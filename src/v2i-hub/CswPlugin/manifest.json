@@ -1,0 +1,37 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"Provides Curve Speed Warning (CSW).",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"TIM",
+			"description":"Travelor Information Message with up to 2 approaches for a curve.  Each approach has 4 regions."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the TIM in milliseconds."
+		},
+		{
+			"key":"MapFile",
+			"default":"IVP_GF_CSW.xml",
+			"description":""
+		},
+		{
+			"key":"Snap Interval",
+			"default":"300",
+			"description":"The interval in milliseconds to keep a vehicle within a zone before allowing it to transition out of all zones."
+		},
+		{
+			"key":"Vehicle Timeout",
+			"default":"2000",
+			"description":"Timeout in milliseconds when a vehicle is removed from all zones if a BSM has not been received."
+		}
+	]
+}

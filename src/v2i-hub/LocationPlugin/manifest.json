@@ -1,0 +1,37 @@
+{
+    "name":"@TMX_PLUGIN_NAME@",
+    "description":"Plugin used to send out Location Messages using data from GPSD",
+    "version":"@PROJECT_VERSION@",
+    "exeLocation":"/bin/@PROJECT_NAME@",
+    "coreIpAddr":"127.0.0.1",
+    "corePort":24601,
+    "messageTypes":[
+        {
+            "type":"Decoded",
+            "subtype":"Location",
+            "description":"Location information gathered from the GPS"
+        }
+    ],
+    "configuration":[
+        {
+            "key":"Frequency",
+            "default":"500",
+            "description":"Rate to send Location Message in milliseconds"
+        },
+        {
+        	"key":"LatchHeadingSpeed",
+        	"default":"2.5",
+        	"description":"Speed at which the heading parameter should be latched, in mph.  Set to 0 to disable latching."
+        },
+        {
+        	"key":"GPSSource",
+        	"default":"localhost",
+        	"description":"Host where the GPSd is running"
+        },
+        {
+        	"key":"SendRawNMEA",
+        	"default":"true",
+        	"description":"Route the raw NMEA strings from GPSd through TMX"
+        }
+    ]
+}

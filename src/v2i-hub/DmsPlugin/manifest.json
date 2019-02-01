@@ -1,0 +1,67 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"Provides communication to a dynamic message sign.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+			"key":"DMS IP Address",
+			"default":"192.168.25.30",
+			"description":"The IP address of the NTCIP Dynamic Message Sign."
+		},
+		{
+			"key":"DMS Port",
+			"default":"9090",
+			"description":"The port of the NTCIP Dynamic Message Sign."
+		},
+		{
+			"key":"Enable DMS",
+			"default":"True",
+			"description":"If true all messages are sent to the Dynamic Message Sign using NTCIP 1203."
+		},
+		{
+			"key":"Enable Sign Simulator",
+			"default":"True",
+			"description":"If true all messages are sent to the Sign Simulator using UDP."
+		},
+		{
+			"key":"Force Message ID",
+			"default":"-1",
+			"description":"Immediately activates the message ID specified, then resets back to -1."
+		},
+		{
+			"key":"Message 01",
+			"default":"",
+			"description":"The text to display on the sign for ID 01 with any formatting (see NTCIP 1203)."
+		},
+		{
+			"key":"Message 02",
+			"default":"[jl3][pt15o0]25[np]MPH",
+			"description":"The text to display on the sign for ID 02 with any formatting (see NTCIP 1203)."
+		},
+		{
+			"key":"Message 03",
+			"default":"[jl3][pt15o0]SLOW[np]DOWN",
+			"description":"The text to display on the sign for ID 03 with any formatting (see NTCIP 1203)."
+		},
+		{
+			"key":"Message 04",
+			"default":"[jl3][pt15o0]CRVE[np]AHED",
+			"description":"The text to display on the sign for ID 04 with any formatting (see NTCIP 1203)."
+		},
+		{
+			"key":"Sign Sim IP Address",
+			"default":"192.168.25.31",
+			"description":"The IP address of the Sign Simulator that is the receipient of UDP messages."
+		},
+		{
+			"key":"Sign Sim Port",
+			"default":"9090",
+			"description":"The UDP port of the Sign Simulator that is the receipient of UDP messages."
+		}
+	]
+}

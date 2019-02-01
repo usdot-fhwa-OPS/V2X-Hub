@@ -1,0 +1,22 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"Plugin to forward messages to the Florida ODEPlugin network",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"10.30.100.105",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+			"key":"ODEIP",
+			"default":"127.0.0.1",
+			"description":"IP address for the ODE network connection."
+		},
+		{
+			"key":"ODEPort",
+			"default":"26789",
+			"description":"Port for the ODE network connection."
+		}
+	]
+}

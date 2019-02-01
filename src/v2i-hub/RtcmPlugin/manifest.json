@@ -1,0 +1,56 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"Plugin to listen for RTCM messages from an NTRIP caster and route those messages over DSRC",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"RTCM",
+			"subtype":"2.3"
+		},
+		{
+			"type":"J2735",
+			"subtype":"RTCM"
+		}
+		
+	],
+	"configuration":[
+		{
+			"key":"Endpoint IP",
+			"default":"156.63.133.118",
+			"description":"NTRIP caster endpoint IP address"
+		},
+		{
+			"key":"Endpoint Port",
+			"default":"2101",
+			"description":"NTRIP caster endpoint port"
+		},
+		{
+			"key":"Username",
+			"default":"username",
+			"description":"NTRIP caster authentication username"
+		},
+		{
+			"key":"Password",
+			"default":"password",
+			"description":"NTRIP caster authentication password"
+		},
+		{
+			"key":"Mountpoint",
+			"default":"ODOT_RTCM23",
+			"description":"NTRIP caster mountpoint"
+		},
+		{
+			"key":"RTCM Version",
+			"default":"Unknown",
+			"description":"Specify the expected RTCM message version (2.3 or 3.3) coming from the caster.  Use Unknown to auto detect the version, which is done using trial and error, thus may be slow."
+		},
+		{
+			"key":"Route RTCM",
+			"default":"false",
+			"description":"Route the RTCM messages created from NTRIP internally for use by other plugins."
+		}
+	]
+}

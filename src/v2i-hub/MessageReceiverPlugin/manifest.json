@@ -1,0 +1,42 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"Plugin to receive messages from an external DSRC radio or other source",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+			"key":"IP",
+			"default":"127.0.0.1",
+			"description":"IP address for the incoming message network connection."
+		},
+		{
+			"key":"Port",
+			"default":"26789",
+			"description":"Port for the incoming message network connection."
+		},
+		{
+			"key":"RouteDSRC",
+			"default":"false",
+			"description":"Set the flag to route a received J2735 message over DSRC."
+		},
+		{
+			"key":"EnableSimulatedBSM",
+			"default":"true",
+			"description":"Accept and route incoming BSM messages from a V2I Hub simulator." 
+		},
+		{
+			"key":"EnableSimulatedSRM",
+			"default":"true",
+			"description":"Accept and route incoming SRM messages from a V2I Hub simulator."
+		},
+		{
+			"key":"EnableSimulatedLocation",
+			"default":"true",
+			"description":"Accept and route incoming GPS location messages from a V2I Hub simulator."
+		}
+	]
+}

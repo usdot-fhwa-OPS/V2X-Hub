@@ -1,0 +1,27 @@
+{
+	"name": "@TMX_PLUGIN_NAME@",
+	"description": "Plugin that reads intersection geometry from a configuration file and publishes a J2735 MAP message.",
+	"version": "@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"MAP-P",
+			"description":"Full geometric layout of the intersection."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the MAP message in milliseconds."
+		},
+		{
+			"key":"MAP_Files",
+			"default":"{ \"MapFiles\": [\n  {\"Action\":0, \"FilePath\":\"GID_Telegraph-Twelve_Mile_withEgress.xml\"}\n] }",
+			"description":"JSON data defining a list of map files.  One map file for each action set specified by the TSC."
+		}
+	]
+}

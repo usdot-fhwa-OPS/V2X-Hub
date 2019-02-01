@@ -1,0 +1,40 @@
+{
+    "name":"@TMX_PLUGIN_NAME@",
+    "description":"Listens for websocket connections from the TMX admin portal and processes commands",
+    "version":"@PROJECT_VERSION@",
+    "exeLocation":"/bin/@PROJECT_NAME@",
+    "coreIpAddr":"127.0.0.1",
+    "corePort":24601,
+    "configuration":[
+        {
+            "key":"SleepMS",
+            "default":"100",
+            "description":"The length of milliseconds to sleep between processing all messages."
+        },
+        {
+            "key":"SSLEnabled",
+            "default":"true",
+            "description":"Enable secure connection using SSL."
+        },
+        {
+            "key":"SSLPath",
+            "default":"/var/www/plugins/.ssl",
+            "description":"The path to the directory containing the SSL key and certificate files."
+        },
+        {
+            "key":"EventRowLimit",
+            "default":"50",
+            "description":"The maximum number of rows returned for the initial Event Log query."
+        },
+        {
+            "key":"DownloadPath",
+            "default":"/var/www/download",
+            "description":"The path to the directory where downloaded files will be saved."
+        },
+        {
+            "key":"LogLevel",
+            "default":"ERROR",
+            "description":"The log level for this plugin"
+        }
+    ]
+}
