@@ -1,0 +1,31 @@
+#!/bin/sh -e
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+# Get the MySQL login and password
+db_input medium tmxcore/mysql_root_login || true
+db_go
+
+db_get tmxcore/mysql_root_login
+DBROOTUSER="${RET}"
+
+db_input high tmxcore/mysql_root_password || true
+db_go
+
+db_get tmxcore/mysql_root_password
+DBROOTPASS="${RET}"
+
+# Test out the connection to the server
+mysql -u$DBROOTUSER -p$DBROOTPASS --silent -e "SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;"
+
+# Install the database
+DBUSER="IVP"
+DBPASS="ivp"
+mysql -u$DBROOTUSER -p$DBROOTPASS -e "CREATE DATABASE IF NOT EXISTS $DBUSER; GRANT ALL PRIVILEGES ON $DBUSER.* To '$DBUSER'@'localhost' IDENTIFIED BY '$DBPASS';"
+if [ -f /var/tmp/tmx/localhost.sql ]; then
+	mysql -v -u$DBUSER -p$DBPASS < /var/tmp/tmx/localhost.sql
+	rm -f /var/tmp/tmx/localhost.sql
+fi
+db_stop
+

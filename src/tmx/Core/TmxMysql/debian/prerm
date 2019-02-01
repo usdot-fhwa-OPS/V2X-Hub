@@ -1,0 +1,19 @@
+#!/bin/sh -e
+
+# Clean up only for a real remove
+if [ "$1" != "remove" -a "$1" != "purge" ]; then
+  exit 0
+fi
+set -e
+
+DBUSER="IVP"
+DBPASS="ivp"
+mysql -u$DBUSER -p$DBPASS -e "DROP DATABASE IF EXISTS $DBUSER;"
+
+if [ "$1" = "purge" -a -e /usr/share/debconf/confmodule ]; then
+    # Source debconf library.
+    . /usr/share/debconf/confmodule
+    
+    # Remove my changes to the db.
+    db_purge
+fi
