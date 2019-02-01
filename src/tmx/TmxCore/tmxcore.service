@@ -1,0 +1,12 @@
+[Unit]
+Description=tmxcore
+After=network.target
+
+[Service]
+WorkingDirectory=/var/log/tmx
+ExecStart=/usr/local/bin/tmxcore
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+Alias=tmxcore.service
