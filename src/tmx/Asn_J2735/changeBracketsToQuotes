@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [[ -z "$1" ]]; then
+	echo "Provide a folder to operate on"
+	exit 1;
+fi
+
+
+find $1 -maxdepth 1 -type f -exec sed '/^#[[:blank:]]*include/s/<\([^>]*\)>/"\1"/' -i {} \;
