@@ -1,0 +1,5 @@
+PROJECT ( EmptyPlugin VERSION 3.0.0 LANGUAGES CXX )
+
+BuildTmxPlugin ( )
+
+TARGET_LINK_LIBRARIES (${PROJECT_NAME} tmxutils)

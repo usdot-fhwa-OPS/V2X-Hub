@@ -1,0 +1,104 @@
+#
+# Example Plugins
+# Makefile configuration script
+#
+# Author:
+#    Gregory M. Baumgardner
+# Version:
+#    1.0 : Initial version
+#
+
+CMAKE_MINIMUM_REQUIRED (VERSION 3.5)
+
+# Global values
+SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
+SET (TMX_APPDESCR "V2I Hub" CACHE INTERNAL "Application description")
+
+# Global values
+IF (TMX_VERBOSE)
+    SET(CMAKE_VERBOSE_MAKEFILE ON CACHE INTERNAL "C Project setting")
+    SET(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "C Project setting")
+ENDIF (TMX_VERBOSE)
+
+ENABLE_LANGUAGE ( C )
+ENABLE_LANGUAGE ( CXX )
+
+INCLUDE (CheckCCompilerFlag)
+CHECK_C_COMPILER_FLAG ("-fPIC" CMAKE_C_FLAG_FPIC_SUPPORTED)
+
+IF (NOT TMX_BIN_DIR)
+    SET (TMX_BIN_DIR "${CMAKE_BINARY_DIR}/bin")
+ENDIF (NOT TMX_BIN_DIR)
+
+IF (NOT TMX_LIB_DIR)
+    SET (TMX_LIB_DIR "${CMAKE_BINARY_DIR}/lib")
+ENDIF (NOT TMX_LIB_DIR)
+
+IF (TMX_CROSSCOMPILING)
+    MESSAGE (STATUS "Cross-compiling for ${CMAKE_SYSTEM} on ${CMAKE_SYSTEM_PROCESSOR}")
+ENDIF (TMX_CROSSCOMPILING)
+
+LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
+
+SET (CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}")
+
+GET_FILENAME_COMPONENT (BUILD_SUB_DIR "${CMAKE_BINARY_DIR}" NAME)
+
+IF (TMX_DIR AND EXISTS "${TMX_DIR}")
+    SET (tmx-plugin_DIR ${TMX_DIR})
+ENDIF ()
+
+FIND_PACKAGE (${TMX_APPNAME}-plugin
+              HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../${TMX_APPNAME}
+                    ${CMAKE_CURRENT_SOURCE_DIR}/../${TMX_APPNAME}/Build
+              PATH_SUFFIXES ${BUILD_SUB_DIR} ${BUILD_SUB_DIR}/${CMAKE_SYSTEM_PROCESSOR}
+              REQUIRED)
+
+MACRO (BuildTmxPlugin)
+    STRING (TOLOWER "${PROJECT_NAME}" COMPONENT_NAME)
+
+    IF (NOT TMX_PLUGIN_NAME)
+        SET (TMX_PLUGIN_NAME ${PROJECT_NAME})    
+    ENDIF (NOT TMX_PLUGIN_NAME)
+
+    STRING (REGEX REPLACE "[ \t]" "" TMX_PLUGIN_NAME ${TMX_PLUGIN_NAME})
+    
+    FILE (GLOB_RECURSE SOURCES "src/*.c*")
+    
+    ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES})
+    IF (TMX_BIN_DIR)
+        SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TMX_BIN_DIR}")
+    ENDIF ()
+    
+    INSTALL (TARGETS ${PROJECT_NAME} 
+             DESTINATION ${TMX_PLUGIN_NAME}/bin COMPONENT ${COMPONENT_NAME}
+             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+                         GROUP_EXECUTE GROUP_READ
+                         WORLD_EXECUTE WORLD_READ)
+                      
+    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" 
+                   "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
+                   @ONLY)
+
+    INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
+             DESTINATION ${TMX_PLUGIN_NAME} COMPONENT ${COMPONENT_NAME}
+             PERMISSIONS OWNER_WRITE OWNER_READ
+                         GROUP_READ WORLD_READ)
+ENDMACRO (BuildTmxPlugin)
+
+FILE (GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+
+FOREACH (Plugin ${PluginBuilds})
+    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin} DIRECTORY)
+    
+    # Do not include the base source directory, or else it might recurse forever
+    IF ("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
+        CONTINUE ()
+    ENDIF ()
+    
+    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin_Dir} NAME)
+    
+    IF (NOT SKIP_${Plugin_Dir})
+        ADD_SUBDIRECTORY (${Plugin_Dir})
+    ENDIF ()
+ENDFOREACH ()
