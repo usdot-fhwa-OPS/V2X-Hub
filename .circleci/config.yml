@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better catkin_make output
     docker:
-      - image: v2xhub/v2x-hub
+      - image: v2xhub/V2X-Hub
         user: v2xhub
         environment:
           TERM: xterm
