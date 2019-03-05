@@ -1,0 +1,98 @@
+
+#  Copyright (C) 2019 LEIDOS.
+# 
+#  Licensed under the Apache License, Version 2.0 (the "License"); you may not
+#  use this file except in compliance with the License. You may obtain a copy of
+#  the License at
+# 
+#  http://www.apache.org/licenses/LICENSE-2.0
+# 
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+#  License for the specific language governing permissions and limitations under
+#  the License.
+# 
+
+# Configuration file for Circle CI 
+# CI will report failure if any executed command returns and error status
+# Operations performed are as follows
+# Build source code
+# Run unit tests for C++ 
+# Run static code analyzer for SourceCloud
+# Upload test results
+# Every run command should start with source ${INIT_ENV} to ensure all default dependancies are available
+jobs:
+  build:
+    # Pull docker image from docker hub
+    # XTERM used for better catkin_make output
+    docker:
+      - image: v2xhub/v2x-hub
+        user: v2xhub
+        environment:
+          TERM: xterm
+          
+    # Set working directory
+    working_directory: "/opt/v2xhub/"
+    # Pull code and execute tests
+    # Name of each run command defines purpose use
+    steps:
+      #setup remote docker
+      - setup_remote_docker :
+          docker_layer_caching: true
+
+    
+      # Checkout PR branch
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+            sudo apt-get update
+            sudo apt-get install docker-ce docket-ce-cli containerd.io
+            sudo apt-get update
+            sudo apt-get install lamp-server^
+# need to figure out how to enter password for lamp-server
+
+
+      - run:
+          name: Build V2XHub and run it
+          command: |
+            sudo docker build --network host 127.0.0.1 .
+# need to run the docker to actually run the docker to test it.
+            sudo docker run --network host 127.0.0.1 tail -F
+
+
+      - run:
+          name: Run C++ Tests
+      # todo add commands for unit tests  
+      
+      # Run SonarCloud analysis
+      # PR Branchs and number extracted from Circle variables and github api
+      # Circle CI seems to make a change to the base branch, so we must fetch --force to ensure correct git file change stats
+      # SONAR_SCANNER_TOKEN MUST be secured as an environment variable in Circle CI NOT in this file. 
+      # The following sonar settings MUST be set in SonarCloud UI NOT in this file
+      # sonar.pullrequest.provider
+      # sonar.pullrequest.github.endpoint
+      # sonar.pullrequest.github.token.secured
+      # sonar.pullrequest.github.repository
+      # Use -X on sonar-scanner to enable debug output
+      #- run:
+      #    name: Run Sonar Scanner
+      #    command: |
+      #      source ${INIT_ENV}
+      #      echo "PR branch ${CIRCLE_BRANCH}"
+      #      echo "Repo name ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+      #      echo "URL ${CIRCLE_PULL_REQUEST}"
+      #      export PR_NUM=`echo ${CIRCLE_PULL_REQUEST} | cut -d'/' -f7`
+      #      echo "PR number ${PR_NUM}"
+      #      export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
+      #      export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
+      #      echo "Target Branch = ${TARGET_BRANCH}"
+      #      cd src/v2xhub
+      #      git fetch --force origin ${TARGET_BRANCH}:${TARGET_BRANCH}
+      #      sonar-scanner -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}
+      #- store_artifacts:
+       #   path: /reports
