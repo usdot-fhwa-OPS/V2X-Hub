@@ -1,10 +1,10 @@
-# Cooperative Automation Research Mobility Applications (CARMA) Collaboration Opportunities
+# V2X Hub Collaboration Opportunities
 
-The Cooperative Automation Research Mobility Applications (CARMA) software platform is designed to be open source to enable collaboration with industry, academia, infrastructure owner operators (IOOs), and other public agencies on cooperative automation applications. Developed on a Robot Operating System (ROS), a flexible framework for writing software, CARMA has an innovative approach to collaboration for automated vehicle development.
+The V2X Hub is designed to be open source to enable collaboration with industry, academia, infrastructure owner operators (IOOs), and other public agencies on plugins which enable connected roadway infrastructure.
 
 # How to Contribute 
 
-Welcome to the CARMAPlatform contributing guide. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things.
+Welcome to the V2X Hub contributing guide. There are a few guidelines that we need contributors to follow so that we can have a chance of keeping on top of things.
 
 ## Contribution Tasks
 
@@ -16,9 +16,9 @@ Welcome to the CARMAPlatform contributing guide. There are a few guidelines that
 ### Reporting Issues
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
-* Ensure the issue was not already reported by searching CARMA Platform [Issues](https://github.com/usdot-fhwa-stol/CARMAPlatform/issues)
+* Ensure the issue was not already reported by searching CARMA Platform [Issues](https://github.com/v2xhub/V2X-Hub/issues)
 * If you're unable to find an open issue addressing the problem, open a new one.
-* Submit a [CARMAPlatform issue](<docs/ISSUE_TEMPLATE.md>).
+* Submit a [V2X Hub issue](<docs/ISSUE_TEMPLATE.md>).
   * Clearly describing the issue
     * Provide a descriptive summary
     * Explain the expected behavior
@@ -28,7 +28,7 @@ Welcome to the CARMAPlatform contributing guide. There are a few guidelines that
 ### Making Changes
 
 #### Fork the Repository
-**Make a fork of CARMA Platform.** 
+**Make a fork of V2X Hub.** 
 
 * Firstly you need a local fork of the project, so go ahead and press the “Fork” button in GitHub. Read the article ["Fork a repo"](https://help.github.com/articles/fork-a-repo/) on GitHub.
 * This will create a copy of the repository in your own GitHub account and you’ll see a note that it’s been forked underneath the project name:
@@ -62,12 +62,12 @@ Welcome to the CARMAPlatform contributing guide. There are a few guidelines that
 * To create one, go to your fork of the project, click on the Pull Requests tab, and click the big green “New Pull Request” button.
 
 ### Merging Changes
-**We want your help to make CARMAPlatform Project great.**
-* All pull requests will be reviewed by the CARMAPlatform team. 
+**We want your help to make V2X Hub great.**
+* All pull requests will be reviewed by the V2X Hub team. 
 * During the review of your pull request the team member will either merge it, request changes to it, or close it with an explanation. 
 * For major changes the reviewer may require additional support from the team, which could cause some delay. 
 * We'll do our best to provide updates and feedback throughout the process. 
-* Feel free to open pull requests, and the CARMAPlatform team will communicate through it with any comments.
+* Feel free to open pull requests, and the V2X Hub team will communicate through it with any comments.
 
 ## Branching Model
 Vincent Driessen’s  ["git flow"](https://nvie.com/posts/a-successful-git-branching-model/) branching model is a git branching and release management workflow that helps developers keep track of features, hotfixes and releases in a software projects. We will follow this model and mainly use five branches - master, develop, feature, release, and hotfix. 
@@ -94,4 +94,4 @@ Vincent Driessen’s  ["git flow"](https://nvie.com/posts/a-successful-git-branc
 * The name of this branch starts with hotfix/ followed by its version. For example: **`hotfix/v0.1.1.`** 
 
 ## The End
-Hope this guide helps you get started in contributing to the CARMAPlatform project! 
+Hope this guide helps you get started in contributing to the V2X Hub! 
