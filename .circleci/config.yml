@@ -45,7 +45,7 @@ jobs:
       # Checkout PR branch
       - checkout
       - run:
-          name: Install dependencies
+          name: Build V2XHub and run it.  First, install dependencies
           command: |
             sudo apt-get update
             sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
@@ -54,14 +54,9 @@ jobs:
             sudo apt-get install docker-ce docket-ce-cli containerd.io
             sudo apt-get update
             sudo apt-get install lamp-server^
-# need to figure out how to enter password for lamp-server
-
-
-      - run:
-          name: Build V2XHub and run it
-          command: |
+            # need to figure out how to enter password for lamp-server
             sudo docker build --network host 127.0.0.1 .
-# need to run the docker to actually run the docker to test it.
+            # need to run the docker to actually run the docker to test it.
             sudo docker run --network host 127.0.0.1 tail -F
 
 
