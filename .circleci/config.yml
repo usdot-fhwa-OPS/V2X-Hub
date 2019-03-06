@@ -42,22 +42,38 @@ jobs:
           docker_layer_caching: true
 
     
-      # Checkout PR branch
-      - checkout
       - run:
-          name: Build V2XHub and run it.  First, install dependencies
+          name: Create src folder
           command: |
-            sudo apt-get update
-            sudo apt-get install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-            sudo apt-get update
-            sudo apt-get install docker-ce docket-ce-cli containerd.io
-            sudo apt-get update
-            sudo apt-get install lamp-server^
-            # need to figure out how to enter password for lamp-server
-            sudo docker build --network host 127.0.0.1 .
-            # need to run the docker to actually run the docker to test it.
-            sudo docker run --network host 127.0.0.1 tail -F
+            mkdir src
+            cd src
+            mkdir v2x-hub
+            
+      # Checkout PR branch
+      - checkout:
+          path: src/v2x-hub
+      - run: 
+          name: Pull V2X-Hub
+          command: |
+            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git src/v2x-hub
+      - run:
+          name: Build tmx
+          command: |
+            cd src/v2x-hub/src/tmx
+            cmake .
+            make
+            make install
+       
+      - run:
+          name: Build V2i-Hub
+          command: |
+            cd src/v2x-hub/src/v2i-hub
+            cmake .
+            make
+            
+
+
+
 
 
 
