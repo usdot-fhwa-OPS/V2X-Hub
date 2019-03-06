@@ -45,6 +45,7 @@ jobs:
       - run:
           name: Create src folder
           command: |
+            rm -r src
             mkdir src
             cd src
             mkdir v2x-hub
