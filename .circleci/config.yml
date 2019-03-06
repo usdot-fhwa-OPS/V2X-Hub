@@ -29,7 +29,6 @@ jobs:
     # XTERM used for better make output
     docker:
       - image: animeshb27/v2x-hub:v2x-hub-v3.2
-        user: v2xhub
         environment:
           TERM: xterm
           
