@@ -33,7 +33,7 @@ jobs:
           TERM: xterm
           
     # Set working directory
-    working_directory: "/opt/v2xhub/"
+    working_directory: "/home"
     # Pull code and execute tests |
     # Name of each run command defines purpose use
     steps:
@@ -45,22 +45,21 @@ jobs:
       - run:
           name: Create src folder
           command: |
-            rm -r src
-            mkdir src
-            cd src
-            mkdir v2x-hub
+            rm -r /V2X-Hub
+            mkdir V2X-Hub
+            
             
       # Checkout PR branch
       - checkout:
-          path: src/v2x-hub
+          path: /home/V2X-Hub
       - run: 
           name: Pull V2X-Hub
           command: |
-            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git src/v2x-hub
+            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git /home/V2X-Hub
       - run:
           name: Build tmx
           command: |
-            cd src/v2x-hub/src/tmx
+            cd /home/V2X-Hub/src/tmx
             cmake .
             make
             make install
@@ -68,7 +67,7 @@ jobs:
       - run:
           name: Build V2i-Hub
           command: |
-            cd src/v2x-hub/src/v2i-hub
+            cd /home/V2X-Hub/src/v2i-hub
             cmake .
             make
             
