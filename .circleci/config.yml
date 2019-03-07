@@ -41,11 +41,6 @@ jobs:
       - setup_remote_docker :
           docker_layer_caching: true
 
-      - run:
-          name: Pull V2X-Hub
-          command: |
-            cd /home   
-            mkdir V2XHub
 
       # Checkout PR branch
       - checkout:
