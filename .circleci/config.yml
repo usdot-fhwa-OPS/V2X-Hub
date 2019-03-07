@@ -33,7 +33,7 @@ jobs:
           TERM: xterm
           
     # Set working directory
-    working_directory: "/home/V2XHub"
+    working_directory: "/home"
     # Pull code and execute tests |
     # Name of each run command defines purpose use
     steps:
@@ -47,7 +47,7 @@ jobs:
       - run: 
           name: Pull V2X-Hub
           command: |
-            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git /home/V2XHub
+            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git V2XHub
       - run:
           name: Build tmx
           command: |
