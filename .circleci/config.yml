@@ -41,22 +41,13 @@ jobs:
       - setup_remote_docker :
           docker_layer_caching: true
 
-    
-      - run:
-          name: Create src folder
-          command: |
-            ls
-            rm -r V2X-Hub
-            mkdir V2X-Hub
-            
             
       # Checkout PR branch
       - checkout:
       - run: 
           name: Pull V2X-Hub
           command: |
-            pwd
-            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git /home/V2X-Hub
+            git pull
       - run:
           name: Build tmx
           command: |
