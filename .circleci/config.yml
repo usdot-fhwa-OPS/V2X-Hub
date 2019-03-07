@@ -33,7 +33,7 @@ jobs:
           TERM: xterm
           
     # Set working directory
-    working_directory: "/home/V2X-Hub"
+    working_directory: "/home/V2XHub"
     # Pull code and execute tests |
     # Name of each run command defines purpose use
     steps:
@@ -41,7 +41,10 @@ jobs:
       - setup_remote_docker :
           docker_layer_caching: true
 
-            
+      - run:
+        cd /home   
+        mkdir V2XHub
+
       # Checkout PR branch
       - checkout:
       - run: 
