@@ -33,7 +33,7 @@ jobs:
           TERM: xterm
           
     # Set working directory
-    working_directory: "/home"
+    working_directory: "/home/V2X-Hub"
     # Pull code and execute tests |
     # Name of each run command defines purpose use
     steps:
