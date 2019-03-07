@@ -42,19 +42,21 @@ jobs:
           docker_layer_caching: true
 
       - run:
-        cd /home   
-        mkdir V2XHub
+          name: Pull V2X-Hub
+          command: |
+            cd /home   
+            mkdir V2XHub
 
       # Checkout PR branch
       - checkout:
       - run: 
           name: Pull V2X-Hub
           command: |
-            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git /home/V2X-Hub
+            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git /home/V2XHub
       - run:
           name: Build tmx
           command: |
-            cd /home/V2X-Hub/src/tmx
+            cd /home/V2XHub/src/tmx
             cmake .
             make
             make install
@@ -62,7 +64,7 @@ jobs:
       - run:
           name: Build V2i-Hub
           command: |
-            cd /home/V2X-Hub/src/v2i-hub
+            cd /home/V2XHub/src/v2i-hub
             cmake .
             make
             
