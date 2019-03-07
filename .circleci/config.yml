@@ -47,7 +47,7 @@ jobs:
       - run: 
           name: Pull V2X-Hub
           command: |
-            git clone -b develop --depth 1 git@github.com:v2xhub/V2X-Hub.git V2X-Hub
+            git clone --depth 1 git@github.com:v2xhub/V2X-Hub.git V2X-Hub
       - run:
           name: Build tmx
           command: |
