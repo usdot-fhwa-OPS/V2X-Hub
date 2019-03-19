@@ -1,0 +1,34 @@
+version: '1'
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'IVP'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'ivp'
+    network_mode: host
+    volumes:
+      - ./mysql/localhost.sql:/tmp/localhost.sql
+      - ./mysql/install_db.sh:/tmp/install_db.sh
+    restart: always
+  apache-php:
+    image: php:7.2.2-apache
+    container_name: apache_php
+    depends_on:
+      - db
+    volumes:
+      - ./php/:/var/www/html/
+    network_mode: host
+    stdin_open: true
+    tty: true
+    restart: always
+  v2x-hub:
+    image: animeshb27/v2x-hub:v2x-hub-v3.2
+    container_name: v2x-hub
+    depends_on:
+      - apache-php
+    network_mode: host
+    restart: always
