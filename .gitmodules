@@ -1,0 +1,3 @@
+[submodule "ext/libwebsockets"]
+	path = ext/libwebsockets
+	url = https://libwebsockets.org/repo/libwebsockets
