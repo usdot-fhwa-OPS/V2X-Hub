@@ -14,12 +14,7 @@ RUN chmod +x /home/V2X-Hub/container/library.sh
 RUN /home/V2X-Hub/container/library.sh
 RUN ldconfig
 
-WORKDIR /home/V2X-Hub/src/
-RUN mkdir ~/tmp
-WORKDIR /home/V2X-Hub/src/tmp/
-RUN git clone https://libwebsockets.org/repo/libwebsockets
-WORKDIR /home/V2X-Hub/src/tmp/libwebsockets/
-RUN git checkout tags/v3.0.0
+WORKDIR /home/V2X-Hub/ext/libwebsockets/
 RUN cmake -DLWS_WITH_SHARED=OFF .
 RUN make
 RUN make install
