@@ -176,12 +176,5 @@ Welcome to the V2X-Hub contributing guide. Please read this guide to learn about
 ## Code of Conduct 
 Please read our [V2X-Hub Code of Conduct](Code_of_Conduct.md) which outlines our expectations for participants within the V2X-Hub community, as well as steps to reporting unacceptable behavior. We are committed to providing a welcoming and inspiring community for all and expect our code of conduct to be honored. Anyone who violates this code of conduct may be banned from the community.
 
-
-
-
-
-
-
-
-
-
+## Attribution
+The development team would like to acknowledge the people who have made direct contributions to the design and code in this repository. [V2X-Hub Attribution](ATTRIBUTION.txt) 
