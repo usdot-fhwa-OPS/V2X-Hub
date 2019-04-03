@@ -46,7 +46,7 @@ RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
 ENV MYSQL_PWD ivp
 RUN echo "mysql-server mysql-server/root_password password $MYSQL_PWD" | debconf-set-selections
 RUN echo "mysql-server mysql-server/root_password_again password $MYSQL_PWD" | debconf-set-selections
-RUN apt-get update && apt-get install -y apache2 mysql-server php
+RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y apache2 mysql-server php
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/
