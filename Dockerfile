@@ -43,10 +43,10 @@ RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
 RUN ln -s ../bin SpatPlugin/bin
 RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
 
-ENV MYSQL_PWD ivp
+ENV MYSQL_ROOT_PASSWORD ivp
 RUN echo "mysql-server mysql-server/root_password password $MYSQL_PWD" | debconf-set-selections
 RUN echo "mysql-server mysql-server/root_password_again password $MYSQL_PWD" | debconf-set-selections
-RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y apache2 mysql-server php
+# RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y apache2 mysql-server php
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/
@@ -80,4 +80,4 @@ RUN tmxctl --plugin-install ODEPlugin.zip
 RUN tmxctl --plugin-install RtcmPlugin.zip
 RUN tmxctl --plugin-install SpatPlugin.zip
 
-ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
+#ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
