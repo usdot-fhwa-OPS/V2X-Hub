@@ -21,7 +21,7 @@ mysql -u$DBROOTUSER -p$DBROOTPASS --silent -e "SHOW STATUS WHERE Variable_name =
 
 # Install the database
 DBUSER="IVP"
-DBPASS="ivp"
+DBPASS=$MYSQL_ROOT_PASSWORD
 mysql -u$DBROOTUSER -p$DBROOTPASS -e "CREATE DATABASE IF NOT EXISTS $DBUSER; GRANT ALL PRIVILEGES ON $DBUSER.* To '$DBUSER'@'localhost' IDENTIFIED BY '$DBPASS';"
 if [ -f /var/tmp/tmx/localhost.sql ]; then
 	mysql -v -u$DBUSER -p$DBPASS < /var/tmp/tmx/localhost.sql

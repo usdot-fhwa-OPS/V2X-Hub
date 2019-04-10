@@ -141,8 +141,9 @@ char* getRootPsw() {
 
 int main()
 {
-	//std::string env_p(std::getenv("MYSQL_ROOT_PASSWORD"));
-	std::string env_p(getRootPsw());
+
+	std::string env_p(std::getenv("MYSQL_ROOT_PASSWORD"));
+	//std::string env_p(getRootPsw());
 
 	DbContext::ConnectionInformation.url = "127.0.0.1";
 	DbContext::ConnectionInformation.username = "IVP";
