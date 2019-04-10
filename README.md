@@ -146,12 +146,12 @@ The binary and the manifest file are the minimum number of files needed for any 
 
 
 ## Installation Instructions
-* install lamp-server
+* Install lamp-server
 ```
 $ sudo apt-get install lamp-server^
 ```
-	* enter a root password (i.e. ivp)
-* install database
+and enter a root password (i.e. ivp)
+* Install database
 	* modify the install_db.sh script located in the DatabaseSetup directory.  Modify the value for DBROOTPASS to the password that was used for root during the previous step
 	* save the script
 	* execute the script using the following commands
