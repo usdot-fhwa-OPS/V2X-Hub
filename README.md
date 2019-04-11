@@ -48,9 +48,9 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 ## System Requirements
 The V2X Hub software can run on most Linux based computers with Pentium core processers, with at least two gigabytes of RAM and at least 64GB of drive space. Performance of the software will be based on the computing power and available RAM in the system.  The project was developed and tested on a machine with a core i3 processor, 4GB of memory, 64GB of hard drive space, running Ubuntu 16.04 LTS.
 
+## Requirements for Ubuntu 16.04 LTS
 The V2X Hub software was developed using c and c++ and requires the following packages installed via apt-get:
 ```
-cmake
 gcc-5
 g++-5
 libboost1.58-dev
@@ -72,7 +72,8 @@ ibusb-1.0.0-dev
 libftdi-dev
 swig
 liboctave-dev
-gpsd libgps-dev
+gpsd
+libgps-dev
 portaudio19-dev
 libsndfile-dev
 libev-dev
@@ -85,6 +86,52 @@ libxml++2.6-dev
 libxml2-dev
 liblzma-dev
 dpkg-dev
+```
+
+Run the following command to install prerequisites via apt-get:
+```
+$sudo at-get install cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev git libusb-dev ibusb-1.0.0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile-dev libev-dev libuv-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev
+```
+
+## Requirements for Ubunut 18.04 LTS
+
+The V2X Hub software was developed using c and c++ and requires the following packages installed via apt-get:
+```
+gcc-7
+g++-7
+libboost1.65-dev
+libboost-thread1.65-dev
+libboost-regex1.65-dev
+libboost-log1.65-dev
+libboost-program-options1.65-dev
+libboost1.65-all-dev
+libxerces-c-dev
+libcurl4-openssl-dev
+libsnmp-dev
+libmysqlclient-dev
+libjsoncpp-dev
+uuid-dev
+libusb-dev
+libusb-1.0-0-dev
+libftdi-dev
+swig
+liboctave-dev
+gpsd
+libgps-dev
+portaudio19-dev
+libsndfile1-dev
+libglib2.0-dev
+libglibmm-2.4-dev
+libpcre3-dev
+libsigc++-2.0-dev
+libxml++2.6-dev
+libxml2-dev
+liblzma-dev
+dpkg-dev
+libmysqlcppconn-dev
+libev-dev
+libuv-dev
+git
 ```
 
 Run the following command to install prerequisites via apt-get:
