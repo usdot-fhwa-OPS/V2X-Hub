@@ -218,21 +218,20 @@ $ sudo systemctl start tmxcore.service
 The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub Administration Portal User Guide for installation and configuration instructions.
 
 Instructions can be found to install additional plugins in the [V2X Hub Software Configuration Guide](docs/V2I_Hub_Software_Configuration_Guide_Final.pdf).
+<!--- Darrell --->
 
 ## Administration Portal
 
 The Administrator Portal can be launched by opening the v2i-webportal/index.html file with either Chrome or Firefox. Further instructions for hosting the portal on a web server can be found in the [Administration Portal User Guide](docs/V2I_Hub_AdministrationPortalUserGuide_Final.pdf).
+<!--- Darrell --->
 
 NOTE: The MAP plugin will need an input file in order to run.  A sample input file for Turner-Fairbank has been included in this deployment in the Sample MAP Input folder.
 
-### Copy sample MAP input file
+### Map Input File Location
+
+You can paste the map input file from this location:
 ```
-$ sudo cp Sample MAP Input\ STOL_MAP.xml /var/www/plugins/MAPr41/
-$ cd /var/www/plugins/MAP/
-$ sudo chmod 644 STOL_MAP.xml
-$ sudo chown www-data STOL_MAP.xml
-$ sudo chgrp www-data STOL_MAP.xml
-$ cd src
+/var/www/plugins/MapPlugin/
 ```
 
 ## Contribution
