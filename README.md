@@ -57,8 +57,7 @@ libboost1.58-dev
 libboost-thread1.58-dev
 libboost-regex1.58-dev
 libboost-log1.58-dev
-libboost-program
-options1.58-dev
+libboost-program-options1.58-dev
 libboost1.58-all-dev
 libxerces-c-dev
 libcurl4-openssl-dev
@@ -66,18 +65,15 @@ libsnmp-dev
 libmysqlclient-dev
 libjsoncpp-dev
 uuid-dev
-git
 libusb-dev
-ibusb-1.0.0-dev
+libusb-1.0-0-dev
 libftdi-dev
 swig
 liboctave-dev
 gpsd
 libgps-dev
 portaudio19-dev
-libsndfile-dev
-libev-dev
-libuv-dev
+libsndfile1-dev
 libglib2.0-dev
 libglibmm-2.4-dev
 libpcre3-dev
@@ -86,6 +82,10 @@ libxml++2.6-dev
 libxml2-dev
 liblzma-dev
 dpkg-dev
+libmysqlcppconn-dev
+libev-dev
+libuv-dev
+git
 ```
 
 Run the following command to install prerequisites via apt-get:
@@ -213,14 +213,14 @@ $ sudo systemctl start tmxcore.service
 
 ## Set Up and Configuration Instructions
 
-The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub Administration Portal User Guide for installation and configuration instructions.
+The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub [Administration Portal User Guide](docs/V2I_Hub_AdministrationPortalUserGuide_Final.pdf) for installation and configuration instructions.
 
-Instructions can be found to install additional plugins in the [V2X Hub Software Configuration Guide](docs/V2I_Hub_Software_Configuration_Guide_Final.pdf).
+Instructions can be found to configure the other plugins in the [V2X Hub Software Configuration Guide](docs/V2I_Hub_Software_Configuration_Guide_Final.pdf).
 <!--- Darrell --->
 
 ## Administration Portal
 
-The Administrator Portal can be launched by opening the v2i-webportal/index.html file with either Chrome or Firefox. Further instructions for hosting the portal on a web server can be found in the [Administration Portal User Guide](docs/V2I_Hub_AdministrationPortalUserGuide_Final.pdf).
+The Administrator Portal can be launched by opening the v2i-webportal/index.html (V2X-Hub/tools/v2i-webportal/) file with either Chrome or Firefox. Further instructions for hosting the portal on a web server can be found in the [Administration Portal User Guide](docs/V2I_Hub_AdministrationPortalUserGuide_Final.pdf).
 <!--- Darrell --->
 
 NOTE: The MAP plugin will need an input file in order to run.  A sample input file for Turner-Fairbank has been included in this deployment in the Sample MAP Input folder.
