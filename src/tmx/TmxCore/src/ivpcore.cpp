@@ -126,25 +126,26 @@ void addSystemDefinedMessageTypes()
 
 } 
 
-char* getRootPsw() {
-	char* psw;
-	psw = std::getenv("MYSQL_ROOT_PASSWORD");
 
-	if(psw == NULL){
+std::string GetPwd(){
+	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* pwd;
+	pwd = std::getenv(EnvVar);
+
+	if(pwd == NULL){
 		LOG_ERROR("Unable to set MYSQL_ROOT_PASSWORD)");
 		return "";
 	}
 	else{
-		return psw;
+		std::string PwdStr(pwd);
+		return PwdStr;
 	}
 }
 
 int main()
 {
 
-	std::string env_p(std::getenv("MYSQL_ROOT_PASSWORD"));
-	//std::string env_p(getRootPsw());
-
+	std::string env_p = GetPwd();
 	DbContext::ConnectionInformation.url = "127.0.0.1";
 	DbContext::ConnectionInformation.username = "IVP";
 	DbContext::ConnectionInformation.password = env_p;
