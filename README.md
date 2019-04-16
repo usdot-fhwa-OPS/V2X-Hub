@@ -90,7 +90,7 @@ dpkg-dev
 
 Run the following command to install prerequisites via apt-get:
 ```
-$sudo at-get install cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev git libusb-dev ibusb-1.0.0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile-dev libev-dev libuv-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev
+$ sudo apt-get install cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program-options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git
 ```
 
 ## Requirements for Ubunut 18.04 LTS
@@ -141,10 +141,10 @@ $ sudo apt-get install cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-de
 
 ## Compilation Instructions
 
-To Compile the V2X Hub software, run the following from the src directory
+To Compile the V2X Hub software, run the following commands from V2X-Hub directory.
 
 ```
-$ cd tmx
+$ cd /src/tmx
 $ cmake .
 $ make 
 $ sudo make install
@@ -162,15 +162,12 @@ When the unit is rebooted this variable will not be set. To add the path at boot
 $ sudo ldconfig
 ```
 
-The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu 16.04.  Therefore, a custom version of the software needs to be downloaded and compiled locally before compiling the V2X Hub plugins.  Note this requires the GIT tool for checking out the latest version of the source code.
+The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub. Run the following commands from V2X-Hub directory.
 
 ```
-$ cd <some tmp dir>
-$ git clone http://libwebsockets.org/repo/libwebsockets
-$ cd libwebsockets
-$ git checkout tags/v3.0.0
+$ cd /ext/libwebsockets
 $ cmake -DLWS_WITH_SHARED=OFF .
-$ make 
+$ make
 $ sudo make install
 ```
 
