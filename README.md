@@ -144,7 +144,7 @@ $ sudo apt-get install cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-de
 To Compile the V2X Hub software, run the following commands from V2X-Hub directory.
 
 ```
-$ cd /src/tmx
+$ cd src/tmx
 $ cmake .
 $ make 
 $ sudo make install
@@ -165,7 +165,7 @@ $ sudo ldconfig
 The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub. Run the following commands from V2X-Hub directory.
 
 ```
-$ cd /ext/libwebsockets
+$ cd ext/libwebsockets
 $ cmake -DLWS_WITH_SHARED=OFF .
 $ make
 $ sudo make install
