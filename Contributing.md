@@ -16,7 +16,7 @@ Welcome to the V2X Hub contributing guide. There are a few guidelines that we ne
 ### Reporting Issues
 
 * Make sure you have a [GitHub account](https://github.com/signup/free).
-* Ensure the issue was not already reported by searching CARMA Platform [Issues](https://github.com/v2xhub/V2X-Hub/issues)
+* Ensure the issue was not already reported by searching V2X Hub [Issues](https://github.com/v2xhub/V2X-Hub/issues)
 * If you're unable to find an open issue addressing the problem, open a new one.
 * Submit a [V2X Hub issue](<docs/ISSUE_TEMPLATE.md>).
   * Clearly describing the issue
@@ -73,7 +73,7 @@ Welcome to the V2X Hub contributing guide. There are a few guidelines that we ne
 Vincent Driessen’s  ["git flow"](https://nvie.com/posts/a-successful-git-branching-model/) branching model is a git branching and release management workflow that helps developers keep track of features, hotfixes and releases in a software projects. We will follow this model and mainly use five branches - master, develop, feature, release, and hotfix. 
 
 ### master
-* This branch contains production-ready code of CARMAPlatform.
+* This branch contains production-ready code of V2X Hub.
 * This branch should be kept stable at all times
 
 ### develop
