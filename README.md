@@ -173,8 +173,9 @@ $ sudo make install
 
 The new libwebsockets static library should now be available in /usr/local to build against.
 
-Now, run the following from the v2i-hub directory
+Now, run the following commands from V2X-Hub directory.
 ```
+$ cd src/v2i-hub
 $ cmake .
 $ make
 ```
