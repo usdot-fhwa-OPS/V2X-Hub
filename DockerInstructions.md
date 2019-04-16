@@ -7,6 +7,10 @@ If you are installing V2X Hub using a docker image, you can use the following in
 Instructions for installing Docker may change, so please use the current instructions at the Docker website:
 https://docs.docker.com/install/linux/docker-ce/ubuntu/
 
+## Docker Hub repository location
+
+Docker Hub repo is located at: https://hub.docker.com/r/usdotfhwaops/v2x-hub
+
 ## Run the V2X Hub image
 
 1.  Download the V2X Hub source to your local machine
@@ -24,7 +28,11 @@ if/when prompted, enter a root password: ivp
 $ chmod +x install_db.sh
 $ sudo ./install_db.sh
 ```
-5.  From terminal, run:
+5.  To pull the docker image, run the following command:
+```
+$ sudo docker pull usdotfhwaops/v2x-hub:v2x-hub-v3.2
+```
+5.  To run dockerized V2X-Hub, run the following command (run without tags for latest build):
 ```
 $ sudo docker run --network=host usdotfhwaops/v2x-hub:v2x-hub-v3.2
 ```
