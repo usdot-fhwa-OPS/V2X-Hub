@@ -10,18 +10,30 @@ https://docs.docker.com/install/linux/docker-ce/ubuntu/
 ## Run the V2X Hub image
 
 1.  Download the V2X Hub source to your local machine
-2.  Navigate to the /configuration/ folder
-3.  Update the apt package index:
+2.  Update the apt package index:
 ```
 $ sudo apt-get update
 ```
-4.  From the /configuration/ folder, run:
+3. Install lamp-server
 ```
-$ sudo docker-compose up
+$ sudo apt-get install lamp-server^
 ```
+if/when prompted, enter a root password: ivp
+4. To install database, from the /V2X-Hub/data/DatabaseSetup directory, execute the script using the following commands:
+```
+$ chmod +x install_db.sh
+$ sudo ./install_db.sh
+```
+5.  From terminal, run:
+```
+$ sudo docker run --network=host usdotfhwaops/v2x-hub:v2x-hub-v3.2
+```
+This will run V2X Hub in a docker contianer on your host computer while using mysql from the host computer.
 
-This will run V2X Hub in a docker contianer on your host ocmputer along with separate containers for mysql and apache-php
-
+5.  You can access V2X-Hub using mysql by running the following commands from terminal:
+```
+$ mysql -uIVP -pivp -DIVP -hlocalhost
+```
 ## Access the V2X Hub Interface
 
 V2X Hub currently requires a certificate exception to run on a local machine.  Here's how you add that exception.
@@ -29,3 +41,5 @@ V2X Hub currently requires a certificate exception to run on a local machine.  H
 1.  In your browser, navigate to https://127.0.0.1:19760/
 2.  Add an exception to the security certificate requirements in your browser.
 3.  Navigate to https://127.0.0.1 for the V2I Hub GUI.  All plugins shipped with the code are installed by default.
+
+
