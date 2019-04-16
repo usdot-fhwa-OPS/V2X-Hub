@@ -23,6 +23,7 @@ $ sudo apt-get update
 $ sudo apt-get install lamp-server^
 ```
 if/when prompted, enter a root password: ivp
+
 4. To install database, from the /V2X-Hub/data/DatabaseSetup directory, execute the script using the following commands:
 ```
 $ chmod +x install_db.sh
@@ -38,7 +39,7 @@ $ sudo docker run --network=host usdotfhwaops/v2x-hub:v2x-hub-v3.2
 ```
 This will run V2X Hub in a docker contianer on your host computer while using mysql from the host computer.
 
-5.  You can access V2X-Hub using mysql by running the following commands from terminal:
+7.  You can access V2X-Hub using mysql by running the following commands from terminal:
 ```
 $ mysql -uIVP -pivp -DIVP -hlocalhost
 ```
