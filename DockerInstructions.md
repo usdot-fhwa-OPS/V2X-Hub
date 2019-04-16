@@ -32,7 +32,7 @@ $ sudo ./install_db.sh
 ```
 $ sudo docker pull usdotfhwaops/v2x-hub:v2x-hub-v3.2
 ```
-5.  To run dockerized V2X-Hub, run the following command (run without tags for latest build):
+6.  To run dockerized V2X-Hub, run the following command (run without tags for latest build):
 ```
 $ sudo docker run --network=host usdotfhwaops/v2x-hub:v2x-hub-v3.2
 ```
