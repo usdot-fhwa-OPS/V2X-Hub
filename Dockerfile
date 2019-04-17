@@ -2,7 +2,7 @@ FROM ubuntu:xenial-20190122
 
 RUN apt-get update && apt-get install -y cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program-options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip
 
-ENV MYSQL_ROOT_PASSWORD ivpx
+ENV MYSQL_ROOT_PASSWORD ivpx1
 
 RUN mkdir ~/V2X-Hub
 COPY . /home/V2X-Hub
@@ -75,11 +75,11 @@ WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN tmxctl --plugin-install CswPlugin.zip
 RUN tmxctl --plugin-install DmsPlugin.zip
 RUN tmxctl --plugin-install DsrcImmediateForwardPlugin.zip
-#RUN tmxctl --plugin-install LocationPlugin.zip
-#RUN tmxctl --plugin-install MapPlugin.zip
-#RUN tmxctl --plugin-install MessageReceiverPlugin.zip
-#RUN tmxctl --plugin-install ODEPlugin.zip
-#RUN tmxctl --plugin-install RtcmPlugin.zip
-#RUN tmxctl --plugin-install SpatPlugin.zip
+RUN tmxctl --plugin-install LocationPlugin.zip
+RUN tmxctl --plugin-install MapPlugin.zip
+RUN tmxctl --plugin-install MessageReceiverPlugin.zip
+RUN tmxctl --plugin-install ODEPlugin.zip
+RUN tmxctl --plugin-install RtcmPlugin.zip
+RUN tmxctl --plugin-install SpatPlugin.zip
 
-#ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
+ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
