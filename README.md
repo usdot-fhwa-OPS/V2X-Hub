@@ -9,18 +9,18 @@ V2X Hub is a message handler that acts as a translator and data aggregator/disse
 
 V2X Hub was developed to support jurisdictions in deploying Vehicle-to-Infrastructure (V2I) technology by reducing integration efforts and issues.
 * V2X Hub is a software platform that enables connected vehicles to talk to existing traffic management hardware and systems, such as traffic signal controllers, Transportation Management Centers, pedestrian and vehicle detection systems, road weather sensors, and dynamic message signs.
-* V2I Hub simplifies integration by translating communication between different standards and protocols.
+* V2X Hub simplifies integration by translating communication between different standards and protocols.
 * Using a modular design, software plugins enable efficient connections to new hardware, custom connections to Transportation Management Centers, and Connected Vehicle (CV) Safety Apps to run on roadside equipment.
 
-The V2I Hub system reduces time needed to create and deploy a roadside based V2I system.  The V2I Hub system contains a suite of plugins that are built to handle specific functionality.  The output of these plugins will vary, but any plugin that communicates externally will produce a message from the J2735-2016 messages set.  Plugins can request to receive data that is being produced by other plugins in the system.  For example, a location plugin can create a location message that is then received by the MAP plugin for use it in its processing.  Below are a list of plugins and the messages they produce that are included in the V2I Hub system.
+The V2X Hub system reduces time needed to create and deploy a roadside based V2X system.  The V2X Hub system contains a suite of plugins that are built to handle specific functionality.  The output of these plugins will vary, but any plugin that communicates externally will produce a message from the J2735-2016 messages set.  Plugins can request to receive data that is being produced by other plugins in the system.  For example, a location plugin can create a location message that is then received by the MAP plugin for use it in its processing.  Below are a list of plugins and the messages they produce that are included in the V2X Hub system.
 
 * CSW Plugin – The Curve Speed Warning Plugin will monitor J2735 BSM messages at a curve, and send a message to a dynamic message sign when it detects that a vehicle is approaching a curve too fast.  The CSW plugin also produces a J2735 TIM message containing the approach zones for the curve to be used by a CSW in-vehicle CV application.
 * DMS Plugin – The Dynamic Message Sign (DMS) Plugin will receive messages from other plugins and translate the information to NTCIP 1203 for display on a DMS.
 * MAP Plugin – Produces intersection geometry in J2735 MAP format.
 * SPAT Plugin – Communicates with a traffic signal controller (TSC) using NTCIP 1202, and creates a J2735 SPaT Message.
 * DSRC Immediate Forward Plugin – Sends all J2735 traffic to the 4.1 RSU for transmission out the DSRC radio.
-* Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2I Hub plugins.
-* Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2I Hub system. 
+* Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2X Hub plugins.
+* Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2X Hub system. 
 * RTCM Plugin – Communicates with a NTRIP network to create J2735 RTCM position correction messages.
 
 V2X Hub is a communication, computation, and processing platform for V2I applications, and providing the functions listed below.
@@ -36,7 +36,7 @@ V2X Hub is a communication, computation, and processing platform for V2I applica
 
 
 ## Security and Passwords
-V2X Hub is middleware that runs on Linux Ubuntu 16.04 LTS with future versions on Ubuntu 18.04 LTS. It is recommended that appropriate security and firewall settings be used on the computer running Linux, including conforming to your agency's security best practices and IT protocols.
+V2X Hub is middleware that runs on Linux Ubuntu 16.04 LTS or Ubuntu 18.04 LTS with future versions on Ubuntu 18.04 LTS. It is recommended that appropriate security and firewall settings be used on the computer running Linux, including conforming to your agency's security best practices and IT protocols.
 
 For configuration and maintenance, the V2X Hub software includes an Administration Portal that runs in a web browser on the host device. The default Username for accessing this Administration Portal is v2iadmin and the default password is V2iHub#123. It is strongly recommended that the v2iadmin password be changed with the first login to the Administration Portal via the menu on the left. Passwords must be a minimum of 8 characters, with at least 1 number, 1 uppercase letter, 1 lowercase, and 1 special character.  Additional users can be created using the Administration Portal by selecting Manage Users from the left menu.  While managing users, you can add new users and delete the default user v2iadmin.  If you want to delete the v2iadmin default user, It is recommended that you create a new user with admin privileges, login as that user, then delete the v2iadmin default user.
 
