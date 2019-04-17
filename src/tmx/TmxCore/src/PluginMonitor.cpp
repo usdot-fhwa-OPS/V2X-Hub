@@ -369,6 +369,7 @@ void PluginMonitor::monitorThreadEntry()
 
 				try {
 					boost::process::child c = boost::process::execute(
+								boost::process::initializers::inherit_env(),
 								boost::process::initializers::run_exe(fullpath),
 								boost::process::initializers::start_in_dir(workingDirectory),
 								boost::process::initializers::set_cmd_line(exeName),

@@ -25,6 +25,8 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string.h>
+
 
 #include <boost/process.hpp>
 
@@ -122,13 +124,31 @@ void addSystemDefinedMessageTypes()
 	if (entries != NULL)
 		ivpMsgType_destroyCollection(entries);
 
+} 
+
+
+std::string GetPwd(){
+	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* pwd;
+	pwd = std::getenv(EnvVar);
+
+	if(pwd == NULL){
+		LOG_ERROR("Unable to set MYSQL_ROOT_PASSWORD)");
+		return "";
+	}
+	else{
+		std::string PwdStr(pwd);
+		return PwdStr;
+	}
 }
 
 int main()
 {
+
+	std::string env_p = GetPwd();
 	DbContext::ConnectionInformation.url = "127.0.0.1";
 	DbContext::ConnectionInformation.username = "IVP";
-	DbContext::ConnectionInformation.password = "ivp";
+	DbContext::ConnectionInformation.password = env_p;
 	DbContext::ConnectionInformation.db = "IVP";
 
 	oldsig_int = signal(SIGINT, sig);

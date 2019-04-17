@@ -88,6 +88,8 @@ public:
 	void DisablePermissionCheck();
 	std::string GetOutput(TmxControlOutputFormat format, bool pretty);
 	tmx::message_container_type* GetOutput();
+	// Method for getting credentials
+	// std::string GetPwd();
 
 private:
 	boost::program_options::variables_map *_opts;

@@ -2,15 +2,13 @@
 
 
 DBROOTUSER="root"
-
-DBROOTPASS="ivp"
-
+DBROOTPASS=$MYSQL_ROOT_PASSWORD
 # Test out the connection to the server
 mysql -u$DBROOTUSER -p$DBROOTPASS --silent -e "SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;"
 
 # Install the database
 DBUSER="IVP"
-DBPASS="ivp"
+DBPASS=$MYSQL_ROOT_PASSWORD
 mysql -u$DBROOTUSER -p$DBROOTPASS -e "CREATE DATABASE IF NOT EXISTS $DBUSER; GRANT ALL PRIVILEGES ON $DBUSER.* To '$DBUSER'@'localhost' IDENTIFIED BY '$DBPASS';"
 if [ -f ./localhost.sql ]; then
 	mysql -v -u$DBUSER -p$DBPASS < ./localhost.sql

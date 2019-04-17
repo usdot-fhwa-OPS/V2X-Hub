@@ -105,7 +105,7 @@ fi
 
 TODAY_YRFIRST=`date --date="${TODAY}" +"%Y-%m-%d"`
 TOMORROW_YRFIRST=`date --date="${TOMORROW}" +"%Y-%m-%d"`
-MYSQL_CMD="mysql -uIVP -pivp -s"
+MYSQL_CMD="mysql -uIVP -p$MYSQL_ROOT_PASSWORD -s"
 
 if [ ${EVENT_LOG} -gt 0 ]; then
 	cd /tmp

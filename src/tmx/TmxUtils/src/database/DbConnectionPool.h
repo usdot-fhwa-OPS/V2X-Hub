@@ -74,6 +74,9 @@ public:
 	size_t NumConnections();
 
 	void SetConnectionUrl(std::string connectionUrl);
+
+	std::string GetPwd();
+
 private:
 	static std::vector<DbConnection> pool;
 	std::string _connectStr;

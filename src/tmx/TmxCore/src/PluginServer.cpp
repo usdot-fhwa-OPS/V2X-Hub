@@ -33,7 +33,6 @@ void PluginServer::startServer()
 #ifndef __CYGWIN__
 	prctl(PR_SET_NAME, "PluginServer", 0, 0, 0);
 #endif
-
 	int temp_fd;
 	int server_len;
 	int client_len;
@@ -41,7 +40,7 @@ void PluginServer::startServer()
 	struct sockaddr_in client_address;
 	int flags;
 	int on = 1;
-
+	
 	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
 

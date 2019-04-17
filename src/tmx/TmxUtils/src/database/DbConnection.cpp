@@ -13,7 +13,7 @@
 #include "../PluginLog.h"
 
 #define DEFAULT_USER "IVP"
-#define DEFAULT_PWD "ivp"
+#define DEFAULT_PWD ""
 #define DEFAULT_DB "IVP"
 
 namespace tmx {

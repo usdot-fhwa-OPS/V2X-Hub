@@ -7,7 +7,7 @@ fi
 set -e
 
 DBUSER="IVP"
-DBPASS="ivp"
+DBPASS=$MYSQL_ROOT_PASSWORD
 mysql -u$DBUSER -p$DBPASS -e "DROP DATABASE IF EXISTS $DBUSER;"
 
 if [ "$1" = "purge" -a -e /usr/share/debconf/confmodule ]; then
