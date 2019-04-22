@@ -1,0 +1,84 @@
+# version: '3'
+
+# services:
+#   db:
+#     image: mysql:5.7
+#     container_name: mysql
+#     environment:
+#       MYSQL_DATABASE: hub
+#       MYSQL_USER: IVP
+#       MYSQL_PASSWORD: ivp
+#       MYSQL_ROOT_PASSWORD: ivp
+#     network_mode: host
+#     volumes:
+#       - ./mysql/localhost.sql:/tmp/localhost.sql
+#       - ./mysql/install_db.sh:/tmp/install_db.sh
+#     entrypoint: /bin/bash
+#     command: "./tmp/install_db.sh"
+#   apache-php:
+#     image: php:7.2.2-apache
+#     container_name: apache_php
+#     depends_on:
+#       - db
+#     volumes:
+#       - ./php/:/var/www/html/
+#     network_mode: host
+#     stdin_open: true
+#     tty: true
+#   v2x-hub:
+#     image: itabrl/test
+#     container_name: v2x-hub
+#     environment:
+#       MYSQL_DATABASE: IVP
+#       MYSQL_USER: IVP
+#       MYSQL_PASSWORD: ivp
+#       MYSQL_ROOT_PASSWORD: ivp
+#     depends_on:
+#       - apache-php
+#     network_mode: host
+
+version: '3.3'
+services:
+  db:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db'
+      # So you don't have to use root, but you can if you like
+      # MYSQL_USER: 'root'
+      # You can use whatever password you like
+      MYSQL_PASSWORD: 'password'
+      # Password for root access
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      # <Port exposed> : < MySQL Port running inside container>
+      - '3306:3306'
+    expose:
+      # Opens port 3306 on the container
+      - '3306'
+      # Where our data will be persisted
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+
+  apache-php:
+    image: php:7.2.2-apache
+    container_name: apache_php
+    depends_on:
+      - db
+    volumes:
+      - ./php/:/var/www/html/
+    network_mode: host
+    stdin_open: true
+    tty: true
+
+  v2x-hub:
+    image: itabrl/test:latest
+    container_name: v2x-hub
+    environment:
+      MYSQL_DATABASE: IVP
+      MYSQL_USER: IVP
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    depends_on:
+      - apache-php
+    network_mode: host
