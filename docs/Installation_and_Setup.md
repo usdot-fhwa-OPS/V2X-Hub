@@ -2,9 +2,9 @@
 
 Download the dependencies based on the choice of Operating System:
 
-Ubuntu 16.04: [Ubuntu 16.04 Requirements Document](docs/Ubuntu_16.04_Requirements.md)
+Ubuntu 16.04: [Ubuntu 16.04 Requirements Document](Ubuntu_16.04_Requirements.md)
 
-Ubuntu 18.04: [Ubuntu 18.04 Requirements Document](docs/Ubuntu_18.04_Requirements.md)
+Ubuntu 18.04: [Ubuntu 18.04 Requirements Document](Ubuntu_18.04_Requirements.md)
 
 To Compile the V2X Hub software, run the following commands from V2X-Hub directory.
 
