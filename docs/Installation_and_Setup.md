@@ -91,7 +91,7 @@ NOTE: The MAP plugin will need an input file in order to run.  A sample input fi
 
 ### Map Input File Location
 
-You can paste the map input file from this location:
+You can paste the map input file to this location:
 ```
 /var/www/plugins/MapPlugin/
 ```
