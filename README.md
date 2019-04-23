@@ -50,6 +50,9 @@ The dependencies for Ubuntu 18.04 can be found in the [Ubuntu 18.04 Requirements
 ## Installation and Setup
 The installation and setup instructions can be found in the [Installation and Setup Guide](docs/Installation_and_Setup.md)
 
+## Docker Setup and Run
+The installation and setup instructions for the docker image can be found in the [Docker Instructions Guide](docs/Docker_Instructions.md)
+
 ## Contribution
 Welcome to the V2X-Hub contributing guide. Please read this guide to learn about our development process, how to propose pull requests and improvements, and how to build and test your changes to this project. [V2X-Hub Contributing Guide](Contributing.md) 
 
