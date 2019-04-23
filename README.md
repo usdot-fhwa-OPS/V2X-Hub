@@ -50,7 +50,7 @@ The dependencies for Ubuntu 18.04 can be found in the [Ubuntu 18.04 Requirements
 ## Installation and Setup
 The installation and setup instructions can be found in the [Installation and Setup Guide](docs/Installation_and_Setup.md)
 
-## Docker Setup and Run
+## Docker Setup
 The installation and setup instructions for the docker image can be found in the [Docker Instructions Guide](docs/Docker_Instructions.md)
 
 ## Contribution
