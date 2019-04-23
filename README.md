@@ -35,12 +35,6 @@ V2X Hub is a communication, computation, and processing platform for V2I applica
 	* Multi-Modal Intelligent Traffic Signal Systems (MMITSS) “intersection level” functions including J2735 Intersection Geometry (MAP) and J2735 Signal Phase and Timing (SPaT) broadcast manager, equipped vehicle tracker, priority request server, and interface to traffic signal controller.
 
 
-## Security and Passwords
-V2X Hub is middleware that runs on Linux Ubuntu 16.04 LTS or Ubuntu 18.04 LTS with future versions on Ubuntu 18.04 LTS. It is recommended that appropriate security and firewall settings be used on the computer running Linux, including conforming to your agency's security best practices and IT protocols.
-
-For configuration and maintenance, the V2X Hub software includes an Administration Portal that runs in a web browser on the host device. The default Username for accessing this Administration Portal is v2iadmin and the default password is V2iHub#123. It is strongly recommended that the v2iadmin password be changed with the first login to the Administration Portal via the menu on the left. Passwords must be a minimum of 8 characters, with at least 1 number, 1 uppercase letter, 1 lowercase, and 1 special character.  Additional users can be created using the Administration Portal by selecting Manage Users from the left menu.  While managing users, you can add new users and delete the default user v2iadmin.  If you want to delete the v2iadmin default user, It is recommended that you create a new user with admin privileges, login as that user, then delete the v2iadmin default user.
-
-
 ## License information
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
 
