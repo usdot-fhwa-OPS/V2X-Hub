@@ -119,5 +119,20 @@ void DbConnectionPool::SetConnectionUrl(std::string connectionUrl) {
 	_connectStr = connectionUrl;
 }
 
+std::string DbConnectionPool::GetPwd(){
+	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* pwd;
+	pwd = std::getenv(EnvVar);
+
+	if(pwd == NULL){
+		PLOG(logERROR) << "Unable to set MYSQL_ROOT_PASSWORD)";
+		return "";
+	}
+	else{
+		std::string PwdStr(pwd);
+		return PwdStr;
+	}
+}
+
 } /* namespace utils */
 } /* namespace tmx */

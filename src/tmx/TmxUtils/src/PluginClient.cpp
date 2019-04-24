@@ -79,7 +79,10 @@ PluginClient::PluginClient(std::string name) :
 	try {
 		PLOG(logDEBUG) << "Calling DB upgrader";
 		DbConnectionPool pool;
-		DbConnection conn = pool.Connection();
+		std::string pwd = pool.GetPwd();
+		// "tcp://127.0.0.1:3306","IVP", pwd, "IVP"
+		DbConnection conn = pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+
 		PluginUpgrader::UpgradeDatabase(&conn, IVPUTILS_VERSION);
 	} catch (runtime_error &ex) {
 		PLOG(logERROR) << "Unable to upgrade database: " << ex.what();
