@@ -79,7 +79,7 @@ $ sudo systemctl start tmxcore.service
 
 The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub [Administration Portal User Guide](https://usdot-carma.atlassian.net/wiki/spaces/CH/pages/174620673/V2X+Hub+Project+Documentation?preview=/174620673/174981124/V2X_Hub_AdministrationPortalUserGuide_3-2.docx) for installation and configuration instructions.
 
-Instructions can be found to configure the other plugins in the [V2X Hub Software Configuration Guide](
+Instructions can be found to configure the other plugins in the [V2X Hub Software Configuration Guide](https://usdot-carma.atlassian.net/wiki/spaces/CH/pages/174620673/V2X+Hub+Project+Documentation?preview=/174620673/174817284/V2X_Hub_Software_Configuration_Guide_3-2.docx)
 
 ## Administration Portal
 
