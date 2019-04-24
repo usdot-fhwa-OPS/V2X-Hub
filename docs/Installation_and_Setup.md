@@ -77,15 +77,13 @@ $ sudo systemctl start tmxcore.service
 
 ## Set Up and Configuration Instructions
 
-The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub [Administration Portal User Guide](V2I_Hub_AdministrationPortalUserGuide_Final.pdf) for installation and configuration instructions.
+The CommandPlugin plugin must be running to access the Administration Portal. Follow the instructions above to build the CommandPlugin.zip package and then refer to Chapter 3 of the V2X Hub [Administration Portal User Guide](https://usdot-carma.atlassian.net/wiki/spaces/CH/pages/174620673/V2X+Hub+Project+Documentation?preview=/174620673/174981124/V2X_Hub_AdministrationPortalUserGuide_3-2.docx) for installation and configuration instructions.
 
-Instructions can be found to configure the other plugins in the [V2X Hub Software Configuration Guide](V2I_Hub_Software_Configuration_Guide_Final.pdf).
-<!--- Darrell --->
+Instructions can be found to configure the other plugins in the [V2X Hub Software Configuration Guide](
 
 ## Administration Portal
 
-The Administrator Portal can be launched by opening the v2i-webportal/index.html (V2X-Hub/tools/v2i-webportal/) file with either Chrome or Firefox. Further instructions for hosting the portal on a web server can be found in the [Administration Portal User Guide](V2I_Hub_AdministrationPortalUserGuide_Final.pdf).
-<!--- Darrell --->
+The Administrator Portal can be launched by opening the v2i-webportal/index.html (V2X-Hub/tools/v2i-webportal/) file with either Chrome or Firefox. Further instructions for hosting the portal on a web server can be found in the [Administration Portal User Guide](https://usdot-carma.atlassian.net/wiki/spaces/CH/pages/174620673/V2X+Hub+Project+Documentation?preview=/174620673/174981124/V2X_Hub_AdministrationPortalUserGuide_3-2.docx).
 
 NOTE: The MAP plugin will need an input file in order to run.  A sample input file for Turner-Fairbank has been included in this deployment in the Sample MAP Input folder.
 
