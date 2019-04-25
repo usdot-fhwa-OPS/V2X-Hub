@@ -1,3 +1,8 @@
+SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;
+-- CREATE DATABASE IF NOT EXISTS IVP; 
+-- GRANT ALL PRIVILEGES ON IVP.* To 'IVP'@'localhost' IDENTIFIED BY 'ivpx1';
+-- GRANT ALL PRIVILEGES ON IVP.* To 'IVP'@'%' IDENTIFIED BY 'ivpx1';
+
 -- phpMyAdmin SQL Dump
 -- version 3.4.10.1deb1
 -- http://www.phpmyadmin.net
@@ -8,8 +13,7 @@
 -- PHP Version: 5.3.10-1ubuntu3.13
 
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
-SET time_zone = "+00:00";
-
+SET time_zone="+00:00";
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -218,3 +222,6 @@ CREATE TABLE IF NOT EXISTS `user` (
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('_battelle', 'B@ttelle', 3);
+INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('v2iadmin', 'V2iHub#321', 3);
