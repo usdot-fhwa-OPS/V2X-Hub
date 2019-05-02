@@ -1,0 +1,16 @@
+The following people have made direct and substantial contributions to the design and code in this repository, listed in alphabetical order:
+* Samir Tabriz - Software Engineer (Leidos)
+* Sudhakar Nallamothu - Software Engineer & Principal Investigator (Leidos)
+
+Other significant contributions have been made by:
+* Thomas Bayhi - Graphics, Communications & Publicity (Leidos)
+* Monica Brito - Graphics, Communications & Publicity (Leidos)
+* Laura Dailey - Graphics, Communications & Publicity (Leidos)
+* Darrell Dorman - Site setup & Configuration Management (Leidos)
+* Tony English - Requirements Development and ODE Coordination (Nearea Consulting)
+* Aaron Greenwood - Project Management (Leidos)
+* Amir Ghiasi - Requirements Development (Leidos)
+* Mafruhatal Jannat - Requirements Development (Leidos)
+* Matthew Marchese - Requirements Development (Leidos)
+
+The development team would also like to acknowledge foundataional code development of the V2I Hub team at the Battelle Memorial Institute.
