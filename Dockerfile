@@ -20,32 +20,44 @@ WORKDIR /home/V2X-Hub/ext/libwebsockets/
 RUN cmake -DLWS_WITH_SHARED=OFF .
 RUN make
 RUN make install
+# RUN apt update \
+# && apt install git cmake zlibc zlib1g zlib1g-dev openssl libssl-dev libuv-dev sqlite3 libsqlite3-dev -y \
+# && apt install libuv1 libuv1-dev -y \
+# && mkdir -p /usr/src/app \
+# && cd /usr/src/app \
+# && git clone https://github.com/warmcat/libwebsockets.git --branch v3.1.0 libwebsockets \
+# && cd /usr/src/app/libwebsockets \
+# && mkdir build \
+# && cd /usr/src/app/libwebsockets/build \
+# && cmake .. -DLWS_WITH_LWSWS=1 -DLWS_WITH_GENERIC_SESSIONS=1 \
+# && make && make install
 
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN cmake .
 RUN make
 RUN ln -s ../bin CommandPlugin/bin
 RUN zip CommandPlugin.zip CommandPlugin/bin/CommandPlugin CommandPlugin/manifest.json
-RUN ln -s ../bin CswPlugin/bin
-RUN zip CswPlugin.zip CswPlugin/bin/CswPlugin CswPlugin/manifest.json
-RUN ln -s ../bin DmsPlugin/bin
-RUN zip DmsPlugin.zip DmsPlugin/bin/DmsPlugin DmsPlugin/manifest.json
-RUN ln -s ../bin DsrcImmediateForwardPlugin/bin
-RUN zip DsrcImmediateForwardPlugin.zip DsrcImmediateForwardPlugin/bin/DsrcImmediateForwardPlugin DsrcImmediateForwardPlugin/manifest.json
-RUN ln -s ../bin LocationPlugin/bin
-RUN zip LocationPlugin.zip LocationPlugin/bin/LocationPlugin LocationPlugin/manifest.json
-RUN ln -s ../bin MapPlugin/bin
-RUN zip MapPlugin.zip MapPlugin/bin/MapPlugin MapPlugin/manifest.json
-RUN ln -s ../bin MessageReceiverPlugin/bin
-RUN zip MessageReceiverPlugin.zip MessageReceiverPlugin/bin/MessageReceiverPlugin MessageReceiverPlugin/manifest.json
-RUN ln -s ../bin ODEPlugin/bin
-RUN zip ODEPlugin.zip ODEPlugin/bin/ODEPlugin ODEPlugin/manifest.json
-RUN ln -s ../bin RtcmPlugin/bin
-RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
-RUN ln -s ../bin SpatPlugin/bin
-RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
+# RUN ln -s ../bin CswPlugin/bin
+# RUN zip CswPlugin.zip CswPlugin/bin/CswPlugin CswPlugin/manifest.json
+# RUN ln -s ../bin DmsPlugin/bin
+# RUN zip DmsPlugin.zip DmsPlugin/bin/DmsPlugin DmsPlugin/manifest.json
+# RUN ln -s ../bin DsrcImmediateForwardPlugin/bin
+# RUN zip DsrcImmediateForwardPlugin.zip DsrcImmediateForwardPlugin/bin/DsrcImmediateForwardPlugin DsrcImmediateForwardPlugin/manifest.json
+# RUN ln -s ../bin LocationPlugin/bin
+# RUN zip LocationPlugin.zip LocationPlugin/bin/LocationPlugin LocationPlugin/manifest.json
+# RUN ln -s ../bin MapPlugin/bin
+# RUN zip MapPlugin.zip MapPlugin/bin/MapPlugin MapPlugin/manifest.json
+# RUN ln -s ../bin MessageReceiverPlugin/bin
+# RUN zip MessageReceiverPlugin.zip MessageReceiverPlugin/bin/MessageReceiverPlugin MessageReceiverPlugin/manifest.json
+# RUN ln -s ../bin ODEPlugin/bin
+# RUN zip ODEPlugin.zip ODEPlugin/bin/ODEPlugin ODEPlugin/manifest.json
+# RUN ln -s ../bin RtcmPlugin/bin
+# RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
+# RUN ln -s ../bin SpatPlugin/bin
+# RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
+RUN ln -s ../bin ExamplePlugin/bin
+RUN zip ExamplePlugin.zip ExamplePlugin/bin/ExamplePlugin ExamplePlugin/manifest.json
 
-#ENV MYSQL_ROOT_PASSWORD ivpx
 RUN echo "mysql-server mysql-server/root_password password $MYSQL_PWD" | debconf-set-selections
 RUN echo "mysql-server mysql-server/root_password_again password $MYSQL_PWD" | debconf-set-selections
 #RUN rm -rf /var/lib/apt/lists/* && apt-get update && apt-get install -y apache2 mysql-server php
@@ -72,14 +84,15 @@ RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tm
 RUN chown root *
 RUN chgrp www-data *
 WORKDIR /home/V2X-Hub/src/v2i-hub/
-RUN tmxctl --plugin-install CswPlugin.zip
-RUN tmxctl --plugin-install DmsPlugin.zip
-RUN tmxctl --plugin-install DsrcImmediateForwardPlugin.zip
-RUN tmxctl --plugin-install LocationPlugin.zip
-RUN tmxctl --plugin-install MapPlugin.zip
-RUN tmxctl --plugin-install MessageReceiverPlugin.zip
-RUN tmxctl --plugin-install ODEPlugin.zip
-RUN tmxctl --plugin-install RtcmPlugin.zip
-RUN tmxctl --plugin-install SpatPlugin.zip
+# RUN tmxctl --plugin-install CswPlugin.zip
+# RUN tmxctl --plugin-install DmsPlugin.zip
+# RUN tmxctl --plugin-install DsrcImmediateForwardPlugin.zip
+# RUN tmxctl --plugin-install LocationPlugin.zip
+# RUN tmxctl --plugin-install MapPlugin.zip
+# RUN tmxctl --plugin-install MessageReceiverPlugin.zip
+# RUN tmxctl --plugin-install ODEPlugin.zip
+# RUN tmxctl --plugin-install RtcmPlugin.zip
+# RUN tmxctl --plugin-install SpatPlugin.zip
+RUN tmxctl --plugin-install ExamplePlugin.zip
 
 ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
