@@ -18,17 +18,17 @@ using namespace tmx::messages;
 using namespace tmx::utils;
 
 
-namespace ExamplePlugin
+namespace PreemptionPlugin
 {
 
 /**
  * This plugin is an example to demonstrate the capabilities of a TMX plugin.
  */
-class ExamplePlugin: public PluginClient
+class PreemptionPlugin: public PluginClient
 {
 public:
-	ExamplePlugin(std::string);
-	virtual ~ExamplePlugin();
+	PreemptionPlugin(std::string);
+	virtual ~PreemptionPlugin();
 	int Main();
 
 protected:
@@ -45,7 +45,7 @@ private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
 
-	void CreateConnection();
+	void SendMib(const char *mib, const char *value);
 	tmx::utils::UdpClient *_signSimClient = NULL;
 };
 };
