@@ -54,9 +54,12 @@ void PreemptionPlugin::UpdateConfigSettings()
 
 	int instance;
 	GetConfigValue("Instance", instance);
-
 	GetConfigValue("Frequency", __frequency_mon.get());
 	__frequency_mon.check();
+
+	GetConfigValue("BasePreemptionOid", BasePreemptionOid);
+	GetConfigValue("ipwithport", ipwithport);
+	GetConfigValue("snmp_community", snmp_community);
 }
 
 
@@ -126,9 +129,9 @@ int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value){
 
 	init_snmp("snmpset");
 	snmp_sess_init(&session);
-	session.peername = strdup(ipwithport);
+	session.peername = strdup(ipwithport.c_str());
 	session.version = snmp_version;
-	session.community = (u_char *)snmp_community;
+	session.community = (u_char *)snmp_community.c_str();
 	session.community_len = strlen((const char*) session.community);
 	session.timeout = 1000000;
 

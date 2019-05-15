@@ -45,10 +45,10 @@ private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);
 
-	const char *ipwithport = "192.168.55.49:6053";
+	std::string ipwithport;
 	int snmp_version = SNMP_VERSION_1;
-	const char *snmp_community = "public";
-	std::string BasePreemptionOid = ".1.3.6.1.4.1.1206.4.2.1.6.3.1.2.";
+	std::string snmp_community;
+	std::string BasePreemptionOid;
 	std::string PreemptionPlan;
 	const char *PreemptionPlan_flag;
 
