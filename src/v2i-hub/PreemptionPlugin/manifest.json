@@ -22,6 +22,21 @@
 			"key":"Instance",
 			"default":"0",
 			"description":"The instance of this plugin."
+		},
+		{
+			"key":"BasePreemptionOid",
+			"default":".1.3.6.1.4.1.1206.4.2.1.6.3.1.2.",
+			"description":"The BasePreemptionOid of this plugin."
+		},
+		{
+			"key":"ipwithport",
+			"default":"192.168.55.49:6053",
+			"description":"The ipwithport of this plugin."
+		},
+		{
+			"key":"snmp_community",
+			"default":"public",
+			"description":"The snmp_community of this plugin."
 		}
 	]
 }

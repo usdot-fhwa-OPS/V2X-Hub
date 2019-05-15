@@ -113,90 +113,83 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
 }
 
-void PreemptionPlugin::SendMib(const char *mib, const char *value){
-	try
-	{
-            netsnmp_session session, *ss;
-            netsnmp_pdu    *pdu, *response = NULL;
-            netsnmp_variable_list *vars;
-            oid             name[MAX_OID_LEN];
-            size_t          name_length;
-            int             status;
-            int             failures = 0;
-            int             exitval = 0;
+int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value){
 
-            init_snmp("snmpset");
-            snmp_sess_init(&session);
-            session.peername = strdup("192.168.55.49:6053");
-            session.version = SNMP_VERSION_1;
-            session.community = (u_char *)"public";
-            session.community_len = strlen((const char*) session.community);
-            session.timeout = 1000000;
+	netsnmp_session session, *ss;
+	netsnmp_pdu    *pdu, *response = NULL;
+	netsnmp_variable_list *vars;
+	oid             name[MAX_OID_LEN];
+	size_t          name_length;
+	int             status;
+	int             failures = 0;
+	int             exitval = 0;
 
-            SOCK_STARTUP;
+	init_snmp("snmpset");
+	snmp_sess_init(&session);
+	session.peername = strdup(ipwithport);
+	session.version = snmp_version;
+	session.community = (u_char *)snmp_community;
+	session.community_len = strlen((const char*) session.community);
+	session.timeout = 1000000;
 
-            ss = snmp_open(&session);
+	SOCK_STARTUP;
 
-            if (ss == NULL) {
-                snmp_sess_perror("snmpset", &session);
-                SOCK_CLEANUP;
-                exit(1);
-            }
-        
-            // create PDU for SET request and add object names and values to request 
-            
-            pdu = snmp_pdu_create(SNMP_MSG_SET);
-            
-            name_length = MAX_OID_LEN;
-            if (snmp_parse_oid(mib, name, &name_length) == NULL) {
-                snmp_perror(mib);
-                failures++;
-            } else {
-                if (snmp_add_var
-                    (pdu, name, name_length, 'i', value)) {
-                    snmp_perror(mib);
-                    failures++;
-                }
-            }
+	ss = snmp_open(&session);
 
-            if (failures) {
-                snmp_close(ss);
-                SOCK_CLEANUP;
-                exit(1);
-            }
+	if (ss == NULL) {
+		snmp_sess_perror("snmpset", &session);
+		SOCK_CLEANUP;
+		exit(1);
+	}
 
-            //send the request 
-            
-            status = snmp_synch_response(ss, pdu, &response);
-            if (status == STAT_SUCCESS) {
-                if (response->errstat == SNMP_ERR_NOERROR) {
-                    if (1) {
-                        for (vars = response->variables; vars; vars = vars->next_variable)
-                            print_variable(vars->name, vars->name_length, vars);
-                    }
-                } else {
-                    fprintf(stderr, "Error in packet.\nReason: %s\n", snmp_errstring(response->errstat));
-                    exitval = 2;
-                }
-            } else if (status == STAT_TIMEOUT) {
-                fprintf(stderr, "Timeout: No Response from %s\n", session.peername);
-                exitval = 1;
-            } else {                    /* status == STAT_ERROR */
-                snmp_sess_perror("snmpset", ss);
-                exitval = 1;
-            }
-
-            if (response)
-                snmp_free_pdu(response);
-            snmp_close(ss);
-            SOCK_CLEANUP;
-
+	// create PDU for SET request and add object names and values to request 
+	
+	pdu = snmp_pdu_create(SNMP_MSG_SET);
+	
+	name_length = MAX_OID_LEN;
+	if (snmp_parse_oid(PreemptionOid, name, &name_length) == NULL) {
+		snmp_perror(PreemptionOid);
+		failures++;
+	} else {
+		if (snmp_add_var
+			(pdu, name, name_length, 'i', value)) {
+			snmp_perror(PreemptionOid);
+			failures++;
 		}
-		catch (UdpClientRuntimeError &ex)
-		{
-			PLOG(logERROR) << " Preemption plugin failed" << ex.what();
-			HandleException(ex, false);
+	}
+
+	if (failures) {
+		snmp_close(ss);
+		SOCK_CLEANUP;
+		exit(1);
+	}
+
+	//send the request 
+	
+	status = snmp_synch_response(ss, pdu, &response);
+	if (status == STAT_SUCCESS) {
+		if (response->errstat == SNMP_ERR_NOERROR) {
+			if (1) {
+				print_variable(response->variables->name, response->variables->name_length, response->variables);
+			}
+		} else {
+			fprintf(stderr, "Error in packet.\nReason: %s\n", snmp_errstring(response->errstat));
+			exitval = 2;
 		}
+	} else if (status == STAT_TIMEOUT) {
+		fprintf(stderr, "Timeout: No Response from %s\n", session.peername);
+		exitval = 1;
+	} else {                    /* status == STAT_ERROR */
+		snmp_sess_perror("snmpset", ss);
+		exitval = 1;
+	}
+
+	if (response)
+		snmp_free_pdu(response);
+	snmp_close(ss);
+	SOCK_CLEANUP;
+
+	return exitval;
 }
 
 // Override of main method of the plugin that should not return until the plugin exits.
@@ -214,13 +207,39 @@ int PreemptionPlugin::Main()
 
 		msCount += 10;
 
-		// Example showing usage of _frequency configuraton parameter from main thread.
-		// Access is thread safe since _frequency is declared using std::atomic.
 		if (_plugin->state == IvpPluginState_registered && _frequency <= msCount)
 		{
 			PLOG(logINFO) << _frequency << " ms wait is complete.";
-			SendMib(".1.3.6.1.4.1.1206.4.2.1.6.3.1.2.2", "0");
-			PLOG(logINFO) << " finished sending preemption plan.";
+
+			PreemptionPlan_flag = "1";
+			PreemptionPlan = "5";
+
+			std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
+			int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
+			if(response != 0){
+				PLOG(logINFO) << "sending oid intrupted with an error.";
+			}
+			else{
+				PLOG(logINFO) << "Finished sending preemption plan.";
+			}
+
+			this_thread::sleep_for(chrono::milliseconds(20000));
+
+			PreemptionPlan = "5";
+			PreemptionPlan_flag = "0";
+
+			PreemptionOid = BasePreemptionOid + PreemptionPlan;
+			response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
+			if(response != 0){
+				PLOG(logINFO) << "sending oid intrupted with an error.";
+			}
+			else{
+				PLOG(logINFO) << "Finished sending preemption plan.";
+			}
+
+			this_thread::sleep_for(chrono::milliseconds(20000));
+
+
 			msCount = 0;
 		}
 	}

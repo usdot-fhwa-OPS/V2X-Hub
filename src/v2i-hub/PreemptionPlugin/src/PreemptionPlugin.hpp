@@ -43,9 +43,17 @@ protected:
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
 private:
 	std::atomic<uint64_t> _frequency{0};
-	DATA_MONITOR(_frequency);   // Declares the
+	DATA_MONITOR(_frequency);
 
-	void SendMib(const char *mib, const char *value);
+	const char *ipwithport = "192.168.55.49:6053";
+	int snmp_version = SNMP_VERSION_1;
+	const char *snmp_community = "public";
+	std::string BasePreemptionOid = ".1.3.6.1.4.1.1206.4.2.1.6.3.1.2.";
+	std::string PreemptionPlan;
+	const char *PreemptionPlan_flag;
+
+	// sends oid to controler
+	int SendOid(const char *PreemptionOid, const char *value);
 	tmx::utils::UdpClient *_signSimClient = NULL;
 };
 };
