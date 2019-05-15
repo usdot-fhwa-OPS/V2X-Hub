@@ -10,18 +10,10 @@ BuildTmxPlugin ()
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})
 TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
 
-################################
-# GTest
-################################
-#ADD_SUBDIRECTORY (gtest-1.6.0)
-#enable_testing()
-#include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
+# Locate GTest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
 
-################################
-# Unit Tests
-################################
-# Add test cpp file
-#add_executable( runUnitTests test/Main.cpp )
-# Link test executable against gtest & gtest_main
-#target_link_libraries(runUnitTests gtest gtest_main)
-#add_test( runUnitTests runUnitTests )
+# Link runTests with what we want to test and the GTest and pthread library
+add_executable(runTests test/Main.cpp)
+target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)
