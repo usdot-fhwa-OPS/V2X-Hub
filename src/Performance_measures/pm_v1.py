@@ -63,7 +63,7 @@ class Browse(tk.Frame):
         lat_mean = statistics.mean(lat)
         lon_mean = statistics.mean(lon)
         gmap = gmplot.GoogleMapPlotter(lat_mean,lon_mean, 18) 
-        gmap.apikey = 'AIzaSyAQQJkyargtjRhmz8gh15IZFuiWbCrYdT0'
+        gmap.apikey = 'API key here'
         gmap.__format__ = 'SATELLITE'
         # here, we plot two sets of scatter points: 1- all points, 2- a subsample for boundary selection
         # there should be a number beside each of the subsample points so that the user can select from
