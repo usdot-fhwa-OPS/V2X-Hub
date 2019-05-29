@@ -1,0 +1,232 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.147611,
+                    38.955013
+
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "1",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.147827,
+                    38.954974
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "2",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.148094,
+                    38.954943
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "3",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.148334,
+                    38.954923
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "4",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.148566,
+                    38.954919
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "5",
+                "marker-symbol": "rail-metro",
+                "title": "West Hyattsville"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.148818,
+                    38.95493
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "6",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149134,
+                    38.954967
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "7",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149431,
+                    38.954884
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "8",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149544,
+                    38.954734
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "9",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149207,
+                    38.954465
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "10",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149536,
+                    38.955059
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "11",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149852,
+                    38.955158
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "12",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.150114,
+                    38.955279
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "13",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.150363,
+                    38.955501
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "14",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149289,
+                    38.95509
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "15",
+                "marker-symbol": "rail-metro"
+            }
+        },
+        {
+            "geometry": {
+                "type": "Point",
+                "coordinates": [
+                    -77.149147,
+                    38.955348
+                ]
+            },
+            "type": "Feature",
+            "properties": {
+                "description": "16",
+                "marker-symbol": "rail-metro"
+            }
+        }
+        
+    ]
+}
