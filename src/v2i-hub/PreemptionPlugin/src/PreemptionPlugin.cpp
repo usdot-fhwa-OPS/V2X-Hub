@@ -1,9 +1,9 @@
 //==========================================================================
 // Name        : PreemptionPlugin.cpp
-// Author      : Battelle Memorial Institute
+// Author      : Leidos Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2014 Battelle Memorial Institute. All rights reserved.
-// Description : Example Plugin
+// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Description : Preemption Plugin
 //==========================================================================
 
 #include "PreemptionPlugin.hpp"
@@ -213,6 +213,9 @@ int PreemptionPlugin::Main()
 		if (_plugin->state == IvpPluginState_registered && _frequency <= msCount)
 		{
 			PLOG(logINFO) << _frequency << " ms wait is complete.";
+
+			MapParser * mp = new MapParser;
+			mp->ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
 
 			PreemptionPlan_flag = "1";
 			PreemptionPlan = "5";

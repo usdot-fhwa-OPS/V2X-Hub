@@ -11,6 +11,7 @@
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
 #include <UdpClient.h>
+#include "include/MapParser.hpp"
 
 using namespace std;
 using namespace tmx;
