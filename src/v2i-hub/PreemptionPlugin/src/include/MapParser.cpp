@@ -30,29 +30,14 @@ namespace PreemptionPlugin {
             j = j + 1;
         }
 
-        std::cout << std::endl << std::endl;
-        std::cout << std::endl << std::endl;
-        
-        for (int i = 0; i < map_message.length()/2; i++) 
-            std::cout << buf[i] << " , "; 
-
-        std::cout << std::endl << std::endl;
-        std::cout << std::endl << std::endl;
-
         asn_dec_rval_t rval;
         MessageFrame_t *message = 0;
         rval = uper_decode(0, &asn_DEF_MessageFrame, (void **) &message, buf, map_message.length()/2, 0, 0);
 
         if(rval.code == RC_OK) {
             map = message -> value.choice.MapData;
-            std::cout << "i diddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddid it.";
-            std::cout << message->value.choice.MapData.intersections[0].list.array[0].Reg_Intersection;
+            // std::cout << "i diddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddid it.";
+            // std::cout << message->value.choice.MapData.intersections[0].list.array[0]->refPoint.lat;
         }
-
-        std::cout << "rval code reutrn" << rval.code << std::endl  << std::endl;
-    }
-
-    void MapParser::test(){
-				std::cout << "teeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeest.";
     }
 }

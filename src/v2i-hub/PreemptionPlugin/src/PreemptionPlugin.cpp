@@ -36,6 +36,8 @@ PreemptionPlugin::PreemptionPlugin(string name): PluginClient(name)
 
 	AddMessageFilter<MapDataMessage>(this, &PreemptionPlugin::HandleMapDataMessage);
 
+	AddMessageFilter <BsmMessage> (this, &BsmLoggerPlugin::HandleBasicSafetyMessage);
+
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
 }
@@ -106,7 +108,6 @@ void PreemptionPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable
 		<< ", IsOutgoing: " << msg.get_IsOutgoing();
 }
 
-// Example of handling
 void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg)
 {
 	PLOG(logINFO) << "Received a data change message: " << msg;
@@ -116,7 +117,8 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
 }
 
-int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value){
+int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value)
+{
 
 	netsnmp_session session, *ss;
 	netsnmp_pdu    *pdu, *response = NULL;
@@ -195,8 +197,6 @@ int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value){
 	return exitval;
 }
 
-// Override of main method of the plugin that should not return until the plugin exits.
-// This method does not need to be overridden if the plugin does not want to use the main thread.
 int PreemptionPlugin::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
@@ -216,9 +216,11 @@ int PreemptionPlugin::Main()
 
 			MapParser * mp = new MapParser;
 			mp->ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
+			PLOG(logINFO) << mp->map.intersections[0].list.array[0]->refPoint.lat;
 
-			PreemptionPlan_flag = "1";
+
 			PreemptionPlan = "5";
+			PreemptionPlan_flag = "1";
 
 			std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
 			int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);

@@ -15,12 +15,7 @@ namespace PreemptionPlugin {
 
 class MapParser {
 	public:
-		std::string map_message;
 		MapData map;
 		void ProcessMapMessageFile(std::string path);
-		void test();
-
 };
-
-
 };
