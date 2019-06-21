@@ -340,7 +340,7 @@ int CommandPlugin::WSCallbackHTTP(
 		if (!pss->spa) {
 			//FILE_LOG(logDEBUG) << "WSCallbackHTTP LWS_CALLBACK_HTTP_BODY create";
 			pss->spa = lws_spa_create(wsi, _httpParamNames,
-					ARRAY_SIZE(_httpParamNames), 1024,
+					LWS_ARRAY_SIZE(_httpParamNames), 1024,
 					FileUploadCB, pss);
 			if (!pss->spa)
 				return -1;
@@ -376,7 +376,7 @@ int CommandPlugin::WSCallbackHTTP(
 			"<html><body><h1>Form results (after urldecoding)</h1>"
 			"<table><tr><td>Name</td><td>Length</td><td>Value</td></tr>");
 
-		for (n = 0; n < (int)ARRAY_SIZE(_httpParamNames); n++) {
+		for (n = 0; n < (int)LWS_ARRAY_SIZE(_httpParamNames); n++) {
 			if (!lws_spa_get_string(pss->spa, n))
 				p += lws_snprintf((char *)p, end - p,
 				    "<tr><td><b>%s</b></td><td>0</td><td>NULL</td></tr>",
