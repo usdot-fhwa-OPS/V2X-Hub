@@ -36,7 +36,7 @@ PreemptionPlugin::PreemptionPlugin(string name): PluginClient(name)
 
 	AddMessageFilter<MapDataMessage>(this, &PreemptionPlugin::HandleMapDataMessage);
 
-	AddMessageFilter <BsmMessage> (this, &BsmLoggerPlugin::HandleBasicSafetyMessage);
+	AddMessageFilter <BsmMessage> (this, &PreemptionPlugin::HandleBasicSafetyMessage);
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
@@ -116,6 +116,48 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 			" has changed from " << msg.get_untyped(msg.OldValue, "?") <<
 			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
 }
+
+void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
+
+	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
+	auto bsm = msg.get_j2735_data();
+
+	float speed_mph;
+	int32_t bsmTmpID;
+
+	bool isSuccess = false;
+	//asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, bsm);
+	int32_t latitude = bsm->coreData.lat;
+	int32_t longitude = bsm->coreData.Long;
+	int32_t longAcceleration = bsm->coreData.accelSet.Long;
+
+	std::cout<<"ProgessBsmMessage - lat: "<< latitude <<" ,"<<" lon: "<< longitude << std::endl;
+
+	uint16_t rawSpeed = bsm->coreData.speed;
+	uint16_t rawHeading = bsm->coreData.heading;
+	GetInt32((unsigned char *)bsm->coreData.id.buf, &bsmTmpID);
+
+	// Heading units are 0.0125 degrees.
+	float heading = rawHeading / 80.0;
+
+	// The speed is contained in bits 0-12.  Units are 0.02 meters/sec.
+	// A value of 8191 is used when the speed is not known.
+	if (rawSpeed != 8191)
+	{
+		// Convert from .02 meters/sec to mph.
+		speed_mph = rawSpeed / 50 * 2.2369362920544;
+
+		isSuccess = true;
+	}
+	else
+		speed_mph = 8191;
+
+}
+
+void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value)
+	{
+		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+	}
 
 int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value)
 {
@@ -214,9 +256,9 @@ int PreemptionPlugin::Main()
 		{
 			PLOG(logINFO) << _frequency << " ms wait is complete.";
 
-			MapParser * mp = new MapParser;
 			mp->ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
 			PLOG(logINFO) << mp->map.intersections[0].list.array[0]->refPoint.lat;
+			PLOG(logINFO) << mp->map.intersections[0].list.array[0]->refPoint.Long;
 
 
 			PreemptionPlan = "5";

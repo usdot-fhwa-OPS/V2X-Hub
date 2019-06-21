@@ -8,9 +8,12 @@
 #include <atomic>
 #include <thread>
 #include <DecodedBsmMessage.h>
+#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <BasicSafetyMessage.h>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
 #include <UdpClient.h>
+#include <tmx/messages/auto_message.hpp>
 #include "include/MapParser.hpp"
 
 using namespace std;
@@ -42,6 +45,10 @@ protected:
 	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
+	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+
+	void GetInt32(unsigned char *buf, int32_t *value);
+
 private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);
@@ -52,7 +59,7 @@ private:
 	std::string BasePreemptionOid;
 	std::string PreemptionPlan;
 	const char *PreemptionPlan_flag;
-
+	MapParser * mp = new MapParser;
 	// sends oid to controler
 	int SendOid(const char *PreemptionOid, const char *value);
 	tmx::utils::UdpClient *_signSimClient = NULL;
