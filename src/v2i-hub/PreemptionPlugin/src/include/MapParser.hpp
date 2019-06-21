@@ -4,6 +4,7 @@
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
 #include <sstream>
+#include <math.h>
 
 using namespace std;
 using namespace tmx;
@@ -17,7 +18,6 @@ class MapParser {
 		std::string map_message;
 		MapData map;
 		void ProcessMapMessageFile(std::string path);
-		int hexadecimalToDecimal(char hexVal[]);
 		void test();
 
 };
