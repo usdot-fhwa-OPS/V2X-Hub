@@ -35,9 +35,63 @@ namespace PreemptionPlugin {
         rval = uper_decode(0, &asn_DEF_MessageFrame, (void **) &message, buf, map_message.length()/2, 0, 0);
 
         if(rval.code == RC_OK) {
-            map = message -> value.choice.MapData;
-            // std::cout << "i diddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddiddid it.";
-            // std::cout << message->value.choice.MapData.intersections[0].list.array[0]->refPoint.lat;
+            map = &(message -> value.choice.MapData);
         }
     }
-}
+    
+    void MapParser::VehicleLocatorWorker(BsmMessage* msg){
+
+        // auto bsm = msg->get_j2735_data();
+
+        // int32_t latitude = bsm->coreData.lat;
+        // int32_t longitude = bsm->coreData.Long;
+	    // int32_t longAcceleration = bsm->coreData.accelSet.Long;
+
+        if(this->map == nullptr){
+            std::cout << "loading map ... " << PreemptionPlan << std::endl;
+            ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
+        }
+
+        int32_t latitude = 389549844 + 593;
+        int32_t longitude = -771493239 - 139;
+
+        std::cout << this->map->intersections[0].list.array[0]->refPoint.lat;
+		std::cout << this->map->intersections[0].list.array[0]->refPoint.Long;
+
+        int32_t lat_offset = latitude - this->map->intersections[0].list.array[0]->refPoint.lat;
+        int32_t long_offset = longitude - this->map->intersections[0].list.array[0]->refPoint.Long;
+
+        int min_distance = 999999;
+        int lane_id = -1;
+
+        for(int i = 0; i< this->map->intersections[0].list.array[0]->laneSet.list.count; i++) {
+            for(int j = 0; j< this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.count; j++) {
+
+                int min_x = lat_offset - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x;
+                int min_y = long_offset - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y;
+                int temp_min_distance = sqrt(min_x * min_x + min_y * min_y);
+
+                if( temp_min_distance < min_distance) {
+                    min_distance = temp_min_distance;
+
+                    // std::cout << "minimum distance " << min_x << "  " << min_y << std::endl;
+                    // std::cout << "distance" << temp_min_distance << std::endl;
+
+                    lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
+
+                    if(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->ingressApproach){
+                        PreemptionPlan_flag = "1";
+                    }
+                    else {
+                        PreemptionPlan_flag = "0";
+                    }
+                }
+            }
+        }
+
+        PreemptionPlan = std::to_string(lane_id);
+        std::cout << "PreemptionPlan " << PreemptionPlan << std::endl;
+
+    };
+
+};

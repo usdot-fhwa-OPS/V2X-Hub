@@ -154,13 +154,11 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 
 }
 
-void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value)
-	{
-		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
-	}
+void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
+	*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+}
 
-int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value)
-{
+int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value) {
 
 	netsnmp_session session, *ss;
 	netsnmp_pdu    *pdu, *response = NULL;
@@ -256,13 +254,14 @@ int PreemptionPlugin::Main()
 		{
 			PLOG(logINFO) << _frequency << " ms wait is complete.";
 
-			mp->ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
-			PLOG(logINFO) << mp->map.intersections[0].list.array[0]->refPoint.lat;
-			PLOG(logINFO) << mp->map.intersections[0].list.array[0]->refPoint.Long;
+			BsmMessage *msg = new BsmMessage;
 
+			mp->VehicleLocatorWorker(msg);
+			
+			PreemptionPlan = mp->PreemptionPlan;
+			PreemptionPlan_flag = mp->PreemptionPlan_flag.c_str();
 
-			PreemptionPlan = "5";
-			PreemptionPlan_flag = "1";
+			PLOG(logINFO) << "PreemptionPlan = " << PreemptionPlan << "PreemptionPlan_flag = " << PreemptionPlan_flag << endl << endl;
 
 			std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
 			int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
@@ -273,21 +272,7 @@ int PreemptionPlugin::Main()
 				PLOG(logINFO) << "Finished sending preemption plan.";
 			}
 
-			this_thread::sleep_for(chrono::milliseconds(20000));
-
-			PreemptionPlan = "5";
-			PreemptionPlan_flag = "0";
-
-			PreemptionOid = BasePreemptionOid + PreemptionPlan;
-			response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
-			if(response != 0){
-				PLOG(logINFO) << "sending oid intrupted with an error.";
-			}
-			else{
-				PLOG(logINFO) << "Finished sending preemption plan.";
-			}
-
-			this_thread::sleep_for(chrono::milliseconds(20000));
+			this_thread::sleep_for(chrono::milliseconds(1000));
 
 
 			msCount = 0;
