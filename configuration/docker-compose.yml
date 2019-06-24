@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   db:
-    image: usdotfhwaops/v2x-mysql:v1.0
+    image: usdotfhwaops/v2x-mysql:v1.1
     container_name: mysql
     environment:
       - MYSQL_DATABASE=IVP
@@ -11,7 +11,7 @@ services:
       - MYSQL_ROOT_PASSWORD=ivp
     network_mode: host
     volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/database.sql
+      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
 
   php:
     image: php:7.2.2-apache
