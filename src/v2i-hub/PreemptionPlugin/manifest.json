@@ -1,6 +1,6 @@
 {
 	"name":"@TMX_PLUGIN_NAME@",
-	"description":"An example plugin for the IVP system.",
+	"description":"Preemption plugin for the IVP system.",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/@PROJECT_NAME@",
 	"coreIpAddr":"127.0.0.1",
