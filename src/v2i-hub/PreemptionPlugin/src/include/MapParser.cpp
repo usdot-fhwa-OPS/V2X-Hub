@@ -57,7 +57,7 @@ namespace PreemptionPlugin {
         int32_t lat_offset = latitude - this->map->intersections[0].list.array[0]->refPoint.lat;
         int32_t long_offset = longitude - this->map->intersections[0].list.array[0]->refPoint.Long;
 
-        std::cout << "offset lat , long " << lat_offset << "," << long_offset << std:endl;
+        std::cout << "offset lat , long " << lat_offset << "," << long_offset << std::endl;
 
         int min_distance = 999999;
         int lane_id = -1;
