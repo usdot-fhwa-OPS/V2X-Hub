@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.7'
 
 services:
   db:
@@ -28,5 +28,6 @@ services:
     image: usdotfhwaops/v2x-hub:v3.2
     container_name: v2xhub
     network_mode: host
+    restart:always
     depends_on: 
       - php
