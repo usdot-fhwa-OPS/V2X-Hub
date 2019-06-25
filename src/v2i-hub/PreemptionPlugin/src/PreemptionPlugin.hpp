@@ -1,3 +1,11 @@
+//==========================================================================
+// Name        : PreemptionPlugin.cpp
+// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Version     :
+// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Description : Preemption Plugin
+//==========================================================================
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <string.h>
@@ -14,7 +22,7 @@
 
 #include <UdpClient.h>
 #include <tmx/messages/auto_message.hpp>
-#include "include/MapParser.hpp"
+#include "include/PreemptionPluginWorker.hpp"
 
 using namespace std;
 using namespace tmx;
@@ -59,7 +67,7 @@ private:
 	std::string BasePreemptionOid;
 	std::string PreemptionPlan;
 	const char *PreemptionPlan_flag;
-	MapParser * mp = new MapParser;
+	PreemptionPluginWorker *mp = new PreemptionPluginWorker;
 	// sends oid to controler
 	int SendOid(const char *PreemptionOid, const char *value);
 	tmx::utils::UdpClient *_signSimClient = NULL;

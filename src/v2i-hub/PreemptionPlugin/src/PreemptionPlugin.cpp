@@ -132,7 +132,7 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 		std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
 		int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
 		if(response != 0){
-			PLOG(logINFO) << "sending oid intrupted with an error.";
+			PLOG(logINFO) << "Sending oid intrupted with an error.";
 		}
 		else{
 			PLOG(logINFO) << "Finished sending preemption plan.";

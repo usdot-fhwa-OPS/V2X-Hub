@@ -1,3 +1,11 @@
+//==========================================================================
+// Name        : PreemptionPlugin.cpp
+// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Version     :
+// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Description : Preemption Plugin
+//==========================================================================
+
 #include <iostream>
 #include <fstream>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
@@ -16,7 +24,7 @@ using namespace tmx::utils;
 
 namespace PreemptionPlugin {
 
-class MapParser {
+class PreemptionPluginWorker {
 	public:
 		MapData* map = nullptr;
 		std::string PreemptionPlan;

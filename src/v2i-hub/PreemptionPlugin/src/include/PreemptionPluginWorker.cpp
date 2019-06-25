@@ -1,10 +1,18 @@
-#include "MapParser.hpp"
+//==========================================================================
+// Name        : PreemptionPlugin.cpp
+// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Version     :
+// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Description : Preemption Plugin
+//==========================================================================
+
+#include "PreemptionPluginWorker.hpp"
 
 using namespace std;
 
 namespace PreemptionPlugin {
 
-	void MapParser::ProcessMapMessageFile(std::string path){
+	void PreemptionPluginWorker::ProcessMapMessageFile(std::string path){
 
         ifstream message_file;
         std::string map_message;
@@ -39,7 +47,7 @@ namespace PreemptionPlugin {
         }
     }
     
-    void MapParser::VehicleLocatorWorker(BsmMessage* msg){
+    void PreemptionPluginWorker::VehicleLocatorWorker(BsmMessage* msg){
 
         auto bsm = msg->get_j2735_data();
 
