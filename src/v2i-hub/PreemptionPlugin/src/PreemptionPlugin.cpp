@@ -120,38 +120,24 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
-	auto bsm = msg.get_j2735_data();
 
-	float speed_mph;
-	int32_t bsmTmpID;
+	mp->VehicleLocatorWorker(&msg);
+	
+	PreemptionPlan = mp->PreemptionPlan;
+	PreemptionPlan_flag = mp->PreemptionPlan_flag.c_str();
 
-	bool isSuccess = false;
-	//asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, bsm);
-	int32_t latitude = bsm->coreData.lat;
-	int32_t longitude = bsm->coreData.Long;
-	int32_t longAcceleration = bsm->coreData.accelSet.Long;
+	PLOG(logINFO) << "PreemptionPlan = " << PreemptionPlan << " PreemptionPlan_flag = " << PreemptionPlan_flag << endl << endl;
 
-	std::cout<<"ProgessBsmMessage - lat: "<< latitude <<" ,"<<" lon: "<< longitude << std::endl;
-
-	uint16_t rawSpeed = bsm->coreData.speed;
-	uint16_t rawHeading = bsm->coreData.heading;
-	GetInt32((unsigned char *)bsm->coreData.id.buf, &bsmTmpID);
-
-	// Heading units are 0.0125 degrees.
-	float heading = rawHeading / 80.0;
-
-	// The speed is contained in bits 0-12.  Units are 0.02 meters/sec.
-	// A value of 8191 is used when the speed is not known.
-	if (rawSpeed != 8191)
-	{
-		// Convert from .02 meters/sec to mph.
-		speed_mph = rawSpeed / 50 * 2.2369362920544;
-
-		isSuccess = true;
+	if(PreemptionPlan_flag != "-1"){
+		std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
+		int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
+		if(response != 0){
+			PLOG(logINFO) << "sending oid intrupted with an error.";
+		}
+		else{
+			PLOG(logINFO) << "Finished sending preemption plan.";
+		}
 	}
-	else
-		speed_mph = 8191;
-
 }
 
 void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
@@ -254,26 +240,7 @@ int PreemptionPlugin::Main()
 		{
 			PLOG(logINFO) << _frequency << " ms wait is complete.";
 
-			BsmMessage *msg = new BsmMessage;
-
-			mp->VehicleLocatorWorker(msg);
-			
-			PreemptionPlan = mp->PreemptionPlan;
-			PreemptionPlan_flag = mp->PreemptionPlan_flag.c_str();
-
-			PLOG(logINFO) << "PreemptionPlan = " << PreemptionPlan << "PreemptionPlan_flag = " << PreemptionPlan_flag << endl << endl;
-
-			std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
-			int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
-			if(response != 0){
-				PLOG(logINFO) << "sending oid intrupted with an error.";
-			}
-			else{
-				PLOG(logINFO) << "Finished sending preemption plan.";
-			}
-
 			this_thread::sleep_for(chrono::milliseconds(1000));
-
 
 			msCount = 0;
 		}

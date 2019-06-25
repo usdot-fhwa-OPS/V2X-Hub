@@ -41,25 +41,23 @@ namespace PreemptionPlugin {
     
     void MapParser::VehicleLocatorWorker(BsmMessage* msg){
 
-        // auto bsm = msg->get_j2735_data();
+        auto bsm = msg->get_j2735_data();
 
-        // int32_t latitude = bsm->coreData.lat;
-        // int32_t longitude = bsm->coreData.Long;
-	    // int32_t longAcceleration = bsm->coreData.accelSet.Long;
+        int32_t latitude = bsm->coreData.lat;
+        int32_t longitude = bsm->coreData.Long;
+	    int32_t longAcceleration = bsm->coreData.accelSet.Long;
 
         if(this->map == nullptr){
             std::cout << "loading map ... " << PreemptionPlan << std::endl;
             ProcessMapMessageFile("/home/V2X-Hub/src/v2i-hub/PreemptionPlugin/src/include/sample_map.txt");
         }
 
-        int32_t latitude = 389549844 + 593;
-        int32_t longitude = -771493239 - 139;
-
-        std::cout << this->map->intersections[0].list.array[0]->refPoint.lat;
-		std::cout << this->map->intersections[0].list.array[0]->refPoint.Long;
+        std::cout << "refrence point lat , long " << this->map->intersections[0].list.array[0]->refPoint.lat << "," << this->map->intersections[0].list.array[0]->refPoint.Long;
 
         int32_t lat_offset = latitude - this->map->intersections[0].list.array[0]->refPoint.lat;
         int32_t long_offset = longitude - this->map->intersections[0].list.array[0]->refPoint.Long;
+
+        std::cout << "offset lat , long " << lat_offset << "," << long_offset << std:endl;
 
         int min_distance = 999999;
         int lane_id = -1;
@@ -73,9 +71,6 @@ namespace PreemptionPlugin {
 
                 if( temp_min_distance < min_distance) {
                     min_distance = temp_min_distance;
-
-                    // std::cout << "minimum distance " << min_x << "  " << min_y << std::endl;
-                    // std::cout << "distance" << temp_min_distance << std::endl;
 
                     lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
 
