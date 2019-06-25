@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2x-hub:v2x-hub-v3.2
+      - image: usdotfhwaops/v2x-hub:v3.2
         environment:
           TERM: xterm
           
