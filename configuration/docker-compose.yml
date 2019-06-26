@@ -28,6 +28,6 @@ services:
     image: usdotfhwaops/v2x-hub:v3.2
     container_name: v2xhub
     network_mode: host
-    restart:always
+    restart: always
     depends_on: 
       - php
