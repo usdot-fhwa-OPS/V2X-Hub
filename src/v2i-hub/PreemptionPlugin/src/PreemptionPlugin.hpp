@@ -67,6 +67,7 @@ private:
 	std::string BasePreemptionOid;
 	std::string PreemptionPlan;
 	const char *PreemptionPlan_flag;
+	std::string map_path;
 	PreemptionPluginWorker *mp = new PreemptionPluginWorker;
 	// sends oid to controler
 	int SendOid(const char *PreemptionOid, const char *value);

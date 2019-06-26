@@ -62,6 +62,7 @@ void PreemptionPlugin::UpdateConfigSettings()
 	GetConfigValue("BasePreemptionOid", BasePreemptionOid);
 	GetConfigValue("ipwithport", ipwithport);
 	GetConfigValue("snmp_community", snmp_community);
+	GetConfigValue("map_path", map_path);
 }
 
 
@@ -120,6 +121,11 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
+
+	if(mp->map == nullptr){
+		std::cout << "loading map ... " << std::endl;
+		mp->ProcessMapMessageFile(map_path);
+	}
 
 	mp->VehicleLocatorWorker(&msg);
 	

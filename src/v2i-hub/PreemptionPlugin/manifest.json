@@ -37,6 +37,11 @@
 			"key":"snmp_community",
 			"default":"public",
 			"description":"The snmp_community of this plugin."
+		},
+		{
+			"key":"map_path",
+			"default":"/sample_map.txt",
+			"description":"The map_path for this plugin."
 		}
 	]
 }
