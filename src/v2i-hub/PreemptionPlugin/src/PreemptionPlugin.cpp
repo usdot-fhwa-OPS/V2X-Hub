@@ -63,6 +63,7 @@ void PreemptionPlugin::UpdateConfigSettings()
 	GetConfigValue("ipwithport", ipwithport);
 	GetConfigValue("snmp_community", snmp_community);
 	GetConfigValue("map_path", map_path);
+
 }
 
 
@@ -122,28 +123,34 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
 
-	if(mp->map == nullptr){
-		std::cout << "loading map ... " << std::endl;
-		mp->ProcessMapMessageFile(map_path);
-	}
-
 	mp->VehicleLocatorWorker(&msg);
-	
-	PreemptionPlan = mp->PreemptionPlan;
-	PreemptionPlan_flag = mp->PreemptionPlan_flag.c_str();
 
-	PLOG(logINFO) << "PreemptionPlan = " << PreemptionPlan << " PreemptionPlan_flag = " << PreemptionPlan_flag << endl << endl;
+	// if(preemption_plan_flag == "1" && mp->preemption_plan_flag.c_str() == "0") {
+	// 	preemption_plan_flag = mp->preemption_plan_flag.c_str();
+	// 	std::string PreemptionOid = BasePreemptionOid + preemption_plan;
+	// 	int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag);
+	// 	if(response != 0){
+	// 		PLOG(logINFO) << "Sending oid intrupted with an error.";
+	// 	}
+	// 	else{
+	// 		PLOG(logINFO) << "Finished sending preemption plan.";
+	// 	}
+	// }
+	// else if(preemption_plan_flag != "1"){ 
+	// 	preemption_plan = mp->preemption_plan;
+	// 	preemption_plan_flag = mp->preemption_plan_flag.c_str();
+	// 	std::string PreemptionOid = BasePreemptionOid + preemption_plan;
+	// 	int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag);
+	// 	if(response != 0){
+	// 		PLOG(logINFO) << "Sending oid intrupted with an error.";
+	// 	}
+	// 	else{
+	// 		PLOG(logINFO) << "Finished sending preemption plan.";
+	// 	}
+	// }
 
-	if(PreemptionPlan_flag != "-1"){
-		std::string PreemptionOid = BasePreemptionOid + PreemptionPlan;
-		int response = SendOid(PreemptionOid.c_str(), PreemptionPlan_flag);
-		if(response != 0){
-			PLOG(logINFO) << "Sending oid intrupted with an error.";
-		}
-		else{
-			PLOG(logINFO) << "Finished sending preemption plan.";
-		}
-	}
+	// PLOG(logINFO) << "preemption_plan = " << preemption_plan << " preemption_plan_flag = " << preemption_plan_flag << std::endl << std::endl;
+
 }
 
 void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
@@ -236,6 +243,16 @@ int PreemptionPlugin::Main()
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
+		if(mp->map == nullptr){
+			PLOG(logINFO) << "loading map ... " << std::endl;
+			mp->ProcessMapMessageFile(map_path);
+		}
+
+		mp->ip_with_port = ipwithport;
+		mp->snmp_version = SNMP_VERSION_1;
+		mp->snmp_community = snmp_community;
+		mp->base_preemption_oid = BasePreemptionOid;
+
 		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
 
 		this_thread::sleep_for(chrono::milliseconds(10));

@@ -65,8 +65,8 @@ private:
 	int snmp_version = SNMP_VERSION_1;
 	std::string snmp_community;
 	std::string BasePreemptionOid;
-	std::string PreemptionPlan;
-	const char *PreemptionPlan_flag;
+	// std::string preemption_plan;
+	// const char *preemption_plan_flag;
 	std::string map_path;
 	PreemptionPluginWorker *mp = new PreemptionPluginWorker;
 	// sends oid to controler
