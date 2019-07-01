@@ -157,84 +157,84 @@ void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
 	*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
 }
 
-int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value) {
+// int PreemptionPlugin::SendOid(const char *PreemptionOid, const char *value) {
 
-	netsnmp_session session, *ss;
-	netsnmp_pdu    *pdu, *response = NULL;
-	netsnmp_variable_list *vars;
-	oid             name[MAX_OID_LEN];
-	size_t          name_length;
-	int             status;
-	int             failures = 0;
-	int             exitval = 0;
+// 	netsnmp_session session, *ss;
+// 	netsnmp_pdu    *pdu, *response = NULL;
+// 	netsnmp_variable_list *vars;
+// 	oid             name[MAX_OID_LEN];
+// 	size_t          name_length;
+// 	int             status;
+// 	int             failures = 0;
+// 	int             exitval = 0;
 
-	init_snmp("snmpset");
-	snmp_sess_init(&session);
-	session.peername = strdup(ipwithport.c_str());
-	session.version = snmp_version;
-	session.community = (u_char *)snmp_community.c_str();
-	session.community_len = strlen((const char*) session.community);
-	session.timeout = 1000000;
+// 	init_snmp("snmpset");
+// 	snmp_sess_init(&session);
+// 	session.peername = strdup(ipwithport.c_str());
+// 	session.version = snmp_version;
+// 	session.community = (u_char *)snmp_community.c_str();
+// 	session.community_len = strlen((const char*) session.community);
+// 	session.timeout = 1000000;
 
-	SOCK_STARTUP;
+// 	SOCK_STARTUP;
 
-	ss = snmp_open(&session);
+// 	ss = snmp_open(&session);
 
-	if (ss == NULL) {
-		snmp_sess_perror("snmpset", &session);
-		SOCK_CLEANUP;
-		exit(1);
-	}
+// 	if (ss == NULL) {
+// 		snmp_sess_perror("snmpset", &session);
+// 		SOCK_CLEANUP;
+// 		exit(1);
+// 	}
 
-	// create PDU for SET request and add object names and values to request 
+// 	// create PDU for SET request and add object names and values to request 
 	
-	pdu = snmp_pdu_create(SNMP_MSG_SET);
+// 	pdu = snmp_pdu_create(SNMP_MSG_SET);
 	
-	name_length = MAX_OID_LEN;
-	if (snmp_parse_oid(PreemptionOid, name, &name_length) == NULL) {
-		snmp_perror(PreemptionOid);
-		failures++;
-	} else {
-		if (snmp_add_var
-			(pdu, name, name_length, 'i', value)) {
-			snmp_perror(PreemptionOid);
-			failures++;
-		}
-	}
+// 	name_length = MAX_OID_LEN;
+// 	if (snmp_parse_oid(PreemptionOid, name, &name_length) == NULL) {
+// 		snmp_perror(PreemptionOid);
+// 		failures++;
+// 	} else {
+// 		if (snmp_add_var
+// 			(pdu, name, name_length, 'i', value)) {
+// 			snmp_perror(PreemptionOid);
+// 			failures++;
+// 		}
+// 	}
 
-	if (failures) {
-		snmp_close(ss);
-		SOCK_CLEANUP;
-		exit(1);
-	}
+// 	if (failures) {
+// 		snmp_close(ss);
+// 		SOCK_CLEANUP;
+// 		exit(1);
+// 	}
 
-	//send the request 
+// 	//send the request 
 	
-	status = snmp_synch_response(ss, pdu, &response);
-	if (status == STAT_SUCCESS) {
-		if (response->errstat == SNMP_ERR_NOERROR) {
-			if (1) {
-				print_variable(response->variables->name, response->variables->name_length, response->variables);
-			}
-		} else {
-			fprintf(stderr, "Error in packet.\nReason: %s\n", snmp_errstring(response->errstat));
-			exitval = 2;
-		}
-	} else if (status == STAT_TIMEOUT) {
-		fprintf(stderr, "Timeout: No Response from %s\n", session.peername);
-		exitval = 1;
-	} else {                    /* status == STAT_ERROR */
-		snmp_sess_perror("snmpset", ss);
-		exitval = 1;
-	}
+// 	status = snmp_synch_response(ss, pdu, &response);
+// 	if (status == STAT_SUCCESS) {
+// 		if (response->errstat == SNMP_ERR_NOERROR) {
+// 			if (1) {
+// 				print_variable(response->variables->name, response->variables->name_length, response->variables);
+// 			}
+// 		} else {
+// 			fprintf(stderr, "Error in packet.\nReason: %s\n", snmp_errstring(response->errstat));
+// 			exitval = 2;
+// 		}
+// 	} else if (status == STAT_TIMEOUT) {
+// 		fprintf(stderr, "Timeout: No Response from %s\n", session.peername);
+// 		exitval = 1;
+// 	} else {                    /* status == STAT_ERROR */
+// 		snmp_sess_perror("snmpset", ss);
+// 		exitval = 1;
+// 	}
 
-	if (response)
-		snmp_free_pdu(response);
-	snmp_close(ss);
-	SOCK_CLEANUP;
+// 	if (response)
+// 		snmp_free_pdu(response);
+// 	snmp_close(ss);
+// 	SOCK_CLEANUP;
 
-	return exitval;
-}
+// 	return exitval;
+// }
 
 int PreemptionPlugin::Main()
 {
@@ -247,15 +247,21 @@ int PreemptionPlugin::Main()
 			PLOG(logINFO) << "loading map ... " << std::endl;
 			mp->ProcessMapMessageFile(map_path);
 		}
+		this_thread::sleep_for(chrono::milliseconds(10000));
 
 		mp->ip_with_port = ipwithport;
 		mp->snmp_version = SNMP_VERSION_1;
 		mp->snmp_community = snmp_community;
 		mp->base_preemption_oid = BasePreemptionOid;
 
-		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
+		// BsmMessage msg_1;
+		// BsmMessage &msg = msg_1;
 
-		this_thread::sleep_for(chrono::milliseconds(10));
+		// mp->VehicleLocatorWorker(&msg);
+
+		// PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
+
+		// this_thread::sleep_for(chrono::milliseconds(10));
 
 		msCount += 10;
 
