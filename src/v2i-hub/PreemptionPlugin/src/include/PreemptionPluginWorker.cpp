@@ -63,21 +63,21 @@ namespace PreemptionPlugin {
 
         PreemptionObject* po = new PreemptionObject;
 
-        // auto bsm = msg->get_j2735_data();
+        auto bsm = msg->get_j2735_data();
 
-        // int32_t latitude = bsm->coreData.lat;
-        // int32_t longitude = bsm->coreData.Long;
+        int32_t latitude = bsm->coreData.lat;
+        int32_t longitude = bsm->coreData.Long;
 
-        // int buff_size = bsm->coreData.id.size;
-        // po ->vehicle_id = bsm->coreData.id.buf;
-        static const char STR[] = "STAY FOOLISH";
+        int buff_size = bsm->coreData.id.size;
+        po ->vehicle_id = bsm->coreData.id.buf;
+        // static const char STR[] = "STAY FOOLISH";
 
-        po ->vehicle_id = (uint8_t*)STR;
+        // po ->vehicle_id = (uint8_t*)STR;
 
         std::cout << " Vehicle id is " << po->vehicle_id << std::endl;
 
-        int32_t latitude = -523;
-        int32_t longitude = -1294;
+        // int32_t latitude = -523;
+        // int32_t longitude = -1294;
 
         if(this->map != nullptr){
             int32_t lat_offset = latitude - this->map->intersections[0].list.array[0]->refPoint.lat;
