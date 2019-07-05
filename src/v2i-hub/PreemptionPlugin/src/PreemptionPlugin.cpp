@@ -247,7 +247,6 @@ int PreemptionPlugin::Main()
 			PLOG(logINFO) << "loading map ... " << std::endl;
 			mp->ProcessMapMessageFile(map_path);
 		}
-		this_thread::sleep_for(chrono::milliseconds(10000));
 
 		mp->ip_with_port = ipwithport;
 		mp->snmp_version = SNMP_VERSION_1;

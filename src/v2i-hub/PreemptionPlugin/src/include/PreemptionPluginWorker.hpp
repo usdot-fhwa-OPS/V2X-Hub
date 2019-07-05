@@ -36,7 +36,7 @@ namespace PreemptionPlugin {
 		struct PreemptionObject {
 			int lane_id;
 			std::string approach; // 0: egress 1: ingress
-			uint8_t* vehicle_id;
+			int vehicle_id;
 		};
 
 		public:
@@ -44,7 +44,7 @@ namespace PreemptionPlugin {
 			std::string preemption_plan;
 			std::string preemption_plan_flag;
 
-			std::map <uint8_t*,std::string> preemption_map;
+			std::map <int,std::string> preemption_map;
 
 			void ProcessMapMessageFile(std::string path);
 			void VehicleLocatorWorker(BsmMessage* msg);

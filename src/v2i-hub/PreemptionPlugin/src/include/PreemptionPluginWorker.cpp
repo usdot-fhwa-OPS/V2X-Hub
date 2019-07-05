@@ -19,6 +19,8 @@ namespace PreemptionPlugin {
         std::string map_message;
 
         try {
+         std::cout << "openning map file" << std::endl;
+
             message_file.open(path);
             if (message_file.is_open()) {
                 while (!message_file.eof()) {
@@ -31,6 +33,8 @@ namespace PreemptionPlugin {
         catch(...) { 
             std::cout << "Caught exception from reading a file"; 
         } 
+
+        std::cout << "decoding map file" << std::endl;
 
         if(map_message != ""){
             std::cout << map_message; 
@@ -55,7 +59,12 @@ namespace PreemptionPlugin {
             if(rval.code == RC_OK) {
                 map = &(message -> value.choice.MapData);
                 std::cout << "finished processing map";
+            } else {
+                std::cout << "rval.code is " << rval.code;
             }
+        }
+        else {
+            std::cout << " map_message is empty";
         }
     }
     
@@ -69,12 +78,16 @@ namespace PreemptionPlugin {
         int32_t longitude = bsm->coreData.Long;
 
         int buff_size = bsm->coreData.id.size;
-        po ->vehicle_id = bsm->coreData.id.buf;
+        po->vehicle_id = (int)*(bsm->coreData.id.buf);
         // static const char STR[] = "STAY FOOLISH";
 
         // po ->vehicle_id = (uint8_t*)STR;
 
+        std::string s( bsm->coreData.id.buf, bsm->coreData.id.buf+buff_size );
+
         std::cout << " Vehicle id is " << po->vehicle_id << std::endl;
+        std::cout << " *(bsm->coreData.id.buf) " << *(bsm->coreData.id.buf) << std::endl;
+        std::cout << " s " << s << std::endl;
 
         // int32_t latitude = -523;
         // int32_t longitude = -1294;
@@ -112,7 +125,7 @@ namespace PreemptionPlugin {
                 }
             }
 
-            std::cout << " finished locating the vehicle " << po ->approach << po ->vehicle_id << po ->lane_id << std::endl;
+            std::cout << " finished locating the vehicle " << po ->approach << " , " << po ->vehicle_id << " , " << po ->lane_id << std::endl;
 
             PreemptionPlaner(po);
 		}
@@ -124,7 +137,8 @@ namespace PreemptionPlugin {
         std::string preemption_plan_flag = "";
 
         if(po->approach == "1"){
-            if ( preemption_map.find(po ->vehicle_id) == preemption_map.end() ) {
+            std::cout << " in the approach == 1 the vehicle id is " << po ->vehicle_id << std::endl;
+            if ( preemption_map.find(po->vehicle_id) == preemption_map.end() ) {
                 switch(po->lane_id) {
                     case 1 : preemption_plan = "2";
                     case 2 : preemption_plan = "2";
@@ -159,7 +173,14 @@ namespace PreemptionPlugin {
             } 
         }
         else if(po->approach == "0"){
-            if ( preemption_map.find(po ->vehicle_id) == preemption_map.end() ) {
+
+            typedef std::map<int,std::string>::const_iterator MapIterator;
+            for (MapIterator iter = preemption_map.begin(); iter != preemption_map.end(); iter++)
+            {
+                cout << "Key: " << iter->first << endl << "Values:" << endl;
+            }
+
+            if (preemption_map.find(po->vehicle_id) == preemption_map.end() ) {
                 std::cout << " vehicle id does not exitst" << po->vehicle_id << std::endl;
             }
             else {
