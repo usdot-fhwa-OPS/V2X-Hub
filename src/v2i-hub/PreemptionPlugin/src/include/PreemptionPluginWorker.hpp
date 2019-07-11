@@ -12,7 +12,7 @@
 #include <math.h>
 #include <cmath>
 #include <map>
-
+#include <chrono>
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
@@ -23,11 +23,13 @@
 
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
+#include "wgs84_utils.h"
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
+using namespace wgs84_utils;
 
 namespace PreemptionPlugin {
 
@@ -36,7 +38,9 @@ namespace PreemptionPlugin {
 		struct PreemptionObject {
 			int lane_id;
 			std::string approach; // 0: egress 1: ingress
+			std::string preemption_plan; // 0: egress 1: ingress
 			int vehicle_id;
+
 		};
 
 		public:
@@ -44,7 +48,7 @@ namespace PreemptionPlugin {
 			std::string preemption_plan;
 			std::string preemption_plan_flag;
 
-			std::map <int,std::string> preemption_map;
+			std::map <int,PreemptionObject> preemption_map;
 
 			void ProcessMapMessageFile(std::string path);
 			void VehicleLocatorWorker(BsmMessage* msg);
