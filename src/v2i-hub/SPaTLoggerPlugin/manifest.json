@@ -1,0 +1,30 @@
+{
+	"name":"SPaTLoggerPlugin",
+	"description":"Listens for SPaT messages and logs them in a file in CSV format.",
+	"version":"3.2.0",
+	"exeLocation":"/bin/SPaTLoggerPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		
+	],
+	"configuration":[
+		{
+			"key":"File Size In MB",
+			"default":"100",
+			"description":"Maximum size of the SPaT log file in mb."
+		},
+		{
+			"key":"File Location",
+			"default":"/var/log/tmx",
+			"description":"The location where the log files are stored."
+		},
+		{
+			"key":"Filename",
+			"default":"SPaTLog",
+			"description":"Default name of the SPaT log file."
+		}
+
+
+	]
+}
