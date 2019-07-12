@@ -224,14 +224,14 @@ void BsmLoggerPlugin::OpenBSMLogFile()
  * Checks the size of the logfile and opens a new file if it's size is greater
  * than the max size specified.
  */
-void BsmLoggerPlugin::CheckBSMLogFileSizeAndRename()
+void BsmLoggerPlugin::CheckBSMLogFileSizeAndRename(bool createNewFile)
 {
 	if (_logFile.is_open())
 	{
 		std::lock_guard<mutex> lock(_cfgLock);
 		_logFile.seekp( 0, std::ios::end );
 		int curFilesizeInMB = _logFile.tellp()/BYTESTOMB;
-		if (curFilesizeInMB > _maxFilesizeInMB)
+		if (curFilesizeInMB > _maxFilesizeInMB || createNewFile)
 		{
 			_logFile.close();
 			OpenBSMLogFile();
@@ -263,12 +263,12 @@ int BsmLoggerPlugin::Main()
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "BsmLoggerPlugin Sleeping 5 seconds" << endl;
+		PLOG(logDEBUG4) << "BsmLoggerPlugin Sleeping 5 minutes" << endl;
 
-		this_thread::sleep_for(chrono::milliseconds(5000));
+		this_thread::sleep_for(chrono::milliseconds(300000));
 
 		// check size of the log file and open new one if needed
-		CheckBSMLogFileSizeAndRename();
+		CheckBSMLogFileSizeAndRename(true);
 	}
 
 	PLOG(logDEBUG) << "BsmLoggerPlugin terminating gracefully.";

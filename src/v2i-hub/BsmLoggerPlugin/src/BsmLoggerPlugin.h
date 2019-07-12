@@ -70,7 +70,7 @@ private:
 	DATA_MONITOR(_frequency);   // Declares the
 
 	void OpenBSMLogFile();
-	void CheckBSMLogFileSizeAndRename();
+	void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
 	std::string  GetCurDateTimeStr();
 
 	std::ofstream _logFile;
