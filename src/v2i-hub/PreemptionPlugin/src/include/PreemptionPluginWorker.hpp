@@ -40,7 +40,6 @@ namespace PreemptionPlugin {
 			std::string approach; // 0: egress 1: ingress
 			std::string preemption_plan; // 0: egress 1: ingress
 			int vehicle_id;
-
 		};
 
 		public:

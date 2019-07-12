@@ -145,10 +145,9 @@ int PreemptionPlugin::Main()
 		mp->snmp_community = snmp_community;
 		mp->base_preemption_oid = BasePreemptionOid;
 
-		BsmMessage msg_1;
-		BsmMessage &msg = msg_1;
-
-		mp->VehicleLocatorWorker(&msg);
+		// BsmMessage msg_1;
+		// BsmMessage &msg = msg_1;
+		// mp->VehicleLocatorWorker(&msg);
 
 		// PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
 
