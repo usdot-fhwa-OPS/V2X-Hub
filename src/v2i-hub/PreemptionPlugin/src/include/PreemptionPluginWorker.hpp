@@ -15,7 +15,7 @@
 #include <chrono>
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
-
+#include <ctime>
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -35,14 +35,16 @@ namespace PreemptionPlugin {
 
 	class PreemptionPluginWorker {
 
-		struct PreemptionObject {
-			int lane_id;
-			std::string approach; // 0: egress 1: ingress
-			std::string preemption_plan; // 0: egress 1: ingress
-			int vehicle_id;
-		};
 
 		public:
+			struct PreemptionObject {
+				int lane_id;
+				std::string approach; // 0: egress 1: ingress
+				std::string preemption_plan; // 0: egress 1: ingress
+				int vehicle_id;
+				std::time_t time = std::time(nullptr);
+			};
+
 			MapData* map = nullptr;
 			std::string preemption_plan;
 			std::string preemption_plan_flag;
@@ -52,6 +54,9 @@ namespace PreemptionPlugin {
 			void ProcessMapMessageFile(std::string path);
 			void VehicleLocatorWorker(BsmMessage* msg);
 			void PreemptionPlaner(PreemptionObject* po);
+			void TurnOnPreemption(PreemptionObject* po);
+			void TurnOffPreemption(PreemptionObject* po);
+			
 
 			std::string ip_with_port;
 			int snmp_version = SNMP_VERSION_1;

@@ -121,6 +121,13 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
 
+	if(mp->map == nullptr){
+		PLOG(logINFO) << "loading map ... " << std::endl;
+		mp->ProcessMapMessageFile(map_path);
+	}
+
+	
+
 	mp->VehicleLocatorWorker(&msg);
 }
 
@@ -131,19 +138,36 @@ void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
 int PreemptionPlugin::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
+	if(mp->map == nullptr){
+		PLOG(logINFO) << "loading map ... " << std::endl;
+		mp->ProcessMapMessageFile(map_path);
+	}
 
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-		if(mp->map == nullptr){
-			PLOG(logINFO) << "loading map ... " << std::endl;
-			mp->ProcessMapMessageFile(map_path);
-		}
-
 		mp->ip_with_port = ipwithport;
 		mp->snmp_version = SNMP_VERSION_1;
 		mp->snmp_community = snmp_community;
 		mp->base_preemption_oid = BasePreemptionOid;
+
+		std::map<int,PreemptionPluginWorker::PreemptionObject>::iterator it = mp->preemption_map.begin();
+		while (it != mp->preemption_map.end())
+		{
+			int vehicle_id = it->first;
+			PreemptionPluginWorker::PreemptionObject po = it->second;
+
+			std::time_t now = std::time(nullptr);
+    		std::asctime(std::localtime(&now));
+
+			if( now - po.time > 180){
+				std::cout << "time out" << std::endl;
+				// bad allocation sag fault
+				mp->preemption_map.erase(po.vehicle_id);
+			}
+
+			it++;
+		}
 
 		// BsmMessage msg_1;
 		// BsmMessage &msg = msg_1;

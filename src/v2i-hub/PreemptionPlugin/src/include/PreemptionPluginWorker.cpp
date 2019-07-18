@@ -126,96 +126,72 @@ namespace PreemptionPlugin {
 
             double distance_from_ref = distance(lat_offset, long_offset, 0, 0);
 
-            if(distance_from_ref < 200){
-                double min_distance = 300.0;
-                double temp_min_distance = 0.0;
-                for(int i = 0; i< this->map->intersections[0].list.array[0]->laneSet.list.count; i++) {
-                    double x, y = 0;
+            double min_distance = 300.0;
+            double temp_min_distance = 0.0;
+            for(int i = 0; i< this->map->intersections[0].list.array[0]->laneSet.list.count; i++) {
+                double x, y = 0;
 
-                    for(int j = 0; j < this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.count; j++) {
+                for(int j = 0; j < this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.count - 1; j++) {
 
-                        x += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x;
-                        y += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y;
+                    x += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x;
+                    y += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y;
 
-                        temp_min_distance = distance(long_offset * 100, -1 *lat_offset * 100, x, y);
-                        std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
-                        std::cout << "x,y" << x << " ," << y << std::endl;
+                    temp_min_distance = distance(long_offset * 100, -1 *lat_offset * 100, x, y);
+                    // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
+                    // std::cout << "x,y" << x << " ," << y << std::endl;
 
-                        if( temp_min_distance < min_distance) {
+                    if( temp_min_distance < min_distance) {
 
-                            // std::cout << std::endl << std::endl << "map point offset distance from refrence" << distance(x/100.0, y/100.0, 0, 0) << std::endl;
-                            // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
+                        // std::cout << std::endl << std::endl << "map point offset distance from refrence" << distance(x/100.0, y/100.0, 0, 0) << std::endl;
+                        // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
 
-                            min_distance = temp_min_distance;
+                        min_distance = temp_min_distance;
 
-                            po ->lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
+                        po ->lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
 
-                            if(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->ingressApproach){
-                                po ->approach = "1";
-                            }
-                            else {
-                                po ->approach = "0";
-                            }
-                            // std::cout << "closest map point offset cmeter,cmeter" << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x << " , " << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y << std::endl;
-                            std::cout << "degree = " << std::setprecision(10) << 180.00000000/3.14159265358979323846 * atan2(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.y, this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.x) << std::endl;
-                            std::cout << "vehicle_coordinate->heading " << std::setprecision(10) << vehicle_coordinate->heading * 0.00125 << std::endl;
+                        if(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->ingressApproach){
+                            po ->approach = "1";
                         }
-
+                        else {
+                            po ->approach = "0";
+                        }
+                        // std::cout << "closest map point offset cmeter,cmeter" << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x << " , " << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y << std::endl;
                     }
+                    // std::cout << "degree = " << std::setprecision(10) << 180.00000000/3.14159265358979323846 * atan2(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.y, this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.x) << std::endl;
+                    // std::cout << "vehicle_coordinate->heading " << std::setprecision(10) << vehicle_coordinate->heading * 0.00125 << std::endl;
+
+                    // std::cout << "map point offset distance from car" << min_distance/100.0 << std::endl;
+
+                    // std::cout << "car distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
+                    
+                    // std::cout << "min distance in m " << std::setprecision(10) << min_distance/100 << std::endl << std::endl;
+                    // std::cout << "finished locating the vehicle approach " << po ->approach << " ,vid " << po ->vehicle_id << " ,lainid " << po ->lane_id << std::endl;
+
                 }
+            }
 
-                std::cout << "map point offset distance from car" << min_distance/100.0 << std::endl;
+            std::cout << "distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
 
-                std::cout << "car distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
-                
-                // std::cout << "distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
-                // std::cout << "min distance in m " << std::setprecision(10) << min_distance/100 << std::endl << std::endl;
-                std::cout << "finished locating the vehicle approach " << po ->approach << " ,vid " << po ->vehicle_id << " ,lainid " << po ->lane_id << std::endl;
-
-                PreemptionPlaner(po);
+            if(distance_from_ref < 9.0){
+                po ->approach = "0";
+            }
+            else if(distance_from_ref < 200.0){
+                po ->approach = "1";
 		    }
+            
+            PreemptionPlaner(po);
+
         }
 
     };
 
     void PreemptionPluginWorker::PreemptionPlaner(PreemptionObject* po){
-        std::string preemption_plan = "";
-        std::string preemption_plan_flag = "";
-
-        if(po->approach == "1"){
+ 
+        if(po->approach == "1") {
             std::cout << "Approach == 1 the vehicle id is " << po ->vehicle_id << std::endl;
 
             if ( preemption_map.find(po->vehicle_id) == preemption_map.end() ) {
-                switch(po->lane_id) {
-                    case 1 : preemption_plan = "2";
-                    case 2 : preemption_plan = "2";
-                    case 3 : preemption_plan = "2";
-                    case 4 : preemption_plan = "2";
-                    case 5 : preemption_plan = "2";
-                    case 6 : preemption_plan = "2";
-                    case 7 : preemption_plan = "2";
-                    case 8 : preemption_plan = "2";
-                    case 9 : preemption_plan = "2";
-                    case 10 : preemption_plan = "2";
-                    case 11 : preemption_plan = "2";
-                    case 12 : preemption_plan = "2";
-                }
-
-                po->preemption_plan = preemption_plan;
-
-                preemption_map[po->vehicle_id] = *po;
-                preemption_plan_flag = "1";
-
-                std::string PreemptionOid = base_preemption_oid + preemption_plan;
-                std::cout << "PreemptionOid " << PreemptionOid << std::endl;
-
-                int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
-                if(response != 0){
-                    std::cout << "Sending oid intrupted with an error.";
-                }
-                else{
-                    std::cout << "Finished sending preemption plan.";
-                }
+                TurnOnPreemption(po);
             } 
             else {
                 std::cout << "Already sent the preemption plan.";
@@ -227,18 +203,7 @@ namespace PreemptionPlugin {
                 std::cout << " vehicle id does not exitst" << po->vehicle_id << std::endl;
             }
             else {
-                preemption_plan = preemption_map[po ->vehicle_id].preemption_plan;
-                preemption_plan_flag = "0";
-                std::string PreemptionOid = base_preemption_oid + preemption_plan;
-                int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
-                if(response != 0){
-                    std::cout << "Sending oid intrupted with an error.";
-                }
-                else{
-                    std::cout << "Finished sending preemption plan.";
-                }
-
-                preemption_map.erase(po->vehicle_id);
+                TurnOffPreemption(po);
             }
         }
         else{
@@ -247,6 +212,49 @@ namespace PreemptionPlugin {
 
         std::cout << " finished PreemptionPlaner" << std::endl;
     };
+
+    void PreemptionPluginWorker::TurnOnPreemption(PreemptionObject* po){
+        std::string preemption_plan, preemption_plan_flag = "";
+
+        switch(po->lane_id) {
+            default: preemption_plan = "2";
+        }
+
+        po->preemption_plan = preemption_plan;
+        preemption_plan_flag = "1";
+
+        std::asctime(std::localtime(&(po->time)));
+
+        preemption_map[po->vehicle_id] = *po;
+        std::string PreemptionOid = base_preemption_oid + preemption_plan;
+        std::cout << "PreemptionOid " << PreemptionOid << std::endl;
+
+        int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
+        if(response != 0){
+            std::cout << "Sending oid intrupted with an error.";
+        }
+        else{
+            std::cout << "Finished sending preemption plan.";
+        }
+    }
+
+    void PreemptionPluginWorker::TurnOffPreemption(PreemptionObject* po){
+        std::string preemption_plan, preemption_plan_flag = "";
+        preemption_plan = preemption_map[po ->vehicle_id].preemption_plan;
+        preemption_plan_flag = "0";
+        std::string PreemptionOid = base_preemption_oid + preemption_plan;
+        int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
+        std::cout << "PreemptionOid " << PreemptionOid << std::endl;
+
+        if(response != 0){
+            std::cout << "Sending oid intrupted with an error.";
+        }
+        else{
+            std::cout << "Finished sending preemption plan.";
+        }
+
+        // preemption_map.erase(po->vehicle_id);
+    }
 
     int PreemptionPluginWorker::SendOid(const char *PreemptionOid, const char *value) {
         netsnmp_session session, *ss;
