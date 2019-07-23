@@ -15,6 +15,7 @@ https://docs.docker.com/compose/install/
 ## Docker Hub repository location
 
 Docker Hub repo for v2x-hub is located at: https://hub.docker.com/r/usdotfhwaops/v2x-hub
+
 Docker Hub repo for mysql is located at: https://hub.docker.com/r/usdotfhwaops/v2x-hub
 
 ## Run the V2X Hub image
