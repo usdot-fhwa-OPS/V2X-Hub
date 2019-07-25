@@ -66,8 +66,57 @@ namespace PreemptionPlugin {
         else {
             std::cout << " map_message is empty";
         }
+
+        boost::property_tree::read_json("/geo.json", geofence_data  );
+    
+
+        BOOST_FOREACH( boost::property_tree::ptree::value_type const& v, geofence_data.get_child( "data" ) ) {
+            assert(v.first.empty()); // array elements have no names
+            boost::property_tree::ptree subtree = v.second;
+            list <double> geox;
+			list <double> geoy;
+
+            BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
+                assert(u.first.empty()); // array elements have no names
+                // std::cout << u.second.get<double>("") << std::endl;
+                double d =  u.second.get<double>("");
+                geox.push_back(d);
+            }
+
+            BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geoy" ) ) {
+                assert(u.first.empty()); // array elements have no names
+                double d =  u.second.get<double>("");
+                geoy.push_back(d);
+
+                // std::cout << u.second.get<double>("") << std::endl;
+            }
+            
+            // std::cout << subtree.get<double>("PreemptCall");
+            // std::cout << subtree.get<double>("HeadingMin");
+            // std::cout << subtree.get<double>("HeadingMax");
+
+            GeofenceObject* geofenceObject = new GeofenceObject(geox,geoy,subtree.get<double>("PreemptCall"),subtree.get<double>("HeadingMin"),subtree.get<double>("HeadingMax"));
+            
+            // std::cout << geofenceObject->maxHeading;
+
+            GeofenceSet.push_back(geofenceObject);
+        }
     }
     
+    bool CarInGeofence(double car_lon, double car_lat, double geofenece_lon[], double geofenece_lat[], int size_of_geofenece) {
+        int i, j= size_of_geofenece - 1;
+        bool odd_number_of_cross = 0;
+        for(i = 0; j<size_of_geofenece;i++) {
+            if(geofenece_lon[i] < car_lon && geofenece_lon[j] >= car_lon 
+            || geofenece_lon[j] < car_lon && geofenece_lon[i] >= car_lon){
+                if(geofenece_lat[i]+(car_lon-geofenece_lon[i])/(geofenece_lon[j]-geofenece_lon[i])*(geofenece_lat[j]-geofenece_lat[i])<car_lat){
+                    odd_number_of_cross = !odd_number_of_cross;
+                }
+            }
+            j=i;
+        }
+        return odd_number_of_cross;
+    }
 
     double distance(long x1, long y1, long x2, long y2) { 
 
@@ -85,103 +134,143 @@ namespace PreemptionPlugin {
 
         auto bsm = msg->get_j2735_data();
 
-        int buff_size = bsm->coreData.id.size;
-        po->vehicle_id = (int)*(bsm->coreData.id.buf);
+        // int buff_size = bsm->coreData.id.size;
+        // po->vehicle_id = (int)*(bsm->coreData.id.buf);
+        po ->vehicle_id = 10;
+        // vehicle_coordinate->lat = bsm->coreData.lat / micro;
+        // vehicle_coordinate->lon = bsm->coreData.Long / micro;
+        // vehicle_coordinate->elevation = bsm->coreData.elev;
+        // vehicle_coordinate->heading = bsm->coreData.heading;
 
-        vehicle_coordinate->lat = bsm->coreData.lat / micro;
-        vehicle_coordinate->lon = bsm->coreData.Long / micro;
-        vehicle_coordinate->elevation = bsm->coreData.elev;
-        vehicle_coordinate->heading = bsm->coreData.heading;
+        vehicle_coordinate->lat = 38.370413;
+        vehicle_coordinate->lon = -77.941177;
+        vehicle_coordinate->heading = 120;
 
-        // vehicle_coordinate->lat = 389548501/micro;
-        // vehicle_coordinate->lon = -771494139/micro;
-        // vehicle_coordinate->elevation = 0.0;
-        // vehicle_coordinate->heading = 165840;
+		std::cout << "vehicle id is" << po->vehicle_id << std::endl;
 
-        // po ->vehicle_id = 10;
+        for (auto const& it: GeofenceSet) {
 
-
-        if(this->map != nullptr){
-
-            ref_coordinate->lat = this->map->intersections[0].list.array[0]->refPoint.lat / micro;
-            ref_coordinate->lon = this->map->intersections[0].list.array[0]->refPoint.Long / micro;
-            ref_coordinate->elevation = 0.0;
-
-            double lat_diff = ((double)(vehicle_coordinate->lat - ref_coordinate->lat)) * 3.14159265358979323846/180.00000000;
-            double lon_diff = ((double)(vehicle_coordinate->lon - ref_coordinate->lon)) * 3.14159265358979323846/180.00000000;
-
-            double lat_offset = -1 * (double)wgs84_utils::calcMetersPerRadLat(*ref_coordinate) * lat_diff;
-            double long_offset = (double)wgs84_utils::calcMetersPerRadLon(*ref_coordinate) * lon_diff;
-
-            std::cout << std::endl << std::endl << std::endl << std::endl;
-            std::cout << "ref_coordinate->lat,lon " << std::setprecision(10) << ref_coordinate->lat << std::setprecision(10) << ref_coordinate->lon << std::endl;
-
-            std::cout << "vehicle_coordinate->lat,lon" << std::setprecision(10) << vehicle_coordinate->lat << "," << vehicle_coordinate->lon << std::endl;
-
-            // std::cout << "calcMetersPerRadLat, calcMetersPerRadLon" << std::setprecision(10) << wgs84_utils::calcMetersPerRadLat(*ref_coordinate) << " , " << std::setprecision(10) << wgs84_utils::calcMetersPerRadLon(*ref_coordinate) << std::endl;
-
-            // std::cout << "lat difference lon difference" << std::setprecision(10) << lat_diff << " , " << lon_diff << std::endl;
-
-            std::cout << "long_offset lat_offset " << std::setprecision(10) << long_offset * 100 << " , " << -1 * lat_offset * 100 << std::endl;
-
-            double distance_from_ref = distance(lat_offset, long_offset, 0, 0);
-
-            double min_distance = 300.0;
-            double temp_min_distance = 0.0;
-            for(int i = 0; i< this->map->intersections[0].list.array[0]->laneSet.list.count; i++) {
-                double x, y = 0;
-
-                for(int j = 0; j < this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.count - 1; j++) {
-
-                    x += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x;
-                    y += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y;
-
-                    temp_min_distance = distance(long_offset * 100, -1 *lat_offset * 100, x, y);
-                    // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
-                    // std::cout << "x,y" << x << " ," << y << std::endl;
-
-                    if( temp_min_distance < min_distance) {
-
-                        // std::cout << std::endl << std::endl << "map point offset distance from refrence" << distance(x/100.0, y/100.0, 0, 0) << std::endl;
-                        // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
-
-                        min_distance = temp_min_distance;
-
-                        po ->lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
-
-                        if(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->ingressApproach){
-                            po ->approach = "1";
-                        }
-                        else {
-                            po ->approach = "0";
-                        }
-                        // std::cout << "closest map point offset cmeter,cmeter" << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x << " , " << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y << std::endl;
-                    }
-                    // std::cout << "degree = " << std::setprecision(10) << 180.00000000/3.14159265358979323846 * atan2(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.y, this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.x) << std::endl;
-                    // std::cout << "vehicle_coordinate->heading " << std::setprecision(10) << vehicle_coordinate->heading * 0.00125 << std::endl;
-
-                    // std::cout << "map point offset distance from car" << min_distance/100.0 << std::endl;
-
-                    // std::cout << "car distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
-                    
-                    // std::cout << "min distance in m " << std::setprecision(10) << min_distance/100 << std::endl << std::endl;
-                    // std::cout << "finished locating the vehicle approach " << po ->approach << " ,vid " << po ->vehicle_id << " ,lainid " << po ->lane_id << std::endl;
-
-                }
+            double geox[it->geox.size()];
+            int k = 0;
+            for (double const &i: it->geox) {
+                geox[k++] = i;
             }
 
-            std::cout << "distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
-
-            if(distance_from_ref < 9.0){
-                po ->approach = "0";
+            double geoy[it->geoy.size()];
+            k = 0;
+            for (double const &i: it->geoy) {
+                geoy[k++] = i;
             }
-            else if(distance_from_ref < 200.0){
-                po ->approach = "1";
-		    }
-            
-            PreemptionPlaner(po);
 
+           bool in_geo =  CarInGeofence(vehicle_coordinate->lat, vehicle_coordinate->lon, geox, geoy, it->geox.size());
+           std::cout << "in geofence " << in_geo << std::endl;
+
+           if(in_geo){
+
+               if(vehicle_coordinate->heading > it->minHeading && vehicle_coordinate->heading < it->maxHeading) {
+                   po->approach = "1";
+                   po->preemption_plan = std::to_string(it->PreemptCall);
+                   PreemptionPlaner(po);
+               }
+               else {
+                    po ->approach = "0";
+                    PreemptionPlaner(po);
+               }
+               break;
+           }
         }
+
+        // // vehicle_coordinate->lat = 389548501/micro;
+        // // vehicle_coordinate->lon = -771494139/micro;
+        // // vehicle_coordinate->elevation = 0.0;
+        // // vehicle_coordinate->heading = 165840;
+
+        // // po ->vehicle_id = 10;
+
+
+        // if(this->map != nullptr){
+
+        //     ref_coordinate->lat = this->map->intersections[0].list.array[0]->refPoint.lat / micro;
+        //     ref_coordinate->lon = this->map->intersections[0].list.array[0]->refPoint.Long / micro;
+        //     ref_coordinate->elevation = 0.0;
+
+        //     double lat_diff = ((double)(vehicle_coordinate->lat - ref_coordinate->lat)) * 3.14159265358979323846/180.00000000;
+        //     double lon_diff = ((double)(vehicle_coordinate->lon - ref_coordinate->lon)) * 3.14159265358979323846/180.00000000;
+
+        //     double lat_offset = -1 * (double)wgs84_utils::calcMetersPerRadLat(*ref_coordinate) * lat_diff;
+        //     double long_offset = (double)wgs84_utils::calcMetersPerRadLon(*ref_coordinate) * lon_diff;
+
+        //     std::cout << std::endl << std::endl << std::endl << std::endl;
+        //     std::cout << "ref_coordinate->lat,lon " << std::setprecision(10) << ref_coordinate->lat << std::setprecision(10) << ref_coordinate->lon << std::endl;
+
+        //     std::cout << "vehicle_coordinate->lat,lon " << std::setprecision(10) << vehicle_coordinate->lat << "," << vehicle_coordinate->lon << std::endl;
+
+        //     // std::cout << "calcMetersPerRadLat, calcMetersPerRadLon" << std::setprecision(10) << wgs84_utils::calcMetersPerRadLat(*ref_coordinate) << " , " << std::setprecision(10) << wgs84_utils::calcMetersPerRadLon(*ref_coordinate) << std::endl;
+
+        //     // std::cout << "lat difference lon difference" << std::setprecision(10) << lat_diff << " , " << lon_diff << std::endl;
+
+        //     std::cout << "vehicle long_offset lat_offset " << std::setprecision(10) << long_offset * 100 << " , " << -1 * lat_offset * 100 << std::endl;
+
+        //     double distance_from_ref = distance(lat_offset, long_offset, 0, 0);
+
+        //     double min_distance = 300.0;
+        //     double temp_min_distance = 0.0;
+        //     for(int i = 0; i< this->map->intersections[0].list.array[0]->laneSet.list.count; i++) {
+        //         double x = 0;
+        //         double y = 0;
+
+        //         for(int j = 0; j < this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.count - 1; j++) {
+
+        //             x += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x;
+        //             y += this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y;
+
+        //             temp_min_distance = distance(long_offset * 100, -1 *lat_offset * 100, x, y);
+        //             // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
+        //             std::cout << "x,y " << x << " ," << y << std::endl;
+
+        //             if( temp_min_distance < min_distance) {
+
+        //                 // std::cout << std::endl << std::endl << "map point offset distance from refrence" << distance(x/100.0, y/100.0, 0, 0) << std::endl;
+        //                 // std::cout << "map point offset distance from car" << temp_min_distance/100.0 << std::endl;
+
+        //                 min_distance = temp_min_distance;
+
+        //                 po ->lane_id = this->map->intersections[0].list.array[0]->laneSet.list.array[i]->laneID;
+
+        //                 if(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->ingressApproach){
+        //                     po ->approach = "1";
+        //                 }
+        //                 else {
+        //                     po ->approach = "0";
+        //                 }
+        //                 // std::cout << "closest map point offset cmeter,cmeter" << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x << " , " << this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y << std::endl;
+        //             }
+        //             // std::cout << "degree = " << std::setprecision(10) << 180.00000000/3.14159265358979323846 * atan2(this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.y - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.y, this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j]->delta.choice.node_XY3.x - this->map->intersections[0].list.array[0]->laneSet.list.array[i]->nodeList.choice.nodes.list.array[j+1]->delta.choice.node_XY3.x) << std::endl;
+        //             // std::cout << "vehicle_coordinate->heading " << std::setprecision(10) << vehicle_coordinate->heading * 0.00125 << std::endl;
+
+        //             // std::cout << "map point offset distance from car" << min_distance/100.0 << std::endl;
+
+        //             // std::cout << "car distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
+                    
+        //             // std::cout << "min distance in m " << std::setprecision(10) << min_distance/100 << std::endl << std::endl;
+        //             // std::cout << "finished locating the vehicle approach " << po ->approach << " ,vid " << po ->vehicle_id << " ,lainid " << po ->lane_id << std::endl;
+
+        //         }
+        //         std::cout << std::endl << std::endl << std::endl;
+        //     }
+
+        //     std::cout << "distance from the refrence point in m " << std::setprecision(10) << distance_from_ref << std::endl;
+
+        //     if(distance_from_ref < 9.0){
+        //         po ->approach = "0";
+        //     }
+        //     else if(distance_from_ref < 200.0){
+        //         po ->approach = "1";
+		//     }
+            
+            // PreemptionPlaner(po);
+
+        // }
 
     };
 
@@ -214,19 +303,12 @@ namespace PreemptionPlugin {
     };
 
     void PreemptionPluginWorker::TurnOnPreemption(PreemptionObject* po){
-        std::string preemption_plan, preemption_plan_flag = "";
-
-        switch(po->lane_id) {
-            default: preemption_plan = "2";
-        }
-
-        po->preemption_plan = preemption_plan;
-        preemption_plan_flag = "1";
+        std::string preemption_plan_flag = "1";
 
         std::asctime(std::localtime(&(po->time)));
 
         preemption_map[po->vehicle_id] = *po;
-        std::string PreemptionOid = base_preemption_oid + preemption_plan;
+        std::string PreemptionOid = base_preemption_oid + po->preemption_plan;
         std::cout << "PreemptionOid " << PreemptionOid << std::endl;
 
         int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
@@ -253,7 +335,7 @@ namespace PreemptionPlugin {
             std::cout << "Finished sending preemption plan.";
         }
 
-        // preemption_map.erase(po->vehicle_id);
+        preemption_map.erase(po->vehicle_id);
     }
 
     int PreemptionPluginWorker::SendOid(const char *PreemptionOid, const char *value) {
@@ -333,6 +415,8 @@ namespace PreemptionPlugin {
 
         return exitval;
     };
+
+
 
 
 };

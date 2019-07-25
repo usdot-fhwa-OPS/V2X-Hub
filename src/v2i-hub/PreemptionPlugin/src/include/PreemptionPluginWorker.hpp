@@ -16,6 +16,10 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <ctime>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/foreach.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -24,6 +28,7 @@
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
 #include "wgs84_utils.h"
+#include <list> 
 
 using namespace std;
 using namespace tmx;
@@ -35,14 +40,28 @@ namespace PreemptionPlugin {
 
 	class PreemptionPluginWorker {
 
-
 		public:
 			struct PreemptionObject {
-				int lane_id;
 				std::string approach; // 0: egress 1: ingress
-				std::string preemption_plan; // 0: egress 1: ingress
+				std::string preemption_plan;
 				int vehicle_id;
 				std::time_t time = std::time(nullptr);
+			};
+
+			struct GeofenceObject {
+				list <double> geox;
+				list <double> geoy;
+				int PreemptCall;
+				int minHeading;
+				int maxHeading;
+
+				GeofenceObject(list <double> geox, list <double> geoy, int PreemptCall, int minHeading, int maxHeading) {
+					this->geox.assign (geox.begin(),geox.end());
+					this->geoy.assign (geoy.begin(),geoy.end());
+					this->PreemptCall = PreemptCall;
+					this->minHeading = minHeading;
+					this->maxHeading = maxHeading;
+				};
 			};
 
 			MapData* map = nullptr;
@@ -57,7 +76,6 @@ namespace PreemptionPlugin {
 			void TurnOnPreemption(PreemptionObject* po);
 			void TurnOffPreemption(PreemptionObject* po);
 			
-
 			std::string ip_with_port;
 			int snmp_version = SNMP_VERSION_1;
 			std::string snmp_community;
@@ -65,6 +83,8 @@ namespace PreemptionPlugin {
 
 			int SendOid(const char *PreemptionOid, const char *value);
 
+			boost::property_tree::ptree geofence_data;
+			std::list<GeofenceObject*> GeofenceSet;
 	};
 
 

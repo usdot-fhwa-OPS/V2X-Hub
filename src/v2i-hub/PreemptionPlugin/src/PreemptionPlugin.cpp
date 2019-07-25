@@ -126,8 +126,6 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 		mp->ProcessMapMessageFile(map_path);
 	}
 
-	
-
 	mp->VehicleLocatorWorker(&msg);
 }
 
@@ -151,27 +149,28 @@ int PreemptionPlugin::Main()
 		mp->snmp_community = snmp_community;
 		mp->base_preemption_oid = BasePreemptionOid;
 
-		std::map<int,PreemptionPluginWorker::PreemptionObject>::iterator it = mp->preemption_map.begin();
-		while (it != mp->preemption_map.end())
-		{
-			int vehicle_id = it->first;
-			PreemptionPluginWorker::PreemptionObject po = it->second;
+		// std::map<int,PreemptionPluginWorker::PreemptionObject>::iterator it = mp->preemption_map.begin();
+		// while (it != mp->preemption_map.end())
+		// {
+		// 	int vehicle_id = it->first;
+		// 	PreemptionPluginWorker::PreemptionObject po = it->second;
 
-			std::time_t now = std::time(nullptr);
-    		std::asctime(std::localtime(&now));
+		// 	std::time_t now = std::time(nullptr);
+    	// 	std::asctime(std::localtime(&now));
 
-			if( now - po.time > 180){
-				std::cout << "time out" << std::endl;
-				// bad allocation sag fault
-				mp->preemption_map.erase(po.vehicle_id);
-			}
+		// 	if( now - po.time > 40) {
+		// 		std::cout << "time out" << std::endl;
+		// 		std::cout << po.vehicle_id << std::endl;
+		// 		// bad allocation sag fault
+		// 		mp->preemption_map.erase(po.vehicle_id);
+		// 	}
 
-			it++;
-		}
+		// 	it++;
+		// }
 
-		// BsmMessage msg_1;
-		// BsmMessage &msg = msg_1;
-		// mp->VehicleLocatorWorker(&msg);
+		BsmMessage msg_1;
+		BsmMessage &msg = msg_1;
+		mp->VehicleLocatorWorker(&msg);
 
 		// PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
 
