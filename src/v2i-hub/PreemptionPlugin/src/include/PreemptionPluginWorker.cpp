@@ -138,7 +138,7 @@ namespace PreemptionPlugin {
         vehicle_coordinate->lat = bsm->coreData.lat / micro;
         vehicle_coordinate->lon = bsm->coreData.Long / micro;
         vehicle_coordinate->elevation = bsm->coreData.elev;
-        vehicle_coordinate->heading = bsm->coreData.heading * 0.00125;
+        vehicle_coordinate->heading = bsm->coreData.heading * 0.0125;
 
         // po ->vehicle_id = 10;
         // vehicle_coordinate->lat = 38.9549306;
