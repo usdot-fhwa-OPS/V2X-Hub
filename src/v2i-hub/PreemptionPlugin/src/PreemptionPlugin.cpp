@@ -168,9 +168,9 @@ int PreemptionPlugin::Main()
 		// 	it++;
 		// }
 
-		BsmMessage msg_1;
-		BsmMessage &msg = msg_1;
-		mp->VehicleLocatorWorker(&msg);
+		// BsmMessage msg_1;
+		// BsmMessage &msg = msg_1;
+		// mp->VehicleLocatorWorker(&msg);
 
 		// PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
 

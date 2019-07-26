@@ -103,20 +103,19 @@ namespace PreemptionPlugin {
         }
     }
     
-    bool CarInGeofence(double car_lon, double car_lat, double geofenece_lon[], double geofenece_lat[], int size_of_geofenece) {
-        int i, j= size_of_geofenece - 1;
-        bool odd_number_of_cross = 0;
-        for(i = 0; j<size_of_geofenece;i++) {
-            if(geofenece_lon[i] < car_lon && geofenece_lon[j] >= car_lon 
-            || geofenece_lon[j] < car_lon && geofenece_lon[i] >= car_lon){
-                if(geofenece_lat[i]+(car_lon-geofenece_lon[i])/(geofenece_lon[j]-geofenece_lon[i])*(geofenece_lat[j]-geofenece_lat[i])<car_lat){
-                    odd_number_of_cross = !odd_number_of_cross;
-                }
-            }
-            j=i;
-        }
-        return odd_number_of_cross;
-    }
+    bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
+        int   i, j=GeoCorners-1 ;
+        bool  oddNodes      ;
+
+        for (i=0; i<GeoCorners; i++) {
+            if ((geoy[i]< y && geoy[j]>=y
+            ||   geoy[j]< y && geoy[i]>=y)
+            &&  (geox[i]<=x || geox[j]<=x)) {
+            oddNodes^=(geox[i]+(y-geoy[i])/(geoy[j]-geoy[i])*(geox[j]-geox[i])<x); }
+            j=i; }
+
+        return oddNodes; 
+    } 
 
     double distance(long x1, long y1, long x2, long y2) { 
 
@@ -134,19 +133,25 @@ namespace PreemptionPlugin {
 
         auto bsm = msg->get_j2735_data();
 
-        // int buff_size = bsm->coreData.id.size;
-        // po->vehicle_id = (int)*(bsm->coreData.id.buf);
-        po ->vehicle_id = 10;
-        // vehicle_coordinate->lat = bsm->coreData.lat / micro;
-        // vehicle_coordinate->lon = bsm->coreData.Long / micro;
-        // vehicle_coordinate->elevation = bsm->coreData.elev;
-        // vehicle_coordinate->heading = bsm->coreData.heading;
+        int buff_size = bsm->coreData.id.size;
+        po->vehicle_id = (int)*(bsm->coreData.id.buf);
+        vehicle_coordinate->lat = bsm->coreData.lat / micro;
+        vehicle_coordinate->lon = bsm->coreData.Long / micro;
+        vehicle_coordinate->elevation = bsm->coreData.elev;
+        vehicle_coordinate->heading = bsm->coreData.heading * 0.00125;
 
-        vehicle_coordinate->lat = 38.370413;
-        vehicle_coordinate->lon = -77.941177;
-        vehicle_coordinate->heading = 120;
+        // po ->vehicle_id = 10;
+        // vehicle_coordinate->lat = 38.9549306;
+        // vehicle_coordinate->lon = -77.1482428;
+        // vehicle_coordinate->heading = 85.225;
+
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
+        std::cout << std::endl;
 
 		std::cout << "vehicle id is" << po->vehicle_id << std::endl;
+		std::cout << "vehicle heading is" << std::setprecision(10) << vehicle_coordinate->heading << std::endl;
 
         for (auto const& it: GeofenceSet) {
 
@@ -162,23 +167,32 @@ namespace PreemptionPlugin {
                 geoy[k++] = i;
             }
 
-           bool in_geo =  CarInGeofence(vehicle_coordinate->lat, vehicle_coordinate->lon, geox, geoy, it->geox.size());
-           std::cout << "in geofence " << in_geo << std::endl;
+            bool in_geo =  CarInGeofence(vehicle_coordinate->lon, vehicle_coordinate->lat, geoy, geox, it->geox.size());
+            // std::cout << "geox,geoy" << geox[0] << "," << geoy[0] << std::endl;
+            std::cout << "x,y" <<  vehicle_coordinate->lat << "," << vehicle_coordinate->lon << std::endl;
+            // std::cout << "it->PreemptCall outside" << it->PreemptCall << std::endl;
+            // std::cout << "in_geo" << in_geo << std::endl;
 
            if(in_geo){
-
+               std::cout << "in the geo" << in_geo << std::endl;
                if(vehicle_coordinate->heading > it->minHeading && vehicle_coordinate->heading < it->maxHeading) {
+                   std::cout << "in the heading" << in_geo << std::endl;
                    po->approach = "1";
                    po->preemption_plan = std::to_string(it->PreemptCall);
                    PreemptionPlaner(po);
+                   return;
                }
                else {
-                    po ->approach = "0";
-                    PreemptionPlaner(po);
+                    po->approach = "0";
                }
-               break;
+           }
+           else {
+                po ->approach = "0";
            }
         }
+
+        PreemptionPlaner(po);
+        return;
 
         // // vehicle_coordinate->lat = 389548501/micro;
         // // vehicle_coordinate->lon = -771494139/micro;
