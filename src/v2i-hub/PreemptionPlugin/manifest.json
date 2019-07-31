@@ -40,7 +40,7 @@
 		},
 		{
 			"key":"map_path",
-			"default":"/sample_map.txt",
+			"default":"/geo.json",
 			"description":"The map_path for this plugin."
 		}
 	]

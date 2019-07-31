@@ -61,6 +61,7 @@ void PreemptionPlugin::UpdateConfigSettings()
 	GetConfigValue("ipwithport", ipwithport);
 	GetConfigValue("snmp_community", snmp_community);
 	GetConfigValue("map_path", map_path);
+	mp->ProcessMapMessageFile(map_path);
 
 }
 
@@ -120,9 +121,7 @@ void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable
 void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
-
-	if(mp->map == nullptr){
-		PLOG(logINFO) << "loading map ... " << std::endl;
+	if(mp->GeofenceSet.size() < 0) {
 		mp->ProcessMapMessageFile(map_path);
 	}
 
@@ -136,45 +135,19 @@ void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
 int PreemptionPlugin::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
-	if(mp->map == nullptr){
-		PLOG(logINFO) << "loading map ... " << std::endl;
-		mp->ProcessMapMessageFile(map_path);
-	}
 
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
+
+		if(mp->GeofenceSet.size() < 1 && map_path != "") {
+			mp->ProcessMapMessageFile(map_path);
+		}
+
 		mp->ip_with_port = ipwithport;
 		mp->snmp_version = SNMP_VERSION_1;
 		mp->snmp_community = snmp_community;
 		mp->base_preemption_oid = BasePreemptionOid;
-
-		// std::map<int,PreemptionPluginWorker::PreemptionObject>::iterator it = mp->preemption_map.begin();
-		// while (it != mp->preemption_map.end())
-		// {
-		// 	int vehicle_id = it->first;
-		// 	PreemptionPluginWorker::PreemptionObject po = it->second;
-
-		// 	std::time_t now = std::time(nullptr);
-    	// 	std::asctime(std::localtime(&now));
-
-		// 	if( now - po.time > 40) {
-		// 		std::cout << "time out" << std::endl;
-		// 		std::cout << po.vehicle_id << std::endl;
-		// 		// bad allocation sag fault
-		// 		mp->preemption_map.erase(po.vehicle_id);
-		// 	}
-
-		// 	it++;
-		// }
-
-		// BsmMessage msg_1;
-		// BsmMessage &msg = msg_1;
-		// mp->VehicleLocatorWorker(&msg);
-
-		// PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
-
-		// this_thread::sleep_for(chrono::milliseconds(10));
 
 		msCount += 10;
 
