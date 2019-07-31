@@ -334,7 +334,7 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	bool isFlashing = getPhaseFlashingStatus(phase);
 	bool forceFlashing = isFlashingStatus() && !isPhaseFlashing();
 
-	if(forceFlashing || getPhaseRedStatus(phase))
+	if(getPhaseRedStatus(phase))
 	{
 		if(forceFlashing || isFlashing)
 			stateTimeSpeed->eventState = MovementPhaseState_stop_Then_Proceed;
