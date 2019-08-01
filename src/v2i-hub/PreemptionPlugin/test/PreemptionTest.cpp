@@ -65,7 +65,7 @@ bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorn
         return oddNodes; 
     } 
 
-TEST_F(VectorTest, BonusTest)
+TEST_F(VectorTest, CarInGeofenceTest)
 {
 	// Floats and Doubles comparisons have special ASSERT and EXPECT tests.
 
