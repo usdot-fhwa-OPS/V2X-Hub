@@ -7,7 +7,6 @@
 #include <gtest/gtest.h>
 
 using namespace std;
-
 namespace unit_test {
 
 // For a detailed tutorial of test fixtures, see official documentation:
@@ -26,8 +25,6 @@ protected:
 
 	VectorTest()
 	{
-		_vector.push_back(1);
-		_vector.push_back(2);
 	}
 
 	virtual ~VectorTest()
@@ -54,27 +51,28 @@ protected:
 // A test case will continue running on failure when the "EXPECT" macros are used.
 // A test case will abort on failure when the "ASSERT" macros are used.
 
-TEST_F(VectorTest, TestElementZeroIsOne)
-{
-	EXPECT_EQ(1, _vector[0]);
-}
+bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
+        int   i, j=GeoCorners-1 ;
+        bool  oddNodes      ;
 
-TEST_F(VectorTest, TestElementOneIsTwo)
-{
-	ASSERT_EQ(2, _vector[1]);
-}
+        for (i=0; i<GeoCorners; i++) {
+            if ((geoy[i]< y && geoy[j]>=y
+            ||   geoy[j]< y && geoy[i]>=y)
+            &&  (geox[i]<=x || geox[j]<=x)) {
+            oddNodes^=(geox[i]+(y-geoy[i])/(geoy[j]-geoy[i])*(geox[j]-geox[i])<x); }
+            j=i; }
 
-TEST_F(VectorTest, TestSizeIsTwo)
-{
-	EXPECT_EQ((unsigned int)2, _vector.size());
-}
+        return oddNodes; 
+    } 
 
 TEST_F(VectorTest, BonusTest)
 {
 	// Floats and Doubles comparisons have special ASSERT and EXPECT tests.
-	ASSERT_FLOAT_EQ (2.00001, 2.000011);
-	ASSERT_NEAR (2.00001, 2.000011, 0.00001);
-	//ASSERT_NEAR (2.00001, 2.000011, 0.000001); // Fails.
+
+	double geox [4] = { 0,4,4,0 }; 
+	double geoy [4] = { 0,0,4,4 }; 
+
+	EXPECT_TRUE(CarInGeofence(2, 2, geox, geoy, 4));
 }
 
 }  // namespace

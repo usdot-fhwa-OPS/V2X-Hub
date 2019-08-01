@@ -15,43 +15,42 @@ namespace PreemptionPlugin {
 	void PreemptionPluginWorker::ProcessMapMessageFile(std::string path){
 
         if(path != ""){
+            try {
+                boost::property_tree::read_json(path, geofence_data);
+            
+                BOOST_FOREACH( boost::property_tree::ptree::value_type const& v, geofence_data.get_child( "data" ) ) {
+                    assert(v.first.empty()); // array elements have no names
+                    boost::property_tree::ptree subtree = v.second;
+                    list <double> geox;
+                    list <double> geoy;
 
-        try {
-            boost::property_tree::read_json(path, geofence_data);
-        
-            BOOST_FOREACH( boost::property_tree::ptree::value_type const& v, geofence_data.get_child( "data" ) ) {
-                assert(v.first.empty()); // array elements have no names
-                boost::property_tree::ptree subtree = v.second;
-                list <double> geox;
-                list <double> geoy;
+                    BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
+                        assert(u.first.empty()); // array elements have no names
+                        // std::cout << u.second.get<double>("") << std::endl;
+                        double d =  u.second.get<double>("");
+                        geox.push_back(d);
+                    }
 
-                BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
-                    assert(u.first.empty()); // array elements have no names
-                    // std::cout << u.second.get<double>("") << std::endl;
-                    double d =  u.second.get<double>("");
-                    geox.push_back(d);
+                    BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geoy" ) ) {
+                        assert(u.first.empty()); // array elements have no names
+                        double d =  u.second.get<double>("");
+                        geoy.push_back(d);
+                    }
+                    
+                    GeofenceObject* geofenceObject = new GeofenceObject(geox,geoy,subtree.get<double>("PreemptCall"),subtree.get<double>("HeadingMin"),subtree.get<double>("HeadingMax"));
+                    
+                    GeofenceSet.push_back(geofenceObject);
+
                 }
-
-                BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geoy" ) ) {
-                    assert(u.first.empty()); // array elements have no names
-                    double d =  u.second.get<double>("");
-                    geoy.push_back(d);
-                }
-                
-                GeofenceObject* geofenceObject = new GeofenceObject(geox,geoy,subtree.get<double>("PreemptCall"),subtree.get<double>("HeadingMin"),subtree.get<double>("HeadingMax"));
-                
-                GeofenceSet.push_back(geofenceObject);
-
             }
-        }
-        catch(...) { 
-            std::cout << "Caught exception from reading a file"; 
-        } 
+            catch(...) { 
+                std::cout << "Caught exception from reading a file"; 
+            } 
         }
 
     }
     
-    bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
+    bool PreemptionPluginWorker::CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
         int   i, j=GeoCorners-1 ;
         bool  oddNodes      ;
 
@@ -63,11 +62,6 @@ namespace PreemptionPlugin {
             j=i; }
 
         return oddNodes; 
-    } 
-
-    double distance(long x1, long y1, long x2, long y2) { 
-
-        return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2) * 1.000000); 
     } 
 
     void PreemptionPluginWorker::VehicleLocatorWorker(BsmMessage* msg){

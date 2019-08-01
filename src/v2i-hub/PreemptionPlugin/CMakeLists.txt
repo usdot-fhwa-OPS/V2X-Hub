@@ -16,6 +16,12 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${XercesC_LIBRARY} ${NETSNMP_LI
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+set(runTests_sources
+                test/PreemptionTest.cpp 
+                test/Main.cpp
+)
+
 # Link runTests with what we want to test and the GTest and pthread library
-add_executable(runTests test/Main.cpp)
+add_executable(runTests ${runTests_sources})
+
 target_link_libraries(runTests ${GTEST_LIBRARIES} pthread)

@@ -64,7 +64,6 @@ namespace PreemptionPlugin {
 				};
 			};
 
-			MapData* map = nullptr;
 			std::string preemption_plan;
 			std::string preemption_plan_flag;
 
@@ -75,7 +74,8 @@ namespace PreemptionPlugin {
 			void PreemptionPlaner(PreemptionObject* po);
 			void TurnOnPreemption(PreemptionObject* po);
 			void TurnOffPreemption(PreemptionObject* po);
-			
+			bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners);
+
 			std::string ip_with_port;
 			int snmp_version = SNMP_VERSION_1;
 			std::string snmp_community;
