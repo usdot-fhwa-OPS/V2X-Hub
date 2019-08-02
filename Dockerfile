@@ -1,6 +1,6 @@
 FROM ubuntu:xenial-20190122
 
-RUN apt-get update && apt-get install -y libeigen3-dev cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program-options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip snmp
+RUN apt-get update && apt-get install -y git zlibc zlib1g zlib1g-dev openssl libssl-dev libuv-dev sqlite3 libsqlite3-dev libgtest-dev cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program-options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev vim zip snmp
 
 ENV MYSQL_ROOT_PASSWORD ivp
 
@@ -24,18 +24,6 @@ WORKDIR /home/V2X-Hub/ext/libwebsockets/
 RUN cmake -DLWS_WITH_SHARED=OFF .
 RUN make
 RUN make install
-RUN apt update \
-&& apt install git cmake zlibc zlib1g zlib1g-dev openssl libssl-dev libuv-dev sqlite3 libsqlite3-dev libgtest-dev -y \
-&& apt install libuv1 libuv1-dev -y \
-&& mkdir -p /usr/src/app \
-&& cd /usr/src/app \
-&& git clone https://github.com/warmcat/libwebsockets.git --branch v3.1.0 libwebsockets \
-&& cd /usr/src/app/libwebsockets \
-&& mkdir build \
-&& cd /usr/src/app/libwebsockets/build \
-&& cmake .. -DLWS_WITH_LWSWS=1 -DLWS_WITH_GENERIC_SESSIONS=1 \
-&& make \
-&& make install
 
 WORKDIR /usr/src/gtest
 RUN cmake CMakeLists.txt && make

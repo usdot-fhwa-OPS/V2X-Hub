@@ -1,8 +1,8 @@
 //==========================================================================
 // Name        : PreemptionPlugin.cpp
-// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Preemption Plugin
 //==========================================================================
 
@@ -27,14 +27,12 @@
 
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
-#include "wgs84_utils.h"
 #include <list> 
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
-using namespace wgs84_utils;
 
 namespace PreemptionPlugin {
 
@@ -62,6 +60,11 @@ namespace PreemptionPlugin {
 					this->minHeading = minHeading;
 					this->maxHeading = maxHeading;
 				};
+			};
+
+			struct VehicleCoordinate
+			{
+				long double lat, lon, heading, elevation;
 			};
 
 			std::string preemption_plan;

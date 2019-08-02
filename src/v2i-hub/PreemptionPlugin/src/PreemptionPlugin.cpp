@@ -1,8 +1,8 @@
 //==========================================================================
 // Name        : PreemptionPlugin.cpp
-// Author      : Leidos Saxton Transportation Operations Laboratory  
-// Version     :
-// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Author      : FHWA Saxton Transportation Operations Laboratory  
+// Version     : 1.0
+// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Preemption Plugin
 //==========================================================================
 
@@ -26,17 +26,8 @@ PreemptionPlugin::PreemptionPlugin(string name): PluginClient(name)
 	// The log level can be changed from the default here.
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
-	// Add a message filter and handler for each message this plugin wants to receive.
-	AddMessageFilter<DecodedBsmMessage>(this, &PreemptionPlugin::HandleDecodedBsmMessage);
-
-	// This is an internal message type that is used to track some plugin data that changes
-	AddMessageFilter<DataChangeMessage>(this, &PreemptionPlugin::HandleDataChangeMessage);
-
-	AddMessageFilter<MapDataMessage>(this, &PreemptionPlugin::HandleMapDataMessage);
-
 	AddMessageFilter <BsmMessage> (this, &PreemptionPlugin::HandleBasicSafetyMessage);
 
-	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
 }
 
@@ -48,14 +39,6 @@ PreemptionPlugin::~PreemptionPlugin()
 
 void PreemptionPlugin::UpdateConfigSettings()
 {
-	// Configuration settings are retrieved from the API using the GetConfigValue template class.
-	// This method does NOT execute in the main thread, so variables must be protected
-	// (e.g. using std::atomic, std::mutex, etc.).
-
-	int instance;
-	GetConfigValue("Instance", instance);
-	GetConfigValue("Frequency", __frequency_mon.get());
-	__frequency_mon.check();
 
 	GetConfigValue("BasePreemptionOid", BasePreemptionOid);
 	GetConfigValue("ipwithport", ipwithport);
@@ -83,41 +66,6 @@ void PreemptionPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PreemptionPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
-{
-	static std::atomic<int> count {0};
-
-	PLOG(logINFO) << "New MAP: " << msg;
-
-	int mapCount = count;
-	SetStatus("ReceivedMaps", mapCount);
-}
-
-void PreemptionPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
-{
-	//PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
-
-	// Determine if location, speed, and heading are valid.
-	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
-
-	// Print some of the BSM values.
-	PLOG(logDEBUG) << "ID: " << msg.get_TemporaryId()
-		<< ", Location: (" <<  msg.get_Latitude() << ", " <<  msg.get_Longitude() << ")"
-		<< ", Speed: " << msg.get_Speed_mph() << " mph"
-		<< ", Heading: " << msg.get_Heading() << "°"
-		<< ", All Valid: " << isValid
-		<< ", IsOutgoing: " << msg.get_IsOutgoing();
-}
-
-void PreemptionPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg)
-{
-	PLOG(logINFO) << "Received a data change message: " << msg;
-
-	PLOG(logINFO) << "Data field " << msg.get_untyped(msg.Name, "?") <<
-			" has changed from " << msg.get_untyped(msg.OldValue, "?") <<
-			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
-}
-
 void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
@@ -126,10 +74,6 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 	}
 
 	mp->VehicleLocatorWorker(&msg);
-}
-
-void PreemptionPlugin::GetInt32(unsigned char *buf, int32_t *value) {
-	*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
 }
 
 int PreemptionPlugin::Main()
@@ -151,9 +95,8 @@ int PreemptionPlugin::Main()
 
 		msCount += 10;
 
-		if (_plugin->state == IvpPluginState_registered && _frequency <= msCount)
+		if (_plugin->state == IvpPluginState_registered)
 		{
-			// PLOG(logINFO) << _frequency << " ms wait is complete.";
 
 			this_thread::sleep_for(chrono::milliseconds(100));
 

@@ -1,8 +1,8 @@
 //==========================================================================
 // Name        : PreemptionPlugin.cpp
-// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Preemption Plugin
 //==========================================================================
 
@@ -70,8 +70,7 @@ namespace PreemptionPlugin {
 
         PreemptionObject* po = new PreemptionObject;
 
-        wgs84_coordinate* vehicle_coordinate = new wgs84_coordinate;
-        wgs84_coordinate* ref_coordinate = new wgs84_coordinate;
+        VehicleCoordinate* vehicle_coordinate = new VehicleCoordinate;
 
         auto bsm = msg->get_j2735_data();
 

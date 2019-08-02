@@ -1,6 +1,6 @@
 //============================================================================
-// Name        : ExampleTest.cpp
-// Description : Example unit test code using a test fixture.
+// Name        : PreemptionTest.cpp
+// Description : Preemption unit test code using a test fixture.
 //============================================================================
 
 #include <vector>
@@ -9,25 +9,17 @@
 using namespace std;
 namespace unit_test {
 
-// For a detailed tutorial of test fixtures, see official documentation:
-//
-//   Google Test Primer: https://github.com/google/googletest/blob/master/googletest/docs/Primer.md
-//
-// Also note that the mock framework can also be used if needed.  It is not used in this example.
-//
-//   Google Mock Docs: https://github.com/google/googletest/blob/master/googlemock/README.md
-
-class VectorTest : public testing::Test
+class PreemptionTest : public testing::Test
 {
 protected:
 	// Set-up and clean-up work for the test is best done in the constructor/destructor
 	// unless exceptions are thrown.
 
-	VectorTest()
+	PreemptionTest()
 	{
 	}
 
-	virtual ~VectorTest()
+	virtual ~PreemptionTest()
 	{
 	}
 
@@ -65,7 +57,7 @@ bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorn
         return oddNodes; 
     } 
 
-TEST_F(VectorTest, CarInGeofenceTest)
+TEST_F(PreemptionTest, CarInGeofenceTest)
 {
 	// Floats and Doubles comparisons have special ASSERT and EXPECT tests.
 
