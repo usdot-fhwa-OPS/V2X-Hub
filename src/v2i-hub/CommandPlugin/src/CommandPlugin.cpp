@@ -1298,8 +1298,6 @@ int CommandPlugin::Main()
 	}
 
 	info.options = opts;
-	info.options |= LWS_SERVER_OPTION_ALLOW_NON_SSL_ON_SSL_PORT;
-	info.iface = "127.0.0.1";
 
 	// create libwebsocket context representing this server
 	context = lws_create_context(&info);
