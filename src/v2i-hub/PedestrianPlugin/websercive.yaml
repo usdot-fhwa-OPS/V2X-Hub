@@ -27,17 +27,17 @@ components:
       title: A PSM message
       type: object
       properties:
-	id:
-	  type: int
+        id:
+          type: number
           description: ID of PSM
         lon:
-          type: double
+          type: number
           description: longitude of PSM
         lat:
-          type: double
+          type: number
           description: latitude of PSM
         heading:
-          type: double
+          type: number
           description: heading of PSM
       required:
         - lon
