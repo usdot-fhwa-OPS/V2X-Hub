@@ -1,8 +1,8 @@
 //==========================================================================
 // Name        : PedestrianPlugin.cpp
-// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
 
@@ -26,12 +26,6 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	// The log level can be changed from the default here.
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
-	// Add a message filter and handler for each message this plugin wants to receive.
-	AddMessageFilter<DecodedBsmMessage>(this, &PedestrianPlugin::HandleDecodedBsmMessage);
-
-	// This is an internal message type that is used to track some plugin data that changes
-	AddMessageFilter<DataChangeMessage>(this, &PedestrianPlugin::HandleDataChangeMessage);
-
 	AddMessageFilter<MapDataMessage>(this, &PedestrianPlugin::HandleMapDataMessage);
 
 	AddMessageFilter <BsmMessage> (this, &PedestrianPlugin::HandleBasicSafetyMessage);
@@ -54,11 +48,8 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	int instance;
 	GetConfigValue("Instance", instance);
-	GetConfigValue("Frequency", __frequency_mon.get());
-	__frequency_mon.check();
 
 }
-
 
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)
 {
@@ -87,33 +78,25 @@ void PedestrianPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_messa
 	SetStatus("ReceivedMaps", mapCount);
 }
 
-void PedestrianPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
-{
-	//PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
-
-	// Determine if location, speed, and heading are valid.
-	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
-
-	// Print some of the BSM values.
-	PLOG(logDEBUG) << "ID: " << msg.get_TemporaryId()
-		<< ", Location: (" <<  msg.get_Latitude() << ", " <<  msg.get_Longitude() << ")"
-		<< ", Speed: " << msg.get_Speed_mph() << " mph"
-		<< ", Heading: " << msg.get_Heading() << "°"
-		<< ", All Valid: " << isValid
-		<< ", IsOutgoing: " << msg.get_IsOutgoing();
-}
-
-void PedestrianPlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg)
-{
-	PLOG(logINFO) << "Received a data change message: " << msg;
-
-	PLOG(logINFO) << "Data field " << msg.get_untyped(msg.Name, "?") <<
-			" has changed from " << msg.get_untyped(msg.OldValue, "?") <<
-			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
-}
 
 void PedestrianPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
+}
+
+void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
+	PLOG(logDEBUG)<<"Broadcasting PSM";
+
+	PsmMessage psmmessage;
+	tmx::message_container_type container;
+	container.load<XML>("/PSM.xml");
+	psmmessage.set_contents(container.get_storage().get_tree());
+	PLOG(logDEBUG) << "Encoding " << psmmessage;
+	PsmEncodedMessage psmENC;
+	psmENC.encode_j2735_message(psmmessage);
+	// mapFile.set_Bytes(mapEnc.get_payload_str());
+
+	PLOG(logINFO) << " XML file encoded as " << psmENC.get_payload_str();
+
 }
 
 int PedestrianPlugin::Main()
@@ -126,9 +109,11 @@ int PedestrianPlugin::Main()
 
 		msCount += 10;
 
-		if (_plugin->state == IvpPluginState_registered && _frequency <= msCount)
+		if (_plugin->state == IvpPluginState_registered)
 		{
-			PLOG(logINFO) << _frequency << " ms wait is complete.";
+			PersonalSafetyMessage psm_1;
+			PersonalSafetyMessage &psm = psm_1;
+			BroadcastPsm(psm);
 
 			this_thread::sleep_for(chrono::milliseconds(100));
 

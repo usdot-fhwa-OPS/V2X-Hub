@@ -1,6 +1,6 @@
 //============================================================================
-// Name        : ExampleTest.cpp
-// Description : Example unit test code using a test fixture.
+// Name        : PedestrianTest.cpp
+// Description : PedestrianTest unit test code using a test fixture.
 //============================================================================
 
 #include <vector>
@@ -17,17 +17,17 @@ namespace unit_test {
 //
 //   Google Mock Docs: https://github.com/google/googletest/blob/master/googlemock/README.md
 
-class VectorTest : public testing::Test
+class PedestrianTest : public testing::Test
 {
 protected:
 	// Set-up and clean-up work for the test is best done in the constructor/destructor
 	// unless exceptions are thrown.
 
-	VectorTest()
+	PedestrianTest()
 	{
 	}
 
-	virtual ~VectorTest()
+	virtual ~PedestrianTest()
 	{
 	}
 
@@ -50,7 +50,7 @@ protected:
 
 // A test case will continue running on failure when the "EXPECT" macros are used.
 // A test case will abort on failure when the "ASSERT" macros are used.
-TEST_F(VectorTest, CarInGeofenceTest)
+TEST_F(PedestrianTest, CarInGeofenceTest)
 {
 	// Floats and Doubles comparisons have special ASSERT and EXPECT tests.
 

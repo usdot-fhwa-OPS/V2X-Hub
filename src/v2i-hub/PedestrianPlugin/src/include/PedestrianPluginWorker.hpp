@@ -1,8 +1,8 @@
 //==========================================================================
 // Name        : PedestrianPlugin.cpp
-// Author      : Leidos Saxton Transportation Operations Laboratory  
+// Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 Leidos Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
 
@@ -13,21 +13,13 @@
 #include <cmath>
 #include <map>
 #include <chrono>
+#include <PersonalSafetyMessage.h>
+#include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
-#include <ctime>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/foreach.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-
-#include <tmx/j2735_messages/MapDataMessage.hpp>
-#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#include <BasicSafetyMessage.h>
 
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
-#include <list> 
 
 using namespace std;
 using namespace tmx;
@@ -38,7 +30,15 @@ namespace PedestrianPlugin {
 
 	class PedestrianPluginWorker {
 		public:
+			// struct PSM {
+			// 	PersonalSafetyMessage psm;
+			// 	PSM(int anInt, double aDouble) : psm.TemporaryID_t(anInt), number(aDouble) { }
+
+			// };
+			
 	};
+
+
 
 };
 
