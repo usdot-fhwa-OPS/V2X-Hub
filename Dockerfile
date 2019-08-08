@@ -54,6 +54,10 @@ RUN ln -s ../bin SpatPlugin/bin
 RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
 RUN ln -s ../bin PreemptionPlugin/bin
 RUN zip PreemptionPlugin.zip PreemptionPlugin/bin/PreemptionPlugin PreemptionPlugin/manifest.json
+RUN ln -s ../bin SPaTLoggerPlugin/bin
+RUN zip SPaTLoggerPlugin.zip SPaTLoggerPlugin/bin/SPaTLoggerPlugin SPaTLoggerPlugin/manifest.json
+RUN ln -s ../bin BsmLoggerPlugin/bin
+RUN zip BsmLoggerPlugin.zip BsmLoggerPlugin/bin/BsmLoggerPlugin BsmLoggerPlugin/manifest.json
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/
@@ -87,5 +91,7 @@ RUN tmxctl --plugin-install ODEPlugin.zip
 RUN tmxctl --plugin-install RtcmPlugin.zip
 RUN tmxctl --plugin-install SpatPlugin.zip
 RUN tmxctl --plugin-install PreemptionPlugin.zip
+RUN tmxctl --plugin-install SPaTLoggerPlugin.zip
+RUN tmxctl --plugin-install BsmLoggerPlugin.zip
 
 ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
