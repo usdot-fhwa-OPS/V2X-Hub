@@ -87,15 +87,30 @@ void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
 	PLOG(logDEBUG)<<"Broadcasting PSM";
 
 	PsmMessage psmmessage;
+	PsmEncodedMessage psmENC;
 	tmx::message_container_type container;
+	std::unique_ptr<PsmEncodedMessage> msg;
+
 	container.load<XML>("/PSM.xml");
+	PLOG(logINFO) << "loaded data";
 	psmmessage.set_contents(container.get_storage().get_tree());
 	PLOG(logDEBUG) << "Encoding " << psmmessage;
-	PsmEncodedMessage psmENC;
 	psmENC.encode_j2735_message(psmmessage);
-	// mapFile.set_Bytes(mapEnc.get_payload_str());
 
-	PLOG(logINFO) << " XML file encoded as " << psmENC.get_payload_str();
+	msg.reset();
+	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+
+	string enc = psmENC.get_encoding();
+	msg->set_payload(psmENC.get_payload_str());
+	msg->set_encoding(enc);
+	msg->set_flags(IvpMsgFlags_RouteDSRC);
+	msg->addDsrcMetadata(172, 0x8002);
+	msg->refresh_timestamp();
+
+	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+	BroadcastMessage(*rMsg);
+
+	PLOG(logINFO) << " sending PSM " << psmENC.get_payload_str();
 
 }
 

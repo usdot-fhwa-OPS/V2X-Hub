@@ -18,6 +18,7 @@
 #include <BasicSafetyMessage.h>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <PersonalSafetyMessage.h>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 
 #include <UdpClient.h>
@@ -57,5 +58,7 @@ protected:
 
 private:
 	tmx::utils::UdpClient *_signSimClient = NULL;
+	J2735MessageFactory factory;
+
 };
 };
