@@ -25,6 +25,11 @@
 #include <tmx/messages/auto_message.hpp>
 #include "include/PedestrianPluginWorker.hpp"
 
+
+
+
+
+
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;

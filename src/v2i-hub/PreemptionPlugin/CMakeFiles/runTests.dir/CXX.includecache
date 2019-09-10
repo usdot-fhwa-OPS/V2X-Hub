@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/saxtonlab/V2X-Hub/src/v2i-hub/PreemptionPlugin/test/Main.cpp
+gtest/gtest.h
+-
+
+/home/saxtonlab/V2X-Hub/src/v2i-hub/PreemptionPlugin/test/PreemptionTest.cpp
+vector
+-
+gtest/gtest.h
+-
+

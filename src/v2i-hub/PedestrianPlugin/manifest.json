@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"Pedestrian",
 	"description":"Pedestrian plugin for the IVP system.",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"version":"3.0.0",
+	"exeLocation":"/bin/PedestrianPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[
