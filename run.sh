@@ -46,5 +46,5 @@ sudo tmxctl --plugin-install SpatPlugin.zip
 sudo tmxctl --plugin-install PreemptionPlugin.zip
 sudo tmxctl --plugin-install SPaTLoggerPlugin.zip
 sudo tmxctl --plugin-install BsmLoggerPlugin.zip
-
+sudo tmxctl --plugin-install PedestrianPlugin.zip
 $TOPDIR/container/service.sh
