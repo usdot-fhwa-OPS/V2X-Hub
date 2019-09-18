@@ -1,3 +1,0 @@
-repository='https://github.com/etherealjoy/qhttpengine.git'
-module=''
-tag=''

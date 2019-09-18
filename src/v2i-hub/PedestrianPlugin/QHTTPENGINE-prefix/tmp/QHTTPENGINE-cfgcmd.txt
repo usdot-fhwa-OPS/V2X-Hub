@@ -1,1 +1,0 @@
-cmd='/usr/bin/cmake;-DCMAKE_INSTALL_PREFIX=/home/saxtonlab/V2X-Hub/src/v2i-hub/PedestrianPlugin/external;-DCMAKE_PREFIX_PATH=;-GUnix Makefiles;<SOURCE_DIR><SOURCE_SUBDIR>'
