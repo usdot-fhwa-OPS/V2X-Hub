@@ -6,12 +6,14 @@
 // Description : Pedestrian Plugin
 //==========================================================================
 
-#include "PedestrianPlugin.hpp"
+#include "include/PedestrianPlugin.hpp"
+
+
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
-using namespace tmx::utils;
+using namespace OpenAPI; 
 
 namespace PedestrianPlugin
 {
@@ -32,6 +34,42 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
+
+	SetupWebService();
+
+}
+
+
+int PedestrianPlugin::SetupWebService()
+{
+	//Web services 
+
+	//QHostAddress address = QHostAddress(parser.value(addressOption));
+    //quint16 port = static_cast<quint16>(parser.value(portOption).toInt());
+
+
+ 	QHostAddress address = QHostAddress(WEBSERVADDR);
+    quint16 port = static_cast<quint16>(WEBSERVPORT);
+
+
+	//QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
+	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
+    auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
+    router->setUpRoutes();
+    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
+        router->processRequest(socket);
+    });
+
+    //QHttpEngine::Server server(handler.data());
+	//server = (QHttpEngine::Server) new (QHttpEngine::Server(handler.data()));
+	server.setHandler(handler.data());
+
+    qDebug() << "Pedestrian plugin Web service::: Serving on " << address.toString() << ":" << port;
+    // Attempt to listen on the specified port
+    if (!server.listen(address, port)) {
+        qCritical("Unable to listen on the specified port.");
+        return 1;
+    }
 }
 
 PedestrianPlugin::~PedestrianPlugin()
@@ -128,7 +166,7 @@ int PedestrianPlugin::Main()
 		{
 			PersonalSafetyMessage psm_1;
 			PersonalSafetyMessage &psm = psm_1;
-			BroadcastPsm(psm);
+			//BroadcastPsm(psm);
 
 			this_thread::sleep_for(chrono::milliseconds(100));
 
