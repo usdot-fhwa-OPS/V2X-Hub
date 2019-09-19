@@ -178,7 +178,7 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //brakePressed
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
-	_logFile	<< ""; //transmission_received_time
+	_logFile	<< routeableMsg.get_millisecondsSinceEpoch(); //transmission_received_time in milliseconds since epoch
 	_logFile	<< endl;
 
 
