@@ -8,13 +8,6 @@
 
 #include "include/PedestrianPlugin.hpp"
 
-
-
-using namespace std;
-using namespace tmx;
-using namespace tmx::messages;
-using namespace OpenAPI; 
-
 namespace PedestrianPlugin
 {
 
@@ -35,41 +28,61 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
 
-	SetupWebService();
+	// fire up the web service on a thread PROTECTION required 
+
+	std::thread webthread(&PedestrianPlugin::StartWebService,this);
+	webthread.join(); // wait for the thread to finish 
 
 }
 
+void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
+{
+	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
+	QString st; 
+	while(socket->bytesAvailable()>0)
+	{	
+		st.append(socket->readAll());
+	}
+	qDebug()<< "Read from socket : "<<st;
+	QByteArray array = st.toLocal8Bit();
 
-int PedestrianPlugin::SetupWebService()
+	char* psmMsgdef = array.data();	
+
+	//sprintf(psmMsgdef,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PersonalSafetyMessage>\n<basicType>\n<aPEDESTRIAN/>\n</basicType>\n<secMark>0</secMark>\n<msgCnt>0</msgCnt>\n<id>87654321</id>\n<position>\n<lat>406680509</lat>\n<long>-738318466</long>\n<elevation>40</elevation>\n</position>\n<accuracy>\n<semiMajor>255</semiMajor>\n<semiMinor>255</semiMinor>\n<orientation>65535</orientation>\n</accuracy>\n<speed>75</speed>\n<heading>3672</heading>\n<crossState>\n<true/>\n</crossState>\n<clusterSize>\n<medium/>\n</clusterSize>\n<clusterRadius>6</clusterRadius>\n</PersonalSafetyMessage>");
+	
+	BroadcastPsm(psmMsgdef);
+}
+
+
+int PedestrianPlugin::StartWebService()
 {
 	//Web services 
-
-	//QHostAddress address = QHostAddress(parser.value(addressOption));
-    //quint16 port = static_cast<quint16>(parser.value(portOption).toInt());
-
+	char *placeholderX[1]={0};
+	int placeholderC=1;
+	QCoreApplication a(placeholderC,placeholderX);
 
  	QHostAddress address = QHostAddress(WEBSERVADDR);
     quint16 port = static_cast<quint16>(WEBSERVPORT);
 
-
-	//QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
+	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
 	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
-    auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-    router->setUpRoutes();
+
     QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
-        router->processRequest(socket);
+
+		this->PedestrianRequestHandler(socket);
     });
 
-    //QHttpEngine::Server server(handler.data());
-	//server = (QHttpEngine::Server) new (QHttpEngine::Server(handler.data()));
-	server.setHandler(handler.data());
+    QHttpEngine::Server server(handler.data());
 
-    qDebug() << "Pedestrian plugin Web service::: Serving on " << address.toString() << ":" << port;
-    // Attempt to listen on the specified port
+
+    qDebug() << "Pedestrian Plugin Web service::: Serving on " << address.toString() << ":" << port;
+
     if (!server.listen(address, port)) {
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
+	return a.exec();
+
 }
 
 PedestrianPlugin::~PedestrianPlugin()
@@ -84,7 +97,9 @@ void PedestrianPlugin::UpdateConfigSettings()
 	// This method does NOT execute in the main thread, so variables must be protected
 	// (e.g. using std::atomic, std::mutex, etc.).
 
-	int instance;
+	int instance;PersonalSafetyMessage psm_1;
+			PersonalSafetyMessage &psm = psm_1;
+			//BroadcastPsm(psm);
 	GetConfigValue("Instance", instance);
 
 }
@@ -117,22 +132,67 @@ void PedestrianPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_messa
 }
 
 
+
 void PedestrianPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
 }
 
-void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
-	PLOG(logDEBUG)<<"Broadcasting PSM";
+
+void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded 
+
+	PLOG(logDEBUG)<<"Pedestrian Plugin < Broadcast PSM> char* :: Broadcasting PSM";
 
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
 	tmx::message_container_type container;
 	std::unique_ptr<PsmEncodedMessage> msg;
 
-	container.load<XML>("/PSM.xml");
-	PLOG(logINFO) << "loaded data";
+
+	std::stringstream ss;
+	ss << psmJson;
+
+	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
-	PLOG(logDEBUG) << "Encoding " << psmmessage;
+
+
+	const std::string psmString(psmJson);
+
+	PLOG(logINFO) << "Pedestrian Plugin:: loaded data";
+
+	PLOG(logDEBUG) << "Pedestrian Plugin :: Encoding " << psmmessage<<"\n";
+	PLOG(logDEBUG)<< " Ready to encode PSM";
+	psmENC.encode_j2735_message(psmmessage);
+	PLOG(logDEBUG)<<" Done Encoding PSM ";
+
+	msg.reset();
+	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+
+	string enc = psmENC.get_encoding();
+	msg->set_payload(psmENC.get_payload_str());
+	msg->set_encoding(enc);
+	msg->set_flags(IvpMsgFlags_RouteDSRC);
+	msg->addDsrcMetadata(172, 0x8002);
+	msg->refresh_timestamp();
+
+	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+	BroadcastMessage(*rMsg);
+
+	PLOG(logINFO) << " Pedestrian Plugin :: sending PSM -----  using structure sent from pedestrian " << psmENC.get_payload_str();
+
+}
+
+void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
+	PLOG(logDEBUG)<<"Pedestrian Plugin :: Broadcasting PSM";
+
+	PsmMessage psmmessage;
+	PsmEncodedMessage psmENC;
+	tmx::message_container_type container;
+	std::unique_ptr<PsmEncodedMessage> msg;
+
+	container.load<XML>("/home/saxtonlab/V2X-Hub/src/v2i-hub/PedestrianPlugin/PSM.xml");
+	PLOG(logINFO) << "Pedestrian Plugin:: loaded data";
+	psmmessage.set_contents(container.get_storage().get_tree());
+	PLOG(logDEBUG) << "Pedestrian Plugin :: Encoding " << psmmessage;
 	psmENC.encode_j2735_message(psmmessage);
 
 	msg.reset();
@@ -148,7 +208,7 @@ void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
 	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 	BroadcastMessage(*rMsg);
 
-	PLOG(logINFO) << " sending PSM " << psmENC.get_payload_str();
+	PLOG(logINFO) << " Pedestrian Plugin :: sending PSM " << psmENC.get_payload_str();
 
 }
 

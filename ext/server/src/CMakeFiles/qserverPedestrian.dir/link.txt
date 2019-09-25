@@ -1,0 +1,2 @@
+/usr/bin/ar qc libqserverPedestrian.a  CMakeFiles/qserverPedestrian.dir/models/OAIHelpers.cpp.o CMakeFiles/qserverPedestrian.dir/models/OAIPSM.cpp.o CMakeFiles/qserverPedestrian.dir/handlers/OAIApiRouter.cpp.o CMakeFiles/qserverPedestrian.dir/handlers/OAIDefaultApiHandler.cpp.o CMakeFiles/qserverPedestrian.dir/requests/OAIDefaultApiRequest.cpp.o CMakeFiles/qserverPedestrian.dir/qserverPedestrian_autogen/mocs_compilation.cpp.o
+/usr/bin/ranlib libqserverPedestrian.a

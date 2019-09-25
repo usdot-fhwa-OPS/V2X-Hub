@@ -35,12 +35,14 @@
 #include <QStringList>
 #include <QSharedPointer>
 #include <QObject>
+
 #ifdef __linux__
 #include <signal.h>
 #include <unistd.h>
 #endif
 #include <qhttpengine/server.h>
 #include <qserverPedestrian/OAIApiRouter.h>
+#include <qserverPedestrian/OAIPSM.h>
 
 #define WEBSERVPORT 9000 
 #define WEBSERVADDR "127.0.0.1"  
@@ -49,6 +51,7 @@ using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
+using namespace OpenAPI;
 
 namespace PedestrianPlugin
 {
@@ -60,6 +63,7 @@ class PedestrianPlugin: public PluginClient
 {
 public:
 	PedestrianPlugin(std::string);
+	PedestrianPlugin();
 	virtual ~PedestrianPlugin();
 	int Main();
 
@@ -74,7 +78,10 @@ protected:
 	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	void BroadcastPsm(PersonalSafetyMessage &psm);
-	int SetupWebService();
+	void BroadcastPsm(char *psmJson);
+
+	int  StartWebService();
+	void PedestrianRequestHandler(QHttpEngine::Socket *socket);
 
 
 private:
@@ -82,9 +89,9 @@ private:
 	J2735MessageFactory factory;
 
 	// webservice 
-	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler; //(new OpenAPI::OAIApiRequestHandler());
+	//QSharedPointer<OpenAPI::OAIApiRequestHandler> handler; //(new OpenAPI::OAIApiRequestHandler());
 	//auto router; // = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-	QHttpEngine::Server server;//(handler.data());
+	//QHttpEngine::Server server;//(handler.data());
 
 
 };
