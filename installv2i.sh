@@ -10,12 +10,21 @@ fi
 echo "Top level dir: $1"
 TOPDIR=$1
 
+### make server shared object for Pedestrian Plugin 
+
+cd $TOPDIR/ext/server
+cmake .
+make
+sudo make install
 
 
 cd $TOPDIR/src/v2i-hub/ 
 cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake
 make
- ln -s ../bin CommandPlugin/bin
+
+
+
+ln -s ../bin CommandPlugin/bin
   zip CommandPlugin.zip CommandPlugin/bin/CommandPlugin CommandPlugin/manifest.json
   ln -s ../bin CswPlugin/bin
   zip CswPlugin.zip CswPlugin/bin/CswPlugin CswPlugin/manifest.json
