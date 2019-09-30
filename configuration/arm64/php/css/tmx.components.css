@@ -1,0 +1,533 @@
+/* -------------------- LEDs ----------------------- */
+.led {
+    width: 1.3em;
+    height: 1.3em;
+    float: left;    
+    background-color: #2D2D2D;    
+    box-shadow: rgba(0, 0, 0, 0) 0 -1px 7px 1px, inset #575757 0 -1px 9px, rgba(0, 0, 0, 0) 0 2px 12px;
+}
+
+.led[data-state="disabled"] {
+    background-color: #2D2D2D;    
+    box-shadow: rgba(0, 0, 0, 0) 0 -1px 7px 1px, inset #575757 0 -1px 9px, rgba(0, 0, 0, 0) 0 2px 12px;
+}
+
+.led[data-state="red"] {
+    background-color: #BA0000;
+    box-shadow: #000 0 -1px 7px 1px, inset #F00 0 -1px 9px, #F00 0 2px 12px;
+}
+
+.led[data-state="yellow"] {
+    background-color: #CAB600;
+    box-shadow: #000 0 -1px 7px 1px, inset #ABAB00 0 -1px 9px, #FF0 0 2px 12px;
+}
+
+.led[data-state="blue"] {
+    background-color: #32AFFF;
+    box-shadow: #000 0 -1px 7px 1px, inset #12AFFF 0 -1px 9px, #12AFFF 0 2px 12px;
+}
+
+.led[data-state="green"] {
+    background-color: #178C19;
+    box-shadow: #000 0 -1px 7px 1px, inset #22B224 0 -1px 9px, #22B224 0 2px 12px;
+}
+
+.led[data-state="off"] {
+    background-color: #000000;
+    box-shadow: rgba(0, 0, 0, 0) 0 -1px 7px 1px, inset #575757 0 -1px 9px, rgba(0, 0, 0, 0) 0 2px 12px;
+}
+
+.led-small {
+    width: 0.9em;
+    height: 0.9em;
+}
+
+/* ------------------ End LEDs --------------------- */
+/* ------------- Telemetry Display ----------------- */
+  .templateinfo{
+    display: table;
+    font-family: Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+    table-layout: fixed;
+    overflow: hidden; 
+  }
+  
+.templateinfo02{
+    display: table;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size:85%;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+    table-layout: fixed;
+    overflow: hidden; 
+  }
+  
+  .telemDisplayLabel{
+    display: table-cell;
+    padding-right: 10px;
+    color: #333;
+    background: #f9f9f9;
+    font-size: 1em;
+    text-align: right;
+    width: 45%; 
+    font-weight: normal;
+  }
+
+  .telemDisplayValue {
+    box-shadow: inset 0 1px 3px  rgba(0,0,0,.2);
+    box-sizing: border-box;
+
+    border-color: #444;
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    color: #333;
+    background: #f9f9f9;
+    text-shadow: 0  1px 0  #111 ;
+    
+    font-size: 1em !important;
+    text-align: center;
+    margin: 0 0 3px 0;
+    min-height: 1.8em;
+    font-weight: normal;
+    
+  }
+
+  .telemDisplayUnits{
+    display: table-cell;
+    color: #f9f9f9;
+    font-size: 1em;
+    padding-left: 10px;
+    text-align: left;
+    width: 15%;
+    font-weight: normal;
+  }
+/* ----------- End Telemetry Display --------------- */
+/* ------------------ Plugin ----------------------- */
+.plugin
+{
+    margin-top: .3em;
+    border: 1px solid #0079CF;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+}
+
+.pluginInfo {
+    line-height: 2;
+}
+
+.pluginInfoField
+{
+    font-size: .8em !important;
+    margin-left:2%;
+}
+.collapsibleHeader
+{
+    height: 1.6em;
+    border: 1px solid #0079CF;
+    /*
+        See copyright in jquery-ui.theme.css
+    */
+    background: #0079CF url("images/ui-bg_gloss-wave_50_0079CF_500x100.png") 50% 50% repeat-x;
+    color: #eaf5f7;
+    margin: 1px;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    width:99.6%;
+    vertical-align: middle;
+    font-size: 1em; 
+}
+
+.collapsibleHeader[id*="infoHeader_"]
+{
+    width: 85% !important;
+    display:inline-block;
+    height: 2.25em;
+    vertical-align: middle;
+    overflow:hidden;
+    line-height:2;
+    /*overflow-behavior-y: contain; */
+}
+
+.hidden {
+    display:none;
+}
+
+.collapsibleHeader[id*="configurationHeader_"]
+{
+    min-height: 100%;
+}
+
+button[class*='infoUploadBtn_'], button[class*='infoDeleteBtn_'] {
+    display:inline-block;
+}
+
+.pluginHeaderDisabled
+{
+    background: #565A5C;
+}
+
+.pluginHeaderExternal
+{
+    background: #496b85;    /* TODO : Placeholder color */
+}
+
+.subHeader
+{
+    height: 1.5em;
+    margin-left:2%;
+    width:98%;
+}
+.subHeaderItem
+{
+    color: #222222;
+    background: #FFFFFF;
+    height: 1.5em;
+    margin-left:2%;
+    width:98%;
+    border:none;
+    font-size: 0.8em;
+}
+.pluginName
+{
+    margin-left: 1em;
+    display: inline-block;
+    width:45%;
+}
+
+.headerVersion {
+    display:inline-block;
+    font-size: 60%;
+    margin-left:1em;
+    text-align: right;
+    width:35%;
+
+}
+
+.headerDescription {
+    display:inline-block;
+    font-size: 60%;
+
+}
+
+.pluginState {
+    display:inline-block;
+    margin-left:1em;
+    width: 2.5%;
+    /*height: 75%;*/
+    /*height: 1.3em;*/
+    margin-top:0.25%;
+}
+
+.filterButton 
+{
+    color: #eaf5f7;
+    border: 1px solid #0079CF;
+    background: #0079CF;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    height: 1.7em;
+    width:6em;
+    margin-right: .3em;
+}
+.filterButton[data-state="true"] 
+{
+    background: #0079CF;
+}
+.filterButton[data-state="false"] 
+{
+    background: #565A5C;
+}
+.clearLogButton 
+{
+    background: #0079CF;
+    color: #eaf5f7;
+    margin-top: .3em;
+    border: 1px solid #0079CF;
+    background: #0079CF;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    width: 7em;
+    height: 2.5em;
+}
+
+.enableButton
+{
+    z-index: 2;
+    float:right;
+    margin-right: 1em;
+    margin-top:.1em;
+    width:6em;
+}
+
+.deletePluginButton {
+    z-index: 2;
+    float:right;
+    margin-right: 1.5%;
+    width: 9%;
+}
+
+.configurationItem
+{
+    margin-left: 2%;
+    width: 98%;
+    font-size: .7em !important;
+}
+.stateItem
+{
+    margin-left: 2%;
+    width: 98%;
+    font-size: .7em !important;
+}
+/* Message Table */
+.message-table, .newConfigDiv
+{
+    margin-left: 2%;
+    width: 98%;
+    font-size:.7em;
+}
+
+.headerVersion
+{
+
+}
+
+.message-table th
+{
+    background-color: #909090;
+    background: -webkit-gradient(linear, left top, left bottom, from(#909090), to(#ababab));
+    background: -moz-linear-gradient(top, #909090, #ababab);
+    color: #efefef;
+}
+
+.message-table th, .message-table td {
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+
+.user-table, .newConfigDiv
+{
+    margin-left: 2%;
+    width: 98%;
+    font-size:.7em;
+}
+
+.user-table th
+{
+    background-color: #909090;
+    background: -webkit-gradient(linear, left top, left bottom, from(#909090), to(#ababab));
+    background: -moz-linear-gradient(top, #909090, #ababab);
+    color: #efefef;
+}
+
+.user-table th, .user-table td {
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    word-break: break-all;
+    word-wrap: break-word;
+}
+
+.user-table[id*="messagesTable"] td[data-type='userName'] {
+    width:40%;
+}
+
+.user-table[id*="messagesTable"] td[data-type='accessLevel'] {
+    width:40%;
+}
+
+.user-table[id*="messagesTable"] td[data-type='operation'] {
+    width:20%;
+}
+
+.message-table[id*="infoTable"] td[data-type='key'] {
+    width:40%;
+}
+
+.message-table[id*="infoTable"] td[data-type='value'] {
+    width:60%;
+}
+
+.message-table[id*="stateTable"] td[data-type='key'] {
+    width:40%;
+}
+
+.message-table[id*="stateTable"] td[data-type='value'] {
+    width:60%;
+}
+
+.message-table[id*="messagesTable"] td[data-type='type'] {
+    width:15%;
+}
+
+.message-table[id*="messagesTable"] td[data-type='subtype'] {
+    width:15%;
+}
+
+.message-table[id*="messagesTable"] td[data-type='count'] {
+    width:10%;
+}
+
+.message-table[id*="messagesTable"] td[data-type='lastTimestamp'] {
+    width:30%;
+}
+
+.message-table[id*="messagesTable"] td[data-type='averageInterval'] {
+    width:30%;
+}
+
+.message-table[id*="configsTable"] td[data-type='key']{
+    width:15%;
+}
+
+.message-table[id*="configsTable"] td[data-type='value'] {
+    width:15%;
+}
+
+.message-table[id*="configsTable"] td[data-type='defaultValue'] {
+    width:30%;
+}
+
+.message-table[id*="configsTable"] td[data-type='description'] {
+    width:40%;
+}
+
+.infoInput {
+    height: 1.5em;
+    width: 98%;
+}
+
+.newConfigLabel {
+    display: inline-block;
+    width: 20%;
+    text-align: right;
+    font-weight: bold;
+}
+
+.newConfigInput {
+    width: 75%;
+}
+
+ button[onmousedown*="AddNewConfigurationItem"] {
+     width:8%;
+ }
+
+/*
+  Copyright (c) 2014 Luke Haas
+  Licensed under the MIT License (http://opensource.org/licenses/MIT) 
+*/
+
+.loaderClass {
+    margin-top:3em;
+    margin-left: 40%;
+    margin-bottom:2em;
+}
+
+.loaderLabel {
+    margin-top:3em;
+    margin-left: 37%;
+}
+
+.loader {
+    /*
+  margin: 72px auto;
+  font-size: 90px;
+    */
+
+  color: #0079CF;
+  font-size: 5em;
+  text-indent: -9999em;
+  overflow: hidden;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  margin: 1em auto;
+  position: relative;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-animation: load6 1.7s infinite ease, round 1.7s infinite ease;
+  animation: load6 1.7s infinite ease, round 1.7s infinite ease;
+}
+@-webkit-keyframes load6 {
+  0% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+  5%,
+  95% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+  10%,
+  59% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.087em -0.825em 0 -0.42em, -0.173em -0.812em 0 -0.44em, -0.256em -0.789em 0 -0.46em, -0.297em -0.775em 0 -0.477em;
+  }
+  20% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.338em -0.758em 0 -0.42em, -0.555em -0.617em 0 -0.44em, -0.671em -0.488em 0 -0.46em, -0.749em -0.34em 0 -0.477em;
+  }
+  38% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.377em -0.74em 0 -0.42em, -0.645em -0.522em 0 -0.44em, -0.775em -0.297em 0 -0.46em, -0.82em -0.09em 0 -0.477em;
+  }
+  100% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+}
+@keyframes load6 {
+  0% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+  5%,
+  95% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+  10%,
+  59% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.087em -0.825em 0 -0.42em, -0.173em -0.812em 0 -0.44em, -0.256em -0.789em 0 -0.46em, -0.297em -0.775em 0 -0.477em;
+  }
+  20% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.338em -0.758em 0 -0.42em, -0.555em -0.617em 0 -0.44em, -0.671em -0.488em 0 -0.46em, -0.749em -0.34em 0 -0.477em;
+  }
+  38% {
+    box-shadow: 0 -0.83em 0 -0.4em, -0.377em -0.74em 0 -0.42em, -0.645em -0.522em 0 -0.44em, -0.775em -0.297em 0 -0.46em, -0.82em -0.09em 0 -0.477em;
+  }
+  100% {
+    box-shadow: 0 -0.83em 0 -0.4em, 0 -0.83em 0 -0.42em, 0 -0.83em 0 -0.44em, 0 -0.83em 0 -0.46em, 0 -0.83em 0 -0.477em;
+  }
+}
+@-webkit-keyframes round {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes round {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+/*
+  End
+  Copyright (c) 2014 Luke Haas
+  Licensed under the MIT License (http://opensource.org/licenses/MIT) 
+*/
