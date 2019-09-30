@@ -29,7 +29,7 @@
     },
     {
       "key": "Destination_1",
-      "default": "192.168.25.10:4589",
+      "default": "192.168.55.46:4589",
       "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_1."
     },
     {

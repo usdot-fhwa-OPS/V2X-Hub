@@ -49,8 +49,10 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 	char* psmMsgdef = array.data();	
 
 	//sprintf(psmMsgdef,"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<PersonalSafetyMessage>\n<basicType>\n<aPEDESTRIAN/>\n</basicType>\n<secMark>0</secMark>\n<msgCnt>0</msgCnt>\n<id>87654321</id>\n<position>\n<lat>406680509</lat>\n<long>-738318466</long>\n<elevation>40</elevation>\n</position>\n<accuracy>\n<semiMajor>255</semiMajor>\n<semiMinor>255</semiMinor>\n<orientation>65535</orientation>\n</accuracy>\n<speed>75</speed>\n<heading>3672</heading>\n<crossState>\n<true/>\n</crossState>\n<clusterSize>\n<medium/>\n</clusterSize>\n<clusterRadius>6</clusterRadius>\n</PersonalSafetyMessage>");
-	
+	//PersonalSafetyMessage psm1;
+	//PersonalSafetyMessage &psm=psm1; 
 	BroadcastPsm(psmMsgdef);
+	//BroadcastPsm(psm);
 }
 
 
@@ -150,8 +152,12 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 
 	std::stringstream ss;
 	ss << psmJson;
+	
 
-	container.load<XML>(ss);
+	qDebug()<<psmJson; 
+
+	container.load<XML>("/home/saxtonlab/V2X-Hub/src/v2i-hub/PedestrianPlugin/PSM.xml");
+	//container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 
 
@@ -159,13 +165,14 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 
 	PLOG(logINFO) << "Pedestrian Plugin:: loaded data";
 
-	PLOG(logDEBUG) << "Pedestrian Plugin :: Encoding " << psmmessage<<"\n";
+	PLOG(logDEBUG) << "Pedestrian Plugin :: Encoding " << psmmessage;
 	PLOG(logDEBUG)<< " Ready to encode PSM";
 	psmENC.encode_j2735_message(psmmessage);
 	PLOG(logDEBUG)<<" Done Encoding PSM ";
 
 	msg.reset();
 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+	//msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING)));
 
 	string enc = psmENC.get_encoding();
 	msg->set_payload(psmENC.get_payload_str());
