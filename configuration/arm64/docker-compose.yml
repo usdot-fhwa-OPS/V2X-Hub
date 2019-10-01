@@ -13,7 +13,7 @@ services:
     network_mode: host
     volumes:
       - "mysql_data:/var/lib/mysql"
-      - ./mysql/amd64.sql:/docker-entrypoint-initdb.d/amd64.sql
+      - ./mysql/arm64.sql:/docker-entrypoint-initdb.d/arm64.sql
 
   php:
     image: php:7.2.2-apache
