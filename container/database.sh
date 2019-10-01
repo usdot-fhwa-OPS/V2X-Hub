@@ -12,7 +12,7 @@ usermod -a -G dialout plugin
 
 mkdir -p /var/log/tmx
 chown plugin:adm /var/log/tmx
-chmod 775 /var/log/tmx
+chmod 777 /var/log/tmx
 
 mkdir -p /var/www/plugins
 chown plugin:adm /var/www /var/www/plugins
