@@ -156,8 +156,8 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 
 	qDebug()<<psmJson; 
 
-	container.load<XML>("/home/saxtonlab/V2X-Hub/src/v2i-hub/PedestrianPlugin/PSM.xml");
-	//container.load<XML>(ss);
+	//container.load<XML>("/home/saxtonlab/V2X-Hub/src/v2i-hub/PedestrianPlugin/PSM.xml");
+	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 
 
@@ -174,15 +174,22 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 	//msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING)));
 
+	//MSGSUBTYPE_PERSONALSAFETYMESSAGE_D_STRING
+
 	string enc = psmENC.get_encoding();
+	msg->refresh_timestamp();
 	msg->set_payload(psmENC.get_payload_str());
 	msg->set_encoding(enc);
 	msg->set_flags(IvpMsgFlags_RouteDSRC);
 	msg->addDsrcMetadata(172, 0x8002);
 	msg->refresh_timestamp();
 
+
+
 	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 	BroadcastMessage(*rMsg);
+
+
 
 	PLOG(logINFO) << " Pedestrian Plugin :: sending PSM -----  using structure sent from pedestrian " << psmENC.get_payload_str();
 
@@ -203,7 +210,7 @@ void PedestrianPlugin::BroadcastPsm(PersonalSafetyMessage &psm) {
 	psmENC.encode_j2735_message(psmmessage);
 
 	msg.reset();
-	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TRAVELERINFORMATION_STRING)));
 
 	string enc = psmENC.get_encoding();
 	msg->set_payload(psmENC.get_payload_str());
