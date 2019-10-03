@@ -40,7 +40,7 @@
 #00201d01c0020000021d950c854de25cbd3f47f97d1028ffffffff0258e58a0c
 
 
-curl -X POST http://127.0.0.1:9000/v1/pedestrian -H "Content-Type:application/json" -d '<?xml version="1.0" encoding="UTF-8"?>
+curl -X POST http://192.168.55.46:9000/v1/pedestrian -H "Content-Type:application/json" -d '<?xml version="1.0" encoding="UTF-8"?>
 <PersonalSafetyMessage>
 <basicType>
 <aPEDESTRIAN/>
