@@ -44,8 +44,6 @@
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
 
-#define WEBSERVPORT 9000 
-#define WEBSERVADDR "127.0.0.1"  
 
 using namespace std;
 using namespace tmx;
@@ -66,6 +64,8 @@ public:
 	PedestrianPlugin();
 	virtual ~PedestrianPlugin();
 	int Main();
+	uint16_t webport;
+	std::string webip; 
 
 
 protected:
@@ -77,7 +77,6 @@ protected:
 
 	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void BroadcastPsm(PersonalSafetyMessage &psm);
 	void BroadcastPsm(char *psmJson);
 
 	int  StartWebService();
@@ -88,11 +87,8 @@ private:
 	tmx::utils::UdpClient *_signSimClient = NULL;
 	J2735MessageFactory factory;
 
-	// webservice 
-	//QSharedPointer<OpenAPI::OAIApiRequestHandler> handler; //(new OpenAPI::OAIApiRequestHandler());
-	//auto router; // = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-	//QHttpEngine::Server server;//(handler.data());
-
 
 };
+std::mutex _cfgLock;
+
 };

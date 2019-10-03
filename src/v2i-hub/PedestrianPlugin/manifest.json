@@ -8,20 +8,30 @@
 	"messageTypes":[
 		{
 			"type":"J2735",
-			"subtype":"TIM",
-			"description":"Travelor Information Message with ..."
+			"subtype":"PSM",
+			"description":"Pedestrian Safety Message"
 		}
 	],
 	"configuration":[
 		{
 			"key":"Frequency",
 			"default":"1000",
-			"description":"The frequency to send the TIM in milliseconds."
+			"description":"The frequency to send the PSM in milliseconds."
 		},
 		{
 			"key":"Instance",
 			"default":"0",
 			"description":"The instance of Pedestrian plugin."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"192.168.55.46",
+			"description":"IP address at which the web service exists"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"9000",
+			"description":"Port at which Web service exists"
 		}
 	]
 }
