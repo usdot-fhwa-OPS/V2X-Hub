@@ -1,3 +1,0 @@
-set(AM_MOC_SETTINGS_HASH "069fdabeef28020bcc6dd9b4edca60fa4efcc551e9ed80ea5023adc74aba9e47")
-set(AM_UIC_SETTINGS_HASH "")
-set(AM_RCC_SETTINGS_HASH "")

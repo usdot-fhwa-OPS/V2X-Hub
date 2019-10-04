@@ -1,2 +1,0 @@
-/usr/bin/ar qc ../lib/libtmxctlStatic.a  CMakeFiles/tmxctlStatic.dir/src/lib/PluginConfig.cpp.o CMakeFiles/tmxctlStatic.dir/src/lib/PluginControl.cpp.o CMakeFiles/tmxctlStatic.dir/src/lib/PluginInstall.cpp.o CMakeFiles/tmxctlStatic.dir/src/lib/PluginStatus.cpp.o CMakeFiles/tmxctlStatic.dir/src/lib/TmxControl.cpp.o
-/usr/bin/ranlib ../lib/libtmxctlStatic.a
