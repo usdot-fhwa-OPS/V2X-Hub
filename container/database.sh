@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-mysql -uroot -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('v2xadmin', 'V2xHub#321', 3)"
+mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('v2xadmin', 'V2xHub#321', 3)"
 
 set +e
 id plugin >/dev/null 2>&1
