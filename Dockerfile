@@ -67,6 +67,7 @@ RUN chmod +x /home/V2X-Hub/container/database.sh
 RUN /home/V2X-Hub/container/database.sh
 WORKDIR /home/V2X-Hub/container/
 RUN chmod +x /home/V2X-Hub/container/service.sh
+RUN chmod +x /home/V2X-Hub/container/wait-for-it.sh
 
 WORKDIR /var/www/
 RUN mkdir ~/plugins
