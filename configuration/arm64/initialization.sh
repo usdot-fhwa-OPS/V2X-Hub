@@ -3,7 +3,7 @@
 set -e
 
 # Max query attempts before consider setup failed
-MAX_TRIES=10
+MAX_TRIES=20
 
 if
   cat initializationLog.txt | grep "First Initialization Complete."
