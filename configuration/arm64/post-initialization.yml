@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db:
-    image: mariadb
+    image: usdotfhwaops/v2xhubdbarm:v1.0
     container_name: mariadb
     restart: always
     environment:
@@ -29,7 +29,7 @@ services:
     tty: true
 
   v2xhubarm:
-    image: usdotfhwaops/v2x-hub-arm:v4.4
+    image: usdotfhwaops/v2xhubarm:v4.0
     container_name: v2xhubarm
     network_mode: host
     restart: always
