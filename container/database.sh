@@ -1,6 +1,6 @@
 #!/bin/sh -x
 
-mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('v2xadmin', 'V2xHub#321', 3)"
+mysql -uroot -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('v2xadmin', 'V2xHub#321', 3)"
 
 set +e
 id plugin >/dev/null 2>&1
@@ -11,7 +11,8 @@ fi
 usermod -a -G dialout plugin
 
 mkdir -p /var/log/tmx
-chmod 755 /var/log/tmx
+chown plugin:adm /var/log/tmx
+chmod 777 /var/log/tmx
 
 mkdir -p /var/www/plugins
 chown plugin:adm /var/www /var/www/plugins

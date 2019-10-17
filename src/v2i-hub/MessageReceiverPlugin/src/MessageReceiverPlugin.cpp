@@ -181,18 +181,41 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 			try
 			{
 				// Check for an abbreviated message
-				const byte_stream &bytes = msg.get_payload_bytes();
+				byte_stream bytesFull = msg.get_payload_bytes();
+				byte_stream bytes; 
 				if (bytes.size() > 8)
 				{
 					PLOG(logDEBUG) << "Looking for abbreviated message in bytes " << bytes;
+					uint16_t msgType;
+					uint8_t msgVersion;
+					uint16_t id;
+					uint16_t dataLength;
+					uint32_t vehID, heaDing, spEed, laTi, loNg, eleVate; // stores for data 
 
-					//message format, length in bytes
-					//  type(2), version(2), sourceId(2), dataLength(2), data
-					//header length is always size 8
-					uint16_t msgType = ntohs(*((uint16_t*)bytes.data()));
-					uint16_t msgVersion = ntohs(*((uint16_t*)&(bytes.data()[2])));
-					uint16_t id = ntohs(*((uint16_t*)&(bytes.data()[4])));
-					uint16_t dataLength = ntohs(*((uint16_t*)&(bytes.data()[6])));
+					std::vector<unsigned char>::iterator cnt = bytesFull.begin();
+
+					while(cnt != bytesFull.end())
+					{
+							if(*cnt == 0x00 && (*(cnt+1) == 0x14 || *(cnt+1) == 0x12 || *(cnt+1) == 0x13))
+							{
+									break;
+							}
+							cnt++;
+					}
+
+					while(cnt != bytesFull.end())
+					{
+							bytes.push_back(*cnt);
+							cnt++;
+
+					}
+
+
+					msgType = ntohs(*((uint16_t*)bytes.data()));
+					msgVersion = ntohs(*((uint16_t*)&(bytes.data()[2])));
+					id = ntohs(*((uint16_t*)&(bytes.data()[4])));
+					dataLength = ntohs(*((uint16_t*)&(bytes.data()[6])));
+
 
 					PLOG(logDEBUG1) << "Got message,  msgType: " << msgType
 							<< ", msgVersion: " << msgVersion

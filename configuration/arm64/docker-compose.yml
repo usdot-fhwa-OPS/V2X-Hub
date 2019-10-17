@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  db:
+    image: usdotfhwaops/v2x-mariadb:v1.2
+    container_name: mariadb
+    restart: always
+    environment:
+      MYSQL_DATABASE: IVP
+      MYSQL_USER: IVP
+      MYSQL_PASSWORD: ivp
+      MYSQL_ROOT_PASSWORD: ivp
+    network_mode: host
+    volumes:
+      - "mysql_data:/var/lib/mysql"
+      - ./mysql/install_db.sh:/docker-entrypoint-initdb.d/install_db.sh
+      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+
+volumes:
+    mysql_data:

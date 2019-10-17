@@ -3,7 +3,6 @@ FROM ubuntu:bionic-20190807
 
 RUN apt-get update  && apt-get install -y cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev
 
-
 ENV MYSQL_ROOT_PASSWORD ivp
 
 RUN mkdir ~/V2X-Hub
@@ -59,6 +58,12 @@ RUN ln -s ../bin RtcmPlugin/bin
 RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
 RUN ln -s ../bin SpatPlugin/bin
 RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
+RUN ln -s ../bin PreemptionPlugin/bin
+RUN zip PreemptionPlugin.zip PreemptionPlugin/bin/PreemptionPlugin PreemptionPlugin/manifest.json
+RUN ln -s ../bin SPaTLoggerPlugin/bin
+RUN zip SPaTLoggerPlugin.zip SPaTLoggerPlugin/bin/SPaTLoggerPlugin SPaTLoggerPlugin/manifest.json
+RUN ln -s ../bin BsmLoggerPlugin/bin
+RUN zip BsmLoggerPlugin.zip BsmLoggerPlugin/bin/BsmLoggerPlugin BsmLoggerPlugin/manifest.json
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/
@@ -91,5 +96,8 @@ RUN tmxctl --plugin-install MessageReceiverPlugin.zip
 RUN tmxctl --plugin-install ODEPlugin.zip
 RUN tmxctl --plugin-install RtcmPlugin.zip
 RUN tmxctl --plugin-install SpatPlugin.zip
+RUN tmxctl --plugin-install PreemptionPlugin.zip
+RUN tmxctl --plugin-install SPaTLoggerPlugin.zip
+RUN tmxctl --plugin-install BsmLoggerPlugin.zip
 
 ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]

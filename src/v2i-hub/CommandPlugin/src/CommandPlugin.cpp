@@ -12,6 +12,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
+#endif
+
 namespace CommandPlugin
 {
 
@@ -1341,6 +1345,8 @@ int CommandPlugin::Main()
 	}
 
 	lws_context_destroy(context);
+	PLOG(logDEBUG) << "libwebsocket context destroyed";
+
 
 	return (EXIT_SUCCESS);
 }
