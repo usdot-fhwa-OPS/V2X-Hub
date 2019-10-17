@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"ODEPlugin",
 	"description":"Plugin to forward messages to the Florida ODEPlugin network",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"version":"3.2.0",
+	"exeLocation":"/bin/ODEPlugin",
 	"coreIpAddr":"10.30.100.105",
 	"corePort":24601,
 	"messageTypes":[

@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"RTCM",
 	"description":"Plugin to listen for RTCM messages from an NTRIP caster and route those messages over DSRC",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"version":"3.2.0",
+	"exeLocation":"/bin/RtcmPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[

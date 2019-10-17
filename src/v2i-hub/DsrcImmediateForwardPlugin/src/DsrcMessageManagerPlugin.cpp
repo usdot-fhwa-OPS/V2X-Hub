@@ -43,6 +43,7 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 	_muteDsrc = false;
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
+	UpdateConfigSettings();
 }
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
@@ -291,10 +292,10 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++)
 		msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 
-
+	PLOG(logWARNING)<<_messageConfigMap.size();
 	//loop through all MessageConfig and send to each with the proper TmxType
 	for (int configIndex = 0;configIndex < _messageConfigMap.size();configIndex++)
-	{
+	{	PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
 		if (_messageConfigMap[configIndex].TmxType == msg->subtype)
 		{
 			foundMessageType = true;
@@ -339,11 +340,10 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			}
 		}
 	}
-
 	if (!foundMessageType)
 	{
 		SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-		PLOG(logWARNING) << "TMX Subtype not found in configuration.  Message Ignored: " <<
+		PLOG(logWARNING)<<" WARNINNGGG TMX Subtype not found in configuration.  Message Ignored: " <<
 				"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		return;
 	}

@@ -1,6 +1,7 @@
-FROM ubuntu:xenial-20190122
+FROM ubuntu:bionic-20190807
 
-RUN apt-get update && apt-get install -y git zlibc zlib1g zlib1g-dev openssl libssl-dev libuv-dev sqlite3 libsqlite3-dev libgtest-dev cmake gcc-5 g++-5 libboost1.58-dev libboost-thread1.58-dev libboost-regex1.58-dev libboost-log1.58-dev libboost-program-options1.58-dev libboost1.58-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev vim zip snmp
+
+RUN apt-get update  && apt-get install -y cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev
 
 ENV MYSQL_ROOT_PASSWORD ivp
 
@@ -17,7 +18,7 @@ RUN /home/V2X-Hub/container/library.sh
 RUN ldconfig
 
 WORKDIR /home/V2X-Hub/
-RUN mkdir ~/ext
+RUN mkdir -p ~/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
 WORKDIR /home/V2X-Hub/ext/libwebsockets/
@@ -25,12 +26,17 @@ RUN cmake -DLWS_WITH_SHARED=OFF .
 RUN make
 RUN make install
 
+WORKDIR /home/V2X-Hub/ext/server
+RUN cmake .
+RUN make 
+RUN make install 
+
 WORKDIR /usr/src/gtest
 RUN cmake CMakeLists.txt && make
 RUN cp *.a /usr/lib
 
 WORKDIR /home/V2X-Hub/src/v2i-hub/
-RUN cmake .
+RUN cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake
 RUN make
 RUN ln -s ../bin CommandPlugin/bin
 RUN zip CommandPlugin.zip CommandPlugin/bin/CommandPlugin CommandPlugin/manifest.json
