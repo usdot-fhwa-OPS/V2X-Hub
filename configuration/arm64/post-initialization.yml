@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db:
-    image: usdotfhwaops/v2x-mariadb:v1.2
+    image: usdotfhwaops/v2xhubdbarm:v1.0
     container_name: mariadb
     restart: always
     environment:
@@ -20,7 +20,7 @@ services:
     image: php:7.2.2-apache
     container_name: php
     volumes:
-      - ./php/:/var/www/html/
+      - ../../web/:/var/www/html/
     network_mode: host
     restart: always
     depends_on: 
@@ -29,7 +29,7 @@ services:
     tty: true
 
   v2xhubarm:
-    image: usdotfhwaops/v2x-hub-arm:v4.3
+    image: usdotfhwaops/v2xhubarm:v4.0
     container_name: v2xhubarm
     network_mode: host
     restart: always
