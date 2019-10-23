@@ -54,7 +54,7 @@ The installation and setup instructions can be found in the [Installation and Se
 
 ## Docker Setup
 
-The installation and setup instructions for the docker image on an AMD system can be found in the [Docker Instructions Guide fpr AMD](docs/Docker_Instructions_AMD.md)
+The installation and setup instructions for the docker image on an AMD system can be found in the [Docker Instructions Guide for AMD](docs/Docker_Instructions_AMD.md)
 
 The installation and setup instructions for the docker image on an ARM system can be found in the [Docker Instructions Guide for ARM](docs/Docker_Instructions_ARM.md)
 
