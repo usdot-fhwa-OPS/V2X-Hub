@@ -1,8 +1,8 @@
 {
-    "name":"@TMX_PLUGIN_NAME@",
+    "name":"Location",
     "description":"Plugin used to send out Location Messages using data from GPSD",
-    "version":"@PROJECT_VERSION@",
-    "exeLocation":"/bin/@PROJECT_NAME@",
+    "version":"3.2.0",
+    "exeLocation":"/bin/LocationPlugin",
     "coreIpAddr":"127.0.0.1",
     "corePort":24601,
     "messageTypes":[

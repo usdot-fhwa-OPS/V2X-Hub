@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"CSW",
 	"description":"Provides Curve Speed Warning (CSW).",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"version":"3.2.0",
+	"exeLocation":"/bin/CswPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[

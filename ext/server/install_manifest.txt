@@ -1,0 +1,15 @@
+/usr/local/lib/libqserverPedestrian.a
+/usr/local/include/qserverPedestrian/OAIDefaultApiHandler.cpp
+/usr/local/include/qserverPedestrian/OAIDefaultApiHandler.h
+/usr/local/include/qserverPedestrian/OAIApiRouter.cpp
+/usr/local/include/qserverPedestrian/OAIApiRouter.h
+/usr/local/include/qserverPedestrian/OAIPSM.cpp
+/usr/local/include/qserverPedestrian/OAIObject.h
+/usr/local/include/qserverPedestrian/OAIEnum.h
+/usr/local/include/qserverPedestrian/OAIHelpers.cpp
+/usr/local/include/qserverPedestrian/OAIPSM.h
+/usr/local/include/qserverPedestrian/OAIHelpers.h
+/usr/local/include/qserverPedestrian/OAIDefaultApiRequest.cpp
+/usr/local/include/qserverPedestrian/OAIDefaultApiRequest.h
+/usr/local/share/qserverPedestrian/cmake/qserverPedestrianConfig.cmake
+/usr/local/share/qserverPedestrian/cmake/qserverPedestrianConfig-release.cmake
