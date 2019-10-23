@@ -1,4 +1,4 @@
-# Running Dockerized V2X Hub
+# Running Dockerized V2X Hub for AMD based systems
 
 If you are running V2X Hub using a docker image, you can use the following instructions:
 
