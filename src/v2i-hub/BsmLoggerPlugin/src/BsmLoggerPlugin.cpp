@@ -172,7 +172,7 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	bool sirensOK = false;
 	bool lightsOK = false;
 
-	if(bsm->partII[0].list.array[0]->partII_Id[0] >= 0)
+	if(bsm->partII[0].list.array[0]->partII_Id >= 0)
 		partIIpresent = true; 
 	if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse >= 0)
 		sirensOK =true;
