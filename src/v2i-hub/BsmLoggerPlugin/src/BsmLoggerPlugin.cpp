@@ -168,8 +168,16 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		speed_mph = 8191;
 
 	// check for extended packets 
+	bool partIIpresent = false; 
+	bool sirensOK = false;
+	bool lightsOK = false;
 
-	
+	if(bsm->partII[0].list.array[0]->partII_Id[0] >= 0)
+		partIIpresent = true; 
+	if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse >= 0)
+		sirensOK =true;
+	if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse >= 0)
+		lightsOK = true;  
 
 
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
@@ -184,18 +192,19 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
 	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
-	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->confidence<<",";
-	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->radiusOfCurve<<",";
-	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathHistory->crumbData.list.array[0]->latOffset<<",";
-	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathHistory->crumbData.list.array[1]->latOffset<<",";
-	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
-	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
-	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
-	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
-	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
-	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
-	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";
-	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<"..";
+	if (partIIpresent) {
+		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
+		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
+		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
+		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
+		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
+		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
+		
+		if(sirensOK)	
+			_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";
+		if(lightsOK)
+			_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse;
+	}
 	_logFile	<< endl;
 
 
@@ -220,7 +229,7 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
 	else
 	{
-		_logFile << "DSRC_MessageID,"
+		_logFile << "DSRC_MessageID, "
 				"Vehicle ID, "
 				"BSM_tmp_ID, "
 				"transtime, "
@@ -233,6 +242,14 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 				"hardBraking,  "
 				"transTo, "
 				"transmission_received_time, "
+				"trailerPivot, "
+				"trailreLength, "
+				"trailerHeight, "
+				"vehicleRole, "
+				"vehicletype, "
+				"Respondertype, "
+				"SirenState, "
+				"LightState, " 
 				"" << endl;
 
 	}
