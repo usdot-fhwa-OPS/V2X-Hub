@@ -178,7 +178,21 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //brakePressed
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
-	_logFile	<< routeableMsg.get_millisecondsSinceEpoch(); //transmission_received_time in milliseconds since epoch
+	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
+	//_logFile 	<< bsm->partII[0].list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<".-.";
+	_logFile<< bsm->partII[0].list.array[0]->partII_Id<<",";
+	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->confidence<<",";
+	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->radiusOfCurve<<",";
+	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathHistory->crumbData.list.array[0]->latOffset<<",";
+	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathHistory->crumbData.list.array[1]->latOffset<<",";
+	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
+	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
+	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
+	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
+	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
+	_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
+	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";
+	_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<"..";
 	_logFile	<< endl;
 
 

@@ -216,8 +216,8 @@ bool DsrcMessageManagerPlugin::ParseJsonMessageConfig(const std::string& json, u
 		// Example JSON parsed:
 		// { "Messages": [ { "TmxType": "MAP-P", "SendType": "MAP", "PSID": "0x8002", "Channel": "172" }, { "TmxType": "SPAT-P", "SendType": "SPAT", "PSID": "0x8002" } ] }
 		// The strings below (with extra quotes escaped) can be used for testing.
-		//string json2 = "{ \"Messages\": [ ] }";
-		//string json2 = "{ \"Messages\": [ { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" } ] }";
+		//string json2 = "{ "Messages": [ ] }";
+		//string json2 = "{ "Messages": [ { "TmxType": "MAP-P", "SendType": "MAP", "PSID": "0x8002" }, { "TmxType": "SPAT-P", "SendType": "SPAT", "PSID": "0x8002" } ] }";
 
 		// Read the JSON into a boost property tree.
 		ptree pt;

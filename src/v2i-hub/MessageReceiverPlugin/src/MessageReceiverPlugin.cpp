@@ -17,6 +17,14 @@
 #include <BsmConverter.h>
 #include <LocationMessage.h>
 
+
+#include <asn_application.h>
+#include <boost/any.hpp>
+#include <tmx/TmxApiMessages.h>
+#include <tmx/messages/J2735Exception.hpp>
+#include <tmx/messages/SaeJ2735Traits.hpp>
+#include <tmx/messages/routeable_message.hpp>
+
 #define ABBR_BSM 1000
 #define ABBR_SRM 2000
 
@@ -64,12 +72,12 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
 {
-	FILE_LOG(logDEBUG1) << "BSM vehicleId: " << vehicleId
+	FILE_LOG(logDEBUG4) << "MessageReceiver:: BSM vehicleId: " << vehicleId
 			<< ", heading: " << heading
 			<< ", speed: " << speed
 			<< ", latitude: " << latitude
 			<< ", longitude: " << longitude
-			<< ", elevation: " << elevation;
+			<< ", elevation: " << elevation<< " \n";
 
 	//send BSM
 
@@ -93,12 +101,13 @@ BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint
 	decodedBsm.set_Elevation_m((float)(elevation / 1000.0 - 500));
 	decodedBsm.set_IsElevationValid(true);
 
-	FILE_LOG(logDEBUG1) << "Decoded BSM: " << decodedBsm;
+	
 
 	BasicSafetyMessage *bsm = (BasicSafetyMessage *)calloc(1, sizeof(BasicSafetyMessage));
 	if (bsm)
 		BsmConverter::ToBasicSafetyMessage(decodedBsm, *bsm);
-
+	
+	FILE_LOG(logDEBUG1) << "MessageReceiver:: Decoded BSM: " << decodedBsm;
 	// Note that this constructor assumes control of cleaning up the J2735 structure pointer
 	return new BsmMessage(bsm);
 }
@@ -161,13 +170,15 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
 
-	PLOG(logDEBUG) << "Received " << msg;
+	PLOG(logDEBUG) << "MessageReceiver:: Received Right after TMX " << msg <<" with message encoding type = " << msg.get_encoding();
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
 	{
 		if (msg.get_encoding() == api::ENCODING_JSON_STRING)
 		{
 			// Check to see if the payload is a routable message
+			PLOG(logDEBUG)<<" MessageReceiver:: Received a json message \n"; 
+
 			message payloadMsg = msg.get_payload<message>();
 			if (payloadMsg.get_untyped("header.type", "Unknown") != "Unknown")
 			{
@@ -185,7 +196,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 				byte_stream bytes; 
 				if (bytes.size() > 8)
 				{
-					PLOG(logDEBUG) << "Looking for abbreviated message in bytes " << bytes;
+					PLOG(logDEBUG) << "MessageReceiver:: Looking for abbreviated message in bytes " << bytes;
 					uint16_t msgType;
 					uint8_t msgVersion;
 					uint16_t id;
@@ -217,7 +228,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 					dataLength = ntohs(*((uint16_t*)&(bytes.data()[6])));
 
 
-					PLOG(logDEBUG1) << "Got message,  msgType: " << msgType
+					PLOG(logDEBUG) << " MessageReceiver:: Got message,  msgType: " << msgType
 							<< ", msgVersion: " << msgVersion
 							<< ", id: " << id
 							<< ", dataLength: " << dataLength;
@@ -279,7 +290,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 							break;
 						default:
 							{
-								PLOG(logDEBUG) << "Unknown byte format.  Dropping message";
+								PLOG(logDEBUG) << "MessageReceiver:: Unknown byte format.  Dropping message";
 							}
 							return;
 						}
@@ -292,7 +303,26 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 				return;
 			}
 		}
-	}
+	}	
+		// ANJAN --  remove later DNU
+		///  IF the message is bsm and the length is greater than typical part I,  treat the message as BSM  part II 
+		///  extended payload. This means, undergoing an extraction of values from the payload and rebranding 
+		/// the sendmsg variable to create a complete bsm message  using more value key pair than normal bsm 
+
+
+	// std::string myData = sendMsg->to_string();
+	// message_type *tmp = 0;
+
+	// asn_dec_rval_t rval;
+
+	// rval = xer_decode(NULL, get_descriptor(), (void **)&tmp, myData.c_str(), myData.size());
+	// if (rval.code != RC_OK)
+	// {
+	// 	std::stringstream err;
+	// 	err << "Unable to decode " << MessageSubType << " from " << myData <<
+	// 					"\nFailed after " << rval.consumed << " bytes.";
+	// 		BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
+	// }
 
 	// Make sure the timestamp matches the incoming source message
 
@@ -321,10 +351,14 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		PLOG(logDEBUG) << "Routing " << name << " message.";
 
 		if (routeDsrc)
+		{	PLOG(logDEBUG)<<" MessageReceiver::  routeDSRC == TRUE ";
 			sendMsg->set_flags(IvpMsgFlags_RouteDSRC);
+		}
 		else
+		{
+			PLOG(logDEBUG)<<" MessageReceiver::  routeDSRC == FALSE";
 			sendMsg->set_flags(IvpMsgFlags_None);
-
+		}
 		this->OutgoingMessage(*sendMsg);
 	}
 }
@@ -392,7 +426,7 @@ int MessageReceiverPlugin::Main()
 			if (len > 0)
 			{
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
-				PLOG(logDEBUG) << "Received "  << len << " bytes.";
+				PLOG(logDEBUG) << "In MessageReceiver before TMX, Received "  << len << " bytes.";
 
 				totalBytes += len;
 

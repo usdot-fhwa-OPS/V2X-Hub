@@ -35,7 +35,7 @@ typedef enum partII_Value_PR {
 } partII_Value_PR;
 
 /* PartIIcontent */
-typedef struct PartIIcontent_151P0 {
+typedef struct PartIIcontent {
 	PartII_Id_t	 partII_Id;
 	struct partII_Value {
 		partII_Value_PR present;
@@ -51,12 +51,12 @@ typedef struct PartIIcontent_151P0 {
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
-} PartIIcontent_151P0_t;
+} PartIIcontent_t;
 
 /* Implementation */
-extern asn_TYPE_descriptor_t asn_DEF_PartIIcontent_151P0;
-extern asn_SEQUENCE_specifics_t asn_SPC_PartIIcontent_151P0_specs_1;
-extern asn_TYPE_member_t asn_MBR_PartIIcontent_151P0_1[2];
+extern asn_TYPE_descriptor_t asn_DEF_PartIIcontent;
+extern asn_SEQUENCE_specifics_t asn_SPC_PartIIcontent_specs_1;
+extern asn_TYPE_member_t asn_MBR_PartIIcontent_1[2];
 
 #ifdef __cplusplus
 }
