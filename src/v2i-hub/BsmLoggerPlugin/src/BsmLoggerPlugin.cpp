@@ -167,6 +167,11 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	else
 		speed_mph = 8191;
 
+	// check for extended packets 
+
+	
+
+
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
 	_logFile << DSRCmsgID_basicSafetyMessage << ",,"; // DSRC_MessageID,  vehicle_ID
 	_logFile	<< bsmTmpID << "," << bsm->coreData.secMark  << ","; // BSM_tmp_ID, transtime
@@ -179,8 +184,6 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
 	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
-	//_logFile 	<< bsm->partII[0].list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<".-.";
-	_logFile<< bsm->partII[0].list.array[0]->partII_Id<<",";
 	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->confidence<<",";
 	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathPrediction->radiusOfCurve<<",";
 	_logFile<<bsm->partII[0].list.array[0]->partII_Value.choice.VehicleSafetyExtensions.pathHistory->crumbData.list.array[0]->latOffset<<",";
@@ -229,7 +232,8 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 				"brakePressure, "
 				"hardBraking,  "
 				"transTo, "
-				"transmission_received_time" << endl;
+				"transmission_received_time, "
+				"" << endl;
 
 	}
 }
