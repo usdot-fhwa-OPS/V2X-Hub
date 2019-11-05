@@ -304,25 +304,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 			}
 		}
 	}	
-		// ANJAN --  remove later DNU
-		///  IF the message is bsm and the length is greater than typical part I,  treat the message as BSM  part II 
-		///  extended payload. This means, undergoing an extraction of values from the payload and rebranding 
-		/// the sendmsg variable to create a complete bsm message  using more value key pair than normal bsm 
 
-
-	// std::string myData = sendMsg->to_string();
-	// message_type *tmp = 0;
-
-	// asn_dec_rval_t rval;
-
-	// rval = xer_decode(NULL, get_descriptor(), (void **)&tmp, myData.c_str(), myData.size());
-	// if (rval.code != RC_OK)
-	// {
-	// 	std::stringstream err;
-	// 	err << "Unable to decode " << MessageSubType << " from " << myData <<
-	// 					"\nFailed after " << rval.consumed << " bytes.";
-	// 		BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
-	// }
 
 	// Make sure the timestamp matches the incoming source message
 
