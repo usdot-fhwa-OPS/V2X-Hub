@@ -145,7 +145,6 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	int32_t longitude = bsm->coreData.Long;
 	int32_t longAcceleration = bsm->coreData.accelSet.Long;
 
-	std::cout<<"ProgessBsmMessage - lat: "<< latitude <<" ,"<<" lon: "<< longitude << std::endl;
 
 	uint16_t rawSpeed = bsm->coreData.speed;
 	uint16_t rawHeading = bsm->coreData.heading;
