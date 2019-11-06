@@ -161,13 +161,11 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		// Convert from .02 meters/sec to mph.
 		speed_mph = rawSpeed / 50 * 2.2369362920544;
 
-		//std::cout << "Vehicle Lat/Long/Heading/Speed: " << vehiclePoint.Latitude << ", " << vehiclePoint.Longitude << ", " << heading << ", " << speed << std::endl;
 		isSuccess = true;
 	}
 	else
 		speed_mph = 8191;
 
-	// check for extended packets 
 	bool partIIpresent = false; 
 	bool sirensOK = false;
 	bool lightsOK = false;
@@ -205,7 +203,7 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		if(lightsOK)
 			_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse;
 	}
-	_logFile	<< endl;
+	_logFile<< endl;
 
 
 }
