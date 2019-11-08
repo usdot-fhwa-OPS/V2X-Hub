@@ -302,6 +302,54 @@ public:
 		}
 	}
 
+	/*
+	 * Function to check for extended bytes and if found, strip them out for valid ASN.1 encoded messages
+	 * Looks for prepended extra bytes 
+	 * Understands the extended meaning and length fields
+	 * Strips them out to create a valid hex string 
+	 * returns the byte vector with valid hex string 
+
+	*/
+
+     inline int TmxJ2735ExtendedBytes(tmx::byte_stream &bytes)
+	{	
+
+		// for(int i=0;i<bytes.size();i++)
+		// 	std::cout<<bytes[i]; 
+		// std::cout<<std::endl;
+
+
+		int msgIdindex=0; // msgId = DD
+		if (bytes[0] == 0x00)
+		{
+			std::cout<<"No Extended bytes found"; 
+			return 0; 
+		}
+		if(bytes[0] == 0x03){ // extended bytes present 
+			if(bytes[1] == 0x00) // length < 64 bytes [ 0300DD]
+				msgIdindex = 1;
+			if(bytes[1] == 0x80){ //  
+				if(bytes[2] == 0x81) // 128 < length < 256 [ 038081XX00DD ]
+					msgIdindex = 4; 
+				else if (bytes[2] == 0x82) // length > 256 [ 038082XXXX00DD ]
+					msgIdindex = 5; 
+				else // 64 < length < 128 bytes  [0380XX00DD] 
+					msgIdindex = 3; 
+			}
+			std::cout<<"Extended bytes found"; 
+		}
+
+		bytes.erase(bytes.begin(),bytes.begin()+msgIdindex);
+
+		// for(int i=0;i<bytes.size();i++)
+		// 	std::cout<<bytes[i]; 
+		// std::cout<<std::endl;
+
+		return msgIdindex; 
+
+
+	}
+
 
 	/**
 	 * Create a new J2735 Routeable Message from the given byte stream.  The message ID is separated
@@ -313,6 +361,15 @@ public:
 	inline TmxJ2735EncodedMessageBase *NewMessage(tmx::byte_stream &bytes)
 	{
 		error_message.reset();
+
+		// look for extra bytes in the byte_stream 
+		int msgidindex;
+		if(msgidindex = TmxJ2735ExtendedBytes(bytes))
+		{
+			std::string byteStr(bytes.begin(),bytes.end());
+			std::cout<<" Return = "<< msgidindex<< ",   Extended bytes found, sanitized::";
+		}
+
 
 		std::string codec;
 		int id = GetCodecAndMessageId(codec, bytes);
