@@ -181,55 +181,57 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
 	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
-	if (bsm->partII[0].list.array[1]->partII_Value.present ==  partII_Value_PR_SpecialVehicleExtensions) {
-		try
-		{
-			if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
-				_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
-				_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
-				_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
-			}
-			else 
+
+		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+			try
 			{
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
+				}
+				else 
+				{
+					_logFile<<",,,";
+				}
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
+			}
+			try {
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";	
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<",";
+				}
+				else
+				{
+					_logFile<<",,";
+				}
+				
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
+			}
+		}
+		if(bsm->partII[0].list.count >= partII_Value_PR_SupplementalVehicleExtensions){
+		try {
+			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {	
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
+			}
+			else {
 				_logFile<<",,,";
 			}
-		}
+		}			
 		catch(exception &e)
-		{
-			PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
-		}
-		try {
-			if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
-		 		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";	
-				_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<",";
-			}
-			else
 			{
-				_logFile<<",,";
+				PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
 			}
-			
 		}
-		catch(exception &e)
-		{
-			PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
-		}
-	}
-	if(bsm->partII[0].list.array[2]->partII_Value.present == 	partII_Value_PR_SupplementalVehicleExtensions){
-	try {
-		if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {	
-			_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
-			_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
-			_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
-		}
-		else {
-			_logFile<<",,,";
-		}
-	}			
-	catch(exception &e)
-		{
-			PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
-		}
-	}
+
 	_logFile<< endl;
 
 

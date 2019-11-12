@@ -75,18 +75,21 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 
 	auto bsm=msg.get_j2735_data();
 
-	try {
-			if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
-				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == SirenInUse_inUse ) // if lights on 
-					mp->VehicleLocatorWorker(&msg);
-				else if (bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse && 
-						bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
-	 				mp->VehicleLocatorWorker(&msg);
-			}
-	}
-	catch(exception &e)
-	{
-		PLOG(logDEBUG)<<"Standard Exception:; Vehicle alerts Unavailable";
+
+	if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+		try {
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
+					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == SirenInUse_inUse ) // if lights on 
+						mp->VehicleLocatorWorker(&msg);
+					else if (bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse && 
+							bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
+						mp->VehicleLocatorWorker(&msg);
+				}
+		}
+		catch(exception &e)
+		{
+			PLOG(logDEBUG)<<"Standard Exception:; Vehicle alerts Unavailable";
+		}
 	}
 	
 }
