@@ -169,14 +169,6 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	bool sirensOK = false;
 	bool lightsOK = false;
 
-	if(bsm->partII[0].list.array[0]->partII_Id >= 0)
-		partIIpresent = true; 
-	if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse >= 0)
-		sirensOK =true;
-	if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse >= 0)
-		lightsOK = true;  
-
-
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
 	_logFile << DSRCmsgID_basicSafetyMessage << ",,"; // DSRC_MessageID,  vehicle_ID
 	_logFile	<< bsmTmpID << "," << bsm->coreData.secMark  << ","; // BSM_tmp_ID, transtime
@@ -189,19 +181,57 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
 	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
-	if (partIIpresent) {
-		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
-		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
-		_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
-		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
-		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
-		_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
-		
-		if(sirensOK)	
-			_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";
-		if(lightsOK)
-			_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse;
-	}
+
+		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+			try
+			{
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
+				}
+				else 
+				{
+					_logFile<<",,,";
+				}
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
+			}
+			try {
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";	
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<",";
+				}
+				else
+				{
+					_logFile<<",,";
+				}
+				
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
+			}
+		}
+		if(bsm->partII[0].list.count >= partII_Value_PR_SupplementalVehicleExtensions){
+		try {
+			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {	
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
+			}
+			else {
+				_logFile<<",,,";
+			}
+		}			
+		catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
+			}
+		}
+
 	_logFile<< endl;
 
 
