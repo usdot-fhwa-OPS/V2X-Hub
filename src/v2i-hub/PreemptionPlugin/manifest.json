@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"Preemption",
 	"description":"Preemption plugin for the IVP system.",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"version":"3.0.0",
+	"exeLocation":"/bin/PreemptionPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"configuration":[
@@ -30,6 +30,11 @@
 			"key":"map_path",
 			"default":"/geo.json",
 			"description":"The map_path for Preemption plugin."
+		},
+		{
+			"key":"allowedList",
+			"default":"{\"validVehicles\":[\"292710445\",\"123456789\",\"2345678\"]}",
+			"description":"List of vehicles BSM id that are allowed"
 		}
 	]
 }

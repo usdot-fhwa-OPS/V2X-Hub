@@ -8,10 +8,15 @@
 
 #include "PreemptionPlugin.hpp"
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
+
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
+using namespace boost::property_tree;
 
 namespace PreemptionPlugin
 {
@@ -39,12 +44,32 @@ PreemptionPlugin::~PreemptionPlugin()
 
 void PreemptionPlugin::UpdateConfigSettings()
 {
-
 	GetConfigValue("BasePreemptionOid", BasePreemptionOid);
 	GetConfigValue("ipwithport", ipwithport);
 	GetConfigValue("snmp_community", snmp_community);
 	GetConfigValue("map_path", map_path);
 	mp->ProcessMapMessageFile(map_path);
+	GetConfigValue("allowedList",allowedListjson);
+
+	std::stringstream ss; 
+	ptree pr; 
+	ss<<allowedListjson; 
+	read_json(ss,pr);
+
+	BOOST_FOREACH(auto &validveh, pr.get_child("validVehicles"))
+	{
+		int val = validveh.second.get_value<int>(); 
+		std::vector<int>::iterator it = std::find(allowedList.begin(),allowedList.end(),val);
+		
+		if(it == allowedList.end())
+			allowedList.push_back(val);
+	}
+
+	for(int i = 0;i<allowedList.size() ;i++)
+	{
+		std::cout<<"Preemption Allowed List "<<allowedList[i]<<std::endl;
+	}
+
 
 }
 
@@ -72,23 +97,32 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 	if(mp->GeofenceSet.size() < 0) {
 		mp->ProcessMapMessageFile(map_path);
 	}
-
+	int32_t bsmTmpID;
+	
 	auto bsm=msg.get_j2735_data();
+	unsigned char* buf = bsm->coreData.id.buf; 
 
+	bsmTmpID =  (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+	
 
-	if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
-		try {
-				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
-					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == SirenInUse_inUse ) // if lights on 
-						mp->VehicleLocatorWorker(&msg);
-					else if (bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse && 
-							bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
-						mp->VehicleLocatorWorker(&msg);
-				}
-		}
-		catch(exception &e)
-		{
-			PLOG(logDEBUG)<<"Standard Exception:; Vehicle alerts Unavailable";
+	std::vector<int>::iterator it = std::find(allowedList.begin(),allowedList.end(),bsmTmpID);
+	
+	if( it != allowedList.end())
+	{	
+		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+			try {
+					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
+						if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == SirenInUse_inUse ) // if lights on 
+							mp->VehicleLocatorWorker(&msg);
+						else if (bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse && 
+								bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
+							mp->VehicleLocatorWorker(&msg);
+					}
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:; Vehicle alerts Unavailable";
+			}
 		}
 	}
 	
