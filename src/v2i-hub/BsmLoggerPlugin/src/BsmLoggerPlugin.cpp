@@ -165,9 +165,16 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	else
 		speed_mph = 8191;
 
-	bool partIIpresent = false; 
-	bool sirensOK = false;
-	bool lightsOK = false;
+
+	
+	// if(bsm->regional != NULL){
+	// 	std::cout<<" BSMLOGGER:: regional not NULL\n";
+	// 	if(bsm->regional->list.count >= regExtValue_PR_NOTHING)
+	// 	{
+	// 		std::cout<<"BSMLOGGER:: "<<bsm->regional->list.array[0]<<std::endl;
+	// 	}
+	// }
+
 
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
 	_logFile << DSRCmsgID_basicSafetyMessage << ",,"; // DSRC_MessageID,  vehicle_ID
@@ -276,7 +283,8 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 				"vehicletype, "
 				"Respondertype, "
 				"SirenState, "
-				"LightState, " 
+				"LightState, "
+				"VehicleDescription, " 
 				"" << endl;
 
 	}

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <atomic>
 #include <thread>
+#include <vector>
 #include <DecodedBsmMessage.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <BasicSafetyMessage.h>
@@ -54,5 +55,7 @@ class PreemptionPlugin: public PluginClient
 		// sends oid to controler
 		int SendOid(const char *PreemptionOid, const char *value);
 		tmx::utils::UdpClient *_signSimClient = NULL;
+		std::string allowedListjson; 
+		std::vector<int> allowedList; 
 	};
 };
