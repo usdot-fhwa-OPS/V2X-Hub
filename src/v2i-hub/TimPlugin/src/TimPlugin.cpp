@@ -114,7 +114,7 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-bool TimPlugin::timDuration(string _startTimDate, string _stopTimDate, string _startTimTime, string _stopTimTime)
+bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _startTimTime, string _stopTimTime)
 {
 	string _endTime = ("23:59:59");
 
@@ -357,7 +357,7 @@ int TimPlugin::Main() {
 	uint64_t lastSendTime = 0;
 	string mapFileCopy;
 
-	while timDuration(true) {
+	while TimDuration(true) {
 
 		while (_plugin->state != IvpPluginState_error) {
 		
