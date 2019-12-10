@@ -181,12 +181,10 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 	StopTimTime >> get_time( &time_stop, "%m-%d-%Y %H:%M:%S" );
 	time_t secondsStopTime = mktime( & time_stop );
 
-	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
+	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime))
 		return true;
 
 	return false;
-
-	}
 }
 
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
