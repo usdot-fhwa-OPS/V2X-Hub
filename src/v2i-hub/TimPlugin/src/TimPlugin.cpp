@@ -183,10 +183,9 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 
 	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
 		return true;
-	}
-	else 
-	{
-		return false;
+
+	return false;
+
 	}
 }
 
@@ -357,7 +356,7 @@ int TimPlugin::Main() {
 	uint64_t lastSendTime = 0;
 	string mapFileCopy;
 
-	while TimDuration(true) {
+	while (TimDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime)) {
 
 		while (_plugin->state != IvpPluginState_error) {
 		
