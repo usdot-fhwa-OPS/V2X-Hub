@@ -114,7 +114,7 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-bool TimPlugin::timDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime) 
+bool TimPlugin::timDuration(string _startTimDate, string _stopTimDate, string _startTimTime, string _stopTimTime)
 {
 	string _endTime = ("23:59:59");
 
