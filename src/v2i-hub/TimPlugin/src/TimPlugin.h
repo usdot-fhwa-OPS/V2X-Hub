@@ -98,7 +98,7 @@ protected:
 	int GetHighestPriorityZoneId(unsigned int speedLimit_mph);
 	void SetStatusForVehiclesInZones();
 
-
+	bool TimPlugin::timDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime);
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	void TestFindRegion();
 
@@ -113,6 +113,10 @@ private:
 	uint64_t _frequency = 0;
 	uint64_t _snapInterval = 0;
 	uint64_t _vehicleTimeout = 1000;
+	string _startTimDate = mm-dd-YYYY;
+	string _stopTimDate = mm-dd-YYYY;
+	string _startTimTime = HH:MM:SS;
+	string _stopTimTime = HH:MM:SS;
 
 	TravelerInformation _tim;
 
