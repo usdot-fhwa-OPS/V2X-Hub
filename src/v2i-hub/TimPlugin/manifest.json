@@ -1,0 +1,57 @@
+{
+	"name":"TIM",
+	"description":"Provides Traveller Information Message (TIM).",
+	"version":"3.2.0",
+	"exeLocation":"/bin/TimPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24602,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"TIM",
+			"description":"Travelor Information Message indicating the active Work Zone information."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the TIM in milliseconds."
+		},
+		{
+			"key":"MapFile",
+			"default":"IVP_GF_TIM.xml",
+			"description":""
+		},
+		{
+			"key":"Snap Interval",
+			"default":"300",
+			"description":"The interval in milliseconds to keep a vehicle within a zone before allowing it to transition out of all zones."
+		},
+		{
+			"key":"Vehicle Timeout",
+			"default":"2000",
+			"description":"Timeout in milliseconds when a vehicle is removed from all zones if a BSM has not been received."
+		}
+		{
+			"key":"Start Broadcast Date (mm-dd-YYYY)",
+			"default":"mm-dd-YYYY",
+			"description":"The Start Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
+		}
+		{
+			"key":"Stop Broadcast Date (mm-dd-YYYY)",
+			"default":"mm-dd-YYYY",
+			"description":"The Stop Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
+		}
+		{
+			"key":"Start Broadcast Time (HH:MM:SS)",
+			"default":"HH:MM:SS",
+			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
+		}
+		{
+			"key":"Stop Broadcast Time (HH:MM:SS)",
+			"default":"HH:MM:SS",
+			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
+		}
+	]
+}
