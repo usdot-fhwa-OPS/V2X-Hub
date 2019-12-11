@@ -32,22 +32,22 @@
 			"key":"Vehicle Timeout",
 			"default":"2000",
 			"description":"Timeout in milliseconds when a vehicle is removed from all zones if a BSM has not been received."
-		}
+		},
 		{
 			"key":"Start Broadcast Date (mm-dd-YYYY)",
 			"default":"mm-dd-YYYY",
 			"description":"The Start Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
-		}
+		},
 		{
 			"key":"Stop Broadcast Date (mm-dd-YYYY)",
 			"default":"mm-dd-YYYY",
 			"description":"The Stop Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
-		}
+		},
 		{
 			"key":"Start Broadcast Time (HH:MM:SS)",
 			"default":"HH:MM:SS",
 			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
-		}
+		},
 		{
 			"key":"Stop Broadcast Time (HH:MM:SS)",
 			"default":"HH:MM:SS",
