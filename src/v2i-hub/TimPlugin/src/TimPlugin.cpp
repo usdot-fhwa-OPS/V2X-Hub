@@ -354,9 +354,9 @@ int TimPlugin::Main() {
 	uint64_t lastSendTime = 0;
 	string mapFileCopy;
 
-	while (TimDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime)) {
-
-		while (_plugin->state != IvpPluginState_error) {
+	while (_plugin->state != IvpPluginState_error) {
+		
+		while (TimDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime)) {
 		
 			if (IsPluginState(IvpPluginState_registered))
 			{
@@ -423,9 +423,8 @@ int TimPlugin::Main() {
 				}
 			}
 
-			usleep(50000);
 		}
-
+		usleep(50000);
 
 	}
 
