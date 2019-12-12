@@ -38,10 +38,37 @@ $ sudo make install
 
 The new libwebsockets static library should now be available in /usr/local to build against.
 
+
+An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is available through the V2X-Hub repo and is located in “ext/server" folder. To compile the web service as a shared library following steps are to be taken: 
+
+```
+$ cd ext/server
+$ cmake .
+$ make 
+$ sudo make install 
+```
+Googletest is another utility used by the V2X-hub for unit tests. Here are the steps to install googletest. The googletest application has to be installed in the prerequisite step first before proceeding. 
+
+```
+$ cd /usr/src/googletest/googletest
+$ sudo mkdir build
+$ cd build
+$ sudo cmake ..
+$ sudo make
+$ sudo cp libgtest* /usr/lib/
+$ cd ..
+$ sudo rm -rf build
+
+
+$ sudo mkdir /usr/local/lib/googletest
+$ sudo ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
+$ sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+```
+
 Now, run the following commands from V2X-Hub directory.
 ```
 $ cd src/v2i-hub
-$ cmake .
+$ cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake
 $ make
 ```
 
