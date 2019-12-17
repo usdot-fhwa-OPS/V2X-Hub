@@ -39,9 +39,16 @@ $ sudo make install
 The new libwebsockets static library should now be available in /usr/local to build against.
 
 
-An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is available through the V2X-Hub repo and is located in “ext/server" folder. To compile the web service as a shared library following steps are to be taken: 
+An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is available through the V2X-Hub repo and is located in “ext/server" folder. To compile the web service as a shared library following steps are to be taken:
 
 ```
+$ cd ext/
+$ git clone https://github.com/nitroshare/qhttpengine.git
+$ cd qhttpengine
+$ cmake . 
+$ make 
+$ sudo make install
+
 $ cd ext/server
 $ cmake .
 $ make 
