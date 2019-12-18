@@ -25,7 +25,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd64:latest
+    image: usdotfhwaops/v2xhubamd:latest
     container_name: v2xhub
     network_mode: host
     restart: always
