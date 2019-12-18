@@ -26,6 +26,13 @@ RUN cmake -DLWS_WITH_SHARED=OFF .
 RUN make
 RUN make install
 
+WORKDIR /home/V2X-Hub/ext
+RUN git clone https://github.com/nitroshare/qhttpengine.git
+WORKDIR /home/V2X-Hub/ext/qhttpengine
+RUN cmake .
+RUN make 
+RUN make install
+
 WORKDIR /home/V2X-Hub/ext/server
 RUN cmake .
 RUN make
