@@ -27,7 +27,7 @@ RUN make
 RUN make install
 
 WORKDIR /home/V2X-Hub/ext
-RUN git clone https://github.com/nitroshare/qhttpengine.git
+RUN git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
 WORKDIR /home/V2X-Hub/ext/qhttpengine
 RUN cmake .
 RUN make 
