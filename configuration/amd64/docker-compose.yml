@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db:
-    image: usdotfhwaops/v2x-mysql:v1.1
+    image: mysql:5.7
     container_name: mysql
     environment:
       - MYSQL_DATABASE=IVP
@@ -25,9 +25,11 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2x-hub:v3.2
+    image: usdotfhwaops/v2xhubamd64:latest
     container_name: v2xhub
     network_mode: host
     restart: always
     depends_on: 
       - php
+    volumes:
+      - ./logs:/var/log/tmx 
