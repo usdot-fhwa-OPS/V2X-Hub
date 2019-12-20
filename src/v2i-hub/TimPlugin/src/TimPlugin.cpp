@@ -44,10 +44,10 @@ void TimPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<uint64_t>("Snap Interval", _snapInterval);
 	GetConfigValue<uint64_t>("Vehicle Timeout", _vehicleTimeout);
-	GetConfigValue("Start Broadcast Date (mm-dd-YYYY):", _startTimDate);
-	GetConfigValue("Stop Broadcast Date (mm-dd-YYYY):", _stopTimDate);
-	GetConfigValue("Start Broadcast Time (HH:MM:SS):", _startTimTime);
-	GetConfigValue("Stop Broadcast Time (HH:MM:SS):", _stopTimTime);
+	GetConfigValue<string>("Start Broadcast Date (mm-dd-YYYY):", _startTimDate);
+	GetConfigValue<string>("Stop Broadcast Date (mm-dd-YYYY):", _stopTimDate);
+	GetConfigValue<string>("Start Broadcast Time (HH:MM:SS):", _startTimTime);
+	GetConfigValue<string>("Stop Broadcast Time (HH:MM:SS):", _stopTimTime);
 
 }
 
@@ -127,21 +127,21 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 	time_t secondsStartDate = mktime( & date_start );
 
 	ostringstream lastTimTime_;
-    lastTimTime_ << _stopTimDate << " " << _endTime;
-    auto lastTime = lastTimTime_.str();
+        lastTimTime_ << _stopTimDate << " " << _endTime;
+        auto lastTime = lastTimTime_.str();
 
-    istringstream stopTimDate(lastTime);
+        istringstream stopTimDate(lastTime);
 
 	struct tm date_stop;
 	stopTimDate >> get_time( &date_stop, "%m-%d-%Y %H:%M:%S" );
 	time_t secondsStopDate = mktime( & date_stop );
 
-    auto t = time(nullptr);
-    auto tm = *localtime(&t);
+        auto t = time(nullptr);
+        auto tm = *localtime(&t);
 
-    ostringstream oss1;
-    oss1 << put_time(&tm, "%m-%d-%Y");
-    auto _currentTimDate = oss1.str();
+        ostringstream oss1;
+        oss1 << put_time(&tm, "%m-%d-%Y");
+        auto _currentTimDate = oss1.str();
 
 	istringstream currentTimDate(_currentTimDate);
 
@@ -149,25 +149,25 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 	currentTimDate >> get_time( &date_current, "%m-%d-%Y" );
 	time_t secondsCurrentDate = mktime( & date_current );
 
-    ostringstream oss2;
-    oss2 << put_time(&tm, "%H:%M:%S");
-    auto _currentTimTime = oss2.str();
+        ostringstream oss2;
+        oss2 << put_time(&tm, "%H:%M:%S");
+        auto _currentTimTime = oss2.str();
 
 	ostringstream currentTimTime_;
-    currentTimTime_ << _currentTimDate << " " << _currentTimTime;
-    auto currentTime = currentTimTime_.str();
+        currentTimTime_ << _currentTimDate << " " << _currentTimTime;
+        auto currentTime = currentTimTime_.str();
 
-    ostringstream startTimTime_;
-    startTimTime_ << _currentTimDate << " " << _startTimTime;
-    auto StartTime = startTimTime_.str();
+        ostringstream startTimTime_;
+        startTimTime_ << _currentTimDate << " " << _startTimTime;
+        auto StartTime = startTimTime_.str();
 
-    ostringstream stopTimTime_;
-    stopTimTime_ << _currentTimDate << " " << _stopTimTime;
-    auto StopTime = stopTimTime_.str();
+        ostringstream stopTimTime_;
+        stopTimTime_ << _currentTimDate << " " << _stopTimTime;
+        auto StopTime = stopTimTime_.str();
 
-    istringstream currentTimTime(currentTime);
-    istringstream StartTimTime(StartTime);
-    istringstream StopTimTime(StopTime);
+        istringstream currentTimTime(currentTime);
+        istringstream StartTimTime(StartTime);
+        istringstream StopTimTime(StopTime);
 
 	struct tm time_current;
 	currentTimTime >> get_time( &time_current, "%m-%d-%Y %H:%M:%S" );
@@ -181,10 +181,11 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 	StopTimTime >> get_time( &time_stop, "%m-%d-%Y %H:%M:%S" );
 	time_t secondsStopTime = mktime( & time_stop );
 
-	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime))
+	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
 		return true;
-
-	return false;
+	} else {
+		return false;
+	}
 }
 
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
