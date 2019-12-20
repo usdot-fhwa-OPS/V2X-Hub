@@ -113,10 +113,10 @@ private:
 	uint64_t _frequency = 0;
 	uint64_t _snapInterval = 0;
 	uint64_t _vehicleTimeout = 1000;
-	string _startTimDate = "01-01-2019";
-	string _stopTimDate = "12-31-2019";
-	string _startTimTime = "06:00:00";
-	string _stopTimTime = "21:00:00";
+	string _startTimDate;
+	string _stopTimDate;
+	string _startTimTime;
+	string _stopTimTime;
 
 	TravelerInformation _tim;
 
