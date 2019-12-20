@@ -4,7 +4,7 @@
 	"version":"3.2.0",
 	"exeLocation":"/bin/TimPlugin",
 	"coreIpAddr":"127.0.0.1",
-	"corePort":24602,
+	"corePort":24601,
 	"messageTypes":[
 		{
 			"type":"J2735",
