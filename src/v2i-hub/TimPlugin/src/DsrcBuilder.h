@@ -30,7 +30,7 @@ typedef NodeListXY NodeList_t;
 class DsrcBuilder
 {
 public:
-	static void AddCurveSpeedAdvisory(TiDataFrame *frame, unsigned int speedLimit);
+	static void AddTimAdvisory(TiDataFrame *frame, unsigned int speedLimit);
 	static void AddItisCode(ItisList *list, long code);
 	static void AddItisText(ItisList *list, std::string text);
 	static void SetPacketId(TravelerInformation *tim);
