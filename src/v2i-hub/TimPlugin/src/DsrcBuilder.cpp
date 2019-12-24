@@ -13,7 +13,7 @@
 #include "DsrcBuilder.h"
 #include "TimeHelper.h"
 
-void DsrcBuilder::AddCurveSpeedAdvisory(TiDataFrame *frame, unsigned int speedLimit)
+void DsrcBuilder::AddTimAdvisory(TiDataFrame *frame, unsigned int speedLimit)
 {
 	frame->content.present = TravelerDataFrame__content_PR_advisory;
 
