@@ -216,7 +216,7 @@ void XmlCurveParser::ReadRoot(DOMElement* root, TravelerInformation *tim)
 	for (int i = 0; i < tim->dataFrames.list.count; i++)
 	{
 		TiDataFrame *frame = tim->dataFrames.list.array[i];
-		DsrcBuilder::AddCurveSpeedAdvisory(frame, speedLimit);
+		DsrcBuilder::AddTimAdvisory(frame, speedLimit);
 	}
 }
 
