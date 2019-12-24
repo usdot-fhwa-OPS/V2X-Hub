@@ -65,7 +65,7 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 
 bool TimPlugin::TimDuration()
 {
-	PLOG(logERROR)<<"Reached in TimDuration";
+	PLOG(logDEBUG)<<"Reached in TimDuration";
 
 	string _endTime = ("23:59:59");
 
@@ -132,18 +132,11 @@ bool TimPlugin::TimDuration()
 	StopTimTime >> get_time( &time_stop, "%m-%d-%Y %H:%M:%S" );
 	time_t secondsStopTime = mktime( & time_stop );
 
-	PLOG(logERROR)<<"secondsStartDate: " << secondsStartDate;
-	PLOG(logERROR)<<"secondsCurrentDate: " << secondsCurrentDate;
-	PLOG(logERROR)<<"secondsStopDate: " << secondsStopDate;
-	PLOG(logERROR)<<"secondsStartTime: " << secondsStartTime;
-	PLOG(logERROR)<<"secondsCurrentTime: " << secondsCurrentTime;
-	PLOG(logERROR)<<"secondsStopTime: " << secondsStopTime;
-
 	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
-		PLOG(logERROR)<<"True";
+		PLOG(logERROR)<<"TimDuration is True";
 		return true;
 	} else {
-		PLOG(logERROR)<<"False";
+		PLOG(logdEBUG)<<"TimDuration is False";
 		return false;
 	}
 }
@@ -181,18 +174,6 @@ bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 	return true;
 }
 
-void TimPlugin::TestFindRegion()
-{
-	if (_isTimLoaded)
-	{
-		WGS84Point point;
-		point.Latitude = 42.2891;
-		point.Longitude = -83.71933195;
-		int regionNumber = VehicleLocate::FindRegion(&_tim, point, 0);
-		std::cout << "In Region: " << regionNumber << std::endl;
-	}
-}
-
 int TimPlugin::Main() {
 	FILE_LOG(logINFO) << "Starting plugin.";
 
@@ -206,7 +187,7 @@ int TimPlugin::Main() {
 
 		while (TimDuration()) {
 
-			PLOG(logERROR)<<"Reached TimPlugin::main";
+			PLOG(logDEBUG)<<"Reached TimPlugin::main";
 
 			if (IsPluginState(IvpPluginState_registered))
 			{
