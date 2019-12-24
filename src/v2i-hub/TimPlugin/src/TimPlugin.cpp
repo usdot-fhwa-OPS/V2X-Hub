@@ -15,7 +15,7 @@ namespace TimPlugin {
 
 
 /**
- * Construct a new EpcwPlugin with the given name.
+ * Construct a new TimPlugin with the given name.
  *
  * @param name The name to give the plugin for identification purposes
  */
