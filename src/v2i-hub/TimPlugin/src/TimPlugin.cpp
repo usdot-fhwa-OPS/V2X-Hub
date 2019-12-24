@@ -23,6 +23,12 @@ namespace TimPlugin {
 TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
+        std::lock_guard<mutex> lock(_cfgLock);
+        GetConfigValue("Start_Broadcast_Date", _startDate);
+        GetConfigValue("Stop_Broadcast_Date", _stopDate);
+        GetConfigValue("Start_Broadcast_Time", _startTime);
+        GetConfigValue("Stop_Broadcast_Time", _stopTime);
+
 	AddMessageFilter < BsmMessage > (this, &TimPlugin::HandleBasicSafetyMessage);
 
 	SubscribeToMessages();
@@ -44,11 +50,12 @@ void TimPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<uint64_t>("Snap Interval", _snapInterval);
 	GetConfigValue<uint64_t>("Vehicle Timeout", _vehicleTimeout);
-	GetConfigValue<string>("Start Broadcast Date (mm-dd-YYYY):", _startTimDate);
-	GetConfigValue<string>("Stop Broadcast Date (mm-dd-YYYY):", _stopTimDate);
-	GetConfigValue<string>("Start Broadcast Time (HH:MM:SS):", _startTimTime);
-	GetConfigValue<string>("Stop Broadcast Time (HH:MM:SS):", _stopTimTime);
 
+        std::lock_guard<mutex> lock(_cfgLock);
+	GetConfigValue("Start_Broadcast_Date", _startDate);
+	GetConfigValue("Stop_Broadcast_Date", _stopDate);
+	GetConfigValue("Start_Broadcast_Time", _startTime);
+	GetConfigValue("Stop_Broadcast_Time", _stopTime);
 }
 
 void TimPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -114,20 +121,22 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _startTimTime, string _stopTimTime)
+bool TimPlugin::TimDuration()
 {
+	PLOG(logERROR)<<"Reached in TimDuration";
+
 	string _endTime = ("23:59:59");
 
-	istringstream startTimDate(_startTimDate);
-	istringstream startTimTime(_startTimTime);
-	istringstream stopTimTime(_stopTimTime);
+	istringstream startTimDate(_startDate);
+        istringstream startTimTime(_startTime);
+        istringstream stopTimTime(_stopTime);
 
 	struct tm date_start;
 	startTimDate >> get_time( &date_start, "%m-%d-%Y" );
 	time_t secondsStartDate = mktime( & date_start );
 
 	ostringstream lastTimTime_;
-        lastTimTime_ << _stopTimDate << " " << _endTime;
+        lastTimTime_ << _stopDate << " " << _endTime;
         auto lastTime = lastTimTime_.str();
 
         istringstream stopTimDate(lastTime);
@@ -158,11 +167,11 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
         auto currentTime = currentTimTime_.str();
 
         ostringstream startTimTime_;
-        startTimTime_ << _currentTimDate << " " << _startTimTime;
+        startTimTime_ << _currentTimDate << " " << _startTime;
         auto StartTime = startTimTime_.str();
 
         ostringstream stopTimTime_;
-        stopTimTime_ << _currentTimDate << " " << _stopTimTime;
+        stopTimTime_ << _currentTimDate << " " << _stopTime;
         auto StopTime = stopTimTime_.str();
 
         istringstream currentTimTime(currentTime);
@@ -181,9 +190,18 @@ bool TimPlugin::TimDuration(string _startTimDate, string _stopTimDate, string _s
 	StopTimTime >> get_time( &time_stop, "%m-%d-%Y %H:%M:%S" );
 	time_t secondsStopTime = mktime( & time_stop );
 
+	PLOG(logERROR)<<"secondsStartDate: " << secondsStartDate;
+	PLOG(logERROR)<<"secondsCurrentDate: " << secondsCurrentDate;
+	PLOG(logERROR)<<"secondsStopDate: " << secondsStopDate;
+	PLOG(logERROR)<<"secondsStartTime: " << secondsStartTime;
+	PLOG(logERROR)<<"secondsCurrentTime: " << secondsCurrentTime;
+	PLOG(logERROR)<<"secondsStopTime: " << secondsStopTime;
+
 	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
+		PLOG(logERROR)<<"True";
 		return true;
 	} else {
+		PLOG(logERROR)<<"False";
 		return false;
 	}
 }
@@ -356,9 +374,11 @@ int TimPlugin::Main() {
 	string mapFileCopy;
 
 	while (_plugin->state != IvpPluginState_error) {
-		
-		while (TimDuration(_startTimDate, _stopTimDate, _startTimTime, _stopTimTime)) {
-		
+
+		while (TimDuration()) {
+
+			PLOG(logERROR)<<"Reached TimPlugin::main";
+
 			if (IsPluginState(IvpPluginState_registered))
 			{
 				pthread_mutex_lock(&_settingsMutex);
@@ -406,13 +426,13 @@ int TimPlugin::Main() {
 				if (_isTimLoaded && sendFrequency > 0 && (time - lastSendTime) > sendFrequency)
 				{
 
-					PLOG(logDEBUG)<<"Send TIM";
+					PLOG(logERROR)<<"Send TIM";
 					lastSendTime = time;
 					TimMessage timMsg(_tim);
 
-					PLOG(logDEBUG)<<"Send TIM 2";
+					PLOG(logERROR)<<"Send TIM 2";
 
-					PLOG(logDEBUG)<<timMsg;
+					PLOG(logERROR)<<timMsg;
 					TimEncodedMessage timEncMsg;
 					timEncMsg.initialize(timMsg);
 
