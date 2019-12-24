@@ -98,7 +98,7 @@ protected:
 	int GetHighestPriorityZoneId(unsigned int speedLimit_mph);
 	void SetStatusForVehiclesInZones();
 
-	bool TimDuration(string _startTimDate, string _stopTimDate, string _startTimTime, string _stopTimTime);
+	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	void TestFindRegion();
 
@@ -113,10 +113,11 @@ private:
 	uint64_t _frequency = 0;
 	uint64_t _snapInterval = 0;
 	uint64_t _vehicleTimeout = 1000;
-	string _startTimDate;
-	string _stopTimDate;
-	string _startTimTime;
-	string _stopTimTime;
+
+	std::string _startDate;
+	std::string _stopDate;
+	std::string _startTime;
+	std::string _stopTime;
 
 	TravelerInformation _tim;
 
@@ -127,8 +128,7 @@ private:
 	unsigned int _speedLimit = 0;
 	int _lastMsgIdSent = -1;
 
-	
-
 };
+std::mutex _cfgLock;
 }
 #endif
