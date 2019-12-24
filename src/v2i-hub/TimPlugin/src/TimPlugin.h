@@ -41,7 +41,6 @@
 #include <ApplicationMessage.h>
 #include <ApplicationDataMessage.h>
 
-#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/messages/auto_message.hpp>
 
 using boost::property_tree::ptree;
@@ -58,20 +57,6 @@ using namespace tmx::messages;
 #define EGRESSREGION "Egress Region"
 
 
-
-struct ZoneInfo
-{
-	// ID of the zone the vehicle is in.  0 indicates no zone.
-	int ZoneId;
-
-	// The current speed of the vehicle in MPH.
-	float Speed_mph;
-
-	// The time the ZoneId was last updated.
-	// Note that if a 0 is received for ZoneId, this time will not be set unless
-	// it has been longer than a configurable duration.
-	uint64_t LastUpdateTime;
-};
 
 namespace TimPlugin {
 
@@ -90,29 +75,16 @@ protected:
 	//void OnMessageReceived(IvpMessage *msg);
 	void OnStateChange(IvpPluginState state);
 
-	// Message handler functions
-	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-
-	void UpdateVehicleInZone(int32_t vehicleId, int zoneId, float speed_mph);
-	void RemoveOldVehicles();
-	int GetHighestPriorityZoneId(unsigned int speedLimit_mph);
-	void SetStatusForVehiclesInZones();
-
 	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	void TestFindRegion();
 
 private:
 
-	// For each vehicle ID, store what zone they are in.
-	map<int32_t, ZoneInfo> _vehicleInZone;
-
 	pthread_mutex_t _settingsMutex = PTHREAD_MUTEX_INITIALIZER;
 	pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
 
 	uint64_t _frequency = 0;
-	uint64_t _snapInterval = 0;
-	uint64_t _vehicleTimeout = 1000;
 
 	std::string _startDate;
 	std::string _stopDate;
