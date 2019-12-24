@@ -28,10 +28,6 @@ TimPlugin::TimPlugin(string name) :
         GetConfigValue("Start_Broadcast_Time", _startTime);
         GetConfigValue("Stop_Broadcast_Time", _stopTime);
 
-	AddMessageFilter < BsmMessage > (this, &TimPlugin::HandleBasicSafetyMessage);
-
-	SubscribeToMessages();
-
 }
 
 TimPlugin::~TimPlugin() {
