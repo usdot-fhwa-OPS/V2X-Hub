@@ -77,7 +77,6 @@ protected:
 
 	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
-	void TestFindRegion();
 
 private:
 
