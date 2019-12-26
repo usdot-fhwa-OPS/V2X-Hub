@@ -133,10 +133,10 @@ bool TimPlugin::TimDuration()
 	time_t secondsStopTime = mktime( & time_stop );
 
 	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
-		PLOG(logERROR)<<"TimDuration is True";
+		PLOG(logDEBUG)<<"TimDuration is True";
 		return true;
 	} else {
-		PLOG(logdEBUG)<<"TimDuration is False";
+		PLOG(logDEBUG)<<"TimDuration is False";
 		return false;
 	}
 }
