@@ -213,7 +213,7 @@ void HandleSignal(int sig_num, siginfo_t * info, void * ucontext)
 #elif defined(__arm__)
 			caller_address = (void *) uc->uc_mcontext.arm_pc; // ARM specific
 #else
-			caller_address = 0 // TODO: Add support for other arch.
+			caller_address = 0; // TODO: Add support for other arch.
 #endif
 
 	SignalException ex(sig_num);

@@ -1,0 +1,37 @@
+{
+	"name":"Pedestrian",
+	"description":"Pedestrian plugin for the IVP system.",
+	"version":"3.0.0",
+	"exeLocation":"/bin/PedestrianPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"PSM",
+			"description":"Pedestrian Safety Message"
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the PSM in milliseconds."
+		},
+		{
+			"key":"Instance",
+			"default":"0",
+			"description":"The instance of Pedestrian plugin."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"192.168.55.46",
+			"description":"IP address at which the web service exists"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"9000",
+			"description":"Port at which Web service exists"
+		}
+	]
+}

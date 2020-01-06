@@ -1,15 +1,15 @@
 {
-  "name": "@TMX_PLUGIN_NAME@",
+  "name": "DSRCMessageManager",
   "description": "Plugin that listens for TMX messages and forwards them to the DSRC Radio (i.e. the RSU).",
-  "version": "@PROJECT_VERSION@",
-  "exeLocation": "/bin/@PROJECT_NAME@",
+  "version": "3.2.0",
+  "exeLocation": "/bin/DsrcImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
   "corePort": 24601,
   "messageTypes": [],
   "configuration": [
     {
       "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" } ] }",
+      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\" } ] }",
       "description": "JSON data defining the message types and PSIDs for messages forwarded to the DSRC radio at destination 1."
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "key": "Destination_1",
-      "default": "192.168.25.10:4589",
+      "default": "192.168.55.77:1516",
       "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_1."
     },
     {

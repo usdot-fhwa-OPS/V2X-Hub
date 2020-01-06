@@ -43,6 +43,7 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 	_muteDsrc = false;
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
+	UpdateConfigSettings();
 }
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
@@ -216,8 +217,8 @@ bool DsrcMessageManagerPlugin::ParseJsonMessageConfig(const std::string& json, u
 		// Example JSON parsed:
 		// { "Messages": [ { "TmxType": "MAP-P", "SendType": "MAP", "PSID": "0x8002", "Channel": "172" }, { "TmxType": "SPAT-P", "SendType": "SPAT", "PSID": "0x8002" } ] }
 		// The strings below (with extra quotes escaped) can be used for testing.
-		//string json2 = "{ \"Messages\": [ ] }";
-		//string json2 = "{ \"Messages\": [ { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" } ] }";
+		//string json2 = "{ "Messages": [ ] }";
+		//string json2 = "{ "Messages": [ { "TmxType": "MAP-P", "SendType": "MAP", "PSID": "0x8002" }, { "TmxType": "SPAT-P", "SendType": "SPAT", "PSID": "0x8002" } ] }";
 
 		// Read the JSON into a boost property tree.
 		ptree pt;
@@ -291,10 +292,10 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++)
 		msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 
-
+	PLOG(logWARNING)<<_messageConfigMap.size();
 	//loop through all MessageConfig and send to each with the proper TmxType
 	for (int configIndex = 0;configIndex < _messageConfigMap.size();configIndex++)
-	{
+	{	PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
 		if (_messageConfigMap[configIndex].TmxType == msg->subtype)
 		{
 			foundMessageType = true;
@@ -339,11 +340,10 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			}
 		}
 	}
-
 	if (!foundMessageType)
 	{
 		SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-		PLOG(logWARNING) << "TMX Subtype not found in configuration.  Message Ignored: " <<
+		PLOG(logWARNING)<<" WARNINNGGG TMX Subtype not found in configuration.  Message Ignored: " <<
 				"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		return;
 	}

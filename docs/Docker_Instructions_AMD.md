@@ -1,4 +1,4 @@
-# Running Dockerized V2X Hub
+# Running Dockerized V2X Hub for AMD based systems
 
 If you are running V2X Hub using a docker image, you can use the following instructions:
 
@@ -20,7 +20,7 @@ Docker Hub repo for mysql is located at: https://hub.docker.com/r/usdotfhwaops/v
 
 ## Run the V2X Hub image
 ```
-$ cd /V2X-Hub/configuration/
+$ cd /V2X-Hub/configuration/amd64/
 $ sudo docker-compose up
 ```
 
