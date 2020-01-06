@@ -3,7 +3,7 @@
 	"description":"Plugin to forward messages to the Florida ODEPlugin network",
 	"version":"3.2.0",
 	"exeLocation":"/bin/ODEPlugin",
-	"coreIpAddr":"10.30.100.105",
+	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[
 	],
