@@ -42,6 +42,17 @@
 			"key":"Stop_Broadcast_Time",
 			"default":"21:00:00",
 			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"127.0.0.1",
+			"description":"IP address at which the web service exists"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"9999",
+			"description":"Port at which Web service exists"
 		}
+
 	]
 }

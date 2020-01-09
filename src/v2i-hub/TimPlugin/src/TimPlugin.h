@@ -43,6 +43,38 @@
 
 #include <tmx/messages/auto_message.hpp>
 
+
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+#include <QCoreApplication>
+#include <QHostAddress>
+#include <QRegExp>
+#include <QStringList>
+#include <QSharedPointer>
+#include <QObject>
+
+#ifdef __linux__
+#include <signal.h>
+#include <unistd.h>
+#endif
+#include <qhttpengine/server.h>
+#include <qserverPedestrian/OAIApiRouter.h>
+#include <qserverPedestrian/OAIPSM.h>
+
+#include <xercesc/dom/DOM.hpp>
+#include <xercesc/dom/DOMDocument.hpp>
+#include <xercesc/dom/DOMDocumentType.hpp>
+#include <xercesc/dom/DOMElement.hpp>
+#include <xercesc/dom/DOMImplementation.hpp>
+#include <xercesc/dom/DOMImplementationLS.hpp>
+#include <xercesc/dom/DOMNodeIterator.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
+#include <xercesc/dom/DOMText.hpp>
+
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/util/XMLUni.hpp>
+
+
 using boost::property_tree::ptree;
 
 using namespace std;
@@ -66,6 +98,8 @@ public:
 	TimPlugin(std::string);
 	virtual ~TimPlugin();
 	int Main();
+	uint16_t webport;
+	std::string webip; 
 protected:
 
 	void UpdateConfigSettings();
@@ -77,6 +111,9 @@ protected:
 
 	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
+	int  StartWebService();
+	void TimRequestHandler(QHttpEngine::Socket *socket);
+
 
 private:
 
@@ -98,6 +135,22 @@ private:
 	bool _isTimLoaded = false;
 	unsigned int _speedLimit = 0;
 	int _lastMsgIdSent = -1;
+
+	// xml parser variables 
+
+	xercesc::XercesDOMParser *_timparser; 
+
+	// xml tags
+	XMLCh* TAG_root; 
+	XMLCh* TAG_timeupdate;
+	XMLCh* TAG_starttime;
+	XMLCh* TAG_stoptime; 
+	XMLCh* TAG_startdate; 
+	XMLCh* TAG_stopdate; 
+	XMLCh* TAG_timupdate; 
+
+	
+
 
 };
 std::mutex _cfgLock;

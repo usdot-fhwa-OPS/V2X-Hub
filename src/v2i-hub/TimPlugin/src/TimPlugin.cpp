@@ -8,10 +8,9 @@
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
+using namespace xercesc;
 
 namespace TimPlugin {
-
-
 
 
 /**
@@ -22,16 +21,87 @@ namespace TimPlugin {
 TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
+		// xml parser setup 
+
+		try
+		{
+			XMLPlatformUtils::Initialize();
+		}
+		catch(XMLException& e)
+		{
+			char *message =XMLString::transcode( e.getMessage());
+			PLOG(logERROR)<<" TimPlugin:: XML Parser DOm object initialize error\n"; 
+			XMLString::release(&message); 
+		}
+
+		TAG_root = XMLString::transcode("timdata");
+		TAG_starttime = XMLString::transcode("starttime");
+		TAG_stoptime = XMLString::transcode("stoptime");
+		TAG_startdate = XMLString::transcode("startdate");
+		TAG_stopdate = XMLString::transcode("stopdate");
+
+
+
         std::lock_guard<mutex> lock(_cfgLock);
         GetConfigValue("Start_Broadcast_Date", _startDate);
         GetConfigValue("Stop_Broadcast_Date", _stopDate);
         GetConfigValue("Start_Broadcast_Time", _startTime);
         GetConfigValue("Stop_Broadcast_Time", _stopTime);
+		GetConfigValue("WebServiceIP",webip);
+		GetConfigValue("WebServicePort",webport);
+
+		std::thread webthread(&TimPlugin::StartWebService,this);
+		webthread.join(); // wait for the thread to finish 
 
 }
 
 TimPlugin::~TimPlugin() {
 }
+
+void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
+{
+	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
+	QString st; 
+	while(socket->bytesAvailable()>0)
+	{	
+		st.append(socket->readAll());
+	}
+	QByteArray array = st.toLocal8Bit();
+
+	char* psmMsgdef = array.data(); 
+
+
+}
+
+
+int TimPlugin::StartWebService()
+{
+	//Web services 
+	char *placeholderX[1]={0};
+	int placeholderC=1;
+	QCoreApplication a(placeholderC,placeholderX);
+
+ 	QHostAddress address = QHostAddress(QString::fromStdString (webip));
+    quint16 port = static_cast<quint16>(webport);
+
+	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
+	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
+
+    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
+
+		this->TimRequestHandler(socket);
+    });
+
+    QHttpEngine::Server server(handler.data());
+
+    if (!server.listen(address, port)) {
+        qCritical("Unable to listen on the specified port.");
+        return 1;
+    }
+	return a.exec();
+
+}
+
 
 void TimPlugin::UpdateConfigSettings() {
 
@@ -247,7 +317,7 @@ int TimPlugin::Main() {
 					timEncMsg.initialize(timMsg);
 
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					timEncMsg.addDsrcMetadata(172, 0x8003);
+					timEncMsg.addDsrcMetadata(172, 0x8002);
 
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);
