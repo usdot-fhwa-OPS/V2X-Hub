@@ -13,7 +13,7 @@
 #endif
 
 #ifndef DEFAULT_LOG_LEVEL
-#define DEFAULT_LOG_LEVEL "ERROR"
+#define DEFAULT_LOG_LEVEL "DEBUG"
 #endif
 
 #define UNKNOWN_SOURCE "Unknown source"

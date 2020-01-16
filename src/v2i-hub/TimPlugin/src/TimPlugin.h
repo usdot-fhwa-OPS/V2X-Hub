@@ -126,6 +126,7 @@ private:
 	std::string _stopDate;
 	std::string _startTime;
 	std::string _stopTime;
+	std::string _timupdate; 
 
 	TravelerInformation _tim;
 
@@ -142,15 +143,11 @@ private:
 
 	// xml tags
 	XMLCh* TAG_root; 
-	XMLCh* TAG_timeupdate;
 	XMLCh* TAG_starttime;
 	XMLCh* TAG_stoptime; 
 	XMLCh* TAG_startdate; 
 	XMLCh* TAG_stopdate; 
 	XMLCh* TAG_timupdate; 
-
-	
-
 
 };
 std::mutex _cfgLock;

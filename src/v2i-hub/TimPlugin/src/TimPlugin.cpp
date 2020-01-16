@@ -13,6 +13,7 @@ using namespace xercesc;
 namespace TimPlugin {
 
 
+
 /**
  * Construct a new TimPlugin with the given name.
  *
@@ -22,6 +23,7 @@ TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
 		// xml parser setup 
+		FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
 		try
 		{
@@ -39,8 +41,9 @@ TimPlugin::TimPlugin(string name) :
 		TAG_stoptime = XMLString::transcode("stoptime");
 		TAG_startdate = XMLString::transcode("startdate");
 		TAG_stopdate = XMLString::transcode("stopdate");
+		TAG_timupdate = XMLString::transcode("Curve");
 
-
+		_timparser = new XercesDOMParser; 
 
         std::lock_guard<mutex> lock(_cfgLock);
         GetConfigValue("Start_Broadcast_Date", _startDate);
@@ -60,6 +63,8 @@ TimPlugin::~TimPlugin() {
 
 void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 {
+
+	// should read from the websocket and parse 
 	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
 	QString st; 
 	while(socket->bytesAvailable()>0)
@@ -68,10 +73,71 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	}
 	QByteArray array = st.toLocal8Bit();
 
-	char* psmMsgdef = array.data(); 
+	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
+ 	_timparser->setValidationScheme( XercesDOMParser::Val_Never );
+	_timparser->setDoNamespaces( false );
+	_timparser->setDoSchema( false );
+	_timparser->setLoadExternalDTD( false );
+
+	cout<<"'TimPlugin::  "<<_cloudUpdate<<endl;
+
+	try{
+		_timparser->parse(_cloudUpdate);
+		DOMDocument* timDoc = _timparser->getDocument();
+		DOMElement* timroot = timDoc -> getDocumentElement();
+
+		if(!timroot)
+		{
+			PLOG(logERROR)<<"TimPlugin:: Unable to find xml root element"; 
+			
+		}
+
+		//  time to read 
+		DOMNodeList* children = timroot->getChildNodes();
+		const XMLSSize_t childcount = children -> getLength();
+
+		for(XMLSSize_t i= 0; i< childcount;i++)
+		{
+			DOMNode* currentNode = children->item(i);
+			if (currentNode->getNodeType() != DOMNode::ELEMENT_NODE)
+			continue;
+
+			// This node is an Element.
+			DOMElement* currentElement = dynamic_cast<xercesc::DOMElement*>(currentNode);
+
+			if (XMLString::compareIString(TAG_starttime, currentElement->getTagName()) == 0)
+			{
+				 _startTime = XMLString::transcode(currentElement->getTextContent());
+				PLOG(logERROR)<<"TimPlugin:: Starttime loaded";  
+			}
+
+			
+
+
+		}
+
+
+
+
+		
+
+	}
+
+	catch(XMLException& e)
+	{	
+		char* message = xercesc::XMLString::transcode(e.getMessage());
+		PLOG(logERROR) << "Error parsing file: " << message << flush;
+		XMLString::release(&message);
+	}
+
+
+
+
 
 
 }
+
+
 
 
 int TimPlugin::StartWebService()
@@ -98,6 +164,7 @@ int TimPlugin::StartWebService()
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
+	PLOG(logERROR)<<"TimPlugin:: Started web service";
 	return a.exec();
 
 }

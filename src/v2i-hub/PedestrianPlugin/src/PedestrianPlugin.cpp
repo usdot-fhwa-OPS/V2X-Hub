@@ -34,6 +34,8 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	GetConfigValue("WebServiceIP",webip);
 	GetConfigValue("WebServicePort",webport);
 
+
+
 	std::thread webthread(&PedestrianPlugin::StartWebService,this);
 	webthread.join(); // wait for the thread to finish 
 
@@ -64,6 +66,7 @@ int PedestrianPlugin::StartWebService()
 
  	QHostAddress address = QHostAddress(QString::fromStdString (webip));
     quint16 port = static_cast<quint16>(webport);
+
 
 	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
 	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
@@ -101,6 +104,8 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue("WebServiceIP",webip);
 	GetConfigValue("WebServicePort",webport);
 	GetConfigValue("Instance", instance);
+
+
 
 }
 
