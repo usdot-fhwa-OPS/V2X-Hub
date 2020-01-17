@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2xhubamd:latest
+      - image: usdotfhwaops/v2xsonar:1.2
         environment:
           TERM: xterm
           
@@ -47,25 +47,65 @@ jobs:
       - run: 
           name: Pull V2X-Hub
           command: |
-            git clone --depth 1 git@github.com:v2xhub/V2X-Hub.git V2X-Hub
+            git clone --branch feature/sonar_integration --depth 1 git@github.com:v2xhub/V2X-Hub.git V2X-Hub
+            ls V2X-Hub/src/
       - run:
           name: Build tmx
           command: |
+            set -x
+            sudo apt-get install cmake
+            source /home/V2X-Hub/.base-image/init-env.sh
             cd /home/V2X-Hub/src/tmx
-            cmake .
+            build-wrapper-linux-x86-64 --out-dir ../../bw-output cmake .
             make
-            make install
-       
+            make install  
+            cat ../../bw-output/build-wrapper-dump.json     
       - run:
           name: Build V2i-Hub
           command: |
+            source /home/V2X-Hub/.base-image/init-env.sh
             cd /home/V2X-Hub/src/v2i-hub
-            cmake .
+            build-wrapper-linux-x86-64 --out-dir ../../bw-output cmake .
             make
-            
-
-
-
-
-
-
+            cat ../../bw-output/build-wrapper-dump.json   
+      - run:
+          name: Run Sonar Scanner
+          command: |
+            set -x
+            sudo apt-get install cmake
+            source /home/V2X-Hub/.base-image/init-env.sh
+            pwd
+            ls
+            cd /home/V2X-Hub/src
+            pwd
+            ls
+            cd tmx
+            pwd
+            ls
+            build-wrapper-linux-x86-64 --out-dir ../../bw-output ../build.sh
+            ls ../../bw-output
+            cat ../../bw-output/build-wrapper-dump.json
+            cat ../../bw-output/build-wrapper.log
+            cd ../../..
+            # TESTING BUILD WRAPPER   
+            source /home/V2X-Hub/.base-image/init-env.sh
+            pwd
+            ls
+            cat V2X-Hub/bw-output/build-wrapper-dump.json
+            if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
+              echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
+              cd V2X-Hub
+              sonar-scanner -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
+              exit 0;
+            fi
+            echo "PR branch ${CIRCLE_BRANCH}"
+            echo "Repo name ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+            echo "URL ${CIRCLE_PULL_REQUEST}"
+            export PR_NUM=`echo ${CIRCLE_PULL_REQUEST} | cut -d'/' -f7`
+            echo "PR number ${PR_NUM}"
+            export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
+            export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
+            echo "Target Branch = ${TARGET_BRANCH}"
+            cd V2X-Hub/src/v2i-hub
+            git fetch --force origin ${TARGET_BRANCH}:${TARGET_BRANCH}
+            sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}
