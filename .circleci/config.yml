@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2xhubamd:latest
+      - image: usdotfhwaops/v2xsonar:1.0
         environment:
           TERM: xterm
           
