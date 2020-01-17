@@ -65,17 +65,7 @@ jobs:
       - run:
           name: Run Sonar Scanner
           command: |
-            apt-get -y install unzip wget nodejs
-            mkdir /downloads/sonarqube -p
-            mkdir /opt/sonar-scanner
-            cd /downloads/sonarqube
-            wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
-            unzip sonar-scanner-cli-4.2.0.1873-linux.zip
-            mv sonar-scanner-4.2.0.1873-linux /opt/sonar-scanner
-            export PATH="$PATH:/opt/sonar-scanner/bin"
-            pwd
-            cd ../..
-            ls
+            source /home/V2X-Hub/.base-image/init-env.sh
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
               pwd
