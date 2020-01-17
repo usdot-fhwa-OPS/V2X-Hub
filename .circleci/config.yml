@@ -63,7 +63,7 @@ jobs:
             cmake .
             make
       - run:
-          name: Download Sonar
+          name: Run Sonar Scanner
           command: |
             apt-get -y install unzip wget nodejs
             mkdir /downloads/sonarqube -p
@@ -73,9 +73,6 @@ jobs:
             unzip sonar-scanner-cli-4.2.0.1873-linux.zip
             mv sonar-scanner-4.2.0.1873-linux /opt/sonar-scanner
             export PATH="$PATH:/opt/sonar-scanner/bin"
-      - run:
-          name: Run Sonar Scanner
-          command: |
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
               cd src/v2i-hub
