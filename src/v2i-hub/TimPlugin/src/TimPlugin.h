@@ -27,10 +27,13 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <ctime>
-
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 
 #include "PluginUtil.h"
@@ -61,21 +64,10 @@
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
 
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/dom/DOMDocument.hpp>
-#include <xercesc/dom/DOMDocumentType.hpp>
-#include <xercesc/dom/DOMElement.hpp>
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationLS.hpp>
-#include <xercesc/dom/DOMNodeIterator.hpp>
-#include <xercesc/dom/DOMNodeList.hpp>
-#include <xercesc/dom/DOMText.hpp>
-
-#include <xercesc/parsers/XercesDOMParser.hpp>
-#include <xercesc/util/XMLUni.hpp>
 
 
-using boost::property_tree::ptree;
+
+
 
 using namespace std;
 
@@ -127,27 +119,17 @@ private:
 	std::string _startTime;
 	std::string _stopTime;
 	std::string _timupdate; 
+	FILE *timfile; 
 
 	TravelerInformation _tim;
 
 	mutex _mapFileLock;
 	string _mapFile;
 	atomic<bool> _isMapFileNew{false};
+	atomic<bool> _isTimFileNew{false};
 	bool _isTimLoaded = false;
 	unsigned int _speedLimit = 0;
 	int _lastMsgIdSent = -1;
-
-	// xml parser variables 
-
-	xercesc::XercesDOMParser *_timparser; 
-
-	// xml tags
-	XMLCh* TAG_root; 
-	XMLCh* TAG_starttime;
-	XMLCh* TAG_stoptime; 
-	XMLCh* TAG_startdate; 
-	XMLCh* TAG_stopdate; 
-	XMLCh* TAG_timupdate; 
 
 };
 std::mutex _cfgLock;

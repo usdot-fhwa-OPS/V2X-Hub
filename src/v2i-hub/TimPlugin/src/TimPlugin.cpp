@@ -5,10 +5,16 @@
 #include <tmx/messages/IvpDmsControlMsg.h>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
+
+
+
+
+
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
 using namespace xercesc;
+using namespace boost::property_tree;
 
 namespace TimPlugin {
 
@@ -23,28 +29,7 @@ TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
 		// xml parser setup 
-		FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
-
-		try
-		{
-			XMLPlatformUtils::Initialize();
-		}
-		catch(XMLException& e)
-		{
-			char *message =XMLString::transcode( e.getMessage());
-			PLOG(logERROR)<<" TimPlugin:: XML Parser DOm object initialize error\n"; 
-			XMLString::release(&message); 
-		}
-
-		TAG_root = XMLString::transcode("timdata");
-		TAG_starttime = XMLString::transcode("starttime");
-		TAG_stoptime = XMLString::transcode("stoptime");
-		TAG_startdate = XMLString::transcode("startdate");
-		TAG_stopdate = XMLString::transcode("stopdate");
-		TAG_timupdate = XMLString::transcode("Curve");
-
-		_timparser = new XercesDOMParser; 
-
+		
         std::lock_guard<mutex> lock(_cfgLock);
         GetConfigValue("Start_Broadcast_Date", _startDate);
         GetConfigValue("Stop_Broadcast_Date", _stopDate);
@@ -52,6 +37,8 @@ TimPlugin::TimPlugin(string name) :
         GetConfigValue("Stop_Broadcast_Time", _stopTime);
 		GetConfigValue("WebServiceIP",webip);
 		GetConfigValue("WebServicePort",webport);
+
+		timfile = fopen("tempTim.conf","rw");
 
 		std::thread webthread(&TimPlugin::StartWebService,this);
 		webthread.join(); // wait for the thread to finish 
@@ -73,70 +60,50 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	}
 	QByteArray array = st.toLocal8Bit();
 
+	//cout<<"TimPlugin:: length received  "<<st.length()<<endl;
+
 	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
- 	_timparser->setValidationScheme( XercesDOMParser::Val_Never );
-	_timparser->setDoNamespaces( false );
-	_timparser->setDoSchema( false );
-	_timparser->setLoadExternalDTD( false );
+ 
 
-	cout<<"'TimPlugin::  "<<_cloudUpdate<<endl;
-
-	try{
-		_timparser->parse(_cloudUpdate);
-		DOMDocument* timDoc = _timparser->getDocument();
-		DOMElement* timroot = timDoc -> getDocumentElement();
-
-		if(!timroot)
-		{
-			PLOG(logERROR)<<"TimPlugin:: Unable to find xml root element"; 
-			
-		}
-
-		//  time to read 
-		DOMNodeList* children = timroot->getChildNodes();
-		const XMLSSize_t childcount = children -> getLength();
-
-		for(XMLSSize_t i= 0; i< childcount;i++)
-		{
-			DOMNode* currentNode = children->item(i);
-			if (currentNode->getNodeType() != DOMNode::ELEMENT_NODE)
-			continue;
-
-			// This node is an Element.
-			DOMElement* currentElement = dynamic_cast<xercesc::DOMElement*>(currentNode);
-
-			if (XMLString::compareIString(TAG_starttime, currentElement->getTagName()) == 0)
-			{
-				 _startTime = XMLString::transcode(currentElement->getTextContent());
-				PLOG(logERROR)<<"TimPlugin:: Starttime loaded";  
-			}
-
-			
+	cout<<"TimPlugin:: length received  "<<strlen(_cloudUpdate)<<endl;
 
 
-		}
+	std::stringstream ss;
+	ss << _cloudUpdate;
 
+	ptree ptr; 
+	read_xml(ss,ptr);
 
-
-
+	BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
+	{
+		if(labeltext == "starttime")
+			_startTime = n.second.get_value<std::string>();
 		
+		if(labeltext == "stoptime")
+			_stopTime = n.second.get_value<std::string>();
+
+		if(labeltext == "startdate")
+			_startDate = n.second.get_value<std::string>();
+
+		if(labeltext == "stopdate")
+			_stopDate = n.second.get_value<std::string>();
+
+		if(labeltext == "timupdate"){
+			_timupdate = n.second.get_value<std::string>();
+			fputs(_timupdate,timfile);
+			_isTimFileNew = true; 
+			_isMapFileNew = false;
+		}
 
 	}
-
-	catch(XMLException& e)
-	{	
-		char* message = xercesc::XMLString::transcode(e.getMessage());
-		PLOG(logERROR) << "Error parsing file: " << message << flush;
-		XMLString::release(&message);
-	}
-
-
-
-
+	std::cout<<"TimPlugin::  "<<_startTime<<std::endl;
+	std::cout<<"TimPlugin::  "<<_stopTime<<std::endl; 
+	std::cout<<"TimPlugin::  "<<_startDate<<std::endl; 
+	std::cout<<"TimPlugin::  "<<_stopDate<<std::endl; 
+	std::cout<<"TimPlugin::  "<<_timupdate<<std::endl; 
 
 
 }
-
 
 
 
@@ -164,7 +131,7 @@ int TimPlugin::StartWebService()
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logERROR)<<"TimPlugin:: Started web service";
+	PLOG(logDEBUG4)<<"TimPlugin:: Started web service";
 	return a.exec();
 
 }
@@ -178,9 +145,10 @@ void TimPlugin::UpdateConfigSettings() {
 		lock_guard<mutex> lock(_mapFileLock);
 		if (GetConfigValue<string>("MapFile", _mapFile))
 			_isMapFileNew = true;
+			_isTimFileNew =false; 
 	}
 	
-        std::lock_guard<mutex> lock(_cfgLock);
+    std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue("Start_Broadcast_Date", _startDate);
 	GetConfigValue("Stop_Broadcast_Date", _stopDate);
 	GetConfigValue("Start_Broadcast_Time", _startTime);
@@ -346,6 +314,24 @@ int TimPlugin::Main() {
 					if (_isTimLoaded)
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
 					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
+					//_isTimLoaded = LoadTim(&_tim, _timupdate);
+					//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
+					//TestFindRegion();
+					pthread_mutex_unlock(&_timMutex);
+				}
+				if (_isTimFileNew)
+				{
+					{
+						lock_guard<mutex> lock(_mapFileLock);
+						mapFileCopy = timfile;
+						_isTimFileNew = false;
+					}
+
+					pthread_mutex_lock(&_timMutex);
+					if (_isTimLoaded)
+						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
+					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
+					//_isTimLoaded = LoadTim(&_tim, _timupdate);
 					//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
 					//TestFindRegion();
 					pthread_mutex_unlock(&_timMutex);
