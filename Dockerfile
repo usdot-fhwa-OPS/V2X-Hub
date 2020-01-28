@@ -151,4 +151,15 @@ RUN cd $SONAR_DIR && \
         # Add scanner, wrapper, and jq to PATH
         sudo echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' > /home/V2X-Hub/.base-image/init-env.sh
 
+# Set metadata labels
+LABEL org.label-schema.schema-version="1.0"
+LABEL org.label-schema.name="V2X-Hub-SonarCloud"
+LABEL org.label-schema.description="Base image for CARMA CI testing using SonarCloud"
+LABEL org.label-schema.vendor="Leidos"
+LABEL org.label-schema.version="${VERSION}"
+LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations"
+LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-ops/V2X-HUB"
+LABEL org.label-schema.vcs-ref=${VCS_REF}
+LABEL org.label-schema.build-date=${BUILD_DATE}
+
 ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
