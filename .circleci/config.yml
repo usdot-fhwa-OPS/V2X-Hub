@@ -71,7 +71,7 @@ jobs:
               pwd
               ls
               cd V2X-Hub/src/v2i-hub
-              pwd
+              ls
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} 
               exit 0;
             fi
