@@ -70,8 +70,7 @@ jobs:
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
               pwd
               ls
-              cd /
-              cd home/V2X-Hub/src/v2i-hub
+              cd V2X-Hub/src/v2i-hub
               pwd
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} 
               exit 0;
