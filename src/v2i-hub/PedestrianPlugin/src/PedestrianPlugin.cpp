@@ -107,6 +107,11 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 
 
+	std::thread webthread(&PedestrianPlugin::StartWebService,this);
+	webthread.join(); // wait for the thread to finish 
+
+
+
 }
 
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)
