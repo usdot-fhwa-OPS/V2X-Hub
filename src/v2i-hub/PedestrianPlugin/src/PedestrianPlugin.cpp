@@ -31,8 +31,8 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	// fire up the web service on a thread PROTECTION required
 
 	std::lock_guard<mutex> lock(_cfgLock); 
-	GetConfigValue("WebServiceIP",webip);
-	GetConfigValue("WebServicePort",webport);
+	GetConfigValue<string>("WebServiceIP",webip);
+	GetConfigValue<uint16_t>("WebServicePort",webport);
 
 
 
@@ -101,9 +101,9 @@ void PedestrianPlugin::UpdateConfigSettings()
 	int instance;
 	std::lock_guard<mutex> lock(_cfgLock);
 
-	GetConfigValue("WebServiceIP",webip);
-	GetConfigValue("WebServicePort",webport);
-	GetConfigValue("Instance", instance);
+	GetConfigValue<string>("WebServiceIP",webip);
+	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<int>("Instance", instance);
 
 
 

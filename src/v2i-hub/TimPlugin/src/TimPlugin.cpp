@@ -31,12 +31,12 @@ TimPlugin::TimPlugin(string name) :
 		// xml parser setup 
 		
         std::lock_guard<mutex> lock(_cfgLock);
-        GetConfigValue("Start_Broadcast_Date", _startDate);
-        GetConfigValue("Stop_Broadcast_Date", _stopDate);
-        GetConfigValue("Start_Broadcast_Time", _startTime);
-        GetConfigValue("Stop_Broadcast_Time", _stopTime);
-		GetConfigValue("WebServiceIP",webip);
-		GetConfigValue("WebServicePort",webport);
+        GetConfigValue<string>("Start_Broadcast_Date", _startDate);
+        GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
+        GetConfigValue<string>("Start_Broadcast_Time", _startTime);
+        GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
+		GetConfigValue<string>("WebServiceIP",webip);
+		GetConfigValue<uint16_t>("WebServicePort",webport);
 
 		timfile = fopen("tempTim.conf","rw");
 
@@ -76,6 +76,8 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 
 	BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
 	{
+		std::string labeltext = n.first;
+
 		if(labeltext == "starttime")
 			_startTime = n.second.get_value<std::string>();
 		
@@ -90,7 +92,7 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 
 		if(labeltext == "timupdate"){
 			_timupdate = n.second.get_value<std::string>();
-			fputs(_timupdate,timfile);
+			//fputs(_timupdate,timfile);
 			_isTimFileNew = true; 
 			_isMapFileNew = false;
 		}
@@ -149,10 +151,16 @@ void TimPlugin::UpdateConfigSettings() {
 	}
 	
     std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue("Start_Broadcast_Date", _startDate);
-	GetConfigValue("Stop_Broadcast_Date", _stopDate);
-	GetConfigValue("Start_Broadcast_Time", _startTime);
-	GetConfigValue("Stop_Broadcast_Time", _stopTime);
+	GetConfigValue<string>("Start_Broadcast_Date", _startDate);
+	GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
+	GetConfigValue<string>("Start_Broadcast_Time", _startTime);
+	GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
+	GetConfigValue<string>("WebServiceIP",webip);
+	GetConfigValue<uint16_t>("WebServicePort",webport);
+
+	std::thread webthread(&TimPlugin::StartWebService,this);
+	webthread.join(); // wait for the thread to finish 
+	
 }
 
 void TimPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -323,7 +331,7 @@ int TimPlugin::Main() {
 				{
 					{
 						lock_guard<mutex> lock(_mapFileLock);
-						mapFileCopy = timfile;
+						mapFileCopy = _timupdate;
 						_isTimFileNew = false;
 					}
 
