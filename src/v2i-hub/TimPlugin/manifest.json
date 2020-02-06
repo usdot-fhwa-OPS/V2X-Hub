@@ -20,7 +20,7 @@
 		},
 		{
 			"key":"MapFile",
-			"default":"/home/anjanrayamajhi/Projects/V2X-TimPlugin/V2X-Hub/src/v2i-hub/TimPlugin/IVP_GF_TIM.xml",
+			"default":"IVP_GF_TIM.xml",
 			"description":""
 		},
 		{

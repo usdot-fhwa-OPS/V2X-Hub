@@ -8,8 +8,6 @@
 
 
 
-
-
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -38,8 +36,6 @@ TimPlugin::TimPlugin(string name) :
 		GetConfigValue<string>("WebServiceIP",webip);
 		GetConfigValue<uint16_t>("WebServicePort",webport);
 
-		timfile = fopen("tempTim.conf","rw");
-
 		std::thread webthread(&TimPlugin::StartWebService,this);
 		webthread.join(); // wait for the thread to finish 
 
@@ -60,13 +56,8 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	}
 	QByteArray array = st.toLocal8Bit();
 
-	//cout<<"TimPlugin:: length received  "<<st.length()<<endl;
-
 	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
  
-
-	cout<<"TimPlugin:: length received  "<<strlen(_cloudUpdate)<<endl;
-
 
 	std::stringstream ss;
 	ss << _cloudUpdate;
@@ -91,20 +82,11 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 			_stopDate = n.second.get_value<std::string>();
 
 		if(labeltext == "timupdate"){
-			_timupdate = n.second.get_value<std::string>();
-			//fputs(_timupdate,timfile);
-			_isTimFileNew = true; 
-			_isMapFileNew = false;
+			_mapFile = n.second.get_value<std::string>();
+			_isMapFileNew = true;
 		}
 
 	}
-	std::cout<<"TimPlugin::  "<<_startTime<<std::endl;
-	std::cout<<"TimPlugin::  "<<_stopTime<<std::endl; 
-	std::cout<<"TimPlugin::  "<<_startDate<<std::endl; 
-	std::cout<<"TimPlugin::  "<<_stopDate<<std::endl; 
-	std::cout<<"TimPlugin::  "<<_timupdate<<std::endl; 
-
-
 }
 
 
@@ -143,12 +125,12 @@ void TimPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<uint64_t>("Frequency", _frequency);
 
-	{
-		lock_guard<mutex> lock(_mapFileLock);
-		if (GetConfigValue<string>("MapFile", _mapFile))
-			_isMapFileNew = true;
-			_isTimFileNew =false; 
-	}
+	// {
+	// 	lock_guard<mutex> lock(_mapFileLock);
+	// 	if (GetConfigValue<string>("MapFile", _mapFile))
+	// 		_isMapFileNew = true;
+	// 		_isTimFileNew =false; 
+	// }
 	
     std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("Start_Broadcast_Date", _startDate);
@@ -322,29 +304,9 @@ int TimPlugin::Main() {
 					if (_isTimLoaded)
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
 					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-					//_isTimLoaded = LoadTim(&_tim, _timupdate);
-					//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
-					//TestFindRegion();
 					pthread_mutex_unlock(&_timMutex);
 				}
-				if (_isTimFileNew)
-				{
-					{
-						lock_guard<mutex> lock(_mapFileLock);
-						mapFileCopy = _timupdate;
-						_isTimFileNew = false;
-					}
 
-					pthread_mutex_lock(&_timMutex);
-					if (_isTimLoaded)
-						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
-					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-					//_isTimLoaded = LoadTim(&_tim, _timupdate);
-					//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
-					//TestFindRegion();
-					pthread_mutex_unlock(&_timMutex);
-				}
-				// Get system time in milliseconds.
 				uint64_t time = TimeHelper::GetMsTimeSinceEpoch();
 
 				// Update the start time of the TIM message if it is time.
@@ -378,7 +340,7 @@ int TimPlugin::Main() {
 					timEncMsg.initialize(timMsg);
 
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					timEncMsg.addDsrcMetadata(172, 0x8002);
+					timEncMsg.addDsrcMetadata(172, 0x8003);
 
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);
