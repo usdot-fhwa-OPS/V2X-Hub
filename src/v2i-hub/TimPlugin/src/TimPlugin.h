@@ -27,10 +27,13 @@
 #include <algorithm>
 #include <vector>
 #include <string>
-#include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <ctime>
-
+#include <boost/property_tree/xml_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/foreach.hpp>
 
 
 #include "PluginUtil.h"
@@ -43,7 +46,28 @@
 
 #include <tmx/messages/auto_message.hpp>
 
-using boost::property_tree::ptree;
+
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+#include <QCoreApplication>
+#include <QHostAddress>
+#include <QRegExp>
+#include <QStringList>
+#include <QSharedPointer>
+#include <QObject>
+
+#ifdef __linux__
+#include <signal.h>
+#include <unistd.h>
+#endif
+#include <qhttpengine/server.h>
+#include <qserverPedestrian/OAIApiRouter.h>
+#include <qserverPedestrian/OAIPSM.h>
+
+
+
+
+
 
 using namespace std;
 
@@ -66,6 +90,8 @@ public:
 	TimPlugin(std::string);
 	virtual ~TimPlugin();
 	int Main();
+	uint16_t webport;
+	std::string webip; 
 protected:
 
 	void UpdateConfigSettings();
@@ -77,6 +103,9 @@ protected:
 
 	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
+	int  StartWebService();
+	void TimRequestHandler(QHttpEngine::Socket *socket);
+
 
 private:
 
@@ -89,12 +118,15 @@ private:
 	std::string _stopDate;
 	std::string _startTime;
 	std::string _stopTime;
+	std::string _timupdate; 
+	FILE *timfile; 
 
 	TravelerInformation _tim;
 
 	mutex _mapFileLock;
 	string _mapFile;
 	atomic<bool> _isMapFileNew{false};
+	atomic<bool> _isTimFileNew{false};
 	bool _isTimLoaded = false;
 	unsigned int _speedLimit = 0;
 	int _lastMsgIdSent = -1;

@@ -20,7 +20,21 @@ paths:
               $ref: '#/components/schemas/PSM'
       responses:
         '201':
-          description: Created                  
+          description: Created    
+  /tim:
+    post:
+      summary: Add TIM update to queue.
+      description: registers updated TIM message for broadcasts
+      requestBody:
+        description: heading and geographic location of PSM
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PSM'
+      responses:
+        '201':
+          description: Created               
 components:
   schemas:
     PSM:

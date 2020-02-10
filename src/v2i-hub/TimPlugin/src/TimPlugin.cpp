@@ -5,12 +5,16 @@
 #include <tmx/messages/IvpDmsControlMsg.h>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
+
+
+
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
+using namespace xercesc;
+using namespace boost::property_tree;
 
 namespace TimPlugin {
-
 
 
 
@@ -22,32 +26,123 @@ namespace TimPlugin {
 TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
+		// xml parser setup 
+		
         std::lock_guard<mutex> lock(_cfgLock);
-        GetConfigValue("Start_Broadcast_Date", _startDate);
-        GetConfigValue("Stop_Broadcast_Date", _stopDate);
-        GetConfigValue("Start_Broadcast_Time", _startTime);
-        GetConfigValue("Stop_Broadcast_Time", _stopTime);
+        GetConfigValue<string>("Start_Broadcast_Date", _startDate);
+        GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
+        GetConfigValue<string>("Start_Broadcast_Time", _startTime);
+        GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
+		GetConfigValue<string>("WebServiceIP",webip);
+		GetConfigValue<uint16_t>("WebServicePort",webport);
+
+		std::thread webthread(&TimPlugin::StartWebService,this);
+		webthread.join(); // wait for the thread to finish 
 
 }
 
 TimPlugin::~TimPlugin() {
 }
 
+void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
+{
+
+	// should read from the websocket and parse 
+	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
+	QString st; 
+	while(socket->bytesAvailable()>0)
+	{	
+		st.append(socket->readAll());
+	}
+	QByteArray array = st.toLocal8Bit();
+
+	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
+ 
+
+	std::stringstream ss;
+	ss << _cloudUpdate;
+
+	ptree ptr; 
+	read_xml(ss,ptr);
+
+	BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
+	{
+		std::string labeltext = n.first;
+
+		if(labeltext == "starttime")
+			_startTime = n.second.get_value<std::string>();
+		
+		if(labeltext == "stoptime")
+			_stopTime = n.second.get_value<std::string>();
+
+		if(labeltext == "startdate")
+			_startDate = n.second.get_value<std::string>();
+
+		if(labeltext == "stopdate")
+			_stopDate = n.second.get_value<std::string>();
+
+		if(labeltext == "timupdate"){
+			_mapFile = n.second.get_value<std::string>();
+			_isMapFileNew = true;
+		}
+
+	}
+}
+
+
+
+int TimPlugin::StartWebService()
+{
+	//Web services 
+	char *placeholderX[1]={0};
+	int placeholderC=1;
+	QCoreApplication a(placeholderC,placeholderX);
+
+ 	QHostAddress address = QHostAddress(QString::fromStdString (webip));
+    quint16 port = static_cast<quint16>(webport);
+
+	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
+	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
+
+    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
+
+		this->TimRequestHandler(socket);
+    });
+
+    QHttpEngine::Server server(handler.data());
+
+    if (!server.listen(address, port)) {
+        qCritical("Unable to listen on the specified port.");
+        return 1;
+    }
+	PLOG(logDEBUG4)<<"TimPlugin:: Started web service";
+	return a.exec();
+
+}
+
+
 void TimPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<uint64_t>("Frequency", _frequency);
 
-	{
-		lock_guard<mutex> lock(_mapFileLock);
-		if (GetConfigValue<string>("MapFile", _mapFile))
-			_isMapFileNew = true;
-	}
+	// {
+	// 	lock_guard<mutex> lock(_mapFileLock);
+	// 	if (GetConfigValue<string>("MapFile", _mapFile))
+	// 		_isMapFileNew = true;
+	// 		_isTimFileNew =false; 
+	// }
 	
-        std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue("Start_Broadcast_Date", _startDate);
-	GetConfigValue("Stop_Broadcast_Date", _stopDate);
-	GetConfigValue("Start_Broadcast_Time", _startTime);
-	GetConfigValue("Stop_Broadcast_Time", _stopTime);
+    std::lock_guard<mutex> lock(_cfgLock);
+	GetConfigValue<string>("Start_Broadcast_Date", _startDate);
+	GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
+	GetConfigValue<string>("Start_Broadcast_Time", _startTime);
+	GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
+	GetConfigValue<string>("WebServiceIP",webip);
+	GetConfigValue<uint16_t>("WebServicePort",webport);
+
+	std::thread webthread(&TimPlugin::StartWebService,this);
+	webthread.join(); // wait for the thread to finish 
+	
 }
 
 void TimPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -209,11 +304,9 @@ int TimPlugin::Main() {
 					if (_isTimLoaded)
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
 					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-					//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
-					//TestFindRegion();
 					pthread_mutex_unlock(&_timMutex);
 				}
-				// Get system time in milliseconds.
+
 				uint64_t time = TimeHelper::GetMsTimeSinceEpoch();
 
 				// Update the start time of the TIM message if it is time.
