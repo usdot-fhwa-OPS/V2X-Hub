@@ -189,6 +189,8 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //transTo
 	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
 
+
+	if(bsm->partII != NULL) {
 		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
 			try
 			{
@@ -238,7 +240,7 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 				PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
 			}
 		}
-
+	}
 	_logFile<< endl;
 
 
