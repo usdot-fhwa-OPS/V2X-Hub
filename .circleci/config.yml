@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: ubuntu:18.04
+      - image: ubuntu:bionic-20190807
         environment:
           TERM: xterm
           
@@ -59,7 +59,6 @@ jobs:
             make install
             cd ../../../..
 
-            pwd
             cd /home/V2X-Hub-build/ext
             git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
             cd /home/V2X-Hub-build/ext/qhttpengine
@@ -67,18 +66,12 @@ jobs:
             make 
             make install
             
-            pwd
             cd /home/V2X-Hub-build/ext/server
-            pwd
             cmake .
             make
             make install
             
-            pwd
-            ls
             cd /usr/src/googletest/googletest
-            pwd
-            ls
             mkdir build
             cd /usr/src/googletest/googletest/build
             cmake ..
@@ -92,7 +85,6 @@ jobs:
             ldconfig
 
             cd ../../../../..
-            pwd
             cd /home/V2X-Hub-build
             mkdir .base-image
             SONAR_DIR=/opt/sonarqube
@@ -112,13 +104,16 @@ jobs:
             mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
             echo "export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/" > /home/V2X-Hub-build/.base-image/init-env.sh
       - run:
-          name: Run Sonar Scanner
+          name: Build TMX & V2I
           command: |
             set -x
             source /home/V2X-Hub-build/.base-image/init-env.sh
             cd /home/V2X-Hub-build/src
             build-wrapper-linux-x86-64 --out-dir ../bw-output ./build.sh
             cd ..
+      - run:
+          name: Run Sonar Scanner
+          command: |
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
               sonar-scanner -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
