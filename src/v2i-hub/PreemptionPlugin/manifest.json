@@ -18,7 +18,7 @@
 		},
 		{
 			"key":"ipwithport",
-			"default":"192.168.55.49:6053",
+			"default":"<ip for signal controller>:<port used for signal controller>",
 			"description":"The ipwithport of Preemption plugin."
 		},
 		{
