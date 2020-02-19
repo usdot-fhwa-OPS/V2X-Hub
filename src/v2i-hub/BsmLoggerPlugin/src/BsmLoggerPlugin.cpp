@@ -166,16 +166,6 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		speed_mph = 8191;
 
 
-	
-	// if(bsm->regional != NULL){
-	// 	std::cout<<" BSMLOGGER:: regional not NULL\n";
-	// 	if(bsm->regional->list.count >= regExtValue_PR_NOTHING)
-	// 	{
-	// 		std::cout<<"BSMLOGGER:: "<<bsm->regional->list.array[0]<<std::endl;
-	// 	}
-	// }
-
-
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
 	_logFile << DSRCmsgID_basicSafetyMessage << ",,"; // DSRC_MessageID,  vehicle_ID
 	_logFile	<< bsmTmpID << "," << bsm->coreData.secMark  << ","; // BSM_tmp_ID, transtime
