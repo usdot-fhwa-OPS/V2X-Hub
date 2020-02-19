@@ -63,8 +63,27 @@ jobs:
             cmake .
             make
             make install
-            cd ../..
+            
+            pwd
+            ls
+            cd /usr/src/googletest/googletest
+            pwd
+            ls
+            mkdir build
+            cd /usr/src/googletest/googletest/build
+            cmake ..
+            make
+            cp libgtest* /usr/lib/
+            cd /usr/src/googletest/googletest
+            rm -rf build
+            mkdir /usr/local/lib/googletest
+            ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
+            ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+            ldconfig
 
+            cd ../../../../..
+            pwd
+            cd /home/V2X-Hub-build
             mkdir .base-image
             SONAR_DIR=/opt/sonarqube
             mkdir $SONAR_DIR
