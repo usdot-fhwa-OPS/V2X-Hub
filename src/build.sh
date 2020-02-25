@@ -1,9 +1,12 @@
 #!/bin/bash
+
+COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
+
 cd tmx
-cmake .
+cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" .
 make
-make install  
+make install
 
 cd ../v2i-hub
-cmake .
+cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" .
 make
