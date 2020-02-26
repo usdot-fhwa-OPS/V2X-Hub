@@ -89,7 +89,7 @@ jobs:
             mkdir .base-image
             SONAR_DIR=/opt/sonarqube
             mkdir $SONAR_DIR
-            curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip
+            curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
             curl -sL https://deb.nodesource.com/setup_10.x | bash -
             mkdir /opt/jq
@@ -108,10 +108,15 @@ jobs:
           command: |
             set -x
             source /home/V2X-Hub-build/.base-image/init-env.sh
+            cd /home/V2X-Hub-build/src
+            build-wrapper-linux-x86-64 --out-dir ../bw-output ./build.sh
+      - run:
+          name: Run Tests
+          command: |
+            set -x
             cd /home/V2X-Hub-build
             mkdir -p coverage_reports/gcov
             cd src
-            build-wrapper-linux-x86-64 --out-dir ../bw-output ./build.sh
             ./coverage.sh
       - run:
           name: Run Sonar Scanner

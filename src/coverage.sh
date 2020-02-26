@@ -9,15 +9,11 @@ do
             TESTS="./`ls $d | grep run[a-zA-Z]*Tests`"
             echo "$TESTS built"
             cd $d
-            $TESTS         
+            $TESTS
+            gcovr -k .         
             cd ../..
         else
             echo "no tests built"
         fi
     fi
 done
-
-cd v2i-hub
-pwd
-gcovr -k ./P*
-mv *.gcov ../../coverage_reports/gcov
