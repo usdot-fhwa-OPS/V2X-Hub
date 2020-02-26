@@ -10,7 +10,10 @@ do
             echo "$TESTS built"
             cd $d
             $TESTS
-            gcovr -k .         
+            gcovr -k .
+            mkdir coverage
+            PLUGIN=`echo $d | cut -d "/" -f 2`
+            mv $(ls | grep [a-zA-Z0-9#-]*$PLUGIN | grep -v test#  | grep gcov) coverage
             cd ../..
         else
             echo "no tests built"
