@@ -104,14 +104,14 @@ jobs:
             mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
             echo "export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/" > /home/V2X-Hub-build/.base-image/init-env.sh
       - run:
-          name: Build TMX & V2I
+          name: Build V2I-Hub
           command: |
             set -x
             source /home/V2X-Hub-build/.base-image/init-env.sh
             cd /home/V2X-Hub-build/src
             build-wrapper-linux-x86-64 --out-dir ../bw-output ./build.sh
       - run:
-          name: Run Tests
+          name: Run Tests & Generate Gcovr Reports
           command: |
             set -x
             cd /home/V2X-Hub-build/src
@@ -119,6 +119,7 @@ jobs:
       - run:
           name: Run Sonar Scanner
           command: |
+            set -x
             source /home/V2X-Hub-build/.base-image/init-env.sh
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
