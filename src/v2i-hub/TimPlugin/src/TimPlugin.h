@@ -90,8 +90,7 @@ public:
 	TimPlugin(std::string);
 	virtual ~TimPlugin();
 	int Main();
-	uint16_t webport;
-	std::string webip; 
+
 protected:
 
 	void UpdateConfigSettings();
@@ -105,6 +104,7 @@ protected:
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	int  StartWebService();
 	void TimRequestHandler(QHttpEngine::Socket *socket);
+	//void BroadCastTIM();
 
 
 private:
@@ -119,12 +119,14 @@ private:
 	std::string _startTime;
 	std::string _stopTime;
 	std::string _timupdate; 
-	FILE *timfile; 
+	uint16_t webport;
+	std::string webip; 
 
 	TravelerInformation _tim;
 
 	mutex _mapFileLock;
 	string _mapFile;
+	std::ofstream tmpTIM;
 	atomic<bool> _isMapFileNew{false};
 	atomic<bool> _isTimFileNew{false};
 	bool _isTimLoaded = false;

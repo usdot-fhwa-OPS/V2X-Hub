@@ -27,8 +27,13 @@ TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
 
 		// xml parser setup 
-		
-        std::lock_guard<mutex> lock(_cfgLock);
+		cout<<"TimPlugin:: Constructor\n";
+	    std::lock_guard<mutex> lock(_cfgLock);
+
+		if (GetConfigValue<string>("MapFile", _mapFile))
+			_isMapFileNew = true;
+	
+		cout<<"Timplugin:: After mapfile read\n";
         GetConfigValue<string>("Start_Broadcast_Date", _startDate);
         GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
         GetConfigValue<string>("Start_Broadcast_Time", _startTime);
@@ -36,12 +41,17 @@ TimPlugin::TimPlugin(string name) :
 		GetConfigValue<string>("WebServiceIP",webip);
 		GetConfigValue<uint16_t>("WebServicePort",webport);
 
-		std::thread webthread(&TimPlugin::StartWebService,this);
-		webthread.join(); // wait for the thread to finish 
+		tmpTIM.open("/tmp/tmpTIM.xml", std::ofstream::out);	
 
+		cout<<"Timplugin:: Before Webservice initiate\n";
+		std::thread webthread(&TimPlugin::StartWebService,this);
+		webthread.detach(); // wait for the thread to finish 
+		// cout<<"TimPlugin:: After Webservice initiate\n";
 }
 
 TimPlugin::~TimPlugin() {
+
+	tmpTIM.close();
 }
 
 void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
@@ -65,6 +75,7 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	ptree ptr; 
 	read_xml(ss,ptr);
 
+	lock_guard<mutex> lock(_cfgLock);
 	BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
 	{
 		std::string labeltext = n.first;
@@ -82,11 +93,20 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 			_stopDate = n.second.get_value<std::string>();
 
 		if(labeltext == "timupdate"){
-			_mapFile = n.second.get_value<std::string>();
+			tmpTIM<<n.second.get_value<std::string>();
+			_mapFile = "/tmp/tmpTIM.xml";
 			_isMapFileNew = true;
 		}
 
 	}
+
+	cout<<"TimPlugin:: starttime == "<<_startTime<<endl;
+	cout<<"TimPlugin:: stoptime ==  "<<_stopTime<<endl;
+ 	cout<<"TimPlugin:: startdate == "<<_startDate<<endl; 
+	cout<<"TimPlugin:: stopDate == "<<_stopDate<<endl;
+	cout<<"TimPlugin:: timupdate == "<<_mapFile<<endl;
+	
+
 }
 
 
@@ -112,7 +132,7 @@ int TimPlugin::StartWebService()
     QHttpEngine::Server server(handler.data());
 
     if (!server.listen(address, port)) {
-        qCritical("Unable to listen on the specified port.");
+        qCritical("TimPlugin:: Unable to listen on the specified port.");
         return 1;
     }
 	PLOG(logDEBUG4)<<"TimPlugin:: Started web service";
@@ -123,16 +143,17 @@ int TimPlugin::StartWebService()
 
 void TimPlugin::UpdateConfigSettings() {
 
-	GetConfigValue<uint64_t>("Frequency", _frequency);
+	cout<<"TimPlugin:: UpdateConfigSettings \n";
 
-	// {
-	// 	lock_guard<mutex> lock(_mapFileLock);
-	// 	if (GetConfigValue<string>("MapFile", _mapFile))
-	// 		_isMapFileNew = true;
-	// 		_isTimFileNew =false; 
-	// }
+	lock_guard<mutex> lock(_cfgLock);
 	
-    std::lock_guard<mutex> lock(_cfgLock);
+	GetConfigValue<uint64_t>("Frequency", _frequency);
+	
+	
+	if (GetConfigValue<string>("MapFile", _mapFile))
+		_isMapFileNew = true;
+	
+	
 	GetConfigValue<string>("Start_Broadcast_Date", _startDate);
 	GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
 	GetConfigValue<string>("Start_Broadcast_Time", _startTime);
@@ -140,8 +161,8 @@ void TimPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 
-	std::thread webthread(&TimPlugin::StartWebService,this);
-	webthread.join(); // wait for the thread to finish 
+	//std::thread webthread(&TimPlugin::StartWebService,this);
+	// webthread.detach(); // wait for the thread to finish 
 	
 }
 
@@ -151,16 +172,20 @@ void TimPlugin::OnConfigChanged(const char *key, const char *value) {
 }
 
 void TimPlugin::OnStateChange(IvpPluginState state) {
+	cout<<"TimPlugin:: Onstatechanged\n";
 	PluginClient::OnStateChange(state);
+
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();
 	}
 }
 
+
+
 bool TimPlugin::TimDuration()
 {
-	PLOG(logDEBUG)<<"Reached in TimDuration";
+	PLOG(logDEBUG)<<"TimPlugin:: Reached in TimDuration";
 
 	string _endTime = ("23:59:59");
 
@@ -228,16 +253,18 @@ bool TimPlugin::TimDuration()
 	time_t secondsStopTime = mktime( & time_stop );
 
 	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
-		PLOG(logDEBUG)<<"TimDuration is True";
+		//cout<<"TimPlugin1:: TimDuration is True\n";
 		return true;
 	} else {
-		PLOG(logDEBUG)<<"TimDuration is False";
+		//cout<<"TimPlugin1:: TimDuration is False\n";
 		return false;
 	}
 }
 
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 {
+
+	cout<<"TimPlugin:: LoadTim with mapfile   "<<_mapFile<<endl;
 	memset(tim, 0, sizeof(TravelerInformation));
 
 	// J2735 packet header.
@@ -250,17 +277,13 @@ bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 
 	XmlCurveParser curveParser;
 
-	std::cout << "Loading curve file: " << mapFile << std::endl;
+	std::cout << "TimPlugin2:: Loading curve file: " << mapFile << std::endl;
 
 	// Read the curve file, which creates and populates the data frame of the TIM.
 	if (!curveParser.ReadCurveFile(mapFile, tim))
 		return false;
 
-	// Verify that a single data frame was added by the parser.
-	//if (tim->dataFrameCount == NULL || *tim->dataFrameCount != 1)
-	//	return false;
-
-	std::cout << "TIM was created." << std::endl;
+	std::cout << "TimPlugin:: TIM was created." << std::endl;
 
 	_speedLimit = curveParser.SpeedLimit;
 
@@ -270,72 +293,59 @@ bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 }
 
 int TimPlugin::Main() {
-	FILE_LOG(logINFO) << "Starting plugin.";
+	FILE_LOG(logINFO) << "TimPlugin:: Starting plugin.\n";
 
 	uint64_t updateFrequency = 24 * 60 * 60 * 1000;
 	uint64_t lastUpdateTime = 0;
 
 	uint64_t lastSendTime = 0;
 	string mapFileCopy;
-
+	cout<<" TimPlugin:: before pluginstate \n ";
 	while (_plugin->state != IvpPluginState_error) {
 
 		while (TimDuration()) {
 
-			PLOG(logDEBUG)<<"Reached TimPlugin::main";
-
 			if (IsPluginState(IvpPluginState_registered))
 			{
-				pthread_mutex_lock(&_settingsMutex);
 				uint64_t sendFrequency = _frequency;
-				pthread_mutex_unlock(&_settingsMutex);
 
 				// Load the TIM from the map file if it is new.
-
+				//cout<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
 				if (_isMapFileNew)
 				{
 					{
-						lock_guard<mutex> lock(_mapFileLock);
-						mapFileCopy = _mapFile;
+						//lock_guard<mutex> lock(_cfgLock);
+						//mapFileCopy = _mapFile;
 						_isMapFileNew = false;
 					}
-
-					pthread_mutex_lock(&_timMutex);
 					if (_isTimLoaded)
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
-					_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-					pthread_mutex_unlock(&_timMutex);
+					_isTimLoaded = LoadTim(&_tim, _mapFile.c_str());
 				}
 
 				uint64_t time = TimeHelper::GetMsTimeSinceEpoch();
 
-				// Update the start time of the TIM message if it is time.
-				// Since the contents of the TIM change, the packet ID is also updated.
-				// If the packet ID is not changed, a recipient may choose to ignore it.
 				if (_isTimLoaded && (time - lastUpdateTime) > updateFrequency)
 				{
 					lastUpdateTime = time;
-					pthread_mutex_lock(&_timMutex);
 					if (_isTimLoaded)
 					{
-						std::cout << "Updating TIM start time." << std::endl;
+						std::cout << "TimPlugin:: Updating TIM start time." << std::endl;
 						DsrcBuilder::SetPacketId(&_tim);
 						DsrcBuilder::SetStartTimeToYesterday(_tim.dataFrames.list.array[0]);
 					}
-					pthread_mutex_unlock(&_timMutex);
 				}
 
 				// Send out the TIM at the frequency read from the configuration.
 				if (_isTimLoaded && sendFrequency > 0 && (time - lastSendTime) > sendFrequency)
 				{
-
-					PLOG(logERROR)<<"Send TIM";
+					cout<<"TimPlugin:: ismapfilenew "<<_isMapFileNew<<"Mapfile loc "<< _mapFile<<endl;
+					cout<<"TimPlugin:: Send TIM\n";
 					lastSendTime = time;
 					TimMessage timMsg(_tim);
 
-					PLOG(logERROR)<<"Send TIM 2";
 
-					PLOG(logERROR)<<timMsg;
+					cout<<timMsg;
 					TimEncodedMessage timEncMsg;
 					timEncMsg.initialize(timMsg);
 
@@ -346,14 +356,14 @@ int TimPlugin::Main() {
 					if (rMsg) BroadcastMessage(*rMsg);
 				}
 			}
-
 		}
-		usleep(50000);
-
+		this_thread::sleep_for(chrono::milliseconds(500));
 	}
 
 	return (EXIT_SUCCESS);
 }
+
+
 } /* namespace */
 
 int main(int argc, char *argv[]) {
