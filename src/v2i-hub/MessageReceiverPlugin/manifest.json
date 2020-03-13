@@ -1,7 +1,7 @@
 {
 	"name":"MessageReceiver",
 	"description":"Plugin to receive messages from an external DSRC radio or other source",
-	"version":"3.2.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/MessageReceiverPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

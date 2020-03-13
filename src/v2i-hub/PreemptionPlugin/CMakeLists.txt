@@ -1,4 +1,4 @@
-PROJECT ( PreemptionPlugin VERSION 3.0.0 LANGUAGES CXX )
+PROJECT ( PreemptionPlugin VERSION 5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Preemption")
 

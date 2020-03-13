@@ -1,4 +1,4 @@
-PROJECT ( PedestrianPlugin VERSION 3.0.0 LANGUAGES CXX )
+PROJECT ( PedestrianPlugin VERSION 5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Pedestrian")
 add_compile_options(-fPIC)
