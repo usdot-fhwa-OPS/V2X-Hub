@@ -22,6 +22,12 @@ The V2X Hub system reduces time needed to create and deploy a roadside based V2X
 * Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2X Hub plugins.
 * Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2X Hub system. 
 * RTCM Plugin – Communicates with a NTRIP network to create J2735 RTCM position correction messages.
+* ODE Plugin – Pushes data to an operational data environment server using a known IP address and port.
+* Pedestrian Plugin – Creates a PSM using information obtained from nomadic devices (ex. cell phones) through a local webserver.
+* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through 	BSMs
+* SPAT Logger Plugin – Logs V2X Hub generated, UPER-encoded SPAT messages in a .csv file along with a system timestamp
+* TIM Plugin – Creates and broadcasts a TIM message from an .xml file based on user input through GUI or local webserver
+* BSM Logger Plugin – Decodes and logs BSMs received by the Message Receiver Plugin to a .csv file
 
 V2X Hub is a communication, computation, and processing platform for V2I applications, and providing the functions listed below.
 
