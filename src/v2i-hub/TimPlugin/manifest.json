@@ -20,7 +20,7 @@
 		},
 		{
 			"key":"MapFile",
-			"default":"IVP_GF_TIM.xml",
+			"default":"/var/www/plugins/MAP/IVP_GF_TIM.xml",
 			"description":""
 		},
 		{
@@ -50,7 +50,7 @@
 		},
 		{
 			"key":"WebServicePort",
-			"default":"9999",
+			"default":"10000",
 			"description":"Port at which Web service exists"
 		}
 

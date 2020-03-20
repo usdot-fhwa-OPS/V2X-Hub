@@ -37,7 +37,7 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 
 
 	std::thread webthread(&PedestrianPlugin::StartWebService,this);
-	webthread.join(); // wait for the thread to finish 
+	webthread.detach(); // wait for the thread to finish 
 
 }
 
@@ -104,11 +104,6 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<int>("Instance", instance);
-
-
-
-	std::thread webthread(&PedestrianPlugin::StartWebService,this);
-	webthread.join(); // wait for the thread to finish 
 
 
 
