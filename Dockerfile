@@ -100,6 +100,7 @@ RUN mkdir ~/plugins
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN tmxctl --plugin-install CommandPlugin.zip
 WORKDIR /var/www/plugins/
+RUN mkdir ~/MAP
 RUN mkdir /var/www/plugins/.ssl
 RUN chown plugin .ssl
 RUN chgrp www-data .ssl
