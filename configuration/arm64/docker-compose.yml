@@ -10,6 +10,8 @@ services:
       MYSQL_USER: IVP
       MYSQL_PASSWORD: ivp
       MYSQL_ROOT_PASSWORD: ivp
+      username: ${username}
+      password: ${password}
     network_mode: host
     volumes:
       - "mysql_db:/var/lib/mysql"

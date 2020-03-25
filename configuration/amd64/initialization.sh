@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sudo echo "username=$1" > .env
+sudo echo "password=$2" >> .env
+
 sudo apt-get -y remove docker docker-engine docker.io containerd runc
 sudo apt-get update
 sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common

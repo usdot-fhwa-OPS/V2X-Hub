@@ -2,6 +2,11 @@
 
 set -e
 
+# takes user-provided username and password for docker-compose.yml and stores in .env file
+
+sudo echo "username=$1" > .env
+sudo echo "password=$2" >> .env
+
 # Max query attempts before consider setup failed
 MAX_TRIES=10
 
