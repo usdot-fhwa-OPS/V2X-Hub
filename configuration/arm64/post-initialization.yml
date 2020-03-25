@@ -37,6 +37,7 @@ services:
       - php
     volumes:
       - ./logs:/var/log/tmx
+      - ./MAP:/var/www/plugins/MAP
 
 volumes:
     mysql_db:
