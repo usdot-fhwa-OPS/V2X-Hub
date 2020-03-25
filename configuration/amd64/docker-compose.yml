@@ -26,11 +26,12 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:5.0
+    image: usdotfhwaops/v2xhubamd:latest
     container_name: v2xhub
     network_mode: host
     restart: always
     depends_on: 
       - php
     volumes:
-      - ./logs:/var/log/tmx 
+      - ./logs:/var/log/tmx
+      - ./MAP:/var/www/plugins/MAP
