@@ -1,9 +1,6 @@
 #!/bin/sh -x
 
-USER=`head -1 .env | cut -d "=" -f 2`
-PASS=`tail -1 .env | cut -d "=" -f 2`
-
 mysql -uroot -pivp --silent -e "SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;"
 mysql -uroot -pivp -e "CREATE DATABASE IF NOT EXISTS IVP; GRANT ALL PRIVILEGES ON IVP.* To 'IVP'@'127.0.0.1' IDENTIFIED BY 'ivp';"
 mysql -v -uIVP -pivp IVP < /docker-entrypoint-initdb.d/localhost.sql
-mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
+mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$username', '$password', 3)"
