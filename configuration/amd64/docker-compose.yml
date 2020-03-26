@@ -10,10 +10,9 @@ services:
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD=ivp
       - MYSQL_ROOT_PASSWORD=ivp
-      - username=${username}
-      - password=${password}
     network_mode: host
     volumes:
+      - ./.env:/docker-entrypoint-initdb.d/.env
       - ./mysql/install_db.sh:/docker-entrypoint-initdb.d/install_db.sh
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
 
