@@ -6,9 +6,8 @@ If you are running V2X Hub using a docker image, you can use the following instr
 ```
 $ cd /V2X-Hub/configuration/arm64
 $ chmod +x initialization.sh
-$ sudo ./initialization.sh <username> <password>
+$ sudo ./initialization.sh
 ```
-Your V2X-Hub password must be at least 8 characters and contain at least one number, symbol, and uppercase and lowercase letter.
 
 ## Access the V2X Hub Interface
 

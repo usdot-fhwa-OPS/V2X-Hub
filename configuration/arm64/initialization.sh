@@ -3,23 +3,22 @@
 set -e
 
 # takes user-provided username and password for docker-compose.yml and stores in .env file
-USERNAME=$1
-PASSWORD=$2
+echo "Please enter a username: "
+read USER
+echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol."
+echo "Please enter a password: "
+read -s PASS
+  
+PASS_LENGTH=`echo $PASS | wc -c`
 
-if [[ -z $PASSWORD ]]; then
-  echo "No password entered."
+if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q [A-Z] && echo $PASS | grep -q [0-9] && echo $PASS | grep -q [\$\!\.\+_-\*@\#\^%\?~]; then
+    sudo echo "username=$USER" > .env
+    sudo echo "password=$PASS" >> .env
+    sudo echo "VALID PASSWORD"
 else
-  PASS_LENGTH=`echo $1 | wc -c`
-
-  if [ $PASS_LENGTH -ge 8 ] && echo $1 | grep [a-z] && echo $1 | grep [A-Z] && echo $1 | grep [0-9] && echo $1 | grep [\$\!\.\+_-\*@\#\^%\?~]; then
-      sudo echo "username=$1" > .env
-      sudo echo "password=$2" >> .env
-      sudo echo "VALID PASSWORD"
-  else
-      sudo echo "INVALID PASSWORD"
-      sudo echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol"
-      sudo exit 1
-  fi
+    sudo echo "INVALID PASSWORD"
+    sudo echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol"
+    exit 1
 fi
 
 # Max query attempts before consider setup failed
