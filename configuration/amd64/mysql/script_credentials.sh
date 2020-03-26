@@ -1,4 +1,3 @@
 #!/bin/sh -x
 
-mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$username', '$password', 3)"
-
+mysql -uroot -pivp -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$username', '$password', 3)"
