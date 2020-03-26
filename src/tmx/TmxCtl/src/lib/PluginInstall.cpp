@@ -1,8 +1,8 @@
 /*
  * PluginInstall.cpp
  *
- *  Created on: Feb 1, 2018
- *      Author: gmb
+ *  Edited on: Nov 25, 2019
+ *      Author: animeshb27
  */
 
 #include "TmxControl.h"
@@ -15,9 +15,6 @@
 #ifndef PLUGINDIRECTORY_ENV
 #define PLUGINDIRECTORY_ENV "TMX_PLUGIN_DIRECTORY"
 #endif
-
-#define INSTPLUGIN_DELETE_STMT "\
-	DELETE FROM IVP.installedPlugin"
 
 #define PLUGIN_DELETE_STMT "\
 	DELETE FROM IVP.plugin \
@@ -231,8 +228,6 @@ bool TmxControl::plugin_remove() {
 
 	pluginlist plugins(1, (*_opts)["plugin-remove"].as<string>());
 
-	string query = add_constraint(INSTPLUGIN_DELETE_STMT, plugins);
-
 	// Get the path for the plugin
 	this->list(plugins);
 	message_path_type basePath(plugins[0], ATTRIBUTE_PATH_CHARACTER);
@@ -254,6 +249,7 @@ bool TmxControl::plugin_remove() {
 	if (!exePath.empty() && stat(exePath.c_str(), &tmpStat) == 0) {
 		PLOG(logDEBUG1) << "Plugin found under " << dirPath;
 
+
 #ifndef NO_DEBIAN_PKG_MGR
 		string cmd = "dpkg -S ";
 		cmd += exePath.string();
@@ -269,7 +265,7 @@ bool TmxControl::plugin_remove() {
 				cmd = "sudo dpkg --remove ";
 				cmd += dpkgResult.substr(0, idx);
 
-				PLOG(logDEBUG) << "Removing Debian package with " << cmd;
+				PLOG(logDEBUG1) << "Removing Debian package with " << cmd;
 
 				int exitVal = system(cmd.c_str());
 				return exitVal == 0;
@@ -281,6 +277,11 @@ bool TmxControl::plugin_remove() {
 	try
 	{
 		DbConnection conn = _pool.Connection();
+
+		std::ostringstream dltinspl;
+		dltinspl << "DELETE FROM IVP.installedPlugin WHERE path = " << dirPath;
+
+		std::string query = dltinspl.str();
 
 		// Delete from installedPlugin table
 		PLOG(logDEBUG1) << "Executing query: " << query;
@@ -299,7 +300,7 @@ bool TmxControl::plugin_remove() {
 
 		// Remove the installed files
 		if (!dirPath.empty() && stat(dirPath.c_str(), &tmpStat) == 0) {
-			PLOG(logDEBUG) << "Deleting file path " << dirPath;
+			PLOG(logDEBUG1) << "Deleting file path " << dirPath;
 
 			boost::filesystem::remove_all(dirPath);
 		}
@@ -314,5 +315,3 @@ bool TmxControl::plugin_remove() {
 }
 
 }
-
-

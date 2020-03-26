@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_DATABASE=IVP
+      - MYSQL_USER=IVP
+      - MYSQL_PASSWORD=ivp
+      - MYSQL_ROOT_PASSWORD=ivp
+      - username=${username}
+      - password=${password}
+    network_mode: host
+    volumes:
+      - ./mysql/script_credentials.sh:/docker-entrypoint-initdb.d/script_credentials.sh
+      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+
+  php:
+    image: php:7.2.2-apache
+    container_name: php
+    volumes:
+      - ../../web/:/var/www/html/
+    network_mode: host
+    depends_on: 
+      - db
+    stdin_open: true
+    tty: true
+
+  v2xhub:
+    image: usdotfhwaops/v2xhubamd:latest
+    container_name: v2xhub
+    network_mode: host
+    restart: always
+    depends_on: 
+      - php
+    volumes:
+      - ./logs:/var/log/tmx
+      - ./MAP:/var/www/plugins/MAP

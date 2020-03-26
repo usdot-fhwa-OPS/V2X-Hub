@@ -1,0 +1,40 @@
+{
+	"name":"Preemption",
+	"description":"Preemption plugin for the IVP system.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PreemptionPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"configuration":[
+		{
+			"key":"Instance",
+			"default":"0",
+			"description":"The instance of Preemption plugin."
+		},
+		{
+			"key":"BasePreemptionOid",
+			"default":".1.3.6.1.4.1.1206.4.2.1.6.3.1.2.",
+			"description":"The BasePreemptionOid of Preemption plugin."
+		},
+		{
+			"key":"ipwithport",
+			"default":"<ip for signal controller>:<port used for signal controller>",
+			"description":"The ipwithport of Preemption plugin."
+		},
+		{
+			"key":"snmp_community",
+			"default":"public",
+			"description":"The snmp_community of Preemption plugin."
+		},
+		{
+			"key":"map_path",
+			"default":"/geo.json",
+			"description":"The map_path for Preemption plugin."
+		},
+		{
+			"key":"allowedList",
+			"default":"{\"validVehicles\":[\"292710445\",\"123456789\",\"2345678\"]}",
+			"description":"List of vehicles BSM id that are allowed"
+		}
+	]
+}

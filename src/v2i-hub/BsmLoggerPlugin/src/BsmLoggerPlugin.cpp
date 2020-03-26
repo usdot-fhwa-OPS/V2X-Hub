@@ -145,7 +145,6 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	int32_t longitude = bsm->coreData.Long;
 	int32_t longAcceleration = bsm->coreData.accelSet.Long;
 
-	std::cout<<"ProgessBsmMessage - lat: "<< latitude <<" ,"<<" lon: "<< longitude << std::endl;
 
 	uint16_t rawSpeed = bsm->coreData.speed;
 	uint16_t rawHeading = bsm->coreData.heading;
@@ -161,11 +160,11 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		// Convert from .02 meters/sec to mph.
 		speed_mph = rawSpeed / 50 * 2.2369362920544;
 
-		//std::cout << "Vehicle Lat/Long/Heading/Speed: " << vehiclePoint.Latitude << ", " << vehiclePoint.Longitude << ", " << heading << ", " << speed << std::endl;
 		isSuccess = true;
 	}
 	else
 		speed_mph = 8191;
+
 
 	PLOG(logDEBUG)<<"Logging BasicSafetyMessage data";
 	_logFile << DSRCmsgID_basicSafetyMessage << ",,"; // DSRC_MessageID,  vehicle_ID
@@ -178,8 +177,61 @@ void BsmLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	_logFile	<< "" << ","; //brakePressed
 	_logFile	<< "" << ","; //hardBraking
 	_logFile	<< "" << ","; //transTo
-	_logFile	<< ""; //transmission_received_time
-	_logFile	<< endl;
+	_logFile	<< routeableMsg.get_millisecondsSinceEpoch()<<","; //transmission_received_time in milliseconds since epoch
+
+
+	if(bsm->partII != NULL) {
+		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+			try
+			{
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length<<",";
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]<<",";
+				}
+				else 
+				{
+					_logFile<<",,,";
+				}
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
+			}
+			try {
+				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse<<",";	
+					_logFile<<bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse<<",";
+				}
+				else
+				{
+					_logFile<<",,";
+				}
+				
+			}
+			catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
+			}
+		}
+		if(bsm->partII[0].list.count >= partII_Value_PR_SupplementalVehicleExtensions){
+		try {
+			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {	
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0]<<",";
+				_logFile<<bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType<<",";
+			}
+			else {
+				_logFile<<",,,";
+			}
+		}			
+		catch(exception &e)
+			{
+				PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
+			}
+		}
+	}
+	_logFile<< endl;
 
 
 }
@@ -203,7 +255,7 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
 	else
 	{
-		_logFile << "DSRC_MessageID,"
+		_logFile << "DSRC_MessageID, "
 				"Vehicle ID, "
 				"BSM_tmp_ID, "
 				"transtime, "
@@ -215,7 +267,17 @@ void BsmLoggerPlugin::OpenBSMLogFile()
 				"brakePressure, "
 				"hardBraking,  "
 				"transTo, "
-				"transmission_received_time" << endl;
+				"transmission_received_time, "
+				"trailerPivot, "
+				"trailreLength, "
+				"trailerHeight, "
+				"vehicleRole, "
+				"vehicletype, "
+				"Respondertype, "
+				"SirenState, "
+				"LightState, "
+				"VehicleDescription, " 
+				"" << endl;
 
 	}
 }

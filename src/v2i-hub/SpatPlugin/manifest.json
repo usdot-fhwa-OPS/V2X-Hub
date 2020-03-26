@@ -1,8 +1,8 @@
 {
-	"name":"@TMX_PLUGIN_NAME@",
+	"name":"SPAT",
 	"description":"Plugin that reads PTLM data from a configuration file, receives live data from the signal controller, and publishes a J2735 SPAT message.",
 	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"exeLocation":"/bin/SpatPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[
@@ -35,22 +35,22 @@
 		},
 		{
 			"key":"Local_IP",
-			"default":"192.168.25.20",
+			"default":"<local ip address>",
 			"description":"The IPv4 address of the local computer for receiving Traffic Signal Controller Broadcast Messages."
 		},
 		{
 			"key":"Local_UDP_Port",
-			"default":"6053",
+			"default":"local port",
 			"description":"The local UDP port for reception of Traffic Signal Controller Broadcast Messages from the TSC."
 		},
 		{
 			"key":"TSC_IP",
-			"default":"192.168.25.50",
+			"default":"<ip address of signal controller>",
 			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
 		},
 		{
 			"key":"TSC_Remote_SNMP_Port",
-			"default":"501",
+			"default":"<snmp port used in signal controller>",
 			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP communication."
 		}
 	]

@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  db:
+    image: mariadb:10.4
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: IVP
+      MYSQL_USER: IVP
+      MYSQL_PASSWORD: ivp
+      MYSQL_ROOT_PASSWORD: ivp
+    network_mode: host
+    volumes:
+      - "mysql_db:/var/lib/mysql"
+      - ./mysql/install_db.sh:/docker-entrypoint-initdb.d/install_db.sh
+      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+
+  php:
+    image: php:7.2.2-apache
+    container_name: php
+    volumes:
+      - ../../web/:/var/www/html/
+    network_mode: host
+    restart: always
+    depends_on: 
+      - db
+    stdin_open: true
+    tty: true
+
+  v2xhub:
+    image: usdotfhwaops/v2xhubarm:latest
+    container_name: v2xhub
+    network_mode: host
+    restart: always
+    depends_on: 
+      - php
+    volumes:
+      - ./logs:/var/log/tmx
+      - ./MAP:/var/www/plugins/MAP
+
+volumes:
+    mysql_db:

@@ -1,8 +1,8 @@
 {
-	"name": "@TMX_PLUGIN_NAME@",
+	"name": "MAP",
 	"description": "Plugin that reads intersection geometry from a configuration file and publishes a J2735 MAP message.",
 	"version": "@PROJECT_VERSION@",
-	"exeLocation":"/bin/@PROJECT_NAME@",
+	"exeLocation":"/bin/MapPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[

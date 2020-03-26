@@ -53,7 +53,7 @@ select_partII_Value_type(const asn_TYPE_descriptor_t *parent_type, const void *p
 	size_t constraining_column = 0; /* &id */
 	size_t for_column = 1; /* &Type */
 	size_t row;
-	const long *constraining_value = (const long *)((const char *)parent_sptr + offsetof(struct PartIIcontent_151P0, partII_Id));
+	const long *constraining_value = (const long *)((const char *)parent_sptr + offsetof(struct PartIIcontent, partII_Id));
 	
 	for(row=0; row < itable->rows_count; row++) {
 	    const asn_ioc_cell_t *constraining_cell = &itable->rows[row * itable->columns_count + constraining_column];
@@ -165,8 +165,8 @@ asn_TYPE_descriptor_t asn_DEF_partII_Value_3 = {
 	&asn_SPC_partII_Value_specs_3	/* Additional specs */
 };
 
-asn_TYPE_member_t asn_MBR_PartIIcontent_151P0_1[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct PartIIcontent_151P0, partII_Id),
+asn_TYPE_member_t asn_MBR_PartIIcontent_1[] = {
+	{ ATF_NOFLAGS, 0, offsetof(struct PartIIcontent, partII_Id),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_PartII_Id,
@@ -177,7 +177,7 @@ asn_TYPE_member_t asn_MBR_PartIIcontent_151P0_1[] = {
 		0,
 		"partII-Id"
 		},
-	{ ATF_OPEN_TYPE | ATF_NOFLAGS, 0, offsetof(struct PartIIcontent_151P0, partII_Value),
+	{ ATF_OPEN_TYPE | ATF_NOFLAGS, 0, offsetof(struct PartIIcontent, partII_Value),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		+1,	/* EXPLICIT tag at current level */
 		&asn_DEF_partII_Value_3,
@@ -189,37 +189,37 @@ asn_TYPE_member_t asn_MBR_PartIIcontent_151P0_1[] = {
 		"partII-Value"
 		},
 };
-static const ber_tlv_tag_t asn_DEF_PartIIcontent_151P0_tags_1[] = {
+static const ber_tlv_tag_t asn_DEF_PartIIcontent_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
-static const asn_TYPE_tag2member_t asn_MAP_PartIIcontent_151P0_tag2el_1[] = {
+static const asn_TYPE_tag2member_t asn_MAP_PartIIcontent_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* partII-Id */
     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* partII-Value */
 };
-asn_SEQUENCE_specifics_t asn_SPC_PartIIcontent_151P0_specs_1 = {
-	sizeof(struct PartIIcontent_151P0),
-	offsetof(struct PartIIcontent_151P0, _asn_ctx),
-	asn_MAP_PartIIcontent_151P0_tag2el_1,
+asn_SEQUENCE_specifics_t asn_SPC_PartIIcontent_specs_1 = {
+	sizeof(struct PartIIcontent),
+	offsetof(struct PartIIcontent, _asn_ctx),
+	asn_MAP_PartIIcontent_tag2el_1,
 	2,	/* Count of tags in the map */
 	0, 0, 0,	/* Optional elements (not needed) */
 	-1,	/* Start extensions */
 	-1	/* Stop extensions */
 };
-asn_TYPE_descriptor_t asn_DEF_PartIIcontent_151P0 = {
+asn_TYPE_descriptor_t asn_DEF_PartIIcontent = {
 	"PartIIcontent",
 	"PartIIcontent",
 	&asn_OP_SEQUENCE,
 	SEQUENCE_constraint,
-	asn_DEF_PartIIcontent_151P0_tags_1,
-	sizeof(asn_DEF_PartIIcontent_151P0_tags_1)
-		/sizeof(asn_DEF_PartIIcontent_151P0_tags_1[0]), /* 1 */
-	asn_DEF_PartIIcontent_151P0_tags_1,	/* Same as above */
-	sizeof(asn_DEF_PartIIcontent_151P0_tags_1)
-		/sizeof(asn_DEF_PartIIcontent_151P0_tags_1[0]), /* 1 */
+	asn_DEF_PartIIcontent_tags_1,
+	sizeof(asn_DEF_PartIIcontent_tags_1)
+		/sizeof(asn_DEF_PartIIcontent_tags_1[0]), /* 1 */
+	asn_DEF_PartIIcontent_tags_1,	/* Same as above */
+	sizeof(asn_DEF_PartIIcontent_tags_1)
+		/sizeof(asn_DEF_PartIIcontent_tags_1[0]), /* 1 */
 	0,	/* No OER visible constraints */
 	0,	/* No PER visible constraints */
-	asn_MBR_PartIIcontent_151P0_1,
+	asn_MBR_PartIIcontent_1,
 	2,	/* Elements count */
-	&asn_SPC_PartIIcontent_151P0_specs_1	/* Additional specs */
+	&asn_SPC_PartIIcontent_specs_1	/* Additional specs */
 };
 
