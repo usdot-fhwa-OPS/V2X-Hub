@@ -1,7 +1,7 @@
 {
     "name":"Location",
     "description":"Plugin used to send out Location Messages using data from GPSD",
-    "version":"3.2.0",
+    "version":"@PROJECT_VERSION@",
     "exeLocation":"/bin/LocationPlugin",
     "coreIpAddr":"127.0.0.1",
     "corePort":24601,

@@ -1,4 +1,4 @@
-PROJECT ( MessageReceiverPlugin VERSION 3.2.0 LANGUAGES CXX )
+PROJECT ( MessageReceiverPlugin VERSION 5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "MessageReceiver")
 

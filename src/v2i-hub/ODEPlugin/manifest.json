@@ -1,7 +1,7 @@
 {
 	"name":"ODEPlugin",
 	"description":"Plugin to forward messages to the Florida ODEPlugin network",
-	"version":"3.2.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/ODEPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

@@ -1,7 +1,7 @@
 {
 	"name":"TIM",
 	"description":"Provides Traveller Information Message (TIM).",
-	"version":"3.2.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/TimPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

@@ -1,7 +1,7 @@
 {
 	"name":"BsmLoggerPlugin",
 	"description":"Listens for BSM messages and logs them in a file in CSV format.",
-	"version":"3.2.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/BsmLoggerPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

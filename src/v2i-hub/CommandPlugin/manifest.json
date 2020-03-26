@@ -1,7 +1,7 @@
 {
     "name":"CommandPlugin",
     "description":"Listens for websocket connections from the TMX admin portal and processes commands",
-    "version":"3.2.0",
+    "version":"@PROJECT_VERSION@",
     "exeLocation":"/bin/CommandPlugin",
     "coreIpAddr":"127.0.0.1",
     "corePort":24601,
