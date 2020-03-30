@@ -16,3 +16,4 @@ Enhancements in this release:
 
 Bug fixes in this release:
 - Fixed segmentation fault which caused V2X-Hub to crash when it received BSMs with missing headers.
+- Fixed remove plugin button to function as expected
