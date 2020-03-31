@@ -33,6 +33,7 @@ class PreemptionPlugin: public PluginClient
 {
 	public:
 		PreemptionPlugin(std::string);
+		PreemptionPlugin();
 		virtual ~PreemptionPlugin();
 		int Main();
 
