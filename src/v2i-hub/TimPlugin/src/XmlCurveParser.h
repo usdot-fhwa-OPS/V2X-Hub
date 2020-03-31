@@ -28,6 +28,10 @@ enum {
 class XmlCurveParser {
 public:
 	XmlCurveParser();
+	XmlCurveParser(XmlCurveParser& mn)
+	{
+		this->_parser = mn._parser; 
+	}
 	~XmlCurveParser();
 
 	bool ReadCurveFile(const char *filePath, TravelerInformation *tim);
