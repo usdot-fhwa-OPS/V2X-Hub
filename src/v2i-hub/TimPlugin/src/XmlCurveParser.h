@@ -33,6 +33,14 @@ public:
 		
 	}
 
+  	XmlCurveParser& operator=(const XmlCurveParser& other) {
+  	}
+  	XmlCurveParser(XmlCurveParser &&fp) noexcept {
+  	}
+ 	 XmlCurveParser const & operator=(XmlCurveParser &&fp) {
+  
+  	}
+
 
 	~XmlCurveParser();
 
