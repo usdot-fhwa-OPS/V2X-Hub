@@ -111,85 +111,53 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-int CARMACloudPlugin::SendTcmRequest(string test)
-{
-	char *placeholderX[1]={0};
-	int placeholderC=1;
-	QCoreApplication b(placeholderC,placeholderX);
-	ClientApi c; 
-	char key[100]="Content-Type";
-	char val[100]="text/plain";
-	std::string m = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><version>0.1</version><reqseq>99</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>1584057600000</oldest><lon>-771521558</lon><lat>389504279</lat><xoffsets>10</xoffsets><xoffsets>20</xoffsets><xoffsets>10</xoffsets><yoffsets>0</yoffsets><yoffsets>500</yoffsets><yoffsets>500</yoffsets></TrafficControlBounds></bounds></TrafficControlRequest>";
 
-	c.SetProxy(QString::fromLocal8Bit("http"),QString::fromLocal8Bit("127.0.0.1"),22222,QString::fromLocal8Bit("/carmacloud"));
-	c.SetHeader(key,val);
-	c.SendRequest(m);
-	return b.exec();
-	 
+int CARMACloudPlugin::CloudSend(string msg,string url, string base, string method)
+{
+	CURL *req;
+  	CURLcode res;
+	string urlfull = url+base;	  
+
+  /* In windows, this will init the winsock stuff */ 
+  	//curl_global_init(CURL_GLOBAL_ALL);
+  	req = curl_easy_init();
+ 	 if(req) {
+  	  	curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
+
+		if(strcmp(method.c_str(),"POST")==0)
+		{
+    		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
+			res = curl_easy_perform(req);
+   			if(res != CURLE_OK)
+			   {
+      				fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
+					  return 1;
+			   }	  
+		}
+    	curl_easy_cleanup(req);
+  }
+  return 0;
 }
 
-int CARMACloudPlugin::sendClientcpprest(char msg[],char url[],char base[])
-{
-		// http_client client(U(url));
-
-		// web::json::value json_return;
-
-        // // Build request URI and start the request.
-        // uri_builder builder(U(base));
-        // //builder.append_query(U(""), U("cpprestsdk github"));
-        // return client.request(methods::POST, builder.to_string(),msg,U("text/plain"))
-		// .then([=](http_response response)
-    	// {
-        // 	printf("Received response status code:%u\n", response.status_code());
-		// 	return response.status_code();
-
-        // 	// Write response body into the file.
-        // 	//return response.body().read_to_end(fileStream->streambuf());
-    	// })
-		// .then([](pplx::task<json::value> previousTask)
-      	// {
-        //  	try
-        //  	{
-        //     	//display_json(previousTask.get(), L"R: ");
-        //  	}
-        //  	catch (http_exception const & e)
-        // 	 {
-        //     	wcout << e.what() << endl;
-        // 	 }
-      	// })
-      	// .wait();
-
-
-}
 
 
 int CARMACloudPlugin::Main() {
 
 
 	FILE_LOG(logINFO) << "Starting plugin.";
-	ClientApi c; 
-	char key[100]="Content-Type";
-	char val[100]="text/plain";
-	c.SetProxy(QString::fromLocal8Bit("http"),QString::fromLocal8Bit("127.0.0.1"),11111,QString::fromLocal8Bit("/carmacloud"));
-	//c.SetHeader(key,val);
-	std::string test = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><version>0.1</version><reqseq>99</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>1584057600000</oldest><lon>-771521558</lon><lat>389504279</lat><xoffsets>10</xoffsets><xoffsets>20</xoffsets><xoffsets>10</xoffsets><yoffsets>0</yoffsets><yoffsets>500</yoffsets><yoffsets>500</yoffsets></TrafficControlBounds></bounds></TrafficControlRequest>";
-	//CARMACloudPlugin cc; 
-	char *placeholderX[1]={0};
-	int placeholderC=1;
-
+	
+	std::string msg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><version>0.1</version><reqseq>99</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>1584057600000</oldest><lon>-771521558</lon><lat>389504279</lat><xoffsets>10</xoffsets><xoffsets>20</xoffsets><xoffsets>10</xoffsets><yoffsets>0</yoffsets><yoffsets>500</yoffsets><yoffsets>500</yoffsets></TrafficControlBounds></bounds></TrafficControlRequest>";
+	std::string url ="http://127.0.0.1:22222";
+	std::string base = "/carmacloud/v2xhub";
+	std::string method = "POST";
 	
 
 	while (_plugin->state != IvpPluginState_error) {
 
 		if (IsPluginState(IvpPluginState_registered))
 		{
-			//QCoreApplication b(placeholderC,placeholderX);
-			//SendTcmRequest(test);
-			//std::thread sendthread(&CARMACloudPlugin::SendTcmRequest,this,test);
-			//sendthread.detach(); // wait for the thread to finish 
-			//b.exec();
-			//this_thread::sleep_for(chrono::milliseconds(5000));
-			usleep(2000000);
+			CloudSend(msg,url, base, method);
+			this_thread::sleep_for(chrono::milliseconds(2000));
 		}
 
 	}
