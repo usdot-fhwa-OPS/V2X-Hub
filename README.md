@@ -40,6 +40,8 @@ V2X Hub is a communication, computation, and processing platform for V2I applica
 	* Aggregation of vehicle weather data for efficient communication to Transportation Management Entity for weather-responsive traffic management.
 	* Multi-Modal Intelligent Traffic Signal Systems (MMITSS) “intersection level” functions including J2735 Intersection Geometry (MAP) and J2735 Signal Phase and Timing (SPaT) broadcast manager, equipped vehicle tracker, priority request server, and interface to traffic signal controller.
 
+## Release Notes
+The V2X-Hub software platform is on version 5.0, as of March 26th, 2020. See more about release 5.0 here: [V2X-Hub Release Notes](<docs/Release_notes.md>)
 
 ## License information
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
