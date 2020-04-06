@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub.svg?style=svg)](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
 
 ## Release Notes
-As of March 26th, 2020, the V2X-Hub software platform is on version 5.0. See more about release 5.0 here: [V2X-Hub Release Notes](<docs/Release_notes.md>)
+As of March 26th, 2020, the V2X Hub software platform is on version 5.0. See more about release 5.0 here: [V2X Hub Release Notes](<docs/Release_notes.md>)
 
 # Overview
 In order to bring infrastructure components into the Connected Vehicle architecture, you need software that will facilitate the exchange of data in a format that can be understood by both vehicles and infrastructure devices The V2X Hub, takes in data from vehicles via Basic Safety Messages (BSM) in a Society of Automotive Engineers (SAE) standard format and translates the data to a National Transportation Communications for ITS Protocol (NTCIP) that infrastructure components can understand.  And vice versa.   It translates Signal Phase and Timing (SPaT) data from NTCIP to SAE and sends it to the Roadside Unit (RSU) for broadcast to mobile devices, including vehicles. 
