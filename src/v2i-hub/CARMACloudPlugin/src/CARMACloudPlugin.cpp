@@ -118,8 +118,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
   	CURLcode res;
 	string urlfull = url+base;	  
 
-  /* In windows, this will init the winsock stuff */ 
-  	//curl_global_init(CURL_GLOBAL_ALL);
+
   	req = curl_easy_init();
  	 if(req) {
   	  	curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
