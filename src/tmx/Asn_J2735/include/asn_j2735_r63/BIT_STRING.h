@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2003 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	_BIT_STRING_H_
@@ -28,13 +28,18 @@ asn_struct_print_f BIT_STRING_print;	/* Human-readable output */
 asn_struct_compare_f BIT_STRING_compare;
 asn_constr_check_f BIT_STRING_constraint;
 xer_type_encoder_f BIT_STRING_encode_xer;
+oer_type_decoder_f BIT_STRING_decode_oer;
+oer_type_encoder_f BIT_STRING_encode_oer;
+per_type_decoder_f BIT_STRING_decode_uper;
+per_type_encoder_f BIT_STRING_encode_uper;
+asn_random_fill_f  BIT_STRING_random_fill;
 
 #define BIT_STRING_free              OCTET_STRING_free
 #define BIT_STRING_decode_ber        OCTET_STRING_decode_ber
 #define BIT_STRING_encode_der        OCTET_STRING_encode_der
 #define BIT_STRING_decode_xer        OCTET_STRING_decode_xer_binary
-#define BIT_STRING_decode_uper       OCTET_STRING_decode_uper
-#define BIT_STRING_encode_uper       OCTET_STRING_encode_uper
+#define BIT_STRING_decode_aper       OCTET_STRING_decode_aper
+#define BIT_STRING_encode_aper       OCTET_STRING_encode_aper
 
 #ifdef __cplusplus
 }

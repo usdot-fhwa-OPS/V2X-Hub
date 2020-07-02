@@ -43,6 +43,13 @@
 #include <ApplicationDataMessage.h>
 
 #include <tmx/messages/auto_message.hpp>
+#include <tmx/messages/IvpJ2735.h>
+#include <tmx/j2735_messages/testMessage06.hpp>
+#include <TestMessage06.h>
+#include <tmx/j2735_messages/testMessage07.hpp>
+#include <TestMessage07.h>
+#include <tmx/messages/auto_message.hpp>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 
 
 #include <QCommandLineOption>
@@ -98,13 +105,14 @@ protected:
 	void CARMAResponseHandler(QHttpEngine::Socket *socket);
 	int CloudSend(string msg,string url, string base, string method);
 
+	void HandleCARMARequest(tsm6Message &msg, routeable_message &routeableMsg);
 
 
 private:
 
 	pthread_mutex_t _settingsMutex = PTHREAD_MUTEX_INITIALIZER;
 	pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
-
+	J2735MessageFactory factory;
 	uint64_t _frequency = 0;
 
 

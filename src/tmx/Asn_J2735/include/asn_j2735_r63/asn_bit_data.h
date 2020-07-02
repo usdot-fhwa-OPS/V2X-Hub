@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2017 Lev Walkin <vlm@lionet.info>.
- * All rights reserved.
+ * Copyright (c) 2005-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	ASN_BIT_DATA
@@ -25,13 +24,19 @@ typedef struct asn_bit_data_s {
 } asn_bit_data_t;
 
 /*
+ * Create a contiguous non-refillable bit data structure.
+ * Can be freed by FREEMEM().
+ */
+asn_bit_data_t *asn_bit_data_new_contiguous(const void *data, size_t size_bits);
+
+/*
  * Extract a small number of bits (<= 31) from the specified PER data pointer.
  * This function returns -1 if the specified number of bits could not be
  * extracted due to EOD or other conditions.
  */
 int32_t asn_get_few_bits(asn_bit_data_t *, int get_nbits);
 
-/* Undo the immediately preceeding "get_few_bits" operation */
+/* Undo the immediately preceding "get_few_bits" operation */
 void asn_get_undo(asn_bit_data_t *, int get_nbits);
 
 /*

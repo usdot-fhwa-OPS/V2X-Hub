@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2004 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2004-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 /*
@@ -33,6 +33,9 @@ oer_type_decoder_f NativeInteger_decode_oer;
 oer_type_encoder_f NativeInteger_encode_oer;
 per_type_decoder_f NativeInteger_decode_uper;
 per_type_encoder_f NativeInteger_encode_uper;
+per_type_decoder_f NativeInteger_decode_aper;
+per_type_encoder_f NativeInteger_encode_aper;
+asn_random_fill_f  NativeInteger_random_fill;
 
 #define NativeInteger_constraint  asn_generic_no_constraint
 

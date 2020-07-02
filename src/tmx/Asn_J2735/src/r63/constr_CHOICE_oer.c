@@ -15,6 +15,7 @@
 #undef  RETURN
 #define RETURN(_code)                    \
     do {                                 \
+        asn_dec_rval_t rval;             \
         rval.code = _code;               \
         rval.consumed = consumed_myself; \
         return rval;                     \
@@ -38,7 +39,12 @@
         ctx->phase++;   \
         ctx->step = 0;  \
     } while(0)
-
+#undef  SET_PHASE
+#define SET_PHASE(ctx, value) \
+    do {                      \
+        ctx->phase = value;   \
+        ctx->step = 0;        \
+    } while(0)
 
 /*
  * Tags are canonically sorted in the tag to member table.
@@ -103,7 +109,7 @@ oer_fetch_tag(const void *ptr, size_t size, ber_tlv_tag_t *tag_r) {
              */
             if(val >> ((8 * sizeof(val)) - 9)) {
                 /*
-                 * We would not be able to accomodate
+                 * We would not be able to accommodate
                  * any more tag bits.
                  */
                 return -1;
@@ -115,19 +121,19 @@ oer_fetch_tag(const void *ptr, size_t size, ber_tlv_tag_t *tag_r) {
         }
     }
 
-
     return 0; /* Want more */
 }
 
-
 asn_dec_rval_t
-CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
+CHOICE_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
+                  const asn_TYPE_descriptor_t *td,
                   const asn_oer_constraints_t *constraints, void **struct_ptr,
                   const void *ptr, size_t size) {
     /*
      * Bring closer parts of structure description.
      */
-    asn_CHOICE_specifics_t *specs = (asn_CHOICE_specifics_t *)td->specifics;
+    const asn_CHOICE_specifics_t *specs =
+        (const asn_CHOICE_specifics_t *)td->specifics;
     asn_TYPE_member_t *elements = td->elements;
 
     /*
@@ -135,8 +141,6 @@ CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
      */
     void *st = *struct_ptr; /* Target structure. */
     asn_struct_ctx_t *ctx;  /* Decoder context */
-
-    asn_dec_rval_t rval;   /* Return code from subparsers */
 
     ssize_t consumed_myself = 0; /* Consumed bytes from ptr */
 
@@ -176,7 +180,8 @@ CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 
         do {
             const asn_TYPE_tag2member_t *t2m;
-            asn_TYPE_tag2member_t key = {tlv_tag, 0, 0, 0};
+            asn_TYPE_tag2member_t key = {0, 0, 0, 0};
+            key.el_tag = tlv_tag;
 
             t2m = (const asn_TYPE_tag2member_t *)bsearch(
                 &key, specs->tag2el, specs->tag2el_count,
@@ -196,7 +201,9 @@ CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
                 RETURN(RC_FAIL);
             } else {
                 /* Skip open type extension */
-                ASN_DEBUG("Not implemented skipping open type extension");
+                ASN_DEBUG(
+                    "Not implemented skipping open type extension for tag %s",
+                    ber_tlv_tag_string(tlv_tag));
                 RETURN(RC_FAIL);
             }
         } while(0);
@@ -204,10 +211,12 @@ CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 
         ADVANCE(tag_len);
     }
+        /* Fall through */
     case 1: {
         asn_TYPE_member_t *elm = &elements[ctx->step]; /* CHOICE's element */
         void *memb_ptr;         /* Pointer to the member */
         void **memb_ptr2;       /* Pointer to that pointer */
+        asn_dec_rval_t rval = {0,0};
 
         /*
          * Compute the position of the member inside a structure,
@@ -230,36 +239,142 @@ CHOICE_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
         (void)CHOICE_variant_set_presence(td, st, ctx->step + 1);
 
         if(specs->ext_start >= 0 && specs->ext_start <= ctx->step) {
-            /* We're in the extensions group. #20.2 requires Open Type */
-            ASN_DEBUG("Not implemented %s es=%d, edx=%u at %s:%d", td->name,
-                      specs->ext_start, ctx->step, __FILE__, __LINE__);
-            RETURN(RC_FAIL);
+            ssize_t got =
+                oer_open_type_get(opt_codec_ctx, elm->type,
+                                  elm->encoding_constraints.oer_constraints,
+                                  memb_ptr2, ptr, size);
+            if(got < 0) ASN__DECODE_FAILED;
+            if(got == 0) ASN__DECODE_STARVED;
+            rval.code = RC_OK;
+            rval.consumed = got;
+        } else {
+            rval = elm->type->op->oer_decoder(
+                opt_codec_ctx, elm->type,
+                elm->encoding_constraints.oer_constraints, memb_ptr2, ptr,
+                size);
         }
-
-        rval = elm->type->op->oer_decoder(opt_codec_ctx, elm->type,
-                                          elm->oer_constraints, memb_ptr2, ptr,
-                                          size);
         rval.consumed += consumed_myself;
+        switch(rval.code) {
+        case RC_OK:
+            NEXT_PHASE(ctx);
+        case RC_WMORE:
+            break;
+        case RC_FAIL:
+            SET_PHASE(ctx, 3);  /* => 3 */
+        }
         return rval;
     }
+    case 2:
+        /* Already decoded everything */
+        RETURN(RC_OK);
+    case 3:
+        /* Failed to decode, after all */
+        RETURN(RC_FAIL);
     }
 
     RETURN(RC_FAIL);
 }
 
 /*
+ * X.696 (08/2015) #8.7 Encoding of tags
+ */
+static ssize_t
+oer_put_tag(ber_tlv_tag_t tag, asn_app_consume_bytes_f *cb, void *app_key) {
+    uint8_t tclass = BER_TAG_CLASS(tag);
+    ber_tlv_tag_t tval = BER_TAG_VALUE(tag);
+
+    if(tval < 0x3F) {
+        uint8_t b = (uint8_t)((tclass << 6) | tval);
+        if(cb(&b, 1, app_key) < 0) {
+            return -1;
+        }
+        return 1;
+    } else {
+        uint8_t buf[1 + 2 * sizeof(tval)];
+        uint8_t *b = &buf[sizeof(buf)-1]; /* Last addressable */
+        size_t encoded;
+        for(; ; tval >>= 7) {
+            if(tval >> 7) {
+                *b-- = 0x80 | (tval & 0x7f);
+            } else {
+                *b-- = tval & 0x7f;
+                break;
+            }
+        }
+        *b = (uint8_t)((tclass << 6) | 0x3F);
+        encoded = sizeof(buf) - (b - buf);
+        if(cb(b, encoded, app_key) < 0) {
+            return -1;
+        }
+        return encoded;
+    }
+
+}
+
+/*
  * Encode as Canonical OER.
  */
 asn_enc_rval_t
-CHOICE_encode_oer(asn_TYPE_descriptor_t *td,
-                  const asn_oer_constraints_t *constraints, void *sptr,
+CHOICE_encode_oer(const asn_TYPE_descriptor_t *td,
+                  const asn_oer_constraints_t *constraints, const void *sptr,
                   asn_app_consume_bytes_f *cb, void *app_key) {
+    const asn_CHOICE_specifics_t *specs =
+        (const asn_CHOICE_specifics_t *)td->specifics;
+    asn_TYPE_member_t *elm; /* CHOICE element */
+    unsigned present;
+    const void *memb_ptr;
+    ber_tlv_tag_t tag;
+    ssize_t tag_len;
+    asn_enc_rval_t er = {0, 0, 0};
 
     (void)constraints;
-    (void)cb;
-    (void)app_key;
 
-    ASN__ENCODE_FAILED;
+    if(!sptr) ASN__ENCODE_FAILED;
+
+    ASN_DEBUG("OER %s encoding as CHOICE", td->name);
+
+    present = CHOICE_variant_get_presence(td, sptr);
+    if(present == 0 || present > td->elements_count) {
+        ASN_DEBUG("CHOICE %s member is not selected", td->name);
+        ASN__ENCODE_FAILED;
+    }
+
+    elm = &td->elements[present-1];
+    if(elm->flags & ATF_POINTER) {
+        memb_ptr =
+            *(const void *const *)((const char *)sptr + elm->memb_offset);
+        if(memb_ptr == 0) {
+            /* Mandatory element absent */
+            ASN__ENCODE_FAILED;
+        }
+    } else {
+        memb_ptr = (const void *)((const char *)sptr + elm->memb_offset);
+    }
+
+    tag = asn_TYPE_outmost_tag(elm->type, memb_ptr, elm->tag_mode, elm->tag);
+    if(tag == 0) {
+        ASN__ENCODE_FAILED;
+    }
+
+    tag_len = oer_put_tag(tag, cb, app_key);
+    if(tag_len < 0) {
+        ASN__ENCODE_FAILED;
+    }
+
+    if(specs->ext_start >= 0 && (unsigned)specs->ext_start <= (present-1)) {
+        ssize_t encoded = oer_open_type_put(elm->type,
+                               elm->encoding_constraints.oer_constraints,
+                               memb_ptr, cb, app_key);
+        if(encoded < 0) ASN__ENCODE_FAILED;
+        er.encoded = tag_len + encoded;
+    } else {
+        er = elm->type->op->oer_encoder(
+            elm->type, elm->encoding_constraints.oer_constraints, memb_ptr, cb,
+            app_key);
+        if(er.encoded >= 0) er.encoded += tag_len;
+    }
+
+    return er;
 }
 
 #endif  /* ASN_DISABLE_OER_SUPPORT */

@@ -10,10 +10,11 @@
  * The XER encoder of any type. May be invoked by the application.
  */
 asn_enc_rval_t
-xer_encode(asn_TYPE_descriptor_t *td, void *sptr,
-	enum xer_encoder_flags_e xer_flags,
-		asn_app_consume_bytes_f *cb, void *app_key) {
-	asn_enc_rval_t er, tmper;
+xer_encode(const asn_TYPE_descriptor_t *td, const void *sptr,
+           enum xer_encoder_flags_e xer_flags, asn_app_consume_bytes_f *cb,
+           void *app_key) {
+    asn_enc_rval_t er = {0, 0, 0};
+	asn_enc_rval_t tmper;
 	const char *mname;
 	size_t mlen;
 	int xcan = (xer_flags & XER_F_CANONICAL) ? 1 : 2;
@@ -27,10 +28,9 @@ xer_encode(asn_TYPE_descriptor_t *td, void *sptr,
 
 	tmper = td->op->xer_encoder(td, sptr, 1, xer_flags, cb, app_key);
 	if(tmper.encoded == -1) return tmper;
+	er.encoded += tmper.encoded;
 
 	ASN__CALLBACK3("</", 2, mname, mlen, ">\n", xcan);
-
-	er.encoded = 4 + xcan + (2 * mlen) + tmper.encoded;
 
 	ASN__ENCODED_OK(er);
 cb_failed:
@@ -52,8 +52,8 @@ xer__print2fp(const void *buffer, size_t size, void *app_key) {
 }
 
 int
-xer_fprint(FILE *stream, asn_TYPE_descriptor_t *td, void *sptr) {
-	asn_enc_rval_t er;
+xer_fprint(FILE *stream, const asn_TYPE_descriptor_t *td, const void *sptr) {
+	asn_enc_rval_t er = {0,0,0};
 
 	if(!stream) stream = stdout;
 	if(!td || !sptr)
@@ -80,7 +80,9 @@ xer__buffer_append(const void *buffer, size_t size, void *app_key) {
         size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
         char *new_buf = MALLOC(new_size);
         if(!new_buf) return -1;
-        memcpy(new_buf, xb->buffer, xb->buffer_size);
+        if (xb->buffer) {
+            memcpy(new_buf, xb->buffer, xb->buffer_size);
+        }
         FREEMEM(xb->buffer);
         xb->buffer = new_buf;
         xb->allocated_size = new_size;
@@ -93,8 +95,8 @@ xer__buffer_append(const void *buffer, size_t size, void *app_key) {
 }
 
 enum xer_equivalence_e
-xer_equivalent(struct asn_TYPE_descriptor_s *td, void *struct1,
-               void *struct2, FILE *opt_debug_stream) {
+xer_equivalent(const struct asn_TYPE_descriptor_s *td, const void *struct1,
+               const void *struct2, FILE *opt_debug_stream) {
     struct xer_buffer xb1 = {0, 0, 0};
     struct xer_buffer xb2 = {0, 0, 0};
     asn_enc_rval_t e1, e2;
@@ -144,7 +146,7 @@ xer_equivalent(struct asn_TYPE_descriptor_s *td, void *struct1,
         if(opt_debug_stream) {
             fprintf(opt_debug_stream,
                     "Both structures encoded into the same XER byte stream "
-                    "of size %zu:\n%s",
+                    "of size %" ASN_PRI_SIZE ":\n%s",
                     xb1.buffer_size, xb1.buffer);
         }
     }
@@ -182,8 +184,8 @@ xer_equivalent(struct asn_TYPE_descriptor_s *td, void *struct1,
                   != (xb1.buffer_size - rval.consumed))) {
         if(opt_debug_stream) {
             fprintf(opt_debug_stream,
-                    "Round-trip decode of %s required less bytes (%zu) than "
-                    "encoded (%zu)\n",
+                    "Round-trip decode of %s required less bytes (%" ASN_PRI_SIZE ") than "
+                    "encoded (%" ASN_PRI_SIZE ")\n",
                     td->name, rval.consumed, xb1.buffer_size);
         }
         ASN_STRUCT_FREE(*td, sptr);
@@ -228,6 +230,8 @@ xer_equivalent(struct asn_TYPE_descriptor_s *td, void *struct1,
         return XEQ_ROUND_TRIP_FAILED;
     }
 
-    return XEQ_SUCCESS;
+	FREEMEM(xb1.buffer);
+	FREEMEM(xb2.buffer);
+	return XEQ_SUCCESS;
 }
 

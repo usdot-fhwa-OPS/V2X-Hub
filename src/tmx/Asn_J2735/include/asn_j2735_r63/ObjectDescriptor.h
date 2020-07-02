@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2003, 2004 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	_ObjectDescriptor_H_
@@ -25,6 +25,8 @@ extern asn_TYPE_operation_t asn_OP_ObjectDescriptor;
 #define ObjectDescriptor_encode_xer   OCTET_STRING_encode_xer_utf8
 #define ObjectDescriptor_decode_uper  OCTET_STRING_decode_uper
 #define ObjectDescriptor_encode_uper  OCTET_STRING_encode_uper
+#define ObjectDescriptor_decode_aper  OCTET_STRING_decode_aper
+#define ObjectDescriptor_encode_aper  OCTET_STRING_encode_aper
 
 #ifdef __cplusplus
 }
