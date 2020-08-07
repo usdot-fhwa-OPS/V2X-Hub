@@ -5,7 +5,6 @@
 struct asn_TYPE_descriptor_s;	/* Forward declaration */
 
 extern struct asn_TYPE_descriptor_s asn_DEF_MessageFrame;
-extern struct asn_TYPE_descriptor_s asn_DEF_TrafficControlPathPart;
 extern struct asn_TYPE_descriptor_s asn_DEF_DDate;
 extern struct asn_TYPE_descriptor_s asn_DEF_DFullTime;
 extern struct asn_TYPE_descriptor_s asn_DEF_DMonthDay;
@@ -40,7 +39,6 @@ extern struct asn_TYPE_descriptor_s asn_DEF_EXTERNAL;
 struct asn_TYPE_descriptor_s *asn_pdu_collection[] = {
 	/* From module DSRC in J2735_201603_ASN_CC.asn */
 	&asn_DEF_MessageFrame,	
-	&asn_DEF_TrafficControlPathPart,	
 	&asn_DEF_DDate,	
 	&asn_DEF_DFullTime,	
 	&asn_DEF_DMonthDay,	

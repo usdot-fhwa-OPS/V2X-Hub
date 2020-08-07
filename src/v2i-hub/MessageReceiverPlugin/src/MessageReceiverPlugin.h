@@ -17,7 +17,7 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#include <tmx/j2735_messages/testMessage06.hpp>
+#include <tmx/j2735_messages/testMessage04.hpp>
 
 
 #define UDP "UDP"

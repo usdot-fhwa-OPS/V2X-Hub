@@ -169,7 +169,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	DecodedBsmMessage decodedBsm;
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
-	tsm6EncodedMessage encodedtsm6; 
+	tsm4EncodedMessage encodedtsm4; 
 
 
 

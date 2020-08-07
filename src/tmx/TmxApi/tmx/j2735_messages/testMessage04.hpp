@@ -5,18 +5,18 @@
  *      Author: Gregory M. Baumgardner
  */
 
-#ifndef TMX_J2735_MESSAGES_TESTMESSAGE07_HPP_
-#define TMX_J2735_MESSAGES_TESTMESSAGE07_HPP_
+#ifndef TMX_J2735_MESSAGES_TESTMESSAGE04_HPP_
+#define TMX_J2735_MESSAGES_TESTMESSAGE04_HPP_
 
 #include <cmath>
-#include <TestMessage06.h>
+#include <TestMessage04.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 
 #if SAEJ2735_SPEC >= 63
 //TMX_J2735_DECLARE(tsm6, TestMessage06, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
 //#else
-TMX_J2735_DECLARE(tsm7, TestMessage07, api::testMessage07, api::MSGSUBTYPE_TESTMESSAGE07_STRING)
+TMX_J2735_DECLARE(tsm4, TestMessage04, api::testMessage04, api::MSGSUBTYPE_TESTMESSAGE04_STRING)
 
 // Specialize the unique key function
 TMX_J2735_NAMESPACE_START(tmx)
@@ -24,7 +24,7 @@ TMX_J2735_NAMESPACE_START(messages)
 TMX_J2735_NAMESPACE_START(j2735)
 
 template <>
-inline int get_j2735_message_key<tmx::messages::tsm7Message>(std::shared_ptr<TestMessage07> message) {
+inline int get_j2735_message_key<tmx::messages::tsm4Message>(std::shared_ptr<TestMessage04> message) {
 	// if (message && message->coreData.id.buf) {
 	// 	tmx::byte_stream bytes(fmax(message->coreData.id.size, sizeof(int)));
 	// 	::memcpy(bytes.data(), message->coreData.id.buf, bytes.size());
@@ -41,4 +41,4 @@ TMX_J2735_NAMESPACE_END(tmx)
 #endif
 
 
-#endif /* TMX_J2735_MESSAGES_TESTMESSAGE07_HPP_ */
+#endif /* TMX_J2735_MESSAGES_TESTMESSAGE04_HPP_ */
