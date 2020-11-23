@@ -1,0 +1,45 @@
+{
+	"name":"ODELoggerPlugin",
+	"description":"Listens for J2735 messages and realtime forwards them to ODE.",
+	"version":"5.0",
+	"exeLocation":"/bin/ODELoggerPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		
+	],
+	"configuration":[
+		{
+			"key":"instance",
+			"default":"1",
+			"description":"instance of the application"
+		},
+		{
+			"key":"schedule_frequency",
+			"default":"1",
+			"description":"sample of incoming messages to forward, 1 = forwards every message"
+		},
+		{
+			"key":"ForwardBsm",
+			"default":true,
+			"description":"Enable Forwarding of BSM"
+		},
+		{
+			"key":"BSMKafkaTopic",
+			"default":"bsm_kafka",
+			"description":"(Cond: ForwardBsm == True) Topic to use for forwarding BSM"
+		},
+		{
+			"key":"KafkaBrokerIp",
+			"default":"",
+			"description":"IP address to be used for  KAFKA broker"
+		},
+		{
+			"key":"KafkaBrokerPort",
+			"default":"",
+			"description":"Port number to be used for  KAFKA broker"
+		}
+
+
+	]
+}
