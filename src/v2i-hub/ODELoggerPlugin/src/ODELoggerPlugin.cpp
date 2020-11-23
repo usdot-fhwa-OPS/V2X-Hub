@@ -42,7 +42,7 @@ ODELoggerPlugin::ODELoggerPlugin(string name): PluginClient(name)
 
 	if(_forwardBSM == true)
 
-		AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleBasicSafetyMessage);
+		AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleRealTimePublish);
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
