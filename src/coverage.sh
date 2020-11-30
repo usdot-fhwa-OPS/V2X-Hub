@@ -42,8 +42,8 @@ do
     echo ""
     echo $d
     if [[ -d $d ]]; then
-        if ls $d | grep run[a-zA-Z]*test ; then
-            TESTS="./`ls $d | grep run[a-zA-Z]*test`"
+        if ls $d | grep [a-zA-Z]*_test ; then
+            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
             echo "$TESTS built"
             cd $d
             $TESTS
