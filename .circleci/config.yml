@@ -76,7 +76,7 @@ jobs:
             cd /usr/src/googletest/build
             cmake ..
             make
-            cp lib/libgtest* /usr/lib/
+            cp /usr/src/googletest/build/lib/libgtest* /usr/lib/
             cd /usr/src/googletest
             rm -rf build
             mkdir /usr/local/lib/googletest
