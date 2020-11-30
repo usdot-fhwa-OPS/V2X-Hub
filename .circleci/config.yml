@@ -71,17 +71,19 @@ jobs:
             make
             make install
             
-            cd /usr/src/googletest/googletest
+            cd /usr/src
+            git clone https://github.com/google/googletest.git
+            cd /usr/src/googletest
             mkdir build
-            cd /usr/src/googletest/googletest/build
+            cd /usr/src/googletest/build
             cmake ..
             make
-            cp libgtest* /usr/lib/
-            cd /usr/src/googletest/googletest
+            cp lib/libgtest* /usr/lib/
+            cd /usr/src/googletest
             rm -rf build
-            mkdir /usr/local/lib/googletest
             ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
             ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+            cd /usr/local/lib/googletest/
             ldconfig
 
             cd ../../../../..

@@ -34,6 +34,11 @@ INSTALL (FILES ${HEADERS}
 #EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
  #       FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)
 
+ ################################
+# GTest
+################################
+enable_testing()
+
 #############
 ## Testing ##
 #############
