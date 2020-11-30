@@ -76,12 +76,12 @@ jobs:
             cd /usr/src/googletest/build
             cmake ..
             make
-            sudo make install
+            make install
             cd /usr/src/googletest
             rm -rf build
-            ln -s /usr/local/lib/googletest/libgtest.a /usr/lib/libgtest.a 
-            ln -s  /usr/local/lib/googletest/libgtest_main.a /usr/lib/libgtest_main.a
-            cd /usr/local/lib/googletest/
+            ln -s  /usr/local/lib/libgtest.a /usr/lib/libgtest.a 
+            ln -s  /usr/local/lib/libgtest_main.a /usr/lib/libgtest_main.a
+            cd /usr/local/lib/
             ldconfig
 
             cd ../../../../..
