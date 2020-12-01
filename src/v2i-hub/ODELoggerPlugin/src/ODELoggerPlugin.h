@@ -79,7 +79,7 @@
  	//void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
 
- 	std::string  GetCurDateTimeStr();
+ 	//std::string  GetCurDateTimeStr();
 
  	int _scheduleFrequency;
  	bool _forwardBSM;

@@ -45,29 +45,29 @@
  		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
  		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
- 		PLOG(logDEBUG) <<"ODELoggerPluginODELoggerPlugin::Attempting to connect to " << kafkaConnectString;
+ 		PLOG(logDEBUG) <<"ODELoggerPlugin: Attempting to connect to " << kafkaConnectString;
  		if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
- 			PLOG(logDEBUG) <<"ODELoggerPluginSetting kafka config options failed with error:" << error_string;
- 			PLOG(logDEBUG) <<"ODELoggerPluginExiting with exit code 1";
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Setting kafka config options failed with error:" << error_string;
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Exiting with exit code 1";
  			exit(1);
  		} else {
- 			PLOG(logDEBUG) <<"ODELoggerPluginKafka config options set succesfully";
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Kafka config options set succesfully";
  		}
 
  		kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
  		if (!kafka_producer) {
- 			PLOG(logDEBUG) <<"ODELoggerPluginCreating kafka producer failed with error:" << error_string;
- 			PLOG(logDEBUG) <<"ODELoggerPluginExiting with exit code 1";
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Creating kafka producer failed with error:" << error_string;
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Exiting with exit code 1";
  			exit(1);
  		}
- 		PLOG(logDEBUG) <<"ODELoggerPluginKafka producer created";
+ 		PLOG(logDEBUG) <<"ODELoggerPlugin: Kafka producer created";
 
  		AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleRealTimePublish);
  	}
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
 
- 	PLOG(logDEBUG) <<"ODELoggerPluginExit ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG) <<"ODELoggerPlugin: Exiting ODELoggerPlugin Constructor";
  }
 
  /**
@@ -142,7 +142,7 @@
  void ODELoggerPlugin::HandleRealTimePublish(BsmMessage &msg,
  		routeable_message &routeableMsg) {
 
- //	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
+ 	PLOG(logDEBUG)<<"ODELoggerPlugin: Starting BSM publish";
  	auto bsm = msg.get_j2735_data();
 
  	float speed_mph;
@@ -198,7 +198,7 @@
  				}
  				else
  				{
- 					// _logFile<<",,,";
+ 					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 trailer contents";
  				}
  			}
  			catch(exception &e)
@@ -212,7 +212,7 @@
  				}
  				else
  				{
- 					// _logFile<<",,";
+ 					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 vehicleAlerts contents";
  				}
 
  			}
@@ -229,7 +229,7 @@
  				bsmPartTwo.AddMember("classDetails_responderType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType[0], allocator);
  			}
  			else {
- 				// _logFile<<",,,";
+ 					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 classDetails contents";
  			}
  		}
  		catch(exception &e)
@@ -247,33 +247,33 @@
 
  void ODELoggerPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {
- 	bool retry = true, return_value = false;
-   PLOG(logDEBUG) <<"ODELoggerPluginQueueing kafka message:topic:" << topic <<"ODELoggerPlugin(" << producer->outq_len() <<"ODELoggerPlugin messages already in queue)";
+	bool retry = true, return_value = false;
+  	PLOG(logDEBUG) <<"ODELoggerPlugin: Queueing kafka message:topic:" << topic << " " << producer->outq_len() <<"messages already in queue";
 
  	while (retry) {
  		RdKafka::ErrorCode produce_error = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
  			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(message.c_str()),
  			message.size(), NULL, NULL, 0, 0);
 
-     if (produce_error == RdKafka::ERR_NO_ERROR) {
-       PLOG(logDEBUG) <<"ODELoggerPluginQueued message:" << message;
-       retry = false; return_value = true;
-     }
+     	if (produce_error == RdKafka::ERR_NO_ERROR) {
+       		PLOG(logDEBUG) <<"ODELoggerPlugin: Queued message:" << message;
+       		retry = false; return_value = true;
+     	}
  		else {
- 			PLOG(logDEBUG) <<"ODELoggerPluginFailed to queue message:" << message <<"ODELoggerPlugin:Error:" << RdKafka::err2str(produce_error);
-       if (produce_error == RdKafka::ERR__QUEUE_FULL) {
- 				PLOG(logDEBUG) <<"ODELoggerPluginMessage queue full...retrying...";
-         producer->poll(500);  /* ms */
- 				retry = true;
-       }
- 			else {
- 				PLOG(logDEBUG) <<"ODELoggerPluginUnhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
- 				retry = false;
-       }
-     }
+ 			PLOG(logDEBUG) <<"ODELoggerPlugin: Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
+				PLOG(logDEBUG) <<"ODELoggerPlugin: Message queue full...retrying...";
+				producer->poll(500);  /* ms */
+				retry = true;
+			}
+			else {
+				PLOG(logDEBUG) <<"ODELoggerPlugin: Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+				retry = false;
+			}
+     	}
    }
-   PLOG(logDEBUG) <<"ODELoggerPluginQueueing kafka message completed";
-   //return(return_value);
+   PLOG(logDEBUG) <<"ODELoggerPlugin: Queueing kafka message completed";
+   //return(return_value);	 	
  }
 
  /**
@@ -339,31 +339,31 @@
 //  	}
 //  }
 
- /**
-  * Returns the current data time as string.
-  * @return current time in ddmmyyhhmiss format.
-  */
- std::string ODELoggerPlugin::GetCurDateTimeStr()
- {
- 	auto t = std::time(nullptr);
- 	auto tm = *std::localtime(&t);
+//  /**
+//   * Returns the current data time as string.
+//   * @return current time in ddmmyyhhmiss format.
+//   */
+//  std::string ODELoggerPlugin::GetCurDateTimeStr()
+//  {
+//  	auto t = std::time(nullptr);
+//  	auto tm = *std::localtime(&t);
 
- 	std::ostringstream oss;
- 	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
- 	auto str = oss.str();
- 	return str;
- }
+//  	std::ostringstream oss;
+//  	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
+//  	auto str = oss.str();
+//  	return str;
+//  }
 
  // Override of main method of the plugin that should not return until the plugin exits.
  // This method does not need to be overridden if the plugin does not want to use the main thread.
  int ODELoggerPlugin::Main()
  {
- 	PLOG(logDEBUG) <<"ODELoggerPluginStarting ODELoggerPlugin...";
+ 	PLOG(logDEBUG) <<"ODELoggerPlugin: Starting ODELoggerPlugin...";
 
  	uint msCount = 0;
  	while (_plugin->state != IvpPluginState_error)
  	{
- 		PLOG(logDEBUG4) <<"ODELoggerPluginODELoggerPlugin Sleeping 5 minutes" << endl;
+ 		PLOG(logDEBUG4) <<"ODELoggerPlugin: Sleeping 5 minutes" << endl;
 
  		this_thread::sleep_for(chrono::milliseconds(300000));
 
@@ -371,7 +371,7 @@
  		//CheckBSMLogFileSizeAndRename(true);
  	}
 
- 	PLOG(logDEBUG) <<"ODELoggerPluginODELoggerPlugin terminating gracefully.";
+ 	PLOG(logDEBUG) <<"ODELoggerPlugin: ODELoggerPlugin terminating gracefully.";
  	return EXIT_SUCCESS;
  }
 
