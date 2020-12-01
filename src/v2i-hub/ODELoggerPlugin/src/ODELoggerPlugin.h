@@ -75,8 +75,8 @@
  	std::atomic<uint64_t> _frequency{0};
  	DATA_MONITOR(_frequency);   // Declares the
 
- 	void OpenBSMLogFile();
- 	void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
+ 	//void OpenBSMLogFile();
+ 	//void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
 
  	std::string  GetCurDateTimeStr();
@@ -85,10 +85,10 @@
  	bool _forwardBSM;
  	std::string _BSMkafkaTopic;
  	std::string _kafkaBrokerIp;
- 	int _kafkaBrokerPort;
+ 	std::string _kafkaBrokerPort;
  	std::string kafkaConnectString;
  	RdKafka::Conf *kafka_conf;
- 	RdKafka::Producer *kafka_producer
+ 	RdKafka::Producer *kafka_producer;
  };
  std::mutex _cfgLock;
 

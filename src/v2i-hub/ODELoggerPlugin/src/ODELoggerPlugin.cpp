@@ -16,7 +16,7 @@
  */
 
 
- #include "ODELoggerPlugin.h"
+#include "ODELoggerPlugin.h"
 
  namespace ODELoggerPlugin
  {
@@ -28,7 +28,7 @@
   */
  ODELoggerPlugin::ODELoggerPlugin(string name): PluginClient(name)
  {
- 	PLOG(logDEBUG)<< "In ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG)<<"ODELoggerPluginODELoggerPlugin::In ODELoggerPlugin Constructor";
  	// The log level can be changed from the default here.
  	//FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
@@ -39,34 +39,35 @@
  	GetConfigValue("BSMKafkaTopic", _BSMkafkaTopic);
  	GetConfigValue("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue("KafkaBrokerPort", _kafkaBrokerPort);
+	std::string error_string;
 
  	if(_forwardBSM == true) {
  		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
  		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
- 		PLOG(logDEBUG) << "Attempting to connect to " << kafkaConnectString;
- 		if ((kafka_conf->set(“bootstrap.servers”, kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK) {
- 			PLOG(logDEBUG) << “Setting kafka config options failed with error:” << error_string;
- 			PLOG(logDEBUG) << “Exiting with exit code 1";
+ 		PLOG(logDEBUG) <<"ODELoggerPluginODELoggerPlugin::Attempting to connect to " << kafkaConnectString;
+ 		if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
+ 			PLOG(logDEBUG) <<"ODELoggerPluginSetting kafka config options failed with error:" << error_string;
+ 			PLOG(logDEBUG) <<"ODELoggerPluginExiting with exit code 1";
  			exit(1);
  		} else {
- 			PLOG(logDEBUG) << “Kafka config options set succesfully”;
+ 			PLOG(logDEBUG) <<"ODELoggerPluginKafka config options set succesfully";
  		}
 
  		kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
  		if (!kafka_producer) {
- 			PLOG(logDEBUG) << “Creating kafka producer failed with error:” << error_string;
- 			PLOG(logDEBUG) << “Exiting with exit code 1";
+ 			PLOG(logDEBUG) <<"ODELoggerPluginCreating kafka producer failed with error:" << error_string;
+ 			PLOG(logDEBUG) <<"ODELoggerPluginExiting with exit code 1";
  			exit(1);
  		}
- 		PLOG(logDEBUG) << << “Kafka producer created”;
+ 		PLOG(logDEBUG) <<"ODELoggerPluginKafka producer created";
 
  		AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleRealTimePublish);
  	}
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
 
- 	PLOG(logDEBUG) << "Exit ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG) <<"ODELoggerPluginExit ODELoggerPlugin Constructor";
  }
 
  /**
@@ -98,7 +99,7 @@
  	GetConfigValue("BSMKafkaTopic", _BSMkafkaTopic);
  	GetConfigValue("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue("KafkaBrokerPort", _kafkaBrokerPort);
- 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort
+ 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 
  }
 
@@ -225,7 +226,7 @@
  			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {
  				bsmPartTwo.AddMember("classDetails_role", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0], allocator);
  				bsmPartTwo.AddMember("classDetails_keyType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0], allocator);
- 				bsmPartTwo.AddMember("classDetails_responderType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType, allocator);
+ 				bsmPartTwo.AddMember("classDetails_responderType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType[0], allocator);
  			}
  			else {
  				// _logFile<<",,,";
@@ -247,32 +248,32 @@
  void ODELoggerPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {
  	bool retry = true, return_value = false;
-   PLOG(logDEBUG) << “Queueing kafka message:topic:” << topic << “(” << producer->outq_len() << ” messages already in queue)“;
+   PLOG(logDEBUG) <<"ODELoggerPluginQueueing kafka message:topic:" << topic <<"ODELoggerPlugin(" << producer->outq_len() <<"ODELoggerPlugin messages already in queue)";
 
  	while (retry) {
  		RdKafka::ErrorCode produce_error = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
  			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(message.c_str()),
- 			message.size(), NULL, 0, 0, NULL, NULL);
+ 			message.size(), NULL, NULL, 0, 0);
 
      if (produce_error == RdKafka::ERR_NO_ERROR) {
-       PLOG(logDEBUG) << “Queued message:” << message;
+       PLOG(logDEBUG) <<"ODELoggerPluginQueued message:" << message;
        retry = false; return_value = true;
      }
  		else {
- 			PLOG(logDEBUG) << “Failed to queue message:” << message << “:Error:” << RdKafka::err2str(produce_error);
+ 			PLOG(logDEBUG) <<"ODELoggerPluginFailed to queue message:" << message <<"ODELoggerPlugin:Error:" << RdKafka::err2str(produce_error);
        if (produce_error == RdKafka::ERR__QUEUE_FULL) {
- 				PLOG(logDEBUG) << “Message queue full...retrying...“;
+ 				PLOG(logDEBUG) <<"ODELoggerPluginMessage queue full...retrying...";
          producer->poll(500);  /* ms */
  				retry = true;
        }
  			else {
- 				BOOST_LOG_TRIVIAL(warning) << “Unhandled error in queue_kafka_message:” << RdKafka::err2str(produce_error);
+ 				PLOG(logDEBUG) <<"ODELoggerPluginUnhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
  				retry = false;
        }
      }
    }
-   PLOG(logDEBUG) << “Queueing kafka message completed”;
-   return(return_value);
+   PLOG(logDEBUG) <<"ODELoggerPluginQueueing kafka message completed";
+   //return(return_value);
  }
 
  /**
@@ -280,63 +281,63 @@
   *  inserts a header row with names of fields that will be logged when data is received. If a log file
   *  with the same name already exists before opening a new file, it's renamed with current timestamp suffix.
   */
- void ODELoggerPlugin::OpenBSMLogFile()
- {
- 	PLOG(logDEBUG) << "BSM Log File: " << _curFilename << std::endl;;
- 	//rename logfile if one already exists
- 	std::string newFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".csv";
- 	std::rename(_curFilename.c_str(), newFilename.c_str());
+//  void ODELoggerPlugin::OpenBSMLogFile()
+//  {
+//  	PLOG(logDEBUG) << "BSM Log File: " << _curFilename << std::endl;;
+//  	//rename logfile if one already exists
+//  	std::string newFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".csv";
+//  	std::rename(_curFilename.c_str(), newFilename.c_str());
 
- 	_logFile.open(_curFilename);
- 	if (!_logFile.is_open())
- 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
- 	else
- 	{
- 		_logFile << "DSRC_MessageID, "
- 				"Vehicle ID, "
- 				"BSM_tmp_ID, "
- 				"transtime, "
- 				"X, Y, "
- 				"Speed, "
- 				"Instant_Acceleration, "
- 				"Heading, "
- 				"brakeStatus, "
- 				"brakePressure, "
- 				"hardBraking,  "
- 				"transTo, "
- 				"transmission_received_time, "
- 				"trailerPivot, "
- 				"trailreLength, "
- 				"trailerHeight, "
- 				"vehicleRole, "
- 				"vehicletype, "
- 				"Respondertype, "
- 				"SirenState, "
- 				"LightState, "
- 				"VehicleDescription, "
- 				"" << endl;
+//  	_logFile.open(_curFilename);
+//  	if (!_logFile.is_open())
+//  		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
+//  	else
+//  	{
+//  		_logFile << "DSRC_MessageID, "
+//  				"Vehicle ID, "
+//  				"BSM_tmp_ID, "
+//  				"transtime, "
+//  				"X, Y, "
+//  				"Speed, "
+//  				"Instant_Acceleration, "
+//  				"Heading, "
+//  				"brakeStatus, "
+//  				"brakePressure, "
+//  				"hardBraking,  "
+//  				"transTo, "
+//  				"transmission_received_time, "
+//  				"trailerPivot, "
+//  				"trailreLength, "
+//  				"trailerHeight, "
+//  				"vehicleRole, "
+//  				"vehicletype, "
+//  				"Respondertype, "
+//  				"SirenState, "
+//  				"LightState, "
+//  				"VehicleDescription, "
+//  				"" << endl;
 
- 	}
- }
+//  	}
+//  }
 
- /**
-  * Checks the size of the logfile and opens a new file if it's size is greater
-  * than the max size specified.
-  */
- void ODELoggerPlugin::CheckBSMLogFileSizeAndRename(bool createNewFile)
- {
- 	if (_logFile.is_open())
- 	{
- 		std::lock_guard<mutex> lock(_cfgLock);
- 		_logFile.seekp( 0, std::ios::end );
- 		int curFilesizeInMB = _logFile.tellp()/BYTESTOMB;
- 		if (curFilesizeInMB > _maxFilesizeInMB || createNewFile)
- 		{
- 			_logFile.close();
- 			OpenBSMLogFile();
- 		}
- 	}
- }
+//  /**
+//   * Checks the size of the logfile and opens a new file if it's size is greater
+//   * than the max size specified.
+//   */
+//  void ODELoggerPlugin::CheckBSMLogFileSizeAndRename(bool createNewFile)
+//  {
+//  	if (_logFile.is_open())
+//  	{
+//  		std::lock_guard<mutex> lock(_cfgLock);
+//  		_logFile.seekp( 0, std::ios::end );
+//  		int curFilesizeInMB = _logFile.tellp()/BYTESTOMB;
+//  		if (curFilesizeInMB > _maxFilesizeInMB || createNewFile)
+//  		{
+//  			_logFile.close();
+//  			OpenBSMLogFile();
+//  		}
+//  	}
+//  }
 
  /**
   * Returns the current data time as string.
@@ -357,20 +358,20 @@
  // This method does not need to be overridden if the plugin does not want to use the main thread.
  int ODELoggerPlugin::Main()
  {
- 	PLOG(logDEBUG) << "Starting ODELoggerPlugin...";
+ 	PLOG(logDEBUG) <<"ODELoggerPluginStarting ODELoggerPlugin...";
 
  	uint msCount = 0;
  	while (_plugin->state != IvpPluginState_error)
  	{
- 		PLOG(logDEBUG4) << "ODELoggerPlugin Sleeping 5 minutes" << endl;
+ 		PLOG(logDEBUG4) <<"ODELoggerPluginODELoggerPlugin Sleeping 5 minutes" << endl;
 
  		this_thread::sleep_for(chrono::milliseconds(300000));
 
  		// check size of the log file and open new one if needed
- 		CheckBSMLogFileSizeAndRename(true);
+ 		//CheckBSMLogFileSizeAndRename(true);
  	}
 
- 	PLOG(logDEBUG) << "ODELoggerPlugin terminating gracefully.";
+ 	PLOG(logDEBUG) <<"ODELoggerPluginODELoggerPlugin terminating gracefully.";
  	return EXIT_SUCCESS;
  }
 
