@@ -28,20 +28,20 @@
   */
  ODELoggerPlugin::ODELoggerPlugin(string name): PluginClient(name)
  {
- 	PLOG(logDEBUG)<<"ODELoggerPluginODELoggerPlugin::In ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG)<<"ODELoggerPlugin::In ODELoggerPlugin Constructor";
  	// The log level can be changed from the default here.
  	//FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
  	// Critical section
  	std::lock_guard<mutex> lock(_cfgLock);
- 	GetConfigValue("schedule_frequency", _scheduleFrequency);
- 	GetConfigValue("ForwardBsm", _forwardBSM);
- 	GetConfigValue("BSMKafkaTopic", _BSMkafkaTopic);
- 	GetConfigValue("KafkaBrokerIp", _kafkaBrokerIp);
- 	GetConfigValue("KafkaBrokerPort", _kafkaBrokerPort);
+ 	GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
+ 	GetConfigValue<uint16_t>("ForwardBsm", _forwardBSM);
+ 	GetConfigValue<string>("BSMKafkaTopic", _BSMkafkaTopic);
+ 	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
+ 	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	std::string error_string;
 
- 	if(_forwardBSM == true) {
+ 	if(_forwardBSM == 1) {
  		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
  		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
@@ -94,11 +94,11 @@
 
 
  	std::lock_guard<mutex> lock(_cfgLock);
- 	GetConfigValue("schedule_frequency", _scheduleFrequency);
- 	GetConfigValue("ForwardBsm", _forwardBSM);
- 	GetConfigValue("BSMKafkaTopic", _BSMkafkaTopic);
- 	GetConfigValue("KafkaBrokerIp", _kafkaBrokerIp);
- 	GetConfigValue("KafkaBrokerPort", _kafkaBrokerPort);
+ 	GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
+ 	GetConfigValue<uint16_t>("ForwardBsm", _forwardBSM);
+ 	GetConfigValue<string>("BSMKafkaTopic", _BSMkafkaTopic);
+ 	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
+ 	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 
  }
@@ -142,7 +142,7 @@
  void ODELoggerPlugin::HandleRealTimePublish(BsmMessage &msg,
  		routeable_message &routeableMsg) {
 
- 	PLOG(logDEBUG)<<"ODELoggerPlugin: Starting BSM publish";
+ 	cout<<"ODELoggerPlugin: Starting BSM publish1\n";
  	auto bsm = msg.get_j2735_data();
 
  	float speed_mph;
@@ -174,7 +174,7 @@
 
  	// Heading units are 0.0125 degrees.
  	float heading = rawHeading / 80.0;
-
+	cout<<"ODELoggerPlugin: Starting BSM publish2\n";
  	// The speed is contained in bits 0-12.  Units are 0.02 meters/sec.
  	// A value of 8191 is used when the speed is not known.
  	if (rawSpeed != 8191)
@@ -200,44 +200,64 @@
  				{
  					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 trailer contents";
  				}
+				cout<<"ODELoggerPlugin: Starting BSM publish3\n";
  			}
  			catch(exception &e)
  			{
  				PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
+				cout<<"ODELoggerPlugin: Starting BSM publish3\n";
  			}
  			try {
  				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
  					bsmPartTwo.AddMember("alert_sirenUse", bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse, allocator);
  					bsmPartTwo.AddMember("alerts_lightsUse", bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse, allocator);
+
  				}
  				else
  				{
  					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 vehicleAlerts contents";
  				}
+				cout<<"ODELoggerPlugin: Starting BSM publish4\n";
 
  			}
  			catch(exception &e)
  			{
- 				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
+ 				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();				cout<<"ODELoggerPlugin: Starting BSM publish4\n";
+
  			}
  		}
  		if(bsm->partII[0].list.count >= partII_Value_PR_SupplementalVehicleExtensions){
+		cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
  		try {
  			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {
  				bsmPartTwo.AddMember("classDetails_role", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0], allocator);
+				cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
  				bsmPartTwo.AddMember("classDetails_keyType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->keyType[0], allocator);
- 				bsmPartTwo.AddMember("classDetails_responderType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType[0], allocator);
+				cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
+ 				//bsmPartTwo.AddMember("classDetails_responderType", bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->responderType[0], allocator);
+				cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
  			}
  			else {
  					PLOG(logDEBUG)<<"ODELoggerPlugin: No BSM Part 2 classDetails contents";
  			}
+			cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
  		}
  		catch(exception &e)
  			{
  				PLOG(logDEBUG)<<"Standard Exception:: classDetails unavailable "<<e.what();
+				cout<<"ODELoggerPlugin: Starting BSM publish5\n";
+
  			}
  		}
  	}
+
+	cout<<"ODELoggerPlugin: Starting BSM publish6\n";
+
  	document.AddMember("PartTwoContents", bsmPartTwo, allocator);
  	StringBuffer buffer;
  	Writer<StringBuffer> writer(buffer);

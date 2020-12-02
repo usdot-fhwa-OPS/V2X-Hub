@@ -21,7 +21,7 @@
 		},
 		{
 			"key":"ForwardBsm",
-			"default":true,
+			"default":"1",
 			"description":"Enable Forwarding of BSM"
 		},
 		{
@@ -31,12 +31,12 @@
 		},
 		{
 			"key":"KafkaBrokerIp",
-			"default":"",
+			"default":"127.0.0.1",
 			"description":"IP address to be used for  KAFKA broker"
 		},
 		{
 			"key":"KafkaBrokerPort",
-			"default":"",
+			"default":"9092",
 			"description":"Port number to be used for  KAFKA broker"
 		}
 

@@ -25,7 +25,6 @@
 
  #include <atomic>
  #include <thread>
- //#include <DecodedBsmMessage.h>
  #include <tmx/messages/IvpJ2735.h>
  #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
  #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -75,14 +74,10 @@
  	std::atomic<uint64_t> _frequency{0};
  	DATA_MONITOR(_frequency);   // Declares the
 
- 	//void OpenBSMLogFile();
- 	//void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
 
- 	//std::string  GetCurDateTimeStr();
-
- 	int _scheduleFrequency;
- 	bool _forwardBSM;
+ 	uint16_t _scheduleFrequency;
+ 	uint16_t _forwardBSM;
  	std::string _BSMkafkaTopic;
  	std::string _kafkaBrokerIp;
  	std::string _kafkaBrokerPort;
