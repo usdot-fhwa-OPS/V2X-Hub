@@ -77,6 +77,7 @@
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
 
  	uint16_t _scheduleFrequency;
+	uint16_t _freqCounter;
  	uint16_t _forwardBSM;
  	std::string _BSMkafkaTopic;
  	std::string _kafkaBrokerIp;
