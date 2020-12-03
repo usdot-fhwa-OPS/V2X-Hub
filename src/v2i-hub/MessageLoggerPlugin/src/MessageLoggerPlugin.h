@@ -29,7 +29,7 @@
 #include <stdlib.h>
 #include <atomic>
 #include <thread>
-#include "/home/animesh/Downloads/V2X-Hub/src/tmx/TmxApi/tmx/json/cJSON.h"
+#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
 //#include <DecodedBsmMessage.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -82,6 +82,9 @@ private:
 	std::string _cvmsgtype;
 	std::string _filename, _fileDirectory;
 	std::string _curFilename;
+	std::string _newFilename;
+	std::string _curFilenamesize;
+	int _logFilesize;
 	int _maxFilesizeInMB;
 
 };

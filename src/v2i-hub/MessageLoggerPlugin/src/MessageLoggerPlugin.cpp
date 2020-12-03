@@ -39,6 +39,7 @@ MessageLoggerPlugin::MessageLoggerPlugin(string name): PluginClient(name)
 	GetConfigValue("Messagetype", _cvmsgtype);
 	GetConfigValue("Filename", _filename);
 	_curFilename = _fileDirectory + "/" + _filename + ".json";
+	_curFilenamesize = _curFilename;
 
 	OpenMSGLogFile();
 	// Add a message filter and handler for each message this plugin wants to receive.
@@ -91,9 +92,7 @@ void MessageLoggerPlugin::UpdateConfigSettings()
 	{
 		_logFile.close();
 		OpenMSGLogFile();
-
 	}
-
 }
 
 /**
@@ -270,8 +269,8 @@ void MessageLoggerPlugin::OpenMSGLogFile()
 	PLOG(logDEBUG) << "Message Log File: " << _curFilename << std::endl;;
 	//rename logfile if one already exists
 	std::string newFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".json";
+	std::string _newFilename = newFilename.c_str();
 	std::rename(_curFilename.c_str(), newFilename.c_str());
-
 	_logFile.open(_curFilename);
 	if (!_logFile.is_open())
 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
@@ -280,38 +279,43 @@ void MessageLoggerPlugin::OpenMSGLogFile()
 		_logFile << "Message Log file" << GetCurDateTimeStr() << endl;
 
 	}
+	std::string jsonlogfile = _newFilename;
+	std::string binarylogfile = jsonlogfile.substr(0, jsonlogfile.size()-4);
+	std::string _binarylogfile = binarylogfile + "bin";
+	FILE *pJsonFile, *pBinaryFile;
+	char jsonbuffer;
+	pJsonFile = fopen(jsonlogfile.c_str(), "r");
+	pBinaryFile = fopen(_binarylogfile.c_str(), "wb");
+	while (fread(&jsonbuffer,1,1,pJsonFile)!=0)
+	{
+		fwrite(&jsonbuffer,1,1,pBinaryFile);
+	}
+	fclose(pJsonFile);
+	fclose(pBinaryFile);
 }
 
 /**
- * Checks the size of the logfile and opens a new file if it's size is greater
+ * Checks the size of the logfile and opens a new_fileDirectory file if it's size is greater
  * than the max size specified.
  */
+int getsize(std::string const _curFilenamesize)
+        {
+
+	}
 void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename(bool createNewFile)
 {
 	if (_logFile.is_open())
 	{
 		std::lock_guard<mutex> lock(_cfgLock);
-		_logFile.seekp( 0, std::ios::end );
-		int curFilesizeInMB = _logFile.tellp()/BYTESTOMB;
-		cout<<curFilesizeInMB;
-		if (curFilesizeInMB > _maxFilesizeInMB || createNewFile)
+		std::fstream logFilesize(_curFilenamesize);
+		logFilesize.seekg(0, std::ios::end);
+		int _logFilesize = logFilesize.tellg();
+		int curFilesizeInMB = _logFilesize/1048576;
+		if (curFilesizeInMB >= _maxFilesizeInMB)
 		{
-			std::string jsonlogfile = _curFilename;
-			std::string binarylogfile = jsonlogfile.substr(0, jsonlogfile.size()-4);
-			std::string _binarylogfile = binarylogfile + ".bin";
+			createNewFile = true;
 			_logFile.close();
 			OpenMSGLogFile();
-			FILE *pJsonFile, *pBinaryFile;
-			char jsonbuffer;
-			pJsonFile = fopen(jsonlogfile.c_str(), "r");
-			pBinaryFile = fopen(_binarylogfile.c_str(), "wb");
-			while (fread(&jsonbuffer,1,1,pJsonFile)!=0)
-			{
-				fwrite(&jsonbuffer,1,1,pBinaryFile);
-			}
-			fclose(pJsonFile);
-			fclose(pBinaryFile);
-
 		}
 	}
 }
@@ -324,7 +328,6 @@ std::string MessageLoggerPlugin::GetCurDateTimeStr()
 {
 	auto t = std::time(nullptr);
 	auto tm = *std::localtime(&t);
-
 	std::ostringstream oss;
 	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
 	auto str = oss.str();
@@ -340,9 +343,9 @@ int MessageLoggerPlugin::Main()
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping 5 minutes" << endl;
+		PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping" << endl;
 
-		this_thread::sleep_for(chrono::milliseconds(300000));
+		this_thread::sleep_for(chrono::milliseconds(1000));
 
 		// check size of the log file and open new one if needed
 		CheckMSGLogFileSizeAndRename(true);
