@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+## The program will test validation for MAP, TIM, SPaT applications on different DUTs
+## Arguments : 
+##              [DUTIP] : ipaddres of the DUT 
+##              [DUTPORTssh]: SSH port for DUT
+##              []
 
 import J2735 
 import json
