@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <atomic>
+#include <chrono>
 #include <thread>
 #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
 //#include <DecodedBsmMessage.h>
@@ -79,12 +80,15 @@ private:
 	std::string  GetCurDateTimeStr();
 
 	std::ofstream _logFile;
+	std::ofstream _logFilebin;
 	std::string _cvmsgtype;
 	std::string _filename, _fileDirectory;
 	std::string _curFilename;
+	std::string _curFilenamebin;
 	std::string _newFilename;
 	std::string _curFilenamesize;
 	int _logFilesize;
+	int _logFilebinsize;
 	int _maxFilesizeInMB;
 
 };

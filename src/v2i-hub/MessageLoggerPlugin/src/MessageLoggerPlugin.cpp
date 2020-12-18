@@ -39,7 +39,8 @@ MessageLoggerPlugin::MessageLoggerPlugin(string name): PluginClient(name)
 	GetConfigValue("Messagetype", _cvmsgtype);
 	GetConfigValue("Filename", _filename);
 	_curFilename = _fileDirectory + "/" + _filename + ".json";
-	_curFilenamesize = _curFilename;
+	_curFilenamebin = _fileDirectory + "/" + _filename + ".txt";
+	_curFilenamesize = _curFilenamebin;
 
 	OpenMSGLogFile();
 	// Add a message filter and handler for each message this plugin wants to receive.
@@ -61,6 +62,7 @@ MessageLoggerPlugin::~MessageLoggerPlugin()
 	if (_logFile.is_open())
 	{
 		_logFile.close();
+		_logFilebin.close();
 	}
 }
 
@@ -86,11 +88,14 @@ void MessageLoggerPlugin::UpdateConfigSettings()
 	GetConfigValue("Messagetype", _cvmsgtype);
 	GetConfigValue("Filename", _filename);
 	std::string oldFilename = _curFilename;
+	std::string oldFilenamebin = _curFilenamebin;
 	_curFilename = _fileDirectory + "/" + _filename + ".json";
+	_curFilenamebin = _fileDirectory + "/" + _filename + ".txt";
 
 	if (_curFilename.compare (oldFilename) !=0 )
 	{
 		_logFile.close();
+		_logFilebin.close();
 		OpenMSGLogFile();
 	}
 }
@@ -139,19 +144,67 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 
 	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
 	auto bsm = msg.get_j2735_data();
-
+	int16_t bsmlen = (routeableMsg.get_payload_str().length()/2)+3;
+	uint16_t bsmlen_sw = __builtin_bswap16(bsmlen);
+        std::stringstream bsmlen_hex;
+        bsmlen_hex<<std::hex<<bsmlen_sw;
+	
 	float speed_mph;
 	int32_t bsmTmpID;
+
+        std::string rxForm_hex = "03";
+	std::string verificationstatus_hex = "03";
 
 	bool isSuccess = false;
 	//asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, bsm);
 	int32_t latitude = bsm->coreData.lat;
+	int32_t latitude_sw = __builtin_bswap32(abs(latitude));
+	std::stringstream latitude_hex;
+        latitude_hex<<std::hex<<latitude_sw;
 	int32_t longitude = bsm->coreData.Long;
+	int32_t longitude_sw = __builtin_bswap32(abs(longitude));
+	std::stringstream longitude_hex;
+        longitude_hex<<std::hex<<longitude_sw;
+	int32_t elevation = bsm->coreData.elev;
+        int32_t elevation_sw = __builtin_bswap32(abs(elevation));
+        std::stringstream elevation_hex;
+        elevation_hex<<std::hex<<elevation_sw;
+
 	int32_t longAcceleration = bsm->coreData.accelSet.Long;
 
-	int32_t transtime = bsm->coreData.secMark;
-	uint16_t rawSpeed = bsm->coreData.speed;
-	uint16_t rawHeading = bsm->coreData.heading;
+	int16_t transtime = bsm->coreData.secMark;
+	int16_t transtime_sw = __builtin_bswap16(abs(transtime));
+        std::stringstream transtime_hex;
+        transtime_hex<<std::hex<<transtime_sw;
+		
+	std::string signstatus_hex = "00";	
+	std::string header_hex = "038081";
+	int header_size = routeableMsg.get_payload_str().length()/2;
+        std::stringstream header_size_hex;
+        header_size_hex<<std::hex<<header_size;
+
+	int16_t rawSpeed = bsm->coreData.speed;
+	int16_t rawspeed_sw = __builtin_bswap16(abs(rawSpeed));
+        std::stringstream rawspeed_size;
+	rawspeed_size << rawSpeed;
+	std::stringstream rawspeed_hex;
+        if (rawspeed_size.str().length() == 1)
+	{
+		rawspeed_hex<<"0"<<std::hex<<rawspeed_sw;
+	}
+	else
+		rawspeed_hex<<std::hex<<rawspeed_sw;
+
+	int16_t rawHeading = bsm->coreData.heading;
+	int16_t rawHeading_sw = __builtin_bswap16(abs(rawHeading));
+        std::stringstream rawHeading_hex;
+        rawHeading_hex<<std::hex<<rawHeading_sw;
+
+	uint32_t bsmreceivetime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	int32_t bsmreceivetime_sw = __builtin_bswap32(bsmreceivetime);
+        std::stringstream bsmreceivetime_hex;
+        bsmreceivetime_hex<<std::hex<<bsmreceivetime_sw;
+
 	GetInt32((unsigned char *)bsm->coreData.id.buf, &bsmTmpID);
 
 	// Heading units are 0.0125 degrees.
@@ -251,6 +304,7 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 	
 	cJSON_AddItemToObject(_BsmMessageContent, "payload", cJSON_CreateString(routeableMsg.get_payload_str().c_str())); // payload
 
+	_logFilebin<<rxForm_hex<<latitude_hex.str()<<longitude_hex.str()<<elevation_hex.str()<<rawspeed_hex.str()<<rawHeading_hex.str()<<bsmreceivetime_hex.str()<<transtime_hex.str()<<signstatus_hex<<bsmlen_hex.str()<<header_hex<<header_size_hex.str()<<routeableMsg.get_payload_str();
 	BsmOut = cJSON_Print(BsmRoot);
 	_logFile << BsmOut;
 	free(BsmOut);
@@ -269,9 +323,12 @@ void MessageLoggerPlugin::OpenMSGLogFile()
 	PLOG(logDEBUG) << "Message Log File: " << _curFilename << std::endl;;
 	//rename logfile if one already exists
 	std::string newFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".json";
-	std::string _newFilename = newFilename.c_str();
+        std::string newbinFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".txt";
+	std::string _newFilename = newbinFilename.c_str();
 	std::rename(_curFilename.c_str(), newFilename.c_str());
+	std::rename(_curFilenamebin.c_str(), newbinFilename.c_str());
 	_logFile.open(_curFilename);
+	_logFilebin.open(_curFilenamebin);
 	if (!_logFile.is_open())
 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
 	else
@@ -279,29 +336,26 @@ void MessageLoggerPlugin::OpenMSGLogFile()
 		_logFile << "Message Log file" << GetCurDateTimeStr() << endl;
 
 	}
-	std::string jsonlogfile = _newFilename;
-	std::string binarylogfile = jsonlogfile.substr(0, jsonlogfile.size()-4);
+	std::string txtlogfile = _newFilename;
+	std::string binarylogfile = txtlogfile.substr(0, txtlogfile.size()-3);
 	std::string _binarylogfile = binarylogfile + "bin";
-	FILE *pJsonFile, *pBinaryFile;
-	char jsonbuffer;
-	pJsonFile = fopen(jsonlogfile.c_str(), "r");
+	FILE *pTxtFile, *pBinaryFile;
+	char txtbuffer;
+	pTxtFile = fopen(txtlogfile.c_str(), "r");
 	pBinaryFile = fopen(_binarylogfile.c_str(), "wb");
-	while (fread(&jsonbuffer,1,1,pJsonFile)!=0)
+	while (fread(&txtbuffer,1,1,pTxtFile)!=0)
 	{
-		fwrite(&jsonbuffer,1,1,pBinaryFile);
+		fwrite(&txtbuffer,1,1,pBinaryFile);
 	}
-	fclose(pJsonFile);
+	fclose(pTxtFile);
 	fclose(pBinaryFile);
+	std::remove(newbinFilename.c_str());
 }
 
 /**
  * Checks the size of the logfile and opens a new_fileDirectory file if it's size is greater
  * than the max size specified.
  */
-int getsize(std::string const _curFilenamesize)
-        {
-
-	}
 void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename(bool createNewFile)
 {
 	if (_logFile.is_open())
@@ -315,6 +369,7 @@ void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename(bool createNewFile)
 		{
 			createNewFile = true;
 			_logFile.close();
+			_logFilebin.close();
 			OpenMSGLogFile();
 		}
 	}
