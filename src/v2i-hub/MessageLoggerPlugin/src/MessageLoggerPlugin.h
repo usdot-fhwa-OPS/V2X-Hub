@@ -23,6 +23,8 @@
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
 
+#include <iostream>
+#include <cstring>
 #include <string>
 #include <fstream>
 #include <stdio.h>
