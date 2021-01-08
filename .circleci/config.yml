@@ -125,7 +125,6 @@ jobs:
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
               echo "Scanner tocken: ${SONAR_SCANNER_TOKEN}"
-              SONAR_SCANNER_TOKEN=215543c3287b3dcf937e41c1e4577a1eddc6d976
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
               exit 0;
             else
