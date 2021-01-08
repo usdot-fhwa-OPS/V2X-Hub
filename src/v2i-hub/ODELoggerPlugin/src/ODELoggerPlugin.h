@@ -18,11 +18,15 @@
  #ifndef TMX_PLUGINS_ODELoggerPlugin_H_
  #define TMX_PLUGINS_ODELoggerPlugin_H_
 
-
-
  #include "PluginClient.h"
  #include "PluginDataMonitor.h"
-
+ #include <iostream>
+ #include <cstring>
+ #include <string>
+ #include <fstream>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <chrono>
  #include <atomic>
  #include <thread>
  #include <tmx/messages/IvpJ2735.h>
@@ -30,16 +34,14 @@
  #include <tmx/j2735_messages/SpatMessage.hpp>
  #include <BasicSafetyMessage.h>
  #include <tmx/messages/auto_message.hpp>
- #include <rapidjson/document.h>
- #include <rapidjson/writer.h>
- #include <rapidjson/stringbuffer.h>
  #include <librdkafka/rdkafkacpp.h>
+ #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
 
  using namespace std;
  using namespace tmx;
  using namespace tmx::utils;
  using namespace tmx::messages;
- using namespace rapidjson;
+
 
  namespace ODELoggerPlugin
  {
