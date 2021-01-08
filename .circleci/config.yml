@@ -92,6 +92,7 @@ jobs:
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
             curl -sL https://deb.nodesource.com/setup_10.x | bash -
+            sudo apt-get install -y nodejs
             mkdir /opt/jq
             curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
             chmod +x /opt/jq/jq
@@ -123,6 +124,7 @@ jobs:
             source /home/V2X-Hub-build/.base-image/init-env.sh
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
+              echo "Scanner tocken: {SONAR_SCANNER_TOKEN}"
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
               exit 0;
             else
