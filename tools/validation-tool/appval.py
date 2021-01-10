@@ -6,7 +6,6 @@
 ##              [DUTIP] : ipaddres of the DUT 
 ##              [DUTPORTssh]: SSH port for DUT
 ##              [TEST type]: MAP/TIM/SPaT
-
 ################ Author: Anjan Rayamajhi  #############################################
 #######################################################################################
 
@@ -19,7 +18,14 @@ import argparse as arg
 from tkinter.filedialog import askopenfilename
 from functools import partial
 from getpass import getpass
-import paramiko
+from binascii import hexlify, unhexlify
+import time
+
+import socket
+import binascii as bi 
+
+from paramiko import SSHClient
+from scp import SCPClient
 
 ### Read in the json file and enable scp to transfer it 
 ### 
@@ -55,11 +61,15 @@ def Guitextinput(label):
 
 
 
-def MAPtest(ip,port): 
-    # copies MAP file to a designated location in the DUT 
+def SRME(ip,port): 
+    # copies a file to a designated location in the DUT 
     # captures the broadcast from the DUT wireless side 
-    # print outs the decoded MAP 
+    # print outs the decoded message 
 
+    print("Undergoing Store and Repeat With Encoding testing")
+    print("Assumptions: The DUT has SRME enabled")
+    print("Sending the JSON file to specific folder in the DUT")
+    
     filename = loadfile()
     fp = open(filename,"r")
 
@@ -69,26 +79,130 @@ def MAPtest(ip,port):
 
     uname = input("Enter Username for DUT login:  ")
     pwd = getpass("Enter Password for DUT login:  ")
-    filepath = input("Enter the target file location:  ")
+    filepath = input("Enter target location:  ")
     print(uname, pwd)
 
     print("Sending MAP file to designated location")
 
     noIssue="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
     portconfig = "-P "+port
-    process=subprocess.Popen(['scp',portconfig, noIssue, filename, uname+'@'+ip+':'+remotepath],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-
-    client=paramiko.SSHClient()
-    client.connect(ip,username=uname,password=pwd)
-    stdin,stdout,stderr = cient.exec_command('ls')
-
-
-    for line in stdout:
-        print('.... '+ line.strip('\n'))
-    client.close()
+    process=subprocess.Popen(['scp',portconfig, noIssue, filename, uname+'@'+ip+':'+filepath],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 
 
 
+    ssh = SSHClient()
+    ssh.load_system_host_keys()
+    ssh.connect(hostname=ip, 
+                port = 22,
+                username=uname,
+                password=pwd)
+
+
+    # SCPCLient takes a paramiko transport as its only argument
+    scp = SCPClient(ssh.get_transport())
+
+    scp.put(filename, filepath)
+    #scp.get('file_path_on_remote_machine', 'file_path_on_local_machine')
+
+
+    scp.close()
+    ssh.close()
+
+
+
+def SRM(ip,port):
+    print("Reading from a sample file")
+    fp = open("tempSample",'r')
+    jMap = fp.read()
+
+    mapasnobj =  J2735.DSRC.MessageFrame
+    mapasnobj.from_uper(unhexlify(jMap))
+
+
+    #print(mapasnobj())
+    t=mapasnobj()
+
+    print("t['value'][1]['msgIssueRevision'] = ",t['value'][1]['msgIssueRevision'])
+    t['value'][1]['msgIssueRevision'] = 5
+
+    mapasnobj.set_val(t)
+
+    print("t['value'][1]['msgIssueRevision'] = ",t['value'][1]['msgIssueRevision'])
+
+
+    print(hexlify(mapasnobj.to_uper()))
+    uperhex=hexlify(mapasnobj.to_uper())
+
+    print("SNMP setup")
+
+    uname = input("Enter Username for DUT login:  ")
+    pwd = getpass("Enter Password for DUT login:  ")
+
+    ssh = SSHClient()
+    ssh.load_system_host_keys()
+    ssh.connect(hostname=ip, 
+                port = 22,
+                username=uname,
+                password=pwd)
+
+    #stdin,stdout,stderr=ssh.exec_command('ls')
+
+    stdin,stdout,stderr=ssh.exec_command('/opt/cohda/application/rc.local stop',get_pty=True)
+    time.sleep(3)
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    
+    stdin,stdout,stderr=ssh.exec_command('net-snmp-config --create-snmpv3-user -A password -X password -a SHA -x AES leidos')
+    time.sleep(3)
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('/opt/cohda/application/rc.local start')   
+    time.sleep(3)    
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 iso.0.15628.4.1.99.0 i 2')
+    time.sleep(3) 
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.11.1 i 5')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.2.1 x 0x8002')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.3.1 i 18')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.4.1 i 0')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.5.1 i 172')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.6.1 i 1000')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.9.1 x '+uperhex) 
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 1.0.15628.4.1.4.1.10.1 i 1')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+
+    stdin,stdout,stderr=ssh.exec_command('snmpset -v3 -lauthPriv -uleidos -Apassword -Xpassword -aSHA -xAES -mRSU-MIB -M/mnt/rw/rsu1609/snmp/mibs -O T 127.0.0.1 iso.0.15628.4.1.99.0 i 4')
+    for line in iter(stdout.readline, ""):
+        print(line, end="")
+
+
+
+    ssh.close()
+
+
+
+def sendTSCBM():
+    sk = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    dutip = input("Enter DUT ip address:  ")
+    dutport = input("Enter DUT port:  ")
 
 
 
@@ -99,38 +213,27 @@ def main():
 
     if(len(sys.argv) != 4):
         print("Incomplete arguments")
-        print("Usage:./appval.py [DUTIP] [DUTPORTssh] [TEST type] ")
+        print("Usage:./appval.py [DUTIP] [DUTPORTssh] [TEST type:SRM|SRME|SPATEncode] ")
         exit(0)
 
 
 
-    username="test"
     dutip=sys.argv[1]
     dutportssh = sys.argv[2]
     testtype = sys.argv[3]
 
     print(dutip,dutportssh,testtype)
 
-    if(testtype=="MAP"):
-        MAPtest(dutip,dutportssh)
-
-    password="test"
-    remotepath=""
-    filenamepath=""
-    #noIssue="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-    #process=subprocess.Popen(['scp',filenamepath,username+'@'+dutip+':'+remotepath],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    regex='s/[ \t].*//;/^\(lo\|\)$/d'
-    oifconfig = subprocess.Popen(['ifconfig','-a'],stdout = subprocess.PIPE)
-    osed = subprocess.Popen(['sed',regex],stdin= oifconfig.stdout,stdout = subprocess.PIPE)
-    endofline = osed.stdout
-
-    #print("ifconfig -a |  sed 's/[ \t].*//;/^\(lo\|\)$/d'")
-
-    for i in endofline:
-        print('\n',i.strip())
+    if(testtype=="SRME"): # store and repeat with encoding 
+        SRME(dutip,dutportssh)
 
 
+    if(testtype=="SRM"): #store and repeat 
+        SRM(dutip,dutportssh)
 
+
+    if(testtype=="SPATEncode"):
+        sendTSCBM()
 
 if __name__ == "__main__":
     main()

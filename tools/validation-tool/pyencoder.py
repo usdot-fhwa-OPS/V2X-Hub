@@ -33,17 +33,30 @@ print("usage pyencoder")
 
 
 
-fp = open("Maps/Dekar_map_all_high.json",'r')
-MAP = fp.read()
+fp = open("tempSample",'r')
+jMap = fp.read()
+#print(MAP)
+#jMap = json.loads(MAP)
 
-jMAP = json.loads(MAP)
+list1=jMap
 
-print(type(jMAP))
-mapasnobj =  J2735.DSRC.MapData()
-print(mapasnobj)
-#mapasnobj.set_val(jMAP)
-#print(mapasnobj.to_asn())
+print(type(list1))
+mapasnobj =  J2735.DSRC.MessageFrame
+mapasnobj.from_uper(unhexlify(jMap))
 
-#print(mapasnobj.to_uper(jMAP))
+print(mapasnobj())
+t=mapasnobj()
+
+print(type(t))
+
+t['value'][1]['msgIssueRevision']= 5
+
+mapasnobj.set_val(t)
+
+print(hexlify(mapasnobj.to_uper()))
+
+
+
+
 
 

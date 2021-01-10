@@ -45,6 +45,7 @@ print("usage pydecoder filename id outputfile J2735msg")
 
 # fp= csv.reader(fp1,delimiter=',')
 # list1=list(fp)
+
 msgid = "0014"
 print("Looking for ",msgid)
 list1="00147843d50c40000d27666e948d9ea6d8c088caff7f7ffff0032852fd8017d07f7fff80007a196a00c0c081000dbff9affe012a10062bfd3101806dc0ffe9bf1ff0b412ce10032bf1010dc13e810034bf15110814fefffec800114100ce38404220641903c39c0000000000067793e0824d03440000010f12fc002cd88eaf"
@@ -58,16 +59,12 @@ if( dt[0:4]==msgid):
     msg.from_uper(unhexlify(dt))
     print(type(msg))
     
-
-
-
-
     print(msg())
 
-
+    print(type(msg))
     print(msg.to_uper())
 
-    # dict2str=json.dumps(msg(),indent=4,sort_keys=True,ensure_ascii=False)
+    #dict2str=json.dumps(msg(),indent=4,sort_keys=True,ensure_ascii=False)
     # parsed = json.loads(dict2str.decode("utf-8","ignore"))
 
 
