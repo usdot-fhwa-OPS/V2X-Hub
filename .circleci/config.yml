@@ -92,6 +92,7 @@ jobs:
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
             curl -sL https://deb.nodesource.com/setup_10.x | bash -
+            sudo apt-get install -y nodejs
             mkdir /opt/jq
             curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
             chmod +x /opt/jq/jq
@@ -135,7 +136,7 @@ jobs:
               export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
               export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
               echo "Target Branch = ${TARGET_BRANCH}"
-              # cd /home/V2X-Hub-build
-              # git fetch --force origin ${TARGET_BRANCH}:${TARGET_BRANCH}
-              # sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}            
+
+             # git merge origin/${TARGET_BRANCH}
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}            
             fi
