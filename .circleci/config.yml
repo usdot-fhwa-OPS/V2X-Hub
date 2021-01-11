@@ -124,7 +124,6 @@ jobs:
             source /home/V2X-Hub-build/.base-image/init-env.sh
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
-              echo "Scanner tocken: ${SONAR_SCANNER_TOKEN}"
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
               exit 0;
             else
