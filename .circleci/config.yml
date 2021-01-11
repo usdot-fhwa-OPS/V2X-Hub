@@ -71,17 +71,17 @@ jobs:
             make
             make install
             
-            cd /usr/src/googletest/googletest
+            cd /usr/src/googletest
             mkdir build
-            cd /usr/src/googletest/googletest/build
+            cd /usr/src/googletest/build
             cmake ..
             make
-            cp libgtest* /usr/lib/
-            cd /usr/src/googletest/googletest
+            make install
+            cd /usr/src/googletest
             rm -rf build
-            mkdir /usr/local/lib/googletest
-            ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
-            ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+            ln -s  /usr/local/lib/libgtest.a /usr/lib/libgtest.a 
+            ln -s  /usr/local/lib/libgtest_main.a /usr/lib/libgtest_main.a
+            cd /usr/local/lib/
             ldconfig
 
             cd ../../../../..
@@ -123,7 +123,8 @@ jobs:
             source /home/V2X-Hub-build/.base-image/init-env.sh
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
+              # cd /home/V2X-Hub-build
+              # sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
               exit 0;
             else
               echo "PR branch ${CIRCLE_BRANCH}"
@@ -134,6 +135,7 @@ jobs:
               export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
               export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
               echo "Target Branch = ${TARGET_BRANCH}"
-              git merge origin/${TARGET_BRANCH}
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}            
+              # cd /home/V2X-Hub-build
+              # git fetch --force origin ${TARGET_BRANCH}:${TARGET_BRANCH}
+              # sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}            
             fi

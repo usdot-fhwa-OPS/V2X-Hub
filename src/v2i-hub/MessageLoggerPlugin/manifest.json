@@ -1,8 +1,8 @@
 {
-	"name":"BsmLoggerPlugin",
-	"description":"Listens for BSM messages and logs them in a file in CSV format.",
-	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/BsmLoggerPlugin",
+	"name":"MessageLoggerPlugin",
+	"description":"Listens for J2735 messages and logs them in a file in JSON format.",
+	"version":"5.0",
+	"exeLocation":"/bin/MessageLoggerPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[
@@ -18,6 +18,11 @@
 			"key":"File Location",
 			"default":"/var/log/tmx",
 			"description":"The location where the log files are stored."
+		},
+		{
+			"key":"Messagetype",
+			"default":"BSM",
+			"description":"The types of messages to be logged."
 		},
 		{
 			"key":"Filename",
