@@ -15,16 +15,24 @@
  * the License.
  */
 
-#ifndef TMX_PLUGINS_BSMLOGGERPLUGIN_H_
-#define TMX_PLUGINS_BSMLOGGERPLUGIN_H_
+#ifndef TMX_PLUGINS_MESSAGELOGGERPLUGIN_H_
+#define TMX_PLUGINS_MESSAGELOGGERPLUGIN_H_
 
 
 
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
 
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
 #include <atomic>
+#include <chrono>
 #include <thread>
+#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
 //#include <DecodedBsmMessage.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -38,20 +46,20 @@ using namespace tmx::utils;
 using namespace tmx::messages;
 
 
-namespace BsmLoggerPlugin
+namespace MessageLoggerPlugin
 {
 
 
 #define BYTESTOMB 1048576
 
 /**
- * This plugin logs the BSM messages received in the following CSV format.
+ * This plugin logs the messages received in the following json format.
  */
-class BsmLoggerPlugin: public PluginClient
+class MessageLoggerPlugin: public PluginClient
 {
 public:
-	BsmLoggerPlugin(std::string);
-	virtual ~BsmLoggerPlugin();
+	MessageLoggerPlugin(std::string);
+	virtual ~MessageLoggerPlugin();
 	int Main();
 protected:
 	void UpdateConfigSettings();
@@ -69,19 +77,26 @@ private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
 
-	void OpenBSMLogFile();
-	void CheckBSMLogFileSizeAndRename(bool createNewFile=false);
+	void OpenMSGLogFile();
+	void CheckMSGLogFileSizeAndRename(bool createNewFile=false);
 	std::string  GetCurDateTimeStr();
 
 	std::ofstream _logFile;
+	std::ofstream _logFilebin;
+	std::string _cvmsgtype;
 	std::string _filename, _fileDirectory;
 	std::string _curFilename;
+	std::string _curFilenamebin;
+	std::string _newFilename;
+	std::string _curFilenamesize;
+	int _logFilesize;
+	int _logFilebinsize;
 	int _maxFilesizeInMB;
 
 };
 std::mutex _cfgLock;
 
 
-} /* namespace BsmLoggerPlugin */
+} /* namespace MessageLoggerPlugin */
 
-#endif /* BsmLoggerPlugin.h */
+#endif /* MessageLoggerPlugin.h */

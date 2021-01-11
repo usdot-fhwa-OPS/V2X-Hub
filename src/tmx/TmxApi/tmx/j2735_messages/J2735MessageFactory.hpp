@@ -336,7 +336,7 @@ public:
 				else // 64 < length < 128 bytes  [0380XX00DD] 
 					msgIdindex = 3; 
 			}
-			std::cout<<"Extended bytes found"; 
+			//std::cout<<"Extended bytes found"; 
 		}
 
 		bytes.erase(bytes.begin(),bytes.begin()+msgIdindex);

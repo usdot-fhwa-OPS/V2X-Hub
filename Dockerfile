@@ -78,8 +78,8 @@ RUN ln -s ../bin PreemptionPlugin/bin
 RUN zip PreemptionPlugin.zip PreemptionPlugin/bin/PreemptionPlugin PreemptionPlugin/manifest.json
 RUN ln -s ../bin SPaTLoggerPlugin/bin
 RUN zip SPaTLoggerPlugin.zip SPaTLoggerPlugin/bin/SPaTLoggerPlugin SPaTLoggerPlugin/manifest.json
-RUN ln -s ../bin BsmLoggerPlugin/bin
-RUN zip BsmLoggerPlugin.zip BsmLoggerPlugin/bin/BsmLoggerPlugin BsmLoggerPlugin/manifest.json
+RUN ln -s ../bin MessageLoggerPlugin/bin
+RUN zip BsmLoggerPlugin.zip MessageLoggerPlugin/bin/MessageLoggerPlugin MessageLoggerPlugin/manifest.json
 RUN ln -s ../bin PedestrianPlugin/bin
 RUN zip PedestrianPlugin.zip PedestrianPlugin/bin/PedestrianPlugin PedestrianPlugin/manifest.json
 RUN ln -s ../bin TimPlugin/bin
@@ -120,7 +120,7 @@ RUN tmxctl --plugin-install RtcmPlugin.zip
 RUN tmxctl --plugin-install SpatPlugin.zip
 RUN tmxctl --plugin-install PreemptionPlugin.zip
 RUN tmxctl --plugin-install SPaTLoggerPlugin.zip
-RUN tmxctl --plugin-install BsmLoggerPlugin.zip
+RUN tmxctl --plugin-install MessageLoggerPlugin.zip
 RUN tmxctl --plugin-install PedestrianPlugin.zip
 RUN tmxctl --plugin-install TimPlugin.zip
 

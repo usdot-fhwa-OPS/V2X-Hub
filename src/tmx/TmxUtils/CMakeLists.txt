@@ -33,3 +33,29 @@ INSTALL (FILES ${HEADERS}
 #INSTALL (EXPORT ${TMX_APPNAME}-plugin DESTINATION share/${TMX_APPNAME}/${TMX_APPNAME}-plugin.cmake)
 #EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
  #       FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)
+
+ ################################
+# GTest
+################################
+enable_testing()
+
+#############
+## Testing ##
+#############
+set(BINARY ${PROJECT_NAME}_test)
+
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+
+set(SOURCES ${TEST_SOURCES}
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+
+add_executable(${BINARY} ${TEST_SOURCES})
+
+add_test(NAME ${BINARY} COMMAND ${BINARY})
+
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}  ${TMXAPI_LIBRARIES} 
+${ASN_J2735_LIBRARIES} 
+${MYSQL_LIBRARIES} 
+${MYSQLCPPCONN_LIBRARIES}
+${UUID_LIBRARY}
+gtest)
