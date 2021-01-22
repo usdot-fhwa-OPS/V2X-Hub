@@ -403,7 +403,7 @@
         binary_output[k]=static_cast<char>(binary_array[k]);
     	}
 	
-	std::string bsmBinaryString = binary_output;
+	std::string bsmBinaryString(binary_output,binary_output+sizeof(binary_output)/sizeof(binary_output[0]));
 	//  check for schedule 
 	if(_freqCounter++%_scheduleFrequency == 0)
  		QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, bsmBinaryString);
