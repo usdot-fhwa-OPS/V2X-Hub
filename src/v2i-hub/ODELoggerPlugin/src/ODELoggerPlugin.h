@@ -36,12 +36,13 @@
  #include <tmx/messages/auto_message.hpp>
  #include <librdkafka/rdkafkacpp.h>
  #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
-
+ #include "/usr/local/include/date/date.h"
+ 
  using namespace std;
  using namespace tmx;
  using namespace tmx::utils;
  using namespace tmx::messages;
-
+ using namespace date;
 
  namespace ODELoggerPlugin
  {
