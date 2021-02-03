@@ -1,0 +1,91 @@
+{ 
+    "testgroup":"SPAT",
+    "testoperator": "person",
+    "testdate": "",
+    "testlist":
+    {
+        "TIMING-01":
+        {
+            "testtype" : "exist",
+            "testobj"  : "timeStamp"
+        },
+        "SIGNALS-01":
+        {
+            "testtype" : "exist",
+            "testobj"  : "signalGroup"
+        },
+        "Exist-01": 
+        {   "testtype": "exist",
+            "testobj" : "name"
+        },
+        "Exist-02": 
+        {   "testtype": "exist",
+            "testobj" : "regionId"
+        },
+        "Exist-03": 
+        {   "testtype": "exist",
+            "testobj" : "id"
+        },
+        "Exist-04": 
+        {   "testtype": "exist",
+            "testobj" : "revision"
+        },
+        "Exist-05": 
+        {   "testtype": "exist",
+            "testobj" : "status"
+        },
+        "Exist-06": 
+        {   "testtype": "exist",
+            "testobj" : "signalGroup"
+        },
+        "Exist-07": 
+        {   "testtype": "exist",
+            "testobj" : "eventState"
+        },
+        "Exist-08": 
+        {   "testtype": "exist",
+            "testobj" : "minEndTime"
+        },
+        "Exist-09": 
+        {   "testtype": "exist",
+            "testobj" : "maxEndTime"
+        },
+        "Verify-01": 
+        {   "testtype": "verify",
+            "testobj" : "name"
+        },
+        "Verify-02": 
+        {   "testtype": "verify",
+            "testobj" : "regionId"
+        },
+        "Verify-03": 
+        {   "testtype": "verify",
+            "testobj" : "id"
+        },
+        "Verify-04": 
+        {   "testtype": "verify",
+            "testobj" : "revision"
+        },
+        "Verify-05": 
+        {   "testtype": "verify",
+            "testobj" : "status"
+        },
+        "Verify-06": 
+        {   "testtype": "verify",
+            "testobj" : "signalGroup"
+        },
+        "Verify-07": 
+        {   "testtype": "verify",
+            "testobj" : "eventState"
+        },
+        "Verify-08": 
+        {   "testtype": "verify",
+            "testobj" : "minEndTime"
+        },
+        "Verify-09": 
+        {   "testtype": "verify",
+            "testobj" : "maxEndTime"
+        }
+    }
+
+}
