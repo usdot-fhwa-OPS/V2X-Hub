@@ -6,12 +6,12 @@
     {
         "TIMING-01":
         {
-            "testtype" : "exist",
+            "testtype" : "print",
             "testobj"  : "timeStamp"
         },
         "SIGNALS-01":
         {
-            "testtype" : "exist",
+            "testtype" : "print",
             "testobj"  : "signalGroup"
         },
         "Exist-01": 

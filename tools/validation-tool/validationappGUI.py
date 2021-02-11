@@ -2,7 +2,6 @@
 
 
 # the front end GUI 
-# should have one window to show case the JSON file being tested against 
 # 
 import sys
 import json
@@ -31,6 +30,10 @@ createdTestSetup=False
 createdTestResult=False
 testlist=""
     
+
+def PrintReport():
+    pass
+
 def find(key, dictionary):
     for k, v in dictionary.items():
         if k == key:
@@ -49,14 +52,14 @@ def certify():
 
     initialMessage = app.getTextArea("message content")
 
-    dict2str=json.dumps(parsed,indent=4,sort_keys=True,ensure_ascii=False)
-    parsed = json.loads(dict2str)#.decode("utf-8","ignore"))
+    #dict2str=json.dumps(parsed,indent=4,sort_keys=True,ensure_ascii=False)#.decode("utf-8","ignore")
+    parsed = json.loads(parsed,parse_int=str)
 
 
 
     initm = json.loads(initialMessage)
     dict2str2=json.dumps(initm,indent=4,sort_keys=True,ensure_ascii=False)
-    initialMessage = json.loads(dict2str2)#.decode("utf-8","ignore"))
+    initialMessage = json.loads(dict2str2,parse_int=str)#.decode("utf-8","ignore")
     #initialMessage = initm
 
     #json.dump(parsed,report_file)
@@ -75,12 +78,11 @@ def certify():
                 for testkey in  value: 
                     #print(testkey+ ":", value[testkey])
         
-                    if(value[testkey]=="exist" or value[testkey]=="verify"):
+                    if(value[testkey]=="exist" or value[testkey]=="verify" or value[testkey] == "print"):
                         testtype=value[testkey]
                     else:
                         if(testtype=="exist"):
                             ret=list(find(value[testkey],parsed))
-                            #print (value[testkey],ret)
                             if(len(ret)>0):
                                 app.setLabel(key,key+" :: "+value[testkey]+" :: PASSED")
                                 app.setLabelFg(key,"green")
@@ -93,13 +95,14 @@ def certify():
                             msg1s= list(map(str, msg1)) 
                             msg2s= list(map(str,msg2)) 
 
+
                             report_file.write("%s:: (Received):: " %value[testkey])
-                            for ls in msg2s:
+                            for ls in msg1s:
                                 report_file.write("%s , " %ls)
                             report_file.write("\n")
 
                             report_file.write("%s:: (Initial):: " %value[testkey])
-                            for ls in msg1s:
+                            for ls in msg2s:
                                 report_file.write("%s , " %ls)
                             report_file.write("\n")
                             if(len(msg1s) >0 and len(msg2s)>0):
@@ -116,7 +119,17 @@ def certify():
                             else:
                                 app.setLabel(key,key+" :: "+value[testkey]+" :: UNAVAILABLE")
                                 app.setLabelFg(key,"orange")
+                        elif(testtype=="print"):
+                            ret=list(find(value[testkey],parsed)
+                            if(len(ret)>0):
+                                app.setLabel(key,key+" :: "+value[testkey]+":: "+ret)
+                                app.setLabelFg(key,"green")
+                            else:
+                                app.setLabel(key,key+" :: "+value[testkey]+" :: UNAVAILABLE")
+                                app.setLabelFg(key,"orange")                            
+
         app.stopLabelFrame()
+        app.addButton("Print Report",PrintReport)
         createdTestResult=True
     else:
 
@@ -134,9 +147,8 @@ def certify():
             if(testvector==True):
                 app.addLabel(key)
                 for testkey in  value: 
-                    #print(testkey+ ":", value[testkey])
         
-                    if(value[testkey]=="exist" or value[testkey]=="verify"):
+                    if(value[testkey]=="exist" or value[testkey]=="verify" or value[testkey] == "print"):
                         testtype=value[testkey]
                     else:
                         if(testtype=="exist"):
@@ -176,8 +188,19 @@ def certify():
                                     app.setLabelFg(key,"red")
                             else:
                                 app.setLabel(key,key+" :: "+value[testkey]+" :: UNAVAILABLE")
-                                app.setLabelFg(key,"yellow")
+                                app.setLabelFg(key,"orange")
+                        elif(testtype=="print"):
+                            ret=list(find(value[testkey],parsed)
+                            if(len(ret)>0):
+                                app.setLabel(key,key+" :: "+value[testkey]+":: "+ret)
+                                app.setLabelFg(key,"green")
+                            else:
+                                app.setLabel(key,key+" :: "+value[testkey]+" :: UNAVAILABLE")
+                                app.setLabelFg(key,"orange") 
+    
         app.stopLabelFrame()
+        app.addButton("Print Report",PrintReport)
+
         print("after redoing the results")
 
     app.stopAllPanedFrames()        
@@ -187,11 +210,11 @@ class TCPRecvHandle(socketserver.BaseRequestHandler):
         global parsed    
         self.data = self.request.recv(10000).strip()
 
-        self.msg = self.data.decode("utf-8")
+        self.msg = self.data.decode("utf-8","ignore")
 
         asnobj =  J2735.DSRC.MessageFrame
         asnobj.from_uper(unhexlify(self.msg))
-        parsed = asnobj()        
+        parsed = asnobj.to_json()  
         certify()
 
 
@@ -213,6 +236,9 @@ def runSSHSnifer(ssh, command):
 def run():
     ## this event initiates the test 
     initialMessage = app.getTextArea("message content")
+
+    with open("./.localsample","w") as f:
+        f.write(initialMessage)
     
     ## install test message to the proper location 
 
@@ -221,9 +247,9 @@ def run():
     ipaddr = app.getEntry("IP address")
     port = app.getEntry("Port #")
     filepath = app.getEntry("Remote filepath")
-    filename = app.getEntry("Local sample file")
+    filename = ".localsample"
     sport = app.getEntry("Server port")
-    snifscript = app.getTextArea("sniffer script")
+    snifscript = app.getTextArea("Sniffer Script")
 
     print(uname, pword, ipaddr, port, filepath, filename,sport, snifscript)
 
@@ -240,9 +266,12 @@ def run():
         ssh.close()
         return 0
 
-    # SCPCLient takes a paramiko transport as its only argument
-    scp = SCPClient(ssh.get_transport())
-    scp.put(filename, filepath)
+    ## check if load file is yes 
+
+    if (app.getRadioButton("loadfile") == "yes"):
+        # SCPCLient takes a paramiko transport as its only argument
+        scp = SCPClient(ssh.get_transport())
+        scp.put(filename, filepath)
 
     try:
         t = Thread(target = runtcpServer, args=(int(sport),),  daemon = True) 
@@ -250,8 +279,11 @@ def run():
     except:
         print("address already in use")
 
-    s = Thread(target = runSSHSnifer, args=(ssh,snifscript,),  daemon = True) 
-    s.start()
+    try:
+        s = Thread(target = runSSHSnifer, args=(ssh,snifscript,),  daemon = True) 
+        s.start()
+    except:
+        print("Unable to send sniffer script to DUT")
 
 
 
@@ -264,7 +296,7 @@ def preview():
     app.clearLabel("er4")    
     filepath1=app.getEntry("Local sample file")
     filepath2=app.getEntry("Test template")
-    snifferscript=app.getTextArea("sniffer script")
+    snifferscript=app.getTextArea("Sniffer Script")
 
     flag=1
 
@@ -284,7 +316,7 @@ def preview():
     if( snifferscript==""):
         app.setLabel("er3","Empty sniffer script, Using default")
         app.setLabelBg("er3","red")
-        app.setTextArea("sniffer script","sudo tcpdump port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat 127.0.0.1 22222 ")
+        app.setTextArea("Sniffer Script","sudo tcpdump port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat 127.0.0.1 22222 ")
         
         
     
@@ -353,7 +385,13 @@ def setupTestTemplate():
             app.setCheckBox(keys)
         app.stopLabelFrame()
 
-    
+
+def loadfilechoice():
+    if(app.getRadioButton("loadfile") == "Yes"):
+        app.enableEntry("Remote filepath")
+    else:
+        app.disableEntry("Remote filepath")
+
 
 
 app = gui()
@@ -392,6 +430,10 @@ app.setEntryDefault("Port #", "22")
 app.stopLabelFrame()
 app.startLabelFrame("DUT message file")
 app.setSticky("ew")
+app.addLabel("Load Sample Message to DUT")
+app.addRadioButton("loadfile","Yes",0,1,1,1)
+app.addRadioButton("loadfile","No",0,2,1,1)
+app.setRadioButtonChangeFunction("loadfile",loadfilechoice)
 app.addLabelEntry("Remote filepath")
 app.setEntryDefault("Remote filepath", "/home/anjanrayamajhi")
 app.addLabelOpenEntry("Local sample file")
@@ -402,10 +444,12 @@ app.startLabelFrame("Test Setup")
 app.addLabelOpenEntry("Test template")
 app.addLabelNumericEntry("Server port")
 app.setEntryDefault("Server port", "5556")
-app.addLabel("snf1","Sniffer Script")
-app.addTextArea("sniffer script")
-app.setTextAreaAspect("sniffer script",400)
 app.stopLabelFrame()
+
+#app.addLabel("snf1","Sniffer Script")
+app.addTextArea("Sniffer Script")
+app.setTextAreaAspect("Sniffer Script",400)
+
 
 app.addButton("Preview",preview)
 
@@ -413,7 +457,7 @@ app.startLabelFrame("Debug")
 app.addLabel("er1","")
 app.addLabel("er2","")
 app.addLabel("er3","")
-app.addLabel("er4")
+app.addLabel("er4","")
 app.stopLabelFrame()
 
 
