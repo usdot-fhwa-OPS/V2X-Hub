@@ -9,8 +9,8 @@ RUN mkdir /validationTool
 COPY . /validationTool
 
 WORKDIR /validationTool
-RUN unzip pycrate-master.zip
-WORKDIR /validationTool/pycrate-master
+RUN git clone git@github.com:P1sec/pycrate.git
+WORKDIR /validationTool/pycrate
 RUN python3 setup.py install
 
 WORKDIR /validationTool
