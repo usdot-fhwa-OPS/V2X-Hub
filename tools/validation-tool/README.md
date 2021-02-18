@@ -14,9 +14,9 @@ The toolset can be installed either locally or through a docker container. Pleas
 
 `sudo apt-get update -y && apt-get install -y python3-dev python3-pip git unzip python3-tk`
 
-`unzip pycrate-master.zip`
+`git clone git@github.com:P1sec/pycrate.git`
 
-`cd pycrate-master`
+`cd pycrate`
 
 `sudo python3 setup.py install`
 
@@ -38,6 +38,7 @@ To run the application just enter:
 
 ## Usage
 
+The application requires J2735.py library file needed for working with J2735 messages. It is advised that the user compile the SAE J2735 2016 asn schema using pycrate module to generate the J2735.py file. For licence issues the J2735.py file is not shared with the repository. 
 The application requires a set of JSON files that contain the specific testing attrbitutes, these are basically test setup files. A snippet of the file for enabling MAP  testing is given below: 
 ```json
 { 
