@@ -63,11 +63,14 @@ Some sample test setup files are available in the repository. These files need t
 ![Application UI](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/apppic1.png/ "Message Validation Application v1.0")
 
 ## Sample MAP test
+The steps needed to run MAP test is given in figure below:
+![MAP test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/maptest.png/ "MAP test")
+
 1. Input username and password for the DUTs SSH connection.
 2. Input IP address and SSH port for connecting to the DUT.
 3. Select whether a sample JSON message file is to be copied to a location on the DUT. The sample test message file should be copied for MAP and TIM test cases. 
 4. If the message file is to be copied to the DUT, enter the location of the folder in DUT where the file is to be copied in the Remote filepath field. 
-5. Select the local file that is to be copied to the device. This can be sample MAP, TIM files or sample SPAT custom file. 
+5. Select the local file that is to be copied to the device. This can be sample MAP, TIM files or sample SPAT custom file. This file will also be used in validation test cases. 
 6. In the test setup block, input the test template file that defines which test categories are to be conducted. 
 7. Input the port number for the TCP server that is used by the application for receiving captured packets. 
 8. Input the bash script that can be run on the DUT for capturing the packets. These script is custom and can be edited based on need and device type. 
@@ -79,8 +82,25 @@ Some sample test setup files are available in the repository. These files need t
 13. The application waits until the TCP server received a captured packet.
 14. The result summary pane comes up when the test is conducted and results available. A report.csv file contains the different values for each attributes tested against is also created in the same location. 
 
+## Sample SPAT test
 
+The steps involved in conducting the SPAT test is illustrated in figure below:
+![SPAT test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/spattest.png/ "SPAT test")
 
+1. Input username and password for the DUTs SSH connection.
+2. Input IP address and SSH port for connecting to the DUT.
+3. Select whether a sample JSON message file is to be copied to a location on the DUT. The sample test message file does not need to be copied for SPAT. 
+4. Select the sample SPAT file that will used in validation test cases. 
+5. In the test setup block, input the test template file that defines which test categories are to be conducted. 
+7. Input the port number for the TCP server that is used by the application for receiving captured packets. 
+8. Input the bash script that can be run on the DUT for capturing the packets. These script is custom and can be edited based on need and device type. 
+9. Hit the "Preview" button to view the sample message that is to be validated against as well as the set of check list that shows the different tests to be conducted. These new information are available in two new panes on the side. Any errors in the preview comes up in the debug pane. 
+11. Check/Uncheck any tests that are not needed to be run in Test Information pane. 
+12. Hit "Run" button and it does a couple of things:
+    1. Initializes the TCP server to listen at the port specified above
+    2. Copies and runs the bash script for capturing packets  
+13. The application waits until the TCP server received a captured packet.
+14. The result summary pane comes up when the test is conducted and results available. A report.csv file contains the different values for each attributes tested against is also created in the same location. 
 
 
 
