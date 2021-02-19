@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #ifndef SAEJ2735_SPEC
-#define SAEJ2735_SPEC 41
+#define SAEJ2735_SPEC 63
 #endif
 
 #include <DSRCmsgID.h>
@@ -46,7 +46,15 @@ typedef enum DSRCmsgID {
 	DSRCmsgID_signalPhaseAndTimingMessage	= 13,
 	DSRCmsgID_signalRequestMessage	= 14,
 	DSRCmsgID_signalStatusMessage	= 15,
-	DSRCmsgID_travelerInformation	= 16
+	DSRCmsgID_travelerInformation	= 16,
+	DSRCmsgID_testMessage00 = 17,
+	DSRCmsgID_testMessage01 = 18,
+	DSRCmsgID_testMessage02 = 19,
+	DSRCmsgID_testMessage03 = 20,
+	DSRCmsgID_testMessage04 = 21,
+   	DSRCmsgID_testMessage05 = 22,
+   	DSRCmsgID_testMessage06 = 23,
+	DSRCmsgID_testMessage07 = 24
 	/*
 	 * Enumeration is extensible
 	 */

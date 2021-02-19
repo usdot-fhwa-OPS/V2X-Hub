@@ -21,7 +21,6 @@ asn_TYPE_operation_t asn_OP_IA5String = {
 	OCTET_STRING_free,
 	OCTET_STRING_print_utf8,	/* ASCII subset */
 	OCTET_STRING_compare,
-	IA5String_constraint,       /* Constraint on the alphabet */
 	OCTET_STRING_decode_ber,    /* Implemented in terms of OCTET STRING */
 	OCTET_STRING_encode_der,
 	OCTET_STRING_decode_xer_utf8,
@@ -40,29 +39,28 @@ asn_TYPE_operation_t asn_OP_IA5String = {
 	OCTET_STRING_decode_uper,
 	OCTET_STRING_encode_uper,
 #endif	/* ASN_DISABLE_PER_SUPPORT */
+	OCTET_STRING_random_fill,
 	0	/* Use generic outmost tag fetcher */
 };
 asn_TYPE_descriptor_t asn_DEF_IA5String = {
 	"IA5String",
 	"IA5String",
 	&asn_OP_IA5String,
-	IA5String_constraint,       /* Constraint on the alphabet */
 	asn_DEF_IA5String_tags,
 	sizeof(asn_DEF_IA5String_tags)
 	  / sizeof(asn_DEF_IA5String_tags[0]) - 1,
 	asn_DEF_IA5String_tags,
 	sizeof(asn_DEF_IA5String_tags)
 	  / sizeof(asn_DEF_IA5String_tags[0]),
-	0,	/* No OER visible constraints */
-	&asn_DEF_IA5String_per_constraints,
+	{ 0, &asn_DEF_IA5String_per_constraints, IA5String_constraint },
 	0, 0,	/* No members */
 	0	/* No specifics */
 };
 
 int
-IA5String_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
-		asn_app_constraint_failed_f *ctfailcb, void *app_key) {
-	const IA5String_t *st = (const IA5String_t *)sptr;
+IA5String_constraint(const asn_TYPE_descriptor_t *td, const void *sptr,
+                     asn_app_constraint_failed_f *ctfailcb, void *app_key) {
+    const IA5String_t *st = (const IA5String_t *)sptr;
 
 	if(st && st->buf) {
 		uint8_t *buf = st->buf;

@@ -15,7 +15,6 @@ asn_TYPE_operation_t asn_OP_ANY = {
 	OCTET_STRING_free,
 	OCTET_STRING_print,
 	OCTET_STRING_compare,
-	asn_generic_no_constraint,
 	OCTET_STRING_decode_ber,
 	OCTET_STRING_encode_der,
 	OCTET_STRING_decode_xer_hex,
@@ -33,16 +32,15 @@ asn_TYPE_operation_t asn_OP_ANY = {
 	ANY_decode_uper,
 	ANY_encode_uper,
 #endif  /* ASN_DISABLE_PER_SUPPORT */
+	0,	/* Random fill is not defined for ANY type */
 	0	/* Use generic outmost tag fetcher */
 };
 asn_TYPE_descriptor_t asn_DEF_ANY = {
 	"ANY",
 	"ANY",
 	&asn_OP_ANY,
-	asn_generic_no_constraint,
 	0, 0, 0, 0,
-	0,	/* No OER visible constraints */
-	0,	/* No PER visible constraints */
+	{ 0, 0, asn_generic_no_constraint },	/* No constraints */
 	0, 0,	/* No members */
 	&asn_SPC_ANY_specs,
 };
@@ -57,11 +55,10 @@ asn_TYPE_descriptor_t asn_DEF_ANY = {
     } while(0)
 
 asn_enc_rval_t
-ANY_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
-	int ilevel, enum xer_encoder_flags_e flags,
-		asn_app_consume_bytes_f *cb, void *app_key) {
-
-	if(flags & XER_F_CANONICAL) {
+ANY_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
+               enum xer_encoder_flags_e flags, asn_app_consume_bytes_f *cb,
+               void *app_key) {
+    if(flags & XER_F_CANONICAL) {
 		/*
 		 * Canonical XER-encoding of ANY type is not supported.
 		 */
@@ -185,11 +182,12 @@ static int ANY__consume_bytes(const void *buffer, size_t size, void *key) {
 #ifndef ASN_DISABLE_PER_SUPPORT
 
 asn_dec_rval_t
-ANY_decode_uper(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
+ANY_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
+                const asn_TYPE_descriptor_t *td,
                 const asn_per_constraints_t *constraints, void **sptr,
                 asn_per_data_t *pd) {
-    asn_OCTET_STRING_specifics_t *specs =
-        td->specifics ? (asn_OCTET_STRING_specifics_t *)td->specifics
+    const asn_OCTET_STRING_specifics_t *specs =
+        td->specifics ? (const asn_OCTET_STRING_specifics_t *)td->specifics
                       : &asn_SPC_ANY_specs;
     size_t consumed_myself = 0;
     int repeat;
@@ -218,10 +216,11 @@ ANY_decode_uper(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
         int ret;
 
         /* Get the PER length */
-        raw_len = uper_get_length(pd, -1, &repeat);
+        raw_len = uper_get_length(pd, -1, 0, &repeat);
         if(raw_len < 0) RETURN(RC_WMORE);
+        if(raw_len == 0 && st->buf) break;
 
-        ASN_DEBUG("Got PER length len %zu, %s (%s)", raw_len,
+        ASN_DEBUG("Got PER length len %" ASN_PRI_SIZE ", %s (%s)", raw_len,
                   repeat ? "repeat" : "once", td->name);
         len_bytes = raw_len;
         len_bits = len_bytes * 8;
@@ -241,8 +240,8 @@ ANY_decode_uper(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 }
 
 asn_enc_rval_t
-ANY_encode_uper(asn_TYPE_descriptor_t *td,
-                const asn_per_constraints_t *constraints, void *sptr,
+ANY_encode_uper(const asn_TYPE_descriptor_t *td,
+                const asn_per_constraints_t *constraints, const void *sptr,
                 asn_per_outp_t *po) {
     const ANY_t *st = (const ANY_t *)sptr;
     asn_enc_rval_t er = {0, 0, 0};
@@ -256,8 +255,9 @@ ANY_encode_uper(asn_TYPE_descriptor_t *td,
 
     buf = st->buf;
     size = st->size;
-    while(size) {
-        ssize_t may_save = uper_put_length(po, size);
+    do {
+        int need_eom = 0;
+        ssize_t may_save = uper_put_length(po, size, &need_eom);
         if(may_save < 0) ASN__ENCODE_FAILED;
 
         ret = per_put_many_bits(po, buf, may_save * 8);
@@ -266,7 +266,9 @@ ANY_encode_uper(asn_TYPE_descriptor_t *td,
         buf += may_save;
         size -= may_save;
         assert(!(may_save & 0x07) || !size);
-    }
+        if(need_eom && uper_put_length(po, 0, 0))
+            ASN__ENCODE_FAILED; /* End of Message length */
+    } while(size);
 
     ASN__ENCODED_OK(er);
 }

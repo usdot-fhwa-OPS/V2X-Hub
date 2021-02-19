@@ -10,17 +10,16 @@
 #include <errno.h>
 
 asn_dec_rval_t
-OCTET_STRING_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
-                        asn_TYPE_descriptor_t *td,
+OCTET_STRING_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
+                        const asn_TYPE_descriptor_t *td,
                         const asn_oer_constraints_t *constraints, void **sptr,
                         const void *ptr, size_t size) {
-    asn_OCTET_STRING_specifics_t *specs =
-        td->specifics
-            ? (asn_OCTET_STRING_specifics_t *)td->specifics
-            : (asn_OCTET_STRING_specifics_t *)&asn_SPC_OCTET_STRING_specs;
+    const asn_OCTET_STRING_specifics_t *specs =
+        td->specifics ? (const asn_OCTET_STRING_specifics_t *)td->specifics
+                      : &asn_SPC_OCTET_STRING_specs;
     OCTET_STRING_t *st = (OCTET_STRING_t *)*sptr;
     const asn_oer_constraints_t *cts =
-        constraints ? constraints : td->oer_constraints;
+        constraints ? constraints : td->encoding_constraints.oer_constraints;
     ssize_t ct_size = cts ? cts->size : -1;
     asn_dec_rval_t rval = {RC_OK, 0};
     size_t expected_length = 0;
@@ -72,7 +71,7 @@ OCTET_STRING_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
 
         if(expected_length % unit_bytes != 0) {
             ASN_DEBUG(
-                "Data size %zu bytes is not consistent with multiplier %zu",
+                "Data size %" ASN_PRI_SIZE " bytes is not consistent with multiplier %" ASN_PRI_SIZE "",
                 expected_length, unit_bytes);
             ASN__DECODE_FAILED;
         }
@@ -101,22 +100,22 @@ OCTET_STRING_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
  * Encode as Canonical OER.
  */
 asn_enc_rval_t
-OCTET_STRING_encode_oer(asn_TYPE_descriptor_t *td,
-                        const asn_oer_constraints_t *constraints, void *sptr,
-                        asn_app_consume_bytes_f *cb, void *app_key) {
-    asn_OCTET_STRING_specifics_t *specs =
-        td->specifics
-            ? (asn_OCTET_STRING_specifics_t *)td->specifics
-            : (asn_OCTET_STRING_specifics_t *)&asn_SPC_OCTET_STRING_specs;
-    OCTET_STRING_t *st = (OCTET_STRING_t *)sptr;
+OCTET_STRING_encode_oer(const asn_TYPE_descriptor_t *td,
+                        const asn_oer_constraints_t *constraints,
+                        const void *sptr, asn_app_consume_bytes_f *cb,
+                        void *app_key) {
+    const asn_OCTET_STRING_specifics_t *specs =
+        td->specifics ? (const asn_OCTET_STRING_specifics_t *)td->specifics
+                      : &asn_SPC_OCTET_STRING_specs;
+    const OCTET_STRING_t *st = (const OCTET_STRING_t *)sptr;
     const asn_oer_constraints_t *cts =
-        constraints ? constraints : td->oer_constraints;
+        constraints ? constraints : td->encoding_constraints.oer_constraints;
     ssize_t ct_size = cts ? cts->size : -1;
     asn_enc_rval_t er = {0, 0, 0};
 
     if(!st) ASN__ENCODE_FAILED;
 
-    ASN_DEBUG("Encoding %s %zu as OCTET STRING", td ? td->name : "", st->size);
+    ASN_DEBUG("Encoding %s %" ASN_PRI_SIZE " as OCTET STRING", td ? td->name : "", st->size);
 
     if(ct_size >= 0) {
         /*
@@ -143,8 +142,8 @@ OCTET_STRING_encode_oer(asn_TYPE_descriptor_t *td,
 
         if(st->size != unit_bytes * (size_t)ct_size) {
             ASN_DEBUG(
-                "Trying to encode %s (%zu bytes) which doesn't fit SIZE "
-                "constraint (%zu)",
+                "Trying to encode %s (%" ASN_PRI_SIZE " bytes) which doesn't fit SIZE "
+                "constraint (%" ASN_PRI_SIZE ")",
                 td->name, st->size, ct_size);
             ASN__ENCODE_FAILED;
         }

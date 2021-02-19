@@ -10,7 +10,8 @@
 #include <errno.h>
 
 asn_dec_rval_t
-INTEGER_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
+INTEGER_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
+                   const asn_TYPE_descriptor_t *td,
                    const asn_oer_constraints_t *constraints, void **sptr,
                    const void *ptr, size_t size) {
     const asn_INTEGER_specifics_t *specs =
@@ -32,7 +33,7 @@ INTEGER_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
     st->buf = 0;
     st->size = 0;
 
-    if(!constraints) constraints = td->oer_constraints;
+    if(!constraints) constraints = td->encoding_constraints.oer_constraints;
     if(constraints) ct = constraints->value;
 
     if(ct.width) {
@@ -99,8 +100,8 @@ INTEGER_decode_oer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
  * Encode as Canonical OER.
  */
 asn_enc_rval_t
-INTEGER_encode_oer(asn_TYPE_descriptor_t *td,
-                   const asn_oer_constraints_t *constraints, void *sptr,
+INTEGER_encode_oer(const asn_TYPE_descriptor_t *td,
+                   const asn_oer_constraints_t *constraints, const void *sptr,
                    asn_app_consume_bytes_f *cb, void *app_key) {
     const INTEGER_t *st = sptr;
     asn_enc_rval_t er;
@@ -113,7 +114,7 @@ INTEGER_encode_oer(asn_TYPE_descriptor_t *td,
 
     if(!st || st->size == 0) ASN__ENCODE_FAILED;
 
-    if(!constraints) constraints = td->oer_constraints;
+    if(!constraints) constraints = td->encoding_constraints.oer_constraints;
     if(constraints) ct = constraints->value;
 
     er.encoded = 0;
