@@ -1,0 +1,106 @@
+{ 
+    "testgroup":"MAP",
+    "testoperator": "person",
+    "testdate": "",
+    "testlist":
+    {
+        "Exist-01": 
+        {   "testtype": "exist",
+            "testobj" : "messageId"
+        },
+        "Exist-02": 
+        {   "testtype": "exist",
+            "testobj" : "msgIssueRevision"
+        },
+        "Exist-03": 
+        {   "testtype": "exist",
+            "testobj" : "regionId"
+        },
+        "Exist-04": 
+        {   "testtype": "exist",
+            "testobj" : "id"
+        },
+        "Exist-05": 
+        {   "testtype": "exist",
+            "testobj" : "refPoint"
+        },
+        "Exist-06": 
+        {   "testtype": "exist",
+            "testobj" : "nodeList"
+        },
+        "Exist-07": 
+        {   "testtype": "exist",
+            "testobj" : "ingressApproach"
+        },
+        "Exist-08": 
+        {   "testtype": "exist",
+            "testobj" : "laneID"
+        },
+        "Exist-09": 
+        {   "testtype": "exist",
+            "testobj" : "egressApproach"
+        },
+        "Exist-10": 
+        {   "testtype": "exist",
+            "testobj" : "directionalUse"
+        },
+        "Exist-11": 
+        {   "testtype": "exist",
+            "testobj" : "connectingLane"
+        },
+        "Exist-12": 
+        {   "testtype": "exist",
+            "testobj" : "maneuver"
+        },
+        "Verify-01": 
+        {   "testtype": "verify",
+            "testobj" : "messageId"
+        },
+        "Verify-02": 
+        {   "testtype": "verify",
+            "testobj" : "msgIssueRevision"
+        },
+        "Verify-03": 
+        {   "testtype": "verify",
+            "testobj" : "regionId"
+        },
+        "Verify-04": 
+        {   "testtype": "verify",
+            "testobj" : "id"
+        },
+        "Verify-05": 
+        {   "testtype": "verify",
+            "testobj" : "refPoint"
+        },
+        "Verify-06": 
+        {   "testtype": "verify",
+            "testobj" : "nodeList"
+        },
+        "Verify-07": 
+        {   "testtype": "verify",
+            "testobj" : "ingressApproach"
+        },
+        "Verify-08": 
+        {   "testtype": "verify",
+            "testobj" : "laneID"
+        },
+        "Verify-09": 
+        {   "testtype": "verify",
+            "testobj" : "egressApproach"
+        },            
+        "Verify-10": 
+        {   "testtype": "verify",
+            "testobj" : "directionalUse"
+        },
+        "Verify-11": 
+        {   "testtype": "verify",
+            "testobj" : "connectingLane"
+        },
+        "Verify-12": 
+        {   "testtype": "verify",
+            "testobj" : "maneuver"
+        }
+        
+    }
+
+}
