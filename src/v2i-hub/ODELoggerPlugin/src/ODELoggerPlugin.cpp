@@ -37,7 +37,7 @@
  	GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
  	GetConfigValue<uint16_t>("ForwardMSG", _forwardMSG);
  	GetConfigValue<string>("BSMKafkaTopic", _BSMkafkaTopic);
- 	GetConfigValue<string>("SPaTKafkaTopic", _BSMkafkaTopic);
+ 	GetConfigValue<string>("SPaTKafkaTopic", _SPaTkafkaTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	std::string error_string;
