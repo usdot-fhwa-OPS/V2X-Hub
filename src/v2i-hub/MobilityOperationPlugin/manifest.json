@@ -1,7 +1,7 @@
 {
 	"name":"MobilityOperationPlugin",
 	"description":"...",
-	"version":"5.0.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/MobilityOperationPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
