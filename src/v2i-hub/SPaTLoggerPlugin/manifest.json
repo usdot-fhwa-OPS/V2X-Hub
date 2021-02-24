@@ -21,7 +21,7 @@
 		},
 		{
 			"key":"Filename",
-			"default":"SPaTLog",
+			"default":"spatTx",
 			"description":"Default name of the SPaT log file."
 		}
 
