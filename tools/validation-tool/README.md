@@ -61,11 +61,11 @@ The application requires a set of JSON files that contain the specific testing a
 As seen in the above JSON sample, each test has a name, e.g. "Exist-01" and has two attributes, "testtype"  and "testobj". The "testtype" defines whether its a test for certain field existance ("exist"), validation ("validate"), timing check ("timing") 
 Some sample test setup files are available in the repository. These files need to be loaded in the application to setup a message validation testing. The layout of the application UI is shown below. The layout consists of 4 major sections as indicated in the figure. 
 
-![Application UI](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/apppic1.png/ "Message Validation Application v1.0")
+![Application UI](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/develop/tools/validation-tool/apppic1.png "Message Validation Application v1.0")
 
 ## Sample MAP test
 The steps needed to run MAP test is given in figure below:
-![MAP test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/maptest.png/ "MAP test")
+![MAP test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/develop/tools/validation-tool/maptest.png "MAP test")
 
 1. Input username and password for the DUTs SSH connection.
 2. Input IP address and SSH port for connecting to the DUT.
@@ -86,7 +86,7 @@ The steps needed to run MAP test is given in figure below:
 ## Sample SPAT test
 
 The steps involved in conducting the SPAT test is illustrated in figure below:
-![SPAT test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/ValidationTool/tools/validation-tool/spattest.png/ "SPAT test")
+![SPAT test](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/develop/tools/validation-tool/spattest.png "SPAT test")
 
 1. Input username and password for the DUTs SSH connection.
 2. Input IP address and SSH port for connecting to the DUT.
