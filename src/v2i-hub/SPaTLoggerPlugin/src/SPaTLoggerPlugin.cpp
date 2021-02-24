@@ -235,15 +235,12 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
 
         unsigned int payload_size = spat_output_payload.size();
         std::stringstream spat_output_data;
-	cout<<spat_output_payload<<endl;
         spat_output_data<<metadata.str();
         for (int bsize = 0; bsize <= payload_size; bsize = bsize+2) {
         spat_output_data << ' ' << spat_output_payload[bsize] << spat_output_payload[bsize+1];
         }
-	cout<<spat_output_data.str()<<endl;
         int actualsize = spat_output_data.str().size();
         int showmethesize = ((spat_output_data.str().size()+1)/3);
-	cout<<showmethesize<<endl;
         unsigned int binary_array[((spat_output_data.str().size()+1)/3)];
         int dsize = 0;
         while (spat_output_data.good() && dsize < spat_output_data.str().size()){
