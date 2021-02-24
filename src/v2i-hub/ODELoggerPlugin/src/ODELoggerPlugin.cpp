@@ -35,14 +35,15 @@
  	// Critical section
  	std::lock_guard<mutex> lock(_cfgLock);
  	GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
- 	GetConfigValue<uint16_t>("ForwardBsm", _forwardBSM);
+ 	GetConfigValue<uint16_t>("ForwardMSG", _forwardMSG);
  	GetConfigValue<string>("BSMKafkaTopic", _BSMkafkaTopic);
+ 	GetConfigValue<string>("SPaTKafkaTopic", _BSMkafkaTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	std::string error_string;
 	_freqCounter=1;
 
- 	if(_forwardBSM == 1) {
+ 	if(_forwardMSG == 1) {
  		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
  		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
@@ -64,6 +65,7 @@
  		PLOG(logDEBUG) <<"ODELoggerPlugin: Kafka producer created";
 
  		AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleRealTimePublish);
+ 		AddMessageFilter < SpatMessage > (this, &ODELoggerPlugin::HandleSPaTPublish);
  	}
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
@@ -96,8 +98,9 @@
 
  	std::lock_guard<mutex> lock(_cfgLock);
  	GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
- 	GetConfigValue<uint16_t>("ForwardBsm", _forwardBSM);
+ 	GetConfigValue<uint16_t>("ForwardMSG", _forwardMSG);
  	GetConfigValue<string>("BSMKafkaTopic", _BSMkafkaTopic);
+ 	GetConfigValue<string>("SPaTKafkaTopic", _SPaTkafkaTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
@@ -162,6 +165,24 @@
 	
 
  }
+
+
+ void ODELoggerPlugin::HandleSPaTPublish(SpatMessage &msg,
+ 		routeable_message &routeableMsg) {
+
+	auto spat=msg.get_j2735_data();
+
+        char *spatstring=new char[10000];
+
+        std::sprintf(spatstring, "{\"SpatMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
+
+        //  check for schedule
+        if(_freqCounter++%_scheduleFrequency == 0)
+                QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);	
+	
+
+ }
+
 
  void ODELoggerPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {

@@ -20,14 +20,19 @@
 			"description":"sample of incoming messages to forward, 1 = forwards every message"
 		},
 		{
-			"key":"ForwardBsm",
+			"key":"ForwardMSG",
 			"default":"1",
 			"description":"Enable Forwarding of BSM"
 		},
 		{
 			"key":"BSMKafkaTopic",
-			"default":"topic.OdeRawEncodedMessageJson",
-			"description":"(Cond: ForwardBsm == True) Topic to use for forwarding BSM"
+			"default":"topic.OdeRawEncodedBsmMessageJson",
+			"description":"(Cond: ForwardMSG == True) Topic to use for forwarding BSM"
+		},
+		{
+			"key":"SPaTKafkaTopic",
+			"default":"topic.OdeRawEncodedSpatMessageJson",
+			"description":"(Cond: ForwardMSG == True) Topic to use for forwarding BSM"
 		},
 		{
 			"key":"KafkaBrokerIp",

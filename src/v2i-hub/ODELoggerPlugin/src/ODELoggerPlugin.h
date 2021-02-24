@@ -67,7 +67,7 @@
  	void OnStateChange(IvpPluginState state);
 
  	void HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg);
- 	void HandleRealTimePublish(SpatMessage &msg, routeable_message &routeableMsg);
+ 	void HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg);
 
  	void GetInt32(unsigned char *buf, int32_t *value)
  	{
@@ -81,8 +81,9 @@
 
  	uint16_t _scheduleFrequency;
 	uint16_t _freqCounter;
- 	uint16_t _forwardBSM;
+ 	uint16_t _forwardMSG;
  	std::string _BSMkafkaTopic;
+ 	std::string _SPaTkafkaTopic;
  	std::string _kafkaBrokerIp;
  	std::string _kafkaBrokerPort;
  	std::string kafkaConnectString;
