@@ -43,14 +43,14 @@ void MobilityOperationPlugin::OnConfigChanged(const char *key, const char *value
 void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 	auto mobilityOperation = msg.get_j2735_data();
 	// FILE_LOG(logDEBUG) << "Checking log level : " << FILELog::ReportingLevel();
-	FILE_LOG(logDEBUG) << "Received MobilityOperation message (encoded) : " << routeableMsg.get_payload_str();
-	FILE_LOG(logDEBUG) << "Header Host BSM ID : " << mobilityOperation->header.hostBSMId.buf;
-	FILE_LOG(logDEBUG) << "Header Host Static ID : " << mobilityOperation->header.hostStaticId.buf;
-	FILE_LOG(logDEBUG) << "Header Plan ID : " << mobilityOperation->header.planId.buf;
-	FILE_LOG(logDEBUG) << "Header Target Static ID : " << mobilityOperation->header.targetStaticId.buf;
-	FILE_LOG(logDEBUG) << "Header Timestamp : " << mobilityOperation->header.timestamp.buf;
-	FILE_LOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
-	FILE_LOG(logDEBUG) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
+	PLOG(logDEBUG) << "Received MobilityOperation message (encoded) : " << routeableMsg.get_payload_str();
+	PLOG(logDEBUG) << "Header Host BSM ID : " << mobilityOperation->header.hostBSMId.buf;
+	PLOG(logDEBUG) << "Header Host Static ID : " << mobilityOperation->header.hostStaticId.buf;
+	PLOG(logDEBUG) << "Header Plan ID : " << mobilityOperation->header.planId.buf;
+	PLOG(logDEBUG) << "Header Target Static ID : " << mobilityOperation->header.targetStaticId.buf;
+	PLOG(logDEBUG) << "Header Timestamp : " << mobilityOperation->header.timestamp.buf;
+	PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
+	PLOG(logDEBUG) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
 
 
 }

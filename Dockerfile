@@ -50,6 +50,8 @@ RUN cmake .
 RUN make
 RUN make install
 
+RUN ldconfig
+
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake
 RUN make
