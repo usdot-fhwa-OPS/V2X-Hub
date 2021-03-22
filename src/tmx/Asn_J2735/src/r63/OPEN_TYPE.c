@@ -12,7 +12,6 @@ asn_TYPE_operation_t asn_OP_OPEN_TYPE = {
 	OPEN_TYPE_free,
 	OPEN_TYPE_print,
 	OPEN_TYPE_compare,
-	OPEN_TYPE_constraint,
 	OPEN_TYPE_decode_ber,
 	OPEN_TYPE_encode_der,
 	OPEN_TYPE_decode_xer,
@@ -24,6 +23,7 @@ asn_TYPE_operation_t asn_OP_OPEN_TYPE = {
 	OPEN_TYPE_decode_uper,
 	OPEN_TYPE_encode_uper,
 #endif
+	0,  /* Random fill is not supported for open type */
 	0,	/* Use generic outmost tag fetcher */
 };
 
@@ -37,9 +37,9 @@ asn_TYPE_operation_t asn_OP_OPEN_TYPE = {
     } while(0)
 
 asn_dec_rval_t
-OPEN_TYPE_ber_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
-                  void *sptr, asn_TYPE_member_t *elm, const void *ptr,
-                  size_t size) {
+OPEN_TYPE_ber_get(const asn_codec_ctx_t *opt_codec_ctx,
+                  const asn_TYPE_descriptor_t *td, void *sptr,
+                  const asn_TYPE_member_t *elm, const void *ptr, size_t size) {
     size_t consumed_myself = 0;
     asn_type_selector_result_t selected;
     void *memb_ptr;   /* Pointer to the member */
@@ -107,7 +107,8 @@ OPEN_TYPE_ber_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
     }
 
     if(*memb_ptr2) {
-        asn_CHOICE_specifics_t *specs = selected.type_descriptor->specifics;
+        const asn_CHOICE_specifics_t *specs =
+            selected.type_descriptor->specifics;
         if(elm->flags & ATF_POINTER) {
             ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
             *memb_ptr2 = NULL;
@@ -121,9 +122,9 @@ OPEN_TYPE_ber_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 }
 
 asn_dec_rval_t
-OPEN_TYPE_xer_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
-                  void *sptr, asn_TYPE_member_t *elm, const void *ptr,
-                  size_t size) {
+OPEN_TYPE_xer_get(const asn_codec_ctx_t *opt_codec_ctx,
+                  const asn_TYPE_descriptor_t *td, void *sptr,
+                  const asn_TYPE_member_t *elm, const void *ptr, size_t size) {
     size_t consumed_myself = 0;
     asn_type_selector_result_t selected;
     void *memb_ptr;   /* Pointer to the member */
@@ -228,7 +229,8 @@ OPEN_TYPE_xer_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
          * will have to be restarted.
          */
         if(*memb_ptr2) {
-            asn_CHOICE_specifics_t *specs = selected.type_descriptor->specifics;
+            const asn_CHOICE_specifics_t *specs =
+                selected.type_descriptor->specifics;
             if(elm->flags & ATF_POINTER) {
                 ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
                 *memb_ptr2 = NULL;
@@ -284,9 +286,9 @@ OPEN_TYPE_xer_get(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 #ifndef  ASN_DISABLE_PER_SUPPORT
 
 asn_dec_rval_t
-OPEN_TYPE_uper_get(asn_codec_ctx_t *opt_codec_ctx,
-                   asn_TYPE_descriptor_t *td, void *sptr,
-                   asn_TYPE_member_t *elm, asn_per_data_t *pd) {
+OPEN_TYPE_uper_get(const asn_codec_ctx_t *opt_codec_ctx,
+                   const asn_TYPE_descriptor_t *td, void *sptr,
+                   const asn_TYPE_member_t *elm, asn_per_data_t *pd) {
     asn_type_selector_result_t selected;
     void *memb_ptr;   /* Pointer to the member */
     void **memb_ptr2; /* Pointer to that pointer */
@@ -343,7 +345,8 @@ OPEN_TYPE_uper_get(asn_codec_ctx_t *opt_codec_ctx,
     case RC_WMORE:
     case RC_FAIL:
         if(*memb_ptr2) {
-            asn_CHOICE_specifics_t *specs = selected.type_descriptor->specifics;
+            const asn_CHOICE_specifics_t *specs =
+                selected.type_descriptor->specifics;
             if(elm->flags & ATF_POINTER) {
                 ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
                 *memb_ptr2 = NULL;
@@ -358,10 +361,10 @@ OPEN_TYPE_uper_get(asn_codec_ctx_t *opt_codec_ctx,
 }
 
 asn_enc_rval_t
-OPEN_TYPE_encode_uper(asn_TYPE_descriptor_t *td,
-                      const asn_per_constraints_t *constraints, void *sptr,
-                      asn_per_outp_t *po) {
-    void *memb_ptr;   /* Pointer to the member */
+OPEN_TYPE_encode_uper(const asn_TYPE_descriptor_t *td,
+                      const asn_per_constraints_t *constraints,
+                      const void *sptr, asn_per_outp_t *po) {
+    const void *memb_ptr;   /* Pointer to the member */
     asn_TYPE_member_t *elm; /* CHOICE's element */
     asn_enc_rval_t er;
     unsigned present;
@@ -380,10 +383,11 @@ OPEN_TYPE_encode_uper(asn_TYPE_descriptor_t *td,
     elm = &td->elements[present];
     if(elm->flags & ATF_POINTER) {
         /* Member is a pointer to another structure */
-        memb_ptr = *(void **)((char *)sptr + elm->memb_offset);
+        memb_ptr =
+            *(const void *const *)((const char *)sptr + elm->memb_offset);
         if(!memb_ptr) ASN__ENCODE_FAILED;
     } else {
-        memb_ptr = (char *)sptr + elm->memb_offset;
+        memb_ptr = (const char *)sptr + elm->memb_offset;
     }
 
     if(uper_open_type_put(elm->type, NULL, memb_ptr, po) < 0) {

@@ -1,6 +1,5 @@
-/*-
- * Copyright (c) 2003, 2004, 2005, 2006 Lev Walkin <vlm@lionet.info>.
- * All rights reserved.
+/*
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 /*
@@ -42,11 +41,12 @@ typedef struct asn_struct_ctx_s {
 #include <per_decoder.h>	/* Packet Encoding Rules decoder */
 #include <per_encoder.h>	/* Packet Encoding Rules encoder */
 #include <constraints.h>	/* Subtype constraints support */
+#include <asn_random_fill.h>	/* Random structures support */
 
 #ifdef  ASN_DISABLE_OER_SUPPORT
 typedef void (oer_type_decoder_f)();
 typedef void (oer_type_encoder_f)();
-typedef struct{} asn_oer_constraints_t;
+typedef void asn_oer_constraints_t;
 #else
 #include <oer_decoder.h>	/* Octet Encoding Rules encoder */
 #include <oer_encoder.h>	/* Octet Encoding Rules encoder */
@@ -96,11 +96,11 @@ typedef void (asn_struct_free_f)(
 /*
  * Print the structure according to its specification.
  */
-typedef int (asn_struct_print_f)(
-		struct asn_TYPE_descriptor_s *type_descriptor,
-		const void *struct_ptr,
-		int level,	/* Indentation level */
-		asn_app_consume_bytes_f *callback, void *app_key);
+typedef int(asn_struct_print_f)(
+    const struct asn_TYPE_descriptor_s *type_descriptor,
+    const void *struct_ptr,
+    int level, /* Indentation level */
+    asn_app_consume_bytes_f *callback, void *app_key);
 
 /*
  * Compare two structs between each other.
@@ -130,7 +130,7 @@ asn_outmost_tag_f asn_TYPE_outmost_tag;
  * Information Object Set driven constraints.
  */
 typedef struct asn_type_selector_result_s {
-    struct asn_TYPE_descriptor_s *type_descriptor; /* Type encoded. */
+    const struct asn_TYPE_descriptor_s *type_descriptor; /* Type encoded. */
     unsigned presence_index; /* Associated choice variant. */
 } asn_type_selector_result_t;
 typedef asn_type_selector_result_t(asn_type_selector_f)(
@@ -142,61 +142,69 @@ typedef asn_type_selector_result_t(asn_type_selector_f)(
  * May be directly invoked by applications.
  */
 typedef struct asn_TYPE_operation_s {
-	asn_struct_free_f  *free_struct;	/* Free the structure */
-	asn_struct_print_f *print_struct;	/* Human readable output */
-	asn_struct_compare_f *compare_struct;	/* Compare two structures */
-	asn_constr_check_f *check_constraints;	/* Constraints validator */
-	ber_type_decoder_f *ber_decoder;	/* Generic BER decoder */
-	der_type_encoder_f *der_encoder;	/* Canonical DER encoder */
-	xer_type_decoder_f *xer_decoder;	/* Generic XER decoder */
-	xer_type_encoder_f *xer_encoder;	/* [Canonical] XER encoder */
-	oer_type_decoder_f *oer_decoder;	/* Generic OER decoder */
-	oer_type_encoder_f *oer_encoder;	/* Canonical OER encoder */
-	per_type_decoder_f *uper_decoder;	/* Unaligned PER decoder */
-	per_type_encoder_f *uper_encoder;	/* Unaligned PER encoder */
-	asn_outmost_tag_f  *outmost_tag;	/* <optional, internal> */
+    asn_struct_free_f *free_struct;     /* Free the structure */
+    asn_struct_print_f *print_struct;   /* Human readable output */
+    asn_struct_compare_f *compare_struct; /* Compare two structures */
+    ber_type_decoder_f *ber_decoder;      /* Generic BER decoder */
+    der_type_encoder_f *der_encoder;      /* Canonical DER encoder */
+    xer_type_decoder_f *xer_decoder;      /* Generic XER decoder */
+    xer_type_encoder_f *xer_encoder;      /* [Canonical] XER encoder */
+    oer_type_decoder_f *oer_decoder;      /* Generic OER decoder */
+    oer_type_encoder_f *oer_encoder;      /* Canonical OER encoder */
+    per_type_decoder_f *uper_decoder;     /* Unaligned PER decoder */
+    per_type_encoder_f *uper_encoder;     /* Unaligned PER encoder */
+    asn_random_fill_f *random_fill;       /* Initialize with a random value */
+    asn_outmost_tag_f *outmost_tag;       /* <optional, internal> */
 } asn_TYPE_operation_t;
+
+/*
+ * A constraints tuple specifying both the OER and PER constraints.
+ */
+typedef struct asn_encoding_constraints_s {
+    const struct asn_oer_constraints_s *oer_constraints;
+    const struct asn_per_constraints_s *per_constraints;
+    asn_constr_check_f *general_constraints;
+} asn_encoding_constraints_t;
 
 /*
  * The definitive description of the destination language's structure.
  */
 typedef struct asn_TYPE_descriptor_s {
-	const char *name;	/* A name of the ASN.1 type. "" in some cases. */
-	const char *xml_tag;	/* Name used in XML tag */
+    const char *name;       /* A name of the ASN.1 type. "" in some cases. */
+    const char *xml_tag;    /* Name used in XML tag */
 
-	/*
-	 * Generalized functions for dealing with the specific type.
-	 * May be directly invoked by applications.
-	 */
-	asn_TYPE_operation_t *op;
-	asn_constr_check_f *check_constraints;	/* Constraints validator */
+    /*
+     * Generalized functions for dealing with the specific type.
+     * May be directly invoked by applications.
+     */
+    asn_TYPE_operation_t *op;
 
-	/***********************************************************************
-	 * Internally useful members. Not to be used by applications directly. *
-	 **********************************************************************/
+    /***********************************************************************
+     * Internally useful members. Not to be used by applications directly. *
+     **********************************************************************/
 
-	/*
-	 * Tags that are expected to occur.
-	 */
-	const ber_tlv_tag_t *tags;	/* Effective tags sequence for this type */
-	unsigned tags_count;			/* Number of tags which are expected */
-	const ber_tlv_tag_t *all_tags;	/* Every tag for BER/containment */
-	unsigned all_tags_count;		/* Number of tags */
+    /*
+     * Tags that are expected to occur.
+     */
+    const ber_tlv_tag_t *tags;      /* Effective tags sequence for this type */
+    unsigned tags_count;            /* Number of tags which are expected */
+    const ber_tlv_tag_t *all_tags;  /* Every tag for BER/containment */
+    unsigned all_tags_count;        /* Number of tags */
 
-	asn_oer_constraints_t *oer_constraints;	/* OER constraints */
-	asn_per_constraints_t *per_constraints;	/* PER constraints */
+    /* OER, PER, and general constraints */
+    asn_encoding_constraints_t encoding_constraints;
 
-	/*
-	 * An ASN.1 production type members (members of SEQUENCE, SET, CHOICE).
-	 */
-	struct asn_TYPE_member_s *elements;
-	unsigned elements_count;
+    /*
+     * An ASN.1 production type members (members of SEQUENCE, SET, CHOICE).
+     */
+    struct asn_TYPE_member_s *elements;
+    unsigned elements_count;
 
-	/*
-	 * Additional information describing the type, used by appropriate
-	 * functions above.
-	 */
-	const void *specifics;
+    /*
+     * Additional information describing the type, used by appropriate
+     * functions above.
+     */
+    const void *specifics;
 } asn_TYPE_descriptor_t;
 
 /*
@@ -217,10 +225,9 @@ typedef struct asn_TYPE_member_s {
     int tag_mode;           /* IMPLICIT/no/EXPLICIT tag at current level */
     asn_TYPE_descriptor_t *type;            /* Member type descriptor */
     asn_type_selector_f *type_selector;     /* IoS runtime type selector */
-    asn_constr_check_f *memb_constraints;   /* Constraints validator */
-    asn_oer_constraints_t *oer_constraints; /* OER compiled constraints */
-    asn_per_constraints_t *per_constraints; /* PER compiled constraints */
-    int (*default_value)(int setval, void **sptr); /* DEFAULT <value> */
+    asn_encoding_constraints_t encoding_constraints;
+    int (*default_value_cmp)(const void *sptr); /* Compare DEFAULT <value> */
+    int (*default_value_set)(void **sptr);      /* Set DEFAULT <value> */
     const char *name; /* ASN.1 identifier of the element */
 } asn_TYPE_member_t;
 
@@ -235,17 +242,16 @@ typedef struct asn_TYPE_tag2member_s {
 } asn_TYPE_tag2member_t;
 
 /*
- * This function is a wrapper around (td)->print_struct, which prints out
- * the contents of the target language's structure (struct_ptr) into the
- * file pointer (stream) in human readable form.
+ * This function prints out the contents of the target language's structure
+ * (struct_ptr) into the file pointer (stream) in human readable form.
  * RETURN VALUES:
  * 	 0: The structure is printed.
  * 	-1: Problem dumping the structure.
  * (See also xer_fprint() in xer_encoder.h)
  */
-int asn_fprint(FILE *stream,		/* Destination stream descriptor */
-	asn_TYPE_descriptor_t *td,	/* ASN.1 type descriptor */
-	const void *struct_ptr);	/* Structure to be printed */
+int asn_fprint(FILE *stream, /* Destination stream descriptor */
+               const asn_TYPE_descriptor_t *td, /* ASN.1 type descriptor */
+               const void *struct_ptr);         /* Structure to be printed */
 
 #ifdef __cplusplus
 }

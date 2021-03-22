@@ -10,8 +10,8 @@
 #include <errno.h>
 
 asn_dec_rval_t
-NativeInteger_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
-                         asn_TYPE_descriptor_t *td,
+NativeInteger_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
+                         const asn_TYPE_descriptor_t *td,
                          const asn_oer_constraints_t *constraints,
                          void **nint_ptr, const void *ptr, size_t size) {
     const asn_INTEGER_specifics_t *specs =
@@ -41,23 +41,23 @@ NativeInteger_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
 
     if(specs && specs->field_unsigned) {
         unsigned long ul;
-        if(asn_INTEGER2ulong(&tmpint, &ul) != 0) {
-            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_INTEGER, &tmpint);
-            rval.code = RC_FAIL;
-            rval.consumed = 0;
-            return rval;
-        } else {
+        int ok = asn_INTEGER2ulong(&tmpint, &ul) == 0;
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_INTEGER, &tmpint);
+        if(ok) {
             *native = ul;
+        } else {
+            rval.code = RC_FAIL;
+            return rval;
         }
     } else {
         long l;
-        if(asn_INTEGER2long(&tmpint, &l) != 0) {
-            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_INTEGER, &tmpint);
-            rval.code = RC_FAIL;
-            rval.consumed = 0;
-            return rval;
-        } else {
+        int ok = asn_INTEGER2long(&tmpint, &l) == 0;
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_INTEGER, &tmpint);
+        if(ok) {
             *native = l;
+        } else {
+            rval.code = RC_FAIL;
+            return rval;
         }
     }
 
@@ -68,9 +68,10 @@ NativeInteger_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
  * Encode as Canonical OER.
  */
 asn_enc_rval_t
-NativeInteger_encode_oer(asn_TYPE_descriptor_t *td,
-                         const asn_oer_constraints_t *constraints, void *sptr,
-                         asn_app_consume_bytes_f *cb, void *app_key) {
+NativeInteger_encode_oer(const asn_TYPE_descriptor_t *td,
+                         const asn_oer_constraints_t *constraints,
+                         const void *sptr, asn_app_consume_bytes_f *cb,
+                         void *app_key) {
     const asn_INTEGER_specifics_t *specs =
         (const asn_INTEGER_specifics_t *)td->specifics;
     INTEGER_t tmpint;

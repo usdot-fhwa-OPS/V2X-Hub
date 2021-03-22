@@ -37,6 +37,11 @@
 #include <tmx/j2735_messages/SignalStatusMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+#include <tmx/j2735_messages/testMessage00.hpp>
+#include <tmx/j2735_messages/testMessage01.hpp>
+#include <tmx/j2735_messages/testMessage02.hpp>
+#include <tmx/j2735_messages/testMessage03.hpp>
+
 
 namespace tmx {
 namespace messages {
@@ -63,10 +68,14 @@ using message_types = message_type_list<
 		PvdMessage,
 		RsaMessage,
 		RtcmMessage,
-		SrmMessage,
+		SrmMessage, 
 		SsmMessage,
 		SpatMessage,
-		TimMessage
+		TimMessage,
+		tsm0Message,
+		tsm1Message,
+		tsm2Message,
+		tsm3Message
 >;
 
 /// Base allocator type
@@ -185,6 +194,10 @@ public:
 			add_allocator_to_maps<SsmMessage>();
 			add_allocator_to_maps<SpatMessage>();
 			add_allocator_to_maps<TimMessage>();
+			add_allocator_to_maps<tsm0Message>();
+			add_allocator_to_maps<tsm1Message>();
+			add_allocator_to_maps<tsm2Message>();
+			add_allocator_to_maps<tsm3Message>();
 #if SAEJ2735_SPEC < 63
 			add_allocator_to_maps<UperFrameMessage>();
 #endif

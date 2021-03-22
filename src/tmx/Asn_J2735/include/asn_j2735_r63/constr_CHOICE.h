@@ -1,6 +1,5 @@
-/*-
- * Copyright (c) 2003, 2004, 2005 Lev Walkin <vlm@lionet.info>.
- * All rights reserved.
+/*
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	_CONSTR_CHOICE_H_
@@ -12,7 +11,7 @@
 extern "C" {
 #endif
 
-typedef const struct asn_CHOICE_specifics_s {
+typedef struct asn_CHOICE_specifics_s {
 	/*
 	 * Target structure description.
 	 */
@@ -28,7 +27,8 @@ typedef const struct asn_CHOICE_specifics_s {
 	unsigned tag2el_count;
 
 	/* Canonical ordering of CHOICE elements, for PER */
-	const unsigned *canonical_order;
+	const unsigned *to_canonical_order;
+	const unsigned *from_canonical_order;
 
 	/*
 	 * Extensions-related stuff.
@@ -52,6 +52,7 @@ oer_type_encoder_f CHOICE_encode_oer;
 per_type_decoder_f CHOICE_decode_uper;
 per_type_encoder_f CHOICE_encode_uper;
 asn_outmost_tag_f CHOICE_outmost_tag;
+asn_random_fill_f CHOICE_random_fill;
 extern asn_TYPE_operation_t asn_OP_CHOICE;
 
 /*

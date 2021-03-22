@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2005-2014 Lev Walkin <vlm@lionet.info>.
- * All rights reserved.
+ * Copyright (c) 2005-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #include <asn_system.h>
@@ -12,14 +11,17 @@
  * Get the optionally constrained length "n" from the stream.
  */
 ssize_t
-uper_get_length(asn_per_data_t *pd, int ebits, int *repeat) {
+uper_get_length(asn_per_data_t *pd, int ebits, size_t lower_bound,
+                int *repeat) {
     ssize_t value;
 
     *repeat = 0;
 
     /* #11.9.4.1 Encoding if constrained (according to effective bits) */
     if(ebits >= 0 && ebits <= 16) {
-        return per_get_few_bits(pd, ebits);
+        value = per_get_few_bits(pd, ebits);
+        if(value >= 0) value += lower_bound;
+        return value;
     }
 
 	value = per_get_few_bits(pd, 8);
@@ -30,6 +32,7 @@ uper_get_length(asn_per_data_t *pd, int ebits, int *repeat) {
         value = ((value & 0x3f) << 8) | per_get_few_bits(pd, 8);
         return value; /* potential -1 from per_get_few_bits passes through. */
     } else if(value < 0) {
+        ASN_DEBUG("END of stream reached for PER");
         return -1;
     }
     value &= 0x3f; /* this is "m" from X.691, #11.9.3.8 */
@@ -58,7 +61,7 @@ uper_get_nslength(asn_per_data_t *pd) {
 		return length;
 	} else {
 		int repeat;
-		length = uper_get_length(pd, -1, &repeat);
+		length = uper_get_length(pd, -1, 0, &repeat);
 		if(length >= 0 && !repeat) return length;
 		return -1; /* Error, or do not support >16K extensions */
 	}
@@ -144,49 +147,48 @@ int uper_get_constrained_whole_number(asn_per_data_t *pd, unsigned long *out_val
 
 
 /* X.691-2008/11, #11.5.6 -> #11.3 */
-int uper_put_constrained_whole_number_s(asn_per_outp_t *po, long v, int nbits) {
-	/*
-	 * Assume signed number can be safely coerced into
-	 * unsigned of the same range.
-	 * The following testing code will likely be optimized out
-	 * by compiler if it is true.
-	 */
-	unsigned long uvalue1 = ULONG_MAX;
-	         long svalue  = uvalue1;
-	unsigned long uvalue2 = svalue;
-	assert(uvalue1 == uvalue2);
-	return uper_put_constrained_whole_number_u(po, v, nbits);
-}
-
-int uper_put_constrained_whole_number_u(asn_per_outp_t *po, unsigned long v, int nbits) {
-	if(nbits <= 31) {
-		return per_put_few_bits(po, v, nbits);
-	} else {
-		/* Put higher portion first, followed by lower 31-bit */
-		if(uper_put_constrained_whole_number_u(po, v >> 31, nbits - 31))
-			return -1;
-		return per_put_few_bits(po, v, 31);
-	}
+int
+uper_put_constrained_whole_number_u(asn_per_outp_t *po, unsigned long v,
+                                    int nbits) {
+    if(nbits <= 31) {
+        return per_put_few_bits(po, v, nbits);
+    } else {
+        /* Put higher portion first, followed by lower 31-bit */
+        if(uper_put_constrained_whole_number_u(po, v >> 31, nbits - 31))
+            return -1;
+        return per_put_few_bits(po, v, 31);
+    }
 }
 
 /*
+ * X.691 (08/2015) #11.9 "General rules for encoding a length determinant"
  * Put the length "n" (or part of it) into the stream.
  */
 ssize_t
-uper_put_length(asn_per_outp_t *po, size_t length) {
+uper_put_length(asn_per_outp_t *po, size_t length, int *need_eom) {
+    int dummy = 0;
+    if(!need_eom) need_eom = &dummy;
 
-	if(length <= 127)	/* #10.9.3.6 */
-		return per_put_few_bits(po, length, 8)
-			? -1 : (ssize_t)length;
-	else if(length < 16384)	/* #10.9.3.7 */
-		return per_put_few_bits(po, length|0x8000, 16)
-			? -1 : (ssize_t)length;
+    if(length <= 127) {	/* #11.9.3.6 */
+        *need_eom = 0;
+        return per_put_few_bits(po, length, 8)
+            ? -1 : (ssize_t)length;
+    } else if(length < 16384) { /* #10.9.3.7 */
+        *need_eom = 0;
+        return per_put_few_bits(po, length|0x8000, 16)
+            ? -1 : (ssize_t)length;
+    }
 
-	length >>= 14;
-	if(length > 4) length = 4;
+    *need_eom = 0 == (length & 16383);
+    length >>= 14;
+    if(length > 4) {
+        *need_eom = 0;
+        length = 4;
+    }
 
-	return per_put_few_bits(po, 0xC0 | length, 8)
-			? -1 : (ssize_t)(length << 14);
+    return per_put_few_bits(po, 0xC0 | length, 8)
+            ? -1 : (ssize_t)(length << 14);
+
 }
 
 
@@ -197,18 +199,97 @@ uper_put_length(asn_per_outp_t *po, size_t length) {
  */
 int
 uper_put_nslength(asn_per_outp_t *po, size_t length) {
+    if(length <= 64) {
+        /* #11.9.3.4 */
+        if(length == 0) return -1;
+        return per_put_few_bits(po, length - 1, 7) ? -1 : 0;
+    } else {
+        int need_eom = 0;
+        if(uper_put_length(po, length, &need_eom) != (ssize_t)length
+           || need_eom) {
+            /* This might happen in case of >16K extensions */
+            return -1;
+        }
+    }
 
-	if(length <= 64) {
-		/* #10.9.3.4 */
-		if(length == 0) return -1;
-		return per_put_few_bits(po, length-1, 7) ? -1 : 0;
-	} else {
-		if(uper_put_length(po, length) != (ssize_t)length) {
-			/* This might happen in case of >16K extensions */
-			return -1;
-		}
-	}
-
-	return 0;
+    return 0;
 }
 
+static int
+per__long_range(long lb, long ub, unsigned long *range_r) {
+    unsigned long bounds_range;
+    if((ub < 0) == (lb < 0)) {
+        bounds_range = ub - lb;
+    } else if(lb < 0) {
+        assert(ub >= 0);
+        bounds_range = 1 + ((unsigned long)ub + (unsigned long)-(lb + 1));
+    } else {
+        assert(!"Unreachable");
+        return -1;
+    }
+    *range_r = bounds_range;
+    return 0;
+}
+
+int
+per_long_range_rebase(long v, long lb, long ub, unsigned long *output) {
+    unsigned long range;
+
+    assert(lb <= ub);
+
+    if(v < lb || v > ub || per__long_range(lb, ub, &range) < 0) {
+        /* Range error. */
+        return -1;
+    }
+
+    /*
+     * Fundamentally what we're doing is returning (v-lb).
+     * However, this triggers undefined behavior when the word width
+     * of signed (v) is the same as the size of unsigned (*output).
+     * In practice, it triggers the UndefinedSanitizer. Therefore we shall
+     * compute the ranges accurately to avoid C's undefined behavior.
+     */
+    if((v < 0) == (lb < 0)) {
+        *output = v-lb;
+        return 0;
+    } else if(v < 0) {
+        unsigned long rebased = 1 + (unsigned long)-(v+1) + (unsigned long)lb;
+        assert(rebased <= range);   /* By construction */
+        *output = rebased;
+        return 0;
+    } else if(lb < 0) {
+        unsigned long rebased = 1 + (unsigned long)-(lb+1) + (unsigned long)v;
+        assert(rebased <= range);   /* By construction */
+        *output = rebased;
+        return 0;
+    } else {
+        assert(!"Unreachable");
+        return -1;
+    }
+}
+
+int
+per_long_range_unrebase(unsigned long inp, long lb, long ub, long *outp) {
+    unsigned long range;
+
+    if(per__long_range(lb, ub, &range) != 0) {
+        return -1;
+    }
+
+    if(inp > range) {
+        /*
+         * We can encode something in the given number of bits that technically
+         * exceeds the range. This is an avenue for security errors,
+         * so we don't allow that.
+         */
+        return -1;
+    }
+
+    if(inp <= LONG_MAX) {
+        *outp = (long)inp + lb;
+    } else {
+        *outp = (lb + LONG_MAX + 1) + (long)((inp - LONG_MAX) - 1);
+    }
+
+    return 0;
+}
