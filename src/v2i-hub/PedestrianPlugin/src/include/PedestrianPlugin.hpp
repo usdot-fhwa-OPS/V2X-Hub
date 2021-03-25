@@ -81,6 +81,8 @@ protected:
 
 	int  StartWebService();
 	void PedestrianRequestHandler(QHttpEngine::Socket *socket);
+	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
+
 
 
 private:
