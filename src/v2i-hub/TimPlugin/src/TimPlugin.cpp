@@ -68,33 +68,56 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	std::stringstream ss;
 	ss << _cloudUpdate;
 
-	ptree ptr; 
-	read_xml(ss,ptr);
+	ptree ptr;
 
-	lock_guard<mutex> lock(_cfgLock);
-	BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
-	{
-		std::string labeltext = n.first;
+	// Catch XML parse exceptions 
+	try { 
+		read_xml(ss,ptr);
 
-		if(labeltext == "starttime")
-			_startTime = n.second.get_value<std::string>();
-		
-		if(labeltext == "stoptime")
-			_stopTime = n.second.get_value<std::string>();
+		lock_guard<mutex> lock(_cfgLock);
+		BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
+		{
+			std::string labeltext = n.first;
 
-		if(labeltext == "startdate")
-			_startDate = n.second.get_value<std::string>();
+			if(labeltext == "starttime")
+				_startTime = n.second.get_value<std::string>();
+			
+			if(labeltext == "stoptime")
+				_stopTime = n.second.get_value<std::string>();
 
-		if(labeltext == "stopdate")
-			_stopDate = n.second.get_value<std::string>();
+			if(labeltext == "startdate")
+				_startDate = n.second.get_value<std::string>();
 
-		if(labeltext == "timupdate"){
-			tmpTIM<<n.second.get_value<std::string>();
-			_mapFile = "/tmp/tmpTIM.xml";
-			_isMapFileNew = true;
+			if(labeltext == "stopdate")
+				_stopDate = n.second.get_value<std::string>();
+
+			if(labeltext == "timupdate"){
+				tmpTIM<<n.second.get_value<std::string>();
+				_mapFile = "/tmp/tmpTIM.xml";
+				_isMapFileNew = true;
+			}
+
 		}
-
+		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
+	catch( const ptree_error &e ) {
+		PLOG(logERROR) << "Error parsing file: " << e.what() << std::endl;
+		writeResponse(QHttpEngine::Socket::BadRequest, socket);
+	}
+
+
+
+}
+/**
+ * Write HTTP response. 
+ */
+void TimPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket) {
+	socket->setStatusCode(responseCode);
+    socket->writeHeaders();
+    if(socket->isOpen()){
+        socket->close();
+    }
+
 }
 
 
