@@ -73,9 +73,10 @@ namespace PreemptionPlugin {
         VehicleCoordinate* vehicle_coordinate = new VehicleCoordinate;
 
         auto bsm = msg->get_j2735_data();
-
+        int32_t bsmTmpID;
+        GetInt32((unsigned char *)bsm->coreData.id.buf, &bsmTmpID);
         int buff_size = bsm->coreData.id.size;
-        po->vehicle_id = (int)*(bsm->coreData.id.buf);
+        po->vehicle_id = bsmTmpID ;
         vehicle_coordinate->lat = bsm->coreData.lat / micro;
         vehicle_coordinate->lon = bsm->coreData.Long / micro;
         vehicle_coordinate->elevation = bsm->coreData.elev;
@@ -256,4 +257,10 @@ namespace PreemptionPlugin {
 
         return exitval;
     };
+
+    void PreemptionPluginWorker::GetInt32(unsigned char *buf, int32_t *value)
+{
+	*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+}
+
 };

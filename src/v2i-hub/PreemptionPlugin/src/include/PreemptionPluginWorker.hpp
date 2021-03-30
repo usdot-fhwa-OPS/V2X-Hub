@@ -85,6 +85,7 @@ namespace PreemptionPlugin {
 			std::string base_preemption_oid;
 
 			int SendOid(const char *PreemptionOid, const char *value);
+			void GetInt32(unsigned char *buf, int32_t *value);
 
 			boost::property_tree::ptree geofence_data;
 			std::list<GeofenceObject*> GeofenceSet;
