@@ -133,7 +133,7 @@ namespace PreemptionPlugin {
         else if(po->approach == "0"){
 
             if (preemption_map.find(po->vehicle_id) == preemption_map.end() ) {
-                std::cout << " vehicle id does not exitst" << po->vehicle_id << std::endl;
+                std::cout << " vehicle id does not exist" << po->vehicle_id << std::endl;
             }
             else {
                 TurnOffPreemption(po);
@@ -156,7 +156,7 @@ namespace PreemptionPlugin {
 
         int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
         if(response != 0){
-            std::cout << "Sending oid intrupted with an error.";
+            std::cout << "Sending oid interupted with an error.";
         }
         else{
             std::cout << "Finished sending preemption plan.";
@@ -171,7 +171,7 @@ namespace PreemptionPlugin {
         int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
 
         if(response != 0){
-            std::cout << "Sending oid intrupted with an error.";
+            std::cout << "Sending oid interupted with an error.";
         }
         else{
             std::cout << "Finished sending preemption plan.";
