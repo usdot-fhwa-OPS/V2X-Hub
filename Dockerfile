@@ -32,11 +32,15 @@ RUN cmake .
 RUN make 
 RUN make install
 
+WORKDIR /home/V2X-Hub/ext
+RUN git clone https://github.com/HowardHinnant/date.git
 WORKDIR /home/V2X-Hub/ext/date
 RUN cmake .
 RUN make
 RUN make install
 RUN ldconfig 
+
+WORKDIR /home/V2X-Hub/ext/ 
 
 WORKDIR /home/V2X-Hub/ext/server
 RUN cmake .
