@@ -62,4 +62,3 @@ jobs:
             cd /home/V2X-Hub/src/v2i-hub
             cmake .
             make
-            
