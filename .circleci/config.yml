@@ -1,6 +1,6 @@
 version: 2
 
-#  Copyright (C) 2019 LEIDOS.
+#  Copyright (C) 2019-2020 LEIDOS.
 # 
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
@@ -22,13 +22,13 @@ version: 2
 # Run unit tests for C++ 
 # Run static code analyzer for SourceCloud
 # Upload test results
-# Every run command should start with source ${INIT_ENV} to ensure all default dependancies are available
+# Every run command should start with source ${INIT_ENV} to ensure all default dependencies are available
 jobs:
   build:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2xhubamd:latest
+      - image: ubuntu:bionic-20190807
         environment:
           TERM: xterm
           
@@ -40,25 +40,100 @@ jobs:
       #setup remote docker
       - setup_remote_docker :
           docker_layer_caching: false
-
-
       # Checkout PR branch
       - checkout:
       - run: 
-          name: Pull V2X-Hub
+          name: Install Sonar & Dependencies
           command: |
-            git clone --depth 1 git@github.com:v2xhub/V2X-Hub.git V2X-Hub
-      - run:
-          name: Build tmx
-          command: |
-            cd /home/V2X-Hub/src/tmx
+            set -x
+            apt-get update
+            apt-get -y install curl unzip sudo cmake gcovr gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev
+            
+            cd /home/V2X-Hub-build/
+            mkdir -p ext
+            cd /home/V2X-Hub-build/ext/
+            git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
+            cd /home/V2X-Hub-build/ext/libwebsockets/
+            cmake -DLWS_WITH_SHARED=OFF .
+            make
+            make install
+            cd ../../../..
+
+            cd /home/V2X-Hub-build/ext
+            git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
+            cd /home/V2X-Hub-build/ext/qhttpengine
+            cmake .
+            make 
+            make install
+            
+            cd /home/V2X-Hub-build/ext/server
             cmake .
             make
             make install
-       
-      - run:
-          name: Build V2i-Hub
-          command: |
-            cd /home/V2X-Hub/src/v2i-hub
-            cmake .
+            
+            cd /usr/src/googletest/googletest
+            mkdir build
+            cd /usr/src/googletest/googletest/build
+            cmake ..
             make
+            cp libgtest* /usr/lib/
+            cd /usr/src/googletest/googletest
+            rm -rf build
+            mkdir /usr/local/lib/googletest
+            ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
+            ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+            ldconfig
+
+            cd ../../../../..
+            cd /home/V2X-Hub-build
+            mkdir .base-image
+            SONAR_DIR=/opt/sonarqube
+            mkdir $SONAR_DIR
+            curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.2.0.1873-linux.zip
+            curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+            curl -sL https://deb.nodesource.com/setup_10.x | bash -
+            mkdir /opt/jq
+            curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
+            chmod +x /opt/jq/jq
+            cd $SONAR_DIR
+            unzip $SONAR_DIR/sonar-scanner.zip -d .
+            unzip $SONAR_DIR/build-wrapper.zip -d .
+            rm $SONAR_DIR/sonar-scanner.zip
+            rm $SONAR_DIR/build-wrapper.zip
+            mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/
+            mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
+            echo "export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/" > /home/V2X-Hub-build/.base-image/init-env.sh
+      - run:
+          name: Build V2I-Hub
+          command: |
+            set -x
+            source /home/V2X-Hub-build/.base-image/init-env.sh
+            cd /home/V2X-Hub-build/src
+            build-wrapper-linux-x86-64 --out-dir ../bw-output ./build.sh
+      - run:
+          name: Run Tests & Generate Gcovr Reports
+          command: |
+            set -x
+            cd /home/V2X-Hub-build/src
+            ./coverage.sh
+      - run:
+          name: Run Sonar Scanner
+          command: |
+            set -x
+            source /home/V2X-Hub-build/.base-image/init-env.sh
+            if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
+              echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
+              exit 0;
+            else
+              echo "PR branch ${CIRCLE_BRANCH}"
+              echo "Repo name ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+              echo "URL ${CIRCLE_PULL_REQUEST}"
+              export PR_NUM=`echo ${CIRCLE_PULL_REQUEST} | cut -d'/' -f7`
+              echo "PR number ${PR_NUM}"
+              export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
+              export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
+              echo "Target Branch = ${TARGET_BRANCH}"
+              git merge origin/${TARGET_BRANCH}
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}            
+            fi
