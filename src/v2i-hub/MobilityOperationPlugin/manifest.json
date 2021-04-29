@@ -14,10 +14,30 @@
 	],
 	"configuration":[
 		{
-			"key":"...",
-			"default":"...",
-			"description":"..."
-		}
+			"key":"Database_IP",
+			"default":"127.0.0.1",
+			"description":"IP address of database"
+		},
+		{
+			"key":"Database_Port",
+			"default":"3306",
+			"description":"Port of database"
+		},
+		{
+			"key":"Database_Username",
+			"default":"root",
+			"description":"Username for database"
+		},
+		{
+			"key":"Database_Password",
+			"default":"ivp",
+			"description":"Password for database"
+		},
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        }
 		
 	]
 }
