@@ -15,7 +15,7 @@ services:
       - mysql_password
       - mysql_root_password
     volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - ./mysql/:/docker-entrypoint-initdb.d/
 
   php:
     image: usdotfhwaops/php:latest
