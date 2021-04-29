@@ -14,8 +14,7 @@ services:
       - password=${password}
     network_mode: host
     volumes:
-      - ./mysql/script_credentials.sh:/docker-entrypoint-initdb.d/script_credentials.sh
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - ./mysql/:/docker-entrypoint-initdb.d/
 
   php:
     image: php:7.2.2-apache
