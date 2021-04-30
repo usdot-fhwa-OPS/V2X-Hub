@@ -1,7 +1,7 @@
 {
 	"name":"Preemption",
 	"description":"Preemption plugin for the IVP system.",
-	"version":"3.0.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/PreemptionPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

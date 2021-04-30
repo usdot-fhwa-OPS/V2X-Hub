@@ -28,7 +28,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 		SubscribeToMessages();
 		std::thread webthread(&CARMACloudPlugin::StartWebService,this);
 		webthread.detach(); // wait for the thread to finish 
-		url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud 
+		url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
 		base_hb = "/carmacloud/v2xhub";
 		base_req = "/carmacloud/tcmreq";
 		method = "POST";
@@ -42,6 +42,8 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	// create an XML template for the request 
 
+
+	printf("%s\n\n","received in carma cloud plugin");
 	if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01)
 	{
 
@@ -62,8 +64,14 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		char xml_str[1024]; 
 
 		sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%ld</reqid><reqseq>%ld</reqseq><scale>%ld</scale><bounds><oldest>%d</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds></TrafficControlRequest>",reqid, reqseq,scale,*oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
-
+		printf("%s\n\n",xml_str);	
 		CloudSend(xml_str,url, base_req, method);
+
+
+		
+
+
+
 	}
 
 
@@ -71,6 +79,22 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 CARMACloudPlugin::~CARMACloudPlugin() {
 }
+
+
+
+string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
+{
+	int ind =0;
+	while(1){
+		ind = str.find(tagout,ind);
+		if(ind!=string::npos)
+			str.replace(ind,tagout.length(),tagin);
+		else
+			break;
+	}	
+	return str; 
+}
+
 
 void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 {
@@ -84,7 +108,19 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
  
+	cout<<_cloudUpdate;
+	
 
+	string tcm = _cloudUpdate;
+
+	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
+	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
+	tcm=updateTags(tcm,"TrafficControlParams","params");
+	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
+	tcm=updateTags(tcm,"TrafficControlPackage","package");
+
+
+	cout<<tcm<<endl;
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
 	tmx::message_container_type container;
@@ -92,25 +128,24 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 
 	std::stringstream ss;
-	ss << _cloudUpdate;
+	ss << tcm;
+
 
 	container.load<XML>(ss);
 	tsm5message.set_contents(container.get_storage().get_tree());
 
-
-	const std::string tsm5String(_cloudUpdate);
+	cout<<container.get_storage().get_tree().begin()->first<<endl;
 	tsm5ENC.encode_j2735_message(tsm5message);
 
 	msg.reset();
 	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
-
 
 	string enc = tsm5ENC.get_encoding();
 	msg->refresh_timestamp();
 	msg->set_payload(tsm5ENC.get_payload_str());
 	msg->set_encoding(enc);
 	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8002);
+	msg->addDsrcMetadata(172, 0x8003);
 	msg->refresh_timestamp();
 
 
@@ -120,7 +155,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 
 
-	PLOG(logERROR) << " Pedestrian Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+	PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 
 
 }

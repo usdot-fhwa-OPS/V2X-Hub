@@ -1,4 +1,4 @@
-PROJECT ( PedestrianPlugin VERSION 3.0.0 LANGUAGES CXX )
+PROJECT ( PedestrianPlugin VERSION 5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Pedestrian")
 add_compile_options(-fPIC)
@@ -43,12 +43,12 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
 
-set(runTests_sources
+set(runPedestrianTests_sources
                 test/PedestrianTest.cpp 
                 test/Main.cpp
 )
 
 # Link runTests with what we want to test and the GTest and pthread library
-add_executable(runPedestrianTest ${runTests_sources})
+add_executable(runPedestrianTests ${runPedestrianTests_sources})
 
-target_link_libraries(runPedestrianTest ${GTEST_LIBRARIES} pthread ${QHttpEngine_LIBRARY} Qt5::Widgets Qt5Core Qt5Network ssl crypto qhttpengine)
+target_link_libraries(runPedestrianTests ${GTEST_LIBRARIES} pthread ${QHttpEngine_LIBRARY} Qt5::Widgets Qt5Core Qt5Network ssl crypto qhttpengine)

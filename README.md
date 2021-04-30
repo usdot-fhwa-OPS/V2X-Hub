@@ -2,6 +2,9 @@
 |----------------------|---------------------|
 [![CircleCI](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub.svg?style=svg)](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
 
+## Release Notes
+As of March 26th, 2020, the V2X Hub software platform is on version 5.0. See more about release 5.0 here: [V2X Hub Release Notes](<docs/Release_notes.md>)
+
 # Overview
 In order to bring infrastructure components into the Connected Vehicle architecture, you need software that will facilitate the exchange of data in a format that can be understood by both vehicles and infrastructure devices The V2X Hub, takes in data from vehicles via Basic Safety Messages (BSM) in a Society of Automotive Engineers (SAE) standard format and translates the data to a National Transportation Communications for ITS Protocol (NTCIP) that infrastructure components can understand.  And vice versa.   It translates Signal Phase and Timing (SPaT) data from NTCIP to SAE and sends it to the Roadside Unit (RSU) for broadcast to mobile devices, including vehicles. 
 
@@ -22,6 +25,12 @@ The V2X Hub system reduces time needed to create and deploy a roadside based V2X
 * Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2X Hub plugins.
 * Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2X Hub system. 
 * RTCM Plugin – Communicates with a NTRIP network to create J2735 RTCM position correction messages.
+* ODE Plugin – Pushes data to an operational data environment server using a known IP address and port.
+* Pedestrian Plugin – Creates a PSM using information obtained from nomadic devices (ex. cell phones) through a local webserver.
+* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through 	BSMs
+* SPAT Logger Plugin – Logs V2X Hub generated, UPER-encoded SPAT messages in a .csv file along with a system timestamp
+* TIM Plugin – Creates and broadcasts a TIM message from an .xml file based on user input through GUI or local webserver
+* BSM Logger Plugin – Decodes and logs BSMs received by the Message Receiver Plugin to a .csv file
 
 V2X Hub is a communication, computation, and processing platform for V2I applications, and providing the functions listed below.
 
@@ -33,7 +42,6 @@ V2X Hub is a communication, computation, and processing platform for V2I applica
 	* Local computation of recommended speeds and stopping distances using real time weather and road condition data for crash imminent V2I safety scenarios such as Reduced Speed (Work Zone) Warning and Spot Weather Information Warning.
 	* Aggregation of vehicle weather data for efficient communication to Transportation Management Entity for weather-responsive traffic management.
 	* Multi-Modal Intelligent Traffic Signal Systems (MMITSS) “intersection level” functions including J2735 Intersection Geometry (MAP) and J2735 Signal Phase and Timing (SPaT) broadcast manager, equipped vehicle tracker, priority request server, and interface to traffic signal controller.
-
 
 ## License information
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.

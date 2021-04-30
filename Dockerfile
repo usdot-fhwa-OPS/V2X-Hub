@@ -1,7 +1,11 @@
 FROM ubuntu:bionic-20190807
 
 
+<<<<<<< HEAD
 RUN apt-get update  && apt-get install -y cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev
+=======
+RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev
+>>>>>>> develop
 
 ENV MYSQL_ROOT_PASSWORD ivp
 
@@ -111,6 +115,7 @@ RUN mkdir ~/plugins
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN tmxctl --plugin-install CommandPlugin.zip
 WORKDIR /var/www/plugins/
+RUN mkdir /var/www/plugins/MAP
 RUN mkdir /var/www/plugins/.ssl
 RUN chown plugin .ssl
 RUN chgrp www-data .ssl
@@ -135,5 +140,44 @@ RUN tmxctl --plugin-install PedestrianPlugin.zip
 RUN tmxctl --plugin-install TimPlugin.zip
 RUN tmxctl --plugin-install CARMACloudPlugin.zip
 
+
+RUN sudo mkdir /home/V2X-Hub/.base-image 
+
+ENV SONAR_DIR=/opt/sonarqube
+
+# Pull scanner from internet
+RUN sudo mkdir $SONAR_DIR && \
+        sudo curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip && \
+        sudo curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip && \
+        # Install Dependancy of NodeJs 6+
+        sudo curl -sL https://deb.nodesource.com/setup_10.x | sudo bash - && \
+        # Install JQ Json Parser Tool
+        sudo mkdir /opt/jq && \
+        sudo curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq && \
+        sudo chmod +x /opt/jq/jq
+
+# Unzip scanner
+RUN cd $SONAR_DIR && \ 
+        sudo unzip $SONAR_DIR/sonar-scanner.zip -d . && \
+        sudo unzip $SONAR_DIR/build-wrapper.zip -d . && \
+        # Remove zip files 
+        sudo rm $SONAR_DIR/sonar-scanner.zip && \
+        sudo rm $SONAR_DIR/build-wrapper.zip && \
+        # Rename files 
+        sudo mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/ && \
+        sudo mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/ && \
+        # Add scanner, wrapper, and jq to PATH
+        sudo echo "export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/" > /home/V2X-Hub/.base-image/init-env.sh
+
+# Set metadata labels
+LABEL org.label-schema.schema-version="1.0"
+LABEL org.label-schema.name="V2X-Hub-SonarCloud"
+LABEL org.label-schema.description="Base image for CARMA CI testing using SonarCloud"
+LABEL org.label-schema.vendor="Leidos"
+LABEL org.label-schema.version="${VERSION}"
+LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations"
+LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-ops/V2X-HUB"
+LABEL org.label-schema.vcs-ref=${VCS_REF}
+LABEL org.label-schema.build-date=${BUILD_DATE}
 
 ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]

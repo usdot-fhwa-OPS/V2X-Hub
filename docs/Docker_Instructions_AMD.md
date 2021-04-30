@@ -21,7 +21,7 @@ Docker Hub repo for mysql is located at: https://hub.docker.com/r/usdotfhwaops/v
 ## Run the V2X Hub image
 ```
 $ cd /V2X-Hub/configuration/amd64/
-$ sudo docker-compose up
+$ sudo ./initialization.sh
 ```
 
 ## Access the V2X Hub Interface

@@ -1,4 +1,4 @@
-PROJECT ( BsmLoggerPlugin VERSION 3.0.0 LANGUAGES CXX )
+PROJECT ( BsmLoggerPlugin VERSION 5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "BsmLoggerPlugin")
 
