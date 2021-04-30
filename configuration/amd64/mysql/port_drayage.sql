@@ -18,6 +18,9 @@
 --
 -- Table structure for table `freight`
 --
+CREATE DATABASE IF NOT EXISTS `PORT_DRAYAGE`;
+
+USE `PORT_DRAYAGE`;
 
 DROP TABLE IF EXISTS `freight`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
