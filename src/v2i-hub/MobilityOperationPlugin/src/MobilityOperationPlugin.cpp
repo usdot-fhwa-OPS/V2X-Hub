@@ -76,7 +76,6 @@ void MobilityOperationPlugin::OnConfigChanged(const char *key, const char *value
 
 void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 	auto mobilityOperation = msg.get_j2735_data();
-	// FILE_LOG(logDEBUG) << "Checking log level : " << FILELog::ReportingLevel(); << "Received MobilityOperation message (encoded) : " << routeableMsg.get_payload_str();
 	FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
 	FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
 
@@ -89,9 +88,7 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 	payload << mobilityOperation->body.operationParams.buf;
 
 	std::string strategy = strat.str();
-	FILE_LOG(logERROR) << "Strategy string : " << strategy << std::endl;
-	FILE_LOG(logERROR) <<  "Compare returns : " << strategy.compare("carma/port_drayage") << std::endl;
-	if ( strategy.compare("carma/port_drayage") == 0 ){
+	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
 			read_json(payload, pr);
 			pd->cmv_id = (int) pr.get_child("cmv_id").get_value<int>();
@@ -194,7 +191,7 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 }
 
 /**
- * Method to create carma/port_drayage payload JSON ptree using a PortDrayage_Object.
+ * Method to create port drayage payload JSON ptree using a PortDrayage_Object.
  * 
  * @param pd_obj Port Drayage object.
  * @param 
@@ -226,7 +223,7 @@ void MobilityOperationPlugin::createMobilityOperationXml( ptree &mobilityOperati
 	ptree message;
 	ptree header;
 	ptree body;
-	body.put("strategy","carma/port_drayage");
+	body.put("strategy",PORT_DRAYAGE_STRATEGY);
 	body.put("operationParams", pl.str());
 	header.put("hostStaticId", "UNSET");
 	header.put("targetStaticId", "UNSET");

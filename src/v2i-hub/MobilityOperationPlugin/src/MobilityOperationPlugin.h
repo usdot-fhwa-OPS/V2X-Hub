@@ -67,6 +67,7 @@ private:
 	sql::PreparedStatement *pstmt;
 	sql::ResultSet *res;
 	J2735MessageFactory factory;
+	static const std::string PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
 };
 std::mutex _cfgLock;
