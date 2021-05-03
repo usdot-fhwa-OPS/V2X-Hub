@@ -28,6 +28,7 @@ MobilityOperationPlugin::MobilityOperationPlugin(string name) :
     GetConfigValue<string>("Database_Password", _database_password);
 	GetConfigValue<string>("Database_IP",_database_ip);
 	GetConfigValue<uint16_t>("Database_Port",_database_port);
+	GetConfigValue<string>("Database_Name", _database_name);
 	AddMessageFilter < tsm3Message > (this, &MobilityOperationPlugin::HandleMobilityOperationMessage);
 	SubscribeToMessages();
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
@@ -53,11 +54,13 @@ void MobilityOperationPlugin::UpdateConfigSettings() {
     GetConfigValue<string>("Database_Password", _database_password);
 	GetConfigValue<string>("Database_IP",_database_ip);
 	GetConfigValue<uint16_t>("Database_Port",_database_port);
+	GetConfigValue<string>("Database_Name", _database_name);
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
 	try {
 		driver = get_driver_instance();
 		con = driver->connect(connection_string,_database_username,_database_password);
-		con->setSchema("PORT_DRAYAGE");
+		//
+		con->setSchema(_database_name);
 	}
 	catch ( sql::SQLException &e ) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;

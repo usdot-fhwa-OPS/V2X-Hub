@@ -34,6 +34,11 @@
 			"description":"Password for database"
 		},
 		{
+			"key":"Database_Name",
+			"default":"PORT_DRAYAGE",
+			"description":"Name of database"			
+		},
+		{
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"

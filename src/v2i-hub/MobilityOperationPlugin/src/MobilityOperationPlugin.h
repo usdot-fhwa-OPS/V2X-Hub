@@ -22,6 +22,7 @@ using namespace boost::property_tree;
 
 
 namespace MobilityOperationPlugin {
+static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
 class MobilityOperationPlugin: public PluginClient {
 public:
@@ -60,14 +61,14 @@ private:
 	std::string _database_username;
 	std::string _database_password;
 	uint16_t _database_port;
-	std::string _database_ip; 
+	std::string _database_ip;
+	std::string _database_name; 
 	sql::Driver *driver;
 	sql::Connection *con;
 	sql::Statement *stmt;
 	sql::PreparedStatement *pstmt;
 	sql::ResultSet *res;
 	J2735MessageFactory factory;
-	static const std::string PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
 };
 std::mutex _cfgLock;
