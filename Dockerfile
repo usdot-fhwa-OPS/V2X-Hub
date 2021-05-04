@@ -54,7 +54,6 @@ RUN cmake .
 RUN make
 RUN make install
 
-<<<<<<< HEAD
 WORKDIR /home/V2X-Hub/ext/ccserver
 RUN cmake . 
 RUN make
@@ -73,8 +72,6 @@ RUN rm -rf build
 RUN mkdir /usr/local/lib/googletest
 RUN ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
 RUN ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
-=======
->>>>>>> develop
 RUN ldconfig
 
 WORKDIR /home/V2X-Hub/src/v2i-hub/
@@ -112,14 +109,11 @@ RUN ln -s ../bin PedestrianPlugin/bin
 RUN zip PedestrianPlugin.zip PedestrianPlugin/bin/PedestrianPlugin PedestrianPlugin/manifest.json
 RUN ln -s ../bin TimPlugin/bin
 RUN zip TimPlugin.zip TimPlugin/bin/TimPlugin TimPlugin/manifest.json
-<<<<<<< HEAD
 RUN ln -s ../bin CARMACloudPlugin/bin
 RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
-=======
 RUN ln -s ../bin MobilityOperationPlugin/bin
 RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperationPlugin MobilityOperationPlugin/manifest.json
 
->>>>>>> develop
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/
@@ -159,12 +153,9 @@ RUN tmxctl --plugin-install SPaTLoggerPlugin.zip
 RUN tmxctl --plugin-install MessageLoggerPlugin.zip
 RUN tmxctl --plugin-install PedestrianPlugin.zip
 RUN tmxctl --plugin-install TimPlugin.zip
-<<<<<<< HEAD
 RUN tmxctl --plugin-install CARMACloudPlugin.zip
 
-=======
 RUN tmxctl --plugin-install MobilityOperationPlugin.zip
->>>>>>> develop
 
 RUN sudo mkdir /home/V2X-Hub/.base-image 
 
