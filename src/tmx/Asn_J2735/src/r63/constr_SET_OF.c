@@ -349,23 +349,15 @@ SET_OF__encode_sorted_free(struct _el_buffer *el_buf, size_t count) {
 
 enum SET_OF__encode_method {
     SOES_DER,   /* Distinguished Encoding Rules */
-<<<<<<< HEAD
     SOES_CUPER,  /* Canonical Unaligned Packed Encoding Rules */
     SOES_CAPER  /* Canonical Aligned Packed Encoding Rules */
-=======
-    SOES_CUPER  /* Canonical Unaligned Packed Encoding Rules */
->>>>>>> develop
 };
 
 static struct _el_buffer *
 SET_OF__encode_sorted(const asn_TYPE_member_t *elm,
                       const asn_anonymous_set_ *list,
                       enum SET_OF__encode_method method) {
-<<<<<<< HEAD
     struct _el_buffer *encoded_els;
-=======
-    static struct _el_buffer *encoded_els;
->>>>>>> develop
     int edx;
 
     encoded_els =
@@ -380,11 +372,7 @@ SET_OF__encode_sorted(const asn_TYPE_member_t *elm,
     for(edx = 0; edx < list->count; edx++) {
         const void *memb_ptr = list->array[edx];
         struct _el_buffer *encoding_el = &encoded_els[edx];
-<<<<<<< HEAD
         asn_enc_rval_t erval = {0,0,0};
-=======
-        asn_enc_rval_t erval;
->>>>>>> develop
 
         if(!memb_ptr) break;
 
@@ -406,7 +394,6 @@ SET_OF__encode_sorted(const asn_TYPE_member_t *elm,
                 encoding_el->bits_unused = (8 - extra_bits) & 0x7;
             }
             break;
-<<<<<<< HEAD
 	case SOES_CAPER:
             erval = aper_encode(elm->type,
                                 elm->encoding_constraints.per_constraints,
@@ -440,28 +427,6 @@ SET_OF__encode_sorted(const asn_TYPE_member_t *elm,
     }
 }
 
-=======
-        default:
-            assert(!"Unreachable");
-            break;
-        }
-        if(erval.encoded < 0) break;
-	}
-
-    if(edx == list->count) {
-        /*
-         * Sort the encoded elements according to their encoding.
-         */
-        qsort(encoded_els, list->count, sizeof(encoded_els[0]), _el_buf_cmp);
-
-        return encoded_els;
-    } else {
-        SET_OF__encode_sorted_free(encoded_els, edx);
-        return NULL;
-    }
-}
-
->>>>>>> develop
 
 /*
  * The DER encoder of the SET OF type.
@@ -484,11 +449,7 @@ SET_OF_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
      */
     for(edx = 0; edx < list->count; edx++) {
         void *memb_ptr = list->array[edx];
-<<<<<<< HEAD
         asn_enc_rval_t erval = {0,0,0};
-=======
-        asn_enc_rval_t erval;
->>>>>>> develop
 
         if(!memb_ptr) ASN__ENCODE_FAILED;
 
@@ -510,11 +471,7 @@ SET_OF_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
     computed_size += encoding_size;
 
     if(!cb || list->count == 0) {
-<<<<<<< HEAD
         asn_enc_rval_t erval = {0,0,0};
-=======
-        asn_enc_rval_t erval;
->>>>>>> develop
         erval.encoded = computed_size;
         ASN__ENCODED_OK(erval);
     }
@@ -545,11 +502,7 @@ SET_OF_encode_der(const asn_TYPE_descriptor_t *td, const void *sptr,
     SET_OF__encode_sorted_free(encoded_els, list->count);
 
     if(edx == list->count) {
-<<<<<<< HEAD
         asn_enc_rval_t erval = {0,0,0};
-=======
-        asn_enc_rval_t erval;
->>>>>>> develop
         assert(computed_size == (size_t)encoding_size);
         erval.encoded = computed_size;
         ASN__ENCODED_OK(erval);
@@ -758,11 +711,7 @@ asn_enc_rval_t
 SET_OF_encode_xer(const asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
                   enum xer_encoder_flags_e flags, asn_app_consume_bytes_f *cb,
                   void *app_key) {
-<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
-=======
-    asn_enc_rval_t er;
->>>>>>> develop
 	const asn_SET_OF_specifics_t *specs = (const asn_SET_OF_specifics_t *)td->specifics;
 	const asn_TYPE_member_t *elm = td->elements;
     const asn_anonymous_set_ *list = _A_CSET_FROM_VOID(sptr);
@@ -974,11 +923,7 @@ SET_OF_decode_uper(const asn_codec_ctx_t *opt_codec_ctx,
                    const asn_TYPE_descriptor_t *td,
                    const asn_per_constraints_t *constraints, void **sptr,
                    asn_per_data_t *pd) {
-<<<<<<< HEAD
     asn_dec_rval_t rv = {RC_OK, 0};
-=======
-    asn_dec_rval_t rv;
->>>>>>> develop
 	const asn_SET_OF_specifics_t *specs = (const asn_SET_OF_specifics_t *)td->specifics;
     const asn_TYPE_member_t *elm = td->elements; /* Single one */
     void *st = *sptr;
@@ -1076,11 +1021,7 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
     const asn_per_constraint_t *ct;
     const asn_TYPE_member_t *elm = td->elements;
     struct _el_buffer *encoded_els;
-<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
-=======
-    asn_enc_rval_t er;
->>>>>>> develop
     size_t encoded_edx;
 
     if(!sptr) ASN__ENCODE_FAILED;
@@ -1170,7 +1111,6 @@ SET_OF_encode_uper(const asn_TYPE_descriptor_t *td,
     }
 }
 
-<<<<<<< HEAD
 asn_enc_rval_t
 SET_OF_encode_aper(const asn_TYPE_descriptor_t *td,
                    const asn_per_constraints_t *constraints, const void *sptr,
@@ -1344,8 +1284,6 @@ SET_OF_decode_aper(const asn_codec_ctx_t *opt_codec_ctx,
 	rv.consumed = 0;
 	return rv;
 }
-=======
->>>>>>> develop
 
 #endif  /* ASN_DISABLE_PER_SUPPORT */
 
@@ -1452,11 +1390,8 @@ asn_TYPE_operation_t asn_OP_SET_OF = {
 #else
 	SET_OF_decode_uper,
 	SET_OF_encode_uper,
-<<<<<<< HEAD
 	SET_OF_decode_aper,
 	SET_OF_encode_aper,
-=======
->>>>>>> develop
 #endif /* ASN_DISABLE_PER_SUPPORT */
 	SET_OF_random_fill,
 	0	/* Use generic outmost tag fetcher */

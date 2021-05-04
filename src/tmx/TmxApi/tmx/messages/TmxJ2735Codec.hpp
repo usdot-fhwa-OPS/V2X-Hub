@@ -155,11 +155,7 @@ struct uper
 	asn_enc_rval_t encode(const typename MsgType::message_type *obj, tmx::byte_stream &bytes,
 			asn_TYPE_descriptor_t *typeDescriptor = MsgType::get_descriptor())
 	{
-<<<<<<< HEAD
 		void * t; 
-=======
-		void * t;
->>>>>>> develop
 		asn_enc_rval_t ueRet = uper_encode_to_buffer(typeDescriptor,(asn_per_constraints_t*) t, (void *)obj, bytes.data(), bytes.max_size());
 
 		// For UPER encoding, the number of bytes encoded must be adjusted

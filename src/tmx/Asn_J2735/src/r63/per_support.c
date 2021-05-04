@@ -211,7 +211,6 @@ uper_put_nslength(asn_per_outp_t *po, size_t length) {
             return -1;
         }
     }
-<<<<<<< HEAD
 
     return 0;
 }
@@ -507,29 +506,10 @@ aper_put_nslength(asn_per_outp_t *po, size_t length) {
 			return -1;
 		}
 	}
-=======
 
-    return 0;
-}
->>>>>>> develop
-
-static int
-per__long_range(long lb, long ub, unsigned long *range_r) {
-    unsigned long bounds_range;
-    if((ub < 0) == (lb < 0)) {
-        bounds_range = ub - lb;
-    } else if(lb < 0) {
-        assert(ub >= 0);
-        bounds_range = 1 + ((unsigned long)ub + (unsigned long)-(lb + 1));
-    } else {
-        assert(!"Unreachable");
-        return -1;
-    }
-    *range_r = bounds_range;
-    return 0;
+	return 0;
 }
 
-<<<<<<< HEAD
 #if !defined(USE_OLDER_APER_NSNNWN)
 int
 aper_put_nsnnwn(asn_per_outp_t *po, int range, int number) {
@@ -601,67 +581,3 @@ aper_put_nsnnwn(asn_per_outp_t *po, int dummy_range, int n) {
        return per_put_few_bits(po, n, 8 * bytes);
 }
 #endif /* which aper_put_nsnnwn() */
-=======
-int
-per_long_range_rebase(long v, long lb, long ub, unsigned long *output) {
-    unsigned long range;
-
-    assert(lb <= ub);
-
-    if(v < lb || v > ub || per__long_range(lb, ub, &range) < 0) {
-        /* Range error. */
-        return -1;
-    }
-
-    /*
-     * Fundamentally what we're doing is returning (v-lb).
-     * However, this triggers undefined behavior when the word width
-     * of signed (v) is the same as the size of unsigned (*output).
-     * In practice, it triggers the UndefinedSanitizer. Therefore we shall
-     * compute the ranges accurately to avoid C's undefined behavior.
-     */
-    if((v < 0) == (lb < 0)) {
-        *output = v-lb;
-        return 0;
-    } else if(v < 0) {
-        unsigned long rebased = 1 + (unsigned long)-(v+1) + (unsigned long)lb;
-        assert(rebased <= range);   /* By construction */
-        *output = rebased;
-        return 0;
-    } else if(lb < 0) {
-        unsigned long rebased = 1 + (unsigned long)-(lb+1) + (unsigned long)v;
-        assert(rebased <= range);   /* By construction */
-        *output = rebased;
-        return 0;
-    } else {
-        assert(!"Unreachable");
-        return -1;
-    }
-}
-
-int
-per_long_range_unrebase(unsigned long inp, long lb, long ub, long *outp) {
-    unsigned long range;
-
-    if(per__long_range(lb, ub, &range) != 0) {
-        return -1;
-    }
-
-    if(inp > range) {
-        /*
-         * We can encode something in the given number of bits that technically
-         * exceeds the range. This is an avenue for security errors,
-         * so we don't allow that.
-         */
-        return -1;
-    }
-
-    if(inp <= LONG_MAX) {
-        *outp = (long)inp + lb;
-    } else {
-        *outp = (lb + LONG_MAX + 1) + (long)((inp - LONG_MAX) - 1);
-    }
-
-    return 0;
-}
->>>>>>> develop

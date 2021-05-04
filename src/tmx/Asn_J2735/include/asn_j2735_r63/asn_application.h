@@ -24,11 +24,7 @@ enum asn_transfer_syntax {
     ATS_INVALID = 0,
     /* Plaintext output (not conforming to any standard), for debugging. */
     ATS_NONSTANDARD_PLAINTEXT,
-<<<<<<< HEAD
     /* Returns a randomly generated structure. */
-=======
-    /* Returns a randomly generatede structure. */
->>>>>>> develop
     ATS_RANDOM,
     /*
      * X.690:
@@ -55,11 +51,8 @@ enum asn_transfer_syntax {
      */
     ATS_UNALIGNED_BASIC_PER,
     ATS_UNALIGNED_CANONICAL_PER,
-<<<<<<< HEAD
     ATS_ALIGNED_BASIC_PER,
     ATS_ALIGNED_CANONICAL_PER,
-=======
->>>>>>> develop
     /*
      * X.693:
      * XER: XML Encoding Rules.

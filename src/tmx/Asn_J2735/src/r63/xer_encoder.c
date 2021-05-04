@@ -53,11 +53,7 @@ xer__print2fp(const void *buffer, size_t size, void *app_key) {
 
 int
 xer_fprint(FILE *stream, const asn_TYPE_descriptor_t *td, const void *sptr) {
-<<<<<<< HEAD
 	asn_enc_rval_t er = {0,0,0};
-=======
-    asn_enc_rval_t er;
->>>>>>> develop
 
 	if(!stream) stream = stdout;
 	if(!td || !sptr)

@@ -20,10 +20,7 @@ asn_struct_compare_f SEQUENCE_OF_compare;
 der_type_encoder_f SEQUENCE_OF_encode_der;
 xer_type_encoder_f SEQUENCE_OF_encode_xer;
 per_type_encoder_f SEQUENCE_OF_encode_uper;
-<<<<<<< HEAD
 per_type_encoder_f SEQUENCE_OF_encode_aper;
-=======
->>>>>>> develop
 extern asn_TYPE_operation_t asn_OP_SEQUENCE_OF;
 
 #define	SEQUENCE_OF_free	SET_OF_free
@@ -34,12 +31,7 @@ extern asn_TYPE_operation_t asn_OP_SEQUENCE_OF;
 #define	SEQUENCE_OF_decode_oer  SET_OF_decode_oer
 #define	SEQUENCE_OF_encode_oer  SET_OF_encode_oer
 #define	SEQUENCE_OF_decode_uper	SET_OF_decode_uper
-<<<<<<< HEAD
 #define	SEQUENCE_OF_decode_aper	SET_OF_decode_aper
-=======
-#define	SEQUENCE_OF_decode_oer  SET_OF_decode_oer
-#define	SEQUENCE_OF_encode_oer  SET_OF_encode_oer
->>>>>>> develop
 #define	SEQUENCE_OF_random_fill SET_OF_random_fill
 
 #ifdef __cplusplus

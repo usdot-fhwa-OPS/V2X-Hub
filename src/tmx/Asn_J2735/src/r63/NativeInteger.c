@@ -154,13 +154,8 @@ asn_enc_rval_t
 NativeInteger_encode_der(const asn_TYPE_descriptor_t *sd, const void *ptr,
                          int tag_mode, ber_tlv_tag_t tag,
                          asn_app_consume_bytes_f *cb, void *app_key) {
-<<<<<<< HEAD
 	unsigned long native = *(const unsigned long *)ptr; /* Disable sign ext. */
 	asn_enc_rval_t erval = {0,0,0};
-=======
-    unsigned long native = *(const unsigned long *)ptr; /* Disable sign ext. */
-    asn_enc_rval_t erval;
->>>>>>> develop
 	INTEGER_t tmp;
 
 #ifdef	WORDS_BIGENDIAN		/* Opportunistic optimization */
