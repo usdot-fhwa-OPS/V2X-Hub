@@ -169,6 +169,14 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	DecodedBsmMessage decodedBsm;
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
+	tsm4EncodedMessage encodedtsm4; 
+
+
+
+	byte_stream testBytes = msg.get_payload_bytes();
+	PLOG(logERROR) << "Looking for abbreviated message in bytes " << testBytes <<" Msg type = " << msg.get_type() << " Msg sub type = "<< msg.get_subtype() << "Encoding = " << msg.get_encoding();
+
+
 
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
@@ -192,7 +200,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 				// Check for an abbreviated message
 				byte_stream bytesFull = msg.get_payload_bytes();
 				byte_stream bytes; 
-				if (bytes.size() > 8)
+				if (bytesFull.size() > 8)
 				{
 					PLOG(logDEBUG) << "Looking for abbreviated message in bytes " << bytes;
 					uint16_t msgType;
@@ -226,7 +234,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 					dataLength = ntohs(*((uint16_t*)&(bytes.data()[6])));
 
 
-					PLOG(logDEBUG1) << " Got message,  msgType: " << msgType
+					PLOG(logERROR) << " Got message,  msgType: " << msgType
 							<< ", msgVersion: " << msgVersion
 							<< ", id: " << id
 							<< ", dataLength: " << dataLength;
@@ -302,6 +310,11 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 			}
 		}
 	}	
+	else if (msg.get_type() == "J2735" && msg.get_subtype() == "TMSG06-P")
+	{
+			PLOG(logERROR) << "okay inside the encoding if ";
+	}
+
 
 
 	// Make sure the timestamp matches the incoming source message
@@ -326,6 +339,8 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	bool fwd = true;
 	GetConfigValue(name, fwd);
 
+	PLOG(logERROR) << "Fwd value "<<fwd; 
+
 	if (fwd)
 	{
 		PLOG(logDEBUG) << "Routing " << name << " message.";
@@ -339,6 +354,8 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 			
 			sendMsg->set_flags(IvpMsgFlags_None);
 		}
+
+		PLOG(logERROR)<<"send messsage content"<<sendMsg->get_payload_str();
 		this->OutgoingMessage(*sendMsg);
 	}
 }

@@ -264,7 +264,11 @@ SET_OF_encode_oer(const asn_TYPE_descriptor_t *td,
 
     for(n = 0; n < list->count; n++) {
         void *memb_ptr = list->array[n];
+<<<<<<< HEAD
+        asn_enc_rval_t er = {0,0,0};
+=======
         asn_enc_rval_t er;
+>>>>>>> develop
         er = elm->type->op->oer_encoder(
             elm->type, elm->encoding_constraints.oer_constraints, memb_ptr, cb,
             app_key);
@@ -276,7 +280,11 @@ SET_OF_encode_oer(const asn_TYPE_descriptor_t *td,
     }
 
     {
+<<<<<<< HEAD
+        asn_enc_rval_t erval = {0,0,0};
+=======
         asn_enc_rval_t erval;
+>>>>>>> develop
         erval.encoded = computed_size;
         ASN__ENCODED_OK(erval);
     }

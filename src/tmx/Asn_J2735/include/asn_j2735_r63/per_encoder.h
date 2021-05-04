@@ -26,6 +26,17 @@ asn_enc_rval_t uper_encode(
     const void *struct_ptr,                    /* Structure to be encoded */
     asn_app_consume_bytes_f *consume_bytes_cb, /* Data collector */
     void *app_key                              /* Arbitrary callback argument */
+<<<<<<< HEAD
+);
+
+asn_enc_rval_t aper_encode(
+    const struct asn_TYPE_descriptor_s *type_descriptor,
+    const asn_per_constraints_t *constraints,
+    const void *struct_ptr,                     /* Structure to be encoded */
+    asn_app_consume_bytes_f *consume_bytes_cb,  /* Data collector */
+    void *app_key                               /* Arbitrary callback argument */
+=======
+>>>>>>> develop
 );
 
 /*
@@ -41,6 +52,13 @@ asn_enc_rval_t uper_encode_to_buffer(
     size_t buffer_size      /* Initial buffer size (max) */
 );
 
+asn_enc_rval_t aper_encode_to_buffer(
+    const struct asn_TYPE_descriptor_s *type_descriptor,
+    const asn_per_constraints_t *constraints,
+    const void *struct_ptr,  /* Structure to be encoded */
+    void *buffer,            /* Pre-allocated buffer */
+    size_t buffer_size       /* Initial buffer size (max) */
+);
 /*
  * A variant of uper_encode_to_buffer() which allocates buffer itself.
  * Returns the number of bytes in the buffer or -1 in case of failure.
@@ -53,6 +71,17 @@ ssize_t uper_encode_to_new_buffer(
     const asn_per_constraints_t *constraints,
     const void *struct_ptr, /* Structure to be encoded */
     void **buffer_r         /* Buffer allocated and returned */
+<<<<<<< HEAD
+);
+
+ssize_t
+aper_encode_to_new_buffer(
+    const struct asn_TYPE_descriptor_s *td,
+    const asn_per_constraints_t *constraints,
+    const void *sptr,
+    void **buffer_r
+=======
+>>>>>>> develop
 );
 
 /*

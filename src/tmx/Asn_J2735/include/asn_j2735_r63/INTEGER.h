@@ -47,6 +47,11 @@ oer_type_decoder_f INTEGER_decode_oer;
 oer_type_encoder_f INTEGER_encode_oer;
 per_type_decoder_f INTEGER_decode_uper;
 per_type_encoder_f INTEGER_encode_uper;
+<<<<<<< HEAD
+per_type_decoder_f INTEGER_decode_aper;
+per_type_encoder_f INTEGER_encode_aper;
+=======
+>>>>>>> develop
 asn_random_fill_f  INTEGER_random_fill;
 
 /***********************************
@@ -73,14 +78,16 @@ int asn_INTEGER2long(const INTEGER_t *i, long *l);
 int asn_INTEGER2ulong(const INTEGER_t *i, unsigned long *l);
 int asn_long2INTEGER(INTEGER_t *i, long l);
 int asn_ulong2INTEGER(INTEGER_t *i, unsigned long l);
+int asn_int642INTEGER(INTEGER_t *i, int64_t l);
+int asn_uint642INTEGER(INTEGER_t *i, uint64_t l);
 
 /* A version of strtol/strtoimax(3) with nicer error reporting. */
 enum asn_strtox_result_e {
     ASN_STRTOX_ERROR_RANGE = -3,  /* Input outside of supported numeric range */
     ASN_STRTOX_ERROR_INVAL = -2,  /* Invalid data encountered (e.g., "+-") */
     ASN_STRTOX_EXPECT_MORE = -1,  /* More data expected (e.g. "+") */
-    ASN_STRTOX_OK          =  0,  /* Conversion succeded, number ends at (*end) */
-    ASN_STRTOX_EXTRA_DATA  =  1   /* Conversion succeded, but the string has extra stuff */
+    ASN_STRTOX_OK          =  0,  /* Conversion succeeded, number ends at (*end) */
+    ASN_STRTOX_EXTRA_DATA  =  1   /* Conversion succeeded, but the string has extra stuff */
 };
 enum asn_strtox_result_e asn_strtol_lim(const char *str, const char **end,
                                         long *l);
