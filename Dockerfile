@@ -57,19 +57,6 @@ RUN make install
 
 ### setup and install v2x-hub core and plugins 
 
-WORKDIR cd /usr/src/googletest/googletest
-RUN mkdir ~/build
-WORKDIR /usr/src/googletest/googletest/build
-RUN cmake ..
-RUN make
-RUN cp libgtest* /usr/lib/
-WORKDIR cd /usr/src/googletest/googletest
-RUN rm -rf build
-RUN mkdir /usr/local/lib/googletest
-RUN ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
-RUN ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
-RUN ldconfig
-
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/
 RUN make

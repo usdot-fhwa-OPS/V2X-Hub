@@ -317,7 +317,7 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 
 
 	if(bsm->partII != NULL) {
-		if (bsm->partII[0].list.count >= PartIIcontent_126P0__partII_Value_PR_SpecialVehicleExtensions ) {
+		if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
 			try
 			{
 				if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
@@ -353,7 +353,7 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 				PLOG(logDEBUG)<<"Standard Exception:: VehicleAlerts unavailable "<<e.what();
 			}
 		}
-		if(bsm->partII[0].list.count >= PartIIcontent_126P0__partII_Value_PR_SupplementalVehicleExtensions){
+		if(bsm->partII[0].list.count >= partII_Value_PR_SupplementalVehicleExtensions){
 		try {
 			if(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails != NULL) {	
 				cJSON_AddItemToObject(_BsmMessageContent, "role", cJSON_CreateNumber(bsm->partII[0].list.array[2]->partII_Value.choice.SupplementalVehicleExtensions.classDetails->role[0]));
