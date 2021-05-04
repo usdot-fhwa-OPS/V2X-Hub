@@ -43,4 +43,4 @@ install(DIRECTORY handlers/ models/ requests/ DESTINATION ${CMAKE_INSTALL_INCLUD
 install(EXPORT v2xhubWebAPIConfig DESTINATION share/v2xhubWebAPI/cmake)
 
 export(TARGETS ${PROJECT_NAME} FILE v2xhubWebAPIConfig.cmake)
-~                                                                  
+                                                              
