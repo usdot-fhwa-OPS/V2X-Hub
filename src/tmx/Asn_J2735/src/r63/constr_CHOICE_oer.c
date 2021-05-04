@@ -216,7 +216,11 @@ CHOICE_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
         asn_TYPE_member_t *elm = &elements[ctx->step]; /* CHOICE's element */
         void *memb_ptr;         /* Pointer to the member */
         void **memb_ptr2;       /* Pointer to that pointer */
+<<<<<<< HEAD
         asn_dec_rval_t rval = {0,0};
+=======
+        asn_dec_rval_t rval;
+>>>>>>> develop
 
         /*
          * Compute the position of the member inside a structure,

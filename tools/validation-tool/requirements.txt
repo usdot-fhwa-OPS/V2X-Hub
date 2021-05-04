@@ -1,0 +1,5 @@
+appJar==0.94.0
+json5==0.9.5
+pandas==0.25.1
+scp==0.13.3
+paramiko==2.7.2

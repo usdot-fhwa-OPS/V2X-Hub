@@ -103,7 +103,11 @@ NativeEnumerated_encode_oer(const asn_TYPE_descriptor_t *td,
                             const asn_oer_constraints_t *constraints,
                             const void *sptr, asn_app_consume_bytes_f *cb,
                             void *app_key) {
+<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
+=======
+    asn_enc_rval_t er;
+>>>>>>> develop
     long native;
 
     (void)constraints;

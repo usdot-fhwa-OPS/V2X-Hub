@@ -84,7 +84,11 @@ asn_enc_rval_t
 der_encode_primitive(const asn_TYPE_descriptor_t *td, const void *sptr,
                      int tag_mode, ber_tlv_tag_t tag,
                      asn_app_consume_bytes_f *cb, void *app_key) {
+<<<<<<< HEAD
 	asn_enc_rval_t erval = {0,0,0};
+=======
+    asn_enc_rval_t erval;
+>>>>>>> develop
 	const ASN__PRIMITIVE_TYPE_t *st = (const ASN__PRIMITIVE_TYPE_t *)sptr;
 
 	ASN_DEBUG("%s %s as a primitive type (tm=%d)",

@@ -121,7 +121,11 @@ oer_open_type_put(const asn_TYPE_descriptor_t *td,
                   const asn_oer_constraints_t *constraints, const void *sptr,
                   asn_app_consume_bytes_f *cb, void *app_key) {
     size_t serialized_byte_count = 0;
+<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
+=======
+    asn_enc_rval_t er;
+>>>>>>> develop
     ssize_t len_len;
 
     er = td->op->oer_encoder(td, constraints, sptr, oer__count_bytes,

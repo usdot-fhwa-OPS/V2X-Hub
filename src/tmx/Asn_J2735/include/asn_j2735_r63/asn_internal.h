@@ -7,9 +7,13 @@
  */
 #ifndef	ASN_INTERNAL_H
 #define	ASN_INTERNAL_H
+<<<<<<< HEAD
 #ifndef __EXTENSIONS__
 #define __EXTENSIONS__          /* for Sun */
 #endif
+=======
+#define __EXTENSIONS__          /* for Sun */
+>>>>>>> develop
 
 #include "asn_application.h"	/* Application-visible API */
 

@@ -47,9 +47,12 @@ typedef struct asn_bit_data_s asn_per_data_t;
  */
 ssize_t uper_get_length(asn_per_data_t *pd, int effective_bound_bits,
                         size_t lower_bound, int *repeat);
+<<<<<<< HEAD
 
 ssize_t aper_get_length(asn_per_data_t *pd, int range,
                         int effective_bound_bits, int *repeat);
+=======
+>>>>>>> develop
 
 /*
  * Get the normally small length "n".
@@ -81,11 +84,17 @@ typedef struct asn_bit_outp_s asn_per_outp_t;
  *  -1: Conversion failed due to range problems.
  *   0: Conversion was successful.
  */
+<<<<<<< HEAD
 int per_long_range_rebase(long, intmax_t lb, intmax_t ub, unsigned long *output);
 int per_imax_range_rebase(intmax_t v, intmax_t lb, intmax_t ub, uintmax_t *output);
 /* The inverse operation: restores the value by the offset and its bounds. */
 int per_long_range_unrebase(unsigned long inp, intmax_t lb, intmax_t ub, long *outp);
 int per_imax_range_unrebase(uintmax_t inp, intmax_t lb, intmax_t ub, intmax_t *outp);
+=======
+int per_long_range_rebase(long v, long lb, long ub, unsigned long *output);
+/* The inverse operation: restores the value by the offset and its bounds. */
+int per_long_range_unrebase(unsigned long inp, long lb, long ub, long *outp);
+>>>>>>> develop
 
 /* X.691-2008/11, #11.5 */
 int uper_put_constrained_whole_number_u(asn_per_outp_t *po, unsigned long v, int nbits);
@@ -100,6 +109,7 @@ int uper_put_constrained_whole_number_u(asn_per_outp_t *po, unsigned long v, int
  */
 ssize_t uper_put_length(asn_per_outp_t *po, size_t whole_length,
                         int *opt_need_eom);
+<<<<<<< HEAD
 
 ssize_t aper_put_length(asn_per_outp_t *po, int range, size_t length,
                         int *opt_need_eom);
@@ -107,6 +117,8 @@ ssize_t aper_put_length(asn_per_outp_t *po, int range, size_t length,
 /* Align the current bit position to octet bundary */
 int aper_put_align(asn_per_outp_t *po);
 int32_t aper_get_align(asn_per_data_t *pd);
+=======
+>>>>>>> develop
 
 /*
  * Put the normally small length "n" to the Unaligned PER stream.

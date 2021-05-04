@@ -31,7 +31,11 @@ asn_TYPE_operation_t asn_OP_OPEN_TYPE = {
 	OPEN_TYPE_encode_aper,
 #endif
 	0,  /* Random fill is not supported for open type */
+<<<<<<< HEAD
 	0	/* Use generic outmost tag fetcher */
+=======
+	0,	/* Use generic outmost tag fetcher */
+>>>>>>> develop
 };
 
 #undef  ADVANCE
@@ -114,6 +118,11 @@ OPEN_TYPE_ber_get(const asn_codec_ctx_t *opt_codec_ctx,
     }
 
     if(*memb_ptr2) {
+<<<<<<< HEAD
+=======
+        const asn_CHOICE_specifics_t *specs =
+            selected.type_descriptor->specifics;
+>>>>>>> develop
         if(elm->flags & ATF_POINTER) {
             ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
             *memb_ptr2 = NULL;
@@ -233,6 +242,11 @@ OPEN_TYPE_xer_get(const asn_codec_ctx_t *opt_codec_ctx,
          * will have to be restarted.
          */
         if(*memb_ptr2) {
+<<<<<<< HEAD
+=======
+            const asn_CHOICE_specifics_t *specs =
+                selected.type_descriptor->specifics;
+>>>>>>> develop
             if(elm->flags & ATF_POINTER) {
                 ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
                 *memb_ptr2 = NULL;
@@ -346,6 +360,11 @@ OPEN_TYPE_uper_get(const asn_codec_ctx_t *opt_codec_ctx,
     case RC_WMORE:
     case RC_FAIL:
         if(*memb_ptr2) {
+<<<<<<< HEAD
+=======
+            const asn_CHOICE_specifics_t *specs =
+                selected.type_descriptor->specifics;
+>>>>>>> develop
             if(elm->flags & ATF_POINTER) {
                 ASN_STRUCT_FREE(*selected.type_descriptor, inner_value);
                 *memb_ptr2 = NULL;

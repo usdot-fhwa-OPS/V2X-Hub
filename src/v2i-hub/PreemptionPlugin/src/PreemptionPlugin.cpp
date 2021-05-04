@@ -110,7 +110,7 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 	//if( it != allowedList.end())
 	//{	
 		if (bsm->partII != NULL) {
-			if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
+			if (bsm->partII[0].list.count >= PartIIcontent_126P0__partII_Value_PR_SpecialVehicleExtensions ) {
 				try {
 						if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
 							if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == SirenInUse_inUse ) // if lights on 

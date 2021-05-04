@@ -17,7 +17,11 @@ uper_encode(const asn_TYPE_descriptor_t *td,
             const asn_per_constraints_t *constraints, const void *sptr,
             asn_app_consume_bytes_f *cb, void *app_key) {
     asn_per_outp_t po;
+<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
+=======
+    asn_enc_rval_t er;
+>>>>>>> develop
 
     /*
      * Invoke type-specific encoder.
@@ -114,7 +118,11 @@ ssize_t
 uper_encode_to_new_buffer(const asn_TYPE_descriptor_t *td,
                           const asn_per_constraints_t *constraints,
                           const void *sptr, void **buffer_r) {
+<<<<<<< HEAD
     asn_enc_rval_t er = {0,0,0};
+=======
+    asn_enc_rval_t er;
+>>>>>>> develop
 	enc_dyn_arg key;
 
 	memset(&key, 0, sizeof(key));
@@ -163,6 +171,7 @@ _uper_encode_flush_outp(asn_per_outp_t *po) {
 	return po->output(po->tmpspace, buf - po->tmpspace, po->op_key);
 }
 
+<<<<<<< HEAD
 asn_enc_rval_t
 aper_encode_to_buffer(const asn_TYPE_descriptor_t *td,
                       const asn_per_constraints_t *constraints,
@@ -263,3 +272,5 @@ aper_encode(const asn_TYPE_descriptor_t *td,
 
 	return er;
 }
+=======
+>>>>>>> develop

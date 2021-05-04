@@ -161,7 +161,11 @@ asn_enc_rval_t
 NativeEnumerated_encode_uper(const asn_TYPE_descriptor_t *td,
                              const asn_per_constraints_t *constraints,
                              const void *sptr, asn_per_outp_t *po) {
+<<<<<<< HEAD
 	const asn_INTEGER_specifics_t *specs =
+=======
+    const asn_INTEGER_specifics_t *specs =
+>>>>>>> develop
         (const asn_INTEGER_specifics_t *)td->specifics;
 	asn_enc_rval_t er = {0,0,0};
 	long native, value;

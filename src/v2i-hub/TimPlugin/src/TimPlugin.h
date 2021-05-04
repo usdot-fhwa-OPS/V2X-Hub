@@ -104,6 +104,7 @@ protected:
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	int  StartWebService();
 	void TimRequestHandler(QHttpEngine::Socket *socket);
+	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
 	//void BroadCastTIM();
 
 

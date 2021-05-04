@@ -14,6 +14,12 @@ PASS_LENGTH=`echo $PASS | wc -c`
 if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q [A-Z] && echo $PASS | grep -q [0-9] && echo $PASS | grep -q [\$\!\.\+_-\*@\#\^%\?~]; then
     sudo echo "username=$USER" > .env
     sudo echo "password=$PASS" >> .env
+    echo "Confirm password: "
+    read -s CONF_PASS
+    while [ $CONF_PASS != $PASS ]; do
+        echo "Passwords do not match. Please re-enter password: "
+        read -s CONF_PASS
+    done
     sudo echo "VALID PASSWORD"
 else
     sudo echo "INVALID PASSWORD"
