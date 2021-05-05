@@ -57,7 +57,7 @@ template <> \
 inline T *_j2735_cast< SaeJ2735Traits<T>, MessageFrameTraits>\
 	(const typename MessageFrameTraits::message_type *ptr) \
 { \
-	if (ptr && ptr->value.present == MessageFrame__value_PR_ ##T) \
+	if (ptr && ptr->value.present == value_PR_ ##T) \
 		return (T *)&(ptr->value.choice.T); \
 	else \
 		return 0; \
@@ -74,7 +74,7 @@ inline typename MessageFrameTraits::message_type *\
 			(typename MessageFrameTraits::message_type *)\
 			calloc(1, sizeof(typename MessageFrameTraits::message_type)); \
 		frame->messageId = get_default_messageId< SaeJ2735Traits<T> >(); \
-		frame->value.present = MessageFrame__value_PR_ ##T; \
+		frame->value.present = value_PR_ ##T; \
 		frame->value.choice.T = *(ptr); \
 		return frame; \
 	} \

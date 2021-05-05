@@ -26,7 +26,6 @@ asn_enc_rval_t uper_encode(
     const void *struct_ptr,                    /* Structure to be encoded */
     asn_app_consume_bytes_f *consume_bytes_cb, /* Data collector */
     void *app_key                              /* Arbitrary callback argument */
-<<<<<<< HEAD
 );
 
 asn_enc_rval_t aper_encode(
@@ -35,8 +34,6 @@ asn_enc_rval_t aper_encode(
     const void *struct_ptr,                     /* Structure to be encoded */
     asn_app_consume_bytes_f *consume_bytes_cb,  /* Data collector */
     void *app_key                               /* Arbitrary callback argument */
-=======
->>>>>>> develop
 );
 
 /*
@@ -71,7 +68,6 @@ ssize_t uper_encode_to_new_buffer(
     const asn_per_constraints_t *constraints,
     const void *struct_ptr, /* Structure to be encoded */
     void **buffer_r         /* Buffer allocated and returned */
-<<<<<<< HEAD
 );
 
 ssize_t
@@ -80,8 +76,6 @@ aper_encode_to_new_buffer(
     const asn_per_constraints_t *constraints,
     const void *sptr,
     void **buffer_r
-=======
->>>>>>> develop
 );
 
 /*
