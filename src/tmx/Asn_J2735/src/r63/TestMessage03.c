@@ -11,7 +11,7 @@ asn_TYPE_member_t asn_MBR_TestMessage03_1[] = {
 	{ ATF_POINTER, 2, offsetof(struct TestMessage03, header),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Header,
+		&asn_DEF_MobilityHeader,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
@@ -20,7 +20,7 @@ asn_TYPE_member_t asn_MBR_TestMessage03_1[] = {
 	{ ATF_POINTER, 1, offsetof(struct TestMessage03, regional),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Reg_BasicSafetyMessage,
+		&asn_DEF_MobilityOperation,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */

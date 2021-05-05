@@ -26,8 +26,8 @@ struct Reg_BasicSafetyMessage;
 
 /* TestMessage03 */
 typedef struct TestMessage03 {
-	struct Header	*header;	/* OPTIONAL */
-	struct Reg_BasicSafetyMessage	*regional;	/* OPTIONAL */
+	MobilityHeader_t	 header;
+	MobilityOperation_t	 body;
 	/*
 	 * This type is extensible,
 	 * possible extensions are below.
