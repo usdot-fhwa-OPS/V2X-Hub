@@ -209,6 +209,7 @@ void MobilityOperationPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj,
 	ptree destination;
 	destination.put("latitude", pd_obj.destination_lat);
 	destination.put("longitude", pd_obj.destination_long);
+	json_payload.put_child("location", location);
 	json_payload.put_child("destination",destination);
 	json_payload.put("operation", pd_obj.operation );
 	json_payload.put("action_id", pd_obj.action_id );
