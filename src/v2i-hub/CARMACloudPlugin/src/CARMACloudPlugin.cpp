@@ -1,6 +1,6 @@
 #include "CARMACloudPlugin.h"
 #include <WGS84Point.h>
-
+#include <math.h>
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -40,34 +40,48 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 {
 	auto carmaRequest = msg.get_j2735_data();
 
-	// create an XML template for the request 
+	// create an XML template for the request
 	if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01)
 	{
 
-		int64_t reqid; 
-		GetInt64((unsigned char *)carmaRequest->body.choice.tcrV01.reqid.buf,&reqid);
+		unsigned char *reqid=new unsigned char [carmaRequest->body.choice.tcrV01.reqid.size+1];
+		memcpy(reqid,carmaRequest->body.choice.tcrV01.reqid.buf, carmaRequest->body.choice.tcrV01.reqid.size+1);
 		long int reqseq = carmaRequest->body.choice.tcrV01.reqseq;
 		long int scale = carmaRequest->body.choice.tcrV01.scale;
-		uint8_t *oldest = (uint8_t*)  carmaRequest->body.choice.tcrV01.bounds.list.array[0]->oldest.buf;
-		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->reflat; 
-		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->reflon;
-		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[0]->deltax;
-		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[0]->deltay;
-		long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[1]->deltax;
-		long dty1 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[1]->deltay;
-		long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[2]->deltax;
-		long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[0]->offsets.list.array[2]->deltay;
-
-		char xml_str[1024]; 
-
-		sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><tcrV01><reqid>%ld</reqid><reqseq>%ld</reqseq><scale>%ld</scale><bounds><oldest>%d</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds></tcrV01></TrafficControlRequest>",reqid, reqseq,scale,*oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
-		CloudSend(xml_str,url, base_req, method);
-
-
 		
 
+		int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
+		int cnt=0;
+		char bounds_str[5000]; 
+
+		while(cnt<totBounds)
+		{
+			int32_t oldest=0;
+			GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
+			// = (int*)  carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf;
+			long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
+			long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
+
+		
+			long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
+			long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
+			long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltax;
+			long dty1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltay;
+			long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
+			long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
+
+			sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%d</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+
+			cnt++;
 
 
+		}
+
+		char xml_str[10000]; 
+
+	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%ld</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",(unsigned long)reqid, reqseq,scale,bounds_str);
+
+	CloudSend(xml_str,url, base_req, method);
 	}
 
 
@@ -77,14 +91,15 @@ CARMACloudPlugin::~CARMACloudPlugin() {
 }
 
 
-
 string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
 {
 	int ind =0;
 	while(1){
 		ind = str.find(tagout,ind);
-		if(ind!=string::npos)
+		if(ind!=string::npos) // did not have brackets, doesn't need them
+		{
 			str.replace(ind,tagout.length(),tagin);
+		}
 		else
 			break;
 	}	
@@ -103,15 +118,17 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
 	
-
+	
 	string tcm = _cloudUpdate;
 
+    // new updateTags section
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
 	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
 
+	
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
 	tmx::message_container_type container;
@@ -119,12 +136,10 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 
 	std::stringstream ss;
-	ss << tcm;
-
+	ss << tcm;  // updated _cloudUpdate tags, using updateTags
 
 	container.load<XML>(ss);
 	tsm5message.set_contents(container.get_storage().get_tree());
-
 	tsm5ENC.encode_j2735_message(tsm5message);
 
 	msg.reset();
@@ -138,16 +153,10 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	msg->addDsrcMetadata(172, 0x8003);
 	msg->refresh_timestamp();
 
-
-
 	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 	BroadcastMessage(*rMsg);
 
-
-
 	PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
-
-
 }
 
 
@@ -160,7 +169,7 @@ int CARMACloudPlugin::StartWebService()
 	QCoreApplication a(placeholderC,placeholderX);
 
  	QHostAddress address = QHostAddress(QString::fromStdString (webip));
-    quint16 port = static_cast<quint16>(webport);
+	quint16 port = static_cast<quint16>(webport);
 
 	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
 	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
@@ -184,7 +193,7 @@ int CARMACloudPlugin::StartWebService()
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logDEBUG4)<<"CARMACloudPlugin:: Started web service";
+	PLOG(logERROR)<<"CARMACloudPlugin:: Started web service";
 	return a.exec();
 
 }
@@ -193,12 +202,10 @@ int CARMACloudPlugin::StartWebService()
 void CARMACloudPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<uint64_t>("Frequency", _frequency);
-
 	
     std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
-
 	
 }
 
@@ -259,7 +266,7 @@ int CARMACloudPlugin::Main() {
 
 		if (IsPluginState(IvpPluginState_registered))
 		{
-			//CloudSend(msg,url, base, method);
+			//CloudSend(msg, url, base, method);
 			this_thread::sleep_for(chrono::milliseconds(5000));
 		}
 

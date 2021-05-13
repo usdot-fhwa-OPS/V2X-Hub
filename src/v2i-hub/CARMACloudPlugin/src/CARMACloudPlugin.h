@@ -112,9 +112,9 @@ protected:
 		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
 	}
 	
-	void GetInt64(unsigned char *buf, int64_t *value)
+	void GetInt64(unsigned char *buf, uint64_t *value)
 	{
-		*value = (int64_t)((buf[0] << 56) + (buf[1] << 48) + (buf[2] << 40) + (buf[3] << 32) + (buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
+		*value = (uint64_t)((buf[0] << 56) + (buf[1] << 48) + (buf[2] << 40) + (buf[3] << 32) + (buf[4] << 24) + (buf[5] << 16) + (buf[6] << 8) + buf[7]);
 	}
 
 
