@@ -52,8 +52,15 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 	QByteArray array = st.toLocal8Bit();
 
 	char* psmMsgdef = array.data();	
-
-	BroadcastPsm(psmMsgdef);
+	// Catch parse exceptions
+    try {
+	    BroadcastPsm(psmMsgdef);
+		writeResponse(QHttpEngine::Socket::Created, socket);
+	}
+	catch(const J2735Exception &e) {
+        PLOG(logERROR) << "Error parsing file: " << e.what() << std::endl;
+		writeResponse(QHttpEngine::Socket::BadRequest, socket);
+	}
 }
 
 
@@ -158,9 +165,9 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 
-
 	const std::string psmString(psmJson);
 	psmENC.encode_j2735_message(psmmessage);
+
 
 	msg.reset();
 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
@@ -182,6 +189,18 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 
 
 	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+
+}
+
+/**
+ * Write HTTP response. 
+ */
+void PedestrianPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket) {
+	socket->setStatusCode(responseCode);
+    socket->writeHeaders();
+    if(socket->isOpen()){
+        socket->close();
+    }
 
 }
 

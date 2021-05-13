@@ -37,3 +37,23 @@ do
         fi
     fi
 done
+for d in tmx/*
+do
+    echo ""
+    echo $d
+    if [[ -d $d ]]; then
+        if ls $d | grep [a-zA-Z]*_test ; then
+            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
+            echo "$TESTS built"
+            cd $d
+            $TESTS
+            gcovr -k .
+            mkdir coverage
+            TMX=`echo $d | cut -d "/" -f 2`
+            mv $(ls | grep [a-zA-Z0-9#-]*$TMX | grep -v test#  | grep gcov) coverage
+            cd ../..
+        else
+            echo "no tests built"
+        fi
+    fi
+done

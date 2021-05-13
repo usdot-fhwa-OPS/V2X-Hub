@@ -12,6 +12,8 @@
 #include "asn_application.h"
 
 /* Including external dependencies */
+#include "MobilityHeader.h"
+#include "MobilityResponse.h"
 #include "constr_SEQUENCE.h"
 
 #ifdef __cplusplus

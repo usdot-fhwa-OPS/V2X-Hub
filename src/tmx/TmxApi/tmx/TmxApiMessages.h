@@ -89,6 +89,10 @@ enum MsgSubType
 		travelerInformation = 31,
 		personalSafetyMessage = 32,
 		personalMobilityMessage = 245,
+		testMessage00 = 240,
+		testMessage01 = 241,
+		testMessage02 = 242,
+		testMessage03 = 243,
 		testMessage04 = 244,
 		testMessage05 = 245, 
 		J2735_end = 256,
@@ -133,6 +137,10 @@ static CONSTEXPR const char *MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING = "PSM-P";
 static CONSTEXPR const char *MSGSUBTYPE_PERSONALMOBILITYMESSAGE_STRING = "PMM";
 static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE04_STRING = "TMSG04-P";
 static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE05_STRING = "TMSG05-P";
+static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE00_STRING = "TMSG00-P";
+static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE01_STRING = "TMSG01-P";
+static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE02_STRING = "TMSG02-P";
+static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE03_STRING = "TMSG03-P";
 static CONSTEXPR const char *MSGSUBTYPE_J2735_END_STRING = "J2735_end";
 static CONSTEXPR const char *MSGSUBTYPE_GID_STRING = "GID";
 			

@@ -12,6 +12,8 @@
 #include "asn_application.h"
 
 /* Including external dependencies */
+#include "MobilityHeader.h"
+#include "MobilityOperation.h"
 #include "constr_SEQUENCE.h"
 
 #ifdef __cplusplus
@@ -24,8 +26,8 @@ struct Reg_BasicSafetyMessage;
 
 /* TestMessage03 */
 typedef struct TestMessage03 {
-	struct Header	*header;	/* OPTIONAL */
-	struct Reg_BasicSafetyMessage	*regional;	/* OPTIONAL */
+	MobilityHeader_t	 header;
+	MobilityOperation_t	 body;
 	/*
 	 * This type is extensible,
 	 * possible extensions are below.

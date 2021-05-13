@@ -73,9 +73,10 @@ namespace PreemptionPlugin {
         VehicleCoordinate* vehicle_coordinate = new VehicleCoordinate;
 
         auto bsm = msg->get_j2735_data();
-
+        int32_t bsmTmpID;
+        GetInt32((unsigned char *)bsm->coreData.id.buf, &bsmTmpID);
         int buff_size = bsm->coreData.id.size;
-        po->vehicle_id = (int)*(bsm->coreData.id.buf);
+        po->vehicle_id = bsmTmpID ;
         vehicle_coordinate->lat = bsm->coreData.lat / micro;
         vehicle_coordinate->lon = bsm->coreData.Long / micro;
         vehicle_coordinate->elevation = bsm->coreData.elev;
@@ -132,7 +133,7 @@ namespace PreemptionPlugin {
         else if(po->approach == "0"){
 
             if (preemption_map.find(po->vehicle_id) == preemption_map.end() ) {
-                std::cout << " vehicle id does not exitst" << po->vehicle_id << std::endl;
+                std::cout << " vehicle id does not exist" << po->vehicle_id << std::endl;
             }
             else {
                 TurnOffPreemption(po);
@@ -155,7 +156,7 @@ namespace PreemptionPlugin {
 
         int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
         if(response != 0){
-            std::cout << "Sending oid intrupted with an error.";
+            std::cout << "Sending oid interupted with an error.";
         }
         else{
             std::cout << "Finished sending preemption plan.";
@@ -170,7 +171,7 @@ namespace PreemptionPlugin {
         int response = SendOid(PreemptionOid.c_str(), preemption_plan_flag.c_str());
 
         if(response != 0){
-            std::cout << "Sending oid intrupted with an error.";
+            std::cout << "Sending oid interupted with an error.";
         }
         else{
             std::cout << "Finished sending preemption plan.";
@@ -256,4 +257,10 @@ namespace PreemptionPlugin {
 
         return exitval;
     };
+
+    void PreemptionPluginWorker::GetInt32(unsigned char *buf, int32_t *value)
+{
+	*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+}
+
 };

@@ -11,20 +11,20 @@ asn_TYPE_member_t asn_MBR_TestMessage03_1[] = {
 	{ ATF_POINTER, 2, offsetof(struct TestMessage03, header),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Header,
+		&asn_DEF_MobilityHeader,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
 		"header"
 		},
-	{ ATF_POINTER, 1, offsetof(struct TestMessage03, regional),
+	{ ATF_POINTER, 1, offsetof(struct TestMessage03, body),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Reg_BasicSafetyMessage,
+		&asn_DEF_MobilityOperation,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
-		"regional"
+		"body"
 		},
 };
 static const int asn_MAP_TestMessage03_oms_1[] = { 0, 1 };
@@ -33,7 +33,7 @@ static const ber_tlv_tag_t asn_DEF_TestMessage03_tags_1[] = {
 };
 static const asn_TYPE_tag2member_t asn_MAP_TestMessage03_tag2el_1[] = {
     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* header */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* regional */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* body */
 };
 asn_SEQUENCE_specifics_t asn_SPC_TestMessage03_specs_1 = {
 	sizeof(struct TestMessage03),
