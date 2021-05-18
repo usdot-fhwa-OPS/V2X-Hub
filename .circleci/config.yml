@@ -149,14 +149,14 @@ jobs:
           cd configuration/amd64/
           docker-compose up -d db
           cd ../../
-          docker build --network=host -t usdotfhwaops/v2xhubamd:$CIRCLE_BRANCH .
+          docker build --network=host -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .
     
      - run: 
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:$CIRCLE_BRANCH
+          docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
   docker_build&push_develop :
    machine:
     image: ubuntu-1604:202004-01
