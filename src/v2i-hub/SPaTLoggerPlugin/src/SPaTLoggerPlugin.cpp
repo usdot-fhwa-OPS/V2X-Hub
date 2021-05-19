@@ -158,14 +158,14 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
         intersectionId_hex<<intersectionId_int_hex.str()[0]<<intersectionId_int_hex.str()[1]<<' '<<intersectionId_int_hex.str()[2]<<intersectionId_int_hex.str()[3];
 	
 	std::string interstatus = std::bitset<8>(spat->intersections.list.array[0]->status.buf).to_string();
-	        int interstatint_sw = stoi(interstatus);
+	        uint8_t interstatint_sw = (uint8_t) stoi(interstatus);
         std::stringstream interstatint_size;
         interstatint_size << interstatint_sw;
         std::stringstream interstatint_int_hex;
         if (interstatint_size.str().length() == 1)
         {
                 interstatint_int_hex<<"0"<<std::hex<<interstatint_sw;
-                unsigned int interstatint_size2 = interstatint_int_hex.str().size();
+                uint8_t interstatint_size2 = interstatint_int_hex.str().size();
                 std::stringstream interstatint_hex;
                 interstatint_hex<<interstatint_int_hex.str()[1];
         }
@@ -204,6 +204,9 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
         else{
                 spatmillis16_hex<<spatmillis16_int_hex.str()[2]<<spatmillis16_int_hex.str()[3]<<' '<<spatmillis16_int_hex.str()[0]<<spatmillis16_int_hex.str()[1];
         }
+        //Add is_cert_present
+        std::stringstream IsCertPresent_hex;
+        IsCertPresent_hex<<"00";
 
 	int spat_size;
         if (routeableMsg.get_payload_str().length()%4 == 0){
@@ -231,7 +234,7 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
 	std::stringstream metadata;
         std::string spat_output_payload = routeableMsg.get_payload_str();
 
-        metadata<<direction_hex.str()<<' '<<intersectionId_hex.str()<<' '<<interstatint_hex.str()<<' '<<spatreceivetime_hex.str()<<' '<<spatmillis16_hex.str()<<' '<<signStatus_hex.str()<<' '<<spat_size_hex.str();
+        metadata<<direction_hex.str()<<' '<<intersectionId_hex.str()<<' '<<interstatint_hex.str()<<' '<<spatreceivetime_hex.str()<<' '<<spatmillis16_hex.str()<<' '<<signStatus_hex.str()<<' '<<IsCertPresent_hex.str()<<' '<<spat_size_hex.str();
 
         unsigned int payload_size = spat_output_payload.size();
         std::stringstream spat_output_data;
