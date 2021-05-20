@@ -57,7 +57,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		while(cnt<totBounds)
 		{
 			int32_t oldest=0;
-			GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
+			//GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
 			// = (int*)  carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf;
 			long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
 			long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
