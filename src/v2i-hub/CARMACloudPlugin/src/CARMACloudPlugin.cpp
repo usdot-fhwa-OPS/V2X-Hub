@@ -41,8 +41,8 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	auto carmaRequest = msg.get_j2735_data();
 
 	// create an XML template for the request
-	if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01)
-	{
+	//if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01) // taking this out since some message arent enabling this present variable. 
+	//{
 
 		unsigned char *reqid=new unsigned char [carmaRequest->body.choice.tcrV01.reqid.size+1];
 		memcpy(reqid,carmaRequest->body.choice.tcrV01.reqid.buf, carmaRequest->body.choice.tcrV01.reqid.size+1);
@@ -82,7 +82,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%ld</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",(unsigned long)reqid, reqseq,scale,bounds_str);
 
 	CloudSend(xml_str,url, base_req, method);
-	}
+	//}
 
 
 }
