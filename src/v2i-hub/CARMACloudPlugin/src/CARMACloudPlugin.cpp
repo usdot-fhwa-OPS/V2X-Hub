@@ -53,6 +53,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
 		int cnt=0;
 		char bounds_str[5000]; 
+		strcpy(bounds_str="");
 
 		while(cnt<totBounds)
 		{
