@@ -54,10 +54,12 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		int cnt=0;
 		char bounds_str[5000]; 
 		strcpy(bounds_str="");
+	
+		std::time_t tm = std::time(0)/60-1*24*60;
 
 		while(cnt<totBounds)
 		{
-			int32_t oldest=0;
+			int32_t oldest=tm;
 			//GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
 			// = (int*)  carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf;
 			long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
