@@ -128,18 +128,18 @@ void addSystemDefinedMessageTypes()
 
 
 std::string GetPwd(){
-	// const char* EnvVar = "MYSQL_ROOT_PASSWORD";
-	// const char* pwd;
-	// pwd = std::getenv(EnvVar);
+	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* pwd;
+	pwd = std::getenv(EnvVar);
 
-	// if(pwd == NULL){
-	// 	LOG_ERROR("Unable to set MYSQL_ROOT_PASSWORD)");
-	// 	return "";
-	// }
-	// else{
-	// 	std::string PwdStr(pwd);
-	// 	return PwdStr;
-	// }
+	if(pwd == NULL){
+		LOG_ERROR("Unable to set MYSQL_ROOT_PASSWORD)");
+		return "";
+	}
+	else{
+		std::string PwdStr(pwd);
+		return PwdStr;
+	}
 	return  "";
 }
 
