@@ -462,14 +462,14 @@ asn_per_constraints_t asn_PER_type_TrafficControlDetail_constr_1 CC_NOTUSED = {
 };
 static const asn_INTEGER_enum_map_t asn_MAP_closed_value2enum_7[] = {
 	{ 0,	4,	"open" },
-	{ 1,	6,	"closed" },
+	{ 1,	6,	"notopen" },
 	{ 2,	9,	"taperleft" },
 	{ 3,	10,	"taperright" },
 	{ 4,	8,	"openleft" },
 	{ 5,	9,	"openright" }
 };
 static const unsigned int asn_MAP_closed_enum2value_7[] = {
-	1,	/* closed(1) */
+	1,	/* notopen(1) */
 	0,	/* open(0) */
 	4,	/* openleft(4) */
 	5,	/* openright(5) */
