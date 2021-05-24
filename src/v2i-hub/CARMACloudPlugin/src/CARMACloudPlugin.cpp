@@ -53,7 +53,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
 		int cnt=0;
 		char bounds_str[5000]; 
-		strcpy(bounds_str="");
+		strcpy(bounds_str,"");
 	
 		std::time_t tm = std::time(0)/60-1*24*60;
 

@@ -52,7 +52,7 @@ typedef enum TrafficControlDetail_PR {
 } TrafficControlDetail_PR;
 typedef enum TrafficControlDetail__closed {
 	TrafficControlDetail__closed_open	= 0,
-	TrafficControlDetail__closed_closed	= 1,
+	TrafficControlDetail__closed_notopen	= 1,
 	TrafficControlDetail__closed_taperleft	= 2,
 	TrafficControlDetail__closed_taperright	= 3,
 	TrafficControlDetail__closed_openleft	= 4,
