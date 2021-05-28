@@ -42,25 +42,35 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	// create an XML template for the request
 	//if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01) // taking this out since some message arent enabling this present variable. 
-	//{
+	// {
 
-		unsigned char *reqid=new unsigned char [carmaRequest->body.choice.tcrV01.reqid.size+1];
-		memcpy(reqid,carmaRequest->body.choice.tcrV01.reqid.buf, carmaRequest->body.choice.tcrV01.reqid.size+1);
+        // convert reqid bytes to hex string.
+        size_t hexlen = 2; //size of each hex representation with a leading 0
+        char reqid[carmaRequest->body.choice.tcrV01.reqid.size * hexlen + 1];
+        for (int i = 0; i < carmaRequest->body.choice.tcrV01.reqid.size; i++)
+        {
+            sprintf(reqid+(i*hexlen), "%.2X", carmaRequest->body.choice.tcrV01.reqid.buf[i]);
+        }
+
+		printf("%s\n",reqid);
+
 		long int reqseq = carmaRequest->body.choice.tcrV01.reqseq;
 		long int scale = carmaRequest->body.choice.tcrV01.scale;
 		
 
 		int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
 		int cnt=0;
-		char bounds_str[5000]; 
-		strcpy(bounds_str,"");
-	
-		std::time_t tm = std::time(0)/60-1*24*60;
+		char bounds_str[5000];
+	       	strcpy(bounds_str,"");	
+		
+		//  get current time 
+		std::time_t tm = std::time(0)/60-1*24*60; //  T minus 24 hours in  min  
 
 		while(cnt<totBounds)
 		{
-			int32_t oldest=tm;
-			//GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
+
+			uint32_t oldest=tm;
+		//	GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
 			// = (int*)  carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf;
 			long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
 			long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
@@ -73,7 +83,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 			long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
 			long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
 
-			sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%d</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+			sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%ld</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
 
 			cnt++;
 
@@ -81,9 +91,9 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		}
 
 		char xml_str[10000]; 
+        sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
 
-	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%ld</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",(unsigned long)reqid, reqseq,scale,bounds_str);
-
+	cout<<"Sent TCR: "<<xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
 	//}
 
@@ -123,6 +133,8 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	
 	
 	string tcm = _cloudUpdate;
+
+	cout<<"Received this from cloud"<<tcm<<endl;
 
     // new updateTags section
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
