@@ -152,20 +152,30 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
 
 	uint16_t intersectionId = spat->intersections.list.array[0]->id.id;
         uint16_t intersectionId_sw = __builtin_bswap16(abs(intersectionId));
-        std::stringstream intersectionId_int_hex;
-        intersectionId_int_hex<<std::hex<<intersectionId_sw;
-        std::stringstream intersectionId_hex;
-        intersectionId_hex<<intersectionId_int_hex.str()[0]<<intersectionId_int_hex.str()[1]<<' '<<intersectionId_int_hex.str()[2]<<intersectionId_int_hex.str()[3];
+	std::stringstream intersectionId_size;
+	intersectionId_size << intersectionId;
+	std::stringstream intersectionId_int_hex;
+        if (intersectionId_size.str().length() == 1)
+	{
+		intersectionId_int_hex<<"0"<<std::hex<<intersectionId_sw;
+	        unsigned int intersectionId_size2 = intersectionId_int_hex.str().size();
+		std::stringstream intersectionId_hex;
+        	intersectionId_hex<<intersectionId_int_hex.str()[1]<<' '<<intersectionId_int_hex.str()[2]<<intersectionId_int_hex.str()[3];
+	}
+	else
+		intersectionId_int_hex<<std::hex<<intersectionId_sw;
+                std::stringstream intersectionId_hex;
+                intersectionId_hex<<intersectionId_int_hex.str()[0]<<intersectionId_int_hex.str()[1]<<' '<<intersectionId_int_hex.str()[2]<<intersectionId_int_hex.str()[3];
 	
 	std::string interstatus = std::bitset<8>(spat->intersections.list.array[0]->status.buf).to_string();
-	        uint8_t interstatint_sw = (uint8_t) stoi(interstatus);
+	int interstatint_sw = stoi(interstatus);
         std::stringstream interstatint_size;
         interstatint_size << interstatint_sw;
         std::stringstream interstatint_int_hex;
         if (interstatint_size.str().length() == 1)
         {
                 interstatint_int_hex<<"0"<<std::hex<<interstatint_sw;
-                uint8_t interstatint_size2 = interstatint_int_hex.str().size();
+                unsigned int interstatint_size2 = interstatint_int_hex.str().size();
                 std::stringstream interstatint_hex;
                 interstatint_hex<<interstatint_int_hex.str()[1];
         }
@@ -204,11 +214,12 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
         else{
                 spatmillis16_hex<<spatmillis16_int_hex.str()[2]<<spatmillis16_int_hex.str()[3]<<' '<<spatmillis16_int_hex.str()[0]<<spatmillis16_int_hex.str()[1];
         }
-        //Add is_cert_present
+
+	//Add is_cert_present
         std::stringstream IsCertPresent_hex;
         IsCertPresent_hex<<"00";
 
-	int spat_size;
+	uint16_t spat_size;
         if (routeableMsg.get_payload_str().length()%4 == 0){
                 spat_size = routeableMsg.get_payload_str().length()/2;
         }
@@ -217,8 +228,22 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
         }
         std::stringstream spat_size_int_hex;
         spat_size_int_hex<<std::hex<<spat_size;
-        std::stringstream spat_size_hex;
-        spat_size_hex<<spat_size_int_hex.str()[0]<<spat_size_int_hex.str()[1];
+        cout<<"OG size: "<<spat_size_int_hex.str()<<endl;
+	std::stringstream spat_size_hex;
+	if (spat_size_int_hex.str()[2] == NULL){
+                cout<<"If"<<endl;
+		spat_size_hex<<"00"<<' '<<spat_size_int_hex.str()[0]<<spat_size_int_hex.str()[1];
+        }
+	else if (spat_size_int_hex.str()[3] == NULL){
+                cout<<"Else If"<<endl;
+                spat_size_hex<<spat_size_int_hex.str()[2]<<"0"<<' '<<spat_size_int_hex.str()[0]<<spat_size_int_hex.str()[1];
+        }
+	else{
+		cout<<"Else"<<endl;
+		spat_size_hex<<spat_size_int_hex.str()[2]<<spat_size_int_hex.str()[3]<<' '<<spat_size_int_hex.str()[0]<<spat_size_int_hex.str()[1];
+	}
+	
+	cout<<"Final: "<<spat_size_hex.str()<<endl;
 	
 	SpatRoot = cJSON_CreateObject(); // create root node
         SpatMessageContent = cJSON_CreateArray(); // create root array
