@@ -1,7 +1,7 @@
 FROM ubuntu:bionic-20190807
 
 
-RUN apt-get update  && apt-get install -y cmake sudo gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev
+RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
@@ -30,7 +30,7 @@ RUN /home/V2X-Hub/container/library.sh
 RUN ldconfig
 
 WORKDIR /home/V2X-Hub/
-RUN mkdir -p ~/ext
+RUN mkdir -p /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
 WORKDIR /home/V2X-Hub/ext/libwebsockets/
@@ -44,6 +44,14 @@ WORKDIR /home/V2X-Hub/ext/qhttpengine
 RUN cmake .
 RUN make 
 RUN make install
+
+WORKDIR /home/V2X-Hub/ext/ 
+RUN git clone https://github.com/HowardHinnant/date.git
+WORKDIR /home/V2X-Hub/ext/date
+RUN cmake .
+RUN make
+RUN make install
+RUN ldconfig 
 
 WORKDIR /home/V2X-Hub/ext/server
 RUN cmake .
@@ -96,6 +104,8 @@ RUN ln -s ../bin CARMACloudPlugin/bin
 RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
 RUN ln -s ../bin MobilityOperationPlugin/bin
 RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperationPlugin MobilityOperationPlugin/manifest.json
+RUN ln -s ../bin ODELoggerPlugin/bin
+RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
 
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
@@ -118,7 +128,7 @@ RUN mkdir /var/www/plugins/.ssl
 RUN chown plugin .ssl
 RUN chgrp www-data .ssl
 WORKDIR /var/www/plugins/.ssl/
-RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tmxcmd.crt -subj "/CN= <your website url> " -days 3650
+RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tmxcmd.crt -subj "/CN= <127.0.0.1> " -days 3650
 RUN chown plugin *
 RUN chgrp www-data *
 WORKDIR /home/V2X-Hub/src/v2i-hub/
@@ -137,8 +147,8 @@ RUN tmxctl --plugin-install MessageLoggerPlugin.zip
 RUN tmxctl --plugin-install PedestrianPlugin.zip
 RUN tmxctl --plugin-install TimPlugin.zip
 RUN tmxctl --plugin-install CARMACloudPlugin.zip
-
 RUN tmxctl --plugin-install MobilityOperationPlugin.zip
+RUN tmxctl --plugin-install ODELoggerPlugin.zip
 
 RUN sudo mkdir /home/V2X-Hub/.base-image 
 
