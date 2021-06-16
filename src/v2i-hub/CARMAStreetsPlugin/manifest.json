@@ -1,0 +1,43 @@
+{
+	"name":"CARMAStreetsPlugin",
+	"description":"Plugin to communicate with CARMA Streets via Apache Kafka",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/CARMAStreetsPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"TMSG03-P",
+			"description":"..."
+		}
+	],
+	"configuration":[
+		{
+			"key":"receiveTopic",
+			"default":"v2xhub_out",
+			"description":"Apache Kafka topic plugin will receive message from."
+		},
+		{
+			"key":"transmitTopic",
+			"default":"v2xhub_in",
+			"description":"Apache Kafka topic plugin will transmit message to."
+		},
+		{
+			"key":"KafkaBrokerIp",
+			"default":"127.0.0.1",
+			"description":"IP of Apache Kafka broker."
+		},
+		{
+			"key":"KafkaBrokerPort",
+			"default":"9092",
+			"description":"Port of Apache Kafka broker."
+		},
+		{
+			"key":"MobilityOperationStrategies",
+			"default":"carma/port_drayage,TruckInspection",
+			"description":"A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
+		}
+		
+	]
+}
