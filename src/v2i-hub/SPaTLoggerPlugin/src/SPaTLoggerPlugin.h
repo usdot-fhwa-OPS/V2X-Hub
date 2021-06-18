@@ -23,19 +23,27 @@
 #include "PluginClient.h"
 #include "PluginDataMonitor.h"
 
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <chrono>
 #include <atomic>
 #include <thread>
-//#include <DecodedSPaTMessage.h>
+#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/SpatMessage.hpp>
-//#include <BasicSafetyMessage.h>
+#include <SPAT.h>
 #include <tmx/messages/auto_message.hpp>
-
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
+using namespace boost::filesystem;
 
 
 namespace SPaTLoggerPlugin
@@ -60,7 +68,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleSPaTMessage(SpatMessage &msg, routeable_message &routeableMsg);
+	void HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg);
 	void GetInt32(unsigned char *buf, int32_t *value)
 	{
 		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
@@ -70,13 +78,20 @@ private:
 	DATA_MONITOR(_frequency);   // Declares the
 
 	void OpenSPaTLogFile();
-	void CheckSPaTLogFileSizeAndRename(bool createNewFile=false);
+	void CheckSPaTLogFileSizeAndRename();
 	std::string  GetCurDateTimeStr();
 
-	std::ofstream _logFile;
-	std::string _filename, _fileDirectory;
-	std::string _curFilename;
-	int _maxFilesizeInMB;
+        std::ofstream _logFile;
+        std::ofstream _logFilebin;
+        std::string _cvmsgtype;
+        std::string _filename, _fileDirectory;
+        std::string _curFilename;
+        std::string _curFilenamebin;
+        std::string _newFilename;
+        std::string _curFilenamesize;
+        int _logFilesize;
+        int _logFilebinsize;
+        int _maxFilesizeInMB;
 
 };
 std::mutex _cfgLock;
