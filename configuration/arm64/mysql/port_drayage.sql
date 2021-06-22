@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.7.33, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 5.7.34, for Linux (x86_64)
 --
 -- Host: 127.0.0.1    Database: PORT_DRAYAGE
 -- ------------------------------------------------------
--- Server version	5.7.34
+-- Server version	5.7.35
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -16,24 +16,58 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `freight`
+-- Current Database: `PORT_DRAYAGE`
 --
-CREATE DATABASE IF NOT EXISTS `PORT_DRAYAGE`;
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `PORT_DRAYAGE` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
 USE `PORT_DRAYAGE`;
+
+--
+-- Table structure for table `first_action`
+--
+
+DROP TABLE IF EXISTS `first_action`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `first_action` (
+  `cmv_id` int(11) NOT NULL,
+  `cargo_id` varchar(20) DEFAULT NULL,
+  `cargo` tinyint(1) NOT NULL,
+  `destination_lat` int(11) NOT NULL,
+  `destination_long` int(11) NOT NULL,
+  `operation` varchar(20) NOT NULL,
+  `action_id` varchar(36) NOT NULL,
+  `next_action` varchar(36) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `first_action`
+--
+
+LOCK TABLES `first_action` WRITE;
+/*!40000 ALTER TABLE `first_action` DISABLE KEYS */;
+INSERT INTO `first_action` VALUES (123,NULL,0,389548890,-771481430,'PICK_UP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
+/*!40000 ALTER TABLE `first_action` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `freight`
+--
 
 DROP TABLE IF EXISTS `freight`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `freight` (
-  `cmv_id` int(11) DEFAULT NULL,
-  `cargo_id` int(11) DEFAULT NULL,
-  `cargo` tinyint(1) DEFAULT NULL,
-  `location` point DEFAULT NULL,
-  `destination` point DEFAULT NULL,
-  `operation` varchar(20) DEFAULT NULL,
-  `action_id` int(11) DEFAULT NULL,
-  `next_action` int(11) DEFAULT NULL
+  `cmv_id` int(11) NOT NULL,
+  `cargo_id` varchar(20) DEFAULT NULL,
+  `cargo` tinyint(1) NOT NULL,
+  `destination_lat` int(11) NOT NULL,
+  `destination_long` int(11) NOT NULL,
+  `operation` varchar(20) NOT NULL,
+  `action_id` varchar(36) NOT NULL,
+  `next_action` varchar(36) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -43,7 +77,7 @@ CREATE TABLE `freight` (
 
 LOCK TABLES `freight` WRITE;
 /*!40000 ALTER TABLE `freight` DISABLE KEYS */;
-INSERT INTO `freight` VALUES (1,2,0,_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0','MOVING_TO_LOADING',32,33),(1,2,0,_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0','MOVING_TO_LOADING',33,34),(1,2,0,_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',_binary '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0','MOVING_TO_LOADING',34,35);
+INSERT INTO `freight` VALUES (123,'CARGO PACKAGE ABC',1,389549780,-771475790,'EXIT_STAGING_AREA','32320c8a-e422-11eb-a8cc-000c29ae389d','4ace39e6-ee36-11eb-9a03-0242ac130003'),(123,NULL,0,389548890,-771481430,'PICK_UP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
 /*!40000 ALTER TABLE `freight` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -56,4 +90,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-05-07 13:08:54
+-- Dump completed on 2021-07-21 11:42:55
