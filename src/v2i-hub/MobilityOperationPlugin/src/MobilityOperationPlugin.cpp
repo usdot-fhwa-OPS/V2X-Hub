@@ -13,54 +13,38 @@ namespace MobilityOperationPlugin {
 
 
 
-/**
- * Construct a new MobililtyOperationPlugin with the given name.
- *
- * @param name The name to give the plugin for identification purposes
- */
+
 MobilityOperationPlugin::MobilityOperationPlugin(string name) :
 		PluginClient(name) {
-		
-	lock_guard<mutex> lock(_cfgLock);
-	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
-	//Set config values
-	GetConfigValue<string>("Database_Username", _database_username);
-    GetConfigValue<string>("Database_Password", _database_password);
-	GetConfigValue<string>("Database_IP",_database_ip);
-	GetConfigValue<uint16_t>("Database_Port",_database_port);
-	GetConfigValue<string>("Database_Name", _database_name);
+	
 	AddMessageFilter < tsm3Message > (this, &MobilityOperationPlugin::HandleMobilityOperationMessage);
 	SubscribeToMessages();
-	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
-	try {
-		driver = get_driver_instance();
-		con = driver->connect(connection_string,_database_username,_database_password);
-		con->setSchema("PORT_DRAYAGE");
-	}
-	catch ( sql::SQLException &e ) {
-		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		FILE_LOG(logERROR) << "Error occurred in file " << __FILE__ << " on line " << __LINE__  << std::endl;
-		FILE_LOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		FILE_LOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
-	}
+
 }
 
 MobilityOperationPlugin::~MobilityOperationPlugin() {
 }
 
 void MobilityOperationPlugin::UpdateConfigSettings() {
+	// Update configuration
 	lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("Database_Username", _database_username);
-    GetConfigValue<string>("Database_Password", _database_password);
+	GetConfigValue<string>("Database_Password", _database_password);
 	GetConfigValue<string>("Database_IP",_database_ip);
 	GetConfigValue<uint16_t>("Database_Port",_database_port);
 	GetConfigValue<string>("Database_Name", _database_name);
+	std::string loglevel;
+	GetConfigValue<string>("LogLevel", loglevel);
+
+	FILELog::ReportingLevel() = FILELog::FromString(loglevel);
+
+	// Create DB connection
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
 	try {
 		driver = get_driver_instance();
 		con = driver->connect(connection_string,_database_username,_database_password);
-		//
 		con->setSchema(_database_name);
+		
 	}
 	catch ( sql::SQLException &e ) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
@@ -68,8 +52,17 @@ void MobilityOperationPlugin::UpdateConfigSettings() {
 		FILE_LOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
 		FILE_LOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
 	}
-	
+	// Initialize PreparedStatements for MySQL
+	try {
+		next_action_id = con->prepareStatement("SELECT next_action FROM freight WHERE action_id = ? ");
+		next_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
+		first_action = con->prepareStatement("SELECT * FROM first_action WHERE cmv_id = ? " );
+	}
+	catch(std::exception &e) {
+		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
+	}
 }
+
 
 void MobilityOperationPlugin::OnConfigChanged(const char *key, const char *value) {
 	PluginClient::OnConfigChanged(key, value);
@@ -78,6 +71,8 @@ void MobilityOperationPlugin::OnConfigChanged(const char *key, const char *value
 
 
 void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
+
+	// Retrieve J2735 Message
 	auto mobilityOperation = msg.get_j2735_data();
 	FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
 	FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
@@ -93,25 +88,13 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 	std::string strategy = strat.str();
 	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
+			// Convert JSON payload to PortDrayage_Object
 			read_json(payload, pr);
-			pd->cmv_id = (int) pr.get_child("cmv_id").get_value<int>();
-			pd->cargo_id = pr.get_child("cargo_id").get_value<int>();
-			pd->cargo =pr.get_child("cargo").get_value<bool>();
-			pd->operation = pr.get_child("operation").get_value<std::string>();
-			auto &location = pr.get_child("location");
-			pd->location_long =location.get_child("longitude").get_value<float>();
-			pd->location_lat = location.get_child("latitude").get_value<float>();
-			auto &destination = pr.get_child("destination");
-			pd->destination_long =destination.get_child("longitude").get_value<float>();
-			pd->destination_lat = destination.get_child("latitude").get_value<float>();
-			pd->action_id = pr.get_child("action_id").get_value<int>();
-			pd->next_action = pr.get_child("next_action").get_value<int>();
-
+			*pd = readPortDrayageJson( pr );
 		}
 		catch( const ptree_error &e ) {
 			FILE_LOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
-
 		FILE_LOG(logERROR) << "Port Drayage Message" << std::endl << 
 			"cmv_id : " << pd->cmv_id << std::endl <<
 			"cargo_id : " << pd->cargo_id << std::endl <<
@@ -126,20 +109,17 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 
 	}
 	try{
-		stmt = con->createStatement();
-		std::string queryString = "SELECT cmv_id, cargo_id, cargo, ST_X(location), ST_Y(location), ST_X(destination), ST_Y(destination), operation, action_id, next_action FROM freight WHERE action_ID = ";
-		queryString.append(std::to_string(pd->next_action));
-		res = stmt->executeQuery( queryString );
-		while ( res->next() ) {
-			FILE_LOG(logERROR) << "Column cmv_id: " << res->getString("cmv_id") << std::endl;
-			FILE_LOG(logERROR) << "Column cargo_id: " << res->getString("cargo_id") << std::endl;
-			FILE_LOG(logERROR) << "Column cargo: " << res->getString("cargo") << std::endl;
-			FILE_LOG(logERROR) << "Column location: (" << res->getString("ST_X(location)") << ", " << res->getString("ST_Y(location)") << ")" << std::endl;
-			FILE_LOG(logERROR) << "Column destination: (" << res->getString("ST_X(destination)") << ", " << res->getString("ST_Y(destination)") << ")" << std::endl;
-			FILE_LOG(logERROR) << "Column operation: " << res->getString("operation") << std::endl;
-			FILE_LOG(logERROR) << "Column action_id: " << res->getString("action_id") << std::endl;
-			FILE_LOG(logERROR) << "Column next_action: " << res->getString("next_action") << std::endl;
+		// Retrieve first or next action
+		PortDrayage_Object *new_action = new PortDrayage_Object();
+		if ( pd->action_id.empty() ) {
+			PLOG(logERROR) << "Retrieving first action." << std::endl;
+			*new_action = retrieveFirstAction( pd->cmv_id );
 		}
+		else {
+			PLOG(logERROR) << "Retrieving next action." << std::endl;
+			*new_action = retrieveNextAction( pd->action_id );
+		}
+
 		
 		// Initializer vars
 		tsm3Message mob_msg;
@@ -148,15 +128,11 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 		std::unique_ptr<tsm3EncodedMessage> msg;
 
 		//  Create operationParams payload json
-		ptree payload;
-		createPortDrayageJson( *pd, payload);
-		std::stringstream pl;
-		write_json( pl, payload);
+		ptree payload = createPortDrayageJson( *new_action );
 
 		// Create XML MobilityOperationMessage
-		ptree message;
+		ptree message = createMobilityOperationXml( payload );
 		std::stringstream content;
-		createMobilityOperationXml( message, payload );
 		write_xml(content, message);
 
 		FILE_LOG(logERROR) << "XML outgoing message : " << std::endl << content.str();
@@ -193,36 +169,32 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 
 }
 
-/**
- * Method to create port drayage payload JSON ptree using a PortDrayage_Object.
- * 
- * @param pd_obj Port Drayage object.
- * @param 
- */
-void MobilityOperationPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj, ptree &json_payload) {
-	json_payload.put("cmv_id", pd_obj.cmv_id );
-	json_payload.put("cargo_id", pd_obj.cargo_id );
+
+ptree MobilityOperationPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
+	ptree json_payload;
+	json_payload.put<int>("cmv_id", pd_obj.cmv_id );
 	json_payload.put("cargo", pd_obj.cargo );
+	if ( pd_obj.cargo ) {
+		json_payload.put("cargo_id", pd_obj.cargo_id );
+	}
 	ptree location;
-	location.put("latitude", pd_obj.location_lat);
-	location.put("longitude", pd_obj.location_long);
+	location.put<int>("latitude", pd_obj.location_lat);
+	location.put<int>("longitude", pd_obj.location_long);
 	ptree destination;
-	destination.put("latitude", pd_obj.destination_lat);
-	destination.put("longitude", pd_obj.destination_long);
+	destination.put<int>("latitude", pd_obj.destination_lat);
+	destination.put<int>("longitude", pd_obj.destination_long);
 	json_payload.put_child("location", location);
 	json_payload.put_child("destination",destination);
 	json_payload.put("operation", pd_obj.operation );
 	json_payload.put("action_id", pd_obj.action_id );
-	json_payload.put("next_action", pd_obj.next_action );
+	return json_payload;
 }
 
-/**
- * Method to create MobilityOperation XML ptree to allow for UPER encoding.
- */
-void MobilityOperationPlugin::createMobilityOperationXml( ptree &mobilityOperationXml, ptree json_payload) {
+
+ptree MobilityOperationPlugin::createMobilityOperationXml( ptree &json_payload ) {
+	ptree mobilityOperationXml;
 	std::stringstream pl;
 	write_json( pl, json_payload);
-
 	// Create XML MobilityOperationMessage
 	ptree message;
 	ptree header;
@@ -233,12 +205,150 @@ void MobilityOperationPlugin::createMobilityOperationXml( ptree &mobilityOperati
 	header.put("targetStaticId", "UNSET");
 	header.put("hostBSMId", "00000000");
 	header.put("planId", "00000000-0000-0000-0000-000000000000");
-	header.put("timestamp","0000000000000000000");
+	header.put("timestamp", "0000000000000000000");
 	message.put_child("header", header);
 	message.put_child("body",body);
 	mobilityOperationXml.put_child( "TestMessage03", message);
+	return mobilityOperationXml;
 }
 
+
+MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveNextAction( std::string action_id ) {
+	try{
+		// Set action_id
+		next_action_id->setString(1,action_id);
+		// Get current action
+		sql::ResultSet *cur_action = next_action_id->executeQuery();
+		if ( cur_action->first() ) {
+			FILE_LOG(logERROR) << "Column next_action: " << cur_action->getString("next_action") << std::endl;
+			// Set action_id to next_action
+			next_action->setString(1,cur_action->getString("next_action"));
+			// Retrieve next action
+			sql::ResultSet *cur_action = next_action->executeQuery();
+			// Create PortDrayage_Object
+			PortDrayage_Object *rtn = new PortDrayage_Object();
+			if ( cur_action->first() )  {
+				rtn->cmv_id = cur_action->getInt("cmv_id");
+				rtn->cargo = cur_action->getBoolean("cargo");
+				rtn->operation = cur_action->getString("operation");
+				rtn->action_id = cur_action->getString("action_id");
+				// If cargo present, retrieve cargo id
+				if ( rtn->cargo ) {
+					rtn->cargo_id = cur_action->getString("cargo_id");
+				}  
+				rtn->destination_long = cur_action->getInt("destination_long");
+				rtn->destination_lat =  cur_action->getInt("destination_lat");
+				
+				FILE_LOG(logERROR) << "Port Drayage Message : " << std::endl << 
+					"cmv_id : " << rtn->cmv_id << std::endl <<
+					"cargo_id : " << rtn->cargo_id << std::endl <<
+					"cargo : " << rtn->cargo << std::endl <<
+					"operation : " << rtn->operation << std::endl <<
+					"location_lat : " << rtn->location_lat << std::endl <<
+					"location_long : " << rtn->location_long << std::endl <<
+					"destination_lat : " << rtn->destination_lat << std::endl <<
+					"destination_long : " << rtn->destination_long << std::endl <<
+					"action_id : " << rtn->action_id << std::endl <<
+					"next_action : " << rtn->next_action << std::endl;
+				return *rtn;
+			}
+
+		}
+		else {
+			FILE_LOG(logERROR) << "No action with id : " << action_id << " found!";
+		}
+		
+	}
+	catch ( sql::SQLException &e ) {
+		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
+		FILE_LOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
+		FILE_LOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+	}
+	
+}
+
+MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveFirstAction( uint32_t cmv_id ) {
+	try{
+		// Set cmv_id
+		first_action->setInt(1,cmv_id);
+		// Retrieve first action of first_action table
+		sql::ResultSet *cur_action = first_action->executeQuery();
+		if ( cur_action->first() ) {
+			FILE_LOG(logERROR) << "Column cmv_id: " << cur_action->getInt("cmv_id") << std::endl
+			<< "Column cargo_id: " << cur_action->getString("cargo_id") << std::endl
+			<< "Column cargo: " << cur_action->getBoolean("cargo") << std::endl
+			<< "Column destination: (" << cur_action->getInt("destination_long") << ", " << cur_action->getInt("destination_lat") << ")" << std::endl
+			<< "Column operation: " << cur_action->getString("operation") << std::endl
+			<< "Column action_id: " << cur_action->getString("action_id") << std::endl
+			<< "Column next_action: " << cur_action->getString("next_action") << std::endl;
+			// Create Port Drayage object
+			PortDrayage_Object *rtn = new PortDrayage_Object();
+			rtn->cmv_id = cur_action->getInt("cmv_id");
+			rtn->cargo = cur_action->getBoolean("cargo");
+			rtn->operation = cur_action->getString("operation");
+			rtn->action_id = cur_action->getString("action_id");
+			// If cargo present, retrieve cargo id
+			if ( rtn->cargo ) {
+				rtn->cargo_id = cur_action->getString("cargo_id");
+			}  
+			rtn->destination_long = cur_action->getInt("destination_long");
+			rtn->destination_lat =  cur_action->getInt("destination_lat");
+			rtn->next_action =cur_action->getString("next_action");
+			FILE_LOG(logERROR) << "Port Drayage Message" << std::endl << 
+				"cmv_id : " << rtn->cmv_id << std::endl <<
+				"cargo_id : " << rtn->cargo_id << std::endl <<
+				"cargo : " << rtn->cargo << std::endl <<
+				"operation : " << rtn->operation << std::endl <<
+				"location_lat : " << rtn->location_lat << std::endl <<
+				"location_long : " << rtn->location_long << std::endl <<
+				"destination_lat : " << rtn->destination_lat << std::endl <<
+				"destination_long : " << rtn->destination_long << std::endl <<
+				"action_id : " << rtn->action_id << std::endl <<
+				"next_action : " << rtn->next_action << std::endl;
+			return *rtn;
+		}
+		else {
+			FILE_LOG(logERROR) << "No first action for cmv_id : " << cmv_id << " found!";
+		}
+		
+
+	}
+	catch ( sql::SQLException &e ) {
+		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
+		FILE_LOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
+		FILE_LOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+	}
+	
+}
+
+
+MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::readPortDrayageJson( ptree &pr ) {
+	PortDrayage_Object *pd = new PortDrayage_Object();
+	try {
+		pd->cmv_id = pr.get_child("cmv_id").get_value<int>();
+		boost::optional< ptree& > child = pr.get_child_optional( "action_id" );
+		if( !child )
+		{
+			PLOG(logERROR) << "No action_id present! This is the vehicle's first action" << std::endl;
+		}
+		else {
+			pd->action_id = child.get_ptr()->get_value<std::string>();
+			PLOG(logERROR) << "Action ID complete : " << pd->action_id << std::endl;
+
+		}
+		return *pd;
+
+	}
+	catch( const ptree_error &e ) {
+		FILE_LOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
+	}
+}
+
+/**
+ * Trigger when Plugin state changes
+ * 
+ * @param state IvpPluginState
+ */ 
 void MobilityOperationPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
@@ -249,17 +359,10 @@ void MobilityOperationPlugin::OnStateChange(IvpPluginState state) {
 
 
 int MobilityOperationPlugin::Main() {
-	FILE_LOG(logINFO) << "Starting plugin.";
-
 	uint64_t lastSendTime = 0;
-
 	while (_plugin->state != IvpPluginState_error) {
-		
-
-
 		usleep(100000); //sleep for microseconds set from config.
 	}
-
 	return (EXIT_SUCCESS);
 }
 }
