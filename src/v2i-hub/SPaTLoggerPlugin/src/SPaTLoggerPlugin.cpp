@@ -271,9 +271,9 @@ void SPaTLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &ro
 
 
 /**
- *  Opens a new log file in the directory specified of specified name for logging SPaT messages and
- *  inserts a header row with names of fields that will be logged when data is received. If a log file
- *  with the same name already exists before opening a new file, it's renamed with current timestamp suffix.
+ * Opens a new log file in the directory specified of specified name for logging SPaT messages. Once the
+ * current binary logfile size reaches the configurable maxSize this file is closed, renamed by the current
+ * time and date and moved to a /ode/ directory where it can be sent to an ODE using the filewatchscript.sh.
  */
 void SPaTLoggerPlugin::OpenSPaTLogFile()
 {
@@ -288,14 +288,17 @@ void SPaTLoggerPlugin::OpenSPaTLogFile()
         std::string newbinFilename = _fileDirectory + "/ode/" + _filename + GetCurDateTimeStr() + ".bin";
 
         int error;
-        error = std::rename(_curFilename.c_str(), newFilename.c_str() );
-        if ( error != 0 ) {
-                FILE_LOG(logERROR) << "Failed to mv " << _curFilename.c_str() << " to " << newFilename.c_str() << std::endl;
-        }
-        error = std::rename(_curFilenamebin.c_str(), newbinFilename.c_str() );
-        if ( error != 0 ) {
-                FILE_LOG(logERROR) << "Failed to mv " << _curFilenamebin.c_str() << " to " << newbinFilename.c_str() << std::endl;
-        }
+        if ( boost::filesystem::exists( _curFilenamebin.c_str() ) ) {
+                error = std::rename(_curFilename.c_str(), newFilename.c_str() );
+    	        if ( error != 0 ) {
+        	        FILE_LOG(logERROR) << "Failed to mv " << _curFilename.c_str() << " to " << newFilename.c_str() << std::endl;
+    	        }
+	
+    	        error = std::rename(_curFilenamebin.c_str(), newbinFilename.c_str() );
+                if ( error != 0 ) {
+                        FILE_LOG(logERROR) << "Failed to mv " << _curFilenamebin.c_str() << " to " << newbinFilename.c_str() << std::endl;
+                }
+	}
         _logFile.open(_curFilename);
         _logFilebin.open(_curFilenamebin, std::ios::out | std::ios::binary | std::ios::app);
 	if (!_logFile.is_open())

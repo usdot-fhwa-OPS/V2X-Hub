@@ -33,17 +33,18 @@
 #include <chrono>
 #include <thread>
 #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
-//#include <DecodedBsmMessage.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <BasicSafetyMessage.h>
 #include <tmx/messages/auto_message.hpp>
+#include <boost/filesystem.hpp>
 
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
+using namespace boost::filesystem;
 
 
 namespace MessageLoggerPlugin
@@ -78,12 +79,11 @@ private:
 	DATA_MONITOR(_frequency);   // Declares the
 
 	void OpenMSGLogFile();
-	void CheckMSGLogFileSizeAndRename(bool createNewFile=false);
+	void CheckMSGLogFileSizeAndRename();
 	std::string  GetCurDateTimeStr();
 
 	std::ofstream _logFile;
 	std::ofstream _logFilebin;
-	std::string _cvmsgtype;
 	std::string _filename, _fileDirectory;
 	std::string _curFilename;
 	std::string _curFilenamebin;
