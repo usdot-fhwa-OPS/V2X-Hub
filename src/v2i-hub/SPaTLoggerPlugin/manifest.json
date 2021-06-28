@@ -15,14 +15,14 @@
 			"description":"Maximum size of the SPaT log file in mb."
 		},
 		{
-			"key":"File Location",
-			"default":"/var/log/tmx",
-			"description":"The location where the log files are stored."
-		},
-		{
 			"key":"Filename",
 			"default":"spatTx",
 			"description":"Default name of the SPaT log file."
+		},
+		{
+			"key":"File Location",
+			"default":"/var/log/tmx",
+			"description":"The location where the log files are stored. DO NOT edit while using docker deployment of V2X-Hub!"
 		}
 
 

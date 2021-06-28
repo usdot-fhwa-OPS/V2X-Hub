@@ -1,7 +1,7 @@
 {
 	"name":"MessageLoggerPlugin",
 	"description":"Listens for J2735 messages and logs them in a file in JSON format.",
-	"version":"5.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/MessageLoggerPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
@@ -15,19 +15,14 @@
 			"description":"Maximum size of the BSM log file in mb."
 		},
 		{
+			"key":"Filename",
+			"default":"bsmTx",
+			"description":"Default name of the BSM log file."
+		},
+		{
 			"key":"File Location",
 			"default":"/var/log/tmx",
-			"description":"The location where the log files are stored."
-		},
-		{
-			"key":"Messagetype",
-			"default":"BSM",
-			"description":"The types of messages to be logged."
-		},
-		{
-			"key":"Filename",
-			"default":"BSMLog",
-			"description":"Default name of the BSM log file."
+			"description":"The location where the log files are stored. DO NOT edit while using docker deployment of V2X-Hub!"
 		}
 
 

@@ -30,21 +30,10 @@ MessageLoggerPlugin::MessageLoggerPlugin(string name): PluginClient(name)
 {
 	PLOG(logDEBUG)<< "In MessageLoggerPlugin Constructor";
 	// The log level can be changed from the default here.
-	//FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
+	// FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
-	// Critical section
-	std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue("File Location", _fileDirectory);
-	GetConfigValue("File Size In MB", _maxFilesizeInMB);
-	GetConfigValue("Messagetype", _cvmsgtype);
-	GetConfigValue("Filename", _filename);
-	_curFilename = _fileDirectory + "/" + _filename + ".json";
-	_curFilenamebin = _fileDirectory + "/" + _filename + ".bin";
-	_curFilenamesize = _curFilenamebin;
 
-	OpenMSGLogFile();
 	// Add a message filter and handler for each message this plugin wants to receive.
-	//AddMessageFilter<DecodedBsmMessage>(this, &BsmLoggerPlugin::HandleDecodedBsmMessage);
 	AddMessageFilter < BsmMessage > (this, &MessageLoggerPlugin::HandleBasicSafetyMessage);
 
 	// Subscribe to all messages specified by the filters above.
@@ -83,15 +72,14 @@ void MessageLoggerPlugin::UpdateConfigSettings()
 	__frequency_mon.check();
 
 	std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue("File Location", _fileDirectory);
+    GetConfigValue("File Location", _fileDirectory);
 	GetConfigValue("File Size In MB", _maxFilesizeInMB);
-	GetConfigValue("Messagetype", _cvmsgtype);
 	GetConfigValue("Filename", _filename);
 	std::string oldFilename = _curFilename;
 	std::string oldFilenamebin = _curFilenamebin;
 	_curFilename = _fileDirectory + "/" + _filename + ".json";
 	_curFilenamebin = _fileDirectory + "/" + _filename + ".bin";
-
+	_curFilenamesize = _curFilenamebin;
 	if (_curFilename.compare (oldFilename) !=0 )
 	{
 		_logFile.close();
@@ -124,7 +112,6 @@ void MessageLoggerPlugin::OnStateChange(IvpPluginState state)
 	if (state == IvpPluginState_registered)
 	{
 		UpdateConfigSettings();
-		//SetStatus("ReceivedMaps", 0);
 	}
 }
 
@@ -138,7 +125,8 @@ void MessageLoggerPlugin::OnStateChange(IvpPluginState state)
  */
 void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 		routeable_message &routeableMsg) {
-
+	// check size of the log file and open new one if needed
+	CheckMSGLogFileSizeAndRename();
 	char *BsmOut;
 	cJSON *BsmRoot, *BsmMessageContent, *_BsmMessageContent;
 
@@ -409,26 +397,42 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg,
 
 
 /**
- *  Opens a new log file in the directory specified of specified name for logging BSM messages and
- *  inserts a header row with names of fields that will be logged when data is received. If a log file
- *  with the same name already exists before opening a new file, it's renamed with current timestamp suffix.
+ * Opens a new log file in the directory specified of specified name for logging BSM messages. Once the
+ * current binary logfile size reaches the configurable maxSize this file is closed, renamed by the current
+ * time and date and moved to a /ode/ directory where it can be sent to an ODE using the filewatchscript.sh.
  */
 void MessageLoggerPlugin::OpenMSGLogFile()
 {
 	PLOG(logDEBUG) << "Message Log File: " << _curFilename << std::endl;;
 	//rename logfile if one already exists
-	std::string newFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".json";
-        std::string newbinFilename = _fileDirectory + "/" + _filename + GetCurDateTimeStr() + ".bin";
+	if ( !boost::filesystem::exists( _fileDirectory + "/json/") ){
+			boost::filesystem::create_directory( _fileDirectory + "/json/");            
+	}
+	if ( !boost::filesystem::exists( _fileDirectory + "/ode/") ){
+			boost::filesystem::create_directory( _fileDirectory + "/ode/");            
+	}
+	std::string newFilename = _fileDirectory + "/json/" + _filename + GetCurDateTimeStr() + ".json";
+    std::string newbinFilename = _fileDirectory + "/ode/" + _filename + GetCurDateTimeStr() + ".bin";
 	std::string _newFilename = newbinFilename.c_str();
-	std::rename(_curFilename.c_str(), newFilename.c_str());
-	std::rename(_curFilenamebin.c_str(), newbinFilename.c_str());
-	_logFile.open(_curFilename);
-	_logFilebin.open(_curFilenamebin, std::ios::out | std::ios::binary | std::ios::app);
+	int error;
+	if ( boost::filesystem::exists( _curFilenamebin.c_str() ) ) {
+    	error = std::rename(_curFilename.c_str(), newFilename.c_str() );
+    	if ( error != 0 ) {
+        	FILE_LOG(logERROR) << "Failed to mv " << _curFilename.c_str() << " to " << newFilename.c_str() << std::endl;
+    	}
+	
+    	error = std::rename(_curFilenamebin.c_str(), newbinFilename.c_str() );
+    	if ( error != 0 ) {
+        	FILE_LOG(logERROR) << "Failed to mv " << _curFilenamebin.c_str() << " to " << newbinFilename.c_str() << std::endl;
+    	}
+	}
+    _logFile.open(_curFilename);
+    _logFilebin.open(_curFilenamebin, std::ios::out | std::ios::binary | std::ios::app);
 	if (!_logFile.is_open())
 		std::cerr << "Could not open log : " << strerror(errno) <<  std::endl;
 	else
 	{
-		_logFile << "Message Log file" << GetCurDateTimeStr() << endl;
+		_logFile << "Message JSON Logs" << endl;
 
 	}
 }
@@ -437,7 +441,7 @@ void MessageLoggerPlugin::OpenMSGLogFile()
  * Checks the size of the logfile and opens a new_fileDirectory file if it's size is greater
  * than the max size specified.
  */
-void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename(bool createNewFile)
+void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename()
 {
 	if (_logFile.is_open())
 	{
@@ -448,7 +452,6 @@ void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename(bool createNewFile)
 		int curFilesizeInMB = _logFilesize/1048576;
 		if (curFilesizeInMB >= _maxFilesizeInMB)
 		{
-			createNewFile = true;
 			_logFile.close();
 			_logFilebin.close();
 			OpenMSGLogFile();
@@ -483,8 +486,7 @@ int MessageLoggerPlugin::Main()
 
 		this_thread::sleep_for(chrono::milliseconds(1000));
 
-		// check size of the log file and open new one if needed
-		CheckMSGLogFileSizeAndRename(true);
+
 	}
 
 	PLOG(logDEBUG) << "MessageLoggerPlugin terminating gracefully.";
