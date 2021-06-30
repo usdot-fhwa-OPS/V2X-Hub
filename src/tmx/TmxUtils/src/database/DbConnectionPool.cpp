@@ -120,17 +120,23 @@ void DbConnectionPool::SetConnectionUrl(std::string connectionUrl) {
 }
 
 std::string DbConnectionPool::GetPwd(){
-	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* EnvVar = "MYSQL_PASSWORD";
 	const char* pwd;
 	pwd = std::getenv(EnvVar);
 
 	if(pwd == NULL){
-		PLOG(logERROR) << "Unable to set MYSQL_ROOT_PASSWORD)";
+		PLOG(logERROR) << "Unable to set MYSQL_PASSWORD)";
 		return "";
 	}
 	else{
-		std::string PwdStr(pwd);
-		return PwdStr;
+		std::ifstream t(pwd);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		if ( buffer.str() != "") {
+			std::string PwdStr = buffer.str();
+			PLOG(logERROR)<<  "PWD " << PwdStr << "!" << std::endl;
+			return PwdStr;
+		}
 	}
 	return "";
 }
