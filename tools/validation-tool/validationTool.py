@@ -215,7 +215,7 @@ class TCPRecvHandle(socketserver.BaseRequestHandler):
         
 
 def runtcpServer(port):
-    with socketserver.TCPServer(('127.0.0.1', port), TCPRecvHandle) as server:
+    with socketserver.TCPServer(('', port), TCPRecvHandle) as server:
         print("Starting the TCP Server in localhost", "::", port)
         server.serve_forever()
 
