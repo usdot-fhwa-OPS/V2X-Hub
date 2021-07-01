@@ -12,9 +12,11 @@ The toolset can be installed either locally or through a docker container. Pleas
 
 *Local Install*:
 
-`sudo apt-get update -y && apt-get install -y python3-dev python3-pip git unzip python3-tk`
+`cd V2XHub/toosl/validation-tool`
 
-`git clone git@github.com:P1sec/pycrate.git`
+`sudo apt-get update -y && sudo apt-get install -y python3-dev python3-pip git unzip python3-tk`
+
+`git clone https://github.com/P1sec/pycrate.git`
 
 `cd pycrate`
 
@@ -74,7 +76,7 @@ The steps needed to run MAP test is given in figure below:
 5. Select the local file that is to be copied to the device. This can be sample MAP, TIM files or sample SPAT custom file. This file will also be used in validation test cases. 
 6. In the test setup block, input the test template file that defines which test categories are to be conducted. 
 7. Input the port number for the TCP server that is used by the application for receiving captured packets. 
-8. Input the bash script that can be run on the DUT for capturing the packets. These script is custom and can be edited based on need and device type. 
+8. Input the bash script that can be run on the DUT for capturing the packets. This command script is custom and can be edited based on need and device type. Change the HOST IP and HOST PORT to the host machine running the validation tool.  
 9. Hit the "Preview" button to view the sample message that is to be validated against as well as the set of check list that shows the different tests to be conducted. These new information are available in two new panes on the side. Any errors in the preview comes up in the debug pane. 
 11. Check/Uncheck any tests that are not needed to be run in Test Information pane. 
 12. Hit "Run" button and it does a couple of things:
