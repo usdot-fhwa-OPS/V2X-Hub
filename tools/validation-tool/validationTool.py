@@ -310,7 +310,7 @@ def preview():
     if( snifferscript==""):
         app.setLabel("er3","Empty sniffer script, Using default")
         app.setLabelBg("er3","red")
-        app.setTextArea("Sniffer Script","sudo tcpdump port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat 127.0.0.1 22222 ")
+        app.setTextArea("Sniffer Script","sudo tcpdump port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat <HOST IP> <HOST PORT>")
         
         
     
@@ -412,7 +412,7 @@ app.startLabelFrame("DUT ssh connection")
 app.setSticky("ew")
 app.addLabelEntry("Username")
 #app.setFocus("Username")
-app.setEntryDefault("Username","anjanrayamajhi")
+app.setEntryDefault("Username","")
 app.addLabelSecretEntry("Password")
 app.stopLabelFrame()
 app.startLabelFrame("DUT networking")
@@ -429,7 +429,7 @@ app.addRadioButton("loadfile","Yes",0,1,1,1)
 app.addRadioButton("loadfile","No",0,2,1,1)
 app.setRadioButtonChangeFunction("loadfile",loadfilechoice)
 app.addLabelEntry("Remote filepath")
-app.setEntryDefault("Remote filepath", "/home/anjanrayamajhi")
+app.setEntryDefault("Remote filepath", "")
 app.addLabelOpenEntry("Local sample file")
 app.stopLabelFrame()
 app.stopLabelFrame()
