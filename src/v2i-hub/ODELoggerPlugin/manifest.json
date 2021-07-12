@@ -1,7 +1,7 @@
 {
 	"name":"ODELoggerPlugin",
 	"description":"Listens for J2735 messages and realtime forwards them to ODE.",
-	"version":"5.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/ODELoggerPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
