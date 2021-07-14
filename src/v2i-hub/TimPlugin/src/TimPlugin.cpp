@@ -193,72 +193,49 @@ bool TimPlugin::TimDuration()
 {
 	PLOG(logDEBUG)<<"TimPlugin:: Reached in TimDuration";
 
-	string _endTime = ("23:59:59");
-
-	istringstream startTimDate(_startDate);
-        istringstream startTimTime(_startTime);
-        istringstream stopTimTime(_stopTime);
-
-	struct tm date_start;
-	startTimDate >> get_time( &date_start, "%m-%d-%Y" );
-	time_t secondsStartDate = mktime( & date_start );
+	ostringstream firstTimTime_;
+    firstTimTime_ << _startDate << " " << _startTime;
+    auto firstTime = firstTimTime_.str();
 
 	ostringstream lastTimTime_;
-        lastTimTime_ << _stopDate << " " << _endTime;
-        auto lastTime = lastTimTime_.str();
+    lastTimTime_ << _stopDate << " " << _stopTime;
+    auto lastTime = lastTimTime_.str();
 
-        istringstream stopTimDate(lastTime);
-
+	istringstream stopTimTime(lastTime);
+	istringstream startTimTime(firstTime);
+	
+	// start time in seconds
+	struct tm date_start;
+	startTimTime >> get_time( &date_start, "%m-%d-%Y %H:%M:%S" );
+	time_t secondsStart = mktime( & date_start );
+	PLOG(logDEBUG) << "START : " << date_start.tm_mon << "-" << date_start.tm_mday << "-" 
+		<< date_start.tm_year << " " << date_start.tm_hour << ":" << date_start.tm_min << ":" 
+		<< date_start.tm_sec << std::endl;
+	// stop time in seconds
 	struct tm date_stop;
-	stopTimDate >> get_time( &date_stop, "%m-%d-%Y %H:%M:%S" );
-	time_t secondsStopDate = mktime( & date_stop );
+	stopTimTime >> get_time( &date_stop, "%m-%d-%Y %H:%M:%S" );
+	PLOG(logDEBUG) << "STOP : " << date_stop.tm_mon << "-" << date_stop.tm_mday << "-" 
+		<< date_stop.tm_year << " " << date_stop.tm_hour << ":" << date_stop.tm_min << ":" 
+		<< date_stop.tm_sec << std::endl;
+	time_t secondsStop = mktime( & date_stop );
 
-        auto t = time(nullptr);
-        auto tm = *localtime(&t);
-
-        ostringstream oss1;
-        oss1 << put_time(&tm, "%m-%d-%Y");
-        auto _currentTimDate = oss1.str();
-
-	istringstream currentTimDate(_currentTimDate);
-
+	// Current Time in seconds
+	auto t = time(nullptr);
+	auto tm = *localtime(&t);
+	ostringstream oss1;
+	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
+	auto _currentTimTime = oss1.str();
+	istringstream currentTimTime(_currentTimTime);
 	struct tm date_current;
-	currentTimDate >> get_time( &date_current, "%m-%d-%Y" );
-	time_t secondsCurrentDate = mktime( & date_current );
+	currentTimTime >> get_time( &date_current, "%m-%d-%Y %H:%M:%S" );
+	PLOG(logDEBUG) << "CURRENT : " << date_current.tm_mon << "-" << date_current.tm_mday << "-" 
+		<< date_current.tm_year << " " << date_current.tm_hour << ":" << date_current.tm_min << ":" 
+		<< date_current.tm_sec << std::endl;
+	time_t secondsCurrent = mktime( & date_current );
 
-        ostringstream oss2;
-        oss2 << put_time(&tm, "%H:%M:%S");
-        auto _currentTimTime = oss2.str();
-
-	ostringstream currentTimTime_;
-        currentTimTime_ << _currentTimDate << " " << _currentTimTime;
-        auto currentTime = currentTimTime_.str();
-
-        ostringstream startTimTime_;
-        startTimTime_ << _currentTimDate << " " << _startTime;
-        auto StartTime = startTimTime_.str();
-
-        ostringstream stopTimTime_;
-        stopTimTime_ << _currentTimDate << " " << _stopTime;
-        auto StopTime = stopTimTime_.str();
-
-        istringstream currentTimTime(currentTime);
-        istringstream StartTimTime(StartTime);
-        istringstream StopTimTime(StopTime);
-
-	struct tm time_current;
-	currentTimTime >> get_time( &time_current, "%m-%d-%Y %H:%M:%S" );
-	time_t secondsCurrentTime = mktime( & time_current );
-
-	struct tm time_start;
-	StartTimTime >> get_time( &time_start, "%m-%d-%Y %H:%M:%S" );
-	time_t secondsStartTime = mktime( & time_start );
-
-	struct tm time_stop;
-	StopTimTime >> get_time( &time_stop, "%m-%d-%Y %H:%M:%S" );
-	time_t secondsStopTime = mktime( & time_stop );
-
-	if ((secondsStartDate <= secondsCurrentDate) && (secondsCurrentDate <= secondsStopDate) && (secondsStartTime <= secondsCurrentTime) && (secondsCurrentTime <= secondsStopTime)) {
+	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
+		" Current : " << secondsCurrent << std::endl;
+	if ( secondsStart <= secondsCurrent && secondsCurrent <= secondsStop) {
 		return true;
 	} else {
 		return false;
