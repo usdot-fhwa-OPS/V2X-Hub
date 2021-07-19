@@ -295,8 +295,6 @@ int TimPlugin::Main() {
 						//mapFileCopy = _mapFile;
 						_isMapFileNew = false;
 					}
-					if (_isTimLoaded)
-						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
 					_isTimLoaded = LoadTim(&_tim, _mapFile.c_str());
 				}
 
@@ -318,9 +316,10 @@ int TimPlugin::Main() {
 
 					lastSendTime = time;
 					TimMessage timMsg(_tim);
-
+					//PLOG(logERROR) <<"timMsg XML to send....."<< timMsg<<std::endl;
 					TimEncodedMessage timEncMsg;
 					timEncMsg.initialize(timMsg);
+					//PLOG(logERROR) <<"encoded timEncMsg..."<< timEncMsg<<std::endl;
 
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					timEncMsg.addDsrcMetadata(172, 0x8003);
