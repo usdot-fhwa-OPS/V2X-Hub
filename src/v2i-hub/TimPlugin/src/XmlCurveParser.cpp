@@ -393,7 +393,10 @@ GeographicalPath* XmlCurveParser::ReadRegion(DOMElement* regionElement)
 		}
 		else if (MatchTagName(currentElement, "Nodes"))
 		{
-			ReadNodes(currentElement, &(geoPath->description->choice.path.offset.choice.xy.choice.nodes));
+			NodeSetXY_t* nodeset_p = (NodeSetXY_t*) calloc(1, sizeof(NodeSetXY));  
+			ReadNodes(currentElement, nodeset_p);
+			geoPath->description->choice.path.offset.choice.xy.choice.nodes = *nodeset_p;
+			free(nodeset_p);
 		}
 	}
 

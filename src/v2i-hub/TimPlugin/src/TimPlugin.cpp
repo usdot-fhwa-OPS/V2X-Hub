@@ -120,8 +120,6 @@ void TimPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket) {
 
 }
 
-
-
 int TimPlugin::StartWebService()
 {
 	//Web services 
@@ -187,8 +185,6 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-
-
 bool TimPlugin::TimDuration()
 {
 	PLOG(logDEBUG)<<"TimPlugin:: Reached in TimDuration";
@@ -244,7 +240,7 @@ bool TimPlugin::TimDuration()
 
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 {
-
+	try{
 	memset(tim, 0, sizeof(TravelerInformation));
 
 	// J2735 packet header.
@@ -268,6 +264,9 @@ bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 	PluginUtil::SetStatus<unsigned int>(_plugin, "Speed Limit", _speedLimit);
 
 	return true;
+	}catch(const std::exception &exc){
+					PLOG(logERROR) <<"Tim Load(): "<<  exc.what() <<std::endl;
+				}
 }
 
 int TimPlugin::Main() {
@@ -281,13 +280,12 @@ int TimPlugin::Main() {
 	while (_plugin->state != IvpPluginState_error) {
 
 		while (TimDuration()) {
-
+		try{
 			if (IsPluginState(IvpPluginState_registered))
 			{
-				uint64_t sendFrequency = _frequency;
-
-				// Load the TIM from the map file if it is new.
-				//cout<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
+				
+				uint64_t sendFrequency = _frequency;				
+				
 				if (_isMapFileNew)
 				{
 					{
@@ -295,8 +293,7 @@ int TimPlugin::Main() {
 						//mapFileCopy = _mapFile;
 						_isMapFileNew = false;
 					}
-					if (_isTimLoaded)
-						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
+					
 					_isTimLoaded = LoadTim(&_tim, _mapFile.c_str());
 				}
 
@@ -318,17 +315,21 @@ int TimPlugin::Main() {
 
 					lastSendTime = time;
 					TimMessage timMsg(_tim);
-
 					TimEncodedMessage timEncMsg;
+					//PLOG(logERROR) <<"timMsg XML to send....."<< timMsg<<std::endl;
 					timEncMsg.initialize(timMsg);
 
+					//PLOG(logERROR) <<"encoded timEncMsg..."<< timEncMsg<<std::endl;
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					timEncMsg.addDsrcMetadata(172, 0x8003);
 
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);
-				}
+				}				
 			}
+			}catch(const std::exception &exc){
+					PLOG(logERROR) <<"Tim exception: "<<  exc.what() <<std::endl;
+				}
 		}
 		this_thread::sleep_for(chrono::milliseconds(500));
 	}
