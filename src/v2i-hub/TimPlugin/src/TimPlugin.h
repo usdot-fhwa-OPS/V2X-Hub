@@ -63,6 +63,8 @@
 #include <qhttpengine/server.h>
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
+#include <boost/filesystem.hpp>
+
 
 
 
@@ -74,6 +76,7 @@ using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
+using namespace boost::filesystem;
 
 
 #define INPUTSREADY "Have Map/Spat/Veh"
