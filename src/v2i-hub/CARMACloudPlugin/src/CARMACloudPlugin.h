@@ -92,6 +92,7 @@ public:
 	int Main();
 	uint16_t webport;
 	std::string webip;
+	unsigned int fetchtime;
 protected:
 
 	void UpdateConfigSettings();
