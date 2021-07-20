@@ -25,29 +25,11 @@ namespace TimPlugin {
  */
 TimPlugin::TimPlugin(string name) :
 		PluginClient(name) {
-
-		// xml parser setup 
-	    std::lock_guard<mutex> lock(_cfgLock);
-
-		if (GetConfigValue<string>("MapFile", _mapFile))
-			_isMapFileNew = true;
-	
-        GetConfigValue<string>("Start_Broadcast_Date", _startDate);
-        GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
-        GetConfigValue<string>("Start_Broadcast_Time", _startTime);
-        GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
-		GetConfigValue<string>("WebServiceIP",webip);
-		GetConfigValue<uint16_t>("WebServicePort",webport);
-
-		tmpTIM.open("/tmp/tmpTIM.xml", std::ofstream::out);	
-
-		std::thread webthread(&TimPlugin::StartWebService,this);
-		webthread.detach(); // wait for the thread to finish 
+					
 }
 
 TimPlugin::~TimPlugin() {
 
-	tmpTIM.close();
 }
 
 void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
@@ -72,6 +54,8 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 
 	// Catch XML parse exceptions 
 	try { 
+		// Using open command with std::ofstream::out mode overwrites existing files 
+		tmpTIM.open("/tmp/tmpTIM.xml", std::ofstream::out);
 		read_xml(ss,ptr);
 
 		lock_guard<mutex> lock(_cfgLock);
@@ -93,11 +77,14 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 
 			if(labeltext == "timupdate"){
 				tmpTIM<<n.second.get_value<std::string>();
+
 				_mapFile = "/tmp/tmpTIM.xml";
 				_isMapFileNew = true;
 			}
 
 		}
+		// Close file each time to avoid appending to open file
+		tmpTIM.close();
 		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
 	catch( const ptree_error &e ) {
@@ -159,10 +146,16 @@ void TimPlugin::UpdateConfigSettings() {
 	
 	GetConfigValue<uint64_t>("Frequency", _frequency);
 	
-	
-	if (GetConfigValue<string>("MapFile", _mapFile))
-		_isMapFileNew = true;
-	
+	if (GetConfigValue<string>("MapFile", _mapFile)) {
+		if ( boost::filesystem::exists( _mapFile ) ){
+            _isMapFileNew = true;
+			PLOG(logINFO) << "Loading MapFile " << _mapFile << "." << std::endl;
+        }
+		else {
+			PLOG(logWARNING) << "MapFile " << _mapFile << " does not exist!" << std::endl;
+		}
+
+	}
 	
 	GetConfigValue<string>("Start_Broadcast_Date", _startDate);
 	GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
@@ -170,7 +163,7 @@ void TimPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
-	
+
 }
 
 void TimPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -184,6 +177,12 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();
+
+		// Start webservice needs to occur after the first updateConfigSettings call
+		// to acquire port and ip configurations.
+		// Also needs to be called from Main thread to work.
+		std::thread webthread(&TimPlugin::StartWebService,this);
+		webthread.detach(); // wait for the thread to finish 
 	}
 }
 
@@ -278,6 +277,7 @@ int TimPlugin::Main() {
 
 	uint64_t lastSendTime = 0;
 	string mapFileCopy;
+
 	while (_plugin->state != IvpPluginState_error) {
 
 		while (TimDuration()) {
