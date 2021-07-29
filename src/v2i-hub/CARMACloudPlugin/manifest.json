@@ -1,0 +1,37 @@
+{
+	"name":"CARMACloud",
+	"description":"CARMA cloud plugin for making websocket connection with CARMA cloud .",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/CARMACloudPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"CARMA",
+			"description":"CARMA message suite"
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the TIM in milliseconds."
+		},
+		{
+			"key":"Instance",
+			"default":"0",
+			"description":"The instance of this plugin."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"127.0.0.1",
+			"description":"Server IP address for V2X hub"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"22222",
+			"description":"Server Port for V2X hub"
+		}
+	]
+}

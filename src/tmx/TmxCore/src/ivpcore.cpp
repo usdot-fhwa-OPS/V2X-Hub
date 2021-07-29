@@ -140,6 +140,7 @@ std::string GetPwd(){
 		std::string PwdStr(pwd);
 		return PwdStr;
 	}
+	return  "";
 }
 
 int main()

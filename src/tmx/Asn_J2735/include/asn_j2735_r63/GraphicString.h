@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2003 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	_GraphicString_H_
@@ -26,6 +26,8 @@ extern asn_TYPE_operation_t asn_OP_GraphicString;
 #define GraphicString_encode_xer    OCTET_STRING_encode_xer
 #define GraphicString_decode_uper   OCTET_STRING_decode_uper
 #define GraphicString_encode_uper   OCTET_STRING_encode_uper
+#define GraphicString_decode_aper   OCTET_STRING_decode_aper
+#define GraphicString_encode_aper   OCTET_STRING_encode_aper
 
 #ifdef __cplusplus
 }

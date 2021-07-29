@@ -9,9 +9,29 @@
 #include <NativeEnumerated.h>
 #include <errno.h>
 
+static long
+asn__nativeenumerated_convert(const uint8_t *b, const uint8_t *end) {
+    unsigned long value;
+
+    /* Perform the sign initialization */
+    /* Actually value = -(*b >> 7); gains nothing, yet unreadable! */
+    if((*b >> 7)) {
+        value = (unsigned long)(-1);
+    } else {
+        value = 0;
+    }
+
+    /* Conversion engine */
+    for(; b < end; b++) {
+        value = (value << 8) | *b;
+    }
+
+    return value;
+}
+
 asn_dec_rval_t
-NativeEnumerated_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
-                            asn_TYPE_descriptor_t *td,
+NativeEnumerated_decode_oer(const asn_codec_ctx_t *opt_codec_ctx,
+                            const asn_TYPE_descriptor_t *td,
                             const asn_oer_constraints_t *constraints,
                             void **nint_ptr, const void *ptr, size_t size) {
     asn_dec_rval_t rval = {RC_OK, 0};
@@ -52,10 +72,8 @@ NativeEnumerated_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
         }
         b++;
         bend = b + length;
-        value = (*b & 0x80) ? -1 : 0; /* Determine sign */
-        for(; b < bend; b++)
-            value = (value << 8) | *b;
 
+        value = asn__nativeenumerated_convert(b, bend);
         if(value < 0) {
             const asn_INTEGER_specifics_t *specs =
                 (const asn_INTEGER_specifics_t *)td->specifics;
@@ -81,11 +99,11 @@ NativeEnumerated_decode_oer(asn_codec_ctx_t *opt_codec_ctx,
  * Encode as Canonical OER.
  */
 asn_enc_rval_t
-NativeEnumerated_encode_oer(asn_TYPE_descriptor_t *td,
+NativeEnumerated_encode_oer(const asn_TYPE_descriptor_t *td,
                             const asn_oer_constraints_t *constraints,
-                            void *sptr, asn_app_consume_bytes_f *cb,
+                            const void *sptr, asn_app_consume_bytes_f *cb,
                             void *app_key) {
-    asn_enc_rval_t er = {0, td, sptr};
+    asn_enc_rval_t er = {0,0,0};
     long native;
 
     (void)constraints;

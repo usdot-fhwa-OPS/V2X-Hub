@@ -130,7 +130,7 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 					// New factory needed to avoid race conditions
 					tmx::messages::J2735MessageFactory myFactory;
 
-					FILE_LOG(logDEBUG4) << this->get_id() << "Decoding from bytes " << *bytes;
+					FILE_LOG(logDEBUG4) << this->get_id() << " Decoding from bytes " << *bytes;
 
 					// Bytes are encoded.  First try to convert to a J2735 message
 					routeableMsg = myFactory.NewMessage(*bytes);

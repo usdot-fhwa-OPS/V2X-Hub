@@ -132,6 +132,7 @@ std::string DbConnectionPool::GetPwd(){
 		std::string PwdStr(pwd);
 		return PwdStr;
 	}
+	return "";
 }
 
 } /* namespace utils */

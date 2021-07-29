@@ -1,0 +1,11 @@
+{ 
+ "name" : "SomeSignalController" ,
+ "regionId" : "1",
+ "id" : "100",
+ "revision" : "20",
+ "status" : "0000000000000000",
+ "signalGroup": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"],
+ "eventState" : ["permissive-Movement-Allowed","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain"],
+ "minEndTime":["25752","25452","25252","25552","25752","25752","25762","25752","25882","25752","25752","25752","25572","25752","25752","25752"],
+ "maxEndTime":["25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853"]
+}

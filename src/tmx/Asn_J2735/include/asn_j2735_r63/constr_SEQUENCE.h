@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2003, 2004 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	_CONSTR_SEQUENCE_H_
@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-typedef const struct asn_SEQUENCE_specifics_s {
+typedef struct asn_SEQUENCE_specifics_s {
 	/*
 	 * Target structure description.
 	 */
@@ -34,9 +34,10 @@ typedef const struct asn_SEQUENCE_specifics_s {
 
 	/*
 	 * Description of an extensions group.
+	 * Root components are clustered at the beginning of the structure,
+	 * whereas extensions are clustered at the end. -1 means not extensible.
 	 */
-	signed ext_after;       /* Extensions start after this member */
-	signed ext_before;      /* Extensions stop before this member */
+	signed first_extension;       /* First extension addition */
 } asn_SEQUENCE_specifics_t;
 
 
@@ -55,6 +56,9 @@ oer_type_decoder_f SEQUENCE_decode_oer;
 oer_type_encoder_f SEQUENCE_encode_oer;
 per_type_decoder_f SEQUENCE_decode_uper;
 per_type_encoder_f SEQUENCE_encode_uper;
+per_type_decoder_f SEQUENCE_decode_aper;
+per_type_encoder_f SEQUENCE_encode_aper;
+asn_random_fill_f  SEQUENCE_random_fill;
 extern asn_TYPE_operation_t asn_OP_SEQUENCE;
 
 #ifdef __cplusplus

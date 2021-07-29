@@ -7,18 +7,43 @@
 #include <asn_internal.h>
 #include <asn_bit_data.h>
 
+/*
+ * Create a contiguous non-refillable bit data structure.
+ * Can be freed by FREEMEM().
+ */
+asn_bit_data_t *
+asn_bit_data_new_contiguous(const void *data, size_t size_bits) {
+    size_t size_bytes = (size_bits + 7) / 8;
+    asn_bit_data_t *pd;
+    uint8_t *bytes;
+
+    /* Get the extensions map */
+    pd = CALLOC(1, sizeof(*pd) + size_bytes + 1);
+    if(!pd) {
+        return NULL;
+    }
+    bytes = (void *)(((char *)pd) + sizeof(*pd));
+    memcpy(bytes, data, size_bytes);
+    bytes[size_bytes] = 0;
+    pd->buffer = bytes;
+    pd->nboff = 0;
+    pd->nbits = size_bits;
+
+    return pd;
+}
+
+
 char *
 asn_bit_data_string(asn_bit_data_t *pd) {
 	static char buf[2][32];
 	static int n;
 	n = (n+1) % 2;
-	snprintf(buf[n], sizeof(buf[n]),
-		"{m=%ld span %+ld[%d..%d] (%d)}",
-		(long)pd->moved,
-		(((long)pd->buffer) & 0xf),
-		(int)pd->nboff, (int)pd->nbits,
-		(int)(pd->nbits - pd->nboff));
-	return buf[n];
+    snprintf(buf[n], sizeof(buf[n]),
+             "{m=%" ASN_PRI_SIZE " span %" ASN_PRI_SIZE "[%" ASN_PRI_SIZE
+             "..%" ASN_PRI_SIZE "] (%" ASN_PRI_SIZE ")}",
+             pd->moved, ((uintptr_t)(pd->buffer) & 0xf), pd->nboff, pd->nbits,
+             pd->nbits - pd->nboff);
+    return buf[n];
 }
 
 void
@@ -86,7 +111,7 @@ asn_get_few_bits(asn_bit_data_t *pd, int nbits) {
 	else if(off <= 24)
 		accum = ((buf[0] << 16) + (buf[1] << 8) + buf[2]) >> (24 - off);
 	else if(off <= 31)
-		accum = ((buf[0] << 24) + (buf[1] << 16)
+		accum = (((uint32_t)buf[0] << 24) + (buf[1] << 16)
 			+ (buf[2] << 8) + (buf[3])) >> (32 - off);
 	else if(nbits <= 31) {
 		asn_bit_data_t tpd = *pd;
@@ -172,7 +197,7 @@ asn_put_few_bits(asn_bit_outp_t *po, uint32_t bits, int obits) {
 	if(obits <= 0 || obits >= 32) return obits ? -1 : 0;
 
 	ASN_DEBUG("[PER put %d bits %x to %p+%d bits]",
-			obits, (int)bits, po->buffer, (int)po->nboff);
+			obits, (int)bits, (void *)po->buffer, (int)po->nboff);
 
 	/*
 	 * Normalize position indicator.
@@ -292,7 +317,7 @@ asn_put_aligned_flush(asn_bit_outp_t *po) {
         (po->buffer ? po->buffer - po->tmpspace : 0) + ((po->nboff + 7) >> 3);
 
     if(unused_bits) {
-        po->buffer[po->nboff >> 3] &= ~0 << unused_bits;
+        po->buffer[po->nboff >> 3] &= ~0u << unused_bits;
     }
 
     if(po->output(po->tmpspace, complete_bytes, po->op_key) < 0) {

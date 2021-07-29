@@ -27,6 +27,7 @@ typedef struct asn_per_constraint_s {
 	long lower_bound;		/* "lb" value */
 	long upper_bound;		/* "ub" value */
 } asn_per_constraint_t;
+
 typedef struct asn_per_constraints_s {
 	asn_per_constraint_t value;
 	asn_per_constraint_t size;

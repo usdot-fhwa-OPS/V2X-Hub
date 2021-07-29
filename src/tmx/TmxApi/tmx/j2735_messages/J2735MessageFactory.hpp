@@ -37,6 +37,12 @@
 #include <tmx/j2735_messages/SignalStatusMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+#include <tmx/j2735_messages/testMessage00.hpp>
+#include <tmx/j2735_messages/testMessage01.hpp>
+#include <tmx/j2735_messages/testMessage02.hpp>
+#include <tmx/j2735_messages/testMessage03.hpp>
+#include <tmx/j2735_messages/testMessage04.hpp>
+#include <tmx/j2735_messages/testMessage05.hpp>
 
 namespace tmx {
 namespace messages {
@@ -66,7 +72,13 @@ using message_types = message_type_list<
 		SrmMessage,
 		SsmMessage,
 		SpatMessage,
-		TimMessage
+		TimMessage,
+		tsm4Message,
+		tsm5Message,
+		tsm0Message,
+		tsm1Message,
+		tsm2Message,
+		tsm3Message
 >;
 
 /// Base allocator type
@@ -185,6 +197,12 @@ public:
 			add_allocator_to_maps<SsmMessage>();
 			add_allocator_to_maps<SpatMessage>();
 			add_allocator_to_maps<TimMessage>();
+			add_allocator_to_maps<tsm4Message>();
+			add_allocator_to_maps<tsm5Message>();
+			add_allocator_to_maps<tsm0Message>();
+			add_allocator_to_maps<tsm1Message>();
+			add_allocator_to_maps<tsm2Message>();
+			add_allocator_to_maps<tsm3Message>();
 #if SAEJ2735_SPEC < 63
 			add_allocator_to_maps<UperFrameMessage>();
 #endif
@@ -322,7 +340,7 @@ public:
 		int msgIdindex=0; // msgId = DD
 		if (bytes[0] == 0x00)
 		{
-			std::cout<<"No Extended bytes found"; 
+			std::cout<<"No Extended bytes found\n"; 
 			return 0; 
 		}
 		if(bytes[0] == 0x03){ // extended bytes present 
@@ -336,7 +354,7 @@ public:
 				else // 64 < length < 128 bytes  [0380XX00DD] 
 					msgIdindex = 3; 
 			}
-			std::cout<<"Extended bytes found"; 
+			std::cout<<"Extended bytes found\n"; 
 		}
 
 		bytes.erase(bytes.begin(),bytes.begin()+msgIdindex);
@@ -406,6 +424,8 @@ private:
 #endif
 
 		int id = Codec.decode_contentId(bytes);
+		std::cout<<" Codec ID  = "<< id <<std::endl;
+
 		if (id < 0)
 		{
 			id = OtherCodec.decode_contentId(bytes);

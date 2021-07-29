@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2003 Lev Walkin <vlm@lionet.info>. All rights reserved.
+ * Copyright (c) 2003-2017 Lev Walkin <vlm@lionet.info>. All rights reserved.
  * Redistribution and modifications are permitted subject to BSD license.
  */
 #ifndef	ASN_TYPE_NULL_H
@@ -26,8 +26,13 @@ asn_struct_compare_f NULL_compare;
 der_type_encoder_f NULL_encode_der;
 xer_type_decoder_f NULL_decode_xer;
 xer_type_encoder_f NULL_encode_xer;
+oer_type_decoder_f NULL_decode_oer;
+oer_type_encoder_f NULL_encode_oer;
 per_type_decoder_f NULL_decode_uper;
 per_type_encoder_f NULL_encode_uper;
+per_type_decoder_f NULL_decode_aper;
+per_type_encoder_f NULL_encode_aper;
+asn_random_fill_f  NULL_random_fill;
 
 #define NULL_free	BOOLEAN_free
 #define NULL_decode_ber	BOOLEAN_decode_ber
