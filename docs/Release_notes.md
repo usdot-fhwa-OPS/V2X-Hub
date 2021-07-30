@@ -17,7 +17,7 @@ Enhancements in this release:
 - Reworded and updated links in Docker documentation combined the AMD and ARM documentation documents into one, and updated the links to V2X-hub and MySQL. Updated the link to this new document in the readme.
 
 Bug fixes in this release:
-- Fixed ODE Logger plugin bugs with Docker file by adding date library install. Also fixed ODE Logger plugin configuration persistence issue by connection to Kafka in update Configuration method.
+- Fixed ODE Logger plugin bugs with Dockerfile by adding date library install. Also fixed ODE Logger plugin configuration persistence issue by connection to Kafka in update Configuration method.
 - Fixed Preemption Plugin - Previously vehicle ID Preemption Plugin was only processing one element of the BSM->coreData.id.buf char array. Added logic similar to Message Logger to read all elements of the char array into an int.
 - Tim Plugin and Pedestrian plugin REST endpoint fix - Tim Plugin and Pedestrian plugin did not respond to correct or incorrect POST requests. Added code to both plugins to catch, previously uncaught xml parsing exceptions and return 201 responses for successful requests and 400 responses for incorrect requests.
 - Fixed Request ID mismatch issue between TCR and TCM messages in CARMA Cloud Plugin.
