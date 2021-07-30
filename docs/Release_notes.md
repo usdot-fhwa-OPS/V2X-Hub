@@ -1,6 +1,32 @@
 V2X-Hub Release Notes
 ----------------------------
 
+Version 6.0, released July 30th, 2021
+--------------------------------------------------------
+
+**Summary:**
+V2X-Hub 6.0 is comprised of a number of enhancements as well as bug fixes. The additions primarily consist of the new Carma Cloud Plugin, ODE Logger Plugin, Spat logger plugin and Validation tool, along with new performance metrics.
+
+Enhancements in this release:
+- Carma Cloud Plugin- Added a new plugin for Carma cloud implementation through V2X Hub.
+- SPaT logger Plugin – Added SPaT logger plugin to log the incoming message SAE J2735 SPaT in Binary and Json files and included a script which regularly sends captured SAE J2735 SPaT messages to ODE.
+- Added password confirmation - PR adds password confirmation to initialization scripts in ARM and AMD.
+- ODE Logger Plugin – Added ODE Logger plugin with Kafka Functionality to V2X-Hub designed to stream real-time messages to ODE via the message broker Apache Kafka.
+- Validation Tool(Message Validation and Certification Tool v1.0) – The tool follows parallel to the methodology used to define how Intelligent Transportation Systems and Connected and Automated Vehicle message/applications are going to be validated in different ITS equipment’s.
+- Message Logger Plugin - Updated Message Logger Plugin to log the incoming message SAE J2735 BSM's in Binary and Json files and included a script which regularly sends captured SAE J2735 BSM's to ODE.
+- Reworded and updated links in Docker documentation combined the AMD and ARM documentation documents into one, and updated the links to V2X-hub and MySQL. Updated the link to this new document in the readme.
+
+Bug fixes in this release:
+- Fixed ODE Logger plugin bugs with Docker file by adding date library install. Also fixed ODE Logger plugin configuration persistence issue by connection to Kafka in update Configuration method.
+- Fixed Preemption Plugin - Previously vehicle ID Preemption Plugin was only processing one element of the BSM->coreData.id.buf char array. Added logic similar to Message Logger to read all elements of the char array into an int.
+- Tim Plugin and Pedestrian plugin REST endpoint fix - Tim Plugin and Pedestrian plugin did not respond to correct or incorrect POST requests. Added code to both plugins to catch, previously uncaught xml parsing exceptions and return 201 responses for successful requests and 400 responses for incorrect requests.
+- Fixed Request ID mismatch issue between TCR and TCM messages in CARMA Cloud Plugin.
+- Bug fix Sonar scan - Fixed sonar scan node JS version not found issue. Updated sonar scan session token.
+- Message Logger Plugin - Fixed Message Logger Plugin log file generation with updating plugin version numbers and removed some configuration parameters.
+- SPaT and BSM binary log file bugs - Fixed SPaT and Binary log files sent to ODE were not being properly processed due to slight header length.
+- TIM Plugin bugs - Fixed the TIM plugin was improperly parse start and end date logic and a segmentation fault was causing the plugin to deconstruct.
+- Validation tool - Fixed Packet data was not being retrieved from remote RSUs and certain setup instructions were unclear.
+
 Version 5.0, released March 26th, 2020
 --------------------------------------------------------
 
