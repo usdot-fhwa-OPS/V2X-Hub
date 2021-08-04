@@ -137,7 +137,7 @@ ENV SONAR_DIR=/opt/sonarqube
 
 # Pull scanner from internet
 RUN sudo mkdir $SONAR_DIR && \
-        sudo curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip && \
+        sudo curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip && \
         sudo curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip && \
         # Install Dependancy of NodeJs 6+
         sudo curl -sL https://deb.nodesource.com/setup_10.x | sudo bash - && \
@@ -157,7 +157,12 @@ RUN cd $SONAR_DIR && \
         sudo mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/ && \
         sudo mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/ && \
         # Add scanner, wrapper, and jq to PATH
-        sudo echo "export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/" > /home/V2X-Hub/.base-image/init-env.sh
+        sudo echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> /home/V2X-Hub/.base-image/init-env.sh
+
+# Install gcovr for code coverage tests and add code_coverage script folder to path
+RUN sudo apt-get -y install gcovr && \
+        sudo echo 'export PATH=$PATH:/home/V2X-Hub/.ci-image/engineering_tools/code_coverage/' >> /home/V2X-Hub/.base-image/init-env.sh
+
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
