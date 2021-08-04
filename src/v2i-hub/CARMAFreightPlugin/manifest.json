@@ -1,15 +1,15 @@
 {
-	"name":"MobilityOperationPlugin",
-	"description":"...",
+	"name":"CARMAFreightPlugin",
+	"description":"CARMAFreight plugin for sending freight trucks automated actions in a port.",
 	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/MobilityOperationPlugin",
+	"exeLocation":"/bin/CARMAFreightPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[
 		{
 			"type":"J2735",
 			"subtype":"TMSG03-P",
-			"description":"In development"
+			"description":"MobilityOperation message is a prototyping message with a configurable payload."
 		}
 	],
 	"configuration":[

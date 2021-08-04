@@ -1,5 +1,5 @@
-#ifndef SRC_MOBILITYOPERATIONPLUGIN_H_
-#define SRC_MOBILITYOPERATIONPLUGIN_H_
+#ifndef SRC_CARMAFREIGHTPLUGIN_H_
+#define SRC_CARMAFREIGHTPLUGIN_H_
 #include "PluginClient.h"
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -22,10 +22,10 @@ using namespace tmx::messages;
 using namespace boost::property_tree;
 
 
-namespace MobilityOperationPlugin {
+namespace CARMAFreightPlugin {
 static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
-class MobilityOperationPlugin: public PluginClient {
+class CARMAFreightPlugin: public PluginClient {
 public:
 	struct PortDrayage_Object {
 		int cmv_id; 
@@ -44,11 +44,11 @@ public:
 	 *
 	 * @param name The name to give the plugin for identification purposes
 	 */
-	MobilityOperationPlugin(std::string);
+	CARMAFreightPlugin(std::string);
 	/**
 	 * Constructor without paramaters 
 	 */
-	virtual ~MobilityOperationPlugin();
+	virtual ~CARMAFreightPlugin();
 	int Main();
 protected:
 	/**
