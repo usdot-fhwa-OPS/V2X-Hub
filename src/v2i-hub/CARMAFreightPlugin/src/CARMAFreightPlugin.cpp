@@ -1,31 +1,35 @@
 //============================================================================
-// Name        : MobilityOperationPlugin.cpp
+// Name        : CARMAFreightPlugin.cpp
 // Author      : Paul Bourelly
 // Version     : 5.0
 // Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
+// Description : CARMAFreightPlugin provides freight trucks in a port with a 
+// list of actions to complete. On initial communication with V2X-Hub the 
+// freight truck will request it's first action. Upon completion of each action
+// the freight truck will send the completed action to V2X-Hub and the CARMAFreightPlugin
+// will retrieve it's next action from a MySQL DB.
 //============================================================================
 
-#include "MobilityOperationPlugin.h"
+#include "CARMAFreightPlugin.h"
 
 
-namespace MobilityOperationPlugin {
+namespace CARMAFreightPlugin {
 
 
 
 
-MobilityOperationPlugin::MobilityOperationPlugin(string name) :
+CARMAFreightPlugin::CARMAFreightPlugin(string name) :
 		PluginClient(name) {
 	
-	AddMessageFilter < tsm3Message > (this, &MobilityOperationPlugin::HandleMobilityOperationMessage);
+	AddMessageFilter < tsm3Message > (this, &CARMAFreightPlugin::HandleMobilityOperationMessage);
 	SubscribeToMessages();
 
 }
 
-MobilityOperationPlugin::~MobilityOperationPlugin() {
+CARMAFreightPlugin::~CARMAFreightPlugin() {
 }
 
-void MobilityOperationPlugin::UpdateConfigSettings() {
+void CARMAFreightPlugin::UpdateConfigSettings() {
 	// Update configuration
 	lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("Database_Username", _database_username);
@@ -64,13 +68,13 @@ void MobilityOperationPlugin::UpdateConfigSettings() {
 }
 
 
-void MobilityOperationPlugin::OnConfigChanged(const char *key, const char *value) {
+void CARMAFreightPlugin::OnConfigChanged(const char *key, const char *value) {
 	PluginClient::OnConfigChanged(key, value);
 	UpdateConfigSettings();
 }
 
 
-void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
+void CARMAFreightPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 
 	// Retrieve J2735 Message
 	auto mobilityOperation = msg.get_j2735_data();
@@ -169,7 +173,7 @@ void MobilityOperationPlugin::HandleMobilityOperationMessage(tsm3Message &msg, r
 }
 
 
-ptree MobilityOperationPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
+ptree CARMAFreightPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
 	ptree json_payload;
 	json_payload.put<int>("cmv_id", pd_obj.cmv_id );
 	json_payload.put("cargo_id", pd_obj.cargo_id );
@@ -183,7 +187,7 @@ ptree MobilityOperationPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj
 }
 
 
-ptree MobilityOperationPlugin::createMobilityOperationXml( ptree &json_payload ) {
+ptree CARMAFreightPlugin::createMobilityOperationXml( ptree &json_payload ) {
 	ptree mobilityOperationXml;
 	std::stringstream pl;
 	write_json( pl, json_payload);
@@ -205,7 +209,7 @@ ptree MobilityOperationPlugin::createMobilityOperationXml( ptree &json_payload )
 }
 
 
-MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveNextAction( std::string action_id ) {
+CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveNextAction( std::string action_id ) {
 	try{
 		// Set action_id
 		next_action_id->setString(1,action_id);
@@ -251,7 +255,7 @@ MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveNex
 	
 }
 
-MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveFirstAction( uint32_t cmv_id ) {
+CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveFirstAction( uint32_t cmv_id ) {
 	try{
 		// Set cmv_id
 		first_action->setInt(1,cmv_id);
@@ -292,7 +296,7 @@ MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::retrieveFir
 }
 
 
-MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::readPortDrayageJson( ptree &pr ) {
+CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::readPortDrayageJson( ptree &pr ) {
 	PortDrayage_Object *pd = new PortDrayage_Object();
 	try {
 		pd->cmv_id = pr.get_child("cmv_id").get_value<int>();
@@ -324,7 +328,7 @@ MobilityOperationPlugin::PortDrayage_Object MobilityOperationPlugin::readPortDra
  * 
  * @param state IvpPluginState
  */ 
-void MobilityOperationPlugin::OnStateChange(IvpPluginState state) {
+void CARMAFreightPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
@@ -333,7 +337,7 @@ void MobilityOperationPlugin::OnStateChange(IvpPluginState state) {
 }
 
 
-int MobilityOperationPlugin::Main() {
+int CARMAFreightPlugin::Main() {
 	uint64_t lastSendTime = 0;
 	while (_plugin->state != IvpPluginState_error) {
 		usleep(100000); //sleep for microseconds set from config.
@@ -343,6 +347,6 @@ int MobilityOperationPlugin::Main() {
 }
 
 int main(int argc, char *argv[]) {
-	return run_plugin < MobilityOperationPlugin::MobilityOperationPlugin > ("MobilityOperationPlugin", argc, argv);
+	return run_plugin < CARMAFreightPlugin::CARMAFreightPlugin > ("CARMAFreightPlugin", argc, argv);
 }
 
