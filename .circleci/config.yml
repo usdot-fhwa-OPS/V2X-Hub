@@ -188,6 +188,42 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:latest
           docker push usdotfhwaops/php:latest
+
+  arm_build&push :
+   machine:
+    image: ubuntu-2004:202101-01
+   resource_class: arm.medium
+   steps:
+     - checkout
+     - run: 
+        name: Docker Build
+        # Run MYSQL image and build v2xhub docker image
+        command: |
+          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+    
+     - run: 
+        name: Docker Push
+        # Push v2xhub docker image to usdotfhwaops dockerhub
+        command: | 
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+          docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
+  arm_build&push_develop :
+   machine:
+    image: ubuntu-1604:202004-01
+   steps:
+     - checkout
+     - run:
+        name: Docker Build
+        # Run MYSQL image and build v2xhub docker image develop image
+        command: |
+          docker build -t usdotfhwaops/v2xhubarm:latest .
+
+     - run:
+        name: Docker Push
+        # Push v2xhub docker image to usdotfhwaops dockerhub
+        command: |
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+          docker push usdotfhwaops/v2xhubarm:latest
 workflows:
   version: 2
   build:
@@ -201,4 +237,14 @@ workflows:
            branches:
               ignore: develop
       - build
+      - arm_build&push:
+          filters:
+            branches:
+               ignore: develop
+      - arm_build&push_develop :
+          filters:
+           branches:
+              only: develop
+
  
+
