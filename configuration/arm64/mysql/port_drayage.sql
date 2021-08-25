@@ -31,11 +31,10 @@ DROP TABLE IF EXISTS `first_action`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `first_action` (
-  `cmv_id` int(11) NOT NULL,
+  `cmv_id` int(4) NOT NULL,
   `cargo_id` varchar(20) DEFAULT NULL,
-  `cargo` tinyint(1) NOT NULL,
-  `destination_lat` int(11) NOT NULL,
-  `destination_long` int(11) NOT NULL,
+  `destination_lat` decimal(9,7) NOT NULL,
+  `destination_long` decimal(9,7) NOT NULL,
   `operation` varchar(20) NOT NULL,
   `action_id` varchar(36) NOT NULL,
   `next_action` varchar(36) NOT NULL
@@ -48,7 +47,7 @@ CREATE TABLE `first_action` (
 
 LOCK TABLES `first_action` WRITE;
 /*!40000 ALTER TABLE `first_action` DISABLE KEYS */;
-INSERT INTO `first_action` VALUES (123,NULL,0,389548890,-771481430,'PICK_UP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
+INSERT INTO `first_action` VALUES (123,'SOME_CARGO',38.9548890,-77.1481430,'PICKUP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
 /*!40000 ALTER TABLE `first_action` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -60,11 +59,10 @@ DROP TABLE IF EXISTS `freight`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `freight` (
-  `cmv_id` int(11) NOT NULL,
+  `cmv_id` int(4) NOT NULL,
   `cargo_id` varchar(20) DEFAULT NULL,
-  `cargo` tinyint(1) NOT NULL,
-  `destination_lat` int(11) NOT NULL,
-  `destination_long` int(11) NOT NULL,
+  `destination_lat` decimal(9,7) NOT NULL,
+  `destination_long` decimal(9,7) NOT NULL,
   `operation` varchar(20) NOT NULL,
   `action_id` varchar(36) NOT NULL,
   `next_action` varchar(36) NOT NULL
@@ -77,7 +75,7 @@ CREATE TABLE `freight` (
 
 LOCK TABLES `freight` WRITE;
 /*!40000 ALTER TABLE `freight` DISABLE KEYS */;
-INSERT INTO `freight` VALUES (123,'CARGO PACKAGE ABC',1,389549780,-771475790,'EXIT_STAGING_AREA','32320c8a-e422-11eb-a8cc-000c29ae389d','4ace39e6-ee36-11eb-9a03-0242ac130003'),(123,NULL,0,389548890,-771481430,'PICK_UP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
+INSERT INTO `freight` VALUES (123,NULL,38.9549780,-77.1475790,'EXIT_STAGING_AREA','32320c8a-e422-11eb-a8cc-000c29ae389d','4ace39e6-ee36-11eb-9a03-0242ac130003'),(123,'SOME_CARGO',38.9548890,-77.1481430,'PICKUP','4bea1c45-e421-11eb-a8cc-000c29ae389d','32320c8a-e422-11eb-a8cc-000c29ae389d');
 /*!40000 ALTER TABLE `freight` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
