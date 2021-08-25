@@ -32,10 +32,10 @@ public:
 		std::string cargo_id;
 		bool cargo;
 		std::string operation;
-		float location_lat;
-		float location_long;
-		float destination_lat;
-		float destination_long;
+		double location_lat;
+		double location_long;
+		double destination_lat;
+		double destination_long;
 		std::string action_id;
 		std::string next_action;
 	};
