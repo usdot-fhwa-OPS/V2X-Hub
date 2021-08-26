@@ -102,8 +102,8 @@ RUN ln -s ../bin TimPlugin/bin
 RUN zip TimPlugin.zip TimPlugin/bin/TimPlugin TimPlugin/manifest.json
 RUN ln -s ../bin CARMACloudPlugin/bin
 RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
-RUN ln -s ../bin MobilityOperationPlugin/bin
-RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperationPlugin MobilityOperationPlugin/manifest.json
+RUN ln -s ../bin CARMAFreightPlugin/bin
+RUN zip CARMAFreightPlugin.zip CARMAFreightPlugin/bin/CARMAFreightPlugin CARMAFreightPlugin/manifest.json
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
 
@@ -147,7 +147,7 @@ RUN tmxctl --plugin-install MessageLoggerPlugin.zip
 RUN tmxctl --plugin-install PedestrianPlugin.zip
 RUN tmxctl --plugin-install TimPlugin.zip
 RUN tmxctl --plugin-install CARMACloudPlugin.zip
-RUN tmxctl --plugin-install MobilityOperationPlugin.zip
+RUN tmxctl --plugin-install CARMAFreightPlugin.zip
 RUN tmxctl --plugin-install ODELoggerPlugin.zip
 
 RUN sudo mkdir /home/V2X-Hub/.base-image 

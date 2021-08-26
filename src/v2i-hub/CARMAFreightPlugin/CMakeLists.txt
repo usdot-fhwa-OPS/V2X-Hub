@@ -1,4 +1,4 @@
-PROJECT ( MobilityOperationPlugin VERSION 5.0 LANGUAGES CXX )
+PROJECT ( CARMAFreight VERSION 5.0 LANGUAGES CXX )
 
 BuildTmxPlugin ( )
 
