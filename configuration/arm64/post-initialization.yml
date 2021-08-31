@@ -20,10 +20,8 @@ services:
       - ./mysql/script_credentials.sh:/docker-entrypoint-initdb.d/script_credentials.sh
 
   php:
-    image: php:7.2.2-apache
+    image: usdotfhwaops/php:latest
     container_name: php
-    volumes:
-      - ../../web/:/var/www/html/
     network_mode: host
     restart: always
     depends_on: 

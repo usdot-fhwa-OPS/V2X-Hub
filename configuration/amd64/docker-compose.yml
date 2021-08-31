@@ -18,10 +18,8 @@ services:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
 
   php:
-    image: php:7.2.2-apache
+    image: usdotfhwaops/php:latest
     container_name: php
-    volumes:
-      - ../../web/:/var/www/html/
     network_mode: host
     depends_on: 
       - db

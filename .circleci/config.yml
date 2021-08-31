@@ -164,6 +164,7 @@ jobs:
           cd configuration/amd64/
           docker-compose up -d db
           cd ../../
+          docker build -f docker/php.yml -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
           docker build --network=host -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .
     
      - run: 
@@ -172,6 +173,7 @@ jobs:
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
   docker_build&push_develop :
    machine:
     image: ubuntu-1604:202004-01
@@ -184,6 +186,7 @@ jobs:
           cd configuration/amd64/
           docker-compose up -d db
           cd ../../
+          docker build -f docker/php.yml -t usdotfhwaops/php:latest .
           docker build --network=host -t usdotfhwaops/v2xhubamd:latest .
     
      - run: 
@@ -192,6 +195,7 @@ jobs:
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:latest
+          docker push usdotfhwaops/php:latest
 workflows:
   version: 2
   build:
