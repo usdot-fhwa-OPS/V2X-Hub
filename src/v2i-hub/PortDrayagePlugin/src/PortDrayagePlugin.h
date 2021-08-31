@@ -1,5 +1,5 @@
-#ifndef SRC_CARMAFREIGHTPLUGIN_H_
-#define SRC_CARMAFREIGHTPLUGIN_H_
+#ifndef SRC_PortDrayagePlugin_H_
+#define SRC_PortDrayagePlugin_H_
 #include "PluginClient.h"
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -22,10 +22,10 @@ using namespace tmx::messages;
 using namespace boost::property_tree;
 
 
-namespace CARMAFreightPlugin {
+namespace PortDrayagePlugin {
 static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
-class CARMAFreightPlugin: public PluginClient {
+class PortDrayagePlugin: public PluginClient {
 public:
 	struct PortDrayage_Object {
 		int cmv_id; 
@@ -44,11 +44,11 @@ public:
 	 *
 	 * @param name The name to give the plugin for identification purposes
 	 */
-	CARMAFreightPlugin(std::string);
+	PortDrayagePlugin(std::string);
 	/**
 	 * Constructor without paramaters 
 	 */
-	virtual ~CARMAFreightPlugin();
+	virtual ~PortDrayagePlugin();
 	int Main();
 protected:
 	/**
@@ -116,7 +116,7 @@ private:
 	sql::Driver *driver;
 	sql::Connection *con;
 	sql::PreparedStatement *next_action_id;
-	sql::PreparedStatement *next_action;
+	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
 	J2735MessageFactory factory;
 

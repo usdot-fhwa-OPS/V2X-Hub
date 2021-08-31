@@ -1,8 +1,8 @@
 {
-	"name":"CARMAFreightPlugin",
-	"description":"CARMAFreight plugin for sending freight trucks automated actions in a port.",
+	"name":"PortDrayagePlugin",
+	"description":"PortDrayagePlugin for sending freight trucks automated actions in a port.",
 	"version":"@PROJECT_VERSION@",
-	"exeLocation":"/bin/CARMAFreightPlugin",
+	"exeLocation":"/bin/PortDrayagePlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
 	"messageTypes":[

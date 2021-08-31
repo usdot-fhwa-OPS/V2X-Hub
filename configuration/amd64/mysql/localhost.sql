@@ -47,7 +47,6 @@ CREATE TABLE `eventLog` (
 
 LOCK TABLES `eventLog` WRITE;
 /*!40000 ALTER TABLE `eventLog` DISABLE KEYS */;
-INSERT INTO `eventLog` VALUES (1,'------------------------','--------','2021-08-25 17:34:15','Debug',0),(2,'IVP Core Starting','Ivp Core','2021-08-25 17:34:15','Info',0),(3,'Plugin registered','ivpcore.PluginMonitor','2021-08-25 17:34:16','Info',0),(4,'Plugin registered','ivpcore.MessageProfiler','2021-08-25 17:34:16','Info',0),(5,'Plugin registered','ivpcore.HistoryManager','2021-08-25 17:34:16','Info',0),(6,'Plugin registered','CommandPlugin','2021-08-25 17:34:32','Info',0),(7,'Plugin \'CommandPlugin\' (id: 1) startup time: 679 milliseconds','ivpcore.PluginMonitor','2021-08-25 17:34:36','Info',0);
 /*!40000 ALTER TABLE `eventLog` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -79,7 +78,7 @@ CREATE TABLE `installedPlugin` (
 
 LOCK TABLES `installedPlugin` WRITE;
 /*!40000 ALTER TABLE `installedPlugin` DISABLE KEYS */;
-INSERT INTO `installedPlugin` VALUES (1,1,'/var/www/plugins/CommandPlugin','/bin/CommandPlugin','manifest.json','',1,500000),(2,2,'/var/www/plugins/CswPlugin','/bin/CswPlugin','manifest.json','',0,500000),(3,3,'/var/www/plugins/DmsPlugin','/bin/DmsPlugin','manifest.json','',0,500000),(4,4,'/var/www/plugins/DsrcImmediateForwardPlugin','/bin/DsrcImmediateForwardPlugin','manifest.json','',0,500000),(5,5,'/var/www/plugins/LocationPlugin','/bin/LocationPlugin','manifest.json','',0,500000),(6,6,'/var/www/plugins/MapPlugin','/bin/MapPlugin','manifest.json','',0,500000),(7,7,'/var/www/plugins/MessageReceiverPlugin','/bin/MessageReceiverPlugin','manifest.json','',0,500000),(8,8,'/var/www/plugins/ODEPlugin','/bin/ODEPlugin','manifest.json','',0,500000),(9,9,'/var/www/plugins/RtcmPlugin','/bin/RtcmPlugin','manifest.json','',0,500000),(10,10,'/var/www/plugins/SpatPlugin','/bin/SpatPlugin','manifest.json','',0,500000),(11,11,'/var/www/plugins/PreemptionPlugin','/bin/PreemptionPlugin','manifest.json','',0,500000),(12,12,'/var/www/plugins/SPaTLoggerPlugin','/bin/SPaTLoggerPlugin','manifest.json','',0,500000),(13,13,'/var/www/plugins/MessageLoggerPlugin','/bin/MessageLoggerPlugin','manifest.json','',0,500000),(14,14,'/var/www/plugins/PedestrianPlugin','/bin/PedestrianPlugin','manifest.json','',0,500000),(15,15,'/var/www/plugins/TimPlugin','/bin/TimPlugin','manifest.json','',0,500000),(16,16,'/var/www/plugins/CARMACloudPlugin','/bin/CARMACloudPlugin','manifest.json','',0,500000),(17,17,'/var/www/plugins/CARMAFreightPlugin','/bin/CARMAFreightPlugin','manifest.json','',0,500000),(18,18,'/var/www/plugins/ODELoggerPlugin','/bin/ODELoggerPlugin','manifest.json','',0,500000);
+INSERT INTO `installedPlugin` VALUES (1,1,'/var/www/plugins/CommandPlugin','/bin/CommandPlugin','manifest.json','',1,500000),(2,2,'/var/www/plugins/CswPlugin','/bin/CswPlugin','manifest.json','',0,500000),(3,3,'/var/www/plugins/DmsPlugin','/bin/DmsPlugin','manifest.json','',0,500000),(4,4,'/var/www/plugins/DsrcImmediateForwardPlugin','/bin/DsrcImmediateForwardPlugin','manifest.json','',0,500000),(5,5,'/var/www/plugins/LocationPlugin','/bin/LocationPlugin','manifest.json','',0,500000),(6,6,'/var/www/plugins/MapPlugin','/bin/MapPlugin','manifest.json','',0,500000),(7,7,'/var/www/plugins/MessageReceiverPlugin','/bin/MessageReceiverPlugin','manifest.json','',0,500000),(8,8,'/var/www/plugins/ODEPlugin','/bin/ODEPlugin','manifest.json','',0,500000),(9,9,'/var/www/plugins/RtcmPlugin','/bin/RtcmPlugin','manifest.json','',0,500000),(10,10,'/var/www/plugins/SpatPlugin','/bin/SpatPlugin','manifest.json','',0,500000),(11,11,'/var/www/plugins/PreemptionPlugin','/bin/PreemptionPlugin','manifest.json','',0,500000),(12,12,'/var/www/plugins/SPaTLoggerPlugin','/bin/SPaTLoggerPlugin','manifest.json','',0,500000),(13,13,'/var/www/plugins/MessageLoggerPlugin','/bin/MessageLoggerPlugin','manifest.json','',0,500000),(14,14,'/var/www/plugins/PedestrianPlugin','/bin/PedestrianPlugin','manifest.json','',0,500000),(15,15,'/var/www/plugins/TimPlugin','/bin/TimPlugin','manifest.json','',0,500000),(16,16,'/var/www/plugins/CARMACloudPlugin','/bin/CARMACloudPlugin','manifest.json','',0,500000),(17,17,'/var/www/plugins/PortDrayagePlugin','/bin/PortDrayagePlugin','manifest.json','',0,500000),(18,18,'/var/www/plugins/ODELoggerPlugin','/bin/ODELoggerPlugin','manifest.json','',0,500000);
 /*!40000 ALTER TABLE `installedPlugin` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -112,7 +111,6 @@ CREATE TABLE `messageActivity` (
 
 LOCK TABLES `messageActivity` WRITE;
 /*!40000 ALTER TABLE `messageActivity` DISABLE KEYS */;
-INSERT INTO `messageActivity` VALUES (1,15,1,1,'2021-08-25 17:34:41',0);
 /*!40000 ALTER TABLE `messageActivity` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -166,7 +164,7 @@ CREATE TABLE `plugin` (
 
 LOCK TABLES `plugin` WRITE;
 /*!40000 ALTER TABLE `plugin` DISABLE KEYS */;
-INSERT INTO `plugin` VALUES (0,'Plugin System','The global configuration for all TMX plugins','4.0'),(1,'CommandPlugin','Listens for websocket connections from the TMX admin portal and processes commands','5.0'),(2,'CSW','Provides Curve Speed Warning (CSW).','5.0'),(3,'DynamicMessageSign','Provides communication to a dynamic message sign.','5.0'),(4,'DSRCMessageManager','Plugin that listens for TMX messages and forwards them to the DSRC Radio (i.e. the RSU).','5.0'),(5,'Location','Plugin used to send out Location Messages using data from GPSD','5.0'),(6,'MAP','Plugin that reads intersection geometry from a configuration file and publishes a J2735 MAP message.','5.0'),(7,'MessageReceiver','Plugin to receive messages from an external DSRC radio or other source','5.0'),(8,'ODEPlugin','Plugin to forward messages to the Florida ODEPlugin network','5.0'),(9,'RTCM','Plugin to listen for RTCM messages from an NTRIP caster and route those messages over DSRC','5.0'),(10,'SPAT','Plugin that reads PTLM data from a configuration file, receives live data from the signal controller, and publishes a J2735 SPAT message.','5.0'),(11,'Preemption','Preemption plugin for the IVP system.','5.0'),(12,'SPaTLoggerPlugin','Listens for SPaT messages and logs them in a file in CSV format.','5.0'),(13,'MessageLoggerPlugin','Listens for J2735 messages and logs them in a file in JSON format.','5.0'),(14,'Pedestrian','Pedestrian plugin for the IVP system.','5.0'),(15,'TIM','Provides Traveller Information Message (TIM).','5.0'),(16,'CARMACloud','CARMA cloud plugin for making websocket connection with CARMA cloud .','3.0.0'),(17,'CARMAFreightPlugin','CARMAFreight plugin for sending freight trucks automated actions in a port.','5.0'),(18,'ODELoggerPlugin','Listens for J2735 messages and realtime forwards them to ODE.','5.0'),(19,'ivpcore.PluginMonitor','Core element that is responsible for starting/stopping installed plugins and monitoring the status of the plugins','3.2.0'),(20,'ivpcore.MessageProfiler','Core element that is responsible for profiling the statistics of received messages','3.2.0'),(21,'ivpcore.HistoryManager','Core element that is responsible for purging old log and history data','3.2.0');
+INSERT INTO `plugin` VALUES (0,'Plugin System','The global configuration for all TMX plugins','4.0'),(1,'CommandPlugin','Listens for websocket connections from the TMX admin portal and processes commands','5.0'),(2,'CSW','Provides Curve Speed Warning (CSW).','5.0'),(3,'DynamicMessageSign','Provides communication to a dynamic message sign.','5.0'),(4,'DSRCMessageManager','Plugin that listens for TMX messages and forwards them to the DSRC Radio (i.e. the RSU).','5.0'),(5,'Location','Plugin used to send out Location Messages using data from GPSD','5.0'),(6,'MAP','Plugin that reads intersection geometry from a configuration file and publishes a J2735 MAP message.','5.0'),(7,'MessageReceiver','Plugin to receive messages from an external DSRC radio or other source','5.0'),(8,'ODEPlugin','Plugin to forward messages to the Florida ODEPlugin network','5.0'),(9,'RTCM','Plugin to listen for RTCM messages from an NTRIP caster and route those messages over DSRC','5.0'),(10,'SPAT','Plugin that reads PTLM data from a configuration file, receives live data from the signal controller, and publishes a J2735 SPAT message.','5.0'),(11,'Preemption','Preemption plugin for the IVP system.','5.0'),(12,'SPaTLoggerPlugin','Listens for SPaT messages and logs them in a file in CSV format.','5.0'),(13,'MessageLoggerPlugin','Listens for J2735 messages and logs them in a file in JSON format.','5.0'),(14,'Pedestrian','Pedestrian plugin for the IVP system.','5.0'),(15,'TIM','Provides Traveller Information Message (TIM).','5.0'),(16,'CARMACloud','CARMA cloud plugin for making websocket connection with CARMA cloud .','3.0.0'),(17,'PortDrayagePlugin','PortDrayagePlugin for sending freight trucks automated actions in a port.','5.0'),(18,'ODELoggerPlugin','Listens for J2735 messages and realtime forwards them to ODE.','5.0'),(19,'ivpcore.PluginMonitor','Core element that is responsible for starting/stopping installed plugins and monitoring the status of the plugins','3.2.0'),(20,'ivpcore.MessageProfiler','Core element that is responsible for profiling the statistics of received messages','3.2.0'),(21,'ivpcore.HistoryManager','Core element that is responsible for purging old log and history data','3.2.0');
 /*!40000 ALTER TABLE `plugin` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -287,7 +285,6 @@ CREATE TABLE `pluginStatus` (
 
 LOCK TABLES `pluginStatus` WRITE;
 /*!40000 ALTER TABLE `pluginStatus` DISABLE KEYS */;
-INSERT INTO `pluginStatus` VALUES (1,19,'','Running'),(2,19,'Number of Active Plugins','1'),(4,20,'','Running'),(5,21,'','Running'),(7,1,'','Running'),(10,1,'Start Time','2021-08-25 17:34:31.739');
 /*!40000 ALTER TABLE `pluginStatus` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -342,7 +339,6 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (7,'test','test',3);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
