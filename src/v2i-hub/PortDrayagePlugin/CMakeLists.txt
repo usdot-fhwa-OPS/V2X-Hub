@@ -1,4 +1,4 @@
-PROJECT ( CARMAFreight VERSION 5.0 LANGUAGES CXX )
+PROJECT ( PortDrayagePlugin VERSION 5.0 LANGUAGES CXX )
 
 BuildTmxPlugin ( )
 

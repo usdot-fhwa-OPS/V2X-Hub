@@ -101,8 +101,8 @@ RUN ln -s ../bin TimPlugin/bin
 RUN zip TimPlugin.zip TimPlugin/bin/TimPlugin TimPlugin/manifest.json
 RUN ln -s ../bin CARMACloudPlugin/bin
 RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
-RUN ln -s ../bin CARMAFreightPlugin/bin
-RUN zip CARMAFreightPlugin.zip CARMAFreightPlugin/bin/CARMAFreightPlugin CARMAFreightPlugin/manifest.json
+RUN ln -s ../bin PortDrayagePlugin/bin
+RUN zip PortDrayagePlugin.zip PortDrayagePlugin/bin/PortDrayagePlugin PortDrayagePlugin/manifest.json
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
 

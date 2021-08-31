@@ -1,35 +1,35 @@
 //============================================================================
-// Name        : CARMAFreightPlugin.cpp
+// Name        : PortDrayagePlugin.cpp
 // Author      : Paul Bourelly
 // Version     : 5.0
 // Copyright   : Your copyright notice
-// Description : CARMAFreightPlugin provides freight trucks in a port with a 
+// Description : PortDrayagePlugin provides freight trucks in a port with a 
 // list of actions to complete. On initial communication with V2X-Hub the 
 // freight truck will request it's first action. Upon completion of each action
-// the freight truck will send the completed action to V2X-Hub and the CARMAFreightPlugin
+// the freight truck will send the completed action to V2X-Hub and the PortDrayagePlugin
 // will retrieve it's next action from a MySQL DB.
 //============================================================================
 
-#include "CARMAFreightPlugin.h"
+#include "PortDrayagePlugin.h"
 
 
-namespace CARMAFreightPlugin {
+namespace PortDrayagePlugin {
 
 
 
 
-CARMAFreightPlugin::CARMAFreightPlugin(string name) :
+PortDrayagePlugin::PortDrayagePlugin(string name) :
 		PluginClient(name) {
 	
-	AddMessageFilter < tsm3Message > (this, &CARMAFreightPlugin::HandleMobilityOperationMessage);
+	AddMessageFilter < tsm3Message > (this, &PortDrayagePlugin::HandleMobilityOperationMessage);
 	SubscribeToMessages();
 
 }
 
-CARMAFreightPlugin::~CARMAFreightPlugin() {
+PortDrayagePlugin::~PortDrayagePlugin() {
 }
 
-void CARMAFreightPlugin::UpdateConfigSettings() {
+void PortDrayagePlugin::UpdateConfigSettings() {
 	// Update configuration
 	lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("Database_Username", _database_username);
@@ -59,7 +59,7 @@ void CARMAFreightPlugin::UpdateConfigSettings() {
 	// Initialize PreparedStatements for MySQL
 	try {
 		next_action_id = con->prepareStatement("SELECT next_action FROM freight WHERE action_id = ? ");
-		next_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
+		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
 		first_action = con->prepareStatement("SELECT * FROM first_action WHERE cmv_id = ? " );
 	}
 	catch(std::exception &e) {
@@ -68,13 +68,13 @@ void CARMAFreightPlugin::UpdateConfigSettings() {
 }
 
 
-void CARMAFreightPlugin::OnConfigChanged(const char *key, const char *value) {
+void PortDrayagePlugin::OnConfigChanged(const char *key, const char *value) {
 	PluginClient::OnConfigChanged(key, value);
 	UpdateConfigSettings();
 }
 
 
-void CARMAFreightPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
+void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 
 	// Retrieve J2735 Message
 	auto mobilityOperation = msg.get_j2735_data();
@@ -124,43 +124,47 @@ void CARMAFreightPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 				*new_action = retrieveNextAction( pd->action_id );
 			}
 
-			
-			// Initializer vars
-			tsm3Message mob_msg;
-			tsm3EncodedMessage mobilityENC;
-			tmx::message_container_type container;
-			std::unique_ptr<tsm3EncodedMessage> msg;
+			if ( !new_action->action_id.empty()) {
+				// Initializer vars
+				tsm3Message mob_msg;
+				tsm3EncodedMessage mobilityENC;
+				tmx::message_container_type container;
+				std::unique_ptr<tsm3EncodedMessage> msg;
 
-			//  Create operationParams payload json
-			ptree payload = createPortDrayageJson( *new_action );
+				//  Create operationParams payload json
+				ptree payload = createPortDrayageJson( *new_action );
 
-			// Create XML MobilityOperationMessage
-			ptree message = createMobilityOperationXml( payload );
-			std::stringstream content;
-			write_xml(content, message);
+				// Create XML MobilityOperationMessage
+				ptree message = createMobilityOperationXml( payload );
+				std::stringstream content;
+				write_xml(content, message);
 
-			FILE_LOG(logERROR) << "XML outgoing message : " << std::endl << content.str();
-			
-			try {
-				// Uper encode message 
-				container.load<XML>(content);
-				mob_msg.set_contents(container.get_storage().get_tree());
-				mobilityENC.encode_j2735_message( mob_msg);
-				msg.reset();
-				msg.reset(dynamic_cast<tsm3EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE03_STRING)));
-				string enc = mobilityENC.get_encoding();
-				FILE_LOG(logERROR) << "Encoded outgoing message : " << std::endl << mobilityENC.get_payload_str();
-				msg->refresh_timestamp();
-				msg->set_payload(mobilityENC.get_payload_str());
-				msg->set_encoding(enc);
-				msg->set_flags(IvpMsgFlags_RouteDSRC);
-				msg->addDsrcMetadata(172,0xBFEE);
-				msg->refresh_timestamp();
-				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-				BroadcastMessage(*rMsg);
+				FILE_LOG(logERROR) << "XML outgoing message : " << std::endl << content.str();
+				
+				try {
+					// Uper encode message 
+					container.load<XML>(content);
+					mob_msg.set_contents(container.get_storage().get_tree());
+					mobilityENC.encode_j2735_message( mob_msg);
+					msg.reset();
+					msg.reset(dynamic_cast<tsm3EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE03_STRING)));
+					string enc = mobilityENC.get_encoding();
+					FILE_LOG(logERROR) << "Encoded outgoing message : " << std::endl << mobilityENC.get_payload_str();
+					msg->refresh_timestamp();
+					msg->set_payload(mobilityENC.get_payload_str());
+					msg->set_encoding(enc);
+					msg->set_flags(IvpMsgFlags_RouteDSRC);
+					msg->addDsrcMetadata(172,0xBFEE);
+					msg->refresh_timestamp();
+					routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+					BroadcastMessage(*rMsg);
+				}
+				catch (J2735Exception &e) {
+					FILE_LOG(logERROR) << "Error occurred during message encoding " << std::endl << e.what() << std::endl;
+				}
 			}
-			catch (J2735Exception &e) {
-				FILE_LOG(logERROR) << "Error occurred during message encoding " << std::endl << e.what() << std::endl;
+			else {
+				FILE_LOG(logERROR) << "Could not find action!" << std::endl;
 			}
 			
 		}
@@ -173,7 +177,7 @@ void CARMAFreightPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 }
 
 
-ptree CARMAFreightPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
+ptree PortDrayagePlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
 	ptree json_payload;
 	json_payload.put<int>("cmv_id", pd_obj.cmv_id );
 	json_payload.put("cargo_id", pd_obj.cargo_id );
@@ -187,7 +191,7 @@ ptree CARMAFreightPlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
 }
 
 
-ptree CARMAFreightPlugin::createMobilityOperationXml( ptree &json_payload ) {
+ptree PortDrayagePlugin::createMobilityOperationXml( ptree &json_payload ) {
 	ptree mobilityOperationXml;
 	std::stringstream pl;
 	write_json( pl, json_payload);
@@ -209,21 +213,23 @@ ptree CARMAFreightPlugin::createMobilityOperationXml( ptree &json_payload ) {
 }
 
 
-CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveNextAction( std::string action_id ) {
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std::string action_id ) {
 	try{
 		// Set action_id
 		next_action_id->setString(1,action_id);
 		// Get current action
 		sql::ResultSet *cur_action = next_action_id->executeQuery();
 		if ( cur_action->first() ) {
-			FILE_LOG(logERROR) << "Column next_action: " << cur_action->getString("next_action") << std::endl;
+			std::string next = cur_action->getString("next_action");
+			FILE_LOG(logERROR) << "Column next_action: " << next << std::endl;
 			// Set action_id to next_action
-			next_action->setString(1,cur_action->getString("next_action"));
+			current_action->setString(1,next);
 			// Retrieve next action
-			sql::ResultSet *cur_action = next_action->executeQuery();
+			sql::ResultSet *cur_action = current_action->executeQuery();
+			
 			// Create PortDrayage_Object
 			PortDrayage_Object *rtn = new PortDrayage_Object();
-			if ( cur_action->first() )  {
+			if ( cur_action->first() ) { 
 				rtn->cmv_id = cur_action->getInt("cmv_id");
 				rtn->operation = cur_action->getString("operation");
 				rtn->action_id = cur_action->getString("action_id");
@@ -238,12 +244,21 @@ CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveNextAction( s
 					"destination_long : " << rtn->destination_long << std::endl <<
 					"action_id : " << rtn->action_id << std::endl <<
 					"next_action : " << rtn->next_action << std::endl;
-				return *rtn;
 			}
+			else {
+				// If we are able to retrieve the current action but not it's next_action we can
+				// assume it was the last action in the DB.
+				FILE_LOG(logERROR) << "Last action completed! No action found with action id " << next << std::endl;
+
+			}
+			return *rtn;
+			
 
 		}
 		else {
 			FILE_LOG(logERROR) << "No action with id : " << action_id << " found!";
+			PortDrayage_Object *rtn = new PortDrayage_Object();
+			return *rtn;
 		}
 		
 	}
@@ -255,7 +270,7 @@ CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveNextAction( s
 	
 }
 
-CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveFirstAction( uint32_t cmv_id ) {
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( uint32_t cmv_id ) {
 	try{
 		// Set cmv_id
 		first_action->setInt(1,cmv_id);
@@ -282,7 +297,9 @@ CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveFirstAction( 
 			return *rtn;
 		}
 		else {
+			PortDrayage_Object *rtn = new PortDrayage_Object();
 			FILE_LOG(logERROR) << "No first action for cmv_id : " << cmv_id << " found!";
+			return *rtn;
 		}
 		
 
@@ -296,7 +313,7 @@ CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::retrieveFirstAction( 
 }
 
 
-CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::readPortDrayageJson( ptree &pr ) {
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( ptree &pr ) {
 	PortDrayage_Object *pd = new PortDrayage_Object();
 	try {
 		pd->cmv_id = pr.get_child("cmv_id").get_value<int>();
@@ -328,7 +345,7 @@ CARMAFreightPlugin::PortDrayage_Object CARMAFreightPlugin::readPortDrayageJson( 
  * 
  * @param state IvpPluginState
  */ 
-void CARMAFreightPlugin::OnStateChange(IvpPluginState state) {
+void PortDrayagePlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
@@ -337,7 +354,7 @@ void CARMAFreightPlugin::OnStateChange(IvpPluginState state) {
 }
 
 
-int CARMAFreightPlugin::Main() {
+int PortDrayagePlugin::Main() {
 	uint64_t lastSendTime = 0;
 	while (_plugin->state != IvpPluginState_error) {
 		usleep(100000); //sleep for microseconds set from config.
@@ -347,6 +364,6 @@ int CARMAFreightPlugin::Main() {
 }
 
 int main(int argc, char *argv[]) {
-	return run_plugin < CARMAFreightPlugin::CARMAFreightPlugin > ("CARMAFreightPlugin", argc, argv);
+	return run_plugin < PortDrayagePlugin::PortDrayagePlugin > ("PortDrayagePlugin", argc, argv);
 }
 
