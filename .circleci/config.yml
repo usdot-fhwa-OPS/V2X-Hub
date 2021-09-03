@@ -159,17 +159,13 @@ jobs:
      - checkout
      - run: 
         name: Docker Build
-        # Run MYSQL image and build v2xhub docker image
+        # Build v2xhub and php docker branch images
         command: |
-          cd configuration/amd64/
-          docker-compose up -d db
-          cd ../../
           docker build -f docker/php.yml -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
-          docker build --network=host -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .
-    
+          docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .  
      - run: 
         name: Docker Push
-        # Push v2xhub docker image to usdotfhwaops dockerhub
+        # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
@@ -181,17 +177,13 @@ jobs:
      - checkout
      - run: 
         name: Docker Build
-        # Run MYSQL image and build v2xhub docker image develop image
+        # Build v2xhub and php docker images develop images
         command: |
-          cd configuration/amd64/
-          docker-compose up -d db
-          cd ../../
           docker build -f docker/php.yml -t usdotfhwaops/php:latest .
-          docker build --network=host -t usdotfhwaops/v2xhubamd:latest .
-    
+          docker build -t usdotfhwaops/v2xhubamd:latest .    
      - run: 
         name: Docker Push
-        # Push v2xhub docker image to usdotfhwaops dockerhub
+        # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:latest

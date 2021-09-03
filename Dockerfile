@@ -15,7 +15,6 @@ RUN mkdir /usr/local/lib/googletest
 RUN ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
 RUN ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
 RUN ldconfig
-ENV MYSQL_ROOT_PASSWORD ivp
 
 RUN mkdir ~/V2X-Hub
 COPY . /home/V2X-Hub
@@ -121,7 +120,6 @@ RUN chmod +x /home/V2X-Hub/container/wait-for-it.sh
 WORKDIR /var/www/
 RUN mkdir ~/plugins
 WORKDIR /home/V2X-Hub/src/v2i-hub/
-RUN tmxctl --plugin-install CommandPlugin.zip
 WORKDIR /var/www/plugins/
 RUN mkdir /var/www/plugins/MAP
 RUN mkdir /var/www/plugins/.ssl
@@ -132,23 +130,6 @@ RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tm
 RUN chown plugin *
 RUN chgrp www-data *
 WORKDIR /home/V2X-Hub/src/v2i-hub/
-RUN tmxctl --plugin-install CswPlugin.zip
-RUN tmxctl --plugin-install DmsPlugin.zip
-RUN tmxctl --plugin-install DsrcImmediateForwardPlugin.zip
-RUN tmxctl --plugin-install LocationPlugin.zip
-RUN tmxctl --plugin-install MapPlugin.zip
-RUN tmxctl --plugin-install MessageReceiverPlugin.zip
-RUN tmxctl --plugin-install ODEPlugin.zip
-RUN tmxctl --plugin-install RtcmPlugin.zip
-RUN tmxctl --plugin-install SpatPlugin.zip
-RUN tmxctl --plugin-install PreemptionPlugin.zip
-RUN tmxctl --plugin-install SPaTLoggerPlugin.zip
-RUN tmxctl --plugin-install MessageLoggerPlugin.zip
-RUN tmxctl --plugin-install PedestrianPlugin.zip
-RUN tmxctl --plugin-install TimPlugin.zip
-RUN tmxctl --plugin-install CARMACloudPlugin.zip
-RUN tmxctl --plugin-install MobilityOperationPlugin.zip
-RUN tmxctl --plugin-install ODELoggerPlugin.zip
 
 RUN sudo mkdir /home/V2X-Hub/.base-image 
 
