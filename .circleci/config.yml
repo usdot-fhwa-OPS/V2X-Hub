@@ -210,6 +210,7 @@ jobs:
   arm_build&push_develop :
    machine:
     image: ubuntu-1604:202004-01
+   resource_class: arm.medium
    steps:
      - checkout
      - run:
