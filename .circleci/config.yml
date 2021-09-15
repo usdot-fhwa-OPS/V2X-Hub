@@ -168,5 +168,8 @@ workflows:
       - sonar-scanner:
           requires:
             - docker_build&push
+      - sonar-scanner:
+          requires:
+            - docker_build&push_develop
  
 
