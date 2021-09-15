@@ -167,7 +167,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-dev -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
     
      - run: 
         name: Docker Push

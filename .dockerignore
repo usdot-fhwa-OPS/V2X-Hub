@@ -1,0 +1,17 @@
+# Files to be ignored by the Docker context
+# Any files mentioned here will not trigger Docker to force an image reuild
+# if they change
+.circleci
+.vscode
+/configuration
+/data
+/docker
+/docs
+/examples
+/tests
+/tools
+*/*/secrets
+Dockerfile
+docker-compose.yml
+*.md
+*.git*
