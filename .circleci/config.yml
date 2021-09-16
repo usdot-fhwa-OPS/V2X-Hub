@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 #  Copyright (C) 2019-2020 LEIDOS.
 # 
@@ -28,7 +28,7 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2xhubamd:186-sonar-scanner-fix
+      - image: usdotfhwaops/v2xhubamd:<< pipeline.git.branch >>
         environment:
           TERM: xterm
           INIT_ENV: /home/V2X-Hub/.base-image/init-env.sh
@@ -41,7 +41,7 @@ jobs:
       - setup_remote_docker :
           docker_layer_caching: false
       # Checkout PR branch
-      - checkout:
+      - checkout
       - run:
           name: Run Tests & Generate Gcovr Reports
           command: |
@@ -72,7 +72,55 @@ jobs:
               cd /home/V2X-Hub/
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}             
             fi 
-  docker_build&push :
+  sonar-scanner_develop:
+    # Pull docker image 
+    # XTERM used for better make output
+    docker:
+      - image: usdotfhwaops/v2xhubamd:latest
+        environment:
+          TERM: xterm
+          INIT_ENV: /home/V2X-Hub/.base-image/init-env.sh
+    # Set working directory
+    working_directory: "/home/V2X-Hub"
+    # Pull code and execute tests |
+    # Name of each run command defines purpose use
+    steps:
+      #setup remote docker
+      - setup_remote_docker :
+          docker_layer_caching: false
+      # Checkout PR branch
+      - checkout
+      - run:
+          name: Run Tests & Generate Gcovr Reports
+          command: |
+            source ${INIT_ENV}
+            cd /home/V2X-Hub/src
+            build-wrapper-linux-x86-64 --out-dir /home/V2X-Hub/bw-output bash build.sh
+            ./coverage.sh
+      - run:
+          name: Run Sonar Scanner
+          command: |
+            source ${INIT_ENV}
+            echo $PATH
+            cd /home/V2X-Hub/src/
+            if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
+              echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
+              cd /home/V2X-Hub/
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
+              exit 0;
+            else
+              echo "PR branch ${CIRCLE_BRANCH}"
+              echo "Repo name ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
+              echo "URL ${CIRCLE_PULL_REQUEST}"
+              export PR_NUM=`echo ${CIRCLE_PULL_REQUEST} | cut -d'/' -f7`
+              echo "PR number ${PR_NUM}"
+              export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
+              export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
+              echo "Target Branch = ${TARGET_BRANCH}"
+              cd /home/V2X-Hub/
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}             
+            fi 
+  docker_build_push :
    machine:
     image: ubuntu-1604:202004-01
    steps:
@@ -90,7 +138,7 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
           docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
-  docker_build&push_develop :
+  docker_build_push_develop :
    machine:
     image: ubuntu-1604:202004-01
    steps:
@@ -109,7 +157,7 @@ jobs:
           docker push usdotfhwaops/v2xhubamd:latest
           docker push usdotfhwaops/php:latest
 
-  arm_build&push :
+  arm_build_push :
    machine:
     image: ubuntu-2004:202101-01
    resource_class: arm.medium
@@ -127,7 +175,7 @@ jobs:
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
-  arm_build&push_develop :
+  arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
    resource_class: arm.medium
@@ -149,24 +197,27 @@ workflows:
   version: 2
   build:
     jobs:
-      - docker_build&push_develop:
+      - docker_build_push_develop:
           filters:
             branches:
               only: develop
-      - docker_build&push:
+      - docker_build_push:
           filters:
            branches:
               ignore: develop
-      - arm_build&push:
+      - arm_build_push:
           filters:
             branches:
                ignore: develop
-      - arm_build&push_develop :
+      - arm_build_push_develop :
           filters:
-           branches:
+            branches:
               only: develop
       - sonar-scanner:
           requires:
-            - docker_build&push
+            - docker_build_push
+      - sonar-scanner_develop:
+          requires:
+            - docker_build_push_develop
  
 
