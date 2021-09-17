@@ -29,6 +29,11 @@
 			"description":"Server IP address for V2X hub"
 		},
 		{
+			"key":"fetchTime",
+			"default":"15",
+			"description":"Time from while the TCMs are requested, in days"
+		},
+		{
 			"key":"WebServicePort",
 			"default":"22222",
 			"description":"Server Port for V2X hub"
