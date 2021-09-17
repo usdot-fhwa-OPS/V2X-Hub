@@ -332,11 +332,15 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
 	bool isFlashing = getPhaseFlashingStatus(phase);
-	bool forceFlashing = isFlashingStatus() && !isPhaseFlashing();
+	bool forceFlashing = isFlashingStatus();
 
 	if(getPhaseRedStatus(phase))
 	{
-		if(forceFlashing || isFlashing)
+		PLOG(logDEBUG3) << "Phase " << phase <<
+				" Red " << getPhaseRedStatus(phase) <<
+				", isFlashing  " << isFlashing <<
+				", forceFlashing " << forceFlashing ;
+		if(isFlashing)
 			stateTimeSpeed->eventState = MovementPhaseState_stop_Then_Proceed;
 		else
 			stateTimeSpeed->eventState = MovementPhaseState_stop_And_Remain;
@@ -353,8 +357,8 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	}
 	else if(getPhaseGreensStatus(phase))
 	{
-		//TODO Add protected and permissive
-		stateTimeSpeed->eventState = MovementPhaseState_permissive_Movement_Allowed;
+		//TODO Add logic for permissive which I am not sure we can figure out based on what's in the Spat status being provide by the controller.
+		stateTimeSpeed->eventState = MovementPhaseState_protected_Movement_Allowed;
 	}
 	else
 	{
