@@ -30,7 +30,7 @@
 		},
 		{
 			"key":"fetchTime",
-			"default":"1",
+			"default":"15",
 			"description":"Time from while the TCMs are requested, in days"
 		},
 		{
