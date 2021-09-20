@@ -22,7 +22,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
         std::lock_guard<mutex> lock(_cfgLock);
 		GetConfigValue<string>("WebServiceIP",webip);
 		GetConfigValue<uint16_t>("WebServicePort",webport);
-		GetConfigValue<uint16_t>("fetchtime",fetchtime);
+		GetConfigValue<uint16_t>("fetchTime",fetchtime);		
 		AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
 
 		// Subscribe to all messages specified by the filters above.
@@ -222,6 +222,7 @@ void CARMACloudPlugin::UpdateConfigSettings() {
     std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<uint16_t>("fetchTime",fetchtime);
 	
 }
 
