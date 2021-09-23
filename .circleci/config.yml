@@ -40,8 +40,6 @@ jobs:
       #setup remote docker
       - setup_remote_docker :
           docker_layer_caching: false
-      # Checkout PR branch
-      - checkout
       - run:
           name: Run Tests & Generate Gcovr Reports
           command: |

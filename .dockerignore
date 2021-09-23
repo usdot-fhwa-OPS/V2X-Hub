@@ -13,4 +13,5 @@
 */*/secrets
 Dockerfile
 docker-compose.yml
+*.git*
 *.md
