@@ -14,4 +14,3 @@
 Dockerfile
 docker-compose.yml
 *.md
-*.git*
