@@ -131,6 +131,7 @@ WORKDIR /var/www/plugins/.ssl/
 RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tmxcmd.crt -subj "/CN= <127.0.0.1> " -days 3650
 RUN chown plugin *
 RUN chgrp www-data *
+WORKDIR /home/V2X-Hub/src/v2i-hub/
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
