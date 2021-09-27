@@ -134,7 +134,6 @@ std::string DbConnectionPool::GetPwd(){
 		buffer << t.rdbuf();
 		if ( buffer.str() != "") {
 			std::string PwdStr = buffer.str();
-			PLOG(logERROR)<<  "PWD " << PwdStr << "!" << std::endl;
 			return PwdStr;
 		}
 	}

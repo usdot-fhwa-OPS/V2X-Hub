@@ -1,0 +1,147 @@
+FROM ubuntu:bionic-20190807 AS install_dependencies
+
+RUN apt-get update  && apt-get install -y cmake git build-essential libgtest-dev libssl-dev qtbase5-dev \
+    zip libmysqlcppconn-dev libboost1.65-all-dev libmysqlclient-dev uuid-dev libxerces-c-dev qtbase5-dev \
+    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libev-dev libuv-dev libcpprest-dev
+# Build and install GTest 
+WORKDIR cd /usr/src/googletest/googletest
+RUN mkdir ~/build
+WORKDIR /usr/src/googletest/googletest/build
+RUN cmake ..
+RUN make
+RUN cp libgtest* /usr/lib/
+WORKDIR cd /usr/src/googletest/googletest
+RUN rm -rf build
+RUN mkdir /usr/local/lib/googletest
+RUN ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
+RUN ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
+RUN ldconfig
+
+# Build and install tmx
+RUN mkdir ~/V2X-Hub
+COPY ./src /home/V2X-Hub/src/
+WORKDIR /home/V2X-Hub/src/tmx/
+RUN cmake .
+RUN make
+RUN make install
+
+# Scripts 
+COPY ./ext /home/V2X-Hub/ext
+COPY ./container /home/V2X-Hub/container
+WORKDIR /home/V2X-Hub/container/
+RUN /home/V2X-Hub/container/database.sh
+RUN /home/V2X-Hub/container/library.sh
+RUN ldconfig
+
+WORKDIR /home/V2X-Hub/
+RUN mkdir -p /home/V2X-Hub/ext
+WORKDIR /home/V2X-Hub/ext/
+RUN git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
+WORKDIR /home/V2X-Hub/ext/libwebsockets/
+RUN cmake -DLWS_WITH_SHARED=OFF .
+RUN make
+RUN make install
+
+WORKDIR /home/V2X-Hub/ext
+RUN git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
+WORKDIR /home/V2X-Hub/ext/qhttpengine
+RUN cmake .
+RUN make 
+RUN make install
+
+WORKDIR /home/V2X-Hub/ext/ 
+RUN git clone https://github.com/HowardHinnant/date.git
+WORKDIR /home/V2X-Hub/ext/date
+RUN cmake .
+RUN make
+RUN make install
+RUN ldconfig 
+
+
+
+COPY ext/ /home/V2X-Hub/ext
+WORKDIR /home/V2X-Hub/ext/server
+RUN cmake .
+RUN make
+RUN make install
+
+WORKDIR /home/V2X-Hub/ext/ccserver
+RUN cmake . 
+RUN make
+RUN make install
+WORKDIR /home/V2X-Hub/ext/ccserver
+RUN rm -rf /home/V2X-Hub/ext/
+
+
+
+WORKDIR /home/V2X-Hub/src/v2i-hub/
+RUN cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/
+RUN make
+
+RUN ln -s ../bin CommandPlugin/bin
+RUN zip CommandPlugin.zip CommandPlugin/bin/CommandPlugin CommandPlugin/manifest.json
+RUN ln -s ../bin CswPlugin/bin
+RUN zip CswPlugin.zip CswPlugin/bin/CswPlugin CswPlugin/manifest.json
+RUN ln -s ../bin DmsPlugin/bin
+RUN zip DmsPlugin.zip DmsPlugin/bin/DmsPlugin DmsPlugin/manifest.json
+RUN ln -s ../bin DsrcImmediateForwardPlugin/bin
+RUN zip DsrcImmediateForwardPlugin.zip DsrcImmediateForwardPlugin/bin/DsrcImmediateForwardPlugin DsrcImmediateForwardPlugin/manifest.json
+RUN ln -s ../bin LocationPlugin/bin
+RUN zip LocationPlugin.zip LocationPlugin/bin/LocationPlugin LocationPlugin/manifest.json
+RUN ln -s ../bin MapPlugin/bin
+RUN zip MapPlugin.zip MapPlugin/bin/MapPlugin MapPlugin/manifest.json
+RUN ln -s ../bin MessageReceiverPlugin/bin
+RUN zip MessageReceiverPlugin.zip MessageReceiverPlugin/bin/MessageReceiverPlugin MessageReceiverPlugin/manifest.json
+RUN ln -s ../bin ODEPlugin/bin
+RUN zip ODEPlugin.zip ODEPlugin/bin/ODEPlugin ODEPlugin/manifest.json
+RUN ln -s ../bin RtcmPlugin/bin
+RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
+RUN ln -s ../bin SpatPlugin/bin
+RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
+RUN ln -s ../bin PreemptionPlugin/bin
+RUN zip PreemptionPlugin.zip PreemptionPlugin/bin/PreemptionPlugin PreemptionPlugin/manifest.json
+RUN ln -s ../bin SPaTLoggerPlugin/bin
+RUN zip SPaTLoggerPlugin.zip SPaTLoggerPlugin/bin/SPaTLoggerPlugin SPaTLoggerPlugin/manifest.json
+RUN ln -s ../bin MessageLoggerPlugin/bin
+RUN zip MessageLoggerPlugin.zip MessageLoggerPlugin/bin/MessageLoggerPlugin MessageLoggerPlugin/manifest.json
+RUN ln -s ../bin PedestrianPlugin/bin
+RUN zip PedestrianPlugin.zip PedestrianPlugin/bin/PedestrianPlugin PedestrianPlugin/manifest.json
+RUN ln -s ../bin TimPlugin/bin
+RUN zip TimPlugin.zip TimPlugin/bin/TimPlugin TimPlugin/manifest.json
+RUN ln -s ../bin CARMACloudPlugin/bin
+RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
+RUN ln -s ../bin MobilityOperationPlugin/bin
+RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperationPlugin MobilityOperationPlugin/manifest.json
+RUN ln -s ../bin ODELoggerPlugin/bin
+RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
+
+WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
+RUN cp tmxcore.service /lib/systemd/system/ && cp tmxcore.service /usr/sbin/
+WORKDIR /home/V2X-Hub/container/
+RUN chmod +x /home/V2X-Hub/container/service.sh && chmod +x /home/V2X-Hub/container/wait-for-it.sh
+WORKDIR /var/www/
+RUN mkdir ~/plugins
+WORKDIR /home/V2X-Hub/src/v2i-hub/
+WORKDIR /var/www/plugins/
+RUN mkdir /var/www/plugins/MAP
+RUN mkdir /var/www/plugins/.ssl
+RUN chown plugin .ssl
+RUN chgrp www-data .ssl
+WORKDIR /var/www/plugins/.ssl/
+RUN openssl req -x509 -newkey rsa:4096 -sha256 -nodes -keyout tmxcmd.key -out tmxcmd.crt -subj "/CN= <127.0.0.1> " -days 3650
+RUN chown plugin *
+RUN chgrp www-data *
+WORKDIR /home/V2X-Hub/src/v2i-hub/
+
+# Set metadata labels
+LABEL org.label-schema.schema-version="1.0"
+LABEL org.label-schema.name="V2X-Hub-Deployment"
+LABEL org.label-schema.description="Image V2X-Hub Deployment"
+LABEL org.label-schema.vendor="Leidos"
+LABEL org.label-schema.version="${VERSION}"
+LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations"
+LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-ops/V2X-HUB"
+LABEL org.label-schema.vcs-ref=${VCS_REF}
+LABEL org.label-schema.build-date=${BUILD_DATE}
+
+ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
