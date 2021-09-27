@@ -385,7 +385,6 @@ public:
 		if(msgidindex = TmxJ2735ExtendedBytes(bytes))
 		{
 			std::string byteStr(bytes.begin(),bytes.end());
-			std::cout<<" Return = "<< msgidindex<< ",   Extended bytes found, sanitized::";
 		}
 
 
@@ -424,7 +423,6 @@ private:
 #endif
 
 		int id = Codec.decode_contentId(bytes);
-		std::cout<<" Codec ID  = "<< id <<std::endl;
 
 		if (id < 0)
 		{
