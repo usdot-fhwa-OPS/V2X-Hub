@@ -29,6 +29,12 @@
 #include "PluginDataMonitor.h"
 #include <list> 
 
+#ifdef PLOG
+#undef PLOG
+#endif
+
+#define PLOG(level) PLUGIN_LOG(level, "Preemptionworker")
+
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
@@ -72,12 +78,12 @@ namespace PreemptionPlugin {
 
 			std::map <int,PreemptionObject> preemption_map;
 
-			void ProcessMapMessageFile(std::string path);
+			void ProcessMapMessageFile(const std::string &path);
 			void VehicleLocatorWorker(BsmMessage* msg);
 			void PreemptionPlaner(PreemptionObject* po);
 			void TurnOnPreemption(PreemptionObject* po);
 			void TurnOffPreemption(PreemptionObject* po);
-			bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners);
+			bool CarInGeofence(long double x, long double y, std::vector<double> geox, std::vector<double> geoy, long GeoCorners) const;
 
 			std::string ip_with_port;
 			int snmp_version = SNMP_VERSION_1;

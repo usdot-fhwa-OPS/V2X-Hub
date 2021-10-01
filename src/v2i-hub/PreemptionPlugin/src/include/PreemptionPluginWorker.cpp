@@ -12,7 +12,7 @@ using namespace std;
 
 namespace PreemptionPlugin {
 
-	void PreemptionPluginWorker::ProcessMapMessageFile(std::string path){
+	void PreemptionPluginWorker::ProcessMapMessageFile(const std::string &path){
 
         if(path != ""){
             try {
@@ -26,7 +26,6 @@ namespace PreemptionPlugin {
 
                     BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
                         assert(u.first.empty()); // array elements have no names
-                        // std::cout << u.second.get<double>("") << std::endl;
                         double d =  u.second.get<double>("");
                         geox.push_back(d);
                     }
@@ -37,28 +36,28 @@ namespace PreemptionPlugin {
                         geoy.push_back(d);
                     }
                     
-                    GeofenceObject* geofenceObject = new GeofenceObject(geox,geoy,subtree.get<double>("PreemptCall"),subtree.get<double>("HeadingMin"),subtree.get<double>("HeadingMax"));
+                    auto geofenceObject = new GeofenceObject(geox,geoy, static_cast<int>(subtree.get<double>("PreemptCall")),static_cast<int>(subtree.get<double>("HeadingMin")),static_cast<int>(subtree.get<double>("HeadingMax")));
                     
                     GeofenceSet.push_back(geofenceObject);
+                    delete geofenceObject;
 
                 }
             }
             catch(...) { 
-                std::cout << "Caught exception from reading a file"; 
+              	PLOG(logERROR) << "Caught exception from reading a file"; 
             } 
         }
-
     }
     
-    bool PreemptionPluginWorker::CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
+    bool PreemptionPluginWorker::CarInGeofence(long double x,long  double y, std::vector<double> geox, std::vector<double>  geoy, long GeoCorners) const{
         int   i, j=GeoCorners-1 ;
-        bool  oddNodes      ;
+        bool  oddNodes = false;
 
         for (i=0; i<GeoCorners; i++) {
-            if ((geoy[i]< y && geoy[j]>=y
-            ||   geoy[j]< y && geoy[i]>=y)
-            &&  (geox[i]<=x || geox[j]<=x)) {
-            oddNodes^=(geox[i]+(y-geoy[i])/(geoy[j]-geoy[i])*(geox[j]-geox[i])<x); }
+            if ((geoy.at(i)< y && geoy.at(j)>=y
+            ||   geoy.at(j)< y && geoy.at(i)>=y)
+            &&  (geox.at(i)<=x || geox.at(j)<=x)) {
+            oddNodes^=(geox.at(i)+(y-geoy.at(i))/(geoy.at(j)-geoy.at(i))*(geox.at(j)-geox.at(i))<x); }
             j=i; }
 
         return oddNodes; 
@@ -84,16 +83,20 @@ namespace PreemptionPlugin {
 
         for (auto const& it: GeofenceSet) {
 
-            double geox[it->geox.size()];
+           // double geox[it->geox.size()];
+            std::vector<double> geox;
             int k = 0;
             for (double const &i: it->geox) {
-                geox[k++] = i;
+               // geox[k++] = i;
+                geox.push_back(i);
             }
 
-            double geoy[it->geoy.size()];
+            // double geoy[it->geoy.size()];
+            std::vector<double> geoy;
             k = 0;
             for (double const &i: it->geoy) {
-                geoy[k++] = i;
+                // geoy[k++] = i;
+                geoy.push_back(i);
             }
 
             bool in_geo =  CarInGeofence(vehicle_coordinate->lon, vehicle_coordinate->lat, geoy, geox, it->geox.size());
@@ -115,6 +118,8 @@ namespace PreemptionPlugin {
         }
 
         PreemptionPlaner(po);
+        delete vehicle_coordinate;
+        delete po;
         return;
 
     };
