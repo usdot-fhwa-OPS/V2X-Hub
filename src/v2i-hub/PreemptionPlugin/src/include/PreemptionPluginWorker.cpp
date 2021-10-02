@@ -7,7 +7,7 @@
 //==========================================================================
 
 #include "PreemptionPluginWorker.hpp"
-
+#include <memory>
 using namespace std;
 
 namespace PreemptionPlugin {
@@ -36,10 +36,9 @@ namespace PreemptionPlugin {
                         geoy.push_back(d);
                     }
                     
-                    auto geofenceObject = new GeofenceObject(geox,geoy, static_cast<int>(subtree.get<double>("PreemptCall")),static_cast<int>(subtree.get<double>("HeadingMin")),static_cast<int>(subtree.get<double>("HeadingMax")));
+                    GeofenceObject geofenceObject(geox,geoy, static_cast<int>(subtree.get<double>("PreemptCall")),static_cast<int>(subtree.get<double>("HeadingMin")),static_cast<int>(subtree.get<double>("HeadingMax")));
                     
-                    GeofenceSet.push_back(geofenceObject);
-                    delete geofenceObject;
+                    GeofenceSet.push_back(&geofenceObject);
 
                 }
             }
@@ -50,7 +49,7 @@ namespace PreemptionPlugin {
     }
     
     bool PreemptionPluginWorker::CarInGeofence(long double x,long  double y, std::vector<double> geox, std::vector<double>  geoy, long GeoCorners) const{
-        int   i, j=GeoCorners-1 ;
+        long   i, j=GeoCorners-1 ;
         bool  oddNodes = false;
 
         for (i=0; i<GeoCorners; i++) {
@@ -67,9 +66,9 @@ namespace PreemptionPlugin {
 
         double micro = 10000000.0;
 
-        PreemptionObject* po = new PreemptionObject;
+        auto po = (PreemptionObject*) malloc(sizeof(PreemptionObject));
 
-        VehicleCoordinate* vehicle_coordinate = (VehicleCoordinate*)malloc(sizeof(VehicleCoordinate));
+        auto vehicle_coordinate = (VehicleCoordinate*)malloc(sizeof(VehicleCoordinate));
 
         auto bsm = msg->get_j2735_data();
         int32_t bsmTmpID;
@@ -83,19 +82,13 @@ namespace PreemptionPlugin {
 
         for (auto const& it: GeofenceSet) {
 
-           // double geox[it->geox.size()];
             std::vector<double> geox;
-            int k = 0;
             for (double const &i: it->geox) {
-               // geox[k++] = i;
                 geox.push_back(i);
             }
 
-            // double geoy[it->geoy.size()];
             std::vector<double> geoy;
-            k = 0;
             for (double const &i: it->geoy) {
-                // geoy[k++] = i;
                 geoy.push_back(i);
             }
 
@@ -119,7 +112,7 @@ namespace PreemptionPlugin {
 
         PreemptionPlaner(po);
         free(vehicle_coordinate);
-        delete po;
+        free(po);
         return;
 
     };
