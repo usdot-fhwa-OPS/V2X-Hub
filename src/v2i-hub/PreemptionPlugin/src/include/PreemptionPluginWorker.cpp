@@ -69,7 +69,7 @@ namespace PreemptionPlugin {
 
         PreemptionObject* po = new PreemptionObject;
 
-        VehicleCoordinate* vehicle_coordinate = new VehicleCoordinate;
+        VehicleCoordinate* vehicle_coordinate = (VehicleCoordinate*)malloc(sizeof(VehicleCoordinate));
 
         auto bsm = msg->get_j2735_data();
         int32_t bsmTmpID;
@@ -118,7 +118,7 @@ namespace PreemptionPlugin {
         }
 
         PreemptionPlaner(po);
-        delete vehicle_coordinate;
+        free(vehicle_coordinate);
         delete po;
         return;
 
