@@ -29,12 +29,6 @@
 #include "PluginDataMonitor.h"
 #include <list> 
 
-#ifdef PLOG
-#undef PLOG
-#endif
-
-#define PLOG(level) PLUGIN_LOG(level, "Preemptionworker")
-
 using namespace std;
 using namespace tmx;
 using namespace tmx::messages;

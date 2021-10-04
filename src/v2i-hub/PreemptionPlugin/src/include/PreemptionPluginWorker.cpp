@@ -43,7 +43,7 @@ namespace PreemptionPlugin {
                 }
             }
             catch(...) { 
-              	PLOG(logERROR) << "Caught exception from reading a file"; 
+              	PLUGIN_LOG(logERROR, "Preemptionworker") << "Caught exception from reading a file"; 
             } 
         }
     }
