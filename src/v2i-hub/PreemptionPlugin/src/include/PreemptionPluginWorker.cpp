@@ -66,9 +66,8 @@ namespace PreemptionPlugin {
 
         double micro = 10000000.0;
 
-        auto po = (PreemptionObject*) malloc(sizeof(PreemptionObject));
-
-        auto vehicle_coordinate = (VehicleCoordinate*)malloc(sizeof(VehicleCoordinate));
+        auto po = std::make_shared<PreemptionObject>();
+        auto vehicle_coordinate = std::make_shared<VehicleCoordinate>();
 
         auto bsm = msg->get_j2735_data();
         int32_t bsmTmpID;
@@ -99,8 +98,6 @@ namespace PreemptionPlugin {
                    po->approach = "1";
                    po->preemption_plan = std::to_string(it->PreemptCall);
                    PreemptionPlaner(po);
-                   free(vehicle_coordinate);
-                   free(po);
                    return;
                }
                else {
@@ -113,13 +110,11 @@ namespace PreemptionPlugin {
         }
 
         PreemptionPlaner(po);
-        free(vehicle_coordinate);
-        free(po);
         return;
 
     };
 
-    void PreemptionPluginWorker::PreemptionPlaner(PreemptionObject* po){
+    void PreemptionPluginWorker::PreemptionPlaner(std::shared_ptr<PreemptionObject> po){
  
         if(po->approach == "1") {
 
@@ -146,7 +141,7 @@ namespace PreemptionPlugin {
         std::cout << " Finished PreemptionPlaner" << std::endl;
     };
 
-    void PreemptionPluginWorker::TurnOnPreemption(PreemptionObject* po){
+    void PreemptionPluginWorker::TurnOnPreemption(std::shared_ptr<PreemptionObject> po){
         std::string preemption_plan_flag = "1";
 
         std::asctime(std::localtime(&(po->time)));
@@ -163,7 +158,7 @@ namespace PreemptionPlugin {
         }
     }
 
-    void PreemptionPluginWorker::TurnOffPreemption(PreemptionObject* po){
+    void PreemptionPluginWorker::TurnOffPreemption(std::shared_ptr<PreemptionObject> po){
         std::string preemption_plan, preemption_plan_flag = "";
         preemption_plan = preemption_map[po ->vehicle_id].preemption_plan;
         preemption_plan_flag = "0";

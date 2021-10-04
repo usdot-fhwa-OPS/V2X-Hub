@@ -80,9 +80,9 @@ namespace PreemptionPlugin {
 
 			void ProcessMapMessageFile(const std::string &path);
 			void VehicleLocatorWorker(BsmMessage* msg);
-			void PreemptionPlaner(PreemptionObject* po);
-			void TurnOnPreemption(PreemptionObject* po);
-			void TurnOffPreemption(PreemptionObject* po);
+			void PreemptionPlaner(std::shared_ptr<PreemptionObject> po);
+			void TurnOnPreemption(std::shared_ptr<PreemptionObject> po);
+			void TurnOffPreemption(std::shared_ptr<PreemptionObject> po);
 			bool CarInGeofence(long double x, long double y, std::vector<double> geox, std::vector<double> geoy, long GeoCorners) const;
 
 			std::string ip_with_port;
