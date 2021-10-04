@@ -46,7 +46,8 @@ namespace PreemptionPlugin {
     }
     
     bool PreemptionPluginWorker::CarInGeofence(long double x,long  double y, std::vector<double> geox, std::vector<double>  geoy, long GeoCorners) const{
-        long   i, j=GeoCorners-1 ;
+        long i = GeoCorners-1 ;
+        long j = GeoCorners-1;
         bool  oddNodes = false;
 
         for (i=0; i<GeoCorners; i++) {
