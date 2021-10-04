@@ -19,19 +19,16 @@ namespace PreemptionPlugin {
                 boost::property_tree::read_json(path, geofence_data);
             
                 BOOST_FOREACH( boost::property_tree::ptree::value_type const& v, geofence_data.get_child( "data" ) ) {
-                    assert(v.first.empty()); // array elements have no names
                     boost::property_tree::ptree subtree = v.second;
                     list <double> geox;
                     list <double> geoy;
 
                     BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
-                        assert(u.first.empty()); // array elements have no names
                         double d =  u.second.get<double>("");
                         geox.push_back(d);
                     }
 
                     BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geoy" ) ) {
-                        assert(u.first.empty()); // array elements have no names
                         double d =  u.second.get<double>("");
                         geoy.push_back(d);
                     }
@@ -50,7 +47,7 @@ namespace PreemptionPlugin {
     
     bool PreemptionPluginWorker::CarInGeofence(long double x,long  double y, std::vector<double> geox, std::vector<double>  geoy, long GeoCorners) const{
         long   i, j=GeoCorners-1 ;
-        bool  oddNodes = false;
+        bool  oddNodes = 0;
 
         for (i=0; i<GeoCorners; i++) {
             if ((geoy.at(i)< y && geoy.at(j)>=y
