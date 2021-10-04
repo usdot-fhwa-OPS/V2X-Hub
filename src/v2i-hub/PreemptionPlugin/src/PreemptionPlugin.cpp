@@ -38,7 +38,6 @@ PreemptionPlugin::PreemptionPlugin(string name): PluginClient(name)
 
 PreemptionPlugin::~PreemptionPlugin()
 {
-	delete mp;
 	if (_signSimClient != NULL)
 		delete _signSimClient;
 }

@@ -46,9 +46,9 @@ namespace PreemptionPlugin {
 
 		public:
 			struct PreemptionObject {
-				std::string approach; // 0: egress 1: ingress
-				std::string preemption_plan;
-				int vehicle_id;
+				std::string approach = ""; // 0: egress 1: ingress
+				std::string preemption_plan = "";
+				int vehicle_id = 0;
 				std::time_t time = std::time(nullptr);
 			};
 

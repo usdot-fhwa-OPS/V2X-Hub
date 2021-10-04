@@ -99,6 +99,8 @@ namespace PreemptionPlugin {
                    po->approach = "1";
                    po->preemption_plan = std::to_string(it->PreemptCall);
                    PreemptionPlaner(po);
+                   free(vehicle_coordinate);
+                   free(po);
                    return;
                }
                else {
