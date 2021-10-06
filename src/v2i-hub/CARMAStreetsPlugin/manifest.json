@@ -19,8 +19,13 @@
 			"description":"Apache Kafka topic plugin will receive message from."
 		},
 		{
-			"key":"transmitTopic",
-			"default":"v2xhub_in",
+			"key":"transmitMobilityOperationTopic",
+			"default":"v2xhub_mobility_operation_in",
+			"description":"Apache Kafka topic plugin will transmit message to."
+		},
+		{
+			"key":"transmitMobilityPathTopic",
+			"default":"v2xhub_mobility_path_in",
 			"description":"Apache Kafka topic plugin will transmit message to."
 		},
 		{
