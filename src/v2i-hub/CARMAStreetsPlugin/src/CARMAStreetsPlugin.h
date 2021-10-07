@@ -2,11 +2,13 @@
 #define SRC_CARMASTREETSPLUGIN_H_
 #include "PluginClient.h"
 #include <tmx/j2735_messages/testMessage03.hpp>
+#include <tmx/j2735_messages/testMessage02.hpp>
 #include <librdkafka/rdkafkacpp.h>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <tmx/TmxException.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include "jsoncpp/json/json.h"
 
 
 
@@ -34,10 +36,12 @@ protected:
 	void OnStateChange(IvpPluginState state);
 
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
+	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 
 private:
 	std::string _receiveTopic;
-	std::string _transmitTopic;
+	std::string _transmitMobilityOperationTopic;
+	std::string _transmitMobilityPathTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	RdKafka::Conf *kafka_conf;
