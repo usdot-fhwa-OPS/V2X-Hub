@@ -14,7 +14,7 @@ namespace CARMAStreetsPlugin {
 
 
 /**
- * Construct a new MobililtyOperationPlugin with the given name.
+ * Construct a new CARMAStreetsPlugin with the given name.
  *
  * @param name The name to give the plugin for identification purposes
  */
@@ -24,7 +24,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	FILELog::ReportingLevel() = FILELog::FromString("INFO");
 	//AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
-
+	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	
 	SubscribeToMessages();
 
@@ -37,7 +37,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 
 	lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("receiveTopic", _receiveTopic);	
-	GetConfigValue<string>("transmitTopic", _transmitTopic);
+	GetConfigValue<string>("transmitMobilityOperationTopic", _transmitMobilityOperationTopic);
+	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	 // Populate strategies config
@@ -89,7 +90,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
 		FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
 
-  		FILE_LOG(logERROR) <<"Queueing kafka message:topic:" << _receiveTopic << " " 
+  		FILE_LOG(logERROR) <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
 		  << kafka_producer->outq_len() <<"messages already in queue";
 
 		std::stringstream strat;
@@ -104,7 +105,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			message = payload.str();
 	
 			while (retry) {
-				RdKafka::ErrorCode produce_error = kafka_producer->produce(_receiveTopic, RdKafka::Topic::PARTITION_UA,
+				RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitMobilityOperationTopic, RdKafka::Topic::PARTITION_UA,
 				RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(message.c_str()),
 				message.size(), NULL, NULL, 0, 0);
 
@@ -133,6 +134,105 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	}
 	
 
+}
+
+void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg ) 
+{
+	try 
+	{
+		auto mobilityPathMsg = msg.get_j2735_data();
+
+		Json::Value mobilityPathJsonRoot;
+		Json::StreamWriterBuilder builder;
+
+		Json::Value metadata;
+		std::stringstream hostStaticId;
+
+		hostStaticId << mobilityPathMsg->header.hostStaticId.buf;
+		metadata["hostStaticId"] = hostStaticId.str();
+
+		std::stringstream targetStaticId;
+		targetStaticId << mobilityPathMsg->header.targetStaticId.buf;
+		metadata["targetStaticId"] = targetStaticId.str();
+
+		std::stringstream hostBSMId;
+		hostBSMId << mobilityPathMsg->header.hostBSMId.buf;
+		metadata["hostBSMId"] =hostBSMId.str();
+
+		std::stringstream planId;
+		planId << mobilityPathMsg->header.planId.buf;
+		metadata["planId"] = planId.str();
+
+		std::stringstream timestamp;
+		timestamp << mobilityPathMsg->header.timestamp.buf;
+		metadata["timestamp"] = timestamp.str();
+
+		Json::Value mobilityPathJsonValue;
+		Json::Value location;
+		Json::Value trajectory;
+
+		std::stringstream location_ecefX;
+		location_ecefX << mobilityPathMsg->body.location.ecefX;
+		location["ecefX"] = std::stoi(location_ecefX.str());
+		
+		std::stringstream location_ecefY;
+		location_ecefY << mobilityPathMsg->body.location.ecefY;
+		location["ecefY"] = std::stoi(location_ecefY.str());
+
+		std::stringstream location_ecefZ;
+		location_ecefZ << mobilityPathMsg->body.location.ecefZ;
+		location["ecefZ"] = std::stoi(location_ecefZ.str());
+
+		std::stringstream location_timestamp;
+		location_timestamp << mobilityPathMsg->body.location.timestamp.buf;
+		location["timestamp"] = location_timestamp.str();
+
+		for(int i=0; i < mobilityPathMsg->body.trajectory.list.count; i++)
+		{
+			Json::Value offset;
+			std::stringstream trajectory_offsetX;
+			trajectory_offsetX<<mobilityPathMsg->body.trajectory.list.array[i]->offsetX;
+			offset["offsetX"] = std::stoi(trajectory_offsetX.str());
+
+
+			std::stringstream trajectory_offsetY;
+			trajectory_offsetY<<mobilityPathMsg->body.trajectory.list.array[i]->offsetY;
+			offset["offsetY"] = std::stoi(trajectory_offsetY.str());
+
+			std::stringstream trajectory_offsetZ;
+			trajectory_offsetZ<<mobilityPathMsg->body.trajectory.list.array[i]->offsetZ;
+			offset["offsetZ"] = std::stoi(trajectory_offsetZ.str());
+
+			trajectory["offsets"].append(offset);
+		}
+
+		mobilityPathJsonValue["location"] = location;
+		mobilityPathJsonValue["trajectory"] = trajectory;
+		mobilityPathJsonRoot["metadata"] = metadata; 
+		mobilityPathJsonRoot["MobilityPath"] = mobilityPathJsonValue;
+		const std::string json_message = Json::writeString(builder, mobilityPathJsonRoot);
+		RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitMobilityPathTopic, RdKafka::Topic::PARTITION_UA,
+		RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(json_message.c_str()),
+		json_message.size(), NULL, NULL, 0, 0);
+
+		if (produce_error == RdKafka::ERR_NO_ERROR) 
+		{
+			FILE_LOG(logDEBUG) <<"Queued message:" << json_message;
+		}
+		else 
+		{
+			FILE_LOG(logERROR) <<"Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
+			if (produce_error == RdKafka::ERR__QUEUE_FULL) 
+			{
+				FILE_LOG(logERROR) <<"MobilityPath producer Message queue is full.";
+			}
+		}	
+	}
+	catch (TmxException &ex) 
+	{
+		FILE_LOG(logERROR) << "Failed to decode message : " << ex.what();
+
+	}
 }
 
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
