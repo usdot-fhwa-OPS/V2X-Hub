@@ -105,11 +105,7 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 	bsmTmpID =  (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
 	
 
-	//std::vector<int>::iterator it = std::find(allowedList.begin(),allowedList.end(),bsmTmpID);
-	
-	//if( it != allowedList.end())
-	//{	
-		if (bsm->partII != NULL) {
+	if (bsm->partII != NULL) {
 			if (bsm->partII[0].list.count >= partII_Value_PR_SpecialVehicleExtensions ) {
 				try {
 						if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
@@ -125,9 +121,7 @@ void PreemptionPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messa
 					PLOG(logDEBUG)<<"Standard Exception:; Vehicle alerts Unavailable";
 				}
 			}
-		}
-	//}
-	
+	}
 }
 
 int PreemptionPlugin::Main()
