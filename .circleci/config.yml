@@ -40,8 +40,6 @@ jobs:
       #setup remote docker
       - setup_remote_docker :
           docker_layer_caching: false
-      # Checkout PR branch
-      - checkout
       - run:
           name: Run Tests & Generate Gcovr Reports
           command: |
@@ -88,8 +86,6 @@ jobs:
       #setup remote docker
       - setup_remote_docker :
           docker_layer_caching: false
-      # Checkout PR branch
-      - checkout
       - run:
           name: Run Tests & Generate Gcovr Reports
           command: |
@@ -167,7 +163,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
     
      - run: 
         name: Docker Push
@@ -185,7 +181,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image develop image
         command: |
-          docker build -t usdotfhwaops/v2xhubarm:latest .
+          docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:latest .
 
      - run:
         name: Docker Push
