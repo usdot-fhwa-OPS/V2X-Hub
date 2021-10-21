@@ -268,6 +268,8 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 		free(msgId);
 		return false;
 	}
+	
+	free(msgId);
 
 	// Set status to modifyReq, notifying the sign to use modifiable memory location for message number 2.
 	_dmsController.setDMSMsgStatus("6", msgId);
@@ -281,6 +283,8 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 		free(msgId);
 		return false;
 	}
+	
+	free(msgId);
 
 	// Set the string for interchangeable memory at the message number specified by the ID.
 	_dmsController.setDMSMsgMultiString(message, msgId);
