@@ -128,7 +128,7 @@ void addSystemDefinedMessageTypes()
 
 
 std::string GetPwd(){
-	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
+	const char* EnvVar = "MYSQL_PASSWORD";
 	const char* pwd;
 	pwd = std::getenv(EnvVar);
 
@@ -137,8 +137,13 @@ std::string GetPwd(){
 		return "";
 	}
 	else{
-		std::string PwdStr(pwd);
-		return PwdStr;
+		std::ifstream t(pwd);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		if ( buffer.str() != "") {
+			std::string PwdStr = buffer.str();
+			return PwdStr;
+		}
 	}
 	return  "";
 }

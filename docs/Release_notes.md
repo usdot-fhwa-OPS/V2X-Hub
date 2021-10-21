@@ -1,6 +1,20 @@
 V2X-Hub Release Notes
 ----------------------------
 
+Version 6.1, released Oct 15th, 2021
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release version 6.1 is a hotfix release for 6.0.
+
+Fixes in this release:
+-	Issue 233: Fixed SPaT message to report green status as "permissive" vs "protected" correctly.
+-	Issue 124: Fixed issue with interpreting when the signal controller is in flash state.
+-	Issue 245: Added configurable parameter for Carma cloud plugin to use for the “oldest” parameter in the TCR request to get controls created within the time period specified by this field in days.
+-	Issue 247: Added TCM PSID to messages forwarded to RSU for broadcast.
+-	Issue 186: Fixed sonar-scanner settings with code coverage to generate the coverage metrics in sonar cloud.
+-	Issue 201: Update docker-compose to manage sensitive data like mysql username and password with Docker secrets.
+
 Version 6.0, released July 30th, 2021
 --------------------------------------------------------
 

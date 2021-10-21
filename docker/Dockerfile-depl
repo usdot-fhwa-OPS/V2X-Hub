@@ -1,8 +1,9 @@
-FROM ubuntu:bionic-20190807
+FROM ubuntu:bionic-20190807 AS install_dependencies
 
-
-RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.65-dev libboost-thread1.65-dev libboost-regex1.65-dev libboost-log1.65-dev libboost-program-options1.65-dev libboost1.65-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
-
+RUN apt-get update  && apt-get install -y cmake git build-essential libgtest-dev libssl-dev qtbase5-dev \
+    zip libmysqlcppconn-dev libboost1.65-all-dev libmysqlclient-dev uuid-dev libxerces-c-dev qtbase5-dev \
+    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libev-dev libuv-dev libcpprest-dev
+# Build and install GTest 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
 WORKDIR /usr/src/googletest/googletest/build
@@ -16,15 +17,19 @@ RUN ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
 RUN ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
 RUN ldconfig
 
+# Build and install tmx
 RUN mkdir ~/V2X-Hub
-COPY . /home/V2X-Hub
+COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/tmx/
 RUN cmake .
 RUN make
 RUN make install
 
+# Scripts 
+COPY ./ext /home/V2X-Hub/ext
+COPY ./container /home/V2X-Hub/container
 WORKDIR /home/V2X-Hub/container/
-RUN chmod +x /home/V2X-Hub/container/library.sh
+RUN /home/V2X-Hub/container/database.sh
 RUN /home/V2X-Hub/container/library.sh
 RUN ldconfig
 
@@ -52,6 +57,9 @@ RUN make
 RUN make install
 RUN ldconfig 
 
+
+
+COPY ext/ /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/server
 RUN cmake .
 RUN make
@@ -60,14 +68,15 @@ RUN make install
 WORKDIR /home/V2X-Hub/ext/ccserver
 RUN cmake . 
 RUN make
-RUN make install 
+RUN make install
+WORKDIR /home/V2X-Hub/ext/ccserver
+RUN rm -rf /home/V2X-Hub/ext/
 
-### setup and install v2x-hub core and plugins 
+
 
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 RUN cmake . -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/
 RUN make
-
 
 RUN ln -s ../bin CommandPlugin/bin
 RUN zip CommandPlugin.zip CommandPlugin/bin/CommandPlugin CommandPlugin/manifest.json
@@ -106,17 +115,10 @@ RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperatio
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
 
-
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
-RUN cp tmxcore.service /lib/systemd/system/
-RUN cp tmxcore.service /usr/sbin/
+RUN cp tmxcore.service /lib/systemd/system/ && cp tmxcore.service /usr/sbin/
 WORKDIR /home/V2X-Hub/container/
-RUN chmod +x /home/V2X-Hub/container/database.sh
-RUN /home/V2X-Hub/container/database.sh
-WORKDIR /home/V2X-Hub/container/
-RUN chmod +x /home/V2X-Hub/container/service.sh
-RUN chmod +x /home/V2X-Hub/container/wait-for-it.sh
-
+RUN chmod +x /home/V2X-Hub/container/service.sh && chmod +x /home/V2X-Hub/container/wait-for-it.sh
 WORKDIR /var/www/
 RUN mkdir ~/plugins
 WORKDIR /home/V2X-Hub/src/v2i-hub/
@@ -131,43 +133,10 @@ RUN chown plugin *
 RUN chgrp www-data *
 WORKDIR /home/V2X-Hub/src/v2i-hub/
 
-RUN sudo mkdir /home/V2X-Hub/.base-image 
-
-ENV SONAR_DIR=/opt/sonarqube
-
-# Pull scanner from internet
-RUN sudo mkdir $SONAR_DIR && \
-        sudo curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip && \
-        sudo curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip && \
-        # Install Dependancy of NodeJs 6+
-        sudo curl -sL https://deb.nodesource.com/setup_10.x | sudo bash - && \
-        # Install JQ Json Parser Tool
-        sudo mkdir /opt/jq && \
-        sudo curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq && \
-        sudo chmod +x /opt/jq/jq
-
-# Unzip scanner
-RUN cd $SONAR_DIR && \ 
-        sudo unzip $SONAR_DIR/sonar-scanner.zip -d . && \
-        sudo unzip $SONAR_DIR/build-wrapper.zip -d . && \
-        # Remove zip files 
-        sudo rm $SONAR_DIR/sonar-scanner.zip && \
-        sudo rm $SONAR_DIR/build-wrapper.zip && \
-        # Rename files 
-        sudo mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/ && \
-        sudo mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/ && \
-        # Add scanner, wrapper, and jq to PATH
-        sudo echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> /home/V2X-Hub/.base-image/init-env.sh
-
-# Install gcovr for code coverage tests and add code_coverage script folder to path
-RUN sudo apt-get -y install gcovr && \
-        sudo echo 'export PATH=$PATH:/home/V2X-Hub/.ci-image/engineering_tools/code_coverage/' >> /home/V2X-Hub/.base-image/init-env.sh
-
-
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.name="V2X-Hub-SonarCloud"
-LABEL org.label-schema.description="Base image for CARMA CI testing using SonarCloud"
+LABEL org.label-schema.name="V2X-Hub-Deployment"
+LABEL org.label-schema.description="Image V2X-Hub Deployment"
 LABEL org.label-schema.vendor="Leidos"
 LABEL org.label-schema.version="${VERSION}"
 LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations"
