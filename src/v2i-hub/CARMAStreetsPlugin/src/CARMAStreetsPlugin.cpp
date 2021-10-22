@@ -28,6 +28,8 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	
 	SubscribeToMessages();
 
+	SubscribeKafkaTopics();
+
 }
 
 CARMAStreetsPlugin::~CARMAStreetsPlugin() {
@@ -41,6 +43,9 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
+ 	GetConfigValue<int>("run_kafka_consumer", _run_kafka_consumer);
+ 	GetConfigValue<string>("subscribeMobilityOperationTopic", _subscribeToSchedulingPlanTopic);
+ 	GetConfigValue<string>("intersectionType", _intersectionType);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -73,7 +78,12 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	} 			
 	FILE_LOG(logERROR) <<"Kafka producer created";
 
-	
+	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf, error_string);
+	if ( !kafka_consumer ) {
+		FILE_LOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
+		exit(1);
+	}
+	FILE_LOG(logERROR) << "Created consumer " << kafka_consumer->name() << std::endl;
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -243,6 +253,38 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
+
+void CARMAStreetsPlugin::SubscribeKafkaTopics()
+{
+  	std::vector<std::string> topics;
+  	topics.push_back(_subscribeToSchedulingPlanTopic);
+	RdKafka::ErrorCode err = consumer->subscribe(topics);
+	if (err) {
+		FILE_LOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
+		return;
+	}
+
+	while (_run_kafka_consumer) 
+	{
+		RdKafka::Message *msg = consumer->consume(1000);
+		if(msg->err() == RdKafka::ERR_NO_ERROR)
+		{
+			const char * payload = static_cast<const char *>(msg->payload());
+		}
+		else
+		{
+			FILE_LOG(logERROR) << "Consume failed: " << msg->errstr() << std::endl;
+			_run_kafka_consumer = 0;
+			return;
+		}
+		delete msg;
+	}
+}
+
+bool CARMAStreetsPlugin::getEncodedtsm3(std::shared_ptr<tsm3EncodedMessage> tsm3EncodedMsg,  std::string msg_payload)
+{
+
+}
 
 int CARMAStreetsPlugin::Main() {
 	FILE_LOG(logINFO) << "Starting plugin.";
