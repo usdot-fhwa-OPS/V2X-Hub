@@ -285,6 +285,7 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	}
 	
 	free(msgId);
+	msgId = NULL; // This will prevent freeing the same memory again
 
 	// Set the string for interchangeable memory at the message number specified by the ID.
 	_dmsController.setDMSMsgMultiString(message, msgId);
@@ -309,6 +310,7 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	}
 
 	free(msgId);
+	msgId = NULL; // This will prevent freeing the same memory again
 
 	if (activateMessage)
 		return ActivateMessage(messageNumber);
