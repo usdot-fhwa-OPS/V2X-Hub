@@ -266,6 +266,7 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	{
 		PLOG(logERROR) << "Set status to 8 - Invalid status retrieved: " << statusResponse;
 		free(msgId);
+		msgId = NULL; // This will prevent freeing the same memory again
 		return false;
 	}
 	
@@ -281,13 +282,10 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	{
 		PLOG(logERROR) << "Set status to 6 - Invalid status response retrieved: " << statusResponse;
 		free(msgId);
-		msgId = NULL;
+		msgId = NULL; // This will prevent freeing the same memory again
 		return false;
 	}
 	
-	free(msgId);
-	msgId = NULL; // This will prevent freeing the same memory again
-
 	// Set the string for interchangeable memory at the message number specified by the ID.
 	_dmsController.setDMSMsgMultiString(message, msgId);
 
@@ -307,12 +305,9 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	{
 		PLOG(logERROR) << "Set status to 7 - Invalid status response retrieved: " << statusResponse;
 		free(msgId);
-		msgId = NULL;
+		msgId = NULL; // This will prevent freeing the same memory again
 		return false;
 	}
-
-	free(msgId);
-	msgId = NULL; // This will prevent freeing the same memory again
 
 	if (activateMessage)
 		return ActivateMessage(messageNumber);
