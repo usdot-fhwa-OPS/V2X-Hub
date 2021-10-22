@@ -281,6 +281,7 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	{
 		PLOG(logERROR) << "Set status to 6 - Invalid status response retrieved: " << statusResponse;
 		free(msgId);
+		msgId = NULL;
 		return false;
 	}
 	
@@ -306,6 +307,7 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	{
 		PLOG(logERROR) << "Set status to 7 - Invalid status response retrieved: " << statusResponse;
 		free(msgId);
+		msgId = NULL;
 		return false;
 	}
 
