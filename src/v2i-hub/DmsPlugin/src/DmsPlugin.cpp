@@ -268,8 +268,6 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 		return false;
 	}
 	
-	free(msgId);
-
 	// Set status to modifyReq, notifying the sign to use modifiable memory location for message number 2.
 	_dmsController.setDMSMsgStatus("6", msgId);
 
