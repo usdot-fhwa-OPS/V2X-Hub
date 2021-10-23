@@ -300,7 +300,6 @@ bool DmsPlugin::AssignMessageOnSign(int messageNumber, const char* message, bool
 	if (statusResponse != 4)
 	{
 		PLOG(logERROR) << "Set status to 7 - Invalid status response retrieved: " << statusResponse;
-		free(msgId);
 		return false;
 	}
 
