@@ -23,7 +23,7 @@ int TimeHelper::GetDayOfYear()
 	time_t time_sec = time / 1000;
 	struct tm *tm;
 	struct tm buf;
-	tm = gmtime_r(&time_sec, &buf):
+	tm = gmtime_r(&time_sec, &buf);
 
 	return tm->tm_yday;
 }
@@ -35,7 +35,7 @@ uint32_t TimeHelper::GetMinuteOfYear()
 	time_t time_sec = time / 1000;
 	struct tm *tm;
 	struct tm buf;
-	tm = gmtime_r(&time_sec, &buf):
+	tm = gmtime_r(&time_sec, &buf);
 
 	return (tm->tm_yday * 24 * 60) + (tm->tm_hour * 60) + tm->tm_min;
 }
