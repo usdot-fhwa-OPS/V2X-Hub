@@ -76,12 +76,11 @@ int VehicleLocate::FindRegion(TiDataFrame *frame, WGS84Point point, uint16_t hea
 		WGS84Point* points = GetPointArray(nodes, nodesLength, nodesAnchor);
 
 		if (IsInPointList(points, nodesLength, point, heading, laneWidth/100.0))
-			free(points);
-			points = NULL;
+			delete[] points;
 			return i + 1;
 
-		free(points);
 	}
+	free(points);
 
 	return -1;
 }
