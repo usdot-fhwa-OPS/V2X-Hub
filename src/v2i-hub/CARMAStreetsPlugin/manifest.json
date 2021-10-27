@@ -21,6 +21,11 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
+            "key": "transmitBSMTopic",
+            "default": "v2xhub_bsm_in",
+            "description": "Apache Kafka topic plugin will transmit message to."
+        },
+        {
             "key": "run_kafka_consumer",
             "default": 1,
             "description": "indicator for consuming kafka messages."
@@ -52,7 +57,7 @@
         },
         {
             "key": "MobilityOperationStrategies",
-            "default": "carma/port_drayage,TruckInspection",
+            "default": "carma/port_drayage,TruckInspection,Carma/stop_controlled_intersection",
             "description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
         }
 

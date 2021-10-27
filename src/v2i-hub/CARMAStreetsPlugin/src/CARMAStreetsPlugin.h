@@ -41,7 +41,7 @@ protected:
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	void SubscribeKafkaTopics();
-	bool getEncodedtsm3(std::shared_ptr<tsm3EncodedMessage> tsm3EncodedMsg,  std::string msg_payload);
+	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
 
 private:
 	std::string _receiveTopic;
