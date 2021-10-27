@@ -20,7 +20,8 @@ void MessageContext::insertOrUpdateMessageActivity(MessageActivityEntry &entry)
 {
 	// Convert time_t struct into UTC timestamp string.
 	struct tm *tm;
-	tm = gmtime (&entry.lastReceivedTimestamp);
+	struct tm buf;
+	tm = gmtime_r(&entry.lastReceivedTimestamp, &buf):
 	stringstream timestamp;
 	timestamp << tm->tm_year + 1900 << "-" << tm->tm_mon + 1 << "-" << tm->tm_mday << " " << tm->tm_hour << ":" << tm->tm_min << ":" << tm->tm_sec;
 
