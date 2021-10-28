@@ -38,6 +38,7 @@ public class LoadingActions {
      * Empty Constructor.
      */
     public LoadingActions() {
+
     }
 
     /**
@@ -106,27 +107,25 @@ public class LoadingActions {
      */
     public ContainerActionStatus getContainerActionStatus(String vehicleId) {
         if (vehicleId != null) {
+            // First search pending loading actions ( null check since actions array is null
+            // before adding values )
             if (pendingActions.getActions() != null) {
-                // First search pending loading actions ( null check since actions array is null
-                // before adding values )
-                if (pendingActions.getActions() != null) {
-                    for (ContainerActionStatus containerAction : pendingActions.getActions()) {
-                        if (vehicleId.equals(containerAction.getVehicleId())) {
-                            return containerAction;
-                        }
+                for (ContainerActionStatus containerAction : pendingActions.getActions()) {
+                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                        return containerAction;
                     }
                 }
-                // Is current action for vehicle with vehicleId
-                if (currentAction != null && vehicleId.equals(currentAction.getVehicleId())) {
-                    return currentAction;
-                }
-                // Search completed loading actions ( null check since actions array is null
-                // before adding values )
-                if (completedActions.getActions() != null) {
-                    for (ContainerActionStatus containerAction : completedActions.getActions()) {
-                        if (vehicleId.equals(containerAction.getVehicleId())) {
-                            return containerAction;
-                        }
+            }
+            // Is current action for vehicle with vehicleId
+            if (currentAction != null && vehicleId.equals(currentAction.getVehicleId())) {
+                return currentAction;
+            }
+            // Search completed loading actions ( null check since actions array is null
+            // before adding values )
+            if (completedActions.getActions() != null) {
+                for (ContainerActionStatus containerAction : completedActions.getActions()) {
+                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                        return containerAction;
                     }
                 }
             }
@@ -143,6 +142,7 @@ public class LoadingActions {
      */
     public void startCurrentAction() {
         if (currentAction != null) {
+            logger.debug(String.format("Starting loading for action %s", currentAction.toString()));
             currentAction.setStatus(StatusEnum.LOADING);
         } else
             logger.warn("There is no current action!");
@@ -157,9 +157,11 @@ public class LoadingActions {
         if (currentAction != null) {
             currentAction.setStatus(ContainerActionStatus.StatusEnum.LOADED);
             currentAction.setCompleted(System.currentTimeMillis());
+            logger.debug(String.format("Complete loading for action %s", currentAction.toString()));
+            logger.debug(String.format("Complete loading for action %s", currentAction.toString()));
             completedActions.addActionsItem(currentAction);
             // Remove first item in list of pending actions and set it to current action
-            if (pendingActions != null && !pendingActions.getActions().isEmpty()) {
+            if (pendingActions.getActions() != null && !pendingActions.getActions().isEmpty()) {
                 currentAction = pendingActions.getActions().remove(0);
             } else {
                 currentAction = null;

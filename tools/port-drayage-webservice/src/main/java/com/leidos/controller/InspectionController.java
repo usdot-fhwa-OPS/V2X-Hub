@@ -73,5 +73,36 @@ public class InspectionController implements InspectionApi {
                     inspectionActions.getCurrentInspection().toString()));
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-    } 
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Void> inspectionCompletePost() {
+        InspectionStatus cur = inspectionActions.getCurrentInspection();
+        if (cur != null) {
+            inspectionActions.completeInspection();
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Void> inspectionHoldPost() {
+        InspectionStatus cur = inspectionActions.getCurrentInspection();
+        if (cur != null) {
+            inspectionActions.proceedToHolding();
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
 }

@@ -61,4 +61,36 @@ public class UnloadingController implements UnloadingApi {
         return new ResponseEntity<>(HttpStatus.CREATED);
 
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Void> unloadingStartPost( ) {
+        ContainerActionStatus cur = unloadingActions.getCurrentAction();
+        if ( cur != null ) {
+            unloadingActions.startCurrentAction();
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
+        else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Void> unloadingCompletePost(  ) {
+        ContainerActionStatus cur = unloadingActions.getCurrentAction();
+        if ( cur != null  ) {
+            unloadingActions.completeCurrentAction();
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        }
+        else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+    }
 }

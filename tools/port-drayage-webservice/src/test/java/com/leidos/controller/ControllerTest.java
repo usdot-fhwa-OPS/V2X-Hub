@@ -1,6 +1,5 @@
 package com.leidos.controller;
 
-
 import com.leidos.loading.LoadingActions;
 import com.leidos.unloading.UnloadingActions;
 import com.baeldung.openapi.model.ContainerActionStatus;
@@ -21,10 +20,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-
-@WebMvcTest( controllers = { InspectionController.class, LoadingController.class, UnloadingController.class})
+@WebMvcTest(controllers = { InspectionController.class, LoadingController.class, UnloadingController.class })
 public class ControllerTest {
-    
+
     @Autowired
     private MockMvc mvc;
 
@@ -41,38 +39,43 @@ public class ControllerTest {
 
     /**
      * Test GET /loading {@link HttpStatus} is always OK.
+     * 
      * @throws Exception
      */
     @Test
-    public void testGetLoading() throws Exception{
-       
-        mvc.perform(MockMvcRequestBuilders.get("/loading/pending")).andExpect( MockMvcResultMatchers.status().isOk());
+    public void testGetLoading() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/loading/pending")).andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     /**
      * Test GET /unloading {@link HttpStatus} is always OK.
+     * 
      * @throws Exception
      */
     @Test
-    public void testGetUnloading() throws Exception{
-       
-        mvc.perform(MockMvcRequestBuilders.get("/unloading/pending")).andExpect( MockMvcResultMatchers.status().isOk());
+    public void testGetUnloading() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/unloading/pending")).andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     /**
      * Test GET /inspection {@link HttpStatus} is always OK.
+     * 
      * @throws Exception
      */
     @Test
-    public void testGetInspection() throws Exception{
-       
-        mvc.perform(MockMvcRequestBuilders.get("/inspection/pending")).andExpect( MockMvcResultMatchers.status().isOk());
+    public void testGetInspection() throws Exception {
+
+        mvc.perform(MockMvcRequestBuilders.get("/inspection/pending")).andExpect(MockMvcResultMatchers.status().isOk());
     }
 
-    // LoadingController Test -------------------------------------------------------------------------------------
+    // LoadingController Test
+    // -------------------------------------------------------------------------------------
 
     /**
      * Test POST /loading responses from {@link LoadingController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -83,28 +86,22 @@ public class ControllerTest {
         request.setVehicleId("vehicleId");
         request.setContainerId("containerId");
 
-        mvc.perform(MockMvcRequestBuilders.post("/loading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-       
-        
+        mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
+
         // Test response for empty post
-        mvc.perform(MockMvcRequestBuilders.post("/loading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("")).
-                andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON).content(""))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         // Test response for invalid post
-        mvc.perform(MockMvcRequestBuilders.post("/loading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"invalid\": \"json\"}"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
     /**
      * Test GET /loading/{vehicleId} responses from {@link LoadingController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -114,27 +111,26 @@ public class ControllerTest {
         responseStatus.setContainerId("containerId");
         responseStatus.setVehicleId("vehicleId");
         responseStatus.setStatus(ContainerActionStatus.StatusEnum.LOADING);
-        Long curTim = System.currentTimeMillis();
-        responseStatus.setRequested(curTim);
-
+        responseStatus.setRequested(System.currentTimeMillis());
 
         Mockito.when(mockLoadingActions.getContainerActionStatus("vehicleId")).thenReturn(responseStatus);
-       
-         // Test response for get loading/{vehicleId} for existing request
-         mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId"
-            )).andExpect(MockMvcResultMatchers.status().isOk());
-         mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId"
-            )).andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus))); 
-        
-         // Test response for get loading/{vehicleId} for non-existent request
-         mvc.perform(MockMvcRequestBuilders.get("/loading/no-existent"
-         )).andExpect(MockMvcResultMatchers.status().isBadRequest()); 
+
+        // Test response for get loading/{vehicleId} for existing request
+        mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId")).andExpect(MockMvcResultMatchers.status().isOk());
+        mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId"))
+                .andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+
+        // Test response for get loading/{vehicleId} for non-existent request
+        mvc.perform(MockMvcRequestBuilders.get("/loading/no-existent"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
-    // UnloadingController Test -------------------------------------------------------------------------------------
+    // UnloadingController Test
+    // -------------------------------------------------------------------------------------
 
     /**
      * Test POST /unloading responses from {@link UnloadingController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -145,28 +141,22 @@ public class ControllerTest {
         request.setVehicleId("vehicleId");
         request.setContainerId("containerId");
 
-        mvc.perform(MockMvcRequestBuilders.post("/unloading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-       
-        
+        mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
+
         // Test response for empty post
-        mvc.perform(MockMvcRequestBuilders.post("/unloading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("")).
-                andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON).content(""))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         // Test response for invalid post
-        mvc.perform(MockMvcRequestBuilders.post("/loading")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"invalid\": \"json\"}"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
     /**
      * Test GET /unloading/{vehicleId} responses from {@link UnloadingController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -176,27 +166,27 @@ public class ControllerTest {
         responseStatus.setContainerId("containerId");
         responseStatus.setVehicleId("vehicleId");
         responseStatus.setStatus(ContainerActionStatus.StatusEnum.UNLOADING);
-        Long curTim = System.currentTimeMillis();
-        responseStatus.setRequested(curTim);
-
+        responseStatus.setRequested(System.currentTimeMillis());
 
         Mockito.when(mockUnloadingActions.getContainerActionStatus("vehicleId")).thenReturn(responseStatus);
-       
-         // Test response for get loading/{vehicleId} for existing request
-         mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId"
-            )).andExpect(MockMvcResultMatchers.status().isOk());
-         mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId"
-            )).andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus))); 
-        
-         // Test response for get loading/{vehicleId} for non-existent request
-         mvc.perform(MockMvcRequestBuilders.get("/unloading/no-existent"
-         )).andExpect(MockMvcResultMatchers.status().isBadRequest()); 
+
+        // Test response for get loading/{vehicleId} for existing request
+        mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId"))
+                .andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+
+        // Test response for get loading/{vehicleId} for non-existent request
+        mvc.perform(MockMvcRequestBuilders.get("/unloading/no-existent"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
-    // UnloadingController Test -------------------------------------------------------------------------------------
+    // UnloadingController Test
+    // -------------------------------------------------------------------------------------
 
     /**
      * Test POST /inspection responses from {@link InspectionController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -207,28 +197,22 @@ public class ControllerTest {
         request.setVehicleId("vehicleId");
         request.setContainerId("containerId");
 
-        mvc.perform(MockMvcRequestBuilders.post("/inspection")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-       
-        
+        mvc.perform(MockMvcRequestBuilders.post("/inspection").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
+
         // Test response for empty post
-        mvc.perform(MockMvcRequestBuilders.post("/inspection")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("")).
-                andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/inspection").contentType(MediaType.APPLICATION_JSON).content(""))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         // Test response for invalid post
-        mvc.perform(MockMvcRequestBuilders.post("/inspection")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"invalid\": \"json\"}"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/inspection").contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
     /**
      * Test POST /inspection/holding responses from {@link InspectionController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -239,9 +223,7 @@ public class ControllerTest {
         responseStatus.setContainerId("containerId");
         responseStatus.setVehicleId("vehicleId");
         responseStatus.setStatus(InspectionStatus.StatusEnum.PENDING);
-        Long curTim = System.currentTimeMillis();
-        responseStatus.setRequested(curTim);
-
+        responseStatus.setRequested(System.currentTimeMillis());
 
         Mockito.when(mockInspectionActions.getCurrentInspection()).thenReturn(responseStatus);
 
@@ -250,41 +232,34 @@ public class ControllerTest {
         request.setVehicleId("vehicleId");
         request.setContainerId("containerId");
 
-        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isCreated());
-        
-        // Test response for non current action ( both incorrect vehicle and container id)
+        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
+
+        // Test response for non current action ( both incorrect vehicle and container
+        // id)
         request.setVehicleId("wrong");
-        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         request.setVehicleId("vehicleId");
         request.setContainerId("wrong");
-        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-        
+        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding").contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest());
+
         // Test response for empty post
-        mvc.perform(MockMvcRequestBuilders.post("/inspection/holding")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("")).
-                andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(
+                MockMvcRequestBuilders.post("/inspection/holding").contentType(MediaType.APPLICATION_JSON).content(""))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         // Test response for invalid post
-        mvc.perform(MockMvcRequestBuilders.post("/inspection")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{ \"invalid\": \"json\"}"))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        mvc.perform(MockMvcRequestBuilders.post("/inspection").contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
     /**
      * Test GET /inspection/{vehicleId} responses from {@link InspectionController}.
+     * 
      * @throws Exception
      */
     @Test
@@ -294,23 +269,19 @@ public class ControllerTest {
         responseStatus.setContainerId("containerId");
         responseStatus.setVehicleId("vehicleId");
         responseStatus.setStatus(InspectionStatus.StatusEnum.PENDING);
-        Long curTim = System.currentTimeMillis();
-        responseStatus.setRequested(curTim);
-
+        responseStatus.setRequested(System.currentTimeMillis());
 
         Mockito.when(mockInspectionActions.getInspectionStatus("vehicleId")).thenReturn(responseStatus);
-       
-         // Test response for get loading/{vehicleId} for existing request
-         mvc.perform(MockMvcRequestBuilders.get("/inspection/vehicleId"
-            )).andExpect(MockMvcResultMatchers.status().isOk());
-         mvc.perform(MockMvcRequestBuilders.get("/inspection/vehicleId"
-            )).andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus))); 
-        
-         // Test response for get loading/{vehicleId} for non-existent request
-         mvc.perform(MockMvcRequestBuilders.get("/inspection/no-existent"
-         )).andExpect(MockMvcResultMatchers.status().isBadRequest()); 
+
+        // Test response for get loading/{vehicleId} for existing request
+        mvc.perform(MockMvcRequestBuilders.get("/inspection/vehicleId"))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        mvc.perform(MockMvcRequestBuilders.get("/inspection/vehicleId"))
+                .andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+
+        // Test response for get loading/{vehicleId} for non-existent request
+        mvc.perform(MockMvcRequestBuilders.get("/inspection/no-existent"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
-    
-    
 }

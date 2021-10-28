@@ -77,3 +77,6 @@ Thumbs.db
 
 #docker-compose variables
 .env
+
+#Maven build directory
+tools/port-drayage-webservice/target/

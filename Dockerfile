@@ -62,6 +62,11 @@ RUN cmake .
 RUN make
 RUN make install 
 
+WORKDIR /home/V2X-Hub/ext/pdclient
+RUN cmake .
+RUN make
+RUN make install
+
 ### setup and install v2x-hub core and plugins 
 
 WORKDIR /home/V2X-Hub/src/v2i-hub/

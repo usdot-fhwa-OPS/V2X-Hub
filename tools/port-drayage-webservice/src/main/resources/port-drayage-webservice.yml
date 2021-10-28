@@ -36,6 +36,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionStatusList'
+  /loading/start:
+    post:
+      summary: Start a loading action.
+      description: Will attempt to start current loading action. Will return 400 if no current action
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+  /loading/complete:
+    post:
+      summary: Complete a loading action.
+      description: Will attempt to complete current loading action. Will return 400 if no current action
+      responses:
+        '201':
+          description: Created   
+        '400':
+          description: Bad Request  
   /loading/{vehicle_id}:
      get:
       parameters:
@@ -80,7 +98,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionStatusList'    
+                $ref: '#/components/schemas/ActionStatusList'
+  /unloading/start:
+    post:
+      summary: Start an unloading action.
+      description: Will attempt to start current unloading action. Will return 400 if no current action
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Bad Request
+  /unloading/complete:
+    post:
+      summary: Complete an unloading action.
+      description: Will attempt to complete current unloading action. Will return 400 if no current action
+      responses:
+        '201':
+          description: Created   
+        '400':
+          description: Bad Request      
   /unloading/{vehicle_id}:
      get:
       parameters:
@@ -144,6 +180,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InspectionStatusList'  
+  /inspection/complete:
+    post:
+      summary: Complete an inspection action.
+      description: Will attempt to complete current inspection action. Will return 400 if no current inspection
+      responses:
+        '201':
+          description: Created   
+        '400':
+          description: Bad Request
+  /inspection/hold:
+    post:
+      summary: Request vehicle proceed to holding area for further inspection
+      description: Will attempt to request vehicle proceed to holding area for further inspection. Will return 400 if no current action
+      responses:
+        '201':
+          description: Created   
+        '400':
+          description: Bad Request   
   /inspection/{vehicle_id}:
     get:
       parameters:
@@ -201,9 +255,11 @@ components:
            - PENDING
            - ABORTED
         requested:
-          type: long
+          type: integer
+          format: int64
         completed:
-          type: long
+          type: integer
+          format: int64
       required:
         - vehicle_id
         - container_id
@@ -250,9 +306,11 @@ components:
            - FAILED
            - HOLDING
         requested:
-          type: long
+          type: integer
+          format: int64
         completed:
-          type: long
+          type: integer
+          format: int64
       required:
         - vehicle_id
         - container_id

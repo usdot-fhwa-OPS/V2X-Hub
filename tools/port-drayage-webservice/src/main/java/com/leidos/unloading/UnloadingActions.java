@@ -107,25 +107,23 @@ public class UnloadingActions {
      */
     public ContainerActionStatus getContainerActionStatus(String vehicleId) {
         if (vehicleId != null) {
+            // First search pending unloading actions ( null check on actions array )
             if (pendingActions.getActions() != null) {
-                // First search pending unloading actions ( null check on actions array )
-                if (pendingActions.getActions() != null) {
-                    for (ContainerActionStatus containerAction : pendingActions.getActions()) {
-                        if (vehicleId.equals(containerAction.getVehicleId())) {
-                            return containerAction;
-                        }
+                for (ContainerActionStatus containerAction : pendingActions.getActions()) {
+                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                        return containerAction;
                     }
                 }
-                // Is current action for vehicle with vehicleId
-                if (currentAction != null && vehicleId.equals(currentAction.getVehicleId())) {
-                    return currentAction;
-                }
-                // Search completed unloading actions ( null check on actions array )
-                if (completedActions.getActions() != null) {
-                    for (ContainerActionStatus containerAction : completedActions.getActions()) {
-                        if (vehicleId.equals(containerAction.getVehicleId())) {
-                            return containerAction;
-                        }
+            }
+            // Is current action for vehicle with vehicleId
+            if (currentAction != null && vehicleId.equals(currentAction.getVehicleId())) {
+                return currentAction;
+            }
+            // Search completed unloading actions ( null check on actions array )
+            if (completedActions.getActions() != null) {
+                for (ContainerActionStatus containerAction : completedActions.getActions()) {
+                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                        return containerAction;
                     }
                 }
             }
@@ -158,7 +156,7 @@ public class UnloadingActions {
             currentAction.setCompleted(System.currentTimeMillis());
             completedActions.addActionsItem(currentAction);
             // Remove first item in list of pending actions and set it to current action
-            if (pendingActions != null && !pendingActions.getActions().isEmpty()) {
+            if (pendingActions.getActions() != null && !pendingActions.getActions().isEmpty()) {
                 currentAction = pendingActions.getActions().remove(0);
             } else {
                 currentAction = null;
