@@ -12,6 +12,10 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <OAIDefaultApi.h>
+#include <QEventLoop>
+#include <QTimer>
+#include "OAIHelpers.h"
 
 
 

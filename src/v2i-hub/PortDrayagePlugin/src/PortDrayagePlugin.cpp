@@ -65,6 +65,12 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 	catch(std::exception &e) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
 	}
+
+	// Setup Port Drayage Web Service Client
+	// OAIDefaultApi api;
+	// QEventLoop loop;
+	// connect( &api, &OIADefaultApi:: )
+	
 }
 
 
@@ -118,6 +124,9 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			if ( pd->action_id.empty() ) {
 				PLOG(logERROR) << "Retrieving first action." << std::endl;
 				*new_action = retrieveFirstAction( pd->cmv_id );
+			}
+			else if ( pd->operation.compare( "")  ) {
+
 			}
 			else {
 				PLOG(logERROR) << "Retrieving next action." << std::endl;
@@ -364,6 +373,8 @@ int PortDrayagePlugin::Main() {
 }
 
 int main(int argc, char *argv[]) {
+	// Qt HttpClient setup
+	QCoreApplication a(argc, argv);
 	return run_plugin < PortDrayagePlugin::PortDrayagePlugin > ("PortDrayagePlugin", argc, argv);
 }
 
