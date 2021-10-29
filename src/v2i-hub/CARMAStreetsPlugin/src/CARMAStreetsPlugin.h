@@ -46,14 +46,16 @@ protected:
 private:
 	std::string _receiveTopic;
 	std::string _transmitMobilityOperationTopic;
-	std::string _subscribeToSchedulingPlanTopic;
+	std::string _subscribeToSchedulingPlanTopic = "";
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	RdKafka::Conf *kafka_conf;
+	RdKafka::Conf *kafka_conf_consumer;
  	RdKafka::Producer *kafka_producer;
 	RdKafka::KafkaConsumer *kafka_consumer;
+	RdKafka::Topic *_topic;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;

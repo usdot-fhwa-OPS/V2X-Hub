@@ -20,15 +20,12 @@ namespace CARMAStreetsPlugin {
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 		PluginClient(name) {
-	
-	FILELog::ReportingLevel() = FILELog::FromString("INFO");
+			
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	
 	SubscribeToMessages();
-
-	SubscribeKafkaTopics();
 
 }
 
@@ -43,8 +40,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
- 	GetConfigValue<int>("run_kafka_consumer", _run_kafka_consumer);
- 	GetConfigValue<string>("subscribeMobilityOperationTopic", _subscribeToSchedulingPlanTopic);
+ 	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
+ 	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
 	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
  	GetConfigValue<string>("intersectionType", _intersectionType);
 	 // Populate strategies config
@@ -61,6 +58,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
 	FILE_LOG(logERROR) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
@@ -79,12 +77,40 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	} 			
 	FILE_LOG(logERROR) <<"Kafka producer created";
 
-	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf, error_string);
+	if (kafka_conf_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK || (kafka_conf_consumer->set("group.id", "streets_group", error_string) != RdKafka::Conf::CONF_OK)) {
+		FILE_LOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string;
+		FILE_LOG(logERROR) <<"Exiting with exit code 1";
+		exit(1);
+	} else {
+		FILE_LOG(logERROR) <<"Kafka config group.id options set successfully";
+	}
+	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
+
+	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
 	if ( !kafka_consumer ) {
 		FILE_LOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
 		exit(1);
 	}
 	FILE_LOG(logERROR) << "Created consumer " << kafka_consumer->name() << std::endl;
+
+	//create kafka topic
+	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	if(!tconf)
+	{
+		FILE_LOG(logERROR) << "RDKafka create topic conf failed ";
+		return;
+	}   
+
+	_topic = RdKafka::Topic::create(kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
+	if(!_topic)
+	{
+		FILE_LOG(logERROR) << "RDKafka create topic failed:" << error_string;
+		return ;
+	}
+
+	delete tconf;
+	
+	boost::thread thr(&CARMAStreetsPlugin::SubscribeKafkaTopics, this);
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -92,10 +118,9 @@ void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
 	UpdateConfigSettings();
 }
 
-
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
-	try {
-
+	try 
+	{
 		auto mobilityOperation = msg.get_j2735_data();
 		bool retry = true;
 		FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
@@ -285,65 +310,133 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 
 void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
-	try {
-
+	try 
+	{
 		auto bsm = msg.get_j2735_data();
 		bool retry = true;
-		FILE_LOG(logERROR) << "BSM msgCnt: " << bsm->coreData.msgCnt;
-		FILE_LOG(logERROR) << "BSM size length: " << bsm->coreData.size.length;
-		FILE_LOG(logERROR) << "BSM size width: " << bsm->coreData.size.width;
-		FILE_LOG(logERROR) << "BSM lat: " << bsm->coreData.lat;
-		FILE_LOG(logERROR) << "BSM long: " << bsm->coreData.Long;
-		FILE_LOG(logERROR) << "BSM elev: " << bsm->coreData.elev;
-		FILE_LOG(logERROR) << "BSM long: " << bsm->coreData.speed;
-		FILE_LOG(logERROR) << "BSM secMark: " << bsm->coreData.secMark;
-
-  		FILE_LOG(logERROR) <<"Queueing kafka message:topic:" << _transmitBSMTopic << " " 
-		<< kafka_producer->outq_len() <<"messages already in queue";
 
 		Json::Value bsmJsonRoot;
+		Json::Value coreData;
+		Json::Value size;
 		Json::StreamWriterBuilder builder;
 
 		std::stringstream msgCnt;
 		msgCnt << bsm->coreData.msgCnt;
-		bsmJsonRoot["msg_count"] = msgCnt.str();
+		coreData["msg_count"] = msgCnt.str();
 
 		std::stringstream length;
 		length << bsm->coreData.size.length;
-		bsmJsonRoot["length"] = length.str();
+		size["length"] = length.str();
 
 		std::stringstream width;
 		width << bsm->coreData.size.width;
-		bsmJsonRoot["width"] = width.str();
+		size["width"] = width.str();
 
 		std::stringstream lat;
 		lat << bsm->coreData.lat;
-		bsmJsonRoot["lat"] = lat.str();
+		coreData["lat"] = lat.str();
 
 		std::stringstream Long;
 		Long << bsm->coreData.Long;
-		bsmJsonRoot["long"] = Long.str();
+		coreData["long"] = Long.str();
 
 		std::stringstream elev;
 		elev << bsm->coreData.elev;
-		bsmJsonRoot["elev"] = elev.str();
+		coreData["elev"] = elev.str();
 
 		std::stringstream speed;
 		speed << bsm->coreData.speed;
-		bsmJsonRoot["speed"] = speed.str();
+		coreData["speed"] = speed.str();
 
 		std::stringstream secMark;
 		secMark << bsm->coreData.secMark;
-		bsmJsonRoot["sec_mark"]  = secMark.str();
+		coreData["sec_mark"]  = secMark.str();
 
-
-		std::stringstream id;
-		id << bsm->coreData.id.buf;
-		bsmJsonRoot["sec_mark"]  = id.str();
+		auto id_len = bsm->coreData.id.size;
+		std::vector<std::uint8_t> id_v;
+		for(auto i = 0; i < id_len; i++)
+		{
+			id_v.push_back(bsm->coreData.id.buf[i]);
+		}
+		std::string id(id_v.begin(), id_v.end());
+		coreData["id"]  = id;
 		
-		bsmJsonRoot["core_data"]  = bsmJsonRoot; 
-		const std::string message = Json::writeString(builder, bsmJsonRoot);
-		PLOG(logDEBUG) <<"BSM Json message:" << message;
+		Json::Value accuracy;
+
+		std::stringstream orientation;
+		orientation << bsm->coreData.accuracy.orientation;
+		accuracy["orientation"] = orientation.str();
+		
+		std::stringstream semiMajor;
+		semiMajor << bsm->coreData.accuracy.semiMajor;
+		accuracy["semi_major"] = semiMajor.str();
+
+		std::stringstream semiMinor;
+		semiMinor << bsm->coreData.accuracy.semiMinor;
+		accuracy["semi_minor"] = semiMinor.str();
+
+		std::stringstream angle;
+		angle << bsm->coreData.angle;
+		coreData["angle"] = angle.str();
+
+		std::stringstream heading;
+		heading << bsm->coreData.heading;
+		coreData["heading"] = heading.str();
+
+		Json::Value accel_set;
+
+		std::stringstream accelSet_lat;
+		accelSet_lat << bsm->coreData.accelSet.lat;
+		accel_set["lat"] = accelSet_lat.str();
+
+		std::stringstream accelSet_long;
+		accelSet_long << bsm->coreData.accelSet.Long;
+		accel_set["long"] = accelSet_long.str();
+
+		std::stringstream accelSet_vert;
+		accelSet_vert << bsm->coreData.accelSet.vert;
+		accel_set["vert"] = accelSet_vert.str();
+
+		std::stringstream accelSet_yaw;
+		accelSet_yaw << bsm->coreData.accelSet.yaw;
+		accel_set["yaw"] = accelSet_yaw.str();
+
+		std::stringstream transmission;
+		transmission << bsm->coreData.transmission;
+		coreData["transmission"] = transmission.str();
+
+		Json::Value brakes;
+
+		std::stringstream abs;
+		abs << bsm->coreData.brakes.abs;
+		brakes["abs"] = abs.str();
+
+		std::stringstream auxBrakes;
+		auxBrakes << bsm->coreData.brakes.auxBrakes;
+		brakes["aux_brakes"] = auxBrakes.str();
+
+		std::stringstream brake_boost;
+		brake_boost << bsm->coreData.brakes.brakeBoost;
+		brakes["brake_boost"] = brake_boost.str();
+
+		std::stringstream scs;
+		scs << bsm->coreData.brakes.scs;
+		brakes["scs"] = scs.str();
+
+		std::stringstream traction;
+		traction << bsm->coreData.brakes.traction;
+		brakes["traction"] = traction.str();
+
+		std::stringstream wheel_brakes;
+		wheel_brakes << bsm->coreData.brakes.wheelBrakes.buf;
+		brakes["wheel_brakes"] = wheel_brakes.str();
+
+		coreData["accel_set"]		= accel_set;
+		coreData["brakes"]			= brakes;
+		coreData["accuracy"] 		= accuracy;
+		coreData["size"] 			= size;		
+		bsmJsonRoot["core_data"]  	= coreData; 
+		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
 
 		while (retry) 
 		{
@@ -385,149 +478,168 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-
 void CARMAStreetsPlugin::SubscribeKafkaTopics()
-{
-  	std::vector<std::string> topics;
-  	topics.push_back(_subscribeToSchedulingPlanTopic);
-	RdKafka::ErrorCode err = kafka_consumer->subscribe(topics);
-	if (err) 
+{	
+	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
-		PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
-		return;
-	}
+		PLOG(logDEBUG) << "SubscribeKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
+		std::vector<std::string> topics;
+		topics.push_back(std::string(_subscribeToSchedulingPlanTopic));
 
-	while (_run_kafka_consumer) 
-	{
-		RdKafka::Message *msg = kafka_consumer->consume( 1000 );
-		if( msg->err() == RdKafka::ERR_NO_ERROR )
+		RdKafka::ErrorCode err = kafka_consumer->subscribe(topics);
+		if (err) 
 		{
-			const char * payload_str = static_cast<const char *>( msg->payload() );
-			if(msg->len() > 0)
-			{
-				PLOG(logERROR) << "consumed message payload: " << payload_str <<std::endl;
-				Json::Value  payload_root;
-				Json::Reader payload_reader;
-				bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
-				if( !parse_sucessful )
-				{	
-					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
-					continue;
-				}
-
-				Json::Value metadata = payload_root["metadata"];
-				Json::Value payload_json_array = payload_root["payload"];
-				
-				for ( int index = 0; index < payload_json_array.size(); ++index )
-				{
-					PLOG(logDEBUG) << payload_json_array[index] << std::endl;
-					Json::Value payload_json =  payload_json_array[index];
-					tsm3EncodedMessage tsm3EncodedMsgs;
-					if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
-					{
-						tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
-						tsm3EncodedMsgs.addDsrcMetadata( 172, 0xBFEE );
-						PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
-						BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
-					}
-				}			
-			}
-		}
-		else
-		{
-			PLOG(logERROR) << "Consume failed: " << msg->errstr() << std::endl;
-			_run_kafka_consumer = 0;
+			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
 			return;
 		}
-		delete msg;
+
+		while (_run_kafka_consumer) 
+		{
+			RdKafka::Message *msg = kafka_consumer->consume( 500 );
+			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			{
+				const char * payload_str = static_cast<const char *>( msg->payload() );
+				if(msg->len() > 0)
+				{
+					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+					Json::Value  payload_root;
+					Json::Reader payload_reader;
+					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+					if( !parse_sucessful )
+					{	
+						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						continue;
+					}
+
+					Json::Value metadata = payload_root["metadata"];
+					Json::Value payload_json_array = payload_root["payload"];
+					
+					for ( int index = 0; index < payload_json_array.size(); ++index )
+					{
+						PLOG(logDEBUG) << payload_json_array[index] << std::endl;
+						Json::Value payload_json =  payload_json_array[index];
+						tsm3EncodedMessage tsm3EncodedMsgs;
+						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
+						{
+							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
+							tsm3EncodedMsgs.addDsrcMetadata( 172, 0xBFEE );
+							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
+							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
+						}
+					}			
+				}
+			}
+			delete msg;
+		}
+
 	}
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
-	std::lock_guard<std::mutex> lock(data_lock);
-	TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
-	std::string sender_id = "NA", recipient_id_str = payload_json["v_id"].asString(), sender_bsm_id_str = "NA", plan_id_str = "NA",timestamp_str = std::to_string(payload_json["timestamp"].asInt64()), strategy_str = payload_json["intersection_type"].asString();
-	std::string strategy_params_str = std::to_string(payload_json["st"].asInt64()) + std::to_string(payload_json["dt"].asInt64()) + std::to_string(payload_json["et"].asInt64()) + std::to_string(payload_json["dp"].asInt64()) + std::to_string(payload_json["access"].asInt64()); 
+	try
+	{			
+		std::lock_guard<std::mutex> lock(data_lock);
+		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
+		std::string sender_id 			 = "UNSET";
+		std::string recipient_id_str 	 = payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
+		std::string sender_bsm_id_str 	 = "00000000";
+		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
+		std::string strategy_str 		 = _intersectionType;
+		std::string strategy_params_str  = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
+											+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
+											+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
+											+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
+											+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
+		
+		std::string timestamp_str 		= (metadata.isMember("timestamp") ? std::to_string(metadata["timestamp"].asUInt64()) : "0"); 
 
-	//content host id
-	size_t string_size = sender_id.size();
-	uint8_t string_content_hostId[string_size];
-	for(size_t i=0; i< string_size; i++)
-	{
-		string_content_hostId[i] = sender_id[i];
+		//content host id
+		size_t string_size = sender_id.size();
+		uint8_t string_content_hostId[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_hostId[i] = sender_id[i];
+		}
+		mobilityOperation->header.hostStaticId.buf  = string_content_hostId;
+		mobilityOperation->header.hostStaticId.size = string_size;
+
+		//recipient id
+		std::string recipient_id = recipient_id_str;
+		string_size = recipient_id.size();
+		uint8_t string_content_targetId[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_targetId[i] = recipient_id[i];
+		}
+		mobilityOperation->header.targetStaticId.buf  = string_content_targetId;
+		mobilityOperation->header.targetStaticId.size = string_size;
+
+		//sender bsm id
+		std::string sender_bsm_id = sender_bsm_id_str;
+		string_size = sender_bsm_id.size();
+		uint8_t string_content_BSMId[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_BSMId[i] = sender_bsm_id[i];
+		}
+		mobilityOperation->header.hostBSMId.buf = string_content_BSMId;
+		mobilityOperation->header.hostBSMId.size = string_size;
+
+		//plan id
+		std::string plan_id = plan_id_str;
+		string_size = plan_id.size();
+		uint8_t string_content_planId[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_planId[i] = plan_id[i];
+		}
+		mobilityOperation->header.planId.buf = string_content_planId;
+		mobilityOperation->header.planId.size = string_size;
+
+		//get timestamp and convert to char array;
+		string_size = timestamp_str.size();
+		uint8_t string_content_timestamp[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_timestamp[i] = timestamp_str[i];
+		}
+		mobilityOperation->header.timestamp.buf = string_content_timestamp;
+		mobilityOperation->header.timestamp.size = string_size;
+
+		//convert strategy string to char array
+		std::string strategy = strategy_str;
+		string_size = strategy.size();
+		uint8_t string_content_strategy[string_size];
+		for(size_t i=0; i< string_size; i++)
+		{
+			string_content_strategy[i] = strategy[i];
+		}
+		mobilityOperation->body.strategy.buf = string_content_strategy;
+		mobilityOperation->body.strategy.size = string_size;        
+
+		//convert parameters string to char array
+		std::string strategy_params = strategy_params_str;
+		string_size = strategy_params.size();       
+		uint8_t string_content_params[string_size];
+		for(size_t i=0; i < string_size; i++)
+		{
+			string_content_params[i] = strategy_params[i];
+		}
+		mobilityOperation->body.operationParams.buf = string_content_params;
+		mobilityOperation->body.operationParams.size = string_size;
+
+		tmx::messages::tsm3Message* _tsm3Message = new tmx::messages::tsm3Message(mobilityOperation);
+		PLOG(logDEBUG) << *_tsm3Message;
+		tsm3EncodedMsg->initialize(*_tsm3Message);
+		free(mobilityOperation);
+		return true;
 	}
-	mobilityOperation->header.hostStaticId.buf  = string_content_hostId;
-	mobilityOperation->header.hostStaticId.size = string_size;
-
-	//recipient id
-	std::string recipient_id = recipient_id_str;
-	string_size = recipient_id.size();
-	uint8_t string_content_targetId[string_size];
-	for(size_t i=0; i< string_size; i++)
+	catch(...)
 	{
-		string_content_targetId[i] = recipient_id[i];
+		PLOG(logERROR) << "Failed to encoded MobilityOperation message" <<std::endl;
+		return false;
 	}
-	mobilityOperation->header.targetStaticId.buf  = string_content_targetId;
-	mobilityOperation->header.targetStaticId.size = string_size;
-
-	//sender bsm id
-	std::string sender_bsm_id = sender_bsm_id_str;
-	string_size = sender_bsm_id.size();
-	uint8_t string_content_BSMId[string_size];
-	for(size_t i=0; i< string_size; i++)
-	{
-		string_content_BSMId[i] = sender_bsm_id[i];
-	}
-	mobilityOperation->header.hostBSMId.buf = string_content_BSMId;
-	mobilityOperation->header.hostBSMId.size = string_size;
-
-	//plan id
-	std::string plan_id = plan_id_str;
-	string_size = plan_id.size();
-	uint8_t string_content_planId[string_size];
-	for(size_t i=0; i< string_size; i++)
-	{
-		string_content_planId[i] = plan_id[i];
-	}
-	mobilityOperation->header.planId.buf = string_content_planId;
-	mobilityOperation->header.planId.size = string_size;
-
-	//get timestamp and convert to char array;
-	string_size = timestamp_str.size();
-	uint8_t string_content_timestamp[string_size];
-	for(size_t i=0; i< string_size; i++)
-	{
-		string_content_timestamp[i] = timestamp_str[i];
-	}
-	mobilityOperation->header.timestamp.buf = string_content_timestamp;
-	mobilityOperation->header.timestamp.size = string_size;
-
-	//convert strategy string to char array
-	std::string strategy = strategy_str;
-	string_size = strategy.size();
-	uint8_t string_content_strategy[string_size];
-	for(size_t i=0; i< string_size; i++)
-	{
-		string_content_strategy[i] = strategy[i];
-	}
-	mobilityOperation->body.strategy.buf = string_content_strategy;
-	mobilityOperation->body.strategy.size = string_size;        
-
-	//convert parameters string to char array
-	std::string strategy_params = strategy_params_str;
-	string_size = strategy_params.size();       
-	uint8_t string_content_params[string_size];
-	for(size_t i=0; i < string_size; i++)
-	{
-		string_content_params[i] = strategy_params[i];
-	}
-	mobilityOperation->body.operationParams.buf = string_content_params;
-	mobilityOperation->body.operationParams.size = string_size;
-
-	tmx::messages::tsm3Message* _tsm3Message = new tmx::messages::tsm3Message(mobilityOperation);
-	PLOG(logDEBUG) << *_tsm3Message;
-	tsm3EncodedMsg->initialize(*_tsm3Message);
 }
 
 int CARMAStreetsPlugin::Main() {
@@ -544,7 +656,7 @@ int CARMAStreetsPlugin::Main() {
 
 	return (EXIT_SUCCESS);
 }
-}
+} /* namespace */
 
 int main(int argc, char *argv[]) {
 	return run_plugin < CARMAStreetsPlugin::CARMAStreetsPlugin > ("CARMAStreetsPlugin", argc, argv);

@@ -26,8 +26,8 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "run_kafka_consumer",
-            "default": 1,
+            "key": "runKafkaConsumer",
+            "default": "1",
             "description": "indicator for consuming kafka messages."
         },
         {
@@ -42,7 +42,7 @@
         },
         {
             "key": "intersectionType",
-            "default": "stop_controlled",
+            "default": "Carma/stop_controlled_intersection",
             "description": "The type of intersection"
         },
         {
@@ -60,6 +60,5 @@
             "default": "carma/port_drayage,TruckInspection,Carma/stop_controlled_intersection",
             "description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
         }
-
     ]
 }
