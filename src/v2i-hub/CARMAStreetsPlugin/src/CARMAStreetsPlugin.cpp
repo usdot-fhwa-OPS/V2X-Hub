@@ -353,9 +353,9 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["sec_mark"]  = secMark.str();
 
 		auto id_len = bsm->coreData.id.size;
-		std::vector<std::uint8_t> id_v;
+		std::vector<uint8_t> id_v;
 		for(auto i = 0; i < id_len; i++)
-		{
+		{			
 			id_v.push_back(bsm->coreData.id.buf[i]);
 		}
 		std::string id(id_v.begin(), id_v.end());
@@ -427,9 +427,22 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		traction << bsm->coreData.brakes.traction;
 		brakes["traction"] = traction.str();
 
-		std::stringstream wheel_brakes;
-		wheel_brakes << bsm->coreData.brakes.wheelBrakes.buf;
-		brakes["wheel_brakes"] = wheel_brakes.str();
+		uint8_t binary = bsm->coreData.brakes.wheelBrakes.buf[0] >> 3;
+		unsigned int brake_applied_status_type = 4;
+		// e.g. shift the binary right until it equals to 1 (0b00000001) to determine the location of the non-zero bit
+		for (int i = 0; i < 4; i ++)
+		{
+			if ((int)binary == 1) 
+			{
+				brakes["wheel_brakes"] = brake_applied_status_type;
+				break;
+			}
+			else
+			{
+				brake_applied_status_type -= 1;
+				binary = binary >> 1;
+			}
+		}
 
 		coreData["accel_set"]		= accel_set;
 		coreData["brakes"]			= brakes;
