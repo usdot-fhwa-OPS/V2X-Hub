@@ -37,6 +37,8 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("Database_IP",_database_ip);
 	GetConfigValue<uint16_t>("Database_Port",_database_port);
 	GetConfigValue<string>("Database_Name", _database_name);
+	GetConfigValue<string>("Web_Service_URL", _webservice_url);
+
 	std::string loglevel;
 	GetConfigValue<string>("LogLevel", loglevel);
 

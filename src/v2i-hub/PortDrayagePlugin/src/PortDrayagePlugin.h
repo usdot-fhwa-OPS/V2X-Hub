@@ -12,6 +12,14 @@
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <OAIDefaultApi.h>
+#include <QEventLoop>
+#include <QTimer>
+#include <OAIHelpers.h>
+#include <QCoreApplication>
+#include "WebServiceClient.h"
+
+
 
 
 
@@ -20,6 +28,7 @@ using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
 using namespace boost::property_tree;
+using namespace OpenAPI;
 
 
 namespace PortDrayagePlugin {
@@ -119,6 +128,7 @@ private:
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
 	J2735MessageFactory factory;
+	std::string _webservice_url;
 
 };
 std::mutex _cfgLock;

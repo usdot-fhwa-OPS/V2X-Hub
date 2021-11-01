@@ -42,7 +42,12 @@
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"
-        }
+        },
+		{
+			"key":"Web_Service_URL",
+            "default":"http://127.0.0.1:8080",
+            "description":"The URL for the Loading/Unloading/Inspection Web Service"
+		}
 		
 	]
 }
