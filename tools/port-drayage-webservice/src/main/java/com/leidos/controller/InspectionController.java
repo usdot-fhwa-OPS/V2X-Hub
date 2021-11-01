@@ -42,11 +42,11 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<InspectionStatus> inspectionVehicleIdGet(String vehicleId) {
-        InspectionStatus status = inspectionActions.getInspectionStatus(vehicleId);
+    public ResponseEntity<InspectionStatus> inspectionActionIdGet(String actionId) {
+        InspectionStatus status = inspectionActions.getInspectionStatus(actionId);
+        logger.debug(String.format("Found inspection %s!", status));
         if (status != null)
             return ResponseEntity.ok(status);
-        logger.warn(String.format("No inspection found for vehicle id %s", vehicleId));
         return new ResponseEntity<InspectionStatus>(HttpStatus.BAD_REQUEST);
     }
 
@@ -63,13 +63,13 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> inspectionHoldingPost(InspectionRequest request) {
-        if (request.getVehicleId().equals(inspectionActions.getCurrentInspection().getVehicleId())
-                && request.getContainerId().equals(inspectionActions.getCurrentInspection().getContainerId())) {
+    public ResponseEntity<Void> inspectionHoldingActionIdPost(String actionId) {
+        InspectionStatus cur = inspectionActions.getCurrentInspection();
+        if ( cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.requestHolding();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            logger.warn(String.format("Request for %s is not current inspection %s ", request.toString(),
+            logger.warn(String.format("Action ID %s is not current inspection %s ", actionId,
                     inspectionActions.getCurrentInspection().toString()));
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -79,9 +79,9 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> inspectionCompletePost() {
+    public ResponseEntity<Void> inspectionCompleteActionIdPost( String actionId ) {
         InspectionStatus cur = inspectionActions.getCurrentInspection();
-        if (cur != null) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.completeInspection();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
@@ -94,7 +94,7 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> inspectionHoldPost() {
+    public ResponseEntity<Void> inspectionHoldActionIdPost( String actionId) {
         InspectionStatus cur = inspectionActions.getCurrentInspection();
         if (cur != null) {
             inspectionActions.proceedToHolding();

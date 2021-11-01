@@ -48,6 +48,11 @@ public:
     bool is_container_id_Set() const;
     bool is_container_id_Valid() const;
 
+    QString getActionId() const;
+    void setActionId(const QString &action_id);
+    bool is_action_id_Set() const;
+    bool is_action_id_Valid() const;
+
     virtual bool isSet() const override;
     virtual bool isValid() const override;
 
@@ -61,6 +66,10 @@ private:
     QString container_id;
     bool m_container_id_isSet;
     bool m_container_id_isValid;
+
+    QString action_id;
+    bool m_action_id_isSet;
+    bool m_action_id_isValid;
 };
 
 } // namespace OpenAPI

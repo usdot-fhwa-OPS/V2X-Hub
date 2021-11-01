@@ -36,35 +36,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionStatusList'
-  /loading/start:
+  /loading/start/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Start a loading action.
-      description: Will attempt to start current loading action. Will return 400 if no current action
+      description: Will attempt to start current loading action. Will return 400 if not current action
       responses:
         '201':
           description: Created
         '400':
           description: Bad Request
-  /loading/complete:
+  /loading/complete/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Complete a loading action.
-      description: Will attempt to complete current loading action. Will return 400 if no current action
+      description: Will attempt to complete current loading action. Will return 400 if not current action
       responses:
         '201':
           description: Created   
         '400':
           description: Bad Request  
-  /loading/{vehicle_id}:
+  /loading/{action_id}:
      get:
       parameters:
         - in: path
-          name: vehicle_id
+          name: action_id
           schema:
             type: string
           required: true
-          description: String static vehicle id 
-      summary: Request most recent loading action status for given vehicle.
-      description: Returns the most recent loading ContainerActionStatus JSON for a given vehicle, whether pending, current or completed.
+          description: ID of action
+      summary: Returns action with given ID 
+      description: Returns action with given ID. If non is found returns 400
       responses:
         '200':
           description: OK
@@ -99,35 +113,49 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ActionStatusList'
-  /unloading/start:
+  /unloading/start/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Start an unloading action.
-      description: Will attempt to start current unloading action. Will return 400 if no current action
+      description: Will attempt to start current unloading action. Will return 400 if not current action
       responses:
         '201':
           description: Created
         '400':
           description: Bad Request
-  /unloading/complete:
+  /unloading/complete/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Complete an unloading action.
-      description: Will attempt to complete current unloading action. Will return 400 if no current action
+      description: Will attempt to complete current unloading action. Will return 400 if not current action
       responses:
         '201':
           description: Created   
         '400':
           description: Bad Request      
-  /unloading/{vehicle_id}:
+  /unloading/{action_id}:
      get:
       parameters:
         - in: path
-          name: vehicle_id
+          name: action_id
           schema:
             type: string
           required: true
-          description: String static vehicle id
-      summary: Request most recent loading action status for given vehicle.
-      description: Returns the most recent unloading ContainerActionStatus JSON for a given vehicle, whether pending, current or completed.
+          description: ID of action
+      summary: Returns action with given ID 
+      description: Returns action with given ID. If non is found returns 400
       responses:
         '200':
           description: OK
@@ -153,17 +181,17 @@ paths:
           description: Created
         '400':
           description: Bad Request
-  /inspection/holding:
+  /inspection/holding/{action_id}:
     post:
-      summary: Request for further inspection at holding area
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
+      summary: Vehicle has arrive at Holding area an is waiting on inspection.
       description: After being instructed to proceed to holding area and navigating to holding area, vehicle will request further inspection at holding area
-      requestBody:
-        description: Request contains container ID and Vehicle ID
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InspectionRequest'
       responses:
         '201':
           description: Created
@@ -180,8 +208,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InspectionStatusList'  
-  /inspection/complete:
+  /inspection/complete/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Complete an inspection action.
       description: Will attempt to complete current inspection action. Will return 400 if no current inspection
       responses:
@@ -189,8 +224,15 @@ paths:
           description: Created   
         '400':
           description: Bad Request
-  /inspection/hold:
+  /inspection/hold/{action_id}:
     post:
+      parameters:
+        - in: path
+          name: action_id
+          schema:
+            type: string
+          required: true
+          description: ID of action
       summary: Request vehicle proceed to holding area for further inspection
       description: Will attempt to request vehicle proceed to holding area for further inspection. Will return 400 if no current action
       responses:
@@ -198,17 +240,17 @@ paths:
           description: Created   
         '400':
           description: Bad Request   
-  /inspection/{vehicle_id}:
+  /inspection/{action_id}:
     get:
       parameters:
         - in: path
-          name: vehicle_id
+          name: action_id
           schema:
             type: string
           required: true
-          description: String static vehicle id
-      summary: Request most recent inspection status for given vehicle.
-      description: Returns the most recent InspectionStatus JSON for a given vehicle, whether pending, current or completed..
+          description: ID of action
+      summary: Returns action with given ID 
+      description: Returns action with given ID. If non is found returns 400
       responses:
         '200':
           description: OK
@@ -217,8 +259,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/InspectionStatus'
         '400':
-          description: Bad Request  
-  
+          description: Bad Request    
 components:
   schemas:
     ContainerRequest:
@@ -231,9 +272,13 @@ components:
         container_id:
           type: string
           description: ID of container
+        action_id:
+          type: string
+          description: ID of action
       required:
         - vehicle_id
         - container_id
+        - action_id
     ContainerActionStatus:
       title: Container Action Status
       type: object
@@ -244,6 +289,9 @@ components:
         container_id:
           type: string
           description: ID of container
+        action_id:
+          type: string
+          description: ID of action
         status:
           type: string
           enum:
@@ -263,8 +311,9 @@ components:
       required:
         - vehicle_id
         - container_id
+        - action_id
         - status
-        - started
+        - requested
     ActionStatusList:
       title: List of Container Action Status elements
       type: object
@@ -284,9 +333,13 @@ components:
         container_id:
           type: string
           description: ID of container
+        action_id:
+          type: string
+          description: ID of action
       required:
         - vehicle_id
         - container_id
+        - action_id
     InspectionStatus:
       title: Inspection Status
       type: object
@@ -297,6 +350,9 @@ components:
         container_id:
           type: string
           description: ID of container
+        action_id:
+          type: string
+          description: ID of action
         status:
           type: string
           enum:
@@ -314,7 +370,9 @@ components:
       required:
         - vehicle_id
         - container_id
+        - action_id
         - status
+        - requested
     InspectionStatusList:
       title: List of Container Action Status elements
       type: object

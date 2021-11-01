@@ -39,6 +39,9 @@ void OAIContainerActionStatus::initializeModel() {
     m_container_id_isSet = false;
     m_container_id_isValid = false;
 
+    m_action_id_isSet = false;
+    m_action_id_isValid = false;
+
     m_status_isSet = false;
     m_status_isValid = false;
 
@@ -64,6 +67,9 @@ void OAIContainerActionStatus::fromJsonObject(QJsonObject json) {
     m_container_id_isValid = ::OpenAPI::fromJsonValue(container_id, json[QString("container_id")]);
     m_container_id_isSet = !json[QString("container_id")].isNull() && m_container_id_isValid;
 
+    m_action_id_isValid = ::OpenAPI::fromJsonValue(action_id, json[QString("action_id")]);
+    m_action_id_isSet = !json[QString("action_id")].isNull() && m_action_id_isValid;
+
     m_status_isValid = ::OpenAPI::fromJsonValue(status, json[QString("status")]);
     m_status_isSet = !json[QString("status")].isNull() && m_status_isValid;
 
@@ -88,6 +94,9 @@ QJsonObject OAIContainerActionStatus::asJsonObject() const {
     }
     if (m_container_id_isSet) {
         obj.insert(QString("container_id"), ::OpenAPI::toJsonValue(container_id));
+    }
+    if (m_action_id_isSet) {
+        obj.insert(QString("action_id"), ::OpenAPI::toJsonValue(action_id));
     }
     if (m_status_isSet) {
         obj.insert(QString("status"), ::OpenAPI::toJsonValue(status));
@@ -131,6 +140,22 @@ bool OAIContainerActionStatus::is_container_id_Set() const{
 
 bool OAIContainerActionStatus::is_container_id_Valid() const{
     return m_container_id_isValid;
+}
+
+QString OAIContainerActionStatus::getActionId() const {
+    return action_id;
+}
+void OAIContainerActionStatus::setActionId(const QString &action_id) {
+    this->action_id = action_id;
+    this->m_action_id_isSet = true;
+}
+
+bool OAIContainerActionStatus::is_action_id_Set() const{
+    return m_action_id_isSet;
+}
+
+bool OAIContainerActionStatus::is_action_id_Valid() const{
+    return m_action_id_isValid;
 }
 
 QString OAIContainerActionStatus::getStatus() const {
@@ -194,6 +219,11 @@ bool OAIContainerActionStatus::isSet() const {
             break;
         }
 
+        if (m_action_id_isSet) {
+            isObjectUpdated = true;
+            break;
+        }
+
         if (m_status_isSet) {
             isObjectUpdated = true;
             break;
@@ -214,7 +244,7 @@ bool OAIContainerActionStatus::isSet() const {
 
 bool OAIContainerActionStatus::isValid() const {
     // only required properties are required for the object to be considered valid
-    return m_vehicle_id_isValid && m_container_id_isValid && m_status_isValid && true;
+    return m_vehicle_id_isValid && m_container_id_isValid && m_action_id_isValid && m_status_isValid && m_requested_isValid && true;
 }
 
 } // namespace OpenAPI

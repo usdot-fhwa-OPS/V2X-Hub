@@ -48,6 +48,11 @@ public:
     bool is_container_id_Set() const;
     bool is_container_id_Valid() const;
 
+    QString getActionId() const;
+    void setActionId(const QString &action_id);
+    bool is_action_id_Set() const;
+    bool is_action_id_Valid() const;
+
     QString getStatus() const;
     void setStatus(const QString &status);
     bool is_status_Set() const;
@@ -76,6 +81,10 @@ private:
     QString container_id;
     bool m_container_id_isSet;
     bool m_container_id_isValid;
+
+    QString action_id;
+    bool m_action_id_isSet;
+    bool m_action_id_isValid;
 
     QString status;
     bool m_status_isSet;

@@ -44,8 +44,8 @@ public class UnloadingController implements UnloadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<ContainerActionStatus> unloadingVehicleIdGet(String vehicleId) {
-        ContainerActionStatus action = unloadingActions.getContainerActionStatus(vehicleId);
+    public ResponseEntity<ContainerActionStatus> unloadingActionIdGet(String actionId) {
+        ContainerActionStatus action = unloadingActions.getContainerActionStatus(actionId);
         logger.debug(String.format("Found action %s!", action));
         if (action != null)
             return ResponseEntity.ok(action);
@@ -66,13 +66,12 @@ public class UnloadingController implements UnloadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> unloadingStartPost( ) {
+    public ResponseEntity<Void> unloadingStartActionIdPost(String actionId) {
         ContainerActionStatus cur = unloadingActions.getCurrentAction();
-        if ( cur != null ) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             unloadingActions.startCurrentAction();
             return new ResponseEntity<>(HttpStatus.CREATED);
-        }
-        else {
+        } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -82,13 +81,12 @@ public class UnloadingController implements UnloadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> unloadingCompletePost(  ) {
+    public ResponseEntity<Void> unloadingCompleteActionIdPost(String actionId) {
         ContainerActionStatus cur = unloadingActions.getCurrentAction();
-        if ( cur != null  ) {
+        if (cur != null) {
             unloadingActions.completeCurrentAction();
             return new ResponseEntity<>(HttpStatus.CREATED);
-        }
-        else {
+        } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 

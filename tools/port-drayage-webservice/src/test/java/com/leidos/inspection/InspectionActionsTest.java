@@ -48,9 +48,10 @@ public class InspectionActionsTest {
         InspectionRequest req1 = new InspectionRequest();
         req1.setVehicleId("vehicleA");
         req1.setContainerId("containerA");
+        req1.setActionId("inspectionA");
 
         // Returns null before inspection is requested
-        assertNull(inspectionActions.getInspectionStatus("vehicleA"));
+        assertNull(inspectionActions.getInspectionStatus(req1.getActionId()));
         assertNull(inspectionActions.getCurrentInspection());
 
         // Current action and inspection status returns action after inspection is
@@ -58,13 +59,14 @@ public class InspectionActionsTest {
         inspectionActions.requestInspectionAction(req1);
         assertEquals(req1.getVehicleId(), inspectionActions.getCurrentInspection().getVehicleId());
         assertEquals(req1.getContainerId(), inspectionActions.getCurrentInspection().getContainerId());
-        assertEquals(req1.getVehicleId(), inspectionActions.getInspectionStatus("vehicleA").getVehicleId());
-        assertEquals(req1.getContainerId(), inspectionActions.getInspectionStatus("vehicleA").getContainerId());
+        assertEquals(req1.getVehicleId(), inspectionActions.getInspectionStatus(req1.getActionId()).getVehicleId());
+        assertEquals(req1.getContainerId(), inspectionActions.getInspectionStatus(req1.getActionId()).getContainerId());
 
         // Attempt to request new inspection while another inspection is in progress
         InspectionRequest req2 = new InspectionRequest();
-        req2.setVehicleId("vehicleB");
+        req2.setVehicleId("vehicleC");
         req2.setContainerId("containerC");
+        req2.setActionId("inspectionC");
         inspectionActions.requestInspectionAction(req2);
         InspectionStatus status = inspectionActions.getCurrentInspection();
 
@@ -88,14 +90,17 @@ public class InspectionActionsTest {
         InspectionRequest req1 = new InspectionRequest();
         req1.setVehicleId("vehicleA");
         req1.setContainerId("containerA");
+        req1.setActionId("inspectionA");
 
         InspectionRequest req2 = new InspectionRequest();
         req2.setVehicleId("vehicleB");
         req2.setContainerId("containerB");
+        req2.setActionId("inspectionB");
 
         InspectionRequest req3 = new InspectionRequest();
         req3.setVehicleId("vehicleC");
         req3.setContainerId("containerC");
+        req3.setActionId("inspectionC");
 
         // Calling complete inspection with no current inspection does not add any
         // inspection to completed list
@@ -110,9 +115,9 @@ public class InspectionActionsTest {
         // inspection is in inspectionActions list of in progress inspections
         assertNull(inspectionActions.getCompletedInspections().getInspections());
 
-        InspectionStatus req1Status = inspectionActions.getInspectionStatus(req1.getVehicleId());
-        InspectionStatus req2Status = inspectionActions.getInspectionStatus(req2.getVehicleId());
-        InspectionStatus req3Status = inspectionActions.getInspectionStatus(req3.getVehicleId());
+        InspectionStatus req1Status = inspectionActions.getInspectionStatus(req1.getActionId());
+        InspectionStatus req2Status = inspectionActions.getInspectionStatus(req2.getActionId());
+        InspectionStatus req3Status = inspectionActions.getInspectionStatus(req3.getActionId());
 
         // First request becomes current action and additional requests are added to
         // pending inspections
@@ -143,7 +148,7 @@ public class InspectionActionsTest {
 
          // Get InspectionStatus will return most recent inspection even when it is completed
         // for a given vehicleID
-        assertEquals(req3Status, inspectionActions.getInspectionStatus(req3.getVehicleId()));
+        assertEquals(req3Status, inspectionActions.getInspectionStatus(req3.getActionId()));
     }
 
     /**

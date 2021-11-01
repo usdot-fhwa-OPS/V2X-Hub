@@ -38,6 +38,9 @@ void OAIContainerRequest::initializeModel() {
 
     m_container_id_isSet = false;
     m_container_id_isValid = false;
+
+    m_action_id_isSet = false;
+    m_action_id_isValid = false;
 }
 
 void OAIContainerRequest::fromJson(QString jsonString) {
@@ -54,6 +57,9 @@ void OAIContainerRequest::fromJsonObject(QJsonObject json) {
 
     m_container_id_isValid = ::OpenAPI::fromJsonValue(container_id, json[QString("container_id")]);
     m_container_id_isSet = !json[QString("container_id")].isNull() && m_container_id_isValid;
+
+    m_action_id_isValid = ::OpenAPI::fromJsonValue(action_id, json[QString("action_id")]);
+    m_action_id_isSet = !json[QString("action_id")].isNull() && m_action_id_isValid;
 }
 
 QString OAIContainerRequest::asJson() const {
@@ -70,6 +76,9 @@ QJsonObject OAIContainerRequest::asJsonObject() const {
     }
     if (m_container_id_isSet) {
         obj.insert(QString("container_id"), ::OpenAPI::toJsonValue(container_id));
+    }
+    if (m_action_id_isSet) {
+        obj.insert(QString("action_id"), ::OpenAPI::toJsonValue(action_id));
     }
     return obj;
 }
@@ -106,6 +115,22 @@ bool OAIContainerRequest::is_container_id_Valid() const{
     return m_container_id_isValid;
 }
 
+QString OAIContainerRequest::getActionId() const {
+    return action_id;
+}
+void OAIContainerRequest::setActionId(const QString &action_id) {
+    this->action_id = action_id;
+    this->m_action_id_isSet = true;
+}
+
+bool OAIContainerRequest::is_action_id_Set() const{
+    return m_action_id_isSet;
+}
+
+bool OAIContainerRequest::is_action_id_Valid() const{
+    return m_action_id_isValid;
+}
+
 bool OAIContainerRequest::isSet() const {
     bool isObjectUpdated = false;
     do {
@@ -118,13 +143,18 @@ bool OAIContainerRequest::isSet() const {
             isObjectUpdated = true;
             break;
         }
+
+        if (m_action_id_isSet) {
+            isObjectUpdated = true;
+            break;
+        }
     } while (false);
     return isObjectUpdated;
 }
 
 bool OAIContainerRequest::isValid() const {
     // only required properties are required for the object to be considered valid
-    return m_vehicle_id_isValid && m_container_id_isValid && true;
+    return m_vehicle_id_isValid && m_container_id_isValid && m_action_id_isValid && true;
 }
 
 } // namespace OpenAPI

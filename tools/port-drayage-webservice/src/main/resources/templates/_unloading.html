@@ -24,6 +24,7 @@
             <tr>
                 <th> Vehicle ID </th>
                 <th> Container ID </th>
+                <th> Action ID </th>
                 <th> Requested </th>
             </tr>
         </thead>
@@ -35,6 +36,7 @@
             <tr th:each="action : ${@unloadingActions.getPendingActions().getActions()}">
                 <td><span th:text="${action.getVehicleId()}"> </span></td>
                 <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
             </tr>
         </tbody>
@@ -46,6 +48,7 @@
             <tr>
                 <th> Vehicle ID </th>
                 <th> Container ID </th>
+                <th> Action ID </th>
                 <th> Requested </th>
                 <th> Completed </th>
             </tr>
@@ -58,6 +61,7 @@
             <tr th:each="action : ${@unloadingActions.getCompletedActions().getActions()}">
                 <td><span th:text="${action.getVehicleId()}"> </span></td>
                 <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
 
@@ -65,13 +69,22 @@
         </tbody>
     </table>
 
-<script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
     $('#start-unloading').on('click', function (e) {
         console.log(e)
+        var actionId
+        if (  /*[[${@unloadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@unloadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
         e.preventDefault();
         $.ajax({
             type: 'post',
-            url: 'unloading/start',
+            url: 'unloading/start/' + actionId,
             success: function () {
                 $('#unloading').load("unloading/")
             }
@@ -80,13 +93,22 @@
 
     $('#complete-unloading').on('click', function (e) {
         console.log(e)
+        var actionId
+        if (  /*[[${@unloadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@unloadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
         e.preventDefault();
         $.ajax({
             type: 'post',
-            url: 'unloading/complete',
+            url: 'unloading/complete/' + actionId,
             success: function () {
                 $('#unloading').load("unloading/")
             }
         });
     });
+       /*]]>*/
 </script>

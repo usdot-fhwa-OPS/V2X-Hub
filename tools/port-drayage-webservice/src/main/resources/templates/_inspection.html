@@ -25,6 +25,7 @@
         <tr>
             <th> Vehicle ID </th>
             <th> Container ID </th>
+            <th> Action ID </th>
             <th> Requested </th>
         </tr>
     </thead>
@@ -36,6 +37,7 @@
         <tr th:each="action : ${@inspectionActions.getPendingInspections().getInspections()}">
             <td><span th:text="${action.getVehicleId()}"> </span></td>
             <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
             <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
         </tr>
     </tbody>
@@ -47,6 +49,7 @@
         <tr>
             <th> Vehicle ID </th>
             <th> Container ID </th>
+            <th> Action ID </th>
             <th> Requested </th>
             <th> Completed </th>
         </tr>
@@ -59,6 +62,7 @@
         <tr th:each="action : ${@inspectionActions.getCompletedInspections().getInspections()}">
             <td><span th:text="${action.getVehicleId()}"> </span></td>
             <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
             <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
             <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
 
@@ -66,13 +70,23 @@
     </tbody>
 </table>
 
-<script>
+<script  th:inline="javascript">
+    /*<![CDATA[*/
 $('#hold-inspection').on('click', function (e) {
     console.log(e)
+    var actionId
+    // Retrieve current action id. ? used to protect against null current actions
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
+
     e.preventDefault();
     $.ajax({
         type: 'post',
-        url: 'inspection/hold',
+        url: 'inspection/hold/' + actionId,
         success: function () {
             $('#inspection').load("inspection/")
         }
@@ -82,13 +96,22 @@ $('#hold-inspection').on('click', function (e) {
 $('#complete-inspection').on('click', function (e) {
     console.log(e)
     e.preventDefault();
+    // Retrieve current action id. ? used to protect against null current actions
+    var actionId
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
 
     $.ajax({
         type: 'post',
-        url: 'inspection/complete',
+        url: 'inspection/complete/' + actionId,
         success: function () {
             $('#inspection').load("inspection/")
         }
     });
 });
+   /*]]>*/
 </script>

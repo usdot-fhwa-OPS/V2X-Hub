@@ -23,6 +23,7 @@
             <tr>
                 <th> Vehicle ID </th>
                 <th> Container ID </th>
+                <th> getCompletedActions ID </th>
                 <th> Requested </th>
             </tr>
         </thead>
@@ -34,6 +35,7 @@
             <tr th:each="action : ${@loadingActions.getPendingActions().getActions()}">
                 <td><span th:text="${action.getVehicleId()}"> </span></td>
                 <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
             </tr>
         </tbody>
@@ -45,6 +47,7 @@
             <tr>
                 <th> Vehicle ID </th>
                 <th> Container ID </th>
+                <th> Action ID </th>
                 <th> Requested </th>
                 <th> Completed </th>
             </tr>
@@ -57,6 +60,7 @@
             <tr th:each="action : ${@loadingActions.getCompletedActions().getActions()}">
                 <td><span th:text="${action.getVehicleId()}"> </span></td>
                 <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
                 <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
 
@@ -64,13 +68,22 @@
         </tbody>
     </table>
 
-<script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
     $('#start-loading').on('click', function (e) {
         console.log(e)
+        var actionId
+        if (  /*[[${@loadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@loadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
         e.preventDefault();
         $.ajax({
             type: 'post',
-            url: 'loading/start',
+            url: 'loading/start/' + actionId,
             success: function () {
                 $('#loading').load("loading/")
             }
@@ -79,14 +92,24 @@
 
     $('#complete-loading').on('click', function (e) {
         console.log(e)
+        // Prevent whole page reload
         e.preventDefault();
+        // Retrieve current action id. ? used to protect against null current actions
+        var actionId
+        if (  /*[[${@loadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@loadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
 
         $.ajax({
             type: 'post',
-            url: 'loading/complete',
+            url: 'loading/complete/' + actionId,
             success: function () {
                 $('#loading').load("loading/")
             }
         });
     });
+    /*]]>*/
 </script>

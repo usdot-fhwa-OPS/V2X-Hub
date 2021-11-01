@@ -39,38 +39,38 @@ void OAIDefaultApi::initializeServerConfigs() {
     QUrl("https://127.0.0.1:8443"),
     "Secured hosting for deployment",
     QMap<QString, OAIServerVariable>()));
-    _serverConfigs.insert("inspectionCompletePost", defaultConf);
-    _serverIndices.insert("inspectionCompletePost", 0);
-    _serverConfigs.insert("inspectionHoldPost", defaultConf);
-    _serverIndices.insert("inspectionHoldPost", 0);
-    _serverConfigs.insert("inspectionHoldingPost", defaultConf);
-    _serverIndices.insert("inspectionHoldingPost", 0);
+    _serverConfigs.insert("inspectionActionIdGet", defaultConf);
+    _serverIndices.insert("inspectionActionIdGet", 0);
+    _serverConfigs.insert("inspectionCompleteActionIdPost", defaultConf);
+    _serverIndices.insert("inspectionCompleteActionIdPost", 0);
+    _serverConfigs.insert("inspectionHoldActionIdPost", defaultConf);
+    _serverIndices.insert("inspectionHoldActionIdPost", 0);
+    _serverConfigs.insert("inspectionHoldingActionIdPost", defaultConf);
+    _serverIndices.insert("inspectionHoldingActionIdPost", 0);
     _serverConfigs.insert("inspectionPendingGet", defaultConf);
     _serverIndices.insert("inspectionPendingGet", 0);
     _serverConfigs.insert("inspectionPost", defaultConf);
     _serverIndices.insert("inspectionPost", 0);
-    _serverConfigs.insert("inspectionVehicleIdGet", defaultConf);
-    _serverIndices.insert("inspectionVehicleIdGet", 0);
-    _serverConfigs.insert("loadingCompletePost", defaultConf);
-    _serverIndices.insert("loadingCompletePost", 0);
+    _serverConfigs.insert("loadingActionIdGet", defaultConf);
+    _serverIndices.insert("loadingActionIdGet", 0);
+    _serverConfigs.insert("loadingCompleteActionIdPost", defaultConf);
+    _serverIndices.insert("loadingCompleteActionIdPost", 0);
     _serverConfigs.insert("loadingPendingGet", defaultConf);
     _serverIndices.insert("loadingPendingGet", 0);
     _serverConfigs.insert("loadingPost", defaultConf);
     _serverIndices.insert("loadingPost", 0);
-    _serverConfigs.insert("loadingStartPost", defaultConf);
-    _serverIndices.insert("loadingStartPost", 0);
-    _serverConfigs.insert("loadingVehicleIdGet", defaultConf);
-    _serverIndices.insert("loadingVehicleIdGet", 0);
-    _serverConfigs.insert("unloadingCompletePost", defaultConf);
-    _serverIndices.insert("unloadingCompletePost", 0);
+    _serverConfigs.insert("loadingStartActionIdPost", defaultConf);
+    _serverIndices.insert("loadingStartActionIdPost", 0);
+    _serverConfigs.insert("unloadingActionIdGet", defaultConf);
+    _serverIndices.insert("unloadingActionIdGet", 0);
+    _serverConfigs.insert("unloadingCompleteActionIdPost", defaultConf);
+    _serverIndices.insert("unloadingCompleteActionIdPost", 0);
     _serverConfigs.insert("unloadingPendingGet", defaultConf);
     _serverIndices.insert("unloadingPendingGet", 0);
     _serverConfigs.insert("unloadingPost", defaultConf);
     _serverIndices.insert("unloadingPost", 0);
-    _serverConfigs.insert("unloadingStartPost", defaultConf);
-    _serverIndices.insert("unloadingStartPost", 0);
-    _serverConfigs.insert("unloadingVehicleIdGet", defaultConf);
-    _serverIndices.insert("unloadingVehicleIdGet", 0);
+    _serverConfigs.insert("unloadingStartActionIdPost", defaultConf);
+    _serverIndices.insert("unloadingStartActionIdPost", 0);
 }
 
 /**
@@ -246,115 +246,29 @@ QString OAIDefaultApi::getParamStyleDelimiter(const QString &style, const QStrin
     }
 }
 
-void OAIDefaultApi::inspectionCompletePost() {
-    QString fullPath = QString(_serverConfigs["inspectionCompletePost"][_serverIndices.value("inspectionCompletePost")].URL()+"/inspection/complete");
+void OAIDefaultApi::inspectionActionIdGet(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["inspectionActionIdGet"][_serverIndices.value("inspectionActionIdGet")].URL()+"/inspection/{action_id}");
     
-    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
-    worker->setTimeOut(_timeOut);
-    worker->setWorkingDirectory(_workingDirectory);
-    OAIHttpRequestInput input(fullPath, "POST");
-
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
-        input.headers.insert(keyValueIt->first, keyValueIt->second);
-    }
-#else
-    for (auto key : _defaultHeaders.keys()) {
-        input.headers.insert(key, _defaultHeaders[key]);
-    }
-#endif
-
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionCompletePostCallback);
-    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
-    connect(worker, &QObject::destroyed, this, [this]() {
-        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
-            emit allPendingRequestsCompleted();
-        }
-    });
-
-    worker->execute(&input);
-}
-
-void OAIDefaultApi::inspectionCompletePostCallback(OAIHttpRequestWorker *worker) {
-    QString error_str = worker->error_str;
-    QNetworkReply::NetworkError error_type = worker->error_type;
-
-    if (worker->error_type != QNetworkReply::NoError) {
-        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
-    }
-    worker->deleteLater();
-
-    if (worker->error_type == QNetworkReply::NoError) {
-        emit inspectionCompletePostSignal();
-        emit inspectionCompletePostSignalFull(worker);
-    } else {
-        emit inspectionCompletePostSignalE(error_type, error_str);
-        emit inspectionCompletePostSignalEFull(worker, error_type, error_str);
-    }
-}
-
-void OAIDefaultApi::inspectionHoldPost() {
-    QString fullPath = QString(_serverConfigs["inspectionHoldPost"][_serverIndices.value("inspectionHoldPost")].URL()+"/inspection/hold");
     
-    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
-    worker->setTimeOut(_timeOut);
-    worker->setWorkingDirectory(_workingDirectory);
-    OAIHttpRequestInput input(fullPath, "POST");
-
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
-        input.headers.insert(keyValueIt->first, keyValueIt->second);
-    }
-#else
-    for (auto key : _defaultHeaders.keys()) {
-        input.headers.insert(key, _defaultHeaders[key]);
-    }
-#endif
-
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionHoldPostCallback);
-    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
-    connect(worker, &QObject::destroyed, this, [this]() {
-        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
-            emit allPendingRequestsCompleted();
-        }
-    });
-
-    worker->execute(&input);
-}
-
-void OAIDefaultApi::inspectionHoldPostCallback(OAIHttpRequestWorker *worker) {
-    QString error_str = worker->error_str;
-    QNetworkReply::NetworkError error_type = worker->error_type;
-
-    if (worker->error_type != QNetworkReply::NoError) {
-        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
-    }
-    worker->deleteLater();
-
-    if (worker->error_type == QNetworkReply::NoError) {
-        emit inspectionHoldPostSignal();
-        emit inspectionHoldPostSignalFull(worker);
-    } else {
-        emit inspectionHoldPostSignalE(error_type, error_str);
-        emit inspectionHoldPostSignalEFull(worker, error_type, error_str);
-    }
-}
-
-void OAIDefaultApi::inspectionHoldingPost(const OAIInspectionRequest &oai_inspection_request) {
-    QString fullPath = QString(_serverConfigs["inspectionHoldingPost"][_serverIndices.value("inspectionHoldingPost")].URL()+"/inspection/holding");
-    
-    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
-    worker->setTimeOut(_timeOut);
-    worker->setWorkingDirectory(_workingDirectory);
-    OAIHttpRequestInput input(fullPath, "POST");
-
     {
-
-        QByteArray output = oai_inspection_request.asJson().toUtf8();
-        input.request_body.append(output);
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
     }
+    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
+    worker->setTimeOut(_timeOut);
+    worker->setWorkingDirectory(_workingDirectory);
+    OAIHttpRequestInput input(fullPath, "GET");
+
+
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
     for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
         input.headers.insert(keyValueIt->first, keyValueIt->second);
@@ -365,7 +279,7 @@ void OAIDefaultApi::inspectionHoldingPost(const OAIInspectionRequest &oai_inspec
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionHoldingPostCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionActionIdGetCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -376,7 +290,70 @@ void OAIDefaultApi::inspectionHoldingPost(const OAIInspectionRequest &oai_inspec
     worker->execute(&input);
 }
 
-void OAIDefaultApi::inspectionHoldingPostCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::inspectionActionIdGetCallback(OAIHttpRequestWorker *worker) {
+    QString error_str = worker->error_str;
+    QNetworkReply::NetworkError error_type = worker->error_type;
+
+    if (worker->error_type != QNetworkReply::NoError) {
+        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
+    }
+    OAIInspectionStatus output(QString(worker->response));
+    worker->deleteLater();
+
+    if (worker->error_type == QNetworkReply::NoError) {
+        emit inspectionActionIdGetSignal(output);
+        emit inspectionActionIdGetSignalFull(worker, output);
+    } else {
+        emit inspectionActionIdGetSignalE(output, error_type, error_str);
+        emit inspectionActionIdGetSignalEFull(worker, error_type, error_str);
+    }
+}
+
+void OAIDefaultApi::inspectionCompleteActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["inspectionCompleteActionIdPost"][_serverIndices.value("inspectionCompleteActionIdPost")].URL()+"/inspection/complete/{action_id}");
+    
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
+    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
+    worker->setTimeOut(_timeOut);
+    worker->setWorkingDirectory(_workingDirectory);
+    OAIHttpRequestInput input(fullPath, "POST");
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
+        input.headers.insert(keyValueIt->first, keyValueIt->second);
+    }
+#else
+    for (auto key : _defaultHeaders.keys()) {
+        input.headers.insert(key, _defaultHeaders[key]);
+    }
+#endif
+
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionCompleteActionIdPostCallback);
+    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, this, [this]() {
+        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
+            emit allPendingRequestsCompleted();
+        }
+    });
+
+    worker->execute(&input);
+}
+
+void OAIDefaultApi::inspectionCompleteActionIdPostCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -386,11 +363,135 @@ void OAIDefaultApi::inspectionHoldingPostCallback(OAIHttpRequestWorker *worker) 
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit inspectionHoldingPostSignal();
-        emit inspectionHoldingPostSignalFull(worker);
+        emit inspectionCompleteActionIdPostSignal();
+        emit inspectionCompleteActionIdPostSignalFull(worker);
     } else {
-        emit inspectionHoldingPostSignalE(error_type, error_str);
-        emit inspectionHoldingPostSignalEFull(worker, error_type, error_str);
+        emit inspectionCompleteActionIdPostSignalE(error_type, error_str);
+        emit inspectionCompleteActionIdPostSignalEFull(worker, error_type, error_str);
+    }
+}
+
+void OAIDefaultApi::inspectionHoldActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["inspectionHoldActionIdPost"][_serverIndices.value("inspectionHoldActionIdPost")].URL()+"/inspection/hold/{action_id}");
+    
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
+    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
+    worker->setTimeOut(_timeOut);
+    worker->setWorkingDirectory(_workingDirectory);
+    OAIHttpRequestInput input(fullPath, "POST");
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
+        input.headers.insert(keyValueIt->first, keyValueIt->second);
+    }
+#else
+    for (auto key : _defaultHeaders.keys()) {
+        input.headers.insert(key, _defaultHeaders[key]);
+    }
+#endif
+
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionHoldActionIdPostCallback);
+    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, this, [this]() {
+        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
+            emit allPendingRequestsCompleted();
+        }
+    });
+
+    worker->execute(&input);
+}
+
+void OAIDefaultApi::inspectionHoldActionIdPostCallback(OAIHttpRequestWorker *worker) {
+    QString error_str = worker->error_str;
+    QNetworkReply::NetworkError error_type = worker->error_type;
+
+    if (worker->error_type != QNetworkReply::NoError) {
+        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
+    }
+    worker->deleteLater();
+
+    if (worker->error_type == QNetworkReply::NoError) {
+        emit inspectionHoldActionIdPostSignal();
+        emit inspectionHoldActionIdPostSignalFull(worker);
+    } else {
+        emit inspectionHoldActionIdPostSignalE(error_type, error_str);
+        emit inspectionHoldActionIdPostSignalEFull(worker, error_type, error_str);
+    }
+}
+
+void OAIDefaultApi::inspectionHoldingActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["inspectionHoldingActionIdPost"][_serverIndices.value("inspectionHoldingActionIdPost")].URL()+"/inspection/holding/{action_id}");
+    
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
+    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
+    worker->setTimeOut(_timeOut);
+    worker->setWorkingDirectory(_workingDirectory);
+    OAIHttpRequestInput input(fullPath, "POST");
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
+        input.headers.insert(keyValueIt->first, keyValueIt->second);
+    }
+#else
+    for (auto key : _defaultHeaders.keys()) {
+        input.headers.insert(key, _defaultHeaders[key]);
+    }
+#endif
+
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionHoldingActionIdPostCallback);
+    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, this, [this]() {
+        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
+            emit allPendingRequestsCompleted();
+        }
+    });
+
+    worker->execute(&input);
+}
+
+void OAIDefaultApi::inspectionHoldingActionIdPostCallback(OAIHttpRequestWorker *worker) {
+    QString error_str = worker->error_str;
+    QNetworkReply::NetworkError error_type = worker->error_type;
+
+    if (worker->error_type != QNetworkReply::NoError) {
+        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
+    }
+    worker->deleteLater();
+
+    if (worker->error_type == QNetworkReply::NoError) {
+        emit inspectionHoldingActionIdPostSignal();
+        emit inspectionHoldingActionIdPostSignalFull(worker);
+    } else {
+        emit inspectionHoldingActionIdPostSignalE(error_type, error_str);
+        emit inspectionHoldingActionIdPostSignalEFull(worker, error_type, error_str);
     }
 }
 
@@ -495,22 +596,22 @@ void OAIDefaultApi::inspectionPostCallback(OAIHttpRequestWorker *worker) {
     }
 }
 
-void OAIDefaultApi::inspectionVehicleIdGet(const QString &vehicle_id) {
-    QString fullPath = QString(_serverConfigs["inspectionVehicleIdGet"][_serverIndices.value("inspectionVehicleIdGet")].URL()+"/inspection/{vehicle_id}");
+void OAIDefaultApi::loadingActionIdGet(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["loadingActionIdGet"][_serverIndices.value("loadingActionIdGet")].URL()+"/loading/{action_id}");
     
     
     {
-        QString vehicle_idPathParam("{");
-        vehicle_idPathParam.append("vehicle_id").append("}");
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
         QString pathPrefix, pathSuffix, pathDelimiter;
         QString pathStyle = "simple";
         if (pathStyle == "")
             pathStyle = "simple";
         pathPrefix = getParamStylePrefix(pathStyle);
         pathSuffix = getParamStyleSuffix(pathStyle);
-        pathDelimiter = getParamStyleDelimiter(pathStyle, "vehicle_id", false);
-        QString paramString = (pathStyle == "matrix") ? pathPrefix+"vehicle_id"+pathSuffix : pathPrefix;
-        fullPath.replace(vehicle_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(vehicle_id)));
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
     }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
@@ -528,7 +629,7 @@ void OAIDefaultApi::inspectionVehicleIdGet(const QString &vehicle_id) {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::inspectionVehicleIdGetCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingActionIdGetCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -539,28 +640,42 @@ void OAIDefaultApi::inspectionVehicleIdGet(const QString &vehicle_id) {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::inspectionVehicleIdGetCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::loadingActionIdGetCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
     if (worker->error_type != QNetworkReply::NoError) {
         error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
     }
-    OAIInspectionStatus output(QString(worker->response));
+    OAIContainerActionStatus output(QString(worker->response));
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit inspectionVehicleIdGetSignal(output);
-        emit inspectionVehicleIdGetSignalFull(worker, output);
+        emit loadingActionIdGetSignal(output);
+        emit loadingActionIdGetSignalFull(worker, output);
     } else {
-        emit inspectionVehicleIdGetSignalE(output, error_type, error_str);
-        emit inspectionVehicleIdGetSignalEFull(worker, error_type, error_str);
+        emit loadingActionIdGetSignalE(output, error_type, error_str);
+        emit loadingActionIdGetSignalEFull(worker, error_type, error_str);
     }
 }
 
-void OAIDefaultApi::loadingCompletePost() {
-    QString fullPath = QString(_serverConfigs["loadingCompletePost"][_serverIndices.value("loadingCompletePost")].URL()+"/loading/complete");
+void OAIDefaultApi::loadingCompleteActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["loadingCompleteActionIdPost"][_serverIndices.value("loadingCompleteActionIdPost")].URL()+"/loading/complete/{action_id}");
     
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
     worker->setWorkingDirectory(_workingDirectory);
@@ -577,7 +692,7 @@ void OAIDefaultApi::loadingCompletePost() {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingCompletePostCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingCompleteActionIdPostCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -588,7 +703,7 @@ void OAIDefaultApi::loadingCompletePost() {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::loadingCompletePostCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::loadingCompleteActionIdPostCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -598,11 +713,11 @@ void OAIDefaultApi::loadingCompletePostCallback(OAIHttpRequestWorker *worker) {
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit loadingCompletePostSignal();
-        emit loadingCompletePostSignalFull(worker);
+        emit loadingCompleteActionIdPostSignal();
+        emit loadingCompleteActionIdPostSignalFull(worker);
     } else {
-        emit loadingCompletePostSignalE(error_type, error_str);
-        emit loadingCompletePostSignalEFull(worker, error_type, error_str);
+        emit loadingCompleteActionIdPostSignalE(error_type, error_str);
+        emit loadingCompleteActionIdPostSignalEFull(worker, error_type, error_str);
     }
 }
 
@@ -707,9 +822,23 @@ void OAIDefaultApi::loadingPostCallback(OAIHttpRequestWorker *worker) {
     }
 }
 
-void OAIDefaultApi::loadingStartPost() {
-    QString fullPath = QString(_serverConfigs["loadingStartPost"][_serverIndices.value("loadingStartPost")].URL()+"/loading/start");
+void OAIDefaultApi::loadingStartActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["loadingStartActionIdPost"][_serverIndices.value("loadingStartActionIdPost")].URL()+"/loading/start/{action_id}");
     
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
     worker->setWorkingDirectory(_workingDirectory);
@@ -726,7 +855,7 @@ void OAIDefaultApi::loadingStartPost() {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingStartPostCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingStartActionIdPostCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -737,7 +866,7 @@ void OAIDefaultApi::loadingStartPost() {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::loadingStartPostCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::loadingStartActionIdPostCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -747,30 +876,30 @@ void OAIDefaultApi::loadingStartPostCallback(OAIHttpRequestWorker *worker) {
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit loadingStartPostSignal();
-        emit loadingStartPostSignalFull(worker);
+        emit loadingStartActionIdPostSignal();
+        emit loadingStartActionIdPostSignalFull(worker);
     } else {
-        emit loadingStartPostSignalE(error_type, error_str);
-        emit loadingStartPostSignalEFull(worker, error_type, error_str);
+        emit loadingStartActionIdPostSignalE(error_type, error_str);
+        emit loadingStartActionIdPostSignalEFull(worker, error_type, error_str);
     }
 }
 
-void OAIDefaultApi::loadingVehicleIdGet(const QString &vehicle_id) {
-    QString fullPath = QString(_serverConfigs["loadingVehicleIdGet"][_serverIndices.value("loadingVehicleIdGet")].URL()+"/loading/{vehicle_id}");
+void OAIDefaultApi::unloadingActionIdGet(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["unloadingActionIdGet"][_serverIndices.value("unloadingActionIdGet")].URL()+"/unloading/{action_id}");
     
     
     {
-        QString vehicle_idPathParam("{");
-        vehicle_idPathParam.append("vehicle_id").append("}");
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
         QString pathPrefix, pathSuffix, pathDelimiter;
         QString pathStyle = "simple";
         if (pathStyle == "")
             pathStyle = "simple";
         pathPrefix = getParamStylePrefix(pathStyle);
         pathSuffix = getParamStyleSuffix(pathStyle);
-        pathDelimiter = getParamStyleDelimiter(pathStyle, "vehicle_id", false);
-        QString paramString = (pathStyle == "matrix") ? pathPrefix+"vehicle_id"+pathSuffix : pathPrefix;
-        fullPath.replace(vehicle_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(vehicle_id)));
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
     }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
@@ -788,7 +917,7 @@ void OAIDefaultApi::loadingVehicleIdGet(const QString &vehicle_id) {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::loadingVehicleIdGetCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingActionIdGetCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -799,7 +928,7 @@ void OAIDefaultApi::loadingVehicleIdGet(const QString &vehicle_id) {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::loadingVehicleIdGetCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::unloadingActionIdGetCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -810,17 +939,31 @@ void OAIDefaultApi::loadingVehicleIdGetCallback(OAIHttpRequestWorker *worker) {
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit loadingVehicleIdGetSignal(output);
-        emit loadingVehicleIdGetSignalFull(worker, output);
+        emit unloadingActionIdGetSignal(output);
+        emit unloadingActionIdGetSignalFull(worker, output);
     } else {
-        emit loadingVehicleIdGetSignalE(output, error_type, error_str);
-        emit loadingVehicleIdGetSignalEFull(worker, error_type, error_str);
+        emit unloadingActionIdGetSignalE(output, error_type, error_str);
+        emit unloadingActionIdGetSignalEFull(worker, error_type, error_str);
     }
 }
 
-void OAIDefaultApi::unloadingCompletePost() {
-    QString fullPath = QString(_serverConfigs["unloadingCompletePost"][_serverIndices.value("unloadingCompletePost")].URL()+"/unloading/complete");
+void OAIDefaultApi::unloadingCompleteActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["unloadingCompleteActionIdPost"][_serverIndices.value("unloadingCompleteActionIdPost")].URL()+"/unloading/complete/{action_id}");
     
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
     worker->setWorkingDirectory(_workingDirectory);
@@ -837,7 +980,7 @@ void OAIDefaultApi::unloadingCompletePost() {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingCompletePostCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingCompleteActionIdPostCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -848,7 +991,7 @@ void OAIDefaultApi::unloadingCompletePost() {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::unloadingCompletePostCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::unloadingCompleteActionIdPostCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -858,11 +1001,11 @@ void OAIDefaultApi::unloadingCompletePostCallback(OAIHttpRequestWorker *worker) 
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit unloadingCompletePostSignal();
-        emit unloadingCompletePostSignalFull(worker);
+        emit unloadingCompleteActionIdPostSignal();
+        emit unloadingCompleteActionIdPostSignalFull(worker);
     } else {
-        emit unloadingCompletePostSignalE(error_type, error_str);
-        emit unloadingCompletePostSignalEFull(worker, error_type, error_str);
+        emit unloadingCompleteActionIdPostSignalE(error_type, error_str);
+        emit unloadingCompleteActionIdPostSignalEFull(worker, error_type, error_str);
     }
 }
 
@@ -967,9 +1110,23 @@ void OAIDefaultApi::unloadingPostCallback(OAIHttpRequestWorker *worker) {
     }
 }
 
-void OAIDefaultApi::unloadingStartPost() {
-    QString fullPath = QString(_serverConfigs["unloadingStartPost"][_serverIndices.value("unloadingStartPost")].URL()+"/unloading/start");
+void OAIDefaultApi::unloadingStartActionIdPost(const QString &action_id) {
+    QString fullPath = QString(_serverConfigs["unloadingStartActionIdPost"][_serverIndices.value("unloadingStartActionIdPost")].URL()+"/unloading/start/{action_id}");
     
+    
+    {
+        QString action_idPathParam("{");
+        action_idPathParam.append("action_id").append("}");
+        QString pathPrefix, pathSuffix, pathDelimiter;
+        QString pathStyle = "simple";
+        if (pathStyle == "")
+            pathStyle = "simple";
+        pathPrefix = getParamStylePrefix(pathStyle);
+        pathSuffix = getParamStyleSuffix(pathStyle);
+        pathDelimiter = getParamStyleDelimiter(pathStyle, "action_id", false);
+        QString paramString = (pathStyle == "matrix") ? pathPrefix+"action_id"+pathSuffix : pathPrefix;
+        fullPath.replace(action_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(action_id)));
+    }
     OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
     worker->setTimeOut(_timeOut);
     worker->setWorkingDirectory(_workingDirectory);
@@ -986,7 +1143,7 @@ void OAIDefaultApi::unloadingStartPost() {
     }
 #endif
 
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingStartPostCallback);
+    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingStartActionIdPostCallback);
     connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, this, [this]() {
         if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
@@ -997,7 +1154,7 @@ void OAIDefaultApi::unloadingStartPost() {
     worker->execute(&input);
 }
 
-void OAIDefaultApi::unloadingStartPostCallback(OAIHttpRequestWorker *worker) {
+void OAIDefaultApi::unloadingStartActionIdPostCallback(OAIHttpRequestWorker *worker) {
     QString error_str = worker->error_str;
     QNetworkReply::NetworkError error_type = worker->error_type;
 
@@ -1007,74 +1164,11 @@ void OAIDefaultApi::unloadingStartPostCallback(OAIHttpRequestWorker *worker) {
     worker->deleteLater();
 
     if (worker->error_type == QNetworkReply::NoError) {
-        emit unloadingStartPostSignal();
-        emit unloadingStartPostSignalFull(worker);
+        emit unloadingStartActionIdPostSignal();
+        emit unloadingStartActionIdPostSignalFull(worker);
     } else {
-        emit unloadingStartPostSignalE(error_type, error_str);
-        emit unloadingStartPostSignalEFull(worker, error_type, error_str);
-    }
-}
-
-void OAIDefaultApi::unloadingVehicleIdGet(const QString &vehicle_id) {
-    QString fullPath = QString(_serverConfigs["unloadingVehicleIdGet"][_serverIndices.value("unloadingVehicleIdGet")].URL()+"/unloading/{vehicle_id}");
-    
-    
-    {
-        QString vehicle_idPathParam("{");
-        vehicle_idPathParam.append("vehicle_id").append("}");
-        QString pathPrefix, pathSuffix, pathDelimiter;
-        QString pathStyle = "simple";
-        if (pathStyle == "")
-            pathStyle = "simple";
-        pathPrefix = getParamStylePrefix(pathStyle);
-        pathSuffix = getParamStyleSuffix(pathStyle);
-        pathDelimiter = getParamStyleDelimiter(pathStyle, "vehicle_id", false);
-        QString paramString = (pathStyle == "matrix") ? pathPrefix+"vehicle_id"+pathSuffix : pathPrefix;
-        fullPath.replace(vehicle_idPathParam, paramString+QUrl::toPercentEncoding(::OpenAPI::toStringValue(vehicle_id)));
-    }
-    OAIHttpRequestWorker *worker = new OAIHttpRequestWorker(this, _manager);
-    worker->setTimeOut(_timeOut);
-    worker->setWorkingDirectory(_workingDirectory);
-    OAIHttpRequestInput input(fullPath, "GET");
-
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-    for (auto keyValueIt = _defaultHeaders.keyValueBegin(); keyValueIt != _defaultHeaders.keyValueEnd(); keyValueIt++) {
-        input.headers.insert(keyValueIt->first, keyValueIt->second);
-    }
-#else
-    for (auto key : _defaultHeaders.keys()) {
-        input.headers.insert(key, _defaultHeaders[key]);
-    }
-#endif
-
-    connect(worker, &OAIHttpRequestWorker::on_execution_finished, this, &OAIDefaultApi::unloadingVehicleIdGetCallback);
-    connect(this, &OAIDefaultApi::abortRequestsSignal, worker, &QObject::deleteLater);
-    connect(worker, &QObject::destroyed, this, [this]() {
-        if (findChildren<OAIHttpRequestWorker*>().count() == 0) {
-            emit allPendingRequestsCompleted();
-        }
-    });
-
-    worker->execute(&input);
-}
-
-void OAIDefaultApi::unloadingVehicleIdGetCallback(OAIHttpRequestWorker *worker) {
-    QString error_str = worker->error_str;
-    QNetworkReply::NetworkError error_type = worker->error_type;
-
-    if (worker->error_type != QNetworkReply::NoError) {
-        error_str = QString("%1, %2").arg(worker->error_str, QString(worker->response));
-    }
-    OAIContainerActionStatus output(QString(worker->response));
-    worker->deleteLater();
-
-    if (worker->error_type == QNetworkReply::NoError) {
-        emit unloadingVehicleIdGetSignal(output);
-        emit unloadingVehicleIdGetSignalFull(worker, output);
-    } else {
-        emit unloadingVehicleIdGetSignalE(output, error_type, error_str);
-        emit unloadingVehicleIdGetSignalEFull(worker, error_type, error_str);
+        emit unloadingStartActionIdPostSignalE(error_type, error_str);
+        emit unloadingStartActionIdPostSignalEFull(worker, error_type, error_str);
     }
 }
 

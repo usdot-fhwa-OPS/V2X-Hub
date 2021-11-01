@@ -81,6 +81,7 @@ public class LoadingActions {
             ContainerActionStatus requestedAction = new ContainerActionStatus();
             requestedAction.setContainerId(request.getContainerId());
             requestedAction.setVehicleId(request.getVehicleId());
+            requestedAction.setActionId(request.getActionId());
             requestedAction.setStatus(ContainerActionStatus.StatusEnum.PENDING);
             requestedAction.setRequested(System.currentTimeMillis());
             // Add action to list of pending actions if an
@@ -97,42 +98,41 @@ public class LoadingActions {
     }
 
     /**
-     * Method to get {@link ContainerActionStatus} most recent loading action for a
-     * given vehicle. First searches pending loading actions, then current loading
-     * action, then completed loading action and returns the first action it finds.
+     * Searches all loading actions ( pending, current and completed ) for a given
+     * actionId and returns {@link ContainerActionStatus}. Returns null if non is found.
      * 
-     * @param vehicleId {@link String} valid non null vehicleID
-     * @return {@link ContainerActionStatus} most recent loading action for given
-     *         vehicle
+     * @param actionId unique string to identify action
+     * @return {@link InspectionStatus} for given action. Null if no action is found 
+     * or null action id is provided.
      */
-    public ContainerActionStatus getContainerActionStatus(String vehicleId) {
-        if (vehicleId != null) {
+    public ContainerActionStatus getContainerActionStatus(String actionId) {
+        if (actionId != null) {
             // First search pending loading actions ( null check since actions array is null
             // before adding values )
             if (pendingActions.getActions() != null) {
                 for (ContainerActionStatus containerAction : pendingActions.getActions()) {
-                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                    if (actionId.equals(containerAction.getActionId())) {
                         return containerAction;
                     }
                 }
             }
-            // Is current action for vehicle with vehicleId
-            if (currentAction != null && vehicleId.equals(currentAction.getVehicleId())) {
+            // search current action
+            if (currentAction != null && actionId.equals(currentAction.getActionId())) {
                 return currentAction;
             }
             // Search completed loading actions ( null check since actions array is null
             // before adding values )
             if (completedActions.getActions() != null) {
                 for (ContainerActionStatus containerAction : completedActions.getActions()) {
-                    if (vehicleId.equals(containerAction.getVehicleId())) {
+                    if (actionId.equals(containerAction.getActionId())) {
                         return containerAction;
                     }
                 }
             }
-            logger.warn(String.format("No actions exist for vehicle ID %s !", vehicleId));
+            logger.warn(String.format("No loading actions exist with action ID %s !", actionId));
             return null;
         }
-        logger.warn("Null vehicle id is not valid!");
+        logger.warn("Null action id is not valid!");
         return null;
     }
 

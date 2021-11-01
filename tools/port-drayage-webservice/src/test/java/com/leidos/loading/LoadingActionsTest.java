@@ -43,9 +43,10 @@ public class LoadingActionsTest {
         ContainerRequest req1 = new ContainerRequest();
         req1.setVehicleId("vehicleA");
         req1.setContainerId("containerA");
+        req1.setActionId("actionA");
 
         // Returns null before loading action is requested
-        assertNull(loadingActions.getContainerActionStatus("vehicleA"));
+        assertNull(loadingActions.getContainerActionStatus(req1.getActionId()));
         assertNull(loadingActions.getCurrentAction());
 
         // Returns action after loading action is requested
@@ -58,6 +59,7 @@ public class LoadingActionsTest {
         ContainerRequest req2 = new ContainerRequest();
         req2.setVehicleId("vehicleA");
         req2.setContainerId("containerC");
+        req2.setActionId("actionC");
         loadingActions.requestLoadingAction(req2);
         ContainerActionStatus status = loadingActions.getCurrentAction();
         assertEquals(req1.getContainerId(), status.getContainerId());
@@ -74,14 +76,17 @@ public class LoadingActionsTest {
         ContainerRequest req1 = new ContainerRequest();
         req1.setVehicleId("vehicleA");
         req1.setContainerId("containerA");
+        req1.setActionId("actionA");
 
         ContainerRequest req2 = new ContainerRequest();
         req2.setVehicleId("vehicleB");
         req2.setContainerId("containerB");
+        req2.setActionId("actionB");
 
         ContainerRequest req3 = new ContainerRequest();
         req3.setVehicleId("vehicleC");
         req3.setContainerId("containerC");
+        req3.setActionId("actionC");
 
         // Run completeCurrentAction with no current action
         assertNull(loadingActions.getCurrentAction());
@@ -98,9 +103,9 @@ public class LoadingActionsTest {
         // Completed actions is empty before completing any loading action but
         // loading action is in loadingActions list of in progress actions
         assertNull(loadingActions.getCompletedActions().getActions());
-        ContainerActionStatus req1Status = loadingActions.getContainerActionStatus(req1.getVehicleId());
-        ContainerActionStatus req2Status = loadingActions.getContainerActionStatus(req2.getVehicleId());
-        ContainerActionStatus req3Status = loadingActions.getContainerActionStatus(req3.getVehicleId());
+        ContainerActionStatus req1Status = loadingActions.getContainerActionStatus(req1.getActionId());
+        ContainerActionStatus req2Status = loadingActions.getContainerActionStatus(req2.getActionId());
+        ContainerActionStatus req3Status = loadingActions.getContainerActionStatus(req3.getActionId());
 
         // First requested action becomes current action and each action requested after
         // is added to
@@ -144,7 +149,7 @@ public class LoadingActionsTest {
         // Get ContainerActionStatus will return most recent action even when it is
         // completed
         // for a given vehicleID
-        assertEquals(req3Status, loadingActions.getContainerActionStatus(req3.getVehicleId()));
+        assertEquals(req3Status, loadingActions.getContainerActionStatus(req3.getActionId()));
 
     }
 }

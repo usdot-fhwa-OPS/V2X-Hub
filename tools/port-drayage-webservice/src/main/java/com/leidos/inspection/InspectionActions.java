@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * allows for a single inspection to be in progress at a time and is stored as
  * the {@link InspectionActions#currentInspection}. Any inspections requested
  * while the current inspection is not yet completed will be added to
- * {@link InspectionActions#pendingInspection} list. This list is then used to
+ * {@link InspectionActions#pendingInspections} list. This list is then used to
  * populate the current action after an action is completed. Each completed
  * action is stored in the {@link InspectionActions#completedInspections} list.
  * 
@@ -27,7 +27,7 @@ public class InspectionActions implements InspectionApi {
     private static Logger logger = LoggerFactory.getLogger(InspectionActions.class);
 
     // List of pending inspection statuses
-    private InspectionStatusList pendingInspection = new InspectionStatusList();
+    private InspectionStatusList pendingInspections = new InspectionStatusList();
 
     // List of completed inspections
     private InspectionStatusList completedInspections = new InspectionStatusList();
@@ -47,7 +47,7 @@ public class InspectionActions implements InspectionApi {
      * @return {@link InspectionStatusList} list of pending inspection.
      */
     public InspectionStatusList getPendingInspections() {
-        return pendingInspection;
+        return pendingInspections;
     }
 
     /**
@@ -81,6 +81,7 @@ public class InspectionActions implements InspectionApi {
             InspectionStatus inspectionStatus = new InspectionStatus();
             inspectionStatus.setContainerId(request.getContainerId());
             inspectionStatus.setVehicleId(request.getVehicleId());
+            inspectionStatus.setActionId(request.getActionId());
             inspectionStatus.setStatus(StatusEnum.PENDING);
             inspectionStatus.setRequested(System.currentTimeMillis());
 
@@ -91,7 +92,7 @@ public class InspectionActions implements InspectionApi {
 
             // else add to list of pending action
             else {
-                pendingInspection.addInspectionsItem(inspectionStatus);
+                pendingInspections.addInspectionsItem(inspectionStatus);
             }
         } else {
             logger.warn("Attempted to add null InspectionRequest!");
@@ -100,40 +101,39 @@ public class InspectionActions implements InspectionApi {
     }
 
     /**
-     * Method to get most recent {@link InspectionStatus} for a given vehicle id.
-     * First searches pending inspections, then current inspection, then completed
-     * inspections and returns the first match.
+     * Searches all inspections ( pending, current and completed ) for a given
+     * actionId and returns {@link InspectionStatus}. Returns null if non is found.
      * 
-     * @param vehicleId {@link String} valid non null vehicleID
-     * @return {@link InspectionStatus} most recent inspection for a given vehicle
-     *         id
+     * @param actionId unique string to identify action
+     * @return {@link InspectionStatus} for given action. Null if no action is found 
+     * or null action id is provided.
      */
-    public InspectionStatus getInspectionStatus(String vehicleId) {
-        if (vehicleId != null) {
+    public InspectionStatus getInspectionStatus(String actionId) {
+        if (actionId != null) {
             // Pending actions ( null check since arraylist is initially null )
-            if (pendingInspection.getInspections() != null) {
-                for (InspectionStatus inspectionStatus : pendingInspection.getInspections()) {
-                    if (vehicleId.equals(inspectionStatus.getVehicleId())) {
+            if (pendingInspections.getInspections() != null) {
+                for (InspectionStatus inspectionStatus : pendingInspections.getInspections()) {
+                    if (actionId.equals(inspectionStatus.getActionId())) {
                         return inspectionStatus;
                     }
                 }
             }
             // Current action
-            if (currentInspection != null && vehicleId.equals(currentInspection.getVehicleId())) {
+            if (currentInspection != null && actionId.equals(currentInspection.getActionId())) {
                 return currentInspection;
             }
             // Completed actions ( null check since arraylist is initially null )
             if (completedInspections.getInspections() != null) {
                 for (InspectionStatus inspectionStatus : completedInspections.getInspections()) {
-                    if (vehicleId.equals(inspectionStatus.getVehicleId())) {
+                    if (actionId.equals(inspectionStatus.getActionId())) {
                         return inspectionStatus;
                     }
                 }
             }
-            logger.warn(String.format("No current inspection action for vehicle ID %s !", vehicleId));
+            logger.warn(String.format("No inspection action with action ID %s !", actionId));
             return null;
         }
-        logger.warn("Null vehicle id is not valid!");
+        logger.warn("Null action id is not valid!");
         return null;
     }
 
@@ -152,8 +152,8 @@ public class InspectionActions implements InspectionApi {
             currentInspection.setCompleted(System.currentTimeMillis());
             completedInspections.addInspectionsItem(currentInspection);
             // If there are any pending actions set them to current
-            if (pendingInspection.getInspections() != null && !pendingInspection.getInspections().isEmpty()) {
-                currentInspection = pendingInspection.getInspections().remove(0);
+            if (pendingInspections.getInspections() != null && !pendingInspections.getInspections().isEmpty()) {
+                currentInspection = pendingInspections.getInspections().remove(0);
             }
             // else set current to null
             else {

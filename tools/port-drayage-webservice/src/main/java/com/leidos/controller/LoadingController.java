@@ -44,8 +44,8 @@ public class LoadingController implements LoadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<ContainerActionStatus> loadingVehicleIdGet(String vehicleId) {
-        ContainerActionStatus action = loadingActions.getContainerActionStatus(vehicleId);
+    public ResponseEntity<ContainerActionStatus> loadingActionIdGet(String actionId) {
+        ContainerActionStatus action = loadingActions.getContainerActionStatus(actionId);
         logger.debug(String.format("Found action %s!", action));
         if (action != null)
             return ResponseEntity.ok(action);
@@ -66,9 +66,9 @@ public class LoadingController implements LoadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> loadingStartPost() {
+    public ResponseEntity<Void> loadingStartActionIdPost(String actionId) {
         ContainerActionStatus cur = loadingActions.getCurrentAction();
-        if (cur != null) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             loadingActions.startCurrentAction();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
@@ -81,9 +81,9 @@ public class LoadingController implements LoadingApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> loadingCompletePost() {
+    public ResponseEntity<Void> loadingCompleteActionIdPost(String actionId) {
         ContainerActionStatus cur = loadingActions.getCurrentAction();
-        if (cur != null) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             loadingActions.completeCurrentAction();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {

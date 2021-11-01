@@ -60,16 +60,25 @@ public:
     QString getParamStyleSuffix(const QString &style);
     QString getParamStyleDelimiter(const QString &style, const QString &name, bool isExplode);
 
-
-    void inspectionCompletePost();
-
-
-    void inspectionHoldPost();
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void inspectionActionIdGet(const QString &action_id);
 
     /**
-    * @param[in]  oai_inspection_request OAIInspectionRequest [required]
+    * @param[in]  action_id QString [required]
     */
-    void inspectionHoldingPost(const OAIInspectionRequest &oai_inspection_request);
+    void inspectionCompleteActionIdPost(const QString &action_id);
+
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void inspectionHoldActionIdPost(const QString &action_id);
+
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void inspectionHoldingActionIdPost(const QString &action_id);
 
 
     void inspectionPendingGet();
@@ -80,12 +89,14 @@ public:
     void inspectionPost(const OAIInspectionRequest &oai_inspection_request);
 
     /**
-    * @param[in]  vehicle_id QString [required]
+    * @param[in]  action_id QString [required]
     */
-    void inspectionVehicleIdGet(const QString &vehicle_id);
+    void loadingActionIdGet(const QString &action_id);
 
-
-    void loadingCompletePost();
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void loadingCompleteActionIdPost(const QString &action_id);
 
 
     void loadingPendingGet();
@@ -95,16 +106,20 @@ public:
     */
     void loadingPost(const OAIContainerRequest &oai_container_request);
 
-
-    void loadingStartPost();
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void loadingStartActionIdPost(const QString &action_id);
 
     /**
-    * @param[in]  vehicle_id QString [required]
+    * @param[in]  action_id QString [required]
     */
-    void loadingVehicleIdGet(const QString &vehicle_id);
+    void unloadingActionIdGet(const QString &action_id);
 
-
-    void unloadingCompletePost();
+    /**
+    * @param[in]  action_id QString [required]
+    */
+    void unloadingCompleteActionIdPost(const QString &action_id);
 
 
     void unloadingPendingGet();
@@ -114,13 +129,10 @@ public:
     */
     void unloadingPost(const OAIContainerRequest &oai_container_request);
 
-
-    void unloadingStartPost();
-
     /**
-    * @param[in]  vehicle_id QString [required]
+    * @param[in]  action_id QString [required]
     */
-    void unloadingVehicleIdGet(const QString &vehicle_id);
+    void unloadingStartActionIdPost(const QString &action_id);
 
 
 private:
@@ -137,92 +149,92 @@ private:
     bool _isResponseCompressionEnabled;
     bool _isRequestCompressionEnabled;
 
-    void inspectionCompletePostCallback(OAIHttpRequestWorker *worker);
-    void inspectionHoldPostCallback(OAIHttpRequestWorker *worker);
-    void inspectionHoldingPostCallback(OAIHttpRequestWorker *worker);
+    void inspectionActionIdGetCallback(OAIHttpRequestWorker *worker);
+    void inspectionCompleteActionIdPostCallback(OAIHttpRequestWorker *worker);
+    void inspectionHoldActionIdPostCallback(OAIHttpRequestWorker *worker);
+    void inspectionHoldingActionIdPostCallback(OAIHttpRequestWorker *worker);
     void inspectionPendingGetCallback(OAIHttpRequestWorker *worker);
     void inspectionPostCallback(OAIHttpRequestWorker *worker);
-    void inspectionVehicleIdGetCallback(OAIHttpRequestWorker *worker);
-    void loadingCompletePostCallback(OAIHttpRequestWorker *worker);
+    void loadingActionIdGetCallback(OAIHttpRequestWorker *worker);
+    void loadingCompleteActionIdPostCallback(OAIHttpRequestWorker *worker);
     void loadingPendingGetCallback(OAIHttpRequestWorker *worker);
     void loadingPostCallback(OAIHttpRequestWorker *worker);
-    void loadingStartPostCallback(OAIHttpRequestWorker *worker);
-    void loadingVehicleIdGetCallback(OAIHttpRequestWorker *worker);
-    void unloadingCompletePostCallback(OAIHttpRequestWorker *worker);
+    void loadingStartActionIdPostCallback(OAIHttpRequestWorker *worker);
+    void unloadingActionIdGetCallback(OAIHttpRequestWorker *worker);
+    void unloadingCompleteActionIdPostCallback(OAIHttpRequestWorker *worker);
     void unloadingPendingGetCallback(OAIHttpRequestWorker *worker);
     void unloadingPostCallback(OAIHttpRequestWorker *worker);
-    void unloadingStartPostCallback(OAIHttpRequestWorker *worker);
-    void unloadingVehicleIdGetCallback(OAIHttpRequestWorker *worker);
+    void unloadingStartActionIdPostCallback(OAIHttpRequestWorker *worker);
 
 signals:
 
-    void inspectionCompletePostSignal();
-    void inspectionHoldPostSignal();
-    void inspectionHoldingPostSignal();
+    void inspectionActionIdGetSignal(OAIInspectionStatus summary);
+    void inspectionCompleteActionIdPostSignal();
+    void inspectionHoldActionIdPostSignal();
+    void inspectionHoldingActionIdPostSignal();
     void inspectionPendingGetSignal(OAIInspectionStatusList summary);
     void inspectionPostSignal();
-    void inspectionVehicleIdGetSignal(OAIInspectionStatus summary);
-    void loadingCompletePostSignal();
+    void loadingActionIdGetSignal(OAIContainerActionStatus summary);
+    void loadingCompleteActionIdPostSignal();
     void loadingPendingGetSignal(OAIActionStatusList summary);
     void loadingPostSignal();
-    void loadingStartPostSignal();
-    void loadingVehicleIdGetSignal(OAIContainerActionStatus summary);
-    void unloadingCompletePostSignal();
+    void loadingStartActionIdPostSignal();
+    void unloadingActionIdGetSignal(OAIContainerActionStatus summary);
+    void unloadingCompleteActionIdPostSignal();
     void unloadingPendingGetSignal(OAIActionStatusList summary);
     void unloadingPostSignal();
-    void unloadingStartPostSignal();
-    void unloadingVehicleIdGetSignal(OAIContainerActionStatus summary);
+    void unloadingStartActionIdPostSignal();
 
-    void inspectionCompletePostSignalFull(OAIHttpRequestWorker *worker);
-    void inspectionHoldPostSignalFull(OAIHttpRequestWorker *worker);
-    void inspectionHoldingPostSignalFull(OAIHttpRequestWorker *worker);
+    void inspectionActionIdGetSignalFull(OAIHttpRequestWorker *worker, OAIInspectionStatus summary);
+    void inspectionCompleteActionIdPostSignalFull(OAIHttpRequestWorker *worker);
+    void inspectionHoldActionIdPostSignalFull(OAIHttpRequestWorker *worker);
+    void inspectionHoldingActionIdPostSignalFull(OAIHttpRequestWorker *worker);
     void inspectionPendingGetSignalFull(OAIHttpRequestWorker *worker, OAIInspectionStatusList summary);
     void inspectionPostSignalFull(OAIHttpRequestWorker *worker);
-    void inspectionVehicleIdGetSignalFull(OAIHttpRequestWorker *worker, OAIInspectionStatus summary);
-    void loadingCompletePostSignalFull(OAIHttpRequestWorker *worker);
+    void loadingActionIdGetSignalFull(OAIHttpRequestWorker *worker, OAIContainerActionStatus summary);
+    void loadingCompleteActionIdPostSignalFull(OAIHttpRequestWorker *worker);
     void loadingPendingGetSignalFull(OAIHttpRequestWorker *worker, OAIActionStatusList summary);
     void loadingPostSignalFull(OAIHttpRequestWorker *worker);
-    void loadingStartPostSignalFull(OAIHttpRequestWorker *worker);
-    void loadingVehicleIdGetSignalFull(OAIHttpRequestWorker *worker, OAIContainerActionStatus summary);
-    void unloadingCompletePostSignalFull(OAIHttpRequestWorker *worker);
+    void loadingStartActionIdPostSignalFull(OAIHttpRequestWorker *worker);
+    void unloadingActionIdGetSignalFull(OAIHttpRequestWorker *worker, OAIContainerActionStatus summary);
+    void unloadingCompleteActionIdPostSignalFull(OAIHttpRequestWorker *worker);
     void unloadingPendingGetSignalFull(OAIHttpRequestWorker *worker, OAIActionStatusList summary);
     void unloadingPostSignalFull(OAIHttpRequestWorker *worker);
-    void unloadingStartPostSignalFull(OAIHttpRequestWorker *worker);
-    void unloadingVehicleIdGetSignalFull(OAIHttpRequestWorker *worker, OAIContainerActionStatus summary);
+    void unloadingStartActionIdPostSignalFull(OAIHttpRequestWorker *worker);
 
-    void inspectionCompletePostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionHoldPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionHoldingPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionActionIdGetSignalE(OAIInspectionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionCompleteActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionHoldActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionHoldingActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
     void inspectionPendingGetSignalE(OAIInspectionStatusList summary, QNetworkReply::NetworkError error_type, QString error_str);
     void inspectionPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionVehicleIdGetSignalE(OAIInspectionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingCompletePostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingActionIdGetSignalE(OAIContainerActionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingCompleteActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
     void loadingPendingGetSignalE(OAIActionStatusList summary, QNetworkReply::NetworkError error_type, QString error_str);
     void loadingPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingStartPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingVehicleIdGetSignalE(OAIContainerActionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingCompletePostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingStartActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingActionIdGetSignalE(OAIContainerActionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingCompleteActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
     void unloadingPendingGetSignalE(OAIActionStatusList summary, QNetworkReply::NetworkError error_type, QString error_str);
     void unloadingPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingStartPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingVehicleIdGetSignalE(OAIContainerActionStatus summary, QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingStartActionIdPostSignalE(QNetworkReply::NetworkError error_type, QString error_str);
 
-    void inspectionCompletePostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionHoldPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionHoldingPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionActionIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionCompleteActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionHoldActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void inspectionHoldingActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void inspectionPendingGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void inspectionPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void inspectionVehicleIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingCompletePostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingActionIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingCompleteActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void loadingPendingGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void loadingPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingStartPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void loadingVehicleIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingCompletePostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void loadingStartActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingActionIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingCompleteActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void unloadingPendingGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
     void unloadingPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingStartPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
-    void unloadingVehicleIdGetSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
+    void unloadingStartActionIdPostSignalEFull(OAIHttpRequestWorker *worker, QNetworkReply::NetworkError error_type, QString error_str);
 
     void abortRequestsSignal();
     void allPendingRequestsCompleted();
