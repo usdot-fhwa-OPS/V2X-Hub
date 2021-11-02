@@ -23,6 +23,7 @@
 
 
 
+
 using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
@@ -31,13 +32,15 @@ using namespace boost::property_tree;
 using namespace OpenAPI;
 
 
+
+
 namespace PortDrayagePlugin {
 static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
 
 class PortDrayagePlugin: public PluginClient {
 public:
 	struct PortDrayage_Object {
-		int cmv_id; 
+		std::string cmv_id; 
 		std::string cargo_id;
 		bool cargo;
 		std::string operation;
@@ -106,7 +109,7 @@ protected:
 	 * @param cmv_id 
 	 * @return PortDrayage_Object of first action 
 	 */
-	PortDrayage_Object retrieveFirstAction( uint32_t cmv_id );
+	PortDrayage_Object retrieveFirstAction( std::string cmv_id );
 
 	/**
 	 * Create PortDrayage_Object from ptree JSON.
@@ -115,20 +118,36 @@ protected:
 	 * @return PortDrayage_Object 
 	 */
 	PortDrayage_Object readPortDrayageJson( ptree &pr );
+
+	void insert_holding_action_into_table(PortDrayage_Object &current_action );
+
 	
 private: 
+	// Database configuration values
 	std::string _database_username;
 	std::string _database_password;
 	uint16_t _database_port;
 	std::string _database_ip;
 	std::string _database_name; 
+	
+
 	sql::Driver *driver;
 	sql::Connection *con;
+
+	// Prepared Statements
 	sql::PreparedStatement *next_action_id;
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
+	sql::PreparedStatement *insert_holding_action;
+	sql::PreparedStatement *get_inserted_holding_action_id;
+	sql::PreparedStatement *update_current_action;
+
 	J2735MessageFactory factory;
+	// Web Service URL
 	std::string _webservice_url;
+	// Port Configuration
+	double _holding_lat;
+	double _holding_lon;
 
 };
 std::mutex _cfgLock;

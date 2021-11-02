@@ -18,16 +18,19 @@ class WebServiceClient : public QObject {
     public slots:
 
     private: 
-        OAIContainerActionStatus *current_loading_action;
-        OAIContainerActionStatus *current_unloading_action;
-        OAIInspectionStatus *current_inspection;
+        OAIContainerActionStatus current_loading_action;
+        OAIContainerActionStatus current_unloading_action;
+        OAIInspectionStatus current_inspection;
 
     
     public : 
-        void setup_callbacks();
         OAIContainerActionStatus get_current_loading_action();
         OAIContainerActionStatus get_current_unloading_action();
         OAIInspectionStatus get_current_inspection();
         void request_loading_action(std::string vehicle_id, std::string container_id, std::string action_id);
+        void request_unloading_action(std::string vehicle_id, std::string container_id, std::string action_id);
+        int request_inspection(std::string vehicle_id, std::string container_id, std::string action_id);
+        void request_holding(std::string action_id);
+
     
 };

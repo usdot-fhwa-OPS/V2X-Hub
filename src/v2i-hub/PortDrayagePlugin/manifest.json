@@ -45,8 +45,18 @@
         },
 		{
 			"key":"Web_Service_URL",
-            "default":"http://127.0.0.1:8080",
+            "default":"http://127.0.0.1:8090/",
             "description":"The URL for the Loading/Unloading/Inspection Web Service"
+		},
+		{
+			"key":"Holding_Lat",
+            "default":"45.45",
+            "description":"Latitude Coordinate for Holding Area GPS Location in Degrees(-90,90)."
+		},
+		{
+			"key":"Holding_Lon",
+            "default":"-45.45",
+            "description":"Longitude Coordinate for Holding Area GPS Location in Degrees(-180,180)."
 		}
 		
 	]
