@@ -234,6 +234,8 @@ char * SignalControllerNTCIP::getSingleString(const char* getOID, const char *co
         	//NumChars = vars->val_len;
         	returnInt = (char *) vars->val.bitstring;
         }
+	    // freed the block of allocated memory
+	    delete[] out;
     }
     else
     {
@@ -283,6 +285,9 @@ int  SignalControllerNTCIP::getOctetString(const char* getOID,  const char *comm
 	            out[i++] = * aa;
 	            printf("value #%d is NOT a string! Ack!\n", *returnInt++);
 	        }
+		    // freed the block of allocated memory
+		    delete[] out;
+		    
 	    }
 	    return *returnInt;
     }
@@ -422,6 +427,8 @@ int  SignalControllerNTCIP::CurTimingPlanRead()
 
 		// ----------get the current timing plan----------------//
         CurTimingPlan=out[0];
+	    // freed the block of allocated memory
+	    delete[] out;
 
     }
     else
@@ -630,6 +637,8 @@ void SignalControllerNTCIP::PhaseControl(int phase_control, int Total,char YES)
                 printf("value #%d is NOT a string! Ack!\n", count++);
                 }
             }
+	    // freed the block of allocated memory
+	    delete[] out;
         }
     else
         {
@@ -1473,6 +1482,8 @@ netsnmp_pdu*  SignalControllerNTCIP::setSNMPInt(const char* setOID, const char *
 
 		// ----------get the current timing plan----------------//
 		CurTimingPlan = out[0];
+		// freed the block of allocated memory
+		delete[] out;
 
 	}
 	else
@@ -1735,6 +1746,8 @@ bool SignalControllerNTCIP::setSNMPActivateMsg(const char* getOID, const char *c
 
 		// ----------get the current timing plan----------------//
 		//CurTimingPlan = out[0];
+		// freed the block of allocated memory
+		delete[] out;
 
 	}
 	else
