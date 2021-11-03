@@ -144,7 +144,9 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			else if ( pd->operation.compare("HOLDING_AREA") == 0) {
 				try{
 					WebServiceClient client;
-					client.request_holding( pd->action_id );
+					string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
+					FILE_LOG(logERROR) << "Requesting holding for action id : " << previous_checkpoint_id << std::endl;
+					client.request_holding( previous_checkpoint_id );
 					FILE_LOG(logERROR) << "Holding Action Complete!" << std::endl;
 
 				}
@@ -454,6 +456,28 @@ void PortDrayagePlugin::insert_holding_action_into_table( PortDrayage_Object &cu
 		if ( res->isFirst() ) {
 			FILE_LOG(logERROR) << "Query Result : " << res->first() << std::endl;
 		}
+	}
+	catch ( sql::SQLException &e ) {
+		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
+		FILE_LOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
+		FILE_LOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+	}
+}
+
+std::string PortDrayagePlugin::retrieve_holding_inspection_action_id( std::string action_id ) {
+	try{
+		get_inserted_holding_action_id->setString(1, action_id);
+		get_inserted_holding_action_id->setString(2, "PORT_CHECKPOINT");
+		FILE_LOG(logERROR) << "Query : SELECT action_id FROM freight WHERE next_action = " 
+			<< action_id << " and operation = PORT_CHECKPOINT " << std::endl;
+
+		sql::ResultSet *res = get_inserted_holding_action_id->executeQuery();
+		res->first();
+		if ( res->isFirst() ) {
+			FILE_LOG(logERROR) << "Query Result: " << res->first() << std::endl;
+		}
+		std::string action_id = res->getString("action_id");
+		return action_id;
 	}
 	catch ( sql::SQLException &e ) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;

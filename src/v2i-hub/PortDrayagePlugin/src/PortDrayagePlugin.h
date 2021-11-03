@@ -120,6 +120,9 @@ protected:
 
 	void insert_holding_action_into_table(PortDrayage_Object &current_action );
 
+
+	std::string retrieve_holding_inspection_action_id( std::string action_id );
+
 	
 private: 
 	// Database configuration values
