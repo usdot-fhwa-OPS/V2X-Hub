@@ -68,8 +68,8 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
 		first_action = con->prepareStatement("SELECT * FROM first_action WHERE cmv_id = ? " );
 		insert_holding_action =  con->prepareStatement("INSERT INTO freight VALUES(?,?,?,?,?, UUID(), ?)");
-		get_inserted_holding_action_id = con->prepareStatement("SELECT action_id FROM freight WHERE next_action = ?");
-		update_current_action = con->prepareStatement("UPDATE FREIGHT next_action = ? WHERE action_id = ?");
+		get_inserted_holding_action_id = con->prepareStatement("SELECT action_id FROM freight WHERE next_action = ? and operation = ? ");
+		update_current_action = con->prepareStatement("UPDATE freight SET next_action = ? WHERE action_id = ?");
 	}
 	catch(std::exception &e) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
@@ -104,50 +104,53 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			// Convert JSON payload to PortDrayage_Object
 			read_json(payload, pr);
 			*pd = readPortDrayageJson( pr );
-
-			if ( pd->operation.compare("PICKUP") ) {
+			FILE_LOG(logERROR) << "Operation is " << pd->operation << std::endl;
+			if ( pd->operation.compare("PICKUP") == 0 ) {
 				try{
 					WebServiceClient client;
 					client.request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+					FILE_LOG(logERROR) << "Loading Complete!" << std::endl;
+
 				}
 				catch(std::exception &e) {
 					FILE_LOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
 				}
-				FILE_LOG(logERROR) << "Loading Complete send next action!" << std::endl;
 			}
-			else if ( pd->operation.compare("DROPOFF")) {
+			else if ( pd->operation.compare("DROPOFF")  == 0) {
 				try{
 					WebServiceClient client;
 					client.request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+					FILE_LOG(logERROR) << "Unloading Complete!" << std::endl;
 				}
 				catch(std::exception &e) {
 					FILE_LOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
 				}
-				FILE_LOG(logERROR) << "Loading Complete send next action!" << std::endl;
 			}
-			else if ( pd->operation.compare("PORT_CHECKPOINT") ) {
+			else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
 				try{
 					WebServiceClient client;
 					// If holding == 1 insert HOLDING action into table
 					int holding = client.request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
 					if ( holding == 1 ) {
+						FILE_LOG(logERROR) << "Requested futher inspection. Inserting Holding Action!" << std::endl;
 						insert_holding_action_into_table( *pd );
+						FILE_LOG(logERROR) << "Inserted Holding action as next action!";
 					}
 				}
 				catch(std::exception &e) {
 					FILE_LOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
 				}
-				FILE_LOG(logERROR) << "Loading Complete send next action!" << std::endl;
 			}
-			else if ( pd->operation.compare("HOLDING_AREA") ) {
+			else if ( pd->operation.compare("HOLDING_AREA") == 0) {
 				try{
 					WebServiceClient client;
 					client.request_holding( pd->action_id );
+					FILE_LOG(logERROR) << "Holding Action Complete!" << std::endl;
+
 				}
 				catch(std::exception &e) {
 					FILE_LOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
 				}
-				FILE_LOG(logERROR) << "Loading Complete send next action!" << std::endl;
 			}
 
 		}
@@ -383,11 +386,14 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( pt
 		else {
 			pd->action_id = child.get_ptr()->get_value<string>();
 			// For eventually tracking of completed actions
-			// pd->operation = pr.get_child("operation").get_value<string>();
+			pd->operation = pr.get_child("operation").get_value<string>();
+			child = pr.get_child_optional("cargo_id");
+			if ( child ) {
+				pd->cargo_id = pr.get_child("cargo_id").get_value<string>();
+			}
 			// ptree location = pr.get_child("location");
 			// pd->location_lat =location.get_child("latitude").get_value<double>();
 			// pd->location_long = location.get_child("longitude").get_value<double>();
-			PLOG(logERROR) << "Action ID complete : " << pd->action_id << std::endl;
 
 		}
 		return *pd;
@@ -399,39 +405,55 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( pt
 }
 
 void PortDrayagePlugin::insert_holding_action_into_table( PortDrayage_Object &current_action ) {
-	FILE_LOG(logERROR) << "Getting next action for " << current_action.action_id  << "." << std::endl;
 	PortDrayage_Object *next_action = new PortDrayage_Object;
 	PortDrayage_Object *cur_action = &current_action;
+
 	try{
 
 		*next_action =  retrieveNextAction(cur_action->action_id);
+		FILE_LOG(logERROR) << "Insert Holding action between " << cur_action->action_id << " and " 
+			<< next_action->action_id << "." << std::endl;
+		FILE_LOG(logERROR) << "Insert Holding Action." << std::endl;
 		//INSERT INTO FREIGHT VALUES(cmv_id,cargo_id,_holding_lat,_holding_lon,HOLDING, UUID(), next_action->action_id)
-		FILE_LOG(logERROR) << "Building Query to insert Holding Action!" << std::endl;
 		insert_holding_action->setString(1,cur_action->cmv_id);
 		insert_holding_action->setString(2,cur_action->cargo_id);
-		FILE_LOG(logERROR) << "Current Action values set!";
 		insert_holding_action->setDouble(3,_holding_lat);
 		insert_holding_action->setDouble(4,_holding_lon);
 		insert_holding_action->setString(5, "HOLDING_AREA");
 		insert_holding_action->setString(6, next_action->action_id);
-		FILE_LOG(logERROR) << "Attempting to insert Holding Action!" << std::endl;
+		FILE_LOG(logERROR) << "Query : INSERT INTO FREIGHT VALUES(" 
+			<< cur_action->cmv_id << ", " << cur_action->cargo_id << ", " 
+			<< _holding_lat << ", " << _holding_lon <<  ", UUID(), HOLDING_AREA )" << std::endl;
 		sql::ResultSet *res = insert_holding_action->executeQuery();
-		FILE_LOG(logERROR) << "Holding Action Added to freight : " << res->rowInserted()<< std::endl;
+		if ( res->isFirst() ) {
+			FILE_LOG(logERROR) << "Query Result : " << res->first()<< std::endl;
+		}
 
-		// Get Holding Action ID 
-		// SELECT action_id FROM freight WHERE next_action = ?
+		FILE_LOG(logERROR) << "Get Holding Action action_id." << std::endl;
+		// SELECT action_id FROM freight WHERE next_action = ? and operation = ? 
 		get_inserted_holding_action_id->setString(1, next_action->action_id);
+		get_inserted_holding_action_id->setString(2, "HOLDING_AREA");
+		FILE_LOG(logERROR) << "Query : SELECT action_id FROM freight WHERE next_action = " 
+			<< next_action->action_id << " and operation = HOLDING_AREA " << std::endl;
+
 		res = get_inserted_holding_action_id->executeQuery();
+		res->first();
+		if ( res->isFirst() ) {
+			FILE_LOG(logERROR) << "Query Result: " << res->first() << std::endl;
+		}
 		std::string action_id = res->getString("action_id");
-		FILE_LOG(logERROR) << "Retrieved action ID " << action_id << std::endl;
-		//"SET @cur_action = SELECT action_id FROM freight WHERE next_action = ?; UPDATE FREIGHT next_action = @cur_action WHERE action_id = ?"
-		update_current_action->setString( 1, next_action->next_action);
+
+		FILE_LOG(logERROR) << "Update Checkpoint next_action = Holding Action action_id" << std::endl;
+		// UPDATE freight SET next_action = ? WHERE action_id = ?
+		update_current_action->setString( 1, action_id);
 		update_current_action->setString( 2, cur_action->action_id);
+		FILE_LOG(logERROR) << "Query : UPDATE freight SET next_action = " 
+			<< action_id << " WHERE action_id = " << cur_action->action_id << std::endl;
 		res = update_current_action->executeQuery();
-		FILE_LOG(logERROR) << "Updated Current Action Added to freight : " << res->rowUpdated() << std::endl;
-
-
-
+		res->first();
+		if ( res->isFirst() ) {
+			FILE_LOG(logERROR) << "Query Result : " << res->first() << std::endl;
+		}
 	}
 	catch ( sql::SQLException &e ) {
 		FILE_LOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
