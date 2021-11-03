@@ -353,13 +353,12 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["sec_mark"]  = secMark.str();
 
 		auto id_len = bsm->coreData.id.size;
-		std::vector<uint8_t> id_v;
+		std::stringstream id_ss;
 		for(auto i = 0; i < id_len; i++)
 		{			
-			id_v.push_back(bsm->coreData.id.buf[i]);
+			id_ss<<static_cast<int>(bsm->coreData.id.buf[i]);
 		}
-		std::string id(id_v.begin(), id_v.end());
-		coreData["id"]  = id;
+		coreData["id"]  = id_ss.str();
 		
 		Json::Value accuracy;
 
