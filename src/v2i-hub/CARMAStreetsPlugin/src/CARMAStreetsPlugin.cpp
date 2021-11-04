@@ -238,7 +238,6 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		timestamp << mobilityPathMsg->header.timestamp.buf;
 		metadata["timestamp"] = timestamp.str();
 
-		Json::Value mobilityPathJsonValue;
 		Json::Value location;
 		Json::Value trajectory;
 
@@ -277,10 +276,9 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 			trajectory["offsets"].append(offset);
 		}
 
-		mobilityPathJsonValue["location"] 		= location;
-		mobilityPathJsonValue["trajectory"] 	= trajectory;
+		trajectory["location"] 		= location;
 		mobilityPathJsonRoot["metadata"] 		= metadata; 
-		mobilityPathJsonRoot["MobilityPath"] 	= mobilityPathJsonValue;
+		mobilityPathJsonRoot["trajectory"]		= trajectory;
 		const std::string json_message 			= Json::writeString(builder, mobilityPathJsonRoot);
 		PLOG(logDEBUG) <<"MobilityPath Json message:" << json_message;
 		RdKafka::ErrorCode produce_error 		= kafka_producer->produce(	_transmitMobilityPathTopic, 
