@@ -41,6 +41,7 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("Web_Service_URL", _webservice_url);
 	GetConfigValue<double>("Holding_Lat", _holding_lat);
 	GetConfigValue<double>("Holding_Lon", _holding_lon);
+	FILE_LOG(logERROR) << "Holding Area set : (" << _holding_lat << ", " << _holding_lon << ")" << std::endl;
 
 
 	std::string loglevel;
@@ -87,8 +88,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 
 	// Retrieve J2735 Message
 	auto mobilityOperation = msg.get_j2735_data();
-	FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
-	FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
+	
 
 	std::stringstream strat;
 	std::stringstream payload; 
@@ -101,6 +101,8 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 	std::string strategy = strat.str();
 	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
+			FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
+			FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
 			// Convert JSON payload to PortDrayage_Object
 			read_json(payload, pr);
 			*pd = readPortDrayageJson( pr );
@@ -161,7 +163,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 		}
 		FILE_LOG(logERROR) << "Port Drayage Message" << std::endl << 
 			"cmv_id : " << pd->cmv_id << std::endl <<
-			"cargo_id : " << pd->cargo_id << std::endl <<
+			"cargo_id : " << pd->cargo_id << std::endl <<		
 			"cargo : " << pd->cargo << std::endl <<
 			"operation : " << pd->operation << std::endl <<
 			"location_lat : " << pd->location_lat << std::endl <<
