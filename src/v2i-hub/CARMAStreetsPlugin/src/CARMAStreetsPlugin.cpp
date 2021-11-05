@@ -536,6 +536,19 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
 							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
 						}
+					}
+					//Empty payload
+					if(payload_json_array.empty())
+					{
+						Json::Value payload_json = {};
+						tsm3EncodedMessage tsm3EncodedMsgs;
+						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
+						{
+							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
+							tsm3EncodedMsgs.addDsrcMetadata( 172, 0xBFEE );
+							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
+							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
+						}
 					}			
 				}
 			}
@@ -552,15 +565,21 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		std::lock_guard<std::mutex> lock(data_lock);
 		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
 		std::string sender_id 			 = "UNSET";
-		std::string recipient_id_str 	 = payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
+		std::string recipient_id_str 	 = payload_json != Json::nullValue && payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
 		std::string sender_bsm_id_str 	 = "00000000";
 		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
 		std::string strategy_str 		 = _intersectionType;
-		std::string strategy_params_str  = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
-											+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
-											+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
-											+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
-											+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
+		
+		std::string strategy_params_str  = "null";
+		if( payload_json != Json::nullValue && !payload_json.empty())
+		{
+			strategy_params_str 	     = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
+														+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
+														+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
+														+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
+														+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
+		}
+		
 		
 		std::string timestamp_str 		= (metadata.isMember("timestamp") ? std::to_string(metadata["timestamp"].asUInt64()) : "0"); 
 
@@ -609,13 +628,19 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 
 		//get timestamp and convert to char array;
 		string_size = timestamp_str.size();
-		uint8_t string_content_timestamp[string_size];
-		for(size_t i=0; i< string_size; i++)
+		size_t timestamp_size = 19; 
+		uint8_t string_content_timestamp[timestamp_size];
+		size_t offset = timestamp_size-string_size;
+		if(offset > 0)
+		{
+			timestamp_str = std::string(offset,'0').append(timestamp_str);
+		}
+		for(size_t i= 0; i< timestamp_size; i++)
 		{
 			string_content_timestamp[i] = timestamp_str[i];
 		}
 		mobilityOperation->header.timestamp.buf = string_content_timestamp;
-		mobilityOperation->header.timestamp.size = string_size;
+		mobilityOperation->header.timestamp.size = timestamp_size;
 
 		//convert strategy string to char array
 		std::string strategy = strategy_str;
