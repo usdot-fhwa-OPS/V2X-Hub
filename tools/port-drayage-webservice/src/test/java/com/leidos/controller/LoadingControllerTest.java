@@ -34,8 +34,7 @@ public class LoadingControllerTest {
     @Test
     public void testGetLoading() throws Exception {
 
-        mvc.perform(MockMvcRequestBuilders.get("/loading/pending"))
-                            .andExpect(MockMvcResultMatchers.status().isOk());
+        mvc.perform(MockMvcRequestBuilders.get("/loading/pending")).andExpect(MockMvcResultMatchers.status().isOk());
     }
 
     /**
@@ -53,17 +52,28 @@ public class LoadingControllerTest {
         request.setActionId("actionId");
 
         mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(request)))
-                        .andExpect(MockMvcResultMatchers.status().isCreated());
+                .content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
 
         // Test response for empty post
         mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON).content(""))
-                        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
         // Test response for invalid post
         mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
-                        .content("{ \"invalid\": \"json\"}"))
-                        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+        // Mock already existing duplicate action
+		ContainerActionStatus responseStatus = new ContainerActionStatus();
+		responseStatus.setContainerId("containerId");
+		responseStatus.setVehicleId("vehicleId");
+		responseStatus.setActionId("actionId");
+		responseStatus.setStatus(ContainerActionStatus.StatusEnum.LOADING);
+		responseStatus.setRequested(System.currentTimeMillis());
+		Mockito.when(mockLoadingActions.getContainerActionStatus(responseStatus.getActionId()))
+				.thenReturn(responseStatus);
+
+		mvc.perform(MockMvcRequestBuilders.post("/loading").contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
@@ -85,18 +95,17 @@ public class LoadingControllerTest {
         Mockito.when(mockLoadingActions.getContainerActionStatus("vehicleId")).thenReturn(responseStatus);
 
         // Test response for get loading/{vehicleId} for existing request
+        mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId")).andExpect(MockMvcResultMatchers.status().isOk());
         mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId"))
-                        .andExpect(MockMvcResultMatchers.status().isOk());
-        mvc.perform(MockMvcRequestBuilders.get("/loading/vehicleId")).andExpect(
-                        MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+                .andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
 
         // Test response for get loading/{vehicleId} for non-existent request
         mvc.perform(MockMvcRequestBuilders.get("/loading/no-existent"))
-                        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
 
     /**
-     * Test loading/complete/{action_id} POST 
+     * Test loading/complete/{action_id} POST
      */
     @Test
     public void testLoadingCompleteActionIdPost() throws Exception {
@@ -112,13 +121,39 @@ public class LoadingControllerTest {
         Mockito.when(mockLoadingActions.getCurrentAction()).thenReturn(responseStatus);
 
         // Assert 201 response when current action ID is provided
-        mvc.perform(MockMvcRequestBuilders.post("/loading/start/{actionId}", responseStatus.getActionId() ) ).andExpect(MockMvcResultMatchers.status().isCreated());
+        mvc.perform(MockMvcRequestBuilders.post("/loading/complete/{actionId}", responseStatus.getActionId()))
+                .andExpect(MockMvcResultMatchers.status().isCreated());
 
         // Assert 400 response when incorrect action ID is provided
-        mvc.perform(MockMvcRequestBuilders.post("/loading/start/{actionId}", "wrong" ) ).andExpect(MockMvcResultMatchers.status().isBadRequest());
-
+        mvc.perform(MockMvcRequestBuilders.post("/loading/complete/{actionId}", "wrong"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     }
 
+    /**
+     * Test unloading/start/{action_id} POST
+     */
+    @Test
+    public void testUnloadingStartActionIdPost() throws Exception {
+        // Create current action
+        ContainerActionStatus responseStatus = new ContainerActionStatus();
+        responseStatus.setContainerId("containerId");
+        responseStatus.setVehicleId("vehicleId");
+        responseStatus.setActionId("actionId");
+        responseStatus.setStatus(ContainerActionStatus.StatusEnum.PENDING);
+        responseStatus.setRequested(System.currentTimeMillis());
+
+        // Mock return responseStatus as current action
+        Mockito.when(mockLoadingActions.getCurrentAction()).thenReturn(responseStatus);
+
+        // Assert 201 response when current action ID is provided
+        mvc.perform(MockMvcRequestBuilders.post("/loading/start/{actionId}", responseStatus.getActionId()))
+                .andExpect(MockMvcResultMatchers.status().isCreated());
+
+        // Assert 400 response when incorrect action ID is provided
+        mvc.perform(MockMvcRequestBuilders.post("/loading/start/{actionId}", "wrong"))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    }
 
 }

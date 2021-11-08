@@ -4,6 +4,7 @@ import com.baeldung.openapi.api.InspectionApi;
 import com.baeldung.openapi.model.InspectionRequest;
 import com.baeldung.openapi.model.InspectionStatus;
 import com.baeldung.openapi.model.InspectionStatusList;
+import com.baeldung.openapi.model.InspectionStatus.StatusEnum;
 import com.leidos.inspection.InspectionActions;
 
 import org.slf4j.Logger;
@@ -55,22 +56,13 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<Void> inspectionPost(InspectionRequest request) {
-        inspectionActions.requestInspectionAction(request);
-        return new ResponseEntity<>(HttpStatus.CREATED);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ResponseEntity<Void> inspectionHoldingActionIdPost(String actionId) {
-        InspectionStatus cur = inspectionActions.getCurrentInspection();
-        if ( cur != null && cur.getActionId().equals(actionId)) {
-            inspectionActions.requestHolding();
+        // Assure there is not current inspection with action_id
+        if (inspectionActions.getInspectionStatus(request.getActionId()) == null) {
+            inspectionActions.requestInspectionAction(request);
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {
-            logger.warn(String.format("Action ID %s is not current inspection %s ", actionId,
-                    inspectionActions.getCurrentInspection().toString()));
+            logger.warn(String.format("Action with action ID %s already exists! Discarding potential duplicate request",
+                    request.getActionId()));
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -79,7 +71,26 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> inspectionCompleteActionIdPost( String actionId ) {
+    public ResponseEntity<Void> inspectionHoldingActionIdPost(String actionId) {
+        InspectionStatus cur = inspectionActions.getCurrentInspection();
+        // Check that action is current action and that status is PROCEED_TO_HOLDING
+        if (cur != null && cur.getActionId().equals(actionId)
+                && cur.getStatus().equals(StatusEnum.PROCEED_TO_HOLDING)) {
+            inspectionActions.requestHolding();
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            logger.warn(String.format(
+                    "Action ID %s is not current inspection %s or does not have a status of PROCEED_TO_HOLDING AREA.\n Discarding potential duplicate request.",
+                    actionId, inspectionActions.getCurrentInspection().toString()));
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ResponseEntity<Void> inspectionCompleteActionIdPost(String actionId) {
         InspectionStatus cur = inspectionActions.getCurrentInspection();
         if (cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.completeInspection();
@@ -94,9 +105,9 @@ public class InspectionController implements InspectionApi {
      * {@inheritDoc}
      */
     @Override
-    public ResponseEntity<Void> inspectionHoldActionIdPost( String actionId) {
+    public ResponseEntity<Void> inspectionHoldActionIdPost(String actionId) {
         InspectionStatus cur = inspectionActions.getCurrentInspection();
-        if (cur != null) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.proceedToHolding();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {

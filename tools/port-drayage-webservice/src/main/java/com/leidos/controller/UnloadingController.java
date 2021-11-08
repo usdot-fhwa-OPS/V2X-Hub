@@ -57,8 +57,15 @@ public class UnloadingController implements UnloadingApi {
      */
     @Override
     public ResponseEntity<Void> unloadingPost(ContainerRequest request) {
-        unloadingActions.requestUnloadingAction(request);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        // Check no action already exists for given action ID
+        if (unloadingActions.getContainerActionStatus(request.getActionId()) == null) {
+            unloadingActions.requestUnloadingAction(request);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            logger.warn(String.format("Action with action ID %s already exists! Discarding potential duplicate request",
+                    request.getActionId()));
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
 
     }
 
@@ -83,7 +90,7 @@ public class UnloadingController implements UnloadingApi {
     @Override
     public ResponseEntity<Void> unloadingCompleteActionIdPost(String actionId) {
         ContainerActionStatus cur = unloadingActions.getCurrentAction();
-        if (cur != null) {
+        if (cur != null && cur.getActionId().equals(actionId)) {
             unloadingActions.completeCurrentAction();
             return new ResponseEntity<>(HttpStatus.CREATED);
         } else {

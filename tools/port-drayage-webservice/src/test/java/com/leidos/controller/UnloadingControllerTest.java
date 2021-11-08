@@ -17,80 +17,144 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 @WebMvcTest(controllers = { UnloadingController.class })
 public class UnloadingControllerTest {
-    
-    @Autowired
-    private MockMvc mvc;
 
-    @MockBean
-    private UnloadingActions mockUnloadingActions;
+	@Autowired
+	private MockMvc mvc;
 
-    private ObjectMapper mapper = new ObjectMapper();
+	@MockBean
+	private UnloadingActions mockUnloadingActions;
 
-    /**
-     * Test GET /unloading {@link HttpStatus} is always OK.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testGetUnloading() throws Exception {
-            mvc.perform(MockMvcRequestBuilders.get("/unloading/pending"))
-                            .andExpect(MockMvcResultMatchers.status().isOk());
-    }
+	private ObjectMapper mapper = new ObjectMapper();
 
-    /**
-     * Test POST /unloading responses from {@link UnloadingController}.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testPostUnloading() throws Exception {
+	/**
+	 * Test GET /unloading {@link HttpStatus} is always OK.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testGetUnloading() throws Exception {
+		mvc.perform(MockMvcRequestBuilders.get("/unloading/pending")).andExpect(MockMvcResultMatchers.status().isOk());
+	}
 
-            // Test response for valid payload
-            ContainerRequest request = new ContainerRequest();
-            request.setVehicleId("vehicleId");
-            request.setContainerId("containerId");
-            request.setActionId("actionId");
+	/**
+	 * Test POST /unloading responses from {@link UnloadingController}.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testPostUnloading() throws Exception {
 
-            mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
-                            .content(mapper.writeValueAsString(request)))
-                            .andExpect(MockMvcResultMatchers.status().isCreated());
+		// Test response for valid payload
+		ContainerRequest request = new ContainerRequest();
+		request.setVehicleId("vehicleId");
+		request.setContainerId("containerId");
+		request.setActionId("actionId");
 
-            // Test response for empty post
-            mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
-                            .content("")).andExpect(MockMvcResultMatchers.status().isBadRequest());
+		mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isCreated());
 
-            // Test response for invalid post
-            mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
-                            .content("{ \"invalid\": \"json\"}"))
-                            .andExpect(MockMvcResultMatchers.status().isBadRequest());
+		// Test response for empty post
+		mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON).content(""))
+				.andExpect(MockMvcResultMatchers.status().isBadRequest());
 
-    }
+		// Test response for invalid post
+		mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
+				.content("{ \"invalid\": \"json\"}")).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
-    /**
-     * Test GET /unloading/{vehicleId} responses from {@link UnloadingController}.
-     * 
-     * @throws Exception
-     */
-    @Test
-    public void testUnloadingVehicleIdGet() throws Exception {
+		// Mock already existing duplicate action
+		ContainerActionStatus responseStatus = new ContainerActionStatus();
+		responseStatus.setContainerId("containerId");
+		responseStatus.setVehicleId("vehicleId");
+		responseStatus.setActionId("actionId");
+		responseStatus.setStatus(ContainerActionStatus.StatusEnum.UNLOADING);
+		responseStatus.setRequested(System.currentTimeMillis());
+		Mockito.when(mockUnloadingActions.getContainerActionStatus(responseStatus.getActionId()))
+				.thenReturn(responseStatus);
 
-            ContainerActionStatus responseStatus = new ContainerActionStatus();
-            responseStatus.setContainerId("containerId");
-            responseStatus.setVehicleId("vehicleId");
-            responseStatus.setStatus(ContainerActionStatus.StatusEnum.UNLOADING);
-            responseStatus.setRequested(System.currentTimeMillis());
+		mvc.perform(MockMvcRequestBuilders.post("/unloading").contentType(MediaType.APPLICATION_JSON)
+				.content(mapper.writeValueAsString(request))).andExpect(MockMvcResultMatchers.status().isBadRequest());
 
-            Mockito.when(mockUnloadingActions.getContainerActionStatus("vehicleId")).thenReturn(responseStatus);
+	}
 
-            // Test response for get loading/{vehicleId} for existing request
-            mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId"))
-                            .andExpect(MockMvcResultMatchers.status().isOk());
-            mvc.perform(MockMvcRequestBuilders.get("/unloading/vehicleId")).andExpect(
-                            MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+	/**
+	 * Test GET /unloading/{vehicleId} responses from {@link UnloadingController}.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testUnloadingVehicleIdGet() throws Exception {
 
-            // Test response for get loading/{vehicleId} for non-existent request
-            mvc.perform(MockMvcRequestBuilders.get("/unloading/no-existent"))
-                            .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
+		ContainerActionStatus responseStatus = new ContainerActionStatus();
+		responseStatus.setContainerId("containerId");
+		responseStatus.setVehicleId("vehicleId");
+		responseStatus.setActionId("actionId");
+		responseStatus.setStatus(ContainerActionStatus.StatusEnum.UNLOADING);
+		responseStatus.setRequested(System.currentTimeMillis());
+
+		Mockito.when(mockUnloadingActions.getContainerActionStatus(responseStatus.getActionId()))
+				.thenReturn(responseStatus);
+
+		// Test response for get loading/{vehicleId} for existing request
+		mvc.perform(MockMvcRequestBuilders.get("/unloading/actionId"))
+				.andExpect(MockMvcResultMatchers.status().isOk());
+		mvc.perform(MockMvcRequestBuilders.get("/unloading/actionId"))
+				.andExpect(MockMvcResultMatchers.content().json(mapper.writeValueAsString(responseStatus)));
+
+		// Test response for get loading/{vehicleId} for non-existent request
+		mvc.perform(MockMvcRequestBuilders.get("/unloading/no-existent"))
+				.andExpect(MockMvcResultMatchers.status().isBadRequest());
+	}
+
+	/**
+	 * Test unloading/complete/{action_id} POST
+	 */
+	@Test
+	public void testUnloadingCompleteActionIdPost() throws Exception {
+		// Create current action
+		ContainerActionStatus responseStatus = new ContainerActionStatus();
+		responseStatus.setContainerId("containerId");
+		responseStatus.setVehicleId("vehicleId");
+		responseStatus.setActionId("actionId");
+		responseStatus.setStatus(ContainerActionStatus.StatusEnum.PENDING);
+		responseStatus.setRequested(System.currentTimeMillis());
+
+		// Mock return responseStatus as current action
+		Mockito.when(mockUnloadingActions.getCurrentAction()).thenReturn(responseStatus);
+
+		// Assert 201 response when current action ID is provided
+		mvc.perform(MockMvcRequestBuilders.post("/unloading/complete/{actionId}", responseStatus.getActionId()))
+				.andExpect(MockMvcResultMatchers.status().isCreated());
+
+		// Assert 400 response when incorrect action ID is provided
+		mvc.perform(MockMvcRequestBuilders.post("/unloading/complete/{actionId}", "wrong"))
+				.andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+	}
+
+	/**
+	 * Test unloading/start/{action_id} POST
+	 */
+	@Test
+	public void testUnloadingStartActionIdPost() throws Exception {
+		// Create current action
+		ContainerActionStatus responseStatus = new ContainerActionStatus();
+		responseStatus.setContainerId("containerId");
+		responseStatus.setVehicleId("vehicleId");
+		responseStatus.setActionId("actionId");
+		responseStatus.setStatus(ContainerActionStatus.StatusEnum.PENDING);
+		responseStatus.setRequested(System.currentTimeMillis());
+
+		// Mock return responseStatus as current action
+		Mockito.when(mockUnloadingActions.getCurrentAction()).thenReturn(responseStatus);
+
+		// Assert 201 response when current action ID is provided
+		mvc.perform(MockMvcRequestBuilders.post("/unloading/start/{actionId}", responseStatus.getActionId()))
+				.andExpect(MockMvcResultMatchers.status().isCreated());
+
+		// Assert 400 response when incorrect action ID is provided
+		mvc.perform(MockMvcRequestBuilders.post("/unloading/start/{actionId}", "wrong"))
+				.andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+	}
 
 }

@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Port Drayage Web Service.
-  description: Web Service for Loading/Unloading/Inspection interactions for Port Drayage Operations. 
+  description: Web Service for Loading/Unloading/Inspection interactions for Port Drayage Operations.
   version: "1.0"
 servers:
   - url: http://127.0.0.1:8080
@@ -12,30 +12,36 @@ paths:
   /loading:
     post:
       summary: Request a container is loaded on to freight vehicle.
-      description: Provide ContainerRequest JSON to request a container with a given id be loaded on a vehicle with a given id.
+      description:
+        Provide ContainerRequest JSON to request a container with a given id be loaded on a vehicle with a given id.\
+        Also requires an action id to uniquely identify the requested action. If an action already exists for a given action id\
+        request will be discarded as duplicate and result in 400 response.
       requestBody:
-        description: Request contains container ID and Vehicle ID
+        description: Request contains container ID, Vehicle ID and an Action ID
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerRequest'
+              $ref: "#/components/schemas/ContainerRequest"
       responses:
-        '201':
-          description: Created   
-        '400':
-          description: Bad Request 
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
   /loading/pending:
     get:
       summary: List of all pending loading actions.
-      description: Provides a list of ContainerActionStatus JSON objects describing the loading actions waiting to be started.
+      description:
+        Provides a list of ContainerActionStatus JSON objects describing the loading actions waiting to be started.\
+        Any action requested while there is a current action in progress will be added to this list. Actions in this list will\
+        replace the current action after it is completed in a first-in first-out order.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionStatusList'
+                $ref: "#/components/schemas/ActionStatusList"
   /loading/start/{action_id}:
     post:
       parameters:
@@ -46,11 +52,14 @@ paths:
           required: true
           description: ID of action
       summary: Start a loading action.
-      description: Will attempt to start current loading action. Will return 400 if not current action
+      description:
+        Will attempt to start current loading action. This REST endpoint is only intended for UI form submission. Will\
+        be triggered on UI interaction to indicate a loading action has started. Will return 400 if provided action id is not \
+        current action.
       responses:
-        '201':
+        "201":
           description: Created
-        '400':
+        "400":
           description: Bad Request
   /loading/complete/{action_id}:
     post:
@@ -62,14 +71,17 @@ paths:
           required: true
           description: ID of action
       summary: Complete a loading action.
-      description: Will attempt to complete current loading action. Will return 400 if not current action
+      description:
+        Will attempt to complete current loading action. This REST endpoint is only intended for UI form submission. Will\
+        be triggered on UI interaction to indicate a loading action has been completed. Will return 400 if provided action id is not\
+        current action.
       responses:
-        '201':
-          description: Created   
-        '400':
-          description: Bad Request  
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
   /loading/{action_id}:
-     get:
+    get:
       parameters:
         - in: path
           name: action_id
@@ -77,42 +89,48 @@ paths:
             type: string
           required: true
           description: ID of action
-      summary: Returns action with given ID 
-      description: Returns action with given ID. If non is found returns 400
+      summary: Returns action with given ID
+      description: Returns action with given ID. If none is found returns 400. Intended for polling the status of a request action.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerActionStatus'
-        '400':
-          description: Bad Request  
+                $ref: "#/components/schemas/ContainerActionStatus"
+        "400":
+          description: Bad Request
   /unloading:
     post:
       summary: Request a container is unloaded on to freight Vehicle.
-      description: Provide ContainerRequest JSON to request a container with a given id be unloaded on a vehicle with a given id.
+      description:
+        Provide ContainerRequest JSON to request a container with a given id be unloaded on a vehicle with a given id.\
+        Also requires an action id to uniquely identify the requested action. If an action already exists for a given action id\
+        request will be discarded as duplicate and result in 400 response.
       requestBody:
-        description: Request contains container ID and Vehicle ID
+        description: Request contains container ID, Vehicle ID and an Action ID
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ContainerRequest'
+              $ref: "#/components/schemas/ContainerRequest"
       responses:
-        '201':
+        "201":
           description: Created
   /unloading/pending:
     get:
       summary: List of all pending unloading actions and status.
-      description: Provides a list of ContainerActionStatus JSON describing the unloading actions waiting to be started.
+      description:
+        Provides a list of ContainerActionStatus JSON describing the unloading actions waiting to be started.\
+        Any action requested while there is a current action in progress will be added to this list. Actions in this list will\
+        replace the current action after it is completed in a first-in first-out order.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ActionStatusList'
+                $ref: "#/components/schemas/ActionStatusList"
   /unloading/start/{action_id}:
     post:
       parameters:
@@ -123,11 +141,14 @@ paths:
           required: true
           description: ID of action
       summary: Start an unloading action.
-      description: Will attempt to start current unloading action. Will return 400 if not current action
+      description:
+        Will attempt to start current unloading action. This REST endpoint is only intended for UI form submission. Will\
+        be triggered on UI interaction to indicate a unloading action has started. Will return 400 if provided action id is not current\
+        action.
       responses:
-        '201':
+        "201":
           description: Created
-        '400':
+        "400":
           description: Bad Request
   /unloading/complete/{action_id}:
     post:
@@ -139,14 +160,17 @@ paths:
           required: true
           description: ID of action
       summary: Complete an unloading action.
-      description: Will attempt to complete current unloading action. Will return 400 if not current action
+      description:
+        Will attempt to complete current unloading action. This REST endpoint is only intended for UI form submission. Will\
+        be triggered on UI interaction to indicate an unloading action has been completed. Will return 400 if provided action id is not\
+        current action.
       responses:
-        '201':
-          description: Created   
-        '400':
-          description: Bad Request      
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
   /unloading/{action_id}:
-     get:
+    get:
       parameters:
         - in: path
           name: action_id
@@ -154,32 +178,35 @@ paths:
             type: string
           required: true
           description: ID of action
-      summary: Returns action with given ID 
-      description: Returns action with given ID. If non is found returns 400
+      summary: Returns action with given ID
+      description: Returns action with given ID. If none is found returns 400. Intended for polling the status of a request action.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ContainerActionStatus'
-        '400':
-          description: Bad Request  
+                $ref: "#/components/schemas/ContainerActionStatus"
+        "400":
+          description: Bad Request
   /inspection:
     post:
       summary: Request a container is inspected on to Freight Vehicle.
-      description: Provide InspectionRequest JSON to request a container with a given id be inspected on a vehicle with a given id.
+      description:
+        Provide InspectionRequest JSON to request a container with a given id be inspected on a vehicle with a given id.\
+        Also requires an action id to uniquely identify the requested action. If an action already exists for a given action id\
+        request will be discarded as duplicate and result in 400 response.
       requestBody:
         description: Request contains container ID and Vehicle ID
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InspectionRequest'
+              $ref: "#/components/schemas/InspectionRequest"
       responses:
-        '201':
+        "201":
           description: Created
-        '400':
+        "400":
           description: Bad Request
   /inspection/holding/{action_id}:
     post:
@@ -191,23 +218,29 @@ paths:
           required: true
           description: ID of action
       summary: Vehicle has arrive at Holding area an is waiting on inspection.
-      description: After being instructed to proceed to holding area and navigating to holding area, vehicle will request further inspection at holding area
+      description:
+        After being instructed to proceed to holding area and navigating to holding area, vehicle will request further inspection at holding\
+        area. This request will be sent from the PortDrayage V2X-Hub Plugin after receiving a vehicles arrival message at the holding area.\
+        Will return 400 if not current action or status is not PROCEED_TO_HOLDING and discard request.
       responses:
-        '201':
+        "201":
           description: Created
-        '400':
+        "400":
           description: Bad Request
   /inspection/pending:
     get:
       summary: List of all pending inspection actions and status.
-      description: Get all inspection actions that have been requested by are not yet in progress.
+      description:
+        Provides a list of InspectionStatus JSON objects describing the inspection actions waiting to be started.\
+        Any action requested while there is a current action in progress will be added to this list. Actions in this list will\
+        replace the current action after it is completed in a first-in first-out order.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InspectionStatusList'  
+                $ref: "#/components/schemas/InspectionStatusList"
   /inspection/complete/{action_id}:
     post:
       parameters:
@@ -218,11 +251,14 @@ paths:
           required: true
           description: ID of action
       summary: Complete an inspection action.
-      description: Will attempt to complete current inspection action. Will return 400 if no current inspection
+      description:
+        Will attempt to complete current inspection. This REST endpoint is only intended for UI form submission. Will\
+        be triggered on UI interaction to indicate an inspection has been completed. Will return 400 if provided action id is not\
+        current action.
       responses:
-        '201':
-          description: Created   
-        '400':
+        "201":
+          description: Created
+        "400":
           description: Bad Request
   /inspection/hold/{action_id}:
     post:
@@ -236,10 +272,10 @@ paths:
       summary: Request vehicle proceed to holding area for further inspection
       description: Will attempt to request vehicle proceed to holding area for further inspection. Will return 400 if no current action
       responses:
-        '201':
-          description: Created   
-        '400':
-          description: Bad Request   
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
   /inspection/{action_id}:
     get:
       parameters:
@@ -249,17 +285,17 @@ paths:
             type: string
           required: true
           description: ID of action
-      summary: Returns action with given ID 
-      description: Returns action with given ID. If non is found returns 400
+      summary: Returns action with given ID
+      description: Returns action with given ID. If non is found returns 400. Intended for polling inspection status.
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InspectionStatus'
-        '400':
-          description: Bad Request    
+                $ref: "#/components/schemas/InspectionStatus"
+        "400":
+          description: Bad Request
 components:
   schemas:
     ContainerRequest:
@@ -295,13 +331,12 @@ components:
         status:
           type: string
           enum:
-           - REQUESTED
-           - LOADING
-           - UNLOADING
-           - LOADED
-           - UNLOADED
-           - PENDING
-           - ABORTED
+            - LOADING
+            - UNLOADING
+            - LOADED
+            - UNLOADED
+            - PENDING
+            - ABORTED
         requested:
           type: integer
           format: int64
@@ -322,7 +357,7 @@ components:
           type: array
           items:
             type: object
-            $ref: '#/components/schemas/ContainerActionStatus'  
+            $ref: "#/components/schemas/ContainerActionStatus"
     InspectionRequest:
       title: Inspection Request
       type: object
@@ -356,11 +391,11 @@ components:
         status:
           type: string
           enum:
-           - PENDING
-           - PROCEED_TO_HOLDING
-           - PASSED
-           - FAILED
-           - HOLDING
+            - PENDING
+            - PROCEED_TO_HOLDING
+            - PASSED
+            - FAILED
+            - HOLDING
         requested:
           type: integer
           format: int64
@@ -381,4 +416,4 @@ components:
           type: array
           items:
             type: object
-            $ref: '#/components/schemas/InspectionStatus'  
+            $ref: "#/components/schemas/InspectionStatus"

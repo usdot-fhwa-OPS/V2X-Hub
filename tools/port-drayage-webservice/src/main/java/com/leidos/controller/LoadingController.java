@@ -57,8 +57,15 @@ public class LoadingController implements LoadingApi {
      */
     @Override
     public ResponseEntity<Void> loadingPost(ContainerRequest request) {
-        loadingActions.requestLoadingAction(request);
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        // Check no action already exists for given action ID
+        if (loadingActions.getContainerActionStatus(request.getActionId()) == null) {
+            loadingActions.requestLoadingAction(request);
+            return new ResponseEntity<>(HttpStatus.CREATED);
+        } else {
+            logger.warn(String.format("Action with action ID %s already exists! Discarding potential duplicate request",
+                    request.getActionId()));
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
 
     }
 
