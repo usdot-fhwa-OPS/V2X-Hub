@@ -57,7 +57,7 @@
         },
         {
             "key": "MobilityOperationStrategies",
-            "default": "carma/port_drayage,TruckInspection,Carma/stop_controlled_intersection",
+            "default": "Carma/stop_controlled_intersection",
             "description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
         }
     ]
