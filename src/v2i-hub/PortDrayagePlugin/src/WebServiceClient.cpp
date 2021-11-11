@@ -184,12 +184,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
         loop.quit();
     });
 
-
-    api->loadingActionIdGet( action_id );
-    QTimer::singleShot(5000, &loop, &QEventLoop::quit);
-    loop.exec();
-
-    while ( current_loading_action.getStatus() != QString::fromStdString( "LOADED") ) {
+    do  {
         api->loadingActionIdGet( action_id );
 
         QTimer::singleShot(5000, &loop, &QEventLoop::quit);
@@ -197,6 +192,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
         // usleep coversion from seconds to microseconds
         usleep( polling_frequency * 1e6 );
     }
+    while ( current_loading_action.getStatus() != QString::fromStdString( "LOADED") ) 
 
 } 
 
@@ -219,11 +215,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
         loop.quit();
     });
 
-    api->unloadingActionIdGet( action_id );
-    QTimer::singleShot(0, &loop, &QEventLoop::quit);
-    loop.exec();
-
-    while ( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") ) {
+    do {
         
         api->unloadingActionIdGet( action_id );
         QTimer::singleShot(0, &loop, &QEventLoop::quit);
@@ -233,6 +225,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
         usleep( polling_frequency * 1e6 );
 
     }
+    while( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") )
 }
 
 int WebServiceClient::pollInspectionAction( QString action_id ) {
@@ -252,16 +245,12 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
         loop.quit();
     });
 
-    api->inspectionActionIdGet( action_id );
-    QTimer::singleShot(0, &loop, &QEventLoop::quit);
-    loop.exec();
-
-    while ( true ) {
+    do {
 
         api->inspectionActionIdGet( action_id );
         QTimer::singleShot(0, &loop, &QEventLoop::quit);
         loop.exec();
-        
+
         if (current_inspection.getStatus() == QString::fromStdString( "PASSED")){
             return 0;
         }
@@ -272,6 +261,9 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
         usleep( polling_frequency * 1e6 );
 
     }
+    while( current_inspection.getStatus() != QString::fromStdString( "PASSED") &&
+         current_inspection.getStatus() != QString::fromStdString( "PROCEED_TO_HOLDING") )
+    return -1;
 }
 
     

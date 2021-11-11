@@ -2,8 +2,8 @@
 # Fail when any command fails
 #set -e
 # Ensure mysql-client is installed
-#sudo apt-get update
-#sudo apt-get install mysql-client
+sudo apt-get update
+sudo apt-get install mysql-client
 
 # Adds V2X-Hub user to mysql db
 read -p "Please enter a username: " USER

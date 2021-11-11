@@ -159,8 +159,6 @@ private:
 	// Message Factory for J2735 messages
 	J2735MessageFactory factory;
 	
-	// Web Service URL
-	std::string _webservice_url;
 	// Web Service Client 
 	WebServiceClient *client;
 

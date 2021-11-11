@@ -140,8 +140,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			PLOG(logDEBUG) << "Operation is " << pd->operation << std::endl;
 			if ( pd->operation.compare("PICKUP") == 0 ) {
 				try{
-					WebServiceClient client;
-					client.request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+					client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 					PLOG(logDEBUG) << "Loading Complete!" << std::endl;
 
 				}
@@ -151,8 +150,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			}
 			else if ( pd->operation.compare("DROPOFF")  == 0) {
 				try{
-					WebServiceClient client;
-					client.request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+					client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 					PLOG(logDEBUG) << "Unloading Complete!" << std::endl;
 				}
 				catch(std::exception &e) {
@@ -161,9 +159,8 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			}
 			else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
 				try{
-					WebServiceClient client;
 					// If holding == 1 insert HOLDING action into table
-					int holding = client.request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
+					int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
 					if ( holding == 1 ) {
 						PLOG(logDEBUG) << "Requested futher inspection. Inserting Holding Action!" << std::endl;
 						insert_holding_action_into_table( *pd );
@@ -176,10 +173,9 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			}
 			else if ( pd->operation.compare("HOLDING_AREA") == 0) {
 				try{
-					WebServiceClient client;
 					string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
 					PLOG(logDEBUG) << "Requesting holding for action id : " << previous_checkpoint_id << std::endl;
-					client.request_holding( previous_checkpoint_id );
+					client->request_holding( previous_checkpoint_id );
 					PLOG(logDEBUG) << "Holding Action Complete!" << std::endl;
 
 				}
@@ -348,15 +344,8 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std
 
 			}
 			return *rtn;
-			
-
-		}
-		else {
-			PLOG(logINFO) << "No action with id : " << action_id << " found!";
-			PortDrayage_Object *rtn = new PortDrayage_Object();
-			return *rtn;
-		}
-		
+			// Qt HttpClient setup
+	QCoreApplication a(argc, argv);
 	}
 	catch ( sql::SQLException &e ) {
 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
@@ -547,6 +536,8 @@ int PortDrayagePlugin::Main() {
 }
 
 int main(int argc, char *argv[]) {
+	// Qt HttpClient setup
+	QCoreApplication a(argc, argv);
 	return run_plugin < PortDrayagePlugin::PortDrayagePlugin > ("PortDrayagePlugin", argc, argv);
 }
 
