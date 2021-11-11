@@ -11,7 +11,10 @@ using namespace OpenAPI;
 using namespace tmx::utils;
 
 /**
+ * WebService REST Client using OpenAPI codegen library pdclient found under V2X-Hub/ext/pdclient. Contains several method to
+ * send POST requests for loading, unloading, and inspection actions and poll the action status.
  * 
+ * @author Paul Bourelly
  */
 class WebServiceClient : public QObject
 {
@@ -22,10 +25,64 @@ private:
     OAIContainerActionStatus current_loading_action;
     OAIContainerActionStatus current_unloading_action;
     OAIInspectionStatus current_inspection;
+    // Stored in Seconds
+    uint16_t polling_frequency;
+
+    OAIDefaultApi *api;
+
+    /**
+     * Method to poll the status of a loading action with a given action id.
+     * 
+     * @param action_id of the loading action to be polled
+     */ 
+    void pollLoadingAction(QString action_id);
+
+    /**
+     * Method to poll the status of a unloading action with a given action id.
+     * 
+     * @param action_id of the unloading action to be polled 
+     */ 
+    void pollUnloadingAction(QString action_id);
+
+    /**
+     * Method to poll the status of a inspection with a given action id.
+     * 
+     * @param action_id of the inspection to be polled
+     * @return 0 if inspection is passed and 1 if further inspection at the holding area is requested
+     */ 
+    int pollInspectionAction(QString action_id);
+
 
 public:
+
+    /**
+     * Constructor without parameters
+     */
+    WebServiceClient();
+
+    /**
+     * Constructor for WebServiceClient
+     * 
+     * @param host string webservice host URL
+     * @param port uint8_t webservice port
+     * @param secure boolean flag set to true when using HTTPS
+     * @param int polling frequency in seconds for action status
+     *  
+     */ 
+    WebServiceClient(std::string host, uint8_t port, bool secure , uint16_t polling_frequency );
+    /**
+     * @return OAIContainerActionStatus for current loading action.
+     */ 
     OAIContainerActionStatus get_current_loading_action();
+
+    /**
+     * @return OAIContainerActionStatus for current unloading action.
+     */
     OAIContainerActionStatus get_current_unloading_action();
+
+    /**
+     * @return OAIInspectionStatus for current inspection
+     */
     OAIInspectionStatus get_current_inspection();
     /**
      * Method to request a loading action. Sends a HTTP POST call to the loading endpoint of the PortDrayage Webservice and then
@@ -62,4 +119,6 @@ public:
      * @param action_id static unique identifier for action
      */
     void request_holding(std::string action_id);
+    
+
 };

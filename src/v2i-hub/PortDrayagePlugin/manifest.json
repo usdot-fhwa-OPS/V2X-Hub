@@ -36,7 +36,7 @@
 		{
 			"key":"Database_Name",
 			"default":"PORT_DRAYAGE",
-			"description":"Name of database"			
+			"description":"Name of database."			
 		},
 		{
             "key":"LogLevel",
@@ -44,9 +44,24 @@
             "description":"The log level for this plugin"
         },
 		{
-			"key":"Web_Service_URL",
-            "default":"http://127.0.0.1:8090/",
-            "description":"The URL for the Loading/Unloading/Inspection Web Service"
+			"key":"Webservice_Host",
+            "default":"127.0.0.1",
+            "description":"PortDrayage Webservice Host Address"
+		},
+		{
+			"key":"Webservice_Port",
+			"default": "8090",
+			"description": "PortDrayage WebService Port"
+		},
+		{
+			"key":"Webservice_Secure",
+			"default": "false",
+			"description": "Boolean flag set to true for HTTPS communication"
+		},
+		{
+			"key":"Webservice_Polling_Frequency",
+			"default": "5",
+			"description": "Polling Frequency for PortDrayage Webservice action status in seconds"
 		},
 		{
 			"key":"Holding_Lat",

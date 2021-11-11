@@ -118,9 +118,21 @@ protected:
 	 */
 	PortDrayage_Object readPortDrayageJson( ptree &pr );
 
+	/**
+	 * Dynamically inserts HOLDING_AREA action into mysql table between
+	 * current_action and next_action. Current action should be PORT_CHECKPOINT
+	 * and next_action should be EXIT_PORT
+	 * 
+	 * @param current_action PORT_CHECKPOINT action
+	 */
 	void insert_holding_action_into_table(PortDrayage_Object &current_action );
 
-
+	/**
+	 * Retrieves HOLDING_AREA action when provided with PORT_CHECKPOINT action
+	 * from mysql freight table.
+	 * 
+	 * @return action_id of HOLDING_AREA action
+	 */
 	std::string retrieve_holding_inspection_action_id( std::string action_id );
 
 	
@@ -140,14 +152,19 @@ private:
 	sql::PreparedStatement *next_action_id;
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
-	sql::PreparedStatement *insert_holding_action;
-	sql::PreparedStatement *get_inserted_holding_action_id;
+	sql::PreparedStatement *insert_action;
+	sql::PreparedStatement *get_action_id_for_previous_action;
 	sql::PreparedStatement *update_current_action;
 
+	// Message Factory for J2735 messages
 	J2735MessageFactory factory;
+	
 	// Web Service URL
 	std::string _webservice_url;
-	// Port Configuration
+	// Web Service Client 
+	WebServiceClient *client;
+
+	// Port HOLDING_AREA Configuration
 	double _holding_lat;
 	double _holding_lon;
 
