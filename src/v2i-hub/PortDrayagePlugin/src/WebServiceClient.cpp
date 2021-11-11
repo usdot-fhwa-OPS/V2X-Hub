@@ -2,9 +2,11 @@
 
 
 WebServiceClient::WebServiceClient() {
-    // 5s
+    // Set polling frequency to 5s
     polling_frequency = 5;
+    // Initialize API
     api = new OAIDefaultApi(0);
+    // Setup Server config
     api->setNewServerForAllOperations(
         QUrl("http://127.0.0.1:8090"),
         QString::fromStdString("Unsecured hosting for development"),
@@ -27,7 +29,9 @@ WebServiceClient::WebServiceClient(std::string host, uint8_t port, bool secure ,
         url.setScheme(QString::fromStdString("http"));
 
     }
+    // Initialize API
     api = new OAIDefaultApi(0);
+    // Setup server config
     api->setNewServerForAllOperations(
         url,
         QString::fromStdString("V2X-Hub Configured PortDrayage WebService"),
@@ -60,17 +64,16 @@ void WebServiceClient::request_loading_action(std::string vehicle_id, std::strin
     // Error call back for POST /loading/
     connect(api, &OAIDefaultApi::loadingPostSignalE, [&](QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure /loading POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure /loading POST : " << error_code;
-
+        FILE_LOG(logERROR) << error_code;
         loop.quit();
     });
 
-
+    // Setup request
     req.setVehicleId( QString::fromStdString( vehicle_id ) ) ;
     req.setContainerId( QString::fromStdString( container_id ) );
     req.setActionId( QString::fromStdString( action_id ) );
-    FILE_LOG(logERROR) << "Sending loading request : " << req.asJson().toStdString();
 
+    FILE_LOG(logERROR) << "Sending loading request : " << req.asJson().toStdString();
     api->loadingPost( req );
     QTimer::singleShot(0, &loop, &QEventLoop::quit);
     loop.exec();
@@ -92,26 +95,27 @@ void WebServiceClient::request_unloading_action(std::string vehicle_id, std::str
     // Error call back for POST /unloading/
     connect(api, &OAIDefaultApi::unloadingPostSignalE, [&](QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure /unloading POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure /unloading POST : " << error_code;
+        FILE_LOG(logERROR) << error_code;
 
         loop.quit();
     });
 
+    // Setup request
     req.setVehicleId( QString::fromStdString( vehicle_id ) ) ;
     req.setContainerId( QString::fromStdString( container_id ) );
     req.setActionId( QString::fromStdString( action_id ) );
-    api->unloadingPost( req );
 
+    api->unloadingPost( req );
     QTimer::singleShot(0, &loop, &QEventLoop::quit);
     loop.exec();
 
+    // Polling unloading action until complete 
     pollUnloadingAction( req.getActionId() );
 
 }
 
 int WebServiceClient::request_inspection(std::string vehicle_id, std::string container_id, std::string action_id ) {
     OAIInspectionRequest req;
-    // OAIDefaultApi api;
     QEventLoop loop;
 
      // Call back for POST /inspection/
@@ -122,26 +126,27 @@ int WebServiceClient::request_inspection(std::string vehicle_id, std::string con
     // Error call back for POST /inspection/
     connect(api, &OAIDefaultApi::inspectionPostSignalE, [&](QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure /inspection POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure /inspection POST : " << error_code;
-
+        FILE_LOG(logERROR) << error_code;
         loop.quit();
     });
 
+    // Setup request
     req.setVehicleId( QString::fromStdString( vehicle_id ) ) ;
     req.setContainerId( QString::fromStdString( container_id ) );
     req.setActionId( QString::fromStdString( action_id ) );
-    api->inspectionPost( req );
 
+    api->inspectionPost( req );
     QTimer::singleShot(0, &loop, &QEventLoop::quit);
     loop.exec();
 
+    // Poll inspection status until complete or proceed to holding
     return pollInspectionAction( req.getActionId() );
 }
 
 void WebServiceClient::request_holding( std::string action_id ) {
     QEventLoop loop;
 
-        // Call back for POST /inspection/
+    // Call back for POST /inspection/
     connect(api, &OAIDefaultApi::inspectionHoldingActionIdPostSignal, [&]() {
         FILE_LOG(logERROR) << "Success /inspection/holding/{action_id} POST";
         loop.quit();
@@ -149,8 +154,7 @@ void WebServiceClient::request_holding( std::string action_id ) {
     // Error call back for POST /inspection/
     connect(api, &OAIDefaultApi::inspectionHoldingActionIdPostSignalE, [&](QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure /inspection/holding/{action_id} POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure /inspection/holding/{action_id} POST : " << error_code;
-
+        FILE_LOG(logERROR) << error_code;
         loop.quit();
     });
 
@@ -158,6 +162,7 @@ void WebServiceClient::request_holding( std::string action_id ) {
     QTimer::singleShot(5000, &loop, &QEventLoop::quit);
     loop.exec();
 
+    // Poll inspection action until complete
     pollInspectionAction( QString::fromStdString( action_id ) );
 
 }
@@ -175,8 +180,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
     connect(api, &OAIDefaultApi::loadingActionIdGetSignalE, 
         [&](OAIContainerActionStatus loading_action , QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure loading/{action_id} GET :" << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure loading/{action_id} POST : " << error_code;
-
+        FILE_LOG(logERROR) << error_code;
         loop.quit();
     });
 
@@ -184,6 +188,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
     api->loadingActionIdGet( action_id );
     QTimer::singleShot(5000, &loop, &QEventLoop::quit);
     loop.exec();
+
     while ( current_loading_action.getStatus() != QString::fromStdString( "LOADED") ) {
         api->loadingActionIdGet( action_id );
 
@@ -209,7 +214,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
     connect(api, &OAIDefaultApi::unloadingActionIdGetSignalE, 
         [&](OAIContainerActionStatus unloading_action , QNetworkReply::NetworkError error_code, QString error_str) {
         FILE_LOG(logERROR) << "Failure unloading/{action_id} GET :" << error_str.toStdString();
-        FILE_LOG(logERROR) << "Failure unloading/{action_id} GET : " << error_code;
+        FILE_LOG(logERROR) << error_code;
 
         loop.quit();
     });
@@ -217,15 +222,15 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
     api->unloadingActionIdGet( action_id );
     QTimer::singleShot(0, &loop, &QEventLoop::quit);
     loop.exec();
-    while ( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") ) {
-        api->unloadingActionIdGet( action_id );
 
+    while ( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") ) {
+        
+        api->unloadingActionIdGet( action_id );
         QTimer::singleShot(0, &loop, &QEventLoop::quit);
         loop.exec();
         
         // usleep coversion from seconds to microseconds
         usleep( polling_frequency * 1e6 );
-
 
     }
 }
@@ -251,12 +256,12 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
     QTimer::singleShot(0, &loop, &QEventLoop::quit);
     loop.exec();
 
-
     while ( true ) {
-        api->inspectionActionIdGet( action_id );
 
+        api->inspectionActionIdGet( action_id );
         QTimer::singleShot(0, &loop, &QEventLoop::quit);
         loop.exec();
+        
         if (current_inspection.getStatus() == QString::fromStdString( "PASSED")){
             return 0;
         }

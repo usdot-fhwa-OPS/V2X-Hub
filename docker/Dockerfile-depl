@@ -75,7 +75,6 @@ WORKDIR /home/V2X-Hub/ext/pdclient
 RUN cmake .
 RUN make 
 RUN make install
-RUN rm -rf /home/V2X-Hub/ext/
 
 
 
