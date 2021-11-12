@@ -345,7 +345,7 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std
 			}
 			return *rtn;
 			// Qt HttpClient setup
-	QCoreApplication a(argc, argv);
+		}
 	}
 	catch ( sql::SQLException &e ) {
 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;

@@ -192,7 +192,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
         // usleep coversion from seconds to microseconds
         usleep( polling_frequency * 1e6 );
     }
-    while ( current_loading_action.getStatus() != QString::fromStdString( "LOADED") ) 
+    while ( current_loading_action.getStatus() != QString::fromStdString( "LOADED") ) ;
 
 } 
 
@@ -225,7 +225,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
         usleep( polling_frequency * 1e6 );
 
     }
-    while( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") )
+    while( current_unloading_action.getStatus() != QString::fromStdString( "UNLOADED") );
 }
 
 int WebServiceClient::pollInspectionAction( QString action_id ) {
@@ -262,7 +262,7 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
 
     }
     while( current_inspection.getStatus() != QString::fromStdString( "PASSED") &&
-         current_inspection.getStatus() != QString::fromStdString( "PROCEED_TO_HOLDING") )
+         current_inspection.getStatus() != QString::fromStdString( "PROCEED_TO_HOLDING") );
     return -1;
 }
 
