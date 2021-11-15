@@ -10,11 +10,7 @@
         "subtype": "TMSG03-P",
         "description": "..."
     }],
-    "configuration": [{
-            "key": "receiveTopic",
-            "default": "v2xhub_out",
-            "description": "Apache Kafka topic plugin will receive message from."
-        },
+    "configuration": [
         {
             "key": "transmitMobilityOperationTopic",
             "default": "v2xhub_mobility_operation_in",
