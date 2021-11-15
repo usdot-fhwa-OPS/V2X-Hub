@@ -45,8 +45,8 @@ public class LoadingController implements LoadingApi {
      */
     @Override
     public ResponseEntity<ContainerActionStatus> loadingActionIdGet(String actionId) {
+        logger.debug(String.format("Received GET loading/%s .", actionId));
         ContainerActionStatus action = loadingActions.getContainerActionStatus(actionId);
-        logger.debug(String.format("Found action %s!", action));
         if (action != null)
             return ResponseEntity.ok(action);
         return new ResponseEntity<ContainerActionStatus>(HttpStatus.BAD_REQUEST);
@@ -57,6 +57,7 @@ public class LoadingController implements LoadingApi {
      */
     @Override
     public ResponseEntity<Void> loadingPost(ContainerRequest request) {
+        logger.debug(String.format("Received POST loading/ with payload : %s .", request));
         // Check no action already exists for given action ID
         if (loadingActions.getContainerActionStatus(request.getActionId()) == null) {
             loadingActions.requestLoadingAction(request);
@@ -74,6 +75,7 @@ public class LoadingController implements LoadingApi {
      */
     @Override
     public ResponseEntity<Void> loadingStartActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST loading/start/%s .", actionId));
         ContainerActionStatus cur = loadingActions.getCurrentAction();
         if (cur != null && cur.getActionId().equals(actionId)) {
             loadingActions.startCurrentAction();
@@ -89,6 +91,7 @@ public class LoadingController implements LoadingApi {
      */
     @Override
     public ResponseEntity<Void> loadingCompleteActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST loading/complete/%s .", actionId));
         ContainerActionStatus cur = loadingActions.getCurrentAction();
         if (cur != null && cur.getActionId().equals(actionId)) {
             loadingActions.completeCurrentAction();

@@ -22,12 +22,10 @@ class WebServiceClient : public QObject
 public slots:
 
 private:
-    OAIContainerActionStatus current_loading_action;
-    OAIContainerActionStatus current_unloading_action;
-    OAIInspectionStatus current_inspection;
     // Stored in Seconds
     uint16_t polling_frequency;
-
+    
+    // OAIDefaultApi pointer
     OAIDefaultApi *api;
 
     /**
@@ -69,21 +67,8 @@ public:
      * @param int polling frequency in seconds for action status
      *  
      */ 
-    WebServiceClient(std::string host, uint8_t port, bool secure , uint16_t polling_frequency );
-    /**
-     * @return OAIContainerActionStatus for current loading action.
-     */ 
-    OAIContainerActionStatus get_current_loading_action();
+    WebServiceClient(std::string host, uint16_t port, bool secure , uint16_t polling_frequency );
 
-    /**
-     * @return OAIContainerActionStatus for current unloading action.
-     */
-    OAIContainerActionStatus get_current_unloading_action();
-
-    /**
-     * @return OAIInspectionStatus for current inspection
-     */
-    OAIInspectionStatus get_current_inspection();
     /**
      * Method to request a loading action. Sends a HTTP POST call to the loading endpoint of the PortDrayage Webservice and then
      * polls the status of the request every 5 seconds. Method will exit once loading action is completed.

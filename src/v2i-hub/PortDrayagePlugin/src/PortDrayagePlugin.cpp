@@ -130,7 +130,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 	std::string strategy = strat.str();
 	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
-			PLOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
+			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
 			PLOG(logINFO) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
 			// Convert JSON payload to PortDrayage_Object
 			read_json(payload, pr);

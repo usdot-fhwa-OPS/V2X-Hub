@@ -44,8 +44,8 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<InspectionStatus> inspectionActionIdGet(String actionId) {
+        logger.debug(String.format("Received GET inspection/%s .", actionId));
         InspectionStatus status = inspectionActions.getInspectionStatus(actionId);
-        logger.debug(String.format("Found inspection %s!", status));
         if (status != null)
             return ResponseEntity.ok(status);
         return new ResponseEntity<InspectionStatus>(HttpStatus.BAD_REQUEST);
@@ -56,6 +56,7 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<Void> inspectionPost(InspectionRequest request) {
+        logger.debug(String.format("Received POST inspection/ with payload : %s .", request));
         // Assure there is not current inspection with action_id
         if (inspectionActions.getInspectionStatus(request.getActionId()) == null) {
             inspectionActions.requestInspectionAction(request);
@@ -72,6 +73,7 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<Void> inspectionHoldingActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST inspection/holding/%s .", actionId));
         InspectionStatus cur = inspectionActions.getCurrentInspection();
         // Check that action is current action and that status is PROCEED_TO_HOLDING
         if (cur != null && cur.getActionId().equals(actionId)
@@ -91,6 +93,7 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<Void> inspectionCompleteActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST inspection/complete/%s .", actionId));
         InspectionStatus cur = inspectionActions.getCurrentInspection();
         if (cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.completeInspection();
@@ -106,6 +109,7 @@ public class InspectionController implements InspectionApi {
      */
     @Override
     public ResponseEntity<Void> inspectionHoldActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST inspection/hold/%s .", actionId));
         InspectionStatus cur = inspectionActions.getCurrentInspection();
         if (cur != null && cur.getActionId().equals(actionId)) {
             inspectionActions.proceedToHolding();
