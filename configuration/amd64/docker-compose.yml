@@ -27,7 +27,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:latest
+    image: usdotfhwaops/v2xhubamd:carma-streets
     container_name: v2xhub
     network_mode: host
     restart: always
