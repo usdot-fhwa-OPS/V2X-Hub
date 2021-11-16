@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>CARMA Freight Web Service</title>
+
+    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.min.css} "/>
+    <link rel="stylesheet" th:href="@{static/css/main.css}"/>
+
+</head>
+
+<body>
+
+<main role="main" class="container">
+    <div class="container">
+
+        <div class="row">
+            <div class="col">
+                <ul class="nav nav-tabs mt-5" id="myTabs">
+                    <li class="nav-item"><a href="#loading" data-url="/loading" class="nav-link active">Loading</a></li>
+                    <li class="nav-item"><a href="#unloading" data-url="/unloading" class="nav-link">Unloading</a></li>
+                    <li class="nav-item"><a href="#inspection" data-url="/inspection" class="nav-link">Inspection</a></li>
+                </ul>
+    
+                <div class="tab-content pt-3">
+                    <div class="tab-pane active" id="loading"></div>
+                    <div class="tab-pane" id="unloading"></div>
+                    <div class="tab-pane" id="inspection"></div>
+                </div>
+            </div>
+        </div>
+    
+    </div>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <script>
+        window.setInterval('refresh()', 5000); 	// Call a function every 5000 milliseconds (OR 5 seconds).
+        // Refresh or reload page.
+        function refresh() {
+            $('#loading').load("loading/")
+            $('#unloading').load("unloading/")
+            $('#inspection').load("inspection/")
+
+        }
+
+    </script>
+    <script>
+        $('#myTabs a').click(function (e) {
+            e.preventDefault();
+    
+            var url = $(this).attr("data-url");
+            var href = this.hash;
+            var pane = $(this);
+    
+            // ajax load from data-url
+            $(href).load(url, function (result) {
+                pane.tab('show');
+            });
+        });
+    
+        // load first tab content
+        $('#loading').load($('.nav-link.active').attr("data-url"), function (result) {
+        });
+
+    </script>
+</main>
+<!-- /.container -->
+
+
+</body>
+</html>

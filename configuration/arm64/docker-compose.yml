@@ -15,7 +15,8 @@ services:
       - mysql_password
       - mysql_root_password
     volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - "mysql_db:/var/lib/mysql"
+      - ./mysql/:/docker-entrypoint-initdb.d/
 
   php:
     image: php:7.2.2-apache

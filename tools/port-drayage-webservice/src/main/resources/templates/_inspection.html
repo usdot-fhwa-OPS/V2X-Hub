@@ -1,0 +1,117 @@
+<div class="jumbotron" th:if="${@inspectionActions.getCurrentInspection() != null}">
+    <h1 class="display-4">Requested Inspection</h1>
+    <h1 class="h4">
+        Inspection for vehicle : 
+            <strong th:text="${@inspectionActions.getCurrentInspection().getVehicleId()}"></strong> 
+        with container : 
+            <strong th:text="${@inspectionActions.getCurrentInspection().getContainerId()}"></strong>
+    </h1>
+    <hr class="my-4">
+    <p class="lead" th:value="${@inspectionActions.getCurrentInspection().getStatus()}"
+        th:text="|Status : ${@inspectionActions.getCurrentInspection().getStatus()}|"></p>
+    <p class="lead">
+        <button class="btn btn-primary btn-lg btn-block" th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING')}"
+            id="hold-inspection">Request Further Inspection</button>
+
+        <button class="btn btn-success btn-lg btn-block" 
+        th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING') || @inspectionActions.getCurrentInspection().getStatus().getValue().equals('HOLDING') }"
+            id="complete-inspection">Complete Inspection</button>
+        <div th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PROCEED_TO_HOLDING')}" class="h4 d-flex justify-content-center">Vehicle is proceeding to Holding Area.</div>
+    </p>
+</div>
+<h1 class="display-4">Pending Inspections</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th> Vehicle ID </th>
+            <th> Container ID </th>
+            <th> Action ID </th>
+            <th> Requested </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr
+            th:if="${@inspectionActions.getPendingInspections().getInspections() == null || @inspectionActions.getPendingInspections().getInspections().isEmpty() }">
+            <td colspan="3"> No Pending Inspections</td>
+        </tr>
+        <tr th:each="action : ${@inspectionActions.getPendingInspections().getInspections()}">
+            <td><span th:text="${action.getVehicleId()}"> </span></td>
+            <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h1 class="display-4">Completed Inspections</h1>
+<table class="table">
+    <thead>
+        <tr>
+            <th> Vehicle ID </th>
+            <th> Container ID </th>
+            <th> Action ID </th>
+            <th> Requested </th>
+            <th> Completed </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr
+            th:if="${@inspectionActions.getCompletedInspections().getInspections() == null || @inspectionActions.getCompletedInspections().getInspections().isEmpty() }">
+            <td colspan="3"> No Completed Actions</td>
+        </tr>
+        <tr th:each="action : ${@inspectionActions.getCompletedInspections().getInspections()}">
+            <td><span th:text="${action.getVehicleId()}"> </span></td>
+            <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
+
+        </tr>
+    </tbody>
+</table>
+
+<script  th:inline="javascript">
+    /*<![CDATA[*/
+$('#hold-inspection').on('click', function (e) {
+    console.log(e)
+    var actionId
+    // Retrieve current action id. ? used to protect against null current actions
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
+
+    e.preventDefault();
+    $.ajax({
+        type: 'post',
+        url: 'inspection/hold/' + actionId,
+        success: function () {
+            $('#inspection').load("inspection/")
+        }
+    });
+});
+
+$('#complete-inspection').on('click', function (e) {
+    console.log(e)
+    e.preventDefault();
+    // Retrieve current action id. ? used to protect against null current actions
+    var actionId
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
+
+    $.ajax({
+        type: 'post',
+        url: 'inspection/complete/' + actionId,
+        success: function () {
+            $('#inspection').load("inspection/")
+        }
+    });
+});
+   /*]]>*/
+</script>

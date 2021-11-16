@@ -16,6 +16,7 @@ services:
       - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
 
   php:
     image: usdotfhwaops/php:latest
@@ -27,7 +28,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:latest
+    image: usdotfhwaops/v2xhubamd:carma-freight
     container_name: v2xhub
     network_mode: host
     restart: always
