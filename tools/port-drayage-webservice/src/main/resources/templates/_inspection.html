@@ -1,7 +1,7 @@
 <div class="jumbotron" th:if="${@inspectionActions.getCurrentInspection() != null}">
-    <h1 class="display-4">Requested Loading Action</h1>
+    <h1 class="display-4">Requested Inspection</h1>
     <h1 class="h4">
-        Load vehicle : 
+        Inspection for vehicle : 
             <strong th:text="${@inspectionActions.getCurrentInspection().getVehicleId()}"></strong> 
         with container : 
             <strong th:text="${@inspectionActions.getCurrentInspection().getContainerId()}"></strong>

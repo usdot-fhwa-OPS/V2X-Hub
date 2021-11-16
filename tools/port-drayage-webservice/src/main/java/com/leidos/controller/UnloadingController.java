@@ -45,8 +45,8 @@ public class UnloadingController implements UnloadingApi {
      */
     @Override
     public ResponseEntity<ContainerActionStatus> unloadingActionIdGet(String actionId) {
+        logger.debug(String.format("Received GET unloading/%s .", actionId));
         ContainerActionStatus action = unloadingActions.getContainerActionStatus(actionId);
-        logger.debug(String.format("Found action %s!", action));
         if (action != null)
             return ResponseEntity.ok(action);
         return new ResponseEntity<ContainerActionStatus>(HttpStatus.BAD_REQUEST);
@@ -57,6 +57,7 @@ public class UnloadingController implements UnloadingApi {
      */
     @Override
     public ResponseEntity<Void> unloadingPost(ContainerRequest request) {
+        logger.debug(String.format("Received POST unloading/ with payload : %s .", request));
         // Check no action already exists for given action ID
         if (unloadingActions.getContainerActionStatus(request.getActionId()) == null) {
             unloadingActions.requestUnloadingAction(request);
@@ -74,6 +75,7 @@ public class UnloadingController implements UnloadingApi {
      */
     @Override
     public ResponseEntity<Void> unloadingStartActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST unloading/start/%s .", actionId));
         ContainerActionStatus cur = unloadingActions.getCurrentAction();
         if (cur != null && cur.getActionId().equals(actionId)) {
             unloadingActions.startCurrentAction();
@@ -89,6 +91,7 @@ public class UnloadingController implements UnloadingApi {
      */
     @Override
     public ResponseEntity<Void> unloadingCompleteActionIdPost(String actionId) {
+        logger.debug(String.format("Received POST unloading/complete/%s .", actionId));
         ContainerActionStatus cur = unloadingActions.getCurrentAction();
         if (cur != null && cur.getActionId().equals(actionId)) {
             unloadingActions.completeCurrentAction();
