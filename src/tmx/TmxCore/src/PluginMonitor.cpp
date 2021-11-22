@@ -88,7 +88,15 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	else
 	{
 		PluginMonitor::sPluginGids.clear();
-		struct group *gid = getgrnam("dialout");
+		
+		char *buffer = NULL;
+		size_t buffer_len = 0;
+		struct group grp = { 0, };
+		struct group *gid= NULL;
+		
+		getgrnam_r("dialout", &grp, buffer, buffer_len, &gid);
+
+		#struct group *gid = getgrnam("dialout");
 		if (gid != NULL)
 			PluginMonitor::sPluginGids.push_back(gid->gr_gid);
 
