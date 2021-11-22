@@ -138,11 +138,7 @@ protected:
 	
 private: 
 	// Database configuration values
-	std::string _database_username;
-	std::string _database_password;
-	uint16_t _database_port;
-	std::string _database_ip;
-	std::string _database_name; 
+ 
 	
 
 	sql::Driver *driver;
@@ -160,7 +156,7 @@ private:
 	J2735MessageFactory factory;
 	
 	// Web Service Client 
-	WebServiceClient *client;
+	std::shared_ptr<WebServiceClient> client;
 
 	// Port HOLDING_AREA Configuration
 	double _holding_lat;

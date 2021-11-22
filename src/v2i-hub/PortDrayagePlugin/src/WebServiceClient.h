@@ -26,8 +26,10 @@ private:
     uint16_t polling_frequency;
     
     // OAIDefaultApi pointer
-    OAIDefaultApi *api;
-
+    std::shared_ptr<OAIDefaultApi> api;
+    std::shared_ptr<OAIContainerActionStatus> loading_status;
+    std::shared_ptr<OAIContainerActionStatus> unloading_status;
+    std::shared_ptr<OAIInspectionStatus> inspection_status;
     /**
      * Method to poll the status of a loading action with a given action id.
      * 
@@ -49,6 +51,16 @@ private:
      * @return 0 if inspection is passed and 1 if further inspection at the holding area is requested
      */ 
     int pollInspectionAction(QString action_id);
+
+    /**
+     * Method to initialize server configuration and polling frequency
+     * 
+     * @param host string host name of server
+     * @param port uint16_t port of server
+     * @param secure bool flag set to true for using HTTPS
+     * @param polling_frequency 
+     */ 
+    void initialize(std::string host, uint16_t port, bool secure , uint16_t polling_frequency);
 
 
 public:
