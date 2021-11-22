@@ -65,8 +65,6 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 	GetConfigValue<double>("Holding_Lat", _holding_lat);
 	GetConfigValue<double>("Holding_Lon", _holding_lon);
 	PLOG(logDEBUG) << "Holding Area set : (" << _holding_lat << ", " << _holding_lon << ")" << std::endl;
-	PLOG(logERROR) << "FILE_LOG::ReportingLevel() = " << FILE_LOG::ReportingLevel() << std::endl;
-	PLOG(logERROR) << "PLOG::ReportingLevel() = " << PLOG::ReportingLevel() << std::endl;
 
 	// Create DB connection
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);

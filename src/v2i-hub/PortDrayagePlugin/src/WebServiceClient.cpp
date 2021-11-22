@@ -22,7 +22,7 @@ void WebServiceClient::initialize(std::string host, uint16_t port, bool secure ,
         url.get()->setScheme(QString::fromStdString("http"));
 
     }
-    FILE_LOG(logINFO) << "Setting API URL as " << url.get()->toString().toStdString() << std::endl;
+    PLOG(logINFO) << "Setting API URL as " << url.get()->toString().toStdString() << std::endl;
     // Initialize API
     api = std::make_shared<OAIDefaultApi>(0);
     // Setup server config
@@ -44,13 +44,13 @@ void WebServiceClient::request_loading_action(std::string vehicle_id, std::strin
 
     // Call back for POST /loading/
     connect(api.get(), &OAIDefaultApi::loadingPostSignal, this, [&]() {
-        FILE_LOG(logINFO) << "Success /loading POST";
+        PLOG(logINFO) << "Success /loading POST";
         loop->quit();
     });
     // Error call back for POST /loading/
     connect(api.get(), &OAIDefaultApi::loadingPostSignalE, this, [&](QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure /loading POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure /loading POST : " << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         loop->quit();
     });
 
@@ -59,7 +59,7 @@ void WebServiceClient::request_loading_action(std::string vehicle_id, std::strin
     req->setContainerId( QString::fromStdString( container_id ) );
     req->setActionId( QString::fromStdString( action_id ) );
 
-    FILE_LOG(logINFO) << "Sending loading request : " << req->asJson().toStdString();
+    PLOG(logINFO) << "Sending loading request : " << req->asJson().toStdString();
     api->loadingPost( *req.get() );
     loop->exec();      
     // Poll loading action until complete
@@ -78,13 +78,13 @@ void WebServiceClient::request_unloading_action(std::string vehicle_id, std::str
 
     // Call back for POST /unloading/
     connect(api.get(), &OAIDefaultApi::unloadingPostSignal, this, [&]() {
-        FILE_LOG(logINFO) << "Success /unloading POST";
+        PLOG(logINFO) << "Success /unloading POST";
         loop->quit();
     });
     // Error call back for POST /unloading/
     connect(api.get(), &OAIDefaultApi::unloadingPostSignalE, this, [&](QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure /unloading POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure /unloading POST : " << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         loop->quit();
     });
 
@@ -93,7 +93,7 @@ void WebServiceClient::request_unloading_action(std::string vehicle_id, std::str
     req->setContainerId( QString::fromStdString( container_id ) );
     req->setActionId( QString::fromStdString( action_id ) );
 
-    FILE_LOG(logINFO) << "Sending unloading request : " << req->asJson().toStdString();
+    PLOG(logINFO) << "Sending unloading request : " << req->asJson().toStdString();
     api->unloadingPost( *req.get() );
     loop->exec();
 
@@ -112,13 +112,13 @@ int WebServiceClient::request_inspection(std::string vehicle_id, std::string con
 
     // Call back for POST /inspection/
     connect(api.get(), &OAIDefaultApi::inspectionPostSignal, this, [&]() {
-        FILE_LOG(logINFO) << "Success /inspection POST";
+        PLOG(logINFO) << "Success /inspection POST";
         loop->quit();
     });
     // Error call back for POST /inspection/
     connect(api.get(), &OAIDefaultApi::inspectionPostSignalE, this, [&](QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure /inspection POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure /inspection POST : " << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         loop->quit();
     });
 
@@ -127,7 +127,7 @@ int WebServiceClient::request_inspection(std::string vehicle_id, std::string con
     req->setContainerId( QString::fromStdString( container_id ) );
     req->setActionId( QString::fromStdString( action_id ) );
 
-    FILE_LOG(logINFO) << "Sending inspection request : " << req->asJson().toStdString();
+    PLOG(logINFO) << "Sending inspection request : " << req->asJson().toStdString();
     api->inspectionPost( *req.get() );
     loop->exec();
 
@@ -144,16 +144,16 @@ void WebServiceClient::request_holding( std::string action_id ) {
 
     // Call back for POST /inspection/
     connect(api.get(), &OAIDefaultApi::inspectionHoldingActionIdPostSignal, [&]() {
-        FILE_LOG(logINFO) << "Success /inspection/holding/{action_id} POST";
+        PLOG(logINFO) << "Success /inspection/holding/{action_id} POST";
         loop->quit();
     });
     // Error call back for POST /inspection/
     connect(api.get(), &OAIDefaultApi::inspectionHoldingActionIdPostSignalE, [&](QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure /inspection/holding/{action_id} POST : " << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure /inspection/holding/{action_id} POST : " << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         loop->quit();
     });
-    FILE_LOG(logINFO) << "Sending holding request for action_id : " << action_id << std::endl;
+    PLOG(logINFO) << "Sending holding request for action_id : " << action_id << std::endl;
     api.get()->inspectionHoldingActionIdPost( QString::fromStdString(action_id) );
     loop->exec();
     // Poll inspection action until complete
@@ -162,7 +162,7 @@ void WebServiceClient::request_holding( std::string action_id ) {
 }
 
 void WebServiceClient::pollLoadingAction( QString action_id ) {
-    FILE_LOG(logDEBUG) << "Starting loading action Polling";
+    PLOG(logDEBUG) << "Starting loading action Polling";
     std::unique_ptr<QEventLoop> loop( new QEventLoop());
     bool badResponse = true;
     // Disconnect all duplicate signals
@@ -172,15 +172,15 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
     // Call back for Get /loading/{action_id}
     connect(api.get(), &OAIDefaultApi::loadingActionIdGetSignal, this,  [&](OAIContainerActionStatus loading_action) {
         loading_status.reset( new OAIContainerActionStatus( loading_action.asJson( ) ) );
-        FILE_LOG(logINFO) << "Success /loading/{action_id} GET : " << loading_status->asJson().toStdString();
+        PLOG(logINFO) << "Success /loading/{action_id} GET : " << loading_status->asJson().toStdString();
         badResponse = false;
         loop->quit();
     });
     // Error call back for Get /loading/{action_id}
     connect(api.get(), &OAIDefaultApi::loadingActionIdGetSignalE, this,
         [&](OAIContainerActionStatus loading_action , QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure loading/{action_id} GET :" << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure loading/{action_id} GET :" << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         badResponse = true;
         loop->quit();
     });
@@ -196,7 +196,7 @@ void WebServiceClient::pollLoadingAction( QString action_id ) {
 } 
 
 void WebServiceClient::pollUnloadingAction( QString action_id) {
-    FILE_LOG(logDEBUG) << "Starting unloading action Polling";
+    PLOG(logDEBUG) << "Starting unloading action Polling";
     std::unique_ptr<QEventLoop> loop( new QEventLoop());
 
     bool badResponse = true;
@@ -206,15 +206,15 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
      // Call back for Get /unloading/{action_id}
     connect(api.get(), &OAIDefaultApi::unloadingActionIdGetSignal, this, [&](OAIContainerActionStatus unloading_action) {
         unloading_status.reset(&unloading_action); 
-        FILE_LOG(logINFO) << "Success /unloading/{action_id} GET : " << unloading_status->asJson().toStdString();
+        PLOG(logINFO) << "Success /unloading/{action_id} GET : " << unloading_status->asJson().toStdString();
         badResponse = false;
         loop->quit();
     });
     // Error call back for Get /unloading/{action_id}
     connect(api.get(), &OAIDefaultApi::unloadingActionIdGetSignalE, this, 
         [&](OAIContainerActionStatus unloading_action , QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure unloading/{action_id} GET :" << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure unloading/{action_id} GET :" << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         badResponse = true;
         loop->quit();
     });
@@ -230,7 +230,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
 }
 
 int WebServiceClient::pollInspectionAction( QString action_id ) {
-    FILE_LOG(logERROR) << "Starting inspection action Polling";
+    PLOG(logERROR) << "Starting inspection action Polling";
     std::unique_ptr<QEventLoop> loop( new QEventLoop());
 
     bool badResponse = true;
@@ -241,15 +241,15 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
     // Call back for GET /inspection/{action_id}
     connect(api.get(), &OAIDefaultApi::inspectionActionIdGetSignal, [&](OAIInspectionStatus inspection) {
         inspection_status.reset( &inspection );
-        FILE_LOG(logINFO) << "Success /inspection/{action_id} GET : " << inspection_status->asJson().toStdString() << std::endl;
+        PLOG(logINFO) << "Success /inspection/{action_id} GET : " << inspection_status->asJson().toStdString() << std::endl;
         badResponse = false;
         loop->quit();
     });
     // Error call back for /inspection/{action_id}
     connect(api.get(), &OAIDefaultApi::inspectionActionIdGetSignalE, 
         [&](OAIInspectionStatus inspection , QNetworkReply::NetworkError error_code, QString error_str) {
-        FILE_LOG(logERROR) << "Failure /inspection/{action_id} GET : " << error_str.toStdString();
-        FILE_LOG(logERROR) << error_code;
+        PLOG(logERROR) << "Failure /inspection/{action_id} GET : " << error_str.toStdString();
+        PLOG(logERROR) << error_code;
         badResponse = true;
         loop->quit();
     });
