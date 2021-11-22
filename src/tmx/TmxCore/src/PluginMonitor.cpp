@@ -69,12 +69,18 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	pthread_mutex_init(&this->mMessagesLock, NULL);
 
 	struct passwd *pwd = NULL;
+	struct passwd *result = 0;
+    	char buf[64]; //assuming passwords are 64 bytes long
+    	memset(&buf, 0, sizeof buf);
 	if (getuid() != 0)
 	{
 		this->setPluginStatus("ERROR: Not running as root");
 		this->addEventLogEntry(LogLevel_Fatal, "Error starting: Not running as root");
 	}
-	else if ((pwd = getpwnam(PLUGIN_USER)) == NULL)
+
+
+	//else if ((pwd = getpwnam(PLUGIN_USER)) == NULL)
+	else if( getpwnam_r(PLUGIN_USER, pwd, buf, 64, &result) == NULL) 
 	{
 		this->setPluginStatus("ERROR: User '" PLUGIN_USER "' doesn't exist");
 		this->addEventLogEntry(LogLevel_Fatal, "Error starting: User '" PLUGIN_USER "' doesn't exist");
@@ -86,7 +92,7 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 		if (gid != NULL)
 			PluginMonitor::sPluginGids.push_back(gid->gr_gid);
 
-		PluginMonitor::sPluginUid = pwd->pw_uid;
+		PluginMonitor::sPluginUid = (*result)->pw_uid;
 
 		this->mMonitorThread = boost::thread(&PluginMonitor::monitorThreadEntry, this);
 
