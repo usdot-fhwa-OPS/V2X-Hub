@@ -17,9 +17,11 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+//#include <tmx/Security/include/softhsm2.h>
 
 #define UDP "UDP"
 
+//using namespace Botan; 
 namespace MessageReceiver {
 
 class MessageReceiverPlugin: public tmx::utils::TmxMessageManager {
@@ -44,6 +46,11 @@ private:
 	std::atomic<bool> simBSM { true };
 	std::atomic<bool> simSRM { true };
 	std::atomic<bool> simLoc { true };
+	unsigned int verState;
+	std::string liblocation; 
+	std::string url; 
+	std::string baseurl;
+	//softhsm st; 
 
 };
 

@@ -33,6 +33,7 @@ using namespace boost::asio;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
+//using namespace Botan;
 
 // BSMs may be 10 times a second, so only send errors at most every 2 minutes
 #define ERROR_WAIT_MS 120000
@@ -48,11 +49,16 @@ static std::atomic<uint64_t> totalBytes {0};
 static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
 MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManager(name)
-{
-	//Don't need to subscribe to messages
+{	//Don't need to subscribe to messages
 	//SubscribeToMessages();
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
+	GetConfigValue<unsigned int>("EnableVerification", verState);
+	GetConfigValue("HSMLocation",liblocation);
+
+	GetConfigValue<string>("HSMurl",baseurl);
+	std::string request="verify";
+	url=baseurl+request;
 }
 
 MessageReceiverPlugin::~MessageReceiverPlugin() { }
@@ -169,6 +175,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	DecodedBsmMessage decodedBsm;
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
+
 
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
@@ -350,6 +357,9 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
+	GetConfigValue<unsigned int>("EnableVerification", verState);
+	GetConfigValue("HSMLocation",liblocation);
+	GetConfigValue<string>("HSMurl",baseurl);
 
 	lock_guard<mutex> lock(syncLock);
 
@@ -409,27 +419,75 @@ int MessageReceiverPlugin::Main()
 
 				totalBytes += len;
 
-				// Support different encodings
-				string enc;
-				if (incoming.size() > 0)
+				// if verification enabled, access HSM
+				if (verState == 1)
 				{
-					switch (incoming[0]) {
-					case 0x00:
-						enc = api::ENCODING_ASN1_UPER_STRING;
-						break;
-					case 0x30:
-						enc = api::ENCODING_ASN1_BER_STRING;
-						break;
-					case '{':
-						enc = api::ENCODING_JSON_STRING;
-						break;
-					default:
-						enc = api::ENCODING_BYTEARRAY_STRING;
-						break;
+
+					char arr[incoming.size()+1];
+					for (int i= 0;i < incoming.size()-1;i++)
+					{
+						arr[i]=incoming[i];
+
 					}
+
+					std::string msg(arr);
+					std::string req = "\'{\"type\":\"map\",\"message\":\""+msg+"\"}\'";
+
+
+					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
+
+					char cmd[5000];
+					strcpy(cmd,cmd1.c_str());
+
+					char buffer[500];
+					std::string result="";
+					FILE* pipe= popen(cmd,"r"); 
+
+					if (!pipe) throw std::runtime_error("popen() failed!");
+					try{
+						while (fgets(buffer, sizeof(buffer),pipe) != NULL)
+						{
+							result+=buffer; 
+						}
+					} catch (...) {
+						pclose(pipe); 
+						throw; 
+					}
+
+					if (result=="{}")
+					{
+						cout<<"Message Verified, No Errors\n";
+					}
+					else{
+						cout<<"Error Verifying Message through SCMS Signature\n";
+					}
+					
 				}
 
-				this->IncomingMessage(incoming.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				else 
+				{
+					// Support different encodings
+					string enc;
+					if (incoming.size() > 0)
+					{
+						switch (incoming[0]) {
+						case 0x00:
+							enc = api::ENCODING_ASN1_UPER_STRING;
+							break;
+						case 0x30:
+							enc = api::ENCODING_ASN1_BER_STRING;
+							break;
+						case '{':
+							enc = api::ENCODING_JSON_STRING;
+							break;
+						default:
+							enc = api::ENCODING_BYTEARRAY_STRING;
+							break;
+						}
+					}
+
+					this->IncomingMessage(incoming.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				}
 			}
 			else if (len < 0)
 			{

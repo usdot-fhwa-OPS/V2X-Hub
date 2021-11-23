@@ -1,0 +1,15 @@
+<defines>
+ENTROPY_SRC_WIN32 -> 20200209
+</defines>
+
+<header:internal>
+es_win32.h
+</header:internal>
+
+<os_features>
+win32
+</os_features>
+
+<libs>
+windows -> user32
+</libs>
