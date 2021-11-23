@@ -60,7 +60,7 @@ private:
      * @param secure bool flag set to true for using HTTPS
      * @param polling_frequency 
      */ 
-    void initialize(std::string host, uint16_t port, bool secure , uint16_t polling_frequency);
+    void initialize(const std::string &host, uint16_t port, bool secure , uint16_t polling_frequency);
 
 
 public:
@@ -79,7 +79,7 @@ public:
      * @param int polling frequency in seconds for action status
      *  
      */ 
-    WebServiceClient(std::string host, uint16_t port, bool secure , uint16_t polling_frequency );
+    WebServiceClient(const std::string &host, uint16_t port, bool secure , uint16_t polling_frequency );
 
     /**
      * Method to request a loading action. Sends a HTTP POST call to the loading endpoint of the PortDrayage Webservice and then
@@ -89,7 +89,7 @@ public:
      * @param container_id static unique identifier for container
      * @param action_id static unique identifier for action 
      */
-    void request_loading_action(std::string vehicle_id, std::string container_id, std::string action_id);
+    void request_loading_action(const std::string &vehicle_id, const std::string &container_id, const std::string &action_id);
     /**
      * Method to request an unloading action. Sends a HTTP POST call to the unloading endpoint of the PortDrayage Webservice and then
      * polls the status of the request every 5 seconds. Method will exit once unloading action is completed.
@@ -98,7 +98,7 @@ public:
      * @param container_id static unique identifier for the container
      * @param action_id static unique identifier for the action 
      */
-    void request_unloading_action(std::string vehicle_id, std::string container_id, std::string action_id);
+    void request_unloading_action(const std::string &vehicle_id, const std::string &container_id, const std::string &action_id);
     /**
      * Method to request an inspection action. Sends a HTTP POST call to the inspection endpoint of the PortDrayage Webservice and then
      * polls the status of the request every 5 seconds. Method will exit once inspection action is completed or operator indicates the 
@@ -108,14 +108,14 @@ public:
      * @param container_id static unique identifier for container
      * @param action_id static unique identifier for the action
      */
-    int request_inspection(std::string vehicle_id, std::string container_id, std::string action_id);
+    int request_inspection(const std::string &vehicle_id, const std::string &container_id, const std::string &action_id);
     /**
      * Method request further inspection at the Holding area. Sends a HTTP POST call to inspection holding endpoint of the PortDrayage Webservice
      * and then poll the status of the request every 5 seconds. Method will exit once inspection action is completed.
      * 
      * @param action_id static unique identifier for action
      */
-    void request_holding(std::string action_id);
+    void request_holding(const std::string &action_id);
     
 
 };

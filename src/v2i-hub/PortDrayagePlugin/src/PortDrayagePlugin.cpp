@@ -115,7 +115,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 	ptree pr;
 
 	// Create new PortDrayage_Object pointer
-	auto *pd = new PortDrayage_Object();
+	std::unique_ptr<PortDrayage_Object> pd( new PortDrayage_Object());
 
 	// Read strategy and operationParams
 	strat << mobilityOperation->body.strategy.buf;
@@ -144,6 +144,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 		else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
 			// If holding == 1 insert HOLDING action into table
 			int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
+			PLOG(logINFO) << "Inspection request completed" << std::endl; 
 			if ( holding == 1 ) {
 				insert_holding_action_into_table( *pd );
 			}	
@@ -266,7 +267,7 @@ ptree PortDrayagePlugin::createMobilityOperationXml( const ptree &json_payload )
 
 
 PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction(const std::string &action_id ) {
-	auto *rtn = new PortDrayage_Object();
+	std::unique_ptr<PortDrayage_Object> rtn( new PortDrayage_Object());
 	try{
 		// Set action_id
 		next_action_id->setString(1,action_id);
@@ -314,7 +315,7 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction(cons
 }
 
 PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( const std::string &cmv_id ) {
-	auto *rtn = new PortDrayage_Object();
+	std::unique_ptr<PortDrayage_Object> rtn( new PortDrayage_Object());
 	try{
 		// Set cmv_id
 		first_action->setString(1,cmv_id);
@@ -357,7 +358,7 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( co
 
 
 PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( const ptree &pr ) {
-	auto *pd = new PortDrayage_Object();
+	std::unique_ptr<PortDrayage_Object> pd( new PortDrayage_Object());
 	try {
 		pd->cmv_id = pr.get_child("cmv_id").get_value<std::string>();
 		boost::optional<const ptree& > child = pr.get_child_optional( "action_id" );
@@ -382,18 +383,18 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( co
 
 
 		}
-		return *pd;
+		return *pd.get();
 
 	}
 	catch( const ptree_error &e ) {
 		PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
-		return *pd;
+		return *pd.get();
 	}
 }
 
 void PortDrayagePlugin::insert_holding_action_into_table( const PortDrayage_Object &current_action ) {
-	auto *next_action = new PortDrayage_Object;
-	// const PortDrayage_Object *cur_action = &current_action;
+	std::unique_ptr<PortDrayage_Object> next_action( new PortDrayage_Object());
+	// const PortDrayage_Object *cur_action = &current_action; TODO: Clean this up if not necessary
 
 	try{
 
