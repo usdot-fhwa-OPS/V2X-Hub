@@ -488,7 +488,7 @@ std::string MessageLoggerPlugin::GetCurDateTimeStr()
 {
 	auto t = std::time(nullptr);
 	struct tm *tm; 
-	tm = std::localtime_r(&t, tm1);
+	tm = std::localtime_s(&t);
 	std::ostringstream oss;
 	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
 	auto str = oss.str();
