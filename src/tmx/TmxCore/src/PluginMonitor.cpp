@@ -96,11 +96,10 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 		
 		getgrnam_r("dialout", &grp, buffer, buffer_len, &gid);
 
-		#struct group *gid = getgrnam("dialout");
 		if (gid != NULL)
 			PluginMonitor::sPluginGids.push_back(gid->gr_gid);
 
-		PluginMonitor::sPluginUid = (*result)->pw_uid;
+		PluginMonitor::sPluginUid = (*result).pw_uid;
 
 		this->mMonitorThread = boost::thread(&PluginMonitor::monitorThreadEntry, this);
 
