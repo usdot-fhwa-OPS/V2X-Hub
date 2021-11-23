@@ -72,16 +72,7 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 		driver = get_driver_instance();
 		con = driver->connect(connection_string,_database_username,_database_password);
 		con->setSchema(_database_name);
-		
-	}
-	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error occurred in file " << __FILE__ << " on line " << __LINE__  << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
-	}
-	// Initialize PreparedStatements for MySQL
-	try {
+		// Initialize PreparedStatements for MySQL
 		// Get next_action for given action_id 
 		next_action_id = con->prepareStatement("SELECT next_action FROM freight WHERE action_id = ? ");
 		// Get current action for given action_id
@@ -94,12 +85,13 @@ void PortDrayagePlugin::UpdateConfigSettings() {
 		get_action_id_for_previous_action = con->prepareStatement("SELECT action_id FROM freight WHERE next_action = ? and operation = ? ");
 		// Update next_action for an action with given action_id
 		update_current_action = con->prepareStatement("UPDATE freight SET next_action = ? WHERE action_id = ?");
+
 	}
-	catch( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error occurred in file " << __FILE__ << " on line " << __LINE__  << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+	catch ( const sql::SQLException &e ) {
+		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+			<< "Error occurred in file " << __FILE__ << " on line " << __LINE__  << std::endl
+			<< "Error code " << e.getErrorCode() << std::endl
+			<< "Error status " << e.getSQLState() << std::endl;
 	}
 	
 }
@@ -123,7 +115,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 	ptree pr;
 
 	// Create new PortDrayage_Object pointer
-	PortDrayage_Object *pd = new PortDrayage_Object();
+	auto *pd = new PortDrayage_Object();
 
 	// Read strategy and operationParams
 	strat << mobilityOperation->body.strategy.buf;
@@ -133,66 +125,35 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 	std::string strategy = strat.str();
 	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
-			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
-			PLOG(logINFO) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
+			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
+				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
 			// Convert JSON payload to PortDrayage_Object
 			read_json(payload, pr);
 			*pd = readPortDrayageJson( pr );
-
-			// Handle actions that require PortDrayage WebService Input
-			PLOG(logDEBUG) << "Operation is " << pd->operation << std::endl;
-			if ( pd->operation.compare("PICKUP") == 0 ) {
-				try{
-					client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
-					PLOG(logDEBUG) << "Pickup Complete!" << std::endl;
-
-				}
-				catch(std::exception &e) {
-					PLOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
-				}
-			}
-			else if ( pd->operation.compare("DROPOFF")  == 0) {
-				try{
-					client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
-					PLOG(logDEBUG) << "Dropoff Complete!" << std::endl;
-				}
-				catch(std::exception &e) {
-					PLOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
-				}
-			}
-			else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
-				try{
-					// If holding == 1 insert HOLDING action into table
-					int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
-					if ( holding == 1 ) {
-						PLOG(logDEBUG) << "Requested futher inspection. Inserting Holding Action!" << std::endl;
-						insert_holding_action_into_table( *pd );
-					}
-					else {
-						PLOG(logDEBUG) << "Checkpoint Action Complete!" << std::endl;
-
-					}
-				}
-				catch(std::exception &e) {
-					PLOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
-				}
-			}
-			else if ( pd->operation.compare("HOLDING_AREA") == 0) {
-				try{
-					string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
-					client->request_holding( previous_checkpoint_id );
-					PLOG(logDEBUG) << "Holding Action Complete!" << std::endl;
-
-				}
-				catch(std::exception &e) {
-					PLOG(logERROR) << "Error occurred during Qt Connection " << std::endl << e.what() << std::endl;
-				}
-			}
-
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
+		// Handle actions that require PortDrayage WebService Input
+		if ( pd->operation.compare("PICKUP") == 0 ) {
+			client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+		}
+		else if ( pd->operation.compare("DROPOFF")  == 0) {
+			client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+		}
+		else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
+			// If holding == 1 insert HOLDING action into table
+			int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
+			if ( holding == 1 ) {
+				insert_holding_action_into_table( *pd );
+			}	
+		}
+		else if ( pd->operation.compare("HOLDING_AREA") == 0) {
+			string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
+			client->request_holding( previous_checkpoint_id );
+		}
+
+		
 		PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
 			"cmv_id : " << pd->cmv_id << std::endl <<
 			"cargo_id : " << pd->cargo_id << std::endl <<		
@@ -231,10 +192,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 				// Create XML MobilityOperationMessage
 				ptree message = createMobilityOperationXml( payload );
 				std::stringstream content;
-				write_xml(content, message);
-
-				PLOG(logINFO) << "XML outgoing message : " << std::endl << content.str();
-				
+				write_xml(content, message);				
 				try {
 					// Uper encode message 
 					container.load<XML>(content);
@@ -253,25 +211,25 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 					BroadcastMessage(*rMsg);
 				}
-				catch (J2735Exception &e) {
+				catch ( const J2735Exception &e) {
 					PLOG(logERROR) << "Error occurred during message encoding " << std::endl << e.what() << std::endl;
 				}
 			}
 			else {
-				PLOG(logERROR) << "Could not find action!" << std::endl;
+				PLOG(logWARNING) << "Could not find action!" << std::endl;
 			}
 			
 		}
-		catch ( sql::SQLException &e ) {
-			PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-			PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-			PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+		catch ( const sql::SQLException &e ) {
+			PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+				<< "Error code " << e.getErrorCode() << std::endl
+				<< "Error status " << e.getSQLState() << std::endl;
 		}
 	}
 }
 
 
-ptree PortDrayagePlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
+ptree PortDrayagePlugin::createPortDrayageJson( const PortDrayage_Object &pd_obj) {
 	ptree json_payload;
 	json_payload.put("cmv_id", pd_obj.cmv_id );
 	json_payload.put("cargo_id", pd_obj.cargo_id );
@@ -285,7 +243,7 @@ ptree PortDrayagePlugin::createPortDrayageJson( PortDrayage_Object &pd_obj) {
 }
 
 
-ptree PortDrayagePlugin::createMobilityOperationXml( ptree &json_payload ) {
+ptree PortDrayagePlugin::createMobilityOperationXml( const ptree &json_payload ) {
 	ptree mobilityOperationXml;
 	std::stringstream pl;
 	write_json( pl, json_payload);
@@ -307,23 +265,19 @@ ptree PortDrayagePlugin::createMobilityOperationXml( ptree &json_payload ) {
 }
 
 
-PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std::string action_id ) {
-	PortDrayage_Object *rtn = new PortDrayage_Object();
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction(const std::string &action_id ) {
+	auto *rtn = new PortDrayage_Object();
 	try{
 		// Set action_id
 		next_action_id->setString(1,action_id);
 		// Get current action
-		PLOG(logDEBUG) << "Getting next action for " << action_id  << "." << std::endl;
-
 		sql::ResultSet *cur_action = next_action_id->executeQuery();
 		if ( cur_action->first() ) {
 			std::string next = cur_action->getString("next_action");
-			PLOG(logDEBUG) << "Column next_action: " << next << std::endl;
 			// Set action_id to next_action
 			current_action->setString(1,next);
 			// Retrieve next action
 			sql::ResultSet *cur_action = current_action->executeQuery();
-			
 			// Create PortDrayage_Object
 			if ( cur_action->first() ) { 
 				rtn->cmv_id = cur_action->getString("cmv_id");
@@ -333,6 +287,7 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std
 				rtn->destination_long = cur_action->getDouble("destination_long");
 				rtn->destination_lat =  cur_action->getDouble("destination_lat");
 				rtn->next_action = cur_action->getString("next_action");
+
 				PLOG(logDEBUG) << "Port Drayage Message : " << std::endl << 
 					"cmv_id : " << rtn->cmv_id << std::endl <<
 					"cargo_id : " << rtn->cargo_id << std::endl <<
@@ -348,21 +303,18 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveNextAction( std
 				PLOG(logINFO) << "Last action completed! No action found with action id " << next << std::endl;
 
 			}
-			return *rtn;
-			// Qt HttpClient setup
 		}
 	}
-	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
-		return *rtn;
+	catch ( const sql::SQLException &e ) {
+		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+			<< "Error code " << e.getErrorCode() << std::endl
+			<< "Error status " << e.getSQLState() << std::endl;
 	}
-	
+	return *rtn;
 }
 
-PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( std::string cmv_id ) {
-	PortDrayage_Object *rtn = new PortDrayage_Object();
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( const std::string &cmv_id ) {
+	auto *rtn = new PortDrayage_Object();
 	try{
 		// Set cmv_id
 		first_action->setString(1,cmv_id);
@@ -388,28 +340,27 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::retrieveFirstAction( st
 			return *rtn;
 		}
 		else {
-			PortDrayage_Object *rtn = new PortDrayage_Object();
 			PLOG(logERROR) << "No first action for cmv_id : " << cmv_id << " found!";
 			return *rtn;
 		}
 		
 
 	}
-	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+	catch ( const sql::SQLException &e ) {
+		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+			<< "Error code " << e.getErrorCode() << std::endl
+			<< "Error status " << e.getSQLState() << std::endl;
 		return *rtn;
 	}
 	
 }
 
 
-PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( ptree &pr ) {
-	PortDrayage_Object *pd = new PortDrayage_Object();
+PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( const ptree &pr ) {
+	auto *pd = new PortDrayage_Object();
 	try {
 		pd->cmv_id = pr.get_child("cmv_id").get_value<std::string>();
-		boost::optional< ptree& > child = pr.get_child_optional( "action_id" );
+		boost::optional<const ptree& > child = pr.get_child_optional( "action_id" );
 		if( !child )
 		{
 			PLOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
@@ -440,24 +391,24 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( pt
 	}
 }
 
-void PortDrayagePlugin::insert_holding_action_into_table( PortDrayage_Object &current_action ) {
-	PortDrayage_Object *next_action = new PortDrayage_Object;
-	PortDrayage_Object *cur_action = &current_action;
+void PortDrayagePlugin::insert_holding_action_into_table( const PortDrayage_Object &current_action ) {
+	auto *next_action = new PortDrayage_Object;
+	// const PortDrayage_Object *cur_action = &current_action;
 
 	try{
 
-		*next_action =  retrieveNextAction(cur_action->action_id);
-		PLOG(logDEBUG1) << "Insert Holding action between " << cur_action->action_id << " and " 
+		*next_action =  retrieveNextAction(current_action.action_id);
+		PLOG(logDEBUG1) << "Insert Holding action between " << current_action.action_id << " and " 
 			<< next_action->action_id << "." << std::endl;
 		//INSERT INTO FREIGHT VALUES(cmv_id,cargo_id,_holding_lat,_holding_lon,HOLDING, UUID(), next_action->action_id)
-		insert_action->setString(1,cur_action->cmv_id);
-		insert_action->setString(2,cur_action->cargo_id);
+		insert_action->setString(1,current_action.cmv_id);
+		insert_action->setString(2,current_action.cargo_id);
 		insert_action->setDouble(3,_holding_lat);
 		insert_action->setDouble(4,_holding_lon);
 		insert_action->setString(5, "HOLDING_AREA");
 		insert_action->setString(6, next_action->action_id);
 		PLOG(logDEBUG) << "Query : INSERT INTO FREIGHT VALUES(" 
-			<< cur_action->cmv_id << ", " << cur_action->cargo_id << ", " 
+			<< current_action.cmv_id << ", " << current_action.cargo_id << ", " 
 			<< _holding_lat << ", " << _holding_lon <<  ", UUID(), HOLDING_AREA )" << std::endl;
 		sql::ResultSet *res = insert_action->executeQuery();
 		if ( res->isFirst() ) {
@@ -481,9 +432,9 @@ void PortDrayagePlugin::insert_holding_action_into_table( PortDrayage_Object &cu
 		PLOG(logDEBUG1) << "Update Checkpoint next_action = Holding Action action_id" << std::endl;
 		// UPDATE freight SET next_action = ? WHERE action_id = ?
 		update_current_action->setString( 1, action_id);
-		update_current_action->setString( 2, cur_action->action_id);
+		update_current_action->setString( 2, current_action.action_id);
 		PLOG(logDEBUG) << "Query : UPDATE freight SET next_action = " 
-			<< action_id << " WHERE action_id = " << cur_action->action_id << std::endl;
+			<< action_id << " WHERE action_id = " << current_action.action_id << std::endl;
 		res = update_current_action->executeQuery();
 		res->first();
 		if ( res->isFirst() ) {
@@ -491,13 +442,13 @@ void PortDrayagePlugin::insert_holding_action_into_table( PortDrayage_Object &cu
 		}
 	}
 	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+			<< "Error code " << e.getErrorCode() << std::endl
+			<< "Error status " << e.getSQLState() << std::endl;
 	}
 }
 
-std::string PortDrayagePlugin::retrieve_holding_inspection_action_id( std::string action_id ) {
+std::string PortDrayagePlugin::retrieve_holding_inspection_action_id( const std::string &action_id ) {
 	try{
 		get_action_id_for_previous_action->setString(1, action_id);
 		get_action_id_for_previous_action->setString(2, "PORT_CHECKPOINT");
@@ -513,9 +464,9 @@ std::string PortDrayagePlugin::retrieve_holding_inspection_action_id( std::strin
 		return action_id;
 	}
 	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl;
-		PLOG(logERROR) << "Error code " << e.getErrorCode() << std::endl;
-		PLOG(logERROR) << "Error status " << e.getSQLState() << std::endl;
+		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+			<< "Error code " << e.getErrorCode() << std::endl
+			<< "Error status " << e.getSQLState() << std::endl;
 		return "";
 	}
 }

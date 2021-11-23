@@ -80,14 +80,14 @@ protected:
 	 * @param pd_obj Port Drayage object.
 	 * @return json ptree
 	 */
-	ptree createPortDrayageJson( PortDrayage_Object &pd_obj);
+	ptree createPortDrayageJson( const PortDrayage_Object &pd_obj);
 	/**
 	 * Method to create MobilityOperation XML ptree.
 	 * 
 	 * @param ptree json payload
 	 * @return MobilityOperation message XML ptree
 	 */
-	ptree createMobilityOperationXml( ptree &json_payload);
+	ptree createMobilityOperationXml( const ptree &json_payload);
 
 	/**
 	 * Handle MobilityOperation message.
@@ -101,14 +101,14 @@ protected:
 	 * 
 	 * @param action_id string
 	 */
-	PortDrayage_Object retrieveNextAction( std::string action_id );
+	PortDrayage_Object retrieveNextAction( const std::string &action_id );
 	/**
 	 * Retrieve first action from first_action table using cmv_id.
 	 * 
 	 * @param cmv_id 
 	 * @return PortDrayage_Object of first action 
 	 */
-	PortDrayage_Object retrieveFirstAction( std::string cmv_id );
+	PortDrayage_Object retrieveFirstAction( const std::string &cmv_id );
 
 	/**
 	 * Create PortDrayage_Object from ptree JSON.
@@ -116,7 +116,7 @@ protected:
 	 * @param pr PortDrayage JSON
 	 * @return PortDrayage_Object 
 	 */
-	PortDrayage_Object readPortDrayageJson( ptree &pr );
+	PortDrayage_Object readPortDrayageJson( const ptree &pr );
 
 	/**
 	 * Dynamically inserts HOLDING_AREA action into mysql table between
@@ -125,7 +125,7 @@ protected:
 	 * 
 	 * @param current_action PORT_CHECKPOINT action
 	 */
-	void insert_holding_action_into_table(PortDrayage_Object &current_action );
+	void insert_holding_action_into_table(const PortDrayage_Object &current_action );
 
 	/**
 	 * Retrieves HOLDING_AREA action when provided with PORT_CHECKPOINT action
@@ -133,7 +133,7 @@ protected:
 	 * 
 	 * @return action_id of HOLDING_AREA action
 	 */
-	std::string retrieve_holding_inspection_action_id( std::string action_id );
+	std::string retrieve_holding_inspection_action_id( const std::string &action_id );
 
 	
 private: 
