@@ -200,7 +200,7 @@ void WebServiceClient::pollUnloadingAction( QString action_id) {
     disconnect(api.get(), &OAIDefaultApi::unloadingActionIdGetSignalE, nullptr, nullptr);
      // Call back for Get /unloading/{action_id}
     connect(api.get(), &OAIDefaultApi::unloadingActionIdGetSignal, this, [&](OAIContainerActionStatus unloading_action) {
-        unloading_status.reset(&unloading_action); 
+        unloading_status.reset( new OAIContainerActionStatus( unloading_action.asJson() ) ); 
         PLOG(logINFO) << "Success /unloading/{action_id} GET : " << unloading_status->asJson().toStdString();
         badResponse = false;
         loop->quit();
@@ -234,11 +234,10 @@ int WebServiceClient::pollInspectionAction( QString action_id ) {
     
     // Call back for GET /inspection/{action_id}
     connect(api.get(), &OAIDefaultApi::inspectionActionIdGetSignal, this , [&](OAIInspectionStatus inspection) {
-        inspection_status.reset( &inspection );
+        inspection_status.reset( new OAIInspectionStatus( inspection.asJson() ) );
         PLOG(logINFO) << "Success /inspection/{action_id} GET : " << inspection_status->asJson().toStdString() << std::endl;
         badResponse = false;
         loop->quit();
-        PLOG(logDEBUG)<< "Loop quit called " << std::endl;
     });
     // Error call back for /inspection/{action_id}
     connect(api.get(), &OAIDefaultApi::inspectionActionIdGetSignalE, this, 
