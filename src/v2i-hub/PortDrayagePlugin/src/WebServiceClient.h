@@ -1,3 +1,19 @@
+/**
+ * Copyright (C) 2019 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 #pragma once
 #include <iostream>
 #include <OAIDefaultApi.h>
@@ -9,6 +25,12 @@
 
 using namespace OpenAPI;
 using namespace tmx::utils;
+
+// Default values for no arg constructor
+static CONSTEXPR const char *DEF_HOST = "127.0.0.1";
+static CONSTEXPR const uint16_t DEF_PORT = 8090;
+static CONSTEXPR const uint16_t DEF_POLLING_FREQ = 5;
+static CONSTEXPR const bool DEF_SECURITY = false;
 
 /**
  * WebService REST Client using OpenAPI codegen library pdclient found under V2X-Hub/ext/pdclient. Contains several method to
@@ -24,7 +46,8 @@ public slots:
 private:
     // Stored in Seconds
     uint16_t polling_frequency;
-    
+
+
     // OAIDefaultApi pointer
     std::shared_ptr<OAIDefaultApi> api;
     std::shared_ptr<OAIContainerActionStatus> loading_status;

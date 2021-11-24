@@ -1,23 +1,23 @@
-//============================================================================
-// Name        : PortDrayagePlugin.cpp
-// Author      : Paul Bourelly
-// Version     : 5.0
-// Copyright   : Your copyright notice
-// Description : PortDrayagePlugin provides freight trucks in a port with a 
-// list of actions to complete. On initial communication with V2X-Hub the 
-// freight truck will request it's first action. Upon completion of each action
-// the freight truck will send the completed action to V2X-Hub and the PortDrayagePlugin
-// will retrieve it's next action from a MySQL DB.
-//============================================================================
-
+/**
+ * Copyright (C) 2019 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 #include "PortDrayagePlugin.h"
 
 
 
 namespace PortDrayagePlugin {
-
-
-
 
 PortDrayagePlugin::PortDrayagePlugin(string name) :
 		PluginClient(name) {
@@ -135,20 +135,20 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
 		// Handle actions that require PortDrayage WebService Input
-		if ( pd->operation.compare("PICKUP") == 0 ) {
+		if ( pd->operation.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
 			client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 		}
-		else if ( pd->operation.compare("DROPOFF")  == 0) {
+		else if ( pd->operation.compare(operation_to_string(Operation::DROPOFF))  == 0) {
 			client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 		}
-		else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
+		else if ( pd->operation.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
 			// If holding == 1 insert HOLDING action into table
 			int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
 			if ( holding == 1 ) {
 				insert_holding_action_into_table( *pd );
 			}	
 		}
-		else if ( pd->operation.compare("HOLDING_AREA") == 0) {
+		else if ( pd->operation.compare(operation_to_string(Operation::HOLDING)) == 0) {
 			string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
 			client->request_holding( previous_checkpoint_id );
 		}
