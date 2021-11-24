@@ -144,7 +144,6 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 		else if ( pd->operation.compare("PORT_CHECKPOINT") == 0) {
 			// If holding == 1 insert HOLDING action into table
 			int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
-			PLOG(logINFO) << "Inspection request completed" << std::endl; 
 			if ( holding == 1 ) {
 				insert_holding_action_into_table( *pd );
 			}	
@@ -394,8 +393,6 @@ PortDrayagePlugin::PortDrayage_Object PortDrayagePlugin::readPortDrayageJson( co
 
 void PortDrayagePlugin::insert_holding_action_into_table( const PortDrayage_Object &current_action ) {
 	std::unique_ptr<PortDrayage_Object> next_action( new PortDrayage_Object());
-	// const PortDrayage_Object *cur_action = &current_action; TODO: Clean this up if not necessary
-
 	try{
 
 		*next_action =  retrieveNextAction(current_action.action_id);
@@ -412,11 +409,7 @@ void PortDrayagePlugin::insert_holding_action_into_table( const PortDrayage_Obje
 			<< current_action.cmv_id << ", " << current_action.cargo_id << ", " 
 			<< _holding_lat << ", " << _holding_lon <<  ", UUID(), HOLDING_AREA )" << std::endl;
 		sql::ResultSet *res = insert_action->executeQuery();
-		if ( res->isFirst() ) {
-			PLOG(logDEBUG) << "Query Result : " << res->first()<< std::endl;
-		}
 
-		PLOG(logDEBUG1) << "Get Holding Action action_id." << std::endl;
 		// SELECT action_id FROM freight WHERE next_action = ? and operation = ? 
 		get_action_id_for_previous_action->setString(1, next_action->action_id);
 		get_action_id_for_previous_action->setString(2, "HOLDING_AREA");
@@ -430,17 +423,12 @@ void PortDrayagePlugin::insert_holding_action_into_table( const PortDrayage_Obje
 		}
 		std::string action_id = res->getString("action_id");
 
-		PLOG(logDEBUG1) << "Update Checkpoint next_action = Holding Action action_id" << std::endl;
 		// UPDATE freight SET next_action = ? WHERE action_id = ?
 		update_current_action->setString( 1, action_id);
 		update_current_action->setString( 2, current_action.action_id);
 		PLOG(logDEBUG) << "Query : UPDATE freight SET next_action = " 
 			<< action_id << " WHERE action_id = " << current_action.action_id << std::endl;
 		res = update_current_action->executeQuery();
-		res->first();
-		if ( res->isFirst() ) {
-			PLOG(logDEBUG) << "Query Result : " << res->first() << std::endl;
-		}
 	}
 	catch ( sql::SQLException &e ) {
 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
