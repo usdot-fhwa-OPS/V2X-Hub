@@ -46,7 +46,7 @@ private:
 	int GetUdpClientIndexForMessage(std::string subtype);
 	void SendMessageToRadio(IvpMessage *msg);
     	return size * nmemb;
-	}
+	};
 
 
 
