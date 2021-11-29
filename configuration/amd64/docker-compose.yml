@@ -28,7 +28,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:carma-freight
+    image: usdotfhwaops/v2xhubamd:v2xrelease_6.2
     container_name: v2xhub
     network_mode: host
     restart: always

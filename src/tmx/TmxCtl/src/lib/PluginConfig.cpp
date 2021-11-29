@@ -525,19 +525,5 @@ bool TmxControl::remove(pluginlist &plugins, ...)
 
 }
 
-// static std::string TmxControl::GetPwd(){
-// 	const char* EnvVar = "MYSQL_ROOT_PASSWORD";
-// 	const char* psw;
-// 	psw = std::getenv(EnvVar);
-
-// 	if(psw == NULL){
-// 		PLOG(logERROR) << "Unable to set MYSQL_ROOT_PASSWORD)";
-// 		return "";
-// 	}
-// 	else{
-// 		std::string PswStr(psw);
-// 		return PswStr;
-// 	}
-// }
 
 } /* namespace tmxctl */
