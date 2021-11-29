@@ -45,8 +45,7 @@ private:
 	bool ParseJsonMessageConfig(const std::string& json, uint clientIndex);
 	int GetUdpClientIndexForMessage(std::string subtype);
 	void SendMessageToRadio(IvpMessage *msg);
-    	return size * nmemb;
-	}
+
 
 
 
