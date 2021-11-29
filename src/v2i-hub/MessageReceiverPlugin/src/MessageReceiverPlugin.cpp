@@ -437,7 +437,7 @@ int MessageReceiverPlugin::Main()
 					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
 
 					char cmd[5000];
-					strcpy(cmd,cmd1.c_str());
+					strncpy(cmd,cmd1.c_str(),cmd1.length());
 
 					char buffer[500];
 					std::string result="";
