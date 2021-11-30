@@ -16,6 +16,7 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/hex.hpp>
 #include "UdpClient.h"
 
 using namespace boost::algorithm; 
@@ -55,6 +56,91 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 	url=baseurl+request;
 }
 
+string hex2bin(char c)
+{
+	switch(toupper(c))
+    {
+        case '0': return "0000";
+        case '1': return "0001";
+        case '2': return "0010";
+        case '3': return "0011";
+        case '4': return "0100";
+        case '5': return "0101";
+        case '6': return "0110";
+        case '7': return "0111";
+        case '8': return "1000";
+        case '9': return "1001";
+        case 'A': return "1010";
+        case 'B': return "1011";
+        case 'C': return "1100";
+        case 'D': return "1101";
+        case 'E': return "1110";
+        case 'F': return "1111";
+    }
+}
+
+char bin2hex(string b)
+{
+	const char *c=b.c_str(); 
+	int dec = strtol(c,nullptr,2);
+
+	if (dec >=0 & dec <=9)
+		return dec+'0'; 
+	else
+		return dec+'A';  
+}
+
+char bin2base64(string s)
+{
+
+
+	const char *c= s.c_str(); 
+
+	int dec = strtol(c,nullptr,2); 
+
+	if ( dec >= 0 && dec <= 25 )
+		return 'A'+dec;
+	else if ( dec >= 26 && dec <= 51 )
+		return 'a'+dec-26; 
+	else if ( dec >= 52 && dec <= 61 )
+		return '0'+dec-52; 
+	else if (dec == 62)
+		return '+';
+	else 
+		return '/';
+
+	return '-'; // this would be error but is a failsafe check, shouldnt happen.
+
+}
+
+string dec2bin(int a)
+{
+	string out="000000"; 
+	int i=0; 
+	while(a)
+	{
+		out[out.length()-1-i]=a%2; 
+		a=a/2; 
+		i++; 
+	}
+
+}
+
+string base642bin(char b64)
+{
+
+	if (b64 >='A' & b64 <='Z')
+		 return dec2bin(b64-'A'); 
+	else if (b64 >='a' & b64 <='z')
+		return dec2bin(b64-'a'+26); 
+	else if (b64 >='0' & b64 <='9') 
+		return dec2bin(b64-'0'+52); 
+	else if (b64 == '+')
+		return dec2bin(62);
+	else 
+		return dec2bin(63);
+}
+
 
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
@@ -70,6 +156,59 @@ DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
 		}
 	}
 }
+
+void DsrcMessageManagerPlugin:: hex2base64(string hexstr, string& base64str)
+{
+
+	// convert hex string to binary, 8 bits 
+	// take 6 bits chops to convert to base64
+
+	string hexbin=""; 
+	int i=0; 
+
+	while(i<hexstr.length())
+		hexbin+=hex2bin(hexstr[i++]);
+
+	cout<<"binary form:: "<<hexbin<<endl; 
+
+	cout<<hexbin.length()<<endl; 
+	cout<<hexbin.length()/24<<endl; 
+	cout<<hexbin.length()%24<<endl; 
+	cout<<(hexbin.length()%24)/6<<endl;
+	int padcount= (int)(hexbin.length()%24)/6; 
+
+	cout<<"pad count === "<<padcount<<endl; 
+
+	i=0; 
+	while(i<hexbin.length())
+	{
+		string s = hexbin.substr(i,6); 
+
+		if(s.length()<6)
+		{
+			for(int j=0;j<6-s.length();j++)
+			s+="0";
+		}
+
+		base64str+=bin2base64(s);
+
+		i+=6; 
+	} 
+
+	for (i=0;i<padcount;i++)
+	base64str+='='; 
+
+}
+
+
+
+void DsrcMessageManagerPlugin::base642hex(string base62str, string& hexstr)
+{
+
+
+	
+}
+
 
 void DsrcMessageManagerPlugin::OnConfigChanged(const char *key, const char *value)
 {
@@ -320,14 +459,25 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			stringstream os;
 
 			/// if signing is Enabled, request signing with HSM 
+
+			cout<<"signMessage = "<<signState<<endl;
 			if (signState == 1)
 			{
-				std:string mType = _messageConfigMap[configIndex].SendType; 
+				std::string mType = _messageConfigMap[configIndex].SendType; 
 
 				std::for_each(mType.begin(), mType.end(), [](char & c){
 					c = ::tolower(c);
 				});
-				
+				/* convert to hex array */
+
+				string msgString=msg->payload->valuestring;
+				string base64str=""; 
+
+				cout<<"right before sending to base 64 encoder \n"; 
+				hex2base64(msgString,base64str);  
+				cout<<msgString<<endl;
+				cout<<base64str<<endl; 
+
 				std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+msg->payload->valuestring+"\"}\'";
 
 
