@@ -87,7 +87,7 @@ char bin2hex(string b)
 	if (dec >=0 & dec <=9)
 		return dec+'0'; 
 	else
-		return dec+'A';  
+		return dec+'A'-10;  
 }
 
 char bin2base64(string s)
@@ -115,20 +115,21 @@ char bin2base64(string s)
 
 string dec2bin(int a)
 {
-	string out="000000"; 
+	string out="000000";
 	int i=0; 
 	while(a)
 	{
-		out[out.length()-1-i]=a%2; 
+		out[out.length()-1-i]=char('0'+(a%2)); 
 		a=a/2; 
 		i++; 
 	}
+
+	return out; 
 
 }
 
 string base642bin(char b64)
 {
-
 	if (b64 >='A' & b64 <='Z')
 		 return dec2bin(b64-'A'); 
 	else if (b64 >='a' & b64 <='z')
@@ -168,17 +169,8 @@ void DsrcMessageManagerPlugin:: hex2base64(string hexstr, string& base64str)
 
 	while(i<hexstr.length())
 		hexbin+=hex2bin(hexstr[i++]);
-
-	cout<<"binary form:: "<<hexbin<<endl; 
-
-	cout<<hexbin.length()<<endl; 
-	cout<<hexbin.length()/24<<endl; 
-	cout<<hexbin.length()%24<<endl; 
-	cout<<(hexbin.length()%24)/6<<endl;
+	
 	int padcount= (int)(hexbin.length()%24)/6; 
-
-	cout<<"pad count === "<<padcount<<endl; 
-
 	i=0; 
 	while(i<hexbin.length())
 	{
@@ -202,11 +194,27 @@ void DsrcMessageManagerPlugin:: hex2base64(string hexstr, string& base64str)
 
 
 
-void DsrcMessageManagerPlugin::base642hex(string base62str, string& hexstr)
-{
+void DsrcMessageManagerPlugin::base642hex(string base64str, string& hexstr)
+{ // this function decodes base64 stream and returns a hex stream 
 
 
-	
+	int i =0;
+	string binstr=""; 
+	while (i++<base64str.length())
+	{	
+		if(base64str[i-1]=='=')
+			continue; 
+		else 
+			binstr+=base642bin(base64str[i-1]);
+	}
+	int padcount=base64str.length()-base64str.find("=");
+	binstr=binstr.substr(0,binstr.length()-padcount*2); //remove twice the number of padcount bits from the end 
+	i=0;
+	while(i<binstr.length())
+	{
+		hexstr+=bin2hex(binstr.substr(i,4)); //take 4 bits for hex  
+		i+=4; 
+	}
 }
 
 
@@ -460,7 +468,6 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 			/// if signing is Enabled, request signing with HSM 
 
-			cout<<"signMessage = "<<signState<<endl;
 			if (signState == 1)
 			{
 				std::string mType = _messageConfigMap[configIndex].SendType; 
@@ -473,17 +480,19 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				string msgString=msg->payload->valuestring;
 				string base64str=""; 
 
-				cout<<"right before sending to base 64 encoder \n"; 
 				hex2base64(msgString,base64str);  
-				cout<<msgString<<endl;
-				cout<<base64str<<endl; 
 
-				std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+msg->payload->valuestring+"\"}\'";
+				//string _base2hex="";
+
+				//base642hex(base64str,_base2hex);
+				//std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+msg->payload->valuestring+"\"}\'"; //old version 
+				std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+base64str+"\"}\'";
+
 
 
 				string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
 				const char *cmd=cmd1.c_str();  
-				char buffer[500];
+				char buffer[2048];
 				std::string result="";
 				FILE* pipe= popen(cmd,"r"); 
 
@@ -500,7 +509,8 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 				cJSON *root   = cJSON_Parse(result.c_str());
 				cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
-				payloadbyte = sd->valuestring; 
+
+				base642hex(sd->valuestring,payloadbyte); // this allows sending hex of the signed message rather than base64
 			}
 			else 
 			{
