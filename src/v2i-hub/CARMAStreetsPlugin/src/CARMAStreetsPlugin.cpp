@@ -153,9 +153,15 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			targetStaticId << mobilityOperation->header.targetStaticId.buf;
 			metadata["targetStaticId"] = targetStaticId.str();
 
-			std::stringstream hostBSMId;
-			hostBSMId << mobilityOperation->header.hostBSMId.buf;
-			metadata["hostBSMId"] =hostBSMId.str();
+			std::stringstream hostBSMId_ss_hex;
+			hostBSMId_ss_hex << mobilityOperation->header.hostBSMId.buf;
+			std::string hostBSMId_hex = hostBSMId_ss_hex.str();
+			unsigned long hostBSMId_decimal = 0;
+			hostBSMId_ss_hex >> std::hex >> hostBSMId_decimal;
+			std::cout << "Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
+			std::stringstream hostBSMId_ss;
+			hostBSMId_ss << hostBSMId_decimal;
+			metadata["hostBSMId"] = hostBSMId_ss.str();
 
 			std::stringstream planId;
 			planId << mobilityOperation->header.planId.buf;
