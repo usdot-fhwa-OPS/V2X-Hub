@@ -17,6 +17,8 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+
 //#include <tmx/Security/include/softhsm2.h>
 
 #define UDP "UDP"
@@ -31,6 +33,8 @@ public:
 
 	int Main();
 	void OnMessageReceived(tmx::routeable_message &msg);
+	void hex2base64(string hexstr, string& base64str); 
+	void base642hex(string base64str, string& hexstr);
 protected:
 	void UpdateConfigSettings();
 

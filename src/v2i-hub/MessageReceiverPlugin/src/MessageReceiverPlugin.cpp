@@ -57,7 +57,7 @@ MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManage
 	GetConfigValue("HSMLocation",liblocation);
 
 	GetConfigValue<string>("HSMurl",baseurl);
-	std::string request="verify";
+	std::string request="verifySig";
 	url=baseurl+request;
 }
 
@@ -73,6 +73,162 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	// Clean up the TMX message pointer and thus the J2735 structure pointer
 	delete msg;
 	return &encMsg;
+}
+
+
+string hex2bin(char c)
+{
+	switch(toupper(c))
+    {
+        case '0': return "0000";
+        case '1': return "0001";
+        case '2': return "0010";
+        case '3': return "0011";
+        case '4': return "0100";
+        case '5': return "0101";
+        case '6': return "0110";
+        case '7': return "0111";
+        case '8': return "1000";
+        case '9': return "1001";
+        case 'A': return "1010";
+        case 'B': return "1011";
+        case 'C': return "1100";
+        case 'D': return "1101";
+        case 'E': return "1110";
+        case 'F': return "1111";
+    }
+}
+
+char bin2hex(string b)
+{
+	const char *c=b.c_str(); 
+	int dec = strtol(c,nullptr,2);
+
+	if (dec >=0 & dec <=9)
+		return dec+'0'; 
+	else
+		return dec+'A'-10;  
+}
+
+char bin2base64(string s)
+{
+
+
+	const char *c= s.c_str(); 
+
+	int dec = strtol(c,nullptr,2); 
+
+	if ( dec >= 0 && dec <= 25 )
+		return 'A'+dec;
+	else if ( dec >= 26 && dec <= 51 )
+		return 'a'+dec-26; 
+	else if ( dec >= 52 && dec <= 61 )
+		return '0'+dec-52; 
+	else if (dec == 62)
+		return '+';
+	else 
+		return '/';
+
+	return '-'; // this would be error but is a failsafe check, shouldnt happen.
+
+}
+
+string dec2bin(int a)
+{
+	string out="000000";
+	int i=0; 
+	while(a)
+	{
+		out[out.length()-1-i]=char('0'+(a%2)); 
+		a=a/2; 
+		i++; 
+	}
+	return out; 
+
+}
+
+string base642bin(char b64)
+{
+	if (b64 >='A' & b64 <='Z')
+		 return dec2bin(b64-'A'); 
+	else if (b64 >='a' & b64 <='z')
+		return dec2bin(b64-'a'+26); 
+	else if (b64 >='0' & b64 <='9') 
+		return dec2bin(b64-'0'+52); 
+	else if (b64 == '+')
+		return dec2bin(62);
+	else 
+		return dec2bin(63);
+}
+
+
+void MessageReceiverPlugin:: hex2base64(string hexstr, string& base64str)
+{
+
+	// convert hex string to binary, 8 bits 
+	// take 6 bits chops to convert to base64
+
+	string hexbin=""; 
+	int i=0; 
+
+	while(i<hexstr.length())
+		hexbin+=hex2bin(hexstr[i++]);
+	
+	int padcount= (int)(24 - (int)(hexbin.length()%24))/6;
+
+	i=0; 
+	while(i<hexbin.length())
+	{
+		string s = hexbin.substr(i,6); 
+
+		if(s.length()<6)
+		{
+			for(int j=0;j<6-s.length();j++)
+			s+="0";
+		}
+
+		base64str+=bin2base64(s);
+
+		i+=6; 
+	} 
+
+	for (i=0;i<padcount;i++)
+	base64str+='='; 
+
+}
+
+
+
+void MessageReceiverPlugin::base642hex(string base64str, string& hexstr)
+{ // this function decodes base64 stream and returns a hex stream 
+
+
+	int i =0;
+	string binstr=""; 
+	string padchar = "=";
+	int padcount=0; 
+
+	while (i++<base64str.length())
+	{	
+		if(base64str[i-1]=='=')
+			continue; 
+		else 
+			binstr+=base642bin(base64str[i-1]);
+	}
+
+	size_t padindex = base64str.find(padchar); 
+	if (padindex != string::npos)
+		padcount=base64str.length()-padindex; 
+	
+	binstr=binstr.substr(0,binstr.length()-padcount*2); //remove twice the number of padcount bits from the end 
+	i=0;
+	while(i<binstr.length())
+	{
+		hexstr+=bin2hex(binstr.substr(i,4)); //take 4 bits for hex  
+		i+=4; 
+	}
+
+
 }
 
 BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
@@ -393,6 +549,9 @@ int MessageReceiverPlugin::Main()
 	byte_stream incoming(4000);
 	std::unique_ptr<tmx::utils::UdpServer> server;
 
+	byte_stream extractedpayload(4000);
+ 
+
 	while (_plugin->state != IvpPluginState_error)
 	{
 		// See if the server values are different
@@ -419,6 +578,8 @@ int MessageReceiverPlugin::Main()
 
 				totalBytes += len;
 
+				extractedpayload=incoming; 
+
 				// if verification enabled, access HSM
 				if (verState == 1)
 				{
@@ -431,15 +592,24 @@ int MessageReceiverPlugin::Main()
 					}
 
 					std::string msg(arr);
-					std::string req = "\'{\"type\":\"map\",\"message\":\""+msg+"\"}\'";
 
+					//the incoming payload is hex encoded, convert this to base64 
+
+					std::string base64msg="";
+
+					hex2base64(msg,base64msg);
+
+
+					//std::string req = "\'{\"type\":\"map\",\"message\":\""+msg+"\"}\'";
+
+					// use this string for verification with base64.
+
+					std::string req = "\'{\"message\":\""+base64msg+"\"}\'";
 
 					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
 
-					char cmd[5000];
-					strncpy(cmd,cmd1.c_str(),cmd1.length());
-
-					char buffer[500];
+					const char *cmd=cmd1.c_str();  
+					char buffer[2048];
 					std::string result="";
 					FILE* pipe= popen(cmd,"r"); 
 
@@ -453,41 +623,102 @@ int MessageReceiverPlugin::Main()
 						pclose(pipe); 
 						throw; 
 					}
+					cJSON *root   = cJSON_Parse(result.c_str());
+					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
 
-					if (result=="{}")
-					{
-						cout<<"Message Verified, No Errors\n";
-					}
-					else{
-						cout<<"Error Verifying Message through SCMS Signature\n";
-					}
-					
-				}
+					int msgValid = sd->valueint;
 
-				else 
-				{
-					// Support different encodings
-					string enc;
-					if (incoming.size() > 0)
+					string extractedmsg=""; 
+					bool foundId=false; 
+
+					if (msgValid == 1)
 					{
-						switch (incoming[0]) {
-						case 0x00:
-							enc = api::ENCODING_ASN1_UPER_STRING;
-							break;
-						case 0x30:
-							enc = api::ENCODING_ASN1_BER_STRING;
-							break;
-						case '{':
-							enc = api::ENCODING_JSON_STRING;
-							break;
-						default:
-							enc = api::ENCODING_BYTEARRAY_STRING;
-							break;
+						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message 
+
+						string j2735ID[]={"0012","0013","0014","001D","00F0","00F1","00F2","00F3","00F4","00F5","00F6","00F7"}; //bsm, spat, map,srm,testmesg 0 to 7 
+						int i=0; 
+						
+						while(j2735ID[i]!="")
+						{
+							//look for the message header within the first 20 bytes. 
+							size_t idloc = msg.find(j2735ID[i]);
+
+							if(idloc != string::npos and idloc < 40) // making sure the msgID lies within the first 20 bytes 
+							{
+								// message id found 
+								
+								if (msg[idloc+4] == '8') // if the length is longer than 256 
+								{
+									const char *c = msg.substr(idloc+5,3).c_str(); // take out next three nibble for length 
+									int len = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
+
+									extractedmsg = msg.substr(idloc,len);
+									byte_stream	temp(extractedmsg.begin(),extractedmsg.end()); 
+
+									extractedpayload = temp; 
+
+								}
+
+								else 
+								{
+									const char *c = msg.substr(idloc+4,2).c_str(); // take out next three nibble for length 
+									int len = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
+
+									extractedmsg = msg.substr(idloc,len);
+									byte_stream	temp(extractedmsg.begin(),extractedmsg.end()); 
+
+									extractedpayload=temp; 
+								}
+
+								break; // can break out if already found a msg id 
+								foundId=true; 
+							} 
+							i++; 
 						}
+
+						if (foundId==false)
+						{
+							PLOG(logERROR) <<" Unable to find any valid msg ID in the incoming message. \n"; 
+							continue;  //do not send the message out to v2x hub if msgid check fails 
+						}
+						else
+						{
+
+						} 
+
+
+					}
+					else
+					{
+						continue; // do not send the message out to v2x hub core if validation fails 
 					}
 
-					this->IncomingMessage(incoming.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
 				}
+
+				// Support different encodings
+				string enc;
+				if (extractedpayload.size() > 0)
+				{
+					switch (extractedpayload[0]) {
+					case 0x00:
+						enc = api::ENCODING_ASN1_UPER_STRING;
+						break;
+					case 0x30:
+						enc = api::ENCODING_ASN1_BER_STRING;
+						break;
+					case '{':
+						enc = api::ENCODING_JSON_STRING;
+						break;
+					default:
+						enc = api::ENCODING_BYTEARRAY_STRING;
+						break;
+					}
+				}
+
+				len = extractedpayload.size();
+
+				this->IncomingMessage(extractedpayload.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				
 			}
 			else if (len < 0)
 			{
