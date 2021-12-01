@@ -123,7 +123,6 @@ string dec2bin(int a)
 		a=a/2; 
 		i++; 
 	}
-
 	return out; 
 
 }
@@ -170,7 +169,8 @@ void DsrcMessageManagerPlugin:: hex2base64(string hexstr, string& base64str)
 	while(i<hexstr.length())
 		hexbin+=hex2bin(hexstr[i++]);
 	
-	int padcount= (int)(hexbin.length()%24)/6; 
+	int padcount= (int)(24 - (int)(hexbin.length()%24))/6;
+
 	i=0; 
 	while(i<hexbin.length())
 	{
@@ -200,6 +200,9 @@ void DsrcMessageManagerPlugin::base642hex(string base64str, string& hexstr)
 
 	int i =0;
 	string binstr=""; 
+	string padchar = "=";
+	int padcount=0; 
+
 	while (i++<base64str.length())
 	{	
 		if(base64str[i-1]=='=')
@@ -207,7 +210,11 @@ void DsrcMessageManagerPlugin::base642hex(string base64str, string& hexstr)
 		else 
 			binstr+=base642bin(base64str[i-1]);
 	}
-	int padcount=base64str.length()-base64str.find("=");
+
+	size_t padindex = base64str.find(padchar); 
+	if (padindex != string::npos)
+		padcount=base64str.length()-padindex; 
+	
 	binstr=binstr.substr(0,binstr.length()-padcount*2); //remove twice the number of padcount bits from the end 
 	i=0;
 	while(i<binstr.length())
@@ -215,6 +222,8 @@ void DsrcMessageManagerPlugin::base642hex(string base64str, string& hexstr)
 		hexstr+=bin2hex(binstr.substr(i,4)); //take 4 bits for hex  
 		i+=4; 
 	}
+
+
 }
 
 
@@ -482,9 +491,6 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 				hex2base64(msgString,base64str);  
 
-				//string _base2hex="";
-
-				//base642hex(base64str,_base2hex);
 				//std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+msg->payload->valuestring+"\"}\'"; //old version 
 				std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+base64str+"\"}\'";
 
@@ -509,8 +515,9 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 				cJSON *root   = cJSON_Parse(result.c_str());
 				cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
+				string signedMsg = sd->valuestring;
+				base642hex(signedMsg,payloadbyte); // this allows sending hex of the signed message rather than base64
 
-				base642hex(sd->valuestring,payloadbyte); // this allows sending hex of the signed message rather than base64
 			}
 			else 
 			{
