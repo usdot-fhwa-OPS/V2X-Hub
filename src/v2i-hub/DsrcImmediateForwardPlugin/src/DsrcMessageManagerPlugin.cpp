@@ -296,6 +296,10 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 	// The same mutex is used that protects the UDP clients.
 	GetConfigValue("Signature", _signature, &_mutexUdpClient);
 	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
+	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
+	GetConfigValue<unsigned int>("signMessage",signState, &_mutexUdpClient);
+	std::string request="sign";
+	url=baseurl+request;
 
 	GetConfigValue("MuteDsrcRadio", _muteDsrc);
 	SetStatus("MuteDsrc", _muteDsrc);
