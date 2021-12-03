@@ -195,6 +195,7 @@ jobs:
     # Set working directory
     working_directory: "/home/V2X-Hub"
     steps:
+     - setup_remote_docker :
      - checkout
      - run: 
         name: Maven Build
@@ -206,7 +207,6 @@ jobs:
         name: Docker Build and Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          sudo dockerd
           docker build -t usdotfhwaops/port-drayage-webservice:latest .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:latest
@@ -215,6 +215,7 @@ jobs:
       - image: cimg/openjdk:11.0.12
     # Set working directory
     steps:
+     - setup_remote_docker :
      - checkout
      - run: 
         name: Maven Build
@@ -226,7 +227,6 @@ jobs:
         name: Docker Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          sudo dockerd
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
