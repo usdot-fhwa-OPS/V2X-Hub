@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
  * @author Paul Bourelly
  */
 @Component
-public class InspectionActions implements InspectionApi {
+public class InspectionActions  {
 
     private static Logger logger = LoggerFactory.getLogger(InspectionActions.class);
 
@@ -189,6 +189,17 @@ public class InspectionActions implements InspectionApi {
             currentInspection.setStatus(StatusEnum.HOLDING);
         } else
             logger.warn("No current inspection in progress!");
+    }
+
+    /**
+     * Clear all inspection actions
+     */
+    public void clear() {
+        if ( pendingInspections.getInspections() != null )
+            pendingInspections.getInspections().clear();
+        if ( completedInspections.getInspections() != null )
+            completedInspections.getInspections().clear();
+        currentInspection = null;
     }
 
 }

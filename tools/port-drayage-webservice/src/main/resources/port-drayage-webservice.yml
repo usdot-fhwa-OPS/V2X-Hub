@@ -9,6 +9,14 @@ servers:
   - url: https://127.0.0.1:8443
     description: Secured hosting for deployment
 paths:
+  /reset:
+    post:
+      summary: Clear Web Service Actions
+      description:
+        Request will clear all actions in InspectionActions, LoadingActions, and UnloadingActions.
+      responses:
+        "201":
+          description: Created
   /loading:
     post:
       summary: Request a container is loaded on to freight vehicle.
