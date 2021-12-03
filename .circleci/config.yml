@@ -195,7 +195,7 @@ jobs:
     # Set working directory
     working_directory: "/home/V2X-Hub"
     steps:
-     - setup_remote_docker :
+     - setup_remote_docker
      - checkout
      - run: 
         name: Maven Build
@@ -215,7 +215,7 @@ jobs:
       - image: cimg/openjdk:11.0.12
     # Set working directory
     steps:
-     - setup_remote_docker :
+     - setup_remote_docker
      - checkout
      - run: 
         name: Maven Build
