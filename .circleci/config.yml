@@ -198,15 +198,16 @@ jobs:
      - setup_remote_docker
      - checkout
      - run: 
-        name: Maven Build
+        name: Maven Build JAR
         # Build Port Drayage Web Service
         command: |
           cd tools/port-drayage-webservice/
           mvn clean install  
      - run: 
-        name: Docker Build and Push
+        name: Build Docker Image and Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
+          cd tools/port-drayage-webservice/
           docker build -t usdotfhwaops/port-drayage-webservice:latest .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:latest
@@ -218,15 +219,16 @@ jobs:
      - setup_remote_docker
      - checkout
      - run: 
-        name: Maven Build
+        name: Maven Build JAR
         # Build Port Drayage Web Service
         command: |
           cd tools/port-drayage-webservice/
           mvn clean install  
      - run: 
-        name: Docker Push
+        name: Build Docker Image and Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
+          cd tools/port-drayage-webservice/
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
