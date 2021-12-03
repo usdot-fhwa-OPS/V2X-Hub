@@ -206,7 +206,7 @@ jobs:
         name: Docker Build and Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          dockerd
+          sudo dockerd
           docker build -t usdotfhwaops/port-drayage-webservice:latest .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:latest
@@ -226,7 +226,7 @@ jobs:
         name: Docker Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          dockerd
+          sudo dockerd
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
