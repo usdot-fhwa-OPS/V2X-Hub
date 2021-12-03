@@ -190,9 +190,11 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:latest
   port_drayage_webservice_build_develop :
-   machine:
-    image: adoptopenjdk/maven-openjdk11
-   steps:
+    docker:
+      - image: cimg/openjdk:11.0.12
+    # Set working directory
+    working_directory: "/home/V2X-Hub"
+    steps:
      - checkout
      - run: 
         name: Maven Build
@@ -202,15 +204,17 @@ jobs:
           mvn clean install  
      - run: 
         name: Docker Build and Push
-        # Push v2xhub and php docker images to usdotfhwaops dockerhub
+        # Build and push Port Drayage Web Service Docker images
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker build -t usdotfhwaops/port-drayage-webservice:latest .
           docker push usdotfhwaops/port-drayage-webservice:latest
   port_drayage_webservice_build :
-   machine:
-    image: cimg/openjdk:11.0.12-node
-   steps:
+    docker:
+      - image: cimg/openjdk:11.0.12
+    # Set working directory
+    working_directory: "/home/V2X-Hub"
+    steps:
      - checkout
      - run: 
         name: Maven Build
@@ -220,7 +224,7 @@ jobs:
           mvn clean install  
      - run: 
         name: Docker Push
-        # Push v2xhub and php docker images to usdotfhwaops dockerhub
+        # Build and push Port Drayage Web Service Docker images
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
