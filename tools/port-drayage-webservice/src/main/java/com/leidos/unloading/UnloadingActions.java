@@ -167,4 +167,14 @@ public class UnloadingActions {
 
     }
 
+     /**
+     * Clear all unloading actions
+     */
+    public void clear() {
+        if ( pendingActions.getActions() != null )
+            pendingActions.getActions().clear();
+        if ( completedActions.getActions() != null )
+            completedActions.getActions().clear();
+        currentAction = null;
+    }
 }
