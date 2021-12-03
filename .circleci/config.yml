@@ -213,7 +213,6 @@ jobs:
     docker:
       - image: cimg/openjdk:11.0.12
     # Set working directory
-    working_directory: "/home/V2X-Hub"
     steps:
      - checkout
      - run: 
