@@ -206,8 +206,8 @@ jobs:
         name: Docker Build and Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker build -t usdotfhwaops/port-drayage-webservice:latest .
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:latest
   port_drayage_webservice_build :
     docker:
@@ -225,8 +225,8 @@ jobs:
         name: Docker Push
         # Build and push Port Drayage Web Service Docker images
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
 workflows:
   version: 2
