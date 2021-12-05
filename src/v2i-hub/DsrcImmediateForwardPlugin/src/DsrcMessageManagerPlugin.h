@@ -45,6 +45,8 @@ private:
 	bool ParseJsonMessageConfig(const std::string& json, uint clientIndex);
 	int GetUdpClientIndexForMessage(std::string subtype);
 	void SendMessageToRadio(IvpMessage *msg);
+	// @SONAR_STOP@
+
 	void hex2base64(string hexstr, string& base64str); 
 	void base642hex(string base64str, string& hexstr);
  
@@ -77,6 +79,8 @@ private:
 	uint _skippedInvalidUdpClient;
 
 	bool _muteDsrc;
+	// @SONAR_START@
+
 };
 
 } /* namespace DsrcMessageManager */
