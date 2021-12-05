@@ -46,7 +46,6 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
 	UpdateConfigSettings();
 
-	//txSign.loginSession();
 	// @SONAR_STOP@
 
 
@@ -82,7 +81,7 @@ string hex2bin(char c)
         case 'C': return "1100";
         case 'D': return "1101";
         case 'E': return "1110";
-        case 'F': return "1111";
+        default : return "1111";
     }
 }
 
@@ -91,7 +90,7 @@ char bin2hex(string b)
 	const char *c=b.c_str(); 
 	int dec = strtol(c,nullptr,2);
 
-	if (dec >=0 & dec <=9)
+	if (dec >=0 && dec <=9)
 		return dec+'0'; 
 	else
 		return dec+'A'-10;  
@@ -136,11 +135,11 @@ string dec2bin(int a)
 
 string base642bin(char b64)
 {
-	if (b64 >='A' & b64 <='Z')
+	if (b64 >='A' && b64 <='Z')
 		 return dec2bin(b64-'A'); 
-	else if (b64 >='a' & b64 <='z')
+	else if (b64 >='a' && b64 <='z')
 		return dec2bin(b64-'a'+26); 
-	else if (b64 >='0' & b64 <='9') 
+	else if (b64 >='0' && b64 <='9') 
 		return dec2bin(b64-'0'+52); 
 	else if (b64 == '+')
 		return dec2bin(62);
