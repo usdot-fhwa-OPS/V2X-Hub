@@ -1,0 +1,9 @@
+src/
+target/classes/
+target/generated-soures/
+target/generated-test-sources/
+target/maven-archiver/
+target/site/
+target/surefire-reports/
+target/test-classes/
+target/jacoco.exec
