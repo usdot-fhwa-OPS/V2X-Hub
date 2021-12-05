@@ -53,12 +53,18 @@ MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManage
 	//SubscribeToMessages();
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
+	
+	// @SONAR_STOP@
+
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue("HSMLocation",liblocation);
-
+	
 	GetConfigValue<string>("HSMurl",baseurl);
 	std::string request="verifySig";
 	url=baseurl+request;
+	
+	// @SONAR_START@
+
 }
 
 MessageReceiverPlugin::~MessageReceiverPlugin() { }
@@ -75,6 +81,7 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	return &encMsg;
 }
 
+// @SONAR_STOP@
 
 string hex2bin(char c)
 {
@@ -230,6 +237,9 @@ void MessageReceiverPlugin::base642hex(string base64str, string& hexstr)
 
 
 }
+
+	
+	// @SONAR_START@
 
 BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
@@ -579,6 +589,9 @@ int MessageReceiverPlugin::Main()
 				totalBytes += len;
 
 				extractedpayload=incoming; 
+				
+				// @SONAR_STOP@
+
 
 				// if verification enabled, access HSM
 				if (verState == 1)
@@ -694,6 +707,7 @@ int MessageReceiverPlugin::Main()
 					}
 
 				}
+				// @SONAR_START@
 
 				// Support different encodings
 				string enc;
