@@ -47,6 +47,8 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 	UpdateConfigSettings();
 
 	//txSign.loginSession();
+	// @SONAR_STOP@
+
 
 	GetConfigValue<string>("HSMurl",baseurl);
 	GetConfigValue<unsigned int>("signMessage",signState);
@@ -54,8 +56,13 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 
 	url=baseurl+request;
+	// @SONAR_START@
+
 }
 
+// @SONAR_STOP@
+	
+	
 string hex2bin(char c)
 {
 	switch(toupper(c))
@@ -225,6 +232,7 @@ void DsrcMessageManagerPlugin::base642hex(string base64str, string& hexstr)
 
 
 }
+// @SONAR_START@
 
 
 void DsrcMessageManagerPlugin::OnConfigChanged(const char *key, const char *value)
@@ -479,6 +487,9 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			stringstream os;
 
 			/// if signing is Enabled, request signing with HSM 
+			
+			// @SONAR_STOP@
+
 
 			if (signState == 1)
 			{
@@ -526,6 +537,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			{
 				payloadbyte=msg->payload->valuestring; 
 			}
+			// @SONAR_START@
 
 			os << "Version=0.7" << "\n";
 			os << "Type=" << _messageConfigMap[configIndex].SendType << "\n" << "PSID=" << _messageConfigMap[configIndex].Psid << "\n";
