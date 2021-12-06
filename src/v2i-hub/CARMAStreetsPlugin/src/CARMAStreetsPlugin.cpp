@@ -158,7 +158,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			std::string hostBSMId_hex = hostBSMId_ss_hex.str();
 			unsigned long hostBSMId_decimal = 0;
 			hostBSMId_ss_hex >> std::hex >> hostBSMId_decimal;
-			std::cout << "Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
+			PLOG(logERROR) << "MO Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
 			std::stringstream hostBSMId_ss;
 			hostBSMId_ss << hostBSMId_decimal;
 			metadata["hostBSMId"] = hostBSMId_ss.str();
@@ -232,9 +232,15 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		targetStaticId << mobilityPathMsg->header.targetStaticId.buf;
 		metadata["targetStaticId"] = targetStaticId.str();
 
-		std::stringstream hostBSMId;
-		hostBSMId << mobilityPathMsg->header.hostBSMId.buf;
-		metadata["hostBSMId"] =hostBSMId.str();
+		std::stringstream hostBSMId_ss_hex;
+		hostBSMId_ss_hex << mobilityPathMsg->header.hostBSMId.buf;
+		std::string hostBSMId_hex = hostBSMId_ss_hex.str();
+		unsigned long hostBSMId_decimal = 0;
+		hostBSMId_ss_hex >> std::hex >> hostBSMId_decimal;
+		PLOG(logERROR) << "MP Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
+		std::stringstream hostBSMId_ss;
+		hostBSMId_ss << hostBSMId_decimal;
+		metadata["hostBSMId"] = hostBSMId_ss.str();
 
 		std::stringstream planId;
 		planId << mobilityPathMsg->header.planId.buf;
