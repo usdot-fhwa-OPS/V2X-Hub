@@ -153,15 +153,9 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			targetStaticId << mobilityOperation->header.targetStaticId.buf;
 			metadata["targetStaticId"] = targetStaticId.str();
 
-			std::stringstream hostBSMId_ss_hex;
-			hostBSMId_ss_hex << mobilityOperation->header.hostBSMId.buf;
-			std::string hostBSMId_hex = hostBSMId_ss_hex.str();
-			unsigned long hostBSMId_decimal = 0;
-			hostBSMId_ss_hex >> std::hex >> hostBSMId_decimal;
-			PLOG(logERROR) << "MO Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
-			std::stringstream hostBSMId_ss;
-			hostBSMId_ss << hostBSMId_decimal;
-			metadata["hostBSMId"] = hostBSMId_ss.str();
+			std::stringstream hostBSMId;
+			hostBSMId << mobilityOperation->header.hostBSMId.buf;
+			metadata["hostBSMId"] =hostBSMId.str();
 
 			std::stringstream planId;
 			planId << mobilityOperation->header.planId.buf;
@@ -232,15 +226,9 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		targetStaticId << mobilityPathMsg->header.targetStaticId.buf;
 		metadata["targetStaticId"] = targetStaticId.str();
 
-		std::stringstream hostBSMId_ss_hex;
-		hostBSMId_ss_hex << mobilityPathMsg->header.hostBSMId.buf;
-		std::string hostBSMId_hex = hostBSMId_ss_hex.str();
-		unsigned long hostBSMId_decimal = 0;
-		hostBSMId_ss_hex >> std::hex >> hostBSMId_decimal;
-		PLOG(logERROR) << "MP Hex value = " << hostBSMId_hex << ". Its decimal value is " << hostBSMId_decimal <<std::endl;
-		std::stringstream hostBSMId_ss;
-		hostBSMId_ss << hostBSMId_decimal;
-		metadata["hostBSMId"] = hostBSMId_ss.str();
+		std::stringstream hostBSMId;
+		hostBSMId << mobilityPathMsg->header.hostBSMId.buf;
+		metadata["hostBSMId"] =hostBSMId.str();
 
 		std::stringstream planId;
 		planId << mobilityPathMsg->header.planId.buf;
@@ -366,7 +354,7 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		std::stringstream id_ss;
 		for(auto i = 0; i < id_len; i++)
 		{			
-			id_ss<<static_cast<int>(bsm->coreData.id.buf[i]);
+			id_ss<<std::hex<<static_cast<int>(bsm->coreData.id.buf[i]);
 		}
 		coreData["id"]  = id_ss.str();
 		
