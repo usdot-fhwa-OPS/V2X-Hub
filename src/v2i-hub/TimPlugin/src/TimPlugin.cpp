@@ -234,8 +234,11 @@ bool TimPlugin::TimDuration()
 		<< date_current.tm_sec << std::endl;
 	time_t secondsCurrent = mktime( & date_current );
 
+
 	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
 		" Current : " << secondsCurrent << std::endl;
+	delete(tm);
+	free(t);
 	if ( secondsStart <= secondsCurrent && secondsCurrent <= secondsStop) {
 		return true;
 	} else {

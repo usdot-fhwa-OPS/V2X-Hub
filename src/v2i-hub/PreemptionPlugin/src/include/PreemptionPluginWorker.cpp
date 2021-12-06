@@ -144,7 +144,7 @@ namespace PreemptionPlugin {
     void PreemptionPluginWorker::TurnOnPreemption(std::shared_ptr<PreemptionObject> po){
         std::string preemption_plan_flag = "1";
 
-	    struct tm *tm; 
+	    struct tm *tm= new struct tm; 
 	    tm = localtime_r(&(po->time),tm);
 
         char * calStr_t=new char[128]; 
@@ -161,6 +161,7 @@ namespace PreemptionPlugin {
         else{
             std::cout << "Finished sending preemption plan.";
         }
+        delete(tm);
     }
 
     void PreemptionPluginWorker::TurnOffPreemption(std::shared_ptr<PreemptionObject> po){

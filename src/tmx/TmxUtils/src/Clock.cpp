@@ -82,6 +82,7 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     std::string calStr = std::asctime(tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
+	delete(tm);
     return calStr;
 }
 
