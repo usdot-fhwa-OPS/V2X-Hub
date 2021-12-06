@@ -342,7 +342,7 @@ std::string SPaTLoggerPlugin::GetCurDateTimeStr()
 
         time_t *t; 
 	time(t); 
-	struct tm *tm; 
+	struct tm *tm = new struct tm; 
 	tm = localtime_r(t,tm);
 	std::ostringstream oss;
 	oss << std::put_time(tm, "%d%m%Y%H%M%S");

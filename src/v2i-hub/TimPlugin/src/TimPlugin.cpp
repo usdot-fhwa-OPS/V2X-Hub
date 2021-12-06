@@ -221,7 +221,7 @@ bool TimPlugin::TimDuration()
 	// Current Time in seconds
 	time_t *t; 
 	time(t); 
-	struct tm *tm; 
+	struct tm *tm= new struct tm; 
 	tm = localtime_r(t,tm);
 	ostringstream oss1;
 	oss1 << put_time(tm, "%m-%d-%Y %H:%M:%S");

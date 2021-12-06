@@ -147,7 +147,9 @@ namespace PreemptionPlugin {
 	    struct tm *tm; 
 	    tm = localtime_r(&(po->time),tm);
 
-        std::asctime(tm);
+        char * calStr_t=new char[128]; 
+        calStr_t = asctime_r(tm,calStr_t);
+   
 
         preemption_map[po->vehicle_id] = *po;
         std::string PreemptionOid = base_preemption_oid + po->preemption_plan;
