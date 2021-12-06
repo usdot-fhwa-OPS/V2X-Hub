@@ -77,9 +77,3 @@ Thumbs.db
 
 #docker-compose variables
 .env
-
-#Maven build directory
-tools/port-drayage-webservice/target/
-
-#Java PKS for HTTPS setup
-tools/port-drayage-webservice/src/main/resources/tutorial.jks

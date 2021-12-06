@@ -340,6 +340,7 @@ public:
 		int msgIdindex=0; // msgId = DD
 		if (bytes[0] == 0x00)
 		{
+			std::cout<<"No Extended bytes found\n"; 
 			return 0; 
 		}
 		if(bytes[0] == 0x03){ // extended bytes present 
@@ -353,6 +354,7 @@ public:
 				else // 64 < length < 128 bytes  [0380XX00DD] 
 					msgIdindex = 3; 
 			}
+			std::cout<<"Extended bytes found\n"; 
 		}
 
 		bytes.erase(bytes.begin(),bytes.begin()+msgIdindex);

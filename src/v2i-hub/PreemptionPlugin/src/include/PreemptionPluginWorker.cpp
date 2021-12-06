@@ -7,58 +7,60 @@
 //==========================================================================
 
 #include "PreemptionPluginWorker.hpp"
-#include <memory>
+
 using namespace std;
 
 namespace PreemptionPlugin {
 
-	void PreemptionPluginWorker::ProcessMapMessageFile(const std::string &path){
+	void PreemptionPluginWorker::ProcessMapMessageFile(std::string path){
 
         if(path != ""){
             try {
                 boost::property_tree::read_json(path, geofence_data);
             
                 BOOST_FOREACH( boost::property_tree::ptree::value_type const& v, geofence_data.get_child( "data" ) ) {
+                    assert(v.first.empty()); // array elements have no names
                     boost::property_tree::ptree subtree = v.second;
                     list <double> geox;
                     list <double> geoy;
 
                     BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geox" ) ) {
+                        assert(u.first.empty()); // array elements have no names
+                        // std::cout << u.second.get<double>("") << std::endl;
                         double d =  u.second.get<double>("");
                         geox.push_back(d);
                     }
 
                     BOOST_FOREACH( boost::property_tree::ptree::value_type const& u, subtree.get_child( "geoy" ) ) {
+                        assert(u.first.empty()); // array elements have no names
                         double d =  u.second.get<double>("");
                         geoy.push_back(d);
                     }
                     
-                    GeofenceObject geofenceObject(geox,geoy, static_cast<int>(subtree.get<double>("PreemptCall")),static_cast<int>(subtree.get<double>("HeadingMin")),static_cast<int>(subtree.get<double>("HeadingMax")));
+                    GeofenceObject* geofenceObject = new GeofenceObject(geox,geoy,subtree.get<double>("PreemptCall"),subtree.get<double>("HeadingMin"),subtree.get<double>("HeadingMax"));
                     
-                    GeofenceSet.push_back(&geofenceObject);
+                    GeofenceSet.push_back(geofenceObject);
 
                 }
             }
             catch(...) { 
-              	PLUGIN_LOG(logERROR, "Preemptionworker") << "Caught exception from reading a file"; 
+                std::cout << "Caught exception from reading a file"; 
             } 
         }
+
     }
     
-    bool PreemptionPluginWorker::CarInGeofence(long double x,long  double y, std::vector<double> geox, std::vector<double>  geoy, long GeoCorners) const{
-        long i = 0 ;
-        long j = GeoCorners-1;
-        bool  oddNodes = false;
+    bool PreemptionPluginWorker::CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
+        int   i, j=GeoCorners-1 ;
+        bool  oddNodes      ;
 
         for (i=0; i<GeoCorners; i++) {
-            if ((geoy.at(i)< y && geoy.at(j)>=y
-            ||   geoy.at(j)< y && geoy.at(i)>=y)
-            &&  (geox.at(i)<=x || geox.at(j)<=x) && (geox.at(i)+(y-geoy.at(i))/(geoy.at(j)-geoy.at(i))*(geox.at(j)-geox.at(i))<x)) {                
-                    oddNodes = !oddNodes;                 
-            }
-            j=i; 
-        }
-        
+            if ((geoy[i]< y && geoy[j]>=y
+            ||   geoy[j]< y && geoy[i]>=y)
+            &&  (geox[i]<=x || geox[j]<=x)) {
+            oddNodes^=(geox[i]+(y-geoy[i])/(geoy[j]-geoy[i])*(geox[j]-geox[i])<x); }
+            j=i; }
+
         return oddNodes; 
     } 
 
@@ -66,8 +68,9 @@ namespace PreemptionPlugin {
 
         double micro = 10000000.0;
 
-        auto po = std::make_shared<PreemptionObject>();
-        auto vehicle_coordinate = std::make_shared<VehicleCoordinate>();
+        PreemptionObject* po = new PreemptionObject;
+
+        VehicleCoordinate* vehicle_coordinate = new VehicleCoordinate;
 
         auto bsm = msg->get_j2735_data();
         int32_t bsmTmpID;
@@ -81,14 +84,16 @@ namespace PreemptionPlugin {
 
         for (auto const& it: GeofenceSet) {
 
-            std::vector<double> geox;
+            double geox[it->geox.size()];
+            int k = 0;
             for (double const &i: it->geox) {
-                geox.push_back(i);
+                geox[k++] = i;
             }
 
-            std::vector<double> geoy;
+            double geoy[it->geoy.size()];
+            k = 0;
             for (double const &i: it->geoy) {
-                geoy.push_back(i);
+                geoy[k++] = i;
             }
 
             bool in_geo =  CarInGeofence(vehicle_coordinate->lon, vehicle_coordinate->lat, geoy, geox, it->geox.size());
@@ -114,7 +119,7 @@ namespace PreemptionPlugin {
 
     };
 
-    void PreemptionPluginWorker::PreemptionPlaner(std::shared_ptr<PreemptionObject> po){
+    void PreemptionPluginWorker::PreemptionPlaner(PreemptionObject* po){
  
         if(po->approach == "1") {
 
@@ -141,7 +146,7 @@ namespace PreemptionPlugin {
         std::cout << " Finished PreemptionPlaner" << std::endl;
     };
 
-    void PreemptionPluginWorker::TurnOnPreemption(std::shared_ptr<PreemptionObject> po){
+    void PreemptionPluginWorker::TurnOnPreemption(PreemptionObject* po){
         std::string preemption_plan_flag = "1";
 
         std::asctime(std::localtime(&(po->time)));
@@ -158,7 +163,7 @@ namespace PreemptionPlugin {
         }
     }
 
-    void PreemptionPluginWorker::TurnOffPreemption(std::shared_ptr<PreemptionObject> po){
+    void PreemptionPluginWorker::TurnOffPreemption(PreemptionObject* po){
         std::string preemption_plan, preemption_plan_flag = "";
         preemption_plan = preemption_map[po ->vehicle_id].preemption_plan;
         preemption_plan_flag = "0";

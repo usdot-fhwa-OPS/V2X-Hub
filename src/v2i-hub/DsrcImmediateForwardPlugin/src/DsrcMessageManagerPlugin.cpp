@@ -71,8 +71,7 @@ void DsrcMessageManagerPlugin::OnMessageReceived(IvpMessage *msg)
 {
 	// Uncomment this line to call the base method, which prints the message received to cout.
 	//PluginClient::OnMessageReceived(msg);
-	PLOG(logDEBUG) << "Message Received " <<
-				"Type: " << msg->type << ", Subtype: " << msg->subtype;
+
 	if (!_configRead)
 	{
 		PLOG(logWARNING) << "Config not read yet.  Message Ignored: " <<

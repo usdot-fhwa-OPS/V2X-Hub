@@ -60,11 +60,6 @@ RUN make install
 WORKDIR /home/V2X-Hub/ext/ccserver
 RUN cmake . 
 RUN make
-RUN make install
-
-WORKDIR /home/V2X-Hub/ext/pdclient
-RUN cmake .
-RUN make
 RUN make install 
 
 ### setup and install v2x-hub core and plugins 
@@ -106,8 +101,8 @@ RUN ln -s ../bin TimPlugin/bin
 RUN zip TimPlugin.zip TimPlugin/bin/TimPlugin TimPlugin/manifest.json
 RUN ln -s ../bin CARMACloudPlugin/bin
 RUN zip CARMACloudPlugin.zip CARMACloudPlugin/bin/CARMACloudPlugin CARMACloudPlugin/manifest.json
-RUN ln -s ../bin PortDrayagePlugin/bin
-RUN zip PortDrayagePlugin.zip PortDrayagePlugin/bin/PortDrayagePlugin PortDrayagePlugin/manifest.json
+RUN ln -s ../bin MobilityOperationPlugin/bin
+RUN zip MobilityOperationPlugin.zip MobilityOperationPlugin/bin/MobilityOperationPlugin MobilityOperationPlugin/manifest.json
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
 

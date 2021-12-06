@@ -40,9 +40,9 @@ namespace PreemptionPlugin {
 
 		public:
 			struct PreemptionObject {
-				std::string approach = ""; // 0: egress 1: ingress
-				std::string preemption_plan = "";
-				int vehicle_id = 0;
+				std::string approach; // 0: egress 1: ingress
+				std::string preemption_plan;
+				int vehicle_id;
 				std::time_t time = std::time(nullptr);
 			};
 
@@ -72,12 +72,12 @@ namespace PreemptionPlugin {
 
 			std::map <int,PreemptionObject> preemption_map;
 
-			void ProcessMapMessageFile(const std::string &path);
+			void ProcessMapMessageFile(std::string path);
 			void VehicleLocatorWorker(BsmMessage* msg);
-			void PreemptionPlaner(std::shared_ptr<PreemptionObject> po);
-			void TurnOnPreemption(std::shared_ptr<PreemptionObject> po);
-			void TurnOffPreemption(std::shared_ptr<PreemptionObject> po);
-			bool CarInGeofence(long double x, long double y, std::vector<double> geox, std::vector<double> geoy, long GeoCorners) const;
+			void PreemptionPlaner(PreemptionObject* po);
+			void TurnOnPreemption(PreemptionObject* po);
+			void TurnOffPreemption(PreemptionObject* po);
+			bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners);
 
 			std::string ip_with_port;
 			int snmp_version = SNMP_VERSION_1;
