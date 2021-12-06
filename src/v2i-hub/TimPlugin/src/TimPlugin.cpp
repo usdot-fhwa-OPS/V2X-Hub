@@ -219,10 +219,12 @@ bool TimPlugin::TimDuration()
 	time_t secondsStop = mktime( & date_stop );
 
 	// Current Time in seconds
-	auto t = time(nullptr);
-	auto tm = *localtime(&t);
+	time_t *t; 
+	time(t); 
+	struct tm *tm; 
+	tm = localtime_r(t,tm);
 	ostringstream oss1;
-	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
+	oss1 << put_time(tm, "%m-%d-%Y %H:%M:%S");
 	auto _currentTimTime = oss1.str();
 	istringstream currentTimTime(_currentTimTime);
 	struct tm date_current;

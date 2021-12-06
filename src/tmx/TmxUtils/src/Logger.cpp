@@ -120,7 +120,8 @@ std::ostream &_logtime(std::ostream &os, uint64_t timestamp)
 	time_t time = tv.tv_sec;
 	short ms = tv.tv_usec / 1000;
 
-	struct tm *myTm = localtime(&time);
+	struct tm *myTm; 
+	myTm = localtime_r(&time,myTm);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 

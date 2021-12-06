@@ -486,11 +486,12 @@ void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename()
  */
 std::string MessageLoggerPlugin::GetCurDateTimeStr()
 {
-	auto t = std::time(nullptr);
+	time_t *t; 
+	time(t); 
 	struct tm *tm; 
-	tm = std::localtime_s(&t);
+	tm = localtime_r(t,tm);
 	std::ostringstream oss;
-	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
+	oss << std::put_time(tm, "%d%m%Y%H%M%S");
 	auto str = oss.str();
 	return str;
 }

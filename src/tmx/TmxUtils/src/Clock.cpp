@@ -71,10 +71,15 @@ void Clock::PrintInfoForChronoClocks()
 std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point& tp)
 {
     // Convert to system time.
-    std::time_t t = chrono::system_clock::to_time_t(tp);
+    time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
     // Note: could have also called std:ctime(&t) - it's an alias.
-    std::string calStr = std::asctime(localtime(&t));
+
+	//time_t *t; 
+	//time(t); 
+	struct tm *tm; 
+	tm = localtime_r(&t,tm);
+    std::string calStr = std::asctime(tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -96,7 +101,9 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 {
     std::time_t t = chrono::system_clock::to_time_t(tp);
 	short ms = tp.time_since_epoch() / std::chrono::milliseconds(1) % 1000;
-	struct tm *myTm = localtime(&t);
+
+	struct tm *myTm; 
+	myTm = localtime_r(&t,myTm);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 

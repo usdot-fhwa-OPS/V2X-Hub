@@ -162,20 +162,26 @@ bool TmxControl::checkPerm()
 	if (isRoot)
 		return true;
 
-	struct group *admGrp = ::getgrnam("adm");
+	char *buffer = NULL;
+	size_t buffer_len = 0;
+	struct group grp = { 0, };
+	struct group *gid= NULL;
+	
+	getgrnam_r("adm", &grp, buffer, buffer_len, &gid);
 
-	if (!admGrp)
+	if (gid == NULL)
 		return false;
+
 
 	gid_t groups[256];
 	int total = getgroups(256, groups);
 
 	for (int i = 0; i < total; i++)
-		if (groups[i] == admGrp->gr_gid)
+		if (groups[i] == gid->gr_gid)
 			return true;
 
-	PLOG(logDEBUG) << "Trying to set effective group id to " << admGrp->gr_gid << " (" << admGrp->gr_name << ")";
-	if (::setregid(-1, admGrp->gr_gid) < 0)
+	PLOG(logDEBUG) << "Trying to set effective group id to " << gid->gr_gid << " (" << gid->gr_name << ")";
+	if (::setregid(-1, gid->gr_gid) < 0)
 	{
 		cerr << strerror(errno) << endl;
 		return false;
