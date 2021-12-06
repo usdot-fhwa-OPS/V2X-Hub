@@ -9,11 +9,11 @@
 #define SRC_LOGGER_H_
 
 #ifndef LOGGER_MAX_LEVEL
-#define LOGGER_MAX_LEVEL tmx::utils::logERROR
+#define LOGGER_MAX_LEVEL tmx::utils::logDEBUG4
 #endif
 
 #ifndef DEFAULT_LOG_LEVEL
-#define DEFAULT_LOG_LEVEL "DEBUG"
+#define DEFAULT_LOG_LEVEL "ERROR"
 #endif
 
 #define UNKNOWN_SOURCE "Unknown source"
