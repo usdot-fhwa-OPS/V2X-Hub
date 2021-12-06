@@ -43,7 +43,7 @@ class PreemptionPlugin: public PluginClient
   		}
   		// PreemptionPlugin(PreemptionPlugin &&fp) noexcept {
   		// }
-  		PreemptionPlugin const & operator=(PreemptionPlugin &&fp) noexcept{
+  		PreemptionPlugin const & operator=(PreemptionPlugin &&fp) {
   
   		}
 

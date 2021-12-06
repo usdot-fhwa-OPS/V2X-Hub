@@ -189,49 +189,6 @@ jobs:
         command: |
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:latest
-  port_drayage_webservice_build_develop :
-    docker:
-      - image: cimg/openjdk:11.0.12
-    # Set working directory
-    working_directory: "/home/V2X-Hub"
-    steps:
-     - setup_remote_docker
-     - checkout
-     - run: 
-        name: Maven Build JAR
-        # Build Port Drayage Web Service
-        command: |
-          cd tools/port-drayage-webservice/
-          mvn clean install  
-     - run: 
-        name: Build Docker Image and Push
-        # Build and push Port Drayage Web Service Docker images
-        command: | 
-          cd tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice:latest .
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/port-drayage-webservice:latest
-  port_drayage_webservice_build :
-    docker:
-      - image: cimg/openjdk:11.0.12
-    # Set working directory
-    steps:
-     - setup_remote_docker
-     - checkout
-     - run: 
-        name: Maven Build JAR
-        # Build Port Drayage Web Service
-        command: |
-          cd tools/port-drayage-webservice/
-          mvn clean install  
-     - run: 
-        name: Build Docker Image and Push
-        # Build and push Port Drayage Web Service Docker images
-        command: | 
-          cd tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
 workflows:
   version: 2
   build:
@@ -258,13 +215,5 @@ workflows:
       - sonar-scanner_develop:
           requires:
             - docker_build_push_develop
-      - port_drayage_webservice_build_develop:
-          filters:
-              branches:
-                only: develop
-      - port_drayage_webservice_build:
-          filters:
-            branches:
-              ignore: develop
  
 

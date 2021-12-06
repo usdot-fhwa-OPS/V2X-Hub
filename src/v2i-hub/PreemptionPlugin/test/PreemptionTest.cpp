@@ -45,7 +45,7 @@ protected:
 
 bool CarInGeofence(double x, double y, double geox[], double geoy[], int GeoCorners) {
         int   i, j=GeoCorners-1 ;
-        bool  oddNodes   = 0   ;
+        bool  oddNodes      ;
 
         for (i=0; i<GeoCorners; i++) {
             if ((geoy[i]< y && geoy[j]>=y
