@@ -70,7 +70,7 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 
 	struct passwd *pwd = NULL;
 	struct passwd *result = nullptr;
-    	std::array<char, 64> buf; //assuming passwords are 64 bits long most
+    	char buf[64]; //assuming passwords are 64 bits long most
     	memset(&buf, 0, sizeof buf);
 	if (getuid() != 0)
 	{
