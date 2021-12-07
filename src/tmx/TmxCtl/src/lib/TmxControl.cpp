@@ -162,14 +162,14 @@ bool TmxControl::checkPerm()
 	if (isRoot)
 		return true;
 
-	char *buffer = NULL;
+	char *buffer = nullptr;
 	size_t buffer_len = 0;
-	struct group grp = { 0, };
-	struct group *gid= NULL;
+	struct group grp = { nullptr, };
+	struct group *gid= nullptr;
 	
 	getgrnam_r("adm", &grp, buffer, buffer_len, &gid);
 
-	if (gid == NULL)
+	if (gid == nullptr)
 		return false;
 
 

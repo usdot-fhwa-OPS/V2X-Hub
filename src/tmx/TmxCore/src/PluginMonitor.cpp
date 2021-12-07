@@ -69,8 +69,8 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	pthread_mutex_init(&this->mMessagesLock, NULL);
 
 	struct passwd *pwd = NULL;
-	struct passwd *result = 0;
-    	char buf[64]; //assuming passwords are 64 bits long most
+	struct passwd *result = nullptr;
+    	std::array<char, 64> buf; //assuming passwords are 64 bits long most
     	memset(&buf, 0, sizeof buf);
 	if (getuid() != 0)
 	{
@@ -79,7 +79,6 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	}
 
 
-	//else if ((pwd = getpwnam(PLUGIN_USER)) == NULL)
 	else if( getpwnam_r(PLUGIN_USER, pwd, buf, 64, &result) == NULL) 
 	{
 		this->setPluginStatus("ERROR: User '" PLUGIN_USER "' doesn't exist");
@@ -91,8 +90,8 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 		
 		char *buffer = NULL;
 		size_t buffer_len = 0;
-		struct group grp = { 0, };
-		struct group *gid= NULL;
+		struct group grp = { nullptr, };
+		struct group *gid= nullptr;
 		
 		getgrnam_r("dialout", &grp, buffer, buffer_len, &gid);
 
