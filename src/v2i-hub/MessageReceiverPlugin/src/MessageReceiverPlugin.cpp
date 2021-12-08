@@ -526,6 +526,8 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue("HSMLocation",liblocation);
 	GetConfigValue<string>("HSMurl",baseurl);
+	std::string request="verifySig";
+	url=baseurl+request;
 
 	lock_guard<mutex> lock(syncLock);
 
