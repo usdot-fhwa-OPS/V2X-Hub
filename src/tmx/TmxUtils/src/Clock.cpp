@@ -74,15 +74,12 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
     // Note: could have also called std:ctime(&t) - it's an alias.
-
-	//time_t *t; 
-	//time(t); 
 	struct tm *tm = new struct tm; 
 	tm = localtime_r(&t,tm);
     std::string calStr = std::asctime(tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
-	delete(tm);
+	delete tm;
     return calStr;
 }
 
@@ -97,6 +94,7 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
 	std::string  calStr = calStr_t; 
     calStr.resize(calStr.size()-1);
     return calStr;
+    delete calstr_t;
 }
 
 
@@ -113,6 +111,7 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms;
     return ss.str();
+    delete myTm;
 }
 
 std::string Clock::ToUtcPreciseTimeString(const std::chrono::system_clock::time_point& tp)

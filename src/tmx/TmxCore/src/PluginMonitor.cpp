@@ -88,7 +88,7 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	{
 		PluginMonitor::sPluginGids.clear();
 		
-		char *buffer = NULL;
+		char *buffer = nullptr;
 		size_t buffer_len = 0;
 		struct group grp = { nullptr, };
 		struct group *gid= nullptr;
