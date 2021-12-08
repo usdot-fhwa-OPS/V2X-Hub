@@ -354,9 +354,11 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		std::stringstream id_ss;
 		for(auto i = 0; i < id_len; i++)
 		{			
-			id_ss<<static_cast<int>(bsm->coreData.id.buf[i]);
+			id_ss<<std::hex<<static_cast<int>(bsm->coreData.id.buf[i]);
 		}
-		coreData["id"]  = id_ss.str();
+		std::stringstream id_fill_ss;
+		id_fill_ss <<  std::setfill('0') << std::setw(8) << id_ss.str();
+		coreData["id"]  = id_fill_ss.str();
 		
 		Json::Value accuracy;
 
