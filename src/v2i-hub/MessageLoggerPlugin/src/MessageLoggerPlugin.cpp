@@ -486,7 +486,6 @@ void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename()
  */
 std::string MessageLoggerPlugin::GetCurDateTimeStr()
 {
-	int t = 0;
 	time_t *t; 
 	time(t); 
 	struct tm *tm; 

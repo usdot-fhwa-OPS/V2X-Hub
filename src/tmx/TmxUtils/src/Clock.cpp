@@ -94,7 +94,7 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
 	std::string  calStr = calStr_t; 
     calStr.resize(calStr.size()-1);
     return calStr;
-    delete calstr_t;
+    delete calStr_t;
 }
 
 
