@@ -664,7 +664,8 @@ int MessageReceiverPlugin::Main()
 								
 								if (msg[idloc+4] == '8') // if the length is longer than 256 
 								{
-									const char *c = msg.substr(idloc+5,3).c_str(); // take out next three nibble for length 
+									string tmp = msg.substr(idloc+5,3); 
+									const char *c = tmp.c_str(); // take out next three nibble for length 
 									int len = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
 
 									extractedmsg = msg.substr(idloc,len);
@@ -676,7 +677,8 @@ int MessageReceiverPlugin::Main()
 
 								else 
 								{
-									const char *c = msg.substr(idloc+4,2).c_str(); // take out next three nibble for length 
+									string tmp = msg.substr(idloc+4,2);
+									const char *c = tmp.c_str(); // take out next three nibble for length 
 									int len = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
 
 									extractedmsg = msg.substr(idloc,len);
