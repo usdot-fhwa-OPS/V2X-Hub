@@ -1,25 +1,41 @@
+<h3 class="font-weight-bold">Port Drayage Inspection Area </h3>
+<br>
 <div class="jumbotron" th:if="${@inspectionActions.getCurrentInspection() != null}">
-    <h1 class="display-4">Requested Inspection</h1>
-    <h1 class="h4">
-        Inspection for vehicle : 
-            <strong th:text="${@inspectionActions.getCurrentInspection().getVehicleId()}"></strong> 
-        with container : 
-            <strong th:text="${@inspectionActions.getCurrentInspection().getContainerId()}"></strong>
-    </h1>
-    <hr class="my-4">
-    <p class="lead" th:value="${@inspectionActions.getCurrentInspection().getStatus()}"
-        th:text="|Status : ${@inspectionActions.getCurrentInspection().getStatus()}|"></p>
-    <p class="lead">
-        <button class="btn btn-primary btn-lg btn-block" th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING')}"
-            id="hold-inspection">Request Further Inspection</button>
+    <div class="action-dialog-left">
+        <h4>
+            Vehicle : 
+                <strong th:text="${@inspectionActions.getCurrentInspection().getVehicleId()}"></strong> 
+            with cargo : 
+                <strong th:text="${@inspectionActions.getCurrentInspection().getContainerId()}"></strong>
+        </h4>
+        <h4 class="font-weight-bold" th:text="|Status : ${@inspectionActions.getCurrentInspection().getStatus()}|"></h4>
+        <br>
+        <button 
+            class="btn btn-info btn-lg pl-10 pr-10" to
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING')}"
+            id="hold-inspection">
+            REQUEST FURTHER INSPECTION
+        </button>
 
-        <button class="btn btn-success btn-lg btn-block" 
-        th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING') || @inspectionActions.getCurrentInspection().getStatus().getValue().equals('HOLDING') }"
-            id="complete-inspection">Complete Inspection</button>
-        <div th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PROCEED_TO_HOLDING')}" class="h4 d-flex justify-content-center">Vehicle is proceeding to Holding Area.</div>
-    </p>
+        <button 
+            class="btn btn-success btn-lg pl-10 pr-10" 
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING') 
+                    || @inspectionActions.getCurrentInspection().getStatus().getValue().equals('HOLDING') }"
+            id="complete-inspection">
+            COMPLETE INSPECTION
+        </button>
+        <h4
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PROCEED_TO_HOLDING')}" 
+            class="font-italic">
+            Vehicle is proceeding to Holding Area.
+        </h4>
+    </div>
+    <div class="action-dialog-right">
+        <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('STAGING_AREA')}">Staging Area</strong>
+        <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">Port Area</strong>
+    </div>
 </div>
-<h1 class="display-4">Pending Inspections</h1>
+<h4 class="font-weight-bold" >Pending Inspections</h4>
 <table class="table">
     <thead>
         <tr>
@@ -43,7 +59,7 @@
     </tbody>
 </table>
 
-<h1 class="display-4">Completed Inspections</h1>
+<h4 class="font-weight-bold">Completed Inspections</h4>
 <table class="table">
     <thead>
         <tr>
@@ -57,7 +73,7 @@
     <tbody>
         <tr
             th:if="${@inspectionActions.getCompletedInspections().getInspections() == null || @inspectionActions.getCompletedInspections().getInspections().isEmpty() }">
-            <td colspan="3"> No Completed Actions</td>
+            <td colspan="3"> No Completed Inspection</td>
         </tr>
         <tr th:each="action : ${@inspectionActions.getCompletedInspections().getInspections()}">
             <td><span th:text="${action.getVehicleId()}"> </span></td>
@@ -69,6 +85,12 @@
         </tr>
     </tbody>
 </table>
+<div class="clear-button">
+    <!-- Button trigger clear modal -->
+    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
+        Clear Actions
+    </button>
+</div>
 
 <script  th:inline="javascript">
     /*<![CDATA[*/

@@ -182,4 +182,20 @@ public class LoadingActions {
         currentAction = null;
     }
 
+    /**
+     * Method to return the number of waiting actions for UI tab notification
+     */
+    public int waitingActions() {
+        if ( pendingActions.getActions() != null && !pendingActions.getActions().isEmpty() ) {
+            // plus one for current action
+            return pendingActions.getActions().size() + 1;
+        }
+        else if ( currentAction != null ) {
+            return 1;
+        }
+        else {
+            return 0;
+        } 
+    } 
+
 }

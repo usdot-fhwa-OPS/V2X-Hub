@@ -9,7 +9,7 @@ servers:
   - url: https://127.0.0.1:8443
     description: Secured hosting for deployment
 paths:
-  /reset:
+  /uiaction/reset:
     post:
       summary: Clear Web Service Actions
       description:
@@ -17,6 +17,23 @@ paths:
       responses:
         "201":
           description: Created
+  /uiaction/area/{area}:
+    post:
+      parameters:
+        - in: path
+          name: area
+          schema:
+            type: string
+          required: true
+          description: Area Enumeration indicating where web service is deployed.
+      summary: Select Area Of Operations.
+      description: Indicates where the web service is deployed. Possible valid area of operations include PORT_AREA and STAGING_AREA
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Invalid Request
+
   /loading:
     post:
       summary: Request a container is loaded on to freight vehicle.

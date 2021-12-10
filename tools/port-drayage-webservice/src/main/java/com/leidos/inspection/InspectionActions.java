@@ -202,4 +202,20 @@ public class InspectionActions  {
         currentInspection = null;
     }
 
+    /**
+     * Method to return the number of waiting actions for UI tab notification
+     */
+    public int waitingActions() {
+        if ( pendingInspections.getInspections() != null && !pendingInspections.getInspections().isEmpty()) {
+            // plus one for current action
+            return pendingInspections.getInspections().size() + 1;
+        }
+        else if ( currentInspection != null ) {
+            return 1;
+        }
+        else {
+            return 0;
+        } 
+    } 
+
 }

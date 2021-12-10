@@ -1,6 +1,10 @@
 package com.leidos.controller;
 
 
+import com.leidos.area.Area;
+import com.leidos.area.AreaBean;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,11 +12,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class UserInterfaceController {
     
+    @Autowired
+    public AreaBean areaBean;
+
 
     @GetMapping("/")
     public String main( Model model) {
-        return "index";
-    }
+        if ( areaBean.getArea() != null )
+            return "index";
+        else {
+            return "main";
+        }
+    }   
 
     @GetMapping("/loading")
     public String loading() {
@@ -29,4 +40,11 @@ public class UserInterfaceController {
         return "_inspection";
         
     }
+
+    @GetMapping("/main")
+    public String main() {
+        return "main";
+        
+    }
+
 }

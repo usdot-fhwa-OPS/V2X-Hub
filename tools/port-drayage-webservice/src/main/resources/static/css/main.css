@@ -1,0 +1,186 @@
+.footerPanel{
+    width: 100%;
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+.footerElement{
+    padding: 0px 10px;
+    font-family: Roboto;
+    font-weight: normal;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    color: #000000;    
+    width: 33%;
+    font-size: 80%;
+}
+.navigation-bar{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+
+.logos{
+    max-height:80px;
+    margin-right: 5px;
+}
+.icons{
+    max-height:40px;
+    max-width: 60px;
+    align-self: flex-end;
+}
+.tabs{
+    display: flex;
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-self: center;
+    width: 100%;
+    height: 100%;
+}
+
+.container{
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.nav-link.active{
+    /* Override bootstrap styling */
+    background-color: hsla(120, 100%, 25%, 0.4) !important;
+    border: 2px black solid !important;
+    border-bottom: none !important;
+    color: black !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.nav-link{
+    border: 2px black solid !important;
+    border-bottom: none !important;
+    color: lightgray !important;
+
+}
+.tab-content{
+    /* Override bootstrap styling */
+    border: 2px black solid;
+    padding: 10px;
+}
+
+.carma-streets-logo{
+    width: auto;
+    max-height: 90px;
+}
+
+.marad-logo{
+    max-height: 40px;
+    align-self: center;
+    margin-left: 5px;
+}
+
+.main-splash{
+    display: flex;
+    justify-content: center;
+}
+
+.main-splash-description{
+    width: 80%;
+}
+
+
+.clear-button{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+/* Overwrite bootstrap badge style */
+.badge {
+    height: fit-content;
+    color: black;
+}
+
+.main-splash{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+.splash-logo{
+    width: 60%;
+    max-height: 45%;
+    margin-top: 20px;
+}
+
+.area-select{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+
+.jumbotron{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 1rem 1rem !important;
+}
+
+.action-dialog-left{
+    width: 60%;
+    height: 100%;
+}
+
+.action-dialog-right{
+    width: 40%;
+    color: darkblue;
+    border: 2px black dashed ;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: xxx-large;
+}
+
+.copyright{
+    width: 33%;
+    text-align: right !important;
+    padding: 0px 10px;
+    font-family: Roboto;
+    font-weight: normal;
+    font-size: 80%;
+    color: #000000;
+    display: block;
+}
+
+.version {
+    width: 33%;
+    text-align: center !important;
+    padding: 0px 10px;
+    font-family: Roboto;
+    font-weight: normal;
+    font-size: 80%;
+    color: #000000;
+    display: block;
+
+}
+
+.tab-label{
+    align-self: flex-end;
+    margin-left: 7px;
+    margin-bottom: 0 !important;
+}
+
+.area-select-btn{
+    width: 190px;
+}
