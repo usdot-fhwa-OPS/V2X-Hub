@@ -576,8 +576,8 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		if( payload_json != Json::nullValue && !payload_json.empty())
 		{
 			strategy_params_str 	     = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
-														+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
 														+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
+														+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
 														+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
 														+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
 		}
