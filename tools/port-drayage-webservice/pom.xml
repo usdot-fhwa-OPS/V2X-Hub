@@ -92,7 +92,6 @@
                             <library>spring-boot</library>
                             <apiPackage>com.baeldung.openapi.api</apiPackage>
                             <modelPackage>com.baeldung.openapi.model</modelPackage>
-                            <skipValidateSpec>true</skipValidateSpec>
                             <supportingFilesToGenerate>
                                 ApiUtil.java
                             </supportingFilesToGenerate>

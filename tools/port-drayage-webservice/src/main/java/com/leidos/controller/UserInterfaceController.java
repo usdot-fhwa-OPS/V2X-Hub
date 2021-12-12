@@ -21,7 +21,7 @@ public class UserInterfaceController {
         if ( areaBean.getArea() != null )
             return "index";
         else {
-            return "main";
+            return "landing";
         }
     }   
 
@@ -41,9 +41,13 @@ public class UserInterfaceController {
         
     }
 
-    @GetMapping("/main")
+    /**
+     * Keeping access to landing page under this URL for testing purposes.
+     * @return
+     */
+    @GetMapping("/debug/landing")
     public String main() {
-        return "main";
+        return "landing";
         
     }
 

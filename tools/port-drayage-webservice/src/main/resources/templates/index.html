@@ -8,90 +8,95 @@
         
         <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.min.css} "/>
         <link th:rel="stylesheet" th:href="@{/css/main.css}"/>
+        <link th:rel="stylesheet" th:href="@{/css/index.css}"/>
     </head>
 
     <body>
-
         <main role="main" class="container">
             <div class="container">
+                <div class="content-wrap">
+                    <div class="navigation-bar">
+                        <ul class="nav nav-tabs mt-5 header-left" id="myTabs">
+                            <li class="nav-item">
+                                <a id="loadingNotif" href="#loading" data-url="/loading" class="nav-link tabs active btn" role="button">
+                                    <img th:src="@{/images/icons/loading.png}" class="icons"/>
+                                    <h4 class="tab-label">LOADING</h4>
+                                    <span
+                                            
+                                        th:if="${@loadingActions.waitingActions()} > 0 " 
+                                        th:text="${@loadingActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a  id="unloadingNotif"  href="#unloading" data-url="/unloading" class="nav-link tabs btn" role="button">
+                                    <img th:src="@{/images/icons/unloading.png}" class="icons"/>
+                                    <h4 class="tab-label">UNLOADING</h4>
+                                    <span
+                                        
+                                        th:if="${@unloadingActions.waitingActions()} > 0 " 
+                                        th:text="${@unloadingActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
 
-                <div class="row">
-                    <div class="col">
-                        <div class="navigation-bar">
-                            <ul class="nav nav-tabs mt-5 header-left" id="myTabs">
-                                <li class="nav-item">
-                                    <a id="loadingNotif" href="#loading" data-url="/loading" class="nav-link tabs active btn" role="button">
-                                        <img th:src="@{/images/icons/loading.png}" class="icons"/>
-                                        <h4 class="tab-label">LOADING</h4>
-                                        <span
-                                             
-                                            th:if="${@loadingActions.waitingActions()} > 0 " 
-                                            th:text="${@loadingActions.waitingActions()}" 
-                                            class="badge rounded-circle bg-warning">
-                                        </span>
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a  id="unloadingNotif"  href="#unloading" data-url="/unloading" class="nav-link tabs btn" role="button">
-                                        <img th:src="@{/images/icons/unloading.png}" class="icons"/>
-                                        <h4 class="tab-label">UNLOADING</h4>
-                                        <span
-                                           
-                                            th:if="${@unloadingActions.waitingActions()} > 0 " 
-                                            th:text="${@unloadingActions.waitingActions()}" 
-                                            class="badge rounded-circle bg-warning">
-                                        </span>
-
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a   id="inspectionNotif" href="#inspection" data-url="/inspection" class="nav-link tabs btn" role="button">
-                                        <img th:src="@{/images/icons/inspection.png}" class="icons"/>
-                                        <h4 class="tab-label">INSPECTION</h4>
-                                        <span
-                                            th:if="${@inspectionActions.waitingActions()} > 0 " 
-                                            th:text="${@inspectionActions.waitingActions()}" 
-                                            class="badge rounded-circle bg-warning">
-                                        </span>
-                                    </a>
-                                </li>   
-                            </ul>
-                            <div class="header-right mt2 mb1">
-                                <img th:src="@{/images/logos/CARMA_Streets.png}" class="logos carma-streets-logo"/>
-                            </div>
+                                </a>
+                            </li>
+                            <li class="nav-item" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">
+                                <a   id="inspectionNotif" href="#inspection" data-url="/inspection" class="nav-link tabs btn" role="button">
+                                    <img th:src="@{/images/icons/inspection.png}" class="icons"/>
+                                    <h4 class="tab-label">INSPECTION</h4>
+                                    <span
+                                        th:if="${@inspectionActions.waitingActions()} > 0 " 
+                                        th:text="${@inspectionActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
+                                </a>
+                            </li>   
+                        </ul>
+                        <div class="header-right mt2 mb1">
+                            <img th:src="@{/images/logos/CARMA_Streets.png}" class="logos carma-streets-logo"/>
                         </div>
-            
-                        <div class="tab-content pt-3">
-                            <div class="tab-pane active" id="loading"></div>
-                            <div class="tab-pane" id="unloading"></div>
-                            <div class="tab-pane" id="inspection"></div>
-                        </div>
+                    </div>
+        
+                    <div class="tab-content pt-3">
+                        <div class="tab-pane active" id="loading"></div>
+                        <div class="tab-pane" id="unloading"></div>
+                        <div class="tab-pane" id="inspection"></div>
+                    </div>
 
-                        <br>
-                        
-                        <!-- Clear Modal -->
-                        <div class="modal fade" id="clearModal" tabindex="-1" role="dialog" aria-labelledby="clearModalLabel" aria-hidden="true">
-                            <div class="modal-dialog" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="clearModalLabel">Caution</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                    Clearing the actions will remove all pending, in-progress and completed actions!
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                        <button id="clear-actions"type="button" class="btn btn-warning" data-dismiss="modal">Clear Actions</button>
-                                    </div>
+                    <br>
+                    
+                    <!-- Clear Modal -->
+                    <div class="modal fade" id="clearModal" tabindex="-1" role="dialog" aria-labelledby="clearModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="clearModalLabel">Caution</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                Clearing the actions will remove all pending, in-progress and completed actions!
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button id="clear-actions"type="button" class="btn btn-warning" data-dismiss="modal">Clear Actions</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            
+                <br>
+                <div class="footerPanel">
+                    <div class="logos">
+                        <img th:src="@{/images/logos/FHWALogo_2.png}" class="fhwa-logo"/>
+                        <img th:src="@{/images/logos/marad.png}" class="marad-logo"/>
+                    </div>
+                    <div class="version" >V2X-Hub 6.2</div>
+                    <div class="copyright">Copyright &copy LEIDOS <script>document.write( new Date().getFullYear() );</script> </div>
+                </div>
             </div>
             <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
             <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
@@ -148,15 +153,7 @@
                 });
             </script>
         </main>
-        <br>
-        <div class="footerPanel">
-            <div class="footerElement " >
-                <img th:src="@{/images/logos/FHWALogo_2.png}" class="logos"/>
-                <img th:src="@{/images/logos/marad.png}" class="marad-logo"/>
-            </div>
-            <div class="version" >V2X-Hub 6.2</div>
-            <div class="copyright">Copyright &copy LEIDOS <script>document.write( new Date().getFullYear() );</script> </div>
-        </div>
+        
 
     </body>
 </html>
