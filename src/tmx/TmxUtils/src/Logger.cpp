@@ -120,14 +120,14 @@ std::ostream &_logtime(std::ostream &os, uint64_t timestamp)
 	time_t time = tv.tv_sec;
 	short ms = tv.tv_usec / 1000;
 
-	struct tm *myTm= new struct tm;  
+	struct tm *myTm;  
 	myTm = localtime_r(&time,myTm);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 
 	os << "[" << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms << "] " << std::setfill(' ');
 
-	delete myTm;
+	delete[] myTm;
 	return os;
 }
 
