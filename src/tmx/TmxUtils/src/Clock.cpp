@@ -71,15 +71,12 @@ void Clock::PrintInfoForChronoClocks()
 std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point& tp)
 {
     // Convert to system time.
-    time_t t = chrono::system_clock::to_time_t(tp);
+    std::time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
     // Note: could have also called std:ctime(&t) - it's an alias.
-	 struct tm *tm1 = new struct tm;  
-	tm = localtime_r(&t,tm);
-    std::string calStr = std::asctime(tm);
+    std::string calStr = std::asctime(localtime(&t));
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
-    delete[] tm;
     return calStr;
 }
 
@@ -88,14 +85,10 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
     // Convert to system time.
     std::time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
-	char * calStr_t=new char[128];  
-    calStr_t = asctime_r(gmtime(&t),calStr_t);
+    std::string calStr = std::asctime(gmtime(&t));
     // Remove trailing newline.
-	std::string  calStr = calStr_t; 
     calStr.resize(calStr.size()-1);
-    delete[] calStr_t; 	
     return calStr;
-  
 }
 
 
@@ -103,17 +96,16 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 {
     std::time_t t = chrono::system_clock::to_time_t(tp);
 	short ms = tp.time_since_epoch() / std::chrono::milliseconds(1) % 1000;
-
-	struct tm *myTm = new struct tm;  
+	// struct tm *myTm = localtime(&t);
+	struct tm *myTm; 
 	myTm = localtime_r(&t,myTm);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms;
-	delete[] myTm; 
     return ss.str();
-    }
+}
 
 std::string Clock::ToUtcPreciseTimeString(const std::chrono::system_clock::time_point& tp)
 {
