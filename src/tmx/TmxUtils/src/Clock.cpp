@@ -80,7 +80,7 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     std::string calStr = std::asctime(tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
-	free(tm);
+    delete[] tm;
     return calStr;
 }
 
@@ -96,7 +96,7 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
     // Remove trailing newline.
 	std::string  calStr = calStr_t; 
     calStr.resize(calStr.size()-1);
-    free(calStr_t); 	
+    delete[] calStr_t; 	
     return calStr;
   
 }
@@ -115,7 +115,7 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms;
-	free(myTm); 
+	delete[] myTm; 
     return ss.str();
     }
 

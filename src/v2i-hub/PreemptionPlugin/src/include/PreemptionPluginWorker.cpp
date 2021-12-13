@@ -162,8 +162,8 @@ namespace PreemptionPlugin {
         else{
             std::cout << "Finished sending preemption plan.";
         }
-        free(tm1); 
-	free(calStr_t); 
+        delete[] tm1; 
+	delete[] calStr_t; 
     }
 
     void PreemptionPluginWorker::TurnOffPreemption(std::shared_ptr<PreemptionObject> po){
