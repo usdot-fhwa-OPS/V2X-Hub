@@ -237,8 +237,8 @@ bool TimPlugin::TimDuration()
 
 	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
 		" Current : " << secondsCurrent << std::endl;
-	delete(tm);
-	free(t);
+	delete[] tm;
+	delete[] t;
 	if ( secondsStart <= secondsCurrent && secondsCurrent <= secondsStop) {
 		return true;
 	} else {
