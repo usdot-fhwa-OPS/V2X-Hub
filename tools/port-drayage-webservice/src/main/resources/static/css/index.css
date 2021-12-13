@@ -1,0 +1,99 @@
+/* Index Page Style Sheet */
+
+/* Navigation bar holds tabs and CARMA-Streets logo*/
+.navigation-bar{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+/*Overwrite bootstrap nav-tabs class stop tabs from wrapping when screen is resized*/
+.nav-tabs{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+.carma-streets-logo{
+    width: auto;
+    max-height: 90px;
+}
+/* Align icons to bottom of tab */
+.icons{
+    max-height:40px;
+    max-width: 60px;
+    align-self: flex-end;
+}
+/* Style individual tabs */
+.tabs{
+    display: flex;
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-self: center;
+    width: 100%;
+    height: 100%;
+    /* overwrite some of the nav-link styling */
+    border: 2px black solid !important;
+    border-bottom: none !important;
+    color: lightgray !important;
+}
+/* Overwrite active tab styling for green backgrould */
+.nav-link.active{
+    /* Override bootstrap styling */
+    background-color: hsla(120, 100%, 25%, 0.4) !important;
+    border: 2px black solid !important;
+    border-bottom: none !important;
+    color: black !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+/* Set tab label styling */
+.tab-label{
+    align-self: flex-end;
+    margin-left: 7px;
+    margin-bottom: 0 !important;
+}
+/* Overwrite bootstrap badge style for notification badges for tabs */
+.badge {
+    height: fit-content;
+    color: black;
+}
+
+/* Styling for Tab Content */
+
+/* Add border to bootstrap tab content styling*/
+.tab-content{
+    border: 2px black solid;
+    padding: 10px;
+}
+/* Overwrite bootstrap jumbotron styling for dialog popup */
+.jumbotron{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    padding: 1rem 1rem !important;
+}
+/* Left part of dialog popup*/
+.action-dialog-left{
+    width: 60%;
+    height: 100%;
+}
+/* Right part of dialog popup*/
+.action-dialog-right{
+    width: 40%;
+    color: darkblue;
+    border: 2px black dashed ;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: xxx-large;
+}
+/* Clear Actions button styling  */
+.clear-button{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}

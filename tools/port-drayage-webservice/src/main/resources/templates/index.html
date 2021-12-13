@@ -1,115 +1,159 @@
 <!DOCTYPE HTML>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>CARMA Freight Web Service</title>
+        <title>CARMA Freight Web Service</title>
+        
+        <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.min.css} "/>
+        <link th:rel="stylesheet" th:href="@{/css/main.css}"/>
+        <link th:rel="stylesheet" th:href="@{/css/index.css}"/>
+    </head>
 
-    <link th:rel="stylesheet" th:href="@{/webjars/bootstrap/4.0.0-2/css/bootstrap.min.css} "/>
-    <link rel="stylesheet" th:href="@{static/css/main.css}"/>
+    <body>
+        <main role="main" class="container">
+            <div class="container">
+                <div class="content-wrap">
+                    <div class="navigation-bar">
+                        <ul class="nav nav-tabs mt-5 header-left" id="myTabs">
+                            <li class="nav-item">
+                                <a id="loadingNotif" href="#loading" data-url="/loading" class="nav-link tabs active btn" role="button">
+                                    <img th:src="@{/images/icons/loading.png}" class="icons"/>
+                                    <h4 class="tab-label">LOADING</h4>
+                                    <span
+                                            
+                                        th:if="${@loadingActions.waitingActions()} > 0 " 
+                                        th:text="${@loadingActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a  id="unloadingNotif"  href="#unloading" data-url="/unloading" class="nav-link tabs btn" role="button">
+                                    <img th:src="@{/images/icons/unloading.png}" class="icons"/>
+                                    <h4 class="tab-label">UNLOADING</h4>
+                                    <span
+                                        
+                                        th:if="${@unloadingActions.waitingActions()} > 0 " 
+                                        th:text="${@unloadingActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
 
-</head>
+                                </a>
+                            </li>
+                            <li class="nav-item" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">
+                                <a   id="inspectionNotif" href="#inspection" data-url="/inspection" class="nav-link tabs btn" role="button">
+                                    <img th:src="@{/images/icons/inspection.png}" class="icons"/>
+                                    <h4 class="tab-label">INSPECTION</h4>
+                                    <span
+                                        th:if="${@inspectionActions.waitingActions()} > 0 " 
+                                        th:text="${@inspectionActions.waitingActions()}" 
+                                        class="badge rounded-circle bg-warning">
+                                    </span>
+                                </a>
+                            </li>   
+                        </ul>
+                        <div class="header-right mt2 mb1">
+                            <img th:src="@{/images/logos/CARMA_Streets.png}" class="logos carma-streets-logo"/>
+                        </div>
+                    </div>
+        
+                    <div class="tab-content pt-3">
+                        <div class="tab-pane active" id="loading"></div>
+                        <div class="tab-pane" id="unloading"></div>
+                        <div class="tab-pane" id="inspection"></div>
+                    </div>
 
-<body>
-
-<main role="main" class="container">
-    <div class="container">
-
-        <div class="row">
-            <div class="col">
-                <ul class="nav nav-tabs mt-5" id="myTabs">
-                    <li class="nav-item"><a href="#loading" data-url="/loading" class="nav-link active">Loading</a></li>
-                    <li class="nav-item"><a href="#unloading" data-url="/unloading" class="nav-link">Unloading</a></li>
-                    <li class="nav-item"><a href="#inspection" data-url="/inspection" class="nav-link">Inspection</a></li>
-                </ul>
-    
-                <div class="tab-content pt-3">
-                    <div class="tab-pane active" id="loading"></div>
-                    <div class="tab-pane" id="unloading"></div>
-                    <div class="tab-pane" id="inspection"></div>
-                </div>
-                <!-- Button trigger modal -->
-                <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
-                    Clear Web Service Actions
-                </button>
-                
-                <!-- Modal -->
-                <div class="modal fade" id="clearModal" tabindex="-1" role="dialog" aria-labelledby="clearModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="clearModalLabel">Caution</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                            </div>
-                            <div class="modal-body">
-                            Clearing the Web Service Actions will remove all pending, in-progress and completed actions!
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                <button id="clear-actions"type="button" class="btn btn-warning" data-dismiss="modal">Clear Actions</button>
+                    <br>
+                    
+                    <!-- Clear Modal -->
+                    <div class="modal fade" id="clearModal" tabindex="-1" role="dialog" aria-labelledby="clearModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="clearModalLabel">Caution</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                Clearing the actions will remove all pending, in-progress and completed actions!
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button id="clear-actions"type="button" class="btn btn-warning" data-dismiss="modal">Clear Actions</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                 </div>
+                </div>
+                <br>
+                <div class="footerPanel">
+                    <div class="logos">
+                        <img th:src="@{/images/logos/FHWALogo_2.png}" class="fhwa-logo"/>
+                        <img th:src="@{/images/logos/marad.png}" class="marad-logo"/>
+                    </div>
+                    <div class="version" >V2X-Hub 6.2</div>
+                    <div class="copyright">Copyright &copy LEIDOS <script>document.write( new Date().getFullYear() );</script> </div>
+                </div>
             </div>
-        </div>
-    
-    </div>
-    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-    <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script>
-        window.setInterval('refresh()', 5000); 	// Call a function every 5000 milliseconds (OR 5 seconds).
-        // Refresh or reload page.
-        function refresh() {
-            $('#loading').load("loading/")
-            $('#unloading').load("unloading/")
-            $('#inspection').load("inspection/")
-
-        }
-
-    </script>
-    <script>
-        $('#myTabs a').click(function (e) {
-            e.preventDefault();
-    
-            var url = $(this).attr("data-url");
-            var href = this.hash;
-            var pane = $(this);
-    
-            // ajax load from data-url
-            $(href).load(url, function (result) {
-                pane.tab('show');
-            });
-        });
-    
-        // load first tab content
-        $('#loading').load($('.nav-link.active').attr("data-url"), function (result) {
-        });
-
-    </script>
-    <script >
-        // Clear Web Service Actions
-        $('#clear-actions').on('click', function (e) {
-            console.log(e)    
-            e.preventDefault();
-            $.ajax({
-                type: 'post',
-                url: 'reset/',
-                success: function () {
+            <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+            <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
+            <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+            <script>
+                window.setInterval('refresh()', 2000); 	// Call a function every 5000 milliseconds (OR 5 seconds).
+                // Refresh or reload page.
+                function refresh() {
                     $('#loading').load("loading/")
                     $('#unloading').load("unloading/")
                     $('#inspection').load("inspection/")
+                    $("#loadingNotif").load(" #loadingNotif > *");
+                    $("#unloadingNotif").load(" #unloadingNotif > *");
+                    $("#inspectionNotif").load(" #inspectionNotif > *");
                 }
-            });
-        });
-    </script>
-</main>
-<!-- /.container -->
 
+            </script>
+            <script>
+                $('#myTabs a').click(function (e) {
+                    e.preventDefault();
+            
+                    var url = $(this).attr("data-url");
+                    var href = this.hash;
+                    var pane = $(this);
+            
+                    // ajax load from data-url
+                    $(href).load(url, function (result) {
+                        pane.tab('show');
+                    });
+                });
+            
+                // load first tab content
+                $('#loading').load($('.nav-link.active').attr("data-url"), function (result) {
+                });
 
-</body>
+            </script>
+            <script>
+                // Clear Web Service Actions
+                $('#clear-actions').on('click', function (e) {
+                    console.log(e)    
+                    e.preventDefault();
+                    $.ajax({
+                        type: 'post',
+                        url: 'uiaction/reset/',
+                        success: function () {
+                            $('#loading').load("loading/")
+                            $('#unloading').load("unloading/")
+                            $('#inspection').load("inspection/")
+                            $("#loadingNotif").load(" #loadingNotif > *");
+                            $("#unloadingNotif").load(" #unloadingNotif > *");
+                            $("#inspectionNotif").load(" #inspectionNotif > *");
+                        }
+                    });
+                });
+            </script>
+        </main>
+        
+
+    </body>
 </html>

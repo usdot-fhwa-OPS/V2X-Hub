@@ -1,0 +1,77 @@
+/* Main Style Sheet */
+
+/*Overwrite container class from bootstrap to occupy 100% of vertical
+ and horizontal space. Container contains all page content including 
+ footer.*/
+.container{
+    position: relative;
+    min-height: 100vh;
+    min-width: 100%;
+}
+
+/*Contains all context except footer. Padding at the bottom to make room 
+for footer.*/
+.content-wrap {
+    padding-bottom: 2.5rem;
+}
+
+/*Styling for footer panel. Split into thirds for logos, version, and copyright.
+ Positioned at absolute bottom. Using flex-box space around to make footer 
+ elements be left, center and right justified.*/
+.footerPanel{
+    width: 100%;
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+/*Footer element styling*/
+.marad-logo{
+    max-height: 40px;
+    align-self: center;
+    margin-left: 10px;
+}
+/*Marad logo has approximately twice as much white space as FHWA logo */
+.fhwa-logo{
+    max-height:80px;
+    align-self: center;
+    margin-right: 10px;
+}
+/* Container holding both FHWA and MARAD logos */
+.logos{
+    display:flex;
+    width: 33%;
+}
+/* Copyright right aligned */
+.copyright{
+    width: 33%;
+    text-align: right !important;
+    padding: 0px 10px;
+    font-family: Roboto;
+    font-weight: normal;
+    font-size: 80%;
+    color: #000000;
+    display: block;
+}
+/* Version text center aligned */
+.version {
+    width: 33%;
+    text-align: center !important;
+    padding: 0px 10px;
+    font-family: Roboto;
+    font-weight: normal;
+    font-size: 80%;
+    color: #000000;
+    display: block;
+
+}
+
+
+
+

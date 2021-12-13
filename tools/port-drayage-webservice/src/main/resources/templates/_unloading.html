@@ -1,24 +1,27 @@
-    <div class="jumbotron" th:if="${@unloadingActions.getCurrentAction() != null}">
-        <h1 class="display-4">Requested Unloading Action</h1>
-        <h1 class="h4">
-            Unload vehicle : 
-                <strong th:text="${@unloadingActions.getCurrentAction().getVehicleId()}"></strong> 
-            with container : 
-                <strong th:text="${@unloadingActions.getCurrentAction().getContainerId()}"></strong>
-        </h1>
-        <hr class="my-4">
-        <p class="lead" th:value="${@unloadingActions.getCurrentAction().getStatus()}"
-            th:text="|Status : ${@unloadingActions.getCurrentAction().getStatus()}|"></p>
-        <p class="lead">
-            <button class="btn btn-primary btn-lg btn-block" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('PENDING')}"
-                id="start-unloading">Start Unloading</button>
+<h3 class="font-weight-bold">Port Drayage Unloading Area </h3>
+<br>
+   <div class="jumbotron" th:if="${@unloadingActions.getCurrentAction() != null}">
+        <div class="action-dialog-left">
+            <h4>
+                Vehicle : 
+                    <strong th:text="${@unloadingActions.getCurrentAction().getVehicleId()}"></strong> 
+                with cargo : 
+                    <strong th:text="${@unloadingActions.getCurrentAction().getContainerId()}"></strong>
+            </h4>
+            <h4 class="font-weight-bold" th:text="|Status : ${@unloadingActions.getCurrentAction().getStatus()}|"></h4>
+            <br>
+            <button class="btn btn-info btn-lg pl-10 pr-10" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('PENDING')}"
+                id="start-unloading">START UNLOADING</button>
 
-            <button class="btn btn-success btn-lg btn-block" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('UNLOADING')}"
-                id="complete-unloading">Complete Unloading</button>
-
-        </p>
+            <button class="btn btn-success btn-lg pl-10 pr-10" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('UNLOADING')}"
+                id="complete-unloading">COMPLETE UNLOADING</button>
+        </div>
+        <div class="action-dialog-right">
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('STAGING_AREA')}">Staging Area</strong>
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">Port Area</strong>
+        </div>
     </div>
-    <h1 class="display-4">Pending Unloading Actions</h1>
+    <h4 class="font-weight-bold">Pending Unloading Actions</h4>
     <table class="table">
         <thead>
             <tr>
@@ -42,7 +45,7 @@
         </tbody>
     </table>
 
-    <h1 class="display-4">Completed Unloading Actions</h1>
+    <h4 class="font-weight-bold" >Completed Unloading Actions</h4>
     <table class="table">
         <thead>
             <tr>
@@ -68,6 +71,12 @@
             </tr>
         </tbody>
     </table>
+    <div class="clear-button">
+        <!-- Button trigger clear modal -->
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
+            Clear Actions
+        </button>
+    </div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
