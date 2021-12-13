@@ -74,7 +74,7 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
     // Note: could have also called std:ctime(&t) - it's an alias.
-	struct tm *tm1 = new struct tm;  
+	 struct tm *tm1 = new struct tm;  
 	tm = localtime_r(&t,tm);
     std::string calStr = std::asctime(tm);
     // Remove trailing newline.
