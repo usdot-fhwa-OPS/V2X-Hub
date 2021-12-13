@@ -127,7 +127,7 @@ std::ostream &_logtime(std::ostream &os, uint64_t timestamp)
 
 	os << "[" << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms << "] " << std::setfill(' ');
 
-	delete[] myTm;
+	delete myTm;
 	return os;
 }
 
