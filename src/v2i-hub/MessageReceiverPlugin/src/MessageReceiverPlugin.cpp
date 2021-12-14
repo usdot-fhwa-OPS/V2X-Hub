@@ -581,6 +581,7 @@ int MessageReceiverPlugin::Main()
 				extractedpayload=incoming; 
 
 				// if verification enabled, access HSM
+
 				if (verState == 1)
 				{
 
@@ -626,11 +627,11 @@ int MessageReceiverPlugin::Main()
 					cJSON *root   = cJSON_Parse(result.c_str());
 					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
 
+
 					int msgValid = sd->valueint;
 
 					string extractedmsg=""; 
 					bool foundId=false; 
-
 					if (msgValid == 1)
 					{
 						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message 
