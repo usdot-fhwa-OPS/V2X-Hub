@@ -21,9 +21,10 @@ class UdpClientRuntimeError : public tmx::TmxException
 {
 public:
 	UdpClientRuntimeError(const char *w) : tmx::TmxException(w) {}
+
 };
 
-class UdpClient
+class UdpClient 
 {
 public:
 	UdpClient(const std::string& address, int port);
@@ -46,3 +47,4 @@ private:
 }} // namespace tmx::utils
 
 #endif /* UDPCLIENT_H_ */
+
