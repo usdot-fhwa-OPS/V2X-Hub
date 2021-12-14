@@ -53,12 +53,18 @@ MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManage
 	//SubscribeToMessages();
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
+	
+	// @SONAR_STOP@
+
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue("HSMLocation",liblocation);
-
+	
 	GetConfigValue<string>("HSMurl",baseurl);
 	std::string request="verifySig";
 	url=baseurl+request;
+	
+	// @SONAR_START@
+
 }
 
 MessageReceiverPlugin::~MessageReceiverPlugin() { }
@@ -75,6 +81,7 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	return &encMsg;
 }
 
+// @SONAR_STOP@
 
 string hex2bin(char c)
 {
@@ -95,7 +102,7 @@ string hex2bin(char c)
         case 'C': return "1100";
         case 'D': return "1101";
         case 'E': return "1110";
-        case 'F': return "1111";
+        default : return "1111";
     }
 }
 
@@ -104,7 +111,7 @@ char bin2hex(string b)
 	const char *c=b.c_str(); 
 	int dec = strtol(c,nullptr,2);
 
-	if (dec >=0 & dec <=9)
+	if (dec >=0 && dec <=9)
 		return dec+'0'; 
 	else
 		return dec+'A'-10;  
@@ -149,11 +156,11 @@ string dec2bin(int a)
 
 string base642bin(char b64)
 {
-	if (b64 >='A' & b64 <='Z')
+	if (b64 >='A' && b64 <='Z')
 		 return dec2bin(b64-'A'); 
-	else if (b64 >='a' & b64 <='z')
+	else if (b64 >='a' && b64 <='z')
 		return dec2bin(b64-'a'+26); 
-	else if (b64 >='0' & b64 <='9') 
+	else if (b64 >='0' && b64 <='9') 
 		return dec2bin(b64-'0'+52); 
 	else if (b64 == '+')
 		return dec2bin(62);
@@ -230,6 +237,9 @@ void MessageReceiverPlugin::base642hex(string base64str, string& hexstr)
 
 
 }
+
+	
+	// @SONAR_START@
 
 BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
@@ -516,6 +526,8 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue("HSMLocation",liblocation);
 	GetConfigValue<string>("HSMurl",baseurl);
+	std::string request="verifySig";
+	url=baseurl+request;
 
 	lock_guard<mutex> lock(syncLock);
 
@@ -579,6 +591,9 @@ int MessageReceiverPlugin::Main()
 				totalBytes += len;
 
 				extractedpayload=incoming; 
+				
+				// @SONAR_STOP@
+
 
 				// if verification enabled, access HSM
 
@@ -650,7 +665,8 @@ int MessageReceiverPlugin::Main()
 								
 								if (msg[idloc+4] == '8') // if the length is longer than 256 
 								{
-									const char *c = msg.substr(idloc+5,3).c_str(); // take out next three nibble for length 
+									string tmp = msg.substr(idloc+5,3); 
+									const char *c = tmp.c_str(); // take out next three nibble for length 
 									int len = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
 
 									extractedmsg = msg.substr(idloc,len);
@@ -662,7 +678,8 @@ int MessageReceiverPlugin::Main()
 
 								else 
 								{
-									const char *c = msg.substr(idloc+4,2).c_str(); // take out next three nibble for length 
+									string tmp = msg.substr(idloc+4,2);
+									const char *c = tmp.c_str(); // take out next three nibble for length 
 									int len = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
 
 									extractedmsg = msg.substr(idloc,len);
@@ -695,6 +712,7 @@ int MessageReceiverPlugin::Main()
 					}
 
 				}
+				// @SONAR_START@
 
 				// Support different encodings
 				string enc;

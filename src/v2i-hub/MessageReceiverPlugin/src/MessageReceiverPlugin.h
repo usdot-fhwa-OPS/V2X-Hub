@@ -30,7 +30,7 @@ class MessageReceiverPlugin: public tmx::utils::TmxMessageManager {
 public:
 	MessageReceiverPlugin(std::string);
 	virtual ~MessageReceiverPlugin();
-
+// @SONAR_STOP@
 	int Main();
 	void OnMessageReceived(tmx::routeable_message &msg);
 	void hex2base64(string hexstr, string& base64str); 
@@ -54,7 +54,9 @@ private:
 	std::string liblocation; 
 	std::string url; 
 	std::string baseurl;
+
 	//softhsm st; 
+// @SONAR_START@
 
 };
 
