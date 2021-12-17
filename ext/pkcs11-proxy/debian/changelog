@@ -1,0 +1,53 @@
+pkcs11-proxy (0.4-1ubuntu4) trusty; urgency=medium
+
+  * debian updates
+
+ -- Leif Johansson <leifj@sunet.se>  Fri, 17 Jul 2015 11:02:03 +0200
+
+pkcs11-proxy (0.4-1ubuntu3) trusty; urgency=medium
+
+  [ Klaus Darilion ]
+  * Update seccomp usage to match Ubuntu 14.04.
+
+ -- Fredrik Thulin <fredrik@thulin.net>  Tue, 17 Feb 2015 19:20:13 +0100
+
+pkcs11-proxy (0.4-1ubuntu2) precise; urgency=low
+
+  * Support IPv6 and connect-fallback through getaddrinfo()
+  * Implement TLS-PSK using OpenSSL
+  * Use libseccomp and reduce number of syscalls allowed in dispatchers
+  * Several important bug fixes (now passes SoftHSM test suite)
+
+ -- Fredrik Thulin <fredrik@thulin.net>  Wed, 30 Jan 2013 09:56:34 +0100
+
+pkcs11-proxy (0.4-1ubuntu1) precise; urgency=low
+
+  * disable debugging by default
+  * use syslog instead of stderr unless DEBUG_OUTPUT is 1
+
+ -- Leif Johansson <leifj@sunet.se>  Tue, 04 Sep 2012 15:58:45 +0200
+
+pkcs11-proxy (0.3-1ubuntu~seccomp1) precise; urgency=low
+
+  [ Corentin Chary ]
+  * debian: remove commonit specific stuff
+
+  [ Andre Grueneberg ]
+  * Compile in normal debian environment
+  * Error in SetPIN
+
+  [ Leif Johansson ]
+  * basic seccmp filter
+
+ -- Leif Johansson <leifj@sunet.se>  Tue, 04 Sep 2012 13:37:56 +0200
+
+pkcs11-proxy (0.2-1ubuntu1) precise; urgency=low
+
+  [ Corentin Chary ]
+  * Initial release.
+
+  [ Leif Johansson ]
+  * Make it build without the opt prefix
+  * support for calling pkcs11-daemon from inetd/stunnel directly
+
+ -- Leif Johansson <leifj@sunet.se>  Tue, 04 Sep 2012 09:02:52 +0200
