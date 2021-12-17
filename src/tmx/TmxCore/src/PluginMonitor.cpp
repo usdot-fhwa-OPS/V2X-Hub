@@ -66,9 +66,9 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	statusItems[PLUGINMONITOR_STATUSKEY_NUMBERPLUGINS] = "0";
 	this->setStatusItems(statusItems);
 
-	pthread_mutex_init(&this->mMessagesLock, NULL);
+	pthread_mutex_init(&this->mMessagesLock, nullptr);
 
-	struct passwd *pwd = NULL;
+	struct passwd *pwd = nullptr;
 	struct passwd *result = nullptr;
     	char buf[64]; //assuming passwords are 64 bits long most
     	memset(&buf, 0, sizeof buf);
@@ -258,7 +258,7 @@ void PluginMonitor::monitorThreadEntry()
 			vector<map<InstalledPluginEntry, PluginMonitoringData>::iterator> deadPlugins;
 			for (map<InstalledPluginEntry, PluginMonitoringData>::iterator itr = mRunningPlugins.begin(); itr != mRunningPlugins.end(); itr++)
 			{
-				waitpid(itr->second.pid, NULL, WNOHANG);
+				waitpid(itr->second.pid, nullptr, WNOHANG);
 				if (kill(itr->second.pid, 0) != 0)
 					deadPlugins.push_back(itr);
 			}

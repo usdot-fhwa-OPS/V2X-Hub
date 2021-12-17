@@ -110,8 +110,8 @@ void Plugin::registerPlugin(RegistrationInformation info)
 	this->addEventLogEntry(LogLevel_Info, "Plugin registered");
 	this->setPluginStatus(IVP_STATUS_RUNNING);
 
-	IvpMessage *msg = ivpMsg_create(NULL, NULL, NULL, IvpMsgFlags_None, NULL);
-	if (msg != NULL)
+	IvpMessage *msg = ivpMsg_create(nullptr, nullptr, nullptr, IvpMsgFlags_None, nullptr);
+	if (msg != nullptr)
 		this->sendMessageToRouter(msg);
 }
 
@@ -210,7 +210,7 @@ void Plugin::addEventLogEntry(LogLevel level, std::string description)
 uint64_t Plugin::GetMsTimeSinceEpoch2()
 {
 	struct timeval tv;
-	gettimeofday(&tv, NULL);
+	gettimeofday(&tv, nullptr);
 	return (uint64_t)((double)(tv.tv_sec) * 1000 + (double)(tv.tv_usec) / 1000);
 }
 

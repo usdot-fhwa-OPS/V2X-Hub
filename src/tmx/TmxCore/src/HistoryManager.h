@@ -21,7 +21,7 @@
 class HistoryManager : public Plugin
 {
 public:
-	HistoryManager(MessageRouter *messageRouter);
+	explicit HistoryManager(MessageRouter *messageRouter);
 	~HistoryManager();
 
 protected:

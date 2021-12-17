@@ -22,7 +22,7 @@
 class MessageProfiler : public Plugin
 {
 public:
-	MessageProfiler(MessageRouter *messageRouter);
+	explicit MessageProfiler(MessageRouter *messageRouter);
 	~MessageProfiler();
 
 	virtual void onConfigChanged(std::string key, std::string value);
