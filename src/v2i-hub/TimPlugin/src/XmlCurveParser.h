@@ -37,7 +37,7 @@ public:
   	}
   	XmlCurveParser(XmlCurveParser &&fp) noexcept {
   	}
- 	 XmlCurveParser const & operator=(XmlCurveParser &&fp) {
+ 	 XmlCurveParser const & operator=(XmlCurveParser &&fp) noexcept {
   
   	}
 

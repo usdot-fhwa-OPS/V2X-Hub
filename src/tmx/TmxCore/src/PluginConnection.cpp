@@ -39,8 +39,8 @@ PluginConnection::~PluginConnection()
 
 void PluginConnection::onConfigChanged(string key, string value)
 {
-	IvpConfigCollection *collection = NULL;
-	collection = ivpConfig_addItemToCollection(collection, key.c_str(), value.c_str(), NULL);
+	IvpConfigCollection *collection = nullptr;
+	collection = ivpConfig_addItemToCollection(collection, key.c_str(), value.c_str(), nullptr);
 
 	IvpMessage *msg = ivpConfig_createMsg(collection);
 	if (msg)
@@ -123,15 +123,15 @@ void PluginConnection::receiverThread()
 
 		msgFramer_incrementBufPos(&framer, recvcount);
 
-		char *rawMessage = NULL;
+		char *rawMessage = nullptr;
 
-		while ((rawMessage = msgFramer_getNextMsg(&framer)) != NULL)
+		while ((rawMessage = msgFramer_getNextMsg(&framer)) != nullptr)
 		{
 			// Create an IvpMessage from the raw message.
 			IvpMessage *msg = ivpMsg_parse(rawMessage);
 
 			// If the message could not be parsed, send an error message back to the plugin.
-			if (msg == NULL)
+			if (msg == nullptr)
 			{
 				IvpMessage *errMsg = ivpError_createMsg(ivpError_createError(IvpLogLevel_warn, IvpError_messageParse, 0));
 				if (errMsg)
@@ -176,7 +176,7 @@ void PluginConnection::fastProcessorThread()
 #endif
 
 	bool messageWaiting = false;
-	IvpMessage *msg = NULL;
+	IvpMessage *msg = nullptr;
 
 	// Disable interruption of this thread (as long as the variable below is in scope).
 	// This allows the thread to exit gracefully by checking interruption_requested().
@@ -200,12 +200,12 @@ void PluginConnection::fastProcessorThread()
 		}
 		else
 		{
-			msg = NULL;
+			msg = nullptr;
 		}
 
 		mMutexFastMessageQueue.unlock();
 
-		if (msg == NULL) continue;
+		if (msg == nullptr) continue;
 
 		// These system messages (registration, subscribe, and config) are handled on this fast processor thread.
 		// This ensures no important message get out of order.
@@ -259,7 +259,7 @@ void PluginConnection::slowProcessorThread()
 #endif
 
 	bool messageWaiting = false;
-	IvpMessage *msg = NULL;
+	IvpMessage *msg = nullptr;
 
 	// Disable interruption of this thread (as long as the variable below is in scope).
 	// This allows the thread to exit gracefully by checking interruption_requested().
@@ -283,12 +283,12 @@ void PluginConnection::slowProcessorThread()
 		}
 		else
 		{
-			msg = NULL;
+			msg = nullptr;
 		}
 
 		mMutexSlowMessageQueue.unlock();
 
-		if (msg == NULL) continue;
+		if (msg == nullptr) continue;
 
 		if (ivpPluginStatus_isStatusMsg(msg))
 		{
@@ -350,7 +350,7 @@ void PluginConnection::processRegistrationMessage(IvpMessage *msg)
 				this->registerPlugin(info);
 
 				map<string, PluginConfigurationParameterEntry> configEntries = this->getAllConfigValues();
-				IvpConfigCollection *collection = NULL;
+				IvpConfigCollection *collection = nullptr;
 				for (map<string, PluginConfigurationParameterEntry>::iterator itr = configEntries.begin(); itr != configEntries.end(); itr++)
 				{
 					if (itr->second.value != itr->second.defaultValue)
@@ -400,11 +400,11 @@ void PluginConnection::processSubscribeMessage(IvpMessage *msg)
 		IvpMsgFlags flagmask;
 		ivpSubscribe_getFilterEntry(msg, i, &type, &subtype, &flagmask);
 
-		if (type != NULL)
+		if (type != nullptr)
 		{
 			MessageFilterEntry filterEntry;
 			filterEntry.type = string(type);
-			if (subtype != NULL)
+			if (subtype != nullptr)
 			{
 				filterEntry.subtype = string(subtype);
 			}
@@ -483,7 +483,7 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 		IvpPluginStatusItem *item = ivpPluginStatus_getItem(msg->payload, i);
 		assert(item != NULL);
 
-		if (item->value == NULL)
+		if (item->value == nullptr)
 		{
 			assert(item->key);
 			if (item->key && strlen(item->key) > 0)
@@ -519,7 +519,7 @@ void PluginConnection::processEventLogMessage(IvpMessage *msg)
 		assert(eventLogEntry->description != NULL);
 		assert(eventLogEntry->description[0] != '\0');
 
-		if (eventLogEntry != NULL && eventLogEntry->description[0] != '\0')
+		if (eventLogEntry != nullptr && eventLogEntry->description[0] != '\0')
 		{
 			this->addEventLogEntry((LogLevel)eventLogEntry->level, string(eventLogEntry->description));
 		}

@@ -41,8 +41,8 @@ void PluginServer::startServer()
 	int flags;
 	int on = 1;
 	
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,nullptr);
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,nullptr);
 
 	//Create unnamed socket
 	server_sockfd = socket(AF_INET, SOCK_STREAM,0);
