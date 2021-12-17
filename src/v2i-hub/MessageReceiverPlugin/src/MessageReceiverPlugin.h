@@ -18,7 +18,7 @@
 #include <memory>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
-
+#include <tmx/Security/include/base64.h>
 //#include <tmx/Security/include/softhsm2.h>
 
 #define UDP "UDP"
@@ -33,8 +33,7 @@ public:
 // @SONAR_STOP@
 	int Main();
 	void OnMessageReceived(tmx::routeable_message &msg);
-	void hex2base64(string hexstr, string& base64str); 
-	void base642hex(string base64str, string& hexstr);
+	void getmessageid();
 protected:
 	void UpdateConfigSettings();
 
@@ -54,6 +53,8 @@ private:
 	std::string liblocation; 
 	std::string url; 
 	std::string baseurl;
+	std::vector<string> messageid;
+	std::string messageidstr; 
 
 	//softhsm st; 
 // @SONAR_START@

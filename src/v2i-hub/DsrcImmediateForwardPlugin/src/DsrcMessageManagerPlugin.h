@@ -21,6 +21,8 @@
 //#include <tmx/Security/include/softhsm2.h>
 #include <curl/curl.h>
 #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+#include <tmx/Security/include/base64.h>
+
 
 namespace DsrcMessageManager
 {
@@ -46,9 +48,6 @@ private:
 	int GetUdpClientIndexForMessage(std::string subtype);
 	void SendMessageToRadio(IvpMessage *msg);
 	// @SONAR_STOP@
-
-	void hex2base64(string hexstr, string& base64str); 
-	void base642hex(string base64str, string& hexstr);
  
 
 
