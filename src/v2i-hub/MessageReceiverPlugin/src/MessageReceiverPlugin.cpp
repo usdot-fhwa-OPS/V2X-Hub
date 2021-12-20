@@ -432,6 +432,8 @@ int MessageReceiverPlugin::Main()
 	std::unique_ptr<tmx::utils::UdpServer> server;
 
 	byte_stream extractedpayload(4000);
+
+	int mlen=0;
  
 
 	while (_plugin->state != IvpPluginState_error)
@@ -454,14 +456,12 @@ int MessageReceiverPlugin::Main()
 		{
 			int len = server ? server->TimedReceive((char *)incoming.data(), incoming.size(), 5) : 0;
 
+
 			if (len > 0)
 			{
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				totalBytes += len;
-
-
-				extractedpayload=incoming; 
 				
 				// @SONAR_STOP@
 				// if verification enabled, access HSM
@@ -469,33 +469,19 @@ int MessageReceiverPlugin::Main()
 				if (verState == 1)
 				{  
 
+					//  convert unit8_t vector to hex stream 
 
-					char arr[incoming.size()+1];
-					for (int i= 0;i < incoming.size()-1;i++)
-					{
-						arr[i]=incoming[i];
+    				stringstream ss;
+    				ss << std::hex << std::setfill('0');
+					uint16_t it=0; 
 
-					}
+    				for (uint16_t it=0; it <len; it++) {
+        				ss << std::setw(2) << static_cast<unsigned>(incoming[it]);
+    				}
 
-					// get hex stream from the binary
-
-
-					std::string msgbin(arr);
-					unsigned char out[incoming.size()+1]; 
-					for(unsigned int c = 0; c < incoming.size(); c++)
-					{
-						unsigned int in;
-						sscanf(msgbin.data() + (c * 2), "%02x", &in);
-						out[c] = in;
-					}
-
-
-					string msg(reinterpret_cast <char const*>(out));
-
-
+					string msg = ss.str(); 
 
 					//the incoming payload is hex encoded, convert this to base64 
-
 					std::string base64msg="";
 
 					hex2base64(msg,base64msg);
@@ -511,7 +497,7 @@ int MessageReceiverPlugin::Main()
 					std::string result="";
 					FILE* pipe= popen(cmd,"r"); 
 
-					if (pipe != NULL ) throw std::runtime_error("popen() failed!");
+					if (pipe == NULL ) throw std::runtime_error("popen() failed!");
 					
 					try{
 						while (fgets(buffer, sizeof(buffer),pipe) != NULL)
@@ -529,7 +515,8 @@ int MessageReceiverPlugin::Main()
 					int msgValid = sd->valueint;
 
 					string extractedmsg=""; 
-					bool foundId=false; 
+					bool foundId=false;
+
 					if (msgValid == 1)
 					{
 						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message 
@@ -541,46 +528,43 @@ int MessageReceiverPlugin::Main()
 							//look for the message header within the first 20 bytes. 
 							size_t idloc = msg.find(*itr);
 
-
 							if(idloc != string::npos and idloc < IDCHECKLIMIT) // making sure the msgID lies within the first IDCHECKLIMIT Characters 
 							{
 								// message id found 
-								
 								if (msg[idloc+4] == '8') // if the length is longer than 256 
 								{
 									string tmp = msg.substr(idloc+5,3); 
 									const char *c = tmp.c_str(); // take out next three nibble for length 
-									int len = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
-
-									extractedmsg = msg.substr(idloc,len);
-									byte_stream	temp(extractedmsg.begin(),extractedmsg.end()); 
-
-									extractedpayload = temp; 
+									mlen = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
+									extractedmsg = msg.substr(idloc,mlen); 
 
 								}
-
 								else 
 								{
 									string tmp = msg.substr(idloc+4,2);
 									const char *c = tmp.c_str(); // take out next three nibble for length 
-									int len = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
-
-									extractedmsg = msg.substr(idloc,len);
-									byte_stream	temp(extractedmsg.begin(),extractedmsg.end()); 
-
-									extractedpayload=temp; 
+									mlen = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
+									extractedmsg = msg.substr(idloc,mlen);
 								}
 
 								foundId=true; 
-								break; // can break out if already found a msg id 
 
+								int k=0; 
+
+								for (unsigned int i = 0; i < extractedmsg.length(); i += 2) {
+									string bs = extractedmsg.substr(i, 2);
+									uint8_t byte = (uint8_t) strtol(bs.c_str(), nullptr, 16);
+									extractedpayload[k++]=byte; 
+									
+								}
+								break; // can break out if already found a msg id 
 							} 
 							itr++; 
 						}
 
 						if (foundId==false)
 						{
-							PLOG(logERROR) <<" Unable to find any valid msg ID in the incoming message. \n"; 
+							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n"; 
 							continue;  //do not send the message out to v2x hub if msgid check fails 
 						}
 					}
@@ -591,6 +575,9 @@ int MessageReceiverPlugin::Main()
 						continue; // do not send the message out to v2x hub core if validation fails 
 					}
 
+				}
+				else {
+				extractedpayload=incoming; 
 				}
 
 				// @SONAR_START@
@@ -615,11 +602,7 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				len = extractedpayload.size();
-				
-
-
-				this->IncomingMessage(extractedpayload.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				this->IncomingMessage(extractedpayload.data(), extractedpayload.size(), enc.empty() ? NULL : enc.c_str(), 0, 0, time);
 				
 			}
 			else if (len < 0)
