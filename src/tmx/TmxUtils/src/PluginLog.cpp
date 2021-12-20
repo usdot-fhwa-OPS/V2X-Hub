@@ -84,7 +84,7 @@ void Output2Syslog::Output(LogMessage &msg)
 		return;
 
 	int level = ToSyslogLevel(msg.level);
-	openlog(msg.component.empty() ? 0 : msg.component.c_str(), LOG_NDELAY, LOG_USER);
+	openlog(msg.component.empty() ? nullptr : msg.component.c_str(), LOG_NDELAY, LOG_USER);
 	syslog(level, "%s", msg.log.c_str());
 }
 

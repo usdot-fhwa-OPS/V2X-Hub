@@ -38,7 +38,7 @@ void LogContext::addEventLogEntry(std::string source, std::string description, L
 	}
 
 	try {
-		auto_ptr<sql::Statement> stmt(this->getStatement());
+		unique_ptr<sql::Statement> stmt(this->getStatement());
 
 		stringstream query;
 		query << "INSERT INTO `eventLog` (`source`,`description`,`logLevel`) VALUES (";
@@ -58,12 +58,12 @@ void LogContext::addEventLogEntry(std::string source, std::string description, L
 
 int LogContext::purgeOldLogEntries(unsigned int numberToKeep)
 {
-	auto_ptr<sql::Statement> stmt(this->getStatement());
+	unique_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "SELECT `id` FROM `eventLog`;";
 
-	auto_ptr<sql::ResultSet> res(stmt->executeQuery(query.str()));
+	unique_ptr<sql::ResultSet> res(stmt->executeQuery(query.str()));
 
 	unsigned int count = res->rowsCount();
 

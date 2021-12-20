@@ -10,8 +10,8 @@
 AutoResetEvent::AutoResetEvent(bool initial)
 	: _flag(initial)
 {
-	pthread_mutex_init(&_protect, NULL);
-	pthread_cond_init(&_signal, NULL);
+	pthread_mutex_init(&_protect, nullptr);
+	pthread_cond_init(&_signal, nullptr);
 }
 
 void AutoResetEvent::Set()

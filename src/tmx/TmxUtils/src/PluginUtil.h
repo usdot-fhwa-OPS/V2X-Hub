@@ -34,7 +34,7 @@ public:
 	// value - The returned bool value.
 	// mutex - If non-NULL, this mutex is locked while value is set.
 	// Returns true on success; false if the value could not be retrieved.
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, bool *value, pthread_mutex_t *mutex = NULL);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, bool *value, pthread_mutex_t *mutex = nullptr);
 
 	// Get a string configuration value for the specified IVP plugin.
 	// plugin - The IVP plugin.
@@ -42,12 +42,12 @@ public:
 	// value - The returned string value.  Note that if the value passed is is non-NULL, it is first freed.
 	// mutex - If non-NULL, this mutex is locked while value is set.
 	// Returns true on success; false if the value could not be retrieved.
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, char **value, pthread_mutex_t *mutex = NULL);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, char **value, pthread_mutex_t *mutex = nullptr);
 
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, std::string *value, pthread_mutex_t *mutex = NULL);
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, int32_t *value, pthread_mutex_t *mutex = NULL);
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, uint32_t *value, pthread_mutex_t *mutex = NULL);
-	static bool GetConfigValue(IvpPlugin *plugin, const char *key, uint64_t *value, pthread_mutex_t *mutex = NULL);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, std::string *value, pthread_mutex_t *mutex = nullptr);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, int32_t *value, pthread_mutex_t *mutex = nullptr);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, uint32_t *value, pthread_mutex_t *mutex = nullptr);
+	static bool GetConfigValue(IvpPlugin *plugin, const char *key, uint64_t *value, pthread_mutex_t *mutex = nullptr);
 };
 
 // Set a status item.

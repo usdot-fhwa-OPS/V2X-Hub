@@ -221,7 +221,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 {
 	chrono::system_clock::time_point now = chrono::system_clock::now();
 	time_t tt = chrono::system_clock::to_time_t(now);
-	struct tm * utctime = gmtime( &tt );
+	struct tm * utctime = gmtime( &tt);
 
 	// In SPAT, the time stamp is split into minute of the year and millisecond of the minute
 	// Calculate the minute of the year

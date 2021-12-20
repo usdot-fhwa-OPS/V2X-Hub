@@ -64,7 +64,7 @@ private:
 	void runKeepAlive();
 	std::mutex freqLock;
 	std::mutex timeLock;
-	std::thread *_thread = 0;
+	std::thread *_thread = nullptr;
 	std::atomic<bool> _isRunning;
 };
 

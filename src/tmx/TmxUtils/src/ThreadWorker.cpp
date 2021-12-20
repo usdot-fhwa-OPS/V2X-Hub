@@ -30,18 +30,18 @@ void ThreadWorker::Start()
 
 void ThreadWorker::Stop()
 {
-	if (_thread != NULL && !_stopThread)
+	if (_thread != nullptr && !_stopThread)
 	{
 		_stopThread = true;
 		_thread->join();
 		delete _thread;
-		_thread = NULL;
+		_thread = nullptr;
 	}
 }
 
 bool ThreadWorker::IsRunning()
 {
-	return !_stopThread && _thread != NULL;
+	return !_stopThread && _thread != nullptr;
 }
 
 } /* namespace utils */

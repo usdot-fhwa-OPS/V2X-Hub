@@ -65,7 +65,7 @@ MessageProfiler::MessageProfiler(MessageRouter *messageRouter) : Plugin(messageR
 		LOG_WARN(e.what());
 	}
 
-	pthread_mutex_init(&this->mLock, NULL);
+	pthread_mutex_init(&this->mLock, nullptr);
 
 	this->mDbRefreshThread = boost::thread(&MessageProfiler::dbRefreshThreadEntry, this);
 }
@@ -86,13 +86,13 @@ void MessageProfiler::onConfigChanged(std::string key, std::string value)
 // of PluginConnection.
 void MessageProfiler::onMessageReceived(IvpMessage *msg)
 {
-	assert(msg != NULL);
+	assert(msg != nullptr);
 
 	// These are heartbeats. So don't profile them.
-	if (msg->type == NULL)// && msg->subtype == NULL)
+	if (msg->type == nullptr)// && msg->subtype == NULL)
 		return;
 
-	if (msg->source == NULL || msg->source[0] == '\0' || msg->sourceId == 0)
+	if (msg->source == nullptr || msg->source[0] == '\0' || msg->sourceId == 0)
 	{
 		LOG_WARN("Message does not contain source information... Dropping message.");
 		return;
@@ -107,7 +107,7 @@ void MessageProfiler::onMessageReceived(IvpMessage *msg)
 	// Since it only writes to the database when a new message type is encountered, it will not
 	// cause latency for subsequent messages of the same type.
 
-	MessageTypeEntry messageType(string(msg->type), string(msg->subtype != NULL ? msg->subtype : ""));
+	MessageTypeEntry messageType(string(msg->type), string(msg->subtype != nullptr ? msg->subtype : ""));
 	set<MessageTypeEntry>::iterator localMsgType = this->mMessageTypes.find(messageType);
 
 	if (localMsgType == this->mMessageTypes.end())

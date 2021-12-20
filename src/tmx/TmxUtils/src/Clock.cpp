@@ -96,7 +96,8 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 {
     std::time_t t = chrono::system_clock::to_time_t(tp);
 	short ms = tp.time_since_epoch() / std::chrono::milliseconds(1) % 1000;
-	struct tm *myTm = localtime(&t);
+	struct tm *myTm; 
+	myTm = localtime_r(&t,myTm);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 

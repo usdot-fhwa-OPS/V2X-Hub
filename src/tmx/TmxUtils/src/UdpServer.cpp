@@ -63,7 +63,7 @@ UdpServer::UdpServer(const std::string& address, int port)
 	hints.ai_protocol = IPPROTO_UDP;
 
 	int r(getaddrinfo(address.c_str(), decimalPort, &hints, &_addrInfo));
-	if (r != 0 || _addrInfo == NULL)
+	if (r != 0 || _addrInfo == nullptr)
 	{
 		throw UdpServerRuntimeError(("invalid address or port for UDP socket: \"" + address + ":" + decimalPort + "\"").c_str());
 	}

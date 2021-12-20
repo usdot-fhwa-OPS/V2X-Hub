@@ -34,11 +34,11 @@ static vector<std::pair<std::string, func_type> > fnRegistry;
 
 template <typename T = std::string>
 void registerFunction(string name, const char *aliases, const char *descr,
-					  func_type func, boost::program_options::typed_value<T> *argVal = 0)
+					  func_type func, boost::program_options::typed_value<T> *argVal = nullptr)
 {
 	fnRegistry.push_back(make_pair(name, func));
 
-	if (aliases != NULL)
+	if (aliases != nullptr)
 	{
 		name += ',';
 		name += aliases;
@@ -61,34 +61,34 @@ void registerFunction(string name, const char *aliases, const char *descr,
 	}
 }
 
-TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NULL)
+TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(nullptr)
 {
 	// Register the available functions as options
 #define REG_FN(X, Y, Z) registerFunction(#X, Y, Z, &TmxControl::X);
 #define REG_FN_ARG(X, Y, Z, T) registerFunction(#X, Y, Z, &TmxControl::X, \
 		boost::program_options::value<T>())
 
-	REG_FN(list, NULL, "List the plugin information");
+	REG_FN(list, nullptr, "List the plugin information");
 	REG_FN(enable, "e", "Enable the plugin for automatic startup");
 	REG_FN(disable, "d", "Disable the plugin for automatic startup");
-	REG_FN(start, NULL, "Start the plugin immediately");
-	REG_FN(stop, NULL, "Stop a running plugin.  If enabled, it will restart automatically");
-	REG_FN(status, NULL, "Return the current running status of the plugin");
-	REG_FN(config, NULL, "Return the current configuration parameters");
-	REG_FN(state, NULL, "Return the current state, i.e. the status values, of the plugin");
-	REG_FN(set, NULL, "Set a configuration value.  Must also set --key and --value.");
-	REG_FN(reset, NULL, "Reset a configuration value to its default.  Must also set --key.");
-	REG_FN(remove, NULL, "Remove a plugin from the database.");
-	REG_FN(messages, NULL, "Show plugin message activity.");
-	REG_FN(events, NULL, "Show event log.");
-	REG_FN(clear_event_log, NULL, "Clear out event log in database.");
-	REG_FN(system_config, NULL, "Return the current system configuration parameters.");
-	REG_FN(set_system, NULL, "Set a system configuration value.  Must also set --key and --value.");
-	REG_FN(user_info, NULL, "Display user information for a user. Must set --username.");
-	REG_FN(all_users_info, NULL, "Display user information for all users.");
-	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
-	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
-	REG_FN(user_delete, NULL, "Delete a TMX user.");
+	REG_FN(start, nullptr, "Start the plugin immediately");
+	REG_FN(stop, nullptr, "Stop a running plugin.  If enabled, it will restart automatically");
+	REG_FN(status, nullptr, "Return the current running status of the plugin");
+	REG_FN(config, nullptr, "Return the current configuration parameters");
+	REG_FN(state, nullptr, "Return the current state, i.e. the status values, of the plugin");
+	REG_FN(set, nullptr, "Set a configuration value.  Must also set --key and --value.");
+	REG_FN(reset, nullptr, "Reset a configuration value to its default.  Must also set --key.");
+	REG_FN(remove, nullptr, "Remove a plugin from the database.");
+	REG_FN(messages, nullptr, "Show plugin message activity.");
+	REG_FN(events, nullptr, "Show event log.");
+	REG_FN(clear_event_log, nullptr, "Clear out event log in database.");
+	REG_FN(system_config, nullptr, "Return the current system configuration parameters.");
+	REG_FN(set_system, nullptr, "Set a system configuration value.  Must also set --key and --value.");
+	REG_FN(user_info, nullptr, "Display user information for a user. Must set --username.");
+	REG_FN(all_users_info, nullptr, "Display user information for all users.");
+	REG_FN(user_add, nullptr, "Add a TMX user. Must set --username, --password, and --access-level.");
+	REG_FN(user_update, nullptr, "Update a TMX users info. Must set --username, --password, and --access-level.");
+	REG_FN(user_delete, nullptr, "Delete a TMX user.");
 
 	// These have arguments
 	REG_FN_ARG(max_message_interval, "M", "Set the max message interval for the plugin", std::string);
@@ -96,8 +96,8 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN_ARG(plugin_log_output, "O", "Redirect the logging of a running plugin to the specified file", std::string);
 	REG_FN_ARG(args, "a", "Set the command line arguments for the plugin", std::string);
 	REG_FN_ARG(load_manifest, "m", "(Re-)load the plugin manifest to the database", std::string);
-	REG_FN_ARG(plugin_install, NULL, "Decompress and install the specified plugin install file on this system.", std::string);
-	REG_FN_ARG(plugin_remove, NULL, "Delete the specified plugin on this system.  No wildcards accepted.", std::string);
+	REG_FN_ARG(plugin_install, nullptr, "Decompress and install the specified plugin install file on this system.", std::string);
+	REG_FN_ARG(plugin_remove, nullptr, "Delete the specified plugin on this system.  No wildcards accepted.", std::string);
 
 #undef REG_FN_ARG
 #undef REG_FN
@@ -162,20 +162,26 @@ bool TmxControl::checkPerm()
 	if (isRoot)
 		return true;
 
-	struct group *admGrp = ::getgrnam("adm");
+	char *buffer = nullptr;
+	size_t buffer_len = 0;
+	struct group grp = { nullptr, };
+	struct group *gid= nullptr;
+	
+	getgrnam_r("adm", &grp, buffer, buffer_len, &gid);
 
-	if (!admGrp)
+	if (gid == nullptr)
 		return false;
+
 
 	gid_t groups[256];
 	int total = getgroups(256, groups);
 
 	for (int i = 0; i < total; i++)
-		if (groups[i] == admGrp->gr_gid)
+		if (groups[i] == gid->gr_gid)
 			return true;
 
-	PLOG(logDEBUG) << "Trying to set effective group id to " << admGrp->gr_gid << " (" << admGrp->gr_name << ")";
-	if (::setregid(-1, admGrp->gr_gid) < 0)
+	PLOG(logDEBUG) << "Trying to set effective group id to " << gid->gr_gid << " (" << gid->gr_name << ")";
+	if (::setregid(-1, gid->gr_gid) < 0)
 	{
 		cerr << strerror(errno) << endl;
 		return false;

@@ -40,7 +40,7 @@
 class PluginServer
 {
 public:
-	PluginServer(MessageRouter *router);
+	explicit PluginServer(MessageRouter *router);
 	~PluginServer();
 
 

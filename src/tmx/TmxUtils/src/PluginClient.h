@@ -57,7 +57,7 @@ class PluginClient: public Runnable {
 	friend class PluginExtender;
 
 public:
-	PluginClient(std::string name);
+	explicit PluginClient(std::string name);
 	virtual ~PluginClient();
 
 	virtual bool ProcessOptions(const boost::program_options::variables_map &);
@@ -196,23 +196,23 @@ public:
 	// @param lock If non-NULL, this mutex is locked while value is set.
 	// @return true on success; false if the value could not be retrieved.
 	template <typename T>
-	bool GetConfigValue(const std::string &key, T &value, std::mutex *lock = NULL)
+	bool GetConfigValue(const std::string &key, T &value, std::mutex *lock = nullptr)
 	{
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		if (lock != NULL)
+		if (lock != nullptr)
 			lock->lock();
 
 		// Maybe this is a system-wide parameter?
-		if (text == NULL && _sysConfig != NULL)
+		if (text == nullptr && _sysConfig != nullptr)
 		{
 			pthread_mutex_lock(&_plugin->lock);
 			text = ivpConfig_getCopyOfValueFromCollection(_sysConfig, key.c_str());
 			pthread_mutex_unlock(&_plugin->lock);
 		}
 
-		if (text != NULL)
+		if (text != nullptr)
 		{
 			try
 			{
@@ -227,7 +227,7 @@ public:
 			free(text);
 		}
 
-		if (lock != NULL)
+		if (lock != nullptr)
 			lock->unlock();
 
 		return success;
@@ -275,7 +275,7 @@ public:
 
 		if (notify)
 		{
-			IvpConfigCollection *collection = NULL;
+			IvpConfigCollection *collection = nullptr;
 			collection = ivpConfig_addItemToCollection(collection, key.c_str(), valString.c_str(), defString.c_str());
 
 			tmx::routeable_message msg(ivpConfig_createMsg(collection));

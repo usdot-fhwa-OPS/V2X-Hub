@@ -20,7 +20,7 @@ namespace utils {
 class UdpServerRuntimeError : public tmx::TmxException
 {
 public:
-	UdpServerRuntimeError(const char *w) : tmx::TmxException(w) {}
+	explicit UdpServerRuntimeError(const char *w) : tmx::TmxException(w) {}
 };
 
 class UdpServer

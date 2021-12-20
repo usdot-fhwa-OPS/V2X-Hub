@@ -144,7 +144,11 @@ namespace PreemptionPlugin {
     void PreemptionPluginWorker::TurnOnPreemption(std::shared_ptr<PreemptionObject> po){
         std::string preemption_plan_flag = "1";
 
-        std::asctime(std::localtime(&(po->time)));
+	    struct tm *tm;
+            tm = localtime_r(&(po->time),tm); 
+
+        char * calStr_t=new char[128]; 
+        calStr_t = asctime_r(tm,calStr_t);
 
         preemption_map[po->vehicle_id] = *po;
         std::string PreemptionOid = base_preemption_oid + po->preemption_plan;
@@ -156,6 +160,10 @@ namespace PreemptionPlugin {
         else{
             std::cout << "Finished sending preemption plan.";
         }
+
+        delete[] tm;
+	    delete[] calStr_t;
+ 
     }
 
     void PreemptionPluginWorker::TurnOffPreemption(std::shared_ptr<PreemptionObject> po){

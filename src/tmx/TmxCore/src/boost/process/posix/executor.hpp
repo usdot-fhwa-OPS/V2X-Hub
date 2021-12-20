@@ -20,13 +20,13 @@ namespace boost { namespace process { namespace posix {
 
 struct executor
 {
-    executor() : exe(0), cmd_line(0), env(0) {}
+    executor() : exe(nullptr), cmd_line(nullptr), env(nullptr) {}
 
     struct call_on_fork_setup
     {
         executor &e_;
 
-        call_on_fork_setup(executor &e) : e_(e) {}
+        explicit call_on_fork_setup(executor &e) : e_(e) {}
 
         template <class Arg>
         void operator()(const Arg &arg) const
@@ -39,7 +39,7 @@ struct executor
     {
         executor &e_;
 
-        call_on_fork_error(executor &e) : e_(e) {}
+        explicit call_on_fork_error(executor &e) : e_(e) {}
 
         template <class Arg>
         void operator()(Arg &arg) const
@@ -52,7 +52,7 @@ struct executor
     {
         executor &e_;
 
-        call_on_fork_success(executor &e) : e_(e) {}
+        explicit call_on_fork_success(executor &e) : e_(e) {}
 
         template <class Arg>
         void operator()(Arg &arg) const
@@ -65,7 +65,7 @@ struct executor
     {
         executor &e_;
 
-        call_on_exec_setup(executor &e) : e_(e) {}
+        explicit call_on_exec_setup(executor &e) : e_(e) {}
 
         template <class Arg>
         void operator()(Arg &arg) const
@@ -78,7 +78,7 @@ struct executor
     {
         executor &e_;
 
-        call_on_exec_error(executor &e) : e_(e) {}
+        explicit call_on_exec_error(executor &e) : e_(e) {}
 
         template <class Arg>
         void operator()(Arg &arg) const
