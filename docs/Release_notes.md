@@ -1,6 +1,41 @@
 V2X-Hub Release Notes
 ----------------------------
 
+Version 6.3, released Dec 17th, 2021
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release version 6.3 is a hotfix release for 6.0.
+
+Enhancements in this release:
+-	Issue 290: Implemented several UI changes to the Port Drayage Web Service for CARMA-Freight as below.
+1.	Added landing page with CARMA-Streets Logo and Description
+2.	Added Tab Icons and tab notifications
+3.	Added Footer with FHWA and MARAD logos
+4.	Added indication of operation area (PORT or STAGING) 
+
+Fixes in this release:
+-	Issue 287: Updated image tags for arm64 and amd64 Docker-compose deployments to use 6.2 release images instead of release candidate images.
+
+Version 6.2, released Dec 10th, 2021
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release version 6.2 is a hotfix release for 6.0.
+
+Enhancements in this release:
+- Issue 268: Added Spring Boot Port Drayage Web Service which includes Open API, REST API and Implemented Spring boot REST server. Added Maven pom.xml for Open API Spring boot server code generation. Updated Maven pom.xml for unit test and Jacoco unit test coverage report.
+-	Issue 255: Created Lightweight V2X-Hub Deployment Image by removing unnecessary apt-get tools and libraries installed and unnecessary files included in build context and any steps not necessary for V2X-Hub deployment.
+-	Issue 272: Added REST Client to Port Drayage Plugin. Changes consist of Qt REST ext/pdclient library generated using Open API code gen and added logic to request and poll loading/unloading and inspection actions from web service, and added Port Drayage Plugin in sonar scanner properties.
+-	Issue 279&281: Implementing Port Drayage Plugin CI/CD integration by Adding Docker file, Circle CI build and Push workflow and Docker-compose setup for Port Drayage Web service and updated DSRC Immediate Forward Plugin Configurations to include Mobility Operation message by default.
+-	Issue 282: Added Clear button for web service to clear existing actions to allow for repeated executions of the same sequence of actions without requiring restart of web service.
+
+Fixes in this release:
+-	Issue 213: Fixed PLOG and FILE_LOG logic where PLOG never prints statements and FILE_LOG only prints error level statements.  Discovered and fixed some segmentation faults in Qt HTTP client code and Tmxctl CLI calls to obtain correct MySQL credentials.
+-	Issue 257: Fixed DB Connection Pool Logging to debug the Docker secrets deployment implementation was unintentionally kept in V2X-Hub which cause V2X-Hub to print the MySQL password it uses every time it attempts to authenticate to MySQL.
+-	Issue 260: Fixed Sonar scan issues found in Preemption Plugin during V2xhub sonar scanning.
+-	Issue 280: Fixed the mobility operation messages used for Vehicle and Infrastructure communication does not indicate the origin of the message where infrastructure may attempt to respond to other infrastructure communication.
+
 Version 6.1, released Oct 15th, 2021
 --------------------------------------------------------
 

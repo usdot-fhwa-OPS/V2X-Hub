@@ -1,0 +1,31 @@
+/* Landing Page Style Sheet */
+/* */
+.main-splash{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+/* Style CARMA-Streets Description */
+.main-splash-description{
+    width: 80%;
+}
+
+/* Style CARMA-Streets Logo */
+.splash-logo{
+    width: 60%;
+    max-height: 45%;
+    margin-top: 20px;
+}
+
+/* Style container holding area selection buttons */
+.area-select{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+}
+/* Style buttons to be the same size */
+.area-select-btn{
+    width: 190px;
+}

@@ -1,0 +1,78 @@
+{
+	"name":"PortDrayagePlugin",
+	"description":"PortDrayagePlugin for sending freight trucks automated actions in a port.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PortDrayagePlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"TMSG03-P",
+			"description":"MobilityOperation message is a prototyping message with a configurable payload."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Database_IP",
+			"default":"127.0.0.1",
+			"description":"IP address of database"
+		},
+		{
+			"key":"Database_Port",
+			"default":"3306",
+			"description":"Port of database"
+		},
+		{
+			"key":"Database_Username",
+			"default":"root",
+			"description":"Username for database"
+		},
+		{
+			"key":"Database_Password",
+			"default":"ivp",
+			"description":"Password for database"
+		},
+		{
+			"key":"Database_Name",
+			"default":"PORT_DRAYAGE",
+			"description":"Name of database."			
+		},
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
+			"key":"Webservice_Host",
+            "default":"127.0.0.1",
+            "description":"PortDrayage Webservice Host Address"
+		},
+		{
+			"key":"Webservice_Port",
+			"default": "8090",
+			"description": "PortDrayage WebService Port"
+		},
+		{
+			"key":"Webservice_Secure",
+			"default": "false",
+			"description": "Boolean flag set to true for HTTPS communication"
+		},
+		{
+			"key":"Webservice_Polling_Frequency",
+			"default": "5",
+			"description": "Polling Frequency for PortDrayage Webservice action status in seconds"
+		},
+		{
+			"key":"Holding_Lat",
+            "default":"45.45",
+            "description":"Latitude Coordinate for Holding Area GPS Location in Degrees(-90,90)."
+		},
+		{
+			"key":"Holding_Lon",
+            "default":"-45.45",
+            "description":"Longitude Coordinate for Holding Area GPS Location in Degrees(-180,180)."
+		}
+		
+	]
+}

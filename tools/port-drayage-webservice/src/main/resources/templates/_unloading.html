@@ -1,0 +1,123 @@
+<h3 class="font-weight-bold">Port Drayage Unloading Area </h3>
+<br>
+   <div class="jumbotron" th:if="${@unloadingActions.getCurrentAction() != null}">
+        <div class="action-dialog-left">
+            <h4>
+                Vehicle : 
+                    <strong th:text="${@unloadingActions.getCurrentAction().getVehicleId()}"></strong> 
+                with cargo : 
+                    <strong th:text="${@unloadingActions.getCurrentAction().getContainerId()}"></strong>
+            </h4>
+            <h4 class="font-weight-bold" th:text="|Status : ${@unloadingActions.getCurrentAction().getStatus()}|"></h4>
+            <br>
+            <button class="btn btn-info btn-lg pl-10 pr-10" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('PENDING')}"
+                id="start-unloading">START UNLOADING</button>
+
+            <button class="btn btn-success btn-lg pl-10 pr-10" th:if="${@unloadingActions.getCurrentAction().getStatus().getValue().equals('UNLOADING')}"
+                id="complete-unloading">COMPLETE UNLOADING</button>
+        </div>
+        <div class="action-dialog-right">
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('STAGING_AREA')}">Staging Area</strong>
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">Port Area</strong>
+        </div>
+    </div>
+    <h4 class="font-weight-bold">Pending Unloading Actions</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Vehicle ID </th>
+                <th> Container ID </th>
+                <th> Action ID </th>
+                <th> Requested </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+                th:if="${@unloadingActions.getPendingActions().getActions() == null || @unloadingActions.getPendingActions().getActions().isEmpty() }">
+                <td colspan="3"> No Pending Actions</td>
+            </tr>
+            <tr th:each="action : ${@unloadingActions.getPendingActions().getActions()}">
+                <td><span th:text="${action.getVehicleId()}"> </span></td>
+                <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 class="font-weight-bold" >Completed Unloading Actions</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Vehicle ID </th>
+                <th> Container ID </th>
+                <th> Action ID </th>
+                <th> Requested </th>
+                <th> Completed </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+                th:if="${@unloadingActions.getCompletedActions().getActions() == null || @unloadingActions.getCompletedActions().getActions().isEmpty() }">
+                <td colspan="3"> No Completed Actions</td>
+            </tr>
+            <tr th:each="action : ${@unloadingActions.getCompletedActions().getActions()}">
+                <td><span th:text="${action.getVehicleId()}"> </span></td>
+                <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
+
+            </tr>
+        </tbody>
+    </table>
+    <div class="clear-button">
+        <!-- Button trigger clear modal -->
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
+            Clear Actions
+        </button>
+    </div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    $('#start-unloading').on('click', function (e) {
+        console.log(e)
+        var actionId
+        if (  /*[[${@unloadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@unloadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
+        e.preventDefault();
+        $.ajax({
+            type: 'post',
+            url: 'unloading/start/' + actionId,
+            success: function () {
+                $('#unloading').load("unloading/")
+            }
+        });
+    });
+
+    $('#complete-unloading').on('click', function (e) {
+        console.log(e)
+        var actionId
+        if (  /*[[${@unloadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@unloadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
+        e.preventDefault();
+        $.ajax({
+            type: 'post',
+            url: 'unloading/complete/' + actionId,
+            success: function () {
+                $('#unloading').load("unloading/")
+            }
+        });
+    });
+       /*]]>*/
+</script>
