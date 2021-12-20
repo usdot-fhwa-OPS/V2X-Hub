@@ -1,0 +1,12 @@
+files
+pkcs11-daemon.debhelper.log
+pkcs11-daemon.substvars
+pkcs11-proxy1.debhelper.log
+pkcs11-proxy1.postinst.debhelper
+pkcs11-proxy1.postrm.debhelper
+pkcs11-proxy1.substvars
+stamp-makefile-build
+stamp-makefile-install
+tmp
+pkcs11-daemon
+pkcs11-proxy1

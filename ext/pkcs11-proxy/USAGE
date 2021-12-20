@@ -1,0 +1,82 @@
+PKCS11-Proxy is a proxy for the PKCS11-library.
+
+This project is based on a stripped down Gnome Keyring without all gnome
+dependencies and other features.
+
+The proxy tunnels PKCS11-requests over the network.  One possible use
+is to store cryptograhic information on a seperate server.  This way
+the crypto can be isolated from the rest of the system.
+
+Example
+=======
+
+Here is an example of using pkcs11-proxy together with SoftHSM (from the
+OpenDNSSEC project).  The benefit of this setup is that no extra hardware
+is needed at all.  This could also be considered the greatest weakeness.
+For demonstration purposes, however, security is not a consideration.
+
+$ sudo adduser cgielen pkcs11
+$ sudo adduser cgielen softhsm
+
+$ softhsm --init-token --slot 0 --label test
+The SO PIN must have a length between 4 and 255 characters.
+Enter SO PIN:
+The user PIN must have a length between 4 and 255 characters.
+Enter user PIN:
+The token has been initialized.
+
+$ PKCS11_DAEMON_SOCKET="tcp://127.0.0.1:2345" pkcs11-daemon /usr/lib/libsofthsm.so
+$ PKCS11_PROXY_SOCKET="tcp://127.0.0.1:2345" pkcs11-tool --module=/usr/lib/libpkcs11-proxy.so -L Available
+slots: Slot 0           SoftHSM
+  token label:   test token manuf:   SoftHSM token model:   SoftHSM
+  token flags:   rng, login required, PIN initialized, token initialized,
+  other flags=0x40 serial num  :  1
+
+
+IPv6 and DNS
+============
+
+The PKCS11_DAEMON_SOCKET and PKCS11_PROXY_SOCKET environment variables can
+have both hostnames and IPv6 addresses in them. getaddrinfo(3) is used to
+resolve any DNS name.
+
+$ PKCS11_DAEMON_SOCKET="tcp://server.example.com:2345" ...
+
+If `server.example.com' resolves to more than one IP address (such as one
+IPv4 and one IPv6 address), these will be tried sequentially. Currently,
+no attempt is made to speed up connection establishment using Happy Eyeballs
+(RFC 6555) or similar, so timeouts in case of unreachable addresses could
+be expected to be quite problematic.
+
+IPv6 addresses should be enclosed by square brackets.
+
+$ PKCS11_DAEMON_SOCKET="tcp://[::1]:2345" ...
+
+
+Encryption
+==========
+
+This version supports encrypting the communication between the client and
+proxy using OpenSSL TLS-PSK (pre-shared key). The PSK is read from a file
+that usees the GnuTLS psktool format. This format includes PSK identity
+as well as key.
+
+Currently, there is no way to specify the identity to use on the client
+side (client tells server what identity should be used), and the first
+identity found in the PSK file is used. The server side will correctly
+look up the identity requested by the client in it's PSK file, so it is
+possible to have one unique PSK identity and key per PKCS11 client, and
+have all the identitys and keys in the PSK file for the PKCS11 daemon.
+
+$ cat test.psk
+test:e9622c85018998993fcc16f5ce9c15e9
+$ PKCS11_PROXY_TLS_PSK_FILE="test.psk" \
+  PKCS11_DAEMON_SOCKET="tls://server.example.com:2345" \
+  pkcs11-daemon /usr/lib/libsofthsm.so
+$ PKCS11_PROXY_TLS_PSK_FILE="test.psk" \
+  PKCS11_PROXY_SOCKET="tls://server.example.com:2345" \
+  pkcs11-tool --module=/usr/lib/libpkcs11-proxy.so -L Available
+slots: Slot 0           SoftHSM
+  token label:   test token manuf:   SoftHSM token model:   SoftHSM
+  token flags:   rng, login required, PIN initialized, token initialized,
+  other flags=0x40 serial num  :  1

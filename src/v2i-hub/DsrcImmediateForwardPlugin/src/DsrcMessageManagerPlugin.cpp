@@ -16,9 +16,10 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/hex.hpp>
 #include "UdpClient.h"
 
-
+using namespace boost::algorithm; 
 using namespace boost::property_tree;
 using namespace std;
 using namespace tmx;
@@ -44,7 +45,22 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 	_muteDsrc = false;
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
 	UpdateConfigSettings();
+
+	// @SONAR_STOP@
+
+
+	GetConfigValue<string>("HSMurl",baseurl);
+	GetConfigValue<unsigned int>("signMessage",signState);
+	std::string request="sign";
+
+
+	url=baseurl+request;
+	// @SONAR_START@
+
 }
+
+// @SONAR_STOP@
+
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
 {
@@ -59,6 +75,9 @@ DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
 		}
 	}
 }
+
+// @SONAR_START@
+
 
 void DsrcMessageManagerPlugin::OnConfigChanged(const char *key, const char *value)
 {
@@ -129,6 +148,10 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 	// Get the signature setting.
 	// The same mutex is used that protects the UDP clients.
 	GetConfigValue("Signature", _signature, &_mutexUdpClient);
+	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
+	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
+	std::string request="sign";
+	url=baseurl+request;
 
 	GetConfigValue("MuteDsrcRadio", _muteDsrc);
 	SetStatus("MuteDsrc", _muteDsrc);
@@ -300,11 +323,65 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 		if (_messageConfigMap[configIndex].TmxType == msg->subtype)
 		{
 			foundMessageType = true;
+			string payloadbyte="";
+
 
 			// Format the message using the protocol defined in the
 			// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
 
 			stringstream os;
+
+			/// if signing is Enabled, request signing with HSM 
+			
+			// @SONAR_STOP@
+
+
+			if (signState == 1)
+			{
+				std::string mType = _messageConfigMap[configIndex].SendType; 
+
+				std::for_each(mType.begin(), mType.end(), [](char & c){
+					c = ::tolower(c);
+				});
+				/* convert to hex array */
+
+				string msgString=msg->payload->valuestring;
+				string base64str=""; 
+
+				hex2base64(msgString,base64str);  
+
+				std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+base64str+"\"}\'";
+
+
+
+				string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
+				const char *cmd=cmd1.c_str();  
+				char buffer[2048];
+				std::string result="";
+				FILE* pipe= popen(cmd,"r"); 
+
+				if (pipe != NULL ) throw std::runtime_error("popen() failed!");
+				try{
+					while (fgets(buffer, sizeof(buffer),pipe) != NULL)
+					{
+						result+=buffer; 
+					}
+				} catch (...) {
+					pclose(pipe); 
+					throw; 
+				}
+
+				cJSON *root   = cJSON_Parse(result.c_str());
+				cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
+				string signedMsg = sd->valuestring;
+				base642hex(signedMsg,payloadbyte); // this allows sending hex of the signed message rather than base64
+
+			}
+			else 
+			{
+				payloadbyte=msg->payload->valuestring; 
+			}
+			// @SONAR_START@
 
 			os << "Version=0.7" << "\n";
 			os << "Type=" << _messageConfigMap[configIndex].SendType << "\n" << "PSID=" << _messageConfigMap[configIndex].Psid << "\n";
@@ -314,9 +391,12 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
 			os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
 			os << "Signature= "<< _signature << "\n" << "Encryption=False\n";
-			os << "Payload=" << msg->payload->valuestring << "\n";
+			os << "Payload=" << payloadbyte << "\n";
 
 			string message = os.str();
+
+
+
 
 			// Send the message using the configured UDP client.
 

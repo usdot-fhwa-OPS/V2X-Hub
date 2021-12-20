@@ -1,7 +1,7 @@
 {
 	"name":"MessageReceiver",
 	"description":"Plugin to receive messages from an external DSRC radio or other source",
-	"version":"@PROJECT_VERSION@",
+	"version":"5.0",
 	"exeLocation":"/bin/MessageReceiverPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
@@ -37,6 +37,21 @@
 			"key":"EnableSimulatedLocation",
 			"default":"true",
 			"description":"Accept and route incoming GPS location messages from a V2I Hub simulator."
+		},
+		{
+			"key":"EnableVerification",
+			"default":"1",
+			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
+		},		
+		{
+			"key":"HSMLocation",
+			"default":"/usr/local/lib/softhsm/libsofthsm2.so",
+			"description":"Location of HSM module static library."
+		},
+		{
+			"key":"HSMurl",
+			"default": "http://192.168.0.237:3000/v1/scms/",
+			"description": "REST API endpoint url needed to make HSM calls"
 		}
 	]
 }
