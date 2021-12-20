@@ -1,0 +1,16 @@
+<defines>
+CERTSTOR_WINDOWS -> 20190430
+</defines>
+
+<os_features>
+win32,certificate_store
+</os_features>
+
+<header:public>
+certstor_windows.h
+</header:public>
+
+<libs>
+windows -> crypt32
+mingw -> crypt32
+</libs>

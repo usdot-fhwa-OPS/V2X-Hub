@@ -1,0 +1,126 @@
+    <h3 class="font-weight-bold">Port Drayage Loading Area </h3>
+    <br>
+    <div class="jumbotron" th:if="${@loadingActions.getCurrentAction() != null}">
+        <div class="action-dialog-left">
+            <h4>
+                Vehicle : 
+                    <strong th:text="${@loadingActions.getCurrentAction().getVehicleId()}"></strong> 
+                with cargo : 
+                    <strong th:text="${@loadingActions.getCurrentAction().getContainerId()}"></strong>
+            </h4>
+            <h4 class="font-weight-bold" th:text="|Status : ${@loadingActions.getCurrentAction().getStatus()}|"></h4>
+            <br>
+            <button class="btn btn-info btn-lg pl-10 pr-10" th:if="${@loadingActions.getCurrentAction().getStatus().getValue().equals('PENDING')}"
+                id="start-loading">START LOADING</button>
+
+            <button class="btn btn-success btn-lg pl-10 pr-10" th:if="${@loadingActions.getCurrentAction().getStatus().getValue().equals('LOADING')}"
+                id="complete-loading">COMPLETE LOADING</button>
+        </div>
+        <div class="action-dialog-right">
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('STAGING_AREA')}">Staging Area</strong>
+            <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">Port Area</strong>
+        </div>
+        
+    </div>
+    <h4 class="font-weight-bold">Pending Loading Actions</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Vehicle ID </th>
+                <th> Container ID </th>
+                <th> Actions ID </th>
+                <th> Requested </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+                th:if="${@loadingActions.getPendingActions().getActions() == null || @loadingActions.getPendingActions().getActions().isEmpty() }">
+                <td colspan="3"> No Pending Actions</td>
+            </tr>
+            <tr th:each="action : ${@loadingActions.getPendingActions().getActions()}">
+                <td><span th:text="${action.getVehicleId()}"> </span></td>
+                <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4 class="font-weight-bold">Completed Loading Actions</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th> Vehicle ID </th>
+                <th> Container ID </th>
+                <th> Action ID </th>
+                <th> Requested </th>
+                <th> Completed </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr
+                th:if="${@loadingActions.getCompletedActions().getActions() == null || @loadingActions.getCompletedActions().getActions().isEmpty() }">
+                <td colspan="3"> No Completed Actions</td>
+            </tr>
+            <tr th:each="action : ${@loadingActions.getCompletedActions().getActions()}">
+                <td><span th:text="${action.getVehicleId()}"> </span></td>
+                <td><span th:text="${action.getContainerId()}"> </span></td>
+                <td><span th:text="${action.getActionId()}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+                <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
+
+            </tr>
+        </tbody>
+    </table>
+    <div class="clear-button">
+        <!-- Button trigger clear modal -->
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
+            Clear Actions
+        </button>
+    </div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    $('#start-loading').on('click', function (e) {
+        console.log(e)
+        var actionId
+        if (  /*[[${@loadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@loadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
+        e.preventDefault();
+        $.ajax({
+            type: 'post',
+            url: 'loading/start/' + actionId,
+            success: function () {
+                $('#loading').load("loading/")
+            }
+        });
+    });
+
+    $('#complete-loading').on('click', function (e) {
+        console.log(e)
+        // Prevent whole page reload
+        e.preventDefault();
+        // Retrieve current action id. ? used to protect against null current actions
+        var actionId
+        if (  /*[[${@loadingActions.getCurrentAction()}]]*/ null ) {
+            actionId = /*[[${@loadingActions.getCurrentAction()?.getActionId()}]]*/ "test"
+        }
+        else {
+            actionId = ""
+        }
+
+        $.ajax({
+            type: 'post',
+            url: 'loading/complete/' + actionId,
+            success: function () {
+                $('#loading').load("loading/")
+            }
+        });
+    });
+    /*]]>*/
+</script>

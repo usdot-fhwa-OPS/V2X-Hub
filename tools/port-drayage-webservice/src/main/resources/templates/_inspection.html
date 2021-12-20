@@ -1,0 +1,139 @@
+<h3 class="font-weight-bold">Port Drayage Inspection Area </h3>
+<br>
+<div class="jumbotron" th:if="${@inspectionActions.getCurrentInspection() != null}">
+    <div class="action-dialog-left">
+        <h4>
+            Vehicle : 
+                <strong th:text="${@inspectionActions.getCurrentInspection().getVehicleId()}"></strong> 
+            with cargo : 
+                <strong th:text="${@inspectionActions.getCurrentInspection().getContainerId()}"></strong>
+        </h4>
+        <h4 class="font-weight-bold" th:text="|Status : ${@inspectionActions.getCurrentInspection().getStatus()}|"></h4>
+        <br>
+        <button 
+            class="btn btn-info btn-lg pl-10 pr-10" to
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING')}"
+            id="hold-inspection">
+            REQUEST FURTHER INSPECTION
+        </button>
+
+        <button 
+            class="btn btn-success btn-lg pl-10 pr-10" 
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PENDING') 
+                    || @inspectionActions.getCurrentInspection().getStatus().getValue().equals('HOLDING') }"
+            id="complete-inspection">
+            COMPLETE INSPECTION
+        </button>
+        <h4
+            th:if="${@inspectionActions.getCurrentInspection().getStatus().getValue().equals('PROCEED_TO_HOLDING')}" 
+            class="font-italic">
+            Vehicle is proceeding to Holding Area.
+        </h4>
+    </div>
+    <div class="action-dialog-right">
+        <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('STAGING_AREA')}">Staging Area</strong>
+        <strong class="font-italic text-info" th:if="${@areaBean.getArea().getName().equals('PORT_AREA')}">Port Area</strong>
+    </div>
+</div>
+<h4 class="font-weight-bold" >Pending Inspections</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th> Vehicle ID </th>
+            <th> Container ID </th>
+            <th> Action ID </th>
+            <th> Requested </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr
+            th:if="${@inspectionActions.getPendingInspections().getInspections() == null || @inspectionActions.getPendingInspections().getInspections().isEmpty() }">
+            <td colspan="3"> No Pending Inspections</td>
+        </tr>
+        <tr th:each="action : ${@inspectionActions.getPendingInspections().getInspections()}">
+            <td><span th:text="${action.getVehicleId()}"> </span></td>
+            <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+        </tr>
+    </tbody>
+</table>
+
+<h4 class="font-weight-bold">Completed Inspections</h4>
+<table class="table">
+    <thead>
+        <tr>
+            <th> Vehicle ID </th>
+            <th> Container ID </th>
+            <th> Action ID </th>
+            <th> Requested </th>
+            <th> Completed </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr
+            th:if="${@inspectionActions.getCompletedInspections().getInspections() == null || @inspectionActions.getCompletedInspections().getInspections().isEmpty() }">
+            <td colspan="3"> No Completed Inspection</td>
+        </tr>
+        <tr th:each="action : ${@inspectionActions.getCompletedInspections().getInspections()}">
+            <td><span th:text="${action.getVehicleId()}"> </span></td>
+            <td><span th:text="${action.getContainerId()}"> </span></td>
+            <td><span th:text="${action.getActionId()}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getRequested()))}"> </span></td>
+            <td><span th:text="${#dates.format(new java.util.Date(action.getCompleted()))}"> </span></td>
+
+        </tr>
+    </tbody>
+</table>
+<div class="clear-button">
+    <!-- Button trigger clear modal -->
+    <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearModal">
+        Clear Actions
+    </button>
+</div>
+
+<script  th:inline="javascript">
+    /*<![CDATA[*/
+$('#hold-inspection').on('click', function (e) {
+    console.log(e)
+    var actionId
+    // Retrieve current action id. ? used to protect against null current actions
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
+
+    e.preventDefault();
+    $.ajax({
+        type: 'post',
+        url: 'inspection/hold/' + actionId,
+        success: function () {
+            $('#inspection').load("inspection/")
+        }
+    });
+});
+
+$('#complete-inspection').on('click', function (e) {
+    console.log(e)
+    e.preventDefault();
+    // Retrieve current action id. ? used to protect against null current actions
+    var actionId
+    if (  /*[[${@inspectionActions.getCurrentInspection()}]]*/ null ) {
+        actionId = /*[[${@inspectionActions.getCurrentInspection()?.getActionId()}]]*/ "test"
+    }
+    else {
+        actionId = ""
+    }
+
+    $.ajax({
+        type: 'post',
+        url: 'inspection/complete/' + actionId,
+        success: function () {
+            $('#inspection').load("inspection/")
+        }
+    });
+});
+   /*]]>*/
+</script>

@@ -19,8 +19,8 @@ tmxctl --plugin-install MessageLoggerPlugin.zip
 tmxctl --plugin-install PedestrianPlugin.zip
 tmxctl --plugin-install TimPlugin.zip
 tmxctl --plugin-install CARMACloudPlugin.zip
-tmxctl --plugin-install MobilityOperationPlugin.zip
 tmxctl --plugin-install ODELoggerPlugin.zip
+tmxctl --plugin-install PortDrayagePlugin.zip
 
 tmxctl --plugin CommandPlugin --enable
 /usr/local/bin/tmxcore

@@ -15,13 +15,12 @@ services:
       - mysql_password
       - mysql_root_password
     volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - "mysql_db:/var/lib/mysql"
+      - ./mysql/:/docker-entrypoint-initdb.d/
 
   php:
-    image: php:7.2.2-apache
+    image: usdotfhwaops/php:6.2
     container_name: php
-    volumes:
-      - ../../web/:/var/www/html/
     network_mode: host
     depends_on: 
       - db
@@ -29,7 +28,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubarm:latest
+    image: usdotfhwaops/v2xhubarm:6.2
     container_name: v2xhub
     network_mode: host
     restart: always
@@ -42,6 +41,10 @@ services:
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
+  port_drayage_webservice:
+    image: usdotfhwaops/port-drayage-webservice:6.2
+    container_name: port_drayage_webservice
+    network_mode: host
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt

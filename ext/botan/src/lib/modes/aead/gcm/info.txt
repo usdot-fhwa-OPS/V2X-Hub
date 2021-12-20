@@ -1,0 +1,9 @@
+<defines>
+AEAD_GCM -> 20131128
+</defines>
+
+<requires>
+block
+ctr
+ghash
+</requires>
