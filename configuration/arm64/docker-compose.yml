@@ -25,16 +25,17 @@ services:
     network_mode: host
     depends_on: 
       - db
+      - v2xhub
     stdin_open: true
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubarm:latest
+    image: usdotfhwaops/v2xhubarm:carma-streets
     container_name: v2xhub
     network_mode: host
     restart: always
     depends_on: 
-      - php
+      - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
     secrets:
