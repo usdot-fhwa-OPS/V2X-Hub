@@ -38,8 +38,8 @@ SystemContext PluginClient::_sysContext;
 PluginClient::PluginClient(std::string name) :
 	_name(name),
 	_logPrefix(name + " - "),
-	_msgFilter(NULL),
-	_sysConfig(NULL)
+	_msgFilter(nullptr),
+	_sysConfig(nullptr)
 {
 	PLOG(logDEBUG2) << "Constructing the plugin";
 
@@ -70,7 +70,7 @@ PluginClient::PluginClient(std::string name) :
 		if (manifest->name && strlen(manifest->name) > 0)
 			_name = string(manifest->name);
 		ivpRegister_destroyManifest(manifest);
-		manifest = NULL;
+		manifest = nullptr;
 
 		PLOG(logDEBUG) << "Plugin " << _name << " has been registered with IVP";
 	}
@@ -100,19 +100,19 @@ PluginClient::~PluginClient()
 	if (this->_msgFilter)
 	{
 		ivpSubscribe_destroyFilter(this->_msgFilter);
-		this->_msgFilter = NULL;
+		this->_msgFilter = nullptr;
 	}
 
 	if (this->_sysConfig)
 	{
 		ivpConfig_destroyCollection(this->_sysConfig);
-		this->_sysConfig = NULL;
+		this->_sysConfig = nullptr;
 	}
 
 	if (this->_keepAlive)
 	{
 		delete this->_keepAlive;
-		this->_keepAlive = NULL;
+		this->_keepAlive = nullptr;
 	}
 }
 
@@ -126,7 +126,7 @@ PluginClient *PluginClient::FindPlugin(string name)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // static wrapper for OnConfigChanged.
@@ -164,18 +164,18 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 	// If this is a system parameter, update the value
 	pthread_mutex_lock(&_plugin->lock);
 
-	char *results = NULL;
-	if (_sysConfig != NULL)
+	char *results = nullptr;
+	if (_sysConfig != nullptr)
 		results = ivpConfig_getCopyOfValueFromCollection(_sysConfig, key);
 
-	if (results != NULL)
+	if (results != nullptr)
 	{
 		ivpConfig_updateValueInCollection(_sysConfig, key, value);
 	}
 	else
 	{
 		// If it is not in the manifest, assume it belongs as a system parameter
-		if (_plugin->config != NULL)
+		if (_plugin->config != nullptr)
 			results = ivpConfig_getCopyOfValueFromCollection(_plugin->config, key);
 
 		if (!results)
@@ -249,7 +249,7 @@ void PluginClient::StaticOnMessageReceived(IvpPlugin *plugin, IvpMessage *msg)
 	if (p)
 	{
 		struct timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 		uint64_t microsecondsSinceEpoch = (uint64_t)(tv.tv_sec) * 1000000 + (uint64_t)(tv.tv_usec);
 
 		try
@@ -342,12 +342,12 @@ void PluginClient::AddMessageFilter(const char *type, const char *subtype, IvpMs
 
 void PluginClient::SubscribeToMessages()
 {
-	if (_msgFilter == NULL)
+	if (_msgFilter == nullptr)
 		throw PluginException("Error subscribing to messages.  No message filters were added.");
 
 	ivp_subscribe(_plugin, _msgFilter);
 	ivpSubscribe_destroyFilter(_msgFilter);
-	_msgFilter = NULL;
+	_msgFilter = nullptr;
 }
 
 int PluginClient::Main()

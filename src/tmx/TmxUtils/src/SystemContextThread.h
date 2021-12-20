@@ -25,7 +25,7 @@ class SystemContextThread : public ThreadTimerClient
 {
 public:
 //	SystemContextThread(tmx::utils::SystemContext &context, ThreadTimer& timer);
-	SystemContextThread(ThreadTimer& timer);
+	explicit SystemContextThread(ThreadTimer& timer);
 //	void set_Context(tmx::utils::SystemContext &context);
 	virtual ~SystemContextThread();
 

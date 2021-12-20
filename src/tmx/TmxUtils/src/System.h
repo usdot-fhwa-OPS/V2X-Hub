@@ -21,7 +21,7 @@ public:
 	 * @param command The command to execute.
 	 * @return The output of the command.
 	 */
-	static std::string ExecCommand(const std::string& command, int *exitCode = NULL);
+	static std::string ExecCommand(const std::string& command, int *exitCode = nullptr);
 
 };
 

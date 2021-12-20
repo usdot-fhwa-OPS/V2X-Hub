@@ -25,7 +25,7 @@ std::string System::ExecCommand(const std::string& command, int *exitCode)
     }
 
     int x = pclose(pipe);
-    if (exitCode != NULL)
+    if (exitCode != nullptr)
     	*exitCode = x;
 
     // Trim the last line

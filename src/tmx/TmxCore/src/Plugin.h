@@ -28,7 +28,7 @@ class PluginException : public std::runtime_error
 {
 public:
 	PluginException(const PluginException& e) : std::runtime_error(e.what()) { };
-	PluginException(const std::string& reason) : std::runtime_error(reason) { };
+	explicit PluginException(const std::string& reason) : std::runtime_error(reason) { };
 };
 
 /*!
@@ -38,7 +38,7 @@ public:
 struct PluginNotRegisteredException : public PluginException
 {
 	PluginNotRegisteredException(const PluginNotRegisteredException& e) : PluginException(e.what()) { }
-	PluginNotRegisteredException(const std::string& reason) : PluginException(reason) {}
+	explicit PluginNotRegisteredException(const std::string& reason) : PluginException(reason) {}
 };
 
 /*!
@@ -48,7 +48,7 @@ struct PluginNotRegisteredException : public PluginException
 struct UnknownConfigurationKeyException : public PluginException
 {
 	UnknownConfigurationKeyException(const UnknownConfigurationKeyException& e) : PluginException(e.what()) { }
-	UnknownConfigurationKeyException(const std::string& reason) : PluginException(reason) {}
+	explicit UnknownConfigurationKeyException(const std::string& reason) : PluginException(reason) {}
 };
 
 /*!
@@ -86,7 +86,7 @@ public:
 	RegistrationInformation mInfo;
 
 protected:
-	Plugin(MessageRouter *messageRouter);
+	explicit Plugin(MessageRouter *messageRouter);
 
 	/*!
 	 * Attempts to reserve the plugin name and register the plugin in the database.  This function must be successfully called before

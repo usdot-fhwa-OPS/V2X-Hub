@@ -103,7 +103,7 @@ namespace dhlogging {
 		static void addEventLogEntry(std::string source, std::string description, LogLevel level);
 
 	private:
-		Logger(std::string fileName);
+		explicit Logger(std::string fileName);
 		Logger(Logger const&);
 		Logger& operator=(Logger const&);
 		virtual ~Logger();

@@ -34,17 +34,17 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, bool *value,
 	bool success = false;
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (text != NULL)
+	if (text != nullptr)
 	{
 		*value = (strncasecmp(text, "True", 4) == 0);
 		free(text);
 		success = true;
 	}
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
 	return success;
@@ -54,20 +54,20 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, char **value
 {
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (*value != NULL)
+	if (*value != nullptr)
 	{
 		free(*value);
 	}
 
 	*value = text;
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
-	return (text != NULL);
+	return (text != nullptr);
 }
 
 bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, std::string *value, pthread_mutex_t *mutex)
@@ -75,17 +75,17 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, std::string 
 	bool success = false;
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (text != NULL)
+	if (text != nullptr)
 	{
 		*value = text;
 		free(text);
 		success = true;
 	}
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
 	return success;
@@ -96,17 +96,17 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, int32_t *val
 	bool success = false;
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (text != NULL)
+	if (text != nullptr)
 	{
-		*value = strtol(text, NULL, 0);
+		*value = strtol(text, nullptr, 0);
 		free(text);
 		success = true;
 	}
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
 	return success;
@@ -117,17 +117,17 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, uint32_t *va
 	bool success = false;
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (text != NULL)
+	if (text != nullptr)
 	{
-		*value = strtoul(text, NULL, 0);
+		*value = strtoul(text, nullptr, 0);
 		free(text);
 		success = true;
 	}
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
 	return success;
@@ -138,17 +138,17 @@ bool PluginUtil::GetConfigValue(IvpPlugin *plugin, const char *key, uint64_t *va
 	bool success = false;
 	char *text = ivp_getCopyOfConfigurationValue(plugin, key);
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_lock(mutex);
 
-	if (text != NULL)
+	if (text != nullptr)
 	{
-		*value = strtoull(text, NULL, 0);
+		*value = strtoull(text, nullptr, 0);
 		free(text);
 		success = true;
 	}
 
-	if (mutex != NULL)
+	if (mutex != nullptr)
 		pthread_mutex_unlock(mutex);
 
 	return success;

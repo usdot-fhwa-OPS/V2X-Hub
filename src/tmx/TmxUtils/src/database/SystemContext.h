@@ -125,7 +125,7 @@ private:
 	mutex dbUpdateLock;
 
     // Separate DB updater thread is created to update DB with latency values.
-	SystemContextThread * _sysContextDbUpdater{NULL};
+	SystemContextThread * _sysContextDbUpdater{nullptr};
 };
 
 }}

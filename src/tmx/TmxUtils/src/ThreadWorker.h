@@ -58,7 +58,7 @@ protected:
 	std::atomic<bool> _stopThread{false};
 
 private:
-	std::thread* _thread = NULL;
+	std::thread* _thread = nullptr;
 };
 
 } /* namespace utils */

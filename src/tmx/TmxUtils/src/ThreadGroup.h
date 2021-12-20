@@ -42,7 +42,7 @@ public:
 	static constexpr size_t max_ids = ::pow(2, 8 * sizeof(id_type));
 
 	ThreadGroup(): _strategy((ThreadGroupAssignmentStrategy)0) {
-		srand(time (NULL));
+		srand(time (nullptr));
 
 		// Initialize the queue assignments
 		for (size_t i = 0; i < max_groups; i++) {
