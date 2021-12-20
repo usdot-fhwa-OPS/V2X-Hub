@@ -9,6 +9,11 @@
 	],
 	"configuration":[
 		{
+			"key":"messageid",
+			"default":"0012,0013,0014,001D,00F0,00F1,00F2,00F3,00F4,00F5,00F6,00F7",
+			"description":"Comma separated list of SAE J2735 message ID values."
+		},
+		{
 			"key":"IP",
 			"default":"127.0.0.1",
 			"description":"IP address for the incoming message network connection."
@@ -45,12 +50,12 @@
 		},		
 		{
 			"key":"HSMLocation",
-			"default":"/usr/local/lib/softhsm/libsofthsm2.so",
+			"default":"<SoftHSM library location>",
 			"description":"Location of HSM module static library."
 		},
 		{
 			"key":"HSMurl",
-			"default": "http://192.168.0.237:3000/v1/scms/",
+			"default": "http://<SoftHSM IP>:3000/v1/scms/",
 			"description": "REST API endpoint url needed to make HSM calls"
 		}
 	]
