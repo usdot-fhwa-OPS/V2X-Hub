@@ -20,7 +20,7 @@ namespace utils
 class SignalException: public tmx::TmxException
 {
 public:
-	explicit SignalException(int signalNo): tmx::TmxException(strsignal(signalNo)), sigNum(signalNo) {}
+	SignalException(int signalNo): tmx::TmxException(strsignal(signalNo)), sigNum(signalNo) {}
 	int GetSignalNumber() { return sigNum; }
 private:
 	int sigNum;

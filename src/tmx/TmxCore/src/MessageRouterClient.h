@@ -31,7 +31,7 @@ protected:
 	 * @requires
 	 * 		messageRouter != NULL
 	 */
-	explicit MessageRouterClient(MessageRouter *messageRouter);
+	MessageRouterClient(MessageRouter *messageRouter);
 
 	/*!
 	 * Subscribes with the router to receive messages that match ANY of the filters in the provided list.

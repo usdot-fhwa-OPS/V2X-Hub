@@ -42,7 +42,7 @@ namespace utils {
  */
 class TmxMessageManager: public PluginClient {
 public:
-	explicit TmxMessageManager(std::string name);
+	TmxMessageManager(std::string name);
 	virtual ~TmxMessageManager();
 
 	// Thread control

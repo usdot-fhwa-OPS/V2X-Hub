@@ -112,13 +112,13 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 	// Warn again the next time the queue gets too full
 	warn = false;
 
-	tmx::routeable_message *routeableMsg = nullptr;
+	tmx::routeable_message *routeableMsg = NULL;
 
 	if (msg.message) {
 		
-		tmx::byte_stream *bytes = nullptr;
+		tmx::byte_stream *bytes = NULL;
 		
-		IvpMessage *ivpMsg = nullptr;
+		IvpMessage *ivpMsg = NULL;
 
 
 		switch (msg.type)
@@ -164,7 +164,7 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 				FILE_LOG(logDEBUG4) << routeableMsg->get_message(); 
 
 				delete bytes;
-				msg.message = nullptr;
+				msg.message = NULL;
 			}
 			break;
 		case type_IvpMessage:
@@ -173,13 +173,13 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 				routeableMsg = new tmx::routeable_message(ivpMsg);
 
 				ivpMsg_destroy(ivpMsg);
-				msg.message = nullptr;
+				msg.message = NULL;
 			}
 			break;
 		}
 
 		free(msg.encoding);
-		msg.encoding = nullptr;
+		msg.encoding = NULL;
 	}
 
 	// Invoke the handler
@@ -197,7 +197,7 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 	rawOutgoingMessage out;
 	out.groupId = msg.groupId;
 	out.uniqId = msg.uniqId;
-	out.msg = nullptr;
+	out.msg = NULL;
 	this->push_out(out);
 	cv.notify_one();
 
@@ -380,7 +380,7 @@ void TmxMessageManager::OnMessageReceived(IvpMessage *msg) {
 
 void TmxMessageManager::OnConfigChanged(const char *key, const char *value) {
 	if (strcmp(NUMBER_WORKER_THREADS_CFG, key) == 0) {
-		size_t n = strtoul(value, nullptr, 0);
+		size_t n = strtoul(value, NULL, 0);
 		if (n > _numThreads && n < 512) {
 			_numThreads = n;
 
@@ -390,7 +390,7 @@ void TmxMessageManager::OnConfigChanged(const char *key, const char *value) {
 	} else if (strcmp(ASSIGNMENT_STRATEGY_CFG, key) == 0) {
 		workerThreads.set_strategy(value);
 	} else if (strcmp(OVERFLOW_CAPACITY_CFG, key) == 0) {
-		uint16_t n = strtoul(value, nullptr, 0);
+		uint16_t n = strtoul(value, NULL, 0);
 		if (n != overflow)
 			overflow = n;
 	} else {

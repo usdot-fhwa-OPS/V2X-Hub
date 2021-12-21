@@ -13,9 +13,9 @@ DbConnectionInformation DbContext::ConnectionInformation;
 DbContext::DbContext()
 {
 	mDriver = sql::mysql::get_driver_instance();
-	mCon = std::unique_ptr< sql::Connection >(mDriver->connect(ConnectionInformation.url, ConnectionInformation.username, ConnectionInformation.password));
+	mCon = std::auto_ptr< sql::Connection >(mDriver->connect(ConnectionInformation.url, ConnectionInformation.username, ConnectionInformation.password));
 
-	std::unique_ptr< sql::Statement > stmt(mCon->createStatement());
+	std::auto_ptr< sql::Statement > stmt(mCon->createStatement());
 
 	stmt->execute("USE " + ConnectionInformation.db);
 }

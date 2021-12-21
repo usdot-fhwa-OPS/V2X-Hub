@@ -31,10 +31,10 @@ Logger::~Logger()
 
 }
 
-Logger* Logger::logger_ = nullptr;
+Logger* Logger::logger_ = NULL;
 Logger* Logger::getInstance(std::string logFile)
 {
-    if ( Logger::logger_ == nullptr ) {
+    if ( Logger::logger_ == NULL ) {
     	logging::add_file_log
 		(
 			keywords::file_name = logFile,

@@ -104,7 +104,7 @@ void GeoDisplay::SendDisplayClearScreen(const char *destinationAddress, uint16_t
 {
 	if (!_enabled)
 		return;
-	SendDisplayMessage(destinationAddress, destinationPort, 1, 1, 1, 0, nullptr);
+	SendDisplayMessage(destinationAddress, destinationPort, 1, 1, 1, 0, 0);
 }
 
 /*
@@ -215,7 +215,7 @@ void GeoDisplay::SendRender(const char *destinationAddress, uint16_t destination
 {
 	if (!_enabled)
 		return;
-	SendDisplayMessage(destinationAddress, destinationPort, 6, 1, 1, 0, nullptr);
+	SendDisplayMessage(destinationAddress, destinationPort, 6, 1, 1, 0, 0);
 }
 
 

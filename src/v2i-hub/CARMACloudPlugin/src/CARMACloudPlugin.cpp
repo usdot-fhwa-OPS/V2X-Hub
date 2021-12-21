@@ -65,7 +65,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	       	strcpy(bounds_str,"");	
 		
 		//  get current time 
-		std::time_t tm = std::time(nullptr)/60-fetchtime*24*60; //  T minus 24 hours in  min  
+		std::time_t tm = std::time(0)/60-fetchtime*24*60; //  T minus 24 hours in  min  
 
 		while(cnt<totBounds)
 		{
@@ -180,7 +180,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 int CARMACloudPlugin::StartWebService()
 {
 	//Web services 
-	char *placeholderX[1]={nullptr};
+	char *placeholderX[1]={0};
 	int placeholderC=1;
 	QCoreApplication a(placeholderC,placeholderX);
 

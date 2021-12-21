@@ -82,7 +82,7 @@ bool Runnable::ProcessOptions(const variables_map &opts)
 		}
 	}
 
-	FILE *logF = nullptr;
+	FILE *logF = NULL;
 	if (opts.count("output"))
 	{
 		std::string fn = opts["output"].as<std::string>();
@@ -90,11 +90,11 @@ bool Runnable::ProcessOptions(const variables_map &opts)
 		if (fn != "-")
 		{
 			logF = fopen(fn.c_str(), "w");
-			if (logF == nullptr)
+			if (logF == NULL)
 				std::cerr << "Could not open log file: " << strerror(errno) << ".  Logging to standard output." << std::endl;
 		}
 
-		if (logF == nullptr)
+		if (logF == NULL)
 			Output2FILE::Stream() = stdout;
 		else
 			Output2FILE::Stream() = logF;
@@ -111,7 +111,7 @@ int run(std::string name, int argc, char *argv[], Runnable &runnable, bool newTh
 	copy(argv, argv+argc, ostream_iterator<char *>(ss, ","));
 
 	std::string title = USAGE;
-	if (argc > 0 || argv[1] != nullptr)
+	if (argc > 0 || argv[1] != NULL)
 	{
 		// Add program name to the usage
 		title += ": ";
@@ -267,7 +267,7 @@ void RegisterSignals(string pluginName)
 	{
 		PLUGIN_LOG(logDEBUG, pluginName) << "Creating handler for signal " << i;
 
-		if (sigaction(i, &sigact, (struct sigaction *)nullptr) != 0)
+		if (sigaction(i, &sigact, (struct sigaction *)NULL) != 0)
 			BOOST_THROW_EXCEPTION(PluginException(string("Unable to initialize handler for ") + SignalException(i).what()));
 	}
 }

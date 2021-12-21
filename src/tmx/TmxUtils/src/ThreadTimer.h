@@ -34,7 +34,7 @@ public:
 	 *
 	 * @param precision The amount of time the thread will sleep between checks to call periodic tick functions.
 	 */
-	explicit ThreadTimer(std::chrono::milliseconds precision = std::chrono::milliseconds(100));
+	ThreadTimer(std::chrono::milliseconds precision = std::chrono::milliseconds(100));
 	virtual ~ThreadTimer();
 
 	/**
@@ -82,7 +82,7 @@ private:
 class ThreadTimerClient
 {
 public:
-	explicit ThreadTimerClient(tmx::utils::ThreadTimer& timer) : _timer(timer)
+	ThreadTimerClient(tmx::utils::ThreadTimer& timer) : _timer(timer)
 	{
 		_periodicTickId = _timer.AddPeriodicTick(std::bind(&ThreadTimerClient::TimerTick, this), std::chrono::milliseconds(10000));
 	}

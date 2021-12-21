@@ -219,12 +219,10 @@ bool TimPlugin::TimDuration()
 	time_t secondsStop = mktime( & date_stop );
 
 	// Current Time in seconds
-	time_t *t; 
-	time(t); 
-	struct tm *tm= new struct tm; 
-	tm = localtime_r(t,tm);
+	auto t = time(nullptr);
+	auto tm = *localtime(&t);
 	ostringstream oss1;
-	oss1 << put_time(tm, "%m-%d-%Y %H:%M:%S");
+	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
 	auto _currentTimTime = oss1.str();
 	istringstream currentTimTime(_currentTimTime);
 	struct tm date_current;
@@ -234,11 +232,8 @@ bool TimPlugin::TimDuration()
 		<< date_current.tm_sec << std::endl;
 	time_t secondsCurrent = mktime( & date_current );
 
-
 	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
 		" Current : " << secondsCurrent << std::endl;
-	delete[] tm;
-	delete[] t;
 	if ( secondsStart <= secondsCurrent && secondsCurrent <= secondsStop) {
 		return true;
 	} else {

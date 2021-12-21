@@ -87,7 +87,7 @@ namespace CARMACloudPlugin {
 
 class CARMACloudPlugin: public PluginClient {
 public:
-	explicit CARMACloudPlugin(std::string);
+	CARMACloudPlugin(std::string);
 	virtual ~CARMACloudPlugin();
 	int Main();
 	uint16_t webport;

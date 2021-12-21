@@ -21,7 +21,7 @@ LogMessage::LogMessage():
 		level(Logger::FromString(DEFAULT_LOG_LEVEL)),
 		timestamp(Clock::GetMillisecondsSinceEpoch()),
 		line(0),
-		logger(nullptr)
+		logger(0)
 {
 }
 
@@ -46,7 +46,7 @@ LogMessage::LogMessage(Logger *logger, LogLevel level, std::string component, st
 {
 }
 
-Logger::Logger(): message(nullptr)
+Logger::Logger(): message(0)
 {
 	os.setf(std::ios::boolalpha);
 }
@@ -54,7 +54,7 @@ Logger::Logger(): message(nullptr)
 Logger::~Logger()
 {
 	delete message;
-	message = nullptr;
+	message = 0;
 }
 
 std::ostream &Logger::Get(LogLevel level, std::string file, unsigned int line, std::string component)
@@ -114,20 +114,18 @@ std::ostream &_logtime(std::ostream &os, uint64_t timestamp)
 	}
 	else
 	{
-		gettimeofday(&tv, nullptr);
+		gettimeofday(&tv, NULL);
 	}
 
 	time_t time = tv.tv_sec;
 	short ms = tv.tv_usec / 1000;
 
-	struct tm *myTm;  
-	myTm = localtime_r(&time,myTm);
+	struct tm *myTm = localtime(&time);
 	char tmBuffer[20];
 	strftime(tmBuffer, 20, "%F %T", myTm);
 
 	os << "[" << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms << "] " << std::setfill(' ');
 
-	delete[] myTm;
 	return os;
 }
 

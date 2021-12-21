@@ -89,7 +89,7 @@ void sig(int sig)
 void addSystemDefinedMessageTypes()
 {
 	//TODO handle this some other way so that the core isn't including anything from the api?
-	IvpMessageTypeCollection *entries = nullptr;
+	IvpMessageTypeCollection *entries = NULL;
 	for(int id = 0; id <= 255; id++)//id <= DSRCmsgID_travelerInformation; id++)
 	{
 		entries = ivpJ2735_addMsgTypeToCollection(entries, (e_DSRCmsgID)id);
@@ -102,7 +102,7 @@ void addSystemDefinedMessageTypes()
 	for(int i = 0; i < arraySize; i++)
 	{
 		IvpMessageTypeEntry *entry = ivpMsgType_getEntry(entries, i);
-		assert(entry != nullptr);
+		assert(entry != NULL);
 
 		MessageTypeEntry dbEntry(std::string(entry->type), std::string(entry->subtype));
 		dbEntry.description = entry->description ? std::string(entry->description) : "";
@@ -121,7 +121,7 @@ void addSystemDefinedMessageTypes()
 		LOG_WARN(e.what());
 	}
 
-	if (entries != nullptr)
+	if (entries != NULL)
 		ivpMsgType_destroyCollection(entries);
 
 } 
@@ -131,9 +131,9 @@ std::string GetPwd(){
 	const char* EnvVar = "MYSQL_PASSWORD";
 	const char* pwd;
 	pwd = std::getenv(EnvVar);
-  
-	if(pwd == nullptr){
-		LOG_ERROR("Unable to set MYSQL_ROOT_PASSWORD)");
+
+	if(pwd == NULL){
+		LOG_ERROR("Unable to set MYSQL_PASSWORD)");
 		return "";
 	}
 	else{

@@ -66,20 +66,15 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	statusItems[PLUGINMONITOR_STATUSKEY_NUMBERPLUGINS] = "0";
 	this->setStatusItems(statusItems);
 
-	pthread_mutex_init(&this->mMessagesLock, nullptr);
+	pthread_mutex_init(&this->mMessagesLock, NULL);
 
-	struct passwd *pwd = nullptr;
-	struct passwd *result = nullptr;
-    	char buf[64]; //assuming passwords are 64 bits long most
-    	memset(&buf, 0, sizeof buf);
+	struct passwd *pwd = NULL;
 	if (getuid() != 0)
 	{
 		this->setPluginStatus("ERROR: Not running as root");
 		this->addEventLogEntry(LogLevel_Fatal, "Error starting: Not running as root");
 	}
-
-
-	else if( getpwnam_r(PLUGIN_USER, pwd, buf, 64, &result) == NULL) 
+	else if ((pwd = getpwnam(PLUGIN_USER)) == NULL)
 	{
 		this->setPluginStatus("ERROR: User '" PLUGIN_USER "' doesn't exist");
 		this->addEventLogEntry(LogLevel_Fatal, "Error starting: User '" PLUGIN_USER "' doesn't exist");
@@ -87,18 +82,11 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	else
 	{
 		PluginMonitor::sPluginGids.clear();
-		
-		char *buffer = nullptr;
-		size_t buffer_len = 0;
-		struct group grp = { nullptr, };
-		struct group *gid= nullptr;
-		
-		getgrnam_r("dialout", &grp, buffer, buffer_len, &gid);
-
+		struct group *gid = getgrnam("dialout");
 		if (gid != NULL)
 			PluginMonitor::sPluginGids.push_back(gid->gr_gid);
 
-		PluginMonitor::sPluginUid = (*result).pw_uid;
+		PluginMonitor::sPluginUid = pwd->pw_uid;
 
 		this->mMonitorThread = boost::thread(&PluginMonitor::monitorThreadEntry, this);
 
@@ -258,7 +246,7 @@ void PluginMonitor::monitorThreadEntry()
 			vector<map<InstalledPluginEntry, PluginMonitoringData>::iterator> deadPlugins;
 			for (map<InstalledPluginEntry, PluginMonitoringData>::iterator itr = mRunningPlugins.begin(); itr != mRunningPlugins.end(); itr++)
 			{
-				waitpid(itr->second.pid, nullptr, WNOHANG);
+				waitpid(itr->second.pid, NULL, WNOHANG);
 				if (kill(itr->second.pid, 0) != 0)
 					deadPlugins.push_back(itr);
 			}

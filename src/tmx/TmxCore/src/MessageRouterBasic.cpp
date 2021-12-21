@@ -40,7 +40,7 @@ MessageRouterBasic::~MessageRouterBasic()
 uint64_t MessageRouterBasic::GetMsTimeSinceEpoch()
 {
 	struct timeval tv;
-	gettimeofday(&tv, nullptr);
+	gettimeofday(&tv, NULL);
 	return (uint64_t)((double)(tv.tv_sec) * 1000 + (double)(tv.tv_usec) / 1000);
 }
 
@@ -85,10 +85,10 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 					break;
 				}
 			}
-			else if(msg->type != nullptr && filterIter->type.compare(msg->type) == 0)
+			else if(msg->type != NULL && filterIter->type.compare(msg->type) == 0)
 			{
 				if (filterIter->subtype.compare("*") == 0
-						|| (msg->subtype != nullptr && filterIter->subtype.compare(msg->subtype) == 0))
+						|| (msg->subtype != NULL && filterIter->subtype.compare(msg->subtype) == 0))
 				{
 					if (!filterIter->flagmask || (filterIter->flagmask & msg->flags) > 0)
 					{

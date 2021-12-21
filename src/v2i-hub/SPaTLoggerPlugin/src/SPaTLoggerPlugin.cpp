@@ -338,16 +338,11 @@ void SPaTLoggerPlugin::CheckSPaTLogFileSizeAndRename()
  */
 std::string SPaTLoggerPlugin::GetCurDateTimeStr()
 {
-	
-
-        time_t *t; 
-	time(t); 
-	struct tm *tm = new struct tm; 
-	tm = localtime_r(t,tm);
+	auto t = std::time(nullptr);
+	auto tm = *std::localtime(&t);
 	std::ostringstream oss;
-	oss << std::put_time(tm, "%d%m%Y%H%M%S");
+	oss << std::put_time(&tm, "%d%m%Y%H%M%S");
 	auto str = oss.str();
-        delete[] tm;
 	return str;
 }
 

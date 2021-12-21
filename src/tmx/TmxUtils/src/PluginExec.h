@@ -65,7 +65,7 @@ public:
 	virtual ~Runnable() { Cleanup(); }
 	virtual bool ProcessOptions(const boost::program_options::variables_map &);
 	virtual int Main() = 0;
-	const char *inFileParam = nullptr;
+	const char *inFileParam = NULL;
 };
 
 /**

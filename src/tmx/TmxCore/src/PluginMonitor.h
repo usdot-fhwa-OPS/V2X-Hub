@@ -21,7 +21,7 @@
 class PluginMonitor : public Plugin
 {
 public:
-	explicit PluginMonitor(MessageRouter *messageRouter);
+	PluginMonitor(MessageRouter *messageRouter);
 	~PluginMonitor();
 
 	virtual void onMessageReceived(IvpMessage *msg);

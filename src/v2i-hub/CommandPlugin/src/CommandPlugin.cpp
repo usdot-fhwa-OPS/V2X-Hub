@@ -134,7 +134,7 @@ void CommandPlugin::UpdateConfigSettings()
 uint64_t CommandPlugin::GetMsTimeSinceEpoch()
 {
 	struct timeval tv;
-	gettimeofday(&tv, nullptr);
+	gettimeofday(&tv, NULL);
 	return (uint64_t) ((double) (tv.tv_sec) * 1000
 			+ (double) (tv.tv_usec) / 1000);
 }
@@ -198,7 +198,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 	case LWS_UFS_FINAL_CONTENT:
 	case LWS_UFS_CONTENT:
 		//check if connection dropped
-		if (_uploadRequests[pss->filename].outputbuffer == nullptr)
+		if (_uploadRequests[pss->filename].outputbuffer == NULL)
 		{
 			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: skip content, connection dropped";
 			_uploadRequests[pss->filename].message = "Connection dropped";
@@ -355,7 +355,7 @@ int CommandPlugin::WSCallbackHTTP(
 		}
 		else
 		{
-			if (_uploadRequests.find(pss->filename) != _uploadRequests.end() && _uploadRequests[pss->filename].outputbuffer == nullptr)
+			if (_uploadRequests.find(pss->filename) != _uploadRequests.end() && _uploadRequests[pss->filename].outputbuffer == NULL)
 			{
 				FILE_LOG(logDEBUG) << "WSCallbackHTTP LWS_CALLBACK_HTTP_BODY drop protocol";
 				return -1;
@@ -458,7 +458,7 @@ int CommandPlugin::WSCallbackHTTP(
 			//send response
 			if (_uploadRequests.find(pss->filename) != _uploadRequests.end())
 			{
-				if (_uploadRequests[pss->filename].outputbuffer != nullptr)
+				if (_uploadRequests[pss->filename].outputbuffer != NULL)
 				{
 					data["state"] = "upload";
 					if (_uploadRequests[pss->filename].message == "")
@@ -471,7 +471,7 @@ int CommandPlugin::WSCallbackHTTP(
 				_uploadRequests.erase(pss->filename);
 			}
 			lws_spa_destroy(pss->spa);
-			pss->spa = nullptr;
+			pss->spa = NULL;
 		}
 		break;
 
@@ -562,7 +562,7 @@ int CommandPlugin::WSCallbackBASE64(
 				}
 				else
 				{
-					it->second.outputbuffer = nullptr;
+					it->second.outputbuffer = NULL;
 					it++;
 				}
 			}
@@ -1236,7 +1236,7 @@ int CommandPlugin::Main()
 					(lws_callback_function*)&CommandPlugin::WSCallbackHTTP,
 					sizeof(struct PerSessionDataHTTP),
 					4096,
-					0, nullptr, 0
+					0, NULL, 0
 			},
 			{
 					"base64",
@@ -1245,7 +1245,7 @@ int CommandPlugin::Main()
 					0
 			},
 			{
-					nullptr, nullptr, 0
+					NULL, NULL, 0
 			}
 	};
 
@@ -1302,7 +1302,7 @@ int CommandPlugin::Main()
 	// create libwebsocket context representing this server
 	context = lws_create_context(&info);
 
-	if (context == nullptr)
+	if (context == NULL)
 	{
 		PLOG(logDEBUG) << "libwebsocket context create failed";
 		return -1;

@@ -19,9 +19,9 @@ std::map<std::string, SystemConfigurationParameterEntry> ConfigContext::getSyste
 {
 	map<string, SystemConfigurationParameterEntry> results;
 
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
-	unique_ptr< sql::ResultSet > rset(stmt->executeQuery("SELECT * FROM `systemConfigurationParameter`;"));
+	auto_ptr< sql::ResultSet > rset(stmt->executeQuery("SELECT * FROM `systemConfigurationParameter`;"));
 	while(rset->next())
 	{
 		SystemConfigurationParameterEntry entry;
@@ -41,14 +41,14 @@ SystemConfigurationParameterEntry ConfigContext::getSystemConfigParameter(std::s
 {
 	SystemConfigurationParameterEntry results;
 
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "SELECT * FROM `systemConfigurationParameter` WHERE `key` = '";
 	query << DbContext::formatStringValue(key);
 	query << "';";
 
-	unique_ptr< sql::ResultSet > rset(stmt->executeQuery(query.str()));
+	auto_ptr< sql::ResultSet > rset(stmt->executeQuery(query.str()));
 	if(rset->next())
 	{
 		results.id = rset->getUInt("id");
@@ -63,7 +63,7 @@ SystemConfigurationParameterEntry ConfigContext::getSystemConfigParameter(std::s
 
 void ConfigContext::initializeSystemConfigParameter(SystemConfigurationParameterEntry *entry)
 {
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
 	{
 		stringstream query;
@@ -86,7 +86,7 @@ void ConfigContext::initializeSystemConfigParameter(SystemConfigurationParameter
 
 void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std::vector<PluginConfigurationParameterEntry> &entries)
 {
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
 	for(vector<PluginConfigurationParameterEntry>::iterator itr = entries.begin(); itr != entries.end(); itr++)
 	{
@@ -146,14 +146,14 @@ std::map<std::string, PluginConfigurationParameterEntry> ConfigContext::getPlugi
 {
 	map<string, PluginConfigurationParameterEntry> results;
 
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "SELECT * FROM `pluginConfigurationParameter` WHERE `pluginId` IN ( '0', '";
 	query << pluginId;
 	query << "');";
 
-	unique_ptr< sql::ResultSet > rset(stmt->executeQuery(query.str()));
+	auto_ptr< sql::ResultSet > rset(stmt->executeQuery(query.str()));
 	while(rset->next())
 	{
 		PluginConfigurationParameterEntry entry;
@@ -172,7 +172,7 @@ std::map<std::string, PluginConfigurationParameterEntry> ConfigContext::getPlugi
 
 void ConfigContext::updatePluginConfigParameterValue(const PluginConfigurationParameterEntry &entry)
 {
-	unique_ptr<sql::Statement> stmt(this->getStatement());
+	auto_ptr<sql::Statement> stmt(this->getStatement());
 
 	//affected_rows = stmt->executeUpdate("UPDATE test SET label = 'y' WHERE id = 100");
 

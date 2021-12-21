@@ -30,7 +30,7 @@ public:
 	virtual ~LockFreeThread() {
 		if (_thread) {
 			delete _thread;
-			_thread = nullptr;
+			_thread = NULL;
 		}
 	}
 
@@ -162,7 +162,7 @@ private:
 	}
 
 	std::atomic<bool> _active;
-	std::thread *_thread = nullptr;
+	std::thread *_thread = NULL;
 
 	// The lock free queues, both in and out
 	boost::lockfree::spsc_queue<incoming_item, Capacity> _inQ;

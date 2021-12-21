@@ -45,7 +45,7 @@ protected:
 
 private:
 	sql::Driver *mDriver;
-	std::unique_ptr< sql::Connection > mCon;
+	std::auto_ptr< sql::Connection > mCon;
 };
 
 
