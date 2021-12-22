@@ -360,7 +360,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				std::string result="";
 				FILE* pipe= popen(cmd,"r"); 
 
-				if (pipe != NULL ) throw std::runtime_error("popen() failed!");
+				if (pipe == NULL ) throw std::runtime_error("popen() failed!");
 				try{
 					while (fgets(buffer, sizeof(buffer),pipe) != NULL)
 					{
