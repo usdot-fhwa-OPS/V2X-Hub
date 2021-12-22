@@ -192,8 +192,6 @@ jobs:
   port_drayage_webservice_build_develop :
     docker:
       - image: cimg/openjdk:11.0.12
-    # Set working directory
-    working_directory: "/home/V2X-Hub"
     steps:
      - setup_remote_docker
      - checkout
@@ -214,7 +212,6 @@ jobs:
   port_drayage_webservice_build :
     docker:
       - image: cimg/openjdk:11.0.12
-    # Set working directory
     steps:
      - setup_remote_docker
      - checkout
