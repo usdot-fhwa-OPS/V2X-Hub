@@ -459,6 +459,7 @@ int MessageReceiverPlugin::Main()
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				totalBytes += len;
+				int txlen=0; 
 				
 				// @SONAR_STOP@
 				// if verification enabled, access HSM
@@ -553,6 +554,7 @@ int MessageReceiverPlugin::Main()
 									string bs = extractedmsg.substr(i, 2);
 									uint8_t byte = (uint8_t) strtol(bs.c_str(), nullptr, 16);
 									extractedpayload[k++]=byte; 
+									txlen++;
 									
 								}
 								break; // can break out if already found a msg id 
@@ -575,7 +577,8 @@ int MessageReceiverPlugin::Main()
 
 				}
 				else {
-				extractedpayload=incoming; 
+				extractedpayload=incoming;
+				txlen=len;
 				}
 
 				// @SONAR_START@
@@ -600,7 +603,7 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				this->IncomingMessage(extractedpayload.data(), extractedpayload.size(), enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
 				
 			}
 			else if (len < 0)
