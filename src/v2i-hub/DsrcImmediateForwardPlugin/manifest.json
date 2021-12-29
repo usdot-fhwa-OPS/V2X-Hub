@@ -1,7 +1,7 @@
 {
   "name": "DSRCMessageManager",
   "description": "Plugin that listens for TMX messages and forwards them to the DSRC Radio (i.e. the RSU).",
-  "version": "@PROJECT_VERSION@",
+  "version": "5.0",
   "exeLocation": "/bin/DsrcImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
   "corePort": 24601,
@@ -51,6 +51,18 @@
       "key": "Signature",
       "default": "False",
       "description": "True or False value indicating whether to sign the messages."
+    },
+    {
+      "key": "signMessage",
+      "default": "0",
+      "description": "True or False value indicating whether to sign the messages with V2X Hub."
+    },
+    {
+      "key": "HSMurl",
+      "default": "http://<softHSM IP>:3000/v1/scms/",
+      "description": "REST API endpoint url needed to make HSM calls"
     }
+  
+
   ]
 }

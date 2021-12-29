@@ -1,0 +1,19 @@
+<defines>
+COMMONCRYPTO -> 20180903
+</defines>
+
+load_on vendor
+
+<header:internal>
+commoncrypto.h
+commoncrypto_utils.h
+</header:internal>
+
+<os_features>
+commoncrypto
+</os_features>
+
+<requires>
+modes
+block
+</requires>

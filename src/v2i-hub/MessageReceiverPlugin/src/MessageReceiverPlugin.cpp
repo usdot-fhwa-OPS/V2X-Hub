@@ -28,11 +28,14 @@
 #define ABBR_BSM 1000
 #define ABBR_SRM 2000
 
+#define IDCHECKLIMIT 60
+
 using namespace std;
 using namespace boost::asio;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
+//using namespace Botan;
 
 // BSMs may be 10 times a second, so only send errors at most every 2 minutes
 #define ERROR_WAIT_MS 120000
@@ -48,12 +51,43 @@ static std::atomic<uint64_t> totalBytes {0};
 static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
 MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManager(name)
-{
-	//Don't need to subscribe to messages
+{	//Don't need to subscribe to messages
 	//SubscribeToMessages();
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
+	
+	// @SONAR_STOP@
+
+	GetConfigValue<unsigned int>("EnableVerification", verState);
+	GetConfigValue("HSMLocation",liblocation);
+	
+	GetConfigValue<string>("HSMurl",baseurl);
+	GetConfigValue<string>("messageid",messageidstr);
+	getmessageid(); 
+	
+	std::string request="verifySig";
+	url=baseurl+request;
+	
+	// @SONAR_START@
+
 }
+
+void MessageReceiverPlugin::getmessageid()
+{
+
+	stringstream ss(messageidstr);
+
+	messageid.clear(); // better to clear out the vector 
+
+	while(ss.good())
+	{
+		string tmp;
+		getline(ss, tmp, ',' );
+		messageid.push_back(tmp); 
+	}
+
+}
+
 
 MessageReceiverPlugin::~MessageReceiverPlugin() { }
 
@@ -68,6 +102,11 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	delete msg;
 	return &encMsg;
 }
+
+// @SONAR_STOP@
+
+	
+	// @SONAR_START@
 
 BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
@@ -169,6 +208,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	DecodedBsmMessage decodedBsm;
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
+
 
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
@@ -350,6 +390,14 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
+	GetConfigValue<unsigned int>("EnableVerification", verState);
+	GetConfigValue("HSMLocation",liblocation);
+	GetConfigValue<string>("HSMurl",baseurl);
+	GetConfigValue<string>("messageid",messageidstr);
+	getmessageid();
+
+	std::string request="verifySig";
+	url=baseurl+request;
 
 	lock_guard<mutex> lock(syncLock);
 
@@ -383,6 +431,9 @@ int MessageReceiverPlugin::Main()
 	byte_stream incoming(4000);
 	std::unique_ptr<tmx::utils::UdpServer> server;
 
+	byte_stream extractedpayload(4000);
+	int mlen=0;
+
 	while (_plugin->state != IvpPluginState_error)
 	{
 		// See if the server values are different
@@ -408,12 +459,135 @@ int MessageReceiverPlugin::Main()
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				totalBytes += len;
+				int txlen=0; 
+				
+				// @SONAR_STOP@
+				// if verification enabled, access HSM
+
+				if (verState == 1)
+				{  
+
+					//  convert unit8_t vector to hex stream 
+
+    				stringstream ss;
+    				ss << std::hex << std::setfill('0');
+					uint16_t it=0; 
+
+    				for (uint16_t it=0; it <len; it++) {
+        				ss << std::setw(2) << static_cast<unsigned>(incoming[it]);
+    				}
+
+					string msg = ss.str(); 
+
+					//the incoming payload is hex encoded, convert this to base64 
+					std::string base64msg="";
+
+					hex2base64(msg,base64msg);
+
+					// use this string for verification with base64.
+
+					std::string req = "\'{\"message\":\""+base64msg+"\"}\'";
+
+					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
+
+					const char *cmd=cmd1.c_str();  
+					char buffer[2048];
+					std::string result="";
+					FILE* pipe= popen(cmd,"r"); 
+
+					if (pipe == NULL ) throw std::runtime_error("popen() failed!");
+					
+					try{
+						while (fgets(buffer, sizeof(buffer),pipe) != NULL)
+						{
+							result+=buffer; 
+						}
+					} catch (...) {
+						pclose(pipe); 
+						throw; 
+					}
+					cJSON *root   = cJSON_Parse(result.c_str());
+					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
+
+
+					int msgValid = sd->valueint;
+
+					string extractedmsg=""; 
+					bool foundId=false;
+
+					if (msgValid == 1)
+					{
+						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message 
+
+						std::vector<string>::iterator itr=messageid.begin(); 
+						int mlen; 
+						
+						while(itr != messageid.end())
+						{
+							//look for the message header within the first 20 bytes. 
+							size_t idloc = msg.find(*itr);
+
+							if(idloc != string::npos and idloc < IDCHECKLIMIT) // making sure the msgID lies within the first IDCHECKLIMIT Characters 
+							{
+								// message id found 
+								if (msg[idloc+4] == '8') // if the length is longer than 256 
+								{
+									string tmp = msg.substr(idloc+5,3); 
+									const char *c = tmp.c_str(); // take out next three nibble for length 
+									mlen = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
+									extractedmsg = msg.substr(idloc,mlen); 
+
+								}
+								else 
+								{
+									string tmp = msg.substr(idloc+4,2);
+									const char *c = tmp.c_str(); // take out next three nibble for length 
+									mlen = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
+									extractedmsg = msg.substr(idloc,mlen);
+								}
+
+								foundId=true; 
+
+								int k=0; 
+
+								for (unsigned int i = 0; i < extractedmsg.length(); i += 2) {
+									string bs = extractedmsg.substr(i, 2);
+									uint8_t byte = (uint8_t) strtol(bs.c_str(), nullptr, 16);
+									extractedpayload[k++]=byte; 
+									txlen++;
+									
+								}
+								break; // can break out if already found a msg id 
+							} 
+							itr++; 
+						}
+
+						if (foundId==false)
+						{
+							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n"; 
+							continue;  //do not send the message out to v2x hub if msgid check fails 
+						}
+					}
+					else
+					{
+						PLOG(logDEBUG) <<" Unable to verify the incoming message: Message Verification Error and dropped \n"; 
+
+						continue; // do not send the message out to v2x hub core if validation fails 
+					}
+
+				}
+				else {
+				extractedpayload=incoming;
+				txlen=len;
+				}
+
+				// @SONAR_START@
 
 				// Support different encodings
 				string enc;
-				if (incoming.size() > 0)
+				if (extractedpayload.size() > 0)
 				{
-					switch (incoming[0]) {
+					switch (extractedpayload[0]) {
 					case 0x00:
 						enc = api::ENCODING_ASN1_UPER_STRING;
 						break;
@@ -429,7 +603,8 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				this->IncomingMessage(incoming.data(), len, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				
 			}
 			else if (len < 0)
 			{
