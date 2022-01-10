@@ -603,7 +603,7 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? nullptr : enc.c_str(), 0, 0, time);
 				
 			}
 			else if (len < 0)
