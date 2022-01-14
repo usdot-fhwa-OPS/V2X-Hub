@@ -493,17 +493,17 @@ int MessageReceiverPlugin::Main()
 					const char *cmd=cmd1.c_str();  
 					char buffer[2048];
 					std::string result="";
-					FILE* pipe= popen(cmd,"r"); 
+					FILE* pipemsg= popen(cmd,"r"); 
 
-					if (pipe == NULL ) throw std::runtime_error("popen() failed!");
+					if (pipemsg == NULL ) throw std::runtime_error("popen() failed!");
 					
 					try{
-						while (fgets(buffer, sizeof(buffer),pipe) != NULL)
+						while (fgets(buffer, sizeof(buffer),pipemsg) != NULL)
 						{
 							result+=buffer; 
 						}
 					} catch (...) {
-						pclose(pipe); 
+						pclose(pipemsg); 
 						throw; 
 					}
 					cJSON *root   = cJSON_Parse(result.c_str());
@@ -603,7 +603,7 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? NULL : enc.c_str(), 0, 0, time);
+				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? nullptr : enc.c_str(), 0, 0, time);
 				
 			}
 			else if (len < 0)
