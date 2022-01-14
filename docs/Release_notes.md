@@ -1,6 +1,21 @@
 V2X-Hub Release Notes
 ----------------------------
 
+Version 7.0, released Dec 29th, 2021
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub 7.0 includes new security features to integrate SoftHSM into V2X Hub. Two V2X Hub plugins have been updated to support message verification and signing for SPaT, MAP and BSM messages.
+
+Enhancements in this release:
+- Issue 278: The following Security changes have been made to the V2xHub code bases.
+    1.The Message Receiver and Immediate Forward plugins have the security features added. This allows any messages to and from RSU to be both signed and verified.
+    2.The V2X Hub Admin portal can be used to enable and disable security for the two plugins.
+    3.The SoftHSM implementation requires base64 formatted messages for signing or verification requests
+
+Fixes in this release:
+-	Issue 253: Fixed sonar scan memory leak issues for preemption plugin.
+
 Version 6.3, released Dec 17th, 2021
 --------------------------------------------------------
 
