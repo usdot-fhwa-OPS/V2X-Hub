@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Fail when any command fails
 #set -e
 # Ensure mysql-client is installed
