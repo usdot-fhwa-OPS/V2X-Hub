@@ -8,7 +8,17 @@
     "messageTypes": [{
         "type": "J2735",
         "subtype": "TMSG03-P",
-        "description": "..."
+        "description": "Mobility Operation Message"
+    },
+    {
+        "type": "J2735",
+        "subtype": "TMSG02-P",
+        "description": "Mobility Path Message"
+    },
+    {
+        "type": "J2735",
+        "subtype": "BSM",
+        "description": "Basic Safety Message"
     }],
     "configuration": [
         {
@@ -55,6 +65,11 @@
             "key": "MobilityOperationStrategies",
             "default": "Carma/stop_controlled_intersection",
             "description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
+        },
+        {
+            "key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
         }
     ]
 }

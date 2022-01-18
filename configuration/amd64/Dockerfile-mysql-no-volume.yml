@@ -1,8 +1,0 @@
-FROM mysql:5.7
-ARG username
-ARG password
-ENV username=$username \
-    password=$password 
-COPY mysql/ /docker-entrypoint-initdb.d/
-RUN mkdir /var/lib/mysql-no-volume
-CMD ["--datadir", "/var/lib/mysql-no-volume"]
