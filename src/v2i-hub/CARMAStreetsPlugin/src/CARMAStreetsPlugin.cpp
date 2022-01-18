@@ -60,51 +60,48 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 	kafka_conf_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
-	FILE_LOG(logERROR) <<"Attempting to connect to " << kafkaConnectString;
+	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
-		FILE_LOG(logERROR) <<"Setting kafka config options failed with error:" << error_string;
-		FILE_LOG(logERROR) <<"Exiting with exit code 1";
+		PLOG(logERROR) <<"Setting kafka config options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
-		FILE_LOG(logERROR) <<"Kafka config options set successfully";
+		PLOG(logDEBUG) <<"Kafka config options set successfully";
 	}
 	
 	kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
 	if (!kafka_producer) {
-		FILE_LOG(logERROR) <<"Creating kafka producer failed with error:" << error_string;
-		FILE_LOG(logERROR) <<"Exiting with exit code 1";
+		PLOG(logERROR) <<"Creating kafka producer failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} 			
-	FILE_LOG(logERROR) <<"Kafka producer created";
+	PLOG(logDEBUG) <<"Kafka producer created";
 
 	if (kafka_conf_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK || (kafka_conf_consumer->set("group.id", "streets_group", error_string) != RdKafka::Conf::CONF_OK)) {
-		FILE_LOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string;
-		FILE_LOG(logERROR) <<"Exiting with exit code 1";
+		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
-		FILE_LOG(logERROR) <<"Kafka config group.id options set successfully";
+		PLOG(logDEBUG) <<"Kafka config group.id options set successfully";
 	}
 	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
 
 	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
 	if ( !kafka_consumer ) {
-		FILE_LOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
+		PLOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
 		exit(1);
 	}
-	FILE_LOG(logERROR) << "Created consumer " << kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << kafka_consumer->name() << std::endl;
 
 	//create kafka topic
 	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 	if(!tconf)
 	{
-		FILE_LOG(logERROR) << "RDKafka create topic conf failed ";
+		PLOG(logERROR) << "RDKafka create topic conf failed ";
 		return;
 	}   
 
 	_topic = RdKafka::Topic::create(kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
 	if(!_topic)
 	{
-		FILE_LOG(logERROR) << "RDKafka create topic failed:" << error_string;
+		PLOG(logERROR) << "RDKafka create topic failed:" << error_string;
 		return ;
 	}
 
@@ -123,11 +120,10 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	{
 		auto mobilityOperation = msg.get_j2735_data();
 		bool retry = true;
-		FILE_LOG(logERROR) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf;
-		FILE_LOG(logERROR) << "Body Strategy : " << mobilityOperation->body.strategy.buf;
-
-  		FILE_LOG(logERROR) <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
-		  << kafka_producer->outq_len() <<"messages already in queue";
+		PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
+					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
+					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
+		  			  << kafka_producer->outq_len() <<"messages already in queue";
 
 		std::stringstream strat;
 		std::stringstream payload; 
@@ -181,19 +177,19 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 																	NULL, NULL, 0, 0);
 
 				if (produce_error == RdKafka::ERR_NO_ERROR) {
-					FILE_LOG(logDEBUG) <<"Queued message:" << message;
+					PLOG(logDEBUG) <<"Queued message:" << message;
 					retry = false;
 				}
 				else 
 				{
-					FILE_LOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+					PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
 					if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-						FILE_LOG(logERROR) <<"Message queue full...retrying...";
+						PLOG(logERROR) <<"Message queue full...retrying...";
 						kafka_producer->poll(500);  /* ms */
 						retry = true;
 					}
 					else {
-						FILE_LOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+						PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
 						retry = false;
 					}
 				}	
@@ -201,7 +197,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		}
 	}
 	catch (TmxException &ex) {
-		FILE_LOG(logERROR) << "Failed to decode message : " << ex.what();
+		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 	}
 	
 
@@ -288,20 +284,20 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 
 		if (produce_error == RdKafka::ERR_NO_ERROR) 
 		{
-			FILE_LOG(logDEBUG) << "Queued message:" << json_message;
+			PLOG(logDEBUG) << "Queued message:" << json_message;
 		}
 		else 
 		{
-			FILE_LOG(logERROR) << "Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
+			PLOG(logERROR) << "Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
 			if (produce_error == RdKafka::ERR__QUEUE_FULL) 
 			{
-				FILE_LOG(logERROR) << "MobilityPath producer Message queue is full.";
+				PLOG(logERROR) << "MobilityPath producer Message queue is full.";
 			}
 		}	
 	}
 	catch (TmxException &ex) 
 	{
-		FILE_LOG(logERROR) << "Failed to decode message : " << ex.what();
+		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 
 	}
 }
@@ -460,26 +456,26 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 																		NULL, NULL, 0, 0);
 
 			if (produce_error == RdKafka::ERR_NO_ERROR) {
-				FILE_LOG(logDEBUG) <<"Queued message:" << message;
+				PLOG(logDEBUG) <<"Queued message:" << message;
 				retry = false;
 			}
 			else 
 			{
-				FILE_LOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+				PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
 				if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-					FILE_LOG(logERROR) <<"Message queue full...retrying...";
+					PLOG(logERROR) <<"Message queue full...retrying...";
 					kafka_producer->poll(500);  /* ms */
 					retry = true;
 				}
 				else {
-					FILE_LOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+					PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
 					retry = false;
 				}
 			}	
 		}
 	}
 	catch (TmxException &ex) {
-		FILE_LOG(logERROR) << "Failed to decode message : " << ex.what();
+		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 	}
 }
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
@@ -680,7 +676,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 }
 
 int CARMAStreetsPlugin::Main() {
-	FILE_LOG(logINFO) << "Starting plugin.";
+	PLOG(logINFO) << "Starting plugin.";
 
 	uint64_t lastSendTime = 0;
 
