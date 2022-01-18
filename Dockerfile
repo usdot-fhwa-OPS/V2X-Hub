@@ -110,6 +110,8 @@ RUN ln -s ../bin PortDrayagePlugin/bin
 RUN zip PortDrayagePlugin.zip PortDrayagePlugin/bin/PortDrayagePlugin PortDrayagePlugin/manifest.json
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
+RUN ln -s ../bin CARMAStreetsPlugin/bin
+RUN zip CARMAStreetsPlugin.zip CARMAStreetsPlugin/bin/CARMAStreetsPlugin CARMAStreetsPlugin/manifest.json
 
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/

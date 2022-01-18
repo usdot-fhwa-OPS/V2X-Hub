@@ -24,6 +24,7 @@ services:
     network_mode: host
     depends_on: 
       - db
+      - v2xhub
     stdin_open: true
     tty: true
 
@@ -33,7 +34,7 @@ services:
     network_mode: host
     restart: always
     depends_on: 
-      - php
+      - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
     secrets:
