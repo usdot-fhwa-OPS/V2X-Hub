@@ -19,6 +19,7 @@ tmxctl --plugin-install MessageLoggerPlugin.zip
 tmxctl --plugin-install PedestrianPlugin.zip
 tmxctl --plugin-install TimPlugin.zip
 tmxctl --plugin-install CARMACloudPlugin.zip
+tmxctl --plugin-install CARMAStreetsPlugin.zip
 tmxctl --plugin-install ODELoggerPlugin.zip
 tmxctl --plugin-install PortDrayagePlugin.zip
 

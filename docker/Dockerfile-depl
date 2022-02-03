@@ -2,7 +2,7 @@ FROM ubuntu:bionic-20190807 AS install_dependencies
 
 RUN apt-get update  && apt-get install -y cmake git build-essential libgtest-dev libssl-dev qtbase5-dev \
     zip libmysqlcppconn-dev libboost1.65-all-dev libmysqlclient-dev uuid-dev libxerces-c-dev qtbase5-dev \
-    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libev-dev libuv-dev libcpprest-dev
+    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libjsoncpp-dev libev-dev libuv-dev libcpprest-dev
 # Build and install GTest 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
@@ -118,6 +118,8 @@ RUN zip PortDrayagePlugin.zip PortDrayagePlugin/bin/PortDrayagePlugin PortDrayag
 
 RUN ln -s ../bin ODELoggerPlugin/bin
 RUN zip ODELoggerPlugin.zip ODELoggerPlugin/bin/ODELoggerPlugin ODELoggerPlugin/manifest.json
+RUN ln -s ../bin CARMAStreetsPlugin/bin
+RUN zip CARMAStreetsPlugin.zip CARMAStreetsPlugin/bin/CARMAStreetsPlugin CARMAStreetsPlugin/manifest.json
 
 WORKDIR /home/V2X-Hub/src/tmx/TmxCore/
 RUN cp tmxcore.service /lib/systemd/system/ && cp tmxcore.service /usr/sbin/
