@@ -1,6 +1,31 @@
 V2X-Hub Release Notes
 ----------------------------
 
+Version 7.1, released Feb 3th, 2022
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.1.0 includes a CARMA streets plugin for the following operations:
+- Receive, decode and forward the BSM, Mobility Operations Message and Mobility Path Message to CARMA Streets.
+- Broadcast schedule plan using Mobility Operations Message received from CARMA Streets.
+
+Enhancements in this release:
+- Issue 262: Updated CARMA Streets plugin to receive and decode Mobility Path messages into JSON through Kafka.
+- Issue 271: Added Filter Message for BSM and Mobility Operation messages. Publish the decoded BSM and Mobility Operation messages to two different Kafka topics.
+Subscribe to Kafka topic to get scheduling plan from CARMA streets. Create a new Mobility Operation message and fill it with scheduling plan data.
+Added functionalities to encode Mobility Operation messages, and send it to DSRC manager for broadcast. 
+- Issue 317: Updated message receiver plugin to disable the J2735 message signature verification by default we allow users to start up the system with default configurations also go through the setup for this security feature.
+
+Bug fixes in this release:
+- Issue 264: Fixed Dependencies Issues, added Carma-streets related data in SQL and Updated plugin install and Docker file to include Carma-streets plugin.
+- Issue 314: Fixed few bugs for Carma-street Plugin as below:
+     1.	Logging to PLOG statements
+     2.	Consolidate logging statements to decrease cognitive complexity
+     3.	Added message types to manifest JSON
+     4.	Removed old Docker-compose files
+     5.	Added CARMA Streets Plugin to sonar analysis
+- Issue 289: Fixed ET and DT order in the strategy parameters in Carma-streets Plugin CPP file.
+
 Version 7.0, released Dec 29th, 2021
 --------------------------------------------------------
 
