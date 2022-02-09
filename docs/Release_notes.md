@@ -1,11 +1,11 @@
 V2X-Hub Release Notes
 ----------------------------
 
-Version 7.1, released Feb 3th, 2022
+Version 7.1, released Feb 3rd, 2022
 --------------------------------------------------------
 
 **Summary:**
-V2X Hub release 7.1.0 includes a CARMA streets plugin for the following operations:
+V2X Hub release 7.1 includes a CARMA streets plugin for the following operations:
 - Receive, decode and forward the BSM, Mobility Operations Message and Mobility Path Message to CARMA Streets.
 - Broadcast schedule plan using Mobility Operations Message received from CARMA Streets.
 
