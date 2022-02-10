@@ -125,7 +125,7 @@ jobs:
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
-          docker build -f docker/php.yml -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
           docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .  
      - run: 
         name: Docker Push
@@ -143,7 +143,7 @@ jobs:
         name: Docker Build
         # Build v2xhub and php docker images develop images
         command: |
-          docker build -f docker/php.yml -t usdotfhwaops/php:latest .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:latest .
           docker build -t usdotfhwaops/v2xhubamd:latest .    
      - run: 
         name: Docker Push
