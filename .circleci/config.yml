@@ -246,7 +246,7 @@ jobs:
         # Build and push Port Drayage Web Service Docker images
         command: | 
           cd tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice_arm:latest .
+          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:latest .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice_arm:latest
   port_drayage_webservice_build_arm :
