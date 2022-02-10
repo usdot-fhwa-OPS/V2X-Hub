@@ -1,6 +1,6 @@
-FROM amd64/alpine:latest
+FROM arm64v8/alpine:latest
 RUN mkdir ~/port-drayage-webservice/
-RUN apk add openjdk11-jre --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
+RUN apk add openjdk11 --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community
 COPY ./target/port-drayage-webservice-0.0.1-SNAPSHOT.jar ~/port-drayage-webservice/
 WORKDIR ~/port-drayage-webservice/
 ENTRYPOINT ["java","-jar","port-drayage-webservice-0.0.1-SNAPSHOT.jar"]
