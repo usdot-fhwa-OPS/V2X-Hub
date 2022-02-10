@@ -229,26 +229,26 @@ jobs:
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
-    port_drayage_webservice_build_develop_arm :
-      docker:
-        - image: cimg/openjdk:11.0.12
-      steps:
-      - setup_remote_docker
-      - checkout
-      - run: 
-          name: Maven Build JAR
-          # Build Port Drayage Web Service
-          command: |
-            cd tools/port-drayage-webservice/
-            mvn clean install  
-      - run: 
-          name: Build Docker Image and Push
-          # Build and push Port Drayage Web Service Docker images
-          command: | 
-            cd tools/port-drayage-webservice/
-            docker build -t usdotfhwaops/port-drayage-webservice_arm:latest .
-            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-            docker push usdotfhwaops/port-drayage-webservice_arm:latest
+  port_drayage_webservice_build_develop_arm :
+    docker:
+      - image: cimg/openjdk:11.0.12
+    steps:
+    - setup_remote_docker
+    - checkout
+    - run: 
+        name: Maven Build JAR
+        # Build Port Drayage Web Service
+        command: |
+          cd tools/port-drayage-webservice/
+          mvn clean install  
+    - run: 
+        name: Build Docker Image and Push
+        # Build and push Port Drayage Web Service Docker images
+        command: | 
+          cd tools/port-drayage-webservice/
+          docker build -t usdotfhwaops/port-drayage-webservice_arm:latest .
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+          docker push usdotfhwaops/port-drayage-webservice_arm:latest
   port_drayage_webservice_build_arm :
     docker:
       - image: cimg/openjdk:11.0.12
