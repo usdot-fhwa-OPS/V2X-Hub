@@ -45,7 +45,7 @@
 		},
 		{
 			"key":"EnableVerification",
-			"default":"1",
+			"default":"0",
 			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
 		},		
 		{
