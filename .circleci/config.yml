@@ -129,6 +129,7 @@ jobs:
           docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .  
           cd ./tools/port-drayage-webservice/
           docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
+     - run:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
