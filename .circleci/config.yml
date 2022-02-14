@@ -170,7 +170,7 @@ jobs:
         # Run MYSQL image and build v2xhub docker image
         command: |
           docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
-          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRLCE_BRANCH,,} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH,,} .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,} .
 
