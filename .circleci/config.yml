@@ -170,6 +170,7 @@ jobs:
         # Run MYSQL image and build v2xhub docker image
         command: |
           docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRLCE_BRANCH,,} .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,} .
 
@@ -181,6 +182,7 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
           docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
   arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
@@ -192,6 +194,7 @@ jobs:
         # Run MYSQL image and build v2xhub docker image develop image
         command: |
           docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:latest .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:latest .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:latest .
 
@@ -203,6 +206,7 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:latest
           docker push usdotfhwaops/port-drayage-webservice_arm:latest
+          docker push usdotfhwaops/php_arm:latest
 workflows:
   version: 2
   build:

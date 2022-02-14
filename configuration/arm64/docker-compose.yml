@@ -19,7 +19,7 @@ services:
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
 
   php:
-    image: usdotfhwaops/php:322-fix-php-port_drayage_webservice_images_arm
+    image: usdotfhwaops/php_arm:322-fix-php-port_drayage_webservice_images_arm
     container_name: php
     network_mode: host
     depends_on: 
