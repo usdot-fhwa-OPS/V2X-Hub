@@ -118,7 +118,7 @@ jobs:
             fi 
   docker_build_push :
    machine:
-    image: ubuntu-1604:202004-01
+    image: ubuntu-2004:202201-02
    steps:
      - checkout
      - run: 
@@ -136,7 +136,7 @@ jobs:
           docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
   docker_build_push_develop :
    machine:
-    image: ubuntu-1604:202004-01
+    image: ubuntu-2004:202201-02
    steps:
      - checkout
      - run: 
