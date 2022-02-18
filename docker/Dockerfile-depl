@@ -1,15 +1,15 @@
-FROM ubuntu:bionic-20190807 AS install_dependencies
+FROM ubuntu:focal-20220113 AS install_dependencies
 
 RUN apt-get update  && apt-get install -y cmake git build-essential libgtest-dev libssl-dev qtbase5-dev \
-    zip libmysqlcppconn-dev libboost1.65-all-dev libmysqlclient-dev uuid-dev libxerces-c-dev qtbase5-dev \
-    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libjsoncpp-dev libev-dev libuv-dev libcpprest-dev
+    zip libmysqlcppconn-dev libboost1.71-all-dev libmysqlclient-dev uuid-dev libxerces-c-dev qtbase5-dev \
+    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libjsoncpp-dev libev-dev libuv1-dev libcpprest-dev
 # Build and install GTest 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
 WORKDIR /usr/src/googletest/googletest/build
 RUN cmake ..
 RUN make
-RUN cp libgtest* /usr/lib/
+RUN cd lib && cp libgtest* /usr/lib/
 WORKDIR cd /usr/src/googletest/googletest
 RUN rm -rf build
 RUN mkdir /usr/local/lib/googletest
