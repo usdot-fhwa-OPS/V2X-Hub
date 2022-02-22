@@ -54,8 +54,7 @@ class SignalController
 		uint32_t _tscRemoteSnmpPort;
 
 		std::string _signalGroupMappingJson;
-		tmx::messages::SpatMessage *_spatMessage{NULL};
-
+		std::shared_ptr<tmx::messages::SpatMessage> _spatMessage;
 		int counter;
 		unsigned long normalstate;
 		unsigned long crossstate;
