@@ -187,7 +187,7 @@ void SignalController::start_signalController()
 					}
 				}
 			}
-			printf("Sleeping\n");
+			//printf("Sleeping\n");
 			sleep(3);
 	    }
 	// }
