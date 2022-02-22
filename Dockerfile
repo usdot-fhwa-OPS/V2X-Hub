@@ -2,7 +2,7 @@ FROM ubuntu:focal-20220113
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libboost-thread1.71-dev libboost-regex1.71-dev  libboost-log1.71-dev libboost-program-options1.71-dev libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
+RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
