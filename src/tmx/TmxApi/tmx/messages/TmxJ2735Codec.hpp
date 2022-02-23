@@ -429,6 +429,8 @@ public:
 				frame.flush();
 				this->set_data(TmxJ2735EncodedMessage<MsgType>::encode_j2735_message<
 						codec::uper<MessageFrameMessage> >(frame));
+				//Free the memory allocated for MessageFrame
+				free(frame.get_j2735_data().get());
 			}
 			else
 			{

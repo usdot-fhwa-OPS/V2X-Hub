@@ -44,7 +44,7 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 		int phaseNumber = signalGroup.second.get<int>("Phase", 0);
 		string typeName = signalGroup.second.get<string>("Type");
 
-		cout<<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<<phaseNumber<<" typeName: "<<typeName<<endl;
+		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<<phaseNumber<<" typeName: "<<typeName<<endl;
 
 		SignalGroupMapping sgm;
 		sgm.PhaseId = phaseNumber;
