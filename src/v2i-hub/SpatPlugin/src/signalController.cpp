@@ -233,7 +233,10 @@ void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::s
 			}
 		}
 
-		spatEncodedMsg->initialize(*_spatMessage);
+		MessageFrameMessage frame(_spatMessage->get_j2735_data());
+		spatEncodedMsg->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
+		//Free the memory allocated for MessageFrame
+		free(frame.get_j2735_data().get());
 	}
 
 	pthread_mutex_unlock(&spat_message_mutex);
