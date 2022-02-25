@@ -85,9 +85,6 @@ void SignalController::start_signalController()
     struct timeval tv;
     int on = 1;
 
-	// while (1)
-	// {
-
 		//Enable SPAT
 		// 0 = disable
 		// 2 = enable SPAT
@@ -187,10 +184,8 @@ void SignalController::start_signalController()
 					}
 				}
 			}
-			//printf("Sleeping\n");
 			sleep(3);
 	    }
-	// }
 }
 
 void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::string currentPedLanes)
