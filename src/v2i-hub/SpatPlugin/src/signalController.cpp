@@ -174,7 +174,6 @@ void SignalController::start_signalController()
 						//_spatMessage.set_j2735_data(_spat);
 						if (_spatMessage != NULL)
 						{
-							// delete _spatMessage;
 							_spatMessage = NULL;
 						}
 						_spatMessage = std::make_shared<tmx::messages::SpatMessage>(_spat);
