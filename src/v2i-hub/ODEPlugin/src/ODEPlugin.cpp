@@ -175,7 +175,7 @@ int ODEPlugin::Main()
 	while (_plugin->state != IvpPluginState_error)
 	{
 		// Wait a bit longer to try again
-		this_thread::sleep_for(chrono::milliseconds(10));
+		this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 
 	return 0;
