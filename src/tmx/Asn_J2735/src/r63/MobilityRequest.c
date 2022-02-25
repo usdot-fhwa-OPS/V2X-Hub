@@ -53,7 +53,7 @@ asn_TYPE_member_t asn_MBR_MobilityRequest_1[] = {
 		0, 0, /* No default value */
 		"strategyParams"
 		},
-	{ ATF_POINTER, 3, offsetof(struct MobilityRequest, trajectoryStart),
+	{ ATF_NOFLAGS, 0, offsetof(struct MobilityRequest, trajectoryStart),
 		(ASN_TAG_CLASS_CONTEXT | (5 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MobilityLocation,
@@ -62,7 +62,7 @@ asn_TYPE_member_t asn_MBR_MobilityRequest_1[] = {
 		0, 0, /* No default value */
 		"trajectoryStart"
 		},
-	{ ATF_POINTER, 2, offsetof(struct MobilityRequest, trajectory),
+	{ ATF_NOFLAGS, 0, offsetof(struct MobilityRequest, trajectory),
 		(ASN_TAG_CLASS_CONTEXT | (6 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MobilityLocationOffsets,
@@ -71,7 +71,7 @@ asn_TYPE_member_t asn_MBR_MobilityRequest_1[] = {
 		0, 0, /* No default value */
 		"trajectory"
 		},
-	{ ATF_POINTER, 1, offsetof(struct MobilityRequest, expiration),
+	{ ATF_NOFLAGS, 0, offsetof(struct MobilityRequest, expiration),
 		(ASN_TAG_CLASS_CONTEXT | (7 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_MobilityTimestamp,

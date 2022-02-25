@@ -8,23 +8,23 @@
 #include "TestMessage01.h"
 
 asn_TYPE_member_t asn_MBR_TestMessage01_1[] = {
-	{ ATF_POINTER, 2, offsetof(struct TestMessage01, header),
+	{ ATF_NOFLAGS, 0, offsetof(struct TestMessage01, header),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Header,
+		&asn_DEF_MobilityHeader,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
 		"header"
 		},
-	{ ATF_POINTER, 1, offsetof(struct TestMessage01, regional),
+	{ ATF_NOFLAGS, 0, offsetof(struct TestMessage01, body),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Reg_BasicSafetyMessage,
+		&asn_DEF_MobilityResponse,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
-		"regional"
+		"body"
 		},
 };
 static const int asn_MAP_TestMessage01_oms_1[] = { 0, 1 };
