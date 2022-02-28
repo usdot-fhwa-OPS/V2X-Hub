@@ -8,7 +8,8 @@
 #    1.0 : Initial version
 #
 
-CMAKE_MINIMUM_REQUIRED (VERSION 3.5)
+CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
+set(CMAKE_CXX_STANDARD 14)
 
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
