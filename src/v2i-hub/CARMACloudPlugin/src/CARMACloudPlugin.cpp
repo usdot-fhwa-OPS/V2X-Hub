@@ -22,8 +22,11 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
         std::lock_guard<mutex> lock(_cfgLock);
 		GetConfigValue<string>("WebServiceIP",webip);
 		GetConfigValue<uint16_t>("WebServicePort",webport);
-		GetConfigValue<uint16_t>("fetchTime",fetchtime);		
+		GetConfigValue<uint16_t>("fetchTime",fetchtime);
+		GetConfigValue<string>("MobilityOperationStrategies", _strategies);	
+		GetConfigValue<uint16_t>("TCMRepeatedlyBroadcastTimeOut",_TCMRepeatedlyBroadcastTimeOut);	
 		AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
+		AddMessageFilter < tsm3Message > (this, &CARMACloudPlugin::HandleMobilityOperationMessage);
 
 		// Subscribe to all messages specified by the filters above.
 		SubscribeToMessages();
@@ -98,7 +101,49 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	CloudSend(xml_str,url, base_req, method);
 	//}
 
+	//Once the TCR is sent, reset the _isAckownlwdged = false and wait for ackownledgement from MobilityOperation message 
+	 std::lock_guard<mutex> lock(_cfgLock);
+	_isAckownlwdged = false;
 
+}
+
+void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
+	std::vector<string> strategies_v;
+	ConvertString2Vector(strategies_v, _strategies);
+
+	//Process incoming MobilityOperation message
+	auto mobilityOperationMsg = msg.get_j2735_data();
+	PLOG(logERROR) << mobilityOperationMsg << std::endl;
+	//process MobilityOperation strategy
+	stringstream ss;
+	ss << mobilityOperationMsg->body.strategy.buf;
+	string mo_strategy = ss.str();
+	std::transform(mo_strategy.begin(), mo_strategy.end(), mo_strategy.begin(), ::tolower );
+	if( std::find( strategies_v.begin(), strategies_v.end(), mo_strategy ) != strategies_v.end() && mo_strategy.find("carma3/geofence_acknowledgement") != std::string::npos)
+	{
+		//Process MobilityOperation trategy params
+		ss.str("");
+		ss << mobilityOperationMsg->body.operationParams.buf;
+		string strategy_params_str = ss.str();	
+		std::vector<string> strategy_params_v;
+		ConvertString2Vector(strategy_params_v, strategy_params_str);	
+
+		string even_log_description = GetValueFromStrategyParamsByKey(strategy_params_v, "reason");
+		string acknnowledgement_str = GetValueFromStrategyParamsByKey(strategy_params_v, "acknowledgement");
+		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );
+		
+		//Create an event log object with both positive and negative ACK (ackownledgement), and broadcast the event log
+		tmx::messages::TmxEventLogMessage event_log_msg;
+
+		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV		
+		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+		event_log_msg.set_description(mo_strategy + ": " + even_log_description);
+		PLOG(logERROR) << "event_log_msg " << event_log_msg << std::endl;
+		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+
+		 std::lock_guard<mutex> lock(_cfgLock);
+		_isAckownlwdged = true;	
+	}
 }
 
 CARMACloudPlugin::~CARMACloudPlugin() {
@@ -148,7 +193,6 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
 	tmx::message_container_type container;
-	std::unique_ptr<tsm5EncodedMessage> msg;
 
 
 	std::stringstream ss;
@@ -158,23 +202,40 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tsm5message.set_contents(container.get_storage().get_tree());
 	tsm5ENC.encode_j2735_message(tsm5message);
 
-	msg.reset();
-	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+	std::time_t start_time = 0, cur_time = 0;
+	size_t count_tcm = 0; 
+	while(!_isAckownlwdged && ((cur_time - start_time) <= _TCMRepeatedlyBroadcastTimeOut) )
+	{
+		std::unique_ptr<tsm5EncodedMessage> msg;
+		msg.reset();
+		msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
 
-	string enc = tsm5ENC.get_encoding();
-	msg->refresh_timestamp();
-	msg->set_payload(tsm5ENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8003);
-	msg->refresh_timestamp();
+		string enc = tsm5ENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(tsm5ENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(172, 0x8003);
+		msg->refresh_timestamp();
 
-	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	BroadcastMessage(*rMsg);
+		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+		
+		if(count_tcm == 0){
+			start_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
+		}else{
+			cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
+		}
+		count_tcm++;
+		PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+	}
 
-	PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+	if(_isAckownlwdged){
+		PLOG(logERROR) << "CARMACloud Plugin receives ackownledgement and stop sending TCM. " << std::endl;
+	}else if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut){
+		PLOG(logERROR) << "CARMACloud Plugin does not receive ackownledgement within "<< _TCMRepeatedlyBroadcastTimeOut << " seconds. Time Out!" << std::endl;
+	}
 }
-
 
 
 int CARMACloudPlugin::StartWebService()
@@ -266,7 +327,55 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
   return 0;
 }
 
+void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, const string &str){
+	stringstream ss;
+	ss << str;
+	while (ss.good())
+	{
+		std::string substring;
+		getline(ss, substring, ',');		
+		std::transform(substring.begin(), substring.end(),substring.begin(), ::tolower );
+		sub_str_v.push_back( substring );
+	}	
+}
 
+string CARMACloudPlugin::GetValueFromStrategyParamsByKey(const std::vector<string> & strategy_params_v, const string key)
+{	
+	string value = "";
+	for(auto itr = strategy_params_v.begin();  itr != strategy_params_v.end(); itr++)
+	{
+		std::pair<string, string> key_value_pair;
+		ConvertString2Pair(key_value_pair, *itr);
+		if (key_value_pair.first.find(key) != std::string::npos)
+		{
+			value = key_value_pair.second;
+			return value;
+		}		
+	}
+	return value;		
+}
+
+void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, const string &str)
+{
+	stringstream ss;
+	ss << str;
+	size_t count = 0;
+	string key, value;
+	while (ss.good())
+	{
+		std::string substring;
+		getline(ss, substring, ':');
+		if(count == 0)
+		{
+			std::transform(substring.begin(), substring.end(),substring.begin(), ::tolower );
+			key = substring;
+			count += 1;
+		}else{
+			value = substring;
+		}		
+	}	
+	str_pair = std::make_pair(key, value);
+}
 
 int CARMACloudPlugin::Main() {
 

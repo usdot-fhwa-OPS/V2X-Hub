@@ -40,8 +40,17 @@ var timeOffsetMs = 0;
 var msgTimeFilterMs = 600000;
 var CookieUrlList = [];
 
-var debugLevel = 0
+var debugLevel = 0;
 
+var log_event_badge_level = {
+    DEBUG : 0,
+    INFO : 1,
+    WARNING : 2,
+    FATAL :3,
+    ERROR : 4
+};
+         
+var cur_log_event_badge_level = log_event_badge_level.INFO;
 /*
 function ssl_changed()
 {
@@ -534,14 +543,14 @@ function handleCommandMessage(msgData) {
                         var role = "No Permissions";
                         permissions = msgData["level"];
                         if (msgData["level"] == "1") {
-                            // TODO : Read Only – Can view everything but cannot change anything
+                            // TODO : Read Only ï¿½ Can view everything but cannot change anything
                             $("[id=\"uploadFileBtn\"]").css("display", "none");
                             $($("#tabs").find("li")[3]).hide();
                             $($("#tabs").find('#tab4')).hide();
                             $(".clearLogButton").css("display", "none");
                             role = "Read Only";
                         } else if (msgData["level"] == "2") {
-                            // TODO : Application Administrator – Can change all settings on the plugins as well as add new plugins
+                            // TODO : Application Administrator ï¿½ Can change all settings on the plugins as well as add new plugins
                             $("[id=\"uploadFileBtn\"]").css("display", "");
                             createFileUploadDialog(msgData["level"]);
                             $($("#tabs").find("li")[3]).hide();
@@ -549,7 +558,7 @@ function handleCommandMessage(msgData) {
                             role = "Application Administrator";
                             $(".clearLogButton").css("display", "");
                         } else if (msgData["level"] == "3") {
-                            // TODO : System Administrator – Can do all Application Administrator functions plus add/remove/change passwords of users
+                            // TODO : System Administrator ï¿½ Can do all Application Administrator functions plus add/remove/change passwords of users
                             $("[id=\"uploadFileBtn\"]").css("display", "");
                             createFileUploadDialog(msgData["level"]);
                             $("[id=\"userTab\"]").css("display", "");
@@ -1007,7 +1016,28 @@ function handleEventsMessage(msgData)
     if (debugLevel > 0) console.log(msgData);
     for (var i in msgData) 
     {
-
+        if(msgData[i].level.trim().toLowerCase() == "warning" && msgData[i].description.toLowerCase().trim().includes("carma3/geofence_acknowledgement"))
+        {   
+              //Show notification for new warning messages
+              console.log((Date.parse(new Date().toUTCString()) - Date.parse(new Date(msgData[i].timestamp.replace(" ","T") +"Z"))));
+            //Updating notificationbage
+            //eventLog tab index = 2
+            if($("#tabs").tabs('option', 'active') == 2)
+            {
+                $("#notificationBadge").css("display","none");                     
+                document.getElementById("notificationBadgeSound").pause();
+            }
+            else if((Date.parse(new Date().toUTCString()) - Date.parse(new Date(msgData[i].timestamp.replace(" ","T") +"Z"))) < 10000)
+            {
+                cur_log_event_badge_level = log_event_badge_level.WARNING;  
+                $("#notificationBadge").css("display","");    
+                var notificationBadge = document.getElementById("notificationBadge");
+                notificationBadge.src.includes("warning")? notificationBadge.src = "../images/alert/exclamation-triangle-caution.svg": notificationBadge.src = "../images/alert/exclamation-triangle-warning.svg";
+               
+                //playing notification sound once per event message            
+                document.getElementById("notificationBadgeSound").play();
+            }
+        }      
         updateEventsObject(msgData[i].description, msgData[i].id, msgData[i].level, msgData[i].source, msgData[i].timestamp);
     }
     //table.columns.adjust().draw();
@@ -1787,10 +1817,46 @@ $(document).ready(function () {
                 if (event.currentTarget.id == "userTab") {
                     if (debugLevel > 0) console.log("User Tab Selected");
                     sendUserRequest();
+                }else if(event.currentTarget.id == "eventLogTab"){
+                    //Update the css to hide for notification Badge
+                    cur_log_event_badge_level = log_event_badge_level.DEBUG;
+                    $("#notificationBadge").css("display","none");
+                    document.getElementById("notificationBadgeSound").pause();   
                 }
             }
         }
     });
+    
+    //Initialize notification badge color
+    // if(cur_log_event_badge_level == log_event_badge_level.INFO || cur_log_event_badge_level != log_event_badge_level.DEBUG)
+    // {
+    //     $("#notificationBadge").css("display","none")
+    // }else if (cur_log_event_badge_level == log_event_badge_level.WARNING){
+    //     $("#notificationBadge").css("display","");
+    // } 
+    //Highlight eventLog records within 5 seconds with warning text color
+    setInterval(()=>{        
+        $('#eventLogTable > tbody  > tr').each(function(index, tr) {
+            let local_i = tr.cells.length-1;
+            let td_timestamp = tr.cells[local_i]; 
+            let td_level = tr.cells[0];
+            let time_diff = Date.parse(new Date().toUTCString()) - Date.parse(new Date(td_timestamp.innerHTML.replace(" ","T") +"Z"));
+            if(time_diff < 10000 && td_level.innerHTML.trim().toLowerCase() == "warning"){
+                $(tr).addClass("color-warning"); //warning text color
+                $(tr).addClass("text-strong");
+            }else{                
+                $(tr).removeClass("color-warning");
+                $(tr).removeClass("text-strong");
+            }
+        });
+
+        if(cur_log_event_badge_level == log_event_badge_level.WARNING)
+        {            
+            var notificationBadge = document.getElementById("notificationBadge");
+            notificationBadge.src.includes("warning") ? notificationBadge.src = "../images/alert/exclamation-triangle-caution.svg": notificationBadge.src = "../images/alert/exclamation-triangle-warning.svg";
+            document.getElementById("notificationBadgeSound").play();            
+        }
+    }, 1000);
 
     // Initialize New Configuration Parameter Dialog
     $("#newConfigDialog").dialog({
