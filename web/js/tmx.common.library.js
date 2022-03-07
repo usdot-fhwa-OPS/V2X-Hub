@@ -49,7 +49,10 @@ var log_event_badge_level = {
     FATAL :3,
     ERROR : 4
 };
-         
+var log_event_bage_icons = {
+    CAUTION: "../images/alert/exclamation-triangle-caution.svg",
+    WARNING: "../images/alert/exclamation-triangle-warning.svg"
+}      
 var cur_log_event_badge_level = log_event_badge_level.INFO;
 /*
 function ssl_changed()
@@ -1032,7 +1035,7 @@ function handleEventsMessage(msgData)
                 cur_log_event_badge_level = log_event_badge_level.WARNING;  
                 $("#notificationBadge").css("display","");    
                 var notificationBadge = document.getElementById("notificationBadge");
-                notificationBadge.src.includes("warning")? notificationBadge.src = "../images/alert/exclamation-triangle-caution.svg": notificationBadge.src = "../images/alert/exclamation-triangle-warning.svg";
+                notificationBadge.src.includes("warning")? notificationBadge.src = log_event_bage_icons.CAUTION: notificationBadge.src = log_event_bage_icons.WARNING;
                
                 //playing notification sound once per event message            
                 document.getElementById("notificationBadgeSound").play();
@@ -1853,7 +1856,7 @@ $(document).ready(function () {
         if(cur_log_event_badge_level == log_event_badge_level.WARNING)
         {            
             var notificationBadge = document.getElementById("notificationBadge");
-            notificationBadge.src.includes("warning") ? notificationBadge.src = "../images/alert/exclamation-triangle-caution.svg": notificationBadge.src = "../images/alert/exclamation-triangle-warning.svg";
+            notificationBadge.src.includes("warning") ? notificationBadge.src = log_event_bage_icons.CAUTION: notificationBadge.src = log_event_bage_icons.WARNING;
             document.getElementById("notificationBadgeSound").play();            
         }
     }, 1000);

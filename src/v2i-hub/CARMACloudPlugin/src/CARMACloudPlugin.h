@@ -136,7 +136,7 @@ protected:
 	/***
 	 * @biref: Retrieve the value string from the strategy params based on the input key string
 	 * @param: std::vector of comma separated string in stragety_params
-	 * @param: key string to identify the value from the key-value pair separated by colon
+	 * @param: key string to identify the value from the key-value pair separated by colon. Input key should be all lower case
 	 * **/
 	string GetValueFromStrategyParamsByKey(const std::vector<string> & stragety_params_v, const string key);
 
@@ -151,11 +151,13 @@ private:
 	//Comma separated string for list of strategies from MobilityOperation messages
 	std::string _strategies;
 
-	//A boolean to indicate whether it receives an acknowledgement from a CMV after sending a TCM
-	bool _isAckownlwdged = false;
-
-	//
+	//Used to lock the shared TCMs resource
+	std::mutex _not_ACK_TCMs_mutex;
+	//An associated array to keep track of TCMs that are not acknowledged
+	std::shared_ptr<std::map<string, tsm5EncodedMessage>> _not_ACK_TCMs;
+	//TCM repeatedly broadcast time out in unit of second
 	uint16_t _TCMRepeatedlyBroadcastTimeOut = 0;
+	std::string _TCMNOAcknowledgementDescription = "";
 
 };
 std::mutex _cfgLock;
