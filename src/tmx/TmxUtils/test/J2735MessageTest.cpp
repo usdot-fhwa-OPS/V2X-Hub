@@ -333,7 +333,6 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());	
-	std::cout << tsm3EncodeMessage<< std::endl;
 	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
 }
 
@@ -423,7 +422,6 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	delete my_str_1;
 	free(offset);
 	free(frame_msg.get_j2735_data().get());
-	std::cout << tsm0EncodeMessage<< std::endl;
 	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
@@ -480,7 +478,6 @@ TEST_F(J2735MessageTest, EncodeMobilityResponse)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());
-	std::cout << tsm1EncodeMessage<< std::endl;
 	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
 
@@ -541,7 +538,6 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 		
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	std::cout << bsmEncodeMessage<< std::endl;
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
 }
 
