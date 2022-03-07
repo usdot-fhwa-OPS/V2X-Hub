@@ -6,8 +6,13 @@
 #include <boost/any.hpp>
 #include <gtest/gtest.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <tmx/j2735_messages/testMessage03.hpp>
 #include <tmx/messages/message_document.hpp>
 #include <vector>
+#include <iostream>
+#include <chrono>
+#include <sstream>
+#include <cassert>
 
 using namespace std;
 using namespace battelle::attributes;
@@ -268,5 +273,273 @@ TEST_F(J2735MessageTest, FactoryTest) {
 		msgFromId = NULL;
 	}
 }
+
+TEST_F(J2735MessageTest, EncodeMobilityOperation)
+{	
+	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
+
+	/**
+	 * Populate MobilityHeader 
+	 */
+	
+	char* my_str = (char *) "sender_id";
+	uint8_t * my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostStaticId.buf = my_bytes;
+	message->header.hostStaticId.size = strlen(my_str);
+	message->header.targetStaticId.buf = my_bytes;
+	message->header.targetStaticId.size = strlen(my_str);
+
+	my_str = (char *) "bsm_idXX";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostBSMId.buf = my_bytes;
+	message->header.hostBSMId.size = strlen(my_str);
+
+	my_str = (char *) "00000000-0000-0000-0000-000000000000";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.planId.buf = my_bytes;
+	message->header.planId.size = strlen(my_str);
+
+	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
+	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
+	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
+	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
+	strcpy(my_str_1, timestamp_str.c_str());
+	for(int i = 0; i< strlen(my_str_1); i++)
+	{
+		my_bytes_1[i] =  (uint8_t)my_str_1[i];
+	}
+	message->header.timestamp.buf = my_bytes_1;
+	message->header.timestamp.size = strlen(my_str_1);
+
+	/**
+	 * Populate MobilityOperation Body 
+	 */
+	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->body.operationParams.buf = my_bytes;
+	message->body.operationParams.size = strlen(my_str);
+
+	my_str = (char *) "carma3/Geofence_Acknowledgement";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->body.strategy.buf = my_bytes;
+	message->body.strategy.size = strlen(my_str);
+
+	tmx::messages::tsm3EncodedMessage tsm3EncodeMessage;
+	tmx::messages::tsm3Message*  _tsm3Message = new tmx::messages::tsm3Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm3Message->get_j2735_data());
+	tsm3EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage03>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+		
+	free(message);
+	delete my_bytes_1;
+	delete my_str_1;
+	free(frame_msg.get_j2735_data().get());	
+	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
+}
+
+
+TEST_F(J2735MessageTest, EncodeMobilityRequest)
+{	
+	TestMessage00_t* message = (TestMessage00_t*) malloc( sizeof(TestMessage00_t) );
+
+	/**
+	 * Populate MobilityHeader 
+	 */
+	
+	char* my_str = (char *) "sender_id";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostStaticId.buf = my_bytes;
+	message->header.hostStaticId.size = strlen(my_str);
+	message->header.targetStaticId.buf = my_bytes;
+	message->header.targetStaticId.size = strlen(my_str);
+
+	my_str = (char *) "bsm_idXX";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostBSMId.buf = my_bytes;
+	message->header.hostBSMId.size = strlen(my_str);
+
+	my_str = (char *) "00000000-0000-0000-0000-000000000000";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.planId.buf = my_bytes;
+	message->header.planId.size = strlen(my_str);
+
+	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
+	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
+	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
+	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
+	strcpy(my_str_1, timestamp_str.c_str());
+	for(int i = 0; i< strlen(my_str_1); i++)
+	{
+		my_bytes_1[i] =  (uint8_t)my_str_1[i];
+	}
+	message->header.timestamp.buf = my_bytes_1;
+	message->header.timestamp.size = strlen(my_str_1);
+
+	/**
+	 * Populate MobilityRequest Body 
+	 */
+	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->body.strategyParams.buf = my_bytes;
+	message->body.strategyParams.size = strlen(my_str);
+
+	my_str = (char *) "carma3/Geofence_Acknowledgement";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->body.strategy.buf = my_bytes;
+	message->body.strategy.size = strlen(my_str);
+
+	message->body.urgency = 1;
+	message->body.planType = 0;
+	message->body.location.ecefX = 1;
+	message->body.location.ecefY = 1;
+	message->body.location.ecefZ = 1;
+	message->body.location.timestamp.buf = my_bytes_1;
+	message->body.location.timestamp.size = strlen(my_str_1);
+	
+	message->body.expiration.buf = my_bytes_1;
+	message->body.expiration.size = strlen(my_str_1);
+	
+		
+	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*) malloc( sizeof(MobilityECEFOffset_t) );
+	offset->offsetX = 1;
+	offset->offsetY = 1;
+	offset->offsetZ = 1;
+	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
+
+	message->body.trajectoryStart.ecefX = 1;
+	message->body.trajectoryStart.ecefY = 1;
+	message->body.trajectoryStart.ecefZ = 1;
+	message->body.trajectoryStart.timestamp.buf = my_bytes_1;
+	message->body.trajectoryStart.timestamp.size = strlen(my_str_1);
+		
+	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
+	tmx::messages::tsm0Message*  _tsm0Message = new tmx::messages::tsm0Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message->get_j2735_data());
+	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+		
+	free(message);
+	delete my_bytes_1;
+	delete my_str_1;
+	free(offset);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
+}
+
+
+TEST_F(J2735MessageTest, EncodeMobilityResponse)
+{	
+	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
+
+	/**
+	 * Populate MobilityHeader 
+	 */
+	
+	char* my_str = (char *) "sender_id";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostStaticId.buf = my_bytes;
+	message->header.hostStaticId.size = strlen(my_str);
+	message->header.targetStaticId.buf = my_bytes;
+	message->header.targetStaticId.size = strlen(my_str);
+
+	my_str = (char *) "bsm_idXX";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.hostBSMId.buf = my_bytes;
+	message->header.hostBSMId.size = strlen(my_str);
+
+	my_str = (char *) "00000000-0000-0000-0000-000000000000";
+	my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->header.planId.buf = my_bytes;
+	message->header.planId.size = strlen(my_str);
+
+	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
+	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
+	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
+	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
+	strcpy(my_str_1, timestamp_str.c_str());
+	for(int i = 0; i< strlen(my_str_1); i++)
+	{
+		my_bytes_1[i] =  (uint8_t)my_str_1[i];
+	}
+	message->header.timestamp.buf = my_bytes_1;
+	message->header.timestamp.size = strlen(my_str_1);
+
+	/**
+	 * Populate MobilityResponse Body 
+	 */
+	message->body.isAccepted = 1;
+	message->body.urgency = 1;
+
+	tmx::messages::tsm1EncodedMessage tsm1EncodeMessage;
+	tmx::messages::tsm1Message*  _tsm1Message = new tmx::messages::tsm1Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message->get_j2735_data());
+	tsm1EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage01>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+		
+	free(message);
+	delete my_bytes_1;
+	delete my_str_1;
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
+}
+
+
+TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
+{	
+	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) malloc( sizeof(BasicSafetyMessage_t) );
+
+	/**
+	 * Populate BSMcoreData 
+	 */
+	
+	char* my_str = (char *) "sender_id";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->coreData.msgCnt = 1;
+	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	message->coreData.id.buf = my_bytes_id;
+	message->coreData.id.size = sizeof(my_bytes_id);
+	message->coreData.secMark = 1023;
+	message->coreData.lat = 38954961;
+	message->coreData.Long = -77149303;
+	message->coreData.elev = 72;
+	message->coreData.speed = 100;
+	message->coreData.heading = 12;
+	message->coreData.angle = 10;
+	message->coreData.transmission = 0;  // allow 0...7
+
+	//position accuracy
+	message->coreData.accuracy.orientation= 100;
+	message->coreData.accuracy.semiMajor = 200;
+	message->coreData.accuracy.semiMinor = 200;
+
+	//Acceleration set
+	message->coreData.accelSet.lat = 100;
+	message->coreData.accelSet.Long = 300;
+	message->coreData.accelSet.vert = 100;
+	message->coreData.accelSet.yaw = 0;
+
+	//populate brakes
+	message->coreData.brakes.abs = 1; // allow 0,1,2,3
+	message->coreData.brakes.scs = 1; // allow 0,1,2,3
+	message->coreData.brakes.traction = 1; // allow 0,1,2,3
+	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
+	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
+	uint8_t  my_bytes_brakes[1] = {8};
+	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
+	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
+	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
+
+	//vehicle size
+	message->coreData.size.length = 500;
+	message->coreData.size.width = 300;
+
+	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
+	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+		
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+}
+
 
 }

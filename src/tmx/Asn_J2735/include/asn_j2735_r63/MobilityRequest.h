@@ -16,6 +16,7 @@
 #include "MobilityPlanType.h"
 #include "MobilityUrgency.h"
 #include "MobilityLocation.h"
+#include "MobilityLocationOffsets.h"
 #include "MobilityParameters.h"
 #include "MobilityTimestamp.h"
 #include "constr_SEQUENCE.h"
@@ -35,9 +36,9 @@ typedef struct MobilityRequest {
 	MobilityUrgency_t	 urgency;
 	MobilityLocation_t	 location;
 	MobilityParameters_t	 strategyParams;
-	struct MobilityLocation	*trajectoryStart	/* OPTIONAL */;
-	struct MobilityLocationOffsets	*trajectory	/* OPTIONAL */;
-	MobilityTimestamp_t	*expiration	/* OPTIONAL */;
+	MobilityLocation_t	trajectoryStart	/* OPTIONAL */;
+	MobilityLocationOffsets_t	trajectory	/* OPTIONAL */;
+	MobilityTimestamp_t	expiration	/* OPTIONAL */;
 	
 	/* Context for parsing across buffer boundaries */
 	asn_struct_ctx_t _asn_ctx;
