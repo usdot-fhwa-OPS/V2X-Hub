@@ -37,7 +37,9 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 		base_hb = "/carmacloud/v2xhub";
 		base_req = "/carmacloud/tcmreq";
 		method = "POST";
-		_not_ACK_TCMs = std::make_shared<map<string, tsm5EncodedMessage>>();
+		_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
+		std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
+		Broadcast_t.join();
 
 }
 
@@ -135,9 +137,9 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 		//The traffic control id should match with the TCM id per CMV (CARMA vehicle).	
-		if(_not_ACK_TCMs->erase(traffic_control_id) == 0)
+		if(_not_ACK_TCMs->erase(traffic_control_id) <= 0)
 		{
-			PLOG(logERROR) << "Acknowledgement received, but traffic_control_id = " << traffic_control_id << " Not Found in TCM map." << std::endl;
+			PLOG(logERROR) << "Acknowledgement received, but traffic_control_id =" << traffic_control_id << " Not Found in TCM map." << std::endl;
 		}
 		
 		//Create an event log object for both positive and negative ACK (ackownledgement), and broadcast the event log
@@ -146,8 +148,8 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
 		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-		event_log_msg.set_description(mo_strategy + ": " + even_log_description);
-		PLOG(logERROR) << "event_log_msg " << event_log_msg << std::endl;
+		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ",reason = " + even_log_description);
+		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 	}
 }
@@ -179,6 +181,10 @@ void CARMACloudPlugin::removeTag(string& str,string openTag, string closeTag)
 	{
 		ind_open = str.find(openTag, ind_open);
 		ind_close = str.find(closeTag, ind_close);
+		if(ind_open == string::npos || ind_close ==string::npos)
+		{
+			break;
+		}
 		size_t len = ind_close - ind_open + strlen(closeTag.c_str());
 		str.replace(ind_open, len, "");
 	}
@@ -225,64 +231,76 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 	//Get TCM id
 	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
+	
+	cout<<"tcmv01_req_id.size="<<tcmv01_req_id.size<<endl;
 	ss.str(""); 
     for(size_t i=0; i < tcmv01_req_id.size; i++)
     {
        ss << std::hex << (unsigned) tcmv01_req_id.buf[i];
     }
 	string tcmv01_req_id_hex = ss.str();	
+	
+	cout<<"tcmv01_req_id_hex="<<tcmv01_req_id_hex<<endl;
 	std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
 	if(tcmv01_req_id_hex.length() > 0)
 	{
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 		_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
-	}
-
-	// std::thread t([this, tcmv01_id_hex , &tsm5ENC]()
-	// {
-	std::time_t start_time = 0, cur_time = 0;
-	bool is_started_broadcasting = false; 
-	
-	while(_not_ACK_TCMs->count(tcmv01_req_id_hex) > 0 && ((cur_time - start_time) <= _TCMRepeatedlyBroadcastTimeOut) )
-	{
-		if(!is_started_broadcasting)
-		{
-			start_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
-		}else{
-			cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
-		}
-		is_started_broadcasting = true;
-		PLOG(logERROR) << "cur_time= "<< cur_time << " start_time = "<< start_time  << "cur_time - start_time = " << cur_time - start_time << " _TCMRepeatedlyBroadcastTimeOut = " << _TCMRepeatedlyBroadcastTimeOut<< std::endl;
-			
-		if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
-		{
-			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-			PLOG(logERROR) << "CARMACloud Plugin does not receive ackownledgement within "<< _TCMRepeatedlyBroadcastTimeOut << " seconds. Time Out!" << std::endl;
-			_not_ACK_TCMs->erase(tcmv01_req_id_hex);			
-			break;
-		}
-		std::unique_ptr<tsm5EncodedMessage> msg;
-		msg.reset();
-		msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
-
-		string enc = tsm5ENC.get_encoding();
-		msg->refresh_timestamp();
-		msg->set_payload(tsm5ENC.get_payload_str());
-		msg->set_encoding(enc);
-		msg->set_flags(IvpMsgFlags_RouteDSRC);
-		msg->addDsrcMetadata(172, 0x8003);
-		msg->refresh_timestamp();
-
-		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-		BroadcastMessage(*rMsg);		
-		PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
-		//sleep to control broadcast rate
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
-	// });//end of thread
-	// t.join();
+	}	
 }
 
+void CARMACloudPlugin::Broadcast_TCMs()
+{ 	
+	std::time_t start_time = 0, cur_time = 0;
+	bool is_started_broadcasting = false;
+	while(true)
+	{		
+		if(_not_ACK_TCMs->size() > 0)
+		{
+			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
+			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
+			{
+				string tcmv01_req_id_hex = itr->first;
+				if(!is_started_broadcasting)
+				{
+					start_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
+				}else{
+					cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
+				}
+				is_started_broadcasting = true;
+				if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
+				{
+					PLOG(logDEBUG) << "CARMACloud Plugin does not receive ackownledgement within "<< _TCMRepeatedlyBroadcastTimeOut << " seconds. Time Out!" << std::endl;
+					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
+					start_time = 0, cur_time = 0;	
+					is_started_broadcasting = false;
+					break;
+				}
+				std::unique_ptr<tsm5EncodedMessage> msg;
+				msg.reset();
+				msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+				tsm5EncodedMessage tsm5ENC = itr->second;
+				string enc = tsm5ENC.get_encoding();
+				msg->refresh_timestamp();
+				msg->set_payload(tsm5ENC.get_payload_str());
+				msg->set_encoding(enc);
+				msg->set_flags(IvpMsgFlags_RouteDSRC);
+				msg->addDsrcMetadata(172, 0x8003);
+				msg->refresh_timestamp();
+
+				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+				BroadcastMessage(*rMsg);		
+				PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+			}
+		}
+		else
+		{
+			start_time = 0, cur_time = 0;	
+			is_started_broadcasting = false;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
 
 int CARMACloudPlugin::StartWebService()
 {
