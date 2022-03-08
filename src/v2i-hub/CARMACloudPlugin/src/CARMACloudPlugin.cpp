@@ -39,7 +39,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 		method = "POST";
 		_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
 		std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
-		Broadcast_t.join();
+		Broadcast_t.detach();
 
 }
 
@@ -112,7 +112,6 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 
 	//Process incoming MobilityOperation message
 	auto mobilityOperationMsg = msg.get_j2735_data();
-	PLOG(logERROR) << mobilityOperationMsg << std::endl;
 	
 	//process MobilityOperation strategy
 	stringstream ss;
@@ -212,10 +211,8 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
-	cout<<"After update tag"<<tcm<<endl;
 
 	removeTag(tcm, "<refwidth>", "</refwidth>");
-	cout<<"After remove tag"<<tcm<<endl;
 	
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
@@ -232,7 +229,6 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	//Get TCM id
 	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
 	
-	cout<<"tcmv01_req_id.size="<<tcmv01_req_id.size<<endl;
 	ss.str(""); 
     for(size_t i=0; i < tcmv01_req_id.size; i++)
     {
@@ -240,7 +236,6 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
     }
 	string tcmv01_req_id_hex = ss.str();	
 	
-	cout<<"tcmv01_req_id_hex="<<tcmv01_req_id_hex<<endl;
 	std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
 	if(tcmv01_req_id_hex.length() > 0)
 	{
