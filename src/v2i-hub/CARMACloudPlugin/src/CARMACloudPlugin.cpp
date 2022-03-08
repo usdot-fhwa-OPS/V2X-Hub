@@ -270,7 +270,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				is_started_broadcasting = true;
 				if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
 				{
-					PLOG(logDEBUG) << "CARMACloud Plugin does not receive ackownledgement within "<< _TCMRepeatedlyBroadcastTimeOut << " seconds. Time Out!" << std::endl;
+					PLOG(logDEBUG) << _TCMNOAcknowledgementDescription << " TCMs' traffic control id =" + tcmv01_req_id_hex + " within "<< _TCMRepeatedlyBroadcastTimeOut << " milliseconds. Time Out!" << std::endl;
 					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
 					start_time = 0, cur_time = 0;	
 					is_started_broadcasting = false;
