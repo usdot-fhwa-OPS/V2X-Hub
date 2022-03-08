@@ -40,8 +40,8 @@
 		},
 		{
 			"key": "TCMRepeatedlyBroadcastTimeOut",
-			"default": "5",
-			"description": "After it receives TCM from carma cloud, it repeatedly broadcasts TCM until TCMRepeatTimeOut seconds."
+			"default": "1000",
+			"description": "After it receives TCM from carma cloud, it repeatedly broadcasts TCM until TCMRepeatTimeOut milliseconds."
 		},
 		{
 			"key": "TCMNOAcknowledgementDescription",

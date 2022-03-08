@@ -106,6 +106,7 @@ protected:
 	void CARMAResponseHandler(QHttpEngine::Socket *socket);
 	int CloudSend(string msg,string url, string base, string method);
 	string updateTags(string s,string t, string t1);
+	void removeTag(string& s,string openTag, string closeTag);
 
 	void HandleCARMARequest(tsm4Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);

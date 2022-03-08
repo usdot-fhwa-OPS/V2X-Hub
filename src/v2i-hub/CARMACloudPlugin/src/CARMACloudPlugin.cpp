@@ -131,7 +131,8 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		string acknnowledgement_str = GetValueFromStrategyParamsByKey(strategy_params_v, "acknowledgement");
 		string traffic_control_id = GetValueFromStrategyParamsByKey(strategy_params_v, "traffic_control_id");
 		boost::trim(traffic_control_id);//Trim white spaces
-		
+		std::transform(traffic_control_id.begin(), traffic_control_id.end(), traffic_control_id.begin(), ::tolower );	
+
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 		//The traffic control id should match with the TCM id per CMV (CARMA vehicle).	
 		if(_not_ACK_TCMs->erase(traffic_control_id) == 0)
@@ -170,6 +171,18 @@ string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
 	return str; 
 }
 
+void CARMACloudPlugin::removeTag(string& str,string openTag, string closeTag)
+{
+	int ind_open = 0;
+	int ind_close = 0;
+	while(ind_open != string::npos && ind_close !=string::npos)
+	{
+		ind_open = str.find(openTag, ind_open);
+		ind_close = str.find(closeTag, ind_close);
+		size_t len = ind_close - ind_open + strlen(closeTag.c_str());
+		str.replace(ind_open, len, "");
+	}
+}
 
 void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 {
@@ -193,7 +206,10 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
+	cout<<"After update tag"<<tcm<<endl;
 
+	removeTag(tcm, "<refwidth>", "</refwidth>");
+	cout<<"After remove tag"<<tcm<<endl;
 	
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
@@ -208,17 +224,18 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tsm5ENC.encode_j2735_message(tsm5message);
 
 	//Get TCM id
-	Id128b_t tcmv01_id = tsm5message.get_j2735_data()->body.choice.tcmV01.id;
+	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
 	ss.str(""); 
-    for(size_t i=0; i < tcmv01_id.size; i++)
+    for(size_t i=0; i < tcmv01_req_id.size; i++)
     {
-       ss << std::hex << (unsigned) tcmv01_id.buf[i];
+       ss << std::hex << (unsigned) tcmv01_req_id.buf[i];
     }
-	string tcmv01_id_hex = ss.str();
-	if(tcmv01_id_hex.length() > 0)
+	string tcmv01_req_id_hex = ss.str();	
+	std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
+	if(tcmv01_req_id_hex.length() > 0)
 	{
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-		_not_ACK_TCMs->insert({tcmv01_id_hex, tsm5ENC});
+		_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
 	}
 
 	// std::thread t([this, tcmv01_id_hex , &tsm5ENC]()
@@ -226,7 +243,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	std::time_t start_time = 0, cur_time = 0;
 	bool is_started_broadcasting = false; 
 	
-	while(_not_ACK_TCMs->count(tcmv01_id_hex) > 0 && ((cur_time - start_time) <= _TCMRepeatedlyBroadcastTimeOut) )
+	while(_not_ACK_TCMs->count(tcmv01_req_id_hex) > 0 && ((cur_time - start_time) <= _TCMRepeatedlyBroadcastTimeOut) )
 	{
 		if(!is_started_broadcasting)
 		{
@@ -235,14 +252,15 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 			cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
 		}
 		is_started_broadcasting = true;
-		
+		PLOG(logERROR) << "cur_time= "<< cur_time << " start_time = "<< start_time  << "cur_time - start_time = " << cur_time - start_time << " _TCMRepeatedlyBroadcastTimeOut = " << _TCMRepeatedlyBroadcastTimeOut<< std::endl;
+			
 		if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
 		{
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 			PLOG(logERROR) << "CARMACloud Plugin does not receive ackownledgement within "<< _TCMRepeatedlyBroadcastTimeOut << " seconds. Time Out!" << std::endl;
-			_not_ACK_TCMs->erase(tcmv01_id_hex);			
+			_not_ACK_TCMs->erase(tcmv01_req_id_hex);			
 			break;
-		}		
+		}
 		std::unique_ptr<tsm5EncodedMessage> msg;
 		msg.reset();
 		msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
@@ -312,6 +330,9 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<uint16_t>("fetchTime",fetchtime);
+	GetConfigValue<string>("MobilityOperationStrategies", _strategies);	
+	GetConfigValue<uint16_t>("TCMRepeatedlyBroadcastTimeOut",_TCMRepeatedlyBroadcastTimeOut);	
+	GetConfigValue<string>("TCMNOAcknowledgementDescription", _TCMNOAcknowledgementDescription);
 	
 }
 
