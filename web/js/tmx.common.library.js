@@ -546,14 +546,14 @@ function handleCommandMessage(msgData) {
                         var role = "No Permissions";
                         permissions = msgData["level"];
                         if (msgData["level"] == "1") {
-                            // TODO : Read Only � Can view everything but cannot change anything
+                            // Read Only  Can view everything but cannot change anything
                             $("[id=\"uploadFileBtn\"]").css("display", "none");
                             $($("#tabs").find("li")[3]).hide();
                             $($("#tabs").find('#tab4')).hide();
                             $(".clearLogButton").css("display", "none");
                             role = "Read Only";
                         } else if (msgData["level"] == "2") {
-                            // TODO : Application Administrator � Can change all settings on the plugins as well as add new plugins
+                            // Application Administrator  Can change all settings on the plugins as well as add new plugins
                             $("[id=\"uploadFileBtn\"]").css("display", "");
                             createFileUploadDialog(msgData["level"]);
                             $($("#tabs").find("li")[3]).hide();
@@ -561,7 +561,7 @@ function handleCommandMessage(msgData) {
                             role = "Application Administrator";
                             $(".clearLogButton").css("display", "");
                         } else if (msgData["level"] == "3") {
-                            // TODO : System Administrator � Can do all Application Administrator functions plus add/remove/change passwords of users
+                            // System Administrator  Can do all Application Administrator functions plus add/remove/change passwords of users
                             $("[id=\"uploadFileBtn\"]").css("display", "");
                             createFileUploadDialog(msgData["level"]);
                             $("[id=\"userTab\"]").css("display", "");
@@ -570,9 +570,9 @@ function handleCommandMessage(msgData) {
                             role = "System Administrator";
                             $(".clearLogButton").css("display", "");                            
                         } else {
-                            // TODO : Let them see nothing...
+                            // Let them see nothing...
                             $("[id=\"uploadFileBtn\"]").css("display", "none");
-                            // TODO: Switch to Log out instead of login 
+                            // Switch to Log out instead of login 
                             return;
                         }
                         $("[id=loginFeedback]").html("");
@@ -1024,7 +1024,6 @@ function handleEventsMessage(msgData)
               //Show notification for new warning messages
               console.log((Date.parse(new Date().toUTCString()) - Date.parse(new Date(msgData[i].timestamp.replace(" ","T") +"Z"))));
             //Updating notificationbage
-            //eventLog tab index = 2
             if($("#tabs").tabs('option', 'active') == 2)
             {
                 $("#notificationBadge").css("display","none");                     
@@ -1830,14 +1829,7 @@ $(document).ready(function () {
         }
     });
     
-    //Initialize notification badge color
-    // if(cur_log_event_badge_level == log_event_badge_level.INFO || cur_log_event_badge_level != log_event_badge_level.DEBUG)
-    // {
-    //     $("#notificationBadge").css("display","none")
-    // }else if (cur_log_event_badge_level == log_event_badge_level.WARNING){
-    //     $("#notificationBadge").css("display","");
-    // } 
-    //Highlight eventLog records within 5 seconds with warning text color
+    //Highlight eventLog records within 10 seconds with warning text color
     setInterval(()=>{        
         $('#eventLogTable > tbody  > tr').each(function(index, tr) {
             let local_i = tr.cells.length-1;
