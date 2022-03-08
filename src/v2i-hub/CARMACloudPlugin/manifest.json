@@ -46,7 +46,7 @@
 		{
 			"key": "TCMNOAcknowledgementDescription",
 			"default": "No response received from CMV after repeatedly broadcast TCMs.",
-			"description": "If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI. The two question marks (?) are required in the NO ACK messae."
+			"description": "If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI."
 		},
 		{
 			"key":"WebServicePort",
