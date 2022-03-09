@@ -106,7 +106,6 @@ protected:
 	void CARMAResponseHandler(QHttpEngine::Socket *socket);
 	int CloudSend(string msg,string url, string base, string method);
 	string updateTags(string s,string t, string t1);
-	void removeTag(string& s,string openTag, string closeTag);
 
 	void HandleCARMARequest(tsm4Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
@@ -125,21 +124,21 @@ protected:
 	 * @param: std::vector of substrings
 	 * @param: comma separated string 
 	 * **/
-	void ConvertString2Vector(std::vector<string> &sub_str_v, const string &str);
+	void ConvertString2Vector(std::vector<string> &sub_str_v, const string &str) const;
 
 	/***
 	 * @biref: Insert the colon separated string into the pair
 	 * @param: std::pair<string, string> of string
 	 * @param: colon separated string 
 	 * **/
-	void ConvertString2Pair(std::pair<string,string> &str_pair, const string &str);
+	void ConvertString2Pair(std::pair<string,string> &str_pair, const string &str) const;
 
 	/***
 	 * @biref: Retrieve the value string from the strategy params based on the input key string
 	 * @param: std::vector of comma separated string in stragety_params
 	 * @param: key string to identify the value from the key-value pair separated by colon. Input key should be all lower case
 	 * **/
-	string GetValueFromStrategyParamsByKey(const std::vector<string> & stragety_params_v, const string key);
+	string GetValueFromStrategyParamsByKey(const std::vector<string> & stragety_params_v, const string &key) const;
 	void Broadcast_TCMs();
 
 private:

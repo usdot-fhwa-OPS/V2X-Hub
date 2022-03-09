@@ -172,22 +172,6 @@ string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
 	return str; 
 }
 
-void CARMACloudPlugin::removeTag(string& str,string openTag, string closeTag)
-{
-	int ind_open = 0;
-	int ind_close = 0;
-	while(ind_open != string::npos && ind_close !=string::npos)
-	{
-		ind_open = str.find(openTag, ind_open);
-		ind_close = str.find(closeTag, ind_close);
-		if(ind_open == string::npos || ind_close ==string::npos)
-		{
-			break;
-		}
-		size_t len = ind_close - ind_open + strlen(closeTag.c_str());
-		str.replace(ind_open, len, "");
-	}
-}
 
 void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 {
@@ -263,9 +247,9 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				is_started_broadcasting = true;
 				if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
 				{
-					PLOG(logDEBUG) << _TCMNOAcknowledgementDescription << " TCMs' traffic control id =" + tcmv01_req_id_hex + " within "<< _TCMRepeatedlyBroadcastTimeOut << " milliseconds. Time Out!" << std::endl;
 					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
-					start_time = 0, cur_time = 0;	
+					start_time = 0;
+					cur_time = 0;	
 					is_started_broadcasting = false;
 					break;
 				}
@@ -283,12 +267,13 @@ void CARMACloudPlugin::Broadcast_TCMs()
 
 				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 				BroadcastMessage(*rMsg);		
-				PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+				PLOG(logDEBUG) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			}
 		}
 		else
 		{
-			start_time = 0, cur_time = 0;	
+			start_time = 0;
+			cur_time = 0;	
 			is_started_broadcasting = false;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -387,7 +372,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
   return 0;
 }
 
-void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, const string &str){
+void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, const string &str) const{
 	stringstream ss;
 	ss << str;
 	while (ss.good())
@@ -399,7 +384,7 @@ void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, cons
 	}	
 }
 
-string CARMACloudPlugin::GetValueFromStrategyParamsByKey(const std::vector<string> & strategy_params_v, const string key)
+string CARMACloudPlugin::GetValueFromStrategyParamsByKey(const std::vector<string> & strategy_params_v, const string& key) const
 {	
 	string value = "";
 	for(auto itr = strategy_params_v.begin();  itr != strategy_params_v.end(); itr++)
@@ -415,7 +400,7 @@ string CARMACloudPlugin::GetValueFromStrategyParamsByKey(const std::vector<strin
 	return value;		
 }
 
-void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, const string &str)
+void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, const string &str) const
 {
 	stringstream ss;
 	ss << str;
