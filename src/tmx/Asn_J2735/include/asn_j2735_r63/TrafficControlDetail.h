@@ -135,7 +135,7 @@ typedef struct TrafficControlDetail {
 /* extern asn_TYPE_descriptor_t asn_DEF_parking_30;	// (Use -fall-defs-global to expose) */
 extern asn_TYPE_descriptor_t asn_DEF_TrafficControlDetail;
 extern asn_CHOICE_specifics_t asn_SPC_TrafficControlDetail_specs_1;
-extern asn_TYPE_member_t asn_MBR_TrafficControlDetail_1[20];
+extern asn_TYPE_member_t asn_MBR_TrafficControlDetail_1[22];
 extern asn_per_constraints_t asn_PER_type_TrafficControlDetail_constr_1;
 
 #ifdef __cplusplus
