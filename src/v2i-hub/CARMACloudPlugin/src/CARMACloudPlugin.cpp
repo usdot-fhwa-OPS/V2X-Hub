@@ -147,7 +147,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
 		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ",reason = " + even_log_description);
+		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 	}
@@ -211,8 +211,6 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
-
-	removeTag(tcm, "<refwidth>", "</refwidth>");
 	
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
