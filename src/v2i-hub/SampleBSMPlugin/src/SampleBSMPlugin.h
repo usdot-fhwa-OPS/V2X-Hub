@@ -20,7 +20,6 @@
 #include <ApplicationDataMessage.h>
 #include <ApplicationMessage.h>
 
-#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/messages/auto_message.hpp>
 
@@ -34,9 +33,6 @@ namespace SampleBSMPluginNS
 {
     class SampleBSMPlugin : public PluginClient
     {
-    private:
-        J2735MessageFactory factory;
-
     public:
         SampleBSMPlugin(std::string name);
         ~SampleBSMPlugin();
