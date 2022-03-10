@@ -133,6 +133,9 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		string traffic_control_id = GetValueFromStrategyParamsByKey(strategy_params_v, "traffic_control_id");
 		boost::trim(traffic_control_id);//Trim white spaces
 		std::transform(traffic_control_id.begin(), traffic_control_id.end(), traffic_control_id.begin(), ::tolower );	
+		ss.str("");
+		ss << mobilityOperationMsg->header.hostStaticId.buf;
+		string CMV_id = ss.str();
 
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 		//The traffic control id should match with the TCM id per CMV (CARMA vehicle).	
@@ -147,7 +150,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
 		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ", reason = " + even_log_description);
+		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 	}
@@ -255,6 +258,13 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					start_time = 0;
 					cur_time = 0;	
 					is_started_broadcasting = false;
+
+					//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
+					tmx::messages::TmxEventLogMessage event_log_msg;
+					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+					event_log_msg.set_description(_TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
+					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
+					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 					break;
 				}
 				std::unique_ptr<tsm5EncodedMessage> msg;
