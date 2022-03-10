@@ -231,7 +231,11 @@ void CARMACloudPlugin::Broadcast_TCMs()
 	std::time_t start_time = 0, cur_time = 0;
 	bool is_started_broadcasting = false;
 	while(true)
-	{		
+	{	
+		if(_plugin->state == IvpPluginState_error)
+		{
+			break;
+		}
 		if(_not_ACK_TCMs->size() > 0)
 		{
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
@@ -267,7 +271,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 
 				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 				BroadcastMessage(*rMsg);		
-				PLOG(logDEBUG) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+				PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			}
 		}
 		else
