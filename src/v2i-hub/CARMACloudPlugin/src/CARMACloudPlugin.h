@@ -159,7 +159,7 @@ private:
 	//TCM repeatedly broadcast time out in unit of second
 	uint16_t _TCMRepeatedlyBroadcastTimeOut = 0;
 	std::string _TCMNOAcknowledgementDescription = "";
-	string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
+	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
 
 };
 std::mutex _cfgLock;
