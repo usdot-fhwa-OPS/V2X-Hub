@@ -119,7 +119,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 	string mo_strategy = ss.str();
 	std::transform(mo_strategy.begin(), mo_strategy.end(), mo_strategy.begin(), ::tolower );
 
-	if( std::find( strategies_v.begin(), strategies_v.end(), mo_strategy ) != strategies_v.end() && mo_strategy.find("carma3/geofence_acknowledgement") != std::string::npos)
+	if( std::find( strategies_v.begin(), strategies_v.end(), mo_strategy ) != strategies_v.end() && mo_strategy.find(_TCMAcknowledgementStrategy) != std::string::npos)
 	{		
 		//Process MobilityOperation trategy params
 		ss.str("");
@@ -150,7 +150,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
 		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-		event_log_msg.set_description(mo_strategy + ": traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
+		event_log_msg.set_description(mo_strategy + ": Traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 	}
@@ -262,7 +262,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
 					tmx::messages::TmxEventLogMessage event_log_msg;
 					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-					event_log_msg.set_description(_TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
+					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
 					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 					break;
