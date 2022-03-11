@@ -217,7 +217,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	ss.str(""); 
     for(size_t i=0; i < tcmv01_req_id.size; i++)
     {
-       ss << std::hex << (unsigned) tcmv01_req_id.buf[i];
+		ss << std::setfill('0') << std::setw(2) << std::hex << (unsigned) tcmv01_req_id.buf[i];
     }
 	string tcmv01_req_id_hex = ss.str();	
 	
