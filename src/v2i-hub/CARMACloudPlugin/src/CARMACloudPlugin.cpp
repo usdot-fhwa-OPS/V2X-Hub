@@ -223,7 +223,8 @@ void CARMACloudPlugin::Broadcast_TCMs()
 	std::time_t start_time = 0, cur_time = 0;
 	bool is_started_broadcasting = false;
 	while(true)
-	{	
+	{			
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 		if(_plugin->state == IvpPluginState_error)
 		{
 			break;
@@ -279,7 +280,6 @@ void CARMACloudPlugin::Broadcast_TCMs()
 			cur_time = 0;	
 			is_started_broadcasting = false;
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 }
 
