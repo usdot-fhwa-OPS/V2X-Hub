@@ -18,7 +18,6 @@ namespace CARMACloudPlugin {
 CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 
 	// xml parser setup 
-	//this->Cli.SetProxy(QString::fromLocal8Bit("http"),QString::fromLocal8Bit("127.0.0.1"),22222,QString::fromLocal8Bit("/v1/carmacloud"),0);
 	std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
