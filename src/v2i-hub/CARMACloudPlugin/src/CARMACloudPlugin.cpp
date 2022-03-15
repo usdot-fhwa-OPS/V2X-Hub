@@ -17,11 +17,8 @@ namespace CARMACloudPlugin {
  */
 CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 
-	// xml parser setup 
+	UpdateConfigSettings();
 	std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<string>("WebServiceIP",webip);
-	GetConfigValue<uint16_t>("WebServicePort",webport);
-	GetConfigValue<uint16_t>("fetchTime",fetchtime);
 	AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
 	AddMessageFilter < tsm3Message > (this, &CARMACloudPlugin::HandleMobilityOperationMessage);
 
@@ -325,10 +322,8 @@ int CARMACloudPlugin::StartWebService()
 
 
 void CARMACloudPlugin::UpdateConfigSettings() {
-
-	GetConfigValue<uint64_t>("Frequency", _frequency);
-	
     std::lock_guard<mutex> lock(_cfgLock);
+	GetConfigValue<uint64_t>("Frequency", _frequency);	
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<uint16_t>("fetchTime",fetchtime);
