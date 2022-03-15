@@ -34,6 +34,11 @@
 			"description":"Time from while the TCMs are requested, in days"
 		},
 		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
 			"key": "MobilityOperationStrategies",
 			"default": "carma3/Geofence_Acknowledgement",
 			"description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
