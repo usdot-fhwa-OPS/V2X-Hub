@@ -41,7 +41,7 @@
 		{
 			"key": "MobilityOperationStrategies",
 			"default": "carma3/Geofence_Acknowledgement",
-			"description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
+			"description": "A comma separated list of strategies of MobilityOperation messages from CARMA vehicles."
 		},
 		{
 			"key": "TCMRepeatedlyBroadcastTimeOut",
