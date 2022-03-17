@@ -83,7 +83,12 @@ using namespace OpenAPI;
 
 
 namespace CARMACloudPlugin {
+typedef enum acknowledgement_status{
+	acknowledgement_status__acknowledged = 1,
+	acknowledgement_status__rejected = 2,
+	acknowledgement_status__not_acknowledged = 3
 
+} e_ack_status;
 
 class CARMACloudPlugin: public PluginClient {
 public:
@@ -151,7 +156,7 @@ private:
 	pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
 	J2735MessageFactory factory;
 	uint64_t _frequency = 0;
-	string url,base_hb, base_req, method; 
+	string url,base_hb, base_req, method, base_ack; 
 	
 	//Comma separated string for list of strategies from MobilityOperation messages
 	std::string _strategies;
