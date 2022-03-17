@@ -146,10 +146,13 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 
 		//send no ack to carma-cloud
-		char xml_str[10000]; 
-		sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%d</msgnum><cmvid>%s</cmvid><acknowledgement>%s</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id, msgnum,CMV_id,acknnowledgement_str,even_log_description);
-		PLOG(logINFO) << "Sent Negative ACK: "<< xml_str<<endl;
-		CloudSend(xml_str,url, base_ack, method);
+		if(acknnowledgement_str.find("1") == std::string::npos )
+		{			
+			char xml_str[10000]; 
+			sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%d</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id, std::stoi(msgnum) ,CMV_id,acknowledgement_status::acknowledgement_status__rejected,even_log_description);
+			PLOG(logINFO) << "Sent Negative ACK: "<< xml_str<<endl;
+			CloudSend(xml_str,url, base_ack, method);
+		}
 	}
 }
 
