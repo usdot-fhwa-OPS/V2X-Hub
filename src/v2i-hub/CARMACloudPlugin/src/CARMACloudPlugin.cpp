@@ -149,7 +149,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		if(acknnowledgement_str.find("1") == std::string::npos )
 		{			
 			char xml_str[10000]; 
-			sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id.c_str(), msgnum.c_str() ,CMV_id.c_str(),acknowledgement_status::acknowledgement_status__rejected,even_log_description);
+			snprintf(xml_str, sizeof(xml_str),"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id.c_str(), msgnum.c_str() ,CMV_id.c_str(),acknowledgement_status::acknowledgement_status__rejected,even_log_description.c_str());
 			PLOG(logINFO) << "Sent Negative ACK: "<< xml_str<<endl;
 			CloudSend(xml_str,url, base_ack, method);
 		}
@@ -273,7 +273,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 
 					//send negative ack to carma-cloud
 					char xml_str[10000]; 
-					sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",tcmv01_req_id_hex.c_str(), "", "", acknowledgement_status::acknowledgement_status__not_acknowledged,_TCMNOAcknowledgementDescription.c_str());
+					snprintf(xml_str, sizeof(xml_str),"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",tcmv01_req_id_hex.c_str(), "", "", acknowledgement_status::acknowledgement_status__not_acknowledged,_TCMNOAcknowledgementDescription.c_str());
 					PLOG(logINFO) << "Sent No ACK as Time Out: "<< xml_str<<endl;
 					CloudSend(xml_str,url, base_ack, method);					
 					break;
