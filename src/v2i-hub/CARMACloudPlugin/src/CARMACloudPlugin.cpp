@@ -91,7 +91,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	char xml_str[10000]; 
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
 
-	PLOG(logINFO) << "Sent TCR: "<< xml_str<<endl;
+	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
 
 }
