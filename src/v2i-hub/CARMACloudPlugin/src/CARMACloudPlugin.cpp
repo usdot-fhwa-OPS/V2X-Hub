@@ -148,10 +148,15 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//send negative ack to carma-cloud if not receiving any ack from CMV. acknowledgement_status__acknowledged	= 1	
 		if(acknnowledgement_str.find("1") == std::string::npos )
 		{			
-			char xml_str[10000]; 
-			snprintf(xml_str, sizeof(xml_str),"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id.c_str(), msgnum.c_str() ,CMV_id.c_str(),acknowledgement_status::acknowledgement_status__rejected,even_log_description.c_str());
-			PLOG(logINFO) << "Sent Negative ACK: "<< xml_str<<endl;
-			CloudSend(xml_str,url, base_ack, method);
+			stringstream sss;
+			sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << traffic_control_id
+					<< "</reqid><msgnum>"<< msgnum 
+					<<"</msgnum><cmvid>"<< CMV_id 
+					<<"</cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__rejected
+					<< "</acknowledgement><description>" << even_log_description
+					<< "</description></TrafficControlAcknowledgement>"; 
+			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
+			CloudSend(sss.str(),url, base_ack, method);
 		}
 	}
 }
@@ -272,10 +277,13 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 
 					//send negative ack to carma-cloud
-					char xml_str[10000]; 
-					snprintf(xml_str, sizeof(xml_str),"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",tcmv01_req_id_hex.c_str(), "", "", acknowledgement_status::acknowledgement_status__not_acknowledged,_TCMNOAcknowledgementDescription.c_str());
-					PLOG(logINFO) << "Sent No ACK as Time Out: "<< xml_str<<endl;
-					CloudSend(xml_str,url, base_ack, method);					
+					stringstream sss;
+					sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
+						  << "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
+						  << "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
+						  << "</description></TrafficControlAcknowledgement>"; 
+					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
+					CloudSend(sss.str(),url, base_ack, method);					
 					break;
 				}
 				std::unique_ptr<tsm5EncodedMessage> msg;
