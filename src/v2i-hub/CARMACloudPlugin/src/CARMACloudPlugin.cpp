@@ -138,18 +138,18 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//Create an event log object for both positive and negative ACK (ackownledgement), and broadcast the event log
 		tmx::messages::TmxEventLogMessage event_log_msg;
 
-		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
+		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CMV. 1 mapping to acknowledged by CMV
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
 		acknnowledgement_str.find("1") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
 		event_log_msg.set_description(mo_strategy + ": Traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 
-		//send no ack to carma-cloud
+		//send negative ack to carma-cloud if not receiving any ack from CMV. acknowledgement_status__acknowledged	= 1	
 		if(acknnowledgement_str.find("1") == std::string::npos )
 		{			
 			char xml_str[10000]; 
-			sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%d</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id, std::stoi(msgnum) ,CMV_id,acknowledgement_status::acknowledgement_status__rejected,even_log_description);
+			sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",traffic_control_id.c_str(), msgnum.c_str() ,CMV_id.c_str(),acknowledgement_status::acknowledgement_status__rejected,even_log_description);
 			PLOG(logINFO) << "Sent Negative ACK: "<< xml_str<<endl;
 			CloudSend(xml_str,url, base_ack, method);
 		}
@@ -190,8 +190,12 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	
 	string tcm = _cloudUpdate;
 
-	cout<<"Received this from cloud"<<tcm<<endl;
-
+	PLOG(logINFO) << "Received this from cloud" << tcm << std::endl;
+	if(tcm.length() == 0)
+	{
+		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
+		return;
+	}
     // new updateTags section
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
 	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
@@ -269,8 +273,8 @@ void CARMACloudPlugin::Broadcast_TCMs()
 
 					//send negative ack to carma-cloud
 					char xml_str[10000]; 
-					sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",tcmv01_req_id_hex, acknowledgement_status::acknowledgement_status__not_acknowledged,_TCMNOAcknowledgementDescription);
-					PLOG(logINFO) << "Sent ACK as Time Out: "<< xml_str<<endl;
+					sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid>%s</reqid><msgnum>%s</msgnum><cmvid>%s</cmvid><acknowledgement>%d</acknowledgement><description>%s</description></TrafficControlAcknowledgement>",tcmv01_req_id_hex.c_str(), "", "", acknowledgement_status::acknowledgement_status__not_acknowledged,_TCMNOAcknowledgementDescription.c_str());
+					PLOG(logINFO) << "Sent No ACK as Time Out: "<< xml_str<<endl;
 					CloudSend(xml_str,url, base_ack, method);					
 					break;
 				}
@@ -378,6 +382,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 		if(strcmp(method.c_str(),"POST")==0)
 		{
     		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
+			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L);
 			res = curl_easy_perform(req);
    			if(res != CURLE_OK)
 			   {
