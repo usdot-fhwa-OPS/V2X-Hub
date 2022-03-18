@@ -1,0 +1,22 @@
+{
+	"name":"SampleBSMPlugin",
+	"description":"Sample BSMplugin for making websocket connection with Sample BSM.",
+	"version": "@PROJECT_VERSION@",
+	"exeLocation":"/bin/SampleBSMPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"CARMA",
+			"description":"CARMA message suite"
+		}
+	],
+	"configuration":[
+		{
+			"key":"Instance",
+			"default":"0",
+			"description":"The instance of this plugin."
+		}
+	]
+}
