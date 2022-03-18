@@ -84,11 +84,11 @@ using namespace OpenAPI;
 
 namespace CARMACloudPlugin {
 	
-typedef enum acknowledgement_status {
+enum acknowledgement_status {
 	acknowledgement_status__acknowledged 		= 1, //Acknowledged by CMV
 	acknowledgement_status__rejected 			= 2, //CMV cannot process the TCM message
 	acknowledgement_status__not_acknowledged 	= 3  //CMV does not respond at all within the v2xhub repeatedly broadcast time period
-} e_ack_status;
+};
 
 class CARMACloudPlugin: public PluginClient {
 public:

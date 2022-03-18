@@ -190,7 +190,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	
 	string tcm = _cloudUpdate;
 
-	PLOG(logINFO) << "Received this from cloud" << tcm << std::endl;
+	PLOG(logINFO) << "Received TCM from cloud" << tcm << std::endl;
 	if(tcm.length() == 0)
 	{
 		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
@@ -382,7 +382,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 		if(strcmp(method.c_str(),"POST")==0)
 		{
     		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
-			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L);
+			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L); // Sets a 2 second timeout 
 			res = curl_easy_perform(req);
    			if(res != CURLE_OK)
 			   {
