@@ -29,6 +29,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
 	base_hb = "/carmacloud/v2xhub";
 	base_req = "/carmacloud/tcmreq";
+	base_ack = "/carmacloud/tcmack";
 	method = "POST";
 	_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
 	std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
@@ -90,7 +91,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	char xml_str[10000]; 
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
 
-	PLOG(logINFO) << "Sent TCR: "<< xml_str<<endl;
+	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
 
 }
@@ -120,6 +121,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		string even_log_description = GetValueFromStrategyParamsByKey(strategy_params_v, "reason");
 		string acknnowledgement_str = GetValueFromStrategyParamsByKey(strategy_params_v, "acknowledgement");
 		string traffic_control_id = GetValueFromStrategyParamsByKey(strategy_params_v, "traffic_control_id");
+		string msgnum = GetValueFromStrategyParamsByKey(strategy_params_v, "msgnum");
 		boost::trim(traffic_control_id);
 		std::transform(traffic_control_id.begin(), traffic_control_id.end(), traffic_control_id.begin(), ::tolower );	
 		ss.str("");
@@ -136,12 +138,26 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		//Create an event log object for both positive and negative ACK (ackownledgement), and broadcast the event log
 		tmx::messages::TmxEventLogMessage event_log_msg;
 
-		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CAV	
+		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CMV. 1 mapping to acknowledged by CMV
 		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
-		acknnowledgement_str.find("true") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+		acknnowledgement_str.find("1") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
 		event_log_msg.set_description(mo_strategy + ": Traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+
+		//send negative ack to carma-cloud if not receiving any ack from CMV. acknowledgement_status__acknowledged	= 1	
+		if(acknnowledgement_str.find("1") == std::string::npos )
+		{			
+			stringstream sss;
+			sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << traffic_control_id
+					<< "</reqid><msgnum>"<< msgnum 
+					<<"</msgnum><cmvid>"<< CMV_id 
+					<<"</cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__rejected
+					<< "</acknowledgement><description>" << even_log_description
+					<< "</description></TrafficControlAcknowledgement>"; 
+			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
+			CloudSend(sss.str(),url, base_ack, method);
+		}
 	}
 }
 
@@ -179,8 +195,12 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	
 	string tcm = _cloudUpdate;
 
-	cout<<"Received this from cloud"<<tcm<<endl;
-
+	PLOG(logINFO) << "Received TCM from cloud" << tcm << std::endl;
+	if(tcm.length() == 0)
+	{
+		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
+		return;
+	}
     // new updateTags section
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
 	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
@@ -255,6 +275,15 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
 					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+
+					//send negative ack to carma-cloud
+					stringstream sss;
+					sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
+						  << "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
+						  << "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
+						  << "</description></TrafficControlAcknowledgement>"; 
+					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
+					CloudSend(sss.str(),url, base_ack, method);					
 					break;
 				}
 				std::unique_ptr<tsm5EncodedMessage> msg;
@@ -361,6 +390,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 		if(strcmp(method.c_str(),"POST")==0)
 		{
     		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
+			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L); // Sets a 2 second timeout 
 			res = curl_easy_perform(req);
    			if(res != CURLE_OK)
 			   {
