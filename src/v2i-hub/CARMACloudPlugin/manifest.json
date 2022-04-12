@@ -34,6 +34,26 @@
 			"description":"Time from while the TCMs are requested, in days"
 		},
 		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
+			"key": "MobilityOperationStrategies",
+			"default": "carma3/Geofence_Acknowledgement",
+			"description": "A comma separated list of strategies of MobilityOperation messages from CARMA vehicles."
+		},
+		{
+			"key": "TCMRepeatedlyBroadcastTimeOut",
+			"default": "1000",
+			"description": "After it receives TCM from carma cloud, it repeatedly broadcasts TCM until TCMRepeatTimeOut milliseconds."
+		},
+		{
+			"key": "TCMNOAcknowledgementDescription",
+			"default": "No response received from CMV after repeatedly broadcast TCMs.",
+			"description": "If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI."
+		},
+		{
 			"key":"WebServicePort",
 			"default":"22222",
 			"description":"Server Port for V2X hub"

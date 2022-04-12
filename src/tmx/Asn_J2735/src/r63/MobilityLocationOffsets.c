@@ -16,7 +16,7 @@ asn_per_constraints_t asn_PER_type_MobilityLocationOffsets_constr_1 CC_NOTUSED =
 	0, 0	/* No PER value map */
 };
 asn_TYPE_member_t asn_MBR_MobilityLocationOffsets_1[] = {
-	{ ATF_POINTER, 0, 0,
+	{ ATF_NOFLAGS, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
 		&asn_DEF_MobilityECEFOffset,

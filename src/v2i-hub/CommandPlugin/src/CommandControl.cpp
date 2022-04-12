@@ -696,12 +696,13 @@ void CommandPlugin::GetEventTelemetry()
 			stringPosition = eJSON.find("},{", stringPosition);
 		}
 		//FILE_LOG(logDEBUG) << "GetEventTelemetry: new events: " << eventCount;
-		if (_eventsJSON.length() > 0)
-		{
-			//save update json without brackets if already have initial full json
-			_eventsUpdatesJSON = eJSON.substr(firstIndex + 1, lastIndex - firstIndex - 1);
+		
+		//save update json without brackets if already have initial full json
+		_eventsUpdatesJSON = eJSON.substr(firstIndex + 1, lastIndex - firstIndex - 1);
+		if(_eventsJSON.length() > 0){
 			_eventsJSON.append(",");
 		}
+		
 		//add JSON to next JSON buffer
 		if (_eventsFullCount >= _eventRowLimit)
 		{

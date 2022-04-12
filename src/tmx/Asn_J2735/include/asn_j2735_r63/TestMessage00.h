@@ -21,13 +21,13 @@ extern "C" {
 #endif
 
 /* Forward declarations */
-struct Header;
-struct Reg_BasicSafetyMessage;
+// struct Header;
+// struct Reg_BasicSafetyMessage;
 
 /* TestMessage00 */
 typedef struct TestMessage00 {
-	struct Header	*header;	/* OPTIONAL */
-	struct Reg_BasicSafetyMessage	*regional;	/* OPTIONAL */
+	MobilityHeader_t	header;	/* OPTIONAL */
+	MobilityRequest_t	body;	/* OPTIONAL */
 	/*
 	 * This type is extensible,
 	 * possible extensions are below.
@@ -47,8 +47,8 @@ extern asn_TYPE_member_t asn_MBR_TestMessage00_1[2];
 #endif
 
 /* Referred external types */
-#include "Header.h"
-#include "RegionalExtension.h"
+// #include "Header.h"
+// #include "RegionalExtension.h"
 
 #endif	/* _TestMessage00_H_ */
 #include "asn_internal.h"

@@ -118,33 +118,38 @@ jobs:
             fi 
   docker_build_push :
    machine:
-    image: ubuntu-1604:202004-01
+    image: ubuntu-2004:202201-02
    steps:
      - checkout
      - run: 
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
-          docker build -f docker/php.yml -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
           docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .  
-     - run: 
+          cd ./tools/port-drayage-webservice/
+          docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
+     - run:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
           docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
   docker_build_push_develop :
    machine:
-    image: ubuntu-1604:202004-01
+    image: ubuntu-2004:202201-02
    steps:
      - checkout
      - run: 
         name: Docker Build
         # Build v2xhub and php docker images develop images
         command: |
-          docker build -f docker/php.yml -t usdotfhwaops/php:latest .
-          docker build -t usdotfhwaops/v2xhubamd:latest .    
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:latest .
+          docker build -t usdotfhwaops/v2xhubamd:latest .
+          cd ./tools/port-drayage-webservice/ 
+          docker build  -t usdotfhwaops/port-drayage-webservice:latest .
      - run: 
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
@@ -152,6 +157,7 @@ jobs:
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:latest
           docker push usdotfhwaops/php:latest
+          docker push usdotfhwaops/port-drayage-webservice:latest
 
   arm_build_push :
    machine:
@@ -164,6 +170,10 @@ jobs:
         # Run MYSQL image and build v2xhub docker image
         command: |
           docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH,,} .
+          cd ./tools/port-drayage-webservice/
+          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,} .
+
     
      - run: 
         name: Docker Push
@@ -171,6 +181,8 @@ jobs:
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
   arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
@@ -182,6 +194,10 @@ jobs:
         # Run MYSQL image and build v2xhub docker image develop image
         command: |
           docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:latest .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:latest .
+          cd ./tools/port-drayage-webservice/
+          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:latest .
+
 
      - run:
         name: Docker Push
@@ -189,46 +205,8 @@ jobs:
         command: |
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:latest
-  port_drayage_webservice_build_develop :
-    docker:
-      - image: cimg/openjdk:11.0.12
-    steps:
-     - setup_remote_docker
-     - checkout
-     - run: 
-        name: Maven Build JAR
-        # Build Port Drayage Web Service
-        command: |
-          cd tools/port-drayage-webservice/
-          mvn clean install  
-     - run: 
-        name: Build Docker Image and Push
-        # Build and push Port Drayage Web Service Docker images
-        command: | 
-          cd tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice:latest .
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/port-drayage-webservice:latest
-  port_drayage_webservice_build :
-    docker:
-      - image: cimg/openjdk:11.0.12
-    steps:
-     - setup_remote_docker
-     - checkout
-     - run: 
-        name: Maven Build JAR
-        # Build Port Drayage Web Service
-        command: |
-          cd tools/port-drayage-webservice/
-          mvn clean install  
-     - run: 
-        name: Build Docker Image and Push
-        # Build and push Port Drayage Web Service Docker images
-        command: | 
-          cd tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
+          docker push usdotfhwaops/port-drayage-webservice_arm:latest
+          docker push usdotfhwaops/php_arm:latest
 workflows:
   version: 2
   build:
@@ -255,13 +233,5 @@ workflows:
       - sonar-scanner_develop:
           requires:
             - docker_build_push_develop
-      - port_drayage_webservice_build_develop:
-          filters:
-              branches:
-                only: develop
-      - port_drayage_webservice_build:
-          filters:
-            branches:
-              ignore: develop
- 
+
 

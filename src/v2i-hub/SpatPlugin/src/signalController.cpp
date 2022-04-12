@@ -30,12 +30,8 @@ using namespace tmx::messages;
 using namespace tmx::utils;
 using namespace std;
 
-SignalController::~SignalController() {
-	if (_spatMessage)
-	{
-		delete _spatMessage;
-		_spatMessage = NULL;
-	}
+SignalController::~SignalController() {	
+	SNMPCloseSession();
 }
 
 void SignalController::Start(std::string signalGroupMappingJson)
@@ -47,7 +43,6 @@ void SignalController::Start(std::string signalGroupMappingJson)
     // launch update thread
     sigcon_thread_id = boost::thread(&SignalController::start_signalController, this);
     // test code
-    counter = 0;
     normalstate = 0x01;
     crossstate = 0x04;
 }
@@ -83,18 +78,12 @@ void SignalController::start_signalController()
 
 	int maxDataSize = 1000;
 
-	Ntcip1202* ntcip1202 = new Ntcip1202();
-	ntcip1202->setSignalGroupMappingList(_signalGroupMappingJson);
-
     int sockfd, numbytes;
     char buf[maxDataSize];
     struct addrinfo hints, *servinfo;
     int rv;
     struct timeval tv;
     int on = 1;
-
-	while (1)
-	{
 
 		//Enable SPAT
 		// 0 = disable
@@ -104,11 +93,6 @@ void SignalController::start_signalController()
 		SNMPSet("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", 2);
 		SNMPCloseSession();
 
-		counter++;
-		if(counter % 60)
-		{
-
-		}
 		// Create UDP Socket
 	    memset(&hints, 0, sizeof hints);
 	    hints.ai_family = AF_UNSPEC;
@@ -177,32 +161,30 @@ void SignalController::start_signalController()
 
 						IsReceiving = 1;
 						pthread_mutex_lock(&spat_message_mutex);
-
+						auto ntcip1202 = std::make_shared<Ntcip1202>();
+						ntcip1202->setSignalGroupMappingList(_signalGroupMappingJson);
 						//printf("Signal Controller calling ntcip1202 copyBytesIntoNtcip1202");
 						ntcip1202->copyBytesIntoNtcip1202(buf, numbytes);
 
 						//printf("Signal Controller calling ntcip1202 ToJ2735r41SPAT");
 						SPAT *_spat = (SPAT *) calloc(1, sizeof(SPAT));
 						ntcip1202->ToJ2735r41SPAT(_spat, _intersectionName, _intersectionId);
-
+						
 						//printf("Signal Controller calling _spatMessage set_j2735_data\n");
 						//_spatMessage.set_j2735_data(_spat);
 						if (_spatMessage != NULL)
 						{
-							delete _spatMessage;
 							_spatMessage = NULL;
 						}
-						_spatMessage = new tmx::messages::SpatMessage(_spat);
+						_spatMessage = std::make_shared<tmx::messages::SpatMessage>(_spat);
 
 						pthread_mutex_unlock(&spat_message_mutex);
 						PLOG(logDEBUG) << *_spatMessage;
 					}
 				}
 			}
-			//printf("Sleeping\n");
 			sleep(3);
 	    }
-	}
 }
 
 void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::string currentPedLanes)
@@ -245,7 +227,10 @@ void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::s
 			}
 		}
 
-		spatEncodedMsg->initialize(*_spatMessage);
+		MessageFrameMessage frame(_spatMessage->get_j2735_data());
+		spatEncodedMsg->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
+		//Free the memory allocated for MessageFrame
+		free(frame.get_j2735_data().get());
 	}
 
 	pthread_mutex_unlock(&spat_message_mutex);
