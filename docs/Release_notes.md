@@ -5,11 +5,13 @@ Version 7.2, released April 12th, 2022
 
 **Summary:**
 V2X Hub release 7.2 includes added functionality for the CARMACloud Plugin to support:
-- Receiving vehicle TCM acknowledgement messages and displaying appropriate positive/negative/no acknowledgement messages on V2X-Hub web UI.
-- Fowarding TCM acknowledgement message (negative/no) to CARMACloud.
+- Issue 348:Receiving vehicle TCM acknowledgement messages and displaying appropriate positive/negative/no acknowledgement messages on V2X-Hub web UI.
+- Issue 348:Fowarding TCM acknowledgement message (negative/no) to CARMACloud.
 
 Enhancements in this release:
 - Issue-328: Upgrade base image for V2X-Hub to ubuntu 20
+- Issue-349: Added example BSM plugin to show how to use PluginClient's BroadcastMessage message to broadcast BSM
+- Issue-350: Added MobilityRequest and MobilityResponse ASN1 encoding and decoding 
 
 Bug fixes in this release:
 - Issue 337: fixed add user script
