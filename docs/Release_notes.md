@@ -1,5 +1,20 @@
 V2X-Hub Release Notes
 ----------------------------
+Version 7.2, released April 12th, 2022
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.2 includes added functionality for the CARMACloud Plugin to support:
+- Receiving vehicle TCM acknowledgement messages and displaying appropriate positive/negative/no acknowledgement messages on V2X-Hub web UI.
+- Fowarding TCM acknowledgement message (negative/no) to CARMACloud.
+
+Enhancements in this release:
+- Issue-328: Upgrade base image for V2X-Hub to ubuntu 20
+
+Bug fixes in this release:
+- Issue 337: fixed add user script
+- Issue 310: fixed possible Spat memory leak
+- Issue 322: Fixed php and port_drayage_web_service ARM image builds
 
 Version 7.1, released Feb 3rd, 2022
 --------------------------------------------------------
