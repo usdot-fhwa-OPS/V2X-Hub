@@ -447,7 +447,7 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 			key = substring;
 			count += 1;
 		}else{
-			value = substring;
+			value += substring;
 		}		
 	}	
 	str_pair = std::make_pair(key, value);
