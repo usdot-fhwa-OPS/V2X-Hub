@@ -2,7 +2,7 @@ V2X-Hub Release Notes
 ----------------------------
 Version 7.2.1, released April 15th, 2022
 --------------------------------------------------------
-V2X Hub release 7.2.1 includes added functionality for the CARMACloud Plugin to support and a hot fix for positive acknowledgment:
+V2X Hub release 7.2.1 includes added functionality for the CARMACloud Plugin to support a hot fix for positive acknowledgment:
 - Issue 352: Fix reason field data to display complete reason information.
 
 Version 7.2, released April 12th, 2022
