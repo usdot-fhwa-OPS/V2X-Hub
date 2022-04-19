@@ -21,11 +21,11 @@ namespace PedestrianPlugin
         char const* port)
     {
         
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::run " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::run " << std::endl;
 	// Save these for later
         host_ = host;
         //text_ = text;
-        PLOG(logERROR) << "Host: "<< host <<" ; port: "<< port << std::endl;
+        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << std::endl;
 
         // Look up the domain name
         resolver_.async_resolve(
@@ -41,7 +41,7 @@ namespace PedestrianPlugin
         beast::error_code ec,
         tcp::resolver::results_type results)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_resolve " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_resolve " << std::endl;
         if(ec)
             return fail(ec, "resolve");
 
@@ -59,7 +59,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_connect " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_connect " << std::endl;
         if(ec)
             return fail(ec, "connect");
 
@@ -96,7 +96,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_handshake(beast::error_code ec)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_handshake " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_handshake " << std::endl;
         if(ec)
             return fail(ec, "handshake");
         
@@ -113,7 +113,7 @@ namespace PedestrianPlugin
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_write " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_write " << std::endl;
         boost::ignore_unused(bytes_transferred);
 
         if(ec)
@@ -133,7 +133,7 @@ namespace PedestrianPlugin
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_read " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_read " << std::endl;
         boost::ignore_unused(bytes_transferred);
 
         if(ec)
@@ -142,8 +142,9 @@ namespace PedestrianPlugin
         // parse the buffer
         std::stringstream ss; 
 	    ptree pr; 
-        std::string text(boost::asio::buffers_begin(buffer_), boost::asio::buffers_end(buffer_));
-	    ss<<text; 
+        // std::string text(boost::asio::buffers_begin(buffer_), boost::asio::buffers_end(buffer_));
+	    std:string text(beast::buffers_to_string(buffer_.data()));
+        ss<<text; 
 	    read_json(ss, pr);
         std::string messageType = pr.get_child("MessageType").get_value<string>();
         if (messageType.compare("subscription") == 0)
@@ -155,7 +156,7 @@ namespace PedestrianPlugin
         else if (messageType.compare("Data") == 0)
         {
             std::string time = pr.get_child("time").get_value<string>(); //TODO: convert to timestamp
-            std:string type =  pr.get_child("type").get_value<string>();
+            std::string type =  pr.get_child("type").get_value<string>();
             if (type.compare("PedestrianPresenceTracking") == 0)
             {
                 ptree track = pr.get_child("track");
@@ -181,7 +182,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_close(beast::error_code ec)
     {
-        PLOG(logERROR) << "In FLIRWebSockAsyncClnSession::on_close " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_close " << std::endl;
         if(ec)
             return fail(ec, "close");
 

@@ -34,22 +34,23 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	std::lock_guard<mutex> lock(_cfgLock); 
 	GetConfigValue<string>("IPAddress",webip);
 	GetConfigValue<uint16_t>("WebPort",webport);
-	GetConfigValue<string>("PedDataProvider",dataprovider);
+	GetConfigValue<string>("DataProvider",dataprovider);
 	GetConfigValue<string>("WebSocketIP",webSocketIP);
 	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
 	
 	
-		PLOG(logERROR) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
+	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
 	
 
-	PLOG(logERROR) << "Before creating websocket: " << std::endl;
-	
+	PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  std::endl;
 	
 	if (dataprovider.compare("FLIR") == 0)
 	{
 		try
 		{
 			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
+			PLOG(logDEBUG) << "Thread started!!: " << std::endl;
+
 			webthread.detach(); // wait for the thread to finish
 		}
 		catch(const std::exception& e)
@@ -93,7 +94,7 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 
 int PedestrianPlugin::StartWebSocket()
 {
-	PLOG(logERROR) << "In PedestrianPlugin::StartWebSocket " << std::endl;
+	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket " << std::endl;
 	// The io_context is required for all I/O
     net::io_context ioc;
 
@@ -103,6 +104,8 @@ int PedestrianPlugin::StartWebSocket()
     // Run the I/O service. The call will return when
     // the socket is closed.
     ioc.run();
+
+	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;
 
 	return EXIT_SUCCESS;
 }
@@ -152,7 +155,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
-	GetConfigValue<string>("WebServicePort",webSocketURLExt);
+	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<string>("DataProvider", dataprovider);
 	
