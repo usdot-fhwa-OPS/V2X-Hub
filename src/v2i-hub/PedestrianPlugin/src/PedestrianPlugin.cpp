@@ -8,6 +8,7 @@
 
 #include "include/PedestrianPlugin.hpp"
 
+
 namespace PedestrianPlugin
 {
 
@@ -31,13 +32,40 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	// fire up the web service on a thread PROTECTION required
 
 	std::lock_guard<mutex> lock(_cfgLock); 
-	GetConfigValue<string>("WebServiceIP",webip);
-	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<string>("IPAddress",webip);
+	GetConfigValue<uint16_t>("WebPort",webport);
+	GetConfigValue<string>("PedDataProvider",dataprovider);
+	GetConfigValue<string>("WebSocketIP",webSocketIP);
+	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
+	
+	
+		PLOG(logERROR) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
+	
+
+	PLOG(logERROR) << "Before creating websocket: " << std::endl;
+	
+	
+	if (dataprovider.compare("FLIR") == 0)
+	{
+		try
+		{
+			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
+			webthread.detach(); // wait for the thread to finish
+		}
+		catch(const std::exception& e)
+		{
+			PLOG(logERROR) << "Error connecting to websocket: " << e.what() << std::endl;
+		}
+				
+			
+	}
+	else  // default if PSM XML data consumed using the webservice implementation
+	{
+		std::thread webthread(&PedestrianPlugin::StartWebService,this);
+		webthread.detach(); // wait for the thread to finish
+	}
 
 
-
-	std::thread webthread(&PedestrianPlugin::StartWebService,this);
-	webthread.detach(); // wait for the thread to finish 
 
 }
 
@@ -63,7 +91,21 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 	}
 }
 
+int PedestrianPlugin::StartWebSocket()
+{
+	PLOG(logERROR) << "In PedestrianPlugin::StartWebSocket " << std::endl;
+	// The io_context is required for all I/O
+    net::io_context ioc;
 
+    // Launch the asynchronous operation
+    std::make_shared<FLIRWebSockAsyncClnSession>(ioc)->run(webSocketIP.c_str(), webSocketURLExt.c_str());
+
+    // Run the I/O service. The call will return when
+    // the socket is closed.
+    ioc.run();
+
+	return EXIT_SUCCESS;
+}
 int PedestrianPlugin::StartWebService()
 {
 	//Web services 
@@ -110,9 +152,10 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<string>("WebServicePort",webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
-
-
+	GetConfigValue<string>("DataProvider", dataprovider);
+	
 
 }
 

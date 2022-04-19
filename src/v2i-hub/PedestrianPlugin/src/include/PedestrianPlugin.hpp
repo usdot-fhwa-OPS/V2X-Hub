@@ -25,6 +25,7 @@
 #include <tmx/messages/auto_message.hpp>
 #include "PedestrianPluginWorker.hpp"
 
+#include "FLIRWebSockAsyncClnSession.hpp"
 
 
 #include <QCommandLineOption>
@@ -66,6 +67,10 @@ public:
 	int Main();
 	uint16_t webport;
 	std::string webip; 
+	std::string webSocketIP;
+	std::string webSocketURLExt;
+	std::string dataprovider;
+	
 
 
 protected:
@@ -83,12 +88,18 @@ protected:
 	void PedestrianRequestHandler(QHttpEngine::Socket *socket);
 	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
 
+	int StartWebSocket();
+
+	void OnWebSocketConnected();
+	void OnWebSocketDataReceived(QString message);
+	void OnWebSocketClosed();
+
 
 
 private:
 	tmx::utils::UdpClient *_signSimClient = NULL;
 	J2735MessageFactory factory;
-
+	
 
 };
 std::mutex _cfgLock;

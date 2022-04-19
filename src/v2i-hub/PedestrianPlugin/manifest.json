@@ -1,7 +1,7 @@
 {
 	"name":"Pedestrian",
 	"description":"Pedestrian plugin for the IVP system.",
-	"version":"@PROJECT_VERSION@",
+	"version":"5.0",
 	"exeLocation":"/bin/PedestrianPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,
@@ -32,6 +32,24 @@
 			"key":"WebServicePort",
 			"default":"9000",
 			"description":"Port at which Web service exists"
+		},
+		{
+			"key":"DataProvider",
+			"default":"FLIR",
+			"description":"Possible data providers we handle - FLIR or PSM XML data"
+		},	
+		{
+			"key":"WebSocketIP",
+			"default":"192.168.55.183",
+			"description":"IP address of the camera to connect to for data"
+
+		},
+		{
+			"key":"WebSocketURLExt",
+			"default":"/api/subscriptions",
+			"description":"Possible data providers we handle - FLIR or PSM XML data"
 		}
+
+
 	]
 }
