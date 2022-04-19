@@ -94,6 +94,14 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
 
+	//If TCR reqids match with the any existing TCMs, erase the TCMs from the list after sending new TCR request to carma-cloud.	
+	std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
+	if(_not_ACK_TCMs->erase(reqid) <= 0)
+	{
+		PLOG(logDEBUG) << "TCR request id =" << reqid << " Not Found in TCM map." << std::endl;
+	}else{
+		PLOG(logDEBUG) << "TCR request id =" << reqid << " Found in TCM map. Remove the existing TCMs with the same TCR request id." << std::endl;
+	}
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
