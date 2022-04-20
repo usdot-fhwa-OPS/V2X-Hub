@@ -172,6 +172,11 @@ private:
 	//TCM repeatedly broadcast time out in unit of second
 	uint16_t _TCMRepeatedlyBroadcastTimeOut = 0;
 	std::string _TCMNOAcknowledgementDescription = "";
+
+	//Total number of times repeatedly broadcast TCMs with the same request id
+	int _TCMRepeatedlyBroadCastTotalTimes = 0; 
+	//Keep tracking of the number of times repeatedly broadcast TCMS. Key: tcm request id, value: the number of times
+	std::shared_ptr<std::map<string, int>> _tcm_broadcast_times;
 	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
 
 };

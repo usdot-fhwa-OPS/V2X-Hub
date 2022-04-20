@@ -49,6 +49,11 @@
 			"description": "After it receives TCM from carma cloud, it repeatedly broadcasts TCM until TCMRepeatTimeOut milliseconds."
 		},
 		{
+			"key": "TCMRepeatedlyBroadCastTotalTimes",
+			"default": "1",
+			"description": "The number of times TCMs with the same request id should be broadcast within the time out period."
+		},
+		{
 			"key": "TCMNOAcknowledgementDescription",
 			"default": "No response received from CMV after repeatedly broadcast TCMs.",
 			"description": "If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI."
