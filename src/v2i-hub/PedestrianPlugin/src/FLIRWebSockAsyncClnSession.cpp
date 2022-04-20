@@ -188,7 +188,7 @@ namespace PedestrianPlugin
                     float speed = track.get_child("longitude").get_value<float>();
                     //TODO: print to PSM xml and call BroadcastPsm
                 }
-                catch(const ptree_error &e))
+                catch(const ptree_error &e)
                 {
                     PLOG(logERROR) << "Error with track data:  " << e.what() << std::endl;
                 }
