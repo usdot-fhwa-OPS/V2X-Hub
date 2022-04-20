@@ -303,8 +303,10 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				if (_tcm_broadcast_times->count(tcmv01_req_id_hex) == 0)
 				{
 					_tcm_broadcast_times->insert({tcmv01_req_id_hex, 0});
+					PLOG(logDEBUG) << " TCMs with request id = " << tcmv01_req_id_hex << " has been broadcast " << _tcm_broadcast_times->at(tcmv01_req_id_hex) << " times."<< std::endl;
 				}
 				else if (_tcm_broadcast_times->at(tcmv01_req_id_hex) >= _TCMRepeatedlyBroadCastTotalTimes){
+					PLOG(logDEBUG) << "SKIP as TCMs with request id = " << tcmv01_req_id_hex << " has been broadcast " << _tcm_broadcast_times->at(tcmv01_req_id_hex) << " times."<< std::endl;				
 					//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
 					continue;
 				}
@@ -324,6 +326,17 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 				BroadcastMessage(*rMsg);		
 				PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+			} //END TCMs LOOP
+		
+			//update the number of times a TCM should be broadcast within time out period
+			for(auto itr = _tcm_broadcast_times->begin(); itr!=_tcm_broadcast_times->end(); itr++)
+			{
+				string reqid = itr->first;
+				int times = itr->second;
+				times += 1; //Increase 1 by every iteration
+				_tcm_broadcast_times->erase(reqid);
+				_tcm_broadcast_times->insert({reqid, times});
+				PLOG(logDEBUG) << " TCMs with request id = " << reqid << " has been broadcast " << times << " times." << std::endl;
 			}
 		}
 		else
@@ -331,17 +344,10 @@ void CARMACloudPlugin::Broadcast_TCMs()
 			start_time = 0;
 			cur_time = 0;	
 			is_started_broadcasting = false;
+			_tcm_broadcast_times->clear();
 		}
 
-		//update the number of times a TCM should be broadcast within time out period
-		for(auto itr = _tcm_broadcast_times->begin(); itr!=_tcm_broadcast_times->end(); itr++)
-		{
-			int times = _tcm_broadcast_times->at(itr->first);
-			times += 1; //Increase 1 by every iteration
-			_tcm_broadcast_times->erase(itr->first);
-			_tcm_broadcast_times->insert({itr->first, times});
-			PLOG(logDEBUG) << " TCMs with request id = " << itr->first << " has been broadcast " << times << " times.";
-		}
+
 	}
 }
 
