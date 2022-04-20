@@ -46,8 +46,8 @@
 		},
 		{
 			"key":"WebSocketURLExt",
-			"default":"/api/subscriptions",
-			"description":"Possible data providers we handle - FLIR or PSM XML data"
+			"default":"80",
+			"description":"Extension/port for FLIR camera subscription"
 		}
 
 

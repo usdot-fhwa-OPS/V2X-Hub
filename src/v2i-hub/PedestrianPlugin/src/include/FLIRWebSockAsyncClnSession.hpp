@@ -4,6 +4,7 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/bind.hpp>
+#include <boost/beast/ssl/ssl_stream.hpp>
 
 #include <cstdlib>
 #include <functional>
@@ -15,14 +16,10 @@ namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
 namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace net = boost::asio;            // from <boost/asio.hpp>
+namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 
-
-
-
 //------------------------------------------------------------------------------
-
-
 
 namespace PedestrianPlugin
 {
@@ -31,6 +28,7 @@ namespace PedestrianPlugin
     {
         tcp::resolver resolver_;
         websocket::stream<beast::tcp_stream> ws_;
+        // websocket::stream<beast::ssl_stream<beast::tcp_stream>> ws_;       
         beast::flat_buffer buffer_;
         std::string host_;
         //TODO: move this to manifest.json
@@ -47,6 +45,9 @@ namespace PedestrianPlugin
         
         // Resolver and socket require an io_context
         explicit
+        // FLIRWebSockAsyncClnSession(net::io_context& ioc, ssl::context& ctx)
+        // : resolver_(net::make_strand(ioc))
+        // , ws_(net::make_strand(ioc), ctx)
         FLIRWebSockAsyncClnSession(net::io_context& ioc)
             : resolver_(net::make_strand(ioc))
             , ws_(net::make_strand(ioc))
@@ -70,6 +71,8 @@ namespace PedestrianPlugin
         void
         on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
         
+        // void
+        // on_ssl_handshake(beast::error_code ec);
 
         void
         on_handshake(beast::error_code ec);
