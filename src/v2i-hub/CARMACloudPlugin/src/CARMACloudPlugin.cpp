@@ -304,7 +304,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				{
 					_tcm_broadcast_times->insert({tcmv01_req_id_hex, 0});
 				}
-				else if (_tcm_broadcast_times->at(tcmv01_req_id_hex) > _TCMRepeatedlyBroadCastTotalTimes){
+				else if (_tcm_broadcast_times->at(tcmv01_req_id_hex) >= _TCMRepeatedlyBroadCastTotalTimes){
 					//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
 					continue;
 				}
