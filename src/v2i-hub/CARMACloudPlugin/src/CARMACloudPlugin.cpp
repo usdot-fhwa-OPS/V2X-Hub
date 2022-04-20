@@ -32,6 +32,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	base_ack = "/carmacloud/tcmack";
 	method = "POST";
 	_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
+	_tcm_broadcast_times = std::make_shared<std::map<string, int>>();
 	std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
 	Broadcast_t.detach();
 
