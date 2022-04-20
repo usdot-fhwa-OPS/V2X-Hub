@@ -56,79 +56,6 @@ namespace PedestrianPlugin
                 shared_from_this()));
     }
 
-    // void
-    // FLIRWebSockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
-    // {
-    //     PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_connect " << std::endl;
-
-    //     if(ec)
-    //         return fail(ec, "connect");
-
-    //      // Turn off the timeout on the tcp_stream, because
-    //     // the websocket stream has its own timeout system.
-    //     beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
-
-    //     // Set SNI Hostname (many hosts need this to handshake successfully)
-    //     if(! SSL_set_tlsext_host_name(
-    //             ws_.next_layer().native_handle(),
-    //             host_.c_str()))
-    //     {
-    //         ec = beast::error_code(static_cast<int>(::ERR_get_error()),
-    //             net::error::get_ssl_category());
-    //         PLOG(logDEBUG) << "error setting SNI hostname" << std::endl;
-      
-    //         return fail(ec, "connect");
-    //     }
-
-    //      // Update the host_ string. This will provide the value of the
-    //     // Host HTTP header during the WebSocket handshake.
-    //     // See https://tools.ietf.org/html/rfc7230#section-5.4
-    //     host_ += ':' + std::to_string(ep.port());
-
-    //     // Perform the SSL handshake
-    //     ws_.next_layer().async_handshake(
-    //         ssl::stream_base::client,
-    //         beast::bind_front_handler(
-    //             &FLIRWebSockAsyncClnSession::on_ssl_handshake,
-    //             shared_from_this()));
-
-    // }
-
-    // void
-    // FLIRWebSockAsyncClnSession::on_ssl_handshake(beast::error_code ec)
-    // {
-    //     PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_ssl_handshake " << std::endl;
-
-    //     if(ec)
-    //         return fail(ec, "ssl_handshake");
-
-    //     // Turn off the timeout on the tcp_stream, because
-    //     // the websocket stream has its own timeout system.
-    //     beast::get_lowest_layer(ws_).expires_never();
-
-    //     // Set suggested timeout settings for the websocket
-    //     ws_.set_option(
-    //         websocket::stream_base::timeout::suggested(
-    //             beast::role_type::client));
-
-    //     // Set a decorator to change the User-Agent of the handshake
-    //     ws_.set_option(websocket::stream_base::decorator(
-    //         [](websocket::request_type& req)
-    //         {
-    //             req.set(http::field::user_agent,
-    //                 std::string(BOOST_BEAST_VERSION_STRING) +
-    //                     " websocket-client-async");
-    //         }));
-
-    //     // Perform the websocket handshake        
-    //     PLOG(logDEBUG) << "performing ssl handshake using host_: " << host_ << std::endl;
-
-    //     ws_.async_handshake(host_, "/api/subscriptions",
-    //         beast::bind_front_handler(
-    //             &FLIRWebSockAsyncClnSession::on_handshake,
-    //             shared_from_this()));
-    // }
-
     void
     FLIRWebSockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
     {
@@ -138,18 +65,7 @@ namespace PedestrianPlugin
 
         // Turn off the timeout on the tcp_stream, because
         // the websocket stream has its own timeout system.
-        beast::get_lowest_layer(ws_).expires_never();
-
-        // if(! SSL_set_tlsext_host_name(
-        //             ws_.next_layer().native_handle(),
-        //             host_.c_str()))
-        // {
-        //     ec = beast::error_code(static_cast<int>(::ERR_get_error()),
-        //         net::error::get_ssl_category());
-        //     PLOG(logDEBUG) << "error setting SNI hostname" << std::endl;
-    
-        //     return fail(ec, "connect");
-        // }
+        beast::get_lowest_layer(ws_).expires_never();      
 
         // Set suggested timeout settings for the websocket
         ws_.set_option(
@@ -168,7 +84,6 @@ namespace PedestrianPlugin
         // Update the host_ string. This will provide the value of the
         // Host HTTP header during the WebSocket handshake.
         // See https://tools.ietf.org/html/rfc7230#section-5.4
-        // host_ += ':' + std::to_string(ep.port()) + "/api/subscriptions";
         // host_ += ':' + std::to_string(ep.port());
 
         PLOG(logDEBUG) << "host_: " << host_ << std::endl;
@@ -229,44 +144,71 @@ namespace PedestrianPlugin
         // parse the buffer
         std::stringstream ss; 
 	    ptree pr; 
-        // std::string text(boost::asio::buffers_begin(buffer_), boost::asio::buffers_end(buffer_));
 	    std:string text(beast::buffers_to_string(buffer_.data()));
         ss<<text; 
 
         PLOG(logDEBUG) << "Received:  " << text.c_str() << std::endl;
 
-	    read_json(ss, pr);
-        // std::string messageType = pr.get_child("MessageType").get_value<string>();
-        // if (messageType.compare("subscription") == 0)
-        // {
-        //     std::string subscrStatus = pr.get_child("Subscription").get_child("returnValue").get_value<string>();
-        //     PLOG(logERROR) << "Ped presence data subscription status: " << subscrStatus << std::endl;
+        try
+        {
+	        read_json(ss, pr);
+        }
+        catch(const ptree_error &e)
+        {
+            PLOG(logERROR) << "Error converting json to p tree:  " << e.what() << std::endl;
+        }
+
+        //Example FLIR subscription response json:
+        //Received:  {"messageType": "Subscription", "subscription": {"returnValue": "OK", "type": "Data"}}
+
+        std::string messageType = pr.get_child("messageType").get_value<string>();
+        if (messageType.compare("Subscription") == 0)
+        {
+            std::string subscrStatus = pr.get_child("subscription").get_child("returnValue").get_value<string>();
+            PLOG(logDEBUG) << "Ped presence data subscription status: " << subscrStatus << std::endl;
         
-        // }
-        // else if (messageType.compare("Data") == 0)
-        // {
-        //     std::string time = pr.get_child("time").get_value<string>(); //TODO: convert to timestamp
-        //     std::string type =  pr.get_child("type").get_value<string>();
-        //     if (type.compare("PedestrianPresenceTracking") == 0)
-        //     {
-        //         ptree track = pr.get_child("track");
-        //         int angle = track.get_child("angle").get_value<int>(); //TODO: convert
-        //         int id = track.get_child("iD").get_value<int>(); 
-        //         double latitude = track.get_child("latitude").get_value<double>();
-        //         double longitude = track.get_child("longitude").get_value<double>();
-        //         float speed = track.get_child("longitude").get_value<float>();
-        //         //TODO: print to PSM xml and call BroadcastPsm
+        }
+        //Example received pedestrian tracking data       
+        //{"dataNumber": "473085", "messageType": "Data", "time": "2022-04-20T15:25:51.001-04:00", 
+        //"track": [{"angle": "263.00000000", "class": "Pedestrian", "iD": "15968646", "latitude": "38.95499217", 
+        //"longitude": "-77.14920953", "speed": "1.41873741", "x": "0.09458912", "y": "14.80903757"}], "type": "PedestrianPresenceTracking"}
+        else if (messageType.compare("Data") == 0)
+        {
+            std::string time = pr.get_child("time").get_value<string>(); //TODO: convert to timestamp
+            std::string type =  pr.get_child("type").get_value<string>();
+            if (type.compare("PedestrianPresenceTracking") == 0)
+            {
+                try
+                {
+                    ptree track = pr.get_child("track");
+                    int angle = track.get_child("angle").get_value<int>(); //TODO: convert
+                    int id = track.get_child("iD").get_value<int>(); 
+                    double latitude = track.get_child("latitude").get_value<double>();
+                    double longitude = track.get_child("longitude").get_value<double>();
+                    float speed = track.get_child("longitude").get_value<float>();
+                    //TODO: print to PSM xml and call BroadcastPsm
+                }
+                catch(const ptree_error &e))
+                {
+                    PLOG(logERROR) << "Error with track data:  " << e.what() << std::endl;
+                }
 
-        //     }            
-        // }
+            }            
+        }
+        else
+        {
+            PLOG(logDEBUG) << "Received unknown message: " << text.c_str() << std::endl;
+        }
 
+        // need to clear the buffer after reading the message
+        buffer_.consume(buffer_.size());  
 
-        // // this will read data subscribed to
-        //  ws_.async_read(
-        //     buffer_,
-        //     beast::bind_front_handler(
-        //         &FLIRWebSockAsyncClnSession::on_read,
-        //         shared_from_this()));
+        // this will read data subscribed to
+        ws_.async_read(
+        buffer_,
+        beast::bind_front_handler(
+            &FLIRWebSockAsyncClnSession::on_read,
+            shared_from_this()));
     }
 
     void
