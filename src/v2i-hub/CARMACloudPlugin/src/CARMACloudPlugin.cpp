@@ -260,9 +260,16 @@ void CARMACloudPlugin::Broadcast_TCMs()
 		if(_not_ACK_TCMs->size() > 0)
 		{
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
+			auto itr = _not_ACK_TCMs->begin();
+			while(  itr!=_not_ACK_TCMs->end() )
 			{
+				if(itr == _not_ACK_TCMs->end())
+				{
+					PLOG(logDEBUG) << "itr end " << std::endl;
+					break;
+				}
 				string tcmv01_req_id_hex = itr->first;	
+				PLOG(logDEBUG) << "tcmv01_req_id_hex  " << tcmv01_req_id_hex << std::endl;
 				auto cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();				
 				if (_tcm_broadcast_starting_time->count(tcmv01_req_id_hex) == 0)
 				{
@@ -291,8 +298,9 @@ void CARMACloudPlugin::Broadcast_TCMs()
 						  << "</description></TrafficControlAcknowledgement>"; 
 					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
 					CloudSend(sss.str(),url, base_ack, method);					
-					break;
+					continue;
 				}
+				++itr;
 
 				std::unique_ptr<tsm5EncodedMessage> msg;
 				msg.reset();
