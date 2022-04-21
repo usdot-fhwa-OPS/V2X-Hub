@@ -303,7 +303,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 			} //END TCMs LOOP
 
 			// For any ids which have expired clean up the maps
-			for (auto expired_id : expired_req_ids) {
+			for (auto tcmv01_req_id_hex : expired_req_ids) {
 
 				//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
 
