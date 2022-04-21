@@ -32,7 +32,8 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	base_ack = "/carmacloud/tcmack";
 	method = "POST";
 	_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
-	_tcm_broadcast_times = std::make_shared<std::map<string, int>>();
+	_tcm_broadcast_times = std::make_shared<std::multimap<string, TCMBroadcastMetadata>>();
+	_tcm_broadcast_starting_time = std::make_shared<std::map<string, std::time_t>>();
 	std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
 	Broadcast_t.detach();
 
@@ -249,8 +250,6 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 void CARMACloudPlugin::Broadcast_TCMs()
 { 	
-	std::time_t start_time = 0, cur_time = 0;
-	bool is_started_broadcasting = false;
 	while(true)
 	{			
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -264,24 +263,20 @@ void CARMACloudPlugin::Broadcast_TCMs()
 			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
 			{
 				string tcmv01_req_id_hex = itr->first;	
-				//Start recording time out period
-				if(!is_started_broadcasting)
+				auto cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();				
+				if (_tcm_broadcast_starting_time->count(tcmv01_req_id_hex) == 0)
 				{
-					start_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
-				}else{
-					cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();
+					_tcm_broadcast_starting_time->insert({tcmv01_req_id_hex, cur_time});
 				}
-				is_started_broadcasting = true;
-				if((cur_time - start_time) > _TCMRepeatedlyBroadcastTimeOut)
+				else if ( (cur_time - _tcm_broadcast_starting_time->at(tcmv01_req_id_hex)) > _TCMRepeatedlyBroadcastTimeOut )
 				{
 					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
-					//If time out, stop counting the number of times TCMs being broadcast
+					//If time out, stop tracking the starting time of the TCMs being broadcast so far
+					_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
+					//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
 					_tcm_broadcast_times->erase(tcmv01_req_id_hex);
-					start_time = 0;
-					cur_time = 0;	
-					is_started_broadcasting = false;
-
 					//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
+
 					tmx::messages::TmxEventLogMessage event_log_msg;
 					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
 					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
@@ -297,24 +292,18 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
 					CloudSend(sss.str(),url, base_ack, method);					
 					break;
-				}		
-
-				//initialize the number of times a TCM should be broadcast
-				if (_tcm_broadcast_times->count(tcmv01_req_id_hex) == 0)
-				{
-					_tcm_broadcast_times->insert({tcmv01_req_id_hex, 0});
-					PLOG(logDEBUG) << " TCMs with request id = " << tcmv01_req_id_hex << " has been broadcast " << _tcm_broadcast_times->at(tcmv01_req_id_hex) << " times."<< std::endl;
-				}
-				else if (_tcm_broadcast_times->at(tcmv01_req_id_hex) >= _TCMRepeatedlyBroadCastTotalTimes){
-					PLOG(logDEBUG) << "SKIP as TCMs with request id = " << tcmv01_req_id_hex << " has been broadcast " << _tcm_broadcast_times->at(tcmv01_req_id_hex) << " times."<< std::endl;				
-					//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
-					continue;
 				}
 
 				std::unique_ptr<tsm5EncodedMessage> msg;
 				msg.reset();
 				msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
 				tsm5EncodedMessage tsm5ENC = itr->second;
+				string tcm_hex_payload = tsm5ENC.get_payload_str();
+				if(IsSkipBroadcastCurTCM(tcmv01_req_id_hex, tcm_hex_payload))
+				{
+					continue;
+				}
+				//Broadcast TCM
 				string enc = tsm5ENC.get_encoding();
 				msg->refresh_timestamp();
 				msg->set_payload(tsm5ENC.get_payload_str());
@@ -322,33 +311,58 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				msg->set_flags(IvpMsgFlags_RouteDSRC);
 				msg->addDsrcMetadata(172, 0x8003);
 				msg->refresh_timestamp();
-
 				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 				BroadcastMessage(*rMsg);		
 				PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			} //END TCMs LOOP
-		
-			//update the number of times a TCM should be broadcast within time out period
-			for(auto itr = _tcm_broadcast_times->begin(); itr!=_tcm_broadcast_times->end(); itr++)
-			{
-				string reqid = itr->first;
-				int times = itr->second;
-				times += 1; //Increase 1 by every iteration
-				_tcm_broadcast_times->erase(reqid);
-				_tcm_broadcast_times->insert({reqid, times});
-				PLOG(logDEBUG) << " TCMs with request id = " << reqid << " has been broadcast " << times << " times." << std::endl;
-			}
 		}
 		else
 		{
-			start_time = 0;
-			cur_time = 0;	
-			is_started_broadcasting = false;
+			PLOG(logDEBUG) << "NO TCMs to broadcast." << std::endl;
 			_tcm_broadcast_times->clear();
+			_tcm_broadcast_starting_time->clear();
 		}
-
-
 	}
+}
+
+bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const
+{
+	bool is_skip_cur_tcm = false;
+	bool is_tcm_hex_found = false;
+	auto tcms_metadatas = _tcm_broadcast_times->equal_range(tcmv01_req_id_hex);
+	for(auto itr = tcms_metadatas.first; itr !=tcms_metadatas.second; itr ++)
+	{
+		string tcm_hex = itr->second.tcm_hex;
+		int times = itr->second.num_of_times;
+		if(tcm_hex == tcm_hex_payload)
+		{
+			is_tcm_hex_found = true;
+			if (times >= _TCMRepeatedlyBroadCastTotalTimes)
+			{						
+				PLOG(logDEBUG) << "SKIP broadcasting as TCMs reqid = " << tcmv01_req_id_hex<< " has been broadcast " << times  << " times." << std::endl;
+				//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
+				is_skip_cur_tcm = true;
+			}
+			else
+			{
+				//update the number of times a TCM being broadcast within time out period
+				times += 1; //Increase by 1 for every iteration
+				itr->second.num_of_times = times;
+				PLOG(logDEBUG) << " TCMs reqid = " << tcmv01_req_id_hex<< " has been broadcast " << times  << " times." << std::endl;
+			}
+		}
+	}	
+
+	if(!is_tcm_hex_found)
+	{
+		//Initialize the number of times a TCM being broadcast
+		TCMBroadcastMetadata t;
+		t.num_of_times = 1;
+		t.tcm_hex = tcm_hex_payload;
+		_tcm_broadcast_times->insert( {tcmv01_req_id_hex, t});
+		PLOG(logDEBUG) << " TCMs reqid =  "<< tcmv01_req_id_hex << " has been broadcast once."<< std::endl;
+	} 
+	return is_skip_cur_tcm;
 }
 
 int CARMACloudPlugin::StartWebService()

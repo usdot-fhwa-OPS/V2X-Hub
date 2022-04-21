@@ -149,6 +149,12 @@ protected:
 	 * If it timed out, it would remove the TCMs from the list, and stop broadcasting them.
 	 * ***/
 	void Broadcast_TCMs();
+	/***
+	 * @brief: Determin if stop broadcasting the current TCM
+	 * @param: std::string of decoded TCM request id
+	 * @param: key string TCM hex payload
+	 * **/
+	bool IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const;
 
 private:
 
@@ -165,20 +171,30 @@ private:
 	//Comma separated string for list of strategies from MobilityOperation messages
 	std::string _strategies;
 
+	struct TCMBroadcastMetadata
+	{
+		string tcm_hex;
+		int num_of_times;
+	};
 	//Used to lock the shared TCMs resource
 	std::mutex _not_ACK_TCMs_mutex;
 	//An associated array to keep track of TCMs that are not acknowledged
 	std::shared_ptr<std::multimap<string, tsm5EncodedMessage>> _not_ACK_TCMs;
+	
 	//TCM repeatedly broadcast time out in unit of second
 	uint16_t _TCMRepeatedlyBroadcastTimeOut = 0;
+	//Keep track of the starting time (unit of milliseconds) TCMs with same TCR request ids being broadcast Key: tcm request id, value: the start broadcasting timestamp
+	std::shared_ptr<std::map<string, std::time_t>> _tcm_broadcast_starting_time;
+	
 	std::string _TCMNOAcknowledgementDescription = "";
 
 	//Total number of times repeatedly broadcast TCMs with the same request id
 	int _TCMRepeatedlyBroadCastTotalTimes = 0; 
-	//Keep tracking of the number of times repeatedly broadcast TCMS. Key: tcm request id, value: the number of times
-	std::shared_ptr<std::map<string, int>> _tcm_broadcast_times;
-	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
+	//Keep track of the number of times repeatedly broadcast TCMS. Key: tcm hex string, value: the number of times
+	std::shared_ptr< std::multimap<string, TCMBroadcastMetadata>> _tcm_broadcast_times;
 
+	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
+	
 };
 std::mutex _cfgLock;
 }
