@@ -260,16 +260,12 @@ void CARMACloudPlugin::Broadcast_TCMs()
 		if(_not_ACK_TCMs->size() > 0)
 		{
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-			auto itr = _not_ACK_TCMs->begin();
-			while(  itr!=_not_ACK_TCMs->end() )
+
+			std::unordered_set<std::string> expired_req_ids;
+
+			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
 			{
-				if(itr == _not_ACK_TCMs->end())
-				{
-					PLOG(logDEBUG) << "itr end " << std::endl;
-					break;
-				}
 				string tcmv01_req_id_hex = itr->first;	
-				PLOG(logDEBUG) << "tcmv01_req_id_hex  " << tcmv01_req_id_hex << std::endl;
 				auto cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();				
 				if (_tcm_broadcast_starting_time->count(tcmv01_req_id_hex) == 0)
 				{
@@ -277,30 +273,12 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				}
 				else if ( (cur_time - _tcm_broadcast_starting_time->at(tcmv01_req_id_hex)) > _TCMRepeatedlyBroadcastTimeOut )
 				{
-					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
-					//If time out, stop tracking the starting time of the TCMs being broadcast so far
-					_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
-					//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
-					_tcm_broadcast_times->erase(tcmv01_req_id_hex);
-					//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
 
-					tmx::messages::TmxEventLogMessage event_log_msg;
-					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
-					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
-					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 
-					//send negative ack to carma-cloud
-					stringstream sss;
-					sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
-						  << "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
-						  << "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
-						  << "</description></TrafficControlAcknowledgement>"; 
-					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-					CloudSend(sss.str(),url, base_ack, method);					
+					expired_req_ids.insert(tcmv01_req_id_hex);
+
 					continue;
 				}
-				++itr;
 
 				std::unique_ptr<tsm5EncodedMessage> msg;
 				msg.reset();
@@ -323,6 +301,35 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				BroadcastMessage(*rMsg);		
 				PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			} //END TCMs LOOP
+
+			// For any ids which have expired clean up the maps
+			for (auto expired_id : expired_req_ids) {
+
+				//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
+
+
+					tmx::messages::TmxEventLogMessage event_log_msg;
+					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
+					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
+					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+
+					//send negative ack to carma-cloud
+					stringstream sss;
+					sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
+						  << "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
+						  << "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
+						  << "</description></TrafficControlAcknowledgement>"; 
+					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
+					CloudSend(sss.str(),url, base_ack, method);		
+
+					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
+					//If time out, stop tracking the starting time of the TCMs being broadcast so far
+					_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
+					//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
+					_tcm_broadcast_times->erase(tcmv01_req_id_hex);			
+
+			}
 		}
 		else
 		{
