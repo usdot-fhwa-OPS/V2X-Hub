@@ -194,6 +194,7 @@ private:
 	std::shared_ptr< std::multimap<string, TCMBroadcastMetadata>> _tcm_broadcast_times;
 
 	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
+	int _TCMRepeatedlyBroadcastSleep = 100;
 	
 };
 std::mutex _cfgLock;

@@ -229,6 +229,19 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	container.load<XML>(ss);
 	tsm5message.set_contents(container.get_storage().get_tree());
 	tsm5ENC.encode_j2735_message(tsm5message);
+	string enc = tsm5ENC.get_encoding();
+	std::unique_ptr<tsm5EncodedMessage> msg;
+	msg.reset();
+	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+	msg->refresh_timestamp();
+	msg->set_payload(tsm5ENC.get_payload_str());
+	msg->set_encoding(enc);
+	msg->set_flags(IvpMsgFlags_RouteDSRC);
+	msg->addDsrcMetadata(172, 0x8003);
+	msg->refresh_timestamp();
+	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+	BroadcastMessage(*rMsg);		
+	PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 
 	//Get TCM id
 	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
@@ -252,7 +265,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 { 	
 	while(true)
 	{			
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(_TCMRepeatedlyBroadcastSleep));
 		if(_plugin->state == IvpPluginState_error)
 		{
 			break;
@@ -261,7 +274,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 		{
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 
-			std::unordered_set<std::string> expired_req_ids;
+			std::set<string> expired_req_ids;
 
 			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
 			{
@@ -273,10 +286,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				}
 				else if ( (cur_time - _tcm_broadcast_starting_time->at(tcmv01_req_id_hex)) > _TCMRepeatedlyBroadcastTimeOut )
 				{
-
-
 					expired_req_ids.insert(tcmv01_req_id_hex);
-
 					continue;
 				}
 
@@ -299,36 +309,32 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				msg->refresh_timestamp();
 				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 				BroadcastMessage(*rMsg);		
-				PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+				PLOG(logINFO) << " CARMACloud Plugin :: Repeatedly Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			} //END TCMs LOOP
 
 			// For any ids which have expired clean up the maps
 			for (auto tcmv01_req_id_hex : expired_req_ids) {
-
 				//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
+				tmx::messages::TmxEventLogMessage event_log_msg;
+				event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+				event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
+				PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
+				this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+				
+				//send negative ack to carma-cloud
+				stringstream sss;
+				sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
+						<< "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
+						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
+						<< "</description></TrafficControlAcknowledgement>"; 
+				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
+				CloudSend(sss.str(),url, base_ack, method);		
 
-
-					tmx::messages::TmxEventLogMessage event_log_msg;
-					event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-					event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
-					PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
-					this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
-
-					//send negative ack to carma-cloud
-					stringstream sss;
-					sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
-						  << "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
-						  << "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
-						  << "</description></TrafficControlAcknowledgement>"; 
-					PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-					CloudSend(sss.str(),url, base_ack, method);		
-
-					_not_ACK_TCMs->erase(tcmv01_req_id_hex);
-					//If time out, stop tracking the starting time of the TCMs being broadcast so far
-					_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
-					//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
-					_tcm_broadcast_times->erase(tcmv01_req_id_hex);			
-
+				_not_ACK_TCMs->erase(tcmv01_req_id_hex);
+				//If time out, stop tracking the starting time of the TCMs being broadcast so far
+				_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
+				//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
+				_tcm_broadcast_times->erase(tcmv01_req_id_hex);		
 			}
 		}
 		else
@@ -354,7 +360,7 @@ bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, c
 			is_tcm_hex_found = true;
 			if (times >= _TCMRepeatedlyBroadCastTotalTimes)
 			{						
-				PLOG(logDEBUG) << "SKIP broadcasting as TCMs reqid = " << tcmv01_req_id_hex<< " has been broadcast " << times  << " times." << std::endl;
+				PLOG(logDEBUG) << "SKIP broadcasting as TCMs reqid = " << tcmv01_req_id_hex<< " has been repeatedly broadcast " << times  << " times." << std::endl;
 				//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
 				is_skip_cur_tcm = true;
 			}
@@ -363,7 +369,7 @@ bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, c
 				//update the number of times a TCM being broadcast within time out period
 				times += 1; //Increase by 1 for every iteration
 				itr->second.num_of_times = times;
-				PLOG(logDEBUG) << " TCMs reqid = " << tcmv01_req_id_hex<< " has been broadcast " << times  << " times." << std::endl;
+				PLOG(logDEBUG) << " TCMs reqid = " << tcmv01_req_id_hex<< " repeatedly broadcast " << times  << " times." << std::endl;
 			}
 		}
 	}	
@@ -428,6 +434,7 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<uint16_t>("TCMRepeatedlyBroadcastTimeOut",_TCMRepeatedlyBroadcastTimeOut);	
 	GetConfigValue<string>("TCMNOAcknowledgementDescription", _TCMNOAcknowledgementDescription);
 	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
+	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
 	
 }
 
