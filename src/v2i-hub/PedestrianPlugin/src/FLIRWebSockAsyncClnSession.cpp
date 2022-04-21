@@ -5,8 +5,6 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/asio/buffers_iterator.hpp>
 
-namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
-
 //using namespace tmx::messages;
 using namespace tmx::utils;
 using namespace std;
@@ -176,17 +174,66 @@ namespace PedestrianPlugin
         {
             std::string time = pr.get_child("time").get_value<string>(); //TODO: convert to timestamp
             std::string type =  pr.get_child("type").get_value<string>();
+
+            PLOG(logDEBUG) << "Received " << type << " data at time: " << time << std::endl;
+
             if (type.compare("PedestrianPresenceTracking") == 0)
             {
                 try
-                {
-                    ptree track = pr.get_child("track");
-                    int angle = track.get_child("angle").get_value<int>(); //TODO: convert
-                    int id = track.get_child("iD").get_value<int>(); 
-                    double latitude = track.get_child("latitude").get_value<double>();
-                    double longitude = track.get_child("longitude").get_value<double>();
-                    float speed = track.get_child("longitude").get_value<float>();
-                    //TODO: print to PSM xml and call BroadcastPsm
+                { 
+
+                    for (auto it: pr.get_child("track")) 
+                    {
+                        float angle = 0.0;
+                        double lat = 0.0;
+                        double lon = 0.0;
+                        float speed = 0.0;
+                        int id = 0;
+                        //if there is no angle data for the pedestrian, do not use
+                        //if there is angle data, begin extracting the necessary PSM data
+                        if (!it.second.get_child("angle").data().empty())
+                        {
+                            angle = std::stof(it.second.get_child("angle").data());
+                            PLOG(logDEBUG) << "ANGLE:  " << angle << std::endl;
+                        }                        
+                        if (!it.second.get_child("iD").data().empty())
+                        {
+                            id = std::stoi(it.second.get_child("iD").data()); 
+                            PLOG(logDEBUG) << "iD:  " << id << std::endl;
+                        }
+                        if (!it.second.get_child("latitude").data().empty())
+                        {
+                            lat = std::stod(it.second.get_child("latitude").data()); 
+                            PLOG(logDEBUG) << "latitude:  " << lat << std::endl;
+                        }
+                        if (!it.second.get_child("longitude").data().empty())
+                        {
+                            lon = std::stod(it.second.get_child("longitude").data()); 
+                            PLOG(logDEBUG) << "longitude:  " << lon << std::endl;
+                        }
+                        if (!it.second.get_child("speed").data().empty())
+                        {
+                            speed = std::stof(it.second.get_child("speed").data());  
+                            PLOG(logDEBUG) << "speed:  " << speed << std::endl;
+                        }
+                        if (!it.second.get_child("x").data().empty())
+                        {
+                            double x_coord = std::stod(it.second.get_child("x").data()); 
+                        }
+                        if (!it.second.get_child("y").data().empty())
+                        {
+                            double y_coord = std::stod(it.second.get_child("y").data()); 
+                        }
+
+                        //constructing xml to send to BroadcastPSM function
+                        char xml_str[10000]; 
+                        sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
+                        "<secMark>0</secMark><msgCnt>0</msgCnt><id>%i</id><position><lat>%lf</lat><long>%lf</long></position><accuracy>"
+                        "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
+                        "<speed>%lf</speed><heading>%lf</heading></PersonalSafetyMessage>", id, lat, lon, speed, angle);
+
+                        PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << xml_str <<endl;                        
+                    }
                 }
                 catch(const ptree_error &e)
                 {
