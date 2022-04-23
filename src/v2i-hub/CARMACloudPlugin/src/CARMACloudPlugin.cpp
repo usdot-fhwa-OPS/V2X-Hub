@@ -162,14 +162,14 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		tmx::messages::TmxEventLogMessage event_log_msg;
 
 		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CMV. 1 mapping to acknowledged by CMV
-		std::transform(acknnowledgement_str.begin(), acknnowledgement_str.end(), acknnowledgement_str.begin(), ::tolower );	
-		acknnowledgement_str.find("1") != std::string::npos ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
+		int ack = std::stoi(acknnowledgement_str);
+		ack == acknowledgement_status::acknowledgement_status__acknowledged ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
 		event_log_msg.set_description(mo_strategy + ": Traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
 		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
 		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
 
-		//send negative ack to carma-cloud if not receiving any ack from CMV. acknowledgement_status__acknowledged	= 1	
-		if(acknnowledgement_str.find("1") == std::string::npos )
+		//Only send negative ack to carma-cloud if receiving any acks from CMV.
+		if(ack != acknowledgement_status::acknowledgement_status__acknowledged  )
 		{			
 			stringstream sss;
 			sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << traffic_control_id
@@ -337,7 +337,7 @@ void CARMACloudPlugin::Broadcast_TCMs()
 				//send negative ack to carma-cloud
 				stringstream sss;
 				sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
-						<< "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__not_acknowledged
+						<< "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" <<  acknowledgement_status::acknowledgement_status__not_acknowledged
 						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
 						<< "</description></TrafficControlAcknowledgement>"; 
 				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
