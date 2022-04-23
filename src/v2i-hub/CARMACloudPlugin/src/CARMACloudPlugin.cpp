@@ -139,10 +139,23 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		string CMV_id = ss.str();
 
 		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-		//The traffic control id should match with the TCM id per CMV (CARMA vehicle).	
-		if(_not_ACK_TCMs->erase(traffic_control_id) <= 0)
+		auto matching_TCMS = _not_ACK_TCMs->equal_range(traffic_control_id);
+		bool is_tcm_removed = false;	
+		for(auto itr = matching_TCMS.first; itr != matching_TCMS.second; itr++)
+		{			
+			//The traffic control id should match with the TCM id per CMV (CARMA vehicle) and combines with msgnum to uniquely identify each TCM.
+			if(itr->second.decode_j2735_message().get_j2735_data()->body.choice.tcmV01.msgnum == stol(msgnum))
+			{				
+				//Remove a single TCM identified by reqid (traffic control id) and msgnum.
+				_not_ACK_TCMs->erase(itr);
+				PLOG(logINFO) << "Acknowledgement received, traffic_control_id =" << traffic_control_id << ", msgnum = "<< msgnum << " removed from TCM map." << std::endl;
+				is_tcm_removed = true;
+				break;
+			}
+		}
+		if(!is_tcm_removed)
 		{
-			PLOG(logERROR) << "Acknowledgement received, but traffic_control_id =" << traffic_control_id << " Not Found in TCM map." << std::endl;
+			PLOG(logERROR) << "Acknowledgement received, but traffic_control_id =" << traffic_control_id << ", msgnum = "<< msgnum << " NOT found in TCM map." << std::endl;
 		}
 		
 		//Create an event log object for both positive and negative ACK (ackownledgement), and broadcast the event log
