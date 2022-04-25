@@ -242,18 +242,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	container.load<XML>(ss);
 	tsm5message.set_contents(container.get_storage().get_tree());
 	tsm5ENC.encode_j2735_message(tsm5message);
-	string enc = tsm5ENC.get_encoding();
-	std::unique_ptr<tsm5EncodedMessage> msg;
-	msg.reset();
-	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
-	msg->refresh_timestamp();
-	msg->set_payload(tsm5ENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8003);
-	msg->refresh_timestamp();
-	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	BroadcastMessage(*rMsg);		
+	BroadcastTCM(tsm5ENC);
 	PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 
 	//Get TCM id
@@ -303,25 +292,14 @@ void CARMACloudPlugin::Broadcast_TCMs()
 					continue;
 				}
 
-				std::unique_ptr<tsm5EncodedMessage> msg;
-				msg.reset();
-				msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+				
 				tsm5EncodedMessage tsm5ENC = itr->second;
 				string tcm_hex_payload = tsm5ENC.get_payload_str();
 				if(IsSkipBroadcastCurTCM(tcmv01_req_id_hex, tcm_hex_payload))
 				{
 					continue;
 				}
-				//Broadcast TCM
-				string enc = tsm5ENC.get_encoding();
-				msg->refresh_timestamp();
-				msg->set_payload(tsm5ENC.get_payload_str());
-				msg->set_encoding(enc);
-				msg->set_flags(IvpMsgFlags_RouteDSRC);
-				msg->addDsrcMetadata(172, 0x8003);
-				msg->refresh_timestamp();
-				routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-				BroadcastMessage(*rMsg);		
+				BroadcastTCM(tsm5ENC);
 				PLOG(logINFO) << " CARMACloud Plugin :: Repeatedly Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 			} //END TCMs LOOP
 
@@ -357,6 +335,22 @@ void CARMACloudPlugin::Broadcast_TCMs()
 			_tcm_broadcast_starting_time->clear();
 		}
 	}
+}
+
+void CARMACloudPlugin::BroadcastTCM(tsm5EncodedMessage& tsm5ENC) {
+	//Broadcast TCM
+	string enc = tsm5ENC.get_encoding();
+	std::unique_ptr<tsm5EncodedMessage> msg;
+	msg.reset();
+	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+	msg->refresh_timestamp();
+	msg->set_payload(tsm5ENC.get_payload_str());
+	msg->set_encoding(enc);
+	msg->set_flags(IvpMsgFlags_RouteDSRC);
+	msg->addDsrcMetadata(172, 0x8003);
+	msg->refresh_timestamp();
+	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+	BroadcastMessage(*rMsg);				
 }
 
 bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const

@@ -150,6 +150,11 @@ protected:
 	 * ***/
 	void Broadcast_TCMs();
 	/***
+	 * @biref: Add DSRC metadata for TCM and broadcast TCM
+	 * @param: Encoded TCM to broadcast
+	 ***/
+	void BroadcastTCM(tsm5EncodedMessage& tsm5ENC);
+	/***
 	 * @brief: Determin if stop broadcasting the current TCM
 	 * @param: std::string of decoded TCM request id
 	 * @param: key string TCM hex payload
