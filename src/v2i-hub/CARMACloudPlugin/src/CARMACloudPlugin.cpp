@@ -34,7 +34,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
 	_tcm_broadcast_times = std::make_shared<std::multimap<string, TCMBroadcastMetadata>>();
 	_tcm_broadcast_starting_time = std::make_shared<std::map<string, std::time_t>>();
-	std::thread Broadcast_t(&CARMACloudPlugin::Broadcast_TCMs, this);
+	std::thread Broadcast_t(&CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM, this);
 	Broadcast_t.detach();
 
 }
@@ -263,7 +263,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	}	
 }
 
-void CARMACloudPlugin::Broadcast_TCMs()
+void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 { 	
 	while(true)
 	{			

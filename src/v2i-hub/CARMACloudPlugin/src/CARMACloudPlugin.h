@@ -148,7 +148,7 @@ protected:
 	 * @brief: Loop through the received TCMs and broadcast them for the configured duration.
 	 * If it timed out, it would remove the TCMs from the list, and stop broadcasting them.
 	 * ***/
-	void Broadcast_TCMs();
+	void TCMAckCheckAndRebroadcastTCM();
 	/***
 	 * @biref: Add DSRC metadata for TCM and broadcast TCM
 	 * @param: Encoded TCM to broadcast
