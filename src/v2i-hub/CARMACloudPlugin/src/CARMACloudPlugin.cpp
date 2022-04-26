@@ -144,7 +144,15 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 		for(auto itr = matching_TCMS.first; itr != matching_TCMS.second; itr++)
 		{			
 			//The traffic control id should match with the TCM id per CMV (CARMA vehicle) and combines with msgnum to uniquely identify each TCM.
-			if(itr->second.decode_j2735_message().get_j2735_data()->body.choice.tcmV01.msgnum == stol(msgnum))
+			tsm5EncodedMessage msg = itr->second;
+			tsm5Message decoded_tsm5_msg = msg.decode_j2735_message();
+			std::shared_ptr<TestMessage05> msg_j2735_data = decoded_tsm5_msg.get_j2735_data();
+			if (msg_j2735_data == NULL) {
+				PLOG(logERROR) << "get_j2735_data() on decoded j2735 returned NULL." << std::endl;
+				break;
+			}
+
+			if(msg_j2735_data->body.choice.tcmV01.msgnum == stol(msgnum))
 			{				
 				//Remove a single TCM identified by reqid (traffic control id) and msgnum.
 				_not_ACK_TCMs->erase(itr);
@@ -278,7 +286,7 @@ void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 
 			std::set<string> expired_req_ids;
 
-			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); ++itr )
+			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); itr++ )
 			{
 				string tcmv01_req_id_hex = itr->first;	
 				auto cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();				
