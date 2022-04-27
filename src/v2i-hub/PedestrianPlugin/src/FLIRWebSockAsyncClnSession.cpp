@@ -17,12 +17,15 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::run(
         char const* host,
-        char const* port)
+        char const* port,
+        float cameraRotation)
     {
         
         PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::run " << std::endl;
 	    // Save these for later
         host_ = host;
+        cameraRotation_ = cameraRotation;
+
         PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << std::endl;       
 
         // Look up the domain name
@@ -160,6 +163,19 @@ namespace PedestrianPlugin
         //Received:  {"messageType": "Subscription", "subscription": {"returnValue": "OK", "type": "Data"}}
 
         std::string messageType = pr.get_child("messageType").get_value<string>();
+        std::string time = "";
+        std::string type = "";
+        float angle = 0.0;
+        float alpha = 0.0;
+        double lat = 0.0;
+        double lon = 0.0;
+        float speed = 0.0;
+        int id = 0;
+        double x_coord = 0.0;
+        double y_coord = 0.0;
+        std::string timeString = "";
+        int dSecond = 0.0;
+
         if (messageType.compare("Subscription") == 0)
         {
             std::string subscrStatus = pr.get_child("subscription").get_child("returnValue").get_value<string>();
@@ -172,67 +188,88 @@ namespace PedestrianPlugin
         //"longitude": "-77.14920953", "speed": "1.41873741", "x": "0.09458912", "y": "14.80903757"}], "type": "PedestrianPresenceTracking"}
         else if (messageType.compare("Data") == 0)
         {
-            std::string time = pr.get_child("time").get_value<string>(); //TODO: convert to timestamp
-            std::string type =  pr.get_child("type").get_value<string>();
+            time = pr.get_child("time").get_value<string>(); 
+            type =  pr.get_child("type").get_value<string>();
 
-            PLOG(logDEBUG) << "Received " << type << " data at time: " << time << std::endl;
+            PLOG(logINFO) << "Received " << type << " data at time: " << time << std::endl;
 
             if (type.compare("PedestrianPresenceTracking") == 0)
             {
                 try
-                { 
-
+                {
                     for (auto it: pr.get_child("track")) 
-                    {
-                        float angle = 0.0;
-                        double lat = 0.0;
-                        double lon = 0.0;
-                        float speed = 0.0;
-                        int id = 0;
-                        //if there is no angle data for the pedestrian, do not use
-                        //if there is angle data, begin extracting the necessary PSM data
+                    {                        
+
                         if (!it.second.get_child("angle").data().empty())
                         {
                             angle = std::stof(it.second.get_child("angle").data());
-                            PLOG(logDEBUG) << "ANGLE:  " << angle << std::endl;
+                            //convert camera reference frame angle
+                            alpha = cameraRotation_ - angle - 270;
+
+                            while (alpha < 0)
+                            {
+                                alpha = 360 + alpha;
+                            }
+                            PLOG(logINFO) << "covnerted ped angle:  " << alpha << std::endl;
                         }                        
                         if (!it.second.get_child("iD").data().empty())
                         {
                             id = std::stoi(it.second.get_child("iD").data()); 
-                            PLOG(logDEBUG) << "iD:  " << id << std::endl;
+                            PLOG(logINFO) << "ped iD:  " << id << std::endl;
                         }
                         if (!it.second.get_child("latitude").data().empty())
                         {
-                            lat = std::stod(it.second.get_child("latitude").data()); 
-                            PLOG(logDEBUG) << "latitude:  " << lat << std::endl;
+                            //converting lat/lon to J2735 lat/lon format
+                            lat = std::stod(it.second.get_child("latitude").data()) * 10000000; 
+                            PLOG(logINFO) << "ped latitude:  " << lat << std::endl;
                         }
                         if (!it.second.get_child("longitude").data().empty())
                         {
-                            lon = std::stod(it.second.get_child("longitude").data()); 
-                            PLOG(logDEBUG) << "longitude:  " << lon << std::endl;
+                            //converting lat/lon to J2735 lat/lon format
+                            lon = std::stod(it.second.get_child("longitude").data()) * 10000000; 
+                            PLOG(logINFO) << "ped longitude:  " << lon << std::endl;
                         }
                         if (!it.second.get_child("speed").data().empty())
                         {
-                            speed = std::stof(it.second.get_child("speed").data());  
-                            PLOG(logDEBUG) << "speed:  " << speed << std::endl;
+                            //speed from the FLIR camera is reported in m/s, need to convert to units of 0.02 m/s
+                            speed = std::stof(it.second.get_child("speed").data()) / 0.02;  
+                            PLOG(logINFO) << "ped speed:  " << speed << std::endl;
                         }
                         if (!it.second.get_child("x").data().empty())
                         {
-                            double x_coord = std::stod(it.second.get_child("x").data()); 
+                            x_coord = std::stod(it.second.get_child("x").data()); 
                         }
                         if (!it.second.get_child("y").data().empty())
                         {
-                            double y_coord = std::stod(it.second.get_child("y").data()); 
+                            y_coord = std::stod(it.second.get_child("y").data()); 
+                        }
+                        //need to parse out seconds from datetime string
+                        if (!it.second.get_child("time").data().empty())
+                        {
+                            timeString = it.second.get_child("time").data(); 
+
+                            std::string delimiter1 = ".";
+                            std::string delimiter2 = "-";
+
+                            std::string sec = timeString.substr(timeString.find(delimiter1)+1, timeString.find(delimiter2)-1);
+                            sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
+
+                            dSecond = std::stoi(sec) * 1000;
                         }
 
                         //constructing xml to send to BroadcastPSM function
-                        char xml_str[10000]; 
-                        sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
-                        "<secMark>0</secMark><msgCnt>0</msgCnt><id>%i</id><position><lat>%lf</lat><long>%lf</long></position><accuracy>"
+                        char psm_xml_char[10000]; 
+                        sprintf(psm_xml_char,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
+                        "<secMark>%i</secMark><msgCnt>0</msgCnt><id>%i</id><position><lat>%lf</lat><long>%lf</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
-                        "<speed>%lf</speed><heading>%lf</heading></PersonalSafetyMessage>", id, lat, lon, speed, angle);
+                        "<speed>%lf</speed><heading>%lf</heading></PersonalSafetyMessage>", dSecond, id, lat, lon, speed, alpha);
 
-                        PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << xml_str <<endl;                        
+
+                        string psm_xml_str(psm_xml_char);
+                        psmxml = psm_xml_str;
+                        
+                        PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
+
                     }
                 }
                 catch(const ptree_error &e)
@@ -270,4 +307,11 @@ namespace PedestrianPlugin
         // The make_printable() function helps print a ConstBufferSequence
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
+
+    //returns the variable containing the psm xml 
+    string FLIRWebSockAsyncClnSession::getPSMXML()
+    {
+        return psmxml;
+    }
+
 }

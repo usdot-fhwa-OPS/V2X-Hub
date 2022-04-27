@@ -28,6 +28,9 @@ namespace PedestrianPlugin
         std::string host_;
         //TODO: move this to manifest.json
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
+        //TODO: move this to manifest.json
+        float cameraRotation_;
+        std::string psmxml = "";
 
     public:
 
@@ -44,14 +47,15 @@ namespace PedestrianPlugin
             : resolver_(net::make_strand(ioc))
             , ws_(net::make_strand(ioc))
         {
-            //auto buf = boost::asio::dynamic_buffer(buffer_);
+
         };
 
         // Start the asynchronous operation
         void
         run(
             char const* host,
-            char const* port);
+            char const* port,
+            float cameraRotation);
         
 
         void
@@ -81,7 +85,10 @@ namespace PedestrianPlugin
         void
         on_close(beast::error_code ec);
 
-        
+        std::string getPSMXML();
+
+        std::shared_ptr<FLIRWebSockAsyncClnSession> getptr();
         
     };
 };
+

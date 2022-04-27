@@ -5,7 +5,6 @@
 // Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
-
 #include <string.h>
 
 #include "PluginClient.h"
@@ -70,7 +69,7 @@ public:
 	std::string webSocketIP;
 	std::string webSocketURLExt;
 	std::string dataprovider;
-	
+	float cameraRotation;
 
 
 protected:
@@ -105,3 +104,4 @@ private:
 std::mutex _cfgLock;
 
 };
+

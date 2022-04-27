@@ -37,7 +37,8 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	GetConfigValue<string>("DataProvider",dataprovider);
 	GetConfigValue<string>("WebSocketIP",webSocketIP);
 	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
-	
+	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
+
 	
 	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
 	
@@ -98,14 +99,33 @@ int PedestrianPlugin::StartWebSocket()
 	// The io_context is required for all I/O
     net::io_context ioc;
 
+	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
+
     // Launch the asynchronous operation
-    std::make_shared<FLIRWebSockAsyncClnSession>(ioc)->run(webSocketIP.c_str(), webSocketURLExt.c_str());
+	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation);
 
     // Run the I/O service. The call will return when
     // the socket is closed.
     ioc.run();
 
 	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;
+
+
+	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
+	std::string lastGeneratedXML = flirSession->getPSMXML();
+
+	while (_plugin->state != IvpPluginState_error)
+	{
+		std::string currentXML = flirSession->getPSMXML();
+
+		if (currentXML != lastGeneratedXML)
+		{
+			BroadcastPsm(const_cast<char*>(currentXML.c_str()));
+			lastGeneratedXML = currentXML;
+
+			PLOG(logINFO) << "Broadcasting new CP PSM!" << std::endl;
+		}
+	}
 
 	return EXIT_SUCCESS;
 }
@@ -158,7 +178,8 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<string>("DataProvider", dataprovider);
-	
+	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
+
 
 }
 

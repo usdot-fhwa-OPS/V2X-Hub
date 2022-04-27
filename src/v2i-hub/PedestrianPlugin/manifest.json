@@ -48,6 +48,11 @@
 			"key":"WebSocketURLExt",
 			"default":"80",
 			"description":"Extension/port for FLIR camera subscription"
+		},
+		{
+			"key":"FLIRCameraRotation",
+			"default":"16.13",
+			"description":"Measured camera rotation used for heading conversion"
 		}
 
 
