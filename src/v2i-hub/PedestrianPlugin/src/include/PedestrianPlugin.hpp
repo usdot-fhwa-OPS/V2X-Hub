@@ -70,7 +70,7 @@ public:
 	std::string webSocketURLExt;
 	std::string dataprovider;
 	float cameraRotation;
-
+	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
 
 protected:
 	void UpdateConfigSettings();
@@ -92,6 +92,8 @@ protected:
 	void OnWebSocketConnected();
 	void OnWebSocketDataReceived(QString message);
 	void OnWebSocketClosed();
+	
+	int checkXML();
 
 
 

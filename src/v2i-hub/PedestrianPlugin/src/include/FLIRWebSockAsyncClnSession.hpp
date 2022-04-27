@@ -87,8 +87,7 @@ namespace PedestrianPlugin
 
         std::string getPSMXML();
 
-        std::shared_ptr<FLIRWebSockAsyncClnSession> getptr();
-        
+        int* timeStringParser(std::string dateTimeStr);        
     };
 };
 

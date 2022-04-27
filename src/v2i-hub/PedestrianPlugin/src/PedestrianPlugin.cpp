@@ -51,8 +51,14 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 		{
 			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
 			PLOG(logDEBUG) << "Thread started!!: " << std::endl;
-
+			
 			webthread.detach(); // wait for the thread to finish
+
+			std::thread xmlThread(&PedestrianPlugin::checkXML,this);
+			PLOG(logDEBUG) << "XML Thread started!!: " << std::endl;
+			
+			xmlThread.detach(); // wait for the thread to finish
+
 		}
 		catch(const std::exception& e)
 		{
@@ -99,36 +105,48 @@ int PedestrianPlugin::StartWebSocket()
 	// The io_context is required for all I/O
     net::io_context ioc;
 
-	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
+	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
-	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation);
+	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation);	
+
+	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;	
 
     // Run the I/O service. The call will return when
     // the socket is closed.
     ioc.run();
 
-	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;
-
-
-	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
-	std::string lastGeneratedXML = flirSession->getPSMXML();
-
-	while (_plugin->state != IvpPluginState_error)
-	{
-		std::string currentXML = flirSession->getPSMXML();
-
-		if (currentXML != lastGeneratedXML)
-		{
-			BroadcastPsm(const_cast<char*>(currentXML.c_str()));
-			lastGeneratedXML = currentXML;
-
-			PLOG(logINFO) << "Broadcasting new CP PSM!" << std::endl;
-		}
-	}
-
 	return EXIT_SUCCESS;
 }
+
+int PedestrianPlugin::checkXML()
+{
+	std::string lastGeneratedXML = "";
+
+	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
+	while (true)
+	{
+		if (flirSession == NULL)
+		{
+			PLOG(logDEBUG) << "flir session not yet initialized: " << std::endl;
+		}
+		else
+		{
+			std::string currentXML = flirSession->getPSMXML();
+
+			if (currentXML.compare(lastGeneratedXML) != 0)
+			{
+				BroadcastPsm(const_cast<char*>(currentXML.c_str()));
+				lastGeneratedXML = currentXML;
+
+				PLOG(logINFO) << "Broadcasting new CP PSM!" << std::endl;
+			}
+		}
+		
+	}	
+	return EXIT_SUCCESS;
+}
+
 int PedestrianPlugin::StartWebService()
 {
 	//Web services 
@@ -223,39 +241,43 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
 	tmx::message_container_type container;
-	std::unique_ptr<PsmEncodedMessage> msg;
+	std::unique_ptr<PsmEncodedMessage> msg;	
 
+	try
+	{
+		std::stringstream ss;
+		ss << psmJson;
 
-	std::stringstream ss;
-	ss << psmJson;
+		container.load<XML>(ss);
+		psmmessage.set_contents(container.get_storage().get_tree());
 
-	container.load<XML>(ss);
-	psmmessage.set_contents(container.get_storage().get_tree());
+		const std::string psmString(psmJson);
 
-	const std::string psmString(psmJson);
-	psmENC.encode_j2735_message(psmmessage);
+		psmENC.encode_j2735_message(psmmessage);
 
+		msg.reset();
+		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 
-	msg.reset();
-	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+		string enc = psmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(psmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(172, 0x8002);
+		msg->refresh_timestamp();
 
+		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
 
-	string enc = psmENC.get_encoding();
-	msg->refresh_timestamp();
-	msg->set_payload(psmENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8002);
-	msg->refresh_timestamp();
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+	}
+	catch(const std::exception& e)
+	{
+		PLOG(logDEBUG) << "Error: " << e.what() << " broadcasting PSM for xml: " << psmJson << std::endl;
 
+	}
 
-
-	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	BroadcastMessage(*rMsg);
-
-
-
-	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+	
 
 }
 

@@ -165,16 +165,15 @@ namespace PedestrianPlugin
         std::string messageType = pr.get_child("messageType").get_value<string>();
         std::string time = "";
         std::string type = "";
-        float angle = 0.0;
-        float alpha = 0.0;
-        double lat = 0.0;
-        double lon = 0.0;
-        float speed = 0.0;
+        float angle = 0;
+        float alpha = 0;
+        float lat = 0;
+        float lon = 0;
+        float speed = 0;
         int id = 0;
-        double x_coord = 0.0;
-        double y_coord = 0.0;
+        // long int x_coord = 0;
+        // long int y_coord = 0;
         std::string timeString = "";
-        int dSecond = 0.0;
 
         if (messageType.compare("Subscription") == 0)
         {
@@ -210,7 +209,10 @@ namespace PedestrianPlugin
                             {
                                 alpha = 360 + alpha;
                             }
-                            PLOG(logINFO) << "covnerted ped angle:  " << alpha << std::endl;
+
+                            //divide by 0.0125 for J2735 format
+                            alpha /= 0.0125;
+                            PLOG(logINFO) << "converted ped angle:  " << alpha << std::endl;
                         }                        
                         if (!it.second.get_child("iD").data().empty())
                         {
@@ -220,13 +222,13 @@ namespace PedestrianPlugin
                         if (!it.second.get_child("latitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            lat = std::stod(it.second.get_child("latitude").data()) * 10000000; 
+                            lat = std::stof(it.second.get_child("latitude").data()) * 10000000; 
                             PLOG(logINFO) << "ped latitude:  " << lat << std::endl;
                         }
                         if (!it.second.get_child("longitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            lon = std::stod(it.second.get_child("longitude").data()) * 10000000; 
+                            lon = std::stof(it.second.get_child("longitude").data()) * 10000000; 
                             PLOG(logINFO) << "ped longitude:  " << lon << std::endl;
                         }
                         if (!it.second.get_child("speed").data().empty())
@@ -235,34 +237,28 @@ namespace PedestrianPlugin
                             speed = std::stof(it.second.get_child("speed").data()) / 0.02;  
                             PLOG(logINFO) << "ped speed:  " << speed << std::endl;
                         }
-                        if (!it.second.get_child("x").data().empty())
-                        {
-                            x_coord = std::stod(it.second.get_child("x").data()); 
-                        }
-                        if (!it.second.get_child("y").data().empty())
-                        {
-                            y_coord = std::stod(it.second.get_child("y").data()); 
-                        }
+                        // if (!it.second.get_child("x").data().empty())
+                        // {
+                        //     x_coord = std::stod(it.second.get_child("x").data()); 
+                        // }
+                        // if (!it.second.get_child("y").data().empty())
+                        // {
+                        //     y_coord = std::stod(it.second.get_child("y").data()); 
+                        // }
                         //need to parse out seconds from datetime string
-                        if (!it.second.get_child("time").data().empty())
-                        {
-                            timeString = it.second.get_child("time").data(); 
-
-                            std::string delimiter1 = ".";
-                            std::string delimiter2 = "-";
-
-                            std::string sec = timeString.substr(timeString.find(delimiter1)+1, timeString.find(delimiter2)-1);
-                            sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
-
-                            dSecond = std::stoi(sec) * 1000;
-                        }
+                        int *dateTimeArr = timeStringParser(time);
 
                         //constructing xml to send to BroadcastPSM function
                         char psm_xml_char[10000]; 
                         sprintf(psm_xml_char,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
-                        "<secMark>%i</secMark><msgCnt>0</msgCnt><id>%i</id><position><lat>%lf</lat><long>%lf</long></position><accuracy>"
+                        "<secMark>%i</secMark><msgCnt>0</msgCnt><id>%i</id><position><lat>%.0f</lat><long>%.0f</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
-                        "<speed>%lf</speed><heading>%lf</heading></PersonalSafetyMessage>", dSecond, id, lat, lon, speed, alpha);
+                        "<speed>%.0f</speed><heading>%.0f</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
+                        "<day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime>"
+                        "<long>0</long><lat>0</lat></initialPosition><crumbData><latOffset>0</latOffset><lonOffset>0</lonOffset>"
+                        "<elevationOffset>0</elevationOffset><timeOffset>0</timeOffset></crumbData></pathHistory>"
+                        "</PersonalSafetyMessage>", dateTimeArr[5], id, lat, lon, speed, alpha, dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3],
+                        dateTimeArr[4], dateTimeArr[5]);
 
 
                         string psm_xml_str(psm_xml_char);
@@ -313,5 +309,52 @@ namespace PedestrianPlugin
     {
         return psmxml;
     }
+
+    int* FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
+    {
+        // string delimiter1 = ".";
+        // string delimiter2 = "-";
+
+        // string sec = dateTimeStr.substr(dateTimeStr.find(delimiter1)+1, dateTimeStr.find(delimiter2)-1);
+        // sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
+
+        // return std::stoi(sec);
+        std::string delimiter1 = ".";
+        std::string delimiter2 = "-";
+        std::string delimiter3 = "T";
+        std::string delimiter4 = ":";  
+
+        std::string year = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
+        year.erase(0, std::min(year.find_first_not_of('0'), year.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
+
+        std::string month = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
+        month.erase(0, std::min(month.find_first_not_of('0'), month.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
+
+        std::string day = dateTimeStr.substr(0, dateTimeStr.find(delimiter3));
+        day.erase(0, std::min(day.find_first_not_of('0'), day.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter3) + delimiter3.length());
+
+        std::string hour = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
+        hour.erase(0, std::min(hour.find_first_not_of('0'), hour.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
+
+        std::string mins = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
+        mins.erase(0, std::min(mins.find_first_not_of('0'), mins.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
+
+        std::string sec = dateTimeStr.substr(0, dateTimeStr.find(delimiter1));
+        sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
+        dateTimeStr.erase(0, dateTimeStr.find(delimiter1) + delimiter1.length());
+
+        std::string milliseconds = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
+        milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
+
+        static int parsedArr [6] = {std::stoi(year), std::stoi(month), std::stoi(day), std::stoi(hour), std::stoi(mins), std::stoi(milliseconds)};
+
+        return parsedArr;
+    }        
+
 
 }
