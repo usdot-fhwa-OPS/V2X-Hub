@@ -148,7 +148,12 @@ protected:
 	 * @brief: Loop through the received TCMs and broadcast them for the configured duration.
 	 * If it timed out, it would remove the TCMs from the list, and stop broadcasting them.
 	 * ***/
-	void Broadcast_TCMs();
+	void TCMAckCheckAndRebroadcastTCM();
+	/***
+	 * @biref: Add DSRC metadata for TCM and broadcast TCM
+	 * @param: Encoded TCM to broadcast
+	 ***/
+	void BroadcastTCM(tsm5EncodedMessage& tsm5ENC);
 	/***
 	 * @brief: Determin if stop broadcasting the current TCM
 	 * @param: std::string of decoded TCM request id
