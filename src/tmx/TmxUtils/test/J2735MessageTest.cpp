@@ -542,4 +542,16 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 }
 
 
+TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
+	string psm="<PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>109</secMark><msgCnt>0</msgCnt><id>115eadf0</id><position><lat>389549376</lat><long>-771491840</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>0</speed><heading>16010</heading><pathHistory><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>";
+	std::stringstream ss;
+	PsmMessage psmmessage;
+	PsmEncodedMessage psmENC;
+	tmx::message_container_type container;
+	ss<<psm;
+	container.load<XML>(ss);
+	psmmessage.set_contents(container.get_storage().get_tree());
+	psmENC.encode_j2735_message(psmmessage);
+	std::cout << psmENC.get_payload_str()<<std::endl;
+}
 }
