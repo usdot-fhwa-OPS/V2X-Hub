@@ -484,7 +484,7 @@ TEST_F(J2735MessageTest, EncodeMobilityResponse)
 
 TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
-	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) malloc( sizeof(BasicSafetyMessage_t) );
+	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
 
 	/**
 	 * Populate BSMcoreData 
