@@ -553,5 +553,6 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
 	std::cout << psmENC.get_payload_str()<<std::endl;
+	ASSERT_EQ(32,  psmENC.get_msgId());
 }
 }
