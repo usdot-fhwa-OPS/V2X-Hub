@@ -269,7 +269,7 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 		BroadcastMessage(*rMsg);
 
-		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str() << std::endl;
 	}
 	catch(const std::exception& e)
 	{
