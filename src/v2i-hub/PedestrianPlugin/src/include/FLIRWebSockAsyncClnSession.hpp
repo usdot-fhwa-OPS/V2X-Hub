@@ -31,7 +31,7 @@ namespace PedestrianPlugin
         //TODO: move this to manifest.json
         float cameraRotation_;
         std::string psmxml = "";
-
+        std::mutex _psmLock;
     public:
 
     // Report a failure
@@ -87,7 +87,7 @@ namespace PedestrianPlugin
 
         std::string getPSMXML();
 
-        int* timeStringParser(std::string dateTimeStr);        
+        std::vector<int> timeStringParser(std::string dateTimeStr);        
     };
 };
 

@@ -121,6 +121,7 @@ int PedestrianPlugin::StartWebSocket()
 
 int PedestrianPlugin::checkXML()
 {
+	//first xml will be empty string
 	std::string lastGeneratedXML = "";
 
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
@@ -136,10 +137,13 @@ int PedestrianPlugin::checkXML()
 
 			if (currentXML.compare(lastGeneratedXML) != 0)
 			{
+				PLOG(logINFO) << "Last xml: " << lastGeneratedXML.c_str() << std::endl;
+				PLOG(logINFO) << "Current xml: " << currentXML.c_str() << std::endl;
+
+				PLOG(logINFO) << "CheckXML: Broadcasting new CP PSM!" << std::endl;
+
 				BroadcastPsm(const_cast<char*>(currentXML.c_str()));
 				lastGeneratedXML = currentXML;
-
-				PLOG(logINFO) << "Broadcasting new CP PSM!" << std::endl;
 			}
 		}
 		

@@ -259,10 +259,11 @@ namespace PedestrianPlugin
                         // }
 
                         //need to parse out seconds from datetime string
-                        int* dateTimeArr = timeStringParser(time);                       
+                        std::vector<int> dateTimeArr = timeStringParser(time);                       
+                        PLOG(logINFO) << "Retrieved milliseconds: " << dateTimeArr[6] <<endl;
 
                         //constructing xml to send to BroadcastPSM function
-                        char psm_xml_char[10000]; 
+                        char psm_xml_char[100000]; 
                         sprintf(psm_xml_char,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
                         "<secMark>%i</secMark><msgCnt>0</msgCnt><id>%s</id><position><lat>%.0f</lat><long>%.0f</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
@@ -273,9 +274,11 @@ namespace PedestrianPlugin
                         "</PersonalSafetyMessage>", dateTimeArr[6], idResult.c_str(), lat, lon, speed, alpha, dateTimeArr[0], dateTimeArr[1], 
                         dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
 
-                        string psm_xml_str(psm_xml_char);
+                        std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
+
+		                std::lock_guard<mutex> lock(_psmLock);
                         psmxml = psm_xml_str;
-                        
+
                         PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
 
                     }
@@ -322,13 +325,13 @@ namespace PedestrianPlugin
         return psmxml;
     }
 
-    int* FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
+    vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
     {
         std::string delimiter1 = ".";
         std::string delimiter2 = "-";
         std::string delimiter3 = "T";
         std::string delimiter4 = ":";  
-        static int parsedArr[7];
+        std::vector<int> parsedArr;
 
         PLOG(logINFO) << "Datetime to parse: " << dateTimeStr.c_str() << std::endl;
 
@@ -366,13 +369,13 @@ namespace PedestrianPlugin
         milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
         PLOG(logINFO) << "Milliseconds: " << milliseconds.c_str() << std::endl;
 
-        parsedArr[0] = std::stoi(year);
-        parsedArr[1] = std::stoi(month);
-        parsedArr[2] = std::stoi(day);
-        parsedArr[3] = std::stoi(hour);
-        parsedArr[4] = std::stoi(mins);
-        parsedArr[5] = std::stoi(sec);
-        parsedArr[6] = std::stoi(milliseconds);
+        parsedArr.push_back(std::stoi(year));
+        parsedArr.push_back(std::stoi(month));
+        parsedArr.push_back(std::stoi(day));
+        parsedArr.push_back(std::stoi(hour));
+        parsedArr.push_back(std::stoi(mins));
+        parsedArr.push_back(std::stoi(sec));
+        parsedArr.push_back(std::stoi(milliseconds));      
 
         return parsedArr;
     }        
