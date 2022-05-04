@@ -5,7 +5,6 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/asio/buffers_iterator.hpp>
 
-//using namespace tmx::messages;
 using namespace tmx::utils;
 using namespace std;
 using namespace boost::property_tree;
@@ -25,6 +24,7 @@ namespace PedestrianPlugin
 	    // Save these for later
         host_ = host;
         cameraRotation_ = cameraRotation;
+        // urlExtension_ = urlExtension;
 
         PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << std::endl;       
 
@@ -86,7 +86,6 @@ namespace PedestrianPlugin
         // Update the host_ string. This will provide the value of the
         // Host HTTP header during the WebSocket handshake.
         // See https://tools.ietf.org/html/rfc7230#section-5.4
-        // host_ += ':' + std::to_string(ep.port());
 
         PLOG(logDEBUG) << "host_: " << host_ << std::endl;
 
@@ -170,9 +169,7 @@ namespace PedestrianPlugin
         float alpha = 0;
         float lat = 0;
         float lon = 0;
-        float speed = 0;
-        // long int x_coord = 0;
-        // long int y_coord = 0;
+        float speed = 0;        
         std::string timeString = "";
         int id = 0;
         std::string idResult;
@@ -214,7 +211,6 @@ namespace PedestrianPlugin
 
                             //divide by 0.0125 for J2735 format
                             alpha /= 0.0125;
-                            PLOG(logINFO) << "converted ped angle:  " << alpha << std::endl;
                         }                        
                         if (!it.second.get_child("iD").data().empty())
                         {
@@ -229,49 +225,48 @@ namespace PedestrianPlugin
                             int str_length_diff = 8 - idResult.length();
                             idResult.append(str_length_diff, '0');
 
-                            PLOG(logINFO) << "ped iD:  " << idResult << std::endl;
                         }
                         if (!it.second.get_child("latitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
                             lat = std::stof(it.second.get_child("latitude").data()) * 10000000; 
-                            PLOG(logINFO) << "ped latitude:  " << lat << std::endl;
                         }
                         if (!it.second.get_child("longitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
                             lon = std::stof(it.second.get_child("longitude").data()) * 10000000; 
-                            PLOG(logINFO) << "ped longitude:  " << lon << std::endl;
                         }
                         if (!it.second.get_child("speed").data().empty())
                         {
                             //speed from the FLIR camera is reported in m/s, need to convert to units of 0.02 m/s
                             speed = std::stof(it.second.get_child("speed").data()) / 0.02;  
-                            PLOG(logINFO) << "ped speed:  " << speed << std::endl;
-                        }
-                        // if (!it.second.get_child("x").data().empty())
-                        // {
-                        //     x_coord = std::stod(it.second.get_child("x").data()); 
-                        // }
-                        // if (!it.second.get_child("y").data().empty())
-                        // {
-                        //     y_coord = std::stod(it.second.get_child("y").data()); 
-                        // }
-
+                        }                       
                         //need to parse out seconds from datetime string
                         std::vector<int> dateTimeArr = timeStringParser(time);                       
-                        PLOG(logINFO) << "Retrieved milliseconds: " << dateTimeArr[6] <<endl;
+
+                        msgCount += 1;
+                        if (msgCount > 127){
+                            msgCount = 0;
+                        }
+
+                        PLOG(logINFO) << "Received FLIR camera data at: " << dateTimeArr[0] << "/" << dateTimeArr[1] << "/" << dateTimeArr[2]
+                        << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6] << std::endl;  
+
+                        PLOG(logINFO) << "Received FLIR camera data at for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
+                        ")" << ", travelling at speed: " << speed << ", with heading: " << alpha << " degrees" << std::endl;
+
+                        PLOG(logINFO) << "PSM message count: " << msgCount << std::endl;
 
                         //constructing xml to send to BroadcastPSM function
-                        char psm_xml_char[100000]; 
-                        sprintf(psm_xml_char,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
-                        "<secMark>%i</secMark><msgCnt>0</msgCnt><id>%s</id><position><lat>%.0f</lat><long>%.0f</long></position><accuracy>"
+                        char psm_xml_char[10000]; 
+                        snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
+                        "<secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%.0f</lat><long>%.0f</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
                         "<speed>%.0f</speed><heading>%.0f</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
                         "<day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime>"
                         "<long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset>"
                         "<lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory>"
-                        "</PersonalSafetyMessage>", dateTimeArr[6], idResult.c_str(), lat, lon, speed, alpha, dateTimeArr[0], dateTimeArr[1], 
+                        "</PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat, lon, speed, alpha, dateTimeArr[0], dateTimeArr[1], 
                         dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
 
                         std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
@@ -320,12 +315,12 @@ namespace PedestrianPlugin
     }
 
     //returns the variable containing the psm xml 
-    string FLIRWebSockAsyncClnSession::getPSMXML()
+    const string FLIRWebSockAsyncClnSession::getPSMXML()
     {
         return psmxml;
     }
 
-    vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
+    const vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
     {
         std::string delimiter1 = ".";
         std::string delimiter2 = "-";
@@ -333,41 +328,32 @@ namespace PedestrianPlugin
         std::string delimiter4 = ":";  
         std::vector<int> parsedArr;
 
-        PLOG(logINFO) << "Datetime to parse: " << dateTimeStr.c_str() << std::endl;
-
         std::string year = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
         year.erase(0, std::min(year.find_first_not_of('0'), year.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
-        PLOG(logINFO) << "Year: " << year.c_str() << std::endl;
 
         std::string month = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
         month.erase(0, std::min(month.find_first_not_of('0'), month.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
-        PLOG(logINFO) << "Month: " << month.c_str() << std::endl;
 
         std::string day = dateTimeStr.substr(0, dateTimeStr.find(delimiter3));
         day.erase(0, std::min(day.find_first_not_of('0'), day.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter3) + delimiter3.length());
-        PLOG(logINFO) << "Day: " << day.c_str() << std::endl;
 
         std::string hour = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
         hour.erase(0, std::min(hour.find_first_not_of('0'), hour.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
-        PLOG(logINFO) << "Hour: " << hour.c_str() << std::endl;
 
         std::string mins = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
         mins.erase(0, std::min(mins.find_first_not_of('0'), mins.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
-        PLOG(logINFO) << "Mins: " << mins.c_str() << std::endl;
 
         std::string sec = dateTimeStr.substr(0, dateTimeStr.find(delimiter1));
         sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
         dateTimeStr.erase(0, dateTimeStr.find(delimiter1) + delimiter1.length());
-        PLOG(logINFO) << "Sec: " << sec.c_str() << std::endl;
 
         std::string milliseconds = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
         milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
-        PLOG(logINFO) << "Milliseconds: " << milliseconds.c_str() << std::endl;
 
         parsedArr.push_back(std::stoi(year));
         parsedArr.push_back(std::stoi(month));

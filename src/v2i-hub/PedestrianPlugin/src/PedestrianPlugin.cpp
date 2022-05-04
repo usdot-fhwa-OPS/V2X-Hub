@@ -35,8 +35,8 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 	GetConfigValue<string>("IPAddress",webip);
 	GetConfigValue<uint16_t>("WebPort",webport);
 	GetConfigValue<string>("DataProvider",dataprovider);
-	GetConfigValue<string>("WebSocketIP",webSocketIP);
-	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
+	GetConfigValue<string>("WebSocketHost",webSocketIP);
+	GetConfigValue<string>("WebSocketPort",webSocketURLExt);
 	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
 
 	
@@ -127,7 +127,7 @@ int PedestrianPlugin::checkXML()
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
 	while (true)
 	{
-		if (flirSession == NULL)
+		if (flirSession == nullptr)
 		{
 			PLOG(logDEBUG) << "flir session not yet initialized: " << std::endl;
 		}
@@ -136,10 +136,7 @@ int PedestrianPlugin::checkXML()
 			std::string currentXML = flirSession->getPSMXML();
 
 			if (currentXML.compare(lastGeneratedXML) != 0)
-			{
-				PLOG(logINFO) << "Last xml: " << lastGeneratedXML.c_str() << std::endl;
-				PLOG(logINFO) << "Current xml: " << currentXML.c_str() << std::endl;
-
+			{				
 				PLOG(logINFO) << "CheckXML: Broadcasting new CP PSM!" << std::endl;
 
 				BroadcastPsm(const_cast<char*>(currentXML.c_str()));
@@ -197,6 +194,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<string>("WebSocketHost",webSocketIP);
 	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<string>("DataProvider", dataprovider);
@@ -277,7 +275,7 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 	}
 	catch(const std::exception& e)
 	{
-		PLOG(logDEBUG) << "Error: " << e.what() << " broadcasting PSM for xml: " << psmJson << std::endl;
+		PLOG(logWARNING) << "Error: " << e.what() << " broadcasting PSM for xml: " << psmJson << std::endl;
 
 	}
 

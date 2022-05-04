@@ -26,12 +26,12 @@ namespace PedestrianPlugin
         websocket::stream<beast::tcp_stream> ws_;
         beast::flat_buffer buffer_;
         std::string host_;
-        //TODO: move this to manifest.json
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
-        //TODO: move this to manifest.json
         float cameraRotation_;
+        // std::string urlExtension_;
         std::string psmxml = "";
         std::mutex _psmLock;
+        int msgCount = 0;
     public:
 
     // Report a failure
@@ -85,9 +85,9 @@ namespace PedestrianPlugin
         void
         on_close(beast::error_code ec);
 
-        std::string getPSMXML();
+        const std::string getPSMXML();
 
-        std::vector<int> timeStringParser(std::string dateTimeStr);        
+        const std::vector<int> timeStringParser(std::string dateTimeStr);        
     };
 };
 
