@@ -224,8 +224,6 @@ void PedestrianPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_messa
 {
 	static std::atomic<int> count {0};
 
-	PLOG(logINFO) << "New MAP: " << msg;
-
 	int mapCount = count;
 	SetStatus("ReceivedMaps", mapCount);
 }
