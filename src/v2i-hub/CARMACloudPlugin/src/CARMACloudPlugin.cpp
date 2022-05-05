@@ -363,6 +363,12 @@ void CARMACloudPlugin::BroadcastTCM(tsm5EncodedMessage& tsm5ENC) {
 
 bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const
 {
+	//Skip repeatedly broadcasting  
+	if(_TCMRepeatedlyBroadCastTotalTimes == 0)
+	{
+			return true;
+	}
+
 	bool is_skip_cur_tcm = false;
 	bool is_tcm_hex_found = false;
 	auto tcms_metadatas = _tcm_broadcast_times->equal_range(tcmv01_req_id_hex);

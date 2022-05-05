@@ -51,12 +51,12 @@
 		{
 			"key": "TCMRepeatedlyBroadcastSleep",
 			"default": "100",
-			"description": "The broadcast thread should sleep for number of milliseconds."
+			"description": "The repeatedly broadcast thread should sleep for number of milliseconds."
 		},
 		{
 			"key": "TCMRepeatedlyBroadCastTotalTimes",
 			"default": "1",
-			"description": "The number of times TCMs with the same request id should be broadcast within the time out period."
+			"description": "The number of times TCMs with the same request id should be repeatedly broadcast within the time out period."
 		},
 		{
 			"key": "TCMNOAcknowledgementDescription",
