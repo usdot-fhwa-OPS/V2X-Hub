@@ -1,5 +1,10 @@
 V2X-Hub Release Notes
 ----------------------------
+Version 7.2.2, released May 9th, 2022
+--------------------------------------------------------
+V2X Hub release 7.2.2 includes added Hotfix for CARMACloud Plugin to prevent repeated TCM broadcast and fix timeout bugs:
+- Issue 364: Fix remove TCMs with the same request ids as TCR if receiving a duplicated TCR request.Fix time out logic that cause segmentation fault. Add config parameter for the thread sleep for.Add configuration parameter and logic to control the number of TCMs being broadcast.
+----------------------------
 Version 7.2.1, released April 15th, 2022
 --------------------------------------------------------
 V2X Hub release 7.2.1 includes added functionality for the CARMACloud Plugin to support a hot fix for positive acknowledgment:
