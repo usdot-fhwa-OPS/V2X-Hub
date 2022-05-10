@@ -167,8 +167,8 @@ namespace PedestrianPlugin
         std::string type = "";
         float angle = 0;
         float alpha = 0;
-        float lat = 0;
-        float lon = 0;
+        std::string lat = "";
+        std::string lon = "";
         float speed = 0;        
         std::string timeString = "";
         int id = 0;
@@ -229,12 +229,18 @@ namespace PedestrianPlugin
                         if (!it.second.get_child("latitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            lat = std::stof(it.second.get_child("latitude").data()) * 10000000; 
+                            // lat = std::stof(it.second.get_child("latitude").data()) * 10000000; 
+                            lat = it.second.get_child("latitude").data();
+                            lat.erase(std::remove(lat.begin(), lat.end(), '.'), lat.end());
+                            lat.pop_back();
                         }
                         if (!it.second.get_child("longitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            lon = std::stof(it.second.get_child("longitude").data()) * 10000000; 
+                            // lon = std::stof(it.second.get_child("longitude").data()) * 10000000; 
+                            lon = it.second.get_child("longitude").data();
+                            lon.erase(std::remove(lon.begin(), lon.end(), '.'), lon.end());
+                            lon.pop_back();
                         }
                         if (!it.second.get_child("speed").data().empty())
                         {
@@ -260,13 +266,13 @@ namespace PedestrianPlugin
                         //constructing xml to send to BroadcastPSM function
                         char psm_xml_char[10000]; 
                         snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
-                        "<secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%.0f</lat><long>%.0f</long></position><accuracy>"
+                        "<secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
                         "<speed>%.0f</speed><heading>%.0f</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
                         "<day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime>"
                         "<long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset>"
                         "<lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory>"
-                        "</PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat, lon, speed, alpha, dateTimeArr[0], dateTimeArr[1], 
+                        "</PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), speed, alpha, dateTimeArr[0], dateTimeArr[1], 
                         dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
 
                         std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
