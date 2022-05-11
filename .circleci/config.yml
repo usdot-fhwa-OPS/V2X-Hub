@@ -207,6 +207,40 @@ jobs:
           docker push usdotfhwaops/v2xhubarm:latest
           docker push usdotfhwaops/port-drayage-webservice_arm:latest
           docker push usdotfhwaops/php_arm:latest
+  automated_release :
+   machine:
+    image: ubuntu-2004:202201-02
+   steps:
+     - run: 
+        name: Docker Pull Release
+        # Pull all built images associated with github tag
+        command: |
+          docker pull usdotfhwaops/php:master
+          docker pull usdotfhwaops/port-drayage-webservice:master
+          docker pull usdotfhwaops/v2xhubamd:master
+          docker pull usdotfhwaops/php_arm:master
+          docker pull usdotfhwaops/port-drayage-webservice_arm:master
+          docker pull usdotfhwaops/v2xhubarm:master
+     - run:
+        name: Docker Tag Release
+        # Tag all pulled images with github tag name
+        command: | 
+          docker tag usdotfhwaops/php:master usdotfhwaops/php:${CIRCLE_TAG}
+          docker tag usdotfhwaops/port-drayage-webservice:master usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
+          docker tag usdotfhwaops/v2xhubamd:master usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
+          docker tag usdotfhwaops/php_arm:master usdotfhwaops/php_arm:${CIRCLE_TAG}
+          docker tag usdotfhwaops/port-drayage-webservice_arm:master usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_TAG}
+          docker tag usdotfhwaops/v2xhubarm:master usdotfhwaops/v2xhubarm:${CIRCLE_TAG}
+     - run:
+        name: Docker Push Release Tag
+        # Push all tagged images
+        command: |
+          docker push usdotfhwaops/php:${CIRCLE_TAG}
+          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
+          docker push usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
+          docker push usdotfhwaops/php_arm:${CIRCLE_TAG}
+          docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_TAG}
+          docker push usdotfhwaops/v2xhubarm:${CIRCLE_TAG}
 workflows:
   version: 2
   build:
@@ -233,5 +267,14 @@ workflows:
       - sonar-scanner_develop:
           requires:
             - docker_build_push_develop
+      - automated_release:
+          requires:
+            - docker_build_push
+            - arm_build_push
+          filters:
+            tags:
+              only: ^[\.0-9]*$
+            branches:
+              only: master
 
 
