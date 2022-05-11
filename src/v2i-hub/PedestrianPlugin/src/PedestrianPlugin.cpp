@@ -136,10 +136,7 @@ int PedestrianPlugin::checkXML()
 			std::string currentXML = flirSession->getPSMXML();
 
 			if (currentXML.compare(lastGeneratedXML) != 0)
-			{		
-				PLOG(logINFO) << "Last xml: " << lastGeneratedXML.c_str() << std::endl;
-				PLOG(logINFO) << "Current xml: " << currentXML.c_str() << std::endl;
-
+			{				
 				PLOG(logINFO) << "CheckXML: Broadcasting new CP PSM!" << std::endl;
 
 				BroadcastPsm(const_cast<char*>(currentXML.c_str()));

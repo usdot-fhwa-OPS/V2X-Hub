@@ -1,9 +1,4 @@
 #include "include/FLIRWebSockAsyncClnSession.hpp"
-#include <PluginLog.h>
-#include <TmxLog.h>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/asio/buffers_iterator.hpp>
 
 using namespace tmx::utils;
 using namespace std;
@@ -12,7 +7,6 @@ using namespace boost::property_tree;
 namespace PedestrianPlugin
 {
 
- // Start the asynchronous operation
     void
     FLIRWebSockAsyncClnSession::run(
         char const* host,
@@ -24,7 +18,6 @@ namespace PedestrianPlugin
 	    // Save these for later
         host_ = host;
         cameraRotation_ = cameraRotation;
-        // urlExtension_ = urlExtension;
 
         PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << std::endl;       
 
@@ -145,14 +138,14 @@ namespace PedestrianPlugin
         // parse the buffer
         std::stringstream ss; 
 	    ptree pr; 
-	    std:string text(beast::buffers_to_string(buffer_.data()));
+	    std::string text(beast::buffers_to_string(buffer_.data()));
         ss<<text; 
 
         PLOG(logDEBUG) << "Received:  " << text.c_str() << std::endl;
 
         try
         {
-	        read_json(ss, pr);
+	        pt::read_json(ss, pr);
         }
         catch(const ptree_error &e)
         {
@@ -229,7 +222,6 @@ namespace PedestrianPlugin
                         if (!it.second.get_child("latitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            // lat = std::stof(it.second.get_child("latitude").data()) * 10000000; 
                             lat = it.second.get_child("latitude").data();
                             lat.erase(std::remove(lat.begin(), lat.end(), '.'), lat.end());
                             lat.pop_back();
@@ -237,7 +229,6 @@ namespace PedestrianPlugin
                         if (!it.second.get_child("longitude").data().empty())
                         {
                             //converting lat/lon to J2735 lat/lon format
-                            // lon = std::stof(it.second.get_child("longitude").data()) * 10000000; 
                             lon = it.second.get_child("longitude").data();
                             lon.erase(std::remove(lon.begin(), lon.end(), '.'), lon.end());
                             lon.pop_back();
@@ -258,7 +249,7 @@ namespace PedestrianPlugin
                         PLOG(logINFO) << "Received FLIR camera data at: " << dateTimeArr[0] << "/" << dateTimeArr[1] << "/" << dateTimeArr[2]
                         << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6] << std::endl;  
 
-                        PLOG(logINFO) << "Received FLIR camera data at for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
+                        PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
                         ")" << ", travelling at speed: " << speed << ", with heading: " << alpha << " degrees" << std::endl;
 
                         PLOG(logINFO) << "PSM message count: " << msgCount << std::endl;
@@ -321,12 +312,12 @@ namespace PedestrianPlugin
     }
 
     //returns the variable containing the psm xml 
-    const string FLIRWebSockAsyncClnSession::getPSMXML()
+    string FLIRWebSockAsyncClnSession::getPSMXML() const
     {
         return psmxml;
     }
 
-    const vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr)
+    vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
     {
         std::string delimiter1 = ".";
         std::string delimiter2 = "-";
