@@ -5,7 +5,6 @@
 // Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
-
 #include <string.h>
 
 #include "PluginClient.h"
@@ -25,6 +24,7 @@
 #include <tmx/messages/auto_message.hpp>
 #include "PedestrianPluginWorker.hpp"
 
+#include "FLIRWebSockAsyncClnSession.hpp"
 
 
 #include <QCommandLineOption>
@@ -66,7 +66,11 @@ public:
 	int Main();
 	uint16_t webport;
 	std::string webip; 
-
+	std::string webSocketIP;
+	std::string webSocketURLExt;
+	std::string dataprovider;
+	float cameraRotation;
+	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
 
 protected:
 	void UpdateConfigSettings();
@@ -83,14 +87,23 @@ protected:
 	void PedestrianRequestHandler(QHttpEngine::Socket *socket);
 	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
 
+	int StartWebSocket();
+
+	void OnWebSocketConnected();
+	void OnWebSocketDataReceived(QString message);
+	void OnWebSocketClosed();
+	
+	int checkXML();
+
 
 
 private:
 	tmx::utils::UdpClient *_signSimClient = NULL;
 	J2735MessageFactory factory;
-
+	
 
 };
 std::mutex _cfgLock;
 
 };
+
