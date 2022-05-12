@@ -1,7 +1,7 @@
 {
 	"name":"Pedestrian",
 	"description":"Pedestrian plugin for the IVP system.",
-	"version":"5.0",
+	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/PedestrianPlugin",
 	"coreIpAddr":"127.0.0.1",
 	"corePort":24601,

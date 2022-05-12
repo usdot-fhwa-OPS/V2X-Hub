@@ -40,6 +40,15 @@ namespace PedestrianPlugin
         int msgCount = 0;
     public:
 
+    // Resolver and socket require an io_context
+    explicit     
+    FLIRWebSockAsyncClnSession(net::io_context& ioc)
+        : resolver_(net::make_strand(ioc))
+        , ws_(net::make_strand(ioc))
+    {
+
+    };
+
     /**
      * @brief Reports a failure with any of the websocket functions below
      * 
@@ -47,105 +56,93 @@ namespace PedestrianPlugin
      * @param: description of the error 
      */
     void
-    fail(beast::error_code ec, char const* what)
-    {
-        std::cerr << what << ": " << ec.message() << "\n";
-    }
-        
-        // Resolver and socket require an io_context
-        explicit     
-        FLIRWebSockAsyncClnSession(net::io_context& ioc)
-            : resolver_(net::make_strand(ioc))
-            , ws_(net::make_strand(ioc))
-        {
+    fail(beast::error_code ec, char const* what) const;       
 
-        };
-
-        /**
-         * @brief Start the asynchronous web socket connection to the camera. Each function will call the
-         * function below it.
-         * 
-         * @param: ip address of camera to connect to
-         * @param: port to connect to
-         * @param: calculated camera rotation
-         */
-        void
-        run(
-            char const* host,
-            char const* port,
-            float cameraRotation);
-        
-        /**
-         * @brief Lookup the domain name of the IP address from run function.
-         * 
-         * @param: error code containing information describing resolve issue
-         * @param: result of domain name lookup
-         */
-        void
-        on_resolve(
-            beast::error_code ec,
-            tcp::resolver::results_type results);
-        
-        /**
-         * @brief Configures websocket settings and initiates handshake
-         * 
-         * @param: error code containing information describing connection issue 
-         */
-        void
-        on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
-
-        /**
-         * @brief Performs the websocket handshake and calls write function
-         * 
-         * @param: error code containing information describing handshake issue
-         */
-        void
-        on_handshake(beast::error_code ec);
-
-        /**
-         * @brief Sends the subscription request json to the camera and calls read function for camera response
-         * 
-         * @param: error code containing information describing issue with json send
-         * @param: the bytes of the json
-         */
-        void
-        on_write(
-            beast::error_code ec,
-            std::size_t bytes_transferred);
+    /**
+     * @brief Start the asynchronous web socket connection to the camera. Each function will call the
+     * function below it.
+     * 
+     * @param: ip address of camera to connect to
+     * @param: port to connect to
+     * @param: calculated camera rotation
+     */
+    void
+    run(
+        char const* host,
+        char const* port,
+        float cameraRotation);
     
-        /**
-         * @brief Used to read in all messages from the camera and parse out desired fields
-         * 
-         * @param: error code containing information describing issue with reading camera data
-         * @param: the bytes of the received camera data
-         */
-        void
-        on_read(
-            beast::error_code ec,
-            std::size_t bytes_transferred);
-        
-        /**
-         * @brief Closes the websocket connection to the camera
-         * 
-         * @param: error code containing information describing issue with closing websocket
-         */
-        void
-        on_close(beast::error_code ec);
+    /**
+     * @brief Lookup the domain name of the IP address from run function.
+     * 
+     * @param: error code containing information describing resolve issue
+     * @param: result of domain name lookup
+     */
+    void
+    on_resolve(
+        beast::error_code ec,
+        tcp::resolver::results_type results);
+    
+    /**
+     * @brief Configures websocket settings and initiates handshake
+     * 
+     * @param: error code containing information describing connection issue 
+     */
+    void
+    on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
 
-        /**
-         * @brief Get method for xml containing psm data
-         * 
-         * @return std::string the psm xml
-         */
-        std::string getPSMXML() const;
+    /**
+     * @brief Performs the websocket handshake and calls write function
+     * 
+     * @param: error code containing information describing handshake issue
+     */
+    void
+    on_handshake(beast::error_code ec);
 
-        /**
-         * @brief Parses the datetime string that the camera returns into a vector containing each component
-         * 
-         * @param: datetime string from camera 
-         * @return: vector with all components 
-         */
-        std::vector<int> timeStringParser(std::string dateTimeStr) const;        
+    /**
+     * @brief Sends the subscription request json to the camera and calls read function for camera response
+     * 
+     * @param: error code containing information describing issue with json send
+     * @param: the bytes of the json
+     */
+    void
+    on_write(
+        beast::error_code ec,
+        std::size_t bytes_transferred);
+
+    /**
+     * @brief Used to read in all messages from the camera and parse out desired fields
+     * 
+     * @param: error code containing information describing issue with reading camera data
+     * @param: the bytes of the received camera data
+     */
+    void
+    on_read(
+        beast::error_code ec,
+        std::size_t bytes_transferred);
+    
+    /**
+     * @brief Closes the websocket connection to the camera
+     * 
+     * @param: error code containing information describing issue with closing websocket
+     */
+    void
+    on_close(beast::error_code ec);
+
+    /**
+     * @brief Get method for xml containing psm data
+     * 
+     * @return std::string the psm xml
+     */
+    std::string getPSMXML() const;
+
+    /**
+     * @brief Parses the datetime string that the camera returns into a vector containing each component
+     * 
+     * @param: datetime string from camera 
+     * @return: vector with all components 
+     */
+    std::vector<int> timeStringParser(std::string dateTimeStr) const;        
     };
 };
 

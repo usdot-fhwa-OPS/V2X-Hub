@@ -6,6 +6,11 @@ using namespace boost::property_tree;
 
 namespace PedestrianPlugin
 {
+    void
+    FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what) const
+    {
+        PLOG(logDEBUG) << what << ": " << ec.message() << std::endl;
+    }
 
     void
     FLIRWebSockAsyncClnSession::run(
@@ -159,7 +164,7 @@ namespace PedestrianPlugin
         std::string time = "";
         std::string type = "";
         float angle = 0;
-        float alpha = 0;
+        int alpha = 0;
         std::string lat = "";
         std::string lon = "";
         float speed = 0;        
@@ -193,13 +198,14 @@ namespace PedestrianPlugin
 
                         if (!it.second.get_child("angle").data().empty())
                         {
-                            angle = std::stof(it.second.get_child("angle").data());
+                            //angle only reported in whole number increments, so int is fine
+                            angle = std::stoi(it.second.get_child("angle").data());
                             //convert camera reference frame angle
                             alpha = cameraRotation_ - angle - 270;
 
-                            while (alpha < 0)
+                            if (alpha < 0)
                             {
-                                alpha = 360 + alpha;
+                                alpha = (alpha % 360) + 360;
                             }
 
                             //divide by 0.0125 for J2735 format
@@ -259,7 +265,7 @@ namespace PedestrianPlugin
                         snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
                         "<secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy>"
                         "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
-                        "<speed>%.0f</speed><heading>%.0f</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
+                        "<speed>%.0f</speed><heading>%i</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
                         "<day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime>"
                         "<long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset>"
                         "<lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory>"
