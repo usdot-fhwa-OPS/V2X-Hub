@@ -27,7 +27,6 @@ asn_TYPE_member_t asn_MBR_TestMessage00_1[] = {
 		"body"
 		},
 };
-static const int asn_MAP_TestMessage00_oms_1[] = { 0, 1 };
 static const ber_tlv_tag_t asn_DEF_TestMessage00_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
@@ -40,7 +39,7 @@ asn_SEQUENCE_specifics_t asn_SPC_TestMessage00_specs_1 = {
 	offsetof(struct TestMessage00, _asn_ctx),
 	asn_MAP_TestMessage00_tag2el_1,
 	2,	/* Count of tags in the map */
-	asn_MAP_TestMessage00_oms_1,	/* Optional members */
+	0, 0, 0,	/* Optional elements (not needed) */
 	2, 0,	/* Root/Additions */
 	2,	/* First extension addition */
 };
