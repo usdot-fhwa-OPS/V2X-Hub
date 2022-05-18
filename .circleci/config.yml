@@ -235,6 +235,7 @@ jobs:
         name: Docker Push Release Tag
         # Push all tagged images
         command: |
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/php:${CIRCLE_TAG}
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
