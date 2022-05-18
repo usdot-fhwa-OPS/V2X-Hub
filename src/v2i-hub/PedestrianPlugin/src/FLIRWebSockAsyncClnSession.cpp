@@ -276,6 +276,7 @@ namespace PedestrianPlugin
 
 		                std::lock_guard<mutex> lock(_psmLock);
                         psmxml = psm_xml_str;
+                        psmQueue.push(psmxml);
 
                         PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
 
@@ -317,10 +318,10 @@ namespace PedestrianPlugin
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
 
-    //returns the variable containing the psm xml 
-    string FLIRWebSockAsyncClnSession::getPSMXML() const
+    std::queue<std::string>& FLIRWebSockAsyncClnSession::getPSMQueue()
     {
-        return psmxml;
+        std::lock_guard<mutex> lock(_psmLock);
+        return psmQueue;
     }
 
     vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
