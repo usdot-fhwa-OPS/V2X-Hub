@@ -134,13 +134,16 @@ int PedestrianPlugin::checkXML()
 		else
 		{	
 			//retrieve the PSM queue and send each one to be broadcast, then pop		
-			std::queue<string> &currentPSMQueue = flirSession->getPSMQueue();
+			std::queue<string> currentPSMQueue = flirSession->getPSMQueue();
 
-			for (int i = 0; i < currentPSMQueue.size(); i++)
-			{
-				BroadcastPsm(const_cast<char*>(currentPSMQueue.front().c_str()));
-				currentPSMQueue.pop();
-			} 
+			if (currentPSMQueue.size() > 0)
+			{				
+				for (int i = 0; i < currentPSMQueue.size(); i++)
+				{
+					BroadcastPsm(const_cast<char*>(currentPSMQueue.front().c_str()));
+					currentPSMQueue.pop();
+				}
+			}			 
 		}
 		
 	}	

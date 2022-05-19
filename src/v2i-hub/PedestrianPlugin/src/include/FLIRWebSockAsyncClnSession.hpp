@@ -132,11 +132,12 @@ namespace PedestrianPlugin
     on_close(beast::error_code ec);
 
     /**
-     * @brief Get method for queue containing psm for all tracked pedestrians
+     * @brief Get method for queue containing psm for all tracked pedestrians. Copies the queue into
+     * a temporary queue and returns temporary queue. Clears the original queue.
      * 
      * @return std::queue the psm queue
      */
-    std::queue<std::string> &getPSMQueue();
+    std::queue<std::string> getPSMQueue();
 
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
@@ -145,6 +146,7 @@ namespace PedestrianPlugin
      * @return: vector with all components 
      */
     std::vector<int> timeStringParser(std::string dateTimeStr) const;        
-    };
+    };  
+
 };
 

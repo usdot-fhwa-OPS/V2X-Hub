@@ -318,10 +318,19 @@ namespace PedestrianPlugin
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
 
-    std::queue<std::string>& FLIRWebSockAsyncClnSession::getPSMQueue()
+    std::queue<std::string> FLIRWebSockAsyncClnSession::getPSMQueue()
     {
         std::lock_guard<mutex> lock(_psmLock);
-        return psmQueue;
+
+        //pass copy of the queue to Pedestrian Plugin
+        std::queue<std::string> queueToPass = psmQueue;
+
+        //empty the queue internally
+        std::queue<std::string> empty;
+        std::swap(psmQueue, empty);
+        
+        return queueToPass;
+
     }
 
     vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
@@ -368,7 +377,6 @@ namespace PedestrianPlugin
         parsedArr.push_back(std::stoi(milliseconds));      
 
         return parsedArr;
-    }        
-
+    }       
 
 }
