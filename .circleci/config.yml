@@ -254,10 +254,14 @@ workflows:
           filters:
            branches:
               ignore: develop
+           tags:
+              only: /^[\.0-9]*$/
       - arm_build_push:
           filters:
             branches:
                ignore: develop
+            tags:
+              only: /^[\.0-9]*$/
       - arm_build_push_develop :
           filters:
             branches:
