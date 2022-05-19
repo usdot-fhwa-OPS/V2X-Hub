@@ -326,10 +326,9 @@ namespace PedestrianPlugin
         std::queue<std::string> queueToPass = psmQueue;
 
         //empty the queue internally
-        while (!psmQueue.empty())
-        {
-            psmQueue.pop();
-        }
+        std::queue<std::string> empty;
+        std::swap(psmQueue, empty);
+        
         return queueToPass;
 
     }
