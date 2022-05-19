@@ -43,6 +43,7 @@
 #include <qhttpengine/server.h>
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
+#include <queue>
 
 
 using namespace std;

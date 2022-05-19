@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <algorithm>
+#include <queue>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -36,6 +37,7 @@ namespace PedestrianPlugin
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
         std::string psmxml = "";
+        std::queue<std::string> psmQueue;
         std::mutex _psmLock;
         int msgCount = 0;
     public:
@@ -130,11 +132,11 @@ namespace PedestrianPlugin
     on_close(beast::error_code ec);
 
     /**
-     * @brief Get method for xml containing psm data
+     * @brief Get method for queue containing psm for all tracked pedestrians
      * 
-     * @return std::string the psm xml
+     * @return std::queue the psm queue
      */
-    std::string getPSMXML() const;
+    std::queue<std::string> &getPSMQueue();
 
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
