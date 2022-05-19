@@ -1,5 +1,17 @@
 V2X-Hub Release Notes
 ----------------------------
+Version 7.2.3, released May 19th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.2.3 includes added hot fix for MobilityRequest and MobilityResponse ASN1 Compiler generated encoding/decoding code for Voices project.
+
+Bug fixes in this release:
+- Issue 372: After getting the dsrc messages from a vehicle, the v2xhub message receiver is able to pass it to other plugins. However, the other plugins experience decoding issues trying to filter MobilityRequest and MobilityResponse messages.
+
+Enhancements in this release:
+ - Issue 369:Add CircleCI workflow that is triggered on numeric github tags on only the master branch. This workflow will be dependent on the build and push workflows for both ARM and AMD images. The workflow will then pull, retag with the github tag name, and push release images.
+
+------------------------------
 Version 7.2.2, released May 9th, 2022
 --------------------------------------------------------
 **Summary:**
