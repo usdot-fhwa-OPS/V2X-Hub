@@ -274,8 +274,9 @@ workflows:
             - arm_build_push
           filters:
             tags:
-              only: ^[\.0-9]*$
+              only: /^[\.0-9]*$/
             branches:
-              only: master
+              ignore: /.*/
+            
 
 
