@@ -136,15 +136,18 @@ namespace PedestrianPlugin
      * 
      * @return std::queue the psm queue
      */
-    std::queue<std::string> &getPSMQueue();
+    std::queue<std::string> getPSMQueue();
 
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
-     * 
+     * std::mutex FLIRWebSockAsyncClnSession::getPSMLock()
      * @param: datetime string from camera 
      * @return: vector with all components 
      */
     std::vector<int> timeStringParser(std::string dateTimeStr) const;        
     };
+
+    
+
 };
 
