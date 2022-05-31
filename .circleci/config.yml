@@ -235,6 +235,7 @@ jobs:
         name: Docker Push Release Tag
         # Push all tagged images
         command: |
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/php:${CIRCLE_TAG}
           docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
@@ -253,10 +254,14 @@ workflows:
           filters:
            branches:
               ignore: develop
+           tags:
+              only: /^[\.0-9]*$/
       - arm_build_push:
           filters:
             branches:
                ignore: develop
+            tags:
+              only: /^[\.0-9]*$/
       - arm_build_push_develop :
           filters:
             branches:
@@ -268,13 +273,9 @@ workflows:
           requires:
             - docker_build_push_develop
       - automated_release:
-          requires:
-            - docker_build_push
-            - arm_build_push
           filters:
             tags:
-              only: ^[\.0-9]*$
+              only: /^[\.0-9]*$/
             branches:
-              only: master
-
+              ignore: /.*/
 
