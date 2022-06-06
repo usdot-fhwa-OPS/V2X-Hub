@@ -367,14 +367,15 @@ namespace PedestrianPlugin
 
         std::string milliseconds = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
         milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
-
+  
+        int millisecondsTotal = (std::stoi(sec) * 1000) + std::stoi(milliseconds);
         parsedArr.push_back(std::stoi(year));
         parsedArr.push_back(std::stoi(month));
         parsedArr.push_back(std::stoi(day));
         parsedArr.push_back(std::stoi(hour));
         parsedArr.push_back(std::stoi(mins));
         parsedArr.push_back(std::stoi(sec));
-        parsedArr.push_back(std::stoi(milliseconds));      
+        parsedArr.push_back(millisecondsTotal);      
 
         return parsedArr;
     }       
