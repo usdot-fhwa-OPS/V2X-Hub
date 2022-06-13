@@ -1,4 +1,16 @@
 V2X-Hub Release Notes
+---------------------------------
+Version 7.3.0, released June 13th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.3.0 includes added functionality for subscribing to FLIR camera for Pedestrian tracking and PSM broadcast to vehicles in the Pedestrian Plugin.
+
+Bug fixes in this release:
+- Issue 374: Fix PSM generation for multiple FLIR tracks.
+- Issue 383: Fix PSM secmark field from FLIR tracks.
+
+Enhancements in this release:
+ - Issue 345: Added Websocket client to consume FLIR data and publish PSM
 ----------------------------
 Version 7.2.2, released May 9th, 2022
 --------------------------------------------------------
