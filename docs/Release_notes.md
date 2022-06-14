@@ -1,4 +1,12 @@
 V2X-Hub Release Notes
+---------------------------------
+Version 7.3.0, released June 14th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.3.0 includes added functionality for subscribing to FLIR camera for Pedestrian tracking and PSM broadcast to vehicles in the Pedestrian Plugin. The new FLIR functionality subscribes to the websocket output of the FLIR tracking feed and will generate a PSM for each new track the camera picks up. To use new FLIR websocket data, set `DataProvider` for the PedestrianPlugin to FLIR and configure the `WebSocketHost` and `WebSocketPort` for the FLIR camera. Additional you must set the `FLIRCameraRotation` in degrees, which is a measure of the camera's rotation from true north. To use the REST PedestrianPlugin functionality simply set the `DataProvider` to PSM.
+
+Enhancements in this release:
+ - Issue 345: Added Websocket client to consume FLIR data and publish PSM
 ----------------------------
 Version 7.2.2, released May 9th, 2022
 --------------------------------------------------------
