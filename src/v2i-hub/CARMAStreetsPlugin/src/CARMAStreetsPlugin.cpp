@@ -24,6 +24,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
+	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	
 	SubscribeToMessages();
 
@@ -38,6 +39,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("receiveTopic", _receiveTopic);	
 	GetConfigValue<string>("transmitMobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
+ 	GetConfigValue<string>("transmitMapTopic", _transmitMAPTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
@@ -119,7 +121,6 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	try 
 	{
 		auto mobilityOperation = msg.get_j2735_data();
-		bool retry = true;
 		PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
 					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
@@ -166,34 +167,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			mobilityOperationJsonRoot["metadata"] 			= metadata; 
 			const std::string message 						= Json::writeString(builder, mobilityOperationJsonRoot);			
 			PLOG(logDEBUG) <<"MobilityOperation message:" << message <<std::endl;
-
-			while (retry) 
-			{
-				RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitMobilityOperationTopic, 
-																	RdKafka::Topic::PARTITION_UA,
-																	RdKafka::Producer::RK_MSG_COPY, 
-																	const_cast<char *>(message.c_str()),
-																	message.size(), 
-																	NULL, NULL, 0, 0);
-
-				if (produce_error == RdKafka::ERR_NO_ERROR) {
-					PLOG(logDEBUG) <<"Queued message:" << message;
-					retry = false;
-				}
-				else 
-				{
-					PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-					if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-						PLOG(logERROR) <<"Message queue full...retrying...";
-						kafka_producer->poll(500);  /* ms */
-						retry = true;
-					}
-					else {
-						PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-						retry = false;
-					}
-				}	
-			}
+			produce_kafka_msg(message, _transmitMobilityOperationTopic);
 		}
 	}
 	catch (TmxException &ex) {
@@ -277,23 +251,7 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		mobilityPathJsonRoot["trajectory"]		= trajectory;
 		const std::string json_message 			= Json::writeString(builder, mobilityPathJsonRoot);
 		PLOG(logDEBUG) <<"MobilityPath Json message:" << json_message;
-		RdKafka::ErrorCode produce_error 		= kafka_producer->produce(	_transmitMobilityPathTopic, 
-																			RdKafka::Topic::PARTITION_UA,
-																			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(json_message.c_str()),
-																			json_message.size(), NULL, NULL, 0, 0 );
-
-		if (produce_error == RdKafka::ERR_NO_ERROR) 
-		{
-			PLOG(logDEBUG) << "Queued message:" << json_message;
-		}
-		else 
-		{
-			PLOG(logERROR) << "Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
-			if (produce_error == RdKafka::ERR__QUEUE_FULL) 
-			{
-				PLOG(logERROR) << "MobilityPath producer Message queue is full.";
-			}
-		}	
+		produce_kafka_msg(json_message, _transmitMobilityPathTopic);
 	}
 	catch (TmxException &ex) 
 	{
@@ -445,39 +403,320 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["size"] 			= size;		
 		bsmJsonRoot["core_data"]  	= coreData; 
 		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
-
-		while (retry) 
-		{
-			RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitBSMTopic, 
-																		RdKafka::Topic::PARTITION_UA,
-																		RdKafka::Producer::RK_MSG_COPY, 
-																		const_cast<char *>(message.c_str()),
-																		message.size(), 
-																		NULL, NULL, 0, 0);
-
-			if (produce_error == RdKafka::ERR_NO_ERROR) {
-				PLOG(logDEBUG) <<"Queued message:" << message;
-				retry = false;
-			}
-			else 
-			{
-				PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-				if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-					PLOG(logERROR) <<"Message queue full...retrying...";
-					kafka_producer->poll(500);  /* ms */
-					retry = true;
-				}
-				else {
-					PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-					retry = false;
-				}
-			}	
-		}
+		produce_kafka_msg(message, _transmitBSMTopic);
+		
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 	}
 }
+
+void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg)
+{
+	std::shared_ptr<MapData> mapMsgPtr = msg.get_j2735_data();
+	PLOG(logERROR) << "Intersection count: " << mapMsgPtr->intersections->list.count <<std::endl;
+	Json::Value mapJson;
+	Json::StreamWriterBuilder builder;
+	convertJ2735MAPToMapJSON(mapMsgPtr, mapJson);
+	const std::string message 	= Json::writeString(builder, mapJson);
+	produce_kafka_msg(message, _transmitMAPTopic);	
+}
+
+void CARMAStreetsPlugin::convertJ2735MAPToMapJSON(const std::shared_ptr<MapData> mapMsgPtr,  Json::Value& mapJson) const
+{	
+	//Construct metadata
+	Json::Value metadata;
+	auto timestamp_utc = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+	metadata["timestamp"] = std::to_string(timestamp_utc);
+	mapJson["metadata"] = metadata; 
+	
+	//Construct Map Data
+	Json::Value mapDataJson;
+	mapDataJson["layer_id"] = mapMsgPtr->layerID;
+	mapDataJson["msg_issue_revision"] = std::to_string(mapMsgPtr->msgIssueRevision);
+	mapDataJson["layer_type"] = std::to_string(*mapMsgPtr->layerType);
+
+	//Construct intersections
+	IntersectionGeometryList* intersections = mapMsgPtr->intersections;
+	Json::Value intersectionsJson;
+	//Assume there is only one intersection geometry for each intersection
+	PLOG(logDEBUG) << "Intersection geometry count: " << intersections->list.count <<std::endl;
+	for(size_t i = 0; i< intersections->list.count; i++)
+	{	
+		Json::Value intersectionJson;
+		if(intersections->list.array != nullptr)
+		{
+			auto intersection = intersections->list.array[i];
+			PLOG(logERROR) << "Intersection ID: " << intersections->list.array[i]->id.id <<std::endl;
+			intersectionJson["id"]["id"] = std::to_string(intersection->id.id);
+			intersectionJson["lane_width"] =  std::to_string(*intersection->laneWidth);
+			intersectionJson["revision"] =  std::to_string(intersection->revision);
+			intersectionJson["ref_point"]["lat"] =  std::to_string(intersection->refPoint.lat);
+			intersectionJson["ref_point"]["long"] =  std::to_string(intersection->refPoint.Long);
+			intersectionJson["ref_point"]["elevation"] =  std::to_string(*intersection->refPoint.elevation);
+
+			//Convert Laneset
+			Json::Value laneSetJson;
+			convertLanesetToJSON(intersection, laneSetJson);
+			intersectionJson["lane_set"] = laneSetJson;
+		}
+		intersectionsJson["intersection_geometry"] = intersectionJson;
+	}
+	mapDataJson["intersections"] = intersectionsJson;
+	mapJson["map_data"] = mapDataJson; 
+	PLOG(logDEBUG) << "mapJson: " << mapJson <<std::endl;
+}
+
+void CARMAStreetsPlugin::convertLanesetToJSON(const IntersectionGeometry* intersection, Json::Value& laneSetJson) const
+{
+	//Construct laneset
+	auto laneSet = intersection->laneSet;
+	if(laneSet.list.array != nullptr)
+	{
+		for(size_t i=0; i< laneSet.list.count; i++)
+		{
+			stringstream ss;
+			Json::Value laneJson;
+			auto lane = laneSet.list.array[i];
+			laneJson["lane_id"] = std::to_string(lane->laneID);				
+			if(lane->ingressApproach != nullptr)
+			{
+				ss.str("");
+				ss<<*lane->ingressApproach;
+				laneJson["ingress_approach"] = ss.str();
+			}
+			if(lane->egressApproach != nullptr)
+			{
+				ss.str("");
+				ss<<*lane->egressApproach;
+				laneJson["egressApproach"] = ss.str();
+			}
+			
+			//Construct LaneAttributes
+			Json::Value LaneAttributesJson;
+			convertLaneAttributeToJSON(lane, LaneAttributesJson);
+			laneJson["lane_attributes"] = LaneAttributesJson;
+
+			//Construct nodelist
+			Json::Value nodeList;
+			convertNodeListToJSON(lane, nodeList);
+			laneJson["node_list"]["nodes"] = nodeList;
+
+			//Construct connects
+			Json::Value connectsJson;
+			if(lane->connectsTo != nullptr)
+			{
+				convertConnectsToJSON(lane, connectsJson);
+				laneJson["connects_to"] = connectsJson;
+			}
+
+			laneSetJson.append(laneJson);
+		}
+	}		
+}
+
+void CARMAStreetsPlugin::convertLaneAttributeToJSON(const GenericLane * lane, Json::Value& LaneAttributesJson) const
+{
+	stringstream ss;
+	ss.str("");
+	auto bit_unused = lane->laneAttributes.directionalUse.bits_unused;
+	ss << lane->laneAttributes.directionalUse.buf;
+	auto binary = lane->laneAttributes.directionalUse.buf[0] >> bit_unused;
+	std::string binary_str = std::to_string(static_cast<unsigned>(binary / 2)) + std::to_string(static_cast<unsigned>(binary % 2));	
+	LaneAttributesJson["directional_use"] = binary_str;	
+
+	ss.str("");
+	ss << lane->laneAttributes.sharedWith.buf;
+	LaneAttributesJson["shared_with"] = ss.str();
+	if(lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_vehicle)
+	{
+		ss.str("");
+		ss << lane->laneAttributes.laneType.choice.vehicle.buf;
+		LaneAttributesJson["lane_type"]["vehicle"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present  == LaneTypeAttributes_PR_crosswalk)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.crosswalk.buf;
+		LaneAttributesJson["lane_type"]["crosswalk"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_bikeLane)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.bikeLane.buf;
+		LaneAttributesJson["lane_type"]["bike_lane"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_median)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.median.buf;
+		LaneAttributesJson["lane_type"]["median"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_parking)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.parking.buf;
+		LaneAttributesJson["lane_type"]["parking"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_sidewalk)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.sidewalk.buf;
+		LaneAttributesJson["lane_type"]["sidewalk"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_striping)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.striping.buf;
+		LaneAttributesJson["lane_type"]["striping"] = ss.str();
+	}
+	else if (lane->laneAttributes.laneType.present == LaneTypeAttributes_PR_trackedVehicle)
+	{
+		ss.str("");
+		ss<<lane->laneAttributes.laneType.choice.trackedVehicle.buf;
+		LaneAttributesJson["lane_type"]["tracked_vehicle"] = ss.str();
+	}
+	else
+	{
+		ss.str("");
+		LaneAttributesJson["lane_type"]["nothing"] = ss.str();
+	}
+}
+
+void CARMAStreetsPlugin::convertNodeListToJSON(const GenericLane* lane , Json::Value& nodeListJson) const
+{
+	stringstream ss;
+	auto nodes = lane->nodeList.choice.nodes;
+	if(NodeListXY_PR_nodes == lane->nodeList.present)
+	{						
+		for(size_t i=0; i< nodes.list.count; i++)
+		{
+			Json::Value nodeJson;
+			auto node = nodes.list.array[i];
+			if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY1)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY1.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY1.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+			else if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY2)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY2.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY2.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+			else if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY3)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY3.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY3.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+			else if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY4)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY4.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY4.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+			else if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY5)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY5.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY5.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+			else if(node->delta.present == NodeOffsetPointXY_PR::NodeOffsetPointXY_PR_node_XY6)
+			{
+				ss.str("");
+				ss << node->delta.choice.node_XY6.x;
+				nodeJson["delta"]["node-xy"]["x"] = ss.str();
+
+				ss.str("");
+				ss << node->delta.choice.node_XY6.y;
+				nodeJson["delta"]["node-xy"]["y"] = ss.str();
+				nodeListJson.append(nodeJson);
+			}
+		}
+	}
+}
+
+void CARMAStreetsPlugin::convertConnectsToJSON(const GenericLane* lane , Json::Value& connectsJson) const
+{
+	stringstream ss;
+	if(lane->connectsTo != nullptr)
+	{
+		for(size_t i=0; i< lane->connectsTo->list.count; i++)
+		{
+			Json::Value connJson;
+			ss.str("");
+			auto connect = lane->connectsTo->list.array[i];
+			ss<<connect->connectingLane.lane;
+			connJson["connecting_lane"]["lane"] = ss.str();
+
+			ss.str("");
+			connect = lane->connectsTo->list.array[i];
+			ss << *connect->signalGroup;
+			connJson["signal_group"] = ss.str();
+			connectsJson.append(connJson);
+		}
+	}	
+}
+
+void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
+{
+	bool retry = true;
+	while (retry) 
+	{
+		RdKafka::ErrorCode produce_error = kafka_producer->produce(topic_name, 
+																	RdKafka::Topic::PARTITION_UA,
+																	RdKafka::Producer::RK_MSG_COPY, 
+																	const_cast<char *>(message.c_str()),
+																	message.size(), 
+																	NULL, NULL, 0, 0);
+
+		if (produce_error == RdKafka::ERR_NO_ERROR) {
+			PLOG(logDEBUG) <<"Queued message:" << message;
+			retry = false;
+		}
+		else 
+		{
+			PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
+				PLOG(logERROR) <<"Message queue full...retrying...";
+				kafka_producer->poll(500);  /* ms */
+				retry = true;
+			}
+			else {
+				PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+				retry = false;
+			}
+		}	
+	}
+}
+
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
