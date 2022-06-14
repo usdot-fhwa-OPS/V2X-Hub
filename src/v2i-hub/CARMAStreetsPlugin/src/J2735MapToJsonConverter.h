@@ -1,6 +1,6 @@
 
 #include "jsoncpp/json/json.h"
-#include <memory.h>
+#include <memory>
 #include <chrono>
 #include <string>
 #include <iostream>
