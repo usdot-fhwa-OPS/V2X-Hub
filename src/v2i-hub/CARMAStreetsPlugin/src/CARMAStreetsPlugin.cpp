@@ -414,7 +414,7 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg)
 {
 	std::shared_ptr<MapData> mapMsgPtr = msg.get_j2735_data();
-	PLOG(logERROR) << "Intersection count: " << mapMsgPtr->intersections->list.count <<std::endl;
+	PLOG(logDEBUG) << "Intersection count: " << mapMsgPtr->intersections->list.count <<std::endl;
 	Json::Value mapJson;
 	Json::StreamWriterBuilder builder;
 	J2735MapToJsonConverter jsonConverter;
