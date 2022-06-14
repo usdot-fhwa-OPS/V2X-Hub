@@ -32,6 +32,32 @@
 			"key":"WebServicePort",
 			"default":"9000",
 			"description":"Port at which Web service exists"
-		}
+		},
+		{
+			"key":"DataProvider",
+			"default":"FLIR",
+			"description":"Possible data providers we handle - FLIR (websocket) or PSM (REST request)"
+		},	
+		{
+			"key":"WebSocketHost",
+			"default":"192.168.55.183",
+			"description":"IP address of the camera to connect to for data"
+
+		},
+		{
+			"key":"WebSocketPort",
+			"default":"80",
+			"description":"Extension/port for FLIR camera subscription"
+		},
+		{
+			"key":"FLIRCameraRotation",
+			"default":"16.13",
+			"description":"Measured camera rotation from true north (in degrees) used for heading conversion"
+		},
+		{
+            "key":"LogLevel",
+            "default":"DEBUG",
+            "description":"The log level for this plugin"
+        }
 	]
 }
