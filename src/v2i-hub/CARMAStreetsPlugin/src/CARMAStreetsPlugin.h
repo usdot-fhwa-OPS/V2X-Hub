@@ -41,6 +41,11 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	/**
+	 * @brief Subscribe to MAP message broadcast by the MAPPlugin. This handler will be called automatically whenever the MAPPlugin is broadcasting a J2735 MAP message.
+	 * @param msg The J2735 MAP message received from the internal 
+	 * @param routeableMsg 
+	 */
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void SubscribeKafkaTopics();
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);

@@ -20,7 +20,7 @@ namespace CARMAStreetsPlugin
         mapDataJson["layer_type"] = std::to_string(*mapMsgPtr->layerType);
 
         // Construct intersections
-        IntersectionGeometryList *intersections = mapMsgPtr->intersections;
+        const IntersectionGeometryList *intersections = mapMsgPtr->intersections;
         Json::Value intersectionsJson;
         // Assume there is only one intersection geometry for each intersection
         for (size_t i = 0; i < intersections->list.count; i++)
@@ -50,7 +50,7 @@ namespace CARMAStreetsPlugin
     void J2735MapToJsonConverter::convertLanesetToJSON(const IntersectionGeometry *intersection, Json::Value &laneSetJson) const
     {
         // Construct laneset
-        auto laneSet = intersection->laneSet;
+        const auto laneSet = intersection->laneSet;
         if (laneSet.list.array != nullptr)
         {
             for (size_t i = 0; i < laneSet.list.count; i++)
