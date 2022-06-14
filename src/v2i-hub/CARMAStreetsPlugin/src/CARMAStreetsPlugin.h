@@ -13,7 +13,7 @@
 #include <pthread.h>
 #include <boost/thread.hpp>
 #include <mutex>
-
+#include "J2735MapToJsonConverter.h"
 
 
 
@@ -44,12 +44,12 @@ protected:
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void SubscribeKafkaTopics();
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
-	void convertJ2735MAPToMapJSON(const std::shared_ptr<MapData> mapMsgPtr,  Json::Value& mapJson) const;
-	void produce_kafka_msg(const string& msg, const string& topic_name) const;
-	void convertLanesetToJSON(const IntersectionGeometry* intersection, Json::Value& laneSetJson) const;
-	void convertLaneAttributeToJSON(const GenericLane * lane, Json::Value& LaneAttributesJson) const;
-	void convertNodeListToJSON(const GenericLane* lane , Json::Value& nodeList) const;
-	void convertConnectsToJSON(const GenericLane* lane , Json::Value& nodeListJson) const;
+	/**
+	 * @brief Produce message to a kafka topic
+	 * @param msg Json format message to send to a topic
+	 * @param topic_name The name of the topic
+	 */
+	void produce_kafka_msg(const string &msg, const string &topic_name) const;
 	
 
 private:
