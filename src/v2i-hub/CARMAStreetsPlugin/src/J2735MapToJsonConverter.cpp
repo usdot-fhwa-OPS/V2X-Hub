@@ -15,35 +15,44 @@ namespace CARMAStreetsPlugin
 
         // Construct Map Data
         Json::Value mapDataJson;
-        mapDataJson["layer_id"] = mapMsgPtr->layerID;
+        mapDataJson["layer_id"] = std::to_string(*mapMsgPtr->layerID);
         mapDataJson["msg_issue_revision"] = std::to_string(mapMsgPtr->msgIssueRevision);
-        mapDataJson["layer_type"] = std::to_string(*mapMsgPtr->layerType);
+        if(mapMsgPtr->layerType != nullptr)
+        {
+            mapDataJson["layer_type"] = std::to_string(*mapMsgPtr->layerType);
+        }
 
         // Construct intersections
         const IntersectionGeometryList *intersections = mapMsgPtr->intersections;
-        Json::Value intersectionsJson;
-        // Assume there is only one intersection geometry for each intersection
-        for (size_t i = 0; i < intersections->list.count; i++)
+        if(intersections != nullptr)
         {
-            Json::Value intersectionJson;
-            if (intersections->list.array != nullptr)
+            Json::Value intersectionsJson;
+            // Assume there is only one intersection geometry for each intersection
+            for (size_t i = 0; i < intersections->list.count; i++)
             {
-                auto intersection = intersections->list.array[i];
-                intersectionJson["id"]["id"] = std::to_string(intersection->id.id);
-                intersectionJson["lane_width"] = std::to_string(*intersection->laneWidth);
-                intersectionJson["revision"] = std::to_string(intersection->revision);
-                intersectionJson["ref_point"]["lat"] = std::to_string(intersection->refPoint.lat);
-                intersectionJson["ref_point"]["long"] = std::to_string(intersection->refPoint.Long);
-                intersectionJson["ref_point"]["elevation"] = std::to_string(*intersection->refPoint.elevation);
+                Json::Value intersectionJson;
+                if (intersections->list.array != nullptr)
+                {
+                    auto intersection = intersections->list.array[i];
+                    intersectionJson["id"]["id"] = std::to_string(intersection->id.id);
+                    intersectionJson["lane_width"] = std::to_string(*intersection->laneWidth);
+                    intersectionJson["revision"] = std::to_string(intersection->revision);
+                    intersectionJson["ref_point"]["lat"] = std::to_string(intersection->refPoint.lat);
+                    intersectionJson["ref_point"]["long"] = std::to_string(intersection->refPoint.Long);
+                    if(intersection->refPoint.elevation !=nullptr)
+                    {
+                        intersectionJson["ref_point"]["elevation"] = std::to_string(*intersection->refPoint.elevation);
+                    }
 
-                // Convert Laneset
-                Json::Value laneSetJson;
-                convertLanesetToJSON(intersection, laneSetJson);
-                intersectionJson["lane_set"] = laneSetJson;
+                    // Convert Laneset
+                    Json::Value laneSetJson;
+                    convertLanesetToJSON(intersection, laneSetJson);
+                    intersectionJson["lane_set"] = laneSetJson;
+                }
+                intersectionsJson["intersection_geometry"] = intersectionJson;
             }
-            intersectionsJson["intersection_geometry"] = intersectionJson;
+            mapDataJson["intersections"] = intersectionsJson;
         }
-        mapDataJson["intersections"] = intersectionsJson;
         mapJson["map_data"] = mapDataJson;
     }
 
@@ -101,10 +110,12 @@ namespace CARMAStreetsPlugin
         ss.str("");
         auto bit_unused = lane->laneAttributes.directionalUse.bits_unused;
         ss << lane->laneAttributes.directionalUse.buf;
-        auto binary = lane->laneAttributes.directionalUse.buf[0] >> bit_unused;
-        std::string binary_str = std::to_string(static_cast<unsigned>(binary / 2)) + std::to_string(static_cast<unsigned>(binary % 2));
-        LaneAttributesJson["directional_use"] = binary_str;
-
+        if( lane->laneAttributes.directionalUse.size != 0 )
+        {
+            auto binary = lane->laneAttributes.directionalUse.buf[0] >> bit_unused;
+            std::string binary_str = std::to_string(static_cast<unsigned>(binary / 2)) + std::to_string(static_cast<unsigned>(binary % 2));
+            LaneAttributesJson["directional_use"] = binary_str;
+        }
         ss.str("");
         ss << lane->laneAttributes.sharedWith.buf;
         LaneAttributesJson["shared_with"] = ss.str();
