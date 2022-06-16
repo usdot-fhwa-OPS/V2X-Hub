@@ -32,6 +32,11 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
+            "key": "transmitMapTopic",
+            "default": "v2xhub_map_msg_in",
+            "description": "Apache Kafka topic plugin will transmit message to."
+        },
+        {
             "key": "runKafkaConsumer",
             "default": "1",
             "description": "indicator for consuming kafka messages."
