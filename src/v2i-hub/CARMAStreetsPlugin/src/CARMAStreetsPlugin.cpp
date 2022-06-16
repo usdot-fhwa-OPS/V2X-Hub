@@ -265,7 +265,6 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 	try 
 	{
 		auto bsm = msg.get_j2735_data();
-		bool retry = true;
 
 		Json::Value bsmJsonRoot;
 		Json::Value coreData;
