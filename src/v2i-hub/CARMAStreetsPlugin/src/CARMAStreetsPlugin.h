@@ -8,11 +8,12 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <tmx/TmxException.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <tmx/j2735_messages/MapDataMessage.hpp>
 #include "jsoncpp/json/json.h"
 #include <pthread.h>
 #include <boost/thread.hpp>
 #include <mutex>
-
+#include "J2735MapToJsonConverter.h"
 
 
 
@@ -40,8 +41,21 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	/**
+	 * @brief Subscribe to MAP message broadcast by the MAPPlugin. This handler will be called automatically whenever the MAPPlugin is broadcasting a J2735 MAP message.
+	 * @param msg The J2735 MAP message received from the internal 
+	 * @param routeableMsg 
+	 */
+	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void SubscribeKafkaTopics();
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
+	/**
+	 * @brief Produce message to a kafka topic
+	 * @param msg Json format message to send to a topic
+	 * @param topic_name The name of the topic
+	 */
+	void produce_kafka_msg(const string &msg, const string &topic_name) const;
+	
 
 private:
 	std::string _receiveTopic;
@@ -49,6 +63,7 @@ private:
 	std::string _subscribeToSchedulingPlanTopic = "";
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
+	std::string _transmitMAPTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	RdKafka::Conf *kafka_conf;
