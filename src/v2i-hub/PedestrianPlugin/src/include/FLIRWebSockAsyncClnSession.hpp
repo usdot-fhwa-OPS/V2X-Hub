@@ -38,6 +38,7 @@ namespace PedestrianPlugin
         float cameraRotation_;
         std::string psmxml = "";
         std::queue<std::string> psmQueue;
+
         std::mutex _psmLock;
         int msgCount = 0;
     public:
@@ -139,6 +140,7 @@ namespace PedestrianPlugin
      */
     std::queue<std::string> getPSMQueue();
 
+
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
      * 
@@ -147,6 +149,7 @@ namespace PedestrianPlugin
      */
     std::vector<int> timeStringParser(std::string dateTimeStr) const;        
     };  
+
 
 };
 

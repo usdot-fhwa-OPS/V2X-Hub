@@ -24,6 +24,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
+	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	
 	SubscribeToMessages();
 
@@ -38,6 +39,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("receiveTopic", _receiveTopic);	
 	GetConfigValue<string>("transmitMobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
+ 	GetConfigValue<string>("transmitMapTopic", _transmitMAPTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
@@ -119,7 +121,6 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	try 
 	{
 		auto mobilityOperation = msg.get_j2735_data();
-		bool retry = true;
 		PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
 					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
@@ -166,34 +167,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			mobilityOperationJsonRoot["metadata"] 			= metadata; 
 			const std::string message 						= Json::writeString(builder, mobilityOperationJsonRoot);			
 			PLOG(logDEBUG) <<"MobilityOperation message:" << message <<std::endl;
-
-			while (retry) 
-			{
-				RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitMobilityOperationTopic, 
-																	RdKafka::Topic::PARTITION_UA,
-																	RdKafka::Producer::RK_MSG_COPY, 
-																	const_cast<char *>(message.c_str()),
-																	message.size(), 
-																	NULL, NULL, 0, 0);
-
-				if (produce_error == RdKafka::ERR_NO_ERROR) {
-					PLOG(logDEBUG) <<"Queued message:" << message;
-					retry = false;
-				}
-				else 
-				{
-					PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-					if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-						PLOG(logERROR) <<"Message queue full...retrying...";
-						kafka_producer->poll(500);  /* ms */
-						retry = true;
-					}
-					else {
-						PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-						retry = false;
-					}
-				}	
-			}
+			produce_kafka_msg(message, _transmitMobilityOperationTopic);
 		}
 	}
 	catch (TmxException &ex) {
@@ -277,23 +251,7 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		mobilityPathJsonRoot["trajectory"]		= trajectory;
 		const std::string json_message 			= Json::writeString(builder, mobilityPathJsonRoot);
 		PLOG(logDEBUG) <<"MobilityPath Json message:" << json_message;
-		RdKafka::ErrorCode produce_error 		= kafka_producer->produce(	_transmitMobilityPathTopic, 
-																			RdKafka::Topic::PARTITION_UA,
-																			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(json_message.c_str()),
-																			json_message.size(), NULL, NULL, 0, 0 );
-
-		if (produce_error == RdKafka::ERR_NO_ERROR) 
-		{
-			PLOG(logDEBUG) << "Queued message:" << json_message;
-		}
-		else 
-		{
-			PLOG(logERROR) << "Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
-			if (produce_error == RdKafka::ERR__QUEUE_FULL) 
-			{
-				PLOG(logERROR) << "MobilityPath producer Message queue is full.";
-			}
-		}	
+		produce_kafka_msg(json_message, _transmitMobilityPathTopic);
 	}
 	catch (TmxException &ex) 
 	{
@@ -307,7 +265,6 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 	try 
 	{
 		auto bsm = msg.get_j2735_data();
-		bool retry = true;
 
 		Json::Value bsmJsonRoot;
 		Json::Value coreData;
@@ -445,39 +402,59 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["size"] 			= size;		
 		bsmJsonRoot["core_data"]  	= coreData; 
 		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
-
-		while (retry) 
-		{
-			RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitBSMTopic, 
-																		RdKafka::Topic::PARTITION_UA,
-																		RdKafka::Producer::RK_MSG_COPY, 
-																		const_cast<char *>(message.c_str()),
-																		message.size(), 
-																		NULL, NULL, 0, 0);
-
-			if (produce_error == RdKafka::ERR_NO_ERROR) {
-				PLOG(logDEBUG) <<"Queued message:" << message;
-				retry = false;
-			}
-			else 
-			{
-				PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-				if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-					PLOG(logERROR) <<"Message queue full...retrying...";
-					kafka_producer->poll(500);  /* ms */
-					retry = true;
-				}
-				else {
-					PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-					retry = false;
-				}
-			}	
-		}
+		produce_kafka_msg(message, _transmitBSMTopic);
+		
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 	}
 }
+
+void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg)
+{
+	std::shared_ptr<MapData> mapMsgPtr = msg.get_j2735_data();
+	PLOG(logDEBUG) << "Intersection count: " << mapMsgPtr->intersections->list.count <<std::endl;
+	Json::Value mapJson;
+	Json::StreamWriterBuilder builder;
+	J2735MapToJsonConverter jsonConverter;
+	jsonConverter.convertJ2735MAPToMapJSON(mapMsgPtr, mapJson);
+	PLOG(logDEBUG) << "mapJson: " << mapJson << std::endl;
+	const std::string message 	= Json::writeString(builder, mapJson);
+	produce_kafka_msg(message, _transmitMAPTopic);	
+}
+
+void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
+{
+	bool retry = true;
+	while (retry) 
+	{
+		RdKafka::ErrorCode produce_error = kafka_producer->produce(topic_name, 
+																	RdKafka::Topic::PARTITION_UA,
+																	RdKafka::Producer::RK_MSG_COPY, 
+																	const_cast<char *>(message.c_str()),
+																	message.size(), 
+																	NULL, NULL, 0, 0);
+
+		if (produce_error == RdKafka::ERR_NO_ERROR) {
+			PLOG(logDEBUG) <<"Queued message:" << message;
+			retry = false;
+		}
+		else 
+		{
+			PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
+				PLOG(logERROR) <<"Message queue full...retrying...";
+				kafka_producer->poll(500);  /* ms */
+				retry = true;
+			}
+			else {
+				PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+				retry = false;
+			}
+		}	
+	}
+}
+
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
