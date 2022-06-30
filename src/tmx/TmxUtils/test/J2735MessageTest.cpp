@@ -555,5 +555,36 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	std::cout << psmENC.get_payload_str()<<std::endl;
 	ASSERT_EQ(32,  psmENC.get_msgId());
 }
+	
+TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
+	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
+	std::stringstream ss;
+	tsm4Message tsm4msg;
+	tsm4EncodedMessage tsm4Enc;
+	tmx::message_container_type container;
+	ss<<tsm4str;
+	container.load<XML>(ss);
+	tsm4msg.set_contents(container.get_storage().get_tree());
+	tsm4Enc.encode_j2735_message(tsm4msg);
+	std::cout << tsm4Enc.get_payload_str()<<std::endl;
+	ASSERT_EQ(244,  tsm4Enc.get_msgId());
+}
+
+
+TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
+	string tsm5str="<TestMessage05><body> <tcmV01> <reqid>30642B129B984162</reqid> <reqseq>0</reqseq> <msgtot>9</msgtot> <msgnum>9</msgnum> <id>0034b8d88d084ffdaf23837926031658</id> <updated>0</updated> <package> <label>workzone - lane closed</label> <tcids> <Id128b>0034b8d88d084ffdaf23837926031658</Id128b> </tcids> </package> <params> <vclasses> <micromobile/> <motorcycle/> <passenger-car/> <light-truck-van/> <bus/> <two-axle-six-tire-single-unit-truck/> <three-axle-single-unit-truck/> <four-or-more-axle-single-unit-truck/> <four-or-fewer-axle-single-trailer-truck/> <five-axle-single-trailer-truck/> <six-or-more-axle-single-trailer-truck/> <five-or-fewer-axle-multi-trailer-truck/> <six-axle-multi-trailer-truck/> <seven-or-more-axle-multi-trailer-truck/> </vclasses> <schedule> <start>27506547</start> <end>153722867280912</end> <dow>1111111</dow> </schedule> <regulatory><true/></regulatory> <detail> <closed><notopen/></closed> </detail> </params> <geometry> <proj>epsg:3785</proj> <datum>WGS84</datum> <reftime>27506547</reftime> <reflon>-818331529</reflon> <reflat>281182119</reflat> <refelv>0</refelv> <refwidth>424</refwidth> <heading>3403</heading> <nodes> <PathNode><x>0</x><y>0</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-204</x><y>722</y><width>2</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>-2</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-13</x><y>46</y><width>0</width></PathNode> </nodes> </geometry> </tcmV01> </body></TestMessage05>";
+	std::stringstream ss;
+	tsm5Message tsm5msg;
+	tsm5EncodedMessage tsm5Enc;
+	tmx::message_container_type container;
+	ss<<tsm5str;
+	container.load<XML>(ss);
+	tsm5msg.set_contents(container.get_storage().get_tree());
+	tsm5Enc.encode_j2735_message(tsm5msg);
+	std::cout << tsm5Enc.get_payload_str()<<std::endl;
+	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
+
+	
+}
 
 }
