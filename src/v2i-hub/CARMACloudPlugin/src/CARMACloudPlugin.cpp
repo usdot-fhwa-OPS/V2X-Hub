@@ -17,25 +17,21 @@ namespace CARMACloudPlugin {
  */
 CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 
-	UpdateConfigSettings();
-	std::lock_guard<mutex> lock(_cfgLock);
-	AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
-	AddMessageFilter < tsm3Message > (this, &CARMACloudPlugin::HandleMobilityOperationMessage);
+		// xml parser setup 
+		//this->Cli.SetProxy(QString::fromLocal8Bit("http"),QString::fromLocal8Bit("127.0.0.1"),22222,QString::fromLocal8Bit("/v1/carmacloud"),0);
+        std::lock_guard<mutex> lock(_cfgLock);
+		GetConfigValue<string>("WebServiceIP",webip);
+		GetConfigValue<uint16_t>("WebServicePort",webport);
+		AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
 
-	// Subscribe to all messages specified by the filters above.
-	SubscribeToMessages();
-	std::thread webthread(&CARMACloudPlugin::StartWebService,this);
-	webthread.detach(); // wait for the thread to finish 
-	url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
-	base_hb = "/carmacloud/v2xhub";
-	base_req = "/carmacloud/tcmreq";
-	base_ack = "/carmacloud/tcmack";
-	method = "POST";
-	_not_ACK_TCMs = std::make_shared<multimap<string, tsm5EncodedMessage>>();
-	_tcm_broadcast_times = std::make_shared<std::multimap<string, TCMBroadcastMetadata>>();
-	_tcm_broadcast_starting_time = std::make_shared<std::map<string, std::time_t>>();
-	std::thread Broadcast_t(&CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM, this);
-	Broadcast_t.detach();
+		// Subscribe to all messages specified by the filters above.
+		SubscribeToMessages();
+		std::thread webthread(&CARMACloudPlugin::StartWebService,this);
+		webthread.detach(); // wait for the thread to finish 
+		url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
+		base_hb = "/carmacloud/v2xhub";
+		base_req = "/carmacloud/tcmreq";
+		method = "POST";
 
 }
 
@@ -44,152 +40,64 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 {
 	auto carmaRequest = msg.get_j2735_data();
 
+	// create an XML template for the request
+	//if(carmaRequest->body.present == TrafficControlRequest_PR_tcrV01) // taking this out since some message arent enabling this present variable. 
+	// {
 
+        // convert reqid bytes to hex string.
+        size_t hexlen = 2; //size of each hex representation with a leading 0
+        char reqid[carmaRequest->body.choice.tcrV01.reqid.size * hexlen + 1];
+        for (int i = 0; i < carmaRequest->body.choice.tcrV01.reqid.size; i++)
+        {
+            sprintf(reqid+(i*hexlen), "%.2X", carmaRequest->body.choice.tcrV01.reqid.buf[i]);
+        }
 
-	// convert reqid bytes to hex string.
-	size_t hexlen = 2; //size of each hex representation with a leading 0
-	char reqid[carmaRequest->body.choice.tcrV01.reqid.size * hexlen + 1];
-	for (int i = 0; i < carmaRequest->body.choice.tcrV01.reqid.size; i++)
-	{
-		sprintf(reqid+(i*hexlen), "%.2X", carmaRequest->body.choice.tcrV01.reqid.buf[i]);
-	}
+		printf("%s\n",reqid);
 
-	printf("%s\n",reqid);
-
-	long int reqseq = carmaRequest->body.choice.tcrV01.reqseq;
-	long int scale = carmaRequest->body.choice.tcrV01.scale;
-	
-
-	int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
-	int cnt=0;
-	char bounds_str[5000];
-		strcpy(bounds_str,"");	
-	
-	//  get current time 
-	std::time_t tm = std::time(0)/60-fetchtime*24*60; //  T minus 24 hours in  min  
-
-	while(cnt<totBounds)
-	{
-
-		uint32_t oldest=tm;
-		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
-		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
-
-	
-		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
-		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
-		long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltax;
-		long dty1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltay;
-		long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
-		long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
-
-		sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%ld</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
-
-		cnt++;
-
-
-	}
-
-	char xml_str[10000]; 
-	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
-
-	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
-	CloudSend(xml_str,url, base_req, method);
-
-	//If TCR reqids match with the any existing TCMs, erase the TCMs from the list after sending new TCR request to carma-cloud.	
-	std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-	if(_not_ACK_TCMs->erase(reqid) <= 0)
-	{
-		PLOG(logDEBUG) << "TCR request id =" << reqid << " Not Found in TCM map." << std::endl;
-	}else{
-		PLOG(logDEBUG) << "TCR request id =" << reqid << " Found in TCM map. Remove the existing TCMs with the same TCR request id." << std::endl;
-	}
-}
-
-void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
-	std::vector<string> strategies_v;
-	ConvertString2Vector(strategies_v, _strategies);
-
-	//Process incoming MobilityOperation message
-	auto mobilityOperationMsg = msg.get_j2735_data();
-	
-	//process MobilityOperation strategy 
-	stringstream ss;
-	ss << mobilityOperationMsg->body.strategy.buf;
-	string mo_strategy = ss.str();
-	std::transform(mo_strategy.begin(), mo_strategy.end(), mo_strategy.begin(), ::tolower );
-
-	if( std::find( strategies_v.begin(), strategies_v.end(), mo_strategy ) != strategies_v.end() && mo_strategy.find(_TCMAcknowledgementStrategy) != std::string::npos)
-	{		
-		//Process MobilityOperation strategy params
-		ss.str("");
-		ss << mobilityOperationMsg->body.operationParams.buf;
-		string strategy_params_str = ss.str();	
-		std::vector<string> strategy_params_v;
-		ConvertString2Vector(strategy_params_v, strategy_params_str);	
-
-		string even_log_description = GetValueFromStrategyParamsByKey(strategy_params_v, "reason");
-		string acknnowledgement_str = GetValueFromStrategyParamsByKey(strategy_params_v, "acknowledgement");
-		string traffic_control_id = GetValueFromStrategyParamsByKey(strategy_params_v, "traffic_control_id");
-		string msgnum = GetValueFromStrategyParamsByKey(strategy_params_v, "msgnum");
-		boost::trim(traffic_control_id);
-		std::transform(traffic_control_id.begin(), traffic_control_id.end(), traffic_control_id.begin(), ::tolower );	
-		ss.str("");
-		ss << mobilityOperationMsg->header.hostStaticId.buf;
-		string CMV_id = ss.str();
-
-		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-		auto matching_TCMS = _not_ACK_TCMs->equal_range(traffic_control_id);
-		bool is_tcm_removed = false;	
-		for(auto itr = matching_TCMS.first; itr != matching_TCMS.second; itr++)
-		{			
-			//The traffic control id should match with the TCM id per CMV (CARMA vehicle) and combines with msgnum to uniquely identify each TCM.
-			tsm5EncodedMessage msg = itr->second;
-			tsm5Message decoded_tsm5_msg = msg.decode_j2735_message();
-			std::shared_ptr<TestMessage05> msg_j2735_data = decoded_tsm5_msg.get_j2735_data();
-			if (msg_j2735_data == NULL) {
-				PLOG(logERROR) << "get_j2735_data() on decoded j2735 returned NULL." << std::endl;
-				break;
-			}
-
-			if(msg_j2735_data->body.choice.tcmV01.msgnum == stol(msgnum))
-			{				
-				//Remove a single TCM identified by reqid (traffic control id) and msgnum.
-				_not_ACK_TCMs->erase(itr);
-				PLOG(logINFO) << "Acknowledgement received, traffic_control_id =" << traffic_control_id << ", msgnum = "<< msgnum << " removed from TCM map." << std::endl;
-				is_tcm_removed = true;
-				break;
-			}
-		}
-		if(!is_tcm_removed)
-		{
-			PLOG(logERROR) << "Acknowledgement received, but traffic_control_id =" << traffic_control_id << ", msgnum = "<< msgnum << " NOT found in TCM map." << std::endl;
-		}
+		long int reqseq = carmaRequest->body.choice.tcrV01.reqseq;
+		long int scale = carmaRequest->body.choice.tcrV01.scale;
 		
-		//Create an event log object for both positive and negative ACK (ackownledgement), and broadcast the event log
-		tmx::messages::TmxEventLogMessage event_log_msg;
 
-		//acknnowledgement: Flag to indicate whether the received geofence was processed successfully by the CMV. 1 mapping to acknowledged by CMV
-		int ack = std::stoi(acknnowledgement_str);
-		ack == acknowledgement_status::acknowledgement_status__acknowledged ? event_log_msg.set_level(IvpLogLevel::IvpLogLevel_info) : event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-		event_log_msg.set_description(mo_strategy + ": Traffic control id = " + traffic_control_id + ( CMV_id.length() <= 0 ? "":", CMV Id = " + CMV_id )+ ", reason = " + even_log_description);
-		PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
-		this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
+		int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
+		int cnt=0;
+		char bounds_str[5000];
+	       	strcpy(bounds_str,"");	
+		
+		//  get current time 
+		std::time_t tm = std::time(0)/60-1*24*60; //  T minus 24 hours in  min  
 
-		//Only send negative ack to carma-cloud if receiving any acks from CMV.
-		if(ack != acknowledgement_status::acknowledgement_status__acknowledged  )
-		{			
-			stringstream sss;
-			sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << traffic_control_id
-					<< "</reqid><msgnum>"<< msgnum 
-					<<"</msgnum><cmvid>"<< CMV_id 
-					<<"</cmvid><acknowledgement>" << acknowledgement_status::acknowledgement_status__rejected
-					<< "</acknowledgement><description>" << even_log_description
-					<< "</description></TrafficControlAcknowledgement>"; 
-			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
-			CloudSend(sss.str(),url, base_ack, method);
+		while(cnt<totBounds)
+		{
+
+			uint32_t oldest=tm;
+		//	GetInt32((unsigned char*)carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf,&oldest);
+			// = (int*)  carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest.buf;
+			long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
+			long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
+
+		
+			long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
+			long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
+			long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltax;
+			long dty1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltay;
+			long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
+			long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
+
+			sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%ld</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+
+			cnt++;
+
+
 		}
-	}
+
+		char xml_str[10000]; 
+        sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
+
+	cout<<"Sent TCR: "<<xml_str<<endl;
+	CloudSend(xml_str,url, base_req, method);
+	//}
+
+
 }
 
 CARMACloudPlugin::~CARMACloudPlugin() {
@@ -226,22 +134,20 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	
 	string tcm = _cloudUpdate;
 
-	PLOG(logINFO) << "Received TCM from cloud" << tcm << std::endl;
-	if(tcm.length() == 0)
-	{
-		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
-		return;
-	}
+	cout<<"Received this from cloud"<<tcm<<endl;
+
     // new updateTags section
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
 	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
+
 	
 	tsm5Message tsm5message;
 	tsm5EncodedMessage tsm5ENC;
 	tmx::message_container_type container;
+	std::unique_ptr<tsm5EncodedMessage> msg;
 
 
 	std::stringstream ss;
@@ -250,162 +156,25 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	container.load<XML>(ss);
 	tsm5message.set_contents(container.get_storage().get_tree());
 	tsm5ENC.encode_j2735_message(tsm5message);
-	BroadcastTCM(tsm5ENC);
-	PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 
-	//Get TCM id
-	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
-	
-	ss.str(""); 
-    for(size_t i=0; i < tcmv01_req_id.size; i++)
-    {
-		ss << std::setfill('0') << std::setw(2) << std::hex << (unsigned) tcmv01_req_id.buf[i];
-    }
-	string tcmv01_req_id_hex = ss.str();	
-	
-	std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
-	if(tcmv01_req_id_hex.length() > 0)
-	{
-		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-		_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
-	}	
-}
-
-void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
-{ 	
-	while(true)
-	{			
-		std::this_thread::sleep_for(std::chrono::milliseconds(_TCMRepeatedlyBroadcastSleep));
-		if(_plugin->state == IvpPluginState_error)
-		{
-			break;
-		}
-		if(_not_ACK_TCMs->size() > 0)
-		{
-			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-
-			std::set<string> expired_req_ids;
-
-			for( auto itr = _not_ACK_TCMs->begin(); itr!=_not_ACK_TCMs->end(); itr++ )
-			{
-				string tcmv01_req_id_hex = itr->first;	
-				auto cur_time = (std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch())).count();				
-				if (_tcm_broadcast_starting_time->count(tcmv01_req_id_hex) == 0)
-				{
-					_tcm_broadcast_starting_time->insert({tcmv01_req_id_hex, cur_time});
-				}
-				else if ( (cur_time - _tcm_broadcast_starting_time->at(tcmv01_req_id_hex)) > _TCMRepeatedlyBroadcastTimeOut )
-				{
-					expired_req_ids.insert(tcmv01_req_id_hex);
-					continue;
-				}
-
-				
-				tsm5EncodedMessage tsm5ENC = itr->second;
-				string tcm_hex_payload = tsm5ENC.get_payload_str();
-				if(IsSkipBroadcastCurTCM(tcmv01_req_id_hex, tcm_hex_payload))
-				{
-					continue;
-				}
-				BroadcastTCM(tsm5ENC);
-				PLOG(logINFO) << " CARMACloud Plugin :: Repeatedly Broadcast tsm5:: " << tsm5ENC.get_payload_str();
-			} //END TCMs LOOP
-
-			// For any ids which have expired clean up the maps
-			for (auto tcmv01_req_id_hex : expired_req_ids) {
-				//Create an event log object for both NO ACK (ackownledgement), and broadcast the event log
-				tmx::messages::TmxEventLogMessage event_log_msg;
-				event_log_msg.set_level(IvpLogLevel::IvpLogLevel_warn);
-				event_log_msg.set_description(_TCMAcknowledgementStrategy + ": " + _TCMNOAcknowledgementDescription + " Traffic control id = " + tcmv01_req_id_hex);
-				PLOG(logDEBUG) << "event_log_msg " << event_log_msg << std::endl;
-				this->BroadcastMessage<tmx::messages::TmxEventLogMessage>(event_log_msg);	
-				
-				//send negative ack to carma-cloud
-				stringstream sss;
-				sss << "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlAcknowledgement><reqid> " << tcmv01_req_id_hex
-						<< "</reqid><msgnum></msgnum><cmvid></cmvid><acknowledgement>" <<  acknowledgement_status::acknowledgement_status__not_acknowledged
-						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
-						<< "</description></TrafficControlAcknowledgement>"; 
-				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-				CloudSend(sss.str(),url, base_ack, method);		
-
-				_not_ACK_TCMs->erase(tcmv01_req_id_hex);
-				//If time out, stop tracking the starting time of the TCMs being broadcast so far
-				_tcm_broadcast_starting_time->erase(tcmv01_req_id_hex);
-				//If time out, stop tracking the number of times the TCMs ( that has the same TCR reqid) being broadcast
-				_tcm_broadcast_times->erase(tcmv01_req_id_hex);		
-			}
-		}
-		else
-		{
-			PLOG(logDEBUG) << "NO TCMs to broadcast." << std::endl;
-			_tcm_broadcast_times->clear();
-			_tcm_broadcast_starting_time->clear();
-		}
-	}
-}
-
-void CARMACloudPlugin::BroadcastTCM(tsm5EncodedMessage& tsm5ENC) {
-	//Broadcast TCM
-	string enc = tsm5ENC.get_encoding();
-	std::unique_ptr<tsm5EncodedMessage> msg;
 	msg.reset();
 	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+
+	string enc = tsm5ENC.get_encoding();
 	msg->refresh_timestamp();
 	msg->set_payload(tsm5ENC.get_payload_str());
 	msg->set_encoding(enc);
 	msg->set_flags(IvpMsgFlags_RouteDSRC);
 	msg->addDsrcMetadata(172, 0x8003);
 	msg->refresh_timestamp();
+
 	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	BroadcastMessage(*rMsg);				
+	BroadcastMessage(*rMsg);
+
+	PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
 }
 
-bool CARMACloudPlugin::IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const
-{
-	//Skip repeatedly broadcasting  
-	if(_TCMRepeatedlyBroadCastTotalTimes == 0)
-	{
-			return true;
-	}
 
-	bool is_skip_cur_tcm = false;
-	bool is_tcm_hex_found = false;
-	auto tcms_metadatas = _tcm_broadcast_times->equal_range(tcmv01_req_id_hex);
-	for(auto itr = tcms_metadatas.first; itr !=tcms_metadatas.second; itr ++)
-	{
-		string tcm_hex = itr->second.tcm_hex;
-		int times = itr->second.num_of_times;
-		if(tcm_hex == tcm_hex_payload)
-		{
-			is_tcm_hex_found = true;
-			if (times >= _TCMRepeatedlyBroadCastTotalTimes)
-			{						
-				PLOG(logDEBUG) << "SKIP broadcasting as TCMs reqid = " << tcmv01_req_id_hex<< " has been repeatedly broadcast " << times  << " times." << std::endl;
-				//Skip the broadcasting logic below if the TCMs with this request id has already been broadcast more than _TCMRepeatedlyBroadCastTotalTimes
-				is_skip_cur_tcm = true;
-			}
-			else
-			{
-				//update the number of times a TCM being broadcast within time out period
-				times += 1; //Increase by 1 for every iteration
-				itr->second.num_of_times = times;
-				PLOG(logDEBUG) << " TCMs reqid = " << tcmv01_req_id_hex<< " repeatedly broadcast " << times  << " times." << std::endl;
-			}
-		}
-	}	
-
-	if(!is_tcm_hex_found)
-	{
-		//Initialize the number of times a TCM being broadcast
-		TCMBroadcastMetadata t;
-		t.num_of_times = 1;
-		t.tcm_hex = tcm_hex_payload;
-		_tcm_broadcast_times->insert( {tcmv01_req_id_hex, t});
-		PLOG(logDEBUG) << " TCMs reqid =  "<< tcmv01_req_id_hex << " has been broadcast once."<< std::endl;
-	} 
-	return is_skip_cur_tcm;
-}
 
 int CARMACloudPlugin::StartWebService()
 {
@@ -446,16 +215,12 @@ int CARMACloudPlugin::StartWebService()
 
 
 void CARMACloudPlugin::UpdateConfigSettings() {
+
+	GetConfigValue<uint64_t>("Frequency", _frequency);
+	
     std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<uint64_t>("Frequency", _frequency);	
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
-	GetConfigValue<uint16_t>("fetchTime",fetchtime);
-	GetConfigValue<string>("MobilityOperationStrategies", _strategies);	
-	GetConfigValue<uint16_t>("TCMRepeatedlyBroadcastTimeOut",_TCMRepeatedlyBroadcastTimeOut);	
-	GetConfigValue<string>("TCMNOAcknowledgementDescription", _TCMNOAcknowledgementDescription);
-	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
-	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
 	
 }
 
@@ -487,7 +252,6 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 		if(strcmp(method.c_str(),"POST")==0)
 		{
     		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
-			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L); // Sets a 2 second timeout 
 			res = curl_easy_perform(req);
    			if(res != CURLE_OK)
 			   {
@@ -500,55 +264,7 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
   return 0;
 }
 
-void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, const string &str) const{
-	stringstream ss;
-	ss << str;
-	while (ss.good())
-	{
-		std::string substring;
-		getline(ss, substring, ',');		
-		std::transform(substring.begin(), substring.end(),substring.begin(), ::tolower );
-		sub_str_v.push_back( substring );
-	}	
-}
 
-string CARMACloudPlugin::GetValueFromStrategyParamsByKey(const std::vector<string> & strategy_params_v, const string& key) const
-{	
-	string value = "";
-	for(auto itr = strategy_params_v.begin();  itr != strategy_params_v.end(); itr++)
-	{
-		std::pair<string, string> key_value_pair;
-		ConvertString2Pair(key_value_pair, *itr);
-		if (key_value_pair.first.find(key) != std::string::npos)
-		{
-			value = key_value_pair.second;
-			return value;
-		}		
-	}
-	return value;		
-}
-
-void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, const string &str) const
-{
-	stringstream ss;
-	ss << str;
-	size_t count = 0;
-	string key, value;
-	while (ss.good())
-	{
-		std::string substring;
-		getline(ss, substring, ':');
-		if(count == 0)
-		{
-			std::transform(substring.begin(), substring.end(),substring.begin(), ::tolower );
-			key = substring;
-			count += 1;
-		}else{
-			value +=  substring + " ";
-		}		
-	}	
-	str_pair = std::make_pair(key, value);
-}
 
 int CARMACloudPlugin::Main() {
 
