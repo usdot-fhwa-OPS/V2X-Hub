@@ -465,29 +465,34 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 
 
 int CARMACloudPlugin::CloudSend(string msg,string url, string base, string method)
-{
-	CURL *req;
-  	CURLcode res;
-	string urlfull = url+base;	  
+{ 
+	std::thread t([msg, url, base, method](){
+		
+		CURL *req;
+		CURLcode res;
+		string urlfull = url+base;	 
+		req = curl_easy_init();
+		if(req) {
+			curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
+			std::cout<< "URL " <<  urlfull.c_str()<<endl;
 
-
-  	req = curl_easy_init();
- 	 if(req) {
-  	  	curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
-
-		if(strcmp(method.c_str(),"POST")==0)
-		{
-    		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
-			curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 500L); // Request operation complete within max millisecond timeout 
-			res = curl_easy_perform(req);
-   			if(res != CURLE_OK)
-			   {
-      				fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
-					  return 1;
-			   }	  
+			if(strcmp(method.c_str(),"POST")==0)
+			{
+				curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
+				curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
+				res = curl_easy_perform(req);
+				if(res != CURLE_OK)
+				{
+						fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
+						return 1;
+				}	  
+			}
+			curl_easy_cleanup(req);
 		}
-    	curl_easy_cleanup(req);
-  }
+	});
+	t.detach();
+
+  	
   return 0;
 }
 
