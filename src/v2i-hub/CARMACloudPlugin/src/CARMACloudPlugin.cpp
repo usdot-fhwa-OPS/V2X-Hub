@@ -1,6 +1,7 @@
 #include "CARMACloudPlugin.h"
 #include <WGS84Point.h>
 #include <math.h>
+#include <future>
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -466,20 +467,18 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 
 int CARMACloudPlugin::CloudSend(string msg,string url, string base, string method)
 { 
-	std::thread t([msg, url, base, method](){
-		
+	std::async(std::launch::async, [msg, url, base, method](){
 		CURL *req;
 		CURLcode res;
-		string urlfull = url+base;	 
+		string urlfull = url+base;	
 		req = curl_easy_init();
 		if(req) {
 			curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
-			std::cout<< "URL " <<  urlfull.c_str()<<endl;
 
 			if(strcmp(method.c_str(),"POST")==0)
 			{
 				curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
-				curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
+				curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 500L); // Request operation complete within max millisecond timeout 
 				res = curl_easy_perform(req);
 				if(res != CURLE_OK)
 				{
@@ -488,10 +487,8 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 				}	  
 			}
 			curl_easy_cleanup(req);
-		}
+		}			
 	});
-	t.detach();
-
   	
   return 0;
 }
