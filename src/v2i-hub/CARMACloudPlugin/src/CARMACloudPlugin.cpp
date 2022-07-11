@@ -95,7 +95,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
-	CloudSendAsync(xml_str,url, base_req, method);
+	CloudSend(xml_str,url, base_req, method);
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
@@ -466,7 +466,7 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 
 void CARMACloudPlugin::CloudSendAsync(string msg,string url, string base, string method)
 {
-	std::thread t([this, msg, url, base, method](){	
+	std::thread t([this, &msg, &url, &base, &method](){	
 		CloudSend(msg, url, base, method);	
 	});
 	t.detach();
