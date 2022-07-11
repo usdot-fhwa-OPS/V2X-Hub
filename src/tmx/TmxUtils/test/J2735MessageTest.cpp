@@ -555,7 +555,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	std::cout << psmENC.get_payload_str()<<std::endl;
 	ASSERT_EQ(32,  psmENC.get_msgId());
 }
-
+	
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
@@ -582,8 +582,9 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());
-}
+	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
 
+	
+}
 
 }

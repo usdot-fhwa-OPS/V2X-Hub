@@ -132,16 +132,17 @@ int PedestrianPlugin::checkXML()
 			PLOG(logDEBUG) << "flir session not yet initialized: " << std::endl;
 		}
 		else
-		{
-			std::string currentXML = flirSession->getPSMXML();
+		{	
+			//retrieve the PSM queue and send each one to be broadcast, then pop		
+			std::queue<string> currentPSMQueue = flirSession->getPSMQueue();
 
-			if (currentXML.compare(lastGeneratedXML) != 0)
-			{				
-				PLOG(logINFO) << "CheckXML: Broadcasting new CP PSM!" << std::endl;
+			while(!currentPSMQueue.empty())
+			{		
+				char* char_arr = &currentPSMQueue.front()[0];
 
-				BroadcastPsm(const_cast<char*>(currentXML.c_str()));
-				lastGeneratedXML = currentXML;
-			}
+				BroadcastPsm(char_arr);
+				currentPSMQueue.pop();
+			}			 
 		}
 		
 	}	

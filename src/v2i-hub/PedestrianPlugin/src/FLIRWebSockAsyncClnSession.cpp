@@ -276,6 +276,8 @@ namespace PedestrianPlugin
 
 		                std::lock_guard<mutex> lock(_psmLock);
                         psmxml = psm_xml_str;
+                        psmQueue.push(psmxml);
+
 
                         PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
 
@@ -317,10 +319,19 @@ namespace PedestrianPlugin
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
 
-    //returns the variable containing the psm xml 
-    string FLIRWebSockAsyncClnSession::getPSMXML() const
+    std::queue<std::string> FLIRWebSockAsyncClnSession::getPSMQueue()
     {
-        return psmxml;
+        std::lock_guard<mutex> lock(_psmLock);
+
+        //pass copy of the queue to Pedestrian Plugin
+        std::queue<std::string> queueToPass = psmQueue;
+
+        //empty the queue internally
+        std::queue<std::string> empty;
+        std::swap(psmQueue, empty);
+        
+        return queueToPass;
+
     }
 
     vector<int> FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
@@ -357,6 +368,8 @@ namespace PedestrianPlugin
 
         std::string milliseconds = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
         milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
+  
+        int millisecondsTotal = (std::stoi(sec) * 1000) + std::stoi(milliseconds);
 
         parsedArr.push_back(std::stoi(year));
         parsedArr.push_back(std::stoi(month));
@@ -364,10 +377,10 @@ namespace PedestrianPlugin
         parsedArr.push_back(std::stoi(hour));
         parsedArr.push_back(std::stoi(mins));
         parsedArr.push_back(std::stoi(sec));
-        parsedArr.push_back(std::stoi(milliseconds));      
+        parsedArr.push_back(millisecondsTotal);      
 
         return parsedArr;
-    }        
+    }       
 
 
 }
