@@ -464,26 +464,26 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void CARMACloudPlugin::CloudSendAsync(const string& msg,const string& url, const string& base, const string& method)
+void CARMACloudPlugin::CloudSendAsync(const string& local_msg,const string& local_url, const string& local_base, const string& local_method)
 {
-	std::thread t([this, &msg, &url, &base, &method](){	
-		CloudSend(msg, url, base, method);	
+	std::thread t([this, &local_msg, &local_url, &local_base, &local_method](){	
+		CloudSend(local_msg, local_url, local_base, local_method);	
 	});
 	t.detach();
 }
 
-int CARMACloudPlugin::CloudSend(const string &msg, const string& url, const string& base, const string& method)
+int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url, const string& local_base, const string& local_method)
 { 	
 	CURL *req;
 	CURLcode res;
-	string urlfull = url+base;	
+	string urlfull = local_url+local_base;	
 	req = curl_easy_init();
 	if(req) {
 		curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
 
-		if(strcmp(method.c_str(),"POST")==0)
+		if(strcmp(local_method.c_str(),"POST")==0)
 		{
-			curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
+			curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
 			curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
 			res = curl_easy_perform(req);
 			if(res != CURLE_OK)
