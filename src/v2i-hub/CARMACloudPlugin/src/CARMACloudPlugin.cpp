@@ -483,7 +483,6 @@ int CARMACloudPlugin::CloudSend(string msg,string url, string base, string metho
 				if(res != CURLE_OK)
 				{
 						fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
-						return 1;
 				}	  
 			}
 			curl_easy_cleanup(req);
