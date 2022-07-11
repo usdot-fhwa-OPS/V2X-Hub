@@ -464,7 +464,7 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void CARMACloudPlugin::CloudSendAsync(string msg,string url, string base, string method)
+void CARMACloudPlugin::CloudSendAsync(const string& msg,const string& url, const string& base, const string& method)
 {
 	std::thread t([this, &msg, &url, &base, &method](){	
 		CloudSend(msg, url, base, method);	
@@ -472,7 +472,7 @@ void CARMACloudPlugin::CloudSendAsync(string msg,string url, string base, string
 	t.detach();
 }
 
-int CARMACloudPlugin::CloudSend(string msg,string url, string base, string method)
+int CARMACloudPlugin::CloudSend(const string &msg, const string& url, const string& base, const string& method)
 { 	
 	CURL *req;
 	CURLcode res;
