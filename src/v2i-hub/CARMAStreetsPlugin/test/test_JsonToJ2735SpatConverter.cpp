@@ -56,6 +56,7 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(spat->intersections.list.count, 0);
         converter.convertJson2Spat(spat_json, spat);
         ASSERT_EQ(spat->intersections.list.count, 1);
+        free(spat);
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2IntersectionStateList)

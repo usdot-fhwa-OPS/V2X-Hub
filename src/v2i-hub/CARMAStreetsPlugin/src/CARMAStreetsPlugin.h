@@ -14,6 +14,7 @@
 #include <boost/thread.hpp>
 #include <mutex>
 #include "J2735MapToJsonConverter.h"
+#include "JsonToJ2735SpatConverter.h"
 
 
 

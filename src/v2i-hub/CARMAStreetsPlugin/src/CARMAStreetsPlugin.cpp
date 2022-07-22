@@ -121,6 +121,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
+	thread_schpl.join();
+	thread_spat.join();
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -557,7 +559,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
 			return;
 		}
-
+		//Initialize Json to J2735 Spat convertor 
+		JsonToJ2735SpatConverter spat_convertor;
 		while (_run_kafka_consumer) 
 		{
 			RdKafka::Message *msg = _spat_kafka_consumer->consume( 500 );
@@ -576,7 +579,17 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 						continue;
 					}
 					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					SPAT *spat = (SPAT *)calloc(1, sizeof(SPAT));
+					spat_convertor.convertJson2Spat(payload_root, spat);
+					auto spat_message = std::make_unique<tmx::messages::SpatMessage>(spat);
+					tmx::messages::SpatEncodedMessage spatEncodedMsg;
+					spat_convertor.encodeSpat(*spat_message.get(), spatEncodedMsg);
+
 					//Broadcast the encoded SPAT message
+					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
+					//PLOG(logDEBUG) << spatEncodedMsg;
+					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
 				}
 			}
 			delete msg;

@@ -60,7 +60,7 @@ namespace CARMAStreetsPlugin
          * @param json Incoming Json value with AdvisorySpeedList information that is consumed from a Kafka topic.
          * @param maneuver_assist_list Outgoing J2735 AdvisorySpeedList object that is populated by the json value.
          */
-        void convertJson2AdvisorySpeed(Json::Value speeds_json, AdvisorySpeedList_t *speeds) const;
+        void convertJson2AdvisorySpeed(const Json::Value speeds_json, AdvisorySpeedList_t *speeds) const;
 
         /**
          * @brief Encode the J2735 SPAT object
