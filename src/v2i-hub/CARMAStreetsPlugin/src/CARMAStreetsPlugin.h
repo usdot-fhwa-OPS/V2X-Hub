@@ -47,7 +47,15 @@ protected:
 	 * @param routeableMsg 
 	 */
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
-	void SubscribeKafkaTopics();
+	/**
+	 * @brief Subcribe to scheduling plan Kafka topic created by carma-streets
+	 */
+	void SubscribeSchedulingPlanKafkaTopic();
+	/**
+	 * @brief Subcribe to SPAT Kafka topic created by carma-streets
+	 */
+	void SubscribeSpatKafkaTopic();
+
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
 	/**
 	 * @brief Produce message to a kafka topic
@@ -61,6 +69,7 @@ private:
 	std::string _receiveTopic;
 	std::string _transmitMobilityOperationTopic;
 	std::string _subscribeToSchedulingPlanTopic = "";
+	std::string _subscribeToSpatTopic = "";
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
@@ -69,8 +78,10 @@ private:
 	RdKafka::Conf *kafka_conf;
 	RdKafka::Conf *kafka_conf_consumer;
  	RdKafka::Producer *kafka_producer;
-	RdKafka::KafkaConsumer *kafka_consumer;
-	RdKafka::Topic *_topic;
+	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
+	RdKafka::KafkaConsumer *_spat_kafka_consumer;
+	RdKafka::Topic *_scheduing_plan_topic;
+	RdKafka::Topic *_spat_topic;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;

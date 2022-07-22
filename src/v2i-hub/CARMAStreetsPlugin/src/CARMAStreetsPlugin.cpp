@@ -85,14 +85,17 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	}
 	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
 
-	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
-	if ( !kafka_consumer ) {
-		PLOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
+	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
+	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
+
+	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
+		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
 		exit(1);
 	}
-	PLOG(logDEBUG) << "Created consumer " << kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _scheduing_plan_kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
 
-	//create kafka topic
+	//create kafka topics
 	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 	if(!tconf)
 	{
@@ -100,16 +103,24 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 		return;
 	}   
 
-	_topic = RdKafka::Topic::create(kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
-	if(!_topic)
+	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
+	if(!_scheduing_plan_topic)
 	{
-		PLOG(logERROR) << "RDKafka create topic failed:" << error_string;
+		PLOG(logERROR) << "RDKafka create scheduing plan topic failed:" << error_string;
+		return ;
+	}
+
+	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf,error_string);
+	if(!_spat_topic)
+	{
+		PLOG(logERROR) << "RDKafka create SPAT topic failed:" << error_string;
 		return ;
 	}
 
 	delete tconf;
 	
-	boost::thread thr(&CARMAStreetsPlugin::SubscribeKafkaTopics, this);
+	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
+	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -463,15 +474,15 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void CARMAStreetsPlugin::SubscribeKafkaTopics()
+void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 {	
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
-		PLOG(logDEBUG) << "SubscribeKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
+		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
 		topics.push_back(std::string(_subscribeToSchedulingPlanTopic));
 
-		RdKafka::ErrorCode err = kafka_consumer->subscribe(topics);
+		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
 		if (err) 
 		{
 			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
@@ -480,7 +491,7 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 
 		while (_run_kafka_consumer) 
 		{
-			RdKafka::Message *msg = kafka_consumer->consume( 500 );
+			RdKafka::Message *msg = _scheduing_plan_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
 				const char * payload_str = static_cast<const char *>( msg->payload() );
@@ -530,6 +541,46 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 			delete msg;
 		}
 
+	}
+}
+
+void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
+	if(_subscribeToSpatTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
+		std::vector<std::string> topics;
+		topics.push_back(std::string(_subscribeToSpatTopic));
+
+		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
+		if (err) 
+		{
+			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
+			return;
+		}
+
+		while (_run_kafka_consumer) 
+		{
+			RdKafka::Message *msg = _spat_kafka_consumer->consume( 500 );
+			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			{
+				const char * payload_str = static_cast<const char *>( msg->payload() );
+				if(msg->len() > 0)
+				{
+					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+					Json::Value  payload_root;
+					Json::Reader payload_reader;
+					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+					if( !parse_sucessful )
+					{	
+						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						continue;
+					}
+					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					//Broadcast the encoded SPAT message
+				}
+			}
+			delete msg;
+		}
 	}
 }
 
