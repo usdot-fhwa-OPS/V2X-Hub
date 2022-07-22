@@ -53,7 +53,9 @@ namespace CARMAStreetsPlugin
     {
         SPAT *spat = (SPAT *)calloc(1, sizeof(SPAT));
         JsonToJ2735SpatConverter converter;
+        ASSERT_EQ(spat->intersections.list.count, 0);
         converter.convertJson2Spat(spat_json, spat);
+        ASSERT_EQ(spat->intersections.list.count, 1);
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2IntersectionStateList)
