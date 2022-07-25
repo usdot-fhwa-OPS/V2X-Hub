@@ -483,7 +483,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
-		std::string scheduling_plan_topic = std::string(_subscribeToSchedulingPlanTopic);
+		auto scheduling_plan_topic = std::string(_subscribeToSchedulingPlanTopic);
 		topics.emplace_back(scheduling_plan_topic);
 
 		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
@@ -495,8 +495,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 
 		while (_run_kafka_consumer) 
 		{
-			RdKafka::Message *msg_obj = _scheduing_plan_kafka_consumer->consume( 500 );
-			auto msg = std::make_unique<RdKafka::Message>(msg_obj);
+			auto msg = _scheduing_plan_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
 				auto payload_str = static_cast<const char *>( msg->payload() );
@@ -543,6 +542,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 					}			
 				}
 			}
+			delete msg;
 		}
 
 	}
@@ -553,7 +553,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
 		std::vector<std::string> topics;
-		std::string spat_topic = std::string(_subscribeToSpatTopic);
+		auto spat_topic = std::string(_subscribeToSpatTopic);
 		topics.emplace_back(spat_topic);
 
 		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
@@ -566,8 +566,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 		JsonToJ2735SpatConverter spat_convertor;
 		while (_run_kafka_consumer) 
 		{
-			auto msg_obj = _spat_kafka_consumer->consume( 500 );
-			auto msg = std::make_unique<RdKafka::Message>(msg_obj);
+			auto msg = _spat_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
 				auto payload_str = static_cast<const char *>( msg->payload() );
@@ -596,6 +595,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
 				}
 			}
+			delete msg;
 		}
 	}
 }

@@ -209,7 +209,7 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::encodeSpat(std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const
+    void JsonToJ2735SpatConverter::encodeSpat(const std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const
     {
         tmx::messages::MessageFrameMessage frame(spat_message->get_j2735_data());
         encodedSpat.set_data(tmx::messages::TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
