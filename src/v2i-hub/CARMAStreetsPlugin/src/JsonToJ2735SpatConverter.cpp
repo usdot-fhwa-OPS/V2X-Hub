@@ -4,6 +4,7 @@ namespace CARMAStreetsPlugin
 {
     void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value &spat_json, SPAT *spat) const
     {
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
         std::string name = spat_json["name"].asString();
         int32_t timestamp = spat_json["timestamp"].asInt();
 
@@ -25,7 +26,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SpatConverter::convertJson2IntersectionStateList(const Json::Value &intersections_json, IntersectionStateList *intersections) const
     {
-        for (const auto& int_json : intersections_json)
+        for (const auto &int_json : intersections_json)
         {
             auto intersection = (IntersectionState_t *)calloc(1, sizeof(IntersectionState_t));
             // intersection name
@@ -92,7 +93,7 @@ namespace CARMAStreetsPlugin
     }
     void JsonToJ2735SpatConverter::convertJson2MovementList(const Json::Value &movements_json, MovementList *states) const
     {
-        for (const auto& movement_json : movements_json)
+        for (const auto &movement_json : movements_json)
         {
             auto state = (MovementState_t *)calloc(1, sizeof(MovementState_t));
 
@@ -121,7 +122,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SpatConverter::convertJson2MovementEventList(const Json::Value &movement_event_list_json, MovementEventList *state_time_speed) const
     {
-        for (const auto& m_event : movement_event_list_json)
+        for (const auto &m_event : movement_event_list_json)
         {
             auto movement_event = (MovementEvent_t *)calloc(1, sizeof(MovementEvent_t));
             movement_event->eventState = m_event["event_state"].asInt();
@@ -165,7 +166,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SpatConverter::convertJson2AdvisorySpeed(const Json::Value &speeds_json, AdvisorySpeedList_t *speeds) const
     {
-        for (const auto& speed_json : speeds_json)
+        for (const auto &speed_json : speeds_json)
         {
             auto speed = (AdvisorySpeed_t *)calloc(1, sizeof(AdvisorySpeed_t));
             speed->type = speed_json["type"].asInt();
@@ -188,7 +189,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SpatConverter::convertJson2ManeuverAssistList(const Json::Value &maneuver_assist_list_json, ManeuverAssistList_t *maneuver_assist_list) const
     {
-        for (const auto& masst : maneuver_assist_list_json)
+        for (const auto &masst : maneuver_assist_list_json)
         {
             auto maneuver_assist = (ConnectionManeuverAssist_t *)calloc(1, sizeof(ConnectionManeuverAssist_t));
             maneuver_assist->connectionID = masst["connection_id"].asInt();
@@ -209,9 +210,9 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::encodeSpat(const std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const
+    void JsonToJ2735SpatConverter::encodeSpat(const std::shared_ptr<SPAT> &spat_ptr, tmx::messages::SpatEncodedMessage &encodedSpat) const
     {
-        tmx::messages::MessageFrameMessage frame(spat_message->get_j2735_data());
+        tmx::messages::MessageFrameMessage frame(spat_ptr);
         encodedSpat.set_data(tmx::messages::TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
         free(frame.get_j2735_data().get());
     }

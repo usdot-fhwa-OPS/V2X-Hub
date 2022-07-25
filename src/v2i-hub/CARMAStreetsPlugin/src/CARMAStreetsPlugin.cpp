@@ -582,11 +582,11 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 						continue;
 					}
 					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
-					auto spat = (SPAT *)calloc(1, sizeof(SPAT));
-					spat_convertor.convertJson2Spat(payload_root, spat);
-					auto spat_message = std::make_unique<tmx::messages::SpatMessage>(spat);
+					auto spat_ptr = std::make_shared<SPAT>();
+					spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
 					tmx::messages::SpatEncodedMessage spatEncodedMsg;
-					spat_convertor.encodeSpat(spat_message, spatEncodedMsg);
+					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 
 					//Broadcast the encoded SPAT message
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);

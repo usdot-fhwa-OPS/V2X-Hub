@@ -67,7 +67,7 @@ namespace CARMAStreetsPlugin
          * @param spat Incoming J2735 SPAT object.
          * @param encodedSpat Outgoing encoded SPAT object populated by the Incoming SPAT object.
          */
-        void encodeSpat(const std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const;
+        void encodeSpat(const std::shared_ptr<SPAT> &spat_ptr, tmx::messages::SpatEncodedMessage &encodedSpat) const;
 
         ~JsonToJ2735SpatConverter() = default;
     };

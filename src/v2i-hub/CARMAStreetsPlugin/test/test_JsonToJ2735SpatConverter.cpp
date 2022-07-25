@@ -51,12 +51,12 @@ namespace CARMAStreetsPlugin
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2Spat)
     {
-        auto spat = std::make_unique<SPAT>();
+        auto spat_ptr = std::make_shared<SPAT>();
         JsonToJ2735SpatConverter converter;
-        ASSERT_EQ(spat->intersections.list.count, 0);
-        converter.convertJson2Spat(spat_json, spat.get());
-        ASSERT_EQ(spat->intersections.list.count, 1);
-        free(spat->intersections.list.array[0]);
+        ASSERT_EQ(spat_ptr->intersections.list.count, 0);
+        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        ASSERT_EQ(spat_ptr->intersections.list.count, 1);
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2IntersectionStateList)
@@ -115,14 +115,14 @@ namespace CARMAStreetsPlugin
 
     TEST_F(test_JsonToJ2735SpatConverter, encodeSpat)
     {
-        SPAT *spat = (SPAT *)calloc(1, sizeof(SPAT));
+        auto spat_ptr = std::make_shared<SPAT>();
         JsonToJ2735SpatConverter converter;
-        converter.convertJson2Spat(spat_json, spat);
+        converter.convertJson2Spat(spat_json, spat_ptr.get());
 
-        auto spat_message = std::make_unique<tmx::messages::SpatMessage>(spat);
         tmx::messages::SpatEncodedMessage encodedSpat;
-        converter.encodeSpat(spat_message, encodedSpat);
+        converter.encodeSpat(spat_ptr, encodedSpat);
         std::string encoded_spat_str = "00135f68051f5a9e9cfbb0ecd3eb2e441a7774cbcb9e5c7d34efdc07c7d7cbcfa49ddd32f2e7971f4d3bf701dd7d8007842dc00411008182803114b4e7d1d2a75e5b81018fe0002001400c807d0400000f10230018141e07001000881e0700100088";
         ASSERT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
     }
 }
