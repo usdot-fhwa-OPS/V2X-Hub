@@ -47,6 +47,11 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
+            "key": "subscribeToSpatTopic",
+            "default": "spat_json",
+            "description": "Apache Kafka topic plugin will transmit message to."
+        },
+        {
             "key": "transmitMobilityPathTopic",
             "default": "v2xhub_mobility_path_in",
             "description": "Apache Kafka topic plugin will transmit message to."

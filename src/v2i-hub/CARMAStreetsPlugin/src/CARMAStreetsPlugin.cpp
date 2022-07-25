@@ -44,6 +44,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
  	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
+ 	GetConfigValue<string>("subscribeToSpatTopic", _subscribeToSpatTopic);
 	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
  	GetConfigValue<string>("intersectionType", _intersectionType);
 	 // Populate strategies config
@@ -494,7 +495,8 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 
 		while (_run_kafka_consumer) 
 		{
-			RdKafka::Message *msg = _scheduing_plan_kafka_consumer->consume( 500 );
+			RdKafka::Message *msg_obj = _scheduing_plan_kafka_consumer->consume( 500 );
+			auto msg = std::make_unique<RdKafka::Message>(msg_obj);
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
 				auto payload_str = static_cast<const char *>( msg->payload() );
@@ -541,7 +543,6 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 					}			
 				}
 			}
-			delete msg;
 		}
 
 	}
@@ -565,7 +566,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 		JsonToJ2735SpatConverter spat_convertor;
 		while (_run_kafka_consumer) 
 		{
-			RdKafka::Message *msg = _spat_kafka_consumer->consume( 500 );
+			auto msg_obj = _spat_kafka_consumer->consume( 500 );
+			auto msg = std::make_unique<RdKafka::Message>(msg_obj);
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
 				auto payload_str = static_cast<const char *>( msg->payload() );
@@ -594,7 +596,6 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
 				}
 			}
-			delete msg;
 		}
 	}
 }
