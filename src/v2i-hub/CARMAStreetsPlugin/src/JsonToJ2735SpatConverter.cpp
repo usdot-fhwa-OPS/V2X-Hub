@@ -8,22 +8,18 @@ namespace CARMAStreetsPlugin
         int32_t timestamp = spat_json["timestamp"].asInt();
 
         // Parse spat name field
-        auto spat_name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
-        spat_name->buf = (uint8_t *)calloc(1, name.length());
-        spat_name->size = name.length();
-        memcpy(spat_name->buf, name.c_str(), name.length());
-        spat->name = spat_name;
+        spat->name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
+        spat->name->buf = (uint8_t *)calloc(1, name.length());
+        spat->name->size = name.length();
+        memcpy(spat->name->buf, name.c_str(), name.length());
 
-        auto min_of_year_timestamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-        *min_of_year_timestamp = timestamp;
-        spat->timeStamp = min_of_year_timestamp;
+        spat->timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+        *spat->timeStamp = timestamp;
 
         // Parse intersections
         if (spat_json["intersections"].isArray())
         {
-            auto intersections = (IntersectionStateList *)calloc(1, sizeof(IntersectionStateList));
-            convertJson2IntersectionStateList(spat_json["intersections"], intersections);
-            spat->intersections = *intersections;
+            convertJson2IntersectionStateList(spat_json["intersections"], &spat->intersections);
         }
     }
 

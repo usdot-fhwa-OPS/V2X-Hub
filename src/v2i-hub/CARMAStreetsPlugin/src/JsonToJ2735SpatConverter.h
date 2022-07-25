@@ -66,7 +66,6 @@ namespace CARMAStreetsPlugin
          * @brief Encode the J2735 SPAT object
          * @param spat Incoming J2735 SPAT object.
          * @param encodedSpat Outgoing encoded SPAT object populated by the Incoming SPAT object.
-         * @return true: Encoding success, false otherwise
          */
         void encodeSpat(std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const;
 

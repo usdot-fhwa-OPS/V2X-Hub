@@ -51,15 +51,13 @@ namespace CARMAStreetsPlugin
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2Spat)
     {
-        SPAT *spat = (SPAT *)calloc(1, sizeof(SPAT));
+        auto spat = std::make_unique<SPAT>();
         JsonToJ2735SpatConverter converter;
         ASSERT_EQ(spat->intersections.list.count, 0);
-        converter.convertJson2Spat(spat_json, spat);
+        converter.convertJson2Spat(spat_json, spat.get());
         ASSERT_EQ(spat->intersections.list.count, 1);
-        free(spat->intersections.list.array[0]);
+        xer_fprint(stdout, &asn_DEF_SPAT, spat.get());
         free(spat->intersections.list.array[0]->status.buf);
-        free(spat);
-
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2IntersectionStateList)
@@ -71,6 +69,7 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(intersections->list.count, 0);
             converter.convertJson2IntersectionStateList(spat_json["intersections"], intersections);
             ASSERT_EQ(intersections->list.count, 1);
+            free(intersections->list.array[0]->status.buf);
             free(intersections);
         }
     }
@@ -84,6 +83,7 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(states->list.count, 0);
             converter.convertJson2MovementList(movement_list_json["states"], states);
             ASSERT_EQ(states->list.count, 1);
+            free(states);
         }
     }
 
@@ -96,6 +96,9 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(state_time_speed->list.count, 0);
             converter.convertJson2MovementEventList(movement_events_json["state_time_speed"], state_time_speed);
             ASSERT_EQ(state_time_speed->list.count, 1);
+            free(state_time_speed->list.array[0]->speeds);
+            free(state_time_speed->list.array[0]->timing);
+            free(state_time_speed);
         }
     }
 
@@ -108,6 +111,11 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(maneuver_assist_list->list.count, 0);
             converter.convertJson2ManeuverAssistList(manuever_assist_list_json["maneuver_assist_list"], maneuver_assist_list);
             ASSERT_EQ(maneuver_assist_list->list.count, 1);
+            free(maneuver_assist_list->list.array[0]->availableStorageLength);
+            free(maneuver_assist_list->list.array[0]->pedBicycleDetect);
+            free(maneuver_assist_list->list.array[0]->queueLength);
+            free(maneuver_assist_list->list.array[0]->waitOnStop);
+            free(maneuver_assist_list);
         }
     }
 
@@ -118,7 +126,6 @@ namespace CARMAStreetsPlugin
         converter.convertJson2Spat(spat_json, spat);
 
         auto spat_message = std::make_unique<tmx::messages::SpatMessage>(spat);
-        // auto spat_obj = spat_message->get_j2735_data();
         tmx::messages::SpatEncodedMessage encodedSpat;
         converter.encodeSpat(spat_message, encodedSpat);
         std::string encoded_spat_str = "00135f68051f5a9e9cfbb0ecd3eb2e441a7774cbcb9e5c7d34efdc07c7d7cbcfa49ddd32f2e7971f4d3bf701dd7d8007842dc00411008182803114b4e7d1d2a75e5b81018fe0002001400c807d0400000f10230018141e07001000881e0700100088";
