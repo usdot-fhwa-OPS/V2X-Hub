@@ -56,8 +56,7 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(spat->intersections.list.count, 0);
         converter.convertJson2Spat(spat_json, spat.get());
         ASSERT_EQ(spat->intersections.list.count, 1);
-        xer_fprint(stdout, &asn_DEF_SPAT, spat.get());
-        free(spat->intersections.list.array[0]->status.buf);
+        free(spat->intersections.list.array[0]);
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2IntersectionStateList)
@@ -69,7 +68,6 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(intersections->list.count, 0);
             converter.convertJson2IntersectionStateList(spat_json["intersections"], intersections);
             ASSERT_EQ(intersections->list.count, 1);
-            free(intersections->list.array[0]->status.buf);
             free(intersections);
         }
     }
@@ -111,10 +109,6 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(maneuver_assist_list->list.count, 0);
             converter.convertJson2ManeuverAssistList(manuever_assist_list_json["maneuver_assist_list"], maneuver_assist_list);
             ASSERT_EQ(maneuver_assist_list->list.count, 1);
-            free(maneuver_assist_list->list.array[0]->availableStorageLength);
-            free(maneuver_assist_list->list.array[0]->pedBicycleDetect);
-            free(maneuver_assist_list->list.array[0]->queueLength);
-            free(maneuver_assist_list->list.array[0]->waitOnStop);
             free(maneuver_assist_list);
         }
     }
