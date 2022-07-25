@@ -2,7 +2,7 @@
 
 namespace CARMAStreetsPlugin
 {
-    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value& spat_json, SPAT *spat) const
+    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value &spat_json, SPAT *spat) const
     {
         std::string name = spat_json["name"].asString();
         int32_t timestamp = spat_json["timestamp"].asInt();
@@ -27,7 +27,7 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2IntersectionStateList(const Json::Value& intersections_json, IntersectionStateList *intersections) const
+    void JsonToJ2735SpatConverter::convertJson2IntersectionStateList(const Json::Value &intersections_json, IntersectionStateList *intersections) const
     {
         for (auto int_json : intersections_json)
         {
@@ -50,18 +50,16 @@ namespace CARMAStreetsPlugin
 
             // moy
             auto moy_int = int_json["moy"].asInt();
-            auto moy = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-            *moy = moy_int;
-            intersection->moy = moy;
+            intersection->moy = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+            *intersection->moy = moy_int;
 
             // timestamp
             auto time_stamp = int_json["time_stamp"];
-            auto timeStamp = (DSecond_t *)calloc(1, sizeof(DSecond_t));
-            *timeStamp = time_stamp.asInt();
-            intersection->timeStamp = timeStamp;
+            intersection->timeStamp = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+            *intersection->timeStamp = time_stamp.asInt();
 
             // status
-            int16_t status = static_cast<int16_t> (int_json["status"].asInt());
+            int16_t status = static_cast<int16_t>(int_json["status"].asInt());
             intersection->status.buf = (uint8_t *)calloc(2, sizeof(uint8_t));
             intersection->status.size = 2 * sizeof(uint8_t);
             intersection->status.bits_unused = 0;
@@ -72,68 +70,60 @@ namespace CARMAStreetsPlugin
             auto enabled_lanes_json = int_json["enabled_lanes"];
             if (enabled_lanes_json.isArray())
             {
-                auto enabled_lanes = (EnabledLaneList_t *)calloc(1, sizeof(EnabledLaneList_t));
-                for (const auto& laneId : enabled_lanes_json)
+                intersection->enabledLanes = (EnabledLaneList_t *)calloc(1, sizeof(EnabledLaneList_t));
+                for (const auto &laneId : enabled_lanes_json)
                 {
                     auto lane = (LaneID_t *)calloc(1, sizeof(LaneID_t));
                     *lane = laneId.asInt();
-                    ASN_SEQUENCE_ADD(&enabled_lanes->list, lane);
+                    ASN_SEQUENCE_ADD(&intersection->enabledLanes->list, lane);
                 }
-                intersection->enabledLanes = enabled_lanes;
             }
 
             // Movements
             if (int_json["states"].isArray())
             {
-                auto states = (MovementList_t *)calloc(1, sizeof(MovementList_t));
-                convertJson2MovementList(int_json["states"], states);
-                intersection->states = *states;
+                convertJson2MovementList(int_json["states"], &intersection->states);
             }
 
             // Manuever Assist List
             if (int_json["maneuver_assist_list"].isArray())
             {
-                auto maneuver_assist_list = (ManeuverAssistList_t *)calloc(1, sizeof(ManeuverAssistList_t));
-                convertJson2ManeuverAssistList(int_json["maneuver_assist_list"], maneuver_assist_list);
-                intersection->maneuverAssistList = maneuver_assist_list;
+                intersection->maneuverAssistList = (ManeuverAssistList_t *)calloc(1, sizeof(ManeuverAssistList_t));
+                convertJson2ManeuverAssistList(int_json["maneuver_assist_list"], intersection->maneuverAssistList);
             }
             ASN_SEQUENCE_ADD(&intersections->list, intersection);
         }
     }
-    void JsonToJ2735SpatConverter::convertJson2MovementList(const Json::Value& movements_json, MovementList *states) const
+    void JsonToJ2735SpatConverter::convertJson2MovementList(const Json::Value &movements_json, MovementList *states) const
     {
         for (auto movement_json : movements_json)
         {
             auto state = (MovementState_t *)calloc(1, sizeof(MovementState_t));
 
             auto movement_name_str = movement_json["movement_name"].asString();
-            auto movement_name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
-            movement_name->size = movement_name_str.length();
-            movement_name->buf = (uint8_t *)calloc(1, movement_name_str.length());
-            memcpy(movement_name->buf, movement_name_str.c_str(), movement_name_str.length());
-            state->movementName = movement_name;
+            state->movementName = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
+            state->movementName->size = movement_name_str.length();
+            state->movementName->buf = (uint8_t *)calloc(1, movement_name_str.length());
+            memcpy(state->movementName->buf, movement_name_str.c_str(), movement_name_str.length());
 
             auto sg_id = movement_json["signal_group"].asInt();
             state->signalGroup = sg_id;
 
             if (movement_json["state_time_speed"].isArray())
             {
-                auto state_time_speed = (MovementEventList_t *)calloc(1, sizeof(MovementEventList_t));
-                convertJson2MovementEventList(movement_json["state_time_speed"], state_time_speed);
-                state->state_time_speed = *state_time_speed;
+                convertJson2MovementEventList(movement_json["state_time_speed"], &state->state_time_speed);
             }
 
             if (movement_json["maneuver_assist_list"].isArray())
             {
-                auto maneuver_assist_list = (ManeuverAssistList_t *)calloc(1, sizeof(ManeuverAssistList_t));
-                convertJson2ManeuverAssistList(movement_json["maneuver_assist_list"], maneuver_assist_list);
-                state->maneuverAssistList = maneuver_assist_list;
+                state->maneuverAssistList = (ManeuverAssistList_t *)calloc(1, sizeof(ManeuverAssistList_t));
+                convertJson2ManeuverAssistList(movement_json["maneuver_assist_list"], state->maneuverAssistList);
             }
             ASN_SEQUENCE_ADD(&states->list, state);
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2MovementEventList(const Json::Value& movement_event_list_json, MovementEventList *state_time_speed) const
+    void JsonToJ2735SpatConverter::convertJson2MovementEventList(const Json::Value &movement_event_list_json, MovementEventList *state_time_speed) const
     {
         for (auto m_event : movement_event_list_json)
         {
@@ -142,107 +132,90 @@ namespace CARMAStreetsPlugin
 
             // Timing
             auto timing_json = m_event["timing"];
-            auto timing = (TimeChangeDetails_t *)calloc(1, sizeof(TimeChangeDetails_t));
-            convertJson2TimeChangeDetail(timing_json, timing);
-            movement_event->timing = timing;
+            movement_event->timing = (TimeChangeDetails_t *)calloc(1, sizeof(TimeChangeDetails_t));
+            convertJson2TimeChangeDetail(timing_json, movement_event->timing);
 
             // speeds
             auto speeds_json = m_event["speeds"];
             if (speeds_json.isArray())
             {
-                auto speeds = (AdvisorySpeedList_t *)calloc(1, sizeof(AdvisorySpeedList_t));
-                convertJson2AdvisorySpeed(speeds_json, speeds);
-                movement_event->speeds = speeds;
+                movement_event->speeds = (AdvisorySpeedList_t *)calloc(1, sizeof(AdvisorySpeedList_t));
+                convertJson2AdvisorySpeed(speeds_json, movement_event->speeds);
             }
 
             ASN_SEQUENCE_ADD(&state_time_speed->list, movement_event);
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2TimeChangeDetail(const Json::Value& time_change_detail_json, TimeChangeDetails_t *timing) const
+    void JsonToJ2735SpatConverter::convertJson2TimeChangeDetail(const Json::Value &time_change_detail_json, TimeChangeDetails_t *timing) const
     {
-        auto t_mark_start = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *t_mark_start = time_change_detail_json["start_time"].asInt();
-        timing->startTime = t_mark_start;
+        timing->startTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
+        *timing->startTime = time_change_detail_json["start_time"].asInt();
 
-        auto t_mark_min_end = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *t_mark_min_end = time_change_detail_json["min_end_time"].asInt();
-        timing->minEndTime = *t_mark_min_end;
+        timing->minEndTime = time_change_detail_json["min_end_time"].asInt();
 
-        auto t_mark_max_end = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *t_mark_max_end = time_change_detail_json["max_end_time"].asInt();
-        timing->maxEndTime = t_mark_max_end;
+        timing->maxEndTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
+        *timing->maxEndTime = time_change_detail_json["max_end_time"].asInt();
 
-        auto t_mark_likely = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *t_mark_likely = time_change_detail_json["likely_time"].asInt();
-        timing->likelyTime = t_mark_likely;
+        timing->likelyTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
+        *timing->likelyTime = time_change_detail_json["likely_time"].asInt();
 
-        auto t_mark_next = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *t_mark_next = time_change_detail_json["next_time"].asInt();
-        timing->nextTime = t_mark_next;
+        timing->nextTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
+        *timing->nextTime = time_change_detail_json["next_time"].asInt();
 
-        auto t_confidence = (TimeIntervalConfidence_t *)calloc(1, sizeof(TimeIntervalConfidence_t));
-        *t_confidence = time_change_detail_json["confidence"].asInt();
-        timing->confidence = t_confidence;
+        timing->confidence = (TimeIntervalConfidence_t *)calloc(1, sizeof(TimeIntervalConfidence_t));
+        *timing->confidence = time_change_detail_json["confidence"].asInt();
     }
 
-    void JsonToJ2735SpatConverter::convertJson2AdvisorySpeed(const Json::Value& speeds_json, AdvisorySpeedList_t *speeds) const
+    void JsonToJ2735SpatConverter::convertJson2AdvisorySpeed(const Json::Value &speeds_json, AdvisorySpeedList_t *speeds) const
     {
         for (auto speed_json : speeds_json)
         {
             auto speed = (AdvisorySpeed_t *)calloc(1, sizeof(AdvisorySpeed_t));
             speed->type = speed_json["type"].asInt();
 
-            auto speed_limit = (SpeedAdvice_t *)calloc(1, sizeof(SpeedAdvice_t));
-            *speed_limit = speed_json["speed_limit"].asInt();
-            speed->speed = speed_limit;
+            speed->speed = (SpeedAdvice_t *)calloc(1, sizeof(SpeedAdvice_t));
+            *speed->speed = speed_json["speed_limit"].asInt();
 
-            auto confidence = (SpeedConfidence_t *)calloc(1, sizeof(SpeedConfidence_t));
-            *confidence = speed_json["speed_confidence"].asInt();
-            speed->confidence = confidence;
+            speed->confidence = (SpeedConfidence_t *)calloc(1, sizeof(SpeedConfidence_t));
+            *speed->confidence = speed_json["speed_confidence"].asInt();
 
-            auto Class = (RestrictionClassID_t *)calloc(1, sizeof(RestrictionClassID_t));
-            *Class = speed_json["class"].asInt();
-            speed->Class = Class;
+            speed->Class = (RestrictionClassID_t *)calloc(1, sizeof(RestrictionClassID_t));
+            *speed->Class = speed_json["class"].asInt();
 
-            auto distance = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
-            *distance = speed_json["distance"].asInt();
-            speed->distance = distance;
+            speed->distance = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
+            *speed->distance = speed_json["distance"].asInt();
 
             ASN_SEQUENCE_ADD(&speeds->list, speed);
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2ManeuverAssistList(const Json::Value& maneuver_assist_list_json, ManeuverAssistList_t *maneuver_assist_list) const
+    void JsonToJ2735SpatConverter::convertJson2ManeuverAssistList(const Json::Value &maneuver_assist_list_json, ManeuverAssistList_t *maneuver_assist_list) const
     {
         for (auto masst : maneuver_assist_list_json)
         {
             auto maneuver_assist = (ConnectionManeuverAssist_t *)calloc(1, sizeof(ConnectionManeuverAssist_t));
             maneuver_assist->connectionID = masst["connection_id"].asInt();
 
-            auto queueLength = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
-            *queueLength = masst["queue_length"].asInt();
-            maneuver_assist->queueLength = queueLength;
+            maneuver_assist->queueLength = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
+            *maneuver_assist->queueLength = masst["queue_length"].asInt();
 
-            auto availableStorageLength = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
-            *availableStorageLength = masst["available_storage_length"].asInt();
-            maneuver_assist->availableStorageLength = availableStorageLength;
+            maneuver_assist->availableStorageLength = (ZoneLength_t *)calloc(1, sizeof(ZoneLength_t));
+            *maneuver_assist->availableStorageLength = masst["available_storage_length"].asInt();
 
-            auto waitOnStop = (WaitOnStopline_t *)calloc(1, sizeof(WaitOnStopline_t));
-            *waitOnStop = masst["wait_on_stop"].asBool() ? 1 : 0;
-            maneuver_assist->waitOnStop = waitOnStop;
+            maneuver_assist->waitOnStop = (WaitOnStopline_t *)calloc(1, sizeof(WaitOnStopline_t));
+            *maneuver_assist->waitOnStop = masst["wait_on_stop"].asBool() ? 1 : 0;
 
-            auto pedBicycleDetect = (PedestrianBicycleDetect_t *)calloc(1, sizeof(PedestrianBicycleDetect_t));
-            *pedBicycleDetect = masst["ped_bicycle_detect"].asBool() ? 1 : 0;
-            maneuver_assist->pedBicycleDetect = pedBicycleDetect;
+            maneuver_assist->pedBicycleDetect = (PedestrianBicycleDetect_t *)calloc(1, sizeof(PedestrianBicycleDetect_t));
+            *maneuver_assist->pedBicycleDetect = masst["ped_bicycle_detect"].asBool() ? 1 : 0;
 
             ASN_SEQUENCE_ADD(&maneuver_assist_list->list, maneuver_assist);
         }
     }
 
-    void JsonToJ2735SpatConverter::encodeSpat(tmx::messages::SpatMessage &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const
+    void JsonToJ2735SpatConverter::encodeSpat(std::unique_ptr<tmx::messages::SpatMessage> &spat_message, tmx::messages::SpatEncodedMessage &encodedSpat) const
     {
-        tmx::messages::MessageFrameMessage frame(spat_message.get_j2735_data());
+        tmx::messages::MessageFrameMessage frame(spat_message->get_j2735_data());
         encodedSpat.set_data(tmx::messages::TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
         free(frame.get_j2735_data().get());
     }

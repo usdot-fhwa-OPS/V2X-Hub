@@ -482,7 +482,8 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
-		topics.emplace_back(std::string(_subscribeToSchedulingPlanTopic));
+		std::string scheduling_plan_topic = std::string(_subscribeToSchedulingPlanTopic);
+		topics.emplace_back(scheduling_plan_topic);
 
 		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
 		if (err) 
@@ -551,7 +552,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
 		std::vector<std::string> topics;
-		topics.emplace_back(std::string(_subscribeToSpatTopic));
+		std::string spat_topic = std::string(_subscribeToSpatTopic);
+		topics.emplace_back(spat_topic);
 
 		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
 		if (err) 
@@ -583,7 +585,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					spat_convertor.convertJson2Spat(payload_root, spat);
 					auto spat_message = std::make_unique<tmx::messages::SpatMessage>(spat);
 					tmx::messages::SpatEncodedMessage spatEncodedMsg;
-					spat_convertor.encodeSpat(*spat_message.get(), spatEncodedMsg);
+					spat_convertor.encodeSpat(spat_message, spatEncodedMsg);
 
 					//Broadcast the encoded SPAT message
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
