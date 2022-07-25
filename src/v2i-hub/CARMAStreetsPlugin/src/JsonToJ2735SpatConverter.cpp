@@ -2,7 +2,7 @@
 
 namespace CARMAStreetsPlugin
 {
-    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value spat_json, SPAT *spat) const
+    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value& spat_json, SPAT *spat) const
     {
         std::string name = spat_json["name"].asString();
         int32_t timestamp = spat_json["timestamp"].asInt();
@@ -27,11 +27,11 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2IntersectionStateList(const Json::Value intersections_json, IntersectionStateList *intersections) const
+    void JsonToJ2735SpatConverter::convertJson2IntersectionStateList(const Json::Value& intersections_json, IntersectionStateList *intersections) const
     {
         for (auto int_json : intersections_json)
         {
-            IntersectionState_t *intersection = (IntersectionState_t *)calloc(1, sizeof(IntersectionState_t));
+            auto intersection = (IntersectionState_t *)calloc(1, sizeof(IntersectionState_t));
             // intersection name
             auto name = int_json["name"].asString();
             auto intersection_name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
@@ -61,21 +61,21 @@ namespace CARMAStreetsPlugin
             intersection->timeStamp = timeStamp;
 
             // status
-            int16_t status_int = int_json["status"].asInt();
+            int16_t status = static_cast<int16_t> (int_json["status"].asInt());
             intersection->status.buf = (uint8_t *)calloc(2, sizeof(uint8_t));
             intersection->status.size = 2 * sizeof(uint8_t);
             intersection->status.bits_unused = 0;
-            intersection->status.buf[1] = status_int;
-            intersection->status.buf[0] = (status_int >> 8);
+            intersection->status.buf[1] = static_cast<int8_t>(status);
+            intersection->status.buf[0] = (status >> 8);
 
             // enabled_lanes
             auto enabled_lanes_json = int_json["enabled_lanes"];
             if (enabled_lanes_json.isArray())
             {
                 auto enabled_lanes = (EnabledLaneList_t *)calloc(1, sizeof(EnabledLaneList_t));
-                for (auto laneId : enabled_lanes_json)
+                for (const auto& laneId : enabled_lanes_json)
                 {
-                    LaneID_t *lane = (LaneID_t *)calloc(1, sizeof(LaneID_t));
+                    auto lane = (LaneID_t *)calloc(1, sizeof(LaneID_t));
                     *lane = laneId.asInt();
                     ASN_SEQUENCE_ADD(&enabled_lanes->list, lane);
                 }
@@ -100,7 +100,7 @@ namespace CARMAStreetsPlugin
             ASN_SEQUENCE_ADD(&intersections->list, intersection);
         }
     }
-    void JsonToJ2735SpatConverter::convertJson2MovementList(const Json::Value movements_json, MovementList *states) const
+    void JsonToJ2735SpatConverter::convertJson2MovementList(const Json::Value& movements_json, MovementList *states) const
     {
         for (auto movement_json : movements_json)
         {
@@ -133,7 +133,7 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2MovementEventList(const Json::Value movement_event_list_json, MovementEventList *state_time_speed) const
+    void JsonToJ2735SpatConverter::convertJson2MovementEventList(const Json::Value& movement_event_list_json, MovementEventList *state_time_speed) const
     {
         for (auto m_event : movement_event_list_json)
         {
@@ -159,7 +159,7 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2TimeChangeDetail(const Json::Value time_change_detail_json, TimeChangeDetails_t *timing) const
+    void JsonToJ2735SpatConverter::convertJson2TimeChangeDetail(const Json::Value& time_change_detail_json, TimeChangeDetails_t *timing) const
     {
         auto t_mark_start = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
         *t_mark_start = time_change_detail_json["start_time"].asInt();
@@ -186,7 +186,7 @@ namespace CARMAStreetsPlugin
         timing->confidence = t_confidence;
     }
 
-    void JsonToJ2735SpatConverter::convertJson2AdvisorySpeed(const Json::Value speeds_json, AdvisorySpeedList_t *speeds) const
+    void JsonToJ2735SpatConverter::convertJson2AdvisorySpeed(const Json::Value& speeds_json, AdvisorySpeedList_t *speeds) const
     {
         for (auto speed_json : speeds_json)
         {
@@ -213,7 +213,7 @@ namespace CARMAStreetsPlugin
         }
     }
 
-    void JsonToJ2735SpatConverter::convertJson2ManeuverAssistList(const Json::Value maneuver_assist_list_json, ManeuverAssistList_t *maneuver_assist_list) const
+    void JsonToJ2735SpatConverter::convertJson2ManeuverAssistList(const Json::Value& maneuver_assist_list_json, ManeuverAssistList_t *maneuver_assist_list) const
     {
         for (auto masst : maneuver_assist_list_json)
         {
