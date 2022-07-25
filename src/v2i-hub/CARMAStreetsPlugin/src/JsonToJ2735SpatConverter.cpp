@@ -51,9 +51,8 @@ namespace CARMAStreetsPlugin
             *intersection->moy = moy_int;
 
             // timestamp
-            auto time_stamp = int_json["time_stamp"];
             intersection->timeStamp = (DSecond_t *)calloc(1, sizeof(DSecond_t));
-            *intersection->timeStamp = time_stamp.asInt();
+            *intersection->timeStamp = int_json["time_stamp"].asInt();
 
             // status
             auto status = static_cast<int16_t>(int_json["status"].asInt());
@@ -64,7 +63,7 @@ namespace CARMAStreetsPlugin
             intersection->status.buf[0] = (status >> 8);
 
             // enabled_lanes
-            auto enabled_lanes_json = int_json["enabled_lanes"];
+            const auto& enabled_lanes_json = int_json["enabled_lanes"];
             if (enabled_lanes_json.isArray())
             {
                 intersection->enabledLanes = (EnabledLaneList_t *)calloc(1, sizeof(EnabledLaneList_t));
@@ -103,8 +102,7 @@ namespace CARMAStreetsPlugin
             state->movementName->buf = (uint8_t *)calloc(1, movement_name_str.length());
             memcpy(state->movementName->buf, movement_name_str.c_str(), movement_name_str.length());
 
-            auto sg_id = movement_json["signal_group"].asInt();
-            state->signalGroup = sg_id;
+            state->signalGroup = movement_json["signal_group"].asInt();
 
             if (movement_json["state_time_speed"].isArray())
             {
@@ -128,12 +126,12 @@ namespace CARMAStreetsPlugin
             movement_event->eventState = m_event["event_state"].asInt();
 
             // Timing
-            auto timing_json = m_event["timing"];
+            const auto& timing_json = m_event["timing"];
             movement_event->timing = (TimeChangeDetails_t *)calloc(1, sizeof(TimeChangeDetails_t));
             convertJson2TimeChangeDetail(timing_json, movement_event->timing);
 
             // speeds
-            auto speeds_json = m_event["speeds"];
+            const auto& speeds_json = m_event["speeds"];
             if (speeds_json.isArray())
             {
                 movement_event->speeds = (AdvisorySpeedList_t *)calloc(1, sizeof(AdvisorySpeedList_t));
