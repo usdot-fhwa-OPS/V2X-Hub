@@ -9,6 +9,7 @@
 #include <tmx/TmxException.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include "jsoncpp/json/json.h"
 #include <pthread.h>
 #include <boost/thread.hpp>
@@ -67,6 +68,7 @@ protected:
 	
 
 private:
+	tmx::messages::J2735MessageFactory factory;
 	std::string _receiveTopic;
 	std::string _transmitMobilityOperationTopic;
 	std::string _subscribeToSchedulingPlanTopic = "";
@@ -77,7 +79,8 @@ private:
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	RdKafka::Conf *kafka_conf;
-	RdKafka::Conf *kafka_conf_consumer;
+	RdKafka::Conf *kafka_conf_spat_consumer;
+	RdKafka::Conf *kafka_conf_sp_consumer;
  	RdKafka::Producer *kafka_producer;
 	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
 	RdKafka::KafkaConsumer *_spat_kafka_consumer;

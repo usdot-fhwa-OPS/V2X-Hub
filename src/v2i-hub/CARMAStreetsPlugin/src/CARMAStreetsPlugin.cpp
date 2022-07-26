@@ -61,7 +61,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	kafka_conf_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_sp_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_spat_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
 	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
@@ -78,16 +79,20 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	} 			
 	PLOG(logDEBUG) <<"Kafka producer created";
 
-	if (kafka_conf_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK || (kafka_conf_consumer->set("group.id", "streets_group", error_string) != RdKafka::Conf::CONF_OK)) {
+	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
+		 || (kafka_conf_sp_consumer->set("group.id", "streets_group_scheduling_plan", error_string) != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("group.id", "streets_group_spat", error_string) != RdKafka::Conf::CONF_OK)) {
 		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
 		PLOG(logDEBUG) <<"Kafka config group.id options set successfully";
 	}
-	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_sp_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_spat_consumer->set("enable.partition.eof", "true", error_string);
 
-	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
-	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
+	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_sp_consumer, error_string);
+	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_spat_consumer, error_string);
 
 	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
 		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
@@ -97,33 +102,33 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
 
 	//create kafka topics
-	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	if(!tconf)
+	RdKafka::Conf *tconf_spat = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	RdKafka::Conf *tconf_sp = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	if(!tconf_spat && !tconf_sp)
 	{
 		PLOG(logERROR) << "RDKafka create topic conf failed ";
 		return;
 	}   
 
-	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
+	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf_sp,error_string);
 	if(!_scheduing_plan_topic)
 	{
 		PLOG(logERROR) << "RDKafka create scheduing plan topic failed:" << error_string;
 		return ;
 	}
 
-	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf,error_string);
+	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf_spat,error_string);
 	if(!_spat_topic)
 	{
 		PLOG(logERROR) << "RDKafka create SPAT topic failed:" << error_string;
 		return ;
 	}
 
-	delete tconf;
+	delete tconf_sp;
+	delete tconf_spat;
 	
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
-	thread_schpl.join();
-	thread_spat.join();
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -587,12 +592,12 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					tmx::messages::SpatEncodedMessage spatEncodedMsg;
 					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
 
 					//Broadcast the encoded SPAT message
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
-					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
-					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
+					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
 				}
 			}
 			delete msg;
