@@ -488,8 +488,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
-		auto scheduling_plan_topic = std::string(_subscribeToSchedulingPlanTopic);
-		topics.emplace_back(scheduling_plan_topic);
+		topics.emplace_back(_subscribeToSchedulingPlanTopic);
 
 		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
 		if (err) 
@@ -557,9 +556,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	if(_subscribeToSpatTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
-		std::vector<std::string> topics;
-		auto spat_topic = std::string(_subscribeToSpatTopic);
-		topics.emplace_back(spat_topic);
+		std::vector<std::string> topics;		
+		topics.emplace_back(_subscribeToSpatTopic);
 
 		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
 		if (err) 
