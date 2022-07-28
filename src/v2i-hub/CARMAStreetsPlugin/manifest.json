@@ -48,7 +48,7 @@
         },
         {
             "key": "subscribeToSpatTopic",
-            "default": "spat_json",
+            "default": "modified_spat",
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
