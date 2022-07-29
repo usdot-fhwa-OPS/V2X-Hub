@@ -44,6 +44,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
  	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
  	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
+ 	GetConfigValue<string>("subscribeToSpatTopic", _subscribeToSpatTopic);
 	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
  	GetConfigValue<string>("intersectionType", _intersectionType);
 	 // Populate strategies config
@@ -60,7 +61,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	kafka_conf_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_sp_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_spat_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
 	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
@@ -77,39 +79,56 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	} 			
 	PLOG(logDEBUG) <<"Kafka producer created";
 
-	if (kafka_conf_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK || (kafka_conf_consumer->set("group.id", "streets_group", error_string) != RdKafka::Conf::CONF_OK)) {
+	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
+		 || (kafka_conf_sp_consumer->set("group.id", "streets_group_scheduling_plan", error_string) != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("group.id", "streets_group_spat", error_string) != RdKafka::Conf::CONF_OK)) {
 		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
 		PLOG(logDEBUG) <<"Kafka config group.id options set successfully";
 	}
-	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_sp_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_spat_consumer->set("enable.partition.eof", "true", error_string);
 
-	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
-	if ( !kafka_consumer ) {
-		PLOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
+	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_sp_consumer, error_string);
+	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_spat_consumer, error_string);
+
+	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
+		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
 		exit(1);
 	}
-	PLOG(logDEBUG) << "Created consumer " << kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _scheduing_plan_kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
 
-	//create kafka topic
-	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	if(!tconf)
+	//create kafka topics
+	RdKafka::Conf *tconf_spat = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	RdKafka::Conf *tconf_sp = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	if(!tconf_spat && !tconf_sp)
 	{
 		PLOG(logERROR) << "RDKafka create topic conf failed ";
 		return;
 	}   
 
-	_topic = RdKafka::Topic::create(kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
-	if(!_topic)
+	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf_sp,error_string);
+	if(!_scheduing_plan_topic)
 	{
-		PLOG(logERROR) << "RDKafka create topic failed:" << error_string;
+		PLOG(logERROR) << "RDKafka create scheduing plan topic failed:" << error_string;
 		return ;
 	}
 
-	delete tconf;
+	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf_spat,error_string);
+	if(!_spat_topic)
+	{
+		PLOG(logERROR) << "RDKafka create SPAT topic failed:" << error_string;
+		return ;
+	}
+
+	delete tconf_sp;
+	delete tconf_spat;
 	
-	boost::thread thr(&CARMAStreetsPlugin::SubscribeKafkaTopics, this);
+	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
+	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -463,15 +482,15 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void CARMAStreetsPlugin::SubscribeKafkaTopics()
+void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 {	
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
-		PLOG(logDEBUG) << "SubscribeKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
+		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
-		topics.push_back(std::string(_subscribeToSchedulingPlanTopic));
+		topics.emplace_back(_subscribeToSchedulingPlanTopic);
 
-		RdKafka::ErrorCode err = kafka_consumer->subscribe(topics);
+		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
 		if (err) 
 		{
 			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
@@ -480,10 +499,10 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 
 		while (_run_kafka_consumer) 
 		{
-			RdKafka::Message *msg = kafka_consumer->consume( 500 );
+			auto msg = _scheduing_plan_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
-				const char * payload_str = static_cast<const char *>( msg->payload() );
+				auto payload_str = static_cast<const char *>( msg->payload() );
 				if(msg->len() > 0)
 				{
 					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
@@ -530,6 +549,57 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 			delete msg;
 		}
 
+	}
+}
+
+void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
+	if(_subscribeToSpatTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
+		std::vector<std::string> topics;		
+		topics.emplace_back(_subscribeToSpatTopic);
+
+		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
+		if (err) 
+		{
+			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
+			return;
+		}
+		//Initialize Json to J2735 Spat convertor 
+		JsonToJ2735SpatConverter spat_convertor;
+		while (_run_kafka_consumer) 
+		{
+			auto msg = _spat_kafka_consumer->consume( 500 );
+			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			{
+				auto payload_str = static_cast<const char *>( msg->payload() );
+				if(msg->len() > 0)
+				{
+					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+					Json::Value  payload_root;
+					Json::Reader payload_reader;
+					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+					if( !parse_sucessful )
+					{	
+						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						continue;
+					}
+					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					auto spat_ptr = std::make_shared<SPAT>();
+					spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
+					tmx::messages::SpatEncodedMessage spatEncodedMsg;
+					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
+
+					//Broadcast the encoded SPAT message
+					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
+					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
+				}
+			}
+			delete msg;
+		}
 	}
 }
 
