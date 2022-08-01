@@ -22,6 +22,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
         std::lock_guard<mutex> lock(_cfgLock);
 		GetConfigValue<string>("WebServiceIP",webip);
 		GetConfigValue<uint16_t>("WebServicePort",webport);
+		GetConfigValue<uint16_t>("fetchTime",fetchtime);		
 		AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
 
 		// Subscribe to all messages specified by the filters above.
@@ -64,7 +65,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	       	strcpy(bounds_str,"");	
 		
 		//  get current time 
-		std::time_t tm = std::time(0)/60-1*24*60; //  T minus 24 hours in  min  
+		std::time_t tm = std::time(0)/60-fetchtime*24*60; //  T minus 24 hours in  min  
 
 		while(cnt<totBounds)
 		{
@@ -221,6 +222,7 @@ void CARMACloudPlugin::UpdateConfigSettings() {
     std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<uint16_t>("fetchTime",fetchtime);
 	
 }
 
