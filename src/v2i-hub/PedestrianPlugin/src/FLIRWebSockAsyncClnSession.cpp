@@ -278,6 +278,7 @@ namespace PedestrianPlugin
                         psmxml = psm_xml_str;
                         psmQueue.push(psmxml);
 
+
                         PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
 
                     }
@@ -369,6 +370,7 @@ namespace PedestrianPlugin
         milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
   
         int millisecondsTotal = (std::stoi(sec) * 1000) + std::stoi(milliseconds);
+
         parsedArr.push_back(std::stoi(year));
         parsedArr.push_back(std::stoi(month));
         parsedArr.push_back(std::stoi(day));
@@ -379,5 +381,6 @@ namespace PedestrianPlugin
 
         return parsedArr;
     }       
+
 
 }

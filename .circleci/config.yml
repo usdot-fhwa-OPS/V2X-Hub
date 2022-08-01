@@ -273,13 +273,8 @@ workflows:
           requires:
             - docker_build_push_develop
       - automated_release:
-          requires:
-            - docker_build_push
-            - arm_build_push
           filters:
             tags:
               only: /^[\.0-9]*$/
             branches:
               ignore: /.*/
-
-
