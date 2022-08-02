@@ -16,7 +16,7 @@
 #include "EpochMins.h"
 #include "Longitude.h"
 #include "Latitude.h"
-#include "Elevation.h"
+#include "DSRC_Elevation.h"
 #include <NativeInteger.h>
 #include <asn_SEQUENCE_OF.h>
 #include <constr_SEQUENCE_OF.h>
@@ -36,7 +36,7 @@ typedef struct TrafficControlGeometry {
 	EpochMins_t	 reftime;
 	Longitude_t	 reflon;
 	Latitude_t	 reflat;
-	Elevation_t	 refelv;
+	DSRC_Elevation_t	 refelv;
 	long	 heading;
 	struct TrafficControlGeometry__nodes {
 		A_SEQUENCE_OF(struct PathNode) list;
