@@ -57,9 +57,9 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "intersectionType",
-            "default": "Carma/stop_controlled_intersection",
-            "description": "The type of intersection"
+            "key": "intersectionId",
+            "default": "9001",
+            "description": "The id of intersection."
         },
         {
             "key": "KafkaBrokerIp",
