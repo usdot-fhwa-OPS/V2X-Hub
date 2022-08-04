@@ -124,55 +124,58 @@ string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
 void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 {
 	QString st; 
-	while(socket->bytesAvailable()>0)
-	{	
-		st.append(socket->readAll());
-	}
-	QByteArray array = st.toLocal8Bit();
+	if (socket->bytesAvailable() > 0)
+	{
+		while(socket->bytesAvailable()>0)
+		{	
+			st.append(socket->readAll());
+		}
+		QByteArray array = st.toLocal8Bit();
 
-	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
-	
-	
-	string tcm = _cloudUpdate;
+		char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
+		
+		
+		string tcm = _cloudUpdate;
 
-	cout<<"Received this from cloud"<<tcm<<endl;
+		cout<<"Received this from cloud"<<tcm<<endl;
 
-    // new updateTags section
-	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
-	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
-	tcm=updateTags(tcm,"TrafficControlParams","params");
-	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
-	tcm=updateTags(tcm,"TrafficControlPackage","package");
+		// new updateTags section
+		tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
+		tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
+		tcm=updateTags(tcm,"TrafficControlParams","params");
+		tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
+		tcm=updateTags(tcm,"TrafficControlPackage","package");
 
-	
-	tsm5Message tsm5message;
-	tsm5EncodedMessage tsm5ENC;
-	tmx::message_container_type container;
-	std::unique_ptr<tsm5EncodedMessage> msg;
+		
+		tsm5Message tsm5message;
+		tsm5EncodedMessage tsm5ENC;
+		tmx::message_container_type container;
+		std::unique_ptr<tsm5EncodedMessage> msg;
 
 
-	std::stringstream ss;
-	ss << tcm;  // updated _cloudUpdate tags, using updateTags
+		std::stringstream ss;
+		ss << tcm;  // updated _cloudUpdate tags, using updateTags
 
-	container.load<XML>(ss);
-	tsm5message.set_contents(container.get_storage().get_tree());
-	tsm5ENC.encode_j2735_message(tsm5message);
+		container.load<XML>(ss);
+		tsm5message.set_contents(container.get_storage().get_tree());
+		tsm5ENC.encode_j2735_message(tsm5message);
 
-	msg.reset();
-	msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
+		msg.reset();
+		msg.reset(dynamic_cast<tsm5EncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TESTMESSAGE05_STRING)));
 
-	string enc = tsm5ENC.get_encoding();
-	msg->refresh_timestamp();
-	msg->set_payload(tsm5ENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8003);
-	msg->refresh_timestamp();
+		string enc = tsm5ENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(tsm5ENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(172, 0x8003);
+		msg->refresh_timestamp();
 
-	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	BroadcastMessage(*rMsg);
+		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
 
-	PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+		PLOG(logERROR) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+	}	
 }
 
 
