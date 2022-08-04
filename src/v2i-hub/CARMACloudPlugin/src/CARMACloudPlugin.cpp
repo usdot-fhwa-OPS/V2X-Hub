@@ -1,6 +1,7 @@
 #include "CARMACloudPlugin.h"
 #include <WGS84Point.h>
 #include <math.h>
+#include <thread>
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -95,15 +96,6 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
-
-	//If TCR reqids match with the any existing TCMs, erase the TCMs from the list after sending new TCR request to carma-cloud.	
-	std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-	if(_not_ACK_TCMs->erase(reqid) <= 0)
-	{
-		PLOG(logDEBUG) << "TCR request id =" << reqid << " Not Found in TCM map." << std::endl;
-	}else{
-		PLOG(logDEBUG) << "TCR request id =" << reqid << " Found in TCM map. Remove the existing TCMs with the same TCR request id." << std::endl;
-	}
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
@@ -187,7 +179,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 					<< "</acknowledgement><description>" << even_log_description
 					<< "</description></TrafficControlAcknowledgement>"; 
 			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
-			CloudSend(sss.str(),url, base_ack, method);
+			CloudSendAsync(sss.str(),url, base_ack, method);
 		}
 	}
 }
@@ -327,7 +319,7 @@ void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
 						<< "</description></TrafficControlAcknowledgement>"; 
 				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-				CloudSend(sss.str(),url, base_ack, method);		
+				CloudSendAsync(sss.str(),url, base_ack, method);		
 
 				_not_ACK_TCMs->erase(tcmv01_req_id_hex);
 				//If time out, stop tracking the starting time of the TCMs being broadcast so far
@@ -472,31 +464,37 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-
-int CARMACloudPlugin::CloudSend(string msg,string url, string base, string method)
+void CARMACloudPlugin::CloudSendAsync(const string& local_msg,const string& local_url, const string& local_base, const string& local_method)
 {
+	std::thread t([this, &local_msg, &local_url, &local_base, &local_method](){	
+		CloudSend(local_msg, local_url, local_base, local_method);	
+	});
+	t.detach();
+}
+
+int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url, const string& local_base, const string& local_method)
+{ 	
 	CURL *req;
-  	CURLcode res;
-	string urlfull = url+base;	  
+	CURLcode res;
+	string urlfull = local_url+local_base;	
+	req = curl_easy_init();
+	if(req) {
+		curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
 
-
-  	req = curl_easy_init();
- 	 if(req) {
-  	  	curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
-
-		if(strcmp(method.c_str(),"POST")==0)
+		if(strcmp(local_method.c_str(),"POST")==0)
 		{
-    		curl_easy_setopt(req, CURLOPT_POSTFIELDS, msg.c_str());
-			curl_easy_setopt(req, CURLOPT_TIMEOUT, 2L); // Sets a 2 second timeout 
+			curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
+			curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
 			res = curl_easy_perform(req);
-   			if(res != CURLE_OK)
-			   {
-      				fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
-					  return 1;
-			   }	  
+			if(res != CURLE_OK)
+			{
+				fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
+				return 1;
+			}	  
 		}
-    	curl_easy_cleanup(req);
-  }
+		curl_easy_cleanup(req);
+	}	
+  	
   return 0;
 }
 

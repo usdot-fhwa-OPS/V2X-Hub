@@ -504,11 +504,17 @@ static asn_per_constraints_t asn_PER_memb_minvehocc_constr_42 CC_NOTUSED = {
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
+static asn_oer_constraints_t asn_OER_memb_maxplatoonsize_constr_43 CC_NOTUSED = {
+	{ 1, 1 }	/* (1..63) */,
+	-1};
 static asn_per_constraints_t asn_PER_memb_maxplatoonsize_constr_43 CC_NOTUSED = {
 	{ APC_CONSTRAINED,	 6,  6,  1,  63 }	/* (1..63) */,
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
+static asn_oer_constraints_t asn_OER_memb_minplatoonhdwy_constr_44 CC_NOTUSED = {
+	{ 2, 1 }	/* (0..2047) */,
+	-1};
 static asn_per_constraints_t asn_PER_memb_minplatoonhdwy_constr_44 CC_NOTUSED = {
 	{ APC_CONSTRAINED,	 11,  11,  0,  2047 }	/* (0..2047) */,
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
@@ -982,18 +988,18 @@ asn_TYPE_member_t asn_MBR_TrafficControlDetail_1[] = {
 		(ASN_TAG_CLASS_CONTEXT | (20 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_NativeInteger,
-		memb_maxplatoonsize_constraint_1,
-		&asn_PER_memb_maxplatoonsize_constr_43,
 		0,
+		{ &asn_OER_memb_maxplatoonsize_constr_43, &asn_PER_memb_maxplatoonsize_constr_43,  memb_maxplatoonsize_constraint_1 },
+		0, 0, /* No default value */
 		"maxplatoonsize"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct TrafficControlDetail, choice.minplatoonhdwy),
 		(ASN_TAG_CLASS_CONTEXT | (21 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_NativeInteger,
-		memb_minplatoonhdwy_constraint_1,
-		&asn_PER_memb_minplatoonhdwy_constr_44,
 		0,
+		{ &asn_OER_memb_minplatoonhdwy_constr_44, &asn_PER_memb_minplatoonhdwy_constr_44,  memb_minplatoonhdwy_constraint_1 },
+		0, 0, /* No default value */
 		"minplatoonhdwy"
 		},
 };

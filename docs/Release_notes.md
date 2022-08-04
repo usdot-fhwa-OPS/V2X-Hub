@@ -1,5 +1,15 @@
 V2X-Hub Release Notes
 ---------------------------------
+Version 7.3.1, released July 29th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release version 7.3.1 is a hotfix release for 7.3.0. The fixes primarily occurred during the Implementation of IHP2 Speed Harmonization algorithm in Carma-cloud application.
+
+Bug fixes in this release:
+ - Issue 392: Fixed Large latencies experienced between V2XHub receiving a Traffic Control Request (TCR) and broadcasting corresponding Traffic Control Messages (TCMs).
+ - Issue 404: Fixed V2xhub cannot encode the TCM if the package detail has minplatoonhdwy tag.
+
+
 Version 7.3.0, released June 14th, 2022
 --------------------------------------------------------
 **Summary:**
