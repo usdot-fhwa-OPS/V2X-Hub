@@ -47,6 +47,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("subscribeToSpatTopic", _subscribeToSpatTopic);
 	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
  	GetConfigValue<string>("intersectionType", _intersectionType);
+	GetConfigValue<string>("intersectionId", _intersectionId);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -609,20 +610,20 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 	{			
 		std::lock_guard<std::mutex> lock(data_lock);
 		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
-		std::string sender_id 			 = "UNSET";
+		std::string sender_id 			 = _intersectionId;
 		std::string recipient_id_str 	 = payload_json != Json::nullValue && payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
 		std::string sender_bsm_id_str 	 = "00000000";
 		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
-		std::string strategy_str 		 = _intersectionType;
+		std::string strategy_str 		 = metadata != Json::nullValue && metadata.isMember("intersection_type")? metadata["intersection_type"].asString(): _intersectionType;
 		
 		std::string strategy_params_str  = "null";
 		if( payload_json != Json::nullValue && !payload_json.empty())
 		{
-			strategy_params_str 	     = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
-														+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
-														+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
-														+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
-														+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
+			std::string strategy_params_str = (payload_json.isMember("st") ? "st:" + std::to_string(payload_json["st"].asUInt64()) + "," : "") + 
+											  (payload_json.isMember("et") ? "et:" + std::to_string(payload_json["et"].asUInt64())+ ","  : "") +
+											  (payload_json.isMember("dt") ?  "dt:" + std::to_string(payload_json["dt"].asUInt64())+ ","  : "") + 
+											  (payload_json.isMember("dp") ? "dp:" + std::to_string(payload_json["dp"].asUInt64())+ ","  : "") +
+											  (payload_json.isMember("access") ?  "access:" + std::to_string(payload_json["access"].asUInt64()) : "");
 		}
 		
 		

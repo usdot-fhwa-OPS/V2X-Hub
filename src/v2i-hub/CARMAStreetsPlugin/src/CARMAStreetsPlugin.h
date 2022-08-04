@@ -96,6 +96,7 @@ private:
 	**/
 	int _run_kafka_consumer = 0; 
 	std::string _intersectionType = "NA";
+	std::string _intersectionId = "UNSET";
 };
 std::mutex _cfgLock;
 

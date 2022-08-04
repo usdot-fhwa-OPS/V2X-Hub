@@ -62,6 +62,11 @@
             "description": "The type of intersection"
         },
         {
+            "key": "intersectionId",
+            "default": "9001",
+            "description": "The id of intersection."
+        },
+        {
             "key": "KafkaBrokerIp",
             "default": "127.0.0.1",
             "description": "IP of Apache Kafka broker."
