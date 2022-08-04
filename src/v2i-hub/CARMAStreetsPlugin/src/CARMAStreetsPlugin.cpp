@@ -46,7 +46,6 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
  	GetConfigValue<string>("subscribeToSpatTopic", _subscribeToSpatTopic);
 	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
- 	GetConfigValue<string>("intersectionType", _intersectionType);
 	GetConfigValue<string>("intersectionId", _intersectionId);
 	 // Populate strategies config
 	string config;
