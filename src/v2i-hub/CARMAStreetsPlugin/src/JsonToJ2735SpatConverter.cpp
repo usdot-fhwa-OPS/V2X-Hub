@@ -16,11 +16,11 @@ namespace CARMAStreetsPlugin
             memcpy(spat->name->buf, name.c_str(), name.length());
         }
 
-        if (spat_json.isMember("timestamp"))
+        if (spat_json.isMember("time_stamp"))
         {
-            int32_t timestamp = spat_json["timestamp"].asInt();
+            int32_t time_stamp = spat_json["time_stamp"].asInt();
             spat->timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-            *spat->timeStamp = timestamp;
+            *spat->timeStamp = time_stamp;
         }
 
         // Parse intersections
