@@ -592,9 +592,9 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					{
 						spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
 					}
-					catch(...)
+					catch (TmxException &ex) 
 					{
-						PLOG(logERROR) << "Failed to encoded SPAT message" <<std::endl;
+						PLOG(logERROR) << "Failed to encoded SPAT message" << ex.what()<<std::endl;
 						return;
 					}
 					
