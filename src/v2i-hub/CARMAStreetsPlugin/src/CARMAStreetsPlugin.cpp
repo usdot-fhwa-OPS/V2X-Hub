@@ -588,7 +588,16 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					auto spat_ptr = std::make_shared<SPAT>();
 					spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
 					tmx::messages::SpatEncodedMessage spatEncodedMsg;
-					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+					try
+					{
+						spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+					}
+					catch (TmxException &ex) 
+					{
+						PLOG(logERROR) << "Failed to encoded SPAT message" << ex.what()<<std::endl;
+						return;
+					}
+					
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
 

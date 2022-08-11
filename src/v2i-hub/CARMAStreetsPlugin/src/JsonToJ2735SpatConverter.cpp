@@ -5,17 +5,23 @@ namespace CARMAStreetsPlugin
     void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value &spat_json, SPAT *spat) const
     {
         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
-        std::string name = spat_json["name"].asString();
-        int32_t timestamp = spat_json["timestamp"].asInt();
 
         // Parse spat name field
-        spat->name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
-        spat->name->buf = (uint8_t *)calloc(1, name.length());
-        spat->name->size = name.length();
-        memcpy(spat->name->buf, name.c_str(), name.length());
+        if (spat_json.isMember("name") && spat_json["name"].asString().length() != 0)
+        {
+            std::string name = spat_json["name"].asString();
+            spat->name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
+            spat->name->buf = (uint8_t *)calloc(1, name.length());
+            spat->name->size = name.length();
+            memcpy(spat->name->buf, name.c_str(), name.length());
+        }
 
-        spat->timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-        *spat->timeStamp = timestamp;
+        if (spat_json.isMember("time_stamp"))
+        {
+            int32_t time_stamp = spat_json["time_stamp"].asInt();
+            spat->timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+            *spat->timeStamp = time_stamp;
+        }
 
         // Parse intersections
         if (spat_json["intersections"].isArray())
@@ -63,7 +69,7 @@ namespace CARMAStreetsPlugin
             intersection->status.buf[0] = (status >> 8);
 
             // enabled_lanes
-            const auto& enabled_lanes_json = int_json["enabled_lanes"];
+            const auto &enabled_lanes_json = int_json["enabled_lanes"];
             if (enabled_lanes_json.isArray())
             {
                 intersection->enabledLanes = (EnabledLaneList_t *)calloc(1, sizeof(EnabledLaneList_t));
@@ -95,12 +101,14 @@ namespace CARMAStreetsPlugin
         for (const auto &movement_json : movements_json)
         {
             auto state = (MovementState_t *)calloc(1, sizeof(MovementState_t));
-
-            auto movement_name_str = movement_json["movement_name"].asString();
-            state->movementName = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
-            state->movementName->size = movement_name_str.length();
-            state->movementName->buf = (uint8_t *)calloc(1, movement_name_str.length());
-            memcpy(state->movementName->buf, movement_name_str.c_str(), movement_name_str.length());
+            if (movement_json.isMember("movement_name") && movement_json["movement_name"].asString().length() != 0)
+            {
+                auto movement_name_str = movement_json["movement_name"].asString();
+                state->movementName = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
+                state->movementName->size = movement_name_str.length();
+                state->movementName->buf = (uint8_t *)calloc(1, movement_name_str.length());
+                memcpy(state->movementName->buf, movement_name_str.c_str(), movement_name_str.length());
+            }
 
             state->signalGroup = movement_json["signal_group"].asInt();
 
@@ -126,12 +134,12 @@ namespace CARMAStreetsPlugin
             movement_event->eventState = m_event["event_state"].asInt();
 
             // Timing
-            const auto& timing_json = m_event["timing"];
+            const auto &timing_json = m_event["timing"];
             movement_event->timing = (TimeChangeDetails_t *)calloc(1, sizeof(TimeChangeDetails_t));
             convertJson2TimeChangeDetail(timing_json, movement_event->timing);
 
             // speeds
-            const auto& speeds_json = m_event["speeds"];
+            const auto &speeds_json = m_event["speeds"];
             if (speeds_json.isArray())
             {
                 movement_event->speeds = (AdvisorySpeedList_t *)calloc(1, sizeof(AdvisorySpeedList_t));
