@@ -19,6 +19,11 @@
         "type": "J2735",
         "subtype": "BSM",
         "description": "Basic Safety Message"
+    },
+    {
+        "type":"J2735",
+        "subtype":"MAP-P",
+        "description":"Full geometric layout of the intersection."
     }],
     "configuration": [
         {
