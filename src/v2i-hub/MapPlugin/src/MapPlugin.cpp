@@ -325,6 +325,8 @@ bool MapPlugin::LoadMapFiles()
 						inType = "ISD";
 					else if (fn.substr(fn.size() - 4) == ".txt")
 						inType = "TXT";
+					else if (fn.substr(fn.size()- 5) == ".uper")
+						inType ="UPER";
 					else
 						inType = "XML";
 
@@ -352,6 +354,29 @@ bool MapPlugin::LoadMapFiles()
 							mapFile.set_Bytes(mapEnc.get_payload_str());
 
 							PLOG(logINFO) << fn << " J2735 message bytes encoded as " << mapFile.get_Bytes();
+						}
+					}
+					else if (inType == "UPER")
+					{
+						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame." << std::endl;
+						std::ifstream in; 
+						try {
+							in.open(fn, std::ios::in | std::ios::binary );
+							if (in.is_open()) {
+								in.seekg(0, std::ios::end);
+								int fileSize = in.tellg();
+								in.seekg(0, std::ios::beg);
+								PLOG(logDEBUG) << "File size is " << fileSize <<std::endl;
+								std::string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+								PLOG(logDEBUG) << "File contents : " << bytes_string << std::endl;
+								mapFile.set_Bytes(bytes_string);								
+							}
+							else {
+								PLOG(logERROR) << "Failed to open file " << fn << "." << std::endl;
+							}
+						}
+						catch( const ios_base::failure &e) {
+							PLOG(logERROR) << "Exception Encountered : \n" << e.what();
 						}
 					}
 					else if (inType == "XML")
