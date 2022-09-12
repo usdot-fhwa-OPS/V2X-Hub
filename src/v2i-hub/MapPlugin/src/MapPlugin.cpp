@@ -358,7 +358,7 @@ bool MapPlugin::LoadMapFiles()
 					}
 					else if (inType == "UPER")
 					{
-						PLOG(logINFO) << "Reading MAP file as UPER encoded hex bytes including MessageFrame." << std::endl;
+						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame." << std::endl;
 						std::ifstream in; 
 						try {
 							in.open(fn, std::ios::in | std::ios::binary );
@@ -367,8 +367,8 @@ bool MapPlugin::LoadMapFiles()
 								int fileSize = in.tellg();
 								in.seekg(0, std::ios::beg);
 								PLOG(logDEBUG) << "File size is " << fileSize <<std::endl;
-								PLOG(logDEBUG) << "File contents : " << in.rdbuf() << std::endl;
 								std::string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+								PLOG(logDEBUG) << "File contents : " << bytes_string << std::endl;
 								mapFile.set_Bytes(bytes_string);								
 							}
 							else {
