@@ -125,4 +125,32 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
     }
+
+    /**
+     * @brief Unit test to ensure encodeSpat will throw and exception attempting to encode timing
+     * data that exceeds max value of 36001 (see ASN1 documentation for TimeMark).
+     * 
+     */
+    TEST_F(test_JsonToJ2735SpatConverter, time_mark_over_max_value) {
+        std::string spat_json_string = "{\"time_stamp\":387178,\"name\":\"\",\"intersections\":[{\"name\":\"East Intersection\",\"id\":9945,\"revision\":1,\"status\":0,\"moy\":387178,\"time_stamp\":32248,\"states\":["
+            "{\"movement_name\":\"\",\"signal_group\":8,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34975,\"min_end_time\":35405,\"max_end_time\":35405,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35405,\"min_end_time\":35505,\"max_end_time\":35505,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35505,\"min_end_time\":35535,\"max_end_time\":35535,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35535,\"min_end_time\":35965,\"max_end_time\":35965,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":2,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34695,\"min_end_time\":35125,\"max_end_time\":35125,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35125,\"min_end_time\":35225,\"max_end_time\":35225,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35225,\"min_end_time\":35255,\"max_end_time\":35255,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35255,\"min_end_time\":35685,\"max_end_time\":35685,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":1,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":35115,\"min_end_time\":35545,\"max_end_time\":35545,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35545,\"min_end_time\":35645,\"max_end_time\":35645,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35645,\"min_end_time\":35675,\"max_end_time\":35675,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35675,\"min_end_time\":36105,\"max_end_time\":36105,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":3,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34835,\"min_end_time\":35265,\"max_end_time\":35265,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35265,\"min_end_time\":35365,\"max_end_time\":35365,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35365,\"min_end_time\":35395,\"max_end_time\":35395,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35395,\"min_end_time\":35825,\"max_end_time\":35825,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":4,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34975,\"min_end_time\":35405,\"max_end_time\":35405,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35405,\"min_end_time\":35505,\"max_end_time\":35505,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35505,\"min_end_time\":35535,\"max_end_time\":35535,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35535,\"min_end_time\":35965,\"max_end_time\":35965,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":5,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":35115,\"min_end_time\":35545,\"max_end_time\":35545,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35545,\"min_end_time\":35645,\"max_end_time\":35645,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35645,\"min_end_time\":35675,\"max_end_time\":35675,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35675,\"min_end_time\":36105,\"max_end_time\":36105,\"confidence\":0}}]},"
+            "{\"movement_name\":\"\",\"signal_group\":6,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34695,\"min_end_time\":35125,\"max_end_time\":35125,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35125,\"min_end_time\":35225,\"max_end_time\":35225,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35225,\"min_end_time\":35255,\"max_end_time\":35255,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35255,\"min_end_time\":35685,\"max_end_time\":35685,\"confidence\":0}}]}]}]}";
+        Json::Reader reader;
+        auto spat_ptr = std::make_shared<SPAT>();
+        auto parse_success = reader.parse(spat_json_string, spat_json, true);
+        JsonToJ2735SpatConverter converter;
+        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        tmx::messages::SpatEncodedMessage encodedSpat;
+       
+        ASSERT_THROW( converter.encodeSpat(spat_ptr, encodedSpat), tmx::TmxException );
+        
+        
+
+    }
+
 }

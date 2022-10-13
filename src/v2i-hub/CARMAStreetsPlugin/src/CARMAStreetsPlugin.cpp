@@ -594,8 +594,11 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					}
 					catch (TmxException &ex) 
 					{
-						PLOG(logERROR) << "Failed to encoded SPAT message" << ex.what()<<std::endl;
-						return;
+						// Skip messages that fail to encode.
+						PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
+							<< ex.what() << std::endl;
+						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+						continue;
 					}
 					
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
