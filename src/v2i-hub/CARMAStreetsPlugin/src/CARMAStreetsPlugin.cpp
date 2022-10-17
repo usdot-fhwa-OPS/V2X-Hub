@@ -36,17 +36,20 @@ CARMAStreetsPlugin::~CARMAStreetsPlugin() {
 void CARMAStreetsPlugin::UpdateConfigSettings() {
 
 	lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<string>("receiveTopic", _receiveTopic);	
-	GetConfigValue<string>("transmitMobilityOperationTopic", _transmitMobilityOperationTopic);
-	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
- 	GetConfigValue<string>("transmitMapTopic", _transmitMAPTopic);
+	// Populate Header Information for outgoing mobility operation messages and filter Header for incoming mobility operation messages
+	GetConfigValue<string>("IntersectionId", _intersectionId);
+	// Kafka broker configuration
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
- 	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
- 	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
- 	GetConfigValue<string>("subscribeToSpatTopic", _subscribeToSpatTopic);
-	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
-	GetConfigValue<string>("intersectionId", _intersectionId);
+	//
+ 	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
+	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
+ 	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
+	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
+	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
+	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
+	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
+ 	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -80,9 +83,9 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	PLOG(logDEBUG) <<"Kafka producer created";
 
 	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
-		 || (kafka_conf_sp_consumer->set("group.id", "streets_group_scheduling_plan", error_string) != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_sp_consumer->set("group.id", _subscribeToSchedulingPlanConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
 		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
-		 || (kafka_conf_spat_consumer->set("group.id", "streets_group_spat", error_string) != RdKafka::Conf::CONF_OK)) {
+		 || (kafka_conf_spat_consumer->set("group.id", _subscribeToSpatConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)) {
 		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
@@ -140,7 +143,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	try 
 	{
 		auto mobilityOperation = msg.get_j2735_data();
-		PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
+		PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
 					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
 		  			  << kafka_producer->outq_len() <<"messages already in queue";
@@ -153,6 +156,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		payload << mobilityOperation->body.operationParams.buf;
 		std::string strategy_params;
 		std::string strategy = strat.str();
+		// TODO: Filter vehicle mobility operation messages based on Mobility Header host id == intersection id
 		if ( std::find( _strategies.begin(), _strategies.end(), strategy) != _strategies.end() ) 
 		{
 			strategy_params = payload.str();
@@ -497,7 +501,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 			return;
 		}
 
-		while (_run_kafka_consumer) 
+		while (true) 
 		{
 			auto msg = _scheduing_plan_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
@@ -567,7 +571,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 		}
 		//Initialize Json to J2735 Spat convertor 
 		JsonToJ2735SpatConverter spat_convertor;
-		while (_run_kafka_consumer) 
+		while (true) 
 		{
 			auto msg = _spat_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
@@ -625,7 +629,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		std::string recipient_id_str 	 = payload_json != Json::nullValue && payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
 		std::string sender_bsm_id_str 	 = "00000000";
 		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
-		std::string strategy_str 		 = metadata != Json::nullValue && metadata.isMember("intersection_type")? metadata["intersection_type"].asString(): _intersectionType;
+		std::string strategy_str 		 = metadata != Json::nullValue && metadata.isMember("intersection_type")? metadata["intersection_type"].asString(): "UNSET";
 		
 		std::string strategy_params_str  = "null";
 		if( payload_json != Json::nullValue && !payload_json.empty())
