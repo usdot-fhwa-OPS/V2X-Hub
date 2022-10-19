@@ -71,8 +71,10 @@ private:
 	tmx::messages::J2735MessageFactory factory;
 	std::string _receiveTopic;
 	std::string _transmitMobilityOperationTopic;
-	std::string _subscribeToSchedulingPlanTopic = "";
-	std::string _subscribeToSpatTopic = "";
+	std::string _subscribeToSchedulingPlanTopic;
+	std::string _subscribeToSchedulingPlanConsumerGroupId;
+	std::string _subscribeToSpatTopic;
+	std::string _subscribeToSpatConsumerGroupId;
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
@@ -94,8 +96,6 @@ private:
 	 * Configurable indicator to run consumer and consume messages from kafka topics
 	 * run the consumer if it equals = 1; otherwise = 0
 	**/
-	int _run_kafka_consumer = 0; 
-	std::string _intersectionType = "UNSET";
 	std::string _intersectionId = "UNSET";
 };
 std::mutex _cfgLock;
