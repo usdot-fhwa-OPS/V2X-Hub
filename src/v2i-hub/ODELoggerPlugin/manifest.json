@@ -1,5 +1,5 @@
 {
-	"name":"ODELoggerPlugin",
+	"name":"ODEForwardPlugin",
 	"description":"Listens for J2735 messages and realtime forwards them to ODE.",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/ODELoggerPlugin",

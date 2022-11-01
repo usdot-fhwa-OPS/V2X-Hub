@@ -1,6 +1,6 @@
 {
-  "name": "DSRCMessageManager",
-  "description": "Plugin that listens for TMX messages and forwards them to the DSRC Radio (i.e. the RSU).",
+  "name": "ImmediateForward",
+  "description": "Plugin that listens for TMX messages and forwards them to the V2X Radio (i.e. the RSU).",
   "version": "5.0",
   "exeLocation": "/bin/DsrcImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
@@ -9,43 +9,43 @@
   "configuration": [
     {
       "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\" }] }",
-      "description": "JSON data defining the message types and PSIDs for messages forwarded to the DSRC radio at destination 1."
+      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\" }] }",
+      "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 1."
     },
     {
       "key": "Messages_Destination_2",
       "default": "{ \"Messages\": [ ] }",
-       "description": "JSON data defining the message types and PSIDs for messages forwarded to the DSRC radio at destination 2."
+       "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 2."
     },
     {
       "key": "Messages_Destination_3",
       "default": "{ \"Messages\": [ ] }",
-      "description": "JSON data defining the message types and PSIDs for messages forwarded to the DSRC radio at destination 3."
+      "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 3."
     },
     {
       "key": "Messages_Destination_4",
       "default": "{ \"Messages\": [ ] }",
-       "description": "JSON data defining the message types and PSIDs for messages forwarded to the DSRC radio at destination 4."
+       "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 4."
     },
     {
       "key": "Destination_1",
       "default": "127.0.0.1:1516",
-      "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_1."
+      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_1."
     },
     {
       "key": "Destination_2",
       "default": "0",
-      "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_2."
+      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_2."
     },
     {
       "key": "Destination_3",
       "default": "0",
-      "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_3."
+      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_3."
     },
     {
       "key": "Destination_4",
       "default": "0",
-       "description": "The destination UDP server(s) and port number(s) on the DSRC radio for all messages specified by Messages_Destination_4."
+       "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_4."
     },
     {
       "key": "Signature",
