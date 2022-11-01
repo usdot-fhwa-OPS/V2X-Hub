@@ -45,7 +45,7 @@ unset(_expectedTargets)
 add_library(qserverPedestrian STATIC IMPORTED)
 
 set_target_properties(qserverPedestrian PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/x86_64-linux-gnu/qt5/;/usr/include/x86_64-linux-gnu/qt5/QtCore;/usr/lib/x86_64-linux-gnu/qt5//mkspecs/linux-g++;/usr/include/x86_64-linux-gnu/qt5/;/usr/include/x86_64-linux-gnu/qt5/QtNetwork;/usr/include/x86_64-linux-gnu/qt5/QtCore;/usr/lib/x86_64-linux-gnu/qt5//mkspecs/linux-g++;/home/saxtonlab/server_so/src/models;/home/saxtonlab/server_so/src/handlers;/home/saxtonlab/server_so/src/requests"
+  INTERFACE_INCLUDE_DIRECTORIES "/usr/include/x86_64-linux-gnu/qt5/;/usr/include/x86_64-linux-gnu/qt5/QtCore;/usr/lib/x86_64-linux-gnu/qt5//mkspecs/linux-g++;/usr/include/x86_64-linux-gnu/qt5/;/usr/include/x86_64-linux-gnu/qt5/QtNetwork;/usr/include/x86_64-linux-gnu/qt5/QtCore;/usr/lib/x86_64-linux-gnu/qt5//mkspecs/linux-g++;/home/saxtonlab/V2X-Hub/ext/server/src/models;/home/saxtonlab/V2X-Hub/ext/server/src/handlers;/home/saxtonlab/V2X-Hub/ext/server/src/requests"
   INTERFACE_LINK_LIBRARIES "Qt5Core;Qt5Network;ssl;crypto;qhttpengine"
 )
 
@@ -53,7 +53,7 @@ set_target_properties(qserverPedestrian PROPERTIES
 set_property(TARGET qserverPedestrian APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
 set_target_properties(qserverPedestrian PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "/home/saxtonlab/server_so/src/libqserverPedestrian.a"
+  IMPORTED_LOCATION_RELEASE "/home/saxtonlab/V2X-Hub/ext/server/src/libqserverPedestrian.a"
   )
 
 # This file does not depend on other imported targets which have
