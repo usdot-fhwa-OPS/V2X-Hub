@@ -60,7 +60,6 @@ void SpatPlugin::HandlePedestrianDetection(PedestrianMessage &pedMsg, routeable_
 int SpatPlugin::Main() {
 
 	int iCounter = 0;
-	SpatEncodedMessage spatEncodedMsg;
 
 	// How long it took to update and send the SPaT message the last time through the loop.
 	__useconds_t sendElapsedMicroSec = 0;
@@ -139,6 +138,7 @@ int SpatPlugin::Main() {
 						PLOG(logDEBUG) << "Pedestrians detected in lanes " << pedZones;
 					}
 
+					SpatEncodedMessage spatEncodedMsg;
 					sc.getEncodedSpat(&spatEncodedMsg, pedZones);
 
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);

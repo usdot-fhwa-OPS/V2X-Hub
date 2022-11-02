@@ -1,5 +1,65 @@
 V2X-Hub Release Notes
+---------------------------------
+Version 7.3.1, released July 29th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release version 7.3.1 is a hotfix release for 7.3.0. The fixes primarily occurred during the Implementation of IHP2 Speed Harmonization algorithm in Carma-cloud application.
+
+Bug fixes in this release:
+ - Issue 392: Fixed Large latencies experienced between V2XHub receiving a Traffic Control Request (TCR) and broadcasting corresponding Traffic Control Messages (TCMs).
+ - Issue 404: Fixed V2xhub cannot encode the TCM if the package detail has minplatoonhdwy tag.
+
+
+Version 7.3.0, released June 14th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.3.0 includes added functionality for subscribing to FLIR camera for Pedestrian tracking and PSM broadcast to vehicles in the Pedestrian Plugin. The new FLIR functionality subscribes to the websocket output of the FLIR tracking feed and will generate a PSM for each new track the camera picks up. To use new FLIR websocket data, set `DataProvider` for the PedestrianPlugin to FLIR and configure the `WebSocketHost` and `WebSocketPort` for the FLIR camera. Additional you must set the `FLIRCameraRotation` in degrees, which is a measure of the camera's rotation from true north. To use the REST PedestrianPlugin functionality simply set the `DataProvider` to PSM.
+
+Enhancements in this release:
+ - Issue 345: Added Websocket client to consume FLIR data and publish PSM
 ----------------------------
+Version 7.2.3, released May 19th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.2.3 includes added hot fix for MobilityRequest and MobilityResponse ASN1 Compiler generated encoding/decoding code for Voices project.
+
+Bug fixes in this release:
+- Issue 372: After getting the dsrc messages from a vehicle, the v2xhub message receiver is able to pass it to other plugins. However, the other plugins experience decoding issues trying to filter MobilityRequest and MobilityResponse messages.
+
+Enhancements in this release:
+ - Issue 369:Add CircleCI workflow that is triggered on numeric github tags on only the master branch. This workflow will be dependent on the build and push workflows for both ARM and AMD images. The workflow will then pull, retag with the github tag name, and push release images.
+
+------------------------------
+Version 7.2.2, released May 9th, 2022
+--------------------------------------------------------
+**Summary:**
+V2X Hub release 7.2.2 includes added Hotfix for CARMACloud Plugin to configure repeated TCM broadcast. V2xhub can control the number of times each TCM being repeatedly broadcast upon receiving TCMs from carma-cloud until an TCM acknowledgement is received from the vehicle. After waiting for a configurable time duration to receive TCM acknowledgement, it sends a time out message to carma-cloud notifying that no response from CMV for TCMs. The no response message will be displayed as a warning on the v2xhub admin user interface. If V2xHub receives an acknowledgement from CMV, it will stop broadcasting TCMs and display the acknowledgement on the v2xhub admin user interface and sends the acknowledgement to carma-cloud:
+
+Bug fixes in this release:
+- Issue 364: Removing existing TCMs when receiving multiple TCRs with same request ID.Add time out logic for each TCR upon repeatedly broadcast associated TCMs.Fix time out logic that cause segmentation fault.Add configuration parameter to update thread sleep time.Add configuration parameter and logic to control the number times that TCMs can repeatedly broadcast.For each acknowledgement it receives from CMV, it only removes one TCM from the list.
+----------------------------
+Version 7.2.1, released April 15th, 2022
+--------------------------------------------------------
+V2X Hub release 7.2.1 includes added functionality for the CARMACloud Plugin to support a hot fix for positive acknowledgment:
+- Issue 352: Fix reason field data to display complete reason information.
+
+Version 7.2, released April 12th, 2022
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.2 includes added functionality for the CARMACloud Plugin to support:
+- Issue 348:Receiving vehicle TCM acknowledgement messages and displaying appropriate positive/negative/no acknowledgement messages on V2X-Hub web UI.
+- Issue 348:Fowarding TCM acknowledgement message (negative/no) to CARMACloud.
+
+Enhancements in this release:
+- Issue 328: Upgrade base image for V2X-Hub to ubuntu 20
+- Issue 349: Added example BSM plugin to show how to use PluginClient's BroadcastMessage message to broadcast BSM
+- Issue 350: Added MobilityRequest and MobilityResponse ASN1 encoding and decoding 
+
+Bug fixes in this release:
+- Issue 337: fixed add user script
+- Issue 310: fixed possible Spat memory leak
+- Issue 322: Fixed php and port_drayage_web_service ARM image builds
 
 Version 7.1, released Feb 3rd, 2022
 --------------------------------------------------------

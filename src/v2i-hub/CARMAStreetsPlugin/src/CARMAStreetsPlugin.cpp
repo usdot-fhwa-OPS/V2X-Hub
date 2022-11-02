@@ -24,6 +24,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
+	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	
 	SubscribeToMessages();
 
@@ -35,15 +36,20 @@ CARMAStreetsPlugin::~CARMAStreetsPlugin() {
 void CARMAStreetsPlugin::UpdateConfigSettings() {
 
 	lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<string>("receiveTopic", _receiveTopic);	
-	GetConfigValue<string>("transmitMobilityOperationTopic", _transmitMobilityOperationTopic);
-	GetConfigValue<string>("transmitMobilityPathTopic", _transmitMobilityPathTopic);
+	// Populate Header Information for outgoing mobility operation messages and filter Header for incoming mobility operation messages
+	GetConfigValue<string>("IntersectionId", _intersectionId);
+	// Kafka broker configuration
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
- 	GetConfigValue<int>("runKafkaConsumer", _run_kafka_consumer);
- 	GetConfigValue<string>("subscribeToSchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
-	GetConfigValue<string>("transmitBSMTopic", _transmitBSMTopic);
- 	GetConfigValue<string>("intersectionType", _intersectionType);
+	//
+ 	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
+	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
+ 	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
+	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
+	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
+	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
+	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
+ 	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -58,7 +64,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	kafka_conf_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_sp_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_spat_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
 	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
@@ -75,39 +82,56 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	} 			
 	PLOG(logDEBUG) <<"Kafka producer created";
 
-	if (kafka_conf_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK || (kafka_conf_consumer->set("group.id", "streets_group", error_string) != RdKafka::Conf::CONF_OK)) {
+	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
+		 || (kafka_conf_sp_consumer->set("group.id", _subscribeToSchedulingPlanConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_spat_consumer->set("group.id", _subscribeToSpatConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)) {
 		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
 		PLOG(logDEBUG) <<"Kafka config group.id options set successfully";
 	}
-	kafka_conf_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_sp_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_spat_consumer->set("enable.partition.eof", "true", error_string);
 
-	kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_consumer, error_string);
-	if ( !kafka_consumer ) {
-		PLOG(logERROR) << "Failed to create Kafka consumer: " << error_string << std::endl;
+	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_sp_consumer, error_string);
+	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_spat_consumer, error_string);
+
+	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
+		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
 		exit(1);
 	}
-	PLOG(logDEBUG) << "Created consumer " << kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _scheduing_plan_kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
 
-	//create kafka topic
-	RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	if(!tconf)
+	//create kafka topics
+	RdKafka::Conf *tconf_spat = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	RdKafka::Conf *tconf_sp = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	if(!tconf_spat && !tconf_sp)
 	{
 		PLOG(logERROR) << "RDKafka create topic conf failed ";
 		return;
 	}   
 
-	_topic = RdKafka::Topic::create(kafka_consumer,_subscribeToSchedulingPlanTopic,tconf,error_string);
-	if(!_topic)
+	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf_sp,error_string);
+	if(!_scheduing_plan_topic)
 	{
-		PLOG(logERROR) << "RDKafka create topic failed:" << error_string;
+		PLOG(logERROR) << "RDKafka create scheduing plan topic failed:" << error_string;
 		return ;
 	}
 
-	delete tconf;
+	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf_spat,error_string);
+	if(!_spat_topic)
+	{
+		PLOG(logERROR) << "RDKafka create SPAT topic failed:" << error_string;
+		return ;
+	}
+
+	delete tconf_sp;
+	delete tconf_spat;
 	
-	boost::thread thr(&CARMAStreetsPlugin::SubscribeKafkaTopics, this);
+	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
+	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -119,8 +143,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	try 
 	{
 		auto mobilityOperation = msg.get_j2735_data();
-		bool retry = true;
-		PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
+		PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
 					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
 		  			  << kafka_producer->outq_len() <<"messages already in queue";
@@ -133,6 +156,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		payload << mobilityOperation->body.operationParams.buf;
 		std::string strategy_params;
 		std::string strategy = strat.str();
+		// TODO: Filter vehicle mobility operation messages based on Mobility Header host id == intersection id
 		if ( std::find( _strategies.begin(), _strategies.end(), strategy) != _strategies.end() ) 
 		{
 			strategy_params = payload.str();
@@ -166,34 +190,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			mobilityOperationJsonRoot["metadata"] 			= metadata; 
 			const std::string message 						= Json::writeString(builder, mobilityOperationJsonRoot);			
 			PLOG(logDEBUG) <<"MobilityOperation message:" << message <<std::endl;
-
-			while (retry) 
-			{
-				RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitMobilityOperationTopic, 
-																	RdKafka::Topic::PARTITION_UA,
-																	RdKafka::Producer::RK_MSG_COPY, 
-																	const_cast<char *>(message.c_str()),
-																	message.size(), 
-																	NULL, NULL, 0, 0);
-
-				if (produce_error == RdKafka::ERR_NO_ERROR) {
-					PLOG(logDEBUG) <<"Queued message:" << message;
-					retry = false;
-				}
-				else 
-				{
-					PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-					if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-						PLOG(logERROR) <<"Message queue full...retrying...";
-						kafka_producer->poll(500);  /* ms */
-						retry = true;
-					}
-					else {
-						PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-						retry = false;
-					}
-				}	
-			}
+			produce_kafka_msg(message, _transmitMobilityOperationTopic);
 		}
 	}
 	catch (TmxException &ex) {
@@ -277,23 +274,7 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		mobilityPathJsonRoot["trajectory"]		= trajectory;
 		const std::string json_message 			= Json::writeString(builder, mobilityPathJsonRoot);
 		PLOG(logDEBUG) <<"MobilityPath Json message:" << json_message;
-		RdKafka::ErrorCode produce_error 		= kafka_producer->produce(	_transmitMobilityPathTopic, 
-																			RdKafka::Topic::PARTITION_UA,
-																			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(json_message.c_str()),
-																			json_message.size(), NULL, NULL, 0, 0 );
-
-		if (produce_error == RdKafka::ERR_NO_ERROR) 
-		{
-			PLOG(logDEBUG) << "Queued message:" << json_message;
-		}
-		else 
-		{
-			PLOG(logERROR) << "Failed to queue message:" << json_message <<" with error:" << RdKafka::err2str(produce_error);
-			if (produce_error == RdKafka::ERR__QUEUE_FULL) 
-			{
-				PLOG(logERROR) << "MobilityPath producer Message queue is full.";
-			}
-		}	
+		produce_kafka_msg(json_message, _transmitMobilityPathTopic);
 	}
 	catch (TmxException &ex) 
 	{
@@ -307,7 +288,6 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 	try 
 	{
 		auto bsm = msg.get_j2735_data();
-		bool retry = true;
 
 		Json::Value bsmJsonRoot;
 		Json::Value coreData;
@@ -347,13 +327,13 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["sec_mark"]  = secMark.str();
 
 		auto id_len = bsm->coreData.id.size;
-		std::stringstream id_ss;
+		unsigned long id_num = 0;
 		for(auto i = 0; i < id_len; i++)
 		{			
-			id_ss<<std::hex<<static_cast<int>(bsm->coreData.id.buf[i]);
+			 id_num = (id_num << 8) | bsm->coreData.id.buf[i];
 		}
 		std::stringstream id_fill_ss;
-		id_fill_ss <<  std::setfill('0') << std::setw(8) << id_ss.str();
+		id_fill_ss << std::setfill('0') << std::setw(8) <<std::hex << id_num;
 		coreData["id"]  = id_fill_ss.str();
 		
 		Json::Value accuracy;
@@ -445,39 +425,59 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["size"] 			= size;		
 		bsmJsonRoot["core_data"]  	= coreData; 
 		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
-
-		while (retry) 
-		{
-			RdKafka::ErrorCode produce_error = kafka_producer->produce(_transmitBSMTopic, 
-																		RdKafka::Topic::PARTITION_UA,
-																		RdKafka::Producer::RK_MSG_COPY, 
-																		const_cast<char *>(message.c_str()),
-																		message.size(), 
-																		NULL, NULL, 0, 0);
-
-			if (produce_error == RdKafka::ERR_NO_ERROR) {
-				PLOG(logDEBUG) <<"Queued message:" << message;
-				retry = false;
-			}
-			else 
-			{
-				PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-				if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-					PLOG(logERROR) <<"Message queue full...retrying...";
-					kafka_producer->poll(500);  /* ms */
-					retry = true;
-				}
-				else {
-					PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-					retry = false;
-				}
-			}	
-		}
+		produce_kafka_msg(message, _transmitBSMTopic);
+		
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 	}
 }
+
+void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg)
+{
+	std::shared_ptr<MapData> mapMsgPtr = msg.get_j2735_data();
+	PLOG(logDEBUG) << "Intersection count: " << mapMsgPtr->intersections->list.count <<std::endl;
+	Json::Value mapJson;
+	Json::StreamWriterBuilder builder;
+	J2735MapToJsonConverter jsonConverter;
+	jsonConverter.convertJ2735MAPToMapJSON(mapMsgPtr, mapJson);
+	PLOG(logDEBUG) << "mapJson: " << mapJson << std::endl;
+	const std::string message 	= Json::writeString(builder, mapJson);
+	produce_kafka_msg(message, _transmitMAPTopic);	
+}
+
+void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
+{
+	bool retry = true;
+	while (retry) 
+	{
+		RdKafka::ErrorCode produce_error = kafka_producer->produce(topic_name, 
+																	RdKafka::Topic::PARTITION_UA,
+																	RdKafka::Producer::RK_MSG_COPY, 
+																	const_cast<char *>(message.c_str()),
+																	message.size(), 
+																	NULL, NULL, 0, 0);
+
+		if (produce_error == RdKafka::ERR_NO_ERROR) {
+			PLOG(logDEBUG) <<"Queued message:" << message;
+			retry = false;
+		}
+		else 
+		{
+			PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
+				PLOG(logERROR) <<"Message queue full...retrying...";
+				kafka_producer->poll(500);  /* ms */
+				retry = true;
+			}
+			else {
+				PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+				retry = false;
+			}
+		}	
+	}
+}
+
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
 
@@ -486,27 +486,27 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void CARMAStreetsPlugin::SubscribeKafkaTopics()
+void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 {	
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
-		PLOG(logDEBUG) << "SubscribeKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
+		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		std::vector<std::string> topics;
-		topics.push_back(std::string(_subscribeToSchedulingPlanTopic));
+		topics.emplace_back(_subscribeToSchedulingPlanTopic);
 
-		RdKafka::ErrorCode err = kafka_consumer->subscribe(topics);
+		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
 		if (err) 
 		{
 			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
 			return;
 		}
 
-		while (_run_kafka_consumer) 
+		while (true) 
 		{
-			RdKafka::Message *msg = kafka_consumer->consume( 500 );
+			auto msg = _scheduing_plan_kafka_consumer->consume( 500 );
 			if( msg->err() == RdKafka::ERR_NO_ERROR )
 			{
-				const char * payload_str = static_cast<const char *>( msg->payload() );
+				auto payload_str = static_cast<const char *>( msg->payload() );
 				if(msg->len() > 0)
 				{
 					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
@@ -556,26 +556,89 @@ void CARMAStreetsPlugin::SubscribeKafkaTopics()
 	}
 }
 
+void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
+	if(_subscribeToSpatTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
+		std::vector<std::string> topics;		
+		topics.emplace_back(_subscribeToSpatTopic);
+
+		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
+		if (err) 
+		{
+			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
+			return;
+		}
+		//Initialize Json to J2735 Spat convertor 
+		JsonToJ2735SpatConverter spat_convertor;
+		while (true) 
+		{
+			auto msg = _spat_kafka_consumer->consume( 500 );
+			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			{
+				auto payload_str = static_cast<const char *>( msg->payload() );
+				if(msg->len() > 0)
+				{
+					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+					Json::Value  payload_root;
+					Json::Reader payload_reader;
+					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+					if( !parse_sucessful )
+					{	
+						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						continue;
+					}
+					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					auto spat_ptr = std::make_shared<SPAT>();
+					spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
+					tmx::messages::SpatEncodedMessage spatEncodedMsg;
+					try
+					{
+						spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+					}
+					catch (TmxException &ex) 
+					{
+						// Skip messages that fail to encode.
+						PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
+							<< ex.what() << std::endl;
+						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+						continue;
+					}
+					
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
+
+					//Broadcast the encoded SPAT message
+					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
+					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
+				}
+			}
+			delete msg;
+		}
+	}
+}
+
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
 	try
 	{			
 		std::lock_guard<std::mutex> lock(data_lock);
 		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
-		std::string sender_id 			 = "UNSET";
+		std::string sender_id 			 = _intersectionId;
 		std::string recipient_id_str 	 = payload_json != Json::nullValue && payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
 		std::string sender_bsm_id_str 	 = "00000000";
 		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
-		std::string strategy_str 		 = _intersectionType;
+		std::string strategy_str 		 = metadata != Json::nullValue && metadata.isMember("intersection_type")? metadata["intersection_type"].asString(): "UNSET";
 		
 		std::string strategy_params_str  = "null";
 		if( payload_json != Json::nullValue && !payload_json.empty())
 		{
-			strategy_params_str 	     = "st:"  +  (payload_json.isMember("st") ? std::to_string(payload_json["st"].asUInt64()) : "0")
-														+ ",et:" +  (payload_json.isMember("et") ? std::to_string(payload_json["et"].asUInt64()) : "0")
-														+ ",dt:" +  (payload_json.isMember("dt") ? std::to_string(payload_json["dt"].asUInt64()) : "0")
-														+ ",dp:" +  (payload_json.isMember("dp") ? std::to_string(payload_json["dp"].asUInt64()) : "0")
-														+ ",access:" + (payload_json.isMember("dp") ? std::to_string(payload_json["access"].asUInt64()): "0"); 
+			strategy_params_str = (payload_json.isMember("st") ? "st:" + std::to_string(payload_json["st"].asUInt64()) + "," : "") + 
+											  (payload_json.isMember("et") ? "et:" + std::to_string(payload_json["et"].asUInt64())+ ","  : "") +
+											  (payload_json.isMember("dt") ?  "dt:" + std::to_string(payload_json["dt"].asUInt64())+ ","  : "") + 
+											  (payload_json.isMember("dp") ? "dp:" + std::to_string(payload_json["dp"].asUInt64())+ ","  : "") +
+											  (payload_json.isMember("access") ?  "access:" + std::to_string(payload_json["access"].asUInt64()) : "");
 		}
 		
 		

@@ -258,7 +258,7 @@ void LocationPlugin::MonitorGPS()
 			_gpsError = 0;
 
 			sendMessage = false;
-			uint64_t gpsTime = (uint64_t)(1000 * gps_data->fix.time);
+			uint64_t gpsTime = (uint64_t)(1000 * gps_data->fix.time.tv_sec);
 			msg.set_Id(Uuid::NewGuid());
 			msg.set_FixQuality((FixTypes)gps_data->fix.mode);
 			msg.set_SignalQuality(msg.get_FixQuality() > 0 ? SignalQualityTypes::GPS : SignalQualityTypes::Invalid);

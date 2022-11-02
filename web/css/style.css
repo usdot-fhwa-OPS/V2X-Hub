@@ -96,6 +96,26 @@ body{
     width:100% !important;
     word-break: break-all;
 }
+
+.badge {
+    color: #fff;
+    font-weight: bold;
+    border-radius: 0.5em;
+    min-width: 2em;
+    padding: .3em 0.5em;
+    text-align: center;
+    margin-left: 0.1em;
+}
+.badge-warning{
+    background-color: rgb(221, 101, 2);
+}
+.color-warning{
+    color:  rgb(221, 101, 2);
+}
+
+.text-strong{
+    font-weight: bolder;
+}
 /* ------------------- End Table ------------------- */
 
 /* -------------------- Button --------------------- */

@@ -8,26 +8,25 @@
 #include "TestMessage00.h"
 
 asn_TYPE_member_t asn_MBR_TestMessage00_1[] = {
-	{ ATF_POINTER, 2, offsetof(struct TestMessage00, header),
+	{ ATF_NOFLAGS, 0, offsetof(struct TestMessage00, header),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Header,
+		&asn_DEF_MobilityHeader,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
 		"header"
 		},
-	{ ATF_POINTER, 1, offsetof(struct TestMessage00, regional),
+	{ ATF_NOFLAGS, 0, offsetof(struct TestMessage00, body),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_Reg_BasicSafetyMessage,
+		&asn_DEF_MobilityRequest,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */
-		"regional"
+		"body"
 		},
 };
-static const int asn_MAP_TestMessage00_oms_1[] = { 0, 1 };
 static const ber_tlv_tag_t asn_DEF_TestMessage00_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
@@ -40,7 +39,7 @@ asn_SEQUENCE_specifics_t asn_SPC_TestMessage00_specs_1 = {
 	offsetof(struct TestMessage00, _asn_ctx),
 	asn_MAP_TestMessage00_tag2el_1,
 	2,	/* Count of tags in the map */
-	asn_MAP_TestMessage00_oms_1,	/* Optional members */
+	0, 0, 0,	/* Optional elements (not needed) */
 	2, 0,	/* Root/Additions */
 	2,	/* First extension addition */
 };
