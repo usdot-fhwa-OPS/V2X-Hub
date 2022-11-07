@@ -92,7 +92,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	}
 
 	char xml_str[10000]; 
-	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",reqid, reqseq,scale,bounds_str);
+	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest port=\"%s\" list=\"%s\"><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",std::to_string(webport).c_str(),list_tcm.c_str(),reqid, reqseq,scale,bounds_str);
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,url, base_req, method);
@@ -209,7 +209,14 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	QString st; 
 	while(socket->bytesAvailable()>0)
 	{	
-		st.append(socket->readAll());
+		auto readBytes = socket->readAll();
+		if (socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE)
+        {
+			//readBytes is compressed in gzip format
+            st.append(UncompressBytes(readBytes));
+        }else{
+			st.append(readBytes);
+		}
 	}
 	QByteArray array = st.toLocal8Bit();
 
@@ -230,36 +237,67 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
-	
-	tsm5Message tsm5message;
-	tsm5EncodedMessage tsm5ENC;
-	tmx::message_container_type container;
-
-
-	std::stringstream ss;
-	ss << tcm;  // updated _cloudUpdate tags, using updateTags
-
-	container.load<XML>(ss);
-	tsm5message.set_contents(container.get_storage().get_tree());
-	tsm5ENC.encode_j2735_message(tsm5message);
-	BroadcastTCM(tsm5ENC);
-	PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
-
-	//Get TCM id
-	Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
-	
-	ss.str(""); 
-    for(size_t i=0; i < tcmv01_req_id.size; i++)
+	//List of tcm in string format
+	std::list<std::string> tcm_sl = {};
+	try
     {
-		ss << std::setfill('0') << std::setw(2) << std::hex << (unsigned) tcmv01_req_id.buf[i];
+        std::stringstream iss;
+		iss << tcm;  // updated _cloudUpdate tags, using updateTags
+        boost::property_tree::ptree parent_node;
+        boost::property_tree::read_xml(iss, parent_node);
+        auto child_nodes = parent_node.get_child_optional("TrafficControlMessageList");
+		//The tcm response is a list of TCM
+        if (child_nodes)
+        {
+            for (auto &p : child_nodes.get())
+            {
+                boost::property_tree::ptree tcm_node;
+                tcm_node.put_child(p.first, p.second);
+                std::ostringstream oss;
+                boost::property_tree::write_xml(oss, tcm_node);
+				tcm_sl.push_back(oss.str());
+            }
+        }else{
+			tcm_sl.push_back(iss.str());
+		}
     }
-	string tcmv01_req_id_hex = ss.str();	
-	
-	std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
-	if(tcmv01_req_id_hex.length() > 0)
+    catch (boost::property_tree::xml_parser_error &e)
+    {
+        std ::cout << "Failed to parse the xml string." << e.what();
+    }
+
+	for(auto tcm_s: tcm_sl)
 	{
-		std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
-		_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
+		tsm5Message tsm5message;
+		tsm5EncodedMessage tsm5ENC;
+		tmx::message_container_type container;
+
+
+		std::stringstream ss;
+		ss << tcm_s;
+
+		container.load<XML>(ss);
+		tsm5message.set_contents(container.get_storage().get_tree());
+		tsm5ENC.encode_j2735_message(tsm5message);
+		BroadcastTCM(tsm5ENC);
+		PLOG(logINFO) << " CARMACloud Plugin :: Broadcast tsm5:: " << tsm5ENC.get_payload_str();
+
+		//Get TCM id
+		Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
+		
+		ss.str(""); 
+		for(size_t i=0; i < tcmv01_req_id.size; i++)
+		{
+			ss << std::setfill('0') << std::setw(2) << std::hex << (unsigned) tcmv01_req_id.buf[i];
+		}
+		string tcmv01_req_id_hex = ss.str();	
+		
+		std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
+		if(tcmv01_req_id_hex.length() > 0)
+		{
+			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
+			_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
+		}	
 	}	
 }
 
@@ -448,6 +486,8 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("TCMNOAcknowledgementDescription", _TCMNOAcknowledgementDescription);
 	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
 	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
+	GetConfigValue<string>("listTCM",list_tcm);
+
 	
 }
 
@@ -546,6 +586,36 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 		}		
 	}	
 	str_pair = std::make_pair(key, value);
+}
+
+QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes)
+{
+    z_stream strm;
+    strm.zalloc = NULL;
+    strm.zfree = NULL;
+    strm.opaque = NULL;
+    strm.avail_in = compressedBytes.size();
+    strm.next_in = (Byte *)compressedBytes.data();
+	//checking input z_stream to see if there is any error, eg: invalid data etc.
+    auto err = inflateInit2(&strm, MAX_WBITS + 16); // gzip input
+    QByteArray outBuf;
+    const int BUFFER_SIZE = 4092;
+	//There is successful, starting to decompress data
+    if (err == Z_OK) 
+    {
+        int isDone = 0;
+        do
+        {
+            char buffer[BUFFER_SIZE] = {0};
+            strm.avail_out = BUFFER_SIZE;
+            strm.next_out = (Byte *)buffer;
+            isDone = inflate(&strm, Z_FINISH);
+            outBuf.append(buffer);
+        } while (Z_STREAM_END != isDone);
+    }
+	//Finished decompress data stream
+    inflateEnd(&strm);
+    return outBuf;
 }
 
 int CARMACloudPlugin::Main() {

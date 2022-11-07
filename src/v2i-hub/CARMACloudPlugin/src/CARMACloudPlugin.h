@@ -34,6 +34,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/foreach.hpp>
+#include <zlib.h>
 
 
 #include "PluginUtil.h"
@@ -163,6 +164,13 @@ protected:
 	 * **/
 	bool IsSkipBroadcastCurTCM(const string & tcmv01_req_id_hex, const string & tcm_hex_payload ) const;
 
+	/**
+	 * @brief Uncompress input source buffer
+	 * @param compressedBytes Uncompressed source buffer
+	 * @return QByteArray uncompressed destination buffer
+	 */
+	QByteArray UncompressBytes(const QByteArray compressedBytes);
+
 private:
 
 	pthread_mutex_t _settingsMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -202,6 +210,9 @@ private:
 
 	const string _TCMAcknowledgementStrategy = "carma3/geofence_acknowledgement";
 	int _TCMRepeatedlyBroadcastSleep = 100;
+	const char *CONTENT_ENCODING_KEY = "Content-Encoding";
+    const char *CONTENT_ENCODING_VALUE = "gzip";
+	std::string list_tcm = "true";
 	
 };
 std::mutex _cfgLock;
