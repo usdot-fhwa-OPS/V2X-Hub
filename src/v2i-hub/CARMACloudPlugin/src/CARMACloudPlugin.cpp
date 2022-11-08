@@ -249,7 +249,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 		//The tcm response is a list of TCM
         if (child_nodes)
         {
-            for (auto &p : child_nodes.get())
+            for (const auto &p : child_nodes.get())
             {
                 boost::property_tree::ptree tcm_node;
                 tcm_node.put_child(p.first, p.second);
@@ -261,12 +261,12 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 			tcm_sl.push_back(iss.str());
 		}
     }
-    catch (boost::property_tree::xml_parser_error &e)
+    catch (const boost::property_tree::xml_parser_error &e)
     {
         std ::cout << "Failed to parse the xml string." << e.what();
     }
 
-	for(auto tcm_s: tcm_sl)
+	for(const auto tcm_s: tcm_sl)
 	{
 		tsm5Message tsm5message;
 		tsm5EncodedMessage tsm5ENC;
@@ -588,12 +588,12 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 	str_pair = std::make_pair(key, value);
 }
 
-QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes)
+QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) const
 {
     z_stream strm;
-    strm.zalloc = NULL;
-    strm.zfree = NULL;
-    strm.opaque = NULL;
+    strm.zalloc = nullptr;
+    strm.zfree = nullptr;
+    strm.opaque = nullptr;
     strm.avail_in = compressedBytes.size();
     strm.next_in = (Byte *)compressedBytes.data();
 	//checking input z_stream to see if there is any error, eg: invalid data etc.
@@ -621,22 +621,14 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes)
 int CARMACloudPlugin::Main() {
 
 
-	FILE_LOG(logINFO) << "Starting plugin.";
-	
-	//std::string msg = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest><version>0.1</version><reqseq>99</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>1584057600000</oldest><lon>-771521558</lon><lat>389504279</lat><xoffsets>10</xoffsets><xoffsets>20</xoffsets><xoffsets>10</xoffsets><yoffsets>0</yoffsets><yoffsets>500</yoffsets><yoffsets>500</yoffsets></TrafficControlBounds></bounds></TrafficControlRequest>";
-	//std::string url ="http://127.0.0.1:22222";
-	//std::string base = "/carmacloud/v2xhub";
-	//std::string method = "POST";
-	
+	FILE_LOG(logINFO) << "Starting plugin.";		
 
 	while (_plugin->state != IvpPluginState_error) {
 
 		if (IsPluginState(IvpPluginState_registered))
 		{
-			//CloudSend(msg, url, base, method);
 			this_thread::sleep_for(chrono::milliseconds(5000));
 		}
-
 	}
 
 	return (EXIT_SUCCESS);

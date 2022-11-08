@@ -169,7 +169,7 @@ protected:
 	 * @param compressedBytes Uncompressed source buffer
 	 * @return QByteArray uncompressed destination buffer
 	 */
-	QByteArray UncompressBytes(const QByteArray compressedBytes);
+	QByteArray UncompressBytes(const QByteArray compressedBytes) const;
 
 private:
 
