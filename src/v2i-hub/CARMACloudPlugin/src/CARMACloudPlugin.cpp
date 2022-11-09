@@ -597,14 +597,12 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) const
 {
     z_stream strm;
-    strm.zalloc = nullptr;
-    strm.zfree = nullptr;
-    strm.opaque = nullptr;
     strm.avail_in = compressedBytes.size();
     strm.next_in = (Byte *)compressedBytes.data();
 	//checking input z_stream to see if there is any error, eg: invalid data etc.
     auto err = inflateInit2(&strm, MAX_WBITS + 16); // gzip input
     QByteArray outBuf;
+	//MAX numbers of bytes stored in a buffer 
     const int BUFFER_SIZE = 4092;
 	//There is successful, starting to decompress data
     if (err == Z_OK) 
@@ -615,9 +613,10 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) c
             char buffer[BUFFER_SIZE] = {0};
             strm.avail_out = BUFFER_SIZE;
             strm.next_out = (Byte *)buffer;
+			//Uncompress finished
             isDone = inflate(&strm, Z_FINISH);
             outBuf.append(buffer);
-        } while (Z_STREAM_END != isDone);
+        } while (Z_STREAM_END != isDone); //Reach the end of stream to be uncompressed 
     }
 	//Finished decompress data stream
     inflateEnd(&strm);
