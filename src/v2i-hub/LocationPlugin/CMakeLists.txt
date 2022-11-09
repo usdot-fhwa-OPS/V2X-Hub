@@ -1,4 +1,4 @@
-project( LocationPlugin VERSION 5.0 LANGUAGES CXX )
+project( LocationPlugin VERSION 7.3.1 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME Location)
 
