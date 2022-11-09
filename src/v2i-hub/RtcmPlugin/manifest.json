@@ -1,6 +1,6 @@
 {
 	"name":"RTCM",
-	"description":"Plugin to listen for RTCM messages from an NTRIP caster and route those messages over DSRC",
+	"description":"Plugin to listen for RTCM messages from an NTRIP caster and route those messages over a V2X radio",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/RtcmPlugin",
 	"coreIpAddr":"127.0.0.1",
