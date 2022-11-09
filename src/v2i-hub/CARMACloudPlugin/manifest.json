@@ -71,7 +71,7 @@
 		{
 			"key":"listTCM",
 			"default":"true",
-			"description":"Indicator to determine if v2xhub receives a list of TCMs from carma-cloud. Default to true, returning a list of TCM. If false, return one TCM at a time."
+			"description":"Indicator to determine if v2xhub receives a list of TCMs from carma-cloud. Default to true, returning a list of TCM. If false, return one TCM at a time. Indicator value can only be either true or false."
 		}
 	]
 }

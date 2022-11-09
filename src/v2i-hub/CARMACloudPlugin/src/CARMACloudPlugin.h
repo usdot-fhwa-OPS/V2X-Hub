@@ -170,6 +170,12 @@ protected:
 	 * @return QByteArray uncompressed destination buffer
 	 */
 	QByteArray UncompressBytes(const QByteArray compressedBytes) const;
+	/***
+	 * @brief Filter each individual TCM from the tcm response. The TCM response string can be either a list of TCMs or one TCM in XML format.
+	 * @param tcm_response string in XML format
+	 * @return A list of TCM in XML format
+	*/
+	std::list<std::string> FilterTCMs(std::string tcm_response);
 
 private:
 

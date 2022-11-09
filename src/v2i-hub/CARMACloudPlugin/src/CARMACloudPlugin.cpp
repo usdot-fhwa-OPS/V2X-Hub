@@ -238,33 +238,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
 	//List of tcm in string format
-	std::list<std::string> tcm_sl = {};
-	try
-    {
-        std::stringstream iss;
-		iss << tcm;  // updated _cloudUpdate tags, using updateTags
-        boost::property_tree::ptree parent_node;
-        boost::property_tree::read_xml(iss, parent_node);
-        auto child_nodes = parent_node.get_child_optional("TrafficControlMessageList");
-		//The tcm response is a list of TCM
-        if (child_nodes)
-        {
-            for (const auto &p : child_nodes.get())
-            {
-                boost::property_tree::ptree tcm_node;
-                tcm_node.put_child(p.first, p.second);
-                std::ostringstream oss;
-                boost::property_tree::write_xml(oss, tcm_node);
-				tcm_sl.push_back(oss.str());
-            }
-        }else{
-			tcm_sl.push_back(iss.str());
-		}
-    }
-    catch (const boost::property_tree::xml_parser_error &e)
-    {
-        std ::cout << "Failed to parse the xml string." << e.what();
-    }
+	std::list<std::string> tcm_sl = FilterTCMs(tcm);	
 
 	for(const auto tcm_s: tcm_sl)
 	{
@@ -299,6 +273,38 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 			_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
 		}	
 	}	
+}
+
+std::list<std::string> CARMACloudPlugin::FilterTCMs(std::string tcm_response)
+{
+	std::list<std::string> tcm_sl = {};
+	try
+    {
+        std::stringstream iss;
+		iss << tcm_response; 
+        boost::property_tree::ptree parent_node;
+        boost::property_tree::read_xml(iss, parent_node);
+        auto child_nodes = parent_node.get_child_optional("TrafficControlMessageList");
+		//The tcm response is a list of TCM
+        if (child_nodes)
+        {
+            for (const auto &p : child_nodes.get())
+            {
+                boost::property_tree::ptree tcm_node;
+                tcm_node.put_child(p.first, p.second);
+                std::ostringstream oss;
+                boost::property_tree::write_xml(oss, tcm_node);
+				tcm_sl.push_back(oss.str());
+            }
+        }else{
+			tcm_sl.push_back(iss.str());
+		}
+    }
+    catch (const boost::property_tree::xml_parser_error &e)
+    {
+        PLOG(logERROR) << "Failed to parse the xml string." << e.what();
+    }
+	return tcm_sl;
 }
 
 void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
