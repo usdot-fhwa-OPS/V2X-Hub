@@ -175,7 +175,7 @@ protected:
 	 * @param tcm_response string in XML format
 	 * @return A list of TCM in XML format
 	*/
-	std::list<std::string> FilterTCMs(std::string tcm_response);
+	std::list<std::string> FilterTCMs(const std::string& tcm_response) const;
 
 private:
 

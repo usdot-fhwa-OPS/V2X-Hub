@@ -213,7 +213,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 		if (socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE)
         {
 			//readBytes is compressed in gzip format
-            st.append(UncompressBytes(readBytes));
+            st.append(UncompressBytes(readBytes));			
         }else{
 			st.append(readBytes);
 		}
@@ -275,7 +275,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	}	
 }
 
-std::list<std::string> CARMACloudPlugin::FilterTCMs(std::string tcm_response)
+std::list<std::string> CARMACloudPlugin::FilterTCMs(const std::string& tcm_response) const
 {
 	std::list<std::string> tcm_sl = {};
 	try
@@ -597,6 +597,9 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) const
 {
     z_stream strm;
+	strm.zalloc = nullptr;
+	strm.zfree = nullptr; 
+    strm.opaque = nullptr;
     strm.avail_in = compressedBytes.size();
     strm.next_in = (Byte *)compressedBytes.data();
 	//checking input z_stream to see if there is any error, eg: invalid data etc.
