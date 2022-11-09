@@ -231,12 +231,14 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
 		return;
 	}
-    // new updateTags section
+
+	//Transform carma-cloud TCM XML to J2735 compatible TCM XML by updating tags
 	tcm=updateTags(tcm,"<TrafficControlMessage>","<TestMessage05><body>");
 	tcm=updateTags(tcm,"</TrafficControlMessage>","</body></TestMessage05>");
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
+	
 	//List of tcm in string format
 	std::list<std::string> tcm_sl = FilterTCMs(tcm);	
 
@@ -258,17 +260,18 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 
 		//Get TCM id
 		Id64b_t tcmv01_req_id = tsm5message.get_j2735_data()->body.choice.tcmV01.reqid;
-		
+		//Translate TCM request id to hex string
 		ss.str(""); 
 		for(size_t i=0; i < tcmv01_req_id.size; i++)
 		{
 			ss << std::setfill('0') << std::setw(2) << std::hex << (unsigned) tcmv01_req_id.buf[i];
 		}
 		string tcmv01_req_id_hex = ss.str();	
-		
+		//Transform all hex to lower case
 		std::transform(tcmv01_req_id_hex.begin(), tcmv01_req_id_hex.end(), tcmv01_req_id_hex.begin(), ::tolower );	
 		if(tcmv01_req_id_hex.length() > 0)
 		{
+			//Update map of tcm request id hex and tcm hex
 			std::lock_guard<mutex> lock(_not_ACK_TCMs_mutex);
 			_not_ACK_TCMs->insert({tcmv01_req_id_hex, tsm5ENC});
 		}	
@@ -597,7 +600,7 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) const
 {
     z_stream strm;
-	strm.zalloc = nullptr;
+	strm.zalloc = nullptr;//Refer to zlib docs (https://zlib.net/zlib_how.html)
 	strm.zfree = nullptr; 
     strm.opaque = nullptr;
     strm.avail_in = compressedBytes.size();
@@ -620,7 +623,9 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) c
             isDone = inflate(&strm, Z_FINISH);
             outBuf.append(buffer);
         } while (Z_STREAM_END != isDone); //Reach the end of stream to be uncompressed 
-    }
+    }else{
+		PLOG(logWARNING) << "Error initalize stream. Err code = " << err << std::endl;
+	}
 	//Finished decompress data stream
     inflateEnd(&strm);
     return outBuf;
