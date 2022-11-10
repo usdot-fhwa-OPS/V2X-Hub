@@ -390,7 +390,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			else
 				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
 			os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
-			os << "Signature= "<< _signature << "\n" << "Encryption=False\n";
+			os << "Signature="<< _signature << "\n" << "Encryption=False\n";
 			os << "Payload=" << payloadbyte << "\n";
 
 			string message = os.str();
