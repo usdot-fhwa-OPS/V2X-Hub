@@ -37,7 +37,7 @@ typedef struct TrafficControlGeometry {
 	Longitude_t	 reflon;
 	Latitude_t	 reflat;
 	DSRC_Elevation_t	 refelv;
-	long	 refwidth;
+	long	*refwidth	/* OPTIONAL */;
 	long	 heading;
 	struct TrafficControlGeometry__nodes {
 		A_SEQUENCE_OF(struct PathNode) list;

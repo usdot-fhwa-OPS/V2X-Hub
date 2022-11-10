@@ -572,6 +572,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 
 
 TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
+	//Has <refwidth> tag in TCM
 	string tsm5str="<TestMessage05><body> <tcmV01> <reqid>30642B129B984162</reqid> <reqseq>0</reqseq> <msgtot>9</msgtot> <msgnum>9</msgnum> <id>0034b8d88d084ffdaf23837926031658</id> <updated>0</updated> <package> <label>workzone - lane closed</label> <tcids> <Id128b>0034b8d88d084ffdaf23837926031658</Id128b> </tcids> </package> <params> <vclasses> <micromobile/> <motorcycle/> <passenger-car/> <light-truck-van/> <bus/> <two-axle-six-tire-single-unit-truck/> <three-axle-single-unit-truck/> <four-or-more-axle-single-unit-truck/> <four-or-fewer-axle-single-trailer-truck/> <five-axle-single-trailer-truck/> <six-or-more-axle-single-trailer-truck/> <five-or-fewer-axle-multi-trailer-truck/> <six-axle-multi-trailer-truck/> <seven-or-more-axle-multi-trailer-truck/> </vclasses> <schedule> <start>27506547</start> <end>153722867280912</end> <dow>1111111</dow> </schedule> <regulatory><true/></regulatory> <detail> <closed><notopen/></closed> </detail> </params> <geometry> <proj>epsg:3785</proj> <datum>WGS84</datum> <reftime>27506547</reftime> <reflon>-818331529</reflon> <reflat>281182119</reflat> <refelv>0</refelv> <refwidth>424</refwidth> <heading>3403</heading> <nodes> <PathNode><x>0</x><y>0</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-204</x><y>722</y><width>2</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>-2</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-13</x><y>46</y><width>0</width></PathNode> </nodes> </geometry> </tcmV01> </body></TestMessage05>";
 	std::stringstream ss;
 	tsm5Message tsm5msg;
@@ -584,7 +585,14 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
 
-	
+	//No <refwidth> tag in TCM
+	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	ss<<tsm5str;
+	container.load<XML>(ss);
+	tsm5msg.set_contents(container.get_storage().get_tree());
+	tsm5Enc.encode_j2735_message(tsm5msg);
+	std::cout << tsm5Enc.get_payload_str()<<std::endl;
+	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
 }

@@ -101,7 +101,7 @@ memb_refwidth_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 	
 	value = *(const long *)sptr;
 	
-	if((value >= 0 && value <= 32767)) { 
+	if((value >= 0 && value <= 32767)) {
 		/* Constraint check succeeded */
 		return 0;
 	} else {
@@ -154,7 +154,7 @@ memb_nodes_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 	
 	if((size >= 1 && size <= 255)) {
 		/* Perform validation of the inner elements */
-		return td->encoding_constraints.general_constraints(td, sptr, ctfailcb, app_key);
+		return SEQUENCE_OF_constraint(td, sptr, ctfailcb, app_key);
 	} else {
 		ASN__CTFAIL(app_key, td, sptr,
 			"%s: constraint failed (%s:%d)",
@@ -163,10 +163,10 @@ memb_nodes_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 	}
 }
 
-static asn_oer_constraints_t asn_OER_type_nodes_constr_9 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_type_nodes_constr_10 CC_NOTUSED = {
 	{ 0, 0 },
 	-1	/* (SIZE(1..255)) */};
-static asn_per_constraints_t asn_PER_type_nodes_constr_9 CC_NOTUSED = {
+static asn_per_constraints_t asn_PER_type_nodes_constr_10 CC_NOTUSED = {
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	{ APC_CONSTRAINED,	 8,  8,  1,  255 }	/* (SIZE(1..255)) */,
 	0, 0	/* No PER value map */
@@ -195,23 +195,23 @@ static asn_per_constraints_t asn_PER_memb_refwidth_constr_8 CC_NOTUSED = {
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
-static asn_oer_constraints_t asn_OER_memb_heading_constr_8 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_heading_constr_9 CC_NOTUSED = {
 	{ 2, 1 }	/* (0..3599) */,
 	-1};
-static asn_per_constraints_t asn_PER_memb_heading_constr_8 CC_NOTUSED = {
+static asn_per_constraints_t asn_PER_memb_heading_constr_9 CC_NOTUSED = {
 	{ APC_CONSTRAINED,	 12,  12,  0,  3599 }	/* (0..3599) */,
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
-static asn_oer_constraints_t asn_OER_memb_nodes_constr_9 CC_NOTUSED = {
+static asn_oer_constraints_t asn_OER_memb_nodes_constr_10 CC_NOTUSED = {
 	{ 0, 0 },
 	-1	/* (SIZE(1..255)) */};
-static asn_per_constraints_t asn_PER_memb_nodes_constr_9 CC_NOTUSED = {
+static asn_per_constraints_t asn_PER_memb_nodes_constr_10 CC_NOTUSED = {
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	{ APC_CONSTRAINED,	 8,  8,  1,  255 }	/* (SIZE(1..255)) */,
 	0, 0	/* No PER value map */
 };
-static asn_TYPE_member_t asn_MBR_nodes_9[] = {
+static asn_TYPE_member_t asn_MBR_nodes_10[] = {
 	{ ATF_POINTER, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
@@ -222,30 +222,30 @@ static asn_TYPE_member_t asn_MBR_nodes_9[] = {
 		""
 		},
 };
-static const ber_tlv_tag_t asn_DEF_nodes_tags_9[] = {
+static const ber_tlv_tag_t asn_DEF_nodes_tags_10[] = {
 	(ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
-static asn_SET_OF_specifics_t asn_SPC_nodes_specs_9 = {
+static asn_SET_OF_specifics_t asn_SPC_nodes_specs_10 = {
 	sizeof(struct TrafficControlGeometry__nodes),
 	offsetof(struct TrafficControlGeometry__nodes, _asn_ctx),
 	0,	/* XER encoding is XMLDelimitedItemList */
 };
 static /* Use -fall-defs-global to expose */
-asn_TYPE_descriptor_t asn_DEF_nodes_9 = {
+asn_TYPE_descriptor_t asn_DEF_nodes_10 = {
 	"nodes",
 	"nodes",
 	&asn_OP_SEQUENCE_OF,
-	asn_DEF_nodes_tags_9,
-	sizeof(asn_DEF_nodes_tags_9)
-		/sizeof(asn_DEF_nodes_tags_9[0]) - 1, /* 1 */
-	asn_DEF_nodes_tags_9,	/* Same as above */
-	sizeof(asn_DEF_nodes_tags_9)
-		/sizeof(asn_DEF_nodes_tags_9[0]), /* 2 */
-	{ &asn_OER_type_nodes_constr_9, &asn_PER_type_nodes_constr_9, SEQUENCE_OF_constraint },
-	asn_MBR_nodes_9,
+	asn_DEF_nodes_tags_10,
+	sizeof(asn_DEF_nodes_tags_10)
+		/sizeof(asn_DEF_nodes_tags_10[0]) - 1, /* 1 */
+	asn_DEF_nodes_tags_10,	/* Same as above */
+	sizeof(asn_DEF_nodes_tags_10)
+		/sizeof(asn_DEF_nodes_tags_10[0]), /* 2 */
+	{ &asn_OER_type_nodes_constr_10, &asn_PER_type_nodes_constr_10, SEQUENCE_OF_constraint },
+	asn_MBR_nodes_10,
 	1,	/* Single element */
-	&asn_SPC_nodes_specs_9	/* Additional specs */
+	&asn_SPC_nodes_specs_10	/* Additional specs */
 };
 
 asn_TYPE_member_t asn_MBR_TrafficControlGeometry_1[] = {
@@ -303,7 +303,7 @@ asn_TYPE_member_t asn_MBR_TrafficControlGeometry_1[] = {
 		0, 0, /* No default value */
 		"refelv"
 		},
-	{ ATF_NOFLAGS, 0, offsetof(struct TrafficControlGeometry, refwidth),
+	{ ATF_POINTER, 1, offsetof(struct TrafficControlGeometry, refwidth),
 		(ASN_TAG_CLASS_CONTEXT | (6 << 2)),
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_NativeInteger,
@@ -317,20 +317,21 @@ asn_TYPE_member_t asn_MBR_TrafficControlGeometry_1[] = {
 		-1,	/* IMPLICIT tag at current level */
 		&asn_DEF_NativeInteger,
 		0,
-		{ &asn_OER_memb_heading_constr_8, &asn_PER_memb_heading_constr_8,  memb_heading_constraint_1 },
+		{ &asn_OER_memb_heading_constr_9, &asn_PER_memb_heading_constr_9,  memb_heading_constraint_1 },
 		0, 0, /* No default value */
 		"heading"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct TrafficControlGeometry, nodes),
 		(ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		0,
-		&asn_DEF_nodes_9,
+		&asn_DEF_nodes_10,
 		0,
-		{ &asn_OER_memb_nodes_constr_9, &asn_PER_memb_nodes_constr_9,  memb_nodes_constraint_1 },
+		{ &asn_OER_memb_nodes_constr_10, &asn_PER_memb_nodes_constr_10,  memb_nodes_constraint_1 },
 		0, 0, /* No default value */
 		"nodes"
 		},
 };
+static const int asn_MAP_TrafficControlGeometry_oms_1[] = { 6 };
 static const ber_tlv_tag_t asn_DEF_TrafficControlGeometry_tags_1[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
@@ -350,7 +351,8 @@ asn_SEQUENCE_specifics_t asn_SPC_TrafficControlGeometry_specs_1 = {
 	offsetof(struct TrafficControlGeometry, _asn_ctx),
 	asn_MAP_TrafficControlGeometry_tag2el_1,
 	9,	/* Count of tags in the map */
-	0, 0, 0,	/* Optional elements (not needed) */
+	asn_MAP_TrafficControlGeometry_oms_1,	/* Optional members */
+	1, 0,	/* Root/Additions */
 	-1,	/* First extension addition */
 };
 asn_TYPE_descriptor_t asn_DEF_TrafficControlGeometry = {
@@ -368,4 +370,3 @@ asn_TYPE_descriptor_t asn_DEF_TrafficControlGeometry = {
 	9,	/* Elements count */
 	&asn_SPC_TrafficControlGeometry_specs_1	/* Additional specs */
 };
-
