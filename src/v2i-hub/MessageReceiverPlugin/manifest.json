@@ -49,11 +49,6 @@
 			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
 		},		
 		{
-			"key":"HSMLocation",
-			"default":"<SoftHSM library location>",
-			"description":"Location of HSM module static library."
-		},
-		{
 			"key":"HSMurl",
 			"default": "http://<SoftHSM IP>:3000/v1/scms/",
 			"description": "REST API endpoint url needed to make HSM calls"
