@@ -59,7 +59,7 @@ protected:
 	void OnStateChange(IvpPluginState state);
 private:
 	tmx::messages::BsmMessage* DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm);
+			   uint32_t longitude, uint32_t elevation, tmx::messages::DecodedBsmMessage &decodedBsm);
 	tmx::messages::SrmMessage* DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 		uint32_t longitude, uint32_t role);
 	std::atomic<bool> cfgChanged { false };
@@ -75,9 +75,9 @@ private:
 	std::string baseurl;
 	std::vector<string> messageid;
 	std::string messageidstr; 
-	mutex syncLock;
-	FrequencyThrottle<int> errThrottle;
-	FrequencyThrottle<int> statThrottle;
+	std::mutex syncLock;
+	tmx::utils::FrequencyThrottle<int> errThrottle;
+	tmx::utils::FrequencyThrottle<int> statThrottle;
 
 	static std::atomic<uint64_t> totalBytes {0};
 	static std::map<std::string, std::atomic<uint32_t> > totalCount;
