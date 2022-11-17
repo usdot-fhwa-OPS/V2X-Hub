@@ -8,6 +8,11 @@
   "messageTypes": [],
   "configuration": [
     {
+      "key":"LogLevel",
+      "default":"INFO",
+      "description":"The log level for this plugin"
+    },
+    {
       "key": "Messages_Destination_1",
       "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\" }] }",
       "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 1."
