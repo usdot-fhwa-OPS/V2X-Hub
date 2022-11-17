@@ -63,8 +63,6 @@ private:
 	std::array<svr_list, 4> _udpClientList;
 	std::vector<MessageConfig> _messageConfigMap;
 	std::map<std::string, int> _messageCountMap;
-	std::string _signature;
-	//softhsm txSign; 
 	std::string signatureData; 
 	std::string url; 
 	std::string baseurl; 

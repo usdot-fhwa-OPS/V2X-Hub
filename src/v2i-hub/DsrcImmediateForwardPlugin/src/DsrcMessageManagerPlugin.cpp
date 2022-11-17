@@ -44,22 +44,10 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 	_muteDsrc = false;
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
-	UpdateConfigSettings();
-
-	// @SONAR_STOP@
-
-
-	GetConfigValue<string>("HSMurl",baseurl);
-	GetConfigValue<unsigned int>("signMessage",signState);
-	std::string request="sign";
-
-
-	url=baseurl+request;
-	// @SONAR_START@
-
+	
 }
 
-// @SONAR_STOP@
+
 
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
@@ -147,7 +135,6 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 
 	// Get the signature setting.
 	// The same mutex is used that protects the UDP clients.
-	GetConfigValue("Signature", _signature, &_mutexUdpClient);
 	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
 	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
 	std::string request="sign";
@@ -390,7 +377,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			else
 				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
 			os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
-			os << "Signature= "<< _signature << "\n" << "Encryption=False\n";
+			os << "Signature= "<< (signState == 1 ? "True" : "False") << "\n" << "Encryption=False\n";
 			os << "Payload=" << payloadbyte << "\n";
 
 			string message = os.str();
