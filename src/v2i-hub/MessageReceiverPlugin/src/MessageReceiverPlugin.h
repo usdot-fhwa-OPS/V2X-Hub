@@ -58,6 +58,10 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 private:
+	BsmMessage* DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm);
+	SrmMessage* DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+		uint32_t longitude, uint32_t role);
 	std::atomic<bool> cfgChanged { false };
 	std::string ip;
 	unsigned short port = 0;

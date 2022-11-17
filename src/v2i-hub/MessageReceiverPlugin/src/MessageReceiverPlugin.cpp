@@ -64,12 +64,7 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	return &encMsg;
 }
 
-// @SONAR_STOP@
-
-	
-	// @SONAR_START@
-
-BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+BsmMessage* MessageReceiverPlugin::DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
 {
 	PLOG(logDEBUG4) << "BSM vehicleId: " << vehicleId
@@ -112,7 +107,7 @@ BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint
 	return new BsmMessage(bsm);
 }
 
-SrmMessage *DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+SrmMessage* MessageReceiverPlugin::DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 		uint32_t longitude, uint32_t role)
 {
 	PLOG(logDEBUG4) << "SRM vehicleId: " << vehicleId
