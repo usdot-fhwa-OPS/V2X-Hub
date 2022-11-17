@@ -79,8 +79,7 @@ private:
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
 
-	static std::atomic<uint64_t> totalBytes {0};
-	static std::map<std::string, std::atomic<uint32_t> > totalCount;
+	
 
 };
 

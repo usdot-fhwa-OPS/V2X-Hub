@@ -25,7 +25,8 @@ using namespace tmx::utils;
 
 namespace MessageReceiver {
 
-
+	static std::atomic<uint64_t> totalBytes {0};
+	static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
 MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManager(name)
 {	
