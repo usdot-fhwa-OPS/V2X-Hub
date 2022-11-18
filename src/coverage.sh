@@ -1,5 +1,6 @@
 #!/bin/bash
-#  Copyright (C) 2018-2020 LEIDOS.
+
+#  Copyright (C) 2018-2022 LEIDOS.
 # 
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
@@ -13,45 +14,78 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-# script to run tests, generate test-coverage, and store coverage reports in a place
-# easily accessible to sonar. Test names should follow convention run<pluginName>Tests
+# This script is meant to generate .gcov files for code coverage analysis by sonar cloud
+# This script depends on collect_gcovr.bash
+# This script requires that gcovr be installed
+# WARNING this script will remove any .gcov files which currently exist under the output directory argument 2. default=./coverage_reports/gcov/
+#
+# Required Options
+# Either -m or -t or both must be set
+#	-m Call make: If set then catkin_make install will be called
+# -t Run tests: If set then catkin_make run_tests will be called
+# Additional Options
+# -e The execution directory which this script will be run from. Generally this should be the catkin workspace with all source code and binaries below this directory
+# -o The output directory which the .gcov files will be written to. Relative paths in the output directory will be resolved relative to the execution directory
+#
+#
 
-set -x
-for d in v2i-hub/*
+set -eo pipefail
+
+usage() { echo "Usage: make_with_coverage.bash -e <execution dir> -o <output dir> -m -t ";}
+
+ 
+
+# Default environment variables
+execution_dir="."
+output_dir="./coverage_reports/gcov"
+do_make=false
+do_test=false
+
+while getopts e:o:mt option
 do
-    echo ""
-    echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep run[a-zA-Z]*Tests ; then
-            TESTS="./`ls $d | grep run[a-zA-Z]*Tests`"
-            echo "$TESTS built"
-            cd $d
-            $TESTS
-            mkdir coverage
-	        gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
-        else
-            echo "no tests built"
-        fi
-    fi
+	case "${option}"
+	in
+		e) execution_dir=${OPTARG};;
+		o) output_dir=${OPTARG};;
+		m) do_make=true;;
+		t) do_test=true;;
+		\?) echo "Unknown option: -$OPTARG" >&2; exit 1;;
+		:) echo "Missing option argument for -$OPTARG" >&2; exit 1;;
+		*) echo "Unimplemented option: -$OPTARG" >&2; exit 1;;
+
+	esac
 done
-for d in tmx/*
-do
-    echo ""
-    echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep [a-zA-Z]*_test ; then
-            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
-            echo "$TESTS built"
-            cd $d
-            $TESTS
-            mkdir coverage
-            gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
-        else
-            echo "no tests built"
-        fi
-    fi
-done
+
+if [ "${do_make}" = false ] && [ "${do_test}" = false ]; then
+  echo "Error -t or -m must be specified"
+  exit 0
+fi
+
+execution_dir=$(readlink -f ${execution_dir}) # Get execution directory as absolute path
+cd ${execution_dir} # cd to execution directory
+echo "Execution Dir: ${execution_dir}"
+
+if ! [ -d ${output_dir} ]; then
+	mkdir -p ${output_dir}
+fi
+
+output_dir=$(readlink -f ${output_dir}); # Get output directory as absolute path
+echo "Output Dir: ${output_dir}"
+
+
+echo "Building and running tests with code coverage"
+COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
+
+if [ "${do_make}" = true ]; then
+  echo "Calling catkin_make"
+  colcon build --parallel-workers 4 --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug"
+fi
+
+if [ "${do_test}" = true ]; then
+  echo "Calling catkin_make run_tests"
+  colcon test --return-code-on-test-failure --parallel-workers 4 --ctest-args -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug"
+fi
+
+bash collect_gcovr.bash "${execution_dir}" "${output_dir}"
+
+echo "Test coverage complete"
