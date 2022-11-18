@@ -452,12 +452,12 @@ public:
 
 	/**
 	 * Add DSRC metadata attributes
-	 * @param channel The DSRC channel
-	 * @param psid The DSRC psid
+	 * @param channel The V2X channel, default set to 172. Configurable in Immediate Forward Plugin.
+	 * @param psid The V2X psid
 	 */
-	void addDsrcMetadata(int channel, int psid)
+	void addDsrcMetadata(int psid, int channel = 172)
 	{
-		ivpMsg_addDsrcMetadata(ivpMsg, channel, psid);
+		ivpMsg_addDsrcMetadata(ivpMsg, psid, channel);
 		_dsrcChannel.bind(ivpMsg->dsrcMetadata->channel);
 		_dsrcPsid.bind(ivpMsg->dsrcMetadata->psid);
 	}

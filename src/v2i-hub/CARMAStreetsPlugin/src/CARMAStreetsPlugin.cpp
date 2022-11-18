@@ -530,7 +530,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
 						{
 							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
-							tsm3EncodedMsgs.addDsrcMetadata( 172, 0xBFEE );
+							tsm3EncodedMsgs.addDsrcMetadata(0xBFEE );
 							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
 							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
 						}
@@ -543,7 +543,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
 						{
 							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
-							tsm3EncodedMsgs.addDsrcMetadata( 172, 0xBFEE );
+							tsm3EncodedMsgs.addDsrcMetadata(0xBFEE);
 							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
 							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
 						}
@@ -610,7 +610,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 
 					//Broadcast the encoded SPAT message
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
+					spatEncodedMsg.addDsrcMetadata(0x8002);
 					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
 				}
 			}

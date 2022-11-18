@@ -272,7 +272,7 @@ int MapPlugin::Main() {
 				msg->set_payload(byteStr);
 				msg->set_encoding(enc);
 				msg->set_flags(IvpMsgFlags_RouteDSRC);
-				msg->addDsrcMetadata(172, 0x8002);
+				msg->addDsrcMetadata(0x8002);
 
 				activeAction = temp;
 				PLOG(logINFO) << "Map for action " << activeAction << " will be sent";

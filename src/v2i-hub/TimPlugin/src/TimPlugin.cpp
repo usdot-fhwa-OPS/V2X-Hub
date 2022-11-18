@@ -322,7 +322,7 @@ int TimPlugin::Main() {
 					//PLOG(logERROR) <<"encoded timEncMsg..."<< timEncMsg<<std::endl;
 
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					timEncMsg.addDsrcMetadata(172, 0x8003);
+					timEncMsg.addDsrcMetadata(0x8003);
 
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);
