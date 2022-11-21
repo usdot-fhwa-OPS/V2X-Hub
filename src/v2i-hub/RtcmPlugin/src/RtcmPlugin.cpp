@@ -116,7 +116,7 @@ void RtcmPlugin::BroadcastRTCMMessage(TmxRtcmMessage &msg, routeable_message &ro
 		RtcmMessage rtcm = msg.get_RtcmMessage();
 		RtcmEncodedMessage encMsg;
 		encMsg.initialize(rtcm, "", 0, IvpMsgFlags_RouteDSRC);
-		encMsg.addDsrcMetadata(172, 0x8000);
+		encMsg.addDsrcMetadata(0x8000);
 
 		const routeable_message &rMsg = encMsg;
 		this->BroadcastMessage(rMsg);
