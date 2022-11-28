@@ -19,7 +19,7 @@
 #include "Node-XY-28b.h"
 #include "Node-XY-32b.h"
 #include "Node-LLmD-64b.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 #include "constr_CHOICE.h"
 
 #ifdef __cplusplus

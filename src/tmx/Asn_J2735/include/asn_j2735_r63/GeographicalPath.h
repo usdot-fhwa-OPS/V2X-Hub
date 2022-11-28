@@ -95,7 +95,7 @@ extern asn_TYPE_member_t asn_MBR_GeographicalPath_1[9];
 /* Referred external types */
 #include "RoadSegmentReferenceID.h"
 #include "Position3D.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _GeographicalPath_H_ */
 #include "asn_internal.h"

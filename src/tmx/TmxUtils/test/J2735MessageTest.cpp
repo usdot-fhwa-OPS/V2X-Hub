@@ -339,7 +339,7 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 
 TEST_F(J2735MessageTest, EncodeMobilityRequest)
 {	
-	TestMessage00_t* message = (TestMessage00_t*) malloc( sizeof(TestMessage00_t) );
+	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -399,7 +399,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	message->body.expiration.size = strlen(my_str_1);
 	
 		
-	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*) malloc( sizeof(MobilityECEFOffset_t) );
+	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
 	offset->offsetX = 1;
 	offset->offsetY = 1;
 	offset->offsetZ = 1;
@@ -539,6 +539,106 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+}
+
+
+
+TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
+{	
+	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
+
+	/**
+	 * Populate BSMcoreData 
+	 */
+	
+	char* my_str = (char *) "sender_id";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->coreData.msgCnt = 1;
+	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	message->coreData.id.buf = my_bytes_id;
+	message->coreData.id.size = sizeof(my_bytes_id);
+	message->coreData.secMark = 1023;
+	message->coreData.lat = 38954961;
+	message->coreData.Long = -77149303;
+	message->coreData.elev = 72;
+	message->coreData.speed = 100;
+	message->coreData.heading = 12;
+	message->coreData.angle = 10;
+	message->coreData.transmission = 0;  // allow 0...7
+
+	//position accuracy
+	message->coreData.accuracy.orientation= 100;
+	message->coreData.accuracy.semiMajor = 200;
+	message->coreData.accuracy.semiMinor = 200;
+
+	//Acceleration set
+	message->coreData.accelSet.lat = 100;
+	message->coreData.accelSet.Long = 300;
+	message->coreData.accelSet.vert = 100;
+	message->coreData.accelSet.yaw = 0;
+
+	//populate brakes
+	message->coreData.brakes.abs = 1; // allow 0,1,2,3
+	message->coreData.brakes.scs = 1; // allow 0,1,2,3
+	message->coreData.brakes.traction = 1; // allow 0,1,2,3
+	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
+	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
+	uint8_t  my_bytes_brakes[1] = {8};
+	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
+	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
+	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
+
+	//vehicle size
+	message->coreData.size.length = 500;
+	message->coreData.size.width = 300;
+
+	//BSM PartIIContent
+	auto bsmPartII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
+	auto partIICnt = (PartIIcontent_t*) calloc(1, sizeof(PartIIcontent_t));
+	partIICnt->partII_Id = 2;
+	partIICnt->partII_Value.present = partII_Value_PR_SpecialVehicleExtensions;
+	auto specialVEx= (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
+	auto emergencyDetails= (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
+	emergencyDetails->lightsUse = LightbarInUse_inUse;
+	auto resp_type = (ResponseType_t*) calloc(1, sizeof(ResponseType_t));
+	*resp_type = ResponseType_emergency;
+	emergencyDetails->responseType = resp_type;
+	emergencyDetails->sirenUse = SirenInUse_inUse;	
+	specialVEx->vehicleAlerts = emergencyDetails;
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions = *specialVEx;
+    asn_sequence_add(&bsmPartII->list.array, partIICnt);
+	message->partII = bsmPartII;
+
+	// BSM regional extension
+    auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
+    auto reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+    reg_bsm->regionId = 128;
+    reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
+
+    auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
+    auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
+    auto point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+    point->lat = 12;
+    point->Long = 1312;
+    asn_sequence_add(&carma_bsm_destination_points->list.array, point);
+    auto point2 = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+    point2->lat = 1222;
+    point2->Long = 1312323;
+    asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
+    carma_bsm_data->routeDestinationPoints = carma_bsm_destination_points;
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
+
+    asn_sequence_add(&regional->list.array, reg_bsm);
+    message->regional = regional;
+	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
+	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+	std::string expectedBSMEncHex = "00143e604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0080d0824088012486b49d218d693ae3e1ad276e335aeec2100";
+	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
 }
 
 

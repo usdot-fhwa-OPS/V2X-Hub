@@ -19,7 +19,7 @@
 #include "Node-LL-44B.h"
 #include "Node-LL-48B.h"
 #include "Node-LLmD-64b.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 #include "constr_CHOICE.h"
 
 #ifdef __cplusplus

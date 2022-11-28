@@ -58,7 +58,7 @@ extern asn_TYPE_member_t asn_MBR_MovementEvent_1[4];
 /* Referred external types */
 #include "TimeChangeDetails.h"
 #include "AdvisorySpeedList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _MovementEvent_H_ */
 #include "asn_internal.h"

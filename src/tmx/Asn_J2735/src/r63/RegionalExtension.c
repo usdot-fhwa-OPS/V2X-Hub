@@ -5,7 +5,7 @@
  * 	`asn1c -gen-PER -fcompound-names -fincludes-quoted -fskeletons-copy`
  */
 
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 static int
 memb_regionId_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
@@ -67,78 +67,78 @@ static asn_per_constraints_t asn_PER_memb_regExtValue_constr_3 CC_NOTUSED = {
 	{ APC_UNCONSTRAINED,	-1, -1,  0,  0 },
 	0, 0	/* No PER value map */
 };
-static asn_CHOICE_specifics_t asn_SPC_regExtValue_specs_3 = {
-	sizeof(struct Reg_BasicSafetyMessage__regExtValue),
-	offsetof(struct Reg_BasicSafetyMessage__regExtValue, _asn_ctx),
-	offsetof(struct Reg_BasicSafetyMessage__regExtValue, present),
-	sizeof(((struct Reg_BasicSafetyMessage__regExtValue *)0)->present),
-	0,	/* No top level tags */
-	0,	/* No tags in the map */
-	0, 0,
-	-1	/* Extensions start */
-};
-static /* Use -fall-defs-global to expose */
-asn_TYPE_descriptor_t asn_DEF_regExtValue_3 = {
-	"regExtValue",
-	"regExtValue",
-	&asn_OP_OPEN_TYPE,
-	0,	/* No effective tags (pointer) */
-	0,	/* No effective tags (count) */
-	0,	/* No tags (pointer) */
-	0,	/* No tags (count) */
-	{ 0, 0, OPEN_TYPE_constraint },
-	0, 0,	/* No members */
-	&asn_SPC_regExtValue_specs_3	/* Additional specs */
-};
+// static asn_CHOICE_specifics_t asn_SPC_regExtValue_specs_3 = {
+// 	sizeof(struct Reg_BasicSafetyMessage__regExtValue),
+// 	offsetof(struct Reg_BasicSafetyMessage__regExtValue, _asn_ctx),
+// 	offsetof(struct Reg_BasicSafetyMessage__regExtValue, present),
+// 	sizeof(((struct Reg_BasicSafetyMessage__regExtValue *)0)->present),
+// 	0,	/* No top level tags */
+// 	0,	/* No tags in the map */
+// 	0, 0,
+// 	-1	/* Extensions start */
+// };
+// static /* Use -fall-defs-global to expose */
+// asn_TYPE_descriptor_t asn_DEF_regExtValue_3 = {
+// 	"regExtValue",
+// 	"regExtValue",
+// 	&asn_OP_OPEN_TYPE,
+// 	0,	/* No effective tags (pointer) */
+// 	0,	/* No effective tags (count) */
+// 	0,	/* No tags (pointer) */
+// 	0,	/* No tags (count) */
+// 	{ 0, 0, OPEN_TYPE_constraint },
+// 	0, 0,	/* No members */
+// 	&asn_SPC_regExtValue_specs_3	/* Additional specs */
+// };
 
-asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[] = {
-	{ ATF_NOFLAGS, 0, offsetof(struct Reg_BasicSafetyMessage, regionId),
-		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
-		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_RegionId,
-		0,
-		{ &asn_OER_memb_regionId_constr_2, &asn_PER_memb_regionId_constr_2,  memb_regionId_constraint_1 },
-		0, 0, /* No default value */
-		"regionId"
-		},
-	{ ATF_OPEN_TYPE | ATF_NOFLAGS, 0, offsetof(struct Reg_BasicSafetyMessage, regExtValue),
-		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
-		+1,	/* EXPLICIT tag at current level */
-		&asn_DEF_regExtValue_3,
-		0,
-		{ &asn_OER_memb_regExtValue_constr_3, &asn_PER_memb_regExtValue_constr_3,  memb_regExtValue_constraint_1 },
-		0, 0, /* No default value */
-		"regExtValue"
-		},
-};
-static const ber_tlv_tag_t asn_DEF_Reg_BasicSafetyMessage_tags_1[] = {
-	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
-};
-static const asn_TYPE_tag2member_t asn_MAP_Reg_BasicSafetyMessage_tag2el_1[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* regionId */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* regExtValue */
-};
-asn_SEQUENCE_specifics_t asn_SPC_Reg_BasicSafetyMessage_specs_1 = {
-	sizeof(struct Reg_BasicSafetyMessage),
-	offsetof(struct Reg_BasicSafetyMessage, _asn_ctx),
-	asn_MAP_Reg_BasicSafetyMessage_tag2el_1,
-	2,	/* Count of tags in the map */
-	0, 0, 0,	/* Optional elements (not needed) */
-	-1,	/* First extension addition */
-};
-asn_TYPE_descriptor_t asn_DEF_Reg_BasicSafetyMessage = {
-	"Reg-BasicSafetyMessage",
-	"Reg-BasicSafetyMessage",
-	&asn_OP_SEQUENCE,
-	asn_DEF_Reg_BasicSafetyMessage_tags_1,
-	sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1)
-		/sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1[0]), /* 1 */
-	asn_DEF_Reg_BasicSafetyMessage_tags_1,	/* Same as above */
-	sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1)
-		/sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1[0]), /* 1 */
-	{ 0, 0, SEQUENCE_constraint },
-	asn_MBR_Reg_BasicSafetyMessage_1,
-	2,	/* Elements count */
-	&asn_SPC_Reg_BasicSafetyMessage_specs_1	/* Additional specs */
-};
+// asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[] = {
+// 	{ ATF_NOFLAGS, 0, offsetof(struct Reg_BasicSafetyMessage, regionId),
+// 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
+// 		-1,	/* IMPLICIT tag at current level */
+// 		&asn_DEF_RegionId,
+// 		0,
+// 		{ &asn_OER_memb_regionId_constr_2, &asn_PER_memb_regionId_constr_2,  memb_regionId_constraint_1 },
+// 		0, 0, /* No default value */
+// 		"regionId"
+// 		},
+// 	{ ATF_OPEN_TYPE | ATF_NOFLAGS, 0, offsetof(struct Reg_BasicSafetyMessage, regExtValue),
+// 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
+// 		+1,	/* EXPLICIT tag at current level */
+// 		&asn_DEF_regExtValue_3,
+// 		0,
+// 		{ &asn_OER_memb_regExtValue_constr_3, &asn_PER_memb_regExtValue_constr_3,  memb_regExtValue_constraint_1 },
+// 		0, 0, /* No default value */
+// 		"regExtValue"
+// 		},
+// };
+// static const ber_tlv_tag_t asn_DEF_Reg_BasicSafetyMessage_tags_1[] = {
+// 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
+// };
+// static const asn_TYPE_tag2member_t asn_MAP_Reg_BasicSafetyMessage_tag2el_1[] = {
+//     { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* regionId */
+//     { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* regExtValue */
+// };
+// asn_SEQUENCE_specifics_t asn_SPC_Reg_BasicSafetyMessage_specs_1 = {
+// 	sizeof(struct Reg_BasicSafetyMessage),
+// 	offsetof(struct Reg_BasicSafetyMessage, _asn_ctx),
+// 	asn_MAP_Reg_BasicSafetyMessage_tag2el_1,
+// 	2,	/* Count of tags in the map */
+// 	0, 0, 0,	/* Optional elements (not needed) */
+// 	-1,	/* First extension addition */
+// };
+// asn_TYPE_descriptor_t asn_DEF_Reg_BasicSafetyMessage = {
+// 	"Reg-BasicSafetyMessage",
+// 	"Reg-BasicSafetyMessage",
+// 	&asn_OP_SEQUENCE,
+// 	asn_DEF_Reg_BasicSafetyMessage_tags_1,
+// 	sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1)
+// 		/sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1[0]), /* 1 */
+// 	asn_DEF_Reg_BasicSafetyMessage_tags_1,	/* Same as above */
+// 	sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1)
+// 		/sizeof(asn_DEF_Reg_BasicSafetyMessage_tags_1[0]), /* 1 */
+// 	{ 0, 0, SEQUENCE_constraint },
+// 	asn_MBR_Reg_BasicSafetyMessage_1,
+// 	2,	/* Elements count */
+// 	&asn_SPC_Reg_BasicSafetyMessage_specs_1	/* Additional specs */
+// };
 

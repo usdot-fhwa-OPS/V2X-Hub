@@ -68,7 +68,7 @@ extern asn_TYPE_member_t asn_MBR_IntersectionGeometry_1[9];
 /* Referred external types */
 #include "SpeedLimitList.h"
 #include "PreemptPriorityList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _IntersectionGeometry_H_ */
 #include "asn_internal.h"

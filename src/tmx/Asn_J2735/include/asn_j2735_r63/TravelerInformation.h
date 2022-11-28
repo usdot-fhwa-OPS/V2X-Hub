@@ -60,7 +60,7 @@ extern asn_TYPE_member_t asn_MBR_TravelerInformation_1[6];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _TravelerInformation_H_ */
 #include "asn_internal.h"

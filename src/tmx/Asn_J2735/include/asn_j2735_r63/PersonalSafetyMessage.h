@@ -104,7 +104,7 @@ extern asn_TYPE_member_t asn_MBR_PersonalSafetyMessage_1[26];
 #include "PathHistory.h"
 #include "PathPrediction.h"
 #include "PropelledInformation.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _PersonalSafetyMessage_H_ */
 #include "asn_internal.h"

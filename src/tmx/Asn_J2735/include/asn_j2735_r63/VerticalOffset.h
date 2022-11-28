@@ -19,7 +19,7 @@
 #include "VertOffset-B11.h"
 #include "VertOffset-B12.h"
 #include "DSRC_Elevation.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 #include "constr_CHOICE.h"
 
 #ifdef __cplusplus

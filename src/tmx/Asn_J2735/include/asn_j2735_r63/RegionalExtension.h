@@ -23,32 +23,32 @@
 extern "C" {
 #endif
 
-/* Dependencies */
-typedef enum Reg_BasicSafetyMessage__regExtValue_PR {
-	Reg_BasicSafetyMessage__regExtValue_PR_NOTHING	/* No components present */
+// /* Dependencies */
+// typedef enum Reg_BasicSafetyMessage__regExtValue_PR {
+// 	Reg_BasicSafetyMessage__regExtValue_PR_NOTHING	/* No components present */
 	
-} Reg_BasicSafetyMessage__regExtValue_PR;
+// } Reg_BasicSafetyMessage__regExtValue_PR;
 
-/* RegionalExtension */
-typedef struct Reg_BasicSafetyMessage {
-	RegionId_t	 regionId;
-	struct Reg_BasicSafetyMessage__regExtValue {
-		Reg_BasicSafetyMessage__regExtValue_PR present;
-		union Reg_BasicSafetyMessage__regExtValue_u {
-		} choice;
+// /* RegionalExtension */
+// typedef struct Reg_BasicSafetyMessage {
+// 	RegionId_t	 regionId;
+// 	struct Reg_BasicSafetyMessage__regExtValue {
+// 		Reg_BasicSafetyMessage__regExtValue_PR present;
+// 		union Reg_BasicSafetyMessage__regExtValue_u {
+// 		} choice;
 		
-		/* Context for parsing across buffer boundaries */
-		asn_struct_ctx_t _asn_ctx;
-	} regExtValue;
+// 		/* Context for parsing across buffer boundaries */
+// 		asn_struct_ctx_t _asn_ctx;
+// 	} regExtValue;
 	
-	/* Context for parsing across buffer boundaries */
-	asn_struct_ctx_t _asn_ctx;
-} Reg_BasicSafetyMessage_t;
+// 	/* Context for parsing across buffer boundaries */
+// 	asn_struct_ctx_t _asn_ctx;
+// } Reg_BasicSafetyMessage_t;
 
-/* Implementation */
-extern asn_TYPE_descriptor_t asn_DEF_Reg_BasicSafetyMessage;
-extern asn_SEQUENCE_specifics_t asn_SPC_Reg_BasicSafetyMessage_specs_1;
-extern asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[2];
+// /* Implementation */
+// extern asn_TYPE_descriptor_t asn_DEF_Reg_BasicSafetyMessage;
+// extern asn_SEQUENCE_specifics_t asn_SPC_Reg_BasicSafetyMessage_specs_1;
+// extern asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[2];
 
 #ifdef __cplusplus
 }

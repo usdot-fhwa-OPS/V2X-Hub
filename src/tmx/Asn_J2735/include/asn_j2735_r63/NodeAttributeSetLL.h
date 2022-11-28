@@ -63,7 +63,7 @@ extern asn_TYPE_member_t asn_MBR_NodeAttributeSetLL_1[7];
 #include "NodeAttributeLLList.h"
 #include "SegmentAttributeLLList.h"
 #include "LaneDataAttributeList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _NodeAttributeSetLL_H_ */
 #include "asn_internal.h"

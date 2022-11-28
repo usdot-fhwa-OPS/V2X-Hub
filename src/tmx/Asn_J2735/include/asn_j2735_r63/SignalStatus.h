@@ -56,7 +56,7 @@ extern asn_TYPE_member_t asn_MBR_SignalStatus_1[4];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _SignalStatus_H_ */
 #include "asn_internal.h"

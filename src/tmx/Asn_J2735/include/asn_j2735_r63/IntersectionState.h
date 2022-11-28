@@ -70,7 +70,7 @@ extern asn_TYPE_member_t asn_MBR_IntersectionState_1[10];
 /* Referred external types */
 #include "EnabledLaneList.h"
 #include "ManeuverAssistList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _IntersectionState_H_ */
 #include "asn_internal.h"

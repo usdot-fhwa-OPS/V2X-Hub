@@ -61,7 +61,7 @@ extern asn_TYPE_member_t asn_MBR_SignalRequest_1[6];
 
 /* Referred external types */
 #include "IntersectionAccessPoint.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _SignalRequest_H_ */
 #include "asn_internal.h"

@@ -98,7 +98,7 @@ extern asn_TYPE_member_t asn_MBR_ProbeDataManagement_1[8];
 
 /* Referred external types */
 #include "VehicleStatusRequestList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _ProbeDataManagement_H_ */
 #include "asn_internal.h"

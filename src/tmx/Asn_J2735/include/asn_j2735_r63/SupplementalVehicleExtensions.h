@@ -76,7 +76,7 @@ extern asn_TYPE_member_t asn_MBR_SupplementalVehicleExtensions_1[10];
 #include "DisabledVehicle.h"
 #include "SpeedProfile.h"
 #include "RTCMPackage.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _SupplementalVehicleExtensions_H_ */
 #include "asn_internal.h"

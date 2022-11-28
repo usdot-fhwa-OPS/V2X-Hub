@@ -58,7 +58,7 @@ extern asn_TYPE_member_t asn_MBR_GeometricProjection_1[5];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _GeometricProjection_H_ */
 #include "asn_internal.h"

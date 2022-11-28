@@ -69,7 +69,7 @@ extern asn_TYPE_member_t asn_MBR_GenericLane_1[10];
 /* Referred external types */
 #include "ConnectsToList.h"
 #include "OverlayLaneList.h"
-#include "RegionalExtension.h"
+#include "RegionalExtension-BasicSafetyMessage.h"
 
 #endif	/* _GenericLane_H_ */
 #include "asn_internal.h"
