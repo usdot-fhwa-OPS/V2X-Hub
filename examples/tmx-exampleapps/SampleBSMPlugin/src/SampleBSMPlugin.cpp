@@ -26,7 +26,7 @@ namespace SampleBSMPluginNS
         MessageFrameMessage frame_msg(bsmMessage->get_j2735_data());
         bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));   
         bsmEncodeMessage.set_flags(IvpMsgFlags_RouteDSRC);
-        bsmEncodeMessage.addDsrcMetadata(172, 0x20);
+        bsmEncodeMessage.addDsrcMetadata(0x20);
         bsmEncodeMessage.refresh_timestamp();
 
         routeable_message *rMsg = dynamic_cast<routeable_message *>(&bsmEncodeMessage);
@@ -59,7 +59,7 @@ namespace SampleBSMPluginNS
 
             //Broadcast BSM
             bsmEncoded.set_flags(IvpMsgFlags_RouteDSRC);
-            bsmEncoded.addDsrcMetadata(172, 0x20);
+            bsmEncoded.addDsrcMetadata(0x20);
             bsmEncoded.refresh_timestamp();
             routeable_message *rMsg = dynamic_cast<routeable_message *>(&bsmEncoded);
             BroadcastMessage(*rMsg);

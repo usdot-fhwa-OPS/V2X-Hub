@@ -14,23 +14,23 @@
     },
     {
       "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\" }] }",
-      "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 1."
+      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"172\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"172\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"172\" }] }",
+      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 1."
     },
     {
       "key": "Messages_Destination_2",
       "default": "{ \"Messages\": [ ] }",
-       "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 2."
+      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 2."
     },
     {
       "key": "Messages_Destination_3",
       "default": "{ \"Messages\": [ ] }",
-      "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 3."
+      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 3."
     },
     {
       "key": "Messages_Destination_4",
       "default": "{ \"Messages\": [ ] }",
-       "description": "JSON data defining the message types and PSIDs for messages forwarded to the V2X radio at destination 4."
+      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 4."
     },
     {
       "key": "Destination_1",
