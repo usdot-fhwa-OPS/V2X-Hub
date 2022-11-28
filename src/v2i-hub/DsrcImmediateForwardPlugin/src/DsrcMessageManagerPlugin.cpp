@@ -306,7 +306,8 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	PLOG(logWARNING)<<_messageConfigMap.size();
 	//loop through all MessageConfig and send to each with the proper TmxType
 	for (int configIndex = 0;configIndex < _messageConfigMap.size();configIndex++)
-	{	PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
+	{	
+		PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
 		if (_messageConfigMap[configIndex].TmxType == msg->subtype)
 		{
 			foundMessageType = true;
@@ -320,8 +321,6 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 			/// if signing is Enabled, request signing with HSM 
 			
-			// @SONAR_STOP@
-
 
 			if (signState == 1)
 			{
@@ -347,18 +346,29 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				std::string result="";
 				FILE* pipe= popen(cmd,"r"); 
 
-				if (pipe == NULL ) throw std::runtime_error("popen() failed!");
+				if (pipe == NULL ) 
+					throw std::runtime_error("popen() failed!");
 				try{
 					while (fgets(buffer, sizeof(buffer),pipe) != NULL)
 					{
 						result+=buffer; 
 					}
-				} catch (...) {
+				} catch (std::exception const & ex) {
+					
 					pclose(pipe); 
-					throw; 
+					PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+					return;
+; 
 				}
 
 				cJSON *root   = cJSON_Parse(result.c_str());
+				// Check if status is 200 (successful)
+				cJSON *status = cJSON_GetObjectItem(root, "code");
+				if (status->valueint != 200 ) {
+					cJSON *message = cJSON_GetObjectItem(root, "message");
+					PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
+					return;
+				}
 				cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
 				string signedMsg = sd->valuestring;
 				base642hex(signedMsg,payloadbyte); // this allows sending hex of the signed message rather than base64
