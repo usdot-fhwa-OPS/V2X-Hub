@@ -16,33 +16,44 @@
 # script to run tests, generate test-coverage, and store coverage reports in a place
 # easily accessible to sonar. Test names should follow convention run<pluginName>Tests
 
-cd /home/V2X-Hub
-mkdir test_results
-
-cd /home/V2X-Hub/src/tmx/TmxUtils/build/
-#./TmxUtils_test --gtest_output=xml:../../../../test_results/
-cd /home/V2X-Hub/src/tmx/TmxUtils/
-mkdir coverage
-cd /home/V2X-Hub/src/tmx/
-gcovr --sonarqube TmxUtils/coverage/coverage.xml -s -f TmxUtils/ -r .
-
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin/build/
-./PedestrianPlugin_test --gtest_output=xml:../../../../test_results/
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin/
-mkdir coverage
-cd /home/V2X-Hub/src/v2i-hub/
-gcovr --sonarqube PedestrianPlugin/coverage/coverage.xml -s -f PedestrianPlugin/ -r .
-
-cd /home/V2X-Hub/src/v2i-hub/PreemptionPlugin/build/
-./PreemptionPlugin_test --gtest_output=xml:../../../../test_results/
-cd /home/V2X-Hub/src/v2i-hub/PreemptionPlugin/
-mkdir coverage
-cd /home/V2X-Hub/src/v2i-hub/
-gcovr --sonarqube PreemptionPlugin/coverage/coverage.xml -s -f PreemptionPlugin/ -r .
-
-cd /home/V2X-Hub/src/v2i-hub/SpatPlugin/build/
-./SpatPlugin_test --gtest_output=xml:../../../../test_results/
-cd /home/V2X-Hub/src/v2i-hub/SpatPlugin/
-mkdir coverage
-cd /home/V2X-Hub/src/v2i-hub/
-gcovr --sonarqube SpatPlugin/coverage/coverage.xml -s -f SpatPlugin/ -r .
+set -x
+for d in v2i-hub/*
+do
+    echo ""
+    echo $d
+    if [[ -d $d ]]; then
+        if ls $d | grep run[a-zA-Z]*Tests ; then
+            TESTS="./`ls $d | grep run[a-zA-Z]*Tests`"
+            echo "$TESTS built"
+            cd $d
+            $TESTS
+            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            mkdir coverage
+            PLUGIN=`echo $d | cut -d "/" -f 2`
+            mv $(ls | grep [a-zA-Z0-9#-]*$PLUGIN | grep -v test#  | grep gcov) coverage
+            cd ../..
+        else
+            echo "no tests built"
+        fi
+    fi
+done
+for d in tmx/*
+do
+    echo ""
+    echo $d
+    if [[ -d $d ]]; then
+        if ls $d | grep [a-zA-Z]*_test ; then
+            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
+            echo "$TESTS built"
+            cd $d
+            $TESTS
+            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            mkdir coverage
+            TMX=`echo $d | cut -d "/" -f 2`
+            mv $(ls | grep [a-zA-Z0-9#-]*$TMX | grep -v test#  | grep gcov) coverage
+            cd ../..
+        else
+            echo "no tests built"
+        fi
+    fi
+done
