@@ -27,33 +27,3 @@ make install
 cd ../v2i-hub
 cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" .
 make
-
-cd /home/V2X-Hub/src/tmx/TmxUtils
-mkdir build
-cd /home/V2X-Hub/src/tmx/TmxUtils/build
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" ..
-make
-
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin
-mkdir build
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" ..
-make
-
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin
-mkdir build
-cd /home/V2X-Hub/src/v2i-hub/PedestrianPlugin
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" ..
-make
-
-cd /home/V2X-Hub/src/v2i-hub/PreemptionPlugin
-mkdir build
-cd /home/V2X-Hub/src/v2i-hub/PreemptionPlugin
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" ..
-make
-
-cd /home/V2X-Hub/src/v2i-hub/SpatPlugin
-mkdir build
-cd /home/V2X-Hub/src/v2i-hub/SpatPlugin
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="Debug" ..
-make
