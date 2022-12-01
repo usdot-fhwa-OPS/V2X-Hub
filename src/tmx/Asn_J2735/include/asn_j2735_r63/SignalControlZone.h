@@ -12,7 +12,7 @@
 #include "asn_application.h"
 
 /* Including external dependencies */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 #include "constr_SEQUENCE.h"
 
 #ifdef __cplusplus

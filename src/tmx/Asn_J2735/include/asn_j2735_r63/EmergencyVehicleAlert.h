@@ -71,7 +71,7 @@ extern asn_TYPE_member_t asn_MBR_EmergencyVehicleAlert_1[11];
 
 /* Referred external types */
 #include "EmergencyDetails.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _EmergencyVehicleAlert_H_ */
 #include "asn_internal.h"

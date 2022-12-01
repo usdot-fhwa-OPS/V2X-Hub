@@ -71,7 +71,7 @@ extern asn_TYPE_member_t asn_MBR_IntersectionCollision_1[10];
 #include "BSMcoreData.h"
 #include "PathHistory.h"
 #include "PathPrediction.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _IntersectionCollision_H_ */
 #include "asn_internal.h"

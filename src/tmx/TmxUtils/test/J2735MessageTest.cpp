@@ -592,11 +592,11 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
 	message->coreData.size.length = 500;
 	message->coreData.size.width = 300;
 
-	//BSM PartIIContent
+	//BSM BSMpartIIExtension
 	auto bsmPartII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
-	auto partIICnt = (PartIIcontent_t*) calloc(1, sizeof(PartIIcontent_t));
+	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
 	partIICnt->partII_Id = 2;
-	partIICnt->partII_Value.present = partII_Value_PR_SpecialVehicleExtensions;
+	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
 	auto specialVEx= (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
 	auto emergencyDetails= (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
 	emergencyDetails->lightsUse = LightbarInUse_inUse;
@@ -626,7 +626,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
     point2->Long = 1312323;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
     carma_bsm_data->routeDestinationPoints = carma_bsm_destination_points;
-    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = carma_bsm_data;
 
     asn_sequence_add(&regional->list.array, reg_bsm);
     message->regional = regional;

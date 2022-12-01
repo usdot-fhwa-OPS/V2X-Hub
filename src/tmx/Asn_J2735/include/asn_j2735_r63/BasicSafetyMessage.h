@@ -9,27 +9,27 @@
 #define	_BasicSafetyMessage_H_
 
 
-#include "asn_application.h"
+#include <asn_application.h>
 
 /* Including external dependencies */
 #include "BSMcoreData.h"
-#include "asn_SEQUENCE_OF.h"
-#include "constr_SEQUENCE_OF.h"
-#include "constr_SEQUENCE.h"
+#include <asn_SEQUENCE_OF.h>
+#include <constr_SEQUENCE_OF.h>
+#include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Forward declarations */
-struct PartIIcontent;
+struct BSMpartIIExtension;
 struct Reg_BasicSafetyMessage;
 
 /* BasicSafetyMessage */
 typedef struct BasicSafetyMessage {
 	BSMcoreData_t	 coreData;
 	struct BasicSafetyMessage__partII {
-		A_SEQUENCE_OF(struct PartIIcontent) list;
+		A_SEQUENCE_OF(struct BSMpartIIExtension) list;
 		
 		/* Context for parsing across buffer boundaries */
 		asn_struct_ctx_t _asn_ctx;
@@ -60,7 +60,7 @@ extern asn_TYPE_member_t asn_MBR_BasicSafetyMessage_1[3];
 
 /* Referred external types */
 #include "PartIIcontent.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _BasicSafetyMessage_H_ */
-#include "asn_internal.h"
+#include <asn_internal.h>

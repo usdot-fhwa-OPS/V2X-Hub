@@ -92,7 +92,7 @@ extern asn_TYPE_member_t asn_MBR_ComputedLane_1[7];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _ComputedLane_H_ */
 #include "asn_internal.h"

@@ -69,7 +69,7 @@ extern asn_TYPE_member_t asn_MBR_ProbeVehicleData_1[7];
 /* Referred external types */
 #include "VehicleIdent.h"
 #include "Snapshot.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _ProbeVehicleData_H_ */
 #include "asn_internal.h"

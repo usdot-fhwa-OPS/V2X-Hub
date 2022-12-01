@@ -64,7 +64,7 @@ extern asn_TYPE_member_t asn_MBR_EventDescription_1[6];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _EventDescription_H_ */
 #include "asn_internal.h"

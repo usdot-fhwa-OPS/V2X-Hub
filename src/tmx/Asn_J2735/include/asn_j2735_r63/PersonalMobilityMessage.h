@@ -79,7 +79,7 @@ extern asn_TYPE_descriptor_t asn_DEF_PersonalMobilityMessage;
 #include "DFullTime.h"
 #include "DestinationType.h"
 #include "MobilityNeedsList.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _PersonalMobilityMessage_H_ */
 #include "asn_internal.h"

@@ -65,7 +65,7 @@ extern asn_per_constraints_t asn_PER_type_RestrictionUserType_constr_1;
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _RestrictionUserType_H_ */
 #include "asn_internal.h"

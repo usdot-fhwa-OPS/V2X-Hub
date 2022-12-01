@@ -70,7 +70,7 @@ extern asn_TYPE_member_t asn_MBR_MapData_1[9];
 #include "RoadSegmentList.h"
 #include "DataParameters.h"
 #include "RestrictionClassList.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _MapData_H_ */
 #include "asn_internal.h"

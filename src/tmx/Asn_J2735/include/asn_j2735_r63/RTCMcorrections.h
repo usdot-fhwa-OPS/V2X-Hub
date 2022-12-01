@@ -64,7 +64,7 @@ extern asn_TYPE_member_t asn_MBR_RTCMcorrections_1[7];
 /* Referred external types */
 #include "FullPositionVector.h"
 #include "RTCMheader.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _RTCMcorrections_H_ */
 #include "asn_internal.h"

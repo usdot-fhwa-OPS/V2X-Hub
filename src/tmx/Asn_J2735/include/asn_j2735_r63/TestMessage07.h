@@ -46,7 +46,7 @@ extern asn_TYPE_member_t asn_MBR_TestMessage07_1[2];
 
 /* Referred external types */
 #include "Header.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _TestMessage07_H_ */
 #include "asn_internal.h"

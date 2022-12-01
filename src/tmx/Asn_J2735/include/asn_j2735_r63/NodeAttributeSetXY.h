@@ -63,7 +63,7 @@ extern asn_TYPE_member_t asn_MBR_NodeAttributeSetXY_1[7];
 #include "NodeAttributeXYList.h"
 #include "SegmentAttributeXYList.h"
 #include "LaneDataAttributeList.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _NodeAttributeSetXY_H_ */
 #include "asn_internal.h"

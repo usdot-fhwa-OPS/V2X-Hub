@@ -73,7 +73,7 @@ extern asn_TYPE_member_t asn_MBR_RoadSideAlert_1[10];
 
 /* Referred external types */
 #include "FullPositionVector.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _RoadSideAlert_H_ */
 #include "asn_internal.h"

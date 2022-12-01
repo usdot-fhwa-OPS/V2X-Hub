@@ -59,7 +59,7 @@ extern asn_TYPE_member_t asn_MBR_MovementState_1[5];
 
 /* Referred external types */
 #include "ManeuverAssistList.h"
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _MovementState_H_ */
 #include "asn_internal.h"

@@ -66,7 +66,7 @@ extern asn_TYPE_member_t asn_MBR_VehicleClassification_1[9];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _VehicleClassification_H_ */
 #include "asn_internal.h"

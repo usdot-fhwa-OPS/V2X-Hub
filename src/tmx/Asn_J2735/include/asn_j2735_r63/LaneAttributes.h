@@ -45,7 +45,7 @@ extern asn_TYPE_member_t asn_MBR_LaneAttributes_1[4];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _LaneAttributes_H_ */
 #include "asn_internal.h"

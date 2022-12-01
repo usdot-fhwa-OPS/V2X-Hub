@@ -53,7 +53,7 @@ extern asn_TYPE_member_t asn_MBR_RequestorType_1[6];
 #endif
 
 /* Referred external types */
-#include "RegionalExtension-BasicSafetyMessage.h"
+#include "RegionalExtension.h"
 
 #endif	/* _RequestorType_H_ */
 #include "asn_internal.h"
