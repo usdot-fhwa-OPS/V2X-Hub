@@ -20,7 +20,7 @@ cd /home/V2X-Hub
 mkdir test_results
 
 cd /home/V2X-Hub/src/tmx/TmxUtils/build/
-./TmxUtils_test --gtest_output=xml:../../../../test_results/
+#./TmxUtils_test --gtest_output=xml:../../../../test_results/
 cd /home/V2X-Hub/src/tmx/TmxUtils/
 mkdir coverage
 cd /home/V2X-Hub/src/tmx/
