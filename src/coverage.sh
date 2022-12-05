@@ -28,11 +28,8 @@ do
             cd $d
             $TESTS
             mkdir coverage
-            PLUGIN=`echo $d | cut -d "/" -f 2`
-            mv $(ls | grep [a-zA-Z0-9#-]*$PLUGIN | grep -v test#  | grep gcov) coverage
-            cd coverage 
-            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
-            cd ../../..
+            gcovr --sonarqube ./coverage/coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            cd ../..
         else
             echo "no tests built"
         fi
@@ -47,13 +44,10 @@ do
             TESTS="./`ls $d | grep [a-zA-Z]*_test`"
             echo "$TESTS built"
             cd $d
-            $TESTS 
+            $TESTS
             mkdir coverage
-            TMX=`echo $d | cut -d "/" -f 2`
-            mv $(ls | grep [a-zA-Z0-9#-]*$TMX | grep -v test#  | grep gcov) coverage
-            cd coverage
-            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
-            cd ../../..
+            gcovr --sonarqube ./coverage/coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            cd ../..
         else
             echo "no tests built"
         fi
