@@ -27,8 +27,7 @@ do
             echo "$TESTS built"
             cd $d
             $TESTS
-            mkdir coverage
-            gcovr --sonarqube ./coverage/coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
             cd ../..
         else
             echo "no tests built"
@@ -45,8 +44,7 @@ do
             echo "$TESTS built"
             cd $d
             $TESTS
-            mkdir coverage
-            gcovr --sonarqube ./coverage/coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
+            gcovr --sonarqube coverage.xml -k -r . # Run gcovr with -k to ensure generated .gcov files are preserved -r . makes it run in the current directory
             cd ../..
         else
             echo "no tests built"
