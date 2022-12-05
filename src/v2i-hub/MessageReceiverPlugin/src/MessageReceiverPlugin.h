@@ -78,6 +78,9 @@ private:
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
+	uint _skippedSignVerifyErrorResponse;
+	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
+
 
 	
 

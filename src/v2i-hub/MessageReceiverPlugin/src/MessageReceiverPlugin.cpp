@@ -354,6 +354,9 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue<string>("messageid",messageidstr);
 	GetConfigValue("IP", ip);
 	GetConfigValue("Port", port);
+	_skippedSignVerifyErrorResponse = 0;
+	SetStatus<uint>(Key_SkippedSignVerifyError, _skippedSignVerifyErrorResponse);
+
 	getmessageid();
 
 	std::string request="verifySig";
@@ -456,11 +459,22 @@ int MessageReceiverPlugin::Main()
 						{
 							result+=buffer; 
 						}
-					} catch (...) {
+					} catch (std::exception const & ex) {
+					
 						pclose(pipemsg); 
-						throw; 
+						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
+						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+						return;
+; 
 					}
 					cJSON *root   = cJSON_Parse(result.c_str());
+					cJSON *status = cJSON_GetObjectItem(root, "code");
+					if (status->valueint != 200 ) {
+						cJSON *message = cJSON_GetObjectItem(root, "message");
+						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
+						PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
+						return;
+					}
 					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
 
 

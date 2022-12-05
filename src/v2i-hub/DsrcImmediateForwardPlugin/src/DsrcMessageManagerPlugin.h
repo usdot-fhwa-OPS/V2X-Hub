@@ -74,6 +74,7 @@ private:
 	uint _skippedNoDsrcMetadata;
 	uint _skippedNoMessageRoute;
 	uint _skippedInvalidUdpClient;
+	uint _skippedSignErrorResponse;
 
 	bool _muteDsrc;
 	// @SONAR_START@

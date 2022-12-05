@@ -30,6 +30,7 @@ namespace DsrcMessageManager
 
 const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
 const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
+const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
 const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
 
 DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginClient(name),
@@ -124,9 +125,12 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 		_skippedNoDsrcMetadata = 0;
 		_skippedNoMessageRoute = 0;
 		_skippedInvalidUdpClient = 0;
+		_skippedSignErrorResponse = 0;
 		SetStatus<uint>(Key_SkippedNoDsrcMetadata, _skippedNoDsrcMetadata);
 		SetStatus<uint>(Key_SkippedNoMessageRoute, _skippedNoMessageRoute);
 		SetStatus<uint>(Key_SkippedInvalidUdpClient, _skippedInvalidUdpClient);
+		SetStatus<uint>(Key_SkippedSignError, _skippedSignErrorResponse);
+
 	}
 	for (uint i = 0; i < _udpClientList.size(); i++)
 	{
@@ -355,7 +359,8 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 					}
 				} catch (std::exception const & ex) {
 					
-					pclose(pipe); 
+					pclose(pipe);
+					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 					PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 					return;
 ; 
@@ -366,6 +371,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				cJSON *status = cJSON_GetObjectItem(root, "code");
 				if (status->valueint != 200 ) {
 					cJSON *message = cJSON_GetObjectItem(root, "message");
+					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 					PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
 					return;
 				}
@@ -421,7 +427,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	if (!foundMessageType)
 	{
 		SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-		PLOG(logWARNING)<<" WARNINNGGG TMX Subtype not found in configuration.  Message Ignored: " <<
+		PLOG(logWARNING)<<" WARNINNG TMX Subtype not found in configuration.  Message Ignored: " <<
 				"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		return;
 	}
