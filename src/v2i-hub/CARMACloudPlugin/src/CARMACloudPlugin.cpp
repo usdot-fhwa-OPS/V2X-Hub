@@ -394,7 +394,7 @@ void CARMACloudPlugin::BroadcastTCM(tsm5EncodedMessage& tsm5ENC) {
 	msg->set_payload(tsm5ENC.get_payload_str());
 	msg->set_encoding(enc);
 	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(172, 0x8003);
+	msg->addDsrcMetadata(0x8003);
 	msg->refresh_timestamp();
 	routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 	BroadcastMessage(*rMsg);				

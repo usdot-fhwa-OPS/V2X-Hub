@@ -53,7 +53,7 @@ IvpMessage *ivpMsg_create(const char *type, const char *subtype, const char *enc
 	return newIvpMessage;
 }
 
-IvpMessage *ivpMsg_addDsrcMetadata(IvpMessage *msg, int channel, int psid)
+IvpMessage *ivpMsg_addDsrcMetadata(IvpMessage *msg, int psid, int channel)
 {
 	assert(msg != NULL);
 	if (msg == NULL)
