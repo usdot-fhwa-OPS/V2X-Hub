@@ -469,7 +469,7 @@ int MessageReceiverPlugin::Main()
 					}
 					cJSON *root   = cJSON_Parse(result.c_str());
 					cJSON *status = cJSON_GetObjectItem(root, "code");
-					if (status->valueint != 200 ) {
+					if ( status ) {
 						cJSON *message = cJSON_GetObjectItem(root, "message");
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;

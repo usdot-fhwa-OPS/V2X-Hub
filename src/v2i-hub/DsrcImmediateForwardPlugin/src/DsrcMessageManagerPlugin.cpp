@@ -365,11 +365,11 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 					return;
 ; 
 				}
-
+				PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 				cJSON *root   = cJSON_Parse(result.c_str());
 				// Check if status is 200 (successful)
 				cJSON *status = cJSON_GetObjectItem(root, "code");
-				if (status->valueint != 200 ) {
+				if ( status ) {
 					cJSON *message = cJSON_GetObjectItem(root, "message");
 					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 					PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
