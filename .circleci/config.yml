@@ -46,7 +46,6 @@ jobs:
             source ${INIT_ENV}
             cd /home/V2X-Hub/src
             build-wrapper-linux-x86-64 --out-dir /home/V2X-Hub/bw-output bash build.sh
-            chmod u+x coverage.sh
             ./coverage.sh
       - run:
           name: Run Sonar Scanner
@@ -95,7 +94,6 @@ jobs:
             source ${INIT_ENV}
             cd /home/V2X-Hub/src
             build-wrapper-linux-x86-64 --out-dir /home/V2X-Hub/bw-output bash build.sh
-            chmod u+x mc.sh
             ./coverage.sh
       - run:
           name: Run Sonar Scanner
