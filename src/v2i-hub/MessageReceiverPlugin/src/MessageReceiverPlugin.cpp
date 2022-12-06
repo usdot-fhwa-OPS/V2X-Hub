@@ -467,6 +467,7 @@ int MessageReceiverPlugin::Main()
 						continue;
 ; 
 					}
+					PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 					cJSON *root   = cJSON_Parse(result.c_str());
 					cJSON *status = cJSON_GetObjectItem(root, "code");
 					if ( status ) {
