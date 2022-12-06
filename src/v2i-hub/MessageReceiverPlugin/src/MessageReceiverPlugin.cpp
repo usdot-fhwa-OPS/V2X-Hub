@@ -464,7 +464,7 @@ int MessageReceiverPlugin::Main()
 						pclose(pipemsg); 
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
-						return;
+						continue;
 ; 
 					}
 					cJSON *root   = cJSON_Parse(result.c_str());
@@ -473,7 +473,7 @@ int MessageReceiverPlugin::Main()
 						cJSON *message = cJSON_GetObjectItem(root, "message");
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
-						return;
+						continue;
 					}
 					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
 
