@@ -21,12 +21,12 @@ extern "C" {
 #endif
 
 /* Forward declarations */
-struct Position3D;
+struct Position3D_addGrpCarma;
 
 /* BasicSafetyMessage-addGrpCarma */
 typedef struct BasicSafetyMessage_addGrpCarma {
 	struct BasicSafetyMessage_addGrpCarma__routeDestinationPoints {
-		A_SEQUENCE_OF(struct Position3D) list;
+		A_SEQUENCE_OF(struct Position3D_addGrpCarma) list;
 		
 		/* Context for parsing across buffer boundaries */
 		asn_struct_ctx_t _asn_ctx;
@@ -50,7 +50,7 @@ extern asn_TYPE_member_t asn_MBR_BasicSafetyMessage_addGrpCarma_1[1];
 #endif
 
 /* Referred external types */
-#include "Position3D.h"
+#include "Position3D-addGrpCarma.h"
 
 #endif	/* _BasicSafetyMessage_addGrpCarma_H_ */
 #include <asn_internal.h>

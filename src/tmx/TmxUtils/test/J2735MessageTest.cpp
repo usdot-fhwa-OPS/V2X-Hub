@@ -539,6 +539,8 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+	//Decode the encoded BSM
+	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
 }
 
 
@@ -546,11 +548,9 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
 {	
 	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
-
 	/**
 	 * Populate BSMcoreData 
-	 */
-	
+	*/	
 	char* my_str = (char *) "sender_id";
 	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->coreData.msgCnt = 1;
@@ -595,7 +595,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
 	//BSM BSMpartIIExtension
 	auto bsmPartII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
 	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
-	partIICnt->partII_Id = 2;
+	partIICnt->partII_Id = 1;
 	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
 	auto specialVEx= (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
 	auto emergencyDetails= (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
@@ -618,27 +618,45 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
     auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
     auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
     auto point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
-    point->lat = 12;
-    point->Long = 1312;
+	auto dummy_lat = 12;
+	auto dummy_long = 1312;
+    point->lat = dummy_lat;
+    point->Long = dummy_long;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point);
     auto point2 = (Position3D_t *)calloc(1, sizeof(Position3D_t));
-    point2->lat = 1222;
-    point2->Long = 1312323;
+    point2->lat = dummy_lat + 1000;
+    point2->Long = dummy_long + 1000;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
     carma_bsm_data->routeDestinationPoints = carma_bsm_destination_points;
-    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = carma_bsm_data;
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
 
     asn_sequence_add(&regional->list.array, reg_bsm);
     message->regional = regional;
+
+	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
 	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
 	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
-	std::string expectedBSMEncHex = "00143e604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0080d0824088012486b49d218d693ae3e1ad276e335aeec2100";
+	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
+	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
 	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
+
+	//Decode the encoded BSM
+	auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
+	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
+	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
+	auto decoded_reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
+	decoded_regional = decoded_bsm_ptr->regional;
+	decoded_reg_bsm = decoded_regional->list.array[0];
+	ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
+	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
+	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
+	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
 

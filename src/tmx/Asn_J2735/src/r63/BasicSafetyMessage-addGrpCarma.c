@@ -61,7 +61,7 @@ static asn_TYPE_member_t asn_MBR_routeDestinationPoints_2[] = {
 	{ ATF_POINTER, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
-		&asn_DEF_Position3D,
+		&asn_DEF_Position3D_addGrpCarma,
 		0,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)

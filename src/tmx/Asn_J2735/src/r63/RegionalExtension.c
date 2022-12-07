@@ -111,7 +111,7 @@ static asn_per_constraints_t asn_PER_memb_regExtValue_constr_3 CC_NOTUSED = {
 };
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 static asn_TYPE_member_t asn_MBR_regExtValue_3[] = {
-	{ ATF_POINTER, 0, offsetof(struct Reg_BasicSafetyMessage__regExtValue, choice.BasicSafetyMessage_addGrpCarma),
+	{ ATF_NOFLAGS, 0, offsetof(struct Reg_BasicSafetyMessage__regExtValue, choice.BasicSafetyMessage_addGrpCarma),
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
 		&asn_DEF_BasicSafetyMessage_addGrpCarma,

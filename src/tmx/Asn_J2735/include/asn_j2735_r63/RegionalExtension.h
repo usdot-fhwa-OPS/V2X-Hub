@@ -30,16 +30,13 @@ typedef enum Reg_BasicSafetyMessage__regExtValue_PR {
 	Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma
 } Reg_BasicSafetyMessage__regExtValue_PR;
 
-/* Forward declarations */
-struct BasicSafetyMessage_addGrpCarma;
-
 /* RegionalExtension */
 typedef struct Reg_BasicSafetyMessage {
 	RegionId_t	 regionId;
 	struct Reg_BasicSafetyMessage__regExtValue {
 		Reg_BasicSafetyMessage__regExtValue_PR present;
 		union Reg_BasicSafetyMessage__regExtValue_u {
-			struct BasicSafetyMessage_addGrpCarma	*BasicSafetyMessage_addGrpCarma;
+			BasicSafetyMessage_addGrpCarma_t	 BasicSafetyMessage_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */
@@ -58,9 +55,6 @@ extern asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[2];
 #ifdef __cplusplus
 }
 #endif
-
-/* Referred external types */
-#include "BasicSafetyMessage-addGrpCarma.h"
 
 #endif	/* _RegionalExtension_H_ */
 #include <asn_internal.h>
