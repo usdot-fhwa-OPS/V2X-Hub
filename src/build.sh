@@ -15,7 +15,6 @@
 
 # script executes all tmx and v2i build and coverage steps so that they can be singularly
 # wrapped by the sonarcloud build-wrapper
-set -e
 
 COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
 

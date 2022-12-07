@@ -50,8 +50,6 @@ jobs:
       - run:
           name: Run Sonar Scanner
           command: |
-            apt-get update && apt-get install sudo python3-pip
-            sudo pip3 install gcovr
             source ${INIT_ENV}
             echo $PATH
             cd /home/V2X-Hub/src/
