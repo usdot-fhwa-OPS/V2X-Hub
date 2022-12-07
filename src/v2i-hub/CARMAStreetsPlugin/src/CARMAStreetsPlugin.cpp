@@ -742,7 +742,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 	}
 	catch(const std::runtime_error &e )
 	{
-		PLOG(logERROR) << "Failed to encoded MobilityOperation message: " << e.what() <<std::endl;
+		PLOG(logERROR) << "Failed to encoded Intersection Schedule into MobilityOperation message: " << e.what() <<std::endl;
 		SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
 		return false;
 	}
