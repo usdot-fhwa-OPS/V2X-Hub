@@ -30,10 +30,8 @@ for d in tmx/* v2i-hub/*; do
             echo "$TESTS built"
             cd "$sub_dir"
             $TESTS
-            mkdir -p "$sub_dir"/coverage
             cd ../../..
             gcovr -k --sonarqube src/"$d"/coverage.xml -s -f src/"$d"/ -r .
-            mv *.gcov "$sub_dir"/coverage
         else
             echo "no tests built"
         fi
