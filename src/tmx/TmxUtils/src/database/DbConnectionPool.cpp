@@ -125,16 +125,21 @@ std::string DbConnectionPool::GetPwd(){
 	pwd = std::getenv(EnvVar);
 
 	if(pwd == NULL){
-		PLOG(logERROR) << "Unable to set MYSQL_PASSWORD)";
+		PLOG(logERROR) << "Unable to get MYSQL_PASSWORD";
 		return "";
 	}
 	else{
 		std::ifstream t(pwd);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		if ( buffer.str() != "") {
-			std::string PwdStr = buffer.str();
-			return PwdStr;
+		if (t) {
+			std::stringstream buffer;
+			buffer << t.rdbuf();
+			if ( buffer.str() != "") {
+				std::string PwdStr = buffer.str();
+				return PwdStr;
+			}
+			PLOG(logERROR) << "No bytes read from pwd file: " << pwd;
+		} else {
+			PLOG(logERROR) << "Unable to read pwd file: " << pwd;
 		}
 	}
 	return "";
