@@ -545,7 +545,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 
 
 
-TEST_F(J2735MessageTest, EncodeBasicSafetyMessag_PartII)
+TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 {	
 	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
 	/**
