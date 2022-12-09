@@ -133,10 +133,12 @@ jobs:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
+          fi
   docker_build_push_develop :
    machine:
     image: ubuntu-2004:202201-02
@@ -154,10 +156,12 @@ jobs:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:latest
-          docker push usdotfhwaops/php:latest
-          docker push usdotfhwaops/port-drayage-webservice:latest
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:latest
+            docker push usdotfhwaops/php:latest
+            docker push usdotfhwaops/port-drayage-webservice:latest
+          fi
 
   arm_build_push :
    machine:
@@ -179,10 +183,12 @@ jobs:
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
+          fi
   arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
@@ -203,10 +209,12 @@ jobs:
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         command: |
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubarm:latest
-          docker push usdotfhwaops/port-drayage-webservice_arm:latest
-          docker push usdotfhwaops/php_arm:latest
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubarm:latest
+            docker push usdotfhwaops/port-drayage-webservice_arm:latest
+            docker push usdotfhwaops/php_arm:latest
+          fi
   automated_release :
    machine:
     image: ubuntu-2004:202201-02
