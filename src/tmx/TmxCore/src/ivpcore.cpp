@@ -128,24 +128,27 @@ void addSystemDefinedMessageTypes()
 
 
 std::string GetPwd(){
+	// NOTE this is duplicated in DbConnectionPool.cpp but no good way to reuse for now
+	// env should probably be named MYSQL_PASSWORD_FILE but is left for legacy
 	const char* EnvVar = "MYSQL_PASSWORD";
-	const char* pwd;
-	pwd = std::getenv(EnvVar);
+	const char* pwdFile;
+	std::string PwdStr;
+	pwdFile = std::getenv(EnvVar);
 
-	if(pwd == NULL){
-		LOG_ERROR("Unable to set MYSQL_PASSWORD)");
-		return "";
-	}
-	else{
-		std::ifstream t(pwd);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		if ( buffer.str() != "") {
-			std::string PwdStr = buffer.str();
-			return PwdStr;
+	if (pwdFile == nullptr) {
+		LOG_ERROR("Unable to get MYSQL_PASSWORD)");
+	} else{
+		std::ifstream t(pwdFile);
+		if (t) {
+			std::getline( t, PwdStr);
+			if (PwdStr.length() == 0) {
+				LOG_ERROR("Empty pwd file: " << pwdFile);
+			}
+		} else {
+			LOG_ERROR("Unable to read pwd file: " << pwdFile);
 		}
 	}
-	return  "";
+	return PwdStr;
 }
 
 int main()
