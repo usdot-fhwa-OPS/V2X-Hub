@@ -27,50 +27,16 @@ When the unit is rebooted this variable will not be set. To add the path at boot
 $ sudo ldconfig
 ```
 
+There are sevral external libraries that need to be compiled for use with V2XHUB.  To compile them follow these steps.
+
 The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub. Run the following commands from V2X-Hub directory.
 
 ```
-$ cd ext/libwebsockets
-$ cmake -DLWS_WITH_SHARED=OFF .
-$ make
-$ sudo make install
+$ cd ext
+$ ./build.sh
 ```
 
-The new libwebsockets static library should now be available in /usr/local to build against.
-
-
-An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is available through the V2X-Hub repo and is located in “ext/server" folder. To compile the web service as a shared library following steps are to be taken:
-
-```
-$ cd ext/
-$ git clone https://github.com/nitroshare/qhttpengine.git
-$ cd qhttpengine
-$ cmake . 
-$ make 
-$ sudo make install
-
-$ cd ext/server
-$ cmake .
-$ make 
-$ sudo make install 
-```
-Googletest is another utility used by the V2X-hub for unit tests. Here are the steps to install googletest. The googletest application has to be installed in the prerequisite step first before proceeding. 
-
-```
-$ cd /usr/src/googletest/googletest
-$ sudo mkdir build
-$ cd build
-$ sudo cmake ..
-$ sudo make
-$ sudo cp libgtest* /usr/lib/
-$ cd ..
-$ sudo rm -rf build
-
-
-$ sudo mkdir /usr/local/lib/googletest
-$ sudo ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
-$ sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
-```
+Googletest is another utility used by the V2X-hub for unit tests. It is included with the Boost Dev library package install. 
 
 Now, run the following commands from V2X-Hub directory.
 ```
