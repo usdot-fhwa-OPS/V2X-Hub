@@ -53,10 +53,10 @@ jobs:
             pip3 install gcovr
 
             mkdir $SONAR_DIR
+            apt-get install -y curl nodejs
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
             curl -sL https://deb.nodesource.com/setup_10.x | bash -
-            apt-get install -y nodejs
             mkdir /opt/jq
             curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
             chmod +x /opt/jq/jq
