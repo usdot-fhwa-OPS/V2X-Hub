@@ -49,7 +49,7 @@ jobs:
             scripts/install_dependencies.sh
             apt-get install -y python3-pip
             pip3 install gcovr
-            # install Sonar scanner from internet
+
             mkdir $SONAR_DIR
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
