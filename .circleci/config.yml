@@ -28,10 +28,10 @@ jobs:
     # Pull docker image 
     # XTERM used for better make output
     docker:
-      - image: usdotfhwaops/v2xhubamd:<< pipeline.git.branch >>
+      - image: ubuntu:focal-20220113
         environment:
           TERM: xterm
-          INIT_ENV: /home/V2X-Hub/.base-image/init-env.sh
+          SONAR_DIR: /opt/sonarqube
     # Set working directory
     working_directory: "/home/V2X-Hub"
     # Pull code and execute tests |
@@ -40,22 +40,46 @@ jobs:
       #setup remote docker
       - setup_remote_docker :
           docker_layer_caching: false
+      # Checkout branch
+      - checkout
+      - run:
+          name: Setup Tools and Dependencies
+          command: |
+            set -x
+            scripts/install_dependencies.sh
+            apt-get install -y python3-pip
+            pip3 install gcovr
+            # install Sonar scanner from internet
+            mkdir $SONAR_DIR
+            curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
+            curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
+            curl -sL https://deb.nodesource.com/setup_10.x | bash -
+            apt-get install -y nodejs
+            mkdir /opt/jq
+            curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
+            chmod +x /opt/jq/jq
+            cd $SONAR_DIR
+            unzip $SONAR_DIR/sonar-scanner.zip -d .
+            unzip $SONAR_DIR/build-wrapper.zip -d .
+            rm $SONAR_DIR/sonar-scanner.zip
+            rm $SONAR_DIR/build-wrapper.zip
+            mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/
+            mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
+            echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> $SONAR_DIR/init-env.sh
       - run:
           name: Run Tests & Generate Gcovr Reports
           command: |
-            source ${INIT_ENV}
-            cd /home/V2X-Hub/src
-            build-wrapper-linux-x86-64 --out-dir /home/V2X-Hub/bw-output bash build.sh
+            source ${SONAR_DIR}/init-env.sh
+            cd src
+            build-wrapper-linux-x86-64 --out-dir bw-output bash build.sh
             ./coverage.sh
       - run:
           name: Run Sonar Scanner
           command: |
-            source ${INIT_ENV}
+            source ${SONAR_DIR}/init-env.sh
             echo $PATH
-            cd /home/V2X-Hub/src/
             if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
               echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
-              cd /home/V2X-Hub/
               sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
               exit 0;
             else
@@ -67,54 +91,7 @@ jobs:
               export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
               export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
               echo "Target Branch = ${TARGET_BRANCH}"
-              cd /home/V2X-Hub/
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}             
-            fi 
-  sonar-scanner_develop:
-    # Pull docker image 
-    # XTERM used for better make output
-    docker:
-      - image: usdotfhwaops/v2xhubamd:latest
-        environment:
-          TERM: xterm
-          INIT_ENV: /home/V2X-Hub/.base-image/init-env.sh
-    # Set working directory
-    working_directory: "/home/V2X-Hub"
-    # Pull code and execute tests |
-    # Name of each run command defines purpose use
-    steps:
-      #setup remote docker
-      - setup_remote_docker :
-          docker_layer_caching: false
-      - run:
-          name: Run Tests & Generate Gcovr Reports
-          command: |
-            source ${INIT_ENV}
-            cd /home/V2X-Hub/src
-            build-wrapper-linux-x86-64 --out-dir /home/V2X-Hub/bw-output bash build.sh
-            ./coverage.sh
-      - run:
-          name: Run Sonar Scanner
-          command: |
-            source ${INIT_ENV}
-            echo $PATH
-            cd /home/V2X-Hub/src/
-            if [ -z "${CIRCLE_PULL_REQUEST}" ]; then
-              echo "Non-PR Build Detected. Running analysis on ${CIRCLE_BRANCH}"
-              cd /home/V2X-Hub/
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN}
-              exit 0;
-            else
-              echo "PR branch ${CIRCLE_BRANCH}"
-              echo "Repo name ${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
-              echo "URL ${CIRCLE_PULL_REQUEST}"
-              export PR_NUM=`echo ${CIRCLE_PULL_REQUEST} | cut -d'/' -f7`
-              echo "PR number ${PR_NUM}"
-              export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
-              export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
-              echo "Target Branch = ${TARGET_BRANCH}"
-              cd /home/V2X-Hub/
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}             
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}
             fi 
   docker_build_push :
    machine:
@@ -169,7 +146,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
+          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH,,} .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,} .
@@ -193,7 +170,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image develop image
         command: |
-          docker build -f docker/Dockerfile-depl -t usdotfhwaops/v2xhubarm:latest .
+          docker build -t usdotfhwaops/v2xhubarm:latest .
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:latest .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:latest .
@@ -267,11 +244,6 @@ workflows:
             branches:
               only: develop
       - sonar-scanner:
-          requires:
-            - docker_build_push
-      - sonar-scanner_develop:
-          requires:
-            - docker_build_push_develop
       - automated_release:
           filters:
             tags:
