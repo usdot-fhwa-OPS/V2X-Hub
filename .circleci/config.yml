@@ -69,6 +69,13 @@ jobs:
             mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
             echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> $SONAR_DIR/init-env.sh
       - run:
+          name: Build Ext Components
+          command: |
+            cd ext
+            ./build.sh
+            ../container/library.sh
+            ldconfig
+      - run:
           name: Run Tests & Generate Gcovr Reports
           command: |
             source ${SONAR_DIR}/init-env.sh
