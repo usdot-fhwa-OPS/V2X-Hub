@@ -46,6 +46,7 @@ jobs:
           name: Setup Tools and Dependencies
           command: |
             set -x
+            DEBIAN_FRONTEND=noninteractive
             scripts/install_dependencies.sh
             apt-get install -y python3-pip
             pip3 install gcovr
