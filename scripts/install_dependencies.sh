@@ -14,8 +14,9 @@ apt-get install -y \
     libssl-dev \
     qtbase5-dev \
     zip \
+    wget \
     libmysqlcppconn-dev \
-    libboost1.71-all-dev \
+    libboost-all-dev \
     libmysqlclient-dev \
     uuid-dev \
     zlib1g \
@@ -27,4 +28,5 @@ apt-get install -y \
     libjsoncpp-dev \
     libev-dev \
     libuv1-dev \
+    libcap-dev \
     libcpprest-dev

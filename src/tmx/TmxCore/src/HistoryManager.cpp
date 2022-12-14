@@ -34,8 +34,9 @@ HistoryManager::HistoryManager(MessageRouter *messageRouter) : Plugin(messageRou
 	info.pluginInfo.description = "Core element that is responsible for purging old log and history data";
 	info.pluginInfo.version = IVPCORE_VERSION;
 
+	ostringstream m = ostringstream() << HISTORYPURGER_CONFIGDFLT_PURGEINTERVAL;
 	info.configDefaultEntries.push_back(PluginConfigurationParameterEntry(HISTORYPURGER_CONFIGKEY_PURGEINTERVAL,
-			static_cast<ostringstream*>( &(ostringstream() << HISTORYPURGER_CONFIGDFLT_PURGEINTERVAL) )->str(),
+			static_cast<ostringstream*>( &m )->str(),
 			"Interval between purges of history items"));
 	info.configDefaultEntries.push_back(PluginConfigurationParameterEntry(HISTORYPURGER_CONFIGKEY_MAXEVENTLOGSIZE, "2000", "Maximum number of event log entries to keep.  A value of zero will result in no purging of event log entries"));
 

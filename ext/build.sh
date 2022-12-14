@@ -5,9 +5,11 @@ set -e
 
 # The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub.
 pushd /tmp
-git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
-cd libwebsockets/
-cmake -DLWS_WITH_SHARED=OFF .
+#git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
+wget https://github.com/warmcat/libwebsockets/archive/refs/tags/v4.2.0.tar.gz
+tar xvf v4.2.0.tar.gz
+cd libwebsockets-4.2.0/
+cmake -DLWS_WITH_SHARED=OFF -DLWS_SUPPRESS_DEPRECATED_API_WARNINGS=ON .
 make
 make install
 popd
