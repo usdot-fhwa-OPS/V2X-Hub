@@ -206,7 +206,7 @@ void PortDrayagePlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeab
 					msg->set_payload(mobilityENC.get_payload_str());
 					msg->set_encoding(enc);
 					msg->set_flags(IvpMsgFlags_RouteDSRC);
-					msg->addDsrcMetadata(172,0xBFEE);
+					msg->addDsrcMetadata(0xBFEE);
 					msg->refresh_timestamp();
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
 					BroadcastMessage(*rMsg);

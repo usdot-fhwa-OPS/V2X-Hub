@@ -88,16 +88,12 @@ RUN ln -s ../bin MapPlugin/bin
 RUN zip MapPlugin.zip MapPlugin/bin/MapPlugin MapPlugin/manifest.json
 RUN ln -s ../bin MessageReceiverPlugin/bin
 RUN zip MessageReceiverPlugin.zip MessageReceiverPlugin/bin/MessageReceiverPlugin MessageReceiverPlugin/manifest.json
-RUN ln -s ../bin ODEPlugin/bin
-RUN zip ODEPlugin.zip ODEPlugin/bin/ODEPlugin ODEPlugin/manifest.json
 RUN ln -s ../bin RtcmPlugin/bin
 RUN zip RtcmPlugin.zip RtcmPlugin/bin/RtcmPlugin RtcmPlugin/manifest.json
 RUN ln -s ../bin SpatPlugin/bin
 RUN zip SpatPlugin.zip SpatPlugin/bin/SpatPlugin SpatPlugin/manifest.json
 RUN ln -s ../bin PreemptionPlugin/bin
 RUN zip PreemptionPlugin.zip PreemptionPlugin/bin/PreemptionPlugin PreemptionPlugin/manifest.json
-RUN ln -s ../bin SPaTLoggerPlugin/bin
-RUN zip SPaTLoggerPlugin.zip SPaTLoggerPlugin/bin/SPaTLoggerPlugin SPaTLoggerPlugin/manifest.json
 RUN ln -s ../bin MessageLoggerPlugin/bin
 RUN zip MessageLoggerPlugin.zip MessageLoggerPlugin/bin/MessageLoggerPlugin MessageLoggerPlugin/manifest.json
 RUN ln -s ../bin PedestrianPlugin/bin

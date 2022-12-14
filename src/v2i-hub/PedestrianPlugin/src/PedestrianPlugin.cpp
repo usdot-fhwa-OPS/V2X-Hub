@@ -264,7 +264,7 @@ void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded
 		msg->set_payload(psmENC.get_payload_str());
 		msg->set_encoding(enc);
 		msg->set_flags(IvpMsgFlags_RouteDSRC);
-		msg->addDsrcMetadata(172, 0x8002);
+		msg->addDsrcMetadata(0x8002);
 		msg->refresh_timestamp();
 
 		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
