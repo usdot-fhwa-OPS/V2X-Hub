@@ -1,7 +1,7 @@
 FROM ubuntu:focal-20220113
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential zlib1g libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
+RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential zlib1g libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev python3-pip
 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
@@ -163,7 +163,7 @@ RUN cd $SONAR_DIR && \
         sudo echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> /home/V2X-Hub/.base-image/init-env.sh
 
 # Install gcovr for code coverage tests and add code_coverage script folder to path
-RUN sudo apt-get -y install gcovr && \
+RUN sudo pip3 install gcovr && \
         sudo echo 'export PATH=$PATH:/home/V2X-Hub/.ci-image/engineering_tools/code_coverage/' >> /home/V2X-Hub/.base-image/init-env.sh
 
 
