@@ -32,6 +32,7 @@ jobs:
         environment:
           TERM: xterm
           SONAR_DIR: /opt/sonarqube
+          DEBIAN_FRONTEND: noninteractive
     # Set working directory
     working_directory: "/home/V2X-Hub"
     # Pull code and execute tests |
@@ -46,7 +47,7 @@ jobs:
           name: Setup Tools and Dependencies
           command: |
             set -x
-            DEBIAN_FRONTEND=noninteractive
+
             scripts/install_dependencies.sh
             apt-get install -y python3-pip
             pip3 install gcovr
