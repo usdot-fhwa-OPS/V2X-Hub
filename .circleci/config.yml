@@ -244,6 +244,9 @@ workflows:
             branches:
               only: develop
       - sonar-scanner:
+          filters:
+            branches:
+               ignore: develop
       - automated_release:
           filters:
             tags:
