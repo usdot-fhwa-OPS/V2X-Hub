@@ -80,7 +80,7 @@ jobs:
           command: |
             source ${SONAR_DIR}/init-env.sh
             cd src
-            build-wrapper-linux-x86-64 --out-dir bw-output bash build.sh
+            build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh
             ./coverage.sh
       - run:
           name: Run Sonar Scanner
