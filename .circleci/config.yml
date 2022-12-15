@@ -237,6 +237,11 @@ workflows:
   version: 2
   build:
     jobs:
+      - sonar-scanner:
+          filters:
+            branches:
+              # only from canonical repository, see https://discuss.circleci.com/t/create-separate-steps-jobs-for-pr-forks-versus-branches/13419/6
+              only: /^(?!pull\/).*$/
       - docker_build_push_develop:
           filters:
             branches:
@@ -257,10 +262,6 @@ workflows:
           filters:
             branches:
               only: develop
-      - sonar-scanner:
-          filters:
-            branches:
-               ignore: develop
       - automated_release:
           filters:
             tags:
