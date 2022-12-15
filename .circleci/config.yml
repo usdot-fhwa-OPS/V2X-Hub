@@ -106,8 +106,8 @@ jobs:
     machine:
       image: ubuntu-2004:202201-02
     steps:
-      - checkout
-      - run: 
+     - checkout
+     - run: 
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
@@ -118,29 +118,29 @@ jobs:
           if [ ! -z "$CIRCLE_PR_NUMBER" ]; then
               circleci-agent step halt
           fi          
-      - run:
-        name: Docker Push
-        # Push v2xhub and php docker images to usdotfhwaops dockerhub
-        command: | 
-          if [ "$CIRCLE_BRANCH" = "develop" ]; then
-            DOCKER_TAG="latest"
-          else
-            DOCKER_TAG=${CIRCLE_BRANCH/\//-}
-          fi
-          docker tag v2xhubamd:ci-build usdotfhwaops/v2xhubamd:${DOCKER_TAG}
-          docker tag php:ci-build usdotfhwaops/php:${DOCKER_TAG}
-          docker tag port-drayage-webservice:ci-build usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
-          docker push usdotfhwaops/php:${DOCKER_TAG}
-          docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
+     - run:
+          name: Docker Push
+          # Push v2xhub and php docker images to usdotfhwaops dockerhub
+          command: | 
+            if [ "$CIRCLE_BRANCH" = "develop" ]; then
+              DOCKER_TAG="latest"
+            else
+              DOCKER_TAG=${CIRCLE_BRANCH/\//-}
+            fi
+            docker tag v2xhubamd:ci-build usdotfhwaops/v2xhubamd:${DOCKER_TAG}
+            docker tag php:ci-build usdotfhwaops/php:${DOCKER_TAG}
+            docker tag port-drayage-webservice:ci-build usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
+            docker push usdotfhwaops/php:${DOCKER_TAG}
+            docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
   arm_build_push :
-    machine:
-      image: ubuntu-2004:202101-01
-    resource_class: arm.medium
-    steps:
-      - checkout
-      - run: 
+   machine:
+    image: ubuntu-2004:202101-01
+   resource_class: arm.medium
+   steps:
+     - checkout
+     - run: 
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
@@ -153,7 +153,7 @@ jobs:
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${DOCKER_TAG} .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${DOCKER_TAG} .    
-      - run: 
+     - run: 
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         command: | 
