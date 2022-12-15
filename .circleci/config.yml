@@ -162,16 +162,19 @@ jobs:
           docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH/\//-} .
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH/\//-} .
           cd ./tools/port-drayage-webservice/
-          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH/\//-} .
-    
-     - run: 
-        name: Docker Push
-        # Push v2xhub docker image to usdotfhwaops dockerhub
-        command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
+          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH/\//-} .    
+     - when:
+          condition:
+            equal: [ "", "$CIRCLE_PR_NUMBER" ]
+          steps:
+            - run: 
+                name: Docker Push
+                # Push v2xhub docker image to usdotfhwaops dockerhub
+                command: | 
+                  echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+                  docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
+                  docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
+                  docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
   arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
