@@ -119,8 +119,7 @@ jobs:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         when:
-          condition:
-            equal: [ "", "$CIRCLE_PR_NUMBER" ]
+          equal: [ "", "$CIRCLE_PR_NUMBER" ]
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
@@ -167,8 +166,7 @@ jobs:
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         when:
-          condition:
-            equal: [ "", "$CIRCLE_PR_NUMBER" ]
+          equal: [ "", "$CIRCLE_PR_NUMBER" ]
         command: | 
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
           docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
