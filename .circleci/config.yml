@@ -138,12 +138,12 @@ jobs:
                   docker push usdotfhwaops/php:${DOCKER_TAG}
                   docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
   arm_build_push :
-   machine:
-    image: ubuntu-2004:202101-01
-   resource_class: arm.medium
-   steps:
-     - checkout
-     - run: 
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run: 
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
@@ -156,23 +156,22 @@ jobs:
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${DOCKER_TAG} .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${DOCKER_TAG} .    
-     - when:
-          condition:
-            equal: [ "", "$CIRCLE_PR_NUMBER" ]
-          steps:
-            - run: 
-                name: Docker Push
-                # Push v2xhub docker image to usdotfhwaops dockerhub
-                command: | 
-                  if [ "$CIRCLE_BRANCH" = "develop" ]; then
-                    DOCKER_TAG="latest"
-                  else
-                    DOCKER_TAG=${CIRCLE_BRANCH/\//-}
-                  fi
-                  echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-                  docker push usdotfhwaops/v2xhubarm:${DOCKER_TAG}
-                  docker push usdotfhwaops/port-drayage-webservice_arm:${DOCKER_TAG}
-                  docker push usdotfhwaops/php_arm:${DOCKER_TAG}
+          if [ ! -z "$CIRCLE_PR_NUMBER" ]; then
+              circleci-agent step halt
+          fi          
+      - run: 
+        name: Docker Push
+        # Push v2xhub docker image to usdotfhwaops dockerhub
+        command: | 
+          if [ "$CIRCLE_BRANCH" = "develop" ]; then
+            DOCKER_TAG="latest"
+          else
+            DOCKER_TAG=${CIRCLE_BRANCH/\//-}
+          fi
+          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+          docker push usdotfhwaops/v2xhubarm:${DOCKER_TAG}
+          docker push usdotfhwaops/port-drayage-webservice_arm:${DOCKER_TAG}
+          docker push usdotfhwaops/php_arm:${DOCKER_TAG}
   automated_release :
    machine:
     image: ubuntu-2004:202201-02
