@@ -105,16 +105,16 @@ jobs:
   docker_build_push:
    machine:
      image: ubuntu-2004:202201-02
-   environment:
-     DOCKER_TAG: ${CIRCLE_BRANCH/\//-}
    steps:
      - checkout
      - run: 
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
-          if [ "$DOCKER_TAG" = "develop" ]; then
+          if [ "$CIRCLE_BRANCH" = "develop" ]; then
             DOCKER_TAG="latest"
+          else
+            DOCKER_TAG=${CIRCLE_BRANCH/\//-}
           fi
           docker build -f docker/Dockerfile-php -t usdotfhwaops/php:${DOCKER_TAG} .
           docker build -t usdotfhwaops/v2xhubamd:${DOCKER_TAG} .  
@@ -231,7 +231,6 @@ workflows:
               only: /^(?!pull\/).*$/
       - docker_build_push:
           filters:
-           branches:
            tags:
               only: /^[\.0-9]*$/
       - arm_build_push:
