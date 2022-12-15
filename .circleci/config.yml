@@ -100,7 +100,7 @@ jobs:
               export BASE_BRANCH_URL="https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/pulls/${PR_NUM}"
               export TARGET_BRANCH=$(curl "$BASE_BRANCH_URL" | jq '.base.ref' | tr -d '"') 
               echo "Target Branch = ${TARGET_BRANCH}"
-              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH} -Dsonar.pullrequest.key=${PR_NUM}
+              sonar-scanner -X -Dproject.settings=.sonarqube/sonar-scanner.properties -Dsonar.login=${SONAR_SCANNER_TOKEN} -Dsonar.pullrequest.base=${TARGET_BRANCH} -Dsonar.pullrequest.branch=${CIRCLE_BRANCH/\//-} -Dsonar.pullrequest.key=${PR_NUM}
             fi 
   docker_build_push :
    machine:
@@ -111,18 +111,20 @@ jobs:
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
-          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:${CIRCLE_BRANCH,,} .
-          docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,} .  
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php:${CIRCLE_BRANCH/\//-} .
+          docker build -t usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH/\//-} .  
           cd ./tools/port-drayage-webservice/
-          docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,} .
+          docker build -t usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH/\//-} .
      - run:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/php:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_BRANCH,,}
+          fi
   docker_build_push_develop :
    machine:
     image: ubuntu-2004:202201-02
@@ -140,10 +142,12 @@ jobs:
         name: Docker Push
         # Push v2xhub and php docker images to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubamd:latest
-          docker push usdotfhwaops/php:latest
-          docker push usdotfhwaops/port-drayage-webservice:latest
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:latest
+            docker push usdotfhwaops/php:latest
+            docker push usdotfhwaops/port-drayage-webservice:latest
+          fi
 
   arm_build_push :
    machine:
@@ -155,11 +159,10 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,} .
-          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH,,} .
+          docker build -t usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH/\//-} .
+          docker build -f docker/Dockerfile-php -t usdotfhwaops/php_arm:${CIRCLE_BRANCH/\//-} .
           cd ./tools/port-drayage-webservice/
-          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,} .
-
+          docker build -f Dockerfile-arm -t usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH/\//-} .
     
      - run: 
         name: Docker Push
