@@ -106,8 +106,8 @@ jobs:
    machine:
      image: ubuntu-2004:202201-02
    steps:
-     - checkout
-     - run: 
+      - checkout
+      - run: 
         name: Docker Build
         # Build v2xhub and php docker branch images
         command: |
@@ -120,23 +120,19 @@ jobs:
           docker build -t usdotfhwaops/v2xhubamd:${DOCKER_TAG} .  
           cd ./tools/port-drayage-webservice/
           docker build -t usdotfhwaops/port-drayage-webservice:${DOCKER_TAG} .
-     - when:
-          condition:
-            equal: [ "", "$CIRCLE_PR_NUMBER" ]
-          steps:
-            - run:
-                name: Docker Push
-                # Push v2xhub and php docker images to usdotfhwaops dockerhub
-                command: | 
-                  if [ "$CIRCLE_BRANCH" = "develop" ]; then
-                    DOCKER_TAG="latest"
-                  else
-                    DOCKER_TAG=${CIRCLE_BRANCH/\//-}
-                  fi
-                  echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-                  docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
-                  docker push usdotfhwaops/php:${DOCKER_TAG}
-                  docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
+      - run:
+          name: Docker Push
+          # Push v2xhub and php docker images to usdotfhwaops dockerhub
+          command: | 
+            if [ "$CIRCLE_BRANCH" = "develop" ]; then
+              DOCKER_TAG="latest"
+            else
+              DOCKER_TAG=${CIRCLE_BRANCH/\//-}
+            fi
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
+            docker push usdotfhwaops/php:${DOCKER_TAG}
+            docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
   arm_build_push :
    machine:
     image: ubuntu-2004:202101-01
