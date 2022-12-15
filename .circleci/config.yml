@@ -104,9 +104,9 @@ jobs:
             fi 
   docker_build_push :
    machine:
-    image: ubuntu-2004:202201-02
-    environment:
-      DOCKER_TAG: ${CIRCLE_BRANCH/\//-}
+    - image: ubuntu-2004:202201-02
+      environment:
+        DOCKER_TAG: ${CIRCLE_BRANCH/\//-}
    steps:
      - checkout
      - run: 
@@ -135,11 +135,11 @@ jobs:
                   docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
                   docker push usdotfhwaops/php:${DOCKER_TAG}
                   docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
-  arm_build_push :
+  arm_build_push:
    machine:
-    image: ubuntu-2004:202101-01
-    environment:
-      DOCKER_TAG: ${CIRCLE_BRANCH/\//-}
+    - image: ubuntu-2004:202101-01
+      environment:
+        DOCKER_TAG: ${CIRCLE_BRANCH/\//-}
    resource_class: arm.medium
    steps:
      - checkout
