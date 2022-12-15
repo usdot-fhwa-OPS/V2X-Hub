@@ -168,10 +168,12 @@ jobs:
         name: Docker Push
         # Push v2xhub docker image to usdotfhwaops dockerhub
         command: | 
-          echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
-          docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
+          if [ -z "$CIRCLE_PR_NUMBER" ]; then
+            echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
+            docker push usdotfhwaops/v2xhubarm:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_BRANCH,,}
+            docker push usdotfhwaops/php_arm:${CIRCLE_BRANCH,,}
+          fi
   arm_build_push_develop :
    machine:
     image: ubuntu-2004:202101-01
