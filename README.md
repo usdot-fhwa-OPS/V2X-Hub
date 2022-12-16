@@ -15,6 +15,8 @@ V2X Hub was developed to support jurisdictions in deploying Vehicle-to-Infrastru
 * V2X Hub simplifies integration by translating communication between different standards and protocols.
 * Using a modular design, software plugins enable efficient connections to new hardware, custom connections to Transportation Management Centers, and Connected Vehicle (CV) Safety Apps to run on roadside equipment.
 
+Test
+
 The V2X Hub system reduces time needed to create and deploy a roadside based V2X system.  The V2X Hub system contains a suite of plugins that are built to handle specific functionality.  The output of these plugins will vary, but any plugin that communicates externally will produce a message from the J2735-2016 messages set.  Plugins can request to receive data that is being produced by other plugins in the system.  For example, a location plugin can create a location message that is then received by the MAP plugin for use it in its processing.  Below are a list of plugins and the messages they produce that are included in the V2X Hub system.
 
 * CSW Plugin – The Curve Speed Warning Plugin will monitor J2735 BSM messages at a curve, and send a message to a dynamic message sign when it detects that a vehicle is approaching a curve too fast.  The CSW plugin also produces a J2735 TIM message containing the approach zones for the curve to be used by a CSW in-vehicle CV application.
