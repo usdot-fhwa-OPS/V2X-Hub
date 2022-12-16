@@ -112,7 +112,7 @@ jobs:
           docker build -f docker/Dockerfile-php -t php:ci-build .
           cd ./tools/port-drayage-webservice/
           docker build -t port-drayage-webservice:ci-build .
-          if [ ! -z "$CIRCLE_PR_NUMBER" ]; then
+          if [ -n "$CIRCLE_PR_NUMBER" ]; then
               circleci-agent step halt
           fi          
      - run:
@@ -145,7 +145,7 @@ jobs:
           docker build -f docker/Dockerfile-php -t php_arm:ci-build .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t port-drayage-webservice_arm:ci-build .
-          if [ ! -z "$CIRCLE_PR_NUMBER" ]; then
+          if [ -n "$CIRCLE_PR_NUMBER" ]; then
               circleci-agent step halt
           fi          
      - run: 
