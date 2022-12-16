@@ -59,8 +59,6 @@ jobs:
             cd $SONAR_DIR
             unzip $SONAR_DIR/sonar-scanner.zip -d .
             unzip $SONAR_DIR/build-wrapper.zip -d .
-            rm $SONAR_DIR/sonar-scanner.zip
-            rm $SONAR_DIR/build-wrapper.zip
             mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/
             mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
             echo 'export PATH=$PATH:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> $SONAR_DIR/init-env.sh
