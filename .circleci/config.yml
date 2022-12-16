@@ -49,7 +49,7 @@ jobs:
             set -x
 
             scripts/install_dependencies.sh
-            apt-get install -y python3-pip
+            apt-get install -y jq python3-pip
             pip3 install gcovr
 
             mkdir $SONAR_DIR
@@ -57,9 +57,6 @@ jobs:
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
             curl -sL https://deb.nodesource.com/setup_10.x | bash -
-            mkdir /opt/jq
-            curl -L "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64" -o /opt/jq/jq
-            chmod +x /opt/jq/jq
             cd $SONAR_DIR
             unzip $SONAR_DIR/sonar-scanner.zip -d .
             unzip $SONAR_DIR/build-wrapper.zip -d .
@@ -67,7 +64,7 @@ jobs:
             rm $SONAR_DIR/build-wrapper.zip
             mv $(ls $SONAR_DIR | grep "sonar-scanner-") $SONAR_DIR/sonar-scanner/
             mv $(ls $SONAR_DIR | grep "build-wrapper-") $SONAR_DIR/build-wrapper/
-            echo 'export PATH=$PATH:/opt/jq/:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> $SONAR_DIR/init-env.sh
+            echo 'export PATH=$PATH:$SONAR_DIR/sonar-scanner/bin/:$SONAR_DIR/build-wrapper/' >> $SONAR_DIR/init-env.sh
       - run:
           name: Build Ext Components
           command: |
