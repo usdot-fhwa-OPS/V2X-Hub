@@ -75,6 +75,7 @@ jobs:
           name: Run Tests & Generate Gcovr Reports
           command: |
             source ${SONAR_DIR}/init-env.sh
+            mkdir bw-output
             cd src
             build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh
             ./coverage.sh
