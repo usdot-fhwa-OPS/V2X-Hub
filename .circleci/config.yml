@@ -56,7 +56,6 @@ jobs:
             apt-get install -y curl nodejs
             curl -o $SONAR_DIR/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.4.0.2170-linux.zip
             curl -o $SONAR_DIR/build-wrapper.zip https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-            curl -sL https://deb.nodesource.com/setup_10.x | bash -
             cd $SONAR_DIR
             unzip $SONAR_DIR/sonar-scanner.zip -d .
             unzip $SONAR_DIR/build-wrapper.zip -d .
