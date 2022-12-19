@@ -110,6 +110,8 @@ jobs:
           docker build -f docker/Dockerfile-php -t php:ci-build .
           cd ./tools/port-drayage-webservice/
           docker build -t port-drayage-webservice:ci-build .
+          # try build on Ubuntu 22 in addition to current on 18
+          docker build -t ci-build-ubuntu22 --build-arg UBUNTU_VERSION=jammy-20221130 .
           if [ -n "$CIRCLE_PR_NUMBER" ]; then
               circleci-agent step halt
           fi          
