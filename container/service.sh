@@ -10,11 +10,9 @@ tmxctl --plugin-install DsrcImmediateForwardPlugin.zip
 tmxctl --plugin-install LocationPlugin.zip
 tmxctl --plugin-install MapPlugin.zip
 tmxctl --plugin-install MessageReceiverPlugin.zip
-tmxctl --plugin-install ODEPlugin.zip
 tmxctl --plugin-install RtcmPlugin.zip
 tmxctl --plugin-install SpatPlugin.zip
 tmxctl --plugin-install PreemptionPlugin.zip
-tmxctl --plugin-install SPaTLoggerPlugin.zip
 tmxctl --plugin-install MessageLoggerPlugin.zip
 tmxctl --plugin-install PedestrianPlugin.zip
 tmxctl --plugin-install TimPlugin.zip

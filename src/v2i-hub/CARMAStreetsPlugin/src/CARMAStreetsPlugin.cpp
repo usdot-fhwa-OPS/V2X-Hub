@@ -195,6 +195,8 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
+		SetStatus<uint>(Key_MobilityOperationMessageSkipped, ++_mobilityOperationMessageSkipped);
+
 	}
 	
 
@@ -279,6 +281,7 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 	catch (TmxException &ex) 
 	{
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
+		SetStatus<uint>(Key_MobilityPathMessageSkipped, ++_mobilityPathMessageSkipped);
 
 	}
 }
@@ -430,6 +433,8 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
+		SetStatus<uint>(Key_BSMMessageSkipped, ++_bsmMessageSkipped);
+
 	}
 }
 
@@ -516,6 +521,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 					if( !parse_sucessful )
 					{	
 						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
 						continue;
 					}
 
@@ -586,6 +592,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					if( !parse_sucessful )
 					{	
 						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
 						continue;
 					}
 					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
@@ -602,6 +609,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 						PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
 							<< ex.what() << std::endl;
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
+
 						continue;
 					}
 					
@@ -731,9 +740,10 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		free(mobilityOperation);
 		return true;
 	}
-	catch(...)
+	catch(const std::runtime_error &e )
 	{
-		PLOG(logERROR) << "Failed to encoded MobilityOperation message" <<std::endl;
+		PLOG(logERROR) << "Failed to encoded Intersection Schedule into MobilityOperation message: " << e.what() <<std::endl;
+		SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
 		return false;
 	}
 }

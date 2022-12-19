@@ -91,11 +91,69 @@ private:
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
+
+	/**
+	 * @brief Status label for SPAT messages skipped due to errors.
+	 */
+	const char* Key_SPATMessageSkipped = "SPAT messages skipped due to errors.";
+	/**
+	 * @brief Count for SPAT messages skipped due to errors.
+	 */
+	uint _spatMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for Intersection Schedule messages skipped due to errors.
+	 */
+	const char* Key_ScheduleMessageSkipped = "Intersection Schedule messages skipped due to errors.";
+
+	/**
+	 * @brief Count for Intersection Schedule messages skipped due to errors.
+	 */
+	uint _scheduleMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for MAP messages skipped due to errors.
+	 */
+	const char* Key_MAPMessageSkipped = "MAP messages skipped due to errors.";
+
+	/**
+	 * @brief Count for MAP messages skipped due to errors.
+	 */
+	uint _mapMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for Mobility Operation messages skipped due to errors.
+	 */
+	const char* Key_MobilityOperationMessageSkipped = "Mobility Operation messages skipped due to errors.";
+
+	/**
+	 * @brief Count for Mobility Operation messages skipped due to errors.
+	 */
+	uint _mobilityOperationMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for Mobility Path messages skipped due to errors.
+	 */
+	const char* Key_MobilityPathMessageSkipped = "Mobility Path messages skipped due to errors.";
+
+	/**
+	 * @brief Count for Mobility Path messages skipped due to errors.
+	 */
+	uint _mobilityPathMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for BSM messages skipped due to  errors.
+	 */
+	const char* Key_BSMMessageSkipped = "BSM messages skipped due to errors.";
+
+	/**
+	 * @brief Count for BSM messages skipped due to errors.
+	 */
+	uint _bsmMessageSkipped = 0;
 		
-	/***
-	 * Configurable indicator to run consumer and consume messages from kafka topics
-	 * run the consumer if it equals = 1; otherwise = 0
-	**/
+	/**
+	 * @brief Intersection Id for intersection
+	 */
 	std::string _intersectionId = "UNSET";
 };
 std::mutex _cfgLock;
