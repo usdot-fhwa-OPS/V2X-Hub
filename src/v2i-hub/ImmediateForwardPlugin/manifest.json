@@ -2,7 +2,7 @@
   "name": "ImmediateForward",
   "description": "Plugin that listens for TMX messages and forwards them to the V2X Radio (i.e. the RSU).",
   "version": "@PROJECT_VERSION@",
-  "exeLocation": "/bin/DsrcImmediateForwardPlugin",
+  "exeLocation": "/bin/ImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
   "corePort": 24601,
   "messageTypes": [],

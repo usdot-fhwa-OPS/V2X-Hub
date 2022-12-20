@@ -7,12 +7,12 @@ PLUGINS=(
     CommandPlugin
     CswPlugin
     DmsPlugin
-    DsrcImmediateForwardPlugin
+    ImmediateForwardPlugin
     LocationPlugin
     MapPlugin
     MessageLoggerPlugin
     MessageReceiverPlugin
-    ODELoggerPlugin
+    ODEForwardPlugin
     PedestrianPlugin
     PortDrayagePlugin
     PreemptionPlugin
