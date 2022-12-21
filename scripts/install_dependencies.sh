@@ -5,11 +5,11 @@ set -e
 
 apt-get update
 
+# NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
 DEPENDENCIES="build-essential \
     cmake \
     git \
     libboost-all-dev \
-    libcap-dev \
     libcpprest-dev \
     libcurl4-openssl-dev \
     libev-dev \
@@ -22,6 +22,7 @@ DEPENDENCIES="build-essential \
     libsnmp-dev \
     libssl-dev \
     libuv1-dev \
+    libwebsockets-dev \
     libxerces-c-dev \
     qtbase5-dev \
     uuid-dev \
