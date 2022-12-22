@@ -23,8 +23,7 @@ PLUGINS=(
 
 # package up all plugins
 for PLUGIN in "${PLUGINS[@]}"; do
-    # remove the link if it exists already
-    rm -f "$PLUGIN"/bin
-    ln -s ../bin "$PLUGIN"/bin
+    # force in case it exists already
+    ln --force -s ../bin "$PLUGIN"/bin
     zip "$PLUGIN".zip "$PLUGIN"/bin/"$PLUGIN" "$PLUGIN"/manifest.json
 done

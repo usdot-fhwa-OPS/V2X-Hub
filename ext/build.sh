@@ -5,7 +5,6 @@ set -e
 
 # An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is located in GitHub.
 pushd /tmp
-#git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
 QHTTPENGINE_VERSION=1.0.1
 wget -O qhttpengine-${QHTTPENGINE_VERSION}.tar.gz https://github.com/nitroshare/qhttpengine/archive/refs/tags/${QHTTPENGINE_VERSION}.tar.gz
 tar xvf qhttpengine-${QHTTPENGINE_VERSION}.tar.gz
