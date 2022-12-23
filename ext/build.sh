@@ -3,27 +3,22 @@
 # exit on errors
 set -e
 
-# The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub.
-pushd /tmp
-git clone https://github.com/usdot-fhwa-OPS/libwebsockets.git
-cd libwebsockets/
-cmake -DLWS_WITH_SHARED=OFF .
-make
-make install
-popd
-
 # An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is located in GitHub.
 pushd /tmp
-git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
-cd qhttpengine/
+QHTTPENGINE_VERSION=1.0.1
+wget -O qhttpengine-${QHTTPENGINE_VERSION}.tar.gz https://github.com/nitroshare/qhttpengine/archive/refs/tags/${QHTTPENGINE_VERSION}.tar.gz
+tar xvf qhttpengine-${QHTTPENGINE_VERSION}.tar.gz
+cd qhttpengine-${QHTTPENGINE_VERSION}/
 cmake .
 make 
 make install
 popd
 
 pushd /tmp
-git clone https://github.com/HowardHinnant/date.git
-cd date
+DATELIB_VERSION=3.0.1
+wget -O date-${DATELIB_VERSION}.tar.gz https://github.com/HowardHinnant/date/archive/refs/tags/v${DATELIB_VERSION}.tar.gz
+tar xvf date-${DATELIB_VERSION}.tar.gz
+cd date-${DATELIB_VERSION}/
 cmake .
 make
 make install
