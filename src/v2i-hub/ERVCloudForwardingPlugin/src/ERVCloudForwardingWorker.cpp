@@ -1,0 +1,65 @@
+#include "ERVCloudForwardingWorker.h"
+
+namespace ERVCloudForwardingPlugin
+{
+    string ERVCloudForwardingWorker::constructERVBSMRequest(BsmMessage &msg)
+    {
+        char xml_str[20000];
+        string bsmHex = encodeBSMHex(msg);
+        auto bsmPtr = msg.get_j2735_data();
+
+        // Check if the BSM is broadcast by the ERV (Emergency Response Vehicle). If not, return empty string.
+        if (!IsBSMFromERV(msg))
+        {
+            return xml_str;
+        }
+
+        // If Carma extension does not present, the ERV is not sending the route information, return empty string.
+        if (bsmPtr->regional->list.array[0]->regExtValue.present != Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma)
+        {
+            return xml_str;
+        }
+        // If there is carma related regional extension value that contains the ERV route points, construct the BSM request with the points.
+        auto bsmCarmaRegion = bsmPtr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma;
+        stringstream route_ss;
+        for (int i = 0; i < bsmCarmaRegion.routeDestinationPoints->list.count; i++)
+        {
+            auto latitude = bsmCarmaRegion.routeDestinationPoints->list.array[i]->lat;
+            auto longitude = bsmCarmaRegion.routeDestinationPoints->list.array[i]->Long;
+            route_ss << "<point><latitude>" << latitude << "</latitude>"
+                     << "<longitude>" << longitude << "</longitude></point>";
+        }
+        sprintf(xml_str, "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><route>%s<route></BSMRequest>", bsmHex.c_str(), route_ss.str().c_str());
+        return xml_str;
+    }
+
+    string ERVCloudForwardingWorker::encodeBSMHex(BsmMessage &msg)
+    {
+        // Encode the BSM message and return encoded hex string
+        tmx::messages::BsmEncodedMessage bsmEncodeMessage;
+        tmx::messages::MessageFrameMessage frame_msg(msg.get_j2735_data());
+        bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+        free(frame_msg.get_j2735_data().get());
+        return bsmEncodeMessage.get_payload_str();
+    }
+
+    bool ERVCloudForwardingWorker::IsBSMFromERV(BsmMessage &msg)
+    {
+        auto bsm_ptr = msg.get_j2735_data();
+        // Check if the BSM contains the regional extesion and PartII. If not, the BSM is not from ERV (Emergency Response Vehicle)
+        if (bsm_ptr->regional == NULL || bsm_ptr->partII == NULL)
+        {
+            return false;
+        }
+        else
+        {
+            // The ERV broadcast BSM that has the PartII content, and the specical vehicle extension within the PartII has the emergency response type.
+            if (bsm_ptr->partII->list.count > 0 && bsm_ptr->partII->list.array[0]->partII_Value.present == BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions && *bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType == ResponseType_emergency)
+            {
+                return true;
+            }
+            return false;
+        }
+    }
+
+} // namespace  ERVCloudForwardingPlugin

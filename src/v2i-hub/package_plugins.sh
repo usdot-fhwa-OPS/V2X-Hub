@@ -19,6 +19,7 @@ PLUGINS=(
     RtcmPlugin
     SpatPlugin
     TimPlugin
+    ERVCloudForwardingPlugin
 )
 
 # package up all plugins
