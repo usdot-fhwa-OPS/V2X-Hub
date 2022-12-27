@@ -472,6 +472,9 @@ int MessageReceiverPlugin::Main()
 					cJSON *status = cJSON_GetObjectItem(root, "code");
 					if ( status ) {
 						cJSON *message = cJSON_GetObjectItem(root, "message");
+						// IF status code exists this means the SCMS container returned an error response on attempting to sign
+						// Set status will increment the count of message skipped due to signature error responses by one each
+						// time this occurs. This count will be visible under the "State" tab of this plugin.
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
 						continue;
