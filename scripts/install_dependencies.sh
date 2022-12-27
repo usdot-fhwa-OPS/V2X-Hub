@@ -28,7 +28,8 @@ DEPENDENCIES="build-essential \
     uuid-dev \
     wget \
     zip \
-    zlib1g"
+    zlib1g \
+    curl"
 
 # install all things needed for deployment, always done
 apt-get install -y $DEPENDENCIES

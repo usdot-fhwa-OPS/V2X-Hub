@@ -8,6 +8,11 @@
   "messageTypes": [],
   "configuration": [
     {
+      "key":"LogLevel",
+      "default":"INFO",
+      "description":"The log level for this plugin"
+    },
+    {
       "key": "Messages_Destination_1",
       "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"172\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"172\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"172\" }] }",
       "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 1."
@@ -48,14 +53,9 @@
        "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_4."
     },
     {
-      "key": "Signature",
-      "default": "False",
-      "description": "True or False value indicating whether to sign the messages."
-    },
-    {
       "key": "signMessage",
       "default": "0",
-      "description": "True or False value indicating whether to sign the messages with V2X Hub."
+      "description": "0 if False and 1 if True indicating whether should sign outgoing J2735 messages."
     },
     {
       "key": "HSMurl",
