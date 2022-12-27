@@ -66,7 +66,7 @@ public:
 		int nptrs = backtrace(btBuffer, BT_BUFFER_SIZE);
 
 		/* overwrite sigaction with caller's address */
-		if (nptrs > 1 && callerAddr > 0)
+		if (nptrs > 1 && callerAddr != 0)
 			btBuffer[1] = callerAddr;
 
 		char **symbols = backtrace_symbols(btBuffer, nptrs);
