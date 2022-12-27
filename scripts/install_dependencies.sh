@@ -25,7 +25,8 @@ DEPENDENCIES="build-essential \
     qtbase5-dev \
     uuid-dev \
     zip \
-    zlib1g"
+    zlib1g \
+    curl"
 
 # install all things needed for deployment, always done
 apt-get install -y $DEPENDENCIES
