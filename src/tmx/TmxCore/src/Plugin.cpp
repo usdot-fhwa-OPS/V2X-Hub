@@ -207,13 +207,6 @@ void Plugin::addEventLogEntry(LogLevel level, std::string description)
 	dhlogging::Logger::addEventLogEntry(this->mInfo.pluginInfo.name, description, level);
 }
 
-uint64_t Plugin::GetMsTimeSinceEpoch2()
-{
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (uint64_t)((double)(tv.tv_sec) * 1000 + (double)(tv.tv_usec) / 1000);
-}
-
 void Plugin::sendMessageToRouter(IvpMessage *msg)
 {
 	assert(msg != NULL);

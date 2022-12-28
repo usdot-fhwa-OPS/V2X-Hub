@@ -13,7 +13,6 @@
 #include <OffsetSystem.h>
 #include <NodeListXY.h>
 
-#include "TimeHelper.h"
 #include "XmlCurveParser.h"
 
 #include <OCTET_STRING.h>

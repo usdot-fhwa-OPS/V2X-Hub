@@ -1,12 +1,9 @@
 #include "TimPlugin.h"
 #include <WGS84Point.h>
-#include "TimeHelper.h"
+#include "Clock.h"
 #include "XmlCurveParser.h"
 #include <tmx/messages/IvpDmsControlMsg.h>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
-
-
-
 
 using namespace std;
 using namespace tmx::messages;
@@ -220,7 +217,8 @@ bool TimPlugin::TimDuration()
 
 	// Current Time in seconds
 	auto t = time(nullptr);
-	auto tm = *localtime(&t);
+	struct tm tm;
+	localtime_r(&t, &tm);
 	ostringstream oss1;
 	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
 	auto _currentTimTime = oss1.str();
@@ -298,7 +296,7 @@ int TimPlugin::Main() {
 					_isTimLoaded = LoadTim(&_tim, _mapFile.c_str());
 				}
 
-				uint64_t time = TimeHelper::GetMsTimeSinceEpoch();
+				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				if (_isTimLoaded && (time - lastUpdateTime) > updateFrequency)
 				{

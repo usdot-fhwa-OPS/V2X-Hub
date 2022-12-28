@@ -74,7 +74,9 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     std::time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
     // Note: could have also called std:ctime(&t) - it's an alias.
-    std::string calStr = std::asctime(localtime(&t));
+	struct tm tm;
+	localtime_r(&t, &tm);
+    std::string calStr = std::asctime(&tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -85,7 +87,9 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
     // Convert to system time.
     std::time_t t = chrono::system_clock::to_time_t(tp);
     // Convert to calendar time string.
-    std::string calStr = std::asctime(gmtime(&t));
+	struct tm tm;
+	gmtime_r(&t, &tm);
+    std::string calStr = std::asctime(&tm);
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -96,9 +100,10 @@ std::string Clock::ToLocalPreciseTimeString(const std::chrono::system_clock::tim
 {
     std::time_t t = chrono::system_clock::to_time_t(tp);
 	short ms = tp.time_since_epoch() / std::chrono::milliseconds(1) % 1000;
-	struct tm *myTm = localtime(&t);
+	struct tm myTm;
+	localtime_r(&t, &myTm);
 	char tmBuffer[20];
-	strftime(tmBuffer, 20, "%F %T", myTm);
+	strftime(tmBuffer, 20, "%F %T", &myTm);
 
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms;
@@ -109,9 +114,10 @@ std::string Clock::ToUtcPreciseTimeString(const std::chrono::system_clock::time_
 {
     std::time_t t = chrono::system_clock::to_time_t(tp);
 	short ms = tp.time_since_epoch() / std::chrono::milliseconds(1) % 1000;
-	struct tm *myTm = gmtime(&t);
+	struct tm myTm;
+	gmtime_r(&t, &myTm);
 	char tmBuffer[20];
-	strftime(tmBuffer, 20, "%F %T", myTm);
+	strftime(tmBuffer, 20, "%F %T", &myTm);
 
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << ms;
@@ -124,9 +130,10 @@ std::string Clock::ToUtcPreciseTimeString(uint64_t ms)
 	// Convert time_t struct into UTC timestamp string.
 	std::time_t t = ms/1000;
 	short msec = ms%1000;
-	struct tm *myTm = gmtime(&t);
+	struct tm myTm;
+	gmtime_r(&t, &myTm);
 	char tmBuffer[20];
-	strftime(tmBuffer, 20, "%F %T", myTm);
+	strftime(tmBuffer, 20, "%F %T", &myTm);
 
 	ostringstream ss;
     ss << tmBuffer << "." << std::setfill('0') << std::setw(3) << msec;
@@ -192,12 +199,24 @@ uint64_t Clock::GetMillisecondsSinceEpoch()
 uint64_t Clock::GetMillisecondsSinceEpoch(const std::chrono::system_clock::time_point &tp)
 {
 	return std::chrono::duration_cast<chrono::milliseconds>(tp.time_since_epoch()).count();
+}	static int GetDayOfYear();
+
+uint32_t Clock::GetDayOfYear() {
+	system_clock::time_point now = system_clock::now();	
+	time_t tt = system_clock::to_time_t(now);
+	tm utc_tm;
+	gmtime_r(&tt, &utc_tm);
+	return utc_tm.tm_yday;
 }
 
-std::chrono::system_clock::time_point Clock::GetTimepointSinceEpoch(uint64_t ms)
-{
-	return std::chrono::system_clock::time_point(std::chrono::milliseconds(ms));
+uint32_t Clock::GetMinuteOfYear() {
+	system_clock::time_point now = system_clock::now();	
+	time_t tt = system_clock::to_time_t(now);
+	tm utc_tm;
+	gmtime_r(&tt, &utc_tm);
+	return (utc_tm.tm_yday * 24 * 60) + (utc_tm.tm_hour * 60) + utc_tm.tm_min;
 }
+
 
 } /* namespace utils */
 } /* namespace tmx */

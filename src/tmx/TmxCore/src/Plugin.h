@@ -174,8 +174,6 @@ private:
 
 	bool mRegistered;
 
-	uint64_t GetMsTimeSinceEpoch2();
-
 	pthread_mutex_t mConfigValueLock;
 	std::map<std::string, PluginConfigurationParameterEntry> mConfigValues;
 	boost::thread mConfigMonitorThread;

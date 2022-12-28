@@ -11,7 +11,9 @@
 #include <ITIScodesAndText.h>
 
 #include "DsrcBuilder.h"
-#include "TimeHelper.h"
+#include "Clock.h"
+
+using namespace tmx::utils;
 
 void DsrcBuilder::AddCurveSpeedAdvisory(TiDataFrame *frame, unsigned int speedLimit)
 {
@@ -65,7 +67,7 @@ void DsrcBuilder::SetPacketId(TravelerInformation *tim)
 	// Recommended packet ID is Agency ID in the first byte and Publish time of packet (MinuteOfTheYear) in bytes 2-4.
 	// Don't know what Agency ID to use.  Specify 0 for now.
 
-	uint32_t minuteOfYear = TimeHelper::GetMinuteOfYear();
+	uint32_t minuteOfYear = Clock::GetMinuteOfYear();
 
 	tim->packetID->buf[0] = 0x00;
 	tim->packetID->buf[1] = (minuteOfYear & 0xFF0000) >> 16;
@@ -81,7 +83,7 @@ void DsrcBuilder::SetPacketId(TravelerInformation *tim)
 void DsrcBuilder::SetStartTimeToYesterday(TiDataFrame *frame)
 {
 	// Set the start time (minutes of the year) to the start of yesterday.
-	int dayOfYear = TimeHelper::GetDayOfYear() - 1;
+	int dayOfYear = Clock::GetDayOfYear() - 1;
 	if (dayOfYear < 0)
 		dayOfYear = 364;
 	frame->startTime = dayOfYear * 24 * 60;
