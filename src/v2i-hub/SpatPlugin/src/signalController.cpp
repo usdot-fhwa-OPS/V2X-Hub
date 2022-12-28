@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <errno.h>
 
 #include <unistd.h>
 #include <netinet/in.h>
@@ -84,6 +85,7 @@ void SignalController::start_signalController()
     int rv;
     struct timeval tv;
     int on = 1;
+	int errnoVal;
 
 		//Enable SPAT
 		// 0 = disable
@@ -146,15 +148,18 @@ void SignalController::start_signalController()
 				while(EthernetIsConnected) {
 					//printf("Signal Controller ethernet connected, reading data\n");
 					numbytes = recv(sockfd, buf, maxDataSize-1, 0);
+					errnoVal = errno;
 					//printf("Signal Controller read %d bytes\n", numbytes);
 					//TODO - Check the start byte for 0xcd, then check for len of 245.
 					//TODO - store in temp space if less than 245, send only from 0xcd (byte 0) to byte 245 to new processing function
 					if ((numbytes == -1) || (numbytes == 0)){
-						if(numbytes == 0)
+						if (numbytes == 0 || errnoVal == EAGAIN || errnoVal == EWOULDBLOCK) {
 							PLOG(logINFO) << "Signal Controller Timed out";
-						else
+						} else {
 							PLOG(logINFO) << "Signal Controller Client closed";
-						EthernetIsConnected = 0;
+							EthernetIsConnected = 0;
+							close(sockfd);
+						}
 						IsReceiving = 0;
 					}
 					else {
