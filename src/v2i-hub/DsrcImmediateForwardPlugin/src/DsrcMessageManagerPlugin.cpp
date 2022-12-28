@@ -30,6 +30,7 @@ namespace DsrcMessageManager
 
 const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
 const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
+const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
 const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
 
 DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginClient(name),
@@ -44,22 +45,10 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 	_muteDsrc = false;
 	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
-	UpdateConfigSettings();
-
-	// @SONAR_STOP@
-
-
-	GetConfigValue<string>("HSMurl",baseurl);
-	GetConfigValue<unsigned int>("signMessage",signState);
-	std::string request="sign";
-
-
-	url=baseurl+request;
-	// @SONAR_START@
-
+	
 }
 
-// @SONAR_STOP@
+
 
 
 DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
@@ -136,9 +125,12 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 		_skippedNoDsrcMetadata = 0;
 		_skippedNoMessageRoute = 0;
 		_skippedInvalidUdpClient = 0;
+		_skippedSignErrorResponse = 0;
 		SetStatus<uint>(Key_SkippedNoDsrcMetadata, _skippedNoDsrcMetadata);
 		SetStatus<uint>(Key_SkippedNoMessageRoute, _skippedNoMessageRoute);
 		SetStatus<uint>(Key_SkippedInvalidUdpClient, _skippedInvalidUdpClient);
+		SetStatus<uint>(Key_SkippedSignError, _skippedSignErrorResponse);
+
 	}
 	for (uint i = 0; i < _udpClientList.size(); i++)
 	{
@@ -147,7 +139,6 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 
 	// Get the signature setting.
 	// The same mutex is used that protects the UDP clients.
-	GetConfigValue("Signature", _signature, &_mutexUdpClient);
 	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
 	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
 	std::string request="sign";
@@ -319,7 +310,8 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	PLOG(logWARNING)<<_messageConfigMap.size();
 	//loop through all MessageConfig and send to each with the proper TmxType
 	for (int configIndex = 0;configIndex < _messageConfigMap.size();configIndex++)
-	{	PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
+	{	
+		PLOG(logWARNING)<<_messageConfigMap[configIndex].TmxType;
 		if (_messageConfigMap[configIndex].TmxType == msg->subtype)
 		{
 			foundMessageType = true;
@@ -333,8 +325,6 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 
 			/// if signing is Enabled, request signing with HSM 
 			
-			// @SONAR_STOP@
-
 
 			if (signState == 1)
 			{
@@ -360,18 +350,34 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 				std::string result="";
 				FILE* pipe= popen(cmd,"r"); 
 
-				if (pipe == NULL ) throw std::runtime_error("popen() failed!");
+				if (pipe == NULL ) 
+					throw std::runtime_error("popen() failed!");
 				try{
 					while (fgets(buffer, sizeof(buffer),pipe) != NULL)
 					{
 						result+=buffer; 
 					}
-				} catch (...) {
-					pclose(pipe); 
-					throw; 
+				} catch (std::exception const & ex) {
+					
+					pclose(pipe);
+					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
+					PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+					return;
+; 
 				}
-
+				PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 				cJSON *root   = cJSON_Parse(result.c_str());
+				// Check if status is 200 (successful)
+				cJSON *status = cJSON_GetObjectItem(root, "code");
+				if ( status ) {
+					// IF status code exists this means the SCMS container returned an error response on attempting to sign
+					// Set status will increment the count of message skipped due to signature error responses by one each
+					// time this occurs. This count will be visible under the "State" tab of this plugin.
+					cJSON *message = cJSON_GetObjectItem(root, "message");
+					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
+					PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
+					return;
+				}
 				cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
 				string signedMsg = sd->valuestring;
 				base642hex(signedMsg,payloadbyte); // this allows sending hex of the signed message rather than base64
@@ -390,7 +396,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 			else
 				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
 			os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
-			os << "Signature= "<< _signature << "\n" << "Encryption=False\n";
+			os << "Signature="<< (signState == 1 ? "True" : "False") << "\n" << "Encryption=False\n";
 			os << "Payload=" << payloadbyte << "\n";
 
 			string message = os.str();
@@ -424,7 +430,7 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 	if (!foundMessageType)
 	{
 		SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-		PLOG(logWARNING)<<" WARNINNGGG TMX Subtype not found in configuration.  Message Ignored: " <<
+		PLOG(logWARNING)<<" WARNINNG TMX Subtype not found in configuration.  Message Ignored: " <<
 				"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		return;
 	}

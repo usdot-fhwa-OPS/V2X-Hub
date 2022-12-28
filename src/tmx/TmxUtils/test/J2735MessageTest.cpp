@@ -204,76 +204,6 @@ vector<string> J2735MessageTest::enumNames(api::J2735_end);
 vector<msg_type *> J2735MessageTest::msgTypes(api::J2735_end);
 vector<string> J2735MessageTest::testBytes(api::J2735_end);
 
-TEST_F(J2735MessageTest, FactoryTest) {
-	static routeable_message *msgFromId = NULL;
-	static routeable_message *msgFromName = NULL;
-	static routeable_message *msgFromBytes = NULL;
-	static msg_type *mType = NULL;
-
-	// Loop through every known messages
-	for (unsigned int i = 0; i < enumNames.size(); i++) {
-		if (i == api::J2735 || enumNames[i].length() <= 0)
-			continue;
-
-		mType = msgTypes[i];
-		cout << "Verifying " << enumNames[i] << endl;
-
-		msgFromId = factory.NewMessage(i);										// Build a message object from the ID
-		ASSERT_TRUE(msgFromId);													// Was the object built correctly?
-		ASSERT_EQ(msgFromId->get_type(), enumNames[api::J2735]);  				// Is the type name correct?
-		ASSERT_EQ(msgFromId->get_subtype(), enumNames[i]);						// Is the subtype name correct?
-		ASSERT_EQ(msgFromId->get_encoding(), api::ENCODING_ASN1_BER_STRING);	// Is the encoding correct?
-
-		ASSERT_TRUE(mType->set_message(msgFromId));								// Is this the correct type?
-	//	ASSERT_EQ(mType->get_default_msgId(), i);								// Is this the correct default message id?
-
-		msgFromName = factory.NewMessage(msgFromId->get_subtype());				// Build a message object from the known name
-		ASSERT_TRUE(msgFromName);												// Was the object built correctly?
-		ASSERT_EQ(msgFromName->get_type(), enumNames[api::J2735]);  			// Is the type name correct?
-		ASSERT_EQ(msgFromName->get_subtype(), enumNames[i]);					// Is the subtype name correct?
-		ASSERT_EQ(msgFromName->get_encoding(), api::ENCODING_ASN1_BER_STRING);	// Is the encoding correct?
-
-		ASSERT_TRUE(mType->set_message(msgFromName));							// Is this the correct type?
-	//	ASSERT_EQ(mType->get_default_msgId(), i);								// Is this the correct default message id?
-
-		if (testBytes[i].length() > 0) {
-			byte_stream bytes = attribute_lexical_cast<byte_stream>(testBytes[i]);
-			msgFromBytes = factory.NewMessage(bytes);
-
-			ASSERT_EQ(msgFromBytes->get_type(), enumNames[api::J2735]);  		// Is the type name correct?
-			ASSERT_EQ(msgFromBytes->get_subtype(), enumNames[i]);				// Is the subtype name correct?
-			ASSERT_EQ(msgFromBytes->get_encoding(), api::ENCODING_ASN1_BER_STRING);	// Is the encoding correct?
-			ASSERT_EQ(msgFromBytes->get_payload_bytes(), bytes);				// Is the payload correct?
-
-			ASSERT_TRUE(mType->set_message(msgFromBytes));						// Is this the correct type?
-			ASSERT_EQ(mType->get_bytes(), bytes);								// Is the message data correct?
-		//	ASSERT_EQ(mType->get_default_msgId(), i);							// Is this the correct default message id?
-			ASSERT_EQ(mType->get_msgId(), i);									// Is this the correct message id?
-
-			// Save off the underlying message
-			string msgXml = mType->get_payload();
-
-			// Build up a new message from scratch
-			xml_message newMsg(msgXml);
-			message_document msgDoc(newMsg);
-
-			ASSERT_STRCASEEQ(mType->message_tag().c_str(), msgDoc.root().first_child().name());	// Is the XML tag correct?
-
-			ASSERT_TRUE(mType->set_message(newMsg.to_string()));				// Is this the correct type?
-			ASSERT_EQ(mType->get_bytes(), bytes);								// Is the message data correct?
-		//	ASSERT_EQ(mType->get_default_msgId(), i);							// Is this the correct default message id?
-			ASSERT_EQ(mType->get_msgId(), i);									// Is this the correct message id?
-		}
-
-		delete(msgFromBytes);
-		msgFromBytes = NULL;
-		delete(msgFromName);
-		msgFromName = NULL;
-		delete(msgFromId);
-		msgFromId = NULL;
-	}
-}
-
 TEST_F(J2735MessageTest, EncodeMobilityOperation)
 {	
 	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
@@ -339,7 +269,7 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 
 TEST_F(J2735MessageTest, EncodeMobilityRequest)
 {	
-	TestMessage00_t* message = (TestMessage00_t*) malloc( sizeof(TestMessage00_t) );
+	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -399,7 +329,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	message->body.expiration.size = strlen(my_str_1);
 	
 		
-	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*) malloc( sizeof(MobilityECEFOffset_t) );
+	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
 	offset->offsetX = 1;
 	offset->offsetY = 1;
 	offset->offsetZ = 1;
@@ -539,6 +469,124 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+	//Decode the encoded BSM
+	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
+}
+
+
+
+TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
+{	
+	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
+	/**
+	 * Populate BSMcoreData 
+	*/	
+	char* my_str = (char *) "sender_id";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	message->coreData.msgCnt = 1;
+	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	message->coreData.id.buf = my_bytes_id;
+	message->coreData.id.size = sizeof(my_bytes_id);
+	message->coreData.secMark = 1023;
+	message->coreData.lat = 38954961;
+	message->coreData.Long = -77149303;
+	message->coreData.elev = 72;
+	message->coreData.speed = 100;
+	message->coreData.heading = 12;
+	message->coreData.angle = 10;
+	message->coreData.transmission = 0;  // allow 0...7
+
+	//position accuracy
+	message->coreData.accuracy.orientation= 100;
+	message->coreData.accuracy.semiMajor = 200;
+	message->coreData.accuracy.semiMinor = 200;
+
+	//Acceleration set
+	message->coreData.accelSet.lat = 100;
+	message->coreData.accelSet.Long = 300;
+	message->coreData.accelSet.vert = 100;
+	message->coreData.accelSet.yaw = 0;
+
+	//populate brakes
+	message->coreData.brakes.abs = 1; // allow 0,1,2,3
+	message->coreData.brakes.scs = 1; // allow 0,1,2,3
+	message->coreData.brakes.traction = 1; // allow 0,1,2,3
+	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
+	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
+	uint8_t  my_bytes_brakes[1] = {8};
+	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
+	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
+	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
+
+	//vehicle size
+	message->coreData.size.length = 500;
+	message->coreData.size.width = 300;
+
+	//BSM BSMpartIIExtension
+	auto bsmPartII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
+	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
+	partIICnt->partII_Id = 1;
+	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
+	auto specialVEx= (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
+	auto emergencyDetails= (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
+	emergencyDetails->lightsUse = LightbarInUse_inUse;
+	auto resp_type = (ResponseType_t*) calloc(1, sizeof(ResponseType_t));
+	*resp_type = ResponseType_emergency;
+	emergencyDetails->responseType = resp_type;
+	emergencyDetails->sirenUse = SirenInUse_inUse;	
+	specialVEx->vehicleAlerts = emergencyDetails;
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions = *specialVEx;
+    asn_sequence_add(&bsmPartII->list.array, partIICnt);
+	message->partII = bsmPartII;
+
+	// BSM regional extension
+    auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
+    auto reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+    reg_bsm->regionId = 128;
+    reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
+
+    auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
+    auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
+    auto point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+	auto dummy_lat = 12;
+	auto dummy_long = 1312;
+    point->lat = dummy_lat;
+    point->Long = dummy_long;
+    asn_sequence_add(&carma_bsm_destination_points->list.array, point);
+    auto point2 = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+    point2->lat = dummy_lat + 1000;
+    point2->Long = dummy_long + 1000;
+    asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
+    carma_bsm_data->routeDestinationPoints = carma_bsm_destination_points;
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
+
+    asn_sequence_add(&regional->list.array, reg_bsm);
+    message->regional = regional;
+
+	//Encode BSM
+	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
+	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
+	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
+	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
+
+	//Decode the encoded BSM
+	auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
+	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
+	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
+	auto decoded_reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
+	decoded_regional = decoded_bsm_ptr->regional;
+	decoded_reg_bsm = decoded_regional->list.array[0];
+	ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
+	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
+	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
+	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
 
@@ -572,6 +620,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 
 
 TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
+	//Has <refwidth> tag in TCM
 	string tsm5str="<TestMessage05><body> <tcmV01> <reqid>30642B129B984162</reqid> <reqseq>0</reqseq> <msgtot>9</msgtot> <msgnum>9</msgnum> <id>0034b8d88d084ffdaf23837926031658</id> <updated>0</updated> <package> <label>workzone - lane closed</label> <tcids> <Id128b>0034b8d88d084ffdaf23837926031658</Id128b> </tcids> </package> <params> <vclasses> <micromobile/> <motorcycle/> <passenger-car/> <light-truck-van/> <bus/> <two-axle-six-tire-single-unit-truck/> <three-axle-single-unit-truck/> <four-or-more-axle-single-unit-truck/> <four-or-fewer-axle-single-trailer-truck/> <five-axle-single-trailer-truck/> <six-or-more-axle-single-trailer-truck/> <five-or-fewer-axle-multi-trailer-truck/> <six-axle-multi-trailer-truck/> <seven-or-more-axle-multi-trailer-truck/> </vclasses> <schedule> <start>27506547</start> <end>153722867280912</end> <dow>1111111</dow> </schedule> <regulatory><true/></regulatory> <detail> <closed><notopen/></closed> </detail> </params> <geometry> <proj>epsg:3785</proj> <datum>WGS84</datum> <reftime>27506547</reftime> <reflon>-818331529</reflon> <reflat>281182119</reflat> <refelv>0</refelv> <refwidth>424</refwidth> <heading>3403</heading> <nodes> <PathNode><x>0</x><y>0</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-204</x><y>722</y><width>2</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>-2</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-13</x><y>46</y><width>0</width></PathNode> </nodes> </geometry> </tcmV01> </body></TestMessage05>";
 	std::stringstream ss;
 	tsm5Message tsm5msg;
@@ -584,7 +633,14 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
 
-	
+	//No <refwidth> tag in TCM
+	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	ss<<tsm5str;
+	container.load<XML>(ss);
+	tsm5msg.set_contents(container.get_storage().get_tree());
+	tsm5Enc.encode_j2735_message(tsm5msg);
+	std::cout << tsm5Enc.get_payload_str()<<std::endl;
+	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
 }

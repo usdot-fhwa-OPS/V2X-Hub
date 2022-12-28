@@ -16,40 +16,22 @@
 # script to run tests, generate test-coverage, and store coverage reports in a place
 # easily accessible to sonar. Test names should follow convention run<pluginName>Tests
 
-set -x
-for d in v2i-hub/*
-do
+set -ex
+
+top_dir="$PWD"
+
+for d in tmx/* v2i-hub/*; do
     echo ""
     echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep run[a-zA-Z]*Tests ; then
-            TESTS="./`ls $d | grep run[a-zA-Z]*Tests`"
+    sub_dir="$top_dir"/"$d"
+    if [[ -d "$sub_dir" ]]; then
+        if ls $sub_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then
+            TESTS="./$(ls $sub_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests")"
             echo "$TESTS built"
-            cd $d
+            cd "$sub_dir"
             $TESTS
-            mkdir coverage
-	        gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
-        else
-            echo "no tests built"
-        fi
-    fi
-done
-for d in tmx/*
-do
-    echo ""
-    echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep [a-zA-Z]*_test ; then
-            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
-            echo "$TESTS built"
-            cd $d
-            $TESTS
-            mkdir coverage
-            gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
+            cd ../../..
+            gcovr -k --sonarqube src/"$d"/coverage.xml -s -f src/"$d"/ -r .
         else
             echo "no tests built"
         fi

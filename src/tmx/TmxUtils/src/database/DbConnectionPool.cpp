@@ -120,24 +120,27 @@ void DbConnectionPool::SetConnectionUrl(std::string connectionUrl) {
 }
 
 std::string DbConnectionPool::GetPwd(){
+	// NOTE this is duplicated in ivpcore.cpp but no good way to reuse for now
+	// env should probably be named MYSQL_PASSWORD_FILE but is left for legacy
 	const char* EnvVar = "MYSQL_PASSWORD";
-	const char* pwd;
-	pwd = std::getenv(EnvVar);
+	const char* pwdFile;
+	std::string PwdStr;
+	pwdFile = std::getenv(EnvVar);
 
-	if(pwd == NULL){
-		PLOG(logERROR) << "Unable to set MYSQL_PASSWORD)";
-		return "";
-	}
-	else{
-		std::ifstream t(pwd);
-		std::stringstream buffer;
-		buffer << t.rdbuf();
-		if ( buffer.str() != "") {
-			std::string PwdStr = buffer.str();
-			return PwdStr;
+	if (pwdFile == nullptr) {
+		PLOG(logERROR) << "Unable to get MYSQL_PASSWORD";
+	} else{
+		std::ifstream t(pwdFile);
+		if (t) {
+			std::getline( t, PwdStr);
+			if (PwdStr.length() == 0) {
+				PLOG(logERROR) << "Empty pwd file: " << pwdFile;
+			}
+		} else {
+			PLOG(logERROR) << "Unable to read pwd file: " << pwdFile;
 		}
 	}
-	return "";
+	return PwdStr;
 }
 
 } /* namespace utils */

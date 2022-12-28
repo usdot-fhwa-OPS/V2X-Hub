@@ -21,16 +21,15 @@ The V2X Hub system reduces time needed to create and deploy a roadside based V2X
 * DMS Plugin – The Dynamic Message Sign (DMS) Plugin will receive messages from other plugins and translate the information to NTCIP 1203 for display on a DMS
 * MAP Plugin – Produces intersection geometry in J2735 MAP format.
 * SPAT Plugin – Communicates with a traffic signal controller (TSC) using NTCIP 1202, and creates a J2735 SPaT Message.
-* DSRC Immediate Forward Plugin – Sends all J2735 traffic to the 4.1 RSU for transmission out the DSRC radio.
+* Immediate Forward Plugin – Sends all J2735 traffic to the 4.1 RSU for transmission out the V2X radio.
 * Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2X Hub plugins.
 * Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2X Hub system. 
 * RTCM Plugin – Communicates with a NTRIP network to create J2735 RTCM position correction messages.
-* ODE Plugin – Pushes data to an operational data environment server using a known IP address and port.
+* ODE Forward Plugin – Pushes data to an operational data environment server using a known IP address and port.
 * Pedestrian Plugin – Creates a PSM using information obtained from nomadic devices (ex. cell phones) through a local webserver.
-* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through 	BSMs
-* SPAT Logger Plugin – Logs V2X Hub generated, UPER-encoded SPAT messages in a .csv file along with a system timestamp
+* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through BSMs
 * TIM Plugin – Creates and broadcasts a TIM message from an .xml file based on user input through GUI or local webserver
-* BSM Logger Plugin – Decodes and logs BSMs received by the Message Receiver Plugin to a .csv file
+* Message Logger Plugin – Decodes and logs BSMs and SPaT messages to .json and .bin files
 
 V2X Hub is a communication, computation, and processing platform for V2I applications, and providing the functions listed below.
 
@@ -49,13 +48,6 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 
 ## System Requirements
 The V2X Hub software can run on most Linux-based computers with Pentium core processers, with at least a 64-bit processor, 2GB of RAM, and at least 64GB of drive space. Performance of the software will be based on the computing power and available RAM in the system.  
-
-The project was developed and tested on a machine with a core i3 processor, 4GB of memory, 64GB of hard drive space, running Ubuntu 16.04 LTS.
-
-The dependencies for Ubuntu 16.04 can be found in the [Ubuntu 16.04 Requirements Document](docs/Ubuntu_16.04_Requirements.md)
-
-The dependencies for Ubuntu 18.04 can be found in the [Ubuntu 18.04 Requirements Document](docs/Ubuntu_18.04_Requirements.md)
-
 
 ## Installation and Setup
 The installation and setup instructions can be found in the [Installation and Setup Guide](docs/Installation_and_Setup.md)

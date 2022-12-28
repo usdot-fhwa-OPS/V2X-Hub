@@ -12,12 +12,12 @@
 		{
 			"key":"File Size In MB",
 			"default":"100",
-			"description":"Maximum size of the BSM log file in mb."
+			"description":"Maximum size of the log file in MB."
 		},
 		{
 			"key":"Filename",
-			"default":"bsmTx",
-			"description":"Default name of the BSM log file."
+			"default":"logTx",
+			"description":"Default name of the log file."
 		},
 		{
 			"key":"File Location",

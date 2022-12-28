@@ -142,7 +142,7 @@ int SpatPlugin::Main() {
 					sc.getEncodedSpat(&spatEncodedMsg, pedZones);
 
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncodedMsg.addDsrcMetadata(172, 0x8002);
+					spatEncodedMsg.addDsrcMetadata(0x8002);
 
 					//PLOG(logDEBUG) << spatEncodedMsg;
 

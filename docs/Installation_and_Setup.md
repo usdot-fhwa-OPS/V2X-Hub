@@ -1,10 +1,6 @@
 ## Compilation Instructions
 
-Download the dependencies based on the choice of Operating System:
-
-Ubuntu 16.04: [Ubuntu 16.04 Requirements Document](Ubuntu_16.04_Requirements.md)
-
-Ubuntu 18.04: [Ubuntu 18.04 Requirements Document](Ubuntu_18.04_Requirements.md)
+V2X Hub can be compiled on Ubuntu releases 20.04LTS or later. See the scripts/install_dependencies.sh file for the list of Ubuntu packages used.  Run this script to install the dependencies if not using Docker.
 
 To Compile the V2X Hub software, run the following commands from V2X-Hub directory.
 
@@ -27,50 +23,16 @@ When the unit is rebooted this variable will not be set. To add the path at boot
 $ sudo ldconfig
 ```
 
+There are sevral external libraries that need to be compiled for use with V2XHUB.  To compile them follow these steps.
+
 The V2X Hub supplied plugins have a dependency on a version of libwebsockets that is newer than the installable package that comes with Ubuntu. Hence a custom version of the software has benn forked and made available with V2X-Hub. Run the following commands from V2X-Hub directory.
 
 ```
-$ cd ext/libwebsockets
-$ cmake -DLWS_WITH_SHARED=OFF .
-$ make
-$ sudo make install
+$ cd ext
+$ ./build.sh
 ```
 
-The new libwebsockets static library should now be available in /usr/local to build against.
-
-
-An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is available through the V2X-Hub repo and is located in “ext/server" folder. To compile the web service as a shared library following steps are to be taken:
-
-```
-$ cd ext/
-$ git clone https://github.com/nitroshare/qhttpengine.git
-$ cd qhttpengine
-$ cmake . 
-$ make 
-$ sudo make install
-
-$ cd ext/server
-$ cmake .
-$ make 
-$ sudo make install 
-```
-Googletest is another utility used by the V2X-hub for unit tests. Here are the steps to install googletest. The googletest application has to be installed in the prerequisite step first before proceeding. 
-
-```
-$ cd /usr/src/googletest/googletest
-$ sudo mkdir build
-$ cd build
-$ sudo cmake ..
-$ sudo make
-$ sudo cp libgtest* /usr/lib/
-$ cd ..
-$ sudo rm -rf build
-
-
-$ sudo mkdir /usr/local/lib/googletest
-$ sudo ln -s /usr/lib/libgtest.a /usr/local/lib/googletest/libgtest.a
-$ sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/googletest/libgtest_main.a
-```
+Googletest is another utility used by the V2X-hub for unit tests. It is included with the Boost Dev library package install. 
 
 Now, run the following commands from V2X-Hub directory.
 ```
@@ -129,6 +91,6 @@ You can paste the map input file to this location:
 ```
 
 ## Security and Passwords
-V2X Hub is middleware that runs on Linux Ubuntu 16.04 LTS or Ubuntu 18.04 LTS with future versions on Ubuntu 18.04 LTS. It is recommended that appropriate security and firewall settings be used on the computer running Linux, including conforming to your agency's security best practices and IT protocols.
+V2X Hub is middleware that runs on Ubuntu Linux within a Docker image.  It is recommended that appropriate security and firewall settings be used on the computer running Linux, including conforming to your agency's security best practices and IT protocols.
 
 For configuration and maintenance, the V2X Hub software includes an Administration Portal that runs in a web browser on the host device. The default Username for accessing this Administration Portal is v2iadmin and the default password is V2iHub#123. It is strongly recommended that the v2iadmin password be changed with the first login to the Administration Portal via the menu on the left. Passwords must be a minimum of 8 characters, with at least 1 number, 1 uppercase letter, 1 lowercase, and 1 special character.  Additional users can be created using the Administration Portal by selecting Manage Users from the left menu.  While managing users, you can add new users and delete the default user v2iadmin.  If you want to delete the v2iadmin default user, It is recommended that you create a new user with admin privileges, login as that user, then delete the v2iadmin default user.

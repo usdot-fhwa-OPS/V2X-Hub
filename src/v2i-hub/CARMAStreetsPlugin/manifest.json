@@ -54,7 +54,7 @@
         },
         {
             "key": "MobilityOperationStrategies",
-            "default": "Carma/stop_controlled_intersection",
+            "default": "Carma/stop_controlled_intersection,Carma/signalized_intersection",
             "description": "A comma separated list of strategies of MobilityOperation messages to send to CARMA Streets"
         },
         {
@@ -68,7 +68,7 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         }, 
         {
-            "key": "BSMTopic",
+            "key": "BsmTopic",
             "default": "v2xhub_bsm_in",
             "description": "Apache Kafka topic plugin will transmit message to."
         },
@@ -83,7 +83,7 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "SchedulingPlanGroupId",
+            "key": "SchedulingPlanConsumerGroupId",
             "default": "v2xhub_scheduling_plan",
             "description": "Apache Kafka consumer group ID for scheduling plan consumer."
         },
