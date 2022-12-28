@@ -147,8 +147,9 @@
         std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
-        if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
+        if(_freqCounter++%_scheduleFrequency == 0) {
+			QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
+		}
 		
 		delete teststring;
 
@@ -165,8 +166,9 @@
         std::sprintf(spatstring, "{\"SpatMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
-        if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
+        if(_freqCounter++%_scheduleFrequency == 0) {
+			QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
+		}
 		
 		delete spatstring;	
 
