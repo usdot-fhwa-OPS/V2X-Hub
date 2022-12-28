@@ -129,6 +129,16 @@ jobs:
             docker push usdotfhwaops/v2xhubamd:${DOCKER_TAG}
             docker push usdotfhwaops/php:${DOCKER_TAG}
             docker push usdotfhwaops/port-drayage-webservice:${DOCKER_TAG}
+  docker_build_ubuntu22:
+    machine:
+      image: ubuntu-2004:202201-02
+    steps:
+     - checkout
+     - run: 
+        name: Docker Build Ubuntu 22
+        # try build on Ubuntu 22 in addition to current on 18
+        command: |
+          docker build -t ci-build-ubuntu22 --build-arg UBUNTU_VERSION=jammy-20221130 .
   arm_build_push :
    machine:
     image: ubuntu-2004:202101-01
@@ -214,6 +224,7 @@ workflows:
           filters:
             tags:
               only: /^[\.0-9]*$/
+      - docker_build_ubuntu22
       - automated_release:
           filters:
             tags:
