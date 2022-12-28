@@ -151,7 +151,7 @@
 			QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
 		}
 		
-		delete teststring;
+		delete [] teststring;
 
  }
 
@@ -170,7 +170,7 @@
 			QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
 		}
 		
-		delete spatstring;	
+		delete [] spatstring;	
 
  }
 
