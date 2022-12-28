@@ -148,8 +148,9 @@
 
         //  check for schedule
         if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);	
-	
+                QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
+		
+		delete teststring;
 
  }
 
@@ -165,8 +166,9 @@
 
         //  check for schedule
         if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);	
-	
+                QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
+		
+		delete spatstring;	
 
  }
 
