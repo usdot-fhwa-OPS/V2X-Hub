@@ -47,7 +47,7 @@ namespace ERVCloudForwardingPlugin
         msg.reset(dynamic_cast<BsmEncodedMessage *>(factory.NewMessage(api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)));
         msg->set_payload(bsmHex);
         msg->set_flags(IvpMsgFlags_RouteDSRC);
-        msg->addDsrcMetadata(0x8002);
+        msg->addDsrcMetadata(0x20);
         msg->set_encoding(_HEXENC);
         msg->refresh_timestamp();
         routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
