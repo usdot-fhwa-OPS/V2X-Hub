@@ -3,7 +3,7 @@
 
 namespace ERVCloudForwardingPlugin
 {
-    ERVCloudForwardingPlugin::ERVCloudForwardingPlugin(string name) : PluginClient(name)
+    ERVCloudForwardingPlugin::ERVCloudForwardingPlugin(const string &name) : PluginClient(name)
     {
         UpdateConfigSettings();
         std::lock_guard<mutex> lock(_cfgLock);
@@ -50,7 +50,7 @@ namespace ERVCloudForwardingPlugin
         msg->addDsrcMetadata(0x20);
         msg->set_encoding(_HEXENC);
         msg->refresh_timestamp();
-        routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+        auto rMsg = dynamic_cast<routeable_message *>(msg.get());
         BroadcastMessage(*rMsg);
         PLOG(logDEBUG) << "Broadcast ERV BSM:" << msg->get_payload() << endl;
     }
@@ -64,7 +64,7 @@ namespace ERVCloudForwardingPlugin
             st.append(readBytes);
         }
         QByteArray array = st.toLocal8Bit();
-        char *_cloudUpdate = array.data();
+        const char *_cloudUpdate = array.data();
         string bsmHex = _cloudUpdate;
         PLOG(logINFO) << "Received ERV BSM from cloud:" << bsmHex << endl;
         BroadcastBSM(bsmHex);
@@ -72,11 +72,11 @@ namespace ERVCloudForwardingPlugin
 
     int ERVCloudForwardingPlugin::StartBSMWebService()
     {
-        char *placeholderX[1] = {0};
+        char *placeholderX[1] = {nullptr};
         int placeholderC = 1;
         QCoreApplication a(placeholderC, placeholderX);
-        QHostAddress address = QHostAddress(QString::fromStdString(_webIp));
-        quint16 port = static_cast<quint16>(_webPort);
+        auto address = QHostAddress(QString::fromStdString(_webIp));
+        auto port = static_cast<quint16>(_webPort);
         QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
         handler = QSharedPointer<OpenAPI::OAIApiRequestHandler>(new OpenAPI::OAIApiRequestHandler());
         auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
@@ -115,6 +115,7 @@ namespace ERVCloudForwardingPlugin
             {
                 curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
                 curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
+                curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2); 
                 res = curl_easy_perform(req);
                 if (res != CURLE_OK)
                 {
@@ -153,11 +154,7 @@ namespace ERVCloudForwardingPlugin
                 this_thread::sleep_for(chrono::milliseconds(5000));
             }
         }
-        return (EXIT_SUCCESS);
-    }
-
-    ERVCloudForwardingPlugin::~ERVCloudForwardingPlugin()
-    {
+        return EXIT_SUCCESS;
     }
 }
 

@@ -47,8 +47,8 @@ namespace ERVCloudForwardingPlugin
         const string _HEXENC = "asn.1-uper/hexstring";
 
     public:
-        ERVCloudForwardingPlugin(std::string);
-        virtual ~ERVCloudForwardingPlugin();
+        explicit ERVCloudForwardingPlugin(const std::string&);
+        ~ERVCloudForwardingPlugin() = default;
         int Main();
 
     protected:
