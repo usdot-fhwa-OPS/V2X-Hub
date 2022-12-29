@@ -76,7 +76,9 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     // Note: could have also called std:ctime(&t) - it's an alias.
 	struct tm tm;
 	localtime_r(&t, &tm);
-    std::string calStr = std::asctime(&tm);
+	char tmBuffer[20];
+	strftime(tmBuffer, 20, "%F %T", &tm);
+    std::string calStr = tmBuffer;
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -89,7 +91,9 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
     // Convert to calendar time string.
 	struct tm tm;
 	gmtime_r(&t, &tm);
-    std::string calStr = std::asctime(&tm);
+	char tmBuffer[20];
+	strftime(tmBuffer, 20, "%F %T", &tm);
+    std::string calStr = tmBuffer;
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -199,7 +203,7 @@ uint64_t Clock::GetMillisecondsSinceEpoch()
 uint64_t Clock::GetMillisecondsSinceEpoch(const std::chrono::system_clock::time_point &tp)
 {
 	return std::chrono::duration_cast<chrono::milliseconds>(tp.time_since_epoch()).count();
-}	static int GetDayOfYear();
+}
 
 uint32_t Clock::GetDayOfYear() {
 	system_clock::time_point now = system_clock::now();	
