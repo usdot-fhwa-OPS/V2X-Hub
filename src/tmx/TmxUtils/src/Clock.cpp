@@ -76,9 +76,9 @@ std::string Clock::ToLocalTimeString(const std::chrono::system_clock::time_point
     // Note: could have also called std:ctime(&t) - it's an alias.
 	struct tm tm;
 	localtime_r(&t, &tm);
-	char tmBuffer[20];
-	strftime(tmBuffer, 20, "%F %T", &tm);
-    std::string calStr = tmBuffer;
+	std::array<char, 20> tmBuffer;
+	strftime(tmBuffer.data(), 20, "%F %T", &tm);
+    std::string calStr = tmBuffer.data();
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;
@@ -91,9 +91,9 @@ std::string Clock::ToUtcTimeString(const std::chrono::system_clock::time_point& 
     // Convert to calendar time string.
 	struct tm tm;
 	gmtime_r(&t, &tm);
-	char tmBuffer[20];
-	strftime(tmBuffer, 20, "%F %T", &tm);
-    std::string calStr = tmBuffer;
+	std::array<char, 20> tmBuffer;
+	strftime(tmBuffer.data(), 20, "%F %T", &tm);
+    std::string calStr = tmBuffer.data();
     // Remove trailing newline.
     calStr.resize(calStr.size()-1);
     return calStr;

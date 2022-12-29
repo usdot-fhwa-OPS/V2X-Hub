@@ -30,6 +30,9 @@ public:
 	XmlCurveParser();
 	~XmlCurveParser();
 
+	XmlCurveParser (const XmlCurveParser&) = delete;
+	XmlCurveParser& operator= (const XmlCurveParser&) = delete;
+
 	bool ReadCurveFile(const char *filePath, TravelerInformation *tim);
 
 	unsigned int SpeedLimit;
