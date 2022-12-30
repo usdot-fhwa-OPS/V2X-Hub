@@ -62,4 +62,35 @@ namespace ERVCloudForwardingPlugin
         }
     }
 
+    map<long, long> ERVCloudForwardingWorker::ParseGPS(std::string &gps_nmea_data)
+    {
+        map<long, long> result;
+        nmea::NMEAParser parser;
+        nmea::GPSService gps(parser);
+        try
+        {
+            parser.readLine(gps_nmea_data);
+            stringstream ss;
+            ss << setprecision(8) << fixed << gps.fix.latitude << endl;
+            auto latitude_str = ss.str();
+            stringstream sss;
+            sss << setprecision(8) << fixed << gps.fix.longitude << endl;
+            auto longitude_str = sss.str();
+            boost::erase_all(longitude_str, ".");
+            boost::erase_all(latitude_str, ".");
+            result.insert({stol(latitude_str), stol(longitude_str)});
+        }
+        catch (nmea::NMEAParseError &e)
+        {
+            fprintf(stderr, "Error:%s\n", e.message.c_str());
+        }
+        return result;
+    }
+
+    string ERVCloudForwardingWorker::constructRSULocationRequest(std::string &rsu_identifier, long latitude, long longitude)
+    {
+        char xml_str[20000];
+        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>%s</id><latitude>%ld<latitude><longitude>%ld</longitude></RSULocationRequest>", rsu_identifier.c_str(), latitude, longitude);
+        return xml_str;
+    }
 } // namespace  ERVCloudForwardingPlugin

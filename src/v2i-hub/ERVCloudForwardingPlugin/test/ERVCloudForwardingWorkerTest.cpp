@@ -1,5 +1,8 @@
 
 #include <gtest/gtest.h>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include "ERVCloudForwardingWorker.h"
 
 using namespace std;
@@ -180,7 +183,7 @@ namespace unit_test
       string expectedBSMHex = "001425004043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0";
       ASSERT_EQ(expectedBSMHex, bsmHex);
 
-      //ERV (Emergency Response Vehicle) BSM with partII
+      // ERV (Emergency Response Vehicle) BSM with partII
       bsmHex = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::encodeBSMHex(*_bsmMessagePartII);
       expectedBSMHex = "00146e604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408804278d693a431ad275c7c6b49d9e8d693b60e35a4f0dc6b49deef1ad27a6235a4f16b8d693e2b1ad279afc6b49f928d693d54e35a5007c6b49ee8f1ad2823235a4f93b8";
       ASSERT_EQ(expectedBSMHex, bsmHex);
@@ -195,7 +198,7 @@ namespace unit_test
       // ERV BSM with partII
       bsmReq = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::constructERVBSMRequest(*_bsmMessagePartII);
       string expectedBSMHex = "00146e604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408804278d693a431ad275c7c6b49d9e8d693b60e35a4f0dc6b49deef1ad27a6235a4f16b8d693e2b1ad279afc6b49f928d693d54e35a5007c6b49ee8f1ad2823235a4f93b8";
-      string expectedBSMReq = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>"+expectedBSMHex+"</id><route><point><latitude>12</latitude><longitude>1312</longitude></point><point><latitude>1012</latitude><longitude>2312</longitude></point><point><latitude>2012</latitude><longitude>3312</longitude></point><point><latitude>3012</latitude><longitude>4312</longitude></point><point><latitude>4012</latitude><longitude>5312</longitude></point><point><latitude>5012</latitude><longitude>6312</longitude></point><point><latitude>6012</latitude><longitude>7312</longitude></point><point><latitude>7012</latitude><longitude>8312</longitude></point><route></BSMRequest>";
+      string expectedBSMReq = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>" + expectedBSMHex + "</id><route><point><latitude>12</latitude><longitude>1312</longitude></point><point><latitude>1012</latitude><longitude>2312</longitude></point><point><latitude>2012</latitude><longitude>3312</longitude></point><point><latitude>3012</latitude><longitude>4312</longitude></point><point><latitude>4012</latitude><longitude>5312</longitude></point><point><latitude>5012</latitude><longitude>6312</longitude></point><point><latitude>6012</latitude><longitude>7312</longitude></point><point><latitude>7012</latitude><longitude>8312</longitude></point><route></BSMRequest>";
       ASSERT_EQ(expectedBSMReq, bsmReq);
    }
 
@@ -205,8 +208,37 @@ namespace unit_test
       auto result = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::IsBSMFromERV(*_bsmMessage);
       ASSERT_FALSE(result);
 
-      //ERV BSM with partII
+      // ERV BSM with partII
       result = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::IsBSMFromERV(*_bsmMessagePartII);
       ASSERT_TRUE(result);
+   }
+
+   TEST_F(ERVCloudForwardingWorkerTest, ParseGPS)
+   {
+      std::string gps_nmea_data = "$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62";
+      auto gps_map = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::ParseGPS(gps_nmea_data);
+      ASSERT_EQ(1, gps_map.size());
+      long expected_latitude = 3895510833;
+      long expected_longitude = -7714955667;
+      for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
+      {
+         ASSERT_EQ(expected_latitude, itr->first);
+         ASSERT_EQ(expected_longitude, itr->second);
+      }
+      std::string invalid_gps_nmea_data = "$*GPGGA,invalid";
+      auto gps_map_invalid = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::ParseGPS(invalid_gps_nmea_data);
+      ASSERT_EQ(0, gps_map_invalid.size());
+   }
+
+   TEST_F(ERVCloudForwardingWorkerTest, constructRSULocationRequest)
+   {
+      std::string rsuName = "west_intersection_rsu";
+      auto uuid = boost::uuids::random_generator()();
+      string rsu_identifier = rsuName + "_" + boost::lexical_cast<std::string>(uuid);
+      long latitude = 3895510833;
+      long longitude = -7714955667;
+      auto xml_str = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, latitude, longitude);
+      std::string expected_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>" + rsu_identifier + "</id><latitude>3895510833<latitude><longitude>-7714955667</longitude></RSULocationRequest>";
+      ASSERT_EQ(expected_xml, xml_str);
    }
 } // namespace unit_test

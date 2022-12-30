@@ -28,6 +28,11 @@
 #include <v2xhubWebAPI/OAIApiRouter.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include "ERVCloudForwardingWorker.h"
+#include "SNMPClient.h"
+#include <boost/uuid/uuid.hpp>           
+#include <boost/uuid/uuid_generators.hpp> 
+#include <boost/uuid/uuid_io.hpp> 
 
 using namespace std;
 using namespace tmx;
@@ -41,9 +46,16 @@ namespace ERVCloudForwardingPlugin
     private:
         uint16_t _webPort;
         string _webIp;
+        string _rsuIp;
+        string _rsuName;
+        uint16_t _snmpPort;
+        string _securityUser;
+        string _authPassPhrase;
+        string _GPSOID;
         const string _CLOUDURL = "http://127.0.0.1:33333"; 
         const string _CLOUDBSMREQ = "/carmacloud/bsmreq";
-        const string _METHOD = "POST";
+        const string _CLOUDRSUREQ = "/carmacloud/rsuLocreq";
+        const string _POSTMETHOD = "POST";
         const string _HEXENC = "asn.1-uper/hexstring";
 
     public:
@@ -74,6 +86,10 @@ namespace ERVCloudForwardingPlugin
         int CloudSend(const string &msg, const string &url, const string &base, const string &method);
         void CloudSendAsync(const string &msg, const string &url, const string &base, const string &method);
         void BroadcastBSM(const string &bsmHex);
+        /**
+         * @brief Send SNMP request to RSU to get RSU GPS location, then send the RSU GPS location to the carma-cloud
+         */
+        void RegisterRSULocation();
     };
 
 } // namespace ERVCloudForwardingPlugin
