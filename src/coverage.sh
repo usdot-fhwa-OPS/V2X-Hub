@@ -43,5 +43,5 @@ for d in ${component_dir}/* ; do
     fi
 done
 # combine all the JSON files for a component
-gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/build/coverage.xml
+gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml
 done
