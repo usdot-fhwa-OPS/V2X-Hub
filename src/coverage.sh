@@ -20,20 +20,28 @@ set -ex
 
 top_dir="$PWD"
 
-for d in tmx/* v2i-hub/*; do
+COMPONENT_DIRS="tmx v2i-hub"
+for component_dir in ${COMPONENT_DIRS}; do
+for d in ${component_dir}/* ; do
     echo ""
     echo $d
-    sub_dir="$top_dir"/"$d"
-    if [[ -d "$sub_dir" ]]; then
-        if ls $sub_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then
-            TESTS="./$(ls $sub_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests")"
+    sub_dir=${top_dir}/${d}
+    build_dir=${top_dir}/${component_dir}/build/$(basename ${d})
+    if [ -d ${sub_dir} -a -d ${build_dir} ]; then
+        if ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then
+            TESTS="./$(ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests")"
             echo "$TESTS built"
-            cd "$sub_dir"
+            pushd "$build_dir"
             $TESTS
-            cd ../../..
-            gcovr -k --sonarqube src/"$d"/coverage.xml -s -f src/"$d"/ -r .
+            popd
+            # generate a JSON file to be combined per https://gcovr.com/en/master/guide/merging.html
+            gcovr -k --json ${component_dir}/$(basename ${d})-coverage.json -s -f ${sub_dir} -r .
+            #gcovr -k --sonarqube ${build_dir}/coverage.xml -s -f ${sub_dir} -r .
         else
             echo "no tests built"
         fi
     fi
+done
+# combine all the JSON files for a component
+gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/build/coverage.xml
 done
