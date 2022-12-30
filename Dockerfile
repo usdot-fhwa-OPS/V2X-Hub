@@ -11,6 +11,8 @@ COPY ./ext /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN ./build.sh
 
+ADD container/wait-for-it.sh /usr/local/bin/
+ADD container/service.sh /usr/local/bin/
 COPY ./container /home/V2X-Hub/container
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
@@ -23,12 +25,9 @@ WORKDIR /home/V2X-Hub/src/
 RUN ./build.sh release
 RUN ldconfig
 
-# package plugins
-WORKDIR /home/V2X-Hub/src/v2i-hub/
-RUN ./package_plugins.sh
-
+WORKDIR /home/V2X-Hub/
 RUN /home/V2X-Hub/container/setup.sh
-WORKDIR /home/V2X-Hub/src/v2i-hub/
+WORKDIR /var/log/tmx
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
@@ -41,4 +40,4 @@ LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-ops/V2X-HUB"
 LABEL org.label-schema.vcs-ref=${VCS_REF}
 LABEL org.label-schema.build-date=${BUILD_DATE}
 
-ENTRYPOINT ["/home/V2X-Hub/container/service.sh"]
+ENTRYPOINT ["/usr/local/bin/service.sh"]

@@ -34,11 +34,17 @@ elif [ $RELEASE_BUILD -eq 0 ]; then
     BUILD_TYPE="Debug"
 fi
 
-cd tmx
-cmake -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
+pushd tmx
+cmake -Bbuild -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
+pushd build
 make
 make install
+popd
+popd
 
-cd ../v2i-hub
-cmake -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
-make
+pushd v2i-hub
+cmake -Bbuild -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
+pushd build
+make install
+popd
+popd
