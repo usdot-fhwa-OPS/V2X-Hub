@@ -59,7 +59,7 @@ pushd /tmp
 wget http://sourceforge.net/projects/net-snmp/files/net-snmp/5.9.1/net-snmp-5.9.1.tar.gz
 tar -xvzf net-snmp-5.9.1.tar.gz
 cd net-snmp-5.9.1
-./configure 
+./configure --with-default-snmp-version="3" --with-sys-contact="@@no.where" --with-sys-location="Unknown" --with-logfile="/var/log/snmpd.log" --with-persistent-directory="/var/net-snmp"
 make
 make install
 popd
