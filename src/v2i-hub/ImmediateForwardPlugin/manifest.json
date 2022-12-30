@@ -2,7 +2,7 @@
   "name": "ImmediateForward",
   "description": "Plugin that listens for TMX messages and forwards them to the V2X Radio (i.e. the RSU).",
   "version": "@PROJECT_VERSION@",
-  "exeLocation": "/bin/DsrcImmediateForwardPlugin",
+  "exeLocation": "/bin/ImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
   "corePort": 24601,
   "messageTypes": [],
@@ -14,7 +14,7 @@
     },
     {
       "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"172\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"172\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"172\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"172\" }] }",
+      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"183\" }] }",
       "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 1."
     },
     {

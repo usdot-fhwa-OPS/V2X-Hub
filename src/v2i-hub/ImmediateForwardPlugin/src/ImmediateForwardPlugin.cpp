@@ -1,11 +1,11 @@
 /*
- * DsrcMessageManagerPlugin.cpp
+ * ImmediateForwardPlugin.cpp
  *
  *  Created on: Feb 26, 2016
  *      Author: ivp
  */
 
-#include "DsrcMessageManagerPlugin.h"
+#include "ImmediateForwardPlugin.h"
 
 #include <chrono>
 #include <iostream>
@@ -25,7 +25,7 @@ using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 
-namespace DsrcMessageManager
+namespace ImmediateForward
 {
 
 const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
@@ -33,7 +33,7 @@ const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
 const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
 const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
 
-DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginClient(name),
+ImmediateForwardPlugin::ImmediateForwardPlugin(std::string name) : PluginClient(name),
 	_configRead(false),
 	_skippedNoDsrcMetadata(0),
 	_skippedNoMessageRoute(0),
@@ -51,7 +51,7 @@ DsrcMessageManagerPlugin::DsrcMessageManagerPlugin(std::string name) : PluginCli
 
 
 
-DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
+ImmediateForwardPlugin::~ImmediateForwardPlugin()
 {
 	lock_guard<mutex> lock(_mutexUdpClient);
 
@@ -68,14 +68,14 @@ DsrcMessageManagerPlugin::~DsrcMessageManagerPlugin()
 // @SONAR_START@
 
 
-void DsrcMessageManagerPlugin::OnConfigChanged(const char *key, const char *value)
+void ImmediateForwardPlugin::OnConfigChanged(const char *key, const char *value)
 {
 	PluginClient::OnConfigChanged(key, value);
 
 	UpdateConfigSettings();
 }
 
-void DsrcMessageManagerPlugin::OnMessageReceived(IvpMessage *msg)
+void ImmediateForwardPlugin::OnMessageReceived(IvpMessage *msg)
 {
 	// Uncomment this line to call the base method, which prints the message received to cout.
 	//PluginClient::OnMessageReceived(msg);
@@ -102,7 +102,7 @@ void DsrcMessageManagerPlugin::OnMessageReceived(IvpMessage *msg)
 	}
 }
 
-void DsrcMessageManagerPlugin::OnStateChange(IvpPluginState state)
+void ImmediateForwardPlugin::OnStateChange(IvpPluginState state)
 {
 	PluginClient::OnStateChange(state);
 
@@ -112,7 +112,7 @@ void DsrcMessageManagerPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void DsrcMessageManagerPlugin::UpdateConfigSettings()
+void ImmediateForwardPlugin::UpdateConfigSettings()
 {
 	PLOG(logINFO) << "Updating configuration settings.";
 
@@ -151,7 +151,7 @@ void DsrcMessageManagerPlugin::UpdateConfigSettings()
 
 // Retrieve all settings for a UDP client, then create a UDP client using those settings.
 // Other settings related to the UDP client are also updated (i.e. msg id list, psid list).
-bool DsrcMessageManagerPlugin::UpdateUdpClientFromConfigSettings(uint clientIndex)
+bool ImmediateForwardPlugin::UpdateUdpClientFromConfigSettings(uint clientIndex)
 {
 	if (_udpClientList.size() <= clientIndex)
 	{
@@ -212,7 +212,7 @@ bool DsrcMessageManagerPlugin::UpdateUdpClientFromConfigSettings(uint clientInde
 	return true;
 }
 
-bool DsrcMessageManagerPlugin::ParseJsonMessageConfig(const std::string& json, uint clientIndex)
+bool ImmediateForwardPlugin::ParseJsonMessageConfig(const std::string& json, uint clientIndex)
 {
 	if (json.length() == 0)
 		return true;
@@ -279,7 +279,7 @@ bool DsrcMessageManagerPlugin::ParseJsonMessageConfig(const std::string& json, u
 	return true;
 }
 
-void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
+void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 {
 	bool foundMessageType = false;
 	static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
@@ -439,4 +439,4 @@ void DsrcMessageManagerPlugin::SendMessageToRadio(IvpMessage *msg)
 }
 
 
-} /* namespace DsrcMessageManager */
+} /* namespace ImmediateForward */

@@ -16,35 +16,35 @@
  */
 
 
-#include "ODELoggerPlugin.h"
+#include "ODEForwardPlugin.h"
 
- namespace ODELoggerPlugin
+ namespace ODEForwardPlugin
  {
 			
  /**
-  * Construct a new ODELoggerPlugin with the given name.
+  * Construct a new ODEForwardPlugin with the given name.
   *
   * @param name The name to give the plugin for identification purposes.
   */
- ODELoggerPlugin::ODELoggerPlugin(string name): PluginClient(name)
+ ODEForwardPlugin::ODEForwardPlugin(string name): PluginClient(name)
  {
- 	PLOG(logDEBUG)<<"ODELoggerPlugin::In ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG)<<"ODEForwardPlugin::In ODEForwardPlugin Constructor";
  	// The log level can be changed from the default here.
  	//FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
-	AddMessageFilter < BsmMessage > (this, &ODELoggerPlugin::HandleRealTimePublish);
- 	AddMessageFilter < SpatMessage > (this, &ODELoggerPlugin::HandleSPaTPublish);
+	AddMessageFilter < BsmMessage > (this, &ODEForwardPlugin::HandleRealTimePublish);
+ 	AddMessageFilter < SpatMessage > (this, &ODEForwardPlugin::HandleSPaTPublish);
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
 
- 	PLOG(logDEBUG) <<"ODELoggerPlugin: Exiting ODELoggerPlugin Constructor";
+ 	PLOG(logDEBUG) <<"ODEForwardPlugin: Exiting ODEForwardPlugin Constructor";
  }
 
  /**
   * Destructor
   */
 
- ODELoggerPlugin::~ODELoggerPlugin()
+ ODEForwardPlugin::~ODEForwardPlugin()
  {
 
  }
@@ -53,7 +53,7 @@
  /**
   * Updates configuration settings
   */
- void ODELoggerPlugin::UpdateConfigSettings()
+ void ODEForwardPlugin::UpdateConfigSettings()
  {
  	// Configuration settings are retrieved from the API using the GetConfigValue template class.
  	// This method does NOT execute in the main thread, so variables must be protected
@@ -75,22 +75,22 @@
  		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
  		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
- 		PLOG(logDEBUG) <<"ODELoggerPlugin: Attempting to connect to " << kafkaConnectString;
+ 		PLOG(logDEBUG) <<"ODEForwardPlugin: Attempting to connect to " << kafkaConnectString;
  		if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
- 			PLOG(logERROR) <<"ODELoggerPlugin: Setting kafka config options failed with error:" << error_string;
- 			PLOG(logERROR) <<"ODELoggerPlugin: Exiting with exit code 1";
+ 			PLOG(logERROR) <<"ODEForwardPlugin: Setting kafka config options failed with error:" << error_string;
+ 			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
  			exit(1);
  		} else {
- 			PLOG(logDEBUG) <<"ODELoggerPlugin: Kafka config options set successfully";
+ 			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
  		}
 		
 		kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
 		if (!kafka_producer) {
-			PLOG(logERROR) <<"ODELoggerPlugin: Creating kafka producer failed with error:" << error_string;
-			PLOG(logERROR) <<"ODELoggerPlugin: Exiting with exit code 1";
+			PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
+			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
 			exit(1);
 		} 			
-		PLOG(logDEBUG) <<"ODELoggerPlugin: Kafka producer created";
+		PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
 
 	}
  }
@@ -101,7 +101,7 @@
   * @param key Key of the configuration value changed
   * @param value Changed value
   */
- void ODELoggerPlugin::OnConfigChanged(const char *key, const char *value)
+ void ODEForwardPlugin::OnConfigChanged(const char *key, const char *value)
  {
  	PluginClient::OnConfigChanged(key, value);
  	UpdateConfigSettings();
@@ -112,7 +112,7 @@
   *
   * @para state New plugin state
   */
- void ODELoggerPlugin::OnStateChange(IvpPluginState state)
+ void ODEForwardPlugin::OnStateChange(IvpPluginState state)
  {
  	PluginClient::OnStateChange(state);
 
@@ -137,7 +137,7 @@
   * @param msg BSMMessage that is received
   * @routeable_message not used
   */
- void ODELoggerPlugin::HandleRealTimePublish(BsmMessage &msg,
+ void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg,
  		routeable_message &routeableMsg) {
 
 	auto bsm=msg.get_j2735_data();
@@ -147,14 +147,16 @@
         std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
-        if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);	
-	
+        if(_freqCounter++%_scheduleFrequency == 0) {
+			QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
+		}
+		
+		delete [] teststring;
 
  }
 
 
- void ODELoggerPlugin::HandleSPaTPublish(SpatMessage &msg,
+ void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg,
  		routeable_message &routeableMsg) {
 
 	auto spat=msg.get_j2735_data();
@@ -164,17 +166,19 @@
         std::sprintf(spatstring, "{\"SpatMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
-        if(_freqCounter++%_scheduleFrequency == 0)
-                QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);	
-	
+        if(_freqCounter++%_scheduleFrequency == 0) {
+			QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
+		}
+		
+		delete [] spatstring;	
 
  }
 
 
- void ODELoggerPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
+ void ODEForwardPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {
 	bool retry = true, return_value = false;
-  	PLOG(logDEBUG) <<"ODELoggerPlugin: Queueing kafka message:topic:" << topic << " " << producer->outq_len() <<"messages already in queue";
+  	PLOG(logDEBUG) <<"ODEForwardPlugin: Queueing kafka message:topic:" << topic << " " << producer->outq_len() <<"messages already in queue";
 
  	while (retry) {
  		RdKafka::ErrorCode produce_error = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
@@ -182,45 +186,45 @@
  			message.size(), NULL, NULL, 0, 0);
 
      	if (produce_error == RdKafka::ERR_NO_ERROR) {
-       		PLOG(logDEBUG) <<"ODELoggerPlugin: Queued message:" << message;
+       		PLOG(logDEBUG) <<"ODEForwardPlugin: Queued message:" << message;
        		retry = false; return_value = true;
      	}
  		else {
- 			PLOG(logERROR) <<"ODELoggerPlugin: Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+ 			PLOG(logERROR) <<"ODEForwardPlugin: Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
 			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-				PLOG(logERROR) <<"ODELoggerPlugin: Message queue full...retrying...";
+				PLOG(logERROR) <<"ODEForwardPlugin: Message queue full...retrying...";
 				producer->poll(500);  /* ms */
 				retry = true;
 			}
 			else {
-				PLOG(logERROR) <<"ODELoggerPlugin: Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+				PLOG(logERROR) <<"ODEForwardPlugin: Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
 				retry = false;
 			}
      	}
    }
-   PLOG(logDEBUG) <<"ODELoggerPlugin: Queueing kafka message completed";
+   PLOG(logDEBUG) <<"ODEForwardPlugin: Queueing kafka message completed";
  }
 
  // Override of main method of the plugin that should not return until the plugin exits.
  // This method does not need to be overridden if the plugin does not want to use the main thread.
- int ODELoggerPlugin::Main()
+ int ODEForwardPlugin::Main()
  {
- 	PLOG(logDEBUG) <<"ODELoggerPlugin: Starting ODELoggerPlugin...";
+ 	PLOG(logDEBUG) <<"ODEForwardPlugin: Starting ODEForwardPlugin...";
 
  	uint msCount = 0;
  	while (_plugin->state != IvpPluginState_error)
  	{
- 		PLOG(logDEBUG4) <<"ODELoggerPlugin: Sleeping 5 minutes" << endl;
+ 		PLOG(logDEBUG4) <<"ODEForwardPlugin: Sleeping 5 minutes" << endl;
 
  		this_thread::sleep_for(chrono::milliseconds(300000));
 
  	}
 
- 	PLOG(logDEBUG) <<"ODELoggerPlugin: ODELoggerPlugin terminating gracefully.";
+ 	PLOG(logDEBUG) <<"ODEForwardPlugin: ODEForwardPlugin terminating gracefully.";
  	return EXIT_SUCCESS;
  }
 
- } /* namespace ODELoggerPlugin */
+ } /* namespace ODEForwardPlugin */
 
 
  /**
@@ -230,5 +234,5 @@
   */
  int main(int argc, char *argv[])
  {
- 	return run_plugin<ODELoggerPlugin::ODELoggerPlugin>("ODELoggerPlugin", argc, argv);
+ 	return run_plugin<ODEForwardPlugin::ODEForwardPlugin>("ODEForwardPlugin", argc, argv);
  }

@@ -1,12 +1,12 @@
 /*
- * DsrcMessageManagerPlugin.h
+ * ImmediateForwardPlugin.h
  *
  *  Created on: Feb 26, 2016
  *      Author: ivp
  */
 
-#ifndef DSRCMESSAGEMANAGERPLUGIN_H_
-#define DSRCMESSAGEMANAGERPLUGIN_H_
+#ifndef IMMEDIATEFORWARDPLUGIN_H_
+#define IMMEDIATEFORWARDPLUGIN_H_
 
 #include <atomic>
 #include <array>
@@ -24,7 +24,7 @@
 #include <tmx/Security/include/base64.h>
 
 
-namespace DsrcMessageManager
+namespace ImmediateForward
 {
 
 struct MessageConfig
@@ -36,11 +36,11 @@ struct MessageConfig
 	std::string Channel;
 };
 
-class DsrcMessageManagerPlugin : public tmx::utils::PluginClient
+class ImmediateForwardPlugin : public tmx::utils::PluginClient
 {
 public:
-	DsrcMessageManagerPlugin(std::string name);
-	virtual ~DsrcMessageManagerPlugin();
+	ImmediateForwardPlugin(std::string name);
+	virtual ~ImmediateForwardPlugin();
 private:
 	void UpdateConfigSettings();
 	bool UpdateUdpClientFromConfigSettings(uint clientIndex);
@@ -81,6 +81,6 @@ private:
 
 };
 
-} /* namespace DsrcMessageManager */
+} /* namespace ImmediateForward */
 
-#endif /* DSRCMESSAGEMANAGERPLUGIN_H_ */
+#endif /* IMMEDIATEFORWARDPLUGIN_H_ */

@@ -1,6 +1,6 @@
-PROJECT ( DsrcImmediateForwardPlugin VERSION 7.3.1 LANGUAGES CXX )
+PROJECT ( ImmediateForwardPlugin VERSION 7.3.1 LANGUAGES CXX )
 
-SET (TMX_PLUGIN_NAME "DSRC Message Manager")
+SET (TMX_PLUGIN_NAME "Immediate Forward")
 
 FIND_PACKAGE (XercesC REQUIRED)
 find_package(CURL REQUIRED)

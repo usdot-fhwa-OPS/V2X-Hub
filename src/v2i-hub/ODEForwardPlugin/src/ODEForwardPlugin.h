@@ -15,8 +15,8 @@
  * the License.
  */
 
- #ifndef TMX_PLUGINS_ODELoggerPlugin_H_
- #define TMX_PLUGINS_ODELoggerPlugin_H_
+ #ifndef TMX_PLUGINS_ODEForwardPlugin_H_
+ #define TMX_PLUGINS_ODEForwardPlugin_H_
 
  #include "PluginClient.h"
  #include "PluginDataMonitor.h"
@@ -44,7 +44,7 @@
  using namespace tmx::messages;
  using namespace date;
 
- namespace ODELoggerPlugin
+ namespace ODEForwardPlugin
  {
 
 
@@ -53,11 +53,11 @@
  /**
   * This plugin logs the BSM messages received in the following CSV format.
   */
- class ODELoggerPlugin: public PluginClient
+ class ODEForwardPlugin: public PluginClient
  {
  public:
- 	ODELoggerPlugin(std::string);
- 	virtual ~ODELoggerPlugin();
+ 	ODEForwardPlugin(std::string);
+ 	virtual ~ODEForwardPlugin();
  	int Main();
  protected:
  	void UpdateConfigSettings();
@@ -93,6 +93,6 @@
  std::mutex _cfgLock;
 
 
- } /* namespace ODELoggerPlugin */
+ } /* namespace ODEForwardPlugin */
 
- #endif /* ODELoggerPlugin.h */
+ #endif /* ODEForwardPlugin.h */
