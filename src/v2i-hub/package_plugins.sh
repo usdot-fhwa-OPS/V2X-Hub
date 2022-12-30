@@ -7,12 +7,12 @@ PLUGINS=(
     CommandPlugin
     CswPlugin
     DmsPlugin
-    DsrcImmediateForwardPlugin
+    ImmediateForwardPlugin
     LocationPlugin
     MapPlugin
     MessageLoggerPlugin
     MessageReceiverPlugin
-    ODELoggerPlugin
+    ODEForwardPlugin
     PedestrianPlugin
     PortDrayagePlugin
     PreemptionPlugin
@@ -24,6 +24,7 @@ PLUGINS=(
 
 # package up all plugins
 for PLUGIN in "${PLUGINS[@]}"; do
-    ln -s ../bin "$PLUGIN"/bin
+    # force in case it exists already
+    ln --force -s ../bin "$PLUGIN"/bin
     zip "$PLUGIN".zip "$PLUGIN"/bin/"$PLUGIN" "$PLUGIN"/manifest.json
 done

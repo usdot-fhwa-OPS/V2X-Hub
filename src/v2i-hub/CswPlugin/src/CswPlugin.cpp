@@ -1,6 +1,6 @@
 #include "CswPlugin.h"
 #include <WGS84Point.h>
-#include "TimeHelper.h"
+#include "Clock.h"
 #include "XmlCurveParser.h"
 #include "VehicleLocate.h"
 #include <tmx/messages/IvpDmsControlMsg.h>
@@ -158,7 +158,7 @@ void CswPlugin::TestFindRegion()
 
 void CswPlugin::UpdateVehicleInZone(int32_t vehicleId, int zoneId, float speed_mph)
 {
-	uint64_t now = TimeHelper::GetMsTimeSinceEpoch();
+	uint64_t now = Clock::GetMillisecondsSinceEpoch();
 
 	// If msgId is 0, the vehicle is removed from the map.
 	// If msgId is not 0, the vehicle is either added or updated in the map.
@@ -205,7 +205,7 @@ void CswPlugin::UpdateVehicleInZone(int32_t vehicleId, int zoneId, float speed_m
 // Remove any vehicles where a BSM has not been received within the timeout period.
 void CswPlugin::RemoveOldVehicles()
 {
-	uint64_t now = TimeHelper::GetMsTimeSinceEpoch();
+	uint64_t now = Clock::GetMillisecondsSinceEpoch();
 
 	pthread_mutex_lock(&_settingsMutex);
 	uint64_t vehicleTimeout = _vehicleTimeout;
@@ -305,7 +305,7 @@ int CswPlugin::Main() {
 				pthread_mutex_unlock(&_timMutex);
 			}
 			// Get system time in milliseconds.
-			uint64_t time = TimeHelper::GetMsTimeSinceEpoch();
+			uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 			// Update the start time of the TIM message if it is time.
 			// Since the contents of the TIM change, the packet ID is also updated.

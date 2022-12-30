@@ -34,20 +34,9 @@ class PreemptionPlugin: public PluginClient
 	public:
 		PreemptionPlugin(std::string);
 		PreemptionPlugin();
-		// PreemptionPlugin(const PreemptionPlugin& mn)
-		// {
-		
-		// }
 
-  		PreemptionPlugin& operator=(const PreemptionPlugin& other) {
-  		}
-  		// PreemptionPlugin(PreemptionPlugin &&fp) noexcept {
-  		// }
-  		PreemptionPlugin const & operator=(PreemptionPlugin &&fp) noexcept{
-  
-  		}
-
-
+		PreemptionPlugin (const PreemptionPlugin&) = delete;
+		PreemptionPlugin& operator= (const PreemptionPlugin&) = delete;
 
 		virtual ~PreemptionPlugin();
 		int Main();

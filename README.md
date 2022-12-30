@@ -49,13 +49,6 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 ## System Requirements
 The V2X Hub software can run on most Linux-based computers with Pentium core processers, with at least a 64-bit processor, 2GB of RAM, and at least 64GB of drive space. Performance of the software will be based on the computing power and available RAM in the system.  
 
-The project was developed and tested on a machine with a core i3 processor, 4GB of memory, 64GB of hard drive space, running Ubuntu 16.04 LTS.
-
-The dependencies for Ubuntu 16.04 can be found in the [Ubuntu 16.04 Requirements Document](docs/Ubuntu_16.04_Requirements.md)
-
-The dependencies for Ubuntu 18.04 can be found in the [Ubuntu 18.04 Requirements Document](docs/Ubuntu_18.04_Requirements.md)
-
-
 ## Installation and Setup
 The installation and setup instructions can be found in the [Installation and Setup Guide](docs/Installation_and_Setup.md)
 

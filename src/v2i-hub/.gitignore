@@ -1,0 +1,17 @@
+CARMACloudPlugin/bin
+CARMAStreetsPlugin/bin
+CommandPlugin/bin
+CswPlugin/bin
+DmsPlugin/bin
+DsrcImmediateForwardPlugin/bin
+LocationPlugin/bin
+MapPlugin/bin
+MessageLoggerPlugin/bin
+MessageReceiverPlugin/bin
+ODELoggerPlugin/bin
+PedestrianPlugin/bin
+PortDrayagePlugin/bin
+PreemptionPlugin/bin
+RtcmPlugin/bin
+SpatPlugin/bin
+TimPlugin/bin

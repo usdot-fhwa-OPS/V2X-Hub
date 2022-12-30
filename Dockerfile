@@ -1,4 +1,6 @@
-FROM ubuntu:focal-20220113
+ARG UBUNTU_VERSION=focal-20220113
+
+FROM ubuntu:$UBUNTU_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
