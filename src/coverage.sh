@@ -35,10 +35,10 @@ for d in ${component_dir}/* ; do
             $TESTS
             popd
             # generate a JSON file to be combined per https://gcovr.com/en/master/guide/merging.html
-            pushd ${component_dir}
-            gcovr -k --json $(basename ${d})-coverage.json -s -f ${sub_dir} -r .
+            pushd $(dirname ${top_dir})
+            # generated at the project root
+            gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s -f $(basename ${top_dir})/${d}/ -r .
             popd
-            #gcovr -k --sonarqube ${build_dir}/coverage.xml -s -f ${sub_dir} -r .
         else
             echo "no tests built"
         fi
