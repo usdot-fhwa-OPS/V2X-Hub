@@ -56,7 +56,7 @@ namespace ERVCloudForwardingPlugin
             }
             auto uuid = boost::uuids::random_generator()();
             string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
-            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, latitude, longitude);
+            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier,_webPort, latitude, longitude);
             PLOG(logINFO) << "Registering RSU location at cloud: " << xml_str << endl;
             CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
         }

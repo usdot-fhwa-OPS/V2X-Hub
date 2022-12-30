@@ -87,10 +87,10 @@ namespace ERVCloudForwardingPlugin
         return result;
     }
 
-    string ERVCloudForwardingWorker::constructRSULocationRequest(std::string &rsu_identifier, long latitude, long longitude)
+    string ERVCloudForwardingWorker::constructRSULocationRequest(std::string &rsu_identifier, uint16_t v2xhub_web_port, long latitude, long longitude)
     {
         char xml_str[20000];
-        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>%s</id><latitude>%ld<latitude><longitude>%ld</longitude></RSULocationRequest>", rsu_identifier.c_str(), latitude, longitude);
+        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>%s</id><latitude>%ld<latitude><longitude>%ld</longitude><v2xhubPort>%d</v2xhubPort></RSULocationRequest>", rsu_identifier.c_str(), latitude, longitude, v2xhub_web_port);
         return xml_str;
     }
 } // namespace  ERVCloudForwardingPlugin

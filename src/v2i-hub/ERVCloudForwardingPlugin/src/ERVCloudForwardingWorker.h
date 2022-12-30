@@ -57,9 +57,10 @@ namespace ERVCloudForwardingPlugin
          * @param rsu_identifier A unique identifier to identify an RSU
          * @param latitude RSU GeoLocation latitude
          * @param longitude  RSU GeoLocation longitude
+         * @param v2xhub_web_port v2xhub server port to receive BSM from cloud
          * @return string XML format request
          */
-        static string constructRSULocationRequest(std::string &rsu_identifier, long latitude, long longitude);
+        static string constructRSULocationRequest(std::string &rsu_identifier, uint16_t v2xhub_web_port, long latitude, long longitude);
     };
 }
 #endif
