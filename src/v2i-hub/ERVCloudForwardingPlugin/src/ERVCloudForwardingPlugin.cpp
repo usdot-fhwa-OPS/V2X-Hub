@@ -38,8 +38,11 @@ namespace ERVCloudForwardingPlugin
     {
         try
         {
+            PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
             auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
+            PLOG(logINFO) << "SNMP GET Request with OID=" << _GPSOID << endl;
             auto gps_sentense = snmpClient->SNMPGet(_GPSOID);
+            PLOG(logINFO) << "SNMP GET Response:" << gps_sentense << endl;
             auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentense);
             long latitude = 0;
             long longitude = 0;
@@ -56,9 +59,14 @@ namespace ERVCloudForwardingPlugin
             }
             auto uuid = boost::uuids::random_generator()();
             string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
-            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier,_webPort, latitude, longitude);
-            PLOG(logINFO) << "Registering RSU location at cloud: " << xml_str << endl;
-            CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
+            PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
+            auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+            if (status == 1)
+            {
+                PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
+                return;
+            }
         }
         catch (SNMPClientException &ex)
         {
@@ -75,8 +83,8 @@ namespace ERVCloudForwardingPlugin
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
-        GetConfigValue<string>("AuthPassPhrase", _securityUser);
-        GetConfigValue<string>("SecurityUser", _authPassPhrase);
+        GetConfigValue<string>("SecurityUser", _securityUser);
+        GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("GPSOID", _GPSOID);
         GetConfigValue<string>("RSUName", _rsuName);
     }
@@ -174,6 +182,8 @@ namespace ERVCloudForwardingPlugin
     {
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
+        // Send RSU location to cloud on configuration change
+        RegisterRSULocation();
     }
 
     void ERVCloudForwardingPlugin::OnStateChange(IvpPluginState state)

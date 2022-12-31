@@ -32,6 +32,10 @@ SNMPClient::SNMPClient(const std::string &rsu_ip, uint16_t snmp_port, const std:
         std::string errMsg = "Cannot open SNMP session. \n";
         throw SNMPClientException(errMsg);
     }
+    else
+    {
+        fprintf(stdout, "snmp session is open.\n");
+    }
 }
 
 std::string SNMPClient::SNMPGet(const std::string &req_oid)
