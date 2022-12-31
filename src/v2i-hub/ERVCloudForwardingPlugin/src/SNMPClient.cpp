@@ -10,16 +10,15 @@ SNMPClient::SNMPClient(const std::string &rsu_ip, uint16_t snmp_port, const std:
     snmp_sess_init(&session);
     session.peername = ip_port;
     session.version = SNMP_VERSION_3;
-    session.securityName = strdup(securityUser.c_str());
+    session.securityName = (char *)securityUser.c_str();
     session.securityNameLen = strlen(session.securityName);
     session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
     session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
     session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
     session.securityAuthKeyLen = USM_AUTH_KU_LEN;
-    char *our_v3_passphrase = strdup(authPassPhrase.c_str());
     if (generate_Ku(session.securityAuthProto,
                     session.securityAuthProtoLen,
-                    (u_char *)our_v3_passphrase, strlen(our_v3_passphrase),
+                    (u_char *)authPassPhrase.c_str(), strlen(authPassPhrase.c_str()),
                     session.securityAuthKey,
                     &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
     {

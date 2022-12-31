@@ -2,10 +2,10 @@
 
 namespace ERVCloudForwardingPlugin
 {
-    string ERVCloudForwardingWorker::constructERVBSMRequest(BsmMessage &msg)
+    std::string ERVCloudForwardingWorker::constructERVBSMRequest(BsmMessage &msg)
     {
         char xml_str[20000];
-        string bsmHex = encodeBSMHex(msg);
+        std::string bsmHex = encodeBSMHex(msg);
         auto bsmPtr = msg.get_j2735_data();
 
         // Check if the BSM is broadcast by the ERV (Emergency Response Vehicle). If not, return empty string.
@@ -21,7 +21,7 @@ namespace ERVCloudForwardingPlugin
         }
         // If there is carma related regional extension value that contains the ERV route points, construct the BSM request with the points.
         auto bsmCarmaRegion = bsmPtr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma;
-        stringstream route_ss;
+        std::stringstream route_ss;
         for (int i = 0; i < bsmCarmaRegion.routeDestinationPoints->list.count; i++)
         {
             auto latitude = bsmCarmaRegion.routeDestinationPoints->list.array[i]->lat;
@@ -33,13 +33,12 @@ namespace ERVCloudForwardingPlugin
         return xml_str;
     }
 
-    string ERVCloudForwardingWorker::encodeBSMHex(BsmMessage &msg)
+    std::string ERVCloudForwardingWorker::encodeBSMHex(BsmMessage &msg)
     {
         // Encode the BSM message and return encoded hex string
         tmx::messages::BsmEncodedMessage bsmEncodeMessage;
         tmx::messages::MessageFrameMessage frame_msg(msg.get_j2735_data());
         bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-        free(frame_msg.get_j2735_data().get());
         return bsmEncodeMessage.get_payload_str();
     }
 
@@ -62,23 +61,23 @@ namespace ERVCloudForwardingPlugin
         }
     }
 
-    map<long, long> ERVCloudForwardingWorker::ParseGPS(std::string &gps_nmea_data)
+    std::map<long, long> ERVCloudForwardingWorker::ParseGPS(const std::string &gps_nmea_data)
     {
-        map<long, long> result;
+        std::map<long, long> result;
         nmea::NMEAParser parser;
         nmea::GPSService gps(parser);
         try
         {
             parser.readLine(gps_nmea_data);
-            stringstream ss;
-            ss << setprecision(8) << fixed << gps.fix.latitude << endl;
+            std::stringstream ss;
+            ss << std::setprecision(8) << std::fixed << gps.fix.latitude << std::endl;
             auto latitude_str = ss.str();
-            stringstream sss;
-            sss << setprecision(8) << fixed << gps.fix.longitude << endl;
+            std::stringstream sss;
+            sss << std::setprecision(8) << std::fixed << gps.fix.longitude << std::endl;
             auto longitude_str = sss.str();
             boost::erase_all(longitude_str, ".");
             boost::erase_all(latitude_str, ".");
-            result.insert({stol(latitude_str), stol(longitude_str)});
+            result.insert({std::stol(latitude_str), std::stol(longitude_str)});
         }
         catch (nmea::NMEAParseError &e)
         {
@@ -87,7 +86,7 @@ namespace ERVCloudForwardingPlugin
         return result;
     }
 
-    string ERVCloudForwardingWorker::constructRSULocationRequest(std::string &rsu_identifier, uint16_t v2xhub_web_port, long latitude, long longitude)
+    std::string ERVCloudForwardingWorker::constructRSULocationRequest(std::string &rsu_identifier, uint16_t v2xhub_web_port, long latitude, long longitude)
     {
         char xml_str[20000];
         snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>%s</id><latitude>%ld<latitude><longitude>%ld</longitude><v2xhubPort>%d</v2xhubPort></RSULocationRequest>", rsu_identifier.c_str(), latitude, longitude, v2xhub_web_port);

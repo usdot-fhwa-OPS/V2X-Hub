@@ -30,9 +30,9 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include "ERVCloudForwardingWorker.h"
 #include "SNMPClient.h"
-#include <boost/uuid/uuid.hpp>           
-#include <boost/uuid/uuid_generators.hpp> 
-#include <boost/uuid/uuid_io.hpp> 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 using namespace std;
 using namespace tmx;
@@ -52,14 +52,14 @@ namespace ERVCloudForwardingPlugin
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
-        const string _CLOUDURL = "http://127.0.0.1:33333"; 
+        const string _CLOUDURL = "http://127.0.0.1:33333";
         const string _CLOUDBSMREQ = "/carmacloud/bsmreq";
         const string _CLOUDRSUREQ = "/carmacloud/rsuLocreq";
         const string _POSTMETHOD = "POST";
         const string _HEXENC = "asn.1-uper/hexstring";
 
     public:
-        explicit ERVCloudForwardingPlugin(const std::string&);
+        explicit ERVCloudForwardingPlugin(const string &);
         ~ERVCloudForwardingPlugin() = default;
         int Main();
 
@@ -72,7 +72,7 @@ namespace ERVCloudForwardingPlugin
         /**
          * @brief Message Filter handler for BSM
          * @param msg BSM message
-         * @param routableMsg 
+         * @param routableMsg
          */
         void handleBSM(BsmMessage &msg, routeable_message &routableMsg);
         /**
@@ -91,7 +91,6 @@ namespace ERVCloudForwardingPlugin
          */
         void RegisterRSULocation();
     };
-
 } // namespace ERVCloudForwardingPlugin
 std::mutex _cfgLock;
 

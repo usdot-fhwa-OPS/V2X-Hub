@@ -13,6 +13,6 @@ public:
     {
         return message.c_str();
     }
-    ~SNMPClientException() = default;
+    ~SNMPClientException() override = default;
 };
 #endif
