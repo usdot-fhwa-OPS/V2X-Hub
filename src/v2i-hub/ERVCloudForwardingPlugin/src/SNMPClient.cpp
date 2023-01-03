@@ -2,8 +2,6 @@
 
 SNMPClient::SNMPClient(const std::string &rsu_ip, uint16_t snmp_port, const std::string &securityUser, const std::string &authPassPhrase)
 {
-    std::string setCustomMibsCommand = "export MIBS=ALL";
-    system(setCustomMibsCommand.c_str());
     std::string ip_port_string = rsu_ip + ":" + std::to_string(snmp_port);
     char *ip_port = &ip_port_string[0];
     init_snmp("snmpclient");
@@ -11,14 +9,14 @@ SNMPClient::SNMPClient(const std::string &rsu_ip, uint16_t snmp_port, const std:
     session.peername = ip_port;
     session.version = SNMP_VERSION_3;
     session.securityName = (char *)securityUser.c_str();
-    session.securityNameLen = strlen(session.securityName);
+    session.securityNameLen = securityUser.length();
     session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
     session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
     session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
     session.securityAuthKeyLen = USM_AUTH_KU_LEN;
     if (generate_Ku(session.securityAuthProto,
                     session.securityAuthProtoLen,
-                    (u_char *)authPassPhrase.c_str(), strlen(authPassPhrase.c_str()),
+                    (u_char *)authPassPhrase.c_str(),authPassPhrase.length(),
                     session.securityAuthKey,
                     &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
     {

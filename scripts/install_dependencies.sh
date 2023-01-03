@@ -28,9 +28,7 @@ DEPENDENCIES="build-essential \
     uuid-dev \
     wget \
     zlib1g \
-    zip \
-    wget \
-    libperl-dev"
+    zip"
 
 # install all things needed for deployment, always done
 apt-get install -y $DEPENDENCIES
