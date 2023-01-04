@@ -74,11 +74,11 @@ int VehicleLocate::FindRegion(TiDataFrame *frame, WGS84Point point, uint16_t hea
 		int nodesLength = geoPath->description->choice.path.offset.choice.xy.choice.nodes.list.count;
 
 		WGS84Point* points = GetPointArray(nodes, nodesLength, nodesAnchor);
-
-		if (IsInPointList(points, nodesLength, point, heading, laneWidth/100.0))
-			return i + 1;
-
+		bool inList = IsInPointList(points, nodesLength, point, heading, laneWidth/100.0);
 		free(points);
+		if (inList) {
+			return i + 1;
+		}
 	}
 
 	return -1;

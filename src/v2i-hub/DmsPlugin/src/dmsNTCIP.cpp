@@ -1,5 +1,7 @@
 #include "dmsNTCIP.h"
 
+#include <vector>
+
 const char* DMS_MSG_MEMORYTYPE_CURR =		"1.3.6.1.4.1.1206.4.2.3.5.8.1.1";
 const char* DMS_MSG_NUMBER_CURR =			"1.3.6.1.4.1.1206.4.2.3.5.8.1.2";
 const char* DMS_MSG_MULTISTRING_CURR =		"1.3.6.1.4.1.1206.4.2.3.5.8.1.3";
@@ -192,7 +194,7 @@ char * SignalControllerNTCIP::getSingleString(const char* getOID, const char *co
     {
 		printf("getSingleString Function -\tOID: %s \t Community: %s\t", getOID, community);
     	//------SUCCESS: Print the result variables
-	    int *out = new int[MAX_ITEMS];
+	    std::vector<int> out(MAX_ITEMS);
 	    int i =0;
 	    for(vars = response->variables; vars; vars = vars->next_variable)
 	        print_variable(vars->name, vars->name_length, vars);
@@ -259,7 +261,7 @@ int  SignalControllerNTCIP::getOctetString(const char* getOID,  const char *comm
     {
 		printf("getOctetString Function -\tOID: %s \t Community: %s\n", getOID, community);
 	    //------SUCCESS: Print the result variables
-	    int *out = new int[MAX_ITEMS];
+	    std::vector<int> out(MAX_ITEMS);
 	    int i =0;
 	    for(vars = response->variables; vars; vars = vars->next_variable)
 	        print_variable(vars->name, vars->name_length, vars);
@@ -394,7 +396,7 @@ int  SignalControllerNTCIP::CurTimingPlanRead()
         /*
         * SUCCESS: Print the result variables
         */
-        int *out = new int[MAX_ITEMS];
+        std::vector<int> out(MAX_ITEMS);
         int i =0;
         for(vars = response->variables; vars; vars = vars->next_variable)
             print_variable(vars->name, vars->name_length, vars);
@@ -606,7 +608,7 @@ void SignalControllerNTCIP::PhaseControl(int phase_control, int Total,char YES)
     if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
         {
         //------SUCCESS: Print the result variables
-          int *out = new int[MAX_ITEMS];
+        std::vector<int> out(MAX_ITEMS);
         int i =0;
         for(vars = response->variables; vars; vars = vars->next_variable)
             print_variable(vars->name, vars->name_length, vars);
@@ -730,7 +732,7 @@ void SignalControllerNTCIP::PhaseRead()
 	        /*
 	        * SUCCESS: Print the result variables
 	        */
-	        int *out = new int[MAX_ITEMS];
+	        std::vector<int> out(MAX_ITEMS);
 	        int i =0;
 	        for(vars = response->variables; vars; vars = vars->next_variable)
 	            print_variable(vars->name, vars->name_length, vars);
@@ -1444,7 +1446,7 @@ netsnmp_pdu*  SignalControllerNTCIP::setSNMPInt(const char* setOID, const char *
 		/*
 		 * SUCCESS: Print the result variables
 		 */
-		int *out = new int[MAX_ITEMS];
+		std::vector<int> out(MAX_ITEMS);
 		int i = 0;
 		int count = 0;
 
@@ -1706,7 +1708,7 @@ bool SignalControllerNTCIP::setSNMPActivateMsg(const char* getOID, const char *c
 		/*
 		 * SUCCESS: Print the result variables
 		 */
-		int *out = new int[MAX_ITEMS];
+		std::vector<int> out(MAX_ITEMS);
 		int i = 0;
 		for (vars = response->variables; vars; vars = vars->next_variable)
 			print_variable(vars->name, vars->name_length, vars);

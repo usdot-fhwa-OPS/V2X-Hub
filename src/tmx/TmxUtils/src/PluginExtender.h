@@ -32,6 +32,7 @@ public:
 protected:
 	PluginClient& _pluginClient;
 	IvpPlugin *_plugin;
+private:	
 	std::string _name;
 };
 

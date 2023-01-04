@@ -10,24 +10,24 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define PLUGIN "plugin"
+constexpr const char * PLUGIN = "plugin";
 
-#define ENABLE_STMT "\
+constexpr const char * ENABLE_STMT = "\
 	UPDATE IVP.installedPlugin \
-	SET enabled = ?"
+	SET enabled = ?";
 
-#define EXE_QUERY "\
+constexpr const char * EXE_QUERY = "\
 	SELECT path, exeName \
-	FROM IVP.installedPlugin"
+	FROM IVP.installedPlugin";
 
-#define STATUS_QUERY "\
+constexpr const char * STATUS_QUERY = "\
 	SELECT name, value \
 	FROM IVP.pluginStatus \
-	LEFT JOIN IVP.plugin ON IVP.pluginStatus.pluginId = IVP.plugin.id"
+	LEFT JOIN IVP.plugin ON IVP.pluginStatus.pluginId = IVP.plugin.id";
 
-#define PROC_SCRIPT "\
+constexpr const char * PROC_SCRIPT = "\
 	ls -L -i /proc/[0-9][0-9]*/exe 2>/dev/null | \
-	awk -F\\/ '$1 = /?/{print $3}'"
+	awk -F\\/ '$1 = /?/{print $3}'";
 
 using namespace std;
 using namespace sql;
@@ -143,23 +143,19 @@ bool TmxControl::start(pluginlist &plugins, ...)
 
 			int pid = fork();
 
-			char *cmd = strdup(exe.c_str());
-
 			// su to plugin user
 			if (pid == 0)
 			{
 				// Child process
 				int ret = 0;
 
-				ret = execl(cmd, cmd, NULL);
+				ret = execl(exe.c_str(), exe.c_str(), NULL);
 
 				if (ret < 0)
 					cerr << strerror(errno) << endl;
 
 				return ret;
 			}
-
-			free(cmd);
 		}
 	}
 	catch (exception &ex)

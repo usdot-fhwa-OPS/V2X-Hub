@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <sstream>
+#include <array>
 
 DmsTest::DmsTest()
 {
@@ -25,7 +26,7 @@ DmsTest::~DmsTest()
 void DmsTest::Test(SignalControllerNTCIP sc)
 {
 	//int MemoryType = 3;
-	char *MsgActivationCode;
+	std::array<char, 28> MsgActivationCode;
 	static int DMSMsgNumber = 0;
 	int DMSMsgStatus = 0;
 
@@ -268,12 +269,10 @@ void DmsTest::Test(SignalControllerNTCIP sc)
 					int DMSMsgCRCCurr = sc.getDMSMsgCRCCurr(".3.2");
 					printf("DMSMsgCRCCurr:= %d\n", DMSMsgCRCCurr);
 					printf("DMSMsgCRC:= %x\n", DMSMsgCRCCurr);
-					MsgActivationCode = (char *)malloc(28);
-					sprintf(MsgActivationCode,"ffffff030002%04xc0a0010a",DMSMsgCRCCurr);
-					printf("MsgActivationCode:= %s\n", MsgActivationCode);
+					sprintf(MsgActivationCode.data(),"ffffff030002%04xc0a0010a",DMSMsgCRCCurr);
+					printf("MsgActivationCode:= %s\n", MsgActivationCode.data());
 					//usleep(500000);
-					sc.setDMSMsgActivate(MsgActivationCode);
-					//free(MsgActivationCode);
+					sc.setDMSMsgActivate(MsgActivationCode.data());
 					//sc.setDMSMsgActivate("FFFFFF0300027ef6c0a0010a");
 					//Checksum 2 bytes
 					//Owner 4 bytes

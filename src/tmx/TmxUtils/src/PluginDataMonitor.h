@@ -49,13 +49,13 @@ public:
 	typedef DataType data_type;
 	typedef tmx::messages::DataChangeMessage message_type;
 
-	PluginDataMonitor(PluginClient &pluginClient, std::string name, data_type &data):
+	PluginDataMonitor(PluginClient &pluginClient, const std::string & name, data_type &data):
 		PluginExtender(pluginClient),
 		_name(name), _data(data), _cache(data)
 	{
 	}
 
-	std::string get_name() { return _name; }
+	const std::string & get_name() { return _name; }
 
 	data_type &get() { return _data; }
 
@@ -103,7 +103,7 @@ public:
 	typedef DataType data_type;
 	typedef tmx::messages::DataChangeMessage message_type;
 
-	PluginDataMonitor(PluginClient &pluginClient, std::string name, std::atomic<data_type> &data):
+	PluginDataMonitor(PluginClient &pluginClient, const std::string & name, std::atomic<data_type> &data):
 		PluginExtender(pluginClient),
 		_name(name), _data(data), _cache(data)
 	{
