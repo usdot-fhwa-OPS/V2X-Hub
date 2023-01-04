@@ -227,7 +227,8 @@ char * SignalControllerNTCIP::getSingleString(const char* getOID, const char *co
 	            printf("ASN-INTEGER Variable: \n");
 	            int *aa;
 	            aa =(int *)vars->val.integer;
-	            out[i++] = * aa;
+	            out[i] = * aa;
+				i++;
 	            printf("value #%d is NOT a string! Ack!\n", *returnInt++);
 	        }
 	    }
@@ -282,7 +283,8 @@ int  SignalControllerNTCIP::getOctetString(const char* getOID,  const char *comm
 	        {
 	            int *aa;
 	            aa =(int *)vars->val.integer;
-	            out[i++] = * aa;
+	            out[i] = * aa;
+				i++;
 	            printf("value #%d is NOT a string! Ack!\n", *returnInt++);
 	        }
 	    }
@@ -417,7 +419,8 @@ int  SignalControllerNTCIP::CurTimingPlanRead()
 
                 int *aa;
                 aa =(int *)vars->val.integer;
-                out[i++] = * aa;
+                out[i] = * aa;
+				i++;
                 //printf("value #%d is NOT a string! Ack!. Value = %d \n", count++,*aa);
             }
         }
@@ -628,7 +631,8 @@ void SignalControllerNTCIP::PhaseControl(int phase_control, int Total,char YES)
                 {
                 int *aa;
                 aa =(int *)vars->val.integer;
-                out[i++] = * aa;
+                out[i] = * aa;
+				i++;
                 printf("value #%d is NOT a string! Ack!\n", count++);
                 }
             }
@@ -754,7 +758,8 @@ void SignalControllerNTCIP::PhaseRead()
 
 	                int *aa;
 	                aa =(int *)vars->val.integer;
-	                out[i++] = * aa;
+	                out[i] = * aa;
+					i++;
 	                //printf("value #%d is NOT a string! Ack!. Value = %d \n", count++,*aa);
 	            }
 	        }
@@ -1468,7 +1473,8 @@ netsnmp_pdu*  SignalControllerNTCIP::setSNMPInt(const char* setOID, const char *
 			{
 				int *aa;
 				aa = (int *) vars->val.integer;
-				out[i++] = *aa;
+				out[i] = *aa;
+				i++;
 				//printf("value #%d is NOT a string! Ack!. Value = %d \n", count++,*aa);
 			}
 		}
@@ -1730,7 +1736,8 @@ bool SignalControllerNTCIP::setSNMPActivateMsg(const char* getOID, const char *c
 
 				int *aa;
 				aa = (int *) vars->val.integer;
-				out[i++] = *aa;
+				out[i] = *aa;
+				i++;
 				//printf("value #%d is NOT a string! Ack!. Value = %d \n", count++,*aa);
 			}
 		}

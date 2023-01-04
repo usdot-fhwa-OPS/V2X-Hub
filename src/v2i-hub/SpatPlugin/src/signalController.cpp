@@ -203,12 +203,13 @@ void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::s
 		if (spat && spat->intersections.list.array && spat->intersections.list.count > 0) {
 			char *zoneList = strdup(currentPedLanes.c_str());
 			vector<LaneConnectionID_t> zones;
-			char *c = strtok(zoneList, ",");
+			char *restOfString = nullptr;
+			char *c = strtok_r(zoneList, ",", &restOfString);
 
 			while (c != NULL) {
 				zones.push_back(strtol(c, NULL, 0));
 
-				c = strtok(NULL, ",");
+				c = strtok_r(NULL, ",", &restOfString);
 			};
 
 			free(zoneList);

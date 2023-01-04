@@ -10,24 +10,13 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-constexpr const char * PLUGIN = "plugin";
+constexpr const char * ENABLE_STMT = "UPDATE IVP.installedPlugin SET enabled = ?";
 
-constexpr const char * ENABLE_STMT = "\
-	UPDATE IVP.installedPlugin \
-	SET enabled = ?";
+constexpr const char * EXE_QUERY = "SELECT path, exeName FROM IVP.installedPlugin";
 
-constexpr const char * EXE_QUERY = "\
-	SELECT path, exeName \
-	FROM IVP.installedPlugin";
+constexpr const char * STATUS_QUERY = "SELECT name, value FROM IVP.pluginStatus LEFT JOIN IVP.plugin ON IVP.pluginStatus.pluginId = IVP.plugin.id";
 
-constexpr const char * STATUS_QUERY = "\
-	SELECT name, value \
-	FROM IVP.pluginStatus \
-	LEFT JOIN IVP.plugin ON IVP.pluginStatus.pluginId = IVP.plugin.id";
-
-constexpr const char * PROC_SCRIPT = "\
-	ls -L -i /proc/[0-9][0-9]*/exe 2>/dev/null | \
-	awk -F\\/ '$1 = /?/{print $3}'";
+constexpr const char * PROC_SCRIPT = "ls -L -i /proc/[0-9][0-9]*/exe 2>/dev/null | awk -F\\/ '$1 = /?/{print $3}'";
 
 using namespace std;
 using namespace sql;
