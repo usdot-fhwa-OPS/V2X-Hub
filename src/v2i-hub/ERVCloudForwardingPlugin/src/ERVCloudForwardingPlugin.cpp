@@ -137,7 +137,7 @@ namespace ERVCloudForwardingPlugin
         if (!server.listen(address, port))
         {
             qCritical("Unable to listen on the specified port.");
-            return 1;
+            return EXIT_FAILURE;
         }
         PLOG(logINFO) << "ERVCloudForwardingPlugin:: Started web service";
         return a.exec();
@@ -168,7 +168,7 @@ namespace ERVCloudForwardingPlugin
                 if (res != CURLE_OK)
                 {
                     fprintf(stderr, "curl send failed: %s\n", curl_easy_strerror(res));
-                    return 1;
+                    return EXIT_FAILURE;
                 }
             }
             curl_easy_cleanup(req);

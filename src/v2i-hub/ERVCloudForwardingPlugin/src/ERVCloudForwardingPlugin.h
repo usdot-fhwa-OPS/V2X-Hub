@@ -84,6 +84,13 @@ namespace ERVCloudForwardingPlugin
          * @return int http status indicator
          */
         int CloudSend(const string &msg, const string &url, const string &base, const string &method);
+        /**
+         * @brief Create a new thread and send BSM request to the cloud 
+         * @param msg BSM message request
+         * @param url The server IP and port the request is sent to
+         * @param base The request path
+         * @param method HTTP method POST
+         */
         void CloudSendAsync(const string &msg, const string &url, const string &base, const string &method);
         void BroadcastBSM(const string &bsmHex);
         /**
