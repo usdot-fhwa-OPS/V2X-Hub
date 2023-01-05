@@ -10,5 +10,5 @@ class PedestrianDetectionForSPAT
 public:
     void updateEncodedSpat(tmx::messages::SpatEncodedMessage & spatEncodedMsg,
         std::shared_ptr<tmx::messages::SpatMessage> _spatMessage,
-        const std::string & currentPedLanes);
+        const std::string & currentPedLanes) const;
 };

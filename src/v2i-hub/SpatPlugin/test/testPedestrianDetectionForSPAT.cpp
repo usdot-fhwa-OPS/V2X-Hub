@@ -22,6 +22,23 @@ static std::shared_ptr<SPAT> createSPAT() {
     return spatPtr;
 }
 
+TEST(PedestrianDetectionForSPAT, updateEncodedSpat_testIncompleteSpat)
+{
+    PedestrianDetectionForSPAT pedSPAT;
+    SpatEncodedMessage spatEncoded;
+    // create incomplete message
+    auto spatPtr = std::make_shared<SPAT>();
+    auto spatMessage = std::make_shared<tmx::messages::SpatMessage>(spatPtr);
+    bool execptionCaught = false;
+    try {
+        pedSPAT.updateEncodedSpat(spatEncoded, spatMessage, "");
+    } catch (std::exception & e) {
+        // should not encode but should get here
+        execptionCaught = true;
+    }
+    EXPECT_EQ(execptionCaught, true);
+}
+
 TEST(PedestrianDetectionForSPAT, updateEncodedSpat)
 {
     PedestrianDetectionForSPAT pedSPAT;
