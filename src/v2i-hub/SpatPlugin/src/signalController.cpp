@@ -26,6 +26,7 @@
 #include "signalController.h"
 
 #include "NTCIP1202.h"
+#include "PedestrianDetectionForSPAT.h"
 
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -196,47 +197,9 @@ void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::s
 {
 	pthread_mutex_lock(&spat_message_mutex);
 
-	//printf("Signal Controller getEncodedSpat\n");
 	if (_spatMessage != nullptr) {
-		// Add pedestrian lanes with active detections and clear the rest
-		auto spat = _spatMessage->get_j2735_data();
-		if (spat && spat->intersections.list.array && spat->intersections.list.count > 0) {
-			char *zoneList = strdup(currentPedLanes.c_str());
-			vector<LaneConnectionID_t> zones;
-			char *restOfString = nullptr;
-			auto c = strtok_r(zoneList, ",", &restOfString);
-
-			while (c != nullptr) {
-				zones.push_back(strtol(c, nullptr, 0));
-
-				c = strtok_r(nullptr, ",", &restOfString);
-			};
-
-			free(zoneList);
-			zoneList = nullptr;
-			c = nullptr;
-
-			if (!zones.empty()) {
-				ManeuverAssistList *&mas = spat->intersections.list.array[0]->maneuverAssistList;
-				mas = (ManeuverAssistList *) calloc(1, sizeof(ManeuverAssistList));
-
-				mas->list.count = zones.size();
-				mas->list.array = (ConnectionManeuverAssist **) calloc(1, sizeof(ConnectionManeuverAssist *));
-
-				std::sort(zones.begin(), zones.end());
-				for (size_t i = 0; i < zones.size(); i++) {
-					mas->list.array[i] = (ConnectionManeuverAssist *) calloc(1, sizeof(ConnectionManeuverAssist));
-					mas->list.array[i]->connectionID = zones[i];
-					mas->list.array[i]->pedBicycleDetect = (PedestrianBicycleDetect_t *) calloc(1, sizeof(PedestrianBicycleDetect_t));
-					*(mas->list.array[i]->pedBicycleDetect) = 1;
-				}
-			}
-		}
-
-		MessageFrameMessage frame(_spatMessage->get_j2735_data());
-		spatEncodedMsg->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-		//Free the memory allocated for MessageFrame
-		free(frame.get_j2735_data().get());
+		PedestrianDetectionForSPAT pedDetect;
+		pedDetect.updateEncodedSpat(*spatEncodedMsg, _spatMessage, currentPedLanes);
 	}
 
 	pthread_mutex_unlock(&spat_message_mutex);
