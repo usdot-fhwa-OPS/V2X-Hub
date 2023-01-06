@@ -81,6 +81,11 @@ MACRO (BuildTmxPlugin)
     ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES})
     # generate executables in the bin directory to use in a zip file
     SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin")
+                      
+    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" 
+                   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json"
+                   @ONLY)
+
     # include the processed manifest.json and executable in the zip file
     ADD_CUSTOM_TARGET ("${PROJECT_NAME}-data" ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip)
     FILE(GLOB ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json")
@@ -91,10 +96,6 @@ MACRO (BuildTmxPlugin)
 
     INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip
              DESTINATION plugins COMPONENT ${COMPONENT_NAME})
-                      
-    CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" 
-                   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json"
-                   @ONLY)
 
 ENDMACRO (BuildTmxPlugin)
 
