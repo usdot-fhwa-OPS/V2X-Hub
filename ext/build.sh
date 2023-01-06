@@ -44,3 +44,12 @@ cmake .
 make
 make install
 popd
+
+# GPS Parser
+pushd /tmp
+git clone https://github.com/ckgt/NemaTode.git
+cd NemaTode
+cmake .
+make
+make install
+popd

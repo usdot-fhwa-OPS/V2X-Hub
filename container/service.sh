@@ -20,6 +20,7 @@ tmxctl --plugin-install CARMACloudPlugin.zip
 tmxctl --plugin-install CARMAStreetsPlugin.zip
 tmxctl --plugin-install ODEForwardPlugin.zip
 tmxctl --plugin-install PortDrayagePlugin.zip
+tmxctl --plugin-install ERVCloudForwardingPlugin.zip
 
 tmxctl --plugin CommandPlugin --enable
 /usr/local/bin/tmxcore
