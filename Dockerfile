@@ -4,7 +4,8 @@ FROM ubuntu:$UBUNTU_VERSION
 
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
-RUN /usr/local/bin/install_dependencies.sh
+RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
+    /usr/local/bin/install_dependencies.sh
 
 # build out ext components
 COPY ./ext /home/V2X-Hub/ext
