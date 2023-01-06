@@ -57,6 +57,16 @@ FIND_PACKAGE (${TMX_APPNAME}-plugin
 
 find_package(Boost COMPONENTS system thread log chrono atomic regex filesystem program_options log_setup) 
 
+function(create_zip output_file input_files working_dir)
+    add_custom_command(
+        COMMAND ${CMAKE_COMMAND} -E tar "cf" "${output_file}" --format=zip -- ${input_files}
+        WORKING_DIRECTORY "${working_dir}"
+        OUTPUT  "${output_file}"
+        DEPENDS ${input_files}
+        COMMENT "Zipping to ${output_file}."
+    )
+endfunction()
+
 MACRO (BuildTmxPlugin)
     STRING (TOLOWER "${PROJECT_NAME}" COMPONENT_NAME)
 
@@ -69,24 +79,24 @@ MACRO (BuildTmxPlugin)
     FILE (GLOB_RECURSE SOURCES "src/*.c*")
     
     ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES})
-    IF (TMX_BIN_DIR)
-        SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TMX_BIN_DIR}")
-    ENDIF ()
-    
-    INSTALL (TARGETS ${PROJECT_NAME} 
-             DESTINATION ${TMX_PLUGIN_NAME}/bin COMPONENT ${COMPONENT_NAME}
-             PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                         GROUP_EXECUTE GROUP_READ
-                         WORLD_EXECUTE WORLD_READ)
+    # generate executables in the bin directory to use in a zip file
+    SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin")
                       
     CONFIGURE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/manifest.json" 
-                   "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
+                   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json"
                    @ONLY)
 
-    INSTALL (FILES "${CMAKE_CURRENT_BINARY_DIR}/manifest.json"
-             DESTINATION ${TMX_PLUGIN_NAME} COMPONENT ${COMPONENT_NAME}
-             PERMISSIONS OWNER_WRITE OWNER_READ
-                         GROUP_READ WORLD_READ)
+    # include the processed manifest.json and executable in the zip file
+    ADD_CUSTOM_TARGET ("${PROJECT_NAME}-data" ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip)
+    FILE(GLOB ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json")
+    LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin/${PROJECT_NAME}")
+    # create the zip file with the structure that is needed, meaning the plugin
+    # name as the directory with manifest.json and bin under this
+    create_zip(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip "${ZIP_FILES_${PROJECT_NAME}}" ${CMAKE_CURRENT_BINARY_DIR})
+
+    INSTALL (FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip
+             DESTINATION plugins COMPONENT ${COMPONENT_NAME})
+
 ENDMACRO (BuildTmxPlugin)
 
 IF (NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv71")

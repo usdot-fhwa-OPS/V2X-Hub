@@ -1,0 +1,62 @@
+{
+	"name":"ERVCloudForwarding",
+	"description":"ERV (Emergency Response Vehicle) cloud plugin for making websocket connection with CARMA cloud, and forward ERV BSM to CARMA cloud.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/ERVCloudForwardingPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"CARMA",
+			"description":"CARMA message suite"
+		}
+	],
+	"configuration":[
+		{
+			"key":"WebServiceIP",
+			"default":"127.0.0.1",
+			"description":"Server IP address for V2X hub to receive BSM"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"44444",
+			"description":"Server port for V2X hub to receive BSM"
+		},
+		{
+            "key":"RSUIp",
+            "default":"192.168.XX.XX",
+            "description":"An IP address of the RSU the V2X hub is connected to."
+        },
+		{
+            "key":"RSUName",
+            "default":"WestIntersectionRSU",
+            "description":"A short description for the RSU the V2X hub is connected to."
+        },
+		{
+            "key":"SNMPPort",
+            "default":"161",
+            "description":"The SNMP port for sending message or command."
+        },
+		{
+            "key":"AuthPassPhrase",
+            "default":"dummy",
+            "description":"SNMP v3 authentication passphrase"
+        },
+		{
+            "key":"SecurityUser",
+            "default":"authOnlyUser",
+            "description":"SNMP Security Name"
+        },
+		{
+            "key":"GPSOID",
+            "default":"1.0.15628.4.1.8.5.0",
+            "description":"OID (Object Identifier) uniquely identify managed objects in a MIB database."
+        },
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        }
+	]
+}

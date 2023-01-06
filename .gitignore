@@ -1,8 +1,7 @@
-### cmake caches
+# build directories
+src/tmx/build
+src/v2i-hub/build
 
-CMakeCache.txt
-Makefile
-CMakeFiles
 # Compiled source #
 ###################
 *.com
