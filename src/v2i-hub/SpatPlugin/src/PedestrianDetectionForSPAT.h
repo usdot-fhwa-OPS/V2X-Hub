@@ -3,7 +3,7 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 
 /**
- * A heler class to add pedestrian detection elements to a SPAT message.
+ * A helper class to add pedestrian detection elements to a SPAT message.
 */
 class PedestrianDetectionForSPAT
 {
