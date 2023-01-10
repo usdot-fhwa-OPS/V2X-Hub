@@ -44,8 +44,6 @@ ImmediateForwardPlugin::ImmediateForwardPlugin(std::string name) : PluginClient(
 	SubscribeToMessages();
 
 	_muteDsrc = false;
-	SetSystemConfigValue("MuteDsrcRadio", _muteDsrc, false);
-	
 }
 
 

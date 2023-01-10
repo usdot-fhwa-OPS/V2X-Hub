@@ -269,9 +269,7 @@ public:
 			success = false;
 		}
 
-		pthread_mutex_lock(&_plugin->lock);
 		_sysConfig = ivpConfig_addItemToCollection(_sysConfig, key.c_str(), valString.c_str(), defString.c_str());
-		pthread_mutex_unlock(&_plugin->lock);
 
 		if (notify)
 		{
