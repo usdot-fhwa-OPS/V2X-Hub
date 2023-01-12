@@ -239,7 +239,7 @@ namespace unit_test
       long longitude = -7714955667;
       uint16_t v2xhubPort = 44444;
       auto xml_str = ERVCloudForwardingPlugin::ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, v2xhubPort, latitude, longitude);
-      std::string expected_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>" + rsu_identifier + "</id><latitude>3895510833<latitude><longitude>-7714955667</longitude><v2xhubPort>" + std::to_string(v2xhubPort) + "</v2xhubPort></RSULocationRequest>";
+      std::string expected_xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><RSULocationRequest><id>" + rsu_identifier + "</id><latitude>3895510833</latitude><longitude>-7714955667</longitude><v2xhubPort>" + std::to_string(v2xhubPort) + "</v2xhubPort></RSULocationRequest>";
       ASSERT_EQ(expected_xml, xml_str);
    }
 } // namespace unit_test
