@@ -53,8 +53,8 @@ namespace ERVCloudForwardingPlugin
         string _authPassPhrase;
         string _GPSOID;
         const string _CLOUDURL = "http://127.0.0.1:33333";
-        const string _CLOUDBSMREQ = "/carmacloud/bsmreq";
-        const string _CLOUDRSUREQ = "/carmacloud/rsuLocreq";
+        const string _CLOUDBSMREQ = "/carmacloud/rsu/req";
+        const string _CLOUDRSUREQ = "/carmacloud/rsu/register";
         const string _POSTMETHOD = "POST";
         const string _HEXENC = "asn.1-uper/hexstring";
 
