@@ -57,6 +57,11 @@
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"
-        }
+        },
+		{
+			"key":"RSUUpdateInterval",
+			"default":"3600",
+			"description":"V2xHub sends RSU register request at certain interval. Unit of measure second."
+		}
 	]
 }

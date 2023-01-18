@@ -49,6 +49,7 @@ namespace ERVCloudForwardingPlugin
         string _rsuIp;
         string _rsuName;
         uint16_t _snmpPort;
+        uint32_t _rsuInterval;
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
@@ -57,6 +58,7 @@ namespace ERVCloudForwardingPlugin
         const string _CLOUDRSUREQ = "/carmacloud/rsu/register";
         const string _POSTMETHOD = "POST";
         const string _HEXENC = "asn.1-uper/hexstring";
+        const uint16_t SECTOMILLISEC = 1000;
 
     public:
         explicit ERVCloudForwardingPlugin(const string &);

@@ -10,11 +10,11 @@ namespace ERVCloudForwardingPlugin
         // Subscribe to all messages specified by the filters above.
         SubscribeToMessages();
 
-        std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);
-        webBSM_t.detach();
+        std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);        
 
         // Send RSU location to cloud
-        RegisterRSULocation();
+        std::thread web_RegisterRSU(&ERVCloudForwardingPlugin::RegisterRSULocation, this);
+        webBSM_t.detach();
     }
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
@@ -36,42 +36,49 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::RegisterRSULocation()
     {
-        try
-        {
-            PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
-            auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
-            auto gps_sentense = snmpClient->SNMPGet(_GPSOID);
-            auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentense);
-            long latitude = 0;
-            long longitude = 0;
-            for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
+        while (_plugin->state != IvpPluginState_error)
+        {        
+            try
             {
-                latitude = itr->first;
-                longitude = itr->second;
-            }
+                PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
+                auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
+                auto gps_sentense = snmpClient->SNMPGet(_GPSOID);
+                auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentense);
+                long latitude = 0;
+                long longitude = 0;
+                for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
+                {
+                    latitude = itr->first;
+                    longitude = itr->second;
+                }
 
-            if (latitude == 0 || longitude == 0)
+                if (latitude == 0 || longitude == 0)
+                {
+                    PLOG(logERROR) << "Invalid latitude and longitude. Cannot register RSU location." << endl;
+                    return;
+                }
+                auto uuid = boost::uuids::random_generator()();
+                string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
+                auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
+                PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
+                auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+                if (status == 1)
+                {
+                    PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
+                    return;
+                }
+            }
+            catch (SNMPClientException &ex)
             {
-                PLOG(logERROR) << "Invalid latitude and longitude. Cannot register RSU location." << endl;
+                PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
                 return;
             }
-            auto uuid = boost::uuids::random_generator()();
-            string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
-            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
-            PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
-            auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
-            if (status == 1)
+            PLOG(logINFO) << "Successfully registered RSU location!" << endl;
+            if (IsPluginState(IvpPluginState_registered))
             {
-                PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
-                return;
+                this_thread::sleep_for(chrono::milliseconds(_rsuInterval * SECTOMILLISEC));
             }
         }
-        catch (SNMPClientException &ex)
-        {
-            PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
-            return;
-        }
-        PLOG(logINFO) << "Successfully registered RSU location!" << endl;
     }
 
     void ERVCloudForwardingPlugin::UpdateConfigSettings()
@@ -81,6 +88,7 @@ namespace ERVCloudForwardingPlugin
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
+        GetConfigValue<uint32_t>("RSUUpdateInterval", _rsuInterval);
         GetConfigValue<string>("SecurityUser", _securityUser);
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("GPSOID", _GPSOID);
