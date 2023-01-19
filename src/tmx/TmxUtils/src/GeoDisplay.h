@@ -26,8 +26,6 @@ private:
 	static bool _enabled;
 	static void SendDisplayMessage(const char *destinationAddress, uint16_t destinationPort,
 		uint16_t msgType, uint16_t msgVersion, uint16_t msgId, uint16_t msgDataLength, char* dataBuffer);
-	static void SendDatagram(const void *buffer, int bufferLen, const char *destinationAddress,
-		uint16_t destinationPort);
 
 public:
 	static void Enable();

@@ -52,33 +52,8 @@ void GeoDisplay::SendDisplayMessage(const char *destinationAddress, uint16_t des
 	{
 		memcpy(&(buffer[8]), dataBuffer, msgDataLength);
 	}
-	//SendDatagram(buffer, bufferLength, destinationAddress, destinationPort);
 	client.Send(buffer, bufferLength);
 	free(buffer);
-
-}
-
-/*
- * Send Datagram *** USE UdpClient class instead ***
- */
-void GeoDisplay::SendDatagram(const void *buffer, int bufferLen, const char *destinationAddress,
-		uint16_t destinationPort)
-{
-	int sock;
-    sockaddr_in destAddr;
-    hostent *host;  // Resolve name
-
-    sock = socket(AF_INET, SOCK_DGRAM, 0);
-    if (sock < 0)
-    	return;
-    memset(&destAddr, 0, sizeof(destAddr));  // Zero out address structure
-    destAddr.sin_family = AF_INET;       // Internet address
-    host = gethostbyname(destinationAddress);
-    destAddr.sin_addr.s_addr = *((unsigned long *) host->h_addr_list[0]);
-    //destAddr.sin_addr.s_addr = *((unsigned long *) destinationAddress.c_str());
-    //memcpy(&destAddr.sin_addr, destinationAddress, strlen(destinationAddress));
-    destAddr.sin_port = htons(destinationPort);     // Assign port in network byte order
-    sendto(sock, (void *) buffer, bufferLen, 0,(sockaddr *) &destAddr, sizeof(destAddr));
 }
 
 /*

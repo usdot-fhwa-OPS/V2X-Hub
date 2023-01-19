@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <deque>
 #include <vector>
+#include <random>
+#include <algorithm>
 
 namespace tmx {
 namespace utils {
@@ -41,7 +43,7 @@ public:
 	static constexpr size_t max_groups = ::pow(2, 8 * sizeof(group_type));
 	static constexpr size_t max_ids = ::pow(2, 8 * sizeof(id_type));
 
-	ThreadGroup(): _strategy((ThreadGroupAssignmentStrategy)0) {
+	ThreadGroup(): gen(std::random_device()()), _strategy((ThreadGroupAssignmentStrategy)0) {
 		srand(time (NULL));
 
 		// Initialize the queue assignments
@@ -106,7 +108,10 @@ public:
 					next = 0;
 				break;
 			case strategy_Random:
-				tId = rand() % _threads.size();
+				{
+					uniform_int_distribution<> dis(0, _threads.size() -1);
+					tId = dis(gen);
+				}
 				break;
 			case strategy_ShortestQueue:
 				tId = 0;
@@ -184,6 +189,7 @@ public:
 		return -1;
 	}
 private:
+	mt19937 gen; // Standard mersenne_twister_engine seeded with rd()
 	std::deque<ThreadClass> _threads;
 
 	struct source_info {
