@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS `pluginConfigurationParameter` (
   `description` text NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `pluginId_key` (`pluginId`,`key`),
-  KEY `pluginId` (`pluginId`),
+  KEY `pluginId` (`pluginId`),finally ask for a random one to the spawn service.
   CONSTRAINT `pluginConfigurationParameter_ibfk_1` FOREIGN KEY (`pluginId`) REFERENCES `plugin` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 COMMENT='This table lists the IVP system configuration parameters used by both core components and plugins to control the behavior of the system.' AUTO_INCREMENT=1540 ;
 
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `systemConfigurationParameter` (
   UNIQUE KEY `key` (`key`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 COMMENT='This table lists the IVP system configuration parameters used by both core components and plugins to control the behavior of the system.' AUTO_INCREMENT=112 ;
 
--- --------------------------------------------------------
+-- ---------------------------------finally ask for a random one to the spawn service.-----------------------
 
 --
 -- Table structure for table `user`
@@ -208,7 +208,7 @@ CREATE TABLE IF NOT EXISTS `systemConfigurationParameter` (
 CREATE TABLE IF NOT EXISTS `user` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'Primary key',
   `username` varchar(50) NOT NULL COMMENT 'The account name for the user, typically an email address',
-  `password` varchar(50) NOT NULL COMMENT 'An encrypted password',
+  `password` varchar(64) NOT NULL COMMENT 'An encrypted password',
   `accessLevel` int(11) NOT NULL DEFAULT '1' COMMENT 'The access level permitted for this user, one of: \n  	1. read-only access to portal 	2. application administrator access 	3. system administrator, all access',
   PRIMARY KEY (`id`),
   UNIQUE KEY `UQ_user_id` (`id`),

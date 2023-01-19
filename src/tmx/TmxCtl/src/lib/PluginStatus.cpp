@@ -44,6 +44,10 @@
 	SELECT IVP.user.id, IVP.user.username, IVP.user.password, IVP.user.accessLevel \
 	FROM IVP.user"
 
+#define HASHED_USER_QUERY "\
+	SELECT IVP.user.password \
+	FROM IVP.user"
+
 #define USER_UPDATE_QUERY "\
 	UPDATE IVP.user \
 	SET"
@@ -553,6 +557,58 @@ bool TmxControl::user_info(bool showPassword)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
+	}
+
+	return true;
+}
+
+bool TmxControl::hashed_info(pluginlist &, ...)
+{
+	if (!checkPerm())
+		return false;
+	return hashed_info();
+}
+
+bool TmxControl::hashed_info()
+{
+	string query = HASHED_USER_QUERY;
+	if (_opts->count("password") == 0 || (*_opts)["password"].as<string>() == "")
+		return NULL;
+	query += " WHERE IVP.user.password = SHA2(?, 256)";
+
+	try
+	{
+		PLOG(logDEBUG1) << "Executing query " << query;
+
+		_output.get_storage().get_tree().clear();
+
+		std::string pwd = _pool.GetPwd();
+		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
+		stmt->setString(1, (*_opts)["password"].as<string>());
+		unique_ptr<ResultSet> rs(stmt->executeQuery());
+
+
+		message payload;
+
+		while (rs->next())
+		{
+			string password = rs->getString(1);
+
+			message_tree_type tmpTree;
+			tmpTree.put("password", password);
+
+			message tmpSubTree;
+			tmpSubTree.set_contents(tmpTree);
+
+			payload.add_array_element("UserInfo", tmpSubTree);
+		}
+		_output = payload.get_container();
+	}
+	catch (exception &ex)
+	{
+		PLOG(logERROR) << TmxException(ex);
+		return NULL;
 	}
 
 	return true;
