@@ -10,7 +10,7 @@ namespace ERVCloudForwardingPlugin
         // Subscribe to all messages specified by the filters above.
         SubscribeToMessages();
 
-        std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);        
+        std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);
         webBSM_t.detach();
         // Send RSU location to cloud
         std::thread webRegisterRSU_t(&ERVCloudForwardingPlugin::RegisterRSULocation, this);
@@ -37,7 +37,8 @@ namespace ERVCloudForwardingPlugin
     void ERVCloudForwardingPlugin::RegisterRSULocation()
     {
         while (true)
-        {        
+        {      
+            this_thread::sleep_for(chrono::seconds(_rsuInterval));  
             try
             {
                 PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
@@ -55,7 +56,7 @@ namespace ERVCloudForwardingPlugin
                 if (latitude == 0 || longitude == 0)
                 {
                     PLOG(logERROR) << "Invalid latitude and longitude. Cannot register RSU location." << endl;
-                    return;
+                    continue;
                 }
                 auto uuid = boost::uuids::random_generator()();
                 string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
@@ -65,16 +66,15 @@ namespace ERVCloudForwardingPlugin
                 if (status == 1)
                 {
                     PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
-                    return;
+                    continue;
                 }
             }
             catch (SNMPClientException &ex)
             {
                 PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
-                return;
+                continue;
             }
             PLOG(logINFO) << "Successfully registered RSU location!" << endl;
-            this_thread::sleep_for(chrono::milliseconds(_rsuInterval * SECTOMILLISEC));
         }
     }
 
