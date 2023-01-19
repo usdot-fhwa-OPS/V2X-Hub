@@ -85,7 +85,6 @@ namespace ERVCloudForwardingPlugin
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
-        GetConfigValue<uint32_t>("RSUUpdateInterval", _rsuInterval);
         GetConfigValue<string>("SecurityUser", _securityUser);
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("GPSOID", _GPSOID);
