@@ -99,6 +99,10 @@ namespace ERVCloudForwardingPlugin
          * @brief Send SNMP request to RSU to get RSU GPS location, then send the RSU GPS location to the carma-cloud
          */
         void RegisterRSULocation();
+        /**
+         * @brief Periodiclly send SNMP request to RSU to get RSU GPS location, then send the RSU GPS location to the carma-cloud every one hour
+         */
+        void PeriodicRSURegisterReq();
     };
 } // namespace ERVCloudForwardingPlugin
 std::mutex _cfgLock;
