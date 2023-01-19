@@ -38,12 +38,12 @@ namespace utils {
 template <class ThreadClass, typename GroupT = uint8_t, typename IdentifierT = uint8_t>
 class ThreadGroup {
 public:
-	typedef GroupT group_type;
-	typedef IdentifierT id_type;
+	using group_type = GroupT;
+	using id_type = IdentifierT;
 	static constexpr size_t max_groups = ::pow(2, 8 * sizeof(group_type));
 	static constexpr size_t max_ids = ::pow(2, 8 * sizeof(id_type));
 
-	ThreadGroup(): gen(std::random_device()()), _strategy((ThreadGroupAssignmentStrategy)0) {
+	ThreadGroup(): gen(std::random_device()()) {
 		srand(time (NULL));
 
 		// Initialize the queue assignments
@@ -83,7 +83,7 @@ public:
 	 *
 	 * @param group The group identifier, or 0 for no group
 	 * @param id The unique identifier in the group, or 0 for no identifier
-	 * @see set_strategy(std::string)
+	 * @see set_strategy(const std::string &)
 	 */
 	void assign(group_type group, id_type id, const typename ThreadClass::incoming_item &item) {
 		static std::atomic<uint32_t> next {0};
@@ -175,7 +175,7 @@ public:
 	 * The string compare is case-insensitive.
 	 * @param strategy The new strategy
 	 */
-	void set_strategy(std::string strategy) {
+	void set_strategy(const std::string & strategy) {
 		_strategy = get_strategy(strategy);
 	}
 
@@ -206,9 +206,9 @@ private:
 		strategy_END
 	};
 
-	ThreadGroupAssignmentStrategy _strategy;
+	ThreadGroupAssignmentStrategy _strategy = strategy_RoundRobin;
 
-	ThreadGroupAssignmentStrategy get_strategy(std::string &str) {
+	ThreadGroupAssignmentStrategy get_strategy(const std::string &str) {
 		static std::vector<std::string> allStrategies(strategy_END);
 		if (allStrategies.empty()) {
 			// Initialize all the strategies
