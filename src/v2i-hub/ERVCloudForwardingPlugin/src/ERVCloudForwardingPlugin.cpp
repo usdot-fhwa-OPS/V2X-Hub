@@ -12,9 +12,9 @@ namespace ERVCloudForwardingPlugin
 
         std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);
         webBSM_t.detach();
-
-        // Send RSU location to cloud
-        RegisterRSULocation();
+        // Send RSU location to cloud at one hour interval 
+        std::thread webRegisterRSU_t(&ERVCloudForwardingPlugin::PeriodicRSURegisterReq, this);
+        webRegisterRSU_t.detach();
     }
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
@@ -35,7 +35,7 @@ namespace ERVCloudForwardingPlugin
     }
 
     void ERVCloudForwardingPlugin::RegisterRSULocation()
-    {
+    {        
         try
         {
             PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
@@ -72,6 +72,15 @@ namespace ERVCloudForwardingPlugin
             return;
         }
         PLOG(logINFO) << "Successfully registered RSU location!" << endl;
+    }
+
+    void ERVCloudForwardingPlugin::PeriodicRSURegisterReq()
+    {
+        while (true)
+        {   
+            RegisterRSULocation();
+            this_thread::sleep_for(chrono::seconds(_rsuInterval));  
+        }
     }
 
     void ERVCloudForwardingPlugin::UpdateConfigSettings()
@@ -180,8 +189,6 @@ namespace ERVCloudForwardingPlugin
     {
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
-        // Send RSU location to cloud on configuration change
-        RegisterRSULocation();
     }
 
     void ERVCloudForwardingPlugin::OnStateChange(IvpPluginState state)

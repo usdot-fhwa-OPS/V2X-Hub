@@ -49,6 +49,8 @@ namespace ERVCloudForwardingPlugin
         string _rsuIp;
         string _rsuName;
         uint16_t _snmpPort;
+        // V2X Hub sends RSU register request to carma-cloud at specified interval. Default 3600 seconds
+        uint32_t _rsuInterval=3600;
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
@@ -97,6 +99,10 @@ namespace ERVCloudForwardingPlugin
          * @brief Send SNMP request to RSU to get RSU GPS location, then send the RSU GPS location to the carma-cloud
          */
         void RegisterRSULocation();
+        /**
+         * @brief Periodiclly send SNMP request to RSU to get RSU GPS location, then send the RSU GPS location to the carma-cloud every one hour
+         */
+        void PeriodicRSURegisterReq();
     };
 } // namespace ERVCloudForwardingPlugin
 std::mutex _cfgLock;
