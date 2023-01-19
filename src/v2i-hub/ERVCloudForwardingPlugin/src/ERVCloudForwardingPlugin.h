@@ -50,7 +50,7 @@ namespace ERVCloudForwardingPlugin
         string _rsuName;
         uint16_t _snmpPort;
         // V2X Hub sends RSU register request to carma-cloud at specified interval. Default 3600 seconds
-        uint32_t _rsuInterval=3;
+        uint32_t _rsuInterval=3600;
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
