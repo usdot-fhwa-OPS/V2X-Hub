@@ -11,10 +11,10 @@ namespace ERVCloudForwardingPlugin
         SubscribeToMessages();
 
         std::thread webBSM_t(&ERVCloudForwardingPlugin::StartBSMWebService, this);        
-
-        // Send RSU location to cloud
-        std::thread web_RegisterRSU(&ERVCloudForwardingPlugin::RegisterRSULocation, this);
         webBSM_t.detach();
+        // Send RSU location to cloud
+        std::thread webRegisterRSU_t(&ERVCloudForwardingPlugin::RegisterRSULocation, this);
+        webRegisterRSU_t.detach();
     }
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
@@ -36,7 +36,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::RegisterRSULocation()
     {
-        while (_plugin->state != IvpPluginState_error)
+        while (true)
         {        
             try
             {
@@ -74,10 +74,7 @@ namespace ERVCloudForwardingPlugin
                 return;
             }
             PLOG(logINFO) << "Successfully registered RSU location!" << endl;
-            if (IsPluginState(IvpPluginState_registered))
-            {
-                this_thread::sleep_for(chrono::milliseconds(_rsuInterval * SECTOMILLISEC));
-            }
+            this_thread::sleep_for(chrono::milliseconds(_rsuInterval * SECTOMILLISEC));
         }
     }
 
@@ -188,8 +185,6 @@ namespace ERVCloudForwardingPlugin
     {
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
-        // Send RSU location to cloud on configuration change
-        RegisterRSULocation();
     }
 
     void ERVCloudForwardingPlugin::OnStateChange(IvpPluginState state)

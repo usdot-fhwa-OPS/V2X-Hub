@@ -49,7 +49,7 @@ namespace ERVCloudForwardingPlugin
         string _rsuIp;
         string _rsuName;
         uint16_t _snmpPort;
-        uint32_t _rsuInterval;
+        uint32_t _rsuInterval=3600; //Default 3600 seconds
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
