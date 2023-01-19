@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS `pluginConfigurationParameter` (
   `description` text NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `pluginId_key` (`pluginId`,`key`),
-  KEY `pluginId` (`pluginId`),finally ask for a random one to the spawn service.
+  KEY `pluginId` (`pluginId`),
   CONSTRAINT `pluginConfigurationParameter_ibfk_1` FOREIGN KEY (`pluginId`) REFERENCES `plugin` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 COMMENT='This table lists the IVP system configuration parameters used by both core components and plugins to control the behavior of the system.' AUTO_INCREMENT=1540 ;
 
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS `systemConfigurationParameter` (
   UNIQUE KEY `key` (`key`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 COMMENT='This table lists the IVP system configuration parameters used by both core components and plugins to control the behavior of the system.' AUTO_INCREMENT=112 ;
 
--- ---------------------------------finally ask for a random one to the spawn service.-----------------------
+-- --------------------------------------------------------
 
 --
 -- Table structure for table `user`
