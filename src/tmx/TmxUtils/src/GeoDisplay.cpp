@@ -22,6 +22,10 @@ using namespace std;
 namespace tmx {
 namespace utils {
 
+static uint32_t coordPointToUint(double pointValue) {
+	return (uint32_t)(pointValue * 10000000.0);
+}
+
 /*
  * initialization of statics
  */
@@ -79,7 +83,7 @@ void GeoDisplay::SendDisplayClearScreen(const char *destinationAddress, uint16_t
 {
 	if (!_enabled)
 		return;
-	SendDisplayMessage(destinationAddress, destinationPort, 1, 1, 1, 0, 0);
+	SendDisplayMessage(destinationAddress, destinationPort, 1, 1, 1, 0, nullptr);
 }
 
 /*
@@ -88,22 +92,20 @@ void GeoDisplay::SendDisplayClearScreen(const char *destinationAddress, uint16_t
 void GeoDisplay::SendDisplayPoint(const char *destinationAddress, uint16_t destinationPort,
 		WGS84Point point, char pixelRadius, char color)
 {
-	char* buffer;
 	uint32_t networkLong;
 	int32_t coord;
 	if (!_enabled)
 		return;
-	buffer = (char*)malloc(10);
-	coord = point.Longitude * 10000000;
+	std::array<char, 10> buffer;
+	coord = coordPointToUint(point.Longitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[0]), &networkLong, 4);
-	coord = point.Latitude * 10000000;
+	coord = coordPointToUint(point.Latitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[4]), &networkLong, 4);
 	memcpy(&(buffer[8]), &pixelRadius, 1);
 	memcpy(&(buffer[9]), &color, 1);
-	SendDisplayMessage(destinationAddress, destinationPort, 2, 1, 1, 10, buffer);
-	free(buffer);
+	SendDisplayMessage(destinationAddress, destinationPort, 2, 1, 1, 10, buffer.data());
 }
 
 /*
@@ -112,27 +114,25 @@ void GeoDisplay::SendDisplayPoint(const char *destinationAddress, uint16_t desti
 void GeoDisplay::SendDisplayLine(const char *destinationAddress, uint16_t destinationPort,
 		WGS84Point point1, WGS84Point point2, char color)
 {
-	char* buffer;
 	uint32_t networkLong;
 	int32_t coord;
 	if (!_enabled)
 		return;
-	buffer = (char*)malloc(17);
-	coord = point1.Longitude * 10000000;
+	std::array<char, 17> buffer;
+	coord = coordPointToUint(point1.Longitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[0]), &networkLong, 4);
-	coord = point1.Latitude * 10000000;
+	coord = coordPointToUint(point1.Latitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[4]), &networkLong, 4);
-	coord = point2.Longitude * 10000000;
+	coord = coordPointToUint(point2.Longitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[8]), &networkLong, 4);
-	coord = point2.Latitude * 10000000;
+	coord = coordPointToUint(point2.Latitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[12]), &networkLong, 4);
 	memcpy(&(buffer[16]), &color, 1);
-	SendDisplayMessage(destinationAddress, destinationPort, 3, 1, 1, 17, buffer);
-	free(buffer);
+	SendDisplayMessage(destinationAddress, destinationPort, 3, 1, 1, 17, buffer.data());
 }
 
 /*
@@ -141,23 +141,21 @@ void GeoDisplay::SendDisplayLine(const char *destinationAddress, uint16_t destin
 void GeoDisplay::SendDisplayCircle(const char *destinationAddress, uint16_t destinationPort,
 		WGS84Point point, uint32_t radiusInCentimeters, char color)
 {
-	char* buffer;
 	uint32_t networkLong;
 	int32_t coord;
 	if (!_enabled)
 		return;
-	buffer = (char*)malloc(13);
-	coord = point.Longitude * 10000000;
+	std::array<char, 13> buffer;
+	coord = coordPointToUint(point.Longitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[0]), &networkLong, 4);
-	coord = point.Latitude * 10000000;
+	coord = coordPointToUint(point.Latitude);
 	networkLong = htonl(coord);
 	memcpy(&(buffer[4]), &networkLong, 4);
 	networkLong = htonl(radiusInCentimeters);
 	memcpy(&(buffer[8]), &networkLong, 4);
 	memcpy(&(buffer[12]), &color, 1);
-	SendDisplayMessage(destinationAddress, destinationPort, 4, 1, 1, 13, buffer);
-	free(buffer);
+	SendDisplayMessage(destinationAddress, destinationPort, 4, 1, 1, 13, buffer.data());
 }
 
 /*
@@ -166,11 +164,10 @@ void GeoDisplay::SendDisplayCircle(const char *destinationAddress, uint16_t dest
 void GeoDisplay::SendDisplayString(const char *destinationAddress, uint16_t destinationPort,
 		uint32_t screenX, uint32_t screenY, char color, char fontType, char fontSize, const char *displayString)
 {
-	char* buffer;
 	uint32_t networkLong;
 	if (!_enabled)
 		return;
-	buffer = (char*)malloc(11 + strlen(displayString));
+	std::vector<char> buffer(11 + strlen(displayString));
 	networkLong = htonl(screenX);
 	memcpy(&(buffer[0]), &networkLong, 4);
 	networkLong = htonl(screenY);
@@ -179,8 +176,7 @@ void GeoDisplay::SendDisplayString(const char *destinationAddress, uint16_t dest
 	memcpy(&(buffer[9]), &fontType, 1);
 	memcpy(&(buffer[10]), &fontSize, 1);
 	memcpy(&(buffer[11]), displayString, strlen(displayString));
-	SendDisplayMessage(destinationAddress, destinationPort, 5, 1, 1, 11 + strlen(displayString), buffer);
-	free(buffer);
+	SendDisplayMessage(destinationAddress, destinationPort, 5, 1, 1, 11 + strlen(displayString), buffer.data());
 }
 
 /*
@@ -190,7 +186,7 @@ void GeoDisplay::SendRender(const char *destinationAddress, uint16_t destination
 {
 	if (!_enabled)
 		return;
-	SendDisplayMessage(destinationAddress, destinationPort, 6, 1, 1, 0, 0);
+	SendDisplayMessage(destinationAddress, destinationPort, 6, 1, 1, 0, nullptr);
 }
 
 
