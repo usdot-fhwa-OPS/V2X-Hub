@@ -26,6 +26,7 @@
 #include "signalController.h"
 
 #include "NTCIP1202.h"
+#include "PedestrianDetectionForSPAT.h"
 
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -40,7 +41,7 @@ void SignalController::Start(std::string signalGroupMappingJson)
 	_signalGroupMappingJson = signalGroupMappingJson;
 
 	// Create mutex for the Spat message
-	pthread_mutex_init(&spat_message_mutex, NULL);
+	pthread_mutex_init(&spat_message_mutex, nullptr);
     // launch update thread
     sigcon_thread_id = boost::thread(&SignalController::start_signalController, this);
     // test code
@@ -74,8 +75,8 @@ void SignalController::start_signalController()
 	prctl(PR_SET_NAME, "SpatGenSC", 0, 0, 0);
 #endif
 
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,NULL);
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,nullptr);
+	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
 	int maxDataSize = 1000;
 
@@ -131,7 +132,7 @@ void SignalController::start_signalController()
 				return;
 			}
 
-			if (servinfo == NULL) {
+			if (servinfo == nullptr) {
 				PLOG(logERROR) << "Could not connect";
 				EthernetIsConnected = 0;
 			}
@@ -177,9 +178,9 @@ void SignalController::start_signalController()
 						
 						//printf("Signal Controller calling _spatMessage set_j2735_data\n");
 						//_spatMessage.set_j2735_data(_spat);
-						if (_spatMessage != NULL)
+						if (_spatMessage != nullptr)
 						{
-							_spatMessage = NULL;
+							_spatMessage = nullptr;
 						}
 						_spatMessage = std::make_shared<tmx::messages::SpatMessage>(_spat);
 
@@ -196,46 +197,9 @@ void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::s
 {
 	pthread_mutex_lock(&spat_message_mutex);
 
-	//printf("Signal Controller getEncodedSpat\n");
-	if (_spatMessage != NULL) {
-		// Add pedestrian lanes with active detections and clear the rest
-		auto spat = _spatMessage->get_j2735_data();
-		if (spat && spat->intersections.list.array && spat->intersections.list.count > 0) {
-			char *zoneList = strdup(currentPedLanes.c_str());
-			vector<LaneConnectionID_t> zones;
-			char *c = strtok(zoneList, ",");
-
-			while (c != NULL) {
-				zones.push_back(strtol(c, NULL, 0));
-
-				c = strtok(NULL, ",");
-			};
-
-			free(zoneList);
-			zoneList = NULL;
-			c = NULL;
-
-			if (!zones.empty()) {
-				ManeuverAssistList *&mas = spat->intersections.list.array[0]->maneuverAssistList;
-				mas = (ManeuverAssistList *) calloc(1, sizeof(ManeuverAssistList));
-
-				mas->list.count = zones.size();
-				mas->list.array = (ConnectionManeuverAssist **) calloc(1, sizeof(ConnectionManeuverAssist *));
-
-				std::sort(zones.begin(), zones.end());
-				for (size_t i = 0; i < zones.size(); i++) {
-					mas->list.array[i] = (ConnectionManeuverAssist *) calloc(1, sizeof(ConnectionManeuverAssist));
-					mas->list.array[i]->connectionID = zones[i];
-					mas->list.array[i]->pedBicycleDetect = (PedestrianBicycleDetect_t *) calloc(1, sizeof(PedestrianBicycleDetect_t));
-					*(mas->list.array[i]->pedBicycleDetect) = 1;
-				}
-			}
-		}
-
-		MessageFrameMessage frame(_spatMessage->get_j2735_data());
-		spatEncodedMsg->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-		//Free the memory allocated for MessageFrame
-		free(frame.get_j2735_data().get());
+	if (_spatMessage != nullptr) {
+		PedestrianDetectionForSPAT pedDetect;
+		pedDetect.updateEncodedSpat(*spatEncodedMsg, _spatMessage, currentPedLanes);
 	}
 
 	pthread_mutex_unlock(&spat_message_mutex);
