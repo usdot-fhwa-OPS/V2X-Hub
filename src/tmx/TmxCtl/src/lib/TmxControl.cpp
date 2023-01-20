@@ -86,6 +86,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN(set_system, NULL, "Set a system configuration value.  Must also set --key and --value.");
 	REG_FN(user_info, NULL, "Display user information for a user. Must set --username.");
 	REG_FN(all_users_info, NULL, "Display user information for all users.");
+	REG_FN(hashed_info, NULL, "Verify login information against hashed information for a user. Must set --username.");
 	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
 	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
 	REG_FN(user_delete, NULL, "Delete a TMX user.");
