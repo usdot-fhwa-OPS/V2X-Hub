@@ -573,7 +573,7 @@ bool TmxControl::hashed_info()
 {
 	string query = HASHED_USER_QUERY;
 	if (_opts->count("password") == 0 || (*_opts)["password"].as<string>() == "")
-		return NULL;
+		return false;
 	query += " WHERE IVP.user.password = SHA2(?, 256)";
 
 	try
@@ -608,7 +608,7 @@ bool TmxControl::hashed_info()
 	catch (exception &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
-		return NULL;
+		return false;
 	}
 
 	return true;
