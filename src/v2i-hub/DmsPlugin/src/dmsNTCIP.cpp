@@ -10,25 +10,9 @@ const char* DMS_MSG_CRC_CURR =				"1.3.6.1.4.1.1206.4.2.3.5.8.1.5";
 const char* DMS_MSG_RUNTIMEPRIORITY_CURR =	"1.3.6.1.4.1.1206.4.2.3.5.8.1.8";
 const char* DMS_MSG_STATUS_CURR =			"1.3.6.1.4.1.1206.4.2.3.5.8.1.9";
 
-char* concat(char *s1, char *s2)
+std::string concat(const char *s1, const char *s2)
 {
-    size_t len1 = strlen(s1);
-    size_t len2 = strlen(s2);
-    char *result = (char *) malloc(len1+len2+1);
-
-    strcpy(result, s1);
-    strcat(result, s2);
-    //memcpy(result, s1, len1);
-    //memcpy(result+len1, s2, len2+1);//+1 to copy the null-terminator
-    return result;
-}
-char* concat(const char *s1, const char *s2)
-{
-	return concat((char*)s1, (char*)s2);
-}
-char* concat(const char *s1, char *s2)
-{
-	return concat((char*)s1, s2);
+	return std::string(s1) + std::string(s2);
 }
 
 void SignalControllerNTCIP::setConfigs(std::string snmpIP, char* snmpPort)
@@ -1017,43 +1001,43 @@ int  SignalControllerNTCIP::getDMSMsgRunTimePriority()
 int  SignalControllerNTCIP::getDMSMsgStatus(const char *MsgID)
 {
 	//printf("\ngetDMSMsgStatus Function\n");
-	return getSingleINT(concat(DMS_MSG_STATUS, MsgID), "public");
+	return getSingleINT(concat(DMS_MSG_STATUS, MsgID).c_str(), "public");
 }
 
 int  SignalControllerNTCIP::getDMSMsgMemoryTypeCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgMemoryType_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_MEMORYTYPE_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_MEMORYTYPE_CURR, msgID).c_str(), "public");
 }
 int  SignalControllerNTCIP::getDMSMsgNumberCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgNumber_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_NUMBER_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_NUMBER_CURR, msgID).c_str(), "public");
 }
 char *  SignalControllerNTCIP::getDMSMsgMultiStringCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgMultiString_Curr Function\n");
-	return getSingleString(concat(DMS_MSG_MULTISTRING_CURR, msgID), "public");
+	return getSingleString(concat(DMS_MSG_MULTISTRING_CURR, msgID).c_str(), "public");
 }
 int  SignalControllerNTCIP::getDMSMsgOwnerCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgOwner_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_OWNER_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_OWNER_CURR, msgID).c_str(), "public");
 }
 int  SignalControllerNTCIP::getDMSMsgCRCCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgCRC_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_CRC_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_CRC_CURR, msgID).c_str(), "public");
 }
 int  SignalControllerNTCIP::getDMSMsgRunTimePriorityCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgRunTimePriority_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_RUNTIMEPRIORITY_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_RUNTIMEPRIORITY_CURR, msgID).c_str(), "public");
 }
 int  SignalControllerNTCIP::getDMSMsgStatusCurr(const char *msgID)
 {
 	//printf("\ngetDMSMsgStatus_Curr Function\n");
-	return getSingleINT(concat(DMS_MSG_STATUS_CURR, msgID), "public");
+	return getSingleINT(concat(DMS_MSG_STATUS_CURR, msgID).c_str(), "public");
 }
 
 
@@ -1111,22 +1095,22 @@ void  SignalControllerNTCIP::setDMSControlMode(const char *Value)
 void SignalControllerNTCIP::setDMSMsgStatus(const char *Value, const char * MsgID)
 {
 	//printf("\n setDMSMsgStatus Function\n");
-	setSNMP(concat(DMS_MSG_STATUS, MsgID), "public", Value);
+	setSNMP(concat(DMS_MSG_STATUS, MsgID).c_str(), "public", Value);
 }
 void SignalControllerNTCIP::setDMSMsgMultiString(const char *Msg, const char *MsgID)
 {
 	//printf("\n setDMSMsgMultiString Function\n");
-	setSNMPText(concat(DMS_MSG_MULTISTRING, MsgID), "public", Msg);
+	setSNMPText(concat(DMS_MSG_MULTISTRING, MsgID).c_str(), "public", Msg);
 }
 void SignalControllerNTCIP::setDMSMsgOwner(const char *Owner, const char *MsgID)
 {
 	//printf("\n setDMSMsgOwner Function\n");
-	setSNMPText(concat(DMS_MSG_OWNER, MsgID), "public", Owner);
+	setSNMPText(concat(DMS_MSG_OWNER, MsgID).c_str(), "public", Owner);
 }
 
 void SignalControllerNTCIP::setDMSMsgRunTimePriority(const char *Priority, const char *MsgID)
 {
-	setSNMP(concat(DMS_MSG_RUNTIMEPRIORITY, MsgID), "public", Priority);
+	setSNMP(concat(DMS_MSG_RUNTIMEPRIORITY, MsgID).c_str(), "public", Priority);
 	//printf("\n setDMSMsgRunTimePriority Function\n");
 }
 
