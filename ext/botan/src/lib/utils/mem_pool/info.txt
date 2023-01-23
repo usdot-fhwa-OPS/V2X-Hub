@@ -1,7 +1,0 @@
-<defines>
-MEM_POOL -> 20180309
-</defines>
-
-<header:internal>
-mem_pool.h
-</header:internal>

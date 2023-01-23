@@ -1,8 +1,0 @@
-<defines>
-UUID -> 20180930
-</defines>
-
-<requires>
-rng
-hex
-</requires>

@@ -1,3 +1,0 @@
-<defines>
-SM4 -> 20170716
-</defines>

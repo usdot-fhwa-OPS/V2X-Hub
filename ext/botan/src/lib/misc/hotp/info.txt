@@ -1,9 +1,0 @@
-<defines>
-HOTP -> 20180816
-TOTP -> 20180816
-</defines>
-
-<requires>
-hmac
-utils
-</requires>
