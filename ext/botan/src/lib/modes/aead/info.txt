@@ -1,3 +1,0 @@
-<defines>
-AEAD_MODES -> 20131128
-</defines>

@@ -1,3 +1,0 @@
-<defines>
-CRC24 -> 20131128
-</defines>
