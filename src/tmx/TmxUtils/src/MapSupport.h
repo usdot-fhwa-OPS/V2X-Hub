@@ -25,7 +25,7 @@ namespace utils {
 class MapMatchResult
 {
 public:
-	MapMatchResult() {};
+	MapMatchResult() = default;
 	virtual ~MapMatchResult() {};
 
 	///The lane number that had the match.
