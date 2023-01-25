@@ -25,22 +25,22 @@ namespace utils {
 class MapMatchResult
 {
 public:
-	MapMatchResult() : LaneNumber (0), IsEgress(false), IsInLane(false), PerpDistanceMeters (-1), StopDistanceMeters (-1), LaneSegment(0) {};
+	MapMatchResult() {};
 	virtual ~MapMatchResult() {};
 
 	///The lane number that had the match.
-	int LaneNumber;
+	int LaneNumber = 0;
 	///If the lane that was matched is an egress lane.
-	bool IsEgress;
+	bool IsEgress = false;
 	///If the point was found to be in the lane, based on location and lane width.
-	bool IsInLane;
+	bool IsInLane = false;
 	///Perpendicular distance of the point to the segment line.
-	double PerpDistanceMeters;
+	double PerpDistanceMeters = -1;
 	///Distance of the point to the stop line (e.g. first point) of the lane.
-	double StopDistanceMeters;
+	double StopDistanceMeters = -1;
 	///One-Based segment number of the nodes that make up the lane that the point matched to.
 	///E.g. if the point matched betwen the first and second nodes of the lane, it would return 1.
-	int LaneSegment;
+	int LaneSegment = 0;
 };
 
 class MapSupport {

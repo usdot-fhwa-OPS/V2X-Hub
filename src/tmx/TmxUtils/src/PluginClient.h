@@ -368,7 +368,7 @@ protected:
 	// Static system context - to log msg latency and system load
 	static tmx::utils::SystemContext _sysContext;
 
-	inline const std::chrono::system_clock::time_point & getStartTime() {
+	inline const std::chrono::system_clock::time_point & getStartTime() const {
 		return _startTime;
 	}
 
