@@ -594,7 +594,7 @@ int MessageReceiverPlugin::Main()
 		if (statThrottle.Monitor(1))
 		{
 			uint64_t b = totalBytes;
-			auto msCount = Clock::GetMillisecondsSinceEpoch() - Clock::GetMillisecondsSinceEpoch(this->_startTime);
+			auto msCount = Clock::GetMillisecondsSinceEpoch() - Clock::GetMillisecondsSinceEpoch(this->getStartTime());
 
 			SetStatus("Total KBytes Received", b / 1024.0);
 
