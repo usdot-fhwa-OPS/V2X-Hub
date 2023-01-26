@@ -20,7 +20,7 @@ You will need to have the following installed on your host or VM.
     * Create a secrets folder in your project root.
     * Inside the secrets folder create files mysql_password.txt and mysql_root_password.txt with any arbitrary line of  text inside them.
 * Install (if not already present) the **Dev Containers** extension.
-* Use ctrl-shift-P (Command Pallette) and select *Dev Containers: Open Workspace in Container*
+* Use ctrl-shift-P (Command Pallette) and select *Dev Containers: Open Folder in Container* and select the current project folder.
 * At this point VS Code should start building a container for your V2XHUB development as well as MySQL and PHP containers that are necessary for running the system.
 
 Once a container has been built you should not need to rebuild it again unless something changes in the dependencies or Docker setup.  If you do need to rebuild then use the *Dev Containers: Rebuild Container* command from the pallette.
