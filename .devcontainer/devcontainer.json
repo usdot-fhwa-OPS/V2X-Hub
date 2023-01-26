@@ -16,24 +16,12 @@
 	// connected. Corresponds to a volume mount in .devcontainer/docker-compose.yml
 	"workspaceFolder": "/workspace",
 
-	// use command like this to build the image if desired: docker build -f Dockerfile.builder -t v2xhub_builder ..
-	//"image": "v2xhub_builder",
-	//"build": {
-		// Sets the run context to one level up instead of the .devcontainer folder.
-	//	"context": "..",
-		// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
-	//	"dockerfile": "Dockerfile.builder"
-	//},
-	//"runArgs": [
-//		// run as host to be able to communicate with other services
-//		"--network=host"
-//	],
 	"extensions": [
 		"ms-vscode.cpptools",
 		"ms-vscode.cpptools-extension-pack",
 		"ms-vscode.cmake-tools",
 		"twxs.cmake"
-	]
+	],
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},

@@ -14,6 +14,22 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "cd src/tmx && rm -rf build && cd ../v2i-hub && rm -rf build",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "ldconfig && container/service.sh",
+            "group": {
+                "kind": "build"
+            }
         }
     ]
 }

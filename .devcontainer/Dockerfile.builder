@@ -10,5 +10,3 @@ RUN /usr/local/bin/install_dependencies.sh
 COPY ./ext /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN ./build.sh
-
-#ENTRYPOINT ["/bin/bash"]

@@ -2,6 +2,9 @@
 src/tmx/build
 src/v2i-hub/build
 
+# manually created directories
+secrets
+
 # Compiled source #
 ###################
 *.com

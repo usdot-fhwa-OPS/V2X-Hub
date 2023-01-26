@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   v2xhub:
-    # replace this with build later
-    image: v2xhub_builder
+    build: 
+      context: ..
+      dockerfile: .devcontainer/Dockerfile.builder
     container_name: v2xhub
     network_mode: host
     volumes:
@@ -31,6 +32,7 @@ services:
       - mysql_root_password
     volumes:
       - ../configuration/amd64/mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      # include creation of a user (user/user) to be able to log in
       - ./mysql_add_dev_user.sql:/docker-entrypoint-initdb.d/mysql_add_dev_user.sql
       - mysql-datavolume:/var/lib/mysql
 
@@ -38,6 +40,7 @@ services:
     image: usdotfhwaops/php:latest
     container_name: php
     network_mode: host
+    restart: always
 
 secrets:
     mysql_password:
