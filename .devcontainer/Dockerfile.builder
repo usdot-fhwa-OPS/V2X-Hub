@@ -11,4 +11,4 @@ COPY ./ext /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN ./build.sh
 
-ENTRYPOINT ["/bin/bash"]
+#ENTRYPOINT ["/bin/bash"]
