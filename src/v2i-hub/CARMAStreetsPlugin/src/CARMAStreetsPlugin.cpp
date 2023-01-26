@@ -461,7 +461,7 @@ void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& 
 																	RdKafka::Producer::RK_MSG_COPY, 
 																	const_cast<char *>(message.c_str()),
 																	message.size(), 
-																	NULL, NULL, 0, 0);
+																	nullptr, 0, 0, nullptr);
 
 		if (produce_error == RdKafka::ERR_NO_ERROR) {
 			PLOG(logDEBUG) <<"Queued message:" << message;

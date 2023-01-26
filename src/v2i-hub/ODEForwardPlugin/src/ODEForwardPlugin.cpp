@@ -183,7 +183,7 @@
  	while (retry) {
  		RdKafka::ErrorCode produce_error = producer->produce(topic, RdKafka::Topic::PARTITION_UA,
  			RdKafka::Producer::RK_MSG_COPY, const_cast<char *>(message.c_str()),
- 			message.size(), NULL, NULL, 0, 0);
+ 			message.size(), nullptr, 0, 0, nullptr);
 
      	if (produce_error == RdKafka::ERR_NO_ERROR) {
        		PLOG(logDEBUG) <<"ODEForwardPlugin: Queued message:" << message;

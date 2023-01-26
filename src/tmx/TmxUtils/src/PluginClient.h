@@ -359,7 +359,6 @@ protected:
 	void handleMessage(tmx::message &msg, tmx::routeable_message &src);
 
 	tmx::utils::DbConnectionPool _dbConnPool;
-	std::chrono::system_clock::time_point _startTime;
 	bool _isStartTimeStatusSet = false;
 
 	std::string _name;
@@ -369,12 +368,17 @@ protected:
 	// Static system context - to log msg latency and system load
 	static tmx::utils::SystemContext _sysContext;
 
+	inline const std::chrono::system_clock::time_point & getStartTime() const {
+		return _startTime;
+	}
+
 private:
 	void SetStartTimeStatus();
 
 	IvpMsgFilter* _msgFilter;
 	IvpConfigCollection *_sysConfig;
 	PluginKeepAlive *_keepAlive;
+	std::chrono::system_clock::time_point _startTime;
 
 	// Map a plugin status key to the last value set for that key.
 	std::map<std::string, std::string> _statusMap;

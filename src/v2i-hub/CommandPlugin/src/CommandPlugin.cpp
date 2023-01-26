@@ -174,7 +174,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 			if (!boost::filesystem::exists(outpath))
 				boost::filesystem::create_directory(outpath);
 		}
-		catch (exception ex)
+		catch (exception & ex)
 		{
 			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create download folder";
 			_uploadRequests[pss->filename].message = "Failed to create download folder";
@@ -264,7 +264,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 						if (!boost::filesystem::exists(toFile))
 							boost::filesystem::create_directory(toFile);
 					}
-					catch (exception ex)
+					catch (exception & ex)
 					{
 						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
 						_uploadRequests[pss->filename].message = "Failed to create destination folder";
@@ -277,7 +277,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				{
 					boost::filesystem::copy_file (fromFile, toFile, copy_option::overwrite_if_exists);
 				}
-				catch (exception ex)
+				catch (exception & ex)
 				{
 					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder.";
 					_uploadRequests[pss->filename].message = "Failed to copy file to destination folder.";
@@ -287,7 +287,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
 						_uploadRequests[pss->filename].message.append(" Failed to delete download file.");
 					}
-					catch (exception ex2)
+					catch (exception & ex2)
 					{
 					}
 					return 1;
@@ -296,7 +296,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				{
 					boost::filesystem::remove(fromFile);
 				}
-				catch (exception ex)
+				catch (exception & ex)
 				{
 					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
 					_uploadRequests[pss->filename].message = "Failed to delete download file.";
@@ -1143,7 +1143,7 @@ int CommandPlugin::WSCallbackBASE64(
 									}
 								}
 							}
-							catch (exception ex)
+							catch (exception & ex)
 							{
 								//parse error
 								FILE_LOG(logDEBUG) << "WSCallbackBASE64 process message exception: ";
