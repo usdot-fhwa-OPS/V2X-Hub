@@ -49,11 +49,8 @@ Licensed under the Apache License, Version 2.0 (the "License"); you may not use 
 ## System Requirements
 The V2X Hub software can run on most Linux-based computers with Pentium core processers, with at least a 64-bit processor, 2GB of RAM, and at least 64GB of drive space. Performance of the software will be based on the computing power and available RAM in the system.  
 
-## Installation and Setup
-The installation and setup instructions can be found in the [Installation and Setup Guide](docs/Installation_and_Setup.md)
-
 ## Docker Setup
-The installation and setup instructions for the docker image on an AMD and ARM system can be found in the [Docker Instructions Guide for AMD and ARM](docs/Docker_Instructions.md)
+The installation and setup instructions for the docker image on an AMD and ARM system can be found in the [Docker Instructions Guide for AMD and ARM](https://usdot-carma.atlassian.net/wiki/spaces/V2XH/pages/1886158849/V2X-Hub+Docker+Deployment)
 
 ## Contribution
 Welcome to the V2X-Hub contributing guide. Please read this guide to learn about our development process, how to propose pull requests and improvements, and how to build and test your changes to this project. [V2X-Hub Contributing Guide](Contributing.md) 
