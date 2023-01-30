@@ -1,34 +1,18 @@
 ## Build the custom V2X Hub image
 
-1.  Download the V2X Hub source to your local machine.
-2.  Download Docker and Docker compose based on the instructions available in Docker_Instructions.md
-3.  Update the apt package index:
+1.  Download V2X Hub using the instructions available on [Confluence](https://usdot-carma.atlassian.net/wiki/spaces/V2XH/pages/1886158849/V2X-Hub+Docker+Deployment).
+2.  Changes to V2X Hub can then be made in your locally downloaded V2X Hub repo.
+3.  Save and then copy those changes to your V2X Hub Docker container. Navigate to V2X-Hub/src/ and run:
 ```
-$ sudo apt-get update
+sudo docker cp . v2xhub:/home/V2X-Hub/src/
 ```
-4. Run mysql image using docker-compose. This may be done by creating a docker-compose.yml file with the following content. Replace the xyz.sql file with the database file created for the new build in the following code and place the file in the same directory as the docker-compose.yml file.
+4.  Navigate to the V2X-Hub/ directory and build the changes:
 ```
-version: '3.7'
-
-services:
-  db:
-    image: mysql
-    container_name: mysql
-    environment:
-      - MYSQL_DATABASE=IVP
-      - MYSQL_USER=IVP
-      - MYSQL_PASSWORD=ivp
-      - MYSQL_ROOT_PASSWORD=ivp
-    network_mode: host
-    volumes:
-      - ./xyz.sql:/docker-entrypoint-initdb.d/xyz.sql
+sudo docker build -t usdotfhwaops/v2xhub:<custom-tag-name> .
 ```
-5.  To build the custom V2X Hub docker image, run the following command (change xyz to the name of the image):
+5.  There are two ways run the new container:
 ```
-$ sudo docker build --network=host -t xyz .
+sudo docker stop v2xhub
+sudo docker run usdotfhwaops/v2xhub:<custom-tag-name>
 ```
-7.  To run the custom-built V2X Hub:
-```
-$ sudo docker run --network=host xyz
-```
-This will run the test build of V2X Hub in a docker contianer on your host computer while using mysql from the host computer.
+Or the v2xhub image tag can be changed in the docker-compose.yml and the docker-compose up/down command can be used.
