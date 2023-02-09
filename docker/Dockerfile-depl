@@ -3,7 +3,7 @@ FROM ubuntu:focal-20220113 AS install_dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update  && apt-get install -y cmake git build-essential libgtest-dev libssl-dev qtbase5-dev \
     zip libmysqlcppconn-dev libboost1.71-all-dev libmysqlclient-dev uuid-dev zlib1g libxerces-c-dev qtbase5-dev \
-    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libjsoncpp-dev libev-dev libuv1-dev libcpprest-dev
+    libcurl4-openssl-dev libgps-dev libsnmp-dev librdkafka-dev libjsoncpp-dev libev-dev libuv1-dev libcpprest-dev wget
 # Build and install GTest 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
@@ -44,11 +44,13 @@ RUN make
 RUN make install
 
 WORKDIR /home/V2X-Hub/ext
-RUN git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
-WORKDIR /home/V2X-Hub/ext/qhttpengine
-RUN cmake .
-RUN make 
-RUN make install
+RUN QHTTPENGINE_VERSION=1.0.1 && \
+    wget -O qhttpengine-${QHTTPENGINE_VERSION}.tar.gz https://github.com/nitroshare/qhttpengine/archive/refs/tags/${QHTTPENGINE_VERSION}.tar.gz && \
+    tar xvf qhttpengine-${QHTTPENGINE_VERSION}.tar.gz && \
+    cd qhttpengine-${QHTTPENGINE_VERSION}/ && \
+    cmake . && \
+    make -j && \
+    make install
 
 WORKDIR /home/V2X-Hub/ext/ 
 RUN git clone https://github.com/HowardHinnant/date.git
