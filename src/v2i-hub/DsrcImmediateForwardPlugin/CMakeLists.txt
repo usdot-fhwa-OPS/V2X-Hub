@@ -1,4 +1,4 @@
-PROJECT ( DsrcImmediateForwardPlugin VERSION 7.3.1 LANGUAGES CXX )
+PROJECT ( DsrcImmediateForwardPlugin VERSION 7.4.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "DSRC Message Manager")
 
