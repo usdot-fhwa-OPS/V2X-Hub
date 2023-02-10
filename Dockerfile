@@ -1,8 +1,7 @@
 FROM ubuntu:focal-20220113
 
 ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev
+RUN apt-get update  && apt-get install -y sudo cmake gcc-7 g++-7 libboost1.71-all-dev libxerces-c-dev libcurl4-openssl-dev libsnmp-dev libmysqlclient-dev libjsoncpp-dev uuid-dev libusb-dev libusb-1.0-0-dev libftdi-dev swig liboctave-dev gpsd libgps-dev portaudio19-dev libsndfile1-dev libglib2.0-dev libglibmm-2.4-dev libpcre3-dev libsigc++-2.0-dev libxml++2.6-dev libxml2-dev liblzma-dev dpkg-dev libmysqlcppconn-dev libev-dev libuv1-dev git vim zip build-essential zlib1g libssl-dev qtbase5-dev qtbase5-dev-tools curl libqhttpengine-dev libgtest-dev libcpprest-dev librdkafka-dev wget
 
 WORKDIR cd /usr/src/googletest/googletest
 RUN mkdir ~/build
@@ -39,11 +38,13 @@ RUN make
 RUN make install
 
 WORKDIR /home/V2X-Hub/ext
-RUN git clone https://github.com/usdot-fhwa-OPS/qhttpengine.git
-WORKDIR /home/V2X-Hub/ext/qhttpengine
-RUN cmake .
-RUN make 
-RUN make install
+RUN QHTTPENGINE_VERSION=1.0.1 && \
+    wget -O qhttpengine-${QHTTPENGINE_VERSION}.tar.gz https://github.com/nitroshare/qhttpengine/archive/refs/tags/${QHTTPENGINE_VERSION}.tar.gz && \
+    tar xvf qhttpengine-${QHTTPENGINE_VERSION}.tar.gz && \
+    cd qhttpengine-${QHTTPENGINE_VERSION}/ && \
+    cmake . && \
+    make -j && \
+    make install
 
 WORKDIR /home/V2X-Hub/ext/ 
 RUN git clone https://github.com/HowardHinnant/date.git

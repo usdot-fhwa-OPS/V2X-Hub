@@ -1,4 +1,4 @@
-PROJECT ( TimPlugin VERSION 5.0 LANGUAGES CXX )
+PROJECT ( TimPlugin VERSION 7.4.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "TIM")
 add_compile_options(-fPIC)

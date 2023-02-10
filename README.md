@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub.svg?style=svg)](https://circleci.com/gh/usdot-fhwa-OPS/V2X-Hub) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
 
 ## Release Notes
-As of July 29th, 2022, the V2X Hub software platform is on version 7.3.1 See more about release 7.3.1 here: [V2X Hub Release Notes](<docs/Release_notes.md>)
+As of Feb 9th, 2023, the V2X Hub software platform is on version 7.4.0 See more about release 7.4.0 here: [V2X Hub Release Notes](<docs/Release_notes.md>)
 
 # Overview
 In order to bring infrastructure components into the Connected Vehicle architecture, you need software that will facilitate the exchange of data in a format that can be understood by both vehicles and infrastructure devices The V2X Hub, takes in data from vehicles via Basic Safety Messages (BSM) in a Society of Automotive Engineers (SAE) standard format and translates the data to a National Transportation Communications for ITS Protocol (NTCIP) that infrastructure components can understand.  And vice versa.   It translates Signal Phase and Timing (SPaT) data from NTCIP to SAE and sends it to the Roadside Unit (RSU) for broadcast to mobile devices, including vehicles. 
@@ -21,13 +21,13 @@ The V2X Hub system reduces time needed to create and deploy a roadside based V2X
 * DMS Plugin – The Dynamic Message Sign (DMS) Plugin will receive messages from other plugins and translate the information to NTCIP 1203 for display on a DMS
 * MAP Plugin – Produces intersection geometry in J2735 MAP format.
 * SPAT Plugin – Communicates with a traffic signal controller (TSC) using NTCIP 1202, and creates a J2735 SPaT Message.
-* DSRC Immediate Forward Plugin – Sends all J2735 traffic to the 4.1 RSU for transmission out the DSRC radio.
+* Immediate Forward Plugin – Sends all J2735 traffic to the 4.1 RSU for transmission out the V2X radio.
 * Message Receiver Plugin – Receives all J2735 traffic incoming from the 4.1 RSU for consumption by other V2X Hub plugins.
 * Location Plugin – Communicates with GPS devices producing location information and optionally the NMEA GP* sentences for the V2X Hub system. 
 * RTCM Plugin – Communicates with a NTRIP network to create J2735 RTCM position correction messages.
-* ODE Plugin – Pushes data to an operational data environment server using a known IP address and port.
+* ODE Forward Plugin – Pushes data to an operational data environment server using a known IP address and port.
 * Pedestrian Plugin – Creates a PSM using information obtained from nomadic devices (ex. cell phones) through a local webserver.
-* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through 	BSMs
+* Preemption Plugin – Calls a preemption table on a controller using NTCIP 1202 V3 commands to provide passage to an emergency vehicle upon request through BSMs
 * SPAT Logger Plugin – Logs V2X Hub generated, UPER-encoded SPAT messages in a .csv file along with a system timestamp
 * TIM Plugin – Creates and broadcasts a TIM message from an .xml file based on user input through GUI or local webserver
 * BSM Logger Plugin – Decodes and logs BSMs received by the Message Receiver Plugin to a .csv file
