@@ -1,0 +1,49 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+	// Docker Compose syntax from https://github.com/devcontainers/templates/blob/main/src/docker-existing-docker-compose/.devcontainer/devcontainer.json
+	// and https://github.com/microsoft/vscode-dev-containers/blob/main/container-templates/docker-compose/.devcontainer/devcontainer.json
+	"name": "V2XHUB Docker Compose Dev",
+
+	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
+	"dockerComposeFile": "docker-compose-vscode.yml",
+
+	// The 'service' property is the name of the service for the container that VS Code should
+	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+	"service": "v2xhub",
+
+	// The 'workspaceFolder' property is the path VS Code should open by default when
+	// connected. Corresponds to a volume mount in .devcontainer/docker-compose.yml
+	"workspaceFolder": "/workspace",
+
+	"extensions": [
+		"ms-vscode.cpptools",
+		"ms-vscode.cpptools-extension-pack",
+		"ms-vscode.cmake-tools",
+		"twxs.cmake"
+	],
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line to run commands after the container is created - for example installing curl.
+	"postCreateCommand": "container/database.sh && container/library.sh && container/setup.sh && ldconfig"
+
+	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
+	// "mounts": [
+    //     {
+    //         "source": "/var/run/docker.sock",
+    //         "target": "/var/run/docker-host.sock",
+    //         "type": "bind"
+    //     }
+    // ]
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

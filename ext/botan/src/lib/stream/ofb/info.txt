@@ -1,7 +1,0 @@
-<defines>
-OFB -> 20131128
-</defines>
-
-<requires>
-block
-</requires>

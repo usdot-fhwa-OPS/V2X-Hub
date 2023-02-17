@@ -69,10 +69,6 @@
  	void HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg);
  	void HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg);
 
- 	void GetInt32(unsigned char *buf, int32_t *value)
- 	{
- 		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
- 	}
  private:
  	std::atomic<uint64_t> _frequency{0};
  	DATA_MONITOR(_frequency);   // Declares the

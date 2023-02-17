@@ -18,7 +18,6 @@ void LogContext::addEventLogEntry(std::string source, std::string description, L
 	string levelString = "Debug";
 	switch(level)
 	{
-		break;
 	case LogLevel_Info:
 		levelString = "Info";
 		break;

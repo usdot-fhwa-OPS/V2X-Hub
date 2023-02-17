@@ -29,7 +29,7 @@ namespace ERVCloudForwardingPlugin
             route_ss << "<point><latitude>" << latitude << "</latitude>"
                      << "<longitude>" << longitude << "</longitude></point>";
         }
-        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><route>%s<route></BSMRequest>", bsmHex.c_str(), route_ss.str().c_str());
+        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><route>%s</route></BSMRequest>", bsmHex.c_str(), route_ss.str().c_str());
         return xml_str;
     }
 
