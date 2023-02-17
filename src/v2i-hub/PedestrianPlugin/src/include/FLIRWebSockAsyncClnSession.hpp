@@ -34,6 +34,7 @@ namespace PedestrianPlugin
         websocket::stream<beast::tcp_stream> ws_;
         beast::flat_buffer buffer_;
         std::string host_;
+        std::string hostString_;
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
         std::string psmxml = "";
@@ -73,7 +74,8 @@ namespace PedestrianPlugin
     run(
         char const* host,
         char const* port,
-        float cameraRotation);
+        float cameraRotation, 
+        char const* hostString);
     
     /**
      * @brief Lookup the domain name of the IP address from run function.

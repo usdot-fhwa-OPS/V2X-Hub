@@ -72,6 +72,7 @@ public:
 	std::string dataprovider;
 	float cameraRotation;
 	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
+	std::string hostString;
 
 protected:
 	void UpdateConfigSettings();
