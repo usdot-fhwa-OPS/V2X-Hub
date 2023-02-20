@@ -28,6 +28,14 @@ Once a container has been built you should not need to rebuild it again unless s
 
 One of the great features about this setup is that the devcontainer.json file can be configured with a list of extensions to be included any time the container is opener so the list can be configured with what is most commonly used with the project so new users do not need to figure that out by themselves or manually install them.
 
+## Troubleshooting
+
+If you have issues with the setup go to the .devconainer folder and run:
+
+```docker-compose -f docker-compose-vscode.yml config```
+
+to see if there are any problems with your compose configuration compatibility.
+
 ## Tasks
 
 The configuration comes with 3 configured tasks.  These can be run under from the menu via *Terminal -> Run Task...*.  The tasks are described below.
