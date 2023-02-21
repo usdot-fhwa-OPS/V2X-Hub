@@ -29,7 +29,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubarm:7.4.0
+    image: usdotfhwaops/v2xhubarm:latest
     container_name: v2xhub
     network_mode: host
     restart: always
