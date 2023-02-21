@@ -1,7 +1,0 @@
-<defines>
-GOST_34_11 -> 20131128
-</defines>
-
-<requires>
-gost_28147
-</requires>

@@ -221,11 +221,12 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 {
 	chrono::system_clock::time_point now = chrono::system_clock::now();
 	time_t tt = chrono::system_clock::to_time_t(now);
-	struct tm * utctime = gmtime( &tt );
+	struct tm utctime;
+	gmtime_r( &tt, &utctime );
 
 	// In SPAT, the time stamp is split into minute of the year and millisecond of the minute
 	// Calculate the minute of the year
-	long minOfYear = utctime->tm_min + (utctime->tm_hour * 60) + (utctime->tm_yday * 24 * 60);
+	long minOfYear = utctime.tm_min + (utctime.tm_hour * 60) + (utctime.tm_yday * 24 * 60);
 
 	// Calculate the millisecond of the minute
 	chrono::milliseconds epochMs = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch());
@@ -551,22 +552,3 @@ long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec)
 
 	return (long)retTimeD;
 }
-
-/*long Ntcip1202::getAdjustedTime(unsigned int offset_ms)
-{
-	double offset = offset_ms/1000.0;
-
-	time_t now = time(0);
-	struct tm now_t = *gmtime(&now);
-
-	cout<<"Now: "<<now_t.tm_hour<<":"<<now_t.tm_min<<":"<<now_t.tm_sec<<endl;
-
-	time_t now_plus_offset = now + offset;
-	struct tm now_tm = *gmtime(&now_plus_offset);
-	cout<<"Offset: "<<offset<<endl;
-	cout<<"Now + Offset: "<<now_tm.tm_hour<<":"<<now_tm.tm_min<<":"<<now_tm.tm_sec<<endl;;
-	long retTime = ((now_tm.tm_min * 60) + now_tm.tm_sec) * 10;
-
-	return retTime;
-}*/
-

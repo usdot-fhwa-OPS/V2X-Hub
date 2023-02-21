@@ -11,7 +11,7 @@
 namespace CommandPlugin
 {
 
-void CommandPlugin::GetTelemetry(string dataType)
+void CommandPlugin::GetTelemetry(const string & dataType)
 {
 	TmxControl::pluginlist plugins;
 	bool processTelemetry = false;
@@ -187,7 +187,7 @@ void CommandPlugin::GetTelemetry(string dataType)
 								update = true;
 							}
 						}
-						catch (exception ex)
+						catch (exception & ex)
 						{
 							//old node doesnt exist
 							update = true;
@@ -243,7 +243,7 @@ void CommandPlugin::GetTelemetry(string dataType)
 									update = true;
 								}
 							}
-							catch (exception ex)
+							catch (exception & ex)
 							{
 								//old node doesnt exist
 								update = true;
@@ -296,8 +296,6 @@ void CommandPlugin::GetTelemetry(string dataType)
 						stringstream msgSs;
 						msgSs.clear();
 						msgSs.str(string());
-						//message_tree_type msgTree;
-						//msgTree.put_child("", msg.second);
 						boost::property_tree::write_json(msgSs, msg.second, false);
 						string msgJSON = msgSs.str();
 
@@ -373,7 +371,7 @@ void CommandPlugin::GetTelemetry(string dataType)
 
 }
 
-void CommandPlugin::BuildFullTelemetry(string *outputBuffer, string dataType)
+void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & dataType)
 {
 	ostringstream oss;
 	bool processTelemetry = false;
@@ -423,7 +421,6 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, string dataType)
 
 	if (processTelemetry)
 	{
-		//FILE_LOG(logDEBUG) << "BuildFullTelemetry output: " << output;
 		//build  message
 
 		outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
@@ -450,16 +447,12 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, string dataType)
 		{
 			outputBuffer->append(output);
 		}
-		//string outputPart = output.substr(0, output.find("TMX UI Vehicle") - 2);
-		//outputPart.append("}");
-		//_outputBuffer->append(outputPart);
 
 		outputBuffer->append("}\x03");
-
 	}
 }
 
-void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, string dataType)
+void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, const string & dataType)
 {
 	ostringstream oss;
 	bool processTelemetry = false;
@@ -524,7 +517,6 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, string dataType)
 
 	if (processTelemetry)
 	{
-		//FILE_LOG(logDEBUG) << "BuildUpdateTelemetry " << dataType;
 		//build message
 
 		outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
@@ -555,7 +547,6 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, string dataType)
 			bool first = true;
 			for  (auto it = updates->begin();it != updates->end();it++)
 			{
-				//FILE_LOG(logDEBUG) << "Update " << it->first << " = " << it->second;
 				if (first)
 					first = false;
 				else
@@ -571,7 +562,7 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, string dataType)
 	}
 }
 
-void CommandPlugin::BuildRemoveTelemetry(string *outputBuffer, string dataType)
+void CommandPlugin::BuildRemoveTelemetry(string *outputBuffer, const string & dataType)
 {
 	ostringstream oss;
 	bool processTelemetry = false;
@@ -608,7 +599,6 @@ void CommandPlugin::BuildRemoveTelemetry(string *outputBuffer, string dataType)
 
 	if (processTelemetry)
 	{
-		//FILE_LOG(logDEBUG) << "BuildRemoveTelemetry output: " << output;
 		//build  message
 
 		outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
@@ -622,7 +612,6 @@ void CommandPlugin::BuildRemoveTelemetry(string *outputBuffer, string dataType)
 		bool first = true;
 		for  (auto it = pluginsRemoveJSON->begin();it != pluginsRemoveJSON->end();it++)
 		{
-			//FILE_LOG(logDEBUG) << "pluginsRemoveJSON " << it->first << " = " << it->second;
 			//append plugin json
 			int firstBracket = it->second.find_first_of('{');
 			int lastBracket = it->second.find_last_of('}');
@@ -695,7 +684,6 @@ void CommandPlugin::GetEventTelemetry()
 			stringPosition += 3;
 			stringPosition = eJSON.find("},{", stringPosition);
 		}
-		//FILE_LOG(logDEBUG) << "GetEventTelemetry: new events: " << eventCount;
 		
 		//save update json without brackets if already have initial full json
 		_eventsUpdatesJSON = eJSON.substr(firstIndex + 1, lastIndex - firstIndex - 1);
@@ -725,13 +713,11 @@ void CommandPlugin::GetEventTelemetry()
 			_eventsJSON.append(eJSON.substr(firstIndex + 1, lastIndex - firstIndex - 1));
 			_eventsFullCount += eventCount;
 		}
-
-		//FILE_LOG(logDEBUG) << "GetEventTelemetry: full events: " << _eventsFullCount << ", next events: " << _eventsNextFullCount;
 	}
 
 }
 
-void CommandPlugin::BuildCommandResponse(string *outputBuffer, string id, string command, string status, string reason, std::map<string, string> &data, std::map<string, string> &arrayData)
+void CommandPlugin::BuildCommandResponse(string *outputBuffer, const string & id, const string & command, const string & status, const string & reason, std::map<string, string> &data, std::map<string, string> &arrayData)
 {
 	ostringstream oss;
 	//build message
@@ -771,7 +757,6 @@ void CommandPlugin::SendData(string *outputBuffer, struct lws *wsi)
 	if (outputBuffer->length() == 0)
 		return;
 
-	//FILE_LOG(logDEBUG) << "SendData";
 	//encode to base64 and send
 
 	//send a chunk of data if outputBuffer is too big
@@ -801,9 +786,6 @@ void CommandPlugin::SendData(string *outputBuffer, struct lws *wsi)
 	}
 	if (chokeCount < 4)
 		lws_write(wsi, &writeBuffer[LWS_SEND_BUFFER_PRE_PADDING], pluginList64.length(), LWS_WRITE_TEXT);
-
-
-	//lws_write(wsi, &writeBuffer[LWS_SEND_BUFFER_PRE_PADDING], pluginList64.length(), LWS_WRITE_TEXT);
 
 }
 

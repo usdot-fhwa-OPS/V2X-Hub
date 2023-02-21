@@ -67,6 +67,8 @@ public:
 	bool system_config(pluginlist &, ...);
 	bool user_info(bool showPassword = false);
 	bool user_info(pluginlist &, ...);
+	bool hashed_info();
+	bool hashed_info(pluginlist &, ...);
 	bool set_system(pluginlist &, ...);
 	bool all_users_info(bool showPassword = false);
 	bool all_users_info(pluginlist &, ...);

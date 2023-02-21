@@ -74,6 +74,16 @@ public:
 	 * Return the specified milliseconds since the epoch into a std::chrono time point
 	 */
 	static std::chrono::system_clock::time_point GetTimepointSinceEpoch(uint64_t ms);
+
+	/**
+	 * Get the current day of the year based on GMT time.
+	 */
+	static uint32_t GetDayOfYear();
+
+	/**
+	 * Get the current minute of the year based on GMT time.
+	 */
+	static uint32_t GetMinuteOfYear();
 };
 
 } /* namespace utils */

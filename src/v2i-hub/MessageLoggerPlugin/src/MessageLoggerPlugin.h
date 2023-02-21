@@ -36,6 +36,8 @@
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <BasicSafetyMessage.h>
+#include <tmx/j2735_messages/SpatMessage.hpp>
+#include <SPAT.h>
 #include <tmx/messages/auto_message.hpp>
 #include <boost/filesystem.hpp>
 
@@ -70,6 +72,7 @@ protected:
 	void OnStateChange(IvpPluginState state);
 
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	void HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg);
 	void GetInt32(unsigned char *buf, int32_t *value)
 	{
 		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);

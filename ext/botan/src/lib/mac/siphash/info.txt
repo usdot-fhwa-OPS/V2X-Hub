@@ -1,3 +1,0 @@
-<defines>
-SIPHASH -> 20150110
-</defines>

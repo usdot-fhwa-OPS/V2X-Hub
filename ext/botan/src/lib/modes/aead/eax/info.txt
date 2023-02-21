@@ -1,8 +1,0 @@
-<defines>
-AEAD_EAX -> 20131128
-</defines>
-
-<requires>
-cmac
-ctr
-</requires>

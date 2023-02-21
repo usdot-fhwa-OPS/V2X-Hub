@@ -9,6 +9,11 @@
 	],
 	"configuration":[
 		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
 			"key":"messageid",
 			"default":"0012,0013,0014,001D,00F0,00F1,00F2,00F3,00F4,00F5,00F6,00F7",
 			"description":"Comma separated list of SAE J2735 message ID values."
@@ -48,11 +53,6 @@
 			"default":"0",
 			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
 		},		
-		{
-			"key":"HSMLocation",
-			"default":"<SoftHSM library location>",
-			"description":"Location of HSM module static library."
-		},
 		{
 			"key":"HSMurl",
 			"default": "http://<SoftHSM IP>:3000/v1/scms/",

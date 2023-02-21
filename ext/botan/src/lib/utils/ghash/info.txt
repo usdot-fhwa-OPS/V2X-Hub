@@ -1,3 +1,0 @@
-<defines>
-GHASH -> 20201002
-</defines>

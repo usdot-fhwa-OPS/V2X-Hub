@@ -144,8 +144,6 @@ namespace PreemptionPlugin {
     void PreemptionPluginWorker::TurnOnPreemption(std::shared_ptr<PreemptionObject> po){
         std::string preemption_plan_flag = "1";
 
-        std::asctime(std::localtime(&(po->time)));
-
         preemption_map[po->vehicle_id] = *po;
         std::string PreemptionOid = base_preemption_oid + po->preemption_plan;
 

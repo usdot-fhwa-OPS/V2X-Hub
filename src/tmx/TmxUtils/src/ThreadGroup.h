@@ -13,6 +13,8 @@
 #include <cstdlib>
 #include <deque>
 #include <vector>
+#include <random>
+#include <algorithm>
 
 namespace tmx {
 namespace utils {
@@ -36,13 +38,12 @@ namespace utils {
 template <class ThreadClass, typename GroupT = uint8_t, typename IdentifierT = uint8_t>
 class ThreadGroup {
 public:
-	typedef GroupT group_type;
-	typedef IdentifierT id_type;
+	using group_type = GroupT;
+	using id_type = IdentifierT;
 	static constexpr size_t max_groups = ::pow(2, 8 * sizeof(group_type));
 	static constexpr size_t max_ids = ::pow(2, 8 * sizeof(id_type));
 
-	ThreadGroup(): _strategy((ThreadGroupAssignmentStrategy)0) {
-		srand(time (NULL));
+	ThreadGroup(): gen(std::random_device()()) {
 
 		// Initialize the queue assignments
 		for (size_t i = 0; i < max_groups; i++) {
@@ -81,7 +82,7 @@ public:
 	 *
 	 * @param group The group identifier, or 0 for no group
 	 * @param id The unique identifier in the group, or 0 for no identifier
-	 * @see set_strategy(std::string)
+	 * @see set_strategy(const std::string &)
 	 */
 	void assign(group_type group, id_type id, const typename ThreadClass::incoming_item &item) {
 		static std::atomic<uint32_t> next {0};
@@ -106,7 +107,10 @@ public:
 					next = 0;
 				break;
 			case strategy_Random:
-				tId = rand() % _threads.size();
+				{
+					uniform_int_distribution<> dis(0, _threads.size() -1);
+					tId = dis(gen);
+				}
 				break;
 			case strategy_ShortestQueue:
 				tId = 0;
@@ -170,7 +174,7 @@ public:
 	 * The string compare is case-insensitive.
 	 * @param strategy The new strategy
 	 */
-	void set_strategy(std::string strategy) {
+	void set_strategy(const std::string & strategy) {
 		_strategy = get_strategy(strategy);
 	}
 
@@ -184,6 +188,7 @@ public:
 		return -1;
 	}
 private:
+	mt19937 gen; // Standard mersenne_twister_engine seeded with rd()
 	std::deque<ThreadClass> _threads;
 
 	struct source_info {
@@ -200,9 +205,9 @@ private:
 		strategy_END
 	};
 
-	ThreadGroupAssignmentStrategy _strategy;
+	ThreadGroupAssignmentStrategy _strategy = strategy_RoundRobin;
 
-	ThreadGroupAssignmentStrategy get_strategy(std::string &str) {
+	ThreadGroupAssignmentStrategy get_strategy(const std::string &str) {
 		static std::vector<std::string> allStrategies(strategy_END);
 		if (allStrategies.empty()) {
 			// Initialize all the strategies

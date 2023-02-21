@@ -71,12 +71,12 @@ protected:
 	static uint64_t GetMsTimeSinceEpoch();
 	static int FileUploadCB(void *data, const char *name, const char *filename,
 		       char *buf, int len, enum lws_spa_fileupload_states state);
-	static void GetTelemetry(string dataType);
+	static void GetTelemetry(const string & dataType);
 	static void GetEventTelemetry();
-	static void BuildFullTelemetry(string *outputBuffer, string dataType);
-	static void BuildUpdateTelemetry(string *outputBuffer, string dataType);
-	static void BuildRemoveTelemetry(string *outputBuffer, string dataType);
-	static void BuildCommandResponse(string *outputBuffer, string id, string command, string status, string reason, std::map<string, string> &data, std::map<string, string> &arrayData);
+	static void BuildFullTelemetry(string *outputBuffer, const string & dataType);
+	static void BuildUpdateTelemetry(string *outputBuffer, const string & dataType);
+	static void BuildRemoveTelemetry(string *outputBuffer, const string & dataType);
+	static void BuildCommandResponse(string *outputBuffer, const string & id, const string & command, const string & status, const string & reason, std::map<string, string> &data, std::map<string, string> &arrayData);
 	static void SendData(string *outputBuffer, struct lws *wsi);
 
 	static int WSCallbackHTTP(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
