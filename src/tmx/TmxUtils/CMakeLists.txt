@@ -3,6 +3,9 @@ PROJECT ( tmxutils CXX )
 FILE (GLOB_RECURSE HEADERS "src/*.h*")
 FILE (GLOB_RECURSE SOURCES "src/[A-Z]*.c*")
 
+set(CMAKE_MODULE_PATH /opt/carma/cmake)
+
+FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
 
 ADD_LIBRARY (${PROJECT_NAME} STATIC ${SOURCES})
@@ -14,15 +17,15 @@ ENDIF ()
 TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} SYSTEM PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
                             $<BUILD_INTERFACE:${TMXMESSAGES_INCLUDE_DIR}>
+                            /opt/carma/include
                             ${MYSQL_INCLUDE_DIR}
                             ${MYSQLCPPCONN_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC 
                        ${TMXAPI_LIBRARIES} 
                        ${MYSQL_LIBRARIES} 
                        ${MYSQLCPPCONN_LIBRARIES}
-                       ${UUID_LIBRARY} 
+                       ${UUID_LIBRARY}
                        pthread m rt)
-                       
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
 

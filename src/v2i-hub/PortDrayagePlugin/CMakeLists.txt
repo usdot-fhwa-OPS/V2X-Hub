@@ -11,11 +11,6 @@ find_package(Qt5Network REQUIRED)
 
 include_directories( "/usr/local/include/pdclient")
 
-
-
-message(CMAKE MODULE : ${CMAKE_MODULE_PATH} )
-
-
 BuildTmxPlugin ( )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pdclient )
