@@ -6,6 +6,8 @@ name: Sonar Workflow
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:jammy-20230126
     steps:
       - name: Checkout
         uses: actions/checkout@v3
