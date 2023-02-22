@@ -1,0 +1,44 @@
+name: Build Workflows
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  v2xhub-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        uses: docker/build-push-action@v4
+        with:
+          tags: v2xhubamd:ci-build
+
+  php-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        uses: docker/build-push-action@v4
+        with:
+          file: docker/Dockerfile-php
+          tags: php:ci-build
+
+  port-drayage-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Build
+        uses: docker/build-push-action@v4
+        with:
+          context: tools/port-drayage-webservice
+          tags: port-drayage-webservice:ci-build
