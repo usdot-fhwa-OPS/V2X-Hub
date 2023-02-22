@@ -9,17 +9,17 @@ jobs:
     container:
       image: ubuntu:jammy-20230126
     steps:
+      - name: Install curl, zip, git, gcovr
+        run: |
+          apt update
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y curl zip git gcovr
       - name: Checkout
         uses: actions/checkout@v3
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
           submodules: recursive
-      - name: Install curl, zip, git, gcovr
-        run: |
-          apt update
-          export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y curl zip git gcovr
       - name:  Install sonar-scanner and build-wrapper
         uses: sonarsource/sonarcloud-github-c-cpp@v1
       - name: Run install_dependencies.sh script
