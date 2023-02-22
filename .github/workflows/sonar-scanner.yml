@@ -40,5 +40,5 @@ jobs:
       - name: Run sonar-scanner
         uses: usdot-fhwa-stol/actions/sonar-scanner@main
         with:
-          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          sonar-token: ${{ secrets.SONAR_SCANNER_TOKEN }}
           working-dir: ${{ github.workspace }}
