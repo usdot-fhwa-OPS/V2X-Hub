@@ -1,0 +1,42 @@
+on:
+  push:
+    # run on branches and not PRs due to secrets used
+    branches:
+name: Sonar Workflow
+jobs:
+  sonarcloud:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          # Disabling shallow clone is recommended for improving relevancy of reporting
+          fetch-depth: 0
+          submodules: recursive
+      - name: Install curl, zip, git, gcovr
+        run: |
+          apt update
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y curl zip git gcovr
+      - name:  Install sonar-scanner and build-wrapper
+        uses: sonarsource/sonarcloud-github-c-cpp@v1
+      - name: Run install_dependencies.sh script
+        run: |
+          ./install_dependencies.sh
+      - name: Build Ext Components
+        run: |
+          cd ext
+          ./build.sh
+          ../container/library.sh
+          ldconfig
+      - name: Run Tests & Generate Gcovr Reports
+        run: |
+          mkdir bw-output
+          cd src
+          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh
+          ./coverage.sh
+      - name: Run sonar-scanner
+        uses: usdot-fhwa-stol/actions/sonar-scanner@main
+        with:
+          sonar-token: ${{ secrets.sonarcloud-token }}
+          working-dir: ${{ github.workspace }}
