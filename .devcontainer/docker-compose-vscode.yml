@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   v2xhub:
@@ -10,6 +10,7 @@ services:
     volumes:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
+      - ./MAP:/var/www/plugins/MAP
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"  
     environment:
