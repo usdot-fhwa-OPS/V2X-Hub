@@ -1,4 +1,4 @@
-PROJECT ( MessageLoggerPlugin VERSION 7.3.1 LANGUAGES CXX )
+PROJECT ( MessageLoggerPlugin VERSION 7.4.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "MessageLoggerPlugin")
 
