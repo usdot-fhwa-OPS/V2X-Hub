@@ -24,7 +24,7 @@ jobs:
         uses: sonarsource/sonarcloud-github-c-cpp@v1
       - name: Run install_dependencies.sh script
         run: |
-          ./install_dependencies.sh
+          scripts/install_dependencies.sh
       - name: Build Ext Components
         run: |
           cd ext
