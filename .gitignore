@@ -4,6 +4,7 @@ src/v2i-hub/build
 
 # manually created directories
 secrets
+.devcontainer/MAP
 
 # Compiled source #
 ###################

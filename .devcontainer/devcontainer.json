@@ -16,12 +16,17 @@
 	// connected. Corresponds to a volume mount in .devcontainer/docker-compose.yml
 	"workspaceFolder": "/workspace",
 
-	"extensions": [
-		"ms-vscode.cpptools",
-		"ms-vscode.cpptools-extension-pack",
-		"ms-vscode.cmake-tools",
-		"twxs.cmake"
-	],
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"ms-vscode.cmake-tools",
+				"twxs.cmake"
+			]
+		}
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
