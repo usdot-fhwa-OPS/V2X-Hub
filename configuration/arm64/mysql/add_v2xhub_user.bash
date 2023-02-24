@@ -3,7 +3,7 @@
 #set -e
 
 # Ensure mysql-client is installed
-REQUIRED_PKG="mysql-client"
+REQUIRED_PKG="mariadb-client-10.5"
 PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
 echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "" = "$PKG_OK" ]; then

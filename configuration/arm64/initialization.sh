@@ -8,5 +8,4 @@ sudo apt-get update
 sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
 sudo apt -y install python3-pip
 sudo pip3 install docker-compose
-sudo apt-get install mariadb-client-10.5
 sudo docker-compose up -d
