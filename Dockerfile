@@ -5,7 +5,7 @@ FROM ubuntu:$UBUNTU_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
 # key for for "ports" for jammy
-RUN apt-get -y install gnupg && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
+RUN apt-get -y install gnupg2 && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
 RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
     /usr/local/bin/install_dependencies.sh
 
