@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
 
+# TODO push to dockerhub with correct tags
 jobs:
   v2xhub-docker:
     runs-on: ubuntu-latest
