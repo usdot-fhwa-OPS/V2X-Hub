@@ -7,7 +7,7 @@ ADD scripts/install_dependencies.sh /usr/local/bin/
 # key for for "ports" for jammy
 #RUN apt-get -y install gpg && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 871920D1991BC93C
 #RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
-    /usr/local/bin/install_dependencies.sh
+#    /usr/local/bin/install_dependencies.sh
 
 # build out ext components
 COPY ./ext /home/V2X-Hub/ext
