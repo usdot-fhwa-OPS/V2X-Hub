@@ -26,6 +26,7 @@ version: 2.1
 jobs:
   arm_build_push :
    machine:
+    # see https://circleci.com/docs/using-arm/ for versions
     image: ubuntu-2004:current
    resource_class: arm.medium
    steps:
@@ -34,7 +35,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -t v2xhubarm:ci-build --build-arg UBUNTU_VERSION=jammy .
+          docker build -t v2xhubarm:ci-build
           docker build -f docker/Dockerfile-php -t php_arm:ci-build .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t port-drayage-webservice_arm:ci-build .
