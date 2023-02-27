@@ -34,7 +34,7 @@ jobs:
         name: Docker Build
         # Run MYSQL image and build v2xhub docker image
         command: |
-          docker build -t v2xhubarm:ci-build .
+          docker build -t v2xhubarm:ci-build --build-arg UBUNTU_VERSION=jammy .
           docker build -f docker/Dockerfile-php -t php_arm:ci-build .
           cd ./tools/port-drayage-webservice/
           docker build -f Dockerfile-arm -t port-drayage-webservice_arm:ci-build .
