@@ -1,11 +1,11 @@
 ARG UBUNTU_VERSION=jammy-20230126
 
-FROM ubuntu:$UBUNTU_VERSION
+FROM ubuntu:$UBUNTU_VERSION AS dependencies
 
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
-RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
-    /usr/local/bin/install_dependencies.sh
+RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
+RUN /usr/local/bin/install_dependencies.sh
 
 # build out ext components
 COPY ./ext /home/V2X-Hub/ext
@@ -14,6 +14,7 @@ RUN ./build.sh
 
 ADD container/wait-for-it.sh /usr/local/bin/
 ADD container/service.sh /usr/local/bin/
+
 COPY ./container /home/V2X-Hub/container
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
@@ -26,6 +27,9 @@ WORKDIR /home/V2X-Hub/src/
 RUN ./build.sh release
 RUN ldconfig
 
+
+# run final image
+FROM dependencies AS v2xhub
 WORKDIR /home/V2X-Hub/
 RUN /home/V2X-Hub/container/setup.sh
 WORKDIR /var/log/tmx
