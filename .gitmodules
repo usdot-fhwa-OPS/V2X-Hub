@@ -1,0 +1,3 @@
+[submodule "ext/server/QHTTPENGINE-prefix/src/QHTTPENGINE"]
+    path = ext/server/QHTTPENGINE-prefix/src/QHTTPENGINE
+    url = https://github.com/etherealjoy/qhttpengine.git
