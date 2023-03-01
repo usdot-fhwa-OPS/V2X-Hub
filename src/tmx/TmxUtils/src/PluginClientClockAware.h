@@ -1,7 +1,7 @@
 #pragma once
 
 #include "PluginClient.h"
-#include "carma-clock/carma_clock_example.h"
+#include "carma-clock/carma_clock.h"
 
 namespace tmx ::utils {
 
