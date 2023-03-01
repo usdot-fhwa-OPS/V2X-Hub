@@ -10,10 +10,10 @@ namespace tmx ::utils {
 */
 class PluginClientClockAware : public PluginClient {
 public:
-    PluginClientClockAware(const std::string & name);
+    explicit PluginClientClockAware(const std::string & name);
 
 protected:
-    inline std::shared_ptr<fwha_stol::lib::time::CarmaClock> const getClock() {
+    inline std::shared_ptr<fwha_stol::lib::time::CarmaClock> getClock() const {
         return clock;
     } 
 

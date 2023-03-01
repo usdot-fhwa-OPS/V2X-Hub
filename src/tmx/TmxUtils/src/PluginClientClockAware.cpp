@@ -6,7 +6,7 @@ PluginClientClockAware::PluginClientClockAware(const std::string & name)
     : PluginClient(name)
 {
     // check for simulation mode enabled by environment variable
-  	constexpr char * EnvVar = "SIMULATION_MODE";
+  	constexpr const char * EnvVar = "SIMULATION_MODE";
 	bool simulationMode = (std::getenv(EnvVar) != nullptr);
 
     using namespace fwha_stol::lib::time;
