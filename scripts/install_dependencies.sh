@@ -3,7 +3,7 @@
 # exit on errors
 set -e
 
-# add the STOL APT repository, may use GitHub action later
+# add the STOL APT repository
 echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository develop main" > /etc/apt/sources.list.d/stol-apt-repository.list
 
 apt-get update

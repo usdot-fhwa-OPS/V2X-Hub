@@ -3,8 +3,6 @@ PROJECT ( tmxutils CXX )
 FILE (GLOB_RECURSE HEADERS "src/*.h*")
 FILE (GLOB_RECURSE SOURCES "src/[A-Z]*.c*")
 
-set(CMAKE_MODULE_PATH /opt/carma/cmake)
-
 FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
 
