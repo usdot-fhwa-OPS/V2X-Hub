@@ -91,7 +91,7 @@ private:
 
 	J2735MessageFactory factory;
 
-	FrequencyThrottle<int> throttle;
+	int sendFrequency = 1000;
 	FrequencyThrottle<int> errThrottle;
 
 	bool LoadMapFiles();
@@ -110,9 +110,7 @@ MapPlugin::~MapPlugin() {
 }
 
 void MapPlugin::UpdateConfigSettings() {
-	int gFrequency;
-	GetConfigValue("Frequency", gFrequency);
-	throttle.set_Frequency(chrono::milliseconds(gFrequency));
+	GetConfigValue("Frequency", sendFrequency);
 
 	message_tree_type rawMapFiles;
 	GetConfigValue("MAP_Files", rawMapFiles);
@@ -282,7 +280,6 @@ int MapPlugin::Main() {
 			}
 		}
 
-		//if (mapFilesOk && throttle.Monitor(0))
 		if (mapFilesOk)
 		{
 			// Time to send a new message
@@ -299,9 +296,7 @@ int MapPlugin::Main() {
 			}
 		}
 
-		// Wake up a few times before next cycle, in case there is something to do
-		auto sleepUntil = getClock()->nowInMilliseconds() + 1000;
-//			(1000 * throttle.get_Frequency().count() / 5);
+		auto sleepUntil = getClock()->nowInMilliseconds() + sendFrequency;
 		getClock()->sleep_until(sleepUntil);
 	}
 
