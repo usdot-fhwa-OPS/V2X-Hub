@@ -9,7 +9,7 @@ using namespace tmx::utils;
 namespace SpatPlugin {
 
 SpatPlugin::SpatPlugin(string name) :
-		PluginClientClockAware(name), intersectionId(0) {
+		PluginClientClockAware(name), sc(getClock()), intersectionId(0) {
 	AddMessageFilter<PedestrianMessage>(this, &SpatPlugin::HandlePedestrianDetection);
 	SubscribeToMessages();
 }

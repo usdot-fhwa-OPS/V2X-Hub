@@ -21,7 +21,7 @@ target_include_directories( ${PROJECT_NAME}_spat_lib PUBLIC
                                                     ${PROJECT_SOURCE_DIR}/src
                                                     ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_spat_lib PUBLIC 
-                                                tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
+                                                tmxutils ::carma-clock ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
 #############
 ## Testing ##
 #############
