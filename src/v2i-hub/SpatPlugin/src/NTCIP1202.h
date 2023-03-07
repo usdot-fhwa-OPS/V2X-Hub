@@ -13,6 +13,8 @@
 
 #include <tmx/j2735_messages/SpatMessage.hpp>
 
+#include "carma-clock/carma_clock.h"
+
 using namespace std;
 
 struct Ntcip1202Ext_PhaseTime
@@ -66,7 +68,8 @@ struct SignalGroupMapping
 class Ntcip1202
 {
 	public:
-
+		inline explicit Ntcip1202(std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock) :
+			clock(clock) {};
 		void setSignalGroupMappingList(string json);
 
 		void copyBytesIntoNtcip1202(char* buff, int numBytes);
@@ -97,6 +100,8 @@ class Ntcip1202
 		uint16_t getOverlapMinTime(int phaseNumber);
 		uint16_t getOverlapMaxTime(int phaseNumber);
 
+		long getAdjustedTime(unsigned int offset);
+
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
@@ -104,6 +109,7 @@ class Ntcip1202
 
 		void printDebug();
 	private:
+		std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
 
 		Ntcip1202Ext ntcip1202Data;
 		std::map<uint8_t, int> _phaseToIndexMapping;
@@ -118,8 +124,6 @@ class Ntcip1202
 		void populateVehicleSignalGroup(MovementState *movement, int phase);
 		void populatePedestrianSignalGroup(MovementState *movement, int phase);
 		void populateOverlapSignalGroup(MovementState *movement, int phase);
-
-		long getAdjustedTime(unsigned int offset);
 };
 
 

@@ -4,11 +4,12 @@ SET (TMX_PLUGIN_NAME "SPAT")
 
 FIND_PACKAGE (XercesC REQUIRED)
 FIND_PACKAGE (NetSNMP REQUIRED)
+FIND_PACKAGE (carma-clock REQUIRED)
 
 BuildTmxPlugin ()
 
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
 
 ################################
 # GTest
@@ -20,7 +21,7 @@ target_include_directories( ${PROJECT_NAME}_spat_lib PUBLIC
                                                     ${PROJECT_SOURCE_DIR}/src
                                                     ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME}_spat_lib PUBLIC 
-                                                tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
+                                                tmxutils ::carma-clock ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
 #############
 ## Testing ##
 #############

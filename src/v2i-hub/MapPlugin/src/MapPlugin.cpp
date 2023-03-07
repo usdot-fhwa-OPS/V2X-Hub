@@ -24,7 +24,7 @@
 
 #define USE_STD_CHRONO
 #include <FrequencyThrottle.h>
-#include <PluginClient.h>
+#include <PluginClientClockAware.h>
 
 #include "utils/common.h"
 #include "utils/map.h"
@@ -68,7 +68,7 @@ public:
 
 volatile int gMessageCount = 0;
 
-class MapPlugin: public PluginClient {
+class MapPlugin: public PluginClientClockAware {
 public:
 	MapPlugin(string name);
 	virtual ~MapPlugin();
@@ -91,7 +91,7 @@ private:
 
 	J2735MessageFactory factory;
 
-	FrequencyThrottle<int> throttle;
+	int sendFrequency = 1000;
 	FrequencyThrottle<int> errThrottle;
 
 	bool LoadMapFiles();
@@ -99,7 +99,7 @@ private:
 };
 
 MapPlugin::MapPlugin(string name) :
-		PluginClient(name) {
+		PluginClientClockAware(name) {
 	AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
 	SubscribeToMessages();
 	errThrottle.set_Frequency(std::chrono::minutes(30));
@@ -110,9 +110,7 @@ MapPlugin::~MapPlugin() {
 }
 
 void MapPlugin::UpdateConfigSettings() {
-	int gFrequency;
-	GetConfigValue("Frequency", gFrequency);
-	throttle.set_Frequency(chrono::milliseconds(gFrequency));
+	GetConfigValue("Frequency", sendFrequency);
 
 	message_tree_type rawMapFiles;
 	GetConfigValue("MAP_Files", rawMapFiles);
@@ -232,6 +230,9 @@ int MapPlugin::Main() {
 
 	std::unique_ptr<MapDataEncodedMessage> msg;
 	int activeAction = -1;
+	
+	// wait for the clock to be initialized
+	getClock()->wait_for_initialization();
 
 	while (_plugin->state != IvpPluginState_error) {
 		if (_isMapFileNew) {
@@ -279,7 +280,7 @@ int MapPlugin::Main() {
 			}
 		}
 
-		if (mapFilesOk && throttle.Monitor(0))
+		if (mapFilesOk)
 		{
 			// Time to send a new message
 			routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
@@ -295,8 +296,8 @@ int MapPlugin::Main() {
 			}
 		}
 
-		// Wake up a few times before next cycle, in case there is something to do
-		usleep(1000 * throttle.get_Frequency().count() / 5);
+		auto sleepUntil = getClock()->nowInMilliseconds() + sendFrequency;
+		getClock()->sleep_until(sleepUntil);
 	}
 
 	return (EXIT_SUCCESS);
