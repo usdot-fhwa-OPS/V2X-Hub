@@ -52,6 +52,11 @@
 			"key":"TSC_Remote_SNMP_Port",
 			"default":"<snmp port used in signal controller>",
 			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP communication."
+		},
+		{
+			"key":"LogLevel",
+			"default":"INFO",
+			"description": "SPAT Plugin Log Level controls which log statements are printed to the terminal."
 		}
 	]
 }

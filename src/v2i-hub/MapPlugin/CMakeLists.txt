@@ -8,4 +8,4 @@ FIND_PACKAGE (carma-clock)
 BuildTmxPlugin ()
 
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} )
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock ${XercesC_LIBRARY} )
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock rdkafka++ jsoncpp ${XercesC_LIBRARY} )
