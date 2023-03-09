@@ -176,7 +176,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 		}
 		catch (exception & ex)
 		{
-			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create download folder";
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create download folder";
 			_uploadRequests[pss->filename].message = "Failed to create download folder";
 			return 1;
 		}
@@ -188,7 +188,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				O_CREAT | O_TRUNC | O_RDWR, 0600);
 		if (pss->fd < 0)
 		{
-			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create or open file";
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create or open file";
 			_uploadRequests[pss->filename].message = "Failed to create or open file";
 			return 1;
 		}
@@ -266,7 +266,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 					}
 					catch (exception & ex)
 					{
-						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
 						_uploadRequests[pss->filename].message = "Failed to create destination folder";
 						return 1;
 					}
@@ -279,12 +279,12 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				}
 				catch (exception & ex)
 				{
-					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder.";
+					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder: " << toFile;
 					_uploadRequests[pss->filename].message = "Failed to copy file to destination folder.";
 					try
 					{
 						boost::filesystem::remove(fromFile);
-						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file: " << fromFile;
 						_uploadRequests[pss->filename].message.append(" Failed to delete download file.");
 					}
 					catch (exception & ex2)
@@ -298,7 +298,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				}
 				catch (exception & ex)
 				{
-					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
+					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
 					_uploadRequests[pss->filename].message = "Failed to delete download file.";
 					return 1;
 				}
