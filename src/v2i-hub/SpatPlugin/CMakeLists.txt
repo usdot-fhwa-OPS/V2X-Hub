@@ -9,7 +9,7 @@ FIND_PACKAGE (carma-clock REQUIRED)
 BuildTmxPlugin ()
 
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock rdkafka++ jsoncpp ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES})
 
 ################################
 # GTest

@@ -3,6 +3,8 @@
 #include "PluginClient.h"
 #include "carma-clock/carma_clock.h"
 
+#include <librdkafka/rdkafkacpp.h>
+
 namespace tmx ::utils {
 
 /**
@@ -18,7 +20,14 @@ protected:
     } 
 
 private:
+    static constexpr const char * KAFKA_TOPIC = "TimeTopic";
+
     std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
+	RdKafka::KafkaConsumer * kafkaTimeConsumer = nullptr;
+    std::thread consumerThread;
+
+    void startKafkaConsumer();
+    void runKafkaConsumer();
 };
 
 }

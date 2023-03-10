@@ -61,9 +61,12 @@ int SpatPlugin::Main() {
 
 	int iCounter = 0;
 
+	PLOG(logINFO) << "Waiting for clock initialization";
+
 	// wait for the clock to be initialized and record the time when it is ready
 	getClock()->wait_for_initialization();
 	auto nextSpatTime = getClock()->nowInMilliseconds();
+	PLOG(logINFO) << "Initial nextSpatTime=" << nextSpatTime;
 
 	try {
 		while (_plugin->state != IvpPluginState_error) {
