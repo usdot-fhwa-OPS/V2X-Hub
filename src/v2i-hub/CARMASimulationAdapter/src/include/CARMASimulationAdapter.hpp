@@ -19,6 +19,7 @@
 #include <PluginClientClockAware.h>
 #include "CARMASimulationConnection.hpp"
 #include <kafka/kafka_producer_worker.h>
+#include <kafka/kafka_client.h>
 
 using namespace std;
 using namespace tmx;
@@ -78,15 +79,17 @@ namespace CARMASimulationAdapter {
         std::string local_ip;
         uint time_sync_port;
         uint v2x_port;
+        WGS84Point location;
         std::shared_ptr<kafka_clients::kafka_producer_worker> time_producer;
         std::unique_ptr<CARMASimulationConnection> connection;
         std::mutex _lock;
         inline static const char *KAFKA_BROKER_ADDRESS_ENV = "KAFKA_BROKER_ADDRESS";
         inline static const char *TIME_SYNC_TOPIC_ENV = "TIME_SYNC_TOPIC";
-        inline static const char *SIMULATION_IP = "SIMULATION_IP";
+        inline static const char *SIMULATION_IP_ENV = "SIMULATION_IP";
         inline static const char *SIMULATION_REGISTRATION_PORT_ENV = "SIMULATION_REGISTRATION_PORT";
         inline static const char *TIME_SYNC_PORT_ENV = "TIME_SYNC_PORT";
         inline static const char *V2X_PORT_ENV = "V2X_PORT";
+        inline static const char *LOCAL_IP_ENV = "LOCAL_IP";
 
 
 

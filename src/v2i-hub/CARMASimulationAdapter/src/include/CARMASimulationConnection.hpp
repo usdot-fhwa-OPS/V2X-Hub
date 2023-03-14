@@ -93,6 +93,10 @@ namespace CARMASimulationAdapter {
              */
             bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
+
+            bool connect();
+
+            bool is_connected() const;
         private:
             std::string _simulation_ip;
             uint _simulation_registration_port;
