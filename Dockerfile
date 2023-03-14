@@ -27,11 +27,29 @@ WORKDIR /home/V2X-Hub/src/
 RUN ./build.sh release
 RUN ldconfig
 
-
-# run final image
-FROM dependencies AS v2xhub
 WORKDIR /home/V2X-Hub/
 RUN /home/V2X-Hub/container/setup.sh
+
+# run final image
+FROM ubuntu:$UBUNTU_VERSION AS v2xhub
+ENV DEBIAN_FRONTEND=noninteractive
+ADD scripts/install_dependencies.sh /usr/local/bin/
+RUN /usr/local/bin/install_dependencies.sh
+
+COPY --from=dependencies /lib/systemd/system/tmxcore.service /lib/systemd/system/
+COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
+COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies /usr/sbin/tmxcore.service /usr/sbin/
+COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
+COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+COPY ./container /home/V2X-Hub/container/
+WORKDIR /home/V2X-Hub/container/
+RUN ./database.sh
+RUN ./library.sh
+RUN ldconfig
+RUN ./ssl.sh
+
 WORKDIR /var/log/tmx
 
 # Set metadata labels
