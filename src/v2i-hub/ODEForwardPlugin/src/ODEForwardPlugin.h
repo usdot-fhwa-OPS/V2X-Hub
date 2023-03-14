@@ -35,7 +35,7 @@
  #include <BasicSafetyMessage.h>
  #include <tmx/messages/auto_message.hpp>
  #include <librdkafka/rdkafkacpp.h>
- #include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+ #include <tmx/json/cJSON.h>
  #include "/usr/local/include/date/date.h"
  
  using namespace std;

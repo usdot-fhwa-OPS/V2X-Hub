@@ -1,7 +1,7 @@
 PROJECT ( tmxutils CXX )
-
-FILE (GLOB_RECURSE HEADERS "src/*.h*")
+FILE (GLOB_RECURSE HEADERS "src/" "*.h*")
 FILE (GLOB_RECURSE SOURCES  "src/" "*.c*")
+
 
 FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
@@ -15,7 +15,6 @@ ENDIF ()
 TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} SYSTEM PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
                             $<BUILD_INTERFACE:${TMXMESSAGES_INCLUDE_DIR}>
-                            /opt/carma/include
                             ${MYSQL_INCLUDE_DIR}
                             ${MYSQLCPPCONN_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC 
@@ -24,15 +23,14 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        ${MYSQLCPPCONN_LIBRARIES}
                        ${UUID_LIBRARY}
                        rdkafka++ 
+                       ::carma-clock
                        gmock
                        pthread m rt)
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
 
-INSTALL (TARGETS ${PROJECT_NAME} EXPORT ${TMX_APPNAME}
-         DESTINATION lib COMPONENT lib${PROJECT_NAME})
-INSTALL (FILES ${HEADERS} 
-         DESTINATION include COMPONENT lib${PROJECT_NAME})
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TMX_APPNAME} DESTINATION lib COMPONENT lib${PROJECT_NAME})
+INSTALL(DIRECTORY src/ DESTINATION include FILES_MATCHING PATTERN "*.h*")
 # INSTALL (EXPORT ${TMX_APPNAME}-plugin DESTINATION share/${TMX_APPNAME}/${TMX_APPNAME}-plugin.cmake)
 # EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
 #        FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)

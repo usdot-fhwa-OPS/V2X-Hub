@@ -1,4 +1,4 @@
-#include <CARMASimulationAdapter.hpp>
+#include "include/CARMASimulationAdapter.hpp"
 
 
 using namespace tmx::utils;
@@ -33,7 +33,27 @@ namespace CARMASimulationAdapter{
     bool CARMASimulationAdapter::initialize_time_producer() {
         std::string _broker_str = std::getenv(KAFKA_BROKER_ADDRESS_ENV);
     }
+
+    int CARMASimulationAdapter::Main() {
+
+
+        PLOG(logINFO) << "Starting plugin.";		
+
+        while (_plugin->state != IvpPluginState_error) {
+
+            if (IsPluginState(IvpPluginState_registered))
+            {
+            }
+        }
+
+	    return (EXIT_SUCCESS);
+    }
+
+
     
         
 
+}
+int main(int argc, char *argv[]) {
+	return run_plugin < CARMASimulationAdapter::CARMASimulationAdapter > ("CARMASimulationAdapter", argc, argv);
 }

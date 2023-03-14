@@ -3,8 +3,8 @@
 #include <UdpClient.h>
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
-#include <kafka_producer_worker.hpp>
-#include <byte_stream.hpp>
+#include <kafka/kafka_producer_worker.h>
+#include <tmx/messages/byte_stream.hpp>
 
 
 namespace CARMASimulationAdapter {
@@ -106,7 +106,7 @@ namespace CARMASimulationAdapter {
             std::unique_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
             std::unique_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::unique_ptr<tmx::utils::UdpClient> message_receiver_publisher;
-            std::shared_ptr<RdKafka::Producer> time_sync_producer;
-    }
+            std::shared_ptr<kafka_clients::kafka_producer_worker> _time_producer;
+    };
 
 }

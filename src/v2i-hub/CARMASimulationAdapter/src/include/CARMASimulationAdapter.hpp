@@ -17,8 +17,8 @@
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
 #include <PluginClientClockAware.h>
-#include <CARMASimulationConnection.hpp>
-#include <kafka_producer_worker.hpp>
+#include "CARMASimulationConnection.hpp"
+#include <kafka/kafka_producer_worker.h>
 
 using namespace std;
 using namespace tmx;
