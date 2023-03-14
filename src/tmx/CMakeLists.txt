@@ -76,3 +76,4 @@ ENDIF ()
 
 INSTALL (EXPORT ${TMX_APPNAME} DESTINATION share/${TMX_APPNAME}
 			FILE ${TMX_APPNAME}-plugin-config.cmake)
+

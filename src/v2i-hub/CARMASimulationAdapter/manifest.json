@@ -1,0 +1,43 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"...",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
+			"key":"Local_IP",
+			"default":"127.0.0.1",
+			"description":"The IPv4 address of the local computer for receiving Traffic Signal Controller Broadcast Messages."
+		},
+		{
+			"key":"Time_Sync_Port",
+			"default":"0",
+			"description":"The local UDP port for reception of time sychronization messages from CARMA Simulation"
+		},
+		{
+			"key":"V2X_Message_Port",
+			"default":"0",
+			"description":"The local UDP port for reception of v2x messages from CARMA Simulation"
+		},
+		{
+			"key":"Longitude",
+			"default":"0",
+			"description":"Longitude (in degrees) of the location of the simulated infrastructure."
+		},
+		{
+			"key":"Latitude",
+			"default":"0",
+			"description":"Latitude (in degrees) of the location of the simulated infrastructure."
+		}
+		
+	]
+}
