@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd src && ./build.sh debug",
+            "command": "cd src && ./build.sh",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -30,6 +30,15 @@
             "group": {
                 "kind": "build"
             }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "cd src && ./coverage.sh",
+            "group": {
+                "kind": "test"
+            }
         }
+
     ]
 }

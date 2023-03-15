@@ -4,7 +4,6 @@
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
 #include <kafka/kafka_producer_worker.h>
-#include <tmx/messages/byte_stream.hpp>
 
 
 namespace CARMASimulationAdapter {
@@ -12,6 +11,8 @@ namespace CARMASimulationAdapter {
     struct Time_Sync_Message
     {
         uint64_t cur_time;
+        std::string toJson() const;
+        void fromJson(const std::string &json);
     };
     
 
@@ -34,27 +35,27 @@ namespace CARMASimulationAdapter {
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation
-             * @param v2x_message byte_stream
+             * @param v2x_message string
              */
-            void forward_v2x_message_to_simulation(const tmx::byte_stream &v2x_message) const;
+            void forward_v2x_message_to_simulation(const std::string &v2x_message) const;
 
             /**
              * @brief Method to forward v2x message to V2X-Hub message receiver plugin.
-             * @param v2x_message byte_stream
+             * @param v2x_message string
              */
-            void foward_v2x_message_to_v2xhub(const tmx::byte_stream &v2x_message) const;
+            void foward_v2x_message_to_v2xhub(const std::string &v2x_message) const;
 
             /**
              * @brief Method to consume incoming v2x message from simulation
-             * @return byte_stream of v2x messaage.
+             * @return string of v2x messaage.
              */
-            tmx::byte_stream consume_v2x_message_from_simulation() const;
+            std::string consume_v2x_message_from_simulation() const;
             
             /**
              * @brief Method to consume incoming v2x message from V2X-Hub immediate forward plugin.
-             * @return byte_stream of v2x messaage.
+             * @return string of v2x messaage.
              */
-            tmx::byte_stream consume_v2x_message_from_v2xhub() const;
+            std::string consume_v2x_message_from_v2xhub() const;
             /**
              * @brief Forward time sychronization message to infrastructure Kafka Broker
              * @param msg Time synchronization message.

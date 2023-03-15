@@ -114,7 +114,7 @@ namespace kafka_clients
     {
         RdKafka::Message *msg = nullptr;
         msg = _consumer->consume(timeout_ms);
-        const char *msg_str = msg_consume(msg, nullptr);
+        const char *msg_str = msg_consume(msg);
         return msg_str;
     }
 
@@ -129,7 +129,7 @@ namespace kafka_clients
             << (_group_id_str.empty() ? "UNKNOWN" : _group_id_str) << std::endl;
     }
 
-    const char *kafka_consumer_worker::msg_consume(RdKafka::Message *message, void *opaque)
+    const char *kafka_consumer_worker::msg_consume(RdKafka::Message *message)
     {
         const char *return_msg_str = "";
         switch (message->err())
@@ -158,5 +158,77 @@ namespace kafka_clients
             break;
         }
         return return_msg_str;
+    }
+
+    void consumer_rebalance_cb::part_list_print(const std::vector<RdKafka::TopicPartition*>&partitions)
+    {
+        for (unsigned int i = 0 ; i < partitions.size() ; i++) {
+            FILE_LOG(logDEBUG) << "Topic " << partitions[i]->topic() << ", Partition " << partitions[i]->partition() << std::endl;
+        }
+    }
+
+    void consumer_rebalance_cb::rebalance_cb(RdKafka::KafkaConsumer *consumer, RdKafka::ErrorCode err, std::vector<RdKafka::TopicPartition*> &partitions) 
+    {
+        FILE_LOG(logDEBUG) << "RebalanceCb: " <<  RdKafka::err2str(err) << std::endl;
+        part_list_print(partitions);
+
+        RdKafka::Error *error = NULL;
+        RdKafka::ErrorCode ret_err = RdKafka::ERR_NO_ERROR;
+
+        if (err == RdKafka::ERR__ASSIGN_PARTITIONS) {
+        if (consumer->rebalance_protocol() == "COOPERATIVE")
+            error = consumer->incremental_assign(partitions);
+        else
+            ret_err = consumer->assign(partitions);
+            partition_cnt += (int)partitions.size();
+        } 
+        else 
+        {
+            if (consumer->rebalance_protocol() == "COOPERATIVE") 
+            {
+                error = consumer->incremental_unassign(partitions);
+                partition_cnt -= (int)partitions.size();
+            } else {
+                ret_err = consumer->unassign();
+                partition_cnt = 0;
+            }
+        }
+        eof_cnt = 0; /* FIXME: Won't work with COOPERATIVE */
+
+        if (error) {
+            FILE_LOG(logWARNING) << "Incremental assign failed: " << error->str() << std::endl;
+            delete error;
+        } else if (ret_err)
+            FILE_LOG(logWARNING) << "Assign failed: " << error->str() << std::endl ;
+    }
+
+    void consumer_event_cb::event_cb (RdKafka::Event &event) {
+        switch (event.type())
+            {
+            case RdKafka::Event::EVENT_ERROR:
+                if (event.fatal()) 
+                {
+                    FILE_LOG(logERROR) << "FATAL: " << RdKafka::err2str(event.err()) << ", " << event.str() << std::endl;
+                }
+                FILE_LOG(logERROR) << RdKafka::err2str(event.err()) << ", " << event.str() << std::endl;
+                break;
+
+            case RdKafka::Event::EVENT_STATS:
+                FILE_LOG(logINFO) << "STATS: " << RdKafka::err2str(event.err()) << ", " << event.str() << std::endl;
+                break;
+
+            case RdKafka::Event::EVENT_LOG:
+                FILE_LOG(logINFO) << "EVENT: SEVERITY: " <<  event.severity() << " FAC:" << event.fac().c_str() 
+                    << " MESSAGE :" << event.str().c_str() << std::endl;
+                break;
+
+            case RdKafka::Event::EVENT_THROTTLE:
+                FILE_LOG(logINFO)  << " THROTTLED:  " << event.throttle_time() << "ms BROKER: " << (int)event.broker_id() << std::endl;
+                break;
+
+            default:
+                FILE_LOG(logINFO) << "DEFAULT: " <<RdKafka::err2str(event.err()) << ", " << event.str() << std::endl;
+                break;
+        }
     }
 }

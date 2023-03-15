@@ -7,9 +7,6 @@
 #include <cstdio>
 #include <csignal>
 #include <cstring>
-// #if _AIX
-// #include <unistd.h>
-// #endif
 #include <PluginLog.h>
 #include <TmxLog.h>
 

@@ -9,4 +9,4 @@ RUN /usr/local/bin/install_dependencies.sh
 # build out ext components
 COPY ./ext /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
-RUN ./build.sh debug
+RUN ./build.sh
