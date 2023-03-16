@@ -33,7 +33,6 @@ elif [ $RELEASE_BUILD -eq 0 ]; then
     COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
     BUILD_TYPE="Debug"
 fi
-
 pushd tmx
 cmake -Bbuild -DCMAKE_PREFIX_PATH=/usr/local/share/tmx\;\/opt/carma/cmake\;\ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
 pushd build

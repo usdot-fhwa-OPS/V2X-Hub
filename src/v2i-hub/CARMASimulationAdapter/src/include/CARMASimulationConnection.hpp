@@ -31,6 +31,9 @@ namespace CARMASimulationAdapter {
             CARMASimulationConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location, std::shared_ptr<kafka_clients::kafka_producer_worker> time_producer);
+            /**
+            * Destructor for CARMA Simulation Connection.
+            */
             ~CARMASimulationConnection();
 
              /**
@@ -43,19 +46,28 @@ namespace CARMASimulationAdapter {
              * @brief Method to forward v2x message to V2X-Hub message receiver plugin.
              * @param v2x_message string
              */
-            void foward_v2x_message_to_v2xhub(const std::string &v2x_message) const;
+            void forward_v2x_message_to_v2xhub(const std::string &v2x_message) const;
+
+            void forward_message(const std::string &v2x_message, const std::shared_ptr<UdpClient> _client ) const ;
 
             /**
              * @brief Method to consume incoming v2x message from simulation
              * @return string of v2x messaage.
              */
             std::string consume_v2x_message_from_simulation() const;
-            
+
             /**
              * @brief Method to consume incoming v2x message from V2X-Hub immediate forward plugin.
              * @return string of v2x messaage.
              */
             std::string consume_v2x_message_from_v2xhub() const;
+            
+            /**
+             * @brief Method to consume incoming std::string message from UDP Server.
+             * @param _server UDP Server to consume string message from.
+             * @return string of message.
+             */
+            std::string consume_server_message( const std::shared_ptr<UdpServer> _server ) const;
             /**
              * @brief Forward time sychronization message to infrastructure Kafka Broker
              * @param msg Time synchronization message.
@@ -94,11 +106,19 @@ namespace CARMASimulationAdapter {
              */
             bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
-
+            /**
+             * @brief Method to attempt to establish connection between CARMA-Simulation and infrastucture. Returns true if succesful
+             * and false if unsuccessful.
+             * @return returns true if succesful and false if unsuccessful.
+             */
             bool connect();
-
+            /**
+             * @brief Returns true if CARMA-Simulation connection is active and false if the connection is inactive.
+             * @return Returns true if CARMA-Simulation connection is active and false if the connection is inactive.
+             */
             bool is_connected() const;
         private:
+            
             std::string _simulation_ip;
             uint _simulation_registration_port;
             std::string _local_ip;
@@ -106,11 +126,12 @@ namespace CARMASimulationAdapter {
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
             uint _simulation_v2x_port;
-            bool _connected;
-            std::unique_ptr<tmx::utils::UdpServer> carma_simulation_listener;
-            std::unique_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
-            std::unique_ptr<tmx::utils::UdpServer> immediate_forward_listener;
-            std::unique_ptr<tmx::utils::UdpClient> message_receiver_publisher;
+            bool _connected = false;
+            std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
+            std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
+            std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
+            std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
+            std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
             std::shared_ptr<kafka_clients::kafka_producer_worker> _time_producer;
     };
 

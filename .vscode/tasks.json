@@ -34,7 +34,7 @@
         {
             "label": "test",
             "type": "shell",
-            "command": "cd src && ./coverage.sh",
+            "command": "cd src && ./install_coverage_dependencies.sh && ./coverage.sh",
             "group": {
                 "kind": "test"
             }

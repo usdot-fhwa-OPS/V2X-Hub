@@ -27,14 +27,14 @@ class UdpClient
 {
 public:
 	UdpClient(const std::string& address, int port);
-	~UdpClient();
+	virtual ~UdpClient();
 
-	int GetSocket() const;
-	int GetPort() const;
-	std::string GetAddress() const;
+	virtual int GetSocket() const;
+	virtual int GetPort() const;
+	virtual std::string GetAddress() const;
 
-	int Send(std::string& message);
-	int Send(void *buffer, size_t size);
+	virtual int Send(const std::string& message);
+	virtual int Send(void *buffer, size_t size);
 
 private:
 	int _socket;

@@ -2,7 +2,6 @@
 #include "kafka_producer_worker.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
 namespace kafka_clients {
     /**
      * @brief Mock kafka consumer used for unit testing using gmock. For documentation using gmock mocks 
