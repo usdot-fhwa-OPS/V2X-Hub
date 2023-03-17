@@ -69,7 +69,10 @@ namespace CARMASimulationAdapter {
          * @return true if initialization is successful and false if initialization fails.
          */
         bool initialize_time_producer();
-
+        /**
+         * @brief Method to attempt to establish connection between CARMA Simulation and Infrastructure Software (V2X-Hub).
+         * @return true if successful and false if unsuccessful.
+         */
         bool connect();
         
     private:

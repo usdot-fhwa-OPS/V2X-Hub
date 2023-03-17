@@ -47,7 +47,11 @@ namespace CARMASimulationAdapter {
              * @param v2x_message string
              */
             void forward_v2x_message_to_v2xhub(const std::string &v2x_message) const;
-
+            /**
+             * @brief Method to forward message to external UDP listener via UDP Client
+             * @param v2x_message string message to forward.
+             * @param _client UDP client to forward message with.
+             */
             void forward_message(const std::string &v2x_message, const std::shared_ptr<UdpClient> _client ) const ;
 
             /**
@@ -102,7 +106,7 @@ namespace CARMASimulationAdapter {
              * @param time_sync_port port assigned to listen for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned for listening for v2x messages from CARMA-Simulation.
              * @param simulation_v2x_port port on which CARMA-Simulation is listening for incoming v2x messages.
-             * @return true 
+             * @return true if setup is successful and false otherwise.
              */
             bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
