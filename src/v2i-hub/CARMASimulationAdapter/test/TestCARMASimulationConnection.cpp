@@ -63,4 +63,12 @@ namespace CARMASimulationAdapter {
         delete msg_data;
 
     }
+
+    TEST_F( TestCARMASimulationConnection, setup_upd_connection) {
+        ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569));
+    }
+
+    TEST_F(TestCARMASimulationConnection, connect) {
+        ASSERT_FALSE(connection->connect());
+    }
 }

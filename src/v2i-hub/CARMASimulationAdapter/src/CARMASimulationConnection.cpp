@@ -42,7 +42,7 @@ namespace CARMASimulationAdapter{
     bool CARMASimulationConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location) {
-        // TODO Standup UDP Server and Client for registration and implement handshake
+        // TODO: Standup UDP Server and Client for registration and implement handshake
         return false;                                
     }
 
@@ -76,7 +76,6 @@ namespace CARMASimulationAdapter{
     }
 
     Time_Sync_Message CARMASimulationConnection::consume_time_sync_message() const{
-        //TODO
         if (time_sync_listener) {
             std::string str_msg = consume_server_message(time_sync_listener);
             Time_Sync_Message msg;
