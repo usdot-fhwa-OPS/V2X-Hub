@@ -89,17 +89,20 @@ namespace CARMASimulationAdapter{
     }
 
     std::string CARMASimulationConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
-        char *msg;
+        char *msg = new char();
         int num_of_bytes = _server->TimedReceive(msg,1000, 5);
         if (num_of_bytes > 0 ) {
             std::string ret(msg);
+            delete msg;
             PLOG(logDEBUG) << "Message Received : " << ret << std::endl;
-            return msg;
+            return ret;
         }
         else if ( num_of_bytes == 0 ) {
+            delete msg;
             throw UdpServerRuntimeError("Received empty message!");
         }
         else {
+            delete msg;
             throw UdpServerRuntimeError("Listen timed out after 5 ms!");
         }
     }

@@ -11,6 +11,8 @@ using testing::Return;
 using testing::Throw;
 using testing::DoDefault;
 using testing::SetArgPointee;
+using testing::SetArrayArgument;
+
 
 namespace CARMASimulationAdapter {
 
@@ -44,13 +46,21 @@ namespace CARMASimulationAdapter {
     }
 
     TEST_F( TestCARMASimulationConnection, consume_msg){
+
         std::shared_ptr<MockUpdServer> server = std::make_shared<MockUpdServer>();
-        char *msg_data;
-        std::string test_string = "Test Message";
-        const char *test_msg = test_string.c_str();
-        EXPECT_CALL( *server, TimedReceive(msg_data, 1000, 5) ).Times(2).WillOnce(testing::DoAll(Return(-1))).WillRepeatedly( testing::DoAll( SetArgPointee<0>(*test_msg),Return(100)));
+        char *msg_data  = new char();
+        char *test_string = "Test Message";
+        EXPECT_CALL( *server, TimedReceive(_, _, _) ).Times(2).
+            WillOnce(testing::DoAll(Return(-1))).
+            WillRepeatedly( testing::DoAll( SetArrayArgument<0>(test_string, test_string + strlen(test_string) + 1),Return(10)));
         ASSERT_THROW(connection->consume_server_message(server), UdpServerRuntimeError);
+
         std::string msg = connection->consume_server_message(server);
-        ASSERT_EQ(test_string.compare( msg) , 0);
+
+        std::string compare_str;
+        compare_str = test_string;
+        ASSERT_EQ(compare_str.compare( msg ) , 0);
+        delete msg_data;
+
     }
 }
