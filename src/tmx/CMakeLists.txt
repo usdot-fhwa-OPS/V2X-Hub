@@ -24,7 +24,6 @@ ENABLE_LANGUAGE ( CXX )
 
 INCLUDE (CheckCCompilerFlag)
 CHECK_C_COMPILER_FLAG ("-fPIC" CMAKE_C_FLAG_FPIC_SUPPORTED)
-SET(CMAKE_CXX_FLAGS "-g --coverage -fprofile-arcs -ftest-coverage")
 
 
 IF (NOT TMX_BIN_DIR)
