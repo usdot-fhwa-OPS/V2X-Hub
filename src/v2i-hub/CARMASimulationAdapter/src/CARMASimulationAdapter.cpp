@@ -9,10 +9,6 @@ namespace CARMASimulationAdapter{
         PLOG(logDEBUG1) << "Initialize " << name << " plugin!" << std::endl;
     }
 
-    CARMASimulationAdapter::~CARMASimulationAdapter() {
-        PLOG(logDEBUG1) << "Destroy " << _name << " plugin!" << std::endl;
-    }
-
     void CARMASimulationAdapter::UpdateConfigSettings() {
         // TODO
     }

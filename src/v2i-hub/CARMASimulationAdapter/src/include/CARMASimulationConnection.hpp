@@ -31,10 +31,6 @@ namespace CARMASimulationAdapter {
             explicit CARMASimulationConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location, std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer);
-            /**
-            * Destructor for CARMA Simulation Connection.
-            */
-            ~CARMASimulationConnection();
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation

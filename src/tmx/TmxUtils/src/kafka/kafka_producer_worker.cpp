@@ -184,7 +184,7 @@ namespace tmx::utils
 
     void kafka_producer_worker::printCurrConf()
     {
-        FILE_LOG(logERROR) << "Producer connect to bootstrap_server: " << (_broker_str.empty() ? "UNKNOWN" : _broker_str) 
+        FILE_LOG(logINFO) << "Producer connect to bootstrap_server: " << (_broker_str.empty() ? "UNKNOWN" : _broker_str) 
                 << " topic: " << (_topics_str.empty() ? "UNKNOWN" : _topics_str) << " ,partition: " <<  _partition << std::endl;
     }
 }

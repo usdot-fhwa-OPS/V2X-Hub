@@ -21,27 +21,22 @@
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
 
-using namespace std;
-using namespace tmx;
-using namespace tmx::utils;
+
 
 namespace CARMASimulationAdapter {
     /**
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
      */
-    class CARMASimulationAdapter: public PluginClientClockAware {
+    class CARMASimulationAdapter: public tmx::utils::PluginClientClockAware {
     public:
         /**
          * @brief CCARMA-Simulation Infrastucture Adapter constructor.
          * @param name name of plugin.
          */
         explicit CARMASimulationAdapter(const std::string &name);
-        /**
-         * @brief CARMA-Simulation Infrastucture Adapter destructor.
-         */
-        ~CARMASimulationAdapter() override;
-        int Main();
+        
+        int Main() override ;
     protected:
         /**
          * @brief Called everytime a configuration value is changed for the plugin.
@@ -54,12 +49,12 @@ namespace CARMASimulationAdapter {
          * @param key string key of the configuration value that has changed.
          * @param value new value of the configuration that has changed.
          */
-        void OnConfigChanged(const char *key, const char *value);
+        void OnConfigChanged(const char *key, const char *value) override;
         /**
          * @brief Overrides PluginClient OnStateChange(IvpPluginState state) method.
          * @param state new state of the plugin.
          */
-        void OnStateChange(IvpPluginState state);
+        void OnStateChange(IvpPluginState state) override;
         // Virtual method overrides END.
         
         /**
@@ -82,8 +77,8 @@ namespace CARMASimulationAdapter {
         std::string local_ip;
         uint time_sync_port;
         uint v2x_port;
-        WGS84Point location;
-        std::shared_ptr<kafka_producer_worker> time_producer;
+        tmx::utils::WGS84Point location;
+        std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CARMASimulationConnection> connection;
         std::mutex _lock;
         inline static const char *KAFKA_BROKER_ADDRESS_ENV = "KAFKA_BROKER_ADDRESS";
