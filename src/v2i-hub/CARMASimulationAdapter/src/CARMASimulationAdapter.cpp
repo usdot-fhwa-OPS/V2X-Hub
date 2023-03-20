@@ -5,7 +5,7 @@ using namespace tmx::utils;
 
 namespace CARMASimulationAdapter{
 
-    CARMASimulationAdapter::CARMASimulationAdapter(std::string name) : PluginClientClockAware(name){
+    CARMASimulationAdapter::CARMASimulationAdapter(const std::string &name) : PluginClientClockAware(name){
         PLOG(logDEBUG1) << "Initialize " << name << " plugin!" << std::endl;
     }
 
@@ -38,7 +38,7 @@ namespace CARMASimulationAdapter{
         std::string _broker_str = std::getenv(KAFKA_BROKER_ADDRESS_ENV);
         std::string _topic = std::getenv(TIME_SYNC_TOPIC_ENV);
 
-        kafka_clients::kafka_client client;
+        kafka_client client;
         time_producer =  client.create_producer(_broker_str,_topic);
     }
 
@@ -75,7 +75,7 @@ namespace CARMASimulationAdapter{
             }
         }
 
-	    return (EXIT_SUCCESS);
+	    return EXIT_SUCCESS;
     }
 
 

@@ -12,53 +12,21 @@
 
 #include <librdkafka/rdkafkacpp.h>
 
-using namespace tmx::utils;
-namespace kafka_clients
+namespace tmx::utils
 {  
     class producer_delivery_report_cb : public RdKafka::DeliveryReportCb
     {
         public:
-            producer_delivery_report_cb(){
-
-            };
-            ~producer_delivery_report_cb(){
-
-            };
-            void dr_cb (RdKafka::Message &message)
-            {
-                FILE_LOG(logDEBUG) << "Message delivery length : " << message.len() << " content: " <<  message.errstr().c_str() << std::endl;
-                if(message.key())                 
-                    FILE_LOG(logDEBUG) << " Key:  " << (char*)(message.key()) << std::endl;
-            }
+            producer_delivery_report_cb() = default;
+            ~producer_delivery_report_cb() override = default;
+            void dr_cb (RdKafka::Message &message) override;
     };
     class producer_event_cb:public RdKafka::EventCb
     {
         public:
-            producer_event_cb(){
-
-            };
-            ~producer_event_cb(){
-                
-            };
-            void event_cb (RdKafka::Event &event) 
-            {
-                switch (event.type())
-                {
-                case RdKafka::Event::EVENT_ERROR:                 
-                    FILE_LOG(logERROR) <<  RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
-                    if (event.err() == RdKafka::ERR__ALL_BROKERS_DOWN)
-                    break;
-                case RdKafka::Event::EVENT_STATS:
-                    FILE_LOG(logINFO) <<  "STATS: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
-                    break;
-                case RdKafka::Event::EVENT_LOG:
-                    FILE_LOG(logINFO) <<  "LOG: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
-                    break;
-                default:
-                    FILE_LOG(logINFO) <<  "EVENT: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
-                    break;
-                }
-            }
+            producer_event_cb() = default;
+            ~producer_event_cb() override = default;
+            void event_cb (RdKafka::Event &event) override;
     };
 
     class kafka_producer_worker

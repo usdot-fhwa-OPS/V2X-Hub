@@ -28,9 +28,9 @@ namespace CARMASimulationAdapter {
              * @param location Simulationed location of infrastructure.
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            CARMASimulationConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
+            explicit CARMASimulationConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location, std::shared_ptr<kafka_clients::kafka_producer_worker> time_producer);
+                                const tmx::utils::WGS84Point &location, std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer);
             /**
             * Destructor for CARMA Simulation Connection.
             */
@@ -52,7 +52,7 @@ namespace CARMASimulationAdapter {
              * @param v2x_message string message to forward.
              * @param _client UDP client to forward message with.
              */
-            void forward_message(const std::string &v2x_message, const std::shared_ptr<UdpClient> _client ) const ;
+            void forward_message(const std::string &v2x_message, const std::shared_ptr<tmx::utils::UdpClient> _client ) const ;
 
             /**
              * @brief Method to consume incoming v2x message from simulation
@@ -71,7 +71,7 @@ namespace CARMASimulationAdapter {
              * @param _server UDP Server to consume string message from.
              * @return string of message.
              */
-            std::string consume_server_message( const std::shared_ptr<UdpServer> _server ) const;
+            std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
             /**
              * @brief Forward time sychronization message to infrastructure Kafka Broker
              * @param msg Time synchronization message.
@@ -136,7 +136,7 @@ namespace CARMASimulationAdapter {
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
-            std::shared_ptr<kafka_clients::kafka_producer_worker> _time_producer;
+            std::shared_ptr<tmx::utils::kafka_producer_worker> _time_producer;
     };
 
 }

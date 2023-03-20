@@ -2,14 +2,14 @@
 #include "kafka_producer_worker.h"
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-namespace kafka_clients {
+namespace tmx::utils {
     /**
      * @brief Mock kafka consumer used for unit testing using gmock. For documentation using gmock mocks 
      * (https://google.github.io/googletest/gmock_for_dummies.html).
      * 
      * @author
      */
-    class mock_kafka_producer_worker : public kafka_clients::kafka_producer_worker {
+    class mock_kafka_producer_worker : public kafka_producer_worker {
         public:
             /**
              * @brief Mock constructor with all default parameters. Can be used as an default constructor.

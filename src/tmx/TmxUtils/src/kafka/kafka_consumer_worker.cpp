@@ -1,12 +1,11 @@
 #include "kafka_consumer_worker.h"
 
-namespace kafka_clients
+namespace tmx::utils
 {
-
     kafka_consumer_worker::kafka_consumer_worker(const std::string &broker_str, const std::string &topic_str,
-                                                 const std::string &group_id_str, int64_t cur_offset, int32_t partition)
-        :_topics_str(topic_str), _broker_str(broker_str), _group_id_str(group_id_str), _cur_offet(cur_offset),
-          _partition(partition)
+                                                const std::string &group_id_str, int64_t cur_offset, int32_t partition)
+        :_topics_str(topic_str), _broker_str(broker_str), _group_id_str(group_id_str), _cur_offset(cur_offset),
+        _partition(partition)
     {
     }
 
@@ -129,7 +128,7 @@ namespace kafka_clients
             << (_group_id_str.empty() ? "UNKNOWN" : _group_id_str) << std::endl;
     }
 
-    const char *kafka_consumer_worker::msg_consume(RdKafka::Message *message)
+    const char *kafka_consumer_worker::msg_consume(const RdKafka::Message *message)
     {
         const char *return_msg_str = "";
         switch (message->err())
@@ -139,11 +138,11 @@ namespace kafka_clients
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;
             FILE_LOG(logDEBUG1) << _consumer->name() << " message Consumed: " << static_cast<int>(message->len())  << " bytes : " << static_cast<const char *>(message->payload()) << std::endl;
-            _last_offset = message->offset();
+            _cur_offset = message->offset();
             return_msg_str = static_cast<const char *>(message->payload());
             break;
         case RdKafka::ERR__PARTITION_EOF:
-            FILE_LOG(logWARNING) << _consumer->name() << " reached the end of the queue, offset : " <<  _last_offset << std::endl;
+            FILE_LOG(logWARNING) << _consumer->name() << " reached the end of the queue, offset : " <<  _cur_offset << std::endl;
             break;
         case RdKafka::ERR__UNKNOWN_TOPIC:
         case RdKafka::ERR__UNKNOWN_PARTITION:
@@ -172,7 +171,7 @@ namespace kafka_clients
         FILE_LOG(logDEBUG) << "RebalanceCb: " <<  RdKafka::err2str(err) << std::endl;
         part_list_print(partitions);
 
-        RdKafka::Error *error = NULL;
+        RdKafka::Error *error = nullptr;
         RdKafka::ErrorCode ret_err = RdKafka::ERR_NO_ERROR;
 
         if (err == RdKafka::ERR__ASSIGN_PARTITIONS) {
@@ -223,7 +222,7 @@ namespace kafka_clients
                 break;
 
             case RdKafka::Event::EVENT_THROTTLE:
-                FILE_LOG(logINFO)  << " THROTTLED:  " << event.throttle_time() << "ms BROKER: " << (int)event.broker_id() << std::endl;
+                FILE_LOG(logINFO)  << " THROTTLED:  " << event.throttle_time() << "ms BROKER: " << event.broker_id() << std::endl;
                 break;
 
             default:
@@ -231,4 +230,5 @@ namespace kafka_clients
                 break;
         }
     }
+    
 }

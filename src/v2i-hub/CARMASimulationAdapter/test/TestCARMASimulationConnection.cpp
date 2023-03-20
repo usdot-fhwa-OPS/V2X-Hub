@@ -6,12 +6,15 @@
 #include <MockUdpClient.h>
 #include <MockUdpServer.h>
 
+
 using testing::_;
 using testing::Return;
 using testing::Throw;
 using testing::DoDefault;
 using testing::SetArgPointee;
 using testing::SetArrayArgument;
+using namespace 
+tmx::utils;
 
 
 namespace CARMASimulationAdapter {
@@ -20,8 +23,8 @@ namespace CARMASimulationAdapter {
         protected:
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
-                tmx::utils::WGS84Point location; 
-                std::shared_ptr<kafka_clients::mock_kafka_producer_worker> producer = std::make_shared<kafka_clients::mock_kafka_producer_worker>();
+                WGS84Point location; 
+                std::shared_ptr<mock_kafka_producer_worker> producer = std::make_shared<mock_kafka_producer_worker>();
                 connection = std::make_shared<CARMASimulationConnection>("127.0.0.1", 1212, "127.0.0.1", 1213, 1214, location, producer);
 
             }

@@ -6,8 +6,8 @@ TEST(test_kafka_consumer_worker, create_consumer)
     std::string broker_str = "127.0.0.1:9092";
     std::string topic = "test";
     std::string group = "group_one";
-    auto client = std::make_shared<kafka_clients::kafka_client>();
-    std::shared_ptr<kafka_clients::kafka_consumer_worker>  worker;
+    auto client = std::make_shared<tmx::utils::kafka_client>();
+    std::shared_ptr<tmx::utils::kafka_consumer_worker>  worker;
     worker = client->create_consumer(broker_str, topic, group);
     worker->init();
     worker->subscribe();

@@ -6,15 +6,15 @@
 
 
 
-namespace kafka_clients
+namespace tmx::utils
 {
 
     class kafka_client
     {
     public:
-        std::shared_ptr<kafka_clients::kafka_consumer_worker> create_consumer(const std::string &broker_str, const std::string &topic_str,
+        std::shared_ptr<kafka_consumer_worker> create_consumer(const std::string &broker_str, const std::string &topic_str,
                                                                               const std::string &group_id_str) const;
-        std::shared_ptr<kafka_clients::kafka_producer_worker> create_producer(const std::string &broker_str, const std::string &topic_str) const;
+        std::shared_ptr<kafka_producer_worker> create_producer(const std::string &broker_str, const std::string &topic_str) const;
     };
 
 }

@@ -10,10 +10,7 @@
 #include <PluginLog.h>
 #include <librdkafka/rdkafkacpp.h>
 
-using namespace tmx::utils;
-
-namespace kafka_clients
-{
+namespace tmx::utils {
     static int partition_cnt = 0;
     static int eof_cnt = 0;
 
@@ -22,15 +19,16 @@ namespace kafka_clients
         private:
             static void part_list_print (const std::vector<RdKafka::TopicPartition*>&partitions);
         public:
-            void rebalance_cb (RdKafka::KafkaConsumer *consumer, RdKafka::ErrorCode err, std::vector<RdKafka::TopicPartition*> &partitions) ;
+            void rebalance_cb (RdKafka::KafkaConsumer *consumer, RdKafka::ErrorCode err, 
+                            std::vector<RdKafka::TopicPartition*> &partitions) override;
     };
 
     class consumer_event_cb : public RdKafka::EventCb 
     {
         public:
             consumer_event_cb() = default;
-            ~consumer_event_cb() = default;
-            void event_cb (RdKafka::Event &event) ;
+            ~consumer_event_cb() override = default;
+            void event_cb (RdKafka::Event &event) override ;
     };
         
     class kafka_consumer_worker
@@ -49,15 +47,14 @@ namespace kafka_clients
             std::string _topics_str = "";
             std::string _broker_str = "";
             std::string _group_id_str = "";
-            int64_t _last_offset = 0;
             RdKafka::KafkaConsumer *_consumer = nullptr;
             RdKafka::Topic *_topic = nullptr;
-            int64_t _cur_offet =  RdKafka::Topic::OFFSET_BEGINNING;
+            int64_t _cur_offset =  RdKafka::Topic::OFFSET_BEGINNING;
             int32_t _partition = 0;
             bool _run = false;
             consumer_event_cb _consumer_event_cb;
             consumer_rebalance_cb _consumer_rebalance_cb;
-            const char* msg_consume(RdKafka::Message *message);
+            const char* msg_consume(const RdKafka::Message *message);
 
         public:
             /**
@@ -109,6 +106,6 @@ namespace kafka_clients
              */
             virtual ~kafka_consumer_worker() = default;
     };
+    
 }
-
 #endif

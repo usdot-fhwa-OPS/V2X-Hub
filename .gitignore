@@ -80,6 +80,8 @@ Thumbs.db
 
 # Coverage Files
 *.gcov
+*coverage.json
+*coverage.xml
  
 #docker-compose variables
 .env

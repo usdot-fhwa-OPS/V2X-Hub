@@ -36,11 +36,11 @@ namespace CARMASimulationAdapter {
          * @brief CCARMA-Simulation Infrastucture Adapter constructor.
          * @param name name of plugin.
          */
-        CARMASimulationAdapter(std::string name);
+        explicit CARMASimulationAdapter(const std::string &name);
         /**
          * @brief CARMA-Simulation Infrastucture Adapter destructor.
          */
-        virtual ~CARMASimulationAdapter();
+        ~CARMASimulationAdapter() override;
         int Main();
     protected:
         /**
@@ -83,7 +83,7 @@ namespace CARMASimulationAdapter {
         uint time_sync_port;
         uint v2x_port;
         WGS84Point location;
-        std::shared_ptr<kafka_clients::kafka_producer_worker> time_producer;
+        std::shared_ptr<kafka_producer_worker> time_producer;
         std::unique_ptr<CARMASimulationConnection> connection;
         std::mutex _lock;
         inline static const char *KAFKA_BROKER_ADDRESS_ENV = "KAFKA_BROKER_ADDRESS";

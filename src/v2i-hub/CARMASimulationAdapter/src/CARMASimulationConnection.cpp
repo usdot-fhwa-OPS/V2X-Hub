@@ -7,7 +7,7 @@ namespace CARMASimulationAdapter{
     CARMASimulationConnection::CARMASimulationConnection(const std::string &simulation_ip, const uint simulation_registration_port, 
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                                         const tmx::utils::WGS84Point &location, 
-                                                        std::shared_ptr<kafka_clients::kafka_producer_worker> time_producer) : 
+                                                        std::shared_ptr<kafka_producer_worker> time_producer) : 
                                                         _simulation_ip(simulation_ip) , _simulation_registration_port(simulation_registration_port),
                                                         _local_ip(local_ip), _time_sync_port(time_sync_port), _v2x_port(v2x_port),
                                                         _location(location), _time_producer(time_producer)  {
@@ -88,20 +88,17 @@ namespace CARMASimulationAdapter{
     }
 
     std::string CARMASimulationConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
-        char *msg = new char();
-        int num_of_bytes = _server->TimedReceive(msg,1000, 5);
+        std::unique_ptr<char> msg = std::make_unique<char>();
+        int num_of_bytes = _server->TimedReceive(msg.get(),1000, 5);
         if (num_of_bytes > 0 ) {
-            std::string ret(msg);
-            delete msg;
+            std::string ret(msg.get());
             PLOG(logDEBUG) << "Message Received : " << ret << std::endl;
             return ret;
         }
         else if ( num_of_bytes == 0 ) {
-            delete msg;
             throw UdpServerRuntimeError("Received empty message!");
         }
         else {
-            delete msg;
             throw UdpServerRuntimeError("Listen timed out after 5 ms!");
         }
     }

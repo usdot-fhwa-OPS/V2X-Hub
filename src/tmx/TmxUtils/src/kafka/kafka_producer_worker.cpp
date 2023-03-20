@@ -1,7 +1,34 @@
 
 #include "kafka_producer_worker.h"
-namespace kafka_clients
+namespace tmx::utils
 {
+    void producer_delivery_report_cb::dr_cb (RdKafka::Message &message) 
+    {
+        FILE_LOG(logDEBUG) << "Message delivery length : " << message.len() << " content: " <<  message.errstr().c_str() << std::endl;
+        if(message.key())                 
+            FILE_LOG(logDEBUG) << " Key:  " << message.key() << std::endl;
+    }
+
+    void producer_event_cb::event_cb (RdKafka::Event &event) 
+            {
+                switch (event.type())
+                {
+                case RdKafka::Event::EVENT_ERROR:                 
+                    FILE_LOG(logERROR) <<  RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
+                    if (event.err() == RdKafka::ERR__ALL_BROKERS_DOWN)
+                    break;
+                case RdKafka::Event::EVENT_STATS:
+                    FILE_LOG(logINFO) <<  "STATS: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
+                    break;
+                case RdKafka::Event::EVENT_LOG:
+                    FILE_LOG(logINFO) <<  "LOG: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
+                    break;
+                default:
+                    FILE_LOG(logINFO) <<  "EVENT: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
+                    break;
+                }
+            }
+
     kafka_producer_worker::kafka_producer_worker(const std::string &brokers, const std::string &topics, int partition)
         : _topics_str(topics), _broker_str(brokers), _run(true), _partition(partition)
     {
@@ -79,17 +106,17 @@ namespace kafka_clients
             _producer->poll(0);
             return;
         }
-
         // produce messages
         while (true)
         {
+            std::unique_ptr<std::string> msg_ptr = std::make_unique<std::string>(msg);
             RdKafka::ErrorCode resp = _producer->produce(_topic,
                                                          _partition,
                                                          RdKafka::Producer::RK_MSG_COPY,
-                                                         const_cast<char *>(msg.c_str()),
+                                                         msg_ptr.get(),
                                                          msg.size(),
-                                                         NULL,
-                                                         NULL);
+                                                         nullptr,
+                                                         nullptr);
             if (resp != RdKafka::ERR_NO_ERROR)
             {
                 FILE_LOG(logWARNING) <<  _producer->name() << " produce failed: " <<  RdKafka::err2str(resp) << std::endl;
