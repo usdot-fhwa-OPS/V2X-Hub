@@ -47,8 +47,8 @@ namespace ERVCloudForwardingPlugin
             {
                 PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
                 auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
-                auto gps_sentense = snmpClient->SNMPGet(_GPSOID);
-                auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentense);
+                auto gps_sentence = snmpClient->SNMPGet(_GPSOID);
+                auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentence);
                 long latitude = 0;
                 long longitude = 0;
                 for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
