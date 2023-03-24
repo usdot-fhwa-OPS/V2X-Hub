@@ -42,8 +42,10 @@ RUN ldconfig
 COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
 COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
 COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies /usr/local/share/ /usr/local/share/
 COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
 COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+COPY --from=dependencies /opt/ /opt/
 ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
 ADD src/tmx/TmxCore/tmxcore.service /usr/sbin/
 RUN ldconfig
