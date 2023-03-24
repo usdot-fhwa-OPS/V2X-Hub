@@ -167,7 +167,7 @@ void SignalController::start_signalController()
 
 						IsReceiving = 1;
 						pthread_mutex_lock(&spat_message_mutex);
-						auto ntcip1202 = std::make_shared<Ntcip1202>();
+						auto ntcip1202 = std::make_shared<Ntcip1202>(clock);
 						ntcip1202->setSignalGroupMappingList(_signalGroupMappingJson);
 						//printf("Signal Controller calling ntcip1202 copyBytesIntoNtcip1202");
 						ntcip1202->copyBytesIntoNtcip1202(buf, numbytes);

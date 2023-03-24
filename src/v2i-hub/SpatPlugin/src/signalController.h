@@ -16,10 +16,13 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
+#include "carma-clock/carma_clock.h"
 
 class SignalController
 {
 	public:
+		inline explicit SignalController(std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock) :
+			clock(clock) {};
 		~SignalController();
 
 		void Start(std::string signalGroupMappingJson);
@@ -44,6 +47,8 @@ class SignalController
 
 	private:
 		void *get_in_addr(struct sockaddr *);
+
+		std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
 
 		// Local IP address and UDP port for reception of SPAT dSPaTDataata from the TSC.
 		char* _localIp;

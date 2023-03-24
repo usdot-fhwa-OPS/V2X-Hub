@@ -51,7 +51,6 @@ ENDIF ()
 
 FIND_PACKAGE (${TMX_APPNAME}-plugin
               HINTS ${CMAKE_CURRENT_SOURCE_DIR}/../${TMX_APPNAME}
-                    ${CMAKE_CURRENT_SOURCE_DIR}/../${TMX_APPNAME}/Build
               PATH_SUFFIXES ${BUILD_SUB_DIR} ${BUILD_SUB_DIR}/${CMAKE_SYSTEM_PROCESSOR}
               REQUIRED)
 
@@ -77,7 +76,7 @@ MACRO (BuildTmxPlugin)
     STRING (REGEX REPLACE "[ \t]" "" TMX_PLUGIN_NAME ${TMX_PLUGIN_NAME})
     
     FILE (GLOB_RECURSE SOURCES "src/*.c*")
-    
+
     ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES})
     # generate executables in the bin directory to use in a zip file
     SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin")

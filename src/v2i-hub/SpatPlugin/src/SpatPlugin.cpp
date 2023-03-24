@@ -9,7 +9,7 @@ using namespace tmx::utils;
 namespace SpatPlugin {
 
 SpatPlugin::SpatPlugin(string name) :
-		PluginClient(name), intersectionId(0) {
+		PluginClientClockAware(name), sc(getClock()), intersectionId(0) {
 	AddMessageFilter<PedestrianMessage>(this, &SpatPlugin::HandlePedestrianDetection);
 	SubscribeToMessages();
 }
@@ -55,8 +55,12 @@ int SpatPlugin::Main() {
 
 	int iCounter = 0;
 
-	// How long it took to update and send the SPaT message the last time through the loop.
-	__useconds_t sendElapsedMicroSec = 0;
+	PLOG(logINFO) << "Waiting for clock initialization";
+
+	// wait for the clock to be initialized and record the time when it is ready
+	getClock()->wait_for_initialization();
+	auto nextSpatTime = getClock()->nowInMilliseconds();
+	PLOG(logINFO) << "Initial nextSpatTime=" << nextSpatTime;
 
 	try {
 		while (_plugin->state != IvpPluginState_error) {
@@ -96,12 +100,12 @@ int SpatPlugin::Main() {
 				}
 
 				// SPaT must be sent exactly every 100 ms.  So adjust for how long it took to do the last send.
-				if (sendElapsedMicroSec < 100000)
-					usleep(100000 - sendElapsedMicroSec);
+				nextSpatTime += 100;
+				getClock()->sleep_until(nextSpatTime);
+
 				iCounter++;
 
 				bool messageSent = false;
-				PerformanceTimer timer;
 
 				// Update PTLM file if the action number has changed.
 				int actionNumber = sc.getActionNumber();
@@ -156,9 +160,6 @@ int SpatPlugin::Main() {
 				} else {
 					SetStatus<string>("TSC Connection", "Disconnected");
 				}
-
-				sendElapsedMicroSec = timer.Elapsed().total_microseconds();
-//			LOG_DEBUGGING("SpatGen Main Loop Time: " << sendElapsedMicroSec / 1000.0 << " ms, Data sent? " << (messageSent ? "yes" : "no"));
 			}
 		}
 	} catch (exception &ex) {
