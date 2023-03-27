@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
-#include "include/CARMASimulationConnection.hpp"
+#include "include/CDASimConnection.hpp"
 #include <WGS84Point.h>
 #include <kafka/mock_kafka_producer_worker.h>
 #include <MockUdpClient.h>
@@ -13,11 +13,10 @@ using testing::Throw;
 using testing::DoDefault;
 using testing::SetArgPointee;
 using testing::SetArrayArgument;
-using namespace 
-tmx::utils;
+using namespace tmx::utils;
 
 
-namespace CARMASimulationAdapter {
+namespace CDASimAdapter {
 
     class TestCARMASimulationConnection : public ::testing::Test {
         protected:
@@ -25,14 +24,14 @@ namespace CARMASimulationAdapter {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 WGS84Point location; 
                 std::shared_ptr<mock_kafka_producer_worker> producer = std::make_shared<mock_kafka_producer_worker>();
-                connection = std::make_shared<CARMASimulationConnection>("127.0.0.1", 1212, "127.0.0.1", 1213, 1214, location, producer);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, "127.0.0.1", 1213, 1214, location, producer);
 
             }
             void TearDown() override {
 
             }
         public:
-            std::shared_ptr<CARMASimulationConnection> connection;
+            std::shared_ptr<CDASimConnection> connection;
         
 
     };

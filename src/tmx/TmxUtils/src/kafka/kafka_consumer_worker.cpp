@@ -134,6 +134,7 @@ namespace tmx::utils
         switch (message->err())
         {
         case RdKafka::ERR__TIMED_OUT:
+            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
             break;
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;
@@ -145,6 +146,8 @@ namespace tmx::utils
             FILE_LOG(logWARNING) << _consumer->name() << " reached the end of the queue, offset : " <<  _cur_offset << std::endl;
             break;
         case RdKafka::ERR__UNKNOWN_TOPIC:
+            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
+            break;
         case RdKafka::ERR__UNKNOWN_PARTITION:
             FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " << message->errstr() << std::endl;
             stop();
@@ -152,7 +155,7 @@ namespace tmx::utils
 
         default:
             /* Errors */
-            FILE_LOG(logWARNING) << _consumer->name() << " consume failed:  {1} " << message->errstr() << std::endl;
+            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " << message->errstr() << std::endl;
             stop();
             break;
         }

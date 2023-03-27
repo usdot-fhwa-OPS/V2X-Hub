@@ -17,24 +17,25 @@
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
 #include <PluginClientClockAware.h>
-#include "CARMASimulationConnection.hpp"
+#include "CDASimConnection.hpp"
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
+#include <simulation/SimulationEnvVar.h>
 
 
 
-namespace CARMASimulationAdapter {
+namespace CDASimAdapter {
     /**
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
      */
-    class CARMASimulationAdapter: public tmx::utils::PluginClientClockAware {
+    class CDASimAdapter: public tmx::utils::PluginClientClockAware {
     public:
         /**
          * @brief CCARMA-Simulation Infrastucture Adapter constructor.
          * @param name name of plugin.
          */
-        explicit CARMASimulationAdapter(const std::string &name);
+        explicit CDASimAdapter(const std::string &name);
         
         int Main() override ;
     protected:
@@ -79,16 +80,8 @@ namespace CARMASimulationAdapter {
         uint v2x_port;
         tmx::utils::WGS84Point location;
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
-        std::unique_ptr<CARMASimulationConnection> connection;
+        std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
-        inline static const char *KAFKA_BROKER_ADDRESS_ENV = "KAFKA_BROKER_ADDRESS";
-        inline static const char *TIME_SYNC_TOPIC_ENV = "TIME_SYNC_TOPIC";
-        inline static const char *SIMULATION_IP_ENV = "SIMULATION_IP";
-        inline static const char *SIMULATION_REGISTRATION_PORT_ENV = "SIMULATION_REGISTRATION_PORT";
-        inline static const char *TIME_SYNC_PORT_ENV = "TIME_SYNC_PORT";
-        inline static const char *V2X_PORT_ENV = "V2X_PORT";
-        inline static const char *LOCAL_IP_ENV = "LOCAL_IP";
-
 
 
     };

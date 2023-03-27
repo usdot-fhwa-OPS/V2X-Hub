@@ -6,7 +6,7 @@
 #include <kafka/kafka_producer_worker.h>
 
 
-namespace CARMASimulationAdapter {
+namespace CDASimAdapter {
 
     struct Time_Sync_Message
     {
@@ -16,7 +16,7 @@ namespace CARMASimulationAdapter {
     };
     
 
-    class CARMASimulationConnection {
+    class CDASimConnection {
         public:
             /**
              * @brief Constructor. 
@@ -28,7 +28,7 @@ namespace CARMASimulationAdapter {
              * @param location Simulationed location of infrastructure.
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            explicit CARMASimulationConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location, std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer);
 

@@ -1,10 +1,10 @@
-#include "include/CARMASimulationConnection.hpp"
+#include "include/CDASimConnection.hpp"
 
 
 using namespace tmx::utils;
 
-namespace CARMASimulationAdapter{ 
-    CARMASimulationConnection::CARMASimulationConnection(const std::string &simulation_ip, const uint simulation_registration_port, 
+namespace CDASimAdapter{ 
+    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint simulation_registration_port, 
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                                         const WGS84Point &location, 
                                                         std::shared_ptr<kafka_producer_worker> time_producer) : 
@@ -16,11 +16,11 @@ namespace CARMASimulationAdapter{
 
  
 
-    bool CARMASimulationConnection::is_connected() const {
+    bool CDASimConnection::is_connected() const {
         return _connected;
     }
 
-    bool CARMASimulationConnection::connect() {
+    bool CDASimConnection::connect() {
         if (!carma_simulation_handshake(_simulation_ip, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
             _connected = false;
             return _connected;
@@ -37,14 +37,14 @@ namespace CARMASimulationAdapter{
         PLOG(logINFO) << "CARMA-Simulation connection is successful!" << std::endl;
         return _connected;
     }
-    bool CARMASimulationConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const WGS84Point &location) {
         // TODO: Standup UDP Server and Client for registration and implement handshake
         return false;                                
     }
 
-    bool CARMASimulationConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
+    bool CDASimConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
                                 const uint v2x_port, const uint simulation_v2x_port) {
         try {
             // Iniitialize CARMA Simulation UDP Server and Client to foward V2X messages between CARMA simulation 
@@ -73,7 +73,7 @@ namespace CARMASimulationAdapter{
         return true;
     }
 
-    Time_Sync_Message CARMASimulationConnection::consume_time_sync_message() const{
+    Time_Sync_Message CDASimConnection::consume_time_sync_message() const{
         if (time_sync_listener) {
             std::string str_msg = consume_server_message(time_sync_listener);
             Time_Sync_Message msg;
@@ -85,7 +85,7 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    std::string CARMASimulationConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
+    std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
         std::unique_ptr<char> msg = std::make_unique<char>();
         int num_of_bytes = _server->TimedReceive(msg.get(),1000, 5);
         if (num_of_bytes > 0 ) {
@@ -101,7 +101,7 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    std::string CARMASimulationConnection::consume_v2x_message_from_simulation() const {
+    std::string CDASimConnection::consume_v2x_message_from_simulation() const {
         if ( carma_simulation_listener) {
             std::string msg = consume_server_message( carma_simulation_listener );
             return msg;
@@ -111,7 +111,7 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    std::string CARMASimulationConnection::consume_v2x_message_from_v2xhub() const {
+    std::string CDASimConnection::consume_v2x_message_from_v2xhub() const {
         if ( immediate_forward_listener) {
             std::string msg = consume_server_message( immediate_forward_listener );
             return msg;
@@ -121,7 +121,7 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    void CARMASimulationConnection::forward_time_sync_message(const Time_Sync_Message &msg) const {
+    void CDASimConnection::forward_time_sync_message(const Time_Sync_Message &msg) const {
         if ( _time_producer || _time_producer->is_running()) {
             _time_producer->send(msg.toJson());
         }
@@ -131,7 +131,7 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    void CARMASimulationConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
+    void CDASimConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
         if ( !msg.empty() && _client) {
             int ret =_client->Send(msg);
             if ( ret < 0) {
@@ -141,11 +141,11 @@ namespace CARMASimulationAdapter{
         }
     }
 
-    void CARMASimulationConnection::forward_v2x_message_to_simulation(const std::string &msg) const {
+    void CDASimConnection::forward_v2x_message_to_simulation(const std::string &msg) const {
         forward_message( msg, carma_simulation_publisher );
     }
 
-    void CARMASimulationConnection::forward_v2x_message_to_v2xhub(const std::string &msg) const {
+    void CDASimConnection::forward_v2x_message_to_v2xhub(const std::string &msg) const {
         forward_message( msg , message_receiver_publisher );
     }
 
