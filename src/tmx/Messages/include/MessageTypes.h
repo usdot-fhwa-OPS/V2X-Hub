@@ -90,6 +90,7 @@ static CONSTEXPR const char *MSGSUBTYPE_NEXTREQUEST_STRING = "NextRequest";
 static CONSTEXPR const char *MSGSUBTYPE_INCOMING_STRING = "Incoming";
 static CONSTEXPR const char *MSGSUBTYPE_OUTGOING_STRING = "Outgoing";
 static CONSTEXPR const char *MSGSUBTYPE_SHUTDOWN_STRING = "Shutdown";
+static CONSTEXPR const char *MSGSUBTYPE_TIMESYNC_STRING = "TimeSync";
 		
 } /* End namespace messages */
 	

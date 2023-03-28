@@ -10,6 +10,8 @@
 
 CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
 set(CMAKE_CXX_STANDARD 14)
+FIND_PACKAGE (carma-clock)
+
 
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
@@ -67,6 +69,7 @@ function(create_zip output_file input_files working_dir)
 endfunction()
 
 MACRO (BuildTmxPlugin)
+
     STRING (TOLOWER "${PROJECT_NAME}" COMPONENT_NAME)
 
     IF (NOT TMX_PLUGIN_NAME)

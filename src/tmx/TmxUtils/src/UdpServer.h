@@ -27,14 +27,14 @@ class UdpServer
 {
 public:
 	UdpServer(const std::string& address, int port);
-	~UdpServer();
+	virtual ~UdpServer();
 
-	int GetSocket() const;
-	int GetPort() const;
-	std::string GetAddress() const;
+	virtual int GetSocket() const;
+	virtual int GetPort() const;
+	virtual std::string GetAddress() const;
 
-	int Receive(char *msg, size_t maxSize);
-	int TimedReceive(char *msg, size_t maxSize, int maxWait_ms);
+	virtual int Receive(char *msg, size_t maxSize);
+	virtual int TimedReceive(char *msg, size_t maxSize, int maxWait_ms);
 
 private:
 	int _socket;

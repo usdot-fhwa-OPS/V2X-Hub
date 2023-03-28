@@ -17,7 +17,7 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+#include <tmx/json/cJSON.h>
 #include <tmx/Security/include/base64.h>
 #include <Clock.h>
 #include <FrequencyThrottle.h>

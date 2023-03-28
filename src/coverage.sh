@@ -37,7 +37,7 @@ for d in ${component_dir}/* ; do
             # generate a JSON file to be combined per https://gcovr.com/en/master/guide/merging.html
             pushd $(dirname ${top_dir})
             # generated at the project root
-            gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s -f $(basename ${top_dir})/${d}/ -r .
+            gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -r .
             popd
         else
             echo "no tests built"

@@ -5,6 +5,7 @@
 // Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
+#pragma once
 #include <string.h>
 
 #include "PluginClient.h"

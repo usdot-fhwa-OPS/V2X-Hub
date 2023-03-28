@@ -3,7 +3,7 @@ src/tmx/build
 src/v2i-hub/build
 
 # manually created directories
-secrets
+secrets/
 .devcontainer/MAP
 
 # Compiled source #
@@ -78,6 +78,11 @@ Thumbs.db
 *.out
 *.app
 
+# Coverage Files
+*.gcov
+*coverage.json
+*coverage.xml
+ 
 #docker-compose variables
 .env
 
