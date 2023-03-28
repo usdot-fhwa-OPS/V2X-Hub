@@ -34,8 +34,16 @@ namespace CDASimAdapter{
         std::string _broker_str = std::getenv(sim::KAFKA_BROKER_ADDRESS);
         std::string _topic = std::getenv(sim::TIME_SYNC_TOPIC);
 
-        kafka_client client;
-        time_producer =  client.create_producer(_broker_str,_topic);
+        try {
+            kafka_client client;
+            time_producer =  client.create_producer(_broker_str,_topic);
+        }
+        catch( const runtime_error &e ) {
+            PLOG(logWARNING) << "Initialization of time producer failed: " << e.what() << std::endl; 
+            return false;
+        }
+        return true;
+
     }
 
     bool CDASimAdapter::connect() {
