@@ -1,6 +1,0 @@
-{
-    "BOOTSTRAP_SERVER": "localhost:9092",
-    "PRODUCER_TOPIC": "test",
-    "CONSUMER_TOPIC": "test",
-    "GROUP_ID": "group_one"
-}

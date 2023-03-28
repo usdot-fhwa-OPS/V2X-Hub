@@ -69,7 +69,7 @@ namespace CDASimAdapter{
     int CDASimAdapter::Main() {
 
 
-        PLOG(logINFO) << "Starting plugin.";		
+        PLOG(logINFO) << "Starting plugin " << _name << std::endl;		
 
         while (_plugin->state != IvpPluginState_error) {
 
