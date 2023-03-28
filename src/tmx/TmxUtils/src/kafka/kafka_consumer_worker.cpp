@@ -111,7 +111,7 @@ namespace tmx::utils
 
     const char *kafka_consumer_worker::consume(int timeout_ms)
     {
-        RdKafka::Message *msg = nullptr;
+        const RdKafka::Message *msg = nullptr;
         msg = _consumer->consume(timeout_ms);
         const char *msg_str = msg_consume(msg);
         return msg_str;
@@ -178,10 +178,12 @@ namespace tmx::utils
         RdKafka::ErrorCode ret_err = RdKafka::ERR_NO_ERROR;
 
         if (err == RdKafka::ERR__ASSIGN_PARTITIONS) {
-        if (consumer->rebalance_protocol() == "COOPERATIVE")
-            error = consumer->incremental_assign(partitions);
-        else
-            ret_err = consumer->assign(partitions);
+            if (consumer->rebalance_protocol() == "COOPERATIVE") {
+                error = consumer->incremental_assign(partitions);
+            }
+            else {
+                ret_err = consumer->assign(partitions);
+            }
             partition_cnt += (int)partitions.size();
         } 
         else 

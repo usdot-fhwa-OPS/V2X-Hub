@@ -14,35 +14,34 @@
 #include <sys/socket.h>
 #include <tmx/TmxException.hpp>
 
-namespace tmx {
-namespace utils {
+namespace tmx::utils {
 
-class UdpClientRuntimeError : public tmx::TmxException
-{
-public:
-	UdpClientRuntimeError(const char *w) : tmx::TmxException(w) {}
-};
+	class UdpClientRuntimeError : public tmx::TmxException
+	{
+	public:
+		UdpClientRuntimeError(const char *w) : tmx::TmxException(w) {}
+	};
 
-class UdpClient
-{
-public:
-	UdpClient(const std::string& address, int port);
-	virtual ~UdpClient();
+	class UdpClient
+	{
+	public:
+		UdpClient(const std::string& address, int port);
+		virtual ~UdpClient();
 
-	virtual int GetSocket() const;
-	virtual int GetPort() const;
-	virtual std::string GetAddress() const;
+		virtual int GetSocket() const;
+		virtual int GetPort() const;
+		virtual std::string GetAddress() const;
 
-	virtual int Send(const std::string& message);
-	virtual int Send(void *buffer, size_t size);
+		virtual int Send(const std::string& message);
+		virtual int Send(void *buffer, size_t size);
 
-private:
-	int _socket;
-	int _port;
-	std::string _address;
-	struct addrinfo *_addrInfo;
-};
+	private:
+		int _socket;
+		int _port;
+		std::string _address;
+		struct addrinfo *_addrInfo;
+	};
 
-}} // namespace tmx::utils
+} // namespace tmx::utils
 
 #endif /* UDPCLIENT_H_ */

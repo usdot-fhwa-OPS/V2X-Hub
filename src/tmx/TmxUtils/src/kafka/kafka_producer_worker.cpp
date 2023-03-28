@@ -15,7 +15,6 @@ namespace tmx::utils
                 {
                 case RdKafka::Event::EVENT_ERROR:                 
                     FILE_LOG(logERROR) <<  RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
-                    if (event.err() == RdKafka::ERR__ALL_BROKERS_DOWN)
                     break;
                 case RdKafka::Event::EVENT_STATS:
                     FILE_LOG(logINFO) <<  "STATS: " << RdKafka::err2str(event.err())  << ". " << event.str() << std::endl;
@@ -109,7 +108,7 @@ namespace tmx::utils
         // produce messages
         while (true)
         {
-            std::unique_ptr<std::string> msg_ptr = std::make_unique<std::string>(msg);
+            auto msg_ptr = std::make_unique<std::string>(msg);
             RdKafka::ErrorCode resp = _producer->produce(_topic,
                                                          _partition,
                                                          RdKafka::Producer::RK_MSG_COPY,
