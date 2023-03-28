@@ -73,11 +73,11 @@ namespace CDASimAdapter{
         return true;
     }
 
-    Time_Sync_Message CDASimConnection::consume_time_sync_message() const{
+    tmx::messages::TimeSyncMessage CDASimConnection::consume_time_sync_message() const{
         if (time_sync_listener) {
             std::string str_msg = consume_server_message(time_sync_listener);
-            Time_Sync_Message msg;
-            msg.fromJson(str_msg);
+            tmx::messages::TimeSyncMessage msg;
+            // TODO: Convert str_msg to TimeSyncMessage
             return msg;
         }
         else {
@@ -121,14 +121,8 @@ namespace CDASimAdapter{
         }
     }
 
-    void CDASimConnection::forward_time_sync_message(const Time_Sync_Message &msg) const {
-        if ( _time_producer || _time_producer->is_running()) {
-            _time_producer->send(msg.toJson());
-        }
-        else {
-            throw std::runtime_error("Time Sync Kafka Producer is not initialized or not running!");
-
-        }
+    void CDASimConnection::forward_time_sync_message(const tmx::messages::TimeSyncMessage &msg) const {
+        //TODO: Forward message on TMX bus and to Kafka 
     }
 
     void CDASimConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
@@ -147,15 +141,6 @@ namespace CDASimAdapter{
 
     void CDASimConnection::forward_v2x_message_to_v2xhub(const std::string &msg) const {
         forward_message( msg , message_receiver_publisher );
-    }
-
-    std::string Time_Sync_Message::toJson() const {
-        // TODO: Implement JSON serialization for Time Sync Message
-        return "";
-    }
-
-    void Time_Sync_Message::fromJson(const std::string &json) {
-        // TODO: Implement JSON deserialization for Time Sync Messages
     }
 
 }

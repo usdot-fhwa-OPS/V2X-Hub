@@ -4,16 +4,11 @@
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
 #include <kafka/kafka_producer_worker.h>
+#include <TimeSyncMessage.h>
 
 
 namespace CDASimAdapter {
 
-    struct Time_Sync_Message
-    {
-        uint64_t cur_time;
-        std::string toJson() const;
-        void fromJson(const std::string &json);
-    };
     
 
     class CDASimConnection {
@@ -69,16 +64,17 @@ namespace CDASimAdapter {
              */
             std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
             /**
-             * @brief Forward time sychronization message to infrastructure Kafka Broker
-             * @param msg Time synchronization message.
+             * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugisn, and to infrastructure Kafka Broker for
+             * CARMA Streets services
+             * @param msg TimeSyncMessage.
              */
-            void forward_time_sync_message(const Time_Sync_Message &msg ) const;
+            void forward_time_sync_message(const tmx::messages::TimeSyncMessage &msg ) const;
             
             /**
              * @brief Method to consume incoming time sychronization message.
-             * @return Time_Sync_Message.
+             * @return TimeSyncMessage.
              */
-            Time_Sync_Message consume_time_sync_message() const;
+            tmx::messages::TimeSyncMessage consume_time_sync_message() const;
             /**
              * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,
