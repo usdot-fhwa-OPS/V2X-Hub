@@ -82,7 +82,7 @@ namespace CDASimAdapter{
 
     std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
         std::unique_ptr<char> msg = std::make_unique<char>();
-        int num_of_bytes = _server->TimedReceive(msg.get(),1000, 5);
+        int num_of_bytes = _server->TimedReceive(msg.get(),1000, 10000);
         if (num_of_bytes > 0 ) {
             std::string ret(msg.get());
             PLOG(logDEBUG) << "Message Received : " << ret << std::endl;

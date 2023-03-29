@@ -54,6 +54,7 @@ namespace CDASimAdapter{
         if (time_producer && time_producer->is_running()) {
             time_producer->send(msg.to_string());
         }
+        
     }
 
     bool CDASimAdapter::connect() {
@@ -106,8 +107,18 @@ namespace CDASimAdapter{
     }
 
     void CDASimAdapter::attempt_time_sync() {
-        tmx::messages::TimeSyncMessage msg = connection->consume_time_sync_message();
-        forward_time_sync_message( msg );
+        try {
+            tmx::messages::TimeSyncMessage msg = connection->consume_time_sync_message();
+            if ( !msg.is_empty()) {
+                forward_time_sync_message( msg );
+            }
+            else {
+                PLOG(logDEBUG1) << "CDASim connection has not yet received a time sync message!" << std::endl;
+            }
+        }
+        catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
     }
         
 
