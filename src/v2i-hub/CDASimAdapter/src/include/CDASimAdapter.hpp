@@ -98,7 +98,7 @@ namespace CDASimAdapter {
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
-        std::unique_ptr<ThreadTimer> thread_timer;
+        std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
         int time_sync_tick_id;
 
 

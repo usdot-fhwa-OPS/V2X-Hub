@@ -97,7 +97,7 @@ namespace CDASimAdapter{
 
     void CDASimAdapter::start_time_sync_thread_timer() {
         if ( !thread_timer ) {
-            thread_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(100));
+            thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
         }
         time_sync_tick_id = thread_timer->AddPeriodicTick([this]() {
             
