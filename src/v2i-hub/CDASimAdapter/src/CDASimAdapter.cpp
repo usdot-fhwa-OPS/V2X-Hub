@@ -27,6 +27,9 @@ namespace CDASimAdapter{
             while ( !connection || !connection->is_connected() ) {
                 connect();
             }
+            if ( connection->is_connected() ) {
+                start_time_sync_thread_timer();
+            }
         }
     }
 
@@ -46,6 +49,13 @@ namespace CDASimAdapter{
 
     }
 
+    void CDASimAdapter::forward_time_sync_message(tmx::messages::TimeSyncMessage &msg) {
+        this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
+        if (time_producer && time_producer->is_running()) {
+            time_producer->send(msg.to_string());
+        }
+    }
+
     bool CDASimAdapter::connect() {
         std::string _simulation_ip = std::getenv(sim::SIMULATION_IP);
         std::string _local_ip = std::getenv(sim::LOCAL_IP);
@@ -56,12 +66,13 @@ namespace CDASimAdapter{
         if (!initialize_time_producer()) {
             return false;
         }
-        if ( connection )
+        if ( connection ) {
             connection.reset(new CDASimConnection( simulation_ip, simulation_registration_port,_local_ip,
-                                                         _time_sync_port, _v2x_port, location, time_producer ));
+                                                _time_sync_port, _v2x_port, location ));
+        }
         else {
             connection = std::make_unique<CDASimConnection>(simulation_ip, simulation_registration_port,_local_ip,
-                                                         _time_sync_port, _v2x_port, location, time_producer);
+                                                         _time_sync_port, _v2x_port, location);
         }
         return connection->connect();
     }
@@ -83,7 +94,21 @@ namespace CDASimAdapter{
     }
 
 
-    
+    void CDASimAdapter::start_time_sync_thread_timer() {
+        if ( !thread_timer ) {
+            thread_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(100));
+        }
+        time_sync_tick_id = thread_timer->AddPeriodicTick([this]() {
+            
+            this->attempt_time_sync();
+        } // end of lambda expression
+        , std::chrono::milliseconds(100), std::chrono::milliseconds(100) );
+    }
+
+    void CDASimAdapter::attempt_time_sync() {
+        tmx::messages::TimeSyncMessage msg = connection->consume_time_sync_message();
+        forward_time_sync_message( msg );
+    }
         
 
 }

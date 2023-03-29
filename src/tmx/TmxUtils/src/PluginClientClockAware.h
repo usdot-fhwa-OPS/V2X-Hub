@@ -32,6 +32,10 @@ protected:
     } 
 
 private:
+	/**
+	 * @brief Status label simulation time to be displayed by each plugin.
+	 */
+	const char* Key_Simulation_Time_Step = "Simulation Time Step (ms)";
     /**
      * @brief Clock wrapper object that can either store a simulation time or retrieve system time based on initialization
      */

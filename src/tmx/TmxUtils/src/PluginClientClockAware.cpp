@@ -21,7 +21,11 @@ namespace tmx::utils {
 
 
     void PluginClientClockAware::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
-       clock->update( msg.get_timestamp() );
+       clock->update( msg.get_timestep() );
+       if (sim::is_simulation_mode() ) {
+        	SetStatus<int>(Key_Simulation_Time_Step, msg.get_timestep());
+
+       }
     }
 
 }

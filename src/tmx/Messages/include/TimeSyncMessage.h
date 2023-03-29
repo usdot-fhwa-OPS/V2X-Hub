@@ -13,9 +13,9 @@ class TimeSyncMessage : public tmx::message
 	public:
 		TimeSyncMessage() {}
 		TimeSyncMessage(const tmx::message_container_type &contents): tmx::message(contents) {}
-		TimeSyncMessage(uint64_t timestamp, uint64_t seq_number) {
-			set_timestamp(timestamp);
-			set_seq_num(seq_number);
+		TimeSyncMessage(uint64_t timestep, uint64_t seq) {
+			set_timestep(timestep);
+			set_seq(seq);
 		}
 
 		/// Message type for routing this message through TMX core.
@@ -24,8 +24,8 @@ class TimeSyncMessage : public tmx::message
 		/// Message sub type for routing this message through TMX core.
 		static constexpr const char* MessageSubType = MSGSUBTYPE_TIMESYNC_STRING;
 
-		std_attribute(this->msg, uint64_t, timestamp, 0, )
-		std_attribute(this->msg, uint64_t, seq_num, 0, )
+		std_attribute(this->msg, uint64_t, timestep, 0, )
+		std_attribute(this->msg, uint64_t, seq, 0, )
 	};
 
 } /* namespace tmx::messages */

@@ -6,11 +6,10 @@ using namespace tmx::utils;
 namespace CDASimAdapter{ 
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint simulation_registration_port, 
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                                        const WGS84Point &location, 
-                                                        std::shared_ptr<kafka_producer_worker> time_producer) : 
+                                                        const WGS84Point &location ) : 
                                                         _simulation_ip(simulation_ip) , _simulation_registration_port(simulation_registration_port),
                                                         _local_ip(local_ip), _time_sync_port(time_sync_port), _v2x_port(v2x_port),
-                                                        _location(location), _time_producer(time_producer)  {
+                                                        _location(location){
         PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
     } 
 
@@ -26,10 +25,6 @@ namespace CDASimAdapter{
             return _connected;
         }
         if (!setup_udp_connection(_simulation_ip, _local_ip, _time_sync_port, _v2x_port, _simulation_v2x_port )) {
-            _connected = false;
-            return _connected;
-        }
-        if (!_time_producer || !_time_producer->is_running()) {
             _connected = false;
             return _connected;
         }
@@ -77,7 +72,7 @@ namespace CDASimAdapter{
         if (time_sync_listener) {
             std::string str_msg = consume_server_message(time_sync_listener);
             tmx::messages::TimeSyncMessage msg;
-            // TODO: Convert str_msg to TimeSyncMessage
+            msg.set_contents( str_msg );
             return msg;
         }
         else {
@@ -121,9 +116,7 @@ namespace CDASimAdapter{
         }
     }
 
-    void CDASimConnection::forward_time_sync_message(const tmx::messages::TimeSyncMessage &msg) const {
-        //TODO: Forward message on TMX bus and to Kafka 
-    }
+
 
     void CDASimConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
         if ( !msg.empty() && _client) {
