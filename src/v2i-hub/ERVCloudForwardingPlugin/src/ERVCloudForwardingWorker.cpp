@@ -19,9 +19,12 @@ namespace ERVCloudForwardingPlugin
         {
             return xml_str;
         }
+        std::stringstream route_ss;
+        //Add vehicle current position to the BSMRequest route point
+        route_ss << "<point><latitude>" << bsmPtr->coreData.lat << "</latitude>"
+                     << "<longitude>" << bsmPtr->coreData.Long << "</longitude></point>";
         // If there is carma related regional extension value that contains the ERV route points, construct the BSM request with the points.
         auto bsmCarmaRegion = bsmPtr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma;
-        std::stringstream route_ss;
         for (int i = 0; i < bsmCarmaRegion.routeDestinationPoints->list.count; i++)
         {
             auto latitude = bsmCarmaRegion.routeDestinationPoints->list.array[i]->lat;
