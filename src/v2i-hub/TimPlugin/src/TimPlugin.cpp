@@ -209,6 +209,61 @@ bool TimPlugin::TimDuration()
 	}
 }
 
+bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
+{
+	lock_guard<mutex> lock(_cfgLock);
+	auto timPtr = TimMsg->get_j2735_data();
+	//Duration is unit of minute
+	auto duration = timPtr->dataFrames.list.array[0]->duratonTime; 
+	bool isPersist = false;
+	if(duration >= 32000)
+	{
+		PLOG(logERROR) << "Duration = 32000, ignore stop time." << std::endl;
+		isPersist = true;
+	}
+	//startTime unit of minute
+	auto startTime = timPtr->dataFrames.list.array[0]->startTime;
+	if(startTime >= 527040)
+	{
+		PLOG(logERROR) << "Invalid startTime." << std::endl;
+		return false;
+	}
+	auto t = time(nullptr);
+	struct tm yearStartTimeInfo;
+	localtime_r(&t, &yearStartTimeInfo);
+	ostringstream currentYearStartSS;
+	currentYearStartSS <<  "01-01-"<< std::put_time(&yearStartTimeInfo, "%Y")<<" 00:00:00";
+	time_t secondsYearStart = mktime( & yearStartTimeInfo );
+	//Start Time in seconds
+	time_t secondsStart = secondsYearStart + startTime * 60;
+	//Stop Time in seconds
+	time_t secondsStop = secondsStart + duration * 60;
+
+	// Current Time in seconds
+	auto t = time(nullptr);
+	struct tm tm;
+	localtime_r(&t, &tm);
+	ostringstream oss1;
+	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
+	auto _currentTimTime = oss1.str();
+	istringstream currentTimTime(_currentTimTime);
+	struct tm date_current;
+	currentTimTime >> get_time( &date_current, "%m-%d-%Y %H:%M:%S" );
+	PLOG(logDEBUG) << "CURRENT : " << date_current.tm_mon << "-" << date_current.tm_mday << "-" 
+		<< date_current.tm_year << " " << date_current.tm_hour << ":" << date_current.tm_min << ":" 
+		<< date_current.tm_sec << std::endl;
+	time_t secondsCurrent = mktime( & date_current );
+
+	//Comparing current time with start and end time 
+	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
+		" Current : " << secondsCurrent << std::endl;
+	if ( secondsStart <= secondsCurrent && (secondsCurrent <= secondsStop || isPersist)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 {
 	memset(tim, 0, sizeof(TravelerInformation));
@@ -263,15 +318,15 @@ int TimPlugin::Main() {
 	while (_plugin->state != IvpPluginState_error) {
 		if (IsPluginState(IvpPluginState_registered))
 		{
-			while (TimDuration()) 
+			while (_timMsgPtr && TimDuration(_timMsgPtr)) 
 			{ 
+				lock_guard<mutex> lock(_cfgLock);
 				uint64_t sendFrequency = _frequency;
 
 				// Load the TIM from the map file if it is new.
 				if (_isMapFileNew)
 				{					
 					PLOG(logINFO)<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
-					lock_guard<mutex> lock(_cfgLock);
 					//reset map update indicator
 					_isMapFileNew = false;
 					//Update the TIM message with XML from map file
@@ -284,7 +339,6 @@ int TimPlugin::Main() {
 				}		
 
 				if(_isTimUpdated){
-					lock_guard<mutex> lock(_cfgLock);
 					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<< _isTimUpdated<<endl;
 					//reset TIM update indicator
 					_isTimUpdated = false;
@@ -292,7 +346,6 @@ int TimPlugin::Main() {
 
 				if (_timMsgPtr)
 				{
-					lock_guard<mutex> lock(_cfgLock);
 					PLOG(logINFO) << "timMsg XML to send: " << *_timMsgPtr << std::endl;
 					TimEncodedMessage timEncMsg;
 					timEncMsg.initialize(*_timMsgPtr);

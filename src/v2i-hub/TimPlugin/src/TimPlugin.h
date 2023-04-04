@@ -105,6 +105,10 @@ protected:
 	void OnStateChange(IvpPluginState state);
 
 	bool TimDuration();
+	/**
+	 * @brief Calculate tim duration based on the J2735 TIM message startTime and Duration
+	 */
+	bool TimDuration(std::shared_ptr<TimMessage> TimMsg);
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
 	/**
 	 * @brief Read map file and populate TIM message
@@ -133,7 +137,6 @@ private:
 	uint16_t webport;
 	std::string webip; 
 
-	TravelerInformation _tim;
 	std::shared_ptr<TimMessage> _timMsgPtr;
 	const string TMP_FILE_PATH = "/tmp/tmpTIM.xml";
 
