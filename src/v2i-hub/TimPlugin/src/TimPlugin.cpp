@@ -49,7 +49,7 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	try { 
 		lock_guard<mutex> lock(_cfgLock);
 		tmx::message_container_type container;
-		container.load<XML>(ss);
+		container.load<XML>(ss);		
 		_timMsgPtr = std::make_shared<TimMessage>();
 		_timMsgPtr->set_contents(container.get_storage().get_tree());
 		_isTimUpdated = true;
@@ -72,8 +72,6 @@ void TimPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket) {
     }
 
 }
-
-
 
 int TimPlugin::StartWebService()
 {
@@ -110,7 +108,6 @@ int TimPlugin::StartWebService()
 	return a.exec();
 
 }
-
 
 void TimPlugin::UpdateConfigSettings() {
 
@@ -157,8 +154,6 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 		webthread.detach(); // wait for the thread to finish 
 	}
 }
-
-
 
 bool TimPlugin::TimDuration()
 {
@@ -240,17 +235,24 @@ bool TimPlugin::LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile)
 	std::ifstream in = std::ifstream(mapFile, ios_base::in);
 	if(in && in.is_open())
 	{
-		std::stringstream ss;
-		ss << in.rdbuf();
-		in.close();
+		try
+		{
+			std::stringstream ss;
+			ss << in.rdbuf();
+			in.close();
 
-		tmx::message_container_type container;
-		container.load<XML>(ss);
-		TimMsg->set_contents(container.get_storage().get_tree());
-		PLOG(logINFO) << "Loaded MapFile and updated TIM." << std::endl;
-		return true;
+			tmx::message_container_type container;
+			container.load<XML>(ss);
+			TimMsg->set_contents(container.get_storage().get_tree());
+			PLOG(logINFO) << "Loaded MapFile and updated TIM." << std::endl;
+			return true;
+		}
+		catch(const std::exception& e)
+		{
+			PLOG(logERROR)<<"Cannot read file " << mapFile<<std::endl;
+		}		
 	}else{
-		PLOG(logERROR)<<"Cannot read file " << mapFile<<std::endl;
+		PLOG(logERROR)<<"Cannot find file " << mapFile<<std::endl;
 	}
 	return false;
 }
@@ -258,15 +260,11 @@ bool TimPlugin::LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile)
 int TimPlugin::Main() {
 	FILE_LOG(logINFO) << "TimPlugin:: Starting plugin.\n";
 
-	uint64_t updateFrequency = 24 * 60 * 60 * 1000;
-	uint64_t lastUpdateTime = 0;
-
-	uint64_t lastSendTime = 0;
-
 	while (_plugin->state != IvpPluginState_error) {
 		if (IsPluginState(IvpPluginState_registered))
 		{
-			while (true) { //TimDuration()
+			while (TimDuration()) 
+			{ 
 				uint64_t sendFrequency = _frequency;
 
 				// Load the TIM from the map file if it is new.
@@ -279,25 +277,15 @@ int TimPlugin::Main() {
 					//Update the TIM message with XML from map file
 					_timMsgPtr = std::make_shared<TimMessage>();
 					_isTimLoaded = LoadTim(_timMsgPtr, _mapFile.c_str());
-				}				
-
-				uint64_t time = Clock::GetMillisecondsSinceEpoch();
-
-				if ((_isTimLoaded || _isTimUpdated ) && _timMsgPtr && (time - lastUpdateTime) > updateFrequency)
-				{
-					lastUpdateTime = time;
-					if (_isTimLoaded || _isTimUpdated)
-					{				
-						lock_guard<mutex> lock(_cfgLock);
-						PLOG(logINFO)<<"update packet ID and start time  "<<endl;		
-						DsrcBuilder::SetPacketId(_timMsgPtr->get_j2735_data().get());
-						DsrcBuilder::SetStartTimeToYesterday(_timMsgPtr->get_j2735_data().get()->dataFrames.list.array[0]);
+					if(!_isTimLoaded)
+					{
+						_timMsgPtr = nullptr;
 					}
-				}
+				}		
 
 				if(_isTimUpdated){
 					lock_guard<mutex> lock(_cfgLock);
-					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<<_isTimUpdated<<endl;
+					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<< _isTimUpdated<<endl;
 					//reset TIM update indicator
 					_isTimUpdated = false;
 				}
