@@ -15,6 +15,15 @@ services:
     command: /bin/sh -c "while sleep 1000; do :; done"  
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
+      - SIMULATION_MODE=true
+      - SIMULATION_IP=127.0.0.1
+      - SIMULATION_REGISTRATION_PORT=6767
+      - LOCAL_IP=127.0.0.1
+      - TIME_SYNC_TOPIC=time_sync
+      - TIME_SYNC_PORT=7575
+      - SIM_V2X_PORT=5757
+      - V2X_PORT=8686
+      - KAFKA_BROKER_ADDRESS=127.0.0.1:9092
     secrets:
       - mysql_password
 
@@ -42,7 +51,49 @@ services:
     container_name: php
     network_mode: host
     restart: always
-
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+       - "2181:2182"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - zookeeper-datavolume:/opt/zookeeper-3.4.13/data
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    depends_on: 
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      DOCKER_HOST_IP:  127.0.0.1
+      KAFKA_ADVERTISED_HOST_NAME:  127.0.0.1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CREATE_TOPICS: "time_sync:1:1"
+      KAFKA_LOG_DIRS: "/kafka/kafka-logs"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - kafka-datavolume:/kafka/kafka-logs
+##############################################################
+# Kafka Owl for monitoring kafka traffic. UI can be accessed on 
+# configurable port set in performance/kowl.yaml NOTE: IS NOT 
+# NECESSARY FOR DEPLOYMENT BUT HELFUL FOR DEBUGGING! 
+################################################################
+  kowl:
+    image: quay.io/cloudhut/kowl
+    container_name: kowl
+    restart: on-failure
+    network_mode: host
+    depends_on:
+      - kafka
+    environment:
+      CONFIG_FILEPATH: /etc/kowl/kowl.yaml
+    volumes:
+      - ../kowl/kowl.yaml:/etc/kowl/kowl.yaml
 secrets:
     mysql_password:
         file: ../secrets/mysql_password.txt
@@ -51,3 +102,5 @@ secrets:
 
 volumes:
   mysql-datavolume:
+  kafka-datavolume:
+  zookeeper-datavolume:

@@ -16,7 +16,7 @@
 #include <atomic>
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
-#include <PluginClientClockAware.h>
+#include <PluginClient.h>
 #include "CDASimConnection.hpp"
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
@@ -31,7 +31,7 @@ namespace CDASimAdapter {
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
      */
-    class CDASimAdapter: public tmx::utils::PluginClientClockAware {
+    class CDASimAdapter: public tmx::utils::PluginClient{
     public:
         /**
          * @brief CCARMA-Simulation Infrastucture Adapter constructor.
@@ -89,11 +89,6 @@ namespace CDASimAdapter {
         
     private:
 
-        std::string simulation_ip;
-        uint simulation_registration_port;
-        std::string local_ip;
-        uint time_sync_port;
-        uint v2x_port;
         tmx::utils::WGS84Point location;
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CDASimConnection> connection;

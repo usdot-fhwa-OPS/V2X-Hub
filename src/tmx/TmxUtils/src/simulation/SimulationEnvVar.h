@@ -2,6 +2,7 @@
 
 #include <stdlib.h>   
 #include <string>
+#include "tmx/TmxException.hpp"
 
 namespace tmx::utils::sim{
         /**
@@ -26,7 +27,7 @@ namespace tmx::utils::sim{
          */
         inline static const char *SIMULATION_IP = "SIMULATION_IP";
         /**
-         * @brief Name of environment variable for storing port on CDASim that handles registration attempts. Only necessary
+         * @brief Name of environment variable for storing pologicrt on CDASim that handles registration attempts. Only necessary
          * in SIMULATION MODE for connecting to CDASim.
          */
         inline static const char *SIMULATION_REGISTRATION_PORT = "SIMULATION_REGISTRATION_PORT";
@@ -36,10 +37,15 @@ namespace tmx::utils::sim{
          */
         inline static const char *TIME_SYNC_PORT = "TIME_SYNC_PORT";
         /**
-         * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
+         * @brief Name of environment variable for storing port for forwarding v2x messages to CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.
          */
         inline static const char *SIM_V2X_PORT = "SIM_V2X_PORT";
+        /**
+         * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        inline static const char *V2X_PORT =  "V2X_PORT";
         /**
          * @brief Name of environment variable for storing local IP of V2X Hub. Only necessary in SIMULATION MODE 
          * for CDASim connection.
@@ -50,4 +56,7 @@ namespace tmx::utils::sim{
          * @return true if SIMULATION_MODE is "true" or "TRUE" and false otherwise.
          */
         bool is_simulation_mode();
+
+        std::string get_sim_config(const char *config_name);
+
 }
