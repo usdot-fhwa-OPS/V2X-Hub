@@ -103,7 +103,7 @@ int TimPlugin::StartWebService()
     QHttpEngine::Server server(handler.data());
 
     if (!server.listen(address, port)) {
-        qCritical("Unable to listen on the specified port.");
+        qCritical("TimPlugin::Unable to listen on the specified port.");
         return 1;
     }
 	PLOG(logINFO)<<"TimPlugin:: Started web service";
@@ -264,11 +264,9 @@ int TimPlugin::Main() {
 	uint64_t lastSendTime = 0;
 
 	while (_plugin->state != IvpPluginState_error) {
-
-		while (true) { //TimDuration()
-
-			if (IsPluginState(IvpPluginState_registered))
-			{
+		if (IsPluginState(IvpPluginState_registered))
+		{
+			while (true) { //TimDuration()
 				uint64_t sendFrequency = _frequency;
 
 				// Load the TIM from the map file if it is new.
@@ -304,10 +302,8 @@ int TimPlugin::Main() {
 					_isTimUpdated = false;
 				}
 
-				// Send out the TIM at the frequency read from the configuration.
-				if (_timMsgPtr && sendFrequency > 0 && (time - lastSendTime) > sendFrequency)
+				if (_timMsgPtr)
 				{
-					lastSendTime = time;
 					lock_guard<mutex> lock(_cfgLock);
 					PLOG(logINFO) << "timMsg XML to send: " << *_timMsgPtr << std::endl;
 					TimEncodedMessage timEncMsg;
@@ -318,8 +314,12 @@ int TimPlugin::Main() {
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);						
 				}
+
+				//Make sure send frequency configuration is positive, otherwise set to default 1000 milliseconds
+				sendFrequency = sendFrequency > 0 ? sendFrequency: 1000;
+				//Sleep sendFrequency for every attempt to broadcast TIM
+				this_thread::sleep_for(chrono::milliseconds(sendFrequency));
 			}
-			this_thread::sleep_for(chrono::milliseconds(10000));
 		}
 		this_thread::sleep_for(chrono::milliseconds(500));
 	}
