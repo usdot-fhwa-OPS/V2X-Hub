@@ -76,6 +76,7 @@ namespace CDASimAdapter{
 
     tmx::messages::TimeSyncMessage CDASimConnection::consume_time_sync_message() const{
         tmx::messages::TimeSyncMessage msg;
+        msg.clear();
         if (time_sync_listener) {
             std::string str_msg = consume_server_message(time_sync_listener);
             msg.set_contents( str_msg );
@@ -88,11 +89,12 @@ namespace CDASimAdapter{
     }
 
     std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
-        std::unique_ptr<char[]> msg (new char[4000]);
-        int num_of_bytes = _server->TimedReceive(msg.get(),4000, 10000);
-        if (num_of_bytes > 0 && msg.get() != nullptr ) {
-            std::string ret(msg.get());
-            PLOG(logDEBUG) << "UDP Server message received : " << ret << std::endl;
+        std::vector<char> msg(4000);
+        int num_of_bytes = _server->TimedReceive(msg.data(),4000, 5);
+        if (num_of_bytes > 0 ) {
+            msg.resize(num_of_bytes);
+            std::string ret(msg.data());
+            PLOG(logDEBUG) << "UDP Server message received : " << ret << " of size " << num_of_bytes << std::endl;
             return ret;
         }
         else if ( num_of_bytes == 0 ) {
