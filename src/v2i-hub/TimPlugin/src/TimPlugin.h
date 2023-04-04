@@ -64,6 +64,7 @@
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
 #include <boost/filesystem.hpp>
+#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
 
 
@@ -105,6 +106,12 @@ protected:
 
 	bool TimDuration();
 	bool LoadTim(TravelerInformation *tim, const char *mapFile);
+	/**
+	 * @brief Read map file and populate TIM message
+	 * @param TimMsg A shared pointer to the TIM object to be updated
+	 * @param mapFile File path that has the standard J2735 TIM message in XML format
+	*/
+	bool LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile);
 	int  StartWebService();
 	void TimRequestHandler(QHttpEngine::Socket *socket);
 	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
@@ -127,12 +134,16 @@ private:
 	std::string webip; 
 
 	TravelerInformation _tim;
+	std::shared_ptr<TimMessage> _timMsgPtr;
+	const string TMP_FILE_PATH = "/tmp/tmpTIM.xml";
 
 	mutex _mapFileLock;
 	string _mapFile;
 	std::ofstream tmpTIM;
 	atomic<bool> _isMapFileNew{false};
 	atomic<bool> _isTimFileNew{false};
+	//Post request to update TIM
+	atomic<bool> _isTimUpdated{false};
 	bool _isTimLoaded = false;
 	unsigned int _speedLimit = 0;
 	int _lastMsgIdSent = -1;

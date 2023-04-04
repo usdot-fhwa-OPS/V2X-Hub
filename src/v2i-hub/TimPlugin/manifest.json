@@ -25,12 +25,12 @@
 		},
 		{
 			"key":"Start_Broadcast_Date",
-			"default":"01-01-2019",
+			"default":"01-01-2023",
 			"description":"The Start Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
 		},
 		{
 			"key":"Stop_Broadcast_Date",
-			"default":"12-31-2020",
+			"default":"12-31-2023",
 			"description":"The Stop Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
 		},
 		{
@@ -52,6 +52,11 @@
 			"key":"WebServicePort",
 			"default":"10000",
 			"description":"Port at which Web service exists"
+		},
+		{
+			"key":"LogLevel",
+			"default":"DEBUG",
+			"description": "TIM Plugin Log Level controls which log statements are printed to the terminal."
 		}
 
 	]

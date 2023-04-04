@@ -3,7 +3,6 @@
 #include "Clock.h"
 #include "XmlCurveParser.h"
 #include <tmx/messages/IvpDmsControlMsg.h>
-#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
 using namespace std;
 using namespace tmx::messages;
@@ -12,9 +11,6 @@ using namespace xercesc;
 using namespace boost::property_tree;
 
 namespace TimPlugin {
-
-
-
 /**
  * Construct a new TimPlugin with the given name.
  *
@@ -31,9 +27,13 @@ TimPlugin::~TimPlugin() {
 
 void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 {
-
+	if(socket->bytesAvailable() == 0)
+	{
+		PLOG(logERROR) << "TimPlugin does not receive web service request content!" <<std::endl;
+		writeResponse(QHttpEngine::Socket::BadRequest, socket);
+		return;
+	}
 	// should read from the websocket and parse 
-	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
 	QString st; 
 	while(socket->bytesAvailable()>0)
 	{	
@@ -43,53 +43,22 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 
 	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
  
-
 	std::stringstream ss;
 	ss << _cloudUpdate;
-
-	ptree ptr;
-
-	// Catch XML parse exceptions 
+	PLOG(logDEBUG) << "Received from webservice: " << ss.str() << std::endl;
 	try { 
-		// Using open command with std::ofstream::out mode overwrites existing files 
-		tmpTIM.open("/tmp/tmpTIM.xml", std::ofstream::out);
-		read_xml(ss,ptr);
-
 		lock_guard<mutex> lock(_cfgLock);
-		BOOST_FOREACH(auto &n, ptr.get_child("timdata"))
-		{
-			std::string labeltext = n.first;
-
-			if(labeltext == "starttime")
-				_startTime = n.second.get_value<std::string>();
-			
-			if(labeltext == "stoptime")
-				_stopTime = n.second.get_value<std::string>();
-
-			if(labeltext == "startdate")
-				_startDate = n.second.get_value<std::string>();
-
-			if(labeltext == "stopdate")
-				_stopDate = n.second.get_value<std::string>();
-
-			if(labeltext == "timupdate"){
-				tmpTIM<<n.second.get_value<std::string>();
-
-				_mapFile = "/tmp/tmpTIM.xml";
-				_isMapFileNew = true;
-			}
-
-		}
-		// Close file each time to avoid appending to open file
-		tmpTIM.close();
+		tmx::message_container_type container;
+		container.load<XML>(ss);
+		_timMsgPtr = std::make_shared<TimMessage>();
+		_timMsgPtr->set_contents(container.get_storage().get_tree());
+		_isTimUpdated = true;
 		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
-	catch( const ptree_error &e ) {
-		PLOG(logERROR) << "Error parsing file: " << e.what() << std::endl;
+	catch (TmxException &ex) {
+		PLOG(logERROR) << "Failed to encode message : " << ex.what();
 		writeResponse(QHttpEngine::Socket::BadRequest, socket);
 	}
-
-
 
 }
 /**
@@ -114,30 +83,36 @@ int TimPlugin::StartWebService()
 	QCoreApplication a(placeholderC,placeholderX);
 
  	QHostAddress address = QHostAddress(QString::fromStdString (webip));
-    quint16 port = static_cast<quint16>(webport);
+	quint16 port = static_cast<quint16>(webport);
 
 	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
 	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
 
+	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
+    router->setUpRoutes();
+
     QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
 
-		this->TimRequestHandler(socket);
+		TimRequestHandler(socket);
+    });
+
+    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
+		router->processRequest(socket);
     });
 
     QHttpEngine::Server server(handler.data());
 
     if (!server.listen(address, port)) {
-        qCritical("TimPlugin:: Unable to listen on the specified port.");
+        qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logDEBUG4)<<"TimPlugin:: Started web service";
+	PLOG(logINFO)<<"TimPlugin:: Started web service";
 	return a.exec();
 
 }
 
 
 void TimPlugin::UpdateConfigSettings() {
-
 
 	lock_guard<mutex> lock(_cfgLock);
 	
@@ -158,8 +133,8 @@ void TimPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("Stop_Broadcast_Date", _stopDate);
 	GetConfigValue<string>("Start_Broadcast_Time", _startTime);
 	GetConfigValue<string>("Stop_Broadcast_Time", _stopTime);
-	GetConfigValue<string>("WebServiceIP",webip);
-	GetConfigValue<uint16_t>("WebServicePort",webport);
+	GetConfigValue<string>("WebServiceIP", webip);
+	GetConfigValue<uint16_t>("WebServicePort", webport);
 
 }
 
@@ -241,30 +216,43 @@ bool TimPlugin::TimDuration()
 
 bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
 {
-
 	memset(tim, 0, sizeof(TravelerInformation));
-
 	// J2735 packet header.
-
 	//tim->msgID = DSRCmsgID_travelerInformation;
 
 	DsrcBuilder::SetPacketId(tim);
-
 	// Data Frame (1 of 1).
-
 	XmlCurveParser curveParser;
-
 
 	// Read the curve file, which creates and populates the data frame of the TIM.
 	if (!curveParser.ReadCurveFile(mapFile, tim))
 		return false;
-
 
 	_speedLimit = curveParser.SpeedLimit;
 
 	PluginUtil::SetStatus<unsigned int>(_plugin, "Speed Limit", _speedLimit);
 
 	return true;
+}
+
+bool TimPlugin::LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile)
+{
+	std::ifstream in = std::ifstream(mapFile, ios_base::in);
+	if(in && in.is_open())
+	{
+		std::stringstream ss;
+		ss << in.rdbuf();
+		in.close();
+
+		tmx::message_container_type container;
+		container.load<XML>(ss);
+		TimMsg->set_contents(container.get_storage().get_tree());
+		PLOG(logINFO) << "Loaded MapFile and updated TIM." << std::endl;
+		return true;
+	}else{
+		PLOG(logERROR)<<"Cannot read file " << mapFile<<std::endl;
+	}
+	return false;
 }
 
 int TimPlugin::Main() {
@@ -274,58 +262,64 @@ int TimPlugin::Main() {
 	uint64_t lastUpdateTime = 0;
 
 	uint64_t lastSendTime = 0;
-	string mapFileCopy;
 
 	while (_plugin->state != IvpPluginState_error) {
 
-		while (TimDuration()) {
+		while (true) { //TimDuration()
 
 			if (IsPluginState(IvpPluginState_registered))
 			{
 				uint64_t sendFrequency = _frequency;
 
 				// Load the TIM from the map file if it is new.
-				//cout<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
 				if (_isMapFileNew)
-				{
-					{
-						//lock_guard<mutex> lock(_cfgLock);
-						//mapFileCopy = _mapFile;
-						_isMapFileNew = false;
-					}
-					_isTimLoaded = LoadTim(&_tim, _mapFile.c_str());
-				}
+				{					
+					PLOG(logINFO)<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
+					lock_guard<mutex> lock(_cfgLock);
+					//reset map update indicator
+					_isMapFileNew = false;
+					//Update the TIM message with XML from map file
+					_timMsgPtr = std::make_shared<TimMessage>();
+					_isTimLoaded = LoadTim(_timMsgPtr, _mapFile.c_str());
+				}				
 
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
-				if (_isTimLoaded && (time - lastUpdateTime) > updateFrequency)
+				if ((_isTimLoaded || _isTimUpdated ) && _timMsgPtr && (time - lastUpdateTime) > updateFrequency)
 				{
 					lastUpdateTime = time;
-					if (_isTimLoaded)
-					{
-						DsrcBuilder::SetPacketId(&_tim);
-						DsrcBuilder::SetStartTimeToYesterday(_tim.dataFrames.list.array[0]);
+					if (_isTimLoaded || _isTimUpdated)
+					{				
+						lock_guard<mutex> lock(_cfgLock);
+						PLOG(logINFO)<<"update packet ID and start time  "<<endl;		
+						DsrcBuilder::SetPacketId(_timMsgPtr->get_j2735_data().get());
+						DsrcBuilder::SetStartTimeToYesterday(_timMsgPtr->get_j2735_data().get()->dataFrames.list.array[0]);
 					}
 				}
 
+				if(_isTimUpdated){
+					lock_guard<mutex> lock(_cfgLock);
+					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<<_isTimUpdated<<endl;
+					//reset TIM update indicator
+					_isTimUpdated = false;
+				}
+
 				// Send out the TIM at the frequency read from the configuration.
-				if (_isTimLoaded && sendFrequency > 0 && (time - lastSendTime) > sendFrequency)
+				if (_timMsgPtr && sendFrequency > 0 && (time - lastSendTime) > sendFrequency)
 				{
-
 					lastSendTime = time;
-					TimMessage timMsg(_tim);
-					//PLOG(logERROR) <<"timMsg XML to send....."<< timMsg<<std::endl;
+					lock_guard<mutex> lock(_cfgLock);
+					PLOG(logINFO) << "timMsg XML to send: " << *_timMsgPtr << std::endl;
 					TimEncodedMessage timEncMsg;
-					timEncMsg.initialize(timMsg);
-					//PLOG(logERROR) <<"encoded timEncMsg..."<< timEncMsg<<std::endl;
-
+					timEncMsg.initialize(*_timMsgPtr);
+					PLOG(logINFO) << "encoded timEncMsg: " << timEncMsg << std::endl;
 					timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					timEncMsg.addDsrcMetadata(0x8003);
-
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
-					if (rMsg) BroadcastMessage(*rMsg);
+					if (rMsg) BroadcastMessage(*rMsg);						
 				}
 			}
+			this_thread::sleep_for(chrono::milliseconds(10000));
 		}
 		this_thread::sleep_for(chrono::milliseconds(500));
 	}
