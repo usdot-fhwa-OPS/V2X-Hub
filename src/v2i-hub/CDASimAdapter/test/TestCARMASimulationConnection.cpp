@@ -70,6 +70,6 @@ namespace CDASimAdapter {
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {
-        ASSERT_FALSE(connection->connect());
+        ASSERT_TRUE(connection->connect());
     }
 }

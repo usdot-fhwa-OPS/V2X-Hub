@@ -15,7 +15,7 @@ count_num = 0
 def generate_time_sync():
     jsonResult = {
         "seq":count_num, 
-        "timestep":int(time.time())
+        "timestep":int(time.time()*1000)
     }
     jsonResult = json.dumps(jsonResult)
     return jsonResult
