@@ -52,9 +52,6 @@ namespace CDASimAdapter{
             return time_producer->init();
 
         }
-        catch (const std::logic_error &e) {
-            PLOG(logERROR) << "Exception occured initializing Kafka Time Producer : " << e.what() << std::endl;
-        }
         catch( const runtime_error &e ) {
             PLOG(logWARNING) << "Initialization of time producer failed: " << e.what() << std::endl; 
         }

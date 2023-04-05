@@ -31,11 +31,8 @@ namespace tmx::utils {
 
     void PluginClientClockAware::OnStateChange(IvpPluginState state) {
         PluginClient::OnStateChange(state);
-        if (state == IvpPluginState_registered) {
-            if (sim::is_simulation_mode()) {
-                bool rtn = SetStatus(Key_Simulation_Mode, "ON");
-            }
-               
+        if (state == IvpPluginState_registered && sim::is_simulation_mode()) {
+            SetStatus(Key_Simulation_Mode, "ON");
         }
     }
 

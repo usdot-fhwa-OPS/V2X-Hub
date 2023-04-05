@@ -110,11 +110,11 @@ namespace CDASimAdapter {
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
+            uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
-            uint _simulation_v2x_port;
             bool _connected = false;
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;

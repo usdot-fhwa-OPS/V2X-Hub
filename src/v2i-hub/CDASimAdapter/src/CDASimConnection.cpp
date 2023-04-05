@@ -43,23 +43,23 @@ namespace CDASimAdapter{
         try {
             // Iniitialize CARMA Simulation UDP Server and Client to foward V2X messages between CARMA simulation 
             // and CARMA Simulation Infrastructure Adapter.
-            PLOG(logDEBUG) << "Creating UDPServer for CDA V2X message forwarding" << local_ip << ":" << std::to_string(v2x_port);
             carma_simulation_listener = std::make_shared<UdpServer>( local_ip, v2x_port );
-            PLOG(logDEBUG) << "Creating UDPClient for CDA V2X message forwarding " << simulation_ip << ":" << std::to_string(simulation_v2x_port);
 
             carma_simulation_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_v2x_port);
             // Initialize V2X-Hub UDP Server and Client to foward V2X messages between CARMA Simulation Infrastructure 
             // Adapter and V2X-Hub.
             // TODO: Using TMX Utils get immediate forward port
             // TODO: Replace 0 with immediate forward port
-            PLOG(logDEBUG) << "Creating UDPServer for Immediate Forward " << local_ip << ":" << std::to_string(5678);
             immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 5678);
             // TODO: Using TMX Utils get message receiver port
             // TODO: Replace 0 with message receiver port
-            PLOG(logDEBUG) << "Creating UDPClient for Message Receiver " << local_ip << ":" << std::to_string(8765);
             message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 8765);
             // Initialize UDP Server for listening for incoming CARMA-Simulation time synchronization.
-            PLOG(logDEBUG) << "Creating UDPServer Time Sync Messages" << local_ip << ":" << std::to_string(time_sync_port);
+            PLOG(logDEBUG) << "Creating UDPServer Time Sync Messages" << local_ip << ":" << std::to_string(time_sync_port) << "\n" 
+                            << "Creating UDPServer for CDA V2X message forwarding" << local_ip << ":" << std::to_string(v2x_port) << "\n" 
+                            << "Creating UDPClient for CDA V2X message forwarding " << simulation_ip << ":" << std::to_string(simulation_v2x_port) << "\n"
+                            << "Creating UDPServer for Immediate Forward " << local_ip << ":" << std::to_string(5678) << "\n"
+                            << "Creating UDPClient for Message Receiver " << local_ip << ":" << std::to_string(8765) << std::endl;
             time_sync_listener = std::make_shared<UdpServer>(local_ip,time_sync_port);
         }
         catch (const UdpClientRuntimeError &e) {

@@ -28,14 +28,7 @@ public:
      * @param routeableMsg 
      */
     void HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg );
-    /**
-	 * @brief Status label simulation time to be displayed by each plugin.
-	 */
-	const char* Key_Simulation_Time_Step = "Simulation Time Step (ms)";
-    /**
-	 * @brief Status label to indicate whether plugin is in Simulation Mode.
-	 */
-	const char* Key_Simulation_Mode = "Simulation Mode ";
+
     
 protected:
     /**
@@ -46,14 +39,21 @@ protected:
         return clock;
     }
 
-    virtual void OnStateChange(IvpPluginState state) override; 
+    void OnStateChange(IvpPluginState state) override; 
     
 private:
     /**
      * @brief Clock wrapper object that can either store a simulation time or retrieve system time based on initialization
      */
     std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
-
+    /**
+	 * @brief Status label simulation time to be displayed by each plugin.
+	 */
+	const char* Key_Simulation_Time_Step = "Simulation Time Step (ms)";
+    /**
+	 * @brief Status label to indicate whether plugin is in Simulation Mode.
+	 */
+	const char* Key_Simulation_Mode = "Simulation Mode ";
     
 };
 
