@@ -21,6 +21,7 @@
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
 #include <simulation/SimulationEnvVar.h>
+#include "ThreadWorker.h"
 
 
 
@@ -70,6 +71,26 @@ namespace CDASimAdapter {
          * @return true if successful and false if unsuccessful.
          */
         bool connect();
+
+        /**
+         * @brief Method to start thread timer for processing msg from v2xhub
+         */
+        void start_amf_msg_thread();
+
+        /**
+         * @brief Method to start thread timer for processing msg from CDASimConnection
+         */
+        void start_binary_msg_thread();
+
+        /**
+         * @brief Method to consume msg in amf fromat from V2Xhub and forward to CDASimConnection
+         */
+        void attempt_message_from_v2xhub();
+
+        /**
+         * @brief Method to consume ans1 binary msg from CDASimConnection and forward to V2Xhub
+         */
+        void attempt_message_from_simulation();
         
     private:
 
@@ -83,6 +104,10 @@ namespace CDASimAdapter {
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
 
+        std::unique_ptr<tmx::utils::ThreadTimer> amf_thread_timer;
+        std::unique_ptr<tmx::utils::ThreadTimer> binary_thread_timer;
+        int amf_msg_tick_id;
+        int binary_msg_tick_id;
 
     };
 }

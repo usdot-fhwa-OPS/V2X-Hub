@@ -27,6 +27,11 @@ namespace CDASimAdapter{
             while ( !connection || !connection->is_connected() ) {
                 connect();
             }
+
+            if ( connection->is_connected() ) {
+                start_amf_msg_thread();
+                start_binary_msg_thread();
+            }
         }
     }
 
@@ -66,6 +71,64 @@ namespace CDASimAdapter{
         return connection->connect();
     }
     
+
+
+    void CDASimAdapter::start_amf_msg_thread() {
+        if ( !amf_thread_timer ) {
+            amf_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+        }
+        amf_msg_tick_id = amf_thread_timer->AddPeriodicTick([this]() {
+
+            this->attempt_message_from_v2xhub();
+        } // end of lambda expression
+        , std::chrono::milliseconds(100), std::chrono::milliseconds(100) );
+
+    }
+
+    void CDASimAdapter::start_binary_msg_thread() {
+        if ( !binary_thread_timer ) {
+            binary_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+        }
+
+        binary_msg_tick_id = binary_thread_timer->AddPeriodicTick([this]() {
+
+            this->attempt_message_from_simulation();
+        } // end of lambda expression
+        , std::chrono::milliseconds(100), std::chrono::milliseconds(100) );
+
+    }
+
+    void CDASimAdapter::attempt_message_from_simulation() {
+        try {
+            std::string msg = connection->consume_v2x_message_from_simulation();
+            if ( !msg.empty()) {
+                connection->forward_v2x_message_to_v2xhub(msg);
+            }
+            else {
+                PLOG(logDEBUG1) << "CDASim connection has not yet received a v2x message!" << std::endl;
+            }
+        }
+        catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    void CDASimAdapter::attempt_message_from_v2xhub() {
+        try {
+            std::string msg = connection->consume_v2x_message_from_v2xhub();
+            if ( !msg.empty()) {
+                connection->forward_v2x_message_to_simulation(msg);
+            }
+            else {
+                PLOG(logDEBUG1) << "CDASim connection has not yet received a v2x message!" << std::endl;
+            }
+        }
+        catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    
     int CDASimAdapter::Main() {
 
 
@@ -81,12 +144,10 @@ namespace CDASimAdapter{
 
 	    return EXIT_SUCCESS;
     }
-
-
-    
         
-
 }
+
+
 int main(int argc, char *argv[]) {
 	return run_plugin < CDASimAdapter::CDASimAdapter > ("CDASimAdapter", argc, argv);
 }

@@ -55,10 +55,10 @@ namespace CDASimAdapter{
             // Adapter and V2X-Hub.
             // TODO: Using TMX Utils get immediate forward port
             // TODO: Replace 0 with immediate forward port
-            immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 0 );
+            immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 5678 );
             // TODO: Using TMX Utils get message receiver port
             // TODO: Replace 0 with message receiver port
-            message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 0);
+            message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 8765 );
             // Initialize UDP Server for listening for incoming CARMA-Simulation time synchronization.
             time_sync_listener = std::make_shared<UdpServer>(local_ip,time_sync_port);
         }
@@ -85,7 +85,7 @@ namespace CDASimAdapter{
         }
     }
 
-    std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
+    std::string CDASimConnection::consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server) const {
         std::unique_ptr<char> msg = std::make_unique<char>();
         int num_of_bytes = _server->TimedReceive(msg.get(),1000, 5);
         if (num_of_bytes > 0 ) {
