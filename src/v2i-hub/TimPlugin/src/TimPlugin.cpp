@@ -211,8 +211,16 @@ bool TimPlugin::TimDuration()
 
 bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 {
+	PLOG(logINFO)<<"TimPlugin:: Reached in TimDuration upcon receiving TIM message.";
 	lock_guard<mutex> lock(_cfgLock);
 	auto timPtr = TimMsg->get_j2735_data();
+	//startTime unit of minute
+	auto startTime = timPtr->dataFrames.list.array[0]->startTime;
+	if(startTime >= 527040)
+	{
+		PLOG(logERROR) << "Invalid startTime." << std::endl;
+		return false;
+	}
 	//Duration is unit of minute
 	auto duration = timPtr->dataFrames.list.array[0]->duratonTime; 
 	bool isPersist = false;
@@ -221,42 +229,32 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 		PLOG(logERROR) << "Duration = 32000, ignore stop time." << std::endl;
 		isPersist = true;
 	}
-	//startTime unit of minute
-	auto startTime = timPtr->dataFrames.list.array[0]->startTime;
-	if(startTime >= 527040)
-	{
-		PLOG(logERROR) << "Invalid startTime." << std::endl;
-		return false;
-	}
+
+	//Get year start UTC in seconds
 	auto t = time(nullptr);
-	struct tm yearStartTimeInfo;
-	localtime_r(&t, &yearStartTimeInfo);
-	ostringstream currentYearStartSS;
-	currentYearStartSS <<  "01-01-"<< std::put_time(&yearStartTimeInfo, "%Y")<<" 00:00:00";
-	time_t secondsYearStart = mktime( & yearStartTimeInfo );
+	struct tm timeInfo;
+	localtime_r(&t, &timeInfo);
+	ostringstream currentYearStartOS;
+	currentYearStartOS << std::put_time(&timeInfo, "%Y")<<"-01-01T00:00:00.000Z";
+	struct tm currentYearStartTimeInfo;
+	istringstream currentYearStartIS(currentYearStartOS.str());
+	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S" );
+	PLOG(logINFO) << "Year Start : " << (currentYearStartTimeInfo.tm_mon + 1) << "-" << currentYearStartTimeInfo.tm_mday << "-" 
+		<< (currentYearStartTimeInfo.tm_year + 1900) << " " << currentYearStartTimeInfo.tm_hour << ":" << currentYearStartTimeInfo.tm_min << ":" 
+		<< currentYearStartTimeInfo.tm_sec << std::endl;
+	time_t secondsYearStart = mktime( &currentYearStartTimeInfo );
+	
 	//Start Time in seconds
 	time_t secondsStart = secondsYearStart + startTime * 60;
 	//Stop Time in seconds
 	time_t secondsStop = secondsStart + duration * 60;
 
-	// Current Time in seconds
-	auto t = time(nullptr);
-	struct tm tm;
-	localtime_r(&t, &tm);
-	ostringstream oss1;
-	oss1 << put_time(&tm, "%m-%d-%Y %H:%M:%S");
-	auto _currentTimTime = oss1.str();
-	istringstream currentTimTime(_currentTimTime);
-	struct tm date_current;
-	currentTimTime >> get_time( &date_current, "%m-%d-%Y %H:%M:%S" );
-	PLOG(logDEBUG) << "CURRENT : " << date_current.tm_mon << "-" << date_current.tm_mday << "-" 
-		<< date_current.tm_year << " " << date_current.tm_hour << ":" << date_current.tm_min << ":" 
-		<< date_current.tm_sec << std::endl;
-	time_t secondsCurrent = mktime( & date_current );
+	// Current UTC Time in seconds;
+	auto secondsCurrent = time(nullptr);
 
 	//Comparing current time with start and end time 
-	PLOG(logDEBUG) << "Start : " << secondsStart << " Stop : " << secondsStop << 
-		" Current : " << secondsCurrent << std::endl;
+	PLOG(logINFO) << "Year Start(s): " << secondsYearStart << " Broadcast Start(s):" << secondsStart << " Broadcast Stop(s): " << secondsStop << 
+		" Current(s):" << secondsCurrent << " Elpased minutes since year start(min):" << ((secondsCurrent-secondsYearStart)/60.0)<< std::endl;
 	if ( secondsStart <= secondsCurrent && (secondsCurrent <= secondsStop || isPersist)) {
 		return true;
 	} else {
