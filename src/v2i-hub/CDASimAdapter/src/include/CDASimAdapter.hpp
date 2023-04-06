@@ -91,6 +91,20 @@ namespace CDASimAdapter {
          * @brief Method to consume ans1 binary msg from CDASimConnection and forward to V2Xhub
          */
         void attempt_message_from_simulation();
+        /**
+         * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
+         * CARMA Streets services
+         * @param msg TimeSyncMessage.
+         */
+        void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
+        /**
+         * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
+         */
+        void start_time_sync_thread_timer();
+        /**
+         * @brief Method to consume time sychrononization from CDASimConnection and forward to tmx core and CARMA Streets
+         */
+        void attempt_time_sync();
         
     private:
 
@@ -103,6 +117,8 @@ namespace CDASimAdapter {
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
+        std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
+        int time_sync_tick_id;
 
         std::unique_ptr<tmx::utils::ThreadTimer> amf_thread_timer;
         std::unique_ptr<tmx::utils::ThreadTimer> binary_thread_timer;
