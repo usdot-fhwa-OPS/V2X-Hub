@@ -78,7 +78,13 @@ namespace CDASimAdapter {
 
         ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, location), 
         "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
-        }
+    }
+
+    TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
+        WGS84Point location;
+        ASSERT_FALSE(connection->carma_simulation_handshake("", NULL, NULL, 
+                                "",  NULL, NULL, location));
+    }
 
     TEST_F(TestCARMASimulationConnection, connect) {
         ASSERT_TRUE(connection->connect());

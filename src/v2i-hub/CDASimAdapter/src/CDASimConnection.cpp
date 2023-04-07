@@ -39,24 +39,16 @@ namespace CDASimAdapter{
     {
         Json::Value message;   
         std::string message_str = "";
-        try
-        {
-            message["rxMessageIpAddress"] = local_ip;
-            message["infrastructureId"] = infrastructure_id;
-            message["rxMessagePort"] = v2x_port;
-            message["timeSyncPort"] = time_sync_port;
-            message["location"]["latitude"] = location.Latitude;
-            message["location"]["longitude"] = location.Longitude;
-            message["location"]["elevation"] = location.Elevation;
-            Json::StyledWriter writer;
-            message_str = writer.write(message);
-    
-        }
-        catch(const std::exception &e)
-        {
-            PLOG(logERROR) << "Encountered runtime error when creating JSON message: " << e.what() << std::endl;
-            return "";
-        }
+        
+        message["rxMessageIpAddress"] = local_ip;
+        message["infrastructureId"] = infrastructure_id;
+        message["rxMessagePort"] = v2x_port;
+        message["timeSyncPort"] = time_sync_port;
+        message["location"]["latitude"] = location.Latitude;
+        message["location"]["longitude"] = location.Longitude;
+        message["location"]["elevation"] = location.Elevation;
+        Json::StyledWriter writer;
+        message_str = writer.write(message);
         return message_str;
     }
 
@@ -65,12 +57,17 @@ namespace CDASimAdapter{
                                 const WGS84Point &location) 
     {
         // Create JSON message with the content 
-        std::string payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
-        if (payload.empty())
+        std::string payload = "";
+        try
         {
+            payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
+        }
+        catch(const std::exception &e)
+        {
+            PLOG(logERROR) << "Encountered runtime error when creating JSON message: " << e.what() << std::endl;
             return false;
         }
-
+        
         try
         {
             carma_simulation_registration_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_registration_port);
