@@ -50,7 +50,11 @@ namespace ERVCloudForwardingPlugin
         string _rsuName;
         uint16_t _snmpPort;
         // V2X Hub sends RSU register request to carma-cloud at specified interval. Default 3600 seconds
-        uint32_t _rsuInterval=3600;
+        uint32_t _rsuInterval = 3600;
+        // Max attempts to try to make connection to RSU and send the RSU location to the cloud.
+        uint32_t _max_rsu_connection_attempt = 30;
+        // Waiting to start the web service
+        uint32_t _max_web_service_waiting = 10; // unit of second
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
@@ -87,7 +91,7 @@ namespace ERVCloudForwardingPlugin
          */
         int CloudSend(const string &msg, const string &url, const string &base, const string &method);
         /**
-         * @brief Create a new thread and send BSM request to the cloud 
+         * @brief Create a new thread and send BSM request to the cloud
          * @param msg BSM message request
          * @param url The server IP and port the request is sent to
          * @param base The request path
