@@ -241,7 +241,7 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 	currentYearStartTimeInfo.tm_isdst = 0; //Day light saving flag
 	PLOG(logINFO) << "Year Start : " << (currentYearStartTimeInfo.tm_mon + 1) << "-" << currentYearStartTimeInfo.tm_mday << "-" 
 		<< (currentYearStartTimeInfo.tm_year + 1900) << " " << currentYearStartTimeInfo.tm_hour << ":" << currentYearStartTimeInfo.tm_min << ":" 
-		<< currentYearStartTimeInfo.tm_sec << ">>"<<currentYearStartTimeInfo.tm_wday<< currentYearStartTimeInfo.tm_yday << ">>"  << currentYearStartTimeInfo.tm_isdst << std::endl;
+		<< currentYearStartTimeInfo.tm_sec << " DST:"  << currentYearStartTimeInfo.tm_isdst << std::endl;
 	time_t secondsYearStart = mktime( &currentYearStartTimeInfo );
 	
 	//Start Time in seconds
