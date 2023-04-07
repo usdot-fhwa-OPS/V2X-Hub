@@ -10,7 +10,13 @@
 namespace CDASimAdapter {
 
     
-
+    /**
+     * @brief Object to hold UdpServers and UdpClients to facilitate V2X-Hub connection
+     * with CDASim (CARMA-Simulation). This includes setting up servers and clients to foward
+     * V2X messages, listen for time sync messages from CDASim, and attempt Infrastructure 
+     * registration with CDA Sim.
+     * 
+     */
     class CDASimConnection {
         public:
             /**

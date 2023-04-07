@@ -2,7 +2,7 @@
 
 #include "PluginClient.h"
 #include "carma-clock/carma_clock.h"
-#include <simulation/SimulationEnvVar.h>
+#include <simulation/SimulationEnvUtils.h>
 #include <TimeSyncMessage.h>
 #include "Clock.h"
 

@@ -79,24 +79,24 @@ namespace CDASimAdapter{
             std::string _simulation_ip = sim::get_sim_config(sim::SIMULATION_IP);
             std::string _local_ip =  sim::get_sim_config(sim::LOCAL_IP);
             PLOG(logERROR) << "Simulation and local IP successfully initialized!"<< std::endl;
-            uint _simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
-            uint _time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            uint _v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
-            uint _sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
+            uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
+            uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
+            uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
+            uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
 
             PLOG(logINFO) << "CDASim connecting " << _simulation_ip << 
-                    "\nUsing Registration Port : "  << std::to_string( _simulation_registration_port) <<
-                    " Time Sync Port: " << std::to_string( _time_sync_port) << " and V2X Port: " << std::to_string(_v2x_port) << std::endl;
+                    "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
+                    " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if (!initialize_time_producer()) {
                 return false;
             }
             if ( connection ) {
-                connection.reset(new CDASimConnection( _simulation_ip, _simulation_registration_port, _sim_v2x_port, _local_ip,
-                                                _time_sync_port, _v2x_port, location ));
+                connection.reset(new CDASimConnection( _simulation_ip, simulation_registration_port, sim_v2x_port, _local_ip,
+                                                time_sync_port, v2x_port, location ));
             }
             else {
-                connection = std::make_unique<CDASimConnection>(_simulation_ip, _simulation_registration_port, _sim_v2x_port, _local_ip,
-                                                            _time_sync_port, _v2x_port, location);
+                connection = std::make_unique<CDASimConnection>(_simulation_ip, simulation_registration_port, sim_v2x_port, _local_ip,
+                                                            time_sync_port, v2x_port, location);
             }
         }       
         catch (const TmxException &e) {
