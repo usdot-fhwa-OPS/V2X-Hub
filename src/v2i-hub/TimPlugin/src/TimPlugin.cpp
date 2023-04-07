@@ -232,10 +232,9 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 
 	//Get year start UTC in seconds
 	auto t = time(nullptr);
-	struct tm timeInfo;
-	localtime_r(&t, &timeInfo);
+	struct tm* timeInfo = gmtime(&t);
 	ostringstream currentYearStartOS;
-	currentYearStartOS << std::put_time(&timeInfo, "%Y")<<"-01-01T00:00:00.000Z";
+	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-01T00:00:00.000Z";
 	struct tm currentYearStartTimeInfo;
 	istringstream currentYearStartIS(currentYearStartOS.str());
 	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S" );
