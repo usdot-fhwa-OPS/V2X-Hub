@@ -20,8 +20,9 @@
 #include "CDASimConnection.hpp"
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
-#include <simulation/SimulationEnvVar.h>
+#include <simulation/SimulationEnvUtils.h>
 #include "ThreadWorker.h"
+
 
 
 

@@ -10,7 +10,13 @@
 namespace CDASimAdapter {
 
     
-
+    /**
+     * @brief Object to hold UdpServers and UdpClients to facilitate V2X-Hub connection
+     * with CDASim (CARMA-Simulation). This includes setting up servers and clients to foward
+     * V2X messages, listen for time sync messages from CDASim, and attempt Infrastructure 
+     * registration with CDA Sim.
+     * 
+     */
     class CDASimConnection {
         public:
             /**
@@ -62,6 +68,11 @@ namespace CDASimAdapter {
              */
             std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
 
+            /**
+             * @brief Method to consume incoming std::string message in hex format from UDP Server.
+             * @param _server UDP Server to consume string message from.
+             * @return string of message.
+             */
             std::string consume_hex_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server) const;
             
             /**

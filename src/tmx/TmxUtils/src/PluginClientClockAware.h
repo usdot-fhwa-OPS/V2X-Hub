@@ -2,8 +2,9 @@
 
 #include "PluginClient.h"
 #include "carma-clock/carma_clock.h"
-#include <simulation/SimulationEnvVar.h>
+#include <simulation/SimulationEnvUtils.h>
 #include <TimeSyncMessage.h>
+#include "Clock.h"
 
 namespace tmx ::utils {
 
@@ -49,7 +50,7 @@ private:
     /**
 	 * @brief Status label simulation time to be displayed by each plugin.
 	 */
-	const char* Key_Simulation_Time_Step = "Simulation Time Step (ms)";
+	const char* Key_Simulation_Time_Step = "Simulation Time Step ";
     /**
 	 * @brief Status label to indicate whether plugin is in Simulation Mode.
 	 */
