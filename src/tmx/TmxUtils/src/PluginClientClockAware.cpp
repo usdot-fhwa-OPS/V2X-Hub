@@ -14,17 +14,26 @@ namespace tmx::utils {
         clock = std::make_shared<CarmaClock>(simulationMode);
         if (simulationMode) {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
+
         }
 
     }
 
 
     void PluginClientClockAware::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
-       clock->update( msg.get_timestep() );
-       if (sim::is_simulation_mode() ) {
-        	SetStatus<int>(Key_Simulation_Time_Step, msg.get_timestep());
+        PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
+        this->getClock()->update( msg.get_timestep() );
+        if (sim::is_simulation_mode() ) {
+            SetStatus<uint>(Key_Simulation_Time_Step, msg.get_timestep());
 
-       }
+        }
+    }
+
+    void PluginClientClockAware::OnStateChange(IvpPluginState state) {
+        PluginClient::OnStateChange(state);
+        if (state == IvpPluginState_registered && sim::is_simulation_mode()) {
+            SetStatus(Key_Simulation_Mode, "ON");
+        }
     }
 
 }

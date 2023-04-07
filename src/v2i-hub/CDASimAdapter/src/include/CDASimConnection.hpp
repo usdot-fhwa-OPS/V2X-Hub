@@ -23,7 +23,7 @@ namespace CDASimAdapter {
              * @param location Simulationed location of infrastructure.
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            explicit CDASimConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const uint simulation_registration_port, const uint sim_v2x_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
 
@@ -62,6 +62,7 @@ namespace CDASimAdapter {
              */
             std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
 
+            std::string consume_hex_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server) const;
             
             /**
              * @brief Method to consume incoming time sychronization message.
@@ -110,11 +111,11 @@ namespace CDASimAdapter {
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
+            uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
-            uint _simulation_v2x_port;
             bool _connected = false;
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
