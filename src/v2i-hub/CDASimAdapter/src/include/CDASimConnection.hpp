@@ -7,6 +7,7 @@
 #include <boost/asio.hpp>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
+#include <gtest/gtest.h>
 
 
 namespace CDASimAdapter {
@@ -25,7 +26,7 @@ namespace CDASimAdapter {
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
-                                const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const uint _sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
 
              /**
@@ -81,7 +82,7 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
+            bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
             
@@ -107,10 +108,22 @@ namespace CDASimAdapter {
              * @return Returns true if CARMA-Simulation connection is active and false if the connection is inactive.
              */
             bool is_connected() const;
+
         private:
+            /**
+             * @brief helper method to generate JSON used for handshake connection with CARMA-Simulation instance. 
+             * @param local_ip address of infrastructure software (V2X-Hub).
+             * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
+             * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
+             * @param location simulated location of infrastructure hardware.
+             * @return true if handshake successful and false if handshake unsuccessful.
+             */
+            std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
+                const uint v2x_port, const tmx::utils::WGS84Point &location); 
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
+            uint _infrastructure_id;
             uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
@@ -124,6 +137,8 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
+
+            FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
     };
 
 }

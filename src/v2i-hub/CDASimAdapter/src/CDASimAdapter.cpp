@@ -83,6 +83,8 @@ namespace CDASimAdapter{
             uint _time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
             uint _v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint _sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
+            uint _infrastructure_id;
+            // = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));
 
             PLOG(logINFO) << "CDASim connecting " << _simulation_ip << 
                     "\nUsing Registration Port : "  << std::to_string( _simulation_registration_port) <<
@@ -91,11 +93,11 @@ namespace CDASimAdapter{
                 return false;
             }
             if ( connection ) {
-                connection.reset(new CDASimConnection( _simulation_ip, _simulation_registration_port, _sim_v2x_port, _local_ip,
+                connection.reset(new CDASimConnection( _simulation_ip, _infrastructure_id, _simulation_registration_port, _sim_v2x_port, _local_ip,
                                                 _time_sync_port, _v2x_port, location ));
             }
             else {
-                connection = std::make_unique<CDASimConnection>(_simulation_ip, _simulation_registration_port, _sim_v2x_port, _local_ip,
+                connection = std::make_unique<CDASimConnection>(_simulation_ip, _infrastructure_id, _simulation_registration_port, _sim_v2x_port, _local_ip,
                                                             _time_sync_port, _v2x_port, location);
             }
         }       

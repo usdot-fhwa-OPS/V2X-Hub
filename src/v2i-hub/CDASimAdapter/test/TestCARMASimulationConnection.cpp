@@ -24,7 +24,7 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 WGS84Point location; 
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567 , "127.0.0.1", 1213, 1214, location);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567, 4678, "127.0.0.1", 1213, 1214, location);
 
             }
             void TearDown() override {
@@ -70,14 +70,15 @@ namespace CDASimAdapter {
         ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569));
     }
 
-    TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
+    TEST_F( TestCARMASimulationConnection, get_handshake_json) {
         WGS84Point location;
         location.Elevation = 1000;
         location.Latitude = 38.955; 
         location.Longitude = -77.149;
 
-        ASSERT_TRUE(connection->carma_simulation_handshake("127.0.0.1", 0, 4566, "127.0.0.1", 4567, 4568, location));
-    }
+        ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, location), 
+        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
+        }
 
     TEST_F(TestCARMASimulationConnection, connect) {
         ASSERT_TRUE(connection->connect());

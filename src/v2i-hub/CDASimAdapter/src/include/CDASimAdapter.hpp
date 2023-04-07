@@ -104,7 +104,5 @@ namespace CDASimAdapter {
         std::mutex _lock;
         std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
         int time_sync_tick_id;
-
-        FRIEND_TEST(TestCARMASimulationConnection, carma_simulation_handshake);
     };
 }
