@@ -2,9 +2,10 @@
 
 namespace tmx::utils::sim{
     bool is_simulation_mode() {
-        if (std::getenv(SIMULATION_MODE)) {
-            std::string sim_mode = std::getenv(SIMULATION_MODE);
-            if ( sim_mode.compare("true") == 0 || sim_mode.compare("TRUE") == 0) {
+        auto sim_mode = std::getenv(SIMULATION_MODE);
+        if ( sim_mode) {
+            std::string sim_mode_string = sim_mode;
+            if ( sim_mode_string.compare("true") == 0 || sim_mode_string.compare("TRUE") == 0) {
                 return true;
             }
         }
