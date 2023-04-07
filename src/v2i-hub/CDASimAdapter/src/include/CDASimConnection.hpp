@@ -4,7 +4,6 @@
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
 #include <TimeSyncMessage.h>
-#include <boost/asio.hpp>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>

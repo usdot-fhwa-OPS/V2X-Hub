@@ -74,15 +74,6 @@ namespace CDASimAdapter {
          * @return true if successful and false if unsuccessful.
          */
         bool connect();
-        
-    private:
-
-        std::string simulation_ip;
-        uint simulation_registration_port;
-        std::string local_ip;
-        uint time_sync_port;
-        uint v2x_port;
-
         /**
          * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
          * CARMA Streets services
@@ -97,6 +88,8 @@ namespace CDASimAdapter {
          * @brief Method to consume time sychrononization from CDASimConnection and forward to tmx core and CARMA Streets
          */
         void attempt_time_sync();
+        
+    private:
 
         tmx::utils::WGS84Point location;
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
