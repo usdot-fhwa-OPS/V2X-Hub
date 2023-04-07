@@ -21,7 +21,19 @@ namespace tmx::utils {
 
 
     void PluginClientClockAware::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
-       clock->update( msg.get_timestamp() );
+        PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
+        this->getClock()->update( msg.get_timestep() );
+        if (sim::is_simulation_mode() ) {
+            SetStatus(Key_Simulation_Time_Step, Clock::ToUtcPreciseTimeString(msg.get_timestep()));
+
+        }
+    }
+
+    void PluginClientClockAware::OnStateChange(IvpPluginState state) {
+        PluginClient::OnStateChange(state);
+        if (state == IvpPluginState_registered && sim::is_simulation_mode()) {
+            SetStatus(Key_Simulation_Mode, "ON");
+        }
     }
 
 }
