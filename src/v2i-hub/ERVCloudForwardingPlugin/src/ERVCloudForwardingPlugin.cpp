@@ -19,6 +19,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
     {
+        uint64_t delayStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         // Check if the BSM is broadcast by an ERV (Emergency Response Vehicle)
         if (ERVCloudForwardingWorker::IsBSMFromERV(msg))
         {
@@ -26,12 +27,14 @@ namespace ERVCloudForwardingPlugin
             auto xml_str = ERVCloudForwardingWorker::constructERVBSMRequest(msg);
             PLOG(logINFO) << "Forward ERV BSM to cloud: " << xml_str << endl;
             CloudSendAsync(xml_str, _CLOUDURL, _CLOUDBSMREQ, _POSTMETHOD);
+            uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            PLOG(logINFO) << "Received ERV BSM and forward ERV BSM to cloud delay (ms): " << (delayEnd - delayStart) << endl;
         }
         else
         {
             // If BSM is not from ERV, print debug log
             PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV)." << endl;
-        }
+        }        
     }
 
     void ERVCloudForwardingPlugin::RegisterRSULocation()
@@ -127,6 +130,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::CARMACloudResponseHandler(QHttpEngine::Socket *socket)
     {
+        uint64_t delayStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         QString st;
         while (socket->bytesAvailable() > 0)
         {
@@ -138,6 +142,8 @@ namespace ERVCloudForwardingPlugin
         string bsmHex = _cloudUpdate;
         PLOG(logINFO) << "Received ERV BSM from cloud:" << bsmHex << endl;
         BroadcastBSM(bsmHex);
+        uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        PLOG(logINFO) << "Received ERV BSM from cloud and broadcast ERV BSM delay(ms):" << (delayEnd - delayStart) << endl;
     }
 
     int ERVCloudForwardingPlugin::StartBSMWebService()
