@@ -4,11 +4,11 @@
 using namespace tmx::utils;
 
 namespace CDASimAdapter{ 
-    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint simulation_registration_port, 
+    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                                         const WGS84Point &location, 
                                                         std::shared_ptr<kafka_producer_worker> time_producer) : 
-                                                        _simulation_ip(simulation_ip) , _simulation_registration_port(simulation_registration_port),
+                                                        _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _local_ip(local_ip), _time_sync_port(time_sync_port), _v2x_port(v2x_port),
                                                         _location(location), _time_producer(time_producer)  {
         PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
@@ -21,7 +21,7 @@ namespace CDASimAdapter{
     }
 
     bool CDASimConnection::connect() {
-        if (!carma_simulation_handshake(_simulation_ip, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
+        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
             _connected = false;
             return _connected;
         }
@@ -37,11 +37,55 @@ namespace CDASimAdapter{
         PLOG(logINFO) << "CARMA-Simulation connection is successful!" << std::endl;
         return _connected;
     }
-    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const WGS84Point &location) {
-        // TODO: Standup UDP Server and Client for registration and implement handshake
-        return false;                                
+                                const WGS84Point &location) 
+    {
+        
+        //Get remote endpoint
+        try
+        {
+            remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(simulation_ip), simulation_registration_port);
+        }
+        catch(std::exception e)
+        {
+            PLOG(logERROR) << "Encountered runtime error when resolving remote udp end point given: " << e.what() << std::endl;
+            throw e;
+        }
+
+        io_.reset(new boost::asio::io_service());
+        udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
+
+        work_.reset(new boost::asio::io_service::work(*io_));
+
+         // Create JSON message with the content 
+        Json::Value message;   
+
+        message["rxMessageIpAddress"] = local_ip;
+        message["infrastructureId"] = infrastructure_id;
+        message["rxMessagePort"] = v2x_port;
+        message["timeSyncPort"] = time_sync_port;
+        
+        message["location"]["latitude"] = location.Latitude;
+        message["location"]["longitude"] = location.Longitude;
+        message["location"]["elevation"] = location.Elevation;
+ 
+        try
+        {
+            Json::StyledWriter writer;
+            std::string message_str = writer.write(message);
+            udp_out_socket_->send_to(boost::asio::buffer(message_str), remote_udp_ep_);
+        }
+        catch(boost::system::system_error error_code)
+        {
+            PLOG(logERROR) << "Encountered runtime error when executing handshake: " << error_code.what() << std::endl;
+        }
+        catch(...)
+        {
+            PLOG(logERROR) << "Encountered runtime error when executing handshake: boost::asio::error::fault" << std::endl;
+        }
+
+        return true;
     }
 
     bool CDASimConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 

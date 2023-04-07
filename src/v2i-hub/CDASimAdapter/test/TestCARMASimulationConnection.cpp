@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 #include "include/CDASimConnection.hpp"
+#include "include/CDASimAdapter.hpp"
 #include <WGS84Point.h>
 #include <kafka/mock_kafka_producer_worker.h>
 #include <MockUdpClient.h>
@@ -24,7 +25,7 @@ namespace CDASimAdapter {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 WGS84Point location; 
                 std::shared_ptr<mock_kafka_producer_worker> producer = std::make_shared<mock_kafka_producer_worker>();
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, "127.0.0.1", 1213, 1214, location, producer);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", 0, 1212, "127.0.0.1", 1213, 1214, location, producer);
 
             }
             void TearDown() override {
@@ -68,6 +69,15 @@ namespace CDASimAdapter {
 
     TEST_F( TestCARMASimulationConnection, setup_upd_connection) {
         ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569));
+    }
+
+    TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
+        WGS84Point location;
+        location.Elevation = 1000;
+        location.Latitude = 38.955; 
+        location.Longitude = -77.149;
+
+        ASSERT_TRUE(connection->carma_simulation_handshake("127.0.0.1", 0, 4566, "127.0.0.1", 4567, 4568, location));
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {

@@ -21,10 +21,11 @@
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
 #include <simulation/SimulationEnvVar.h>
-
+#include <gtest/gtest.h>
 
 
 namespace CDASimAdapter {
+
     /**
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
@@ -70,11 +71,17 @@ namespace CDASimAdapter {
          * @return true if successful and false if unsuccessful.
          */
         bool connect();
+        /**
+         * @brief Method to give the next available id of infrastructure
+         * @return next id to be assigned
+         */
+        static int get_next_id() { return infrastructure_id++; }
         
     private:
-
+        static int infrastructure_id;
         std::string simulation_ip;
         uint simulation_registration_port;
+        uint infrastructure_id_adapter;
         std::string local_ip;
         uint time_sync_port;
         uint v2x_port;
@@ -83,6 +90,6 @@ namespace CDASimAdapter {
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
 
-
+        FRIEND_TEST(TestCARMASimulationConnection, carma_simulation_handshake);
     };
 }

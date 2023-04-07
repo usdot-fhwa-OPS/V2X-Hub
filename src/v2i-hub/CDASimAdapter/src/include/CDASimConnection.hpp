@@ -5,17 +5,18 @@
 #include <WGS84Point.h>
 #include <kafka/kafka_producer_worker.h>
 #include <TimeSyncMessage.h>
+#include <boost/asio.hpp>
+#include <jsoncpp/json/json.h>
 
 
 namespace CDASimAdapter {
-
-    
 
     class CDASimConnection {
         public:
             /**
              * @brief Constructor. 
              * @param simulation_ip IP address of CARMA Simulation.
+             * @param infrastructure_id Id of this infrastructure
              * @param simulation_registration_port Port on CARMA Simulation which handles infrastructure registration.
              * @param local_ip IP address of infrastructure software (V2X-Hub).
              * @param time_sync_port Port on which connection listens for time synchronization messages.
@@ -23,7 +24,7 @@ namespace CDASimAdapter {
              * @param location Simulationed location of infrastructure.
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            explicit CDASimConnection( const std::string &simulation_ip, const uint simulation_registration_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location, std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer);
 
@@ -87,7 +88,7 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            bool carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
+            bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
             
@@ -117,12 +118,20 @@ namespace CDASimAdapter {
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
+            uint _infrastructure_id;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
             uint _simulation_v2x_port;
             bool _connected = false;
+
+            std::unique_ptr<boost::asio::ip::udp::socket> udp_out_socket_;
+            boost::asio::ip::udp::endpoint remote_udp_ep_;
+
+            std::unique_ptr<boost::asio::io_service> io_;
+            std::shared_ptr<boost::asio::io_service::work> work_;
+
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;

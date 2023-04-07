@@ -5,8 +5,10 @@ using namespace tmx::utils;
 
 namespace CDASimAdapter{
 
-    CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClientClockAware(name){
-        PLOG(logDEBUG1) << "Initialize " << name << " plugin!" << std::endl;
+    int CDASimAdapter::infrastructure_id = 0;
+
+    CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClientClockAware(name), infrastructure_id_adapter (get_next_id()){
+        PLOG(logDEBUG1) << "Initialize " << name << " plugin! with ID: "  << infrastructure_id_adapter << std::endl;
     }
 
     void CDASimAdapter::UpdateConfigSettings() {
@@ -57,10 +59,10 @@ namespace CDASimAdapter{
             return false;
         }
         if ( connection )
-            connection.reset(new CDASimConnection( simulation_ip, simulation_registration_port,_local_ip,
+            connection.reset(new CDASimConnection( simulation_ip, infrastructure_id_adapter, simulation_registration_port,_local_ip,
                                                          _time_sync_port, _v2x_port, location, time_producer ));
         else {
-            connection = std::make_unique<CDASimConnection>(simulation_ip, simulation_registration_port,_local_ip,
+            connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id_adapter, simulation_registration_port,_local_ip,
                                                          _time_sync_port, _v2x_port, location, time_producer);
         }
         return connection->connect();
