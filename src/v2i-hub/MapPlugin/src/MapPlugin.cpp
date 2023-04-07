@@ -21,7 +21,6 @@
 #include "XmlMapParser.h"
 #include "ConvertToJ2735r41.h"
 #include "inputs/isd/ISDToJ2735r41.h"
-#include "simulation/SimulationEnvUtils.h"
 
 #define USE_STD_CHRONO
 #include <FrequencyThrottle.h>

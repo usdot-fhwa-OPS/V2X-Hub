@@ -33,7 +33,7 @@ namespace CDASimAdapter {
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
-                                const uint _sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
 
              /**
