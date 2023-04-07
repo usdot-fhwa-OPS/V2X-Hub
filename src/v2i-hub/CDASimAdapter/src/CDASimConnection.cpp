@@ -58,16 +58,9 @@ namespace CDASimAdapter{
     {
         // Create JSON message with the content 
         std::string payload = "";
-        try
-        {
-            payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
-        }
-        catch(const std::exception &e)
-        {
-            PLOG(logERROR) << "Encountered runtime error when creating JSON message: " << e.what() << std::endl;
-            return false;
-        }
-        
+    
+        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
+    
         try
         {
             carma_simulation_registration_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_registration_port);

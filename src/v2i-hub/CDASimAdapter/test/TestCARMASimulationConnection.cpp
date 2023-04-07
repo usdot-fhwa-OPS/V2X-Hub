@@ -82,8 +82,9 @@ namespace CDASimAdapter {
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
         WGS84Point location;
-        ASSERT_FALSE(connection->carma_simulation_handshake("", NULL, NULL, 
-                                "",  NULL, NULL, location));
+        // UDP creation error
+        ASSERT_FALSE(connection->carma_simulation_handshake("", 45, NULL, 
+                                "",  45, 45, location));
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {
