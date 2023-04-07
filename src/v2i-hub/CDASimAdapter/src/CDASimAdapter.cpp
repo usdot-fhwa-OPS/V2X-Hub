@@ -88,8 +88,8 @@ namespace CDASimAdapter{
             // = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));
 
             PLOG(logINFO) << "CDASim connecting " << _simulation_ip << 
-                    "\nUsing Registration Port : "  << std::to_string( _simulation_registration_port) <<
-                    " Time Sync Port: " << std::to_string( _time_sync_port) << " and V2X Port: " << std::to_string(_v2x_port) << std::endl;
+                    "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
+                    " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if (!initialize_time_producer()) {
                 return false;
             }
