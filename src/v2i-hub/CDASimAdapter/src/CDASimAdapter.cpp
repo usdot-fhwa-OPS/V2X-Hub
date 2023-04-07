@@ -7,7 +7,6 @@ namespace CDASimAdapter{
 
     CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClient(name){
         if (!sim::is_simulation_mode()) {
-            std::cout << "------------"  << sim::is_simulation_mode() << std::endl;
             throw TmxException("CDASimAdapter only necessary in simulation mode!");
         }
 
@@ -84,8 +83,7 @@ namespace CDASimAdapter{
             uint _time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
             uint _v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint _sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
-            uint _infrastructure_id;
-            // = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));
+            uint _infrastructure_id = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));;
 
             PLOG(logINFO) << "CDASim connecting " << _simulation_ip << 
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<

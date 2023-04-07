@@ -52,6 +52,11 @@ namespace tmx::utils::sim{
          */
         constexpr inline static const char *LOCAL_IP = "LOCAL_IP";
         /**
+         * @brief Name of environment variable for storing infrastructure id of V2xhub. Only necessary in SIMULATION MODE 
+         * for CDASim connection.
+         */
+        constexpr inline static const char *INFRASTRUCTURE_ID = "INFRASTRUCTURE_ID";
+        /**
          * @brief Function to return bool indicating whether V2X-Hub deployment is in SIMULATION MODE or not.
          * @return true if SIMULATION_MODE is "true" or "TRUE" and false otherwise.
          */
