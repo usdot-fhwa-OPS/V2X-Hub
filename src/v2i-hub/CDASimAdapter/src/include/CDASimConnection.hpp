@@ -111,7 +111,6 @@ namespace CDASimAdapter {
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
-            uint _infrastructure_id;
             uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
@@ -119,14 +118,9 @@ namespace CDASimAdapter {
             tmx::utils::WGS84Point _location;
             bool _connected = false;
 
-            std::unique_ptr<boost::asio::ip::udp::socket> udp_out_socket_;
-            boost::asio::ip::udp::endpoint remote_udp_ep_;
-
-            std::unique_ptr<boost::asio::io_service> io_;
-            std::shared_ptr<boost::asio::io_service::work> work_;
-
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
+            std::shared_ptr<tmx::utils::UdpClient> carma_simulation_registration_publisher;
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;

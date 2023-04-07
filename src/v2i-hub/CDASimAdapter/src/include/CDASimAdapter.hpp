@@ -76,10 +76,9 @@ namespace CDASimAdapter {
         bool connect();
         
     private:
-        static int infrastructure_id;
+
         std::string simulation_ip;
         uint simulation_registration_port;
-        uint infrastructure_id_adapter;
         std::string local_ip;
         uint time_sync_port;
         uint v2x_port;

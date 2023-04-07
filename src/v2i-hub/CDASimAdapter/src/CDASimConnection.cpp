@@ -36,48 +36,39 @@ namespace CDASimAdapter{
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const WGS84Point &location) 
     {
+        // Create JSON message with the content 
+        Json::Value message;   
         
-        //Get remote endpoint
+        std::string message_str = "";
         try
         {
-            remote_udp_ep_ = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(simulation_ip), simulation_registration_port);
+            message["rxMessageIpAddress"] = local_ip;
+            message["infrastructureId"] = infrastructure_id;
+            message["rxMessagePort"] = v2x_port;
+            message["timeSyncPort"] = time_sync_port;
+            
+            message["location"]["latitude"] = location.Latitude;
+            message["location"]["longitude"] = location.Longitude;
+            message["location"]["elevation"] = location.Elevation;
+            Json::StyledWriter writer;
+            message_str = writer.write(message);
+    
         }
         catch(std::exception e)
         {
-            PLOG(logERROR) << "Encountered runtime error when resolving remote udp end point given: " << e.what() << std::endl;
-            throw e;
+            PLOG(logERROR) << "Encountered runtime error when creating JSON message: " << e.what() << std::endl;
+            return false;
         }
 
-        io_.reset(new boost::asio::io_service());
-        udp_out_socket_.reset(new boost::asio::ip::udp::socket(*io_,remote_udp_ep_.protocol()));
-
-        work_.reset(new boost::asio::io_service::work(*io_));
-
-         // Create JSON message with the content 
-        Json::Value message;   
-
-        message["rxMessageIpAddress"] = local_ip;
-        message["infrastructureId"] = infrastructure_id;
-        message["rxMessagePort"] = v2x_port;
-        message["timeSyncPort"] = time_sync_port;
-        
-        message["location"]["latitude"] = location.Latitude;
-        message["location"]["longitude"] = location.Longitude;
-        message["location"]["elevation"] = location.Elevation;
- 
         try
         {
-            Json::StyledWriter writer;
-            std::string message_str = writer.write(message);
-            udp_out_socket_->send_to(boost::asio::buffer(message_str), remote_udp_ep_);
+            carma_simulation_registration_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_registration_port);
+            carma_simulation_registration_publisher->Send(message_str);
         }
-        catch(boost::system::system_error error_code)
+        catch(std::exception e)
         {
-            PLOG(logERROR) << "Encountered runtime error when executing handshake: " << error_code.what() << std::endl;
-        }
-        catch(...)
-        {
-            PLOG(logERROR) << "Encountered runtime error when executing handshake: boost::asio::error::fault" << std::endl;
+            PLOG(logERROR) << "Encountered runtime error when executing handshake:" << e.what() << std::endl;
+            return false;
         }
 
         return true;
