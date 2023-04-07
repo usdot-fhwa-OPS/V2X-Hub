@@ -7,6 +7,7 @@ namespace CDASimAdapter{
 
     CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClient(name){
         if (!sim::is_simulation_mode()) {
+            std::cout << "------------"  << sim::is_simulation_mode() << std::endl;
             throw TmxException("CDASimAdapter only necessary in simulation mode!");
         }
 
