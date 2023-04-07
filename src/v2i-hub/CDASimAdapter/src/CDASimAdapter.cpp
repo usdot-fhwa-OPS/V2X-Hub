@@ -8,7 +8,7 @@ namespace CDASimAdapter{
     int CDASimAdapter::infrastructure_id = 0;
 
     CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClientClockAware(name), infrastructure_id_adapter (get_next_id()){
-        PLOG(logDEBUG1) << "Initialize " << name << " plugin! with ID: "  << infrastructure_id_adapter << std::endl;
+        PLOG(logWARNING) << "Initialize " << name << " plugin! with ID: "  << infrastructure_id_adapter << std::endl;
     }
 
     void CDASimAdapter::UpdateConfigSettings() {

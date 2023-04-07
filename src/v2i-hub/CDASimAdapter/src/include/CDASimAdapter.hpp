@@ -33,7 +33,7 @@ namespace CDASimAdapter {
     class CDASimAdapter: public tmx::utils::PluginClientClockAware {
     public:
         /**
-         * @brief CCARMA-Simulation Infrastucture Adapter constructor.
+         * @brief CARMA-Simulation Infrastructure Adapter constructor.
          * @param name name of plugin.
          */
         explicit CDASimAdapter(const std::string &name);
