@@ -3,10 +3,10 @@
 #include <UdpClient.h>
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
-#include <kafka/kafka_producer_worker.h>
 #include <TimeSyncMessage.h>
 #include <boost/asio.hpp>
 #include <jsoncpp/json/json.h>
+#include <PluginLog.h>
 
 
 namespace CDASimAdapter {
@@ -26,7 +26,7 @@ namespace CDASimAdapter {
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location, std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer);
+                                const tmx::utils::WGS84Point &location);
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -40,36 +40,29 @@ namespace CDASimAdapter {
              */
             void forward_v2x_message_to_v2xhub(const std::string &v2x_message) const;
             /**
-             * @brief Method to forward message to external UDP listener via UDP Client
-             * @param v2x_message string message to forward.
-             * @param _client UDP client to forward message with.
-             */
-            void forward_message(const std::string &v2x_message, const std::shared_ptr<tmx::utils::UdpClient> _client ) const ;
-
-            /**
              * @brief Method to consume incoming v2x message from simulation
              * @return string of v2x messaage.
              */
             std::string consume_v2x_message_from_simulation() const;
-
             /**
-             * @brief Method to consume incoming v2x message from V2X-Hub immediate forward plugin.
+             * @brief Method to forward message to external UDP listener via UDP Client
+             * @param v2x_message string message to forward.
+             * @param _client UDP client to forward message with. TMX message bus for other V2X-Hub Plug immediate forward plugin.
              * @return string of v2x messaage.
              */
             std::string consume_v2x_message_from_v2xhub() const;
-            
+            /**
+             * @param v2x_message string message to forward.
+             * @param _client UDP client to forward message with.
+             */
+            void forward_message(const std::string &v2x_message, const std::shared_ptr<tmx::utils::UdpClient> _client ) const ;
             /**
              * @brief Method to consume incoming std::string message from UDP Server.
              * @param _server UDP Server to consume string message from.
              * @return string of message.
              */
             std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
-            /**
-             * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugisn, and to infrastructure Kafka Broker for
-             * CARMA Streets services
-             * @param msg TimeSyncMessage.
-             */
-            void forward_time_sync_message(const tmx::messages::TimeSyncMessage &msg ) const;
+
             
             /**
              * @brief Method to consume incoming time sychronization message.
@@ -119,11 +112,11 @@ namespace CDASimAdapter {
             std::string _simulation_ip;
             uint _simulation_registration_port;
             uint _infrastructure_id;
+            uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
-            uint _simulation_v2x_port;
             bool _connected = false;
 
             std::unique_ptr<boost::asio::ip::udp::socket> udp_out_socket_;
@@ -137,7 +130,6 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
-            std::shared_ptr<tmx::utils::kafka_producer_worker> _time_producer;
     };
 
 }

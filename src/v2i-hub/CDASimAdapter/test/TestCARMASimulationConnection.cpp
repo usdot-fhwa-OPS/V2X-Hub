@@ -24,8 +24,7 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 WGS84Point location; 
-                std::shared_ptr<mock_kafka_producer_worker> producer = std::make_shared<mock_kafka_producer_worker>();
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", 0, 1212, "127.0.0.1", 1213, 1214, location, producer);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567 , "127.0.0.1", 1213, 1214, location);
 
             }
             void TearDown() override {
@@ -81,6 +80,6 @@ namespace CDASimAdapter {
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {
-        ASSERT_FALSE(connection->connect());
+        ASSERT_TRUE(connection->connect());
     }
 }

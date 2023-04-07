@@ -17,11 +17,19 @@ namespace tmx ::utils {
 class PluginClientClockAware : public PluginClient {
 public:
     /**
-     * @brief Constructor
+     * @brief Constructor. Plugins that extent this constructor must at some point call SubcribeToMessages in 
+     * constructor to register TimeMessageHandler.
      * @param name name of plugin
      */
     explicit PluginClientClockAware(const std::string & name);
+    /**
+     * @brief Method to Handle TimeSyncMessage and update clock
+     * @param msg TimeSyncMessage broadcast on TMX core 
+     * @param routeableMsg 
+     */
+    void HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg );
 
+    
 protected:
     /**
      * @brief Method for child classes to use to retrieve the clock object and get the simulation or real time.
@@ -29,20 +37,24 @@ protected:
      */
     inline std::shared_ptr<fwha_stol::lib::time::CarmaClock> getClock() const {
         return clock;
-    } 
+    }
 
+    void OnStateChange(IvpPluginState state) override; 
+    
 private:
     /**
      * @brief Clock wrapper object that can either store a simulation time or retrieve system time based on initialization
      */
     std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
-
     /**
-     * @brief Method to Handle TimeSyncMessage and update clock
-     * @param msg TimeSyncMessage broadcast on TMX core 
-     * @param routeableMsg 
-     */
-    void HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg );
+	 * @brief Status label simulation time to be displayed by each plugin.
+	 */
+	const char* Key_Simulation_Time_Step = "Simulation Time Step (ms)";
+    /**
+	 * @brief Status label to indicate whether plugin is in Simulation Mode.
+	 */
+	const char* Key_Simulation_Mode = "Simulation Mode ";
+    
 };
 
 }

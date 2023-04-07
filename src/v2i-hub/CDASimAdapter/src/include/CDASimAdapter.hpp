@@ -16,12 +16,15 @@
 #include <atomic>
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
-#include <PluginClientClockAware.h>
+#include <PluginClient.h>
 #include "CDASimConnection.hpp"
 #include <kafka/kafka_producer_worker.h>
 #include <kafka/kafka_client.h>
 #include <simulation/SimulationEnvVar.h>
 #include <gtest/gtest.h>
+#include "ThreadWorker.h"
+
+
 
 
 namespace CDASimAdapter {
@@ -30,7 +33,7 @@ namespace CDASimAdapter {
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
      */
-    class CDASimAdapter: public tmx::utils::PluginClientClockAware {
+    class CDASimAdapter: public tmx::utils::PluginClient{
     public:
         /**
          * @brief CARMA-Simulation Infrastructure Adapter constructor.
@@ -71,11 +74,6 @@ namespace CDASimAdapter {
          * @return true if successful and false if unsuccessful.
          */
         bool connect();
-        /**
-         * @brief Method to give the next available id of infrastructure
-         * @return next id to be assigned
-         */
-        static int get_next_id() { return infrastructure_id++; }
         
     private:
         static int infrastructure_id;
@@ -85,10 +83,28 @@ namespace CDASimAdapter {
         std::string local_ip;
         uint time_sync_port;
         uint v2x_port;
+
+        /**
+         * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
+         * CARMA Streets services
+         * @param msg TimeSyncMessage.
+         */
+        void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
+        /**
+         * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
+         */
+        void start_time_sync_thread_timer();
+        /**
+         * @brief Method to consume time sychrononization from CDASimConnection and forward to tmx core and CARMA Streets
+         */
+        void attempt_time_sync();
+
         tmx::utils::WGS84Point location;
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
+        std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
+        int time_sync_tick_id;
 
         FRIEND_TEST(TestCARMASimulationConnection, carma_simulation_handshake);
     };

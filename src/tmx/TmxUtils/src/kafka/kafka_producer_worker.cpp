@@ -31,7 +31,6 @@ namespace tmx::utils
     kafka_producer_worker::kafka_producer_worker(const std::string &brokers, const std::string &topics, int partition)
         : _topics_str(topics), _broker_str(brokers), _run(true), _partition(partition)
     {
-        FILE_LOG(logDEBUG) << "kafka_producer_worker init()... " << std::endl;
     }
 
     bool kafka_producer_worker::init()
@@ -108,11 +107,10 @@ namespace tmx::utils
         // produce messages
         while (true)
         {
-            auto msg_ptr = std::make_unique<std::string>(msg);
             RdKafka::ErrorCode resp = _producer->produce(_topic,
                                                          _partition,
                                                          RdKafka::Producer::RK_MSG_COPY,
-                                                         msg_ptr.get(),
+                                                         const_cast<char *>(msg.c_str()),
                                                          msg.size(),
                                                          nullptr,
                                                          nullptr);

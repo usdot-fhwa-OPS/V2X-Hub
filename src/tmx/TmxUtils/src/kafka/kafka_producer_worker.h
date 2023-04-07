@@ -55,14 +55,14 @@ namespace tmx::utils
              */
             kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
             /**
-             * @brief Initialize kafka_producer_worker
+             * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
              * @return true if successful.
              * @return false if unsuccessful.
              */
             virtual bool init();
             /**
-             * @brief Produce to topic.
+             * @brief Produce to topic. Will result in segmentation fault if init() is not called on producer first.
              * 
              * @param msg message to produce.
              */

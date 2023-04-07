@@ -35,6 +35,7 @@ public:
 	virtual int Main();
 
 	void HandlePedestrianDetection(tmx::messages::PedestrianMessage &pedMsg, tmx::routeable_message &routeableMsg);
+
 protected:
 
 	void UpdateConfigSettings();

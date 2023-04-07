@@ -21,6 +21,7 @@
 #include "XmlMapParser.h"
 #include "ConvertToJ2735r41.h"
 #include "inputs/isd/ISDToJ2735r41.h"
+#include "simulation/SimulationEnvVar.h"
 
 #define USE_STD_CHRONO
 #include <FrequencyThrottle.h>
@@ -190,7 +191,7 @@ void MapPlugin::OnConfigChanged(const char *key, const char *value) {
 }
 
 void MapPlugin::OnStateChange(IvpPluginState state) {
-	PluginClient::OnStateChange(state);
+	PluginClientClockAware::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();
