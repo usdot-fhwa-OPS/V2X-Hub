@@ -126,7 +126,7 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::WGS84Point &location); 
+                const uint v2x_port, const tmx::utils::WGS84Point &location) const; 
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
