@@ -138,7 +138,7 @@ namespace CDASimAdapter{
 
     }
 
-    void CDASimAdapter::attempt_message_from_simulation() {
+    void CDASimAdapter::attempt_message_from_simulation() const {
         try {
             std::string msg = connection->consume_v2x_message_from_simulation();
             PLOG(logDEBUG1) << "binary Msg: " << msg << "of size: " << msg.size() << std::endl;
@@ -155,7 +155,7 @@ namespace CDASimAdapter{
         }
     }
 
-    void CDASimAdapter::attempt_message_from_v2xhub() {
+    void CDASimAdapter::attempt_message_from_v2xhub() const {
         try {
             std::string msg = connection->consume_v2x_message_from_v2xhub();
             PLOG(logDEBUG1) << "AMF Msg: " << msg << std::endl;

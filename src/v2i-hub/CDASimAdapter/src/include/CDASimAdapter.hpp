@@ -86,12 +86,12 @@ namespace CDASimAdapter {
         /**
          * @brief Method to consume msg in amf fromat from V2Xhub and forward to CDASimConnection
          */
-        void attempt_message_from_v2xhub();
+        void attempt_message_from_v2xhub() const;
 
         /**
          * @brief Method to consume ans1 binary msg from CDASimConnection and forward to V2Xhub
          */
-        void attempt_message_from_simulation();
+        void attempt_message_from_simulation() const;
         /**
          * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
          * CARMA Streets services
