@@ -4,12 +4,13 @@
 using namespace tmx::utils;
 
 namespace CDASimAdapter{ 
-    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint simulation_registration_port, const uint sim_v2x_port, 
+    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                                        const WGS84Point &location ) : 
-                                                        _simulation_ip(simulation_ip) , _simulation_registration_port(simulation_registration_port),
-                                                        _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port),
-                                                        _v2x_port(v2x_port), _location(location) {
+                                                        const WGS84Point &location) : 
+                                                        _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
+                                                        _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _v2x_port(v2x_port),
+                                                        _location(location)  {
+        PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
     } 
 
  
@@ -19,7 +20,7 @@ namespace CDASimAdapter{
     }
 
     bool CDASimConnection::connect() {
-        if (!carma_simulation_handshake(_simulation_ip, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
+        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
             _connected = false;
             return _connected;
         }
@@ -31,11 +32,47 @@ namespace CDASimAdapter{
         PLOG(logINFO) << "CARMA-Simulation connection is successful!" << std::endl;
         return _connected;
     }
-    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint simulation_registration_port, 
+
+    std::string CDASimConnection::get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const WGS84Point &location) const
+
+    {
+        Json::Value message;   
+        std::string message_str = "";
+        
+        message["rxMessageIpAddress"] = local_ip;
+        message["infrastructureId"] = infrastructure_id;
+        message["rxMessagePort"] = v2x_port;
+        message["timeSyncPort"] = time_sync_port;
+        message["location"]["latitude"] = location.Latitude;
+        message["location"]["longitude"] = location.Longitude;
+        message["location"]["elevation"] = location.Elevation;
+        Json::StyledWriter writer;
+        message_str = writer.write(message);
+        return message_str;
+    }
+
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const WGS84Point &location) {
-        // TODO: Standup UDP Server and Client for registration and implement handshake
-        return true;                                
+                                const WGS84Point &location) 
+    {
+        // Create JSON message with the content 
+        std::string payload = "";
+    
+        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
+    
+        try
+        {
+            carma_simulation_registration_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_registration_port);
+            forward_message(payload, carma_simulation_registration_publisher);
+        }
+        catch(const std::exception &e)
+        {
+            PLOG(logERROR) << "Encountered runtime error when executing handshake:" << e.what() << std::endl;
+            return false;
+        }
+
+        return true;
     }
 
     bool CDASimConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
