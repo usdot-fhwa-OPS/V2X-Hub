@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <J2735ToSRMJsonConverter.h>
+#include <cassert>
 
 class test_J2735ToSRMJsonConverter : public ::testing::Test
 {
@@ -79,8 +80,12 @@ namespace unit_test
 {
     TEST_F(test_J2735ToSRMJsonConverter, toSRMJson)
     {
-        J2735ToSRMJsonConverter srmConverter;
+        CARMAStreetsPlugin::J2735ToSRMJsonConverter srmConverter;
         Json::Value srmJson;
         srmConverter.toSRMJson(srmJson, _srmMessage);
+        std::string expectedSrmStr ="{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":true,\"ETA_Minute\":true,\"ETA_Second\":true},\"heading_Degree\":true,\"inBoundLane\":{\"ApproachID\":1,\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":345239,\"msOfMinute\":54000,\"msgCount\":1,\"position\":{\"elevation_Meter\":true,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":1,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"\\u0001\\f\\f\\n\",\"vehicleType\":false}}\n";
+        Json::FastWriter fastWriter;
+        std::string message = fastWriter.write(srmJson);
+        ASSERT_EQ(expectedSrmStr, message);
     }
 }

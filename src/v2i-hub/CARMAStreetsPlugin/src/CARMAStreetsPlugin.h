@@ -16,6 +16,7 @@
 #include <mutex>
 #include "J2735MapToJsonConverter.h"
 #include "JsonToJ2735SpatConverter.h"
+#include "J2735ToSRMJsonConverter.h"
 
 
 
@@ -50,6 +51,10 @@ protected:
 	 */
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	/**
+	 * @brief Subscribe to SRM message received from RSU and publish the message to a Kafka topic
+	*/
+	void HandleSRMMessage (SrmMessage &msg, routeable_message &routeableMsg);
+	/**
 	 * @brief Subcribe to scheduling plan Kafka topic created by carma-streets
 	 */
 	void SubscribeSchedulingPlanKafkaTopic();
@@ -78,6 +83,7 @@ private:
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
+	std::string _transmitSRMTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	RdKafka::Conf *kafka_conf;
