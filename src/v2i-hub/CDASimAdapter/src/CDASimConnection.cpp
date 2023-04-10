@@ -34,7 +34,7 @@ namespace CDASimAdapter{
     }
 
     std::string CDASimConnection::get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const WGS84Point &location)
+                                const WGS84Point &location) const
 
     {
         Json::Value message;   
