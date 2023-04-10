@@ -27,6 +27,7 @@
 
 
 namespace CDASimAdapter {
+
     /**
      * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
      * environment variable to be installed and enabled by default.
@@ -34,7 +35,7 @@ namespace CDASimAdapter {
     class CDASimAdapter: public tmx::utils::PluginClient{
     public:
         /**
-         * @brief CCARMA-Simulation Infrastucture Adapter constructor.
+         * @brief CARMA-Simulation Infrastructure Adapter constructor.
          * @param name name of plugin.
          */
         explicit CDASimAdapter(const std::string &name);
@@ -95,7 +96,5 @@ namespace CDASimAdapter {
         std::mutex _lock;
         std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
         int time_sync_tick_id;
-
-
     };
 }
