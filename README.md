@@ -50,6 +50,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
  * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
  * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
  * **LOCAL_IP** – Environment variable for storing local IP of V2X Hub.
+ * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub..
 ## Release Notes
 The current version and release history of the V2X Hub software platform can be found here: [Release Notes](<docs/Release_notes.md>)
 
