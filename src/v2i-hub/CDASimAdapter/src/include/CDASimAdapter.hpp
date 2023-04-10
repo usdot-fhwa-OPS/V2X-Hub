@@ -73,6 +73,26 @@ namespace CDASimAdapter {
          * @return true if successful and false if unsuccessful.
          */
         bool connect();
+
+        /**
+         * @brief Method to start thread timer for processing msg from v2xhub
+         */
+        void start_amf_msg_thread();
+
+        /**
+         * @brief Method to start thread timer for processing msg from CDASimConnection
+         */
+        void start_binary_msg_thread();
+
+        /**
+         * @brief Method to consume msg in amf fromat from V2Xhub and forward to CDASimConnection
+         */
+        void attempt_message_from_v2xhub() const;
+
+        /**
+         * @brief Method to consume ans1 binary msg from CDASimConnection and forward to V2Xhub
+         */
+        void attempt_message_from_simulation() const;
         /**
          * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
          * CARMA Streets services
@@ -96,5 +116,9 @@ namespace CDASimAdapter {
         std::mutex _lock;
         std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
         int time_sync_tick_id;
+        std::unique_ptr<tmx::utils::ThreadTimer> amf_thread_timer;
+        std::unique_ptr<tmx::utils::ThreadTimer> binary_thread_timer;
+        int amf_msg_tick_id;
+        int binary_msg_tick_id;
     };
 }

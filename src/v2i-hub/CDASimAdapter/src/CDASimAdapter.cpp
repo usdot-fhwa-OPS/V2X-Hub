@@ -35,8 +35,11 @@ namespace CDASimAdapter{
             while ( !connection || !connection->is_connected() ) {
                 connect();
             }
+
             if ( connection->is_connected() ) {
                 start_time_sync_thread_timer();
+                start_amf_msg_thread();
+                start_binary_msg_thread();
             }
             
         }
@@ -107,22 +110,68 @@ namespace CDASimAdapter{
         return connection->connect();
     }
     
-    int CDASimAdapter::Main() {
 
 
-        PLOG(logINFO) << "Starting plugin " << _name << std::endl;		
-
-        while (_plugin->state != IvpPluginState_error) {
-
-            if (IsPluginState(IvpPluginState_registered))
-            {
-                
-            }
+    void CDASimAdapter::start_amf_msg_thread() {
+        if ( !amf_thread_timer ) {
+            amf_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
         }
+        amf_msg_tick_id = amf_thread_timer->AddPeriodicTick([this]() {
+            this->attempt_message_from_v2xhub();
+            
+        } // end of lambda expression
+        , std::chrono::milliseconds(100) );
+        
+        amf_thread_timer->Start();
 
-	    return EXIT_SUCCESS;
     }
 
+    void CDASimAdapter::start_binary_msg_thread() {
+        if ( !binary_thread_timer ) {
+            binary_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+        }
+
+        binary_msg_tick_id = binary_thread_timer->AddPeriodicTick([this]() {
+            this->attempt_message_from_simulation();
+        } // end of lambda expression
+        , std::chrono::milliseconds(100) );
+        binary_thread_timer->Start();
+
+    }
+
+    void CDASimAdapter::attempt_message_from_simulation() const {
+        try {
+            std::string msg = connection->consume_v2x_message_from_simulation();
+            PLOG(logDEBUG1) << "binary Msg: " << msg << "of size: " << msg.size() << std::endl;
+            if ( !msg.empty()) {
+                connection->forward_v2x_message_to_v2xhub(msg);
+                PLOG(logDEBUG1) << "Msg Forwarded to v2xhub!" << std::endl;
+            }
+            else {
+                PLOG(logDEBUG1) << "CDASim connection has not yet received a v2x message!" << std::endl;
+            }
+        }
+        catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    void CDASimAdapter::attempt_message_from_v2xhub() const {
+        try {
+            std::string msg = connection->consume_v2x_message_from_v2xhub();
+            PLOG(logDEBUG1) << "AMF Msg: " << msg << std::endl;
+            if ( !msg.empty()) {
+                connection->forward_v2x_message_to_simulation(msg);
+                PLOG(logDEBUG1) << "Msg Forwarded to simulation!" << std::endl;
+            }
+            else {
+                PLOG(logDEBUG1) << "CDASim connection has not yet received a v2x message!" << std::endl;
+            }
+        }
+        catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
 
     void CDASimAdapter::start_time_sync_thread_timer() {
         PLOG(logDEBUG) << "Creating Thread Timer for time sync" << std::endl;
@@ -150,8 +199,25 @@ namespace CDASimAdapter{
     }
 
         
+    int CDASimAdapter::Main() {
 
+
+        PLOG(logINFO) << "Starting plugin " << _name << std::endl;		
+
+        while (_plugin->state != IvpPluginState_error) {
+
+            if (IsPluginState(IvpPluginState_registered))
+            {
+                
+            }
+        }
+
+	    return EXIT_SUCCESS;
+    }
+        
 }
+
+
 int main(int argc, char *argv[]) {
 	return run_plugin < CDASimAdapter::CDASimAdapter > ("CDASimAdapter", argc, argv);
 }

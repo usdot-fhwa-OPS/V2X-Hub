@@ -125,6 +125,28 @@ namespace CDASimAdapter{
 
     }
 
+    std::string CDASimConnection::consume_hex_server_message( const std::shared_ptr<UdpServer> _server) const {
+        std::vector<char> msg(4000);
+        int num_of_bytes = _server->TimedReceive(msg.data(),4000, 5);
+        if (num_of_bytes > 0 ) {
+            msg.resize(num_of_bytes);
+            std::string ret = "";
+            for (char c: msg)
+            {
+                ret += c;
+            }
+            PLOG(logDEBUG) << "UDP Server message received size and payload: " << ret.size() <<" and "<< ret << std::endl;
+            return ret;
+        }
+        else if ( num_of_bytes == 0 ) {
+            throw UdpServerRuntimeError("Received empty message!");
+        }
+        else {
+            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
+        }
+        return "";
+    }
+
     std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
         std::vector<char> msg(4000);
         int num_of_bytes = _server->TimedReceive(msg.data(),4000, 5);
@@ -145,7 +167,7 @@ namespace CDASimAdapter{
 
     std::string CDASimConnection::consume_v2x_message_from_simulation() const {
         if ( carma_simulation_listener) {
-            std::string msg = consume_server_message( carma_simulation_listener );
+            std::string msg = consume_hex_server_message( carma_simulation_listener );
             return msg;
         }
         else {
@@ -157,7 +179,7 @@ namespace CDASimAdapter{
 
     std::string CDASimConnection::consume_v2x_message_from_v2xhub() const {
         if ( immediate_forward_listener) {
-            std::string msg = consume_server_message( immediate_forward_listener );
+            std::string msg = consume_hex_server_message( immediate_forward_listener );
             return msg;
         }
         else {

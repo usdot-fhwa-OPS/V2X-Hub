@@ -71,6 +71,12 @@ namespace CDASimAdapter {
              */
             std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
 
+            /**
+             * @brief Method to consume incoming std::string message in hex format from UDP Server.
+             * @param _server UDP Server to consume string message from.
+             * @return string of message.
+             */
+            std::string consume_hex_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server) const;
             
             /**
              * @brief Method to consume incoming time sychronization message.
