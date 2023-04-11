@@ -234,7 +234,7 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 	auto t = time(nullptr);
 	struct tm* timeInfo = gmtime(&t);
 	ostringstream currentYearStartOS;
-	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-01T00:00:00.000Z";
+	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-02T00:00:00.000Z";
 	struct tm currentYearStartTimeInfo;
 	istringstream currentYearStartIS(currentYearStartOS.str());
 	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S" );
@@ -316,25 +316,26 @@ int TimPlugin::Main() {
 	while (_plugin->state != IvpPluginState_error) {
 		if (IsPluginState(IvpPluginState_registered))
 		{
+
+			// Load the TIM from the map file if it is new.
+			if (_isMapFileNew)
+			{				
+				lock_guard<mutex> lock(_cfgLock);	
+				PLOG(logINFO)<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
+				//reset map update indicator
+				_isMapFileNew = false;
+				//Update the TIM message with XML from map file
+				_timMsgPtr = std::make_shared<TimMessage>();
+				_isTimLoaded = LoadTim(_timMsgPtr, _mapFile.c_str());
+				if(!_isTimLoaded)
+				{
+					_timMsgPtr = nullptr;
+				}
+			}	
 			while (_timMsgPtr && TimDuration(_timMsgPtr)) 
 			{ 
 				lock_guard<mutex> lock(_cfgLock);
-				uint64_t sendFrequency = _frequency;
-
-				// Load the TIM from the map file if it is new.
-				if (_isMapFileNew)
-				{					
-					PLOG(logINFO)<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
-					//reset map update indicator
-					_isMapFileNew = false;
-					//Update the TIM message with XML from map file
-					_timMsgPtr = std::make_shared<TimMessage>();
-					_isTimLoaded = LoadTim(_timMsgPtr, _mapFile.c_str());
-					if(!_isTimLoaded)
-					{
-						_timMsgPtr = nullptr;
-					}
-				}		
+				uint64_t sendFrequency = _frequency;	
 
 				if(_isTimUpdated){
 					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<< _isTimUpdated<<endl;
