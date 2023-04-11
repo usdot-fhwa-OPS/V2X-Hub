@@ -12,8 +12,19 @@ namespace CARMAStreetsPlugin
 
     void J2735ToSRMJsonConverter::toSRMJson(Json::Value &json, tmx::messages::SrmMessage *srm)
     {
-        auto srm_ptr = srm->get_j2735_data();
         json["MsgType"] = MsgType;
+        std::cout << "srm is nul1l"<<std::endl;
+        if(!srm)
+        {
+            json["SignalRequest"] = Json::nullValue;
+            return;
+        }
+        auto srm_ptr = srm->get_j2735_data();
+        if(!srm_ptr || !srm_ptr->requests  || srm_ptr->requests->list.count <= 0)
+        {
+            json["SignalRequest"] = Json::nullValue;
+            return;
+        }
 
         /***
          * Request data for one or more signalized intersections that support SRM dialogs.

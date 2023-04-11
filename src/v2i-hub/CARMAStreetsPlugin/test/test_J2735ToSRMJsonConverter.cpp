@@ -88,4 +88,18 @@ namespace unit_test
         std::string message = fastWriter.write(srmJson);
         ASSERT_EQ(expectedSrmStr, message);
     }
+
+     TEST_F(test_J2735ToSRMJsonConverter, toSRMJsonNULLObj)
+    {
+        CARMAStreetsPlugin::J2735ToSRMJsonConverter srmConverter;
+        Json::Value invalidSRMJson;
+        SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
+        auto invalidSRMmMessage = new tmx::messages::SrmMessage(message);
+        srmConverter.toSRMJson(invalidSRMJson, invalidSRMmMessage);
+        std::string expectedSrmStr ="{\"MsgType\":\"SRM\",\"SignalRequest\":null}\n";
+        Json::FastWriter fastWriter;
+        std::string messageStr = fastWriter.write(invalidSRMJson);
+        std::cout << messageStr<< std::endl;
+        ASSERT_EQ(expectedSrmStr, messageStr);
+    }
 }
