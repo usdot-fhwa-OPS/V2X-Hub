@@ -291,12 +291,21 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &routeableMsg)
 {
 	J2735ToSRMJsonConverter srmJsonConverter;
-	Json::Value srmJson;
-	srmJsonConverter.toSRMJson(srmJson , &msg);
-	Json::StreamWriterBuilder builder;
-	const std::string srmJsonStr = Json::writeString(builder, srmJson);
-	PLOG(logINFO) << "SRM Json message: " << srmJsonStr << std::endl;
-	produce_kafka_msg(srmJsonStr, _transmitSRMTopic);
+	std::vector<Json::Value> srmJsonV;
+	srmJsonConverter.toSRMJsonV(srmJsonV , &msg);
+	if(srmJsonV.empty())
+	{
+		PLOG(logERROR) << "SRM message content is empty." << std::endl;
+		
+	}else{
+		for (auto srmJson : srmJsonV)
+        {
+			Json::StreamWriterBuilder builder;
+			const std::string srmJsonStr = Json::writeString(builder, srmJson);
+			PLOG(logINFO) << "SRM Json message: " << srmJsonStr << std::endl;
+			produce_kafka_msg(srmJsonStr, _transmitSRMTopic);           
+        }		
+	}	
 }
 
 void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)

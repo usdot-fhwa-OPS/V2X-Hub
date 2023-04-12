@@ -11,10 +11,11 @@ public:
 
 protected:
     tmx::messages::SrmMessage *_srmMessage;
+    SignalRequestMessage_t *_message;
     void SetUp() override
     {
-        SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
-        message->second = 12;
+        _message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
+        _message->second = 12;
         RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
         VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
         veh_id->present = VehicleID_PR_entityID;
@@ -45,7 +46,7 @@ protected:
         speed->transmisson = 7;
         position->speed = speed;
         requestor->position = position;
-        message->requestor = *requestor;
+        _message->requestor = *requestor;
 
         SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
         SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
@@ -70,9 +71,9 @@ protected:
         request->inBoundLane = *inBoundLane;
         request_package->request = *request;
         asn_sequence_add(&requests->list.array, request_package);
-        message->requests = requests;
+        _message->requests = requests;
         tmx::messages::SrmEncodedMessage srmEncodeMessage;
-        _srmMessage = new tmx::messages::SrmMessage(message);
+        _srmMessage = new tmx::messages::SrmMessage(_message);
     }
 };
 
@@ -81,25 +82,27 @@ namespace unit_test
     TEST_F(test_J2735ToSRMJsonConverter, toSRMJson)
     {
         CARMAStreetsPlugin::J2735ToSRMJsonConverter srmConverter;
-        Json::Value srmJson;
-        srmConverter.toSRMJson(srmJson, _srmMessage);
-        std::string expectedSrmStr ="{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":true,\"ETA_Minute\":true,\"ETA_Second\":true},\"heading_Degree\":true,\"inBoundLane\":{\"ApproachID\":1,\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":345239,\"msOfMinute\":54000,\"msgCount\":1,\"position\":{\"elevation_Meter\":true,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":1,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"\\u0001\\f\\f\\n\",\"vehicleType\":false}}\n";
-        Json::FastWriter fastWriter;
-        std::string message = fastWriter.write(srmJson);
-        ASSERT_EQ(expectedSrmStr, message);
+        std::vector<Json::Value> srmJsonV;
+        srmConverter.toSRMJsonV(srmJsonV, _srmMessage);
+        int expectedSrmSize = 1;
+        ASSERT_EQ(expectedSrmSize, srmJsonV.size());
+        for (auto srmJson : srmJsonV)
+        {
+            Json::FastWriter fastWriter;
+            std::string message = fastWriter.write(srmJson);
+            std::string expectedSrmStr =  "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":1,\"position\":{\"elevation_Meter\":12,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":1,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"10c0c0a\"}}\n";
+            ASSERT_EQ(expectedSrmStr, message);
+        }
     }
 
-     TEST_F(test_J2735ToSRMJsonConverter, toSRMJsonNULLObj)
+    TEST_F(test_J2735ToSRMJsonConverter, toSRMJsonNULLObj)
     {
         CARMAStreetsPlugin::J2735ToSRMJsonConverter srmConverter;
-        Json::Value invalidSRMJson;
+        std::vector<Json::Value> invalidSRMJson;
         SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
         auto invalidSRMmMessage = new tmx::messages::SrmMessage(message);
-        srmConverter.toSRMJson(invalidSRMJson, invalidSRMmMessage);
-        std::string expectedSrmStr ="{\"MsgType\":\"SRM\",\"SignalRequest\":null}\n";
-        Json::FastWriter fastWriter;
-        std::string messageStr = fastWriter.write(invalidSRMJson);
-        std::cout << messageStr<< std::endl;
-        ASSERT_EQ(expectedSrmStr, messageStr);
+        srmConverter.toSRMJsonV(invalidSRMJson, invalidSRMmMessage);
+        int expectedSrmSize = 0;
+        ASSERT_EQ(expectedSrmSize, invalidSRMJson.size());
     }
 }

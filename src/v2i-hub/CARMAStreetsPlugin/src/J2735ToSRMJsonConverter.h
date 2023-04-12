@@ -10,7 +10,7 @@ namespace CARMAStreetsPlugin
 
     public:
         J2735ToSRMJsonConverter();
-        void toSRMJson(Json::Value &json, tmx::messages::SrmMessage *srm);
+        void toSRMJsonV(std::vector<Json::Value> &jsonV, tmx::messages::SrmMessage *srm);
         ~J2735ToSRMJsonConverter();
     };
 }
