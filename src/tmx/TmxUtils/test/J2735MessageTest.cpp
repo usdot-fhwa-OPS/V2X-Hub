@@ -680,6 +680,7 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	message->requestor = *requestor;
 
 	SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
+	//First: Request Package
 	SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
 	MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
 	*min = 123;
@@ -702,18 +703,34 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	request->inBoundLane = *inBoundLane;
 	request_package->request = *request;
 	asn_sequence_add(&requests->list.array, request_package);
+
+	//Second: Request Package
+	SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+	request_package_2->minute = min;
+	request_package_2->duration = duration;
+	request_package_2->second = second;
+	SignalRequest_t *request_2 = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
+	IntersectionReferenceID_t *referId2 = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
+	referId2->id = 2333;
+	request_2->id = *referId2;
+	request_2->requestID = 2;
+	request_2->requestType = 1;
+	IntersectionAccessPoint_t *inBoundLane2 = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+	inBoundLane2->present = IntersectionAccessPoint_PR_approach;
+	inBoundLane2->choice.approach = 1;
+	request_2->inBoundLane = *inBoundLane2;
+	request_package_2->request = *request_2;
+	asn_sequence_add(&requests->list.array, request_package_2);
 	message->requests = requests;
 	tmx::messages::SrmEncodedMessage srmEncodeMessage;
-	tmx::messages::SrmMessage*  _srmMessage = new tmx::messages::SrmMessage(message);
+	auto _srmMessage = new tmx::messages::SrmMessage(message);
 	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
-	std::string expectedSRMEncHex = "001d251000601c0098c020008003d825e003d30002181814000d35dd8e4d6bc4142c100c00f7c014";
-	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());
-	std::cout << srmEncodeMessage.get_payload_str() <<std::endl;
-	
+	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
+	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
 }

@@ -49,6 +49,7 @@ protected:
         _message->requestor = *requestor;
 
         SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
+        //First: Request Package
         SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
         MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
         *min = 123;
@@ -71,6 +72,24 @@ protected:
         request->inBoundLane = *inBoundLane;
         request_package->request = *request;
         asn_sequence_add(&requests->list.array, request_package);
+
+        //Second: Request Package
+        SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+        request_package_2->minute = min;
+        request_package_2->duration = duration;
+        request_package_2->second = second;
+        SignalRequest_t *request_2 = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
+        IntersectionReferenceID_t *referId2 = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
+        referId2->id = 2333;
+        request_2->id = *referId2;
+        request_2->requestID = 2;
+        request_2->requestType = 1;
+        IntersectionAccessPoint_t *inBoundLane2 = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+        inBoundLane2->present = IntersectionAccessPoint_PR_approach;
+        inBoundLane2->choice.approach = 1;
+        request_2->inBoundLane = *inBoundLane2;
+        request_package_2->request = *request_2;
+        asn_sequence_add(&requests->list.array, request_package_2);
         _message->requests = requests;
         tmx::messages::SrmEncodedMessage srmEncodeMessage;
         _srmMessage = new tmx::messages::SrmMessage(_message);
@@ -84,14 +103,24 @@ namespace unit_test
         CARMAStreetsPlugin::J2735ToSRMJsonConverter srmConverter;
         std::vector<Json::Value> srmJsonV;
         srmConverter.toSRMJsonV(srmJsonV, _srmMessage);
-        int expectedSrmSize = 1;
+        int expectedSrmSize = 2;
         ASSERT_EQ(expectedSrmSize, srmJsonV.size());
+        int i = 0;
         for (auto srmJson : srmJsonV)
         {
             Json::FastWriter fastWriter;
             std::string message = fastWriter.write(srmJson);
-            std::string expectedSrmStr =  "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":1,\"position\":{\"elevation_Meter\":12,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":1,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"10c0c0a\"}}\n";
+            std::string expectedSrmStr = "";
+            if (i == 0)
+            {
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":2,\"position\":{\"elevation_Meter\":12,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":1,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"10c0c0a\"}}\n";
+            }
+            else if (i == 1)
+            {
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"ApproachID\":1},\"intersectionID\":2333,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":2,\"position\":{\"elevation_Meter\":12,\"latitude_DecimalDegree\":3712333,\"longitude_DecimalDegree\":8012333},\"priorityRequestType\":2,\"regionalID\":0,\"speed_MeterPerSecond\":10,\"vehicleID\":\"10c0c0a\"}}\n";
+            }
             ASSERT_EQ(expectedSrmStr, message);
+            i++;
         }
     }
 
