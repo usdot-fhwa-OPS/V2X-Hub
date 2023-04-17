@@ -30,8 +30,8 @@ RUN ldconfig
 # run final image
 FROM ubuntu:$UBUNTU_VERSION AS v2xhub
 ENV DEBIAN_FRONTEND=noninteractive
-ADD scripts/install_dependencies.sh /usr/local/bin/
-RUN /usr/local/bin/install_dependencies.sh
+ADD scripts/deployment_dependencies.sh /usr/local/bin/
+RUN /usr/local/bin/deployment_dependencies.sh
 
 COPY ./container /home/V2X-Hub/container/
 WORKDIR /home/V2X-Hub/container/
