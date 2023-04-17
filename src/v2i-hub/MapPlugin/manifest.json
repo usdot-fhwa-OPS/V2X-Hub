@@ -10,6 +10,11 @@
 			"type":"J2735",
 			"subtype":"MAP-P",
 			"description":"Full geometric layout of the intersection."
+		},
+		{
+			"type":"Application",
+			"subtype":"TimeSync",
+			"description":"Time synchronization message."
 		}
 	],
 	"configuration":[

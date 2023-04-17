@@ -32,7 +32,7 @@
 #include <atomic>
 #include <chrono>
 #include <thread>
-#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+#include <tmx/json/cJSON.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <BasicSafetyMessage.h>

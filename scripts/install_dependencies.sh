@@ -41,3 +41,10 @@ LIBRARY_DEPENDENCIES=" \
 
 # install all things needed for deployment, always done
 apt-get install -y $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+
+# install gtest
+cd /usr/src/googletest/
+mkdir -p build/
+cd build
+cmake ..
+make install

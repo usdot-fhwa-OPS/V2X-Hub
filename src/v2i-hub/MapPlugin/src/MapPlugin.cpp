@@ -190,7 +190,7 @@ void MapPlugin::OnConfigChanged(const char *key, const char *value) {
 }
 
 void MapPlugin::OnStateChange(IvpPluginState state) {
-	PluginClient::OnStateChange(state);
+	PluginClientClockAware::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();

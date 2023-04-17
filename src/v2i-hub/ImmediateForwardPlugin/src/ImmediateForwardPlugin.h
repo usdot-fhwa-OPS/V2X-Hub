@@ -18,9 +18,8 @@
 
 #include <boost/chrono.hpp>
 #include <FrequencyThrottle.h>
-//#include <tmx/Security/include/softhsm2.h>
 #include <curl/curl.h>
-#include <../../../tmx/TmxApi/tmx/json/cJSON.h>
+#include <tmx/json/cJSON.h>
 #include <tmx/Security/include/base64.h>
 
 

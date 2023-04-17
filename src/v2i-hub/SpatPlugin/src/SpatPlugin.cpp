@@ -39,7 +39,7 @@ void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
 }
 
 void SpatPlugin::OnStateChange(IvpPluginState state) {
-	PluginClient::OnStateChange(state);
+	PluginClientClockAware::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();

@@ -19,9 +19,12 @@ namespace ERVCloudForwardingPlugin
         {
             return xml_str;
         }
+        std::stringstream route_ss;
+        //Add vehicle current position to the BSMRequest route point
+        route_ss << "<point><latitude>" << bsmPtr->coreData.lat << "</latitude>"
+                     << "<longitude>" << bsmPtr->coreData.Long << "</longitude></point>";
         // If there is carma related regional extension value that contains the ERV route points, construct the BSM request with the points.
         auto bsmCarmaRegion = bsmPtr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma;
-        std::stringstream route_ss;
         for (int i = 0; i < bsmCarmaRegion.routeDestinationPoints->list.count; i++)
         {
             auto latitude = bsmCarmaRegion.routeDestinationPoints->list.array[i]->lat;
@@ -53,9 +56,20 @@ namespace ERVCloudForwardingPlugin
         else
         {
             // The ERV broadcast BSM that has the PartII content, and the specical vehicle extension within the PartII has the emergency response type.
-            if (bsm_ptr->partII->list.count > 0 && bsm_ptr->partII->list.array[0]->partII_Value.present == BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions && *bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType == ResponseType_emergency)
+            if (bsm_ptr->partII->list.count > 0 && bsm_ptr->partII->list.array[0]->partII_Value.present == BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions )
             {
-                return true;
+                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType && *bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType == ResponseType_emergency)
+                {
+                    return true;
+                }
+                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
+                {
+                    return true;
+                }    
+                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse)
+                {
+                    return true;
+                }             
             }
             return false;
         }
