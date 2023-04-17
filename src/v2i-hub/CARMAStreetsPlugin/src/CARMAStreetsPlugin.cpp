@@ -298,6 +298,7 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 	{
 		PLOG(logERROR) << "Fatal error with SRM To JSON converter. " << ex.what() << std::endl;
 		SetStatus<uint>(Key_ScheduleMessageSkipped, ++_srmToJsonSkipped);
+		return;
 	}
 	
 	if(srmJsonV.empty())
