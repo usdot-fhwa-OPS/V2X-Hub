@@ -234,11 +234,12 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 	auto t = time(nullptr);
 	struct tm* timeInfo = gmtime(&t);
 	ostringstream currentYearStartOS;
-	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-02T00:00:00.000Z";
+	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-01T00:00:00.000Z";
 	struct tm currentYearStartTimeInfo;
 	istringstream currentYearStartIS(currentYearStartOS.str());
-	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S" );
+	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S%Z" );
 	currentYearStartTimeInfo.tm_isdst = 0; //Day light saving flag
+	currentYearStartTimeInfo.tm_hour += 4; //Offset 4 hours localtime compared to UTC timezone
 	PLOG(logINFO) << "Year Start : " << (currentYearStartTimeInfo.tm_mon + 1) << "-" << currentYearStartTimeInfo.tm_mday << "-" 
 		<< (currentYearStartTimeInfo.tm_year + 1900) << " " << currentYearStartTimeInfo.tm_hour << ":" << currentYearStartTimeInfo.tm_min << ":" 
 		<< currentYearStartTimeInfo.tm_sec << " DST:"  << currentYearStartTimeInfo.tm_isdst << std::endl;
