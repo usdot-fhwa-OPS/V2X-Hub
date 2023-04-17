@@ -292,7 +292,13 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 {
 	J2735ToSRMJsonConverter srmJsonConverter;
 	std::vector<Json::Value> srmJsonV;
-	srmJsonConverter.toSRMJsonV(srmJsonV , &msg);
+	try{
+		srmJsonConverter.toSRMJsonV(srmJsonV , &msg);
+	}catch(std::exception ex)
+	{
+		PLOG(logERROR) << "Fatal error with SRM To JSON converter. " << ex.what() << std::endl;
+	}
+	
 	if(srmJsonV.empty())
 	{
 		PLOG(logERROR) << "SRM message content is empty." << std::endl;
