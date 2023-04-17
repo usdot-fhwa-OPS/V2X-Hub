@@ -39,7 +39,6 @@ namespace CARMAStreetsPlugin
             {
                 request["msOfMinute"] = *srm_ptr->requests->list.array[i]->second;
             }            
-            request["regionalID"] = 0;
             request["intersectionID"] = srm_ptr->requests->list.array[i]->request.id.id;
             request["priorityRequestType"] = srm_ptr->requests->list.array[i]->request.requestID;
             request["basicVehicleRole"] = srm_ptr->requestor.type->role;

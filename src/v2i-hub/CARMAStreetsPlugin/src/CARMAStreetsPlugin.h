@@ -161,6 +161,14 @@ private:
 	 * @brief Intersection Id for intersection
 	 */
 	std::string _intersectionId = "UNSET";
+	/**
+	 * @brief Status label for SRM messages skipped due to errors.
+	 */
+	const char* Key_SRMToJSONSkipped = "Failed SRM To JSON count.";
+	/**
+	 * @brief Count for SRM messages skipped due to errors.
+	 */
+	uint _srmToJsonSkipped = 0;
 };
 std::mutex _cfgLock;
 
