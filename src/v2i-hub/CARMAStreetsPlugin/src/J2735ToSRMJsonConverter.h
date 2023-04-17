@@ -7,6 +7,9 @@ namespace CARMAStreetsPlugin
     {
     private:
         const std::string MsgType = "SRM";
+        const float FIFTY_TH = 0.02;
+        const float DEGREE_TO_TENTH_MICRODEGREE = 10000000.0; 
+        const int TEN_CM_TO_METER = 10;
 
     public:
         /***

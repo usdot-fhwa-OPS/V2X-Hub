@@ -30,7 +30,14 @@ namespace CARMAStreetsPlugin
              * Request data for one or more signalized intersections that support SRM dialogs.
              */
             Json::Value request;
-            request["msgCount"] = srm_ptr->requests->list.count;
+            if(srm_ptr->sequenceNumber)
+            {
+                request["msgCount"] = srm_ptr->sequenceNumber;
+            }            
+            if(srm_ptr->timeStamp){
+                request["minuteOfYear"] = srm_ptr->timeStamp;
+            }            
+            request["msOfMinute"] = srm_ptr->second;
             if(srm_ptr->requests->list.array[i]->minute)
             {
                 request["minuteOfYear"] = *srm_ptr->requests->list.array[i]->minute;
@@ -40,7 +47,7 @@ namespace CARMAStreetsPlugin
                 request["msOfMinute"] = *srm_ptr->requests->list.array[i]->second;
             }            
             request["intersectionID"] = srm_ptr->requests->list.array[i]->request.id.id;
-            request["priorityRequestType"] = srm_ptr->requests->list.array[i]->request.requestID;
+            request["priorityRequestType"] = srm_ptr->requests->list.array[i]->request.requestType;
             request["basicVehicleRole"] = srm_ptr->requestor.type->role;
 
             Json::Value inBoundLane;
@@ -100,10 +107,6 @@ namespace CARMAStreetsPlugin
             std::stringstream id_fill_ss;
             id_fill_ss << std::hex << id_num;
             request["vehicleID"] = id_fill_ss.str();
-            if(srm_ptr->requestor.type->hpmsType)
-            {
-                request["vehicleType"] = *srm_ptr->requestor.type->hpmsType;
-            }
             if( srm_ptr->requestor.position)
             {
                 if(srm_ptr->requestor.position->heading)
@@ -112,16 +115,16 @@ namespace CARMAStreetsPlugin
                 }                
                 if(srm_ptr->requestor.position->speed)
                 {
-                    request["speed_MeterPerSecond"] = srm_ptr->requestor.position->speed->speed;
+                    request["speed_MeterPerSecond"] = srm_ptr->requestor.position->speed->speed / FIFTY_TH;
                 }                
             }           
 
             Json::Value position;
-            position["latitude_DecimalDegree"] = srm_ptr->requestor.position->position.lat;
-            position["longitude_DecimalDegree"] = srm_ptr->requestor.position->position.Long;
+            position["latitude_DecimalDegree"] = srm_ptr->requestor.position->position.lat / DEGREE_TO_TENTH_MICRODEGREE;
+            position["longitude_DecimalDegree"] = srm_ptr->requestor.position->position.Long / DEGREE_TO_TENTH_MICRODEGREE;
             if(srm_ptr->requestor.position->position.elevation)
             {
-                position["elevation_Meter"] = *srm_ptr->requestor.position->position.elevation;
+                position["elevation_Meter"] = *srm_ptr->requestor.position->position.elevation  * 10;
             }            
             request["position"] = position;
             srmJson["SignalRequest"] = request;
