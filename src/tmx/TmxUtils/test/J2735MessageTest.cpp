@@ -643,4 +643,21 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
+
+TEST_F(J2735MessageTest, EncodeTravelerInformation){
+	//Advisory
+	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
+	std::stringstream ss;
+	TimMessage timMsg;
+	TimEncodedMessage timEnc;
+	tmx::message_container_type container;
+	ss<<timStr;
+	container.load<XML>(ss);
+	timMsg.set_contents(container.get_storage().get_tree());
+	timEnc.encode_j2735_message(timMsg);
+	ASSERT_EQ(31,  timEnc.get_msgId());	
+	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
+	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
+}
+
 }
