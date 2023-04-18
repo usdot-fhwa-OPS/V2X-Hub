@@ -25,6 +25,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
+	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
 	
 	SubscribeToMessages();
 
@@ -50,6 +51,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
+	GetConfigValue<string>("SRMTopic", _transmitSRMTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -284,6 +286,35 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		SetStatus<uint>(Key_MobilityPathMessageSkipped, ++_mobilityPathMessageSkipped);
 
 	}
+}
+
+void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &routeableMsg)
+{
+	J2735ToSRMJsonConverter srmJsonConverter;
+	std::vector<Json::Value> srmJsonV;
+	try{
+		srmJsonConverter.toSRMJsonV(srmJsonV , &msg);
+	}catch(std::exception& ex)
+	{
+		PLOG(logERROR) << "Fatal error with SRM To JSON converter. " << ex.what() << std::endl;
+		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
+		return;
+	}
+	
+	if(srmJsonV.empty())
+	{
+		PLOG(logERROR) << "SRM message content is empty." << std::endl;
+		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
+		
+	}else{
+		for (auto srmJson : srmJsonV)
+        {
+			Json::StreamWriterBuilder builder;
+			const std::string srmJsonStr = Json::writeString(builder, srmJson);
+			PLOG(logINFO) << "SRM Json message: " << srmJsonStr << std::endl;
+			produce_kafka_msg(srmJsonStr, _transmitSRMTopic);           
+        }		
+	}	
 }
 
 void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
