@@ -294,17 +294,17 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 	std::vector<Json::Value> srmJsonV;
 	try{
 		srmJsonConverter.toSRMJsonV(srmJsonV , &msg);
-	}catch(std::exception ex)
+	}catch(std::exception& ex)
 	{
 		PLOG(logERROR) << "Fatal error with SRM To JSON converter. " << ex.what() << std::endl;
-		SetStatus<uint>(Key_SRMToJSONSkipped, ++_srmToJsonSkipped);
+		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
 		return;
 	}
 	
 	if(srmJsonV.empty())
 	{
 		PLOG(logERROR) << "SRM message content is empty." << std::endl;
-		SetStatus<uint>(Key_SRMToJSONSkipped, ++_srmToJsonSkipped);
+		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
 		
 	}else{
 		for (auto srmJson : srmJsonV)
