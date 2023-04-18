@@ -731,7 +731,7 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
 	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
-
+}
 
 TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	//Advisory
@@ -748,5 +748,4 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
 	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
 }
-
 }
