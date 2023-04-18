@@ -2,37 +2,31 @@ import sys
 import getopt
 import pandas as pd
 import xml.etree.ElementTree as ET
+import argparse
 
 '''
 Get file names
 '''
 
 
-def get_filenames(argv):
+def get_filenames():
     inputfile = ''
     outputfile = ''
-    try:
-        if len(argv) < 4:
-            print('python3 carmacloud_log_analysis.py -i <inputfile> -o <outputfile>')
-        else:
-            opts, args = getopt.getopt(args=argv, shortopts="i:s:o:")
-            for opt, arg in opts:
-                if opt == '-i':
-                    inputfile = arg
-                elif opt == "-o":
-                    outputfile = arg
-        return (inputfile,  outputfile)
-    except:
-        print('python3 carmacloud_log_analysis.py -i <inputfile> -o <outputfile>')
-        sys.exit()
-
-
+    parser = argparse.ArgumentParser(prog="V2xHub Analysis for ERV BSM")
+    parser.add_argument('--input', type=str, required=True)
+    parser.add_argument('--output', type=str, required=True)
+    args = parser.parse_args()
+    print(f'Received log file: {args.input}; Result will be saved into file: {args.output}.xlsx')
+    inputfile = args.input
+    outputfile = args.output
+    return (inputfile, outputfile)
 '''
 Read the input logs file and search the relevant logs. Process the logs and return a dictionary of the relevant information
 '''
 
 
 def process_input_log_file(inputfile, search_keyword):
+    print(f'Processing log file...')
     file_stream = open(inputfile, 'r')
     fields_dict = {}
     fields_dict["Time (UTC)"] = []
@@ -80,8 +74,8 @@ Once the relevant logs are found, it write the data into the specified excel out
 '''
 
 
-def main(argv):
-    inputfile, outputfile = get_filenames(argv=argv)
+def main():    
+    inputfile, outputfile = get_filenames()
     search_metric_keywords = {
                               'FER-5-6': 'Incoming BSM is not from Emergency Response Vehicle (ERV)',
                               'FER-9-10-11': 'Forward ERV BSM to cloud:',
@@ -107,4 +101,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()
