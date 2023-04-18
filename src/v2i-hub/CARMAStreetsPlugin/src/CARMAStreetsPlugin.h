@@ -164,7 +164,7 @@ private:
 	/**
 	 * @brief Status label for SRM messages skipped due to errors.
 	 */
-	const char* Key_SRMMessageSkipped = "Failed to convert J2735 SRM To JSON due to errors.";
+	const char* Key_SRMMessageSkipped = "SRM messages skipped due to errors.";
 	/**
 	 * @brief Count for SRM messages skipped due to errors.
 	 */
