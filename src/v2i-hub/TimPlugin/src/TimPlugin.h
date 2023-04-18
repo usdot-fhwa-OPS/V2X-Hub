@@ -133,7 +133,6 @@ private:
 	std::string webip; 
 
 	std::shared_ptr<TimMessage> _timMsgPtr;
-	const string TMP_FILE_PATH = "/tmp/tmpTIM.xml";
 
 	mutex _mapFileLock;
 	string _mapFile;
