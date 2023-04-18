@@ -104,7 +104,6 @@ protected:
 	//void OnMessageReceived(IvpMessage *msg);
 	void OnStateChange(IvpPluginState state);
 
-	bool TimDuration();
 	/**
 	 * @brief Calculate tim duration based on the J2735 TIM message startTime and Duration
 	 */
@@ -129,10 +128,6 @@ private:
 
 	uint64_t _frequency = 0;
 
-	std::string _startDate;
-	std::string _stopDate;
-	std::string _startTime;
-	std::string _stopTime;
 	std::string _timupdate; 
 	uint16_t webport;
 	std::string webip; 
