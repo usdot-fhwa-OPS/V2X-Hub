@@ -21,19 +21,13 @@ SpatPlugin::~SpatPlugin() {
 void SpatPlugin::UpdateConfigSettings() {
 
 	GetConfigValue<string>("SignalGroupMapping", signalGroupMappingJson, &data_lock);
-
 	GetConfigValue<string>("Local_IP", localIp, &data_lock);
-
 	GetConfigValue<string>("Local_UDP_Port", localUdpPort, &data_lock);
-
 	GetConfigValue<string>("TSC_IP", tscIp, &data_lock);
-
 	GetConfigValue<string>("TSC_Remote_SNMP_Port", tscRemoteSnmpPort,
 			&data_lock);
-
 	GetConfigValue<string>("Intersection_Name", intersectionName,
 			&data_lock);
-
 	GetConfigValue<int>("Intersection_Id", intersectionId, &data_lock);
 
 	isConfigurationLoaded = true;
@@ -45,7 +39,7 @@ void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
 }
 
 void SpatPlugin::OnStateChange(IvpPluginState state) {
-	PluginClient::OnStateChange(state);
+	PluginClientClockAware::OnStateChange(state);
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();

@@ -19,6 +19,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
     {
+        uint64_t delayStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         // Check if the BSM is broadcast by an ERV (Emergency Response Vehicle)
         if (ERVCloudForwardingWorker::IsBSMFromERV(msg))
         {
@@ -26,52 +27,67 @@ namespace ERVCloudForwardingPlugin
             auto xml_str = ERVCloudForwardingWorker::constructERVBSMRequest(msg);
             PLOG(logINFO) << "Forward ERV BSM to cloud: " << xml_str << endl;
             CloudSendAsync(xml_str, _CLOUDURL, _CLOUDBSMREQ, _POSTMETHOD);
+            uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+            PLOG(logINFO) << "Received ERV BSM and forward ERV BSM to cloud delay (ms): " << (delayEnd - delayStart) << endl;
         }
         else
         {
             // If BSM is not from ERV, print debug log
             PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV)." << endl;
-        }
+        }        
     }
 
     void ERVCloudForwardingPlugin::RegisterRSULocation()
-    {        
-        try
+    {
+        uint32_t attempt = 0;
+        bool isRegistered = false;
+        while (attempt < _max_rsu_connection_attempt && !isRegistered)
         {
-            PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
-            auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
-            auto gps_sentense = snmpClient->SNMPGet(_GPSOID);
-            auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentense);
-            long latitude = 0;
-            long longitude = 0;
-            for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
+            attempt++;
+            this_thread::sleep_for(chrono::seconds(1));
+            PLOG(logINFO) << "Attempting to register RSU " << attempt << " times." << endl;
+            try
             {
-                latitude = itr->first;
-                longitude = itr->second;
-            }
+                PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
+                auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
+                auto gps_sentence = snmpClient->SNMPGet(_GPSOID);
+                auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentence);
+                long latitude = 0;
+                long longitude = 0;
+                for (auto itr = gps_map.begin(); itr != gps_map.end(); itr++)
+                {
+                    latitude = itr->first;
+                    longitude = itr->second;
+                }
 
-            if (latitude == 0 || longitude == 0)
-            {
-                PLOG(logERROR) << "Invalid latitude and longitude. Cannot register RSU location." << endl;
-                return;
+                if (latitude == 0 || longitude == 0)
+                {
+                    PLOG(logERROR) << "Invalid latitude and longitude. Cannot register RSU location." << endl;
+                    continue;
+                }
+                auto uuid = boost::uuids::random_generator()();
+                string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
+                auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
+                PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
+                auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+                if (status == 1)
+                {
+                    PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
+                    continue;
+                }
+                isRegistered = true;
             }
-            auto uuid = boost::uuids::random_generator()();
-            string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
-            auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
-            PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
-            auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
-            if (status == 1)
+            catch (SNMPClientException &ex)
             {
-                PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
-                return;
+                PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
             }
         }
-        catch (SNMPClientException &ex)
+        if (isRegistered)
         {
-            PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
-            return;
+            PLOG(logINFO) << "Successfully registered RSU location!" << endl;
+        }else{
+            PLOG(logERROR) << "Failed to register RSU after trying " << attempt << " times." << endl;
         }
-        PLOG(logINFO) << "Successfully registered RSU location!" << endl;
     }
 
     void ERVCloudForwardingPlugin::PeriodicRSURegisterReq()
@@ -114,6 +130,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::CARMACloudResponseHandler(QHttpEngine::Socket *socket)
     {
+        uint64_t delayStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         QString st;
         while (socket->bytesAvailable() > 0)
         {
@@ -125,10 +142,15 @@ namespace ERVCloudForwardingPlugin
         string bsmHex = _cloudUpdate;
         PLOG(logINFO) << "Received ERV BSM from cloud:" << bsmHex << endl;
         BroadcastBSM(bsmHex);
+        uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        PLOG(logINFO) << "Received ERV BSM from cloud and broadcast ERV BSM delay(ms):" << (delayEnd - delayStart) << endl;
     }
 
     int ERVCloudForwardingPlugin::StartBSMWebService()
     {
+        PLOG(logINFO) << "ERVCloudForwardingPlugin:: Starting web service...";
+        //In case some configuration for web service changes, the web service wait for those change before starting
+        this_thread::sleep_for(chrono::seconds(_max_web_service_waiting));
         char *placeholderX[1] = {nullptr};
         int placeholderC = 1;
         QCoreApplication a(placeholderC, placeholderX);
@@ -148,7 +170,7 @@ namespace ERVCloudForwardingPlugin
             qCritical("Unable to listen on the specified port.");
             return EXIT_FAILURE;
         }
-        PLOG(logINFO) << "ERVCloudForwardingPlugin:: Started web service";
+        PLOG(logINFO) << "ERVCloudForwardingPlugin:: Started web service!";
         return a.exec();
     }
 

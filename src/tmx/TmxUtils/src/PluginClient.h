@@ -331,7 +331,7 @@ public:
 
 		if (isNewValue)
 		{
-			//PLOG(logINFO) << "New Status. " << key << ": " << ss.str();
+			PLOG(logDEBUG1) << "New Status. " << key << ": " << ss.str();
 			ivp_setStatusItem(_plugin, key, ss.str().c_str());
 		}
 

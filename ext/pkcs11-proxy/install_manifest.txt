@@ -1,4 +1,0 @@
-/usr/local/bin/pkcs11-daemon
-/usr/local/lib/libpkcs11-proxy.so.0.1
-/usr/local/lib/libpkcs11-proxy.so.0
-/usr/local/lib/libpkcs11-proxy.so

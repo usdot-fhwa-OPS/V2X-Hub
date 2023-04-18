@@ -91,3 +91,4 @@ tools/port-drayage-webservice/target/
 
 #Java PKS for HTTPS setup
 tools/port-drayage-webservice/src/main/resources/tutorial.jks
+.vscode/settings.json

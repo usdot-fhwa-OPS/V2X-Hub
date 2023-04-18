@@ -145,7 +145,7 @@ void Plugin::setPluginStatus(std::string status)
 		context.setPluginStatus(this->mInfo.pluginInfo.id, status);
 	} catch (DbException &e) {
 		LOG_ERROR("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to set plugin status [" << e.what() << "]");
-		//throw PluginException("Error setting plugin status [" + string(e.what()) + "]");
+		throw PluginException("Error setting plugin status [" + string(e.what()) + "]");
 	}
 }
 
@@ -173,7 +173,7 @@ void Plugin::setStatusItems(std::map<std::string, std::string> statusItems)
 		context.setPluginStatusItems(this->mInfo.pluginInfo.id, dbEntries);
 	} catch (DbException &e) {
 		LOG_WARN("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to status entries [" << e.what() << "]");
-		//throw PluginException("Error setting status entries [" + string(e.what()) + "]");
+		throw PluginException("Error setting status entries [" + string(e.what()) + "]");
 	}
 }
 
@@ -191,7 +191,7 @@ void Plugin::removeStatusItems(std::vector<std::string> itemKeys)
 		context.removePluginStatusItems(this->mInfo.pluginInfo.id, itemKeys);
 	} catch (DbException &e) {
 		LOG_WARN("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to remove status items [" << e.what() << "]");
-		//throw PluginException("Error setting status entries [" + string(e.what()) + "]");
+		throw PluginException("Error setting status entries [" + string(e.what()) + "]");
 	}
 }
 
