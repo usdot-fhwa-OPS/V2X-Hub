@@ -24,26 +24,6 @@
 			"description":""
 		},
 		{
-			"key":"Start_Broadcast_Date",
-			"default":"01-01-2023",
-			"description":"The Start Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
-		},
-		{
-			"key":"Stop_Broadcast_Date",
-			"default":"12-31-2023",
-			"description":"The Stop Broadcast Date for the TIM message in the (mm-dd-YYYY) format."
-		},
-		{
-			"key":"Start_Broadcast_Time",
-			"default":"06:00:00",
-			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
-		},
-		{
-			"key":"Stop_Broadcast_Time",
-			"default":"21:00:00",
-			"description":"The Start Broadcast Time for the TIM message in the (HH:MM:SS) format."
-		},
-		{
 			"key":"WebServiceIP",
 			"default":"127.0.0.1",
 			"description":"IP address at which the web service exists"
