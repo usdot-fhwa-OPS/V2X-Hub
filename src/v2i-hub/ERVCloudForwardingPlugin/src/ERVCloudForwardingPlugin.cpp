@@ -33,7 +33,7 @@ namespace ERVCloudForwardingPlugin
         else
         {
             // If BSM is not from ERV, print debug log
-            PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV)." << endl;
+            PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV): " << msg << endl;
         }        
     }
 
