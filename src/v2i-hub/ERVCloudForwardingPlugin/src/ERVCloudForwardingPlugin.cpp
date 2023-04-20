@@ -24,7 +24,7 @@ namespace ERVCloudForwardingPlugin
         if (ERVCloudForwardingWorker::IsBSMFromERV(msg))
         {
             // Construct the ERV BSM and forward it to the cloud.
-            auto xml_str = ERVCloudForwardingWorker::constructERVBSMRequest(msg);
+            auto xml_str = ERVCloudForwardingWorker::constructERVBSMRequest(msg, _webPort);
             PLOG(logINFO) << "Forward ERV BSM to cloud: " << xml_str << endl;
             CloudSendAsync(xml_str, _CLOUDURL, _CLOUDBSMREQ, _POSTMETHOD);
             uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -193,7 +193,7 @@ namespace ERVCloudForwardingPlugin
             if (strcmp(local_method.c_str(), "POST") == 0)
             {
                 curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
-                curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
+                curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 5000L); //Http request timeout in 5 seconds
                 curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
                 res = curl_easy_perform(req);
                 if (res != CURLE_OK)
