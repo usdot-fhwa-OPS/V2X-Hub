@@ -1,5 +1,4 @@
 import sys
-import getopt
 import pandas as pd
 import xml.etree.ElementTree as ET
 import argparse
@@ -26,7 +25,6 @@ Read the input logs file and search the relevant logs. Process the logs and retu
 
 
 def process_input_log_file(inputfile, search_keyword):
-    print(f'Processing log file...')
     file_stream = open(inputfile, 'r')
     fields_dict = {}
     fields_dict["Time (UTC)"] = []
@@ -84,6 +82,7 @@ def main():
                               'FER-TBD-2': 'Received ERV BSM from cloud and broadcast ERV BSM delay(ms)'
                              }
     global_fields_dict = {}
+    print(f'Processing log file [{inputfile}]...')
     for metric_keyword_key in search_metric_keywords.keys():
         if len(inputfile) > 0 and len(outputfile) > 0:
             fields_dict = process_input_log_file(inputfile=inputfile,
