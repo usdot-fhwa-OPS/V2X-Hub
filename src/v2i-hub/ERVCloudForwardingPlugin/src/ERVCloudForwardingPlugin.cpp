@@ -19,6 +19,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::handleBSM(BsmMessage &msg, routeable_message &routableMsg)
     {
+        PLOG(logDEBUG) << "Receive BSM: " << msg << endl;
         uint64_t delayStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         // Check if the BSM is broadcast by an ERV (Emergency Response Vehicle)
         if (ERVCloudForwardingWorker::IsBSMFromERV(msg))
@@ -200,6 +201,8 @@ namespace ERVCloudForwardingPlugin
                 {
                     fprintf(stderr, "curl send failed: %s\n", curl_easy_strerror(res));
                     return EXIT_FAILURE;
+                }else{
+                    PLOG(logDEBUG) << "Successfully forward ERV BSM to cloud: " << local_msg << endl;
                 }
             }
             curl_easy_cleanup(req);
