@@ -1,6 +1,5 @@
 import sys
 import pandas as pd
-import xml.etree.ElementTree as ET
 import argparse
 
 '''
@@ -48,17 +47,17 @@ def process_input_log_file(inputfile, search_keyword):
             metric_field_value = ''
             metric_field_title = ''
             txt_list = [x.strip() for x in  txt.strip().split(":") if x.strip() != 'INFO' if x.strip() != 'DEBUG' if x.strip() != 'ERROR' ]
-            if  "stdout" in txt_list[1]:
-                metric_field_title = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','')
-                metric_field_value = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
-            else:
-                metric_field_title = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','')
-                metric_field_value = txt_list[1].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
-                try:
-                    xml = ET.fromstring(metric_field_value)
-                    metric_field_value = xml.find("id").text
-                except:
-                    pass
+            metric_field_title = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','')
+            metric_field_value = txt_list[1].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
+            
+            # The actual BSM XML content from the log is on the next line
+            if 'Incoming BSM is not from Emergency Response Vehicle (ERV)'.lower() == metric_field_title.strip().lower():
+                metric_field_value = file_stream.__next__()
+                metric_field_value = metric_field_value.strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
+                metric_field_value_list = metric_field_value.split(':')
+                for value in metric_field_value_list:
+                    if '<BasicSafetyMessage>' in value:
+                        metric_field_value = value
             if metric_field_title not in fields_dict.keys():
                 fields_dict[metric_field_title] = []
             fields_dict[metric_field_title].append(metric_field_value)
@@ -75,9 +74,9 @@ Once the relevant logs are found, it write the data into the specified excel out
 def main():    
     inputfile, outputfile = get_filenames()
     search_metric_keywords = {
-                              'FER-5-6': 'Incoming BSM is not from Emergency Response Vehicle (ERV)',
-                              'FER-9-10-11': 'Forward ERV BSM to cloud:',
-                              'FER-12-1': 'Received ERV BSM and forward ERV BSM to cloud delay (ms)',
+                              'FER-4-5': 'Incoming BSM is not from Emergency Response Vehicle (ERV)',
+                              'FER-8-9-10': 'Forward ERV BSM to cloud:',
+                              'FER-11-1': 'Received ERV BSM and forward ERV BSM to cloud delay (ms)',
                               'FER-TBD-1': 'Received ERV BSM from cloud:',
                               'FER-TBD-2': 'Received ERV BSM from cloud and broadcast ERV BSM delay(ms)'
                              }
