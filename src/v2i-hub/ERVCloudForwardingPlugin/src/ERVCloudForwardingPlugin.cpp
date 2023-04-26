@@ -196,13 +196,14 @@ namespace ERVCloudForwardingPlugin
                 curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
                 curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 5000L); //Http request timeout in 5 seconds
                 curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+                PLOG(logDEBUG) << "Forwarding message to cloud via curl: " << local_msg << endl;
                 res = curl_easy_perform(req);
                 if (res != CURLE_OK)
                 {
                     fprintf(stderr, "curl send failed: %s\n", curl_easy_strerror(res));
                     return EXIT_FAILURE;
                 }else{
-                    PLOG(logDEBUG) << "Successfully forward ERV BSM to cloud: " << local_msg << endl;
+                    PLOG(logDEBUG) << "Successfully forwarded message to cloud via curl: " << local_msg << endl;
                 }
             }
             curl_easy_cleanup(req);
