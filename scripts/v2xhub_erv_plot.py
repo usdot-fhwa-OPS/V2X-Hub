@@ -300,7 +300,7 @@ def main():
         plt.setp(plt.gca().xaxis.get_majorticklabels(),'rotation', 30)
         plt.title('FER-5: For any 5-second window, V2xHub receives the ERV\'s BSM without Part II information before the ERV activates its lights and siren at a rate of 8-12 messages/sec.')
         plt.savefig("FER-5.png",bbox_inches='tight')
-        with pd.ExcelWriter("Average_num_of_BSM_without_partII_5s_window.xlsx") as writer:
+        with pd.ExcelWriter("FER-5.xlsx") as writer:
             df.to_excel(writer, sheet_name='FER-5', index=False)
             print(f'Generated sheet for metric: FER-5' )
     
@@ -361,7 +361,6 @@ def main():
             plt.xlabel(x_index)
             plt.locator_params(axis='x', nbins=3)
             plt.ylabel(y_index)
-            plt.legend(bbox_to_anchor = (1.0, 1), loc = 'upper right')
             plt.plot(df[x_index], df[y_index])
             ax1.xaxis.set_major_locator(plt.MaxNLocator(3))
             plt.title('FER-11-1-Supportive: V2xHub forward BSM request to cloud and request sent via curl.')
