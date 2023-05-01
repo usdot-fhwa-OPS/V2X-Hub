@@ -2,7 +2,7 @@
 
 namespace ERVCloudForwardingPlugin
 {
-    std::string ERVCloudForwardingWorker::constructERVBSMRequest(BsmMessage &msg)
+    std::string ERVCloudForwardingWorker::constructERVBSMRequest(BsmMessage &msg, uint16_t v2xhubPort)
     {
         char xml_str[20000];
         std::string bsmHex = encodeBSMHex(msg);
@@ -20,9 +20,9 @@ namespace ERVCloudForwardingPlugin
             return xml_str;
         }
         std::stringstream route_ss;
-        //Add vehicle current position to the BSMRequest route point
+        // Add vehicle current position to the BSMRequest route point
         route_ss << "<point><latitude>" << bsmPtr->coreData.lat << "</latitude>"
-                     << "<longitude>" << bsmPtr->coreData.Long << "</longitude></point>";
+                 << "<longitude>" << bsmPtr->coreData.Long << "</longitude></point>";
         // If there is carma related regional extension value that contains the ERV route points, construct the BSM request with the points.
         auto bsmCarmaRegion = bsmPtr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma;
         for (int i = 0; i < bsmCarmaRegion.routeDestinationPoints->list.count; i++)
@@ -32,7 +32,7 @@ namespace ERVCloudForwardingPlugin
             route_ss << "<point><latitude>" << latitude << "</latitude>"
                      << "<longitude>" << longitude << "</longitude></point>";
         }
-        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><route>%s</route></BSMRequest>", bsmHex.c_str(), route_ss.str().c_str());
+        snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><v2xhubPort>%d</v2xhubPort><route>%s</route></BSMRequest>", bsmHex.c_str(), v2xhubPort, route_ss.str().c_str());
         return xml_str;
     }
 
@@ -56,20 +56,12 @@ namespace ERVCloudForwardingPlugin
         else
         {
             // The ERV broadcast BSM that has the PartII content, and the specical vehicle extension within the PartII has the emergency response type.
-            if (bsm_ptr->partII->list.count > 0 && bsm_ptr->partII->list.array[0]->partII_Value.present == BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions )
+            if (bsm_ptr->partII->list.count > 0 && bsm_ptr->partII->list.array[0]->partII_Value.present == BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions)
             {
-                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType && *bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType == ResponseType_emergency)
+                if (bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType && *bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType == ResponseType_emergency && bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse && bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse)
                 {
                     return true;
                 }
-                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse == LightbarInUse_inUse)
-                {
-                    return true;
-                }    
-                if(bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse == SirenInUse_inUse)
-                {
-                    return true;
-                }             
             }
             return false;
         }
