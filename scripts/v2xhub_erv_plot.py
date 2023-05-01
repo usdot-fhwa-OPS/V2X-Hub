@@ -161,6 +161,7 @@ def main():
                     FER_5_field_dicts ['Average num of BSM per second without partII (HZ)'] = []
                     five_second_window_bsm_count = 0     
                     select_start_time = 0
+                    last_record_time_no_partII = 0
                     for index, receive_bsm_row in df_sheet_receive_bsm.iterrows():
                         bsm_str = receive_bsm_row['Receive BSM']
                         record_time_str = receive_bsm_row['Time (UTC)']
@@ -169,16 +170,25 @@ def main():
                                 select_start_time  =  pd.to_datetime(record_time_str)    
                             if select_start_time != 0:                                         
                                 record_time = pd.to_datetime(record_time_str)
+                                last_record_time_no_partII = record_time
                                 record_time_total_seconds_of_day = record_time.hour * 3600 + record_time.minute * 60 + record_time.second
                                 select_time_total_seconds_of_day = select_start_time.hour * 3600 + select_start_time.minute * 60 + select_start_time.second
                                 # print(f'\nRecord time: {record_time}. selected time: {select_start_time}. \n\tRecord ts: {record_time_total_seconds_of_day} >> selected ts: {select_time_total_seconds_of_day}')
                                 if record_time_total_seconds_of_day >= select_time_total_seconds_of_day and  (record_time_total_seconds_of_day < select_time_total_seconds_of_day + FIVE_SEC_WINDOW ):
                                     five_second_window_bsm_count += 1
                                 else:
-                                    FER_5_field_dicts ['Time (UTC)'].append( select_start_time)
+                                    FER_5_field_dicts ['Time (UTC)'].append(select_start_time)
                                     FER_5_field_dicts ['Average num of BSM per second without partII (HZ)'].append(five_second_window_bsm_count / FIVE_SEC_WINDOW)
                                     select_start_time = pd.to_datetime(record_time_str)
                                     five_second_window_bsm_count = 1  
+                                
+                    # In case, the last few record does not reach 5 second
+                    if select_start_time != 0:
+                        select_time_total_seconds_of_day = select_start_time.hour * 3600 + select_start_time.minute * 60 + select_start_time.second  
+                        last_record_time_total_seconds_of_day = last_record_time_no_partII.hour * 3600 + last_record_time_no_partII.minute * 60 + last_record_time_no_partII.second                      
+                        if five_second_window_bsm_count > 1 and  (select_time_total_seconds_of_day + FIVE_SEC_WINDOW > last_record_time_total_seconds_of_day):
+                                FER_5_field_dicts ['Time (UTC)'].append(select_start_time)
+                                FER_5_field_dicts ['Average num of BSM per second without partII (HZ)'].append(five_second_window_bsm_count / FIVE_SEC_WINDOW)
 
                     FER_9_field_dicts ['Time (UTC)'] = []
                     FER_9_field_dicts ['Average num of BSM per second with siren and light on (HZ)'] = []
@@ -333,7 +343,7 @@ def main():
 
     '''Metric FER-10: Once V2xHub receives the ERV's BSM, it will identify whether emergency exists and forward the ERV's BSM over to CARMA Cloud.'''
     if len(FER_10_field_dicts.keys()) == 2:
-        create_bar_plot('BSM Status','Number of BSMs','FER-10: Once V2xHub receives the ERV\'s BSM, it will identify whether emergency exists and forward the ERV\'s BSM over to CARMA Cloud','ER-10.png',FER_10_field_dicts )
+        create_bar_plot('BSM Status','Number of BSMs','FER-10: Once V2xHub receives the ERV\'s BSM, it will identify whether emergency exists and forward the ERV\'s BSM over to CARMA Cloud','FER-10.png',FER_10_field_dicts )
 
     '''Metric FER-11: Read sheet: FER-TBD-5. Once V2xHub receives the ERV's BSM, it will identify whether emergency exists and forward the ERV's BSM over to CARMA Cloud within 0.1 second.'''
     if ('df_sheet_forwarding_bsm_delay' in locals() or 'df_sheet_forwarding_bsm_delay' in globals()) and len(df_sheet_forwarding_bsm_delay) > 0:
