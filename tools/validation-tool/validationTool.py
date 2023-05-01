@@ -16,8 +16,8 @@ import socket
 import binascii as bi 
 from threading import Thread
 
-from paramiko import SSHClient
-from scp import SCPClient
+# from paramiko import SSHClient
+# from scp import SCPClient
 import J2735 
 from appJar import gui
 from datetime import date
@@ -28,8 +28,7 @@ report_file=open("report.csv","w")
 createdPreview=False
 createdTestSetup=False
 createdTestResult=False
-testlist=""
-    
+testlist="" 
 
 def find(key, dictionary):
     for k, v in dictionary.items():
@@ -49,8 +48,8 @@ def certify():
 
     initialMessage = app.getTextArea("message content")
 
-    #dict2str=json.dumps(parsed,indent=4,sort_keys=True,ensure_ascii=False)#.decode("utf-8","ignore")
-    parsed = json.loads(parsed,parse_int=str)
+    # dict2str=json.dumps(parsed,indent=4,sort_keys=True,ensure_ascii=False)#.decode("utf-8","ignore")
+    # parsed = json.loads(parsed,parse_int=str)
 
 
 
@@ -73,7 +72,7 @@ def certify():
             if(testvector==True):
                 app.addLabel(key)
                 for testkey in  value: 
-                    #print(testkey+ ":", value[testkey])
+                    # print(testkey+ ":", value[testkey])
         
                     if(value[testkey]=="exist" or value[testkey]=="verify" or value[testkey] == "print"):
                         testtype=value[testkey]
@@ -105,7 +104,8 @@ def certify():
                             if(len(msg1s) >0 and len(msg2s)>0):
                                 try:
                                     if(collections.Counter(msg1s)==collections.Counter(msg2s)):
-                                        app.setLabel(key,key+" :: "+value[testkey]+" :: PASSED")                                        
+                                        test = str(value[testkey])
+                                        app.setLabel(key,key+" :: "+test+" :: PASSED")                                        
                                         app.setLabelFg(key,"green")
                                     else:
                                         app.setLabel(key,key+" :: "+value[testkey]+" :: FAILED")
@@ -119,7 +119,7 @@ def certify():
                         elif(testtype=="print"):
                             ret=list(find(value[testkey],parsed))
                             if(len(ret)>0):
-                                app.setLabel(key,key+" :: "+value[testkey]+":: "+ret)
+                                app.setLabel(key,key+" :: "+value[testkey]+":: "+str(ret))
                                 app.setLabelFg(key,"green")
                             else:
                                 app.setLabel(key,key+" :: "+value[testkey]+" :: UNAVAILABLE")
@@ -199,10 +199,11 @@ def certify():
 
     app.stopAllPanedFrames()        
 
-class TCPRecvHandle(socketserver.BaseRequestHandler):
+class UDPRecvHandle(socketserver.BaseRequestHandler):
     def handle(self):
         global parsed    
         self.data = self.request.recv(10000).strip()
+        self.data = ''.join(self.data.split())
 
         self.msg = self.data.decode("utf-8","ignore")
 
@@ -210,21 +211,22 @@ class TCPRecvHandle(socketserver.BaseRequestHandler):
         asnobj.from_uper(unhexlify(self.msg))
         parsed = asnobj.to_json()  
         certify()
+        
 
 
         
 
-def runtcpServer(port):
-    with socketserver.TCPServer(('', port), TCPRecvHandle) as server:
+def runUDPserver(port):
+    with socketserver.UDPServer(('', port), UDPRecvHandle) as server:
         print("Starting the TCP Server in localhost", "::", port)
         server.serve_forever()
 
-def runSSHSnifer(ssh, command):
-    print("sending ssh command")
-    stdin, stdout,stderr = ssh.exec_command(command)
-    print("done sending ssh comand")
-    for line in iter(stdout.readline, ""):
-        print(line, end="")
+# def runSSHSnifer(ssh, command):
+#     print("sending ssh command")
+#     stdin, stdout,stderr = ssh.exec_command(command)
+#     print("done sending ssh comand")
+#     for line in iter(stdout.readline, ""):
+#         print(line, end="")
 
 
 def run():
@@ -236,48 +238,77 @@ def run():
     
     ## install test message to the proper location 
 
-    uname = app.getEntry("Username")
-    pword = app.getEntry("Password")
-    ipaddr = app.getEntry("IP address")
-    port = app.getEntry("Port #")
-    filepath = app.getEntry("Remote filepath")
-    filename = ".localsample"
-    sport = app.getEntry("Server port")
-    snifscript = app.getTextArea("Sniffer Script")
+    # uname = app.getEntry("Username")
+    # pword = app.getEntry("Password")
+    # ipaddr = app.getEntry("Local IP address")
+    # port = app.getEntry("Port #")
+    # filepath = app.getEntry("Remote filepath")
+    # filename = ".localsample"
+    serverPort = int(app.getEntry("Server port"))
+    # snifferScript = app.getTextArea("Sniffer Script")
 
-    print(uname, pword, ipaddr, port, filepath, filename,sport, snifscript)
+    # print(uname, pword, ipaddr, port, filepath, filename,sport, snifscript)
 
-    ssh = SSHClient()
-    ssh.load_system_host_keys()
+    sk_listen = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+    sk_listen.bind(('127.0.0.1', serverPort))
+    print("Starting the UDP Server in localhost", "::", serverPort)
 
-    try:
-        ssh.connect(hostname=ipaddr, 
-                port = int(port),
-                username=uname,
-                password=pword)
-    except:
-        print("Error ssh-ing to the DUT")
-        ssh.close()
-        return 0
+    global parsed    
+    data = str(sk_listen.recvfrom(10000)[0])
+    data = ''.join(data.split())
+
+    msgId = "0013"
+    idx = data.find(msgId)
+    if(int('0x'+data[idx+4],16)==8):
+        if(msgId == '0014'):
+            lenstr=int('0x'+data[idx+5:idx+8],16)*2+16
+        else:
+            lenstr=int('0x'+data[idx+5:idx+8],16)*2+8
+    else:
+        if(msgId == '0014'):
+            lenstr=int('0x'+data[idx+5:idx+8],16)*2+16
+        else:
+            lenstr=int('0x'+data[idx+4:idx+6],16)*2+6
+    msg = data[idx:idx+lenstr].encode('utf-8')
+
+    asnobj =  J2735.DSRC.MessageFrame
+    asnobj.from_uper(unhexlify(msg))
+    parsed = asnobj.to_json()
+    parsed = json.loads(parsed,parse_int=str)
+    # print(type(parsed), parsed)
+    certify()
+
+    # ssh = SSHClient()
+    # ssh.load_system_host_keys()
+
+    # try:
+    #     ssh.connect(hostname=ipaddr, 
+    #             port = int(port),
+    #             username=uname,
+    #             password=pword)
+    # except:
+    #     print("Error ssh-ing to the DUT")
+    #     ssh.close()
+    #     return 0
 
     ## check if load file is yes 
 
-    if (app.getRadioButton("loadfile") == "yes"):
-        # SCPCLient takes a paramiko transport as its only argument
-        scp = SCPClient(ssh.get_transport())
-        scp.put(filename, filepath)
+    # if (app.getRadioButton("loadfile") == "yes"):
+    #     # SCPCLient takes a paramiko transport as its only argument
+    #     # scp = SCPClient(ssh.get_transport())
+    #     # scp.put(filename, filepath)
 
-    try:
-        t = Thread(target = runtcpServer, args=(int(sport),),  daemon = True) 
-        t.start()
-    except:
-        print("address already in use")
+    # try:
+    #     t = Thread(target = runUDPserver, args=[serverPort],  daemon = True) 
+    #     t.start()
+    # except:
+    #     print("Port already in use\n")
 
-    try:
-        s = Thread(target = runSSHSnifer, args=(ssh,snifscript,),  daemon = True) 
-        s.start()
-    except:
-        print("Unable to send sniffer script to DUT")
+    # try:
+    #     s = Thread(target = runSSHSnifer, args=(ssh,snifscript,),  daemon = True) 
+    #     s.start()
+    # except:
+    #     print("Unable to send sniffer script to DUT")
 
 
 
@@ -298,7 +329,6 @@ def preview():
         app.setLabel("er1","Empty local sample file input")
         app.setLabelBg("er1","red")
         flag = 0 
-    
     if( filepath2==""):
         app.setLabel("er2","Empty input test template")
         app.setLabelBg("er2","red")
@@ -310,7 +340,7 @@ def preview():
     if( snifferscript==""):
         app.setLabel("er3","Empty sniffer script, Using default")
         app.setLabelBg("er3","red")
-        app.setTextArea("Sniffer Script","sudo tcpdump port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat <HOST IP> <HOST PORT>")
+        app.setTextArea("Sniffer Script","sudo tcpdump -i lo port 1516 -Aq | grep -m  1 \"Payload=\" | sed 's|Payload=||g' | netcat <HOST IP> <HOST PORT>")
         
         
     
@@ -408,36 +438,36 @@ app.setLabelFont(size=11, underline=False)
 app.startPanedFrame("ts1")
 app.startLabelFrame("DUT Configurations")
 
-app.startLabelFrame("DUT ssh connection")
-app.setSticky("ew")
-app.addLabelEntry("Username")
-#app.setFocus("Username")
-app.setEntryDefault("Username","")
-app.addLabelSecretEntry("Password")
-app.stopLabelFrame()
-app.startLabelFrame("DUT networking")
-app.setSticky("ew")
-app.addLabelEntry("IP address")
-app.setEntryDefault("IP address", "127.0.0.1")
-app.addLabelNumericEntry("Port #")
-app.setEntryDefault("Port #", "22")
-app.stopLabelFrame()
-app.startLabelFrame("DUT message file")
-app.setSticky("ew")
-app.addLabel("Load Sample Message to DUT")
-app.addRadioButton("loadfile","Yes",0,1,1,1)
-app.addRadioButton("loadfile","No",0,2,1,1)
-app.setRadioButtonChangeFunction("loadfile",loadfilechoice)
-app.addLabelEntry("Remote filepath")
-app.setEntryDefault("Remote filepath", "")
+# app.startLabelFrame("DUT ssh connection")
+# app.setSticky("ew")
+# app.addLabelEntry("Username")
+# #app.setFocus("Username")
+# app.setEntryDefault("Username","")
+# app.addLabelSecretEntry("Password")
+# app.stopLabelFrame()
+# app.startLabelFrame("DUT networking")
+# app.setSticky("ew")
+# app.addLabelEntry("Local IP address")
+# app.setEntryDefault("IP address", "127.0.0.1")
+# app.addLabelNumericEntry("Port #")
+# app.setEntryDefault("Port #", "1516")
+# app.stopLabelFrame()
+# app.startLabelFrame("DUT message file")
+# app.setSticky("ew")
+# app.addLabel("Load Sample Message to DUT")
+# app.addRadioButton("loadfile","Yes",0,1,1,1)
+# app.addRadioButton("loadfile","No",0,2,1,1)
+# app.setRadioButtonChangeFunction("loadfile",loadfilechoice)
+# app.addLabelEntry("Remote filepath")
+# app.setEntryDefault("Remote filepath", "")
 app.addLabelOpenEntry("Local sample file")
 app.stopLabelFrame()
-app.stopLabelFrame()
+# app.stopLabelFrame()
 
 app.startLabelFrame("Test Setup")
 app.addLabelOpenEntry("Test template")
 app.addLabelNumericEntry("Server port")
-app.setEntryDefault("Server port", "5556")
+app.setEntryDefault("Server port", "1516")
 app.stopLabelFrame()
 
 #app.addLabel("snf1","Sniffer Script")
