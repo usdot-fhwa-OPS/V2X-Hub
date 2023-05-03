@@ -25,7 +25,6 @@ Read the input logs file and search the relevant logs. Process the logs and retu
 
 
 def process_input_log_file(inputfile, search_keyword):
-<<<<<<< HEAD
     fields_dict = {}
     fields_dict["Time (UTC)"] = []
     try:
@@ -70,46 +69,6 @@ def process_input_log_file(inputfile, search_keyword):
     except FileNotFoundError:
         print(f'Log file not found {inputfile}')
         exit()
-=======
-    file_stream = open(inputfile, 'r')
-    fields_dict = {}
-    fields_dict["Time (UTC)"] = []
-    while True:
-        line = file_stream.readline()
-        # if line is empty, end of file is reached
-        if not line:
-            break
-        if len(line.strip()) == 0:
-            continue
-        if len(line.strip().split(' - ')) < 2:
-            continue
-
-        txt = line.strip().split(' - ')[1]
-        # Look for the specific metric by keyword
-        if search_keyword.lower().strip() in txt.lower():
-            metadata_list = [x for x in line.strip().split(
-                ' - ')[0].split("[") if x != '']
-            time = ''.join(metadata_list).split(']')[0].replace('"','').replace('log','').replace('{','').replace('{}','').replace(':','',1).replace('}','')
-            fields_dict["Time (UTC)"].append(time)
-            metric_field_value = ''
-            metric_field_title = ''
-            txt_list = [x.strip() for x in  txt.strip().split(":") if x.strip() != 'INFO' if x.strip() != 'DEBUG' if x.strip() != 'ERROR' ]
-            if  "stdout" in txt_list[1]:
-                metric_field_title = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','')
-                metric_field_value = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
-            else:
-                metric_field_title = txt_list[0].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','')
-                metric_field_value = txt_list[1].strip().replace("stream","").replace('\\n','').replace('"','').replace(',','').replace('\\u003e','>').replace('\\u003c','<').replace('\\','"')
-                try:
-                    xml = ET.fromstring(metric_field_value)
-                    metric_field_value = xml.find("id").text
-                except:
-                    pass
-            if metric_field_title not in fields_dict.keys():
-                fields_dict[metric_field_title] = []
-            fields_dict[metric_field_title].append(metric_field_value)
-    file_stream.close()
->>>>>>> k900
     return fields_dict
 
 
@@ -122,7 +81,6 @@ Once the relevant logs are found, it write the data into the specified excel out
 def main():    
     inputfile, outputfile = get_filenames()
     search_metric_keywords = {
-<<<<<<< HEAD
                               'FER-4-5-8-9': 'Receive BSM',
                               'FER-10-11-1': 'Forwarding message to cloud via curl',
                               'FER-10-11-2': 'Successfully forwarded message to cloud via curl',
@@ -131,13 +89,6 @@ def main():
                               'FER-TBD-3': 'Incoming BSM is not from Emergency Response Vehicle (ERV)',
                               'FER-TBD-4': 'Forward ERV BSM to cloud',
                               'FER-TBD-5': 'Received ERV BSM and forward ERV BSM to cloud delay (ms)',
-=======
-                              'FER-5-6': 'Incoming BSM is not from Emergency Response Vehicle (ERV)',
-                              'FER-9-10-11': 'Forward ERV BSM to cloud:',
-                              'FER-12-1': 'Received ERV BSM and forward ERV BSM to cloud delay (ms)',
-                              'FER-TBD-1': 'Received ERV BSM from cloud:',
-                              'FER-TBD-2': 'Received ERV BSM from cloud and broadcast ERV BSM delay(ms)'
->>>>>>> k900
                              }
     global_fields_dict = {}
     print(f'Processing log file [{inputfile}]...')
