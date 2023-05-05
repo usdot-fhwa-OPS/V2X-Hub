@@ -201,6 +201,12 @@ namespace CDASimAdapter{
                             ":" + std::to_string(_client->GetPort()) + " with error code : " + std::to_string(errno)).c_str());
             }
         }
+        else if ( msg.empty() ) {
+            PLOG(logWARNING) << "Unable to send empty message to " << _client->GetAddress() << ":" << _client->GetPort() << "." << std::endl;
+        }
+        else {
+            PLOG(logWARNING) << "Unable to send message from uninitialized client." << std::endl;
+        }
     }
 
     void CDASimConnection::forward_v2x_message_to_simulation(const std::string &msg) const {

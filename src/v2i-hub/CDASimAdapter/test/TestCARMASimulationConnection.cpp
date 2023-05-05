@@ -47,6 +47,18 @@ namespace CDASimAdapter {
         connection->forward_message(test_message, client);
     }
 
+    TEST_F( TestCARMASimulationConnection, forward_message_invalid ) {
+        std::shared_ptr<MockUpdClient> client = std::make_shared<MockUpdClient>();
+        std::string test_message = "";
+        // ASSERT that we never call Send message.
+        EXPECT_CALL( *client, Send(test_message) ).Times(0);
+        // sent empty message
+        connection->forward_message(test_message,client);
+        test_message = "message";
+        client = nullptr;
+        connection->forward_message(test_message, client);
+    } 
+
     TEST_F( TestCARMASimulationConnection, consume_msg){
 
         std::shared_ptr<MockUpdServer> server = std::make_shared<MockUpdServer>();
