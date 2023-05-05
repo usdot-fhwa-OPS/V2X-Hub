@@ -28,7 +28,7 @@ if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q 
     done
     echo "VALID PASSWORD"
     echo "Enter MYSQL ROOT PASSWORD: "
-    mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
+    mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
     echo "V2X Hub user successfully added"
 else
     echo "INVALID PASSWORD"

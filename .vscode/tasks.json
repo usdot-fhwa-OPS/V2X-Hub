@@ -1,0 +1,44 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "cd src && ./build.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "cd src/tmx && rm -rf build && cd ../v2i-hub && rm -rf build",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "run",
+            "type": "shell",
+            "command": "ldconfig && container/service.sh",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "cd src && ./install_coverage_dependencies.sh && ./coverage.sh",
+            "group": {
+                "kind": "test"
+            }
+        }
+
+    ]
+}

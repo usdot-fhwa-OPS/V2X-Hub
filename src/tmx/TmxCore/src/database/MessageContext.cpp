@@ -19,14 +19,14 @@ MessageContext::MessageContext()
 void MessageContext::insertOrUpdateMessageActivity(MessageActivityEntry &entry)
 {
 	// Convert time_t struct into UTC timestamp string.
-	struct tm *tm;
-	tm = gmtime (&entry.lastReceivedTimestamp);
+	struct tm tm;
+	gmtime_r (&entry.lastReceivedTimestamp, &tm);
 	stringstream timestamp;
-	timestamp << tm->tm_year + 1900 << "-" << tm->tm_mon + 1 << "-" << tm->tm_mday << " " << tm->tm_hour << ":" << tm->tm_min << ":" << tm->tm_sec;
+	timestamp << tm.tm_year + 1900 << "-" << tm.tm_mon + 1 << "-" << tm.tm_mday << " " << tm.tm_hour << ":" << tm.tm_min << ":" << tm.tm_sec;
 
 	// Insert or update messageActivity row.
 
-	auto_ptr<sql::Statement> stmt(this->getStatement());
+	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "INSERT INTO messageActivity (messageTypeId, pluginId, count, lastReceivedTimestamp, averageInterval)";
@@ -46,7 +46,7 @@ void MessageContext::insertOrUpdateMessageActivity(MessageActivityEntry &entry)
 	query << "SELECT `id` FROM `messageActivity`";
 	query << " WHERE `messageActivity`.`messageTypeId` = '" << entry.messageTypeId << "' AND `messageActivity`.`pluginId` = '" << entry.pluginId << "'";
 
-	auto_ptr<sql::ResultSet> rset(stmt->executeQuery(query.str()));
+	std::unique_ptr<sql::ResultSet> rset(stmt->executeQuery(query.str()));
 	if (rset->next())
 	{
 		entry.id = rset->getUInt("id");
@@ -55,7 +55,7 @@ void MessageContext::insertOrUpdateMessageActivity(MessageActivityEntry &entry)
 
 void MessageContext::insertMessageType(MessageTypeEntry &entry, bool updateDescriptionOnDuplicate)
 {
-	auto_ptr<sql::Statement> stmt(this->getStatement());
+	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "INSERT INTO messageType (type, subtype, description)";
@@ -76,7 +76,7 @@ void MessageContext::insertMessageType(MessageTypeEntry &entry, bool updateDescr
 	query << "SELECT * FROM `messageType`";
 	query << " WHERE `messageType`.`type` = '" << entry.type << "' AND `messageType`.`subtype` = '" << entry.subtype << "'";
 
-	auto_ptr<sql::ResultSet> rset(stmt->executeQuery(query.str()));
+	std::unique_ptr<sql::ResultSet> rset(stmt->executeQuery(query.str()));
 	if (rset->next())
 	{
 		entry.id = rset->getUInt("id");
@@ -86,7 +86,7 @@ void MessageContext::insertMessageType(MessageTypeEntry &entry, bool updateDescr
 
 void MessageContext::mapPluginToMessageType(unsigned int pluginId, unsigned int messageTypeId)
 {
-	auto_ptr<sql::Statement> stmt(this->getStatement());
+	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
 	stringstream query;
 	query << "INSERT IGNORE INTO `pluginMessageMap` (`pluginId`, `messageTypeId`)";
@@ -100,9 +100,9 @@ std::set<MessageTypeEntry> MessageContext::getAllMessageTypes()
 {
 	set<MessageTypeEntry> results;
 
-	auto_ptr<sql::Statement> stmt(this->getStatement());
+	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
-	auto_ptr< sql::ResultSet > rset(stmt->executeQuery("SELECT * FROM `messageType`;"));
+	std::unique_ptr< sql::ResultSet > rset(stmt->executeQuery("SELECT * FROM `messageType`;"));
 	while(rset->next())
 	{
 		MessageTypeEntry entry;

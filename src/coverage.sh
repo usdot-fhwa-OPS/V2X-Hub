@@ -16,42 +16,34 @@
 # script to run tests, generate test-coverage, and store coverage reports in a place
 # easily accessible to sonar. Test names should follow convention run<pluginName>Tests
 
-set -x
-for d in v2i-hub/*
-do
+set -ex
+
+top_dir="$PWD"
+
+COMPONENT_DIRS="tmx v2i-hub"
+for component_dir in ${COMPONENT_DIRS}; do
+for d in ${component_dir}/* ; do
     echo ""
     echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep run[a-zA-Z]*Tests ; then
-            TESTS="./`ls $d | grep run[a-zA-Z]*Tests`"
+    sub_dir=${top_dir}/${d}
+    build_dir=${top_dir}/${component_dir}/build/$(basename ${d})
+    if [ -d ${sub_dir} -a -d ${build_dir} ]; then
+        if ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then
+            TESTS="./$(ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests")"
             echo "$TESTS built"
-            cd $d
+            pushd "$build_dir"
             $TESTS
-            mkdir coverage
-	        gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
+            popd
+            # generate a JSON file to be combined per https://gcovr.com/en/master/guide/merging.html
+            pushd $(dirname ${top_dir})
+            # generated at the project root
+            gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -r .
+            popd
         else
             echo "no tests built"
         fi
     fi
 done
-for d in tmx/*
-do
-    echo ""
-    echo $d
-    if [[ -d $d ]]; then
-        if ls $d | grep [a-zA-Z]*_test ; then
-            TESTS="./`ls $d | grep [a-zA-Z]*_test`"
-            echo "$TESTS built"
-            cd $d
-            $TESTS
-            mkdir coverage
-            gcovr -k -r .
-            mv *.gcov coverage
-            cd ../..
-        else
-            echo "no tests built"
-        fi
-    fi
+# combine all the JSON files for a component
+gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml
 done

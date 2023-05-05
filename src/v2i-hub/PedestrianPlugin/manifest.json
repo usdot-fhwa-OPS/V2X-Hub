@@ -50,13 +50,18 @@
 			"description":"Extension/port for FLIR camera subscription"
 		},
 		{
+			"key":"HostString",
+			"default":"/api/subscriptions",
+			"description":"Host HTTP header during the WebSocket handshake"
+		},
+		{
 			"key":"FLIRCameraRotation",
 			"default":"16.13",
 			"description":"Measured camera rotation from true north (in degrees) used for heading conversion"
 		},
 		{
             "key":"LogLevel",
-            "default":"DEBUG",
+            "default":"INFO",
             "description":"The log level for this plugin"
         }
 	]

@@ -5,7 +5,7 @@
 // Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Preemption Plugin
 //==========================================================================
-
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>

@@ -16,15 +16,17 @@ namespace PedestrianPlugin
     FLIRWebSockAsyncClnSession::run(
         char const* host,
         char const* port,
-        float cameraRotation)
+        float cameraRotation,
+        char const* hostString)
     {
         
         PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::run " << std::endl;
 	    // Save these for later
         host_ = host;
         cameraRotation_ = cameraRotation;
+        hostString_ = hostString;
 
-        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << std::endl;       
+        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << " ; host string: "<< hostString << std::endl;       
 
         // Look up the domain name
         resolver_.async_resolve(
@@ -42,7 +44,7 @@ namespace PedestrianPlugin
     {
         PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_resolve " << std::endl;
         if(ec)
-            return fail(ec, "resolve");             
+            return fail(ec, "resolve");
 
         // Set the timeout for the operation
         beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
@@ -85,10 +87,10 @@ namespace PedestrianPlugin
         // Host HTTP header during the WebSocket handshake.
         // See https://tools.ietf.org/html/rfc7230#section-5.4
 
-        PLOG(logDEBUG) << "host_: " << host_ << std::endl;
+        PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << hostString_ << std::endl;
 
         // Perform the websocket handshake
-        ws_.async_handshake(host_, "/api/subscriptions",
+        ws_.async_handshake(host_, hostString_,
             beast::bind_front_handler(
                 &FLIRWebSockAsyncClnSession::on_handshake,
                 shared_from_this()));

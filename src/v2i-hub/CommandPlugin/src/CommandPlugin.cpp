@@ -174,9 +174,9 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 			if (!boost::filesystem::exists(outpath))
 				boost::filesystem::create_directory(outpath);
 		}
-		catch (exception ex)
+		catch (exception & ex)
 		{
-			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create download folder";
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create download folder";
 			_uploadRequests[pss->filename].message = "Failed to create download folder";
 			return 1;
 		}
@@ -188,7 +188,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				O_CREAT | O_TRUNC | O_RDWR, 0600);
 		if (pss->fd < 0)
 		{
-			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create or open file";
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create or open file";
 			_uploadRequests[pss->filename].message = "Failed to create or open file";
 			return 1;
 		}
@@ -264,9 +264,9 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 						if (!boost::filesystem::exists(toFile))
 							boost::filesystem::create_directory(toFile);
 					}
-					catch (exception ex)
+					catch (exception & ex)
 					{
-						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
 						_uploadRequests[pss->filename].message = "Failed to create destination folder";
 						return 1;
 					}
@@ -277,17 +277,17 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				{
 					boost::filesystem::copy_file (fromFile, toFile, copy_option::overwrite_if_exists);
 				}
-				catch (exception ex)
+				catch (exception & ex)
 				{
-					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder.";
+					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder: " << toFile;
 					_uploadRequests[pss->filename].message = "Failed to copy file to destination folder.";
 					try
 					{
 						boost::filesystem::remove(fromFile);
-						FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file: " << fromFile;
 						_uploadRequests[pss->filename].message.append(" Failed to delete download file.");
 					}
-					catch (exception ex2)
+					catch (exception & ex2)
 					{
 					}
 					return 1;
@@ -296,9 +296,9 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				{
 					boost::filesystem::remove(fromFile);
 				}
-				catch (exception ex)
+				catch (exception & ex)
 				{
-					FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
+					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file.";
 					_uploadRequests[pss->filename].message = "Failed to delete download file.";
 					return 1;
 				}
@@ -1074,6 +1074,7 @@ int CommandPlugin::WSCallbackBASE64(
 											{
 												std::map<string, string> data;
 												std::map<string, string> arrayData;
+												std::map<string, string> passTemp;
 												//get user info
 												_tmxControl.ClearOptions();
 												_tmxControl.SetOption("username", argsList["user"]);
@@ -1084,7 +1085,7 @@ int CommandPlugin::WSCallbackBASE64(
 													if (uJSON == "")
 													{
 														//user not found
-														BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Invalid user name or password", data, arrayData);
+														BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Invalid user name", data, arrayData);
 													}
 													else
 													{
@@ -1095,15 +1096,32 @@ int CommandPlugin::WSCallbackBASE64(
 															BOOST_FOREACH(ptree::value_type &userData, userInfo.second)
 															{
 																//check each user record returned
-																if (userData.second.get<string>("username") == argsList["user"] && userData.second.get<string>("password") == argsList["password"] && authorized == false)
+																if (userData.second.get<string>("username") == argsList["user"] && authorized == false)
 																{
-																	//send response
-																	authorized = true;
+																	//set access level
 																	data["level"] = userData.second.get<string>("accessLevel");
-																	BuildCommandResponse(psdata->outputbuffer, id, command, "success", "", data, arrayData);
-																	//set session data
-																	psdata->authorized = true;
-																	psdata->authorizationLevel = stoi(userData.second.get<string>("accessLevel"));
+																	passTemp["password"] = userData.second.get<string>("password");
+																}
+															}
+														}
+														//verify password
+														_tmxControl.ClearOptions();
+														_tmxControl.SetOption("password", argsList["password"]);
+														if (_tmxControl.hashed_info())
+														{
+															BOOST_FOREACH(ptree::value_type &userInfo, output->get_storage().get_tree())
+															{
+																BOOST_FOREACH(ptree::value_type &userData, userInfo.second)
+																{
+																	if (userData.second.get<string>("password") == passTemp["password"])
+																	{
+																		//send response
+																		authorized = true;
+																		BuildCommandResponse(psdata->outputbuffer, id, command, "success", "", data, arrayData);
+																		//set session data
+																		psdata->authorized = true;
+																		psdata->authorizationLevel = stoi(data["level"]);
+																	}
 																}
 															}
 														}
@@ -1112,7 +1130,6 @@ int CommandPlugin::WSCallbackBASE64(
 															//bad password
 															BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Invalid user name or password", data, arrayData);
 														}
-
 													}
 												}
 												else
@@ -1126,7 +1143,7 @@ int CommandPlugin::WSCallbackBASE64(
 									}
 								}
 							}
-							catch (exception ex)
+							catch (exception & ex)
 							{
 								//parse error
 								FILE_LOG(logDEBUG) << "WSCallbackBASE64 process message exception: ";

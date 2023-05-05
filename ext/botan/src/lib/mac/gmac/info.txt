@@ -1,8 +1,0 @@
-<defines>
-GMAC -> 20160207
-</defines>
-
-<requires>
-ghash
-block
-</requires>

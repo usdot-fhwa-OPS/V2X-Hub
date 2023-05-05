@@ -1,8 +1,11 @@
-### cmake caches
+# build directories
+src/tmx/build
+src/v2i-hub/build
 
-CMakeCache.txt
-Makefile
-CMakeFiles
+# manually created directories
+secrets/
+.devcontainer/MAP
+
 # Compiled source #
 ###################
 *.com
@@ -28,7 +31,6 @@ CMakeFiles
 # Logs and databases #
 ######################
 *.log
-*.sql
 *.sqlite
 
 # OS generated files #
@@ -76,6 +78,11 @@ Thumbs.db
 *.out
 *.app
 
+# Coverage Files
+*.gcov
+*coverage.json
+*coverage.xml
+ 
 #docker-compose variables
 .env
 
@@ -84,3 +91,4 @@ tools/port-drayage-webservice/target/
 
 #Java PKS for HTTPS setup
 tools/port-drayage-webservice/src/main/resources/tutorial.jks
+.vscode/settings.json

@@ -5,6 +5,7 @@
 // Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
+#pragma once
 #include <string.h>
 
 #include "PluginClient.h"
@@ -72,6 +73,7 @@ public:
 	std::string dataprovider;
 	float cameraRotation;
 	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
+	std::string hostString;
 
 protected:
 	void UpdateConfigSettings();

@@ -110,7 +110,6 @@ void Logger::addEventLogEntry(std::string source, std::string description, LogLe
 
 	switch(level)
 	{
-		break;
 	case LogLevel_Info:
 		LOG_INFO(fileLogText.str());
 		break;

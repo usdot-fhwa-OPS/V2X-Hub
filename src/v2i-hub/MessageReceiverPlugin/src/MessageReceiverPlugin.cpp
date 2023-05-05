@@ -6,24 +6,7 @@
  */
 
 #include "MessageReceiverPlugin.h"
-#include <Clock.h>
-#include <FrequencyThrottle.h>
-#include <mutex>
-#include <stdexcept>
-#include <thread>
 
-#include <tmx/apimessages/TmxEventLog.hpp>
-#include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include <BsmConverter.h>
-#include <LocationMessage.h>
-
-
-#include <asn_application.h>
-#include <boost/any.hpp>
-#include <tmx/TmxApiMessages.h>
-#include <tmx/messages/J2735Exception.hpp>
-#include <tmx/messages/SaeJ2735Traits.hpp>
-#include <tmx/messages/routeable_message.hpp>
 
 #define ABBR_BSM 1000
 #define ABBR_SRM 2000
@@ -35,7 +18,6 @@ using namespace boost::asio;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
-//using namespace Botan;
 
 // BSMs may be 10 times a second, so only send errors at most every 2 minutes
 #define ERROR_WAIT_MS 120000
@@ -43,33 +25,13 @@ using namespace tmx::utils;
 
 namespace MessageReceiver {
 
-mutex syncLock;
-FrequencyThrottle<int> errThrottle;
-FrequencyThrottle<int> statThrottle;
-
-static std::atomic<uint64_t> totalBytes {0};
-static std::map<std::string, std::atomic<uint32_t> > totalCount;
+	static std::atomic<uint64_t> totalBytes {0};
+	static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
 MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManager(name)
-{	//Don't need to subscribe to messages
-	//SubscribeToMessages();
+{	
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
-	
-	// @SONAR_STOP@
-
-	GetConfigValue<unsigned int>("EnableVerification", verState);
-	GetConfigValue("HSMLocation",liblocation);
-	
-	GetConfigValue<string>("HSMurl",baseurl);
-	GetConfigValue<string>("messageid",messageidstr);
-	getmessageid(); 
-	
-	std::string request="verifySig";
-	url=baseurl+request;
-	
-	// @SONAR_START@
-
 }
 
 void MessageReceiverPlugin::getmessageid()
@@ -103,15 +65,10 @@ TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
 	return &encMsg;
 }
 
-// @SONAR_STOP@
-
-	
-	// @SONAR_START@
-
-BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+BsmMessage* MessageReceiverPlugin::DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
 {
-	FILE_LOG(logDEBUG4) << "BSM vehicleId: " << vehicleId
+	PLOG(logDEBUG4) << "BSM vehicleId: " << vehicleId
 			<< ", heading: " << heading
 			<< ", speed: " << speed
 			<< ", latitude: " << latitude
@@ -146,15 +103,15 @@ BsmMessage *DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint
 	if (bsm)
 		BsmConverter::ToBasicSafetyMessage(decodedBsm, *bsm);
 	
-	FILE_LOG(logDEBUG4) << " Decoded BSM: " << decodedBsm;
+	PLOG(logDEBUG4) << " Decoded BSM: " << decodedBsm;
 	// Note that this constructor assumes control of cleaning up the J2735 structure pointer
 	return new BsmMessage(bsm);
 }
 
-SrmMessage *DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
+SrmMessage* MessageReceiverPlugin::DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
 		uint32_t longitude, uint32_t role)
 {
-	FILE_LOG(logDEBUG4) << "SRM vehicleId: " << vehicleId
+	PLOG(logDEBUG4) << "SRM vehicleId: " << vehicleId
 			<< ", heading: " << heading
 			<< ", speed: " << speed
 			<< ", latitude: " << latitude
@@ -385,25 +342,25 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 
 void MessageReceiverPlugin::UpdateConfigSettings()
 {
+	lock_guard<mutex> lock(syncLock);
+
 	// Atomic flags
 	GetConfigValue("RouteDSRC", routeDsrc);
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
 	GetConfigValue<unsigned int>("EnableVerification", verState);
-	GetConfigValue("HSMLocation",liblocation);
 	GetConfigValue<string>("HSMurl",baseurl);
 	GetConfigValue<string>("messageid",messageidstr);
+	GetConfigValue("IP", ip);
+	GetConfigValue("Port", port);
+	_skippedSignVerifyErrorResponse = 0;
+	SetStatus<uint>(Key_SkippedSignVerifyError, _skippedSignVerifyErrorResponse);
+
 	getmessageid();
 
 	std::string request="verifySig";
 	url=baseurl+request;
-
-	lock_guard<mutex> lock(syncLock);
-
-	GetConfigValue("IP", ip);
-	GetConfigValue("Port", port);
-
 	cfgChanged = true;
 }
 
@@ -502,11 +459,26 @@ int MessageReceiverPlugin::Main()
 						{
 							result+=buffer; 
 						}
-					} catch (...) {
+					} catch (std::exception const & ex) {
+					
 						pclose(pipemsg); 
-						throw; 
+						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
+						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+						continue;
+; 
 					}
+					PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 					cJSON *root   = cJSON_Parse(result.c_str());
+					cJSON *status = cJSON_GetObjectItem(root, "code");
+					if ( status ) {
+						cJSON *message = cJSON_GetObjectItem(root, "message");
+						// IF status code exists this means the SCMS container returned an error response on attempting to sign
+						// Set status will increment the count of message skipped due to signature error responses by one each
+						// time this occurs. This count will be visible under the "State" tab of this plugin.
+						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
+						PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
+						continue;
+					}
 					cJSON *sd = cJSON_GetObjectItem(root, "signatureIsValid");
 
 
@@ -622,7 +594,7 @@ int MessageReceiverPlugin::Main()
 		if (statThrottle.Monitor(1))
 		{
 			uint64_t b = totalBytes;
-			auto msCount = Clock::GetMillisecondsSinceEpoch() - Clock::GetMillisecondsSinceEpoch(this->_startTime);
+			auto msCount = Clock::GetMillisecondsSinceEpoch() - Clock::GetMillisecondsSinceEpoch(this->getStartTime());
 
 			SetStatus("Total KBytes Received", b / 1024.0);
 

@@ -27,7 +27,7 @@ class DSRC:
         'RegionalExtension',
         'BasicSafetyMessage',
         'PARTII-EXT-ID-AND-TYPE',
-        'PartIIcontent',
+        'BSMpartIIExtension',
         'PartII-Id',
         'vehicleSafetyExt',
         'specialVehicleExt',
@@ -582,7 +582,7 @@ class DSRC:
         'RegionalExtension',
         'BasicSafetyMessage',
         'PARTII-EXT-ID-AND-TYPE',
-        'PartIIcontent',
+        'BSMpartIIExtension',
         'PartII-Id',
         'CommonSafetyRequest',
         'EmergencyVehicleAlert',
@@ -1144,7 +1144,7 @@ class DSRC:
         ]
     _param_ = [
         'RegionalExtension',
-        'PartIIcontent',
+        'BSMpartIIExtension',
         ]
     
     #-----< MessageFrame >-----#
@@ -1256,7 +1256,7 @@ class DSRC:
     BasicSafetyMessage = SEQ(name='BasicSafetyMessage', mode=MODE_TYPE)
     _BasicSafetyMessage_coreData = SEQ(name='coreData', mode=MODE_TYPE, tag=(0, TAG_CONTEXT_SPEC, TAG_IMPLICIT), typeref=ASN1RefType(('DSRC', 'BSMcoreData')))
     _BasicSafetyMessage_partII = SEQ_OF(name='partII', mode=MODE_TYPE, tag=(1, TAG_CONTEXT_SPEC, TAG_IMPLICIT), opt=True)
-    __BasicSafetyMessage_partII__item_ = SEQ(name='_item_', mode=MODE_TYPE, typeref=ASN1RefType(('DSRC', 'PartIIcontent')))
+    __BasicSafetyMessage_partII__item_ = SEQ(name='_item_', mode=MODE_TYPE, typeref=ASN1RefType(('DSRC', 'BSMpartIIExtension')))
     ___BasicSafetyMessage_partII__item__partII_Id = INT(name='partII-Id', mode=MODE_TYPE, tag=(0, TAG_CONTEXT_SPEC, TAG_IMPLICIT), typeref=ASN1RefClassField(('DSRC', 'PARTII-EXT-ID-AND-TYPE'), ['id']))
     ____BasicSafetyMessage_partII__item__partII_Id_tab = CLASS(name='_tab_PARTII-EXT-ID-AND-TYPE', mode=MODE_SET, typeref=ASN1RefType(('DSRC', 'PARTII-EXT-ID-AND-TYPE')))
     _____BasicSafetyMessage_partII__item__partII_Id_tab_val_Type_0 = SEQ(name='Type', mode=MODE_TYPE, typeref=ASN1RefType(('DSRC', 'VehicleSafetyExtensions')))
@@ -1312,8 +1312,8 @@ class DSRC:
         ('Type', _PARTII_EXT_ID_AND_TYPE_Type),
         ])
     
-    #-----< PartIIcontent >-----#
-    PartIIcontent = SEQ(name='PartIIcontent', mode=MODE_TYPE, param=True)
+    #-----< BSMpartIIExtension >-----#
+    BSMpartIIExtension = SEQ(name='BSMpartIIExtension', mode=MODE_TYPE, param=True)
     
     #-----< PartII-Id >-----#
     PartII_Id = INT(name='PartII-Id', mode=MODE_TYPE)

@@ -269,9 +269,7 @@ public:
 			success = false;
 		}
 
-		pthread_mutex_lock(&_plugin->lock);
 		_sysConfig = ivpConfig_addItemToCollection(_sysConfig, key.c_str(), valString.c_str(), defString.c_str());
-		pthread_mutex_unlock(&_plugin->lock);
 
 		if (notify)
 		{
@@ -333,7 +331,7 @@ public:
 
 		if (isNewValue)
 		{
-			//PLOG(logINFO) << "New Status. " << key << ": " << ss.str();
+			PLOG(logDEBUG1) << "New Status. " << key << ": " << ss.str();
 			ivp_setStatusItem(_plugin, key, ss.str().c_str());
 		}
 
@@ -361,7 +359,6 @@ protected:
 	void handleMessage(tmx::message &msg, tmx::routeable_message &src);
 
 	tmx::utils::DbConnectionPool _dbConnPool;
-	std::chrono::system_clock::time_point _startTime;
 	bool _isStartTimeStatusSet = false;
 
 	std::string _name;
@@ -371,12 +368,17 @@ protected:
 	// Static system context - to log msg latency and system load
 	static tmx::utils::SystemContext _sysContext;
 
+	inline const std::chrono::system_clock::time_point & getStartTime() const {
+		return _startTime;
+	}
+
 private:
 	void SetStartTimeStatus();
 
 	IvpMsgFilter* _msgFilter;
 	IvpConfigCollection *_sysConfig;
 	PluginKeepAlive *_keepAlive;
+	std::chrono::system_clock::time_point _startTime;
 
 	// Map a plugin status key to the last value set for that key.
 	std::map<std::string, std::string> _statusMap;

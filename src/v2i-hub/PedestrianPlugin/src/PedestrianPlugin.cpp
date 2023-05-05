@@ -28,53 +28,6 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
-
-	// fire up the web service on a thread PROTECTION required
-
-	std::lock_guard<mutex> lock(_cfgLock); 
-	GetConfigValue<string>("IPAddress",webip);
-	GetConfigValue<uint16_t>("WebPort",webport);
-	GetConfigValue<string>("DataProvider",dataprovider);
-	GetConfigValue<string>("WebSocketHost",webSocketIP);
-	GetConfigValue<string>("WebSocketPort",webSocketURLExt);
-	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
-
-	
-	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
-	
-
-	PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str() << std::endl;
-	
-	if (dataprovider.compare("FLIR") == 0)
-	{
-		try
-		{
-			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
-			PLOG(logDEBUG) << "Thread started!!: " << std::endl;
-			
-			webthread.detach(); // wait for the thread to finish
-
-			std::thread xmlThread(&PedestrianPlugin::checkXML,this);
-			PLOG(logDEBUG) << "XML Thread started!!: " << std::endl;
-			
-			xmlThread.detach(); // wait for the thread to finish
-
-		}
-		catch(const std::exception& e)
-		{
-			PLOG(logERROR) << "Error connecting to websocket: " << e.what() << std::endl;
-		}
-				
-			
-	}
-	else  // default if PSM XML data consumed using the webservice implementation
-	{
-		std::thread webthread(&PedestrianPlugin::StartWebService,this);
-		webthread.detach(); // wait for the thread to finish
-	}
-
-
-
 }
 
 void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
@@ -108,7 +61,7 @@ int PedestrianPlugin::StartWebSocket()
 	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
-	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation);	
+	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str());	
 
 	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;	
 
@@ -196,12 +149,42 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<string>("WebSocketHost",webSocketIP);
-	GetConfigValue<string>("WebSocketURLExt",webSocketURLExt);
+	GetConfigValue<string>("WebSocketPort",webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<string>("DataProvider", dataprovider);
 	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
+	GetConfigValue<string>("HostString",hostString);
 
+	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
+	PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str() << std::endl;
 
+	if (dataprovider.compare("FLIR") == 0)
+	{
+		try
+		{
+			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
+			PLOG(logDEBUG) << "Thread started!!: " << std::endl;
+			
+			webthread.detach(); // wait for the thread to finish
+
+			std::thread xmlThread(&PedestrianPlugin::checkXML,this);
+			PLOG(logDEBUG) << "XML Thread started!!: " << std::endl;
+			
+			xmlThread.detach(); // wait for the thread to finish
+
+		}
+		catch(const std::exception& e)
+		{
+			PLOG(logERROR) << "Error connecting to websocket: " << e.what() << std::endl;
+		}
+				
+			
+	}
+	else  // default if PSM XML data consumed using the webservice implementation
+	{
+		std::thread webthread(&PedestrianPlugin::StartWebService,this);
+		webthread.detach(); // wait for the thread to finish
+	}
 }
 
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)

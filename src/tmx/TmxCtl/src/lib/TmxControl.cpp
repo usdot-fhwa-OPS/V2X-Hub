@@ -86,6 +86,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN(set_system, NULL, "Set a system configuration value.  Must also set --key and --value.");
 	REG_FN(user_info, NULL, "Display user information for a user. Must set --username.");
 	REG_FN(all_users_info, NULL, "Display user information for all users.");
+	REG_FN(hashed_info, NULL, "Verify login information against hashed information for a user. Must set --username.");
 	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
 	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
 	REG_FN(user_delete, NULL, "Delete a TMX user.");
@@ -162,20 +163,22 @@ bool TmxControl::checkPerm()
 	if (isRoot)
 		return true;
 
-	struct group *admGrp = ::getgrnam("adm");
-
-	if (!admGrp)
+	struct group admGrp;
+	struct group * admGrpResult = nullptr;
+	std::array<char, 1024> dataBuf;
+	if (getgrnam_r("adm", &admGrp, dataBuf.data(), dataBuf.size(), &admGrpResult)) {
 		return false;
+	}
 
 	gid_t groups[256];
 	int total = getgroups(256, groups);
 
 	for (int i = 0; i < total; i++)
-		if (groups[i] == admGrp->gr_gid)
+		if (groups[i] == admGrp.gr_gid)
 			return true;
 
-	PLOG(logDEBUG) << "Trying to set effective group id to " << admGrp->gr_gid << " (" << admGrp->gr_name << ")";
-	if (::setregid(-1, admGrp->gr_gid) < 0)
+	PLOG(logDEBUG) << "Trying to set effective group id to " << admGrp.gr_gid << " (" << admGrp.gr_name << ")";
+	if (::setregid(-1, admGrp.gr_gid) < 0)
 	{
 		cerr << strerror(errno) << endl;
 		return false;

@@ -9,9 +9,7 @@
 #include "NTCIP1202.h"
 #include <netinet/in.h>
 #include <ctime>
-#include <chrono>
 #include <ratio>
-#include "Clock.h"
 #include <PluginLog.h>
 
 #include <boost/property_tree/ptree.hpp>
@@ -20,7 +18,6 @@
 
 using namespace std;
 using namespace boost::property_tree;
-using namespace std::chrono;
 using namespace tmx::utils;
 
 #if SAEJ2735_SPEC < 63
@@ -214,23 +211,21 @@ void Ntcip1202::printDebug()
 				", Ped Clear " << getPhasePedClearsStatus(phaseNum) <<
 				", Don't Walk " << getPhaseDontWalkStatus(phaseNum);
 	}
-
 }
 
 bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionID_t intersectionId)
 {
-	chrono::system_clock::time_point now = chrono::system_clock::now();
-	time_t tt = chrono::system_clock::to_time_t(now);
-	struct tm * utctime = gmtime( &tt );
+	time_t epochSec = clock->nowInSeconds();
+	struct tm utctime;
+	gmtime_r( &epochSec, &utctime );
 
 	// In SPAT, the time stamp is split into minute of the year and millisecond of the minute
 	// Calculate the minute of the year
-	long minOfYear = utctime->tm_min + (utctime->tm_hour * 60) + (utctime->tm_yday * 24 * 60);
+	long minOfYear = utctime.tm_min + (utctime.tm_hour * 60) + (utctime.tm_yday * 24 * 60);
 
 	// Calculate the millisecond of the minute
-	chrono::milliseconds epochMs = chrono::duration_cast<chrono::milliseconds>(now.time_since_epoch());
-	chrono::seconds epochS = chrono::duration_cast<chrono::seconds>(epochMs);
-	long msOfMin = 1000 * (epochS.count() % 60) + (epochMs.count() % 1000);
+	auto epochMs = clock->nowInMilliseconds();
+	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
 
 	std::lock_guard<std::mutex> lock(_spat_lock);
 
@@ -520,53 +515,19 @@ int Ntcip1202::getPedestrianSignalGroupForPhase(int phase)
 	return signalGroupId;
 }
 
-
 long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec)
 {
-	typedef duration<int, ratio_multiply<hours::period, ratio<24> >::type> days;
-
-	int offset_ms = offset_tenthofSec * 100;
-	system_clock::time_point nowTimePoint = system_clock::now();
-	system_clock::time_point nowPlusOffsetTimePoint = nowTimePoint + milliseconds(offset_ms);
-
-
-	system_clock::duration tp = nowPlusOffsetTimePoint.time_since_epoch();
-
-	days d = duration_cast<days>(tp);
-	tp -= d;
-
-	hours h = duration_cast<hours>(tp);
-	tp -= h;
-
-	minutes m = duration_cast<minutes>(tp);
-	tp -= m;
-
-	seconds s = duration_cast<seconds>(tp);
-	tp -= s;
-
-	milliseconds ms = duration_cast<milliseconds>(tp);
-
-	double fractionSeconds = s.count() + (ms.count()/1000.0);
-	double retTimeD = ((m.count() * 60) + fractionSeconds) * 10;
-
-	return (long)retTimeD;
+	// generate J2735 TimeMark which is:
+	// Tenths of a second in the current or next hour
+	// In units of 1/10th second from UTC time
+	// first get new time is absolute milliseconds
+	auto epochMs = clock->nowInMilliseconds() + (offset_tenthofSec * 100);
+	// get minute and second of hour from UTC time
+	time_t epochSec = epochMs / 1000;
+	struct tm utctime;
+	gmtime_r( &epochSec, &utctime );
+	auto tenthsOfSecond = utctime.tm_min * 600;
+	tenthsOfSecond += utctime.tm_sec * 10;
+	tenthsOfSecond += (epochMs % 1000) / 100;
+	return tenthsOfSecond;
 }
-
-/*long Ntcip1202::getAdjustedTime(unsigned int offset_ms)
-{
-	double offset = offset_ms/1000.0;
-
-	time_t now = time(0);
-	struct tm now_t = *gmtime(&now);
-
-	cout<<"Now: "<<now_t.tm_hour<<":"<<now_t.tm_min<<":"<<now_t.tm_sec<<endl;
-
-	time_t now_plus_offset = now + offset;
-	struct tm now_tm = *gmtime(&now_plus_offset);
-	cout<<"Offset: "<<offset<<endl;
-	cout<<"Now + Offset: "<<now_tm.tm_hour<<":"<<now_tm.tm_min<<":"<<now_tm.tm_sec<<endl;;
-	long retTime = ((now_tm.tm_min * 60) + now_tm.tm_sec) * 10;
-
-	return retTime;
-}*/
-

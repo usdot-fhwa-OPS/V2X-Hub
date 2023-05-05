@@ -1,7 +1,0 @@
-<defines>
-EME_OAEP -> 20180305
-</defines>
-
-<requires>
-mgf1
-</requires>

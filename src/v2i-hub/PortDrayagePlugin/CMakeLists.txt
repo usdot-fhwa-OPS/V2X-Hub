@@ -1,4 +1,4 @@
-PROJECT ( PortDrayagePlugin VERSION 7.4.0 LANGUAGES CXX )
+PROJECT ( PortDrayagePlugin VERSION 7.5.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "PortDrayage")
 set(CMAKE_AUTOMOC ON)
@@ -10,11 +10,6 @@ find_package(Qt5Network REQUIRED)
 
 
 include_directories( "/usr/local/include/pdclient")
-
-
-
-message(CMAKE MODULE : ${CMAKE_MODULE_PATH} )
-
 
 BuildTmxPlugin ( )
 

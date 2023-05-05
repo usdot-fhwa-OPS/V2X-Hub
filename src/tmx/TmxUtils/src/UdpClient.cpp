@@ -139,7 +139,7 @@ int UdpClient::Send(void *buffer, size_t size)
     return sendto(_socket, buffer, size, 0, _addrInfo->ai_addr, _addrInfo->ai_addrlen);
 }
 
-int UdpClient::Send(std::string& message)
+int UdpClient::Send(const std::string& message)
 {
 	//printf("UdpClient.Send: ");
 

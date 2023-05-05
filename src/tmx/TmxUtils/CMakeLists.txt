@@ -1,8 +1,9 @@
 PROJECT ( tmxutils CXX )
+FILE (GLOB_RECURSE HEADERS "src/" "*.h*")
+FILE (GLOB_RECURSE SOURCES  "src/" "*.c*")
 
-FILE (GLOB_RECURSE HEADERS "src/*.h*")
-FILE (GLOB_RECURSE SOURCES "src/[A-Z]*.c*")
 
+FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
 
 ADD_LIBRARY (${PROJECT_NAME} STATIC ${SOURCES})
@@ -20,19 +21,19 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        ${TMXAPI_LIBRARIES} 
                        ${MYSQL_LIBRARIES} 
                        ${MYSQLCPPCONN_LIBRARIES}
-                       ${UUID_LIBRARY} 
+                       ${UUID_LIBRARY}
+                       rdkafka++ 
+                       ::carma-clock
+                       gmock
                        pthread m rt)
-                       
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
 
-INSTALL (TARGETS ${PROJECT_NAME} EXPORT ${TMX_APPNAME}
-         DESTINATION lib COMPONENT lib${PROJECT_NAME})
-INSTALL (FILES ${HEADERS} 
-         DESTINATION include COMPONENT lib${PROJECT_NAME})
-#INSTALL (EXPORT ${TMX_APPNAME}-plugin DESTINATION share/${TMX_APPNAME}/${TMX_APPNAME}-plugin.cmake)
-#EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
- #       FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)
+INSTALL(TARGETS ${PROJECT_NAME} EXPORT ${TMX_APPNAME} DESTINATION lib COMPONENT lib${PROJECT_NAME})
+INSTALL(DIRECTORY src/ DESTINATION include FILES_MATCHING PATTERN "*.h*")
+# INSTALL (EXPORT ${TMX_APPNAME}-plugin DESTINATION share/${TMX_APPNAME}/${TMX_APPNAME}-plugin.cmake)
+# EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
+#        FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)
 
  ################################
 # GTest
@@ -53,9 +54,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}  ${TMXAPI_LIBRARIES} 
-${ASN_J2735_LIBRARIES} 
-${MYSQL_LIBRARIES} 
-${MYSQLCPPCONN_LIBRARIES}
-${UUID_LIBRARY}
-gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} gtest)

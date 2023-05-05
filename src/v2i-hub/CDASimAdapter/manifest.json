@@ -1,0 +1,33 @@
+{
+	"name":"@TMX_PLUGIN_NAME@",
+	"description":"CDASim Adapter is the V2X-Hub plugin that facilitates the connection between the CDASim simulation environment and V2X-Hub and CARMA Streets.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/@PROJECT_NAME@",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
+		{
+			"key":"Longitude",
+			"default":"0.0",
+			"description":"Longitude (in degrees) of the location of the simulated infrastructure."
+		},
+		{
+			"key":"Latitude",
+			"default":"0.0",
+			"description":"Latitude (in degrees) of the location of the simulated infrastructure."
+		},
+		{
+			"key":"Elevation",
+			"default":"0.0",
+			"description":"Elevation (in degrees) of the location of the simulated infrastructure."
+		}
+		
+	]
+}

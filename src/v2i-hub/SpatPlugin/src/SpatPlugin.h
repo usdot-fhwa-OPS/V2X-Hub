@@ -13,10 +13,9 @@
 #include <map>
 #include <mutex>
 #include <vector>
-#include "PluginClient.h"
+#include "PluginClientClockAware.h"
 #include "UdpClient.h"
 #include "signalController.h"
-#include "utils/PerformanceTimer.h"
 
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/messages/IvpSignalControllerStatus.h>
@@ -27,7 +26,7 @@
 
 namespace SpatPlugin {
 
-class SpatPlugin: public tmx::utils::PluginClient {
+class SpatPlugin: public tmx::utils::PluginClientClockAware {
 
 public:
 
@@ -36,6 +35,7 @@ public:
 	virtual int Main();
 
 	void HandlePedestrianDetection(tmx::messages::PedestrianMessage &pedMsg, tmx::routeable_message &routeableMsg);
+
 protected:
 
 	void UpdateConfigSettings();

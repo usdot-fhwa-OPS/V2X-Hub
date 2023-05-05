@@ -1,3 +1,0 @@
-<defines>
-THREEFISH_512 -> 20131224
-</defines>
