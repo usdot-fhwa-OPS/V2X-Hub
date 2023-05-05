@@ -13,7 +13,6 @@ DEPENDENCIES="build-essential \
     cmake \
     git \
     libboost-all-dev \
-    libcpprest-dev \
     libcurl4-openssl-dev \
     libev-dev \
     libgps-dev \

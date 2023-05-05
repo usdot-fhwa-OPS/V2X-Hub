@@ -193,11 +193,19 @@ namespace CDASimAdapter{
 
     void CDASimConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
         if ( !msg.empty() && _client) {
+            PLOG(logDEBUG) << "Sending UDP msg " << msg << " to host " << _client->GetAddress() 
+                << ":" << _client->GetPort() << "." << std::endl;
             int ret =_client->Send(msg);
             if ( ret < 0) {
                 throw UdpClientRuntimeError(("Failed to send message " + msg + " to " + _client->GetAddress() + 
                             ":" + std::to_string(_client->GetPort()) + " with error code : " + std::to_string(errno)).c_str());
             }
+        }
+        else if ( msg.empty() ) {
+            PLOG(logWARNING) << "Unable to send empty message to " << _client->GetAddress() << ":" << _client->GetPort() << "." << std::endl;
+        }
+        else {
+            PLOG(logWARNING) << "Unable to send message from uninitialized client." << std::endl;
         }
     }
 
