@@ -1,5 +1,31 @@
 V2X-Hub Release Notes
 ---------------------------------
+
+Version 7.5.0, released May 5th, 2023
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.5.0 is comprised of the following new features: a new ERVCloudForwardingPlugin to enable BSMs from active Emergency Response Vehicles (ERVs) to be forwarded to CARMA Cloud in support of message forwarding to V2X Hub instances along an ERV’s future route when deployed along with other CARMA tools to demonstrate move-over law when an ERV is approaching a CDA vehicle from behind; new features to support CARMA Simulation integration such as simulation clock functionality; and a newly developed CARMA Simulation adaptor shell and handshake functionality to allow multiple V2X Hub instances to connect with a single CARMA Simulation platform. Along with the above enhancements, several enhancements and bug fixes are included in this release. 
+
+**<ins>Freight Emergency Response Functionalities</ins>**
+
+Enhancements in this release related to Freight Emergency Response: 
+
+- PR 460: The creation of a new ERVCloudForwardingPlugin that enables V2X Hub to register a connected RSU, along with its location information, with CARMA Cloud. Additionally, this plugin is responsible for sending received BSMs from active Emergency Response Vehicles (ERVs) to CARMA Cloud in support of message forwarding to V2X Hub instances located along the ERV’s future route. 
+
+**<ins>Other</ins>**
+
+Enhancements in this release: 
+
+- Issue 262: Updated CARMA Streets plugin to receive and decode Mobility Path messages into JSON through Kafka. 
+- PR 486: Updated the V2X Hub docker images to Ubuntu 22 (Jammy) which has LTS support through April 2027. This will also support new libraries created using the Carma-builds project. 
+- PR 487: Added some changes to allow for Docker to be installed on different Linux distros for arm64. 
+
+Fixes in this release: 
+
+- Issue 484: Fixed PedestrianPlugin does not update when any configuration changes are made with in Plugin, either when plugin is off or on. 
+- PR 494: Sets some error message in the Command Plugin for file upload operations to ERROR instead of DEBUG so they can be seen on the command line by default. 
+
 Version 7.4.0, released Feb 10th, 2023
 --------------------------------------------------------
 
