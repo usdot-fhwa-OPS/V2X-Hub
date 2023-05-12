@@ -106,6 +106,11 @@ namespace CDASimAdapter{
         catch (const TmxException &e) {
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << std::endl;
             return false;
+        }
+        catch (const std::invalid_argument &e ) {
+            PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << 
+                ". Check environment variables are set to the correct type!";
+            return;
         }   
         return connection->connect();
     }
