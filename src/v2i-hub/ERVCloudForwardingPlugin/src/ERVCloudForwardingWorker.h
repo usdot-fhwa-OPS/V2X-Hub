@@ -36,7 +36,7 @@ namespace ERVCloudForwardingPlugin
          * @param msg The BSM object
          * @return The BSM request in XML format
          */
-        static std::string constructERVBSMRequest(BsmMessage &msg);
+        static std::string constructERVBSMRequest(BsmMessage &msg, uint16_t v2xhubPort);
         /**
          * @brief Check whether the BSM is sent from an ERV
          * @param msg The BSM object
