@@ -111,7 +111,7 @@ namespace CDASimAdapter{
             // std::stoul throws invalid arguement exception when provided with a string that contains characters that are not numbers.
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << 
                 ". Check environment variables are set to the correct type!";
-            return;
+            return false;
         }   
         return connection->connect();
     }
