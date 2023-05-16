@@ -32,6 +32,13 @@ namespace CARMAStreetsPlugin
          */
         void encodeSSM(const std::shared_ptr<SignalStatusMessage> &ssmPtr, tmx::messages::SsmEncodedMessage &encodedSSM) const;
 
+        /***
+         * @brief Populate J2735 SignalStatusPackage object with Json Value
+         * @param Pointer J2735 SignalStatusPackage object
+         * @param Json::Value SignalstatusPackage Json string iterator
+         */
+        void populateSigStatusPackage(SignalStatusPackage *signalStatusPackage, Json::Value::iterator itr) const;
+
         ~JsonToJ2735SSMConverter() = default;
     };
 

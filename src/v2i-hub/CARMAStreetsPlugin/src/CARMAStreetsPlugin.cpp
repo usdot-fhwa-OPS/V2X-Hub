@@ -46,7 +46,9 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
 	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
  	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
+	GetConfigValue<string>("SsmTopic", _subscribeToSsmTopic);
 	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
+	GetConfigValue<string>("SsmConsumerGroupId", _subscribeToSSMConsumerGroupId);
 	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
@@ -68,6 +70,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 	kafka_conf_sp_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 	kafka_conf_spat_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_conf_ssm_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+
 
 	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
 	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
@@ -87,7 +91,10 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
 		 || (kafka_conf_sp_consumer->set("group.id", _subscribeToSchedulingPlanConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
 		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
-		 || (kafka_conf_spat_consumer->set("group.id", _subscribeToSpatConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)) {
+		 || (kafka_conf_spat_consumer->set("group.id", _subscribeToSpatConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_ssm_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
+		 || (kafka_conf_ssm_consumer->set("group.id", _subscribeToSSMConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
+		 ) {
 		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
 		exit(1);
 	} else {
@@ -95,20 +102,24 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	}
 	kafka_conf_sp_consumer->set("enable.partition.eof", "true", error_string);
 	kafka_conf_spat_consumer->set("enable.partition.eof", "true", error_string);
+	kafka_conf_ssm_consumer->set("enable.partition.eof", "true", error_string);
 
 	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_sp_consumer, error_string);
 	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_spat_consumer, error_string);
+	_ssm_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_ssm_consumer, error_string);
 
-	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
+	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer || !_ssm_kafka_consumer) {
 		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
 		exit(1);
 	}
 	PLOG(logDEBUG) << "Created consumer " << _scheduing_plan_kafka_consumer->name() << std::endl;
 	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
+	PLOG(logDEBUG) << "Created consumer " << _ssm_kafka_consumer->name() << std::endl;
 
 	//create kafka topics
 	RdKafka::Conf *tconf_spat = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 	RdKafka::Conf *tconf_sp = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+	RdKafka::Conf *tconf_ssm = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 	if(!tconf_spat && !tconf_sp)
 	{
 		PLOG(logERROR) << "RDKafka create topic conf failed ";
@@ -129,11 +140,20 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 		return ;
 	}
 
+	_ssm_topic = RdKafka::Topic::create(_ssm_kafka_consumer,_subscribeToSsmTopic,tconf_ssm,error_string);
+	if(!_ssm_topic)
+	{
+		PLOG(logERROR) << "RDKafka create SSM topic failed:" << error_string;
+		return ;
+	}
+
 	delete tconf_sp;
 	delete tconf_spat;
+	delete tconf_ssm;
 	
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
+	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -659,6 +679,71 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	}
 }
 
+void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
+
+	if(_subscribeToSsmTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSSMKafkaTopics:" <<_subscribeToSsmTopic << std::endl;
+		std::vector<std::string> topics;		
+		topics.emplace_back(_subscribeToSsmTopic);
+
+		RdKafka::ErrorCode err = _ssm_kafka_consumer->subscribe(topics);
+		if (err) 
+		{
+			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
+			return;
+		}
+		//Initialize Json to J2735 Spat convertor 
+		JsonToJ2735SSMConverter ssm_convertor;
+		while (true) 
+		{
+			auto msg = _ssm_kafka_consumer->consume( 500 );
+			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			{
+				auto payload_str = static_cast<const char *>( msg->payload() );
+				if(msg->len() > 0)
+				{
+					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+					Json::Value ssmDoc;
+					auto parse_sucessful = ssm_convertor.parseJsonString(payload_str, ssmDoc);
+					if( !parse_sucessful )
+					{	
+						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+						SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
+						continue;
+					}
+					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					auto ssm_ptr = std::make_shared<SignalStatusMessage>();
+					ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
+					tmx::messages::SsmEncodedMessage ssmEncodedMsg;
+					try
+					{
+						ssm_convertor.encodeSSM(ssm_ptr, ssmEncodedMsg);
+					}
+					catch (TmxException &ex) 
+					{
+						// Skip messages that fail to encode.
+						PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
+							<< ex.what() << std::endl;
+						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
+						continue;
+					}
+					
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+					PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
+
+					//Broadcast the encoded SPAT message
+					ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+					ssmEncodedMsg.addDsrcMetadata(0x8002);
+					BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
+				}
+			}
+			delete msg;
+		}
+	}
+
+}
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
 	try
