@@ -88,7 +88,7 @@ namespace CDASimAdapter {
         location.Latitude = 38.955; 
         location.Longitude = -77.149;
         ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, location), 
-        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
+        "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
