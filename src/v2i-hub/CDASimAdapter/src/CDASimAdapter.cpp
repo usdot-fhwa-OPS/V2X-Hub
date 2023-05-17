@@ -13,11 +13,11 @@ namespace CDASimAdapter{
     }
 
     void CDASimAdapter::UpdateConfigSettings() {
-        GetConfigValue<double>("Longitude", location.Longitude);
-        GetConfigValue<double>("Latitude", location.Latitude);
-        GetConfigValue<double>("Elevation", location.Elevation);
-        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.Longitude << ", " 
-            << location.Latitude << ", " << location.Elevation << "}." << std::endl;
+        GetConfigValue<double>("X", location.Z);
+        GetConfigValue<double>("Y", location.Y);
+        GetConfigValue<double>("Z", location.X);
+        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", " 
+            << location.Y << ", " << location.Z << "}." << std::endl;
     }
 
     void CDASimAdapter::OnConfigChanged(const char *key, const char *value) {
