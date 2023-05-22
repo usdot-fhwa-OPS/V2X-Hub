@@ -2,7 +2,7 @@
 #include <UdpServer.h>
 #include <UdpClient.h>
 #include <tmx/tmx.h>
-#include <WGS84Point.h>
+#include <Point.h>
 #include <TimeSyncMessage.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
@@ -34,7 +34,7 @@ namespace CDASimAdapter {
              */
             explicit CDASimConnection( const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
+                                const tmx::utils::Point &location);
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -97,7 +97,7 @@ namespace CDASimAdapter {
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
+                                const tmx::utils::Point &location);
             
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
@@ -131,8 +131,8 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const std::string infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::WGS84Point &location) const; 
+            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
+                const uint v2x_port, const tmx::utils::Point &location) const; 
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
@@ -141,7 +141,7 @@ namespace CDASimAdapter {
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
-            tmx::utils::WGS84Point _location;
+            tmx::utils::Point _location;
             bool _connected = false;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;

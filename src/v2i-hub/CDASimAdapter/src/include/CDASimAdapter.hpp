@@ -110,7 +110,7 @@ namespace CDASimAdapter {
         
     private:
 
-        tmx::utils::WGS84Point location;
+        tmx::utils::Point location;
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;

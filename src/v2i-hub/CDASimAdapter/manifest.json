@@ -14,19 +14,19 @@
             "description":"The log level for this plugin"
         },
 		{
-			"key":"Longitude",
+			"key":"X",
 			"default":"0.0",
-			"description":"Longitude (in degrees) of the location of the simulated infrastructure."
+			"description":"Cartesian X coordinate in simulated map (in meters)."
 		},
 		{
-			"key":"Latitude",
+			"key":"Y",
 			"default":"0.0",
-			"description":"Latitude (in degrees) of the location of the simulated infrastructure."
+			"description":"Cartesian Y coordinate in simulated map (in meters)."
 		},
 		{
-			"key":"Elevation",
+			"key":"Z",
 			"default":"0.0",
-			"description":"Elevation (in degrees) of the location of the simulated infrastructure."
+			"description":"Cartesian Z coordinate in simulated map (in meters)."
 		}
 		
 	]
