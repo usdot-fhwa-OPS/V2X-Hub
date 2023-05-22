@@ -169,7 +169,7 @@ private:
 	uint _bsmMessageSkipped = 0;
 	
 	/**
-	 * @brief Status label for MAP messages skipped due to errors.
+	 * @brief Status label for SSM messages skipped due to errors.
 	 */
 	const char*  Key_SSMMessageSkipped =  "SSM messages skipped due to errors.";
 

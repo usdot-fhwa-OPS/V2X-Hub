@@ -726,7 +726,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 						PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
 							<< ex.what() << std::endl;
 						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
-						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
+						SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 						continue;
 					}
 					
