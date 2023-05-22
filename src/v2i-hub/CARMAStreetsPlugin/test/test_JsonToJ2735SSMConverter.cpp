@@ -87,7 +87,7 @@ namespace CARMAStreetsPlugin
         converter.toJ2735SSM(root, ssmPtr);
         tmx::messages::SsmEncodedMessage encodedSSM;
         converter.encodeSSM(ssmPtr, encodedSSM);
-        string expected_payload_hex = "001e1a454498d2f1001007d805ca000004b20a0900100000200280fa08";
+        string expected_payload_hex = "001e18454498d2f1001007d8054a000004b20a090010000280fa08";
         ASSERT_EQ(expected_payload_hex, encodedSSM.get_payload_str());
 
         // Json has three requestors
@@ -95,7 +95,7 @@ namespace CARMAStreetsPlugin
         converter.parseJsonString(valid_json_str, root);
         converter.toJ2735SSM(root, ssmPtr);
         converter.encodeSSM(ssmPtr, encodedSSM);
-        expected_payload_hex = "001e3b454497d2f0001007d625ca000004b20a0900100000200280fa08b9400000974143200300000400581f41172800001310286240600000800b03e800";
+        expected_payload_hex = "001e35454497d2f0001007d6254a000004b20a090010000280fa08a940000097414320030000581f4115280000131028624060000b03e800";
         ASSERT_EQ(expected_payload_hex, encodedSSM.get_payload_str());
         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
     }
