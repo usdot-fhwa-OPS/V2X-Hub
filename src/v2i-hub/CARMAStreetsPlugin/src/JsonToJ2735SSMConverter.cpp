@@ -19,6 +19,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SSMConverter::toJ2735SSM(const Json::Value &ssmDoc, std::shared_ptr<SignalStatusMessage> ssmPtr) const
     {
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
         if (!ssmDoc.isMember("SignalStatus"))
         {
             return;
