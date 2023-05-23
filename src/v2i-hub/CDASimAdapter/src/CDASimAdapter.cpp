@@ -33,9 +33,11 @@ namespace CDASimAdapter{
            
             // While CARMA Simulation connection is down, attempt to reconnect
             while ( !connection || !connection->is_connected() ) {
-                connect();
+                bool success = connect();
                 // Sleep for 2 seconds in between connection attempts
-                sleep(2);
+                if ( !connection->is_connected() ) {
+                    sleep(2);
+                }
             }
 
             if ( connection->is_connected() ) {
