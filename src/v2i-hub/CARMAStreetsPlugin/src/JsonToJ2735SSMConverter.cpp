@@ -71,7 +71,7 @@ namespace CARMAStreetsPlugin
             asn_sequence_add(&statusPtr->list.array, signalStatus);
             ssmPtr->status = *statusPtr;
         }
-        catch(exception ex)
+        catch(exception &ex)
         {
             std::cout << "ERROR: Cannot read JSON file." << std::endl;
         }
