@@ -96,14 +96,11 @@ private:
 	RdKafka::Conf *kafka_conf;
 	RdKafka::Conf *kafka_conf_spat_consumer;
 	RdKafka::Conf *kafka_conf_sp_consumer;
-	RdKafka::Conf *kafka_conf_ssm_consumer;
  	RdKafka::Producer *kafka_producer;
 	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
 	RdKafka::KafkaConsumer *_spat_kafka_consumer;
-	RdKafka::KafkaConsumer *_ssm_kafka_consumer;
 	RdKafka::Topic *_scheduing_plan_topic;
 	RdKafka::Topic *_spat_topic;
-	RdKafka::Topic *_ssm_topic;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
