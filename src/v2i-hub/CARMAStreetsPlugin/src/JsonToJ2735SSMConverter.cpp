@@ -19,54 +19,62 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SSMConverter::toJ2735SSM(const Json::Value &ssmDoc, std::shared_ptr<SignalStatusMessage> ssmPtr) const
     {
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
-        if (!ssmDoc.isMember("SignalStatus"))
-        {
-            return;
-        }
-        // populate SignalStatusMessage::second
-        if (ssmDoc["SignalStatus"].isMember("msOfMinute") && ssmDoc["SignalStatus"]["msOfMinute"].isNumeric())
-        {
-            ssmPtr->second = ssmDoc["SignalStatus"]["msOfMinute"].asInt64();
-        }
-
-        // populate SignalStatusMessage::timstamp
-        if (ssmDoc["SignalStatus"].isMember("minuteOfYear") && ssmDoc["SignalStatus"]["minuteOfYear"].isNumeric())
-        {
-            MinuteOfTheYear_t *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-            *timeStamp = ssmDoc["SignalStatus"]["minuteOfYear"].asInt64();
-            ssmPtr->timeStamp = timeStamp;
-        }
-
-        SignalStatusList_t *statusPtr = (SignalStatusList_t *)calloc(1, sizeof(SignalStatusList_t));
-        SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
-
-        // populate SignalStatusMessage::status::id
-        if (ssmDoc["SignalStatus"].isMember("intersectionID") && ssmDoc["SignalStatus"]["intersectionID"].isNumeric())
-        {
-            signalStatus->id.id = ssmDoc["SignalStatus"]["intersectionID"].asInt64();
-        }
-
-        // populate SignalStatusMessage::status::sequenceNumber
-        if (ssmDoc["SignalStatus"].isMember("sequenceNumber") && ssmDoc["SignalStatus"]["sequenceNumber"].isNumeric())
-        {
-            signalStatus->sequenceNumber = ssmDoc["SignalStatus"]["sequenceNumber"].asInt64();
-        }
-
-        // populate SignalStatusMessage::status::sigStatus
-        if (ssmDoc["SignalStatus"].isMember("requestorInfo") && ssmDoc["SignalStatus"]["requestorInfo"].isArray())
-        {
-            Json::Value requesterJsonArr = ssmDoc["SignalStatus"]["requestorInfo"];
-            for (auto itr = requesterJsonArr.begin(); itr != requesterJsonArr.end(); itr++)
+        try 
+        {        
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
+            if (!ssmDoc.isMember("SignalStatus"))
             {
-                SignalStatusPackage *signalStatusPackage = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
-                populateSigStatusPackage(signalStatusPackage, itr);
-                asn_sequence_add(&signalStatus->sigStatus.list.array, signalStatusPackage);
-            } // Populate signal status package
-        }
+                return;
+            }
 
-        asn_sequence_add(&statusPtr->list.array, signalStatus);
-        ssmPtr->status = *statusPtr;
+            // populate SignalStatusMessage::second
+            if (ssmDoc["SignalStatus"].isMember("msOfMinute") && ssmDoc["SignalStatus"]["msOfMinute"].isNumeric())
+            {
+                ssmPtr->second = ssmDoc["SignalStatus"]["msOfMinute"].asInt64();
+            }
+
+            // populate SignalStatusMessage::timstamp
+            if (ssmDoc["SignalStatus"].isMember("minuteOfYear") && ssmDoc["SignalStatus"]["minuteOfYear"].isNumeric())
+            {
+                MinuteOfTheYear_t *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+                *timeStamp = ssmDoc["SignalStatus"]["minuteOfYear"].asInt64();
+                ssmPtr->timeStamp = timeStamp;
+            }
+
+            SignalStatusList_t *statusPtr = (SignalStatusList_t *)calloc(1, sizeof(SignalStatusList_t));
+            SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
+
+            // populate SignalStatusMessage::status::id
+            if (ssmDoc["SignalStatus"].isMember("intersectionID") && ssmDoc["SignalStatus"]["intersectionID"].isNumeric())
+            {
+                signalStatus->id.id = ssmDoc["SignalStatus"]["intersectionID"].asInt64();
+            }
+
+            // populate SignalStatusMessage::status::sequenceNumber
+            if (ssmDoc["SignalStatus"].isMember("sequenceNumber") && ssmDoc["SignalStatus"]["sequenceNumber"].isNumeric())
+            {
+                signalStatus->sequenceNumber = ssmDoc["SignalStatus"]["sequenceNumber"].asInt64();
+            }
+
+            // populate SignalStatusMessage::status::sigStatus
+            if (ssmDoc["SignalStatus"].isMember("requestorInfo") && ssmDoc["SignalStatus"]["requestorInfo"].isArray())
+            {
+                Json::Value requesterJsonArr = ssmDoc["SignalStatus"]["requestorInfo"];
+                for (auto itr = requesterJsonArr.begin(); itr != requesterJsonArr.end(); itr++)
+                {
+                    SignalStatusPackage *signalStatusPackage = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
+                    populateSigStatusPackage(signalStatusPackage, itr);
+                    asn_sequence_add(&signalStatus->sigStatus.list.array, signalStatusPackage);
+                } // Populate signal status package
+            }
+
+            asn_sequence_add(&statusPtr->list.array, signalStatus);
+            ssmPtr->status = *statusPtr;
+        }
+        catch(exception ex)
+        {
+            std::cout << "ERROR: Cannot read JSON file." << std::endl;
+        }
     }
  
     void JsonToJ2735SSMConverter::populateSigStatusPackage(SignalStatusPackage *signalStatusPackage, Json::Value::iterator itr) const
