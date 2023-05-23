@@ -692,7 +692,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 					continue;
 				}
-				//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+				//Convert the SSM JSON string into J2735 SSM message and encode it.
 				auto ssm_ptr = std::make_shared<SignalStatusMessage>();
 				ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
 				tmx::messages::SsmEncodedMessage ssmEncodedMsg;
