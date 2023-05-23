@@ -680,7 +680,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 		JsonToJ2735SSMConverter ssm_convertor;
 		while (_ssm_kafka_consumer_ptr->is_running()) 
 		{
-			const std::string payload_str = _ssm_kafka_consumer_ptr->consume(500);
+			const std::string payload_str = _ssm_kafka_consumer_ptr->consume(1000);
 			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
@@ -713,7 +713,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 				PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
 
-				//Broadcast the encoded SPAT message
+				//Broadcast the encoded SSM message
 				ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				ssmEncodedMsg.addDsrcMetadata(0x8002);
 				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
