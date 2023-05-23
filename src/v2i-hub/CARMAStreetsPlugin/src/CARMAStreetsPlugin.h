@@ -18,6 +18,8 @@
 #include "JsonToJ2735SpatConverter.h"
 #include "J2735ToSRMJsonConverter.h"
 #include "JsonToJ2735SSMConverter.h"
+#include <kafka/kafka_consumer_worker.h>
+#include <kafka/kafka_client.h>
 
 
 
@@ -99,6 +101,7 @@ private:
  	RdKafka::Producer *kafka_producer;
 	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
 	RdKafka::KafkaConsumer *_spat_kafka_consumer;
+	std::shared_ptr<kafka_consumer_worker>  _ssm_kafka_consumer_ptr;
 	RdKafka::Topic *_scheduing_plan_topic;
 	RdKafka::Topic *_spat_topic;
 	std::vector<std::string> _strategies;
