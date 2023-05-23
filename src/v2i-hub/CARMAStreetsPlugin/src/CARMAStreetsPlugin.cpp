@@ -693,7 +693,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
 			return;
 		}
-		//Initialize Json to J2735 Spat convertor 
+		//Initialize Json to J2735 SSM convertor 
 		JsonToJ2735SSMConverter ssm_convertor;
 		while (true) 
 		{
@@ -712,7 +712,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 						SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 						continue;
 					}
-					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+					//Convert the SSM JSON string into J2735 SSM message and encode it.
 					auto ssm_ptr = std::make_shared<SignalStatusMessage>();
 					ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
 					tmx::messages::SsmEncodedMessage ssmEncodedMsg;
