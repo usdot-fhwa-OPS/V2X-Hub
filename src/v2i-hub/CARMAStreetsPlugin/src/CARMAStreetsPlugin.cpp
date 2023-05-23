@@ -733,7 +733,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 					PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
 
-					//Broadcast the encoded SPAT message
+					//Broadcast the encoded SSM message
 					ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					ssmEncodedMsg.addDsrcMetadata(0x8002);
 					BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
