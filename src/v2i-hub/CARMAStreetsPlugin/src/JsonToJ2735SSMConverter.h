@@ -3,8 +3,10 @@
 #include "jsoncpp/json/json.h"
 #include <string>
 #include <tmx/j2735_messages/SignalStatusMessage.hpp>
+#include <PluginLog.h>
 
 using namespace std;
+using namespace tmx::utils;
 namespace CARMAStreetsPlugin
 {
     class JsonToJ2735SSMConverter

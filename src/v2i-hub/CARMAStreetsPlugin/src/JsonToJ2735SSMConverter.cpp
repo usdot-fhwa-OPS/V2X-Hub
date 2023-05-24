@@ -12,7 +12,7 @@ namespace CARMAStreetsPlugin
         bool parseResult = reader->parse(consumedMsg.c_str(), consumedMsg.c_str() + jsonLen, &ssmDoc, &err);
         if (!parseResult)
         {
-            std::cout << "Parse error: " << err << endl;
+            PLOG(logERROR) << "Parse error: " << err << endl;
         }
         return parseResult;
     }
@@ -24,6 +24,7 @@ namespace CARMAStreetsPlugin
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
             if (!ssmDoc.isMember("SignalStatus"))
             {
+                PLOG(logERROR) << "No SignalStatus present in JSON."  << std::endl;
                 return;
             }
 
@@ -73,7 +74,7 @@ namespace CARMAStreetsPlugin
         }
         catch(exception &ex)
         {
-            std::cout << "ERROR: Cannot read JSON file." << std::endl;
+            PLOG(logERROR) << "Cannot read JSON file."  << std::endl;
         }
     }
  
@@ -130,7 +131,6 @@ namespace CARMAStreetsPlugin
         {
             signalStatusPackage->duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
             *signalStatusPackage->duration = (*itr)["ETA_Duration"].asInt64();
-            // signalStatusPackage->duration = duration;
         }
 
         // populate SignalStatusMessage::status::sigStatus::minute
