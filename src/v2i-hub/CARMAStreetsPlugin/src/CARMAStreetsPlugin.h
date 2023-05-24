@@ -17,6 +17,7 @@
 #include "J2735MapToJsonConverter.h"
 #include "JsonToJ2735SpatConverter.h"
 #include "J2735ToSRMJsonConverter.h"
+#include "JsonToJ2735SSMConverter.h"
 
 
 
@@ -62,6 +63,10 @@ protected:
 	 * @brief Subcribe to SPAT Kafka topic created by carma-streets
 	 */
 	void SubscribeSpatKafkaTopic();
+	/**
+	 * @brief Subcribe to SSM Kafka topic created by carma-streets
+	 */
+	void SubscribeSSMKafkaTopic();
 
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
 	/**
@@ -79,7 +84,9 @@ private:
 	std::string _subscribeToSchedulingPlanTopic;
 	std::string _subscribeToSchedulingPlanConsumerGroupId;
 	std::string _subscribeToSpatTopic;
+	std::string _subscribeToSsmTopic;
 	std::string _subscribeToSpatConsumerGroupId;
+	std::string _subscribeToSSMConsumerGroupId;
 	std::string _transmitMobilityPathTopic;
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
@@ -89,11 +96,14 @@ private:
 	RdKafka::Conf *kafka_conf;
 	RdKafka::Conf *kafka_conf_spat_consumer;
 	RdKafka::Conf *kafka_conf_sp_consumer;
+	RdKafka::Conf *kafka_conf_ssm_consumer;
  	RdKafka::Producer *kafka_producer;
 	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
 	RdKafka::KafkaConsumer *_spat_kafka_consumer;
+	RdKafka::KafkaConsumer *_ssm_kafka_consumer;
 	RdKafka::Topic *_scheduing_plan_topic;
 	RdKafka::Topic *_spat_topic;
+	RdKafka::Topic *_ssm_topic;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
@@ -130,6 +140,7 @@ private:
 	/**
 	 * @brief Status label for Mobility Operation messages skipped due to errors.
 	 */
+
 	const char* Key_MobilityOperationMessageSkipped = "Mobility Operation messages skipped due to errors.";
 
 	/**
@@ -156,7 +167,17 @@ private:
 	 * @brief Count for BSM messages skipped due to errors.
 	 */
 	uint _bsmMessageSkipped = 0;
-		
+	
+	/**
+	 * @brief Status label for SSM messages skipped due to errors.
+	 */
+	const char*  Key_SSMMessageSkipped =  "SSM messages skipped due to errors.";
+
+	/**
+	 * @brief Count for SSM messages skipped due to errors.
+	 */
+	uint _ssmMessageSkipped = 0;
+
 	/**
 	 * @brief Intersection Id for intersection
 	 */
