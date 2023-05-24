@@ -13,9 +13,9 @@ namespace CDASimAdapter{
     }
 
     void CDASimAdapter::UpdateConfigSettings() {
-        GetConfigValue<double>("X", location.Z);
+        GetConfigValue<double>("X", location.X);
         GetConfigValue<double>("Y", location.Y);
-        GetConfigValue<double>("Z", location.X);
+        GetConfigValue<double>("Z", location.Z);
         PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", " 
             << location.Y << ", " << location.Z << "}." << std::endl;
     }
