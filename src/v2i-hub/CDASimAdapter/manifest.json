@@ -27,7 +27,18 @@
 			"key":"Z",
 			"default":"0.0",
 			"description":"Cartesian Z coordinate in simulated map (in meters)."
+		},
+		{
+			"key":"MaxConnectionAttempts",
+			"default":"10",
+			"description":"Number of connection attempts CDASimAdapter plugin will execute before failing. Valid values are any integers greater than or equal to 1. Any value less than 1 will result in unlimited connection attemtps."
+		},
+		{
+			"key":"ConnectionSleepTime",
+			"default":"4",
+			"description":"Number of seconds to wait after a failed CDASim connection attempt, before retrying to establish connection."
 		}
+
 		
 	]
 }
