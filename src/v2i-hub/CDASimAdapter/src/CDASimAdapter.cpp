@@ -21,8 +21,12 @@ namespace CDASimAdapter{
         success = success && GetConfigValue<double>("Z", location.Z);
         PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", " 
             << location.Y << ", " << location.Z << "}." << std::endl;
-        success = success && GetConfigValue<int8_t>("MaxConnectionAttempts", max_connection_attemps);
-        success = success && GetConfigValue<uint8_t>("ConnectionSleepTime", connection_sleep_time);
+        success = success && GetConfigValue<int>("MaxConnectionAttempts", max_connection_attempts);
+        success = success && GetConfigValue<uint>("ConnectionSleepTime", connection_sleep_time);
+        if (connection_sleep_time < 1 ) {
+            PLOG(logWARNING) << "ConnectionSleepTime of " << connection_sleep_time << " is invalid. Valid values are <= 1." << std::endl;      
+            connection_sleep_time = 1;
+        }
         _lock.unlock();
         if (!success) {
             PLOG(logWARNING) << "Some configuration parameters were not successfully loaded! Please ensure configuration parameter keys are correct!" << std::endl;
@@ -42,12 +46,17 @@ namespace CDASimAdapter{
            
             // While CARMA Simulation connection is down, attempt to reconnect
             int connection_attempts = 0;
-            while ( (!connection || !connection->is_connected()) && connection_attempts < max_connection_attemps  ) {
+            while ( (!connection || !connection->is_connected()) && (connection_attempts < max_connection_attempts || max_connection_attempts < 1 ) ) {
+                PLOG(logINFO) << "Attempting CDASim connection " << connection_attempts << "/" << max_connection_attempts << " ..." << std::endl;
                 bool success = connect();
+                if (success) {
+                    PLOG(logINFO) << "Connection to CDASim established!" << std::endl;
+                }
                 connection_attempts++;
-                // Sleep for configurable seconds in between connection attempts
-                if ( !connection->is_connected() ) {
-                    sleep(connection_sleep_time);
+                // Sleep for configurable seconds in between connection attempts. No sleep is required on final failing attempt
+                if ( !connection->is_connected() && (connection_attempts < max_connection_attempts || max_connection_attempts < 1 ) ) {
+                    PLOG(logDEBUG) << "Sleeping for " << connection_sleep_time << " seconds before next connection attempt ..." << std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(connection_sleep_time));
                 }
             }
 

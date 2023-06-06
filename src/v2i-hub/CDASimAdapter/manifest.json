@@ -36,7 +36,7 @@
 		{
 			"key":"ConnectionSleepTime",
 			"default":"4",
-			"description":"Number of seconds to wait after a failed CDASim connection attempt, before retrying to establish connection."
+			"description":"Number of seconds to wait after a failed CDASim connection attempt, before retrying to establish connection. Valid values are equal or greater than 1. Any value less than 1 will be treated as 1."
 		}
 
 		

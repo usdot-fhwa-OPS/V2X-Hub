@@ -112,9 +112,9 @@ namespace CDASimAdapter
         // Simulated location of RSU
         tmx::utils::Point location;
         // Stores configurable MaxConnectionAttempts. Any value > 1 will result in infinite connection attempts.
-        int8_t max_connection_attemps;
+        int max_connection_attempts;
         // Time in seconds between connection attempts. Most be greater than zero!
-        uint8_t connection_sleep_time;
+        uint connection_sleep_time;
         // Kafka producer for sending time_sync messages to carma-streets
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         // CDASim connection
