@@ -4,7 +4,7 @@
 using namespace tmx::utils;
 
 namespace CDASimAdapter{ 
-    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
+    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                                         const Point &location) : 
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
@@ -52,7 +52,7 @@ namespace CDASimAdapter{
         return message_str;
     }
 
-    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port, 
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const Point &location) 
     {
