@@ -32,7 +32,7 @@ namespace CDASimAdapter {
              * @param location Simulationed location of infrastructure.
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            explicit CDASimConnection( const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::Point &location);
 
@@ -95,7 +95,7 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            bool carma_simulation_handshake(const std::string &simulation_ip, const std::string infrastructure_id, const uint simulation_registration_port,
+            bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const tmx::utils::Point &location);
             
