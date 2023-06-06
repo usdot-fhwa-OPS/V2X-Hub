@@ -13,9 +13,8 @@ namespace CDASimAdapter{
     }
 
     void CDASimAdapter::UpdateConfigSettings() {
-
+        std::scoped_lock<std::mutex> lock(_lock);
         bool success = false;
-        _lock.lock();
         success = GetConfigValue<double>("X", location.X);
         success = success && GetConfigValue<double>("Y", location.Y);
         success = success && GetConfigValue<double>("Z", location.Z);
@@ -27,7 +26,6 @@ namespace CDASimAdapter{
             PLOG(logWARNING) << "ConnectionSleepTime of " << connection_sleep_time << " is invalid. Valid values are <= 1." << std::endl;      
             connection_sleep_time = 1;
         }
-        _lock.unlock();
         if (!success) {
             PLOG(logWARNING) << "Some configuration parameters were not successfully loaded! Please ensure configuration parameter keys are correct!" << std::endl;
         }
