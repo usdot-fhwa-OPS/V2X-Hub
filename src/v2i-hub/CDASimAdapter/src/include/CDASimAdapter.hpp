@@ -1,7 +1,7 @@
 //============================================================================
-// Name        : EpcwPlugin.cpp
-// Author      : 
-// Version     :
+// Name        : CDASimAdapter.cpp
+// Author      : Paul Bourelly
+// Version     : 7.5.1
 // Copyright   : Your copyright notice
 // Description : Hello World in C++, Ansi-style
 //============================================================================
@@ -23,24 +23,24 @@
 #include <simulation/SimulationEnvUtils.h>
 #include "ThreadWorker.h"
 
-
-
-
-namespace CDASimAdapter {
+namespace CDASimAdapter
+{
 
     /**
-     * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used 
+     * @brief V2X-Hub Plugin that acts as a adapter for integration with CARMA-Simulation. Plugin used
      * environment variable to be installed and enabled by default.
      */
-    class CDASimAdapter: public tmx::utils::PluginClient{
+    class CDASimAdapter : public tmx::utils::PluginClient
+    {
     public:
         /**
          * @brief CARMA-Simulation Infrastructure Adapter constructor.
          * @param name name of plugin.
          */
         explicit CDASimAdapter(const std::string &name);
-        
-        int Main() override ;
+
+        int Main() override;
+
     protected:
         /**
          * @brief Called everytime a configuration value is changed for the plugin.
@@ -60,7 +60,7 @@ namespace CDASimAdapter {
          */
         void OnStateChange(IvpPluginState state) override;
         // Virtual method overrides END.
-        
+
         /**
          * @brief Get Kafka Connection string from environment variable KAFKA_BROKER_ADDRESS and time sync topic name from
          * CARMA_INFRASTRUCTURE_TIME_SYNC_TOPIC and initialize a Kafka producer to forward time synchronization messages to
@@ -77,12 +77,12 @@ namespace CDASimAdapter {
         /**
          * @brief Method to start thread timer for processing msg from v2xhub
          */
-        void start_amf_msg_thread();
+        void start_immediate_forward_thread();
 
         /**
          * @brief Method to start thread timer for processing msg from CDASimConnection
          */
-        void start_binary_msg_thread();
+        void start_message_receiver_thread();
 
         /**
          * @brief Method to consume msg in amf fromat from V2Xhub and forward to CDASimConnection
@@ -107,18 +107,31 @@ namespace CDASimAdapter {
          * @brief Method to consume time sychrononization from CDASimConnection and forward to tmx core and CARMA Streets
          */
         void attempt_time_sync();
-        
-    private:
 
-        tmx::utils::WGS84Point location;
+    private:
+        // Simulated location of RSU
+        tmx::utils::Point location;
+        // Stores configurable MaxConnectionAttempts. Any value > 1 will result in infinite connection attempts.
+        int max_connection_attempts;
+        // Time in seconds between connection attempts. Most be greater than zero!
+        uint connection_sleep_time;
+        // Kafka producer for sending time_sync messages to carma-streets
         std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
+        // CDASim connection
         std::unique_ptr<CDASimConnection> connection;
+        // Mutex for configuration parameter thread safety
         std::mutex _lock;
-        std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
+        // Time sync thread to forward time sync messages to PluginClientClockAware V2X-Hub plugins.
+        std::unique_ptr<tmx::utils::ThreadTimer> time_sync_timer;
+        // Time sync thread id
         int time_sync_tick_id;
-        std::unique_ptr<tmx::utils::ThreadTimer> amf_thread_timer;
-        std::unique_ptr<tmx::utils::ThreadTimer> binary_thread_timer;
-        int amf_msg_tick_id;
-        int binary_msg_tick_id;
+        // Immediate forward thread to consume messages from the immediate forward plugin and send to CDASim
+        std::unique_ptr<tmx::utils::ThreadTimer> immediate_forward_timer;
+        // Immediate forward thread id
+        int immediate_forward_tick_id;
+        // Message receiver thread to consume messages from CDASim and forward them to the message receiver.
+        std::unique_ptr<tmx::utils::ThreadTimer> message_receiver_timer;
+        // Message receiver thread id
+        int message_receiver_tick_id;
     };
 }

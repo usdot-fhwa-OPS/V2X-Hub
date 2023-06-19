@@ -27,6 +27,11 @@
     },
     {
         "type":"J2735",
+        "subtype":"SRM",
+        "description": "Signal request message for intersection"
+    },
+    {
+        "type":"J2735",
         "subtype":"SPAT-P",
         "description":"Signal Phase and Timing (SPAT) status for the signalized intersection."
     }
@@ -61,6 +66,11 @@
             "key": "MobilityOperationTopic",
             "default": "v2xhub_mobility_operation_in",
             "description": "Apache Kafka topic plugin will transmit message to."
+        },
+        {
+          "key":"SRMTopic",
+          "default": "v2xhub_srm_in",
+          "description": "Apache Kafka topic plugin will transmit message to."  
         },
         {
             "key": "MobilityPathTopic",

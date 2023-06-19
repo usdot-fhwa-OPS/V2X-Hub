@@ -20,7 +20,7 @@ services:
       - mysql-datavolume:/var/lib/mysql
 
   php:
-    image: usdotfhwaops/php_arm:k900
+    image: usdotfhwaops/php_arm:7.5.1
     container_name: php
     network_mode: host
     depends_on: 
@@ -30,7 +30,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubarm:k900
+    image: usdotfhwaops/v2xhubarm:7.5.1
     container_name: v2xhub
     network_mode: host
     restart: always
@@ -44,7 +44,7 @@ services:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
   port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice_arm:k900
+    image: usdotfhwaops/port-drayage-webservice_arm:7.5.1
     container_name: port_drayage_webservice
     network_mode: host
 secrets:

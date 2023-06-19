@@ -643,4 +643,109 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
+TEST_F (J2735MessageTest, EncodeSrm)
+{
+	SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
+	message->second = 12;
+	RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
+	VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
+	veh_id->present = VehicleID_PR_entityID;
+	TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	entity_id->buf = my_bytes_id;
+	entity_id->size = sizeof(my_bytes_id);
+	veh_id->choice.entityID = *entity_id;
+	requestor->id = *veh_id;
+	RequestorType_t *requestType = (RequestorType_t *)calloc(1, sizeof(RequestorType_t));
+	requestType->role = 0;
+	requestor->type = requestType;
+	RequestorPositionVector_t *position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+	DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+	*heading_angle = 123;
+	position->heading = heading_angle;
+	Position3D_t *position_point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+	DSRC_Elevation_t *elev = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+	*elev = 12;
+	position_point->elevation = elev;
+	position_point->lat = 3712333;
+	position_point->Long = 8012333;
+	position->position = *position_point;
+	TransmissionAndSpeed_t *speed = (TransmissionAndSpeed_t *)calloc(1, sizeof(TransmissionAndSpeed_t));
+	speed->speed = 10;
+	TransmissionState_t *transmission_state = (TransmissionState_t *)calloc(1, sizeof(TransmissionState_t));
+	*transmission_state = 1111;
+	speed->transmisson = 7;
+	position->speed = speed;
+	requestor->position = position;
+	message->requestor = *requestor;
+
+	SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
+	//First: Request Package
+	SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+	MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	*min = 123;
+	request_package->minute = min;
+	DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	*duration = 122;
+	request_package->duration = duration;
+	DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	*second = 1212;
+	request_package->second = second;
+	SignalRequest_t *request = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
+	IntersectionReferenceID_t *refer_id = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
+	refer_id->id = 1222;
+	request->id = *refer_id;
+	request->requestID = 1;
+	request->requestType = 0;
+	IntersectionAccessPoint_t *inBoundLane = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+	inBoundLane->present = IntersectionAccessPoint_PR_lane;
+	inBoundLane->choice.lane = 1;
+	request->inBoundLane = *inBoundLane;
+	request_package->request = *request;
+	asn_sequence_add(&requests->list.array, request_package);
+
+	//Second: Request Package
+	SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+	request_package_2->minute = min;
+	request_package_2->duration = duration;
+	request_package_2->second = second;
+	SignalRequest_t *request_2 = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
+	IntersectionReferenceID_t *referId2 = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
+	referId2->id = 2333;
+	request_2->id = *referId2;
+	request_2->requestID = 2;
+	request_2->requestType = 1;
+	IntersectionAccessPoint_t *inBoundLane2 = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+	inBoundLane2->present = IntersectionAccessPoint_PR_approach;
+	inBoundLane2->choice.approach = 1;
+	request_2->inBoundLane = *inBoundLane2;
+	request_package_2->request = *request_2;
+	asn_sequence_add(&requests->list.array, request_package_2);
+	message->requests = requests;
+	tmx::messages::SrmEncodedMessage srmEncodeMessage;
+	auto _srmMessage = new tmx::messages::SrmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
+	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
+	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
+	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
+}
+
+TEST_F(J2735MessageTest, EncodeTravelerInformation){
+	//Advisory
+	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
+	std::stringstream ss;
+	TimMessage timMsg;
+	TimEncodedMessage timEnc;
+	tmx::message_container_type container;
+	ss<<timStr;
+	container.load<XML>(ss);
+	timMsg.set_contents(container.get_storage().get_tree());
+	timEnc.encode_j2735_message(timMsg);
+	ASSERT_EQ(31,  timEnc.get_msgId());	
+	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
+	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
+}
 }

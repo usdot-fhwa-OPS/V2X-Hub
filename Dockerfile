@@ -1,11 +1,11 @@
 ARG UBUNTU_VERSION=jammy-20230126
 
-FROM ubuntu:$UBUNTU_VERSION
+FROM ubuntu:$UBUNTU_VERSION AS dependencies
 
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
-RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list && \
-    /usr/local/bin/install_dependencies.sh
+RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
+RUN /usr/local/bin/install_dependencies.sh
 
 # build out ext components
 COPY ./ext /home/V2X-Hub/ext
@@ -14,6 +14,7 @@ RUN ./build.sh
 
 ADD container/wait-for-it.sh /usr/local/bin/
 ADD container/service.sh /usr/local/bin/
+
 COPY ./container /home/V2X-Hub/container
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
@@ -26,8 +27,33 @@ WORKDIR /home/V2X-Hub/src/
 RUN ./build.sh release
 RUN ldconfig
 
-WORKDIR /home/V2X-Hub/
+# run final image
+FROM ubuntu:$UBUNTU_VERSION AS v2xhub
+ENV DEBIAN_FRONTEND=noninteractive
+ADD scripts/deployment_dependencies.sh /usr/local/bin/
+RUN /usr/local/bin/deployment_dependencies.sh
+
+COPY ./container /home/V2X-Hub/container/
+WORKDIR /home/V2X-Hub/container/
+RUN ./database.sh
+RUN ./library.sh
+RUN ldconfig
+
+COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
+COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies /usr/lib/ /usr/lib/
+COPY --from=dependencies /usr/bin/ /usr/bin/
+COPY --from=dependencies /usr/local/share/ /usr/local/share/
+COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
+COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+COPY --from=dependencies /opt/ /opt/
+ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
+ADD src/tmx/TmxCore/tmxcore.service /usr/sbin/
+RUN ldconfig
+
 RUN /home/V2X-Hub/container/setup.sh
+
 WORKDIR /var/log/tmx
 
 # Set metadata labels
