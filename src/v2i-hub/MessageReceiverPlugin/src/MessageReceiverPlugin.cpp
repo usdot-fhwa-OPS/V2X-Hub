@@ -330,13 +330,14 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		if (routeDsrc)
 		{	
 			sendMsg->set_flags(IvpMsgFlags_RouteDSRC);
+			this->OutgoingMessage(*sendMsg, true);
 		}
 		else
 		{
 			
 			sendMsg->set_flags(IvpMsgFlags_None);
+			this->OutgoingMessage(*sendMsg);
 		}
-		this->OutgoingMessage(*sendMsg);
 	}
 }
 
