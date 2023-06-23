@@ -1,6 +1,43 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.5.1, released June 21st, 2023
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.5.1 includes added functionality to integrate V2X Hub with CDASim environment. This integration includes V2X Hub registering as a Roadside Unit (RSU) in the CDASim environment, consuming and producing J2735 messages to the CDASim environment, and adding functionality to synchronize plugins to CDASim simulation time.
+
+**<ins>V2X Hub CDASim Functionalities </ins>**
+
+Enhancements in this release: 
+
+- Added new carma-time-lib to V2X Hub to allow services to use an external source for time value and update rate. 
+- Added new Plugin Client ClockAware, which extends Plugin Client and implements functionality to consume time sync messages and updates a carma-clock object from carma-time-lib. Any plugins that want to synchronize their time to simulation must extend this plugin to gain access to this functionality. 
+- Added CDASim Adapter plugin which is responsible for establishing connection between V2X Hub and CDASim environment. This includes a handshake that provides information about the V2X Hub simulated location and ID and message forwarding for J2735 messages and time synchronization messages. This plugin requires several environment variables to be set which are documented on the GitHub repo README.md. 
+
+Fixes in this release: 
+
+- PR 488: Added a simulated clock functionality with the new time library and tested. 
+- PR 489: Setup Kafka consumers for the time topic when running in simulation mode. 
+- Issue 492: Created a carma-simulation adapter shell for service that will act as adapter for CARMA Simulation integration. 
+- PR 509: Added a V2X Hub plugin inside the simulation platform to receive all messages from V2X Hub. This plugin contains parameters and variables that are provided in real-world scenarios. 
+- Issue 514: Added handshake functionality to carma-simulation ambassador instance which register’s the V2X Hub instance inside the simulator to allow multiple V2X Hub instances to connect with a single CARMA Simulation platform. 
+- Issue 535: Updated infrastructure registration to use a cartesian point as location over a geodetic point to allow for easier configuration of simulated location of an RSU. 
+- Issue 537: Fixed configuration parameters to correctly map X, Y, Z coordinates to Point for Infrastructure registration in CDASim Adapter. 
+- Issue 525: Fixed CDASim Adapter plugin that throws an exception while attempting CDASim handshake with CARMA-Simulation. 
+
+Known issues in this release: 
+
+- Issue #540: CDASim Time Synchronization is non-time-regulating. If simulation runs too fast (faster than real-time) for V2X Hub to keep up, V2X Hub can fall behind in time. 
+- Issue #507: SPaT plugin throws segfault when in SIM MODE  
+- Issue #10 in carma-time-lib (not V2X Hub repo): wait_for_initialization does not support notifying multiple threads Work around exists for services/plugins using carma-time-lib.
+
+**<ins>Other </ins>**
+
+Enhancements in this release: 
+
+- Issue 511: Added new functionality get the log time for a message received in V2xHub to forward to Carma cloud, and from receiving in Carma Cloud to forward V2xhub. 
+
 Version 7.5.0, released May 5th, 2023
 --------------------------------------------------------
 
