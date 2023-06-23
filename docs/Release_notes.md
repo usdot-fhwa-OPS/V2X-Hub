@@ -5,7 +5,7 @@ Version 7.5.1, released June 21st, 2023
 --------------------------------------------------------
 
 **Summary:**
-V2X Hub release 7.5.1 includes added functionality to integrate V2X Hub with CDASim environment. This integration includes V2X Hub registering as a Roadside Unit (RSU) in the CDASim environment, consuming and producing J2735 messages to the CDASim environment, and adding functionality to synchronize plugins to CDASim simulation time.
+ V2X Hub release 7.5.1 includes added functionality to integrate V2X Hub with CDASim environment. This integration includes V2X Hub registering as a Roadside Unit (RSU) in the CDASim environment, consuming and producing J2735 messages to the CDASim environment, and adding functionality to synchronize plugins to CDASim simulation time.
 
 **<ins>V2X Hub CDASim Functionalities </ins>**
 
@@ -30,7 +30,8 @@ Known issues in this release:
 
 - Issue #540: CDASim Time Synchronization is non-time-regulating. If simulation runs too fast (faster than real-time) for V2X Hub to keep up, V2X Hub can fall behind in time. 
 - Issue #507: SPaT plugin throws segfault when in SIM MODE  
-- Issue #10 in carma-time-lib (not V2X Hub repo): wait_for_initialization does not support notifying multiple threads Work around exists for services/plugins using carma-time-lib.
+- Issue #10 in carma-time-lib (not V2X Hub repo): wait_for_initialization does not support notifying multiple threads Work around exists for services/plugins using carma-time-lib. 
+- Issue #543: CARMA Streets Plugin Kafka Consumers can send redundant subscription attempts on initialization and can cause subscriptions to silently fail. 
 
 **<ins>Other </ins>**
 
