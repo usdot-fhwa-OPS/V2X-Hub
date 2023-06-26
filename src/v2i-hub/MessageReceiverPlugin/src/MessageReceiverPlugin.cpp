@@ -348,7 +348,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	lock_guard<mutex> lock(syncLock);
 
 	// Atomic flags
-	GetConfigValue("RouteDSRC", routeDsrc);
+	GetConfigValue("RouteMessage", routeDsrc);
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
