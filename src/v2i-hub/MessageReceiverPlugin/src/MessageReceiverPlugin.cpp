@@ -166,7 +166,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
 
-
+	uint16_t msgPSID = NULL;
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
 	{
@@ -263,6 +263,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 								}
 
 								sendMsg = encode(encodedBsm, bsm);
+								msgPSID = 0x20;
 								if (!simBSM) return;
 							}
 							break;
@@ -280,6 +281,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 										ntohl(*((uint32_t*)&(bytes.data()[24]))),
 										ntohl(*((uint32_t*)&(bytes.data()[28]))));
 								sendMsg = encode(encodedSrm, srm);
+								msgPSID = 0xE0000016;
 
 							}
 							break;
@@ -330,14 +332,14 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		if (routeDsrc)
 		{	
 			sendMsg->set_flags(IvpMsgFlags_RouteDSRC);
-			this->OutgoingMessage(*sendMsg, true);
+			sendMsg->addDsrcMetadata(msgPSID);
 		}
 		else
 		{
 			
 			sendMsg->set_flags(IvpMsgFlags_None);
-			this->OutgoingMessage(*sendMsg);
 		}
+		this->OutgoingMessage(*sendMsg);
 	}
 }
 
