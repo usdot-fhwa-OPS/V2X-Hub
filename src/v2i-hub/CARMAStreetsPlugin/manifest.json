@@ -103,6 +103,16 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
+            "key": "SsmTopic",
+            "default": "v2xhub_ssm_sub",
+            "description": "Apache Kafka topic plugin will transmit message to."            
+        },
+        {
+            "key": "SsmConsumerGroupId",
+            "default": "v2xhub_ssm",
+            "description": "Apache Kafka consumer group ID for spat consumer."
+        },
+        {
             "key": "SpatConsumerGroupId",
             "default": "v2xhub_spat",
             "description": "Apache Kafka consumer group ID for spat consumer."

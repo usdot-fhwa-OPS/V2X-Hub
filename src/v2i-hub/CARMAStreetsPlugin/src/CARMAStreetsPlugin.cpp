@@ -46,7 +46,9 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
 	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
  	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
+	GetConfigValue<string>("SsmTopic", _subscribeToSsmTopic);
 	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
+	GetConfigValue<string>("SsmConsumerGroupId", _subscribeToSSMConsumerGroupId);
 	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
@@ -97,19 +99,21 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	PLOG(logERROR) << "Kafka INFO:" << kafkaConnectString<<_subscribeToSpatTopic<<_subscribeToSpatConsumerGroupId;
 	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,_subscribeToSpatConsumerGroupId);
 	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic,_subscribeToSchedulingPlanConsumerGroupId);
-	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr)
+	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,_subscribeToSSMConsumerGroupId);
+	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr)
 	{
 		PLOG(logERROR) <<"Failed to create Kafka consumers.";
 		return;
 	}
 	PLOG(logDEBUG) <<"Kafka consumers created";
-	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init())
+	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init())
 	{
 		PLOG(logERROR) <<"Kafka consumers init() failed!";
 	}
 
 	thread_schpl = new std::thread(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	thread_spat  = new std::thread(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
+	thread_ssm  = new std::thread(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);	
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -610,6 +614,58 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	}
 }
 
+void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
+
+	if(_subscribeToSsmTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSSMKafkaTopics:" <<_subscribeToSsmTopic << std::endl;
+		_ssm_kafka_consumer_ptr->subscribe();
+		//Initialize Json to J2735 SSM convertor 
+		JsonToJ2735SSMConverter ssm_convertor;
+		while (_ssm_kafka_consumer_ptr->is_running()) 
+		{
+			auto payload_str = _ssm_kafka_consumer_ptr->consume(500);			
+			if(strlen(payload_str) > 0)
+			{
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value ssmDoc;
+				auto parse_sucessful = ssm_convertor.parseJsonString(payload_str, ssmDoc);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
+					continue;
+				}
+				//Convert the SSM JSON string into J2735 SSM message and encode it.
+				auto ssm_ptr = std::make_shared<SignalStatusMessage>();
+				ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
+				tmx::messages::SsmEncodedMessage ssmEncodedMsg;
+				try
+				{
+					ssm_convertor.encodeSSM(ssm_ptr, ssmEncodedMsg);
+				}
+				catch (TmxException &ex) 
+				{
+					// Skip messages that fail to encode.
+					PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
+						<< ex.what() << std::endl;
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
+					continue;
+				}
+				
+				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+				PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
+
+				//Broadcast the encoded SSM message
+				ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+				ssmEncodedMsg.addDsrcMetadata(0x8002);
+				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
+			}
+		}
+	}
+
+}
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
 	try
