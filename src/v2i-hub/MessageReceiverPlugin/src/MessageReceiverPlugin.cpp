@@ -166,7 +166,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
 
-	char msgPSID;
+	int msgPSID = api::msgPSID::None_PSID;
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
 	{
