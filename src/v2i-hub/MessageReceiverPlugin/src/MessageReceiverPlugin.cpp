@@ -166,7 +166,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
 
-	uint16_t msgPSID = NULL;
+	char msgPSID;
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
 	{
@@ -263,7 +263,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 								}
 
 								sendMsg = encode(encodedBsm, bsm);
-								msgPSID = 0x20;
+								msgPSID = api::msgPSID::basicSafetyMessage_PSID;
 								if (!simBSM) return;
 							}
 							break;
@@ -281,8 +281,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 										ntohl(*((uint32_t*)&(bytes.data()[24]))),
 										ntohl(*((uint32_t*)&(bytes.data()[28]))));
 								sendMsg = encode(encodedSrm, srm);
-								msgPSID = 0xE0000016;
-
+								msgPSID = api::msgPSID::signalRequestMessage_PSID;
 							}
 							break;
 						default:
@@ -348,7 +347,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	lock_guard<mutex> lock(syncLock);
 
 	// Atomic flags
-	GetConfigValue("RouteMessage", routeDsrc);
+	GetConfigValue("RouteJ2735", routeDsrc);
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
@@ -468,7 +467,6 @@ int MessageReceiverPlugin::Main()
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 						continue;
-; 
 					}
 					PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 					cJSON *root   = cJSON_Parse(result.c_str());

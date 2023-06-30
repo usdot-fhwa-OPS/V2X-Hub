@@ -29,7 +29,7 @@
 			"description":"Port for the incoming message network connection."
 		},
 		{
-			"key":"RouteMessage",
+			"key":"RouteJ2735",
 			"default":"false",
 			"description":"Set the flag to route/broadcast a received J2735 message to TMX Core."
 		},
