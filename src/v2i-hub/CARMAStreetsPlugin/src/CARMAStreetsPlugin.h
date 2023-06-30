@@ -111,9 +111,6 @@ private:
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
-	std::thread* thread_schpl;
-	std::thread* thread_spat;
-	std::thread* thread_ssm;
 
 	/**
 	 * @brief Status label for SPAT messages skipped due to errors.

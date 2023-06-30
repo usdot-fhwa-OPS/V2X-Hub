@@ -20,6 +20,8 @@ namespace CARMAStreetsPlugin {
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 		PluginClient(name) {
+
+	PLOG(logERROR) << "CARMAStreetsPlugin Constructor.";
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
@@ -31,6 +33,11 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 }
 
 CARMAStreetsPlugin::~CARMAStreetsPlugin() {
+	PLOG(logERROR) << "CARMAStreetsPlugin Destructor.";
+	//Todo: It does not seem the desctructor is called.
+	_spat_kafka_consumer_ptr->stop();
+	_scheduing_plan_kafka_consumer_ptr->stop();
+	_ssm_kafka_consumer_ptr->stop();
 }
 
 void CARMAStreetsPlugin::UpdateConfigSettings() {
@@ -95,7 +102,8 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	ss << uuid;
 	_subscribeToSpatConsumerGroupId += ss.str();
 	_subscribeToSchedulingPlanConsumerGroupId += ss.str();
-	PLOG(logERROR) << "Kafka INFO:" << kafkaConnectString<<_subscribeToSpatTopic<<_subscribeToSpatConsumerGroupId;
+	_subscribeToSSMConsumerGroupId += ss.str();
+	//Todo further enhancement: Temporary fix for the consumer rebalancing die to multiple consumers join the same group upon restarting plugin.
 	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,_subscribeToSpatConsumerGroupId);
 	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic,_subscribeToSchedulingPlanConsumerGroupId);
 	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,_subscribeToSSMConsumerGroupId);
@@ -110,9 +118,9 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 		PLOG(logERROR) <<"Kafka consumers init() failed!";
 	}
 
-	thread_schpl = new std::thread(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
-	thread_spat  = new std::thread(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
-	thread_ssm  = new std::thread(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);	
+	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
+	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
+	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);	
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -795,6 +803,7 @@ int CARMAStreetsPlugin::Main() {
 
 		usleep(100000); //sleep for microseconds set from config.
 	}
+
 	return (EXIT_SUCCESS);
 }
 } /* namespace */

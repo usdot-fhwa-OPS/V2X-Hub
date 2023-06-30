@@ -40,6 +40,7 @@ namespace tmx::utils {
             const std::string GROUP_ID="group.id";
             const std::string MAX_PARTITION_FETCH_SIZE="max.partition.fetch.bytes";
             const std::string ENABLE_PARTITION_END_OF="enable.partition.eof";
+            const std::string ENABLE_AUTO_COMMIT="enable.auto.commit";
 
             //maximum size for pulling message from a single partition at a time
             std::string STR_FETCH_NUM = "10240000";
