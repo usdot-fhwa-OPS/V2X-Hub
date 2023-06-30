@@ -108,7 +108,6 @@ private:
 	std::shared_ptr<kafka_consumer_worker> _spat_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _scheduing_plan_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _ssm_kafka_consumer_ptr;
- 	RdKafka::Producer *kafka_producer;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
