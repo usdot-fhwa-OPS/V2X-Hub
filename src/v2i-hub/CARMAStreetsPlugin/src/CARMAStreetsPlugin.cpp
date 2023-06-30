@@ -20,7 +20,6 @@ namespace CARMAStreetsPlugin {
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 		PluginClient(name) {
-	PLOG(logINFO) << "CARMAStreetsPlugin constructor!" << std::endl;
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
