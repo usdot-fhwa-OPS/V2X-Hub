@@ -13,7 +13,6 @@ curl -L https://raw.githubusercontent.com/usdot-fhwa-stol/carma-platform/develop
 
 #make passwords for mysql
 mkdir secrets && cd secrets
-sleep 1
 
 #creates password files where user inputs password
 read -p "enter password for the mysql_root_password: " sql_root_pass
@@ -44,7 +43,5 @@ sudo apt-get update -y && sudo apt update -y
 cd mysql
 ./add_v2xhub_user.bash
 
-sudo apt-get update -y && sudo apt update -y
-
-echo -e "\n open chromium-browser, go to https://127.0.0.1:19760, accept certs, and go to https://127.0.0.1 to login to V2x hub."
-sleep 3
+chromium-browser "https://127.0.0.1" > /dev/null 2>&1 &
+chromium-browser "https://127.0.0.1:19760" > /dev/null 2>&1 &
