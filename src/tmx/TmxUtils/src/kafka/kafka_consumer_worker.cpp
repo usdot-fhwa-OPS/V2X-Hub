@@ -134,7 +134,7 @@ namespace tmx::utils
         switch (message->err())
         {
         case RdKafka::ERR__TIMED_OUT:
-            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
+            FILE_LOG(logDEBUG4) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
             break;
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;
