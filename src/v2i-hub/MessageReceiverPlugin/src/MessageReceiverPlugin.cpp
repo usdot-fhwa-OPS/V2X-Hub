@@ -166,7 +166,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	BsmEncodedMessage encodedBsm;
 	SrmEncodedMessage encodedSrm;
 
-
+	int msgPSID = api::msgPSID::None_PSID;
 
 	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
 	{
@@ -263,6 +263,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 								}
 
 								sendMsg = encode(encodedBsm, bsm);
+								msgPSID = api::msgPSID::basicSafetyMessage_PSID;
 								if (!simBSM) return;
 							}
 							break;
@@ -280,7 +281,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 										ntohl(*((uint32_t*)&(bytes.data()[24]))),
 										ntohl(*((uint32_t*)&(bytes.data()[28]))));
 								sendMsg = encode(encodedSrm, srm);
-
+								msgPSID = api::msgPSID::signalRequestMessage_PSID;
 							}
 							break;
 						default:
@@ -330,6 +331,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		if (routeDsrc)
 		{	
 			sendMsg->set_flags(IvpMsgFlags_RouteDSRC);
+			sendMsg->addDsrcMetadata(msgPSID);
 		}
 		else
 		{
@@ -345,7 +347,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	lock_guard<mutex> lock(syncLock);
 
 	// Atomic flags
-	GetConfigValue("RouteDSRC", routeDsrc);
+	GetConfigValue("RouteJ2735", routeDsrc);
 	GetConfigValue("EnableSimulatedBSM", simBSM);
 	GetConfigValue("EnableSimulatedSRM", simSRM);
 	GetConfigValue("EnableSimulatedLocation", simLoc);
@@ -465,7 +467,6 @@ int MessageReceiverPlugin::Main()
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 						continue;
-; 
 					}
 					PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 					cJSON *root   = cJSON_Parse(result.c_str());

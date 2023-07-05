@@ -428,7 +428,7 @@ void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 	if (!foundMessageType)
 	{
 		SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-		PLOG(logWARNING)<<" WARNINNG TMX Subtype not found in configuration.  Message Ignored: " <<
+		PLOG(logWARNING)<<" WARNING TMX Subtype not found in configuration. Message Ignored: " <<
 				"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		return;
 	}
