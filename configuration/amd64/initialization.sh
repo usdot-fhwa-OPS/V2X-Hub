@@ -34,7 +34,7 @@ sudo apt-get -y install docker-ce docker-ce-cli containerd.io
 sudo apt -y install python3-pip
 sudo pip3 install docker-compose
 sudo docker-compose pull
-sudo apt update -y && sudo update -y
+sudo apt update -y && sudo apt upgrade -y
 sudo docker-compose up -d
 
 #create v2xhub user
