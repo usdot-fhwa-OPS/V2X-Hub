@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # update and upgrade commands to update linux OS
-sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt update -y && sudo apt upgrade -y
 
 #installing necessary and useful apps
@@ -28,17 +27,15 @@ rm sql_root_pass.txt && rm sql_pass.txt
 #AMD64 initialzation
 cd ..
 sudo apt-get -y remove docker docker-engine docker.io containerd runc
-sudo apt-get update
 sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update
 sudo apt-get -y install docker-ce docker-ce-cli containerd.io 
 sudo apt -y install python3-pip
 sudo pip3 install docker-compose
 sudo docker-compose pull
+sudo apt update -y && sudo update -y
 sudo docker-compose up -d
-sudo apt-get update -y && sudo apt update -y
 
 #create v2xhub user
 cd mysql
