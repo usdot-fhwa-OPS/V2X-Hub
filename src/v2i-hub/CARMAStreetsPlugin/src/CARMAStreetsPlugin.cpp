@@ -103,7 +103,7 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	_subscribeToSpatConsumerGroupId += ss.str();
 	_subscribeToSchedulingPlanConsumerGroupId += ss.str();
 	_subscribeToSSMConsumerGroupId += ss.str();
-	//Todo further enhancement: Temporary fix for the consumer rebalancing die to multiple consumers join the same group upon restarting plugin.
+	//Todo further enhancement: Temporary fix for the consumer rebalancing due to multiple consumers join the same group upon restarting plugin.
 	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,_subscribeToSpatConsumerGroupId);
 	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic,_subscribeToSchedulingPlanConsumerGroupId);
 	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,_subscribeToSSMConsumerGroupId);
@@ -116,6 +116,7 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init())
 	{
 		PLOG(logERROR) <<"Kafka consumers init() failed!";
+		return;
 	}
 
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
