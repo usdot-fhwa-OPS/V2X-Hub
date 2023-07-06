@@ -84,13 +84,6 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	}
 
 	//Consumers
-	auto uuid = boost::uuids::random_generator()();
-	std::stringstream ss;
-	ss << uuid;
-	_subscribeToSpatConsumerGroupId += ss.str();
-	_subscribeToSchedulingPlanConsumerGroupId += ss.str();
-	_subscribeToSSMConsumerGroupId += ss.str();
-	//Todo further enhancement: Temporary fix for the consumer rebalancing due to multiple consumers join the same group upon restarting plugin.
 	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,_subscribeToSpatConsumerGroupId);
 	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic,_subscribeToSchedulingPlanConsumerGroupId);
 	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,_subscribeToSSMConsumerGroupId);

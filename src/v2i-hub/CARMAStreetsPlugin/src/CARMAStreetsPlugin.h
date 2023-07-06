@@ -16,10 +16,7 @@
 #include <mutex>
 #include "J2735MapToJsonConverter.h"
 #include "JsonToJ2735SpatConverter.h"
-#include "J2735ToSRMJsonConverter.h"
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>   
+#include "J2735ToSRMJsonConverter.h"   
 #include <kafka/kafka_client.h>
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
