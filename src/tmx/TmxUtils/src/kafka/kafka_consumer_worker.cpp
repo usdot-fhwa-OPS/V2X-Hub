@@ -94,6 +94,7 @@ namespace tmx::utils
     void kafka_consumer_worker::stop()
     {
         _run = false;
+        //Close and shutdown the consumer.
         _consumer->close();
         /*Destroy kafka instance*/ // Wait for RdKafka to decommission.
         RdKafka::wait_destroyed(5000);
