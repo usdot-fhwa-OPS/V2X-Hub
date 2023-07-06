@@ -55,18 +55,41 @@ namespace tmx::utils
              */
             kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
             /**
+             * @brief Construct a new kafka producer worker object
+             * 
+             * @param broker_str network address of kafka broker.
+             */
+            kafka_producer_worker(const std::string &brokers);
+            /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
              * @return true if successful.
              * @return false if unsuccessful.
              */
             virtual bool init();
+             /**
+             * @brief Initialize kafka topic.
+             * @return true if successful.
+             * @return false if unsuccessful.
+             */
+            virtual bool init_topic();
+             /**
+             * @brief Initialize kafka producer.
+             * @return true if successful.
+             * @return false if unsuccessful.
+             */
+            virtual bool init_producer();
             /**
              * @brief Produce to topic. Will result in segmentation fault if init() is not called on producer first.
-             * 
              * @param msg message to produce.
              */
             virtual void send(const std::string &msg);
+            /**
+             * @brief Produce to a specific topic. Will result in segmentation fault if init() is not called on producer first.
+             * @param msg message to produce.
+             * @param topic_name topic to send the message to.
+             */
+            virtual void send(const std::string& message, const std::string& topic_name ) const;
             /**
              * @brief Is kafka_producer_worker still running?
              * 

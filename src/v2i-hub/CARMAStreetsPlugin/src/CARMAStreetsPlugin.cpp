@@ -77,26 +77,12 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
  	std::string kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
+	kafka_client client;
 
 	//Producer
-	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
-	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
-		PLOG(logERROR) <<"Setting kafka config options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
-		exit(1);
-	} else {
-		PLOG(logDEBUG) <<"Kafka config options set successfully";
-	}
-	
-	kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
-	if (!kafka_producer) {
-		PLOG(logERROR) <<"Creating kafka producer failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
-		exit(1);
-	} 			
-	PLOG(logDEBUG) <<"Kafka producers created";
+	_kafka_producer_ptr = client.create_producer(kafkaConnectString);
 
 	//Consumers
-	kafka_client client;
 	auto uuid = boost::uuids::random_generator()();
 	std::stringstream ss;
 	ss << uuid;
@@ -135,8 +121,7 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		auto mobilityOperation = msg.get_j2735_data();
 		PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
-					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
-		  			  << kafka_producer->outq_len() <<"messages already in queue";
+					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic;
 
 		std::stringstream strat;
 		std::stringstream payload; 
@@ -472,34 +457,7 @@ void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message
 
 void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
 {
-	bool retry = true;
-	while (retry) 
-	{
-		RdKafka::ErrorCode produce_error = kafka_producer->produce(topic_name, 
-																	RdKafka::Topic::PARTITION_UA,
-																	RdKafka::Producer::RK_MSG_COPY, 
-																	const_cast<char *>(message.c_str()),
-																	message.size(), 
-																	nullptr, 0, 0, nullptr);
-
-		if (produce_error == RdKafka::ERR_NO_ERROR) {
-			PLOG(logDEBUG) <<"Queued message:" << message;
-			retry = false;
-		}
-		else 
-		{
-			PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-				PLOG(logERROR) <<"Message queue full...retrying...";
-				kafka_producer->poll(500);  /* ms */
-				retry = true;
-			}
-			else {
-				PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-				retry = false;
-			}
-		}	
-	}
+	_kafka_producer_ptr->send(message, topic_name);
 }
 
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {

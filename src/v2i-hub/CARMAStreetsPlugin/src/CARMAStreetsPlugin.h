@@ -103,8 +103,7 @@ private:
 	std::string _transmitSRMTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
-	RdKafka::Conf *kafka_conf;
- 	RdKafka::Producer *kafka_producer;
+	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _spat_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _scheduing_plan_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _ssm_kafka_consumer_ptr;
