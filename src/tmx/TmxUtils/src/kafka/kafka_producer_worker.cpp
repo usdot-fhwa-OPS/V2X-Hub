@@ -35,8 +35,7 @@ namespace tmx::utils
 
     kafka_producer_worker::kafka_producer_worker(const std::string &brokers)
         : _broker_str(brokers), _run(true)
-    {
-        init_producer();		
+    {	
     }
 
     bool kafka_producer_worker::init()

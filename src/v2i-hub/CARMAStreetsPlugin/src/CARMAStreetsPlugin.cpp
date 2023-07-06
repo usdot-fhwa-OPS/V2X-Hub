@@ -78,6 +78,10 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 
 	//Producer
 	_kafka_producer_ptr = client.create_producer(kafkaConnectString);
+	if(!_kafka_producer_ptr->init_producer())
+	{
+		return;
+	}
 
 	//Consumers
 	auto uuid = boost::uuids::random_generator()();
