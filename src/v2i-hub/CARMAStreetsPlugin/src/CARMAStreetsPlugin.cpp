@@ -20,8 +20,6 @@ namespace CARMAStreetsPlugin {
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 		PluginClient(name) {
-
-	PLOG(logERROR) << "CARMAStreetsPlugin Constructor.";
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
@@ -33,7 +31,6 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 }
 
 CARMAStreetsPlugin::~CARMAStreetsPlugin() {
-	PLOG(logERROR) << "CARMAStreetsPlugin Destructor.";
 	//Todo: It does not seem the desctructor is called.
 	_spat_kafka_consumer_ptr->stop();
 	_scheduing_plan_kafka_consumer_ptr->stop();
@@ -478,8 +475,8 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 
 		while (_scheduing_plan_kafka_consumer_ptr->is_running()) 
 		{
-			auto payload_str = _scheduing_plan_kafka_consumer_ptr->consume(500);
-			if(strlen(payload_str) > 0)
+			std::string payload_str = _scheduing_plan_kafka_consumer_ptr->consume(500);
+			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
 				Json::Value  payload_root;
@@ -536,8 +533,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 		JsonToJ2735SpatConverter spat_convertor;
 		while (_spat_kafka_consumer_ptr->is_running()) 
 		{
-			auto payload_str = _spat_kafka_consumer_ptr->consume(500);
-			if(strlen(payload_str) > 0)
+			std::string payload_str = _spat_kafka_consumer_ptr->consume(500);
+			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
 				Json::Value  payload_root;
@@ -590,8 +587,8 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 		JsonToJ2735SSMConverter ssm_convertor;
 		while (_ssm_kafka_consumer_ptr->is_running()) 
 		{
-			auto payload_str = _ssm_kafka_consumer_ptr->consume(500);			
-			if(strlen(payload_str) > 0)
+			std::string payload_str = _ssm_kafka_consumer_ptr->consume(500);			
+			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
 				Json::Value ssmDoc;
