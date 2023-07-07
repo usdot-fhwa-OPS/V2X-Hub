@@ -59,7 +59,7 @@ namespace tmx::utils
              * 
              * @param broker_str network address of kafka broker.
              */
-            kafka_producer_worker(const std::string &brokers);
+            explicit kafka_producer_worker(const std::string &brokers);
             /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
