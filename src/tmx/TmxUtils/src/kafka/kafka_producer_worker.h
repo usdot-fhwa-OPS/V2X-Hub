@@ -53,7 +53,7 @@ namespace tmx::utils
              * @param topic_str topic producer should produce to.
              * @param n_partition partition producer should be assigned to.
              */
-            kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
+            explicit kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
             /**
              * @brief Construct a new kafka producer worker object
              * 
