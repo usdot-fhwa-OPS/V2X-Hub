@@ -42,6 +42,12 @@ namespace tmx::utils
             return false;
         }
 
+        if (conf->set(ENABLE_AUTO_COMMIT, "true", errstr) != RdKafka::Conf::CONF_OK)
+        {
+            FILE_LOG(logWARNING) << "RDKafka conf set enable auto commit failed: " << errstr.c_str() << std::endl;
+            return false;
+        }
+
         // set consumer group
         if (conf->set(GROUP_ID, _group_id_str, errstr) != RdKafka::Conf::CONF_OK)
         {
@@ -88,6 +94,8 @@ namespace tmx::utils
     void kafka_consumer_worker::stop()
     {
         _run = false;
+        //Close and shutdown the consumer.
+        _consumer->close();
         /*Destroy kafka instance*/ // Wait for RdKafka to decommission.
         RdKafka::wait_destroyed(5000);
     }
@@ -134,7 +142,7 @@ namespace tmx::utils
         switch (message->err())
         {
         case RdKafka::ERR__TIMED_OUT:
-            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
+            FILE_LOG(logDEBUG4) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
             break;
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;

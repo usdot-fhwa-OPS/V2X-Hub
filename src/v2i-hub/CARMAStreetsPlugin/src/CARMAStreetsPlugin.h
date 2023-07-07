@@ -16,8 +16,11 @@
 #include <mutex>
 #include "J2735MapToJsonConverter.h"
 #include "JsonToJ2735SpatConverter.h"
-#include "J2735ToSRMJsonConverter.h"
+#include "J2735ToSRMJsonConverter.h"   
+#include <kafka/kafka_client.h>
+#include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
+
 
 
 
@@ -75,6 +78,10 @@ protected:
 	 * @param topic_name The name of the topic
 	 */
 	void produce_kafka_msg(const string &msg, const string &topic_name) const;
+	/**
+	 * @brief Initialize Kafka Producers and Consumers
+	*/
+	void InitKafkaConsumerProducers();
 	
 
 private:
@@ -93,17 +100,10 @@ private:
 	std::string _transmitSRMTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
-	RdKafka::Conf *kafka_conf;
-	RdKafka::Conf *kafka_conf_spat_consumer;
-	RdKafka::Conf *kafka_conf_sp_consumer;
-	RdKafka::Conf *kafka_conf_ssm_consumer;
- 	RdKafka::Producer *kafka_producer;
-	RdKafka::KafkaConsumer *_scheduing_plan_kafka_consumer;
-	RdKafka::KafkaConsumer *_spat_kafka_consumer;
-	RdKafka::KafkaConsumer *_ssm_kafka_consumer;
-	RdKafka::Topic *_scheduing_plan_topic;
-	RdKafka::Topic *_spat_topic;
-	RdKafka::Topic *_ssm_topic;
+	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;
+	std::shared_ptr<kafka_consumer_worker> _spat_kafka_consumer_ptr;
+	std::shared_ptr<kafka_consumer_worker> _scheduing_plan_kafka_consumer_ptr;
+	std::shared_ptr<kafka_consumer_worker> _ssm_kafka_consumer_ptr;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
