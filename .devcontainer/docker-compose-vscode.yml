@@ -74,7 +74,6 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_CREATE_TOPICS: "time_sync:1:1,modified_spat:1:1,v2xhub_scheduling_plan_sub:1:1,v2xhub_ssm_sub:1:1"
       KAFKA_LOG_DIRS: "/kafka/kafka-logs"
-      KAFKA_OFFSETS_RETENTION_MINUTES: 1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /etc/localtime:/etc/localtime:ro
