@@ -1,4 +1,7 @@
 #!/bin/bash
+directory=$(pwd)
+mysqlDir="$directory/mysql"
+
 # update and upgrade commands to update linux OS
 sudo apt update -y && sudo apt upgrade -y
 
@@ -10,21 +13,31 @@ sudo apt install curl -y                      #Curl for downloading files over i
 curl -L https://raw.githubusercontent.com/usdot-fhwa-stol/carma-platform/develop/engineering_tools/install-docker.sh | bash 
 
 #make passwords for mysql
-mkdir secrets && cd secrets
+mkdir -p secrets && cd secrets
 
 #creates password files where user inputs password
-read -p "enter password for the mysql_root_password: " sql_root_pass
-echo "$sql_root_pass" > sql_root_pass.txt
+FILE1=mysql_root_password.txt
+FILE2=mysql_password.txt
+if test -f "$FILE1"; then
+    echo "$FILE1 exists."
+else
+    read -p "enter password for the mysql_root_password: " sql_root_pass
+    echo "$sql_root_pass" > sql_root_pass.txt
+    #remove endline characters from password files
+    tr -d '\n' <sql_root_pass.txt> mysql_root_password.txt && rm sql_root_pass.txt
+fi
 
-read -p "enter password for mysql_password: " sql_pass
-echo "$sql_pass" > sql_pass.txt
-
-#remove endline characters from password files
-tr -d '\n' <sql_root_pass.txt> mysql_root_password.txt && tr -d '\n' <sql_pass.txt> mysql_password.txt
-rm sql_root_pass.txt && rm sql_pass.txt
+if test -f "$FILE2"; then
+    echo "$FILE2 exists."
+else
+    read -p "enter password for mysql_password: " sql_pass
+    echo "$sql_pass" > sql_pass.txt
+    #remove endline characters from password files
+    tr -d '\n' <sql_pass.txt> mysql_password.txt && rm sql_pass.txt
+fi
 
 #ARM initialization
-cd ..
+cd $directory
 sudo apt-get -y remove docker docker-engine docker.io containerd runc
 sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
 OS=$(lsb_release -i | awk 'FS=":" {print $3;}' | awk '{print tolower($0)}')
@@ -38,8 +51,8 @@ sudo apt update -y && sudo apt upgrade -y
 sudo docker-compose up -d
 
 #create v2xhub user
-cd mysql
+cd $mysqlDir
 ./add_v2xhub_user.bash
 
-chromium-browser "https://127.0.0.1" > /dev/null 2>&1 &
+chromium-browser "http://127.0.0.1" > /dev/null 2>&1 &
 chromium-browser "https://127.0.0.1:19760" > /dev/null 2>&1 &
