@@ -41,5 +41,5 @@ sudo docker-compose up -d
 cd mysql
 ./add_v2xhub_user.bash
 
-chromium-browser "https://127.0.0.1" > /dev/null 2>&1 &
+chromium-browser "http://127.0.0.1" > /dev/null 2>&1 &
 chromium-browser "https://127.0.0.1:19760" > /dev/null 2>&1 &
