@@ -20,6 +20,7 @@
 #include <kafka/kafka_client.h>
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
+#include "PluginClientClockAware.h"
 
 
 
@@ -32,7 +33,7 @@ using namespace boost::property_tree;
 
 namespace CARMAStreetsPlugin {
 
-class CARMAStreetsPlugin: public PluginClient {
+class CARMAStreetsPlugin: public PluginClientClockAware {
 public:
 	CARMAStreetsPlugin(std::string);
 	virtual ~CARMAStreetsPlugin();
@@ -48,6 +49,7 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	virtual void HandleTimeSyncMessage(TimeSyncMessage &msg, routeable_message &routeableMsg) override;
 	/**
 	 * @brief Subscribe to MAP message broadcast by the MAPPlugin. This handler will be called automatically whenever the MAPPlugin is broadcasting a J2735 MAP message.
 	 * @param msg The J2735 MAP message received from the internal 

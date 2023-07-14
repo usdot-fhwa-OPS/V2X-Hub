@@ -19,7 +19,7 @@ namespace CARMAStreetsPlugin {
  * @param name The name to give the plugin for identification purposes
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
-		PluginClient(name) {
+		PluginClientClockAware(name) {
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
@@ -109,6 +109,13 @@ void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
 	UpdateConfigSettings();
 }
 
+void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
+	PluginClientClockAware::HandleTimeSyncMessage(msg, routeableMsg);
+	if ( isSimulationMode()) {
+		PLOG(logINFO) << "Handling TimeSync messages!" << std::endl;
+		produce_kafka_msg(msg.to_string(), "time_sync");
+	}
+}
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 	try 
 	{

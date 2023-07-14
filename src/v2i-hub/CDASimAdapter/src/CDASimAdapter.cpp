@@ -45,35 +45,12 @@ namespace CDASimAdapter{
         }
     }
 
-    bool CDASimAdapter::initialize_time_producer() {
-        try {
-            std::string _broker_str = sim::get_sim_config(sim::KAFKA_BROKER_ADDRESS);
-            std::string _topic = sim::get_sim_config(sim::TIME_SYNC_TOPIC);
 
-            kafka_client client;
-            time_producer =  client.create_producer(_broker_str,_topic);
-            return time_producer->init();
-
-        }
-        catch( const runtime_error &e ) {
-            PLOG(logWARNING) << "Initialization of time producer failed: " << e.what() << std::endl; 
-        }
-        return false;
-
-    }
 
     void CDASimAdapter::forward_time_sync_message(tmx::messages::TimeSyncMessage &msg) {
         std::string payload =msg.to_string();
         PLOG(logDEBUG1) << "Sending Time Sync Message " << msg << std::endl;
         this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
-        if (time_producer && time_producer->is_running()) {
-            try {
-                time_producer->send(payload);
-            }
-            catch( const runtime_error &e ) {
-                PLOG(logERROR) << "Exception encountered during kafka time sync forward : " << e.what() << std::endl;
-            }
-        }
         
     }
 
@@ -91,9 +68,6 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "CDASim connecting " << simulation_ip << 
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
-            if (!initialize_time_producer()) {
-                return false;
-            }
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                 time_sync_port, v2x_port, location ));
