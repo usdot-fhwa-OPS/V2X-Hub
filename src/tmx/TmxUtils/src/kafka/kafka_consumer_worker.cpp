@@ -8,6 +8,10 @@ namespace tmx::utils
         _partition(partition)
     {
     }
+    kafka_consumer_worker::~kafka_consumer_worker() {
+        stop();
+        FILE_LOG(logWARNING) << "Kafka consumer destroyed!" << std::endl;
+    }
 
     bool kafka_consumer_worker::init()
     {

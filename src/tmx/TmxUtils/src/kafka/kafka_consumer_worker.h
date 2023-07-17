@@ -69,6 +69,11 @@ namespace tmx::utils {
              */
             kafka_consumer_worker(const std::string &broker_str, const std::string &topic_str, const std::string & group_id, int64_t cur_offset = 0, int32_t partition = 0);
             /**
+             * @brief Destroy the kafka consumer worker object
+             * 
+             */
+            ~kafka_consumer_worker();
+            /**
              * @brief Initialize kafka_consumer_worker
              * 
              * @return true if successful.
@@ -101,11 +106,6 @@ namespace tmx::utils {
              * @return false if kafka consumer is stopped.
              */
             virtual bool is_running() const;
-            /**
-             * @brief Destroy the kafka consumer worker object
-             * 
-             */
-            virtual ~kafka_consumer_worker() = default;
     };
     
 }

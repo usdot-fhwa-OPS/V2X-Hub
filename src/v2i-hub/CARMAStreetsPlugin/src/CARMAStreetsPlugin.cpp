@@ -25,17 +25,9 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	
 	SubscribeToMessages();
-
 }
 
-CARMAStreetsPlugin::~CARMAStreetsPlugin() {
-	//Todo: It does not seem the desctructor is called.
-	_spat_kafka_consumer_ptr->stop();
-	_scheduing_plan_kafka_consumer_ptr->stop();
-	_ssm_kafka_consumer_ptr->stop();
-}
 
 void CARMAStreetsPlugin::UpdateConfigSettings() {
 
@@ -64,6 +56,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	_strategies.clear();
 	while( ss.good() ) {
 		std::string substring;
+
 		getline( ss, substring, ',');
 		_strategies.push_back( substring);
 	}
