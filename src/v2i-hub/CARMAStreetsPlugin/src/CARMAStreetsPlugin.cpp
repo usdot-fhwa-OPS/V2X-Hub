@@ -25,6 +25,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
+	AddMessageFilter < simulation::ExternalObject> (this, &CARMAStreetsPlugin::HandleSimulatedExternalMessage );
 	
 	SubscribeToMessages();
 
@@ -626,6 +627,13 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 	}
 
 }
+
+void CARMAStreetsPlugin::HandleSimulatedExternalMessage(simulation::ExternalObject &msg, routeable_message &routeableMsg)
+{
+	PLOG(logINFO) << "HandleSimulatedExternalMessage called." <<std::endl;
+	PLOG(logINFO) << msg.to_string()<<std::endl;
+}
+
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
 	try

@@ -40,6 +40,7 @@ namespace CDASimAdapter{
                 start_time_sync_thread_timer();
                 start_amf_msg_thread();
                 start_binary_msg_thread();
+                start_external_object_detection_thread();
             }
             
         }
@@ -77,6 +78,11 @@ namespace CDASimAdapter{
         
     }
 
+    void CDASimAdapter::forward_simulated_external_message(tmx::messages::simulation::ExternalObject &msg) {
+        PLOG(logDEBUG1) << "Sending Simulated ExternalObject Message " << msg << std::endl;
+        this->BroadcastMessage<tmx::messages::simulation::ExternalObject>(msg, _name, 0 , IvpMsgFlags_None);        
+    }
+
     bool CDASimAdapter::connect() {
         try {
             std::string simulation_ip = sim::get_sim_config(sim::SIMULATION_IP);
@@ -84,6 +90,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
+            uint external_object_detection_port = std::stoul(sim::get_sim_config(sim::SIM_EXTERNAL_OBJECT_PORT));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             uint infrastructure_id = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));;
@@ -96,11 +103,11 @@ namespace CDASimAdapter{
             }
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, v2x_port, location ));
+                                                time_sync_port, external_object_detection_port, v2x_port, location ));
             }
             else {
                 connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, v2x_port, location);
+                                                            time_sync_port, external_object_detection_port, v2x_port, location);
             }
         }       
         catch (const TmxException &e) {
@@ -152,6 +159,36 @@ namespace CDASimAdapter{
             }
         }
         catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    void CDASimAdapter::start_external_object_detection_thread() {
+        PLOG(logDEBUG) << "Creating Thread Timer for simulated external object" << std::endl;
+        try 
+        {
+            if(!external_bject_detection_thread_timer)
+            {
+                external_bject_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
+            }            
+            external_bject_detection_thread_timer->AddPeriodicTick([this](){
+                PLOG(logDEBUG1) << "Listening for External Object Message from CDASim." << std::endl;
+                auto msg = connection->consume_external_object_message();
+                if ( !msg.is_empty()) {
+                    PLOG(logDEBUG1) << "Consumed External Object Message: " << msg<<std::endl;                
+                    this->forward_simulated_external_message(msg);
+                    PLOG(logDEBUG1) << "External Object Message Forwarded to CARMAStreetsPlugin!" << std::endl;
+                }
+                else 
+                {
+                    PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated external message!" << std::endl;
+                }
+            }//End lambda
+            , std::chrono::milliseconds(100));
+            external_bject_detection_thread_timer->Start();
+        }
+        catch ( const UdpServerRuntimeError &e ) 
+        {
             PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
         }
     }

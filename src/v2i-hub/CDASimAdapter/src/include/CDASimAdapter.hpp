@@ -99,6 +99,11 @@ namespace CDASimAdapter {
          * @param msg TimeSyncMessage.
          */
         void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
+         /**
+         * @brief Forward simulated external object message to TMX message bus for other V2X-Hub Plugin 
+         * @param msg simulation::ExternalObject.
+         */
+        void forward_simulated_external_message(tmx::messages::simulation::ExternalObject &msg);
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */
@@ -107,6 +112,10 @@ namespace CDASimAdapter {
          * @brief Method to consume time sychrononization from CDASimConnection and forward to tmx core and CARMA Streets
          */
         void attempt_time_sync();
+        /**
+         * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
+         */
+        void start_external_object_detection_thread();
         
     private:
 
@@ -115,6 +124,7 @@ namespace CDASimAdapter {
         std::unique_ptr<CDASimConnection> connection;
         std::mutex _lock;
         std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
+        std::unique_ptr<tmx::utils::ThreadTimer> external_bject_detection_thread_timer;
         int time_sync_tick_id;
         std::unique_ptr<tmx::utils::ThreadTimer> amf_thread_timer;
         std::unique_ptr<tmx::utils::ThreadTimer> binary_thread_timer;

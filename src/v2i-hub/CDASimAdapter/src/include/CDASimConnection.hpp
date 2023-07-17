@@ -4,6 +4,7 @@
 #include <tmx/tmx.h>
 #include <WGS84Point.h>
 #include <TimeSyncMessage.h>
+#include <simulation/ExternalObject.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
@@ -33,7 +34,7 @@ namespace CDASimAdapter {
              * @param producer Kafka Producer for forwarding time synchronization messages.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
-                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,  const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
 
              /**
@@ -84,6 +85,11 @@ namespace CDASimAdapter {
              */
             tmx::messages::TimeSyncMessage consume_time_sync_message() const;
             /**
+             * @brief Method to consume incoming external object message.
+             * @return simulation::ExternalObject.
+             */
+            tmx::messages::simulation::ExternalObject consume_external_object_message() const;
+            /**
              * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,
              * initialize UDP Servers and Clients for message forwarding, and set connected property. 
@@ -96,7 +102,7 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port,
-                                const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,  const uint v2x_port, 
                                 const tmx::utils::WGS84Point &location);
             
             /**
@@ -108,7 +114,7 @@ namespace CDASimAdapter {
              * @param simulation_v2x_port port on which CARMA-Simulation is listening for incoming v2x messages.
              * @return true if setup is successful and false otherwise.
              */
-            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
+            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
             /**
              * @brief Method to attempt to establish connection between CARMA-Simulation and infrastucture. Returns true if succesful
@@ -131,13 +137,14 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
+            std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,
                 const uint v2x_port, const tmx::utils::WGS84Point &location) const; 
             
             std::string _simulation_ip;
             uint _simulation_registration_port;
             uint _infrastructure_id;
             uint _simulation_v2x_port;
+            uint _external_object_detection_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
@@ -150,6 +157,7 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
+            std::shared_ptr<tmx::utils::UdpServer> external_object_listener;
 
             FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
     };

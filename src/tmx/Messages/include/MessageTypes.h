@@ -54,6 +54,7 @@ static CONSTEXPR const char *MSGTYPE_VEHICLE_STRING = "Vehicle";
 static CONSTEXPR const char *MSGTYPE_PEDESTRIAN_STRING = "Pedestrian";
 static CONSTEXPR const char *MSGTYPE_PMM_STRING = "Pmm";
 static CONSTEXPR const char *MSGTYPE_RADIO_STRING = "Radio";
+static CONSTEXPR const char *MSGTYPE_DETECTED_STRING = "Simulation";
 			
 enum MsgSubType 
 {
@@ -91,6 +92,7 @@ static CONSTEXPR const char *MSGSUBTYPE_INCOMING_STRING = "Incoming";
 static CONSTEXPR const char *MSGSUBTYPE_OUTGOING_STRING = "Outgoing";
 static CONSTEXPR const char *MSGSUBTYPE_SHUTDOWN_STRING = "Shutdown";
 static CONSTEXPR const char *MSGSUBTYPE_TIMESYNC_STRING = "TimeSync";
+static CONSTEXPR const char *MSGSUBTYPE_EXTERNAL_OBJECT_STRING = "ExternalObject";
 		
 } /* End namespace messages */
 	
