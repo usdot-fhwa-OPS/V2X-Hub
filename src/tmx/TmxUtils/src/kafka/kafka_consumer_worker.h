@@ -69,14 +69,17 @@ namespace tmx::utils {
              */
             kafka_consumer_worker(const std::string &broker_str, const std::string &topic_str, const std::string & group_id, int64_t cur_offset = 0, int32_t partition = 0);
             /**
-             * @brief Destroy the kafka consumer worker object
-             * 
+             * @brief Destroy the kafka consumer worker object. Calls stop on consumer to clean up resources.
              */
             ~kafka_consumer_worker();
-
+            // Rule of 5 because destructor is define (https://www.codementor.io/@sandesh87/the-rule-of-five-in-c-1pdgpzb04f)
+            // Delete copy constructor
             kafka_consumer_worker(kafka_consumer_worker& other) = delete;
+            // Delete copy assigment 
             kafka_consumer_worker& operator=(const kafka_consumer_worker& other) = delete;
+            // delete move constructor
             kafka_consumer_worker(kafka_consumer_worker &&consumer) = delete;
+            // delete move assignment
             kafka_consumer_worker const & operator=(kafka_consumer_worker &&consumer) = delete;
             /**
              * @brief Initialize kafka_consumer_worker
