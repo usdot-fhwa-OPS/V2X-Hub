@@ -97,11 +97,12 @@ namespace tmx::utils
 
     void kafka_consumer_worker::stop()
     {
+        FILE_LOG(logWARNING) << "Stopping Kafka Consumer!" << std::endl;
         _run = false;
         //Close and shutdown the consumer.
         _consumer->close();
-        /*Destroy kafka instance*/ // Wait for RdKafka to decommission.
-        RdKafka::wait_destroyed(5000);
+        FILE_LOG(logWARNING) << "Kafka Consumer Stopped!" << std::endl;
+
     }
 
     void kafka_consumer_worker::subscribe()

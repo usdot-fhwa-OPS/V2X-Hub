@@ -38,6 +38,11 @@ namespace tmx::utils
     {	
     }
 
+    kafka_producer_worker::~kafka_producer_worker() {
+        stop();
+        FILE_LOG(logWARNING) << "Kafka Producer Worker Destroyed!" << std::endl;
+    }
+
     bool kafka_producer_worker::init()
     {
         if(init_producer())
@@ -217,16 +222,18 @@ namespace tmx::utils
         {
             if (_producer)
             {
-                _producer->flush(10 * 1000 /* wait for max 10 seconds */);
-
+                auto error =_producer->flush(10 * 1000 /* wait for max 10 seconds */);
+                if (error == RdKafka::ERR__TIMED_OUT)
+                    FILE_LOG(logERROR) << "Flush attempt timed out!" << std::endl;
                 if (_producer->outq_len() > 0)
-                   FILE_LOG(logWARNING) << _producer->name() << _producer->outq_len() << " message(s) were not delivered." << std::endl;
+                   FILE_LOG(logERROR) << _producer->name() << _producer->outq_len() << " message(s) were not delivered." << std::endl;
             }
         }
         catch (const std::runtime_error &e)
         {
             FILE_LOG(logERROR) << "Error encountered flushing producer : " << e.what() << std::endl;
         }
+        FILE_LOG(logWARNING) << "Kafka producer stopped!" << std::endl;
     }
 
     void kafka_producer_worker::printCurrConf()

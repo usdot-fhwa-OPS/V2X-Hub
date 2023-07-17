@@ -60,6 +60,8 @@ namespace tmx::utils
              * @param broker_str network address of kafka broker.
              */
             explicit kafka_producer_worker(const std::string &brokers);
+
+            virtual ~kafka_producer_worker();
             /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
@@ -105,11 +107,7 @@ namespace tmx::utils
              * @brief Print current configurations.
              */
             virtual void printCurrConf();
-            /**
-             * @brief Destroy the kafka producer worker object
-             * 
-             */
-            virtual ~kafka_producer_worker() = default;
+           
         };
 }
 
