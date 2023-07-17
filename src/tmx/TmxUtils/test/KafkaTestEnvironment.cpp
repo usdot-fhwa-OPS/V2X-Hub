@@ -23,6 +23,5 @@ class KafkaTestEnvironment : public ::testing::Environment {
             else {
                 std::cout << "All Objects are destroyed!" << std::endl;
             }
-
         }
 };

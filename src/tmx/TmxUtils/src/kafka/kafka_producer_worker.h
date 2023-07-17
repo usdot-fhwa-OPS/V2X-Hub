@@ -62,6 +62,11 @@ namespace tmx::utils
             explicit kafka_producer_worker(const std::string &brokers);
 
             virtual ~kafka_producer_worker();
+
+            kafka_producer_worker(kafka_producer_worker& other) = delete;
+            kafka_producer_worker& operator=(const kafka_producer_worker& other) = delete;
+            kafka_producer_worker(kafka_producer_worker &&producer) = delete;
+            kafka_producer_worker const & operator=(kafka_producer_worker &&producer) = delete;
             /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
@@ -102,7 +107,7 @@ namespace tmx::utils
             /**
              * @brief Stop running kafka producer.
              */
-            virtual void stop();
+            void stop();
             /**
              * @brief Print current configurations.
              */

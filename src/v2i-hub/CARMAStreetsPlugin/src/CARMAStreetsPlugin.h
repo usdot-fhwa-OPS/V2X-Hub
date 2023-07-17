@@ -36,7 +36,6 @@ namespace CARMAStreetsPlugin {
 class CARMAStreetsPlugin: public PluginClientClockAware {
 public:
 	CARMAStreetsPlugin(std::string);
-	virtual ~CARMAStreetsPlugin() = default ;
 	int Main();
 protected:
 

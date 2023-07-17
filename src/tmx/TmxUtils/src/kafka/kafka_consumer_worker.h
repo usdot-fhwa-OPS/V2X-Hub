@@ -73,6 +73,11 @@ namespace tmx::utils {
              * 
              */
             ~kafka_consumer_worker();
+
+            kafka_consumer_worker(kafka_consumer_worker& other) = delete;
+            kafka_consumer_worker& operator=(const kafka_consumer_worker& other) = delete;
+            kafka_consumer_worker(kafka_consumer_worker &&consumer) = delete;
+            kafka_consumer_worker const & operator=(kafka_consumer_worker &&consumer) = delete;
             /**
              * @brief Initialize kafka_consumer_worker
              * 
@@ -94,7 +99,7 @@ namespace tmx::utils {
             /**
              * @brief Stop running kafka consumer.
              */
-            virtual void stop();
+            void stop();
             /**
              * @brief Print current configurations.
              */
