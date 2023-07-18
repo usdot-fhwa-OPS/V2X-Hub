@@ -13,80 +13,55 @@ import time
 count_num = 0
 
 def generate_sim_external_object():
-    jsonResult = {
-        "metadata":{
-            "is_simulation": False,
-            "datum": "",
-            "proj_string": "",
-            "sensor_x": 0.0,
-            "sensor_y": 0.0,
-            "sensor_z": 0.0,
-            "infrastructure_id": "",
-            "sensor_id": ""
-        },
-        "header": {
-            "seq": 0,
-            "stamp": {
-            "secs": 0,
-            "nsecs": 0
-            }
-        },
-        "id": 0,
-        "pose": {
-            "pose": {
-            "position": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "orientation": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0,
-                "w": 0.0
-            }
-            },
-            "covariance": [
+    jsonResult ={
+        "MetadataIsSimulation": False,
+        "MetadataDatum": "",
+        "MetadataProjString": "",
+        "MetadataSensorX": "",
+        "MetadataSensorY": "",
+        "MetadataSensorZ": "",
+        "MetadataInfrastructureId": "",
+        "MetadataSensorId": "",
+        "HeaderStampSecs": 1,
+        "HeaderStampNsecs": 2,
+        "Id": 10,
+        "PosePosePositionX": 0.2,
+        "PosePosePositionY": 0.3,
+        "PosePosePositionZ": 0.4,
+        "PosePoseOrientationX": 0.1,
+        "PosePoseOrientationY": 0.2,
+        "PosePoseOrientationZ": 0.3,
+        "PosePoseOrientationW": 0.4,
+        "BsmId": [12,12,22,11],
+        "PoseCovariance": [
+            1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        ],
+        "VelocityTwistLinearX": 0.1,
+        "VelocityTwistLinearY": 0.1,
+        "VelocityTwistLinearZ": 0.1,
+        "VelocityTwistAngularX": 0.1,
+        "VelocityTwistAngularY": 0.1,
+        "VelocityTwistAngularZ": 0.1,
+        "VelocityCovariance": [
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-            ]
-        },
-        "velocity": {
-            "twist": {
-            "linear": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "angular": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            }
-            },
-            "covariance": [
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-            ]
-        },
-        "size": {
-            "x": 0.0,
-            "y": 0.0,
-            "z": 0.0
-        },
-        "confidence": 0.0,
-        "object_type": "",
-        "dynamic_obj": False
-        }
-
+        ],
+        "SizeX": 0.3,
+        "SizeY": 0.4,
+        "SizeZ": 0.6,
+        "Confidence": 0.0,
+        "ObjectType": "",
+        "DynamicObj": False
+    }
     jsonResult = json.dumps(jsonResult)
     return jsonResult
 port = 7576

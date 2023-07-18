@@ -22,23 +22,24 @@ namespace tmx
             {
             public:
                 ExternalObject(){};
-                ExternalObject(const tmx::message_container_type &contents) : tmx::message(contents) {}
-                ExternalObject(PRESENCE_VECTOR_TYPES presenceVector, uint32_t id,
-                               double confidence, OBJECT_TYPES objectType, bool dynamticObj)
-                {
-                    set_PresenceVector(presenceVector);
-                    set_Id(id);
-                    set_Confidence(confidence);
-                    set_ObjectType(objectType);
-                    set_DynamticObj(dynamticObj);
-                };
+                ExternalObject(const tmx::message_container_type &contents) : tmx::message(contents) {};
                 ~ExternalObject(){};
                 // Message type fpr routing this message through TMX core
                 static constexpr const char *MessageType = MSGTYPE_DETECTED_STRING;
 
                 // Message sub type for routing this message through TMX core
                 static constexpr const char *MessageSubType = MSGSUBTYPE_EXTERNAL_OBJECT_STRING;
-
+                /**
+                 * Metadata to describe the external object
+                */
+                std_attribute(this->msg, bool, MetadataIsSimulation, false, );
+                std_attribute(this->msg, std::string, MetadataDatum, "", );
+                std_attribute(this->msg, std::string, MetadataProjString, "", );
+                std_attribute(this->msg, std::string, MetadataSensorX, "", );
+                std_attribute(this->msg, std::string, MetadataSensorY, "", );
+                std_attribute(this->msg, std::string, MetadataSensorZ, "", );
+                std_attribute(this->msg, std::string, MetadataInfrastructureId, "", );
+                std_attribute(this->msg, std::string, MetadataSensorId, "", );
                 /**
                  *Header contains the frame rest of the fields will use
                  */
@@ -49,9 +50,9 @@ namespace tmx
                 //  # * stamp.nsec: nanoseconds since stamp_secs (in Python the variable is called 'nsecs')
                 //  # time-handling sugar is provided by the client library
                 // The seconds component, valid over all int32 values.
-                std_attribute(this->msg, uint32_t, HeaderTimeSec, 0, );
+                std_attribute(this->msg, uint32_t, HeaderStampSecs, 0, );
                 // # The nanoseconds component, valid in the range [0, 10e9).
-                std_attribute(this->msg, uint32_t, HeaderTimeNanoSec, 0, );
+                std_attribute(this->msg, uint32_t, HeaderStampNSecs, 0, );
 
                 // A presence vector, this message is used to describe objects coming from potentially different
                 // sources. The presence vector is used to determine what items are set by the producer.
@@ -88,27 +89,62 @@ namespace tmx
                 // Pose of the object within the frame specified in header
                 // geometry_msgs/PoseWithCovariance pose
                 // This represents a pose in free space with uncertainty.
-                std_attribute(this->msg, double, PosePointX, 0, );
-                std_attribute(this->msg, double, PosePointY, 0, );
-                std_attribute(this->msg, double, PosePointZ, 0, );
+                std_attribute(this->msg, double, PosePosePositionX, 0, );
+                std_attribute(this->msg, double, PosePosePositionY, 0, );
+                std_attribute(this->msg, double, PosePosePositionZ, 0, );
 
                 // This represents an orientation in free space in quaternion form.
-                std_attribute(this->msg, double, PoseQuaternionX, 0, );
-                std_attribute(this->msg, double, PoseQuaternionY, 0, );
-                std_attribute(this->msg, double, PoseQuaternionZ, 0, );
-                std_attribute(this->msg, double, PoseQuaternionW, 0, );
+                std_attribute(this->msg, double, PosePoseOrientationX, 0, );
+                std_attribute(this->msg, double, PosePoseOrientationY, 0, );
+                std_attribute(this->msg, double, PosePoseOrientationZ, 0, );
+                std_attribute(this->msg, double, PosePoseOrientationW, 0, );
 
                 // Row-major representation of the 6x6 covariance matrix
                 //  # The orientation parameters use a fixed-axis representation.
                 //  # In order, the parameters are:
                 //  # (x, y, z, rotation about X axis, rotation about Y axis, rotation about Z axis)
-                std_attribute(this->msg, double, Covariance, 0, );
+                struct Covariance
+                {
+                    double covariance = 0;
+
+                    Covariance() {}
+                    Covariance(double covariance) : covariance(covariance) {}
+
+                    static message_tree_type to_tree(Covariance element)
+                    {
+                        message_tree_type treeElement;
+                        treeElement.put("Covariance", element.covariance);
+                        return treeElement;
+                    }
+
+                    static Covariance from_tree(message_tree_type &treeElement)
+                    {
+                        Covariance element;
+                        element.covariance = treeElement.get<std::uint8_t>("Covariance");
+                        return element;
+                    }
+                };
+                array_attribute( Covariance, PoseCovariance);
 
                 // #Average velocity of the object within the frame specified in header
                 // geometry_msgs/TwistWithCovariance velocity
+                std_attribute(this->msg, double, VelocityTwistLinearX, 0, );
+                std_attribute(this->msg, double, VelocityTwistLinearY, 0, );
+                std_attribute(this->msg, double, VelocityTwistLinearZ, 0, );
+                std_attribute(this->msg, double, VelocityTwistAngularX, 0, );
+                std_attribute(this->msg, double, VelocityTwistAngularY, 0, );
+                std_attribute(this->msg, double, VelocityTwistAngularZ, 0, );
+                array_attribute( Covariance, VelocityCovariance);
 
                 // #Instantaneous velocity of an object within the frame specified in header
                 // geometry_msgs/TwistWithCovariance velocity_inst
+                std_attribute(this->msg, double, VelocityInstTwistLinearX, 0, );
+                std_attribute(this->msg, double, VelocityInstTwistLinearY, 0, );
+                std_attribute(this->msg, double, VelocityInstTwistLinearZ, 0, );
+                std_attribute(this->msg, double, VelocityInstTwistAngularX, 0, );
+                std_attribute(this->msg, double, VelocityInstTwistAngularY, 0, );
+                std_attribute(this->msg, double, VelocityInstTwistAngularZ, 0, );
+                array_attribute( Covariance, VelocityInstCovariance);
 
                 // #The size of the object aligned along the axis of the object described by the orientation in pose
                 // #Dimensions are specified in meters
@@ -117,8 +153,7 @@ namespace tmx
                     # It is only meant to represent a direction. Therefore, it does not
                     # make sense to apply a translation to it (e.g., when applying a
                     # generic rigid transformation to a Vector3, tf2 will only apply the
-                    # rotation). If you want your data to be translatable too, use the
-                    # geometry_msgs/Point message instead.
+                    # rotation).
                 */
                 // geometry_msgs/Vector3 size
                 std_attribute(this->msg, double, SizeX, 0, );

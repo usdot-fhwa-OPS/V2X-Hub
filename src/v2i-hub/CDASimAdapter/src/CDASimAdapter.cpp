@@ -174,10 +174,8 @@ namespace CDASimAdapter{
             external_bject_detection_thread_timer->AddPeriodicTick([this](){
                 PLOG(logDEBUG1) << "Listening for External Object Message from CDASim." << std::endl;
                 auto msg = connection->consume_external_object_message();
-                if ( !msg.is_empty()) {
-                    PLOG(logDEBUG1) << "Consumed External Object Message: " << msg<<std::endl;                
+                if ( !msg.is_empty()) {             
                     this->forward_simulated_external_message(msg);
-                    PLOG(logDEBUG1) << "External Object Message Forwarded to CARMAStreetsPlugin!" << std::endl;
                 }
                 else 
                 {
