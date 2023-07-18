@@ -9,6 +9,7 @@ namespace tmx
         {
             enum PRESENCE_VECTOR_TYPES
             {
+                UNAVAILABLE = 0,
                 ID_PRESENCE_VECTOR = 1,
                 POSE_PRESENCE_VECTOR = 2,
                 VELOCITY_PRESENCE_VECTOR = 4,

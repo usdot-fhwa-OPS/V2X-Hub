@@ -13,55 +13,79 @@ import time
 count_num = 0
 
 def generate_sim_external_object():
-    jsonResult ={
-        "MetadataIsSimulation": False,
-        "MetadataDatum": "",
-        "MetadataProjString": "",
-        "MetadataSensorX": "",
-        "MetadataSensorY": "",
-        "MetadataSensorZ": "",
-        "MetadataInfrastructureId": "",
-        "MetadataSensorId": "",
-        "HeaderStampSecs": 1,
-        "HeaderStampNsecs": 2,
-        "Id": 10,
-        "PosePosePositionX": 0.2,
-        "PosePosePositionY": 0.3,
-        "PosePosePositionZ": 0.4,
-        "PosePoseOrientationX": 0.1,
-        "PosePoseOrientationY": 0.2,
-        "PosePoseOrientationZ": 0.3,
-        "PosePoseOrientationW": 0.4,
-        "BsmId": [12,12,22,11],
-        "PoseCovariance": [
-            1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-        ],
-        "VelocityTwistLinearX": 0.1,
-        "VelocityTwistLinearY": 0.1,
-        "VelocityTwistLinearZ": 0.1,
-        "VelocityTwistAngularX": 0.1,
-        "VelocityTwistAngularY": 0.1,
-        "VelocityTwistAngularZ": 0.1,
-        "VelocityCovariance": [
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-        ],
-        "SizeX": 0.3,
-        "SizeY": 0.4,
-        "SizeZ": 0.6,
-        "Confidence": 0.0,
-        "ObjectType": "",
-        "DynamicObj": False
-    }
+    jsonResult ={      
+        "metadata":{
+            "is_simulation": True,
+            "datum": "WGS84",
+            "proj_string": "epsg:3785",
+            "sensor_x": 12.212,
+            "sensor_y": 2.2121212,
+            "sensor_z": 0.121212212,
+            "infrastructure_id": "test",
+            "sensor_id": "test_sensor"
+        },
+        "header": {
+            "seq": 2,
+            "stamp": {
+            "secs": 3,
+            "nsecs":4
+            }
+        },
+        "id": 1212,
+        "pose": {
+            "pose": {
+            "position": {
+                "x": 12.0,
+                "y": 23.0,
+                "z": 56.121212
+            },
+            "orientation": {
+                "x": 11.0,
+                "y": 22.0,
+                "z": 33.333333,
+                "w": 44.4444444444
+            }
+            },
+            "covariance": [
+                12.12, 12.3233232, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+            ]
+        },
+        "velocity": {
+            "twist": {
+            "linear": {
+                "x": 12.1111111111111,
+                "y": 2.11111112222,
+                "z": 3.2222222222333
+            },
+            "angular": {
+                "x": 2.212222222222,
+                "y": 2.2333333333333,
+                "z": 3.3333333333121
+            }
+            },
+            "covariance": [
+                12.2222222222, 123.33333333, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 0.0, 0.0,23.66666666666
+            ]
+        },
+        "size": {
+            "x": 12.0,
+            "y": 23.0,
+            "z": 23.0
+        },
+        "confidence": 12.0,
+        "object_type": "2",
+        "dynamic_obj": True
+        }
     jsonResult = json.dumps(jsonResult)
     return jsonResult
 port = 7576

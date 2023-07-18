@@ -8,6 +8,7 @@
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
+#include <simulation/SimulationExternalObjectConverter.h>
 
 
 namespace CDASimAdapter {
@@ -86,6 +87,7 @@ namespace CDASimAdapter {
             tmx::messages::TimeSyncMessage consume_time_sync_message() const;
             /**
              * @brief Method to consume incoming external object message.
+             * //To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
              * @return simulation::ExternalObject.
              */
             tmx::messages::simulation::ExternalObject consume_external_object_message() const;

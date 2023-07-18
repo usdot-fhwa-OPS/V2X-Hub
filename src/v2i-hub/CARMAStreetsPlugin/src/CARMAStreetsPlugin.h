@@ -21,6 +21,7 @@
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
 #include <simulation/ExternalObject.h>
+#include <simulation/SimulationExternalObjectConverter.h>
 
 
 
@@ -101,6 +102,7 @@ private:
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
 	std::string _transmitSRMTopic;
+	std::string _transmitSimExternalObjTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;

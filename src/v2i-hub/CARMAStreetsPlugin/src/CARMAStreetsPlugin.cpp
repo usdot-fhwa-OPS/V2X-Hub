@@ -57,7 +57,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
-	GetConfigValue<string>("SRMTopic", _transmitSRMTopic);
+	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
+	GetConfigValue<string>("SimExternalObjTopic", _transmitSimExternalObjTopic); 
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -630,9 +631,10 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 void CARMAStreetsPlugin::HandleSimulatedExternalMessage(ExternalObject &msg, routeable_message &routeableMsg)
 {
-	PLOG(logINFO) << "HandleSimulatedExternalMessage called." <<std::endl;
-	PLOG(logINFO) <<  "Message Received " << msg.to_string()<<std::endl;
-	PLOG(logINFO) <<  "Message Received " << msg.get_PosePosePositionX()<<std::endl;
+	tmx::utils::sim::SimulationExternalObjectConverter converter;
+	auto json_str = converter.simExternalObjToJsonStr(msg);
+	PLOG(logINFO) <<  "Produce External Object Message in JSON format:  " << json_str <<std::endl;
+	produce_kafka_msg(json_str, _transmitSimExternalObjTopic);
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
