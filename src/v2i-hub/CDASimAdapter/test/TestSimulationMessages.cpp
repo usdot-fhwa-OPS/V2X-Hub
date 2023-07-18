@@ -27,5 +27,5 @@ TEST(SimulationMessages, ExternalObjectToRoutableMessage)
     ASSERT_EQ(0, routeableMsg.get_sourceId());
     ASSERT_EQ("CDASimAdapter", routeableMsg.get_source());
     ASSERT_EQ("ExternalObject",routeableMsg.get_subtype());
-    ASSERT_EQ("Detected", routeableMsg.get_type());
+    ASSERT_EQ("Simulation", routeableMsg.get_type());
 }
