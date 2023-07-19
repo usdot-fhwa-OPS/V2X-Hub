@@ -1,4 +1,4 @@
-PROJECT ( ImmediateForwardPlugin VERSION 7.5.0 LANGUAGES CXX )
+PROJECT ( ImmediateForwardPlugin VERSION 7.5.1 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Immediate Forward")
 
