@@ -631,8 +631,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 void CARMAStreetsPlugin::HandleSimulatedExternalMessage(ExternalObject &msg, routeable_message &routeableMsg)
 {
-	tmx::utils::sim::SimulationExternalObjectConverter converter;
-	auto json_str = converter.simExternalObjToJsonStr(msg);
+	auto json_str = tmx::utils::sim::SimulationExternalObjectConverter::simExternalObjToJsonStr(msg);
 	PLOG(logINFO) <<  "Produce External Object Message in JSON format:  " << json_str <<std::endl;
 	produce_kafka_msg(json_str, _transmitSimExternalObjTopic);
 }

@@ -135,9 +135,8 @@ namespace CDASimAdapter{
         if(external_object_listener)
         {
             std::string str_msg = consume_server_message(external_object_listener);
-            tmx::utils::sim::SimulationExternalObjectConverter converter;
             //To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
-            converter.jsonToSimExternalObj(str_msg, externalObj);
+            tmx::utils::sim::SimulationExternalObjectConverter::jsonToSimExternalObj(str_msg, externalObj);
         }
         else
         {

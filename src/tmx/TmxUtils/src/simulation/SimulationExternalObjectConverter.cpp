@@ -2,7 +2,7 @@
 
 namespace tmx::utils::sim
 {
-    string SimulationExternalObjectConverter::simExternalObjToJsonStr(simulation::ExternalObject &simExternalObj)
+    std::string SimulationExternalObjectConverter::simExternalObjToJsonStr(tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         Json::Value root;
         Json::Value metadata;
@@ -23,7 +23,7 @@ namespace tmx::utils::sim
         root["header"] = header;
 
         root["id"] = simExternalObj.get_Id();
-        if (simExternalObj.get_PresenceVector() != simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE)
+        if (simExternalObj.get_PresenceVector() != tmx::messages::simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE)
         {
             root["presence_vector"] = simExternalObj.get_PresenceVector();
         }
@@ -37,10 +37,8 @@ namespace tmx::utils::sim
         pose["pose"]["orientation"]["z"] = simExternalObj.get_PosePoseOrientationZ();
         pose["pose"]["orientation"]["w"] = simExternalObj.get_PosePoseOrientationW();
         auto pCovarianceV = simExternalObj.get_PoseCovariance();
-        for (auto itr = pCovarianceV.begin(); itr != pCovarianceV.end(); itr++)
-        {
-            pose["covariance"].append(Json::Value(itr->covariance));
-        }
+        std::for_each(pCovarianceV.begin(), pCovarianceV.end(), [&pose](const auto &item)
+                      { pose["covariance"].append(Json::Value(item.covariance)); });
         root["pose"] = pose;
 
         Json::Value velocity;
@@ -51,10 +49,8 @@ namespace tmx::utils::sim
         velocity["twist"]["angular"]["y"] = simExternalObj.get_VelocityTwistAngularY();
         velocity["twist"]["angular"]["z"] = simExternalObj.get_VelocityTwistAngularZ();
         auto vCovarianceV = simExternalObj.get_VelocityCovariance();
-        for (auto itr = vCovarianceV.begin(); itr != vCovarianceV.end(); itr++)
-        {
-            velocity["covariance"].append(Json::Value(itr->covariance));
-        }
+        std::for_each(vCovarianceV.begin(), vCovarianceV.end(), [&velocity](const auto &item)
+                      { velocity["covariance"].append(Json::Value(item.covariance)); });
         root["velocity"] = velocity;
 
         Json::Value size;
@@ -64,14 +60,14 @@ namespace tmx::utils::sim
         root["size"] = size;
 
         root["confidence"] = simExternalObj.get_Confidence();
-        root["object_type"] = to_string(simExternalObj.get_ObjectType());
+        root["object_type"] = std::to_string(simExternalObj.get_ObjectType());
         root["dynamic_obj"] = simExternalObj.get_DynamticObj();
         Json::StreamWriterBuilder builder;
         const std::string json_str = Json::writeString(builder, root);
         return json_str;
     }
 
-    void SimulationExternalObjectConverter::jsonToSimExternalObj(const string &jsonStr, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::jsonToSimExternalObj(const std::string &jsonStr, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         Json::CharReaderBuilder builder;
         const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
@@ -79,7 +75,7 @@ namespace tmx::utils::sim
         JSONCPP_STRING err;
         if (!reader->parse(jsonStr.c_str(), jsonStr.c_str() + static_cast<int>(jsonStr.length()), &root, &err))
         {
-            throw runtime_error("Error parsing external object JSON string.");
+            throw std::runtime_error("Error parsing external object JSON string.");
         }
 
         /**
@@ -154,7 +150,7 @@ namespace tmx::utils::sim
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimExternalObjectMetadata(const Json::Value &metadataValue, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::populateSimExternalObjectMetadata(const Json::Value &metadataValue, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         if (metadataValue.isMember("is_simulation") && metadataValue["is_simulation"].isBool())
         {
@@ -197,7 +193,7 @@ namespace tmx::utils::sim
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimExternalObjectHeader(const Json::Value &headerValue, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::populateSimExternalObjectHeader(const Json::Value &headerValue, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         if (headerValue.isMember("seq") && headerValue["seq"].isUInt())
         {
@@ -215,7 +211,7 @@ namespace tmx::utils::sim
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimExternalObjectPose(const Json::Value &poseValue, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::populateSimExternalObjectPose(const Json::Value &poseValue, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         if (poseValue.isMember("pose") && poseValue["pose"].isMember("position") && poseValue["pose"]["position"].isObject())
         {
@@ -258,13 +254,13 @@ namespace tmx::utils::sim
         if (poseValue.isMember("covariance") && poseValue["covariance"].isArray())
         {
             Json::Value covarianceArrayValue = poseValue["covariance"];
-            std::vector<simulation::Covariance> covarianceV;
+            std::vector<tmx::messages::simulation::Covariance> covarianceV;
             populateSimCovarianceArray(covarianceArrayValue, covarianceV);
             simExternalObj.set_PoseCovariance(covarianceV);
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimExternalObjectVelocity(const Json::Value &velocityValue, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::populateSimExternalObjectVelocity(const Json::Value &velocityValue, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         if (velocityValue.isMember("twist") && velocityValue["twist"].isMember("linear") && velocityValue["twist"]["linear"].isObject())
         {
@@ -306,13 +302,13 @@ namespace tmx::utils::sim
         if (velocityValue.isMember("covariance") && velocityValue["covariance"].isArray())
         {
             Json::Value covarianceArrayValue = velocityValue["covariance"];
-            std::vector<simulation::Covariance> covarianceV;
+            std::vector<tmx::messages::simulation::Covariance> covarianceV;
             populateSimCovarianceArray(covarianceArrayValue, covarianceV);
             simExternalObj.set_VelocityCovariance(covarianceV);
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimExternalObjectSize(const Json::Value &sizeValue, simulation::ExternalObject &simExternalObj)
+    void SimulationExternalObjectConverter::populateSimExternalObjectSize(const Json::Value &sizeValue, tmx::messages::simulation::ExternalObject &simExternalObj)
     {
         if (sizeValue.isMember("x"))
         {
@@ -328,80 +324,96 @@ namespace tmx::utils::sim
         }
     }
 
-    void SimulationExternalObjectConverter::populateSimCovarianceArray(const Json::Value &covarianceArrayValue, std::vector<simulation::Covariance> &covarianceV)
+    void SimulationExternalObjectConverter::populateSimCovarianceArray(const Json::Value &covarianceArrayValue, std::vector<tmx::messages::simulation::Covariance> &covarianceV)
     {
-        for (auto itr = covarianceArrayValue.begin(); itr != covarianceArrayValue.end(); itr++)
-        {
-            simulation::Covariance covariance(itr->asDouble());
-            covarianceV.push_back(covariance);
-        }
+        std::for_each(covarianceArrayValue.begin(), covarianceArrayValue.end(), [&covarianceV](const auto &item)
+                      { tmx::messages::simulation::Covariance covariance(item.asDouble()); 
+                      covarianceV.push_back(covariance); });
     }
 
-    simulation::OBJECT_TYPES SimulationExternalObjectConverter::objectTypeStringToEnum(const string &object_type_str)
+    tmx::messages::simulation::OBJECT_TYPES SimulationExternalObjectConverter::objectTypeStringToEnum(const std::string &object_type_str)
     {
-        simulation::OBJECT_TYPES object_type = simulation::OBJECT_TYPES::UNKNOWN;
+        tmx::messages::simulation::OBJECT_TYPES object_type = tmx::messages::simulation::OBJECT_TYPES::UNKNOWN;
         try
         {
             int object_type_int = stoi(object_type_str);
             switch (object_type_int)
             {
-            case simulation::OBJECT_TYPES::LARGE_VEHICLE:
-                object_type = simulation::OBJECT_TYPES::LARGE_VEHICLE;
+            case tmx::messages::simulation::OBJECT_TYPES::LARGE_VEHICLE:
+                object_type = tmx::messages::simulation::OBJECT_TYPES::LARGE_VEHICLE;
                 break;
-            case simulation::OBJECT_TYPES::MOTORCYCLE:
-                object_type = simulation::OBJECT_TYPES::MOTORCYCLE;
+
+            case tmx::messages::simulation::OBJECT_TYPES::MOTORCYCLE:
+                object_type = tmx::messages::simulation::OBJECT_TYPES::MOTORCYCLE;
                 break;
-            case simulation::OBJECT_TYPES::PEDESTRIAN:
-                object_type = simulation::OBJECT_TYPES::PEDESTRIAN;
-            case simulation::OBJECT_TYPES::SMALL_VEHICLE:
-                object_type = simulation::OBJECT_TYPES::SMALL_VEHICLE;
+
+            case tmx::messages::simulation::OBJECT_TYPES::PEDESTRIAN:
+                object_type = tmx::messages::simulation::OBJECT_TYPES::PEDESTRIAN;
                 break;
+
+            case tmx::messages::simulation::OBJECT_TYPES::SMALL_VEHICLE:
+                object_type = tmx::messages::simulation::OBJECT_TYPES::SMALL_VEHICLE;
+                break;
+
             default:
-                object_type = simulation::OBJECT_TYPES::UNKNOWN;
+                object_type = tmx::messages::simulation::OBJECT_TYPES::UNKNOWN;
                 break;
             }
         }
-        catch (exception &err)
+        catch (std::exception &err)
         {
-            object_type = simulation::OBJECT_TYPES::UNKNOWN;
+            object_type = tmx::messages::simulation::OBJECT_TYPES::UNKNOWN;
         }
         return object_type;
     }
 
-    simulation::PRESENCE_VECTOR_TYPES SimulationExternalObjectConverter::presenceVectorIntToEnum(uint16_t presence_vector)
+    tmx::messages::simulation::PRESENCE_VECTOR_TYPES SimulationExternalObjectConverter::presenceVectorIntToEnum(uint16_t presence_vector)
     {
-        simulation::PRESENCE_VECTOR_TYPES presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE;
+        tmx::messages::simulation::PRESENCE_VECTOR_TYPES presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE;
         switch (presence_vector)
         {
-        case simulation::PRESENCE_VECTOR_TYPES::BSM_ID_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::BSM_ID_PRESENCE_VECTOR;
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::BSM_ID_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::BSM_ID_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::CONFIDENCE_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::CONFIDENCE_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::CONFIDENCE_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::CONFIDENCE_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::DYNAMIC_OBJ_PRESENCE:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::DYNAMIC_OBJ_PRESENCE;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::DYNAMIC_OBJ_PRESENCE:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::DYNAMIC_OBJ_PRESENCE;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::OBJECT_TYPE_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::OBJECT_TYPE_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::OBJECT_TYPE_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::OBJECT_TYPE_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::POSE_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::POSE_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::POSE_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::POSE_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::PREDICTION_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::PREDICTION_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::PREDICTION_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::PREDICTION_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::SIZE_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::SIZE_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::SIZE_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::SIZE_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::VELOCITY_INST_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::VELOCITY_INST_PRESENCE_VECTOR;
+            
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::VELOCITY_INST_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::VELOCITY_INST_PRESENCE_VECTOR;
             break;
-        case simulation::PRESENCE_VECTOR_TYPES::VELOCITY_PRESENCE_VECTOR:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::VELOCITY_PRESENCE_VECTOR;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::VELOCITY_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::VELOCITY_PRESENCE_VECTOR;
             break;
+
+        case tmx::messages::simulation::PRESENCE_VECTOR_TYPES::ID_PRESENCE_VECTOR:
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::ID_PRESENCE_VECTOR;
+            break;
+
         default:
-            presence_vector_enum = simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE;
+            presence_vector_enum = tmx::messages::simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE;
             break;
         }
         return presence_vector_enum;
