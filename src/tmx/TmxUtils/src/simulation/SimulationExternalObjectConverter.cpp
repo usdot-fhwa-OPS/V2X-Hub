@@ -94,6 +94,9 @@ namespace tmx::utils::sim
             populateSimExternalObjectHeader(root["header"], simExternalObj);
         }
 
+        /**
+         * Populate simulation external object presence vector
+         */
         if (root.isMember("presence_vector") && root["presence_vector"].isUInt())
         {
             auto presence_vetor = presenceVectorIntToEnum(root["presence_vector"].asUInt());
