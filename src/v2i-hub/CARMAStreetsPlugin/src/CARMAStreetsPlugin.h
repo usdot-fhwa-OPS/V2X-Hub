@@ -30,7 +30,6 @@ using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
-using namespace tmx::messages::simulation;
 using namespace boost::property_tree;
 
 namespace CARMAStreetsPlugin {
@@ -51,7 +50,7 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void HandleSimulatedExternalMessage(ExternalObject &msg, routeable_message &routeableMsg);
+	void HandleSimulatedExternalMessage(simulation::ExternalObject &msg, routeable_message &routeableMsg);
 	/**
 	 * @brief Subscribe to MAP message broadcast by the MAPPlugin. This handler will be called automatically whenever the MAPPlugin is broadcasting a J2735 MAP message.
 	 * @param msg The J2735 MAP message received from the internal 

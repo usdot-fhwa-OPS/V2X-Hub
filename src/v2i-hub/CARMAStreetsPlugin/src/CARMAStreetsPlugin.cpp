@@ -25,7 +25,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	AddMessageFilter < ExternalObject > (this, &CARMAStreetsPlugin::HandleSimulatedExternalMessage );
+	AddMessageFilter < simulation::ExternalObject > (this, &CARMAStreetsPlugin::HandleSimulatedExternalMessage );
 	
 	SubscribeToMessages();
 
@@ -629,7 +629,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 }
 
-void CARMAStreetsPlugin::HandleSimulatedExternalMessage(ExternalObject &msg, routeable_message &routeableMsg)
+void CARMAStreetsPlugin::HandleSimulatedExternalMessage(simulation::ExternalObject &msg, routeable_message &routeableMsg)
 {
 	auto json_str = tmx::utils::sim::SimulationExternalObjectConverter::simExternalObjToJsonStr(msg);
 	PLOG(logINFO) <<  "Produce External Object Message in JSON format:  " << json_str <<std::endl;
