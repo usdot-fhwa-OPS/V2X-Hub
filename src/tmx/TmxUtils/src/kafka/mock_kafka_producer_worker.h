@@ -26,7 +26,6 @@ namespace tmx::utils {
             MOCK_METHOD(bool, init,(),(override));
             MOCK_METHOD(void, send, (const std::string &msg), (override));
             MOCK_METHOD(bool, is_running, (), (const, override));
-            MOCK_METHOD(void, stop, (), (override));
             MOCK_METHOD(void, printCurrConf, (), (override));
     };
 }

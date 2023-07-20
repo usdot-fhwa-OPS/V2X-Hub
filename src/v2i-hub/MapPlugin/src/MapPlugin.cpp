@@ -81,6 +81,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnMessageReceived(IvpMessage *msg);
 	void OnStateChange(IvpPluginState state);
+
 private:
 	std::atomic<int> _mapAction {-1};
 	std::atomic<bool> _isMapFileNew {false};

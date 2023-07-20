@@ -25,7 +25,6 @@ services:
       - SIM_EXTERNAL_OBJECT_PORT=7576
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=1
-      - KAFKA_BROKER_ADDRESS=127.0.0.1:9092
     secrets:
       - mysql_password
 

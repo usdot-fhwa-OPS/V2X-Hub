@@ -13,7 +13,6 @@ TEST(test_kafka_producer_worker, create_producer)
     std::string msg = "test message";
     // // Run this unit test without launching kafka broker will throw connection refused error
     worker->send(msg);
-    worker->stop();
 }
 
 TEST(test_kafka_producer_worker, create_producer_no_topic)
@@ -28,5 +27,4 @@ TEST(test_kafka_producer_worker, create_producer_no_topic)
     std::string msg = "test message";
     // // Run this unit test without launching kafka broker will throw connection refused error
     worker->send(msg, topic);
-    worker->stop();
 }

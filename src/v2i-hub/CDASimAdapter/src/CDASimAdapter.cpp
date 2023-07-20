@@ -13,11 +13,22 @@ namespace CDASimAdapter{
     }
 
     void CDASimAdapter::UpdateConfigSettings() {
-        GetConfigValue<double>("Longitude", location.Longitude);
-        GetConfigValue<double>("Latitude", location.Latitude);
-        GetConfigValue<double>("Elevation", location.Elevation);
-        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.Longitude << ", " 
-            << location.Latitude << ", " << location.Elevation << "}." << std::endl;
+        std::scoped_lock<std::mutex> lock(_lock);
+        bool success = false;
+        success = GetConfigValue<double>("X", location.X);
+        success = success && GetConfigValue<double>("Y", location.Y);
+        success = success && GetConfigValue<double>("Z", location.Z);
+        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", " 
+            << location.Y << ", " << location.Z << "}." << std::endl;
+        success = success && GetConfigValue<int>("MaxConnectionAttempts", max_connection_attempts);
+        success = success && GetConfigValue<uint>("ConnectionSleepTime", connection_sleep_time);
+        if (connection_sleep_time < 1 ) {
+            PLOG(logWARNING) << "ConnectionSleepTime of " << connection_sleep_time << " is invalid. Valid values are <= 1." << std::endl;      
+            connection_sleep_time = 1;
+        }
+        if (!success) {
+            PLOG(logWARNING) << "Some configuration parameters were not successfully loaded! Please ensure configuration parameter keys are correct!" << std::endl;
+        }
     }
 
     void CDASimAdapter::OnConfigChanged(const char *key, const char *value) {
@@ -32,8 +43,19 @@ namespace CDASimAdapter{
             UpdateConfigSettings();
            
             // While CARMA Simulation connection is down, attempt to reconnect
-            while ( !connection || !connection->is_connected() ) {
-                connect();
+            int connection_attempts = 0;
+            while ( (!connection || !connection->is_connected()) && (connection_attempts < max_connection_attempts || max_connection_attempts < 1 ) ) {
+                PLOG(logINFO) << "Attempting CDASim connection " << connection_attempts << "/" << max_connection_attempts << " ..." << std::endl;
+                bool success = connect();
+                if (success) {
+                    PLOG(logINFO) << "Connection to CDASim established!" << std::endl;
+                }
+                connection_attempts++;
+                // Sleep for configurable seconds in between connection attempts. No sleep is required on final failing attempt
+                if ( !connection->is_connected() && (connection_attempts < max_connection_attempts || max_connection_attempts < 1 ) ) {
+                    PLOG(logDEBUG) << "Sleeping for " << connection_sleep_time << " seconds before next connection attempt ..." << std::endl;
+                    std::this_thread::sleep_for(std::chrono::seconds(connection_sleep_time));
+                }
             }
 
             if ( connection->is_connected() ) {
@@ -41,40 +63,21 @@ namespace CDASimAdapter{
                 start_amf_msg_thread();
                 start_binary_msg_thread();
                 start_external_object_detection_thread();
+                start_immediate_forward_thread();
+                start_message_receiver_thread();
+            }else {
+                PLOG(logERROR) << "CDASim connection failed!" << std::endl;
             }
             
         }
     }
 
-    bool CDASimAdapter::initialize_time_producer() {
-        try {
-            std::string _broker_str = sim::get_sim_config(sim::KAFKA_BROKER_ADDRESS);
-            std::string _topic = sim::get_sim_config(sim::TIME_SYNC_TOPIC);
 
-            kafka_client client;
-            time_producer =  client.create_producer(_broker_str,_topic);
-            return time_producer->init();
-
-        }
-        catch( const runtime_error &e ) {
-            PLOG(logWARNING) << "Initialization of time producer failed: " << e.what() << std::endl; 
-        }
-        return false;
-
-    }
 
     void CDASimAdapter::forward_time_sync_message(tmx::messages::TimeSyncMessage &msg) {
         std::string payload =msg.to_string();
         PLOG(logDEBUG1) << "Sending Time Sync Message " << msg << std::endl;
         this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
-        if (time_producer && time_producer->is_running()) {
-            try {
-                time_producer->send(payload);
-            }
-            catch( const runtime_error &e ) {
-                PLOG(logERROR) << "Exception encountered during kafka time sync forward : " << e.what() << std::endl;
-            }
-        }
         
     }
 
@@ -93,14 +96,11 @@ namespace CDASimAdapter{
             uint external_object_detection_port = std::stoul(sim::get_sim_config(sim::SIM_EXTERNAL_OBJECT_PORT));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
-            uint infrastructure_id = std::stoul(sim::get_sim_config(sim::INFRASTRUCTURE_ID));;
+            std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
 
             PLOG(logINFO) << "CDASim connecting " << simulation_ip << 
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
-            if (!initialize_time_producer()) {
-                return false;
-            }
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                 time_sync_port, external_object_detection_port, v2x_port, location ));
@@ -113,36 +113,42 @@ namespace CDASimAdapter{
         catch (const TmxException &e) {
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << std::endl;
             return false;
+        }
+        catch (const std::invalid_argument &e ) {
+            // std::stoul throws invalid arguement exception when provided with a string that contains characters that are not numbers.
+            PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << 
+                ". Check environment variables are set to the correct type!";
+            return false;
         }   
         return connection->connect();
     }
     
 
 
-    void CDASimAdapter::start_amf_msg_thread() {
-        if ( !amf_thread_timer ) {
-            amf_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+    void CDASimAdapter::start_immediate_forward_thread() {
+        if ( !immediate_forward_timer ) {
+            immediate_forward_timer = std::make_unique<tmx::utils::ThreadTimer>();
         }
-        amf_msg_tick_id = amf_thread_timer->AddPeriodicTick([this]() {
+        immediate_forward_tick_id = immediate_forward_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_v2xhub();
             
         } // end of lambda expression
         , std::chrono::milliseconds(100) );
         
-        amf_thread_timer->Start();
+        immediate_forward_timer->Start();
 
     }
 
-    void CDASimAdapter::start_binary_msg_thread() {
-        if ( !binary_thread_timer ) {
-            binary_thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+    void CDASimAdapter::start_message_receiver_thread() {
+        if ( !message_receiver_timer ) {
+            message_receiver_timer = std::make_unique<tmx::utils::ThreadTimer>();
         }
 
-        binary_msg_tick_id = binary_thread_timer->AddPeriodicTick([this]() {
+        message_receiver_tick_id = message_receiver_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_simulation();
         } // end of lambda expression
         , std::chrono::milliseconds(100) );
-        binary_thread_timer->Start();
+        message_receiver_timer->Start();
 
     }
 
@@ -210,15 +216,15 @@ namespace CDASimAdapter{
 
     void CDASimAdapter::start_time_sync_thread_timer() {
         PLOG(logDEBUG) << "Creating Thread Timer for time sync" << std::endl;
-        if ( !thread_timer ) {
-            thread_timer = std::make_unique<tmx::utils::ThreadTimer>();
+        if ( !time_sync_timer ) {
+            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>();
         }
-        time_sync_tick_id = thread_timer->AddPeriodicTick([this]() {
+        time_sync_tick_id = time_sync_timer->AddPeriodicTick([this]() {
             PLOG(logDEBUG1) << "Listening for time sync messages from CDASim." << std::endl;
             this->attempt_time_sync();
         } // end of lambda expression
         , std::chrono::milliseconds(100));
-        thread_timer->Start();
+        time_sync_timer->Start();
     }
 
     void CDASimAdapter::attempt_time_sync() {

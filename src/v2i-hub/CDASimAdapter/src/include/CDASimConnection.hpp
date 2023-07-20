@@ -2,7 +2,7 @@
 #include <UdpServer.h>
 #include <UdpClient.h>
 #include <tmx/tmx.h>
-#include <WGS84Point.h>
+#include <Point.h>
 #include <TimeSyncMessage.h>
 #include <simulation/ExternalObject.h>
 #include <jsoncpp/json/json.h>
@@ -32,12 +32,10 @@ namespace CDASimAdapter {
              * @param time_sync_port Port on which connection listens for time synchronization messages.
              * @param v2x_port Port on which connecction listens for incoming v2x messages.
              * @param location Simulationed location of infrastructure.
-             * @param producer Kafka Producer for forwarding time synchronization messages.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,  const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
-
+                                const tmx::utils::Point &location);
              /**
              * @brief Method to forward v2x message to CARMA Simulation
              * @param v2x_message string
@@ -105,7 +103,7 @@ namespace CDASimAdapter {
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,  const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
+                                const tmx::utils::Point &location);
             
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
@@ -140,17 +138,16 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port,
-                const uint v2x_port, const tmx::utils::WGS84Point &location) const; 
-            
+                const uint v2x_port, const tmx::utils::Point &location) const;             
             std::string _simulation_ip;
             uint _simulation_registration_port;
-            uint _infrastructure_id;
+            std::string _infrastructure_id;
             uint _simulation_v2x_port;
             uint _external_object_detection_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
-            tmx::utils::WGS84Point _location;
+            tmx::utils::Point _location;
             bool _connected = false;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
