@@ -24,7 +24,6 @@ services:
       - SIM_V2X_PORT=5757
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=1
-      - KAFKA_BROKER_ADDRESS=127.0.0.1:9092
     secrets:
       - mysql_password
 

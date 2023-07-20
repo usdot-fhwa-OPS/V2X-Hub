@@ -44,6 +44,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
+
 private:
 
 

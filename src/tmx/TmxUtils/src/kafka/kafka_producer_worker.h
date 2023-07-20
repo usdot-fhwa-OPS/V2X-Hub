@@ -61,6 +61,19 @@ namespace tmx::utils
              */
             explicit kafka_producer_worker(const std::string &brokers);
             /**
+             * @brief Destroy the kafka producer worker object. Calls stop on producer to clean up resources.
+             */
+            virtual ~kafka_producer_worker();
+            // Rule of 5 because destructor is define (https://www.codementor.io/@sandesh87/the-rule-of-five-in-c-1pdgpzb04f)
+            // delete copy constructor
+            kafka_producer_worker(kafka_producer_worker& other) = delete;
+            // delete copy assignment
+            kafka_producer_worker& operator=(const kafka_producer_worker& other) = delete;
+            // delete move constructor
+            kafka_producer_worker(kafka_producer_worker &&producer) = delete;
+            // delete move assignment
+            kafka_producer_worker const & operator=(kafka_producer_worker &&producer) = delete;
+            /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
              * @return true if successful.
@@ -100,16 +113,12 @@ namespace tmx::utils
             /**
              * @brief Stop running kafka producer.
              */
-            virtual void stop();
+            void stop();
             /**
              * @brief Print current configurations.
              */
             virtual void printCurrConf();
-            /**
-             * @brief Destroy the kafka producer worker object
-             * 
-             */
-            virtual ~kafka_producer_worker() = default;
+           
         };
 }
 
