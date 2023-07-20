@@ -85,8 +85,7 @@ namespace CDASimAdapter
          */
         void attempt_message_from_simulation() const;
         /**
-         * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin and to infrastructure Kafka Broker for
-         * CARMA Streets services
+         * @brief Forward time sychronization message to TMX message bus for other V2X-Hub Plugin 
          * @param msg TimeSyncMessage.
          */
         void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
@@ -106,8 +105,6 @@ namespace CDASimAdapter
         int max_connection_attempts;
         // Time in seconds between connection attempts. Most be greater than zero!
         uint connection_sleep_time;
-        // Kafka producer for sending time_sync messages to carma-streets
-        std::shared_ptr<tmx::utils::kafka_producer_worker> time_producer;
         // CDASim connection
         std::unique_ptr<CDASimConnection> connection;
         // Mutex for configuration parameter thread safety

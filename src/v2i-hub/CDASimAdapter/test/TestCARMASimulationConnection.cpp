@@ -3,7 +3,6 @@
 #include "include/CDASimConnection.hpp"
 #include "include/CDASimAdapter.hpp"
 #include <WGS84Point.h>
-#include <kafka/mock_kafka_producer_worker.h>
 #include <MockUdpClient.h>
 #include <MockUdpServer.h>
 
@@ -22,7 +21,7 @@ namespace CDASimAdapter {
     class TestCARMASimulationConnection : public ::testing::Test {
         protected:
             void SetUp() override {
-                // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
+                // Initialize CARMA Simulation connection with (0,0,0) location.
                 Point location; 
                 connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, location);
             }
