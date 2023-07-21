@@ -119,7 +119,6 @@ namespace CDASimAdapter
         std::unique_ptr<CDASimConnection> connection;
         // Mutex for configuration parameter thread safety
         std::mutex _lock;
-        std::unique_ptr<tmx::utils::ThreadTimer> thread_timer;
         std::unique_ptr<tmx::utils::ThreadTimer> external_bject_detection_thread_timer;
         // Time sync thread to forward time sync messages to PluginClientClockAware V2X-Hub plugins.
         std::unique_ptr<tmx::utils::ThreadTimer> time_sync_timer;
