@@ -23,7 +23,7 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 Point location; 
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567, 4678, "127.0.0.1", 1213, 1214, 1215, location);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, 1215, location);
             }
             void TearDown() override {
 
@@ -85,14 +85,14 @@ namespace CDASimAdapter {
         location.X = 1000;
         location.Y = 38.955; 
         location.Z = -77.149;
-        ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, 4569, location), 
-        "{\n   \"ExternalObjectDetectionPort\" : 4568,\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"timeSyncPort\" : 4567\n}\n");
+        ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, 4569, location), 
+        "{\n   \"ExternalObjectDetectionPort\" : 4568,\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
         Point location;
         // UDP creation error
-        ASSERT_FALSE(connection->carma_simulation_handshake("", 45, NULL, 
+        ASSERT_FALSE(connection->carma_simulation_handshake("", "45", NULL, 
                                 "",  45, 45, 45, location));
     }
 

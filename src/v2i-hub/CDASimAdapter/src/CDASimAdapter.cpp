@@ -60,8 +60,6 @@ namespace CDASimAdapter{
 
             if ( connection->is_connected() ) {
                 start_time_sync_thread_timer();
-                start_amf_msg_thread();
-                start_binary_msg_thread();
                 start_external_object_detection_thread();
                 start_immediate_forward_thread();
                 start_message_receiver_thread();

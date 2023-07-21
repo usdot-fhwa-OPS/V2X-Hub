@@ -4,11 +4,9 @@
 using namespace tmx::utils;
 
 namespace CDASimAdapter{ 
-    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
+    CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port,const uint external_object_detection_port, const uint v2x_port, 
                                                         const Point &location) : 
-
-
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _external_object_detection_port(external_object_detection_port),_v2x_port(v2x_port),
                                                         _location(location)  {
@@ -36,7 +34,7 @@ namespace CDASimAdapter{
     }
 
 
-    std::string CDASimConnection::get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port, const uint v2x_port, 
+    std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port, const uint v2x_port, 
                                 const Point &location) const
 
     {
@@ -56,7 +54,7 @@ namespace CDASimAdapter{
         return message_str;
     }
 
-    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint external_object_detection_port, const uint v2x_port, 
                                 const Point &location) 
     {
