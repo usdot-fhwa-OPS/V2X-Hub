@@ -50,7 +50,6 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
-	GetConfigValue<string>("SimExternalObjTopic", _transmitSimExternalObjTopic); 
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
