@@ -65,15 +65,6 @@ namespace tmx
                 std_attribute(this->msg, double, VelocityTwistAngularZ, 0, );
                 array_attribute( Covariance, VelocityCovariance);
 
-                // #Instantaneous velocity of an object within the frame specified in header
-                std_attribute(this->msg, double, VelocityInstTwistLinearX, 0, );
-                std_attribute(this->msg, double, VelocityInstTwistLinearY, 0, );
-                std_attribute(this->msg, double, VelocityInstTwistLinearZ, 0, );
-                std_attribute(this->msg, double, VelocityInstTwistAngularX, 0, );
-                std_attribute(this->msg, double, VelocityInstTwistAngularY, 0, );
-                std_attribute(this->msg, double, VelocityInstTwistAngularZ, 0, );
-                array_attribute( Covariance, VelocityInstCovariance);
-
                 // #The size of the object aligned along the axis of the object described by the orientation in pose
                 // #Dimensions are specified in meters
                 /**
