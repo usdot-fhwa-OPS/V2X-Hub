@@ -25,7 +25,6 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	AddMessageFilter < simulation::SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedExternalMessage );
 
 	SubscribeToMessages();
 }
@@ -630,12 +629,6 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 }
 
-void CARMAStreetsPlugin::HandleSimulatedExternalMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
-{
-	auto json_str = tmx::utils::sim::SimulationSensorDetectedObjectConverter::simExternalObjToJsonStr(msg);
-	PLOG(logINFO) <<  "Produce External Object Message in JSON format:  " << json_str <<std::endl;
-	produce_kafka_msg(json_str, _transmitSimExternalObjTopic);
-}
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {

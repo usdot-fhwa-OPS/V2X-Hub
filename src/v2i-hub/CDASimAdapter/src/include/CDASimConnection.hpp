@@ -8,7 +8,6 @@
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
-#include <simulation/SimulationSensorDetectedObjectConverter.h>
 
 
 namespace CDASimAdapter {
