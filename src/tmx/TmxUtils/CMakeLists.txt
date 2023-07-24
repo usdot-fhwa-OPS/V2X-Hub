@@ -25,7 +25,6 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        rdkafka++ 
                        ::carma-clock
                        gmock
-                       jsoncpp
                        pthread m rt)
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
@@ -55,4 +54,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} gtest jsoncpp)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} gtest)
