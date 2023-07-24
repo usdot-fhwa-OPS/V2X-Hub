@@ -1,139 +1,52 @@
-#include <simulation/SimulationExternalObjectConverter.h>
+#include <simulation/SimulationSensorDetectedObjectConverter.h>
 #include <gtest/gtest.h>
 #include <algorithm>
 
 using namespace tmx::utils::sim;
 using namespace tmx::messages;
 
-TEST(SimulationExternalObjectConverter, jsonToSimExternalObjInvalidJson)
+TEST(SimulationSensorDetectedObjectConverter, jsonToSimExternalObjInvalidJson)
 {
-    simulation::ExternalObject simExternalObj;
+    simulation::SensorDetectedObject simExternalObj;
     std::string invalidJsonStr = "Invalid";
-    ASSERT_THROW(SimulationExternalObjectConverter::jsonToSimExternalObj(invalidJsonStr, simExternalObj), std::runtime_error);
+    ASSERT_THROW(SimulationSensorDetectedObjectConverter::jsonToSimExternalObj(invalidJsonStr, simExternalObj), std::runtime_error);
+    std::string noContentJsonStr = "Invalid";
+    ASSERT_THROW(SimulationSensorDetectedObjectConverter::jsonToSimExternalObj(noContentJsonStr, simExternalObj), std::runtime_error);
 }
 
-TEST(SimulationExternalObjectConverter, jsonToSimExternalObjValidJson)
+TEST(SimulationSensorDetectedObjectConverter, jsonToSimExternalObjValidJson)
 {
-    simulation::ExternalObject simExternalObj;
-    std::string jsonStr = "{\"metadata\":{\"is_simulation\":false,\"datum\":\"\",\"proj_string\":\"\",\"sensor_x\":0.0,\"sensor_y\":0.0,\"sensor_z\":0.0,\"infrastructure_id\":\"\",\"sensor_id\":\"\"},\"header\":{\"seq\":0,\"stamp\":{\"secs\":0,\"nsecs\":0}},\"id\":0,\"pose\":{\"pose\":{\"position\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"orientation\":{\"x\":0.0,\"y\":0.0,\"z\":0.0,\"w\":0.0}},\"covariance\":[12.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},\"velocity\":{\"twist\":{\"linear\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"angular\":{\"x\":0.0,\"y\":0.0,\"z\":0.0}},\"covariance\":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0]},\"size\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"confidence\":0.0,\"object_type\":\"\",\"dynamic_obj\":false}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(0, simExternalObj.get_Id());
-    ASSERT_EQ(false, simExternalObj.get_MetadataIsSimulation());
-    ASSERT_EQ("", simExternalObj.get_MetadataDatum());
-    ASSERT_EQ("", simExternalObj.get_MetadataSensorId());
-    ASSERT_EQ("", simExternalObj.get_MetadataInfrastructureId());
-    ASSERT_EQ(0, simExternalObj.get_MetadataSensorX());
-    ASSERT_EQ(0, simExternalObj.get_MetadataSensorY());
-    ASSERT_EQ(0, simExternalObj.get_MetadataSensorZ());
-    ASSERT_EQ(0, simExternalObj.get_HeaderSeq());
-    ASSERT_EQ(0, simExternalObj.get_HeaderStampSecs());
-    ASSERT_EQ(0, simExternalObj.get_HeaderStampNSecs());
-    ASSERT_EQ(0, simExternalObj.get_PosePosePositionX());
-    ASSERT_EQ(0, simExternalObj.get_PosePoseOrientationX());
-    ASSERT_EQ(36, simExternalObj.get_PoseCovariance().size());
-    ASSERT_EQ(0, simExternalObj.get_VelocityInstTwistLinearX());
-    ASSERT_EQ(0, simExternalObj.get_VelocityInstTwistAngularX());
-    ASSERT_EQ(36, simExternalObj.get_VelocityCovariance().size());
+    simulation::SensorDetectedObject simExternalObj;
+    std::string jsonStr = "{\"type\":\"Application\",\"subtype\":\"SensorDetectedObject\",\"content\":{\"timestamp\":123,\"isSimulated\":true,\"sensor\":{\"id\":\"SomeID\",\"type\":\"SematicLidar\",\"location\":{\"x\":1.0,\"y\":1.0,\"z\":2.0},\"proj_string\":\"+proj=tmerc+lat_0=38.95197911150576+lon_0=-77.14835128349988+k=1+x_0=0+y_0=0+datum=WGS84+units=m+geoidgrids=egm96_15.gtx+vunits=m+no_defs\"},\"type\":\"Car\",\"confidence\":\"0.7\",\"objectId\":\"Object1\",\"position\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"positionCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"velocity\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"velocityCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"angularVelocity\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"angularVelocityCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"size\":{\"length\":0.1,\"width\":0.4,\"height\":1.5}}}";
+    SimulationSensorDetectedObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
+    ASSERT_EQ("Object1", simExternalObj.get_Id());
+    ASSERT_EQ(true, simExternalObj.get_MetadataIsSimulation());
+    ASSERT_EQ("SomeID", simExternalObj.get_SensorId());
+    ASSERT_EQ("SematicLidar", simExternalObj.get_SensorType());
+    ASSERT_EQ("+proj=tmerc+lat_0=38.95197911150576+lon_0=-77.14835128349988+k=1+x_0=0+y_0=0+datum=WGS84+units=m+geoidgrids=egm96_15.gtx+vunits=m+no_defs", simExternalObj.get_SensorProjString());
+    ASSERT_EQ(1, simExternalObj.get_SensorLocationX());
+    ASSERT_EQ(1, simExternalObj.get_SensorLocationY());
+    ASSERT_EQ(2, simExternalObj.get_SensorLocationZ());
+    ASSERT_EQ(1, simExternalObj.get_PositionX());
+    ASSERT_EQ(2.5, simExternalObj.get_PositionY());
+    ASSERT_EQ(1.1, simExternalObj.get_PositionZ());
+    ASSERT_EQ(36, simExternalObj.get_PositionCovariance().size());
+    ASSERT_EQ(36, simExternalObj.get_PositionCovariance().size());
 }
 
-TEST(SimulationExternalObjectConverter, jsonToSimExternalObjPresenceVector)
+TEST(SimulationSensorDetectedObjectConverter, simExternalObjToJsonStr)
 {
-    simulation::ExternalObject simExternalObj;
-    ASSERT_TRUE(simExternalObj.is_empty());
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE, simExternalObj.get_PresenceVector());
-    ASSERT_FALSE(simExternalObj.is_empty());
-
-    std::string jsonStr = "{\"presence_vector\":1}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::ID_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":2}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::POSE_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":4}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::VELOCITY_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":8}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::VELOCITY_INST_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":16}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::SIZE_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":32}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::CONFIDENCE_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":64}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::OBJECT_TYPE_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":128}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::BSM_ID_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":256}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::DYNAMIC_OBJ_PRESENCE, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":512}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::PREDICTION_PRESENCE_VECTOR, simExternalObj.get_PresenceVector());
-
-    jsonStr = "{\"presence_vector\":212121}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::PRESENCE_VECTOR_TYPES::UNAVAILABLE, simExternalObj.get_PresenceVector());
-}
-
-TEST(SimulationExternalObjectConverter, jsonToSimExternalObjObjectTypes)
-{
-    simulation::ExternalObject simExternalObj;
-    ASSERT_TRUE(simExternalObj.is_empty());
-    ASSERT_EQ(simulation::OBJECT_TYPES::UNKNOWN, simExternalObj.get_ObjectType());
-    ASSERT_FALSE(simExternalObj.is_empty());
-
-    std::string jsonStr = "{\"object_type\":\"1\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::SMALL_VEHICLE, simExternalObj.get_ObjectType());
-
-    jsonStr = "{\"object_type\":\"2\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::LARGE_VEHICLE, simExternalObj.get_ObjectType());
-
-    jsonStr = "{\"object_type\":\"3\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::MOTORCYCLE, simExternalObj.get_ObjectType());
-
-    jsonStr = "{\"object_type\":\"5\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::UNKNOWN, simExternalObj.get_ObjectType());
-
-    jsonStr = "{\"object_type\":\"4\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::PEDESTRIAN, simExternalObj.get_ObjectType());
-
-    jsonStr = "{\"object_type\":\"invalid\"}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    ASSERT_EQ(simulation::OBJECT_TYPES::UNKNOWN, simExternalObj.get_ObjectType());
-}
-
-TEST(SimulationExternalObjectConverter, simExternalObjToJsonStr)
-{
-    simulation::ExternalObject simExternalObj;
-    std::string jsonStr = "{\"metadata\":{\"is_simulation\":false,\"datum\":\"\",\"proj_string\":\"\",\"sensor_x\":0.0,\"sensor_y\":0.0,\"sensor_z\":0.0,\"infrastructure_id\":\"\",\"sensor_id\":\"\"},\"header\":{\"seq\":0,\"stamp\":{\"secs\":0,\"nsecs\":0}},\"id\":0,\"pose\":{\"pose\":{\"position\":{\"x\":34.0,\"y\":0.0,\"z\":0.0},\"orientation\":{\"x\":23.0,\"y\":0.0,\"z\":0.0,\"w\":0.0}},\"covariance\":[12.1,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,11.0]},\"velocity\":{\"twist\":{\"linear\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"angular\":{\"x\":0.0,\"y\":0.0,\"z\":0.0}},\"covariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333]},\"size\":{\"x\":12.0,\"y\":23.0,\"z\":12.0},\"confidence\":1.0,\"object_type\":\"128\",\"dynamic_obj\":false}";
-    SimulationExternalObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
-    std::string output = SimulationExternalObjectConverter::simExternalObjToJsonStr(simExternalObj);
+    std::string jsonStr = "{\"type\":\"Application\",\"subtype\":\"SensorDetectedObject\",\"content\":{\"timestamp\":123,\"isSimulated\":true,\"sensor\":{\"id\":\"SomeID\",\"type\":\"SematicLidar\",\"location\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"proj_string\":\"+proj=tmerc+lat_0=38.95197911150576+lon_0=-77.14835128349988+k=1+x_0=0+y_0=0+datum=WGS84+units=m+geoidgrids=egm96_15.gtx+vunits=m+no_defs\"},\"type\":\"Car\",\"confidence\":\"0.7\",\"objectId\":\"Object1\",\"position\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"positionCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"velocity\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"velocityCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"angularVelocity\":{\"x\":1.0,\"y\":2.5,\"z\":1.1},\"angularVelocityCovariance\":[12.0,17.33333333,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,20.3333],\"size\":{\"length\":0.1,\"width\":0.4,\"height\":1.5}}}";
+    simulation::SensorDetectedObject simExternalObj;
+    SimulationSensorDetectedObjectConverter::jsonToSimExternalObj(jsonStr, simExternalObj);
+    std::string output = SimulationSensorDetectedObjectConverter::simExternalObjToJsonStr(simExternalObj);
     Json::CharReaderBuilder builder;
     const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
     Json::Value root;
     JSONCPP_STRING err;
     reader->parse(output.c_str(), output.c_str() + static_cast<int>(output.length()), &root, &err);
-    ASSERT_FALSE(root["metadata"]["is_simulation"].asBool());
-    ASSERT_EQ(12.1, root["pose"]["covariance"].begin()->asDouble());
-    ASSERT_EQ(23, root["pose"]["pose"]["orientation"]["x"].asDouble());
-    ASSERT_EQ(12, root["velocity"]["covariance"].begin()->asDouble());
-    ASSERT_EQ(17.33333333, root["velocity"]["covariance"][1].asDouble());
+    ASSERT_FALSE(root["metadata"]["isSimulation"].asBool());
+    ASSERT_EQ(12, root["payload"]["positionCovariance"].begin()->asDouble());
+    ASSERT_EQ(12, root["payload"]["velocityCovariance"].begin()->asDouble());
+    ASSERT_EQ(17.33333333, root["payload"]["velocityCovariance"][1].asDouble());
 }

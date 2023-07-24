@@ -79,9 +79,9 @@ namespace CDASimAdapter{
         
     }
 
-    void CDASimAdapter::forward_simulated_external_message(tmx::messages::simulation::ExternalObject &msg) {
-        PLOG(logDEBUG1) << "Sending Simulated ExternalObject Message " << msg << std::endl;
-        this->BroadcastMessage<tmx::messages::simulation::ExternalObject>(msg, _name, 0 , IvpMsgFlags_None);        
+    void CDASimAdapter::forward_simulated_external_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+        PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
+        this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);        
     }
 
     bool CDASimAdapter::connect() {

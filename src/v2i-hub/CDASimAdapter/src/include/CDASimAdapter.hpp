@@ -91,9 +91,9 @@ namespace CDASimAdapter
         void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
          /**
          * @brief Forward simulated external object message to TMX message bus for other V2X-Hub Plugin 
-         * @param msg simulation::ExternalObject.
+         * @param msg simulation::SensorDetectedObject.
          */
-        void forward_simulated_external_message(tmx::messages::simulation::ExternalObject &msg);
+        void forward_simulated_external_message(tmx::messages::simulation::SensorDetectedObject &msg);
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */

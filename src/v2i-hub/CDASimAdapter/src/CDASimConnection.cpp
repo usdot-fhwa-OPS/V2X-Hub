@@ -45,7 +45,7 @@ namespace CDASimAdapter{
         message["infrastructureId"] = infrastructure_id;
         message["rxMessagePort"] = v2x_port;
         message["timeSyncPort"] = time_sync_port;
-        message["ExternalObjectDetectionPort"] = external_object_detection_port;
+        message["SensorDetectedObjectDetectionPort"] = external_object_detection_port;
         message["location"]["x"] = location.X;
         message["location"]["y"] = location.Y;
         message["location"]["z"] = location.Z;
@@ -129,15 +129,15 @@ namespace CDASimAdapter{
 
     }
 
-    tmx::messages::simulation::ExternalObject CDASimConnection::consume_external_object_message() const
+    tmx::messages::simulation::SensorDetectedObject CDASimConnection::consume_external_object_message() const
     {
-        tmx::messages::simulation::ExternalObject externalObj;
+        tmx::messages::simulation::SensorDetectedObject externalObj;
         externalObj.clear();
         if(external_object_listener)
         {
             std::string str_msg = consume_server_message(external_object_listener);
             //To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
-            tmx::utils::sim::SimulationExternalObjectConverter::jsonToSimExternalObj(str_msg, externalObj);
+            tmx::utils::sim::SimulationSensorDetectedObjectConverter::jsonToSimExternalObj(str_msg, externalObj);
         }
         else
         {
