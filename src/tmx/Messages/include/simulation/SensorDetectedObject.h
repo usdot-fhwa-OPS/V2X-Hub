@@ -83,12 +83,11 @@ namespace tmx
                     # generic rigid transformation to a Vector3, tf2 will only apply the
                     # rotation).
                 */
-                // geometry_msgs/Vector3 size
                 std_attribute(this->msg, double, SizeLength, 0, );
                 std_attribute(this->msg, double, SizeWidth, 0, );
                 std_attribute(this->msg, double, SizeHeight, 0, );
 
-                // #Confidence [0,1]
+                // #Confidence
                 std_attribute(this->msg, double, Confidence, 0, );
 
                 // #describes a general object type as defined in this message
