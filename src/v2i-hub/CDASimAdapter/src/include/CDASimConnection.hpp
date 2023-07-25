@@ -33,7 +33,7 @@ namespace CDASimAdapter {
              * @param location Simulationed location of infrastructure.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
-                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint sensor_detected_object_detection_port,  const uint v2x_port, 
+                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
                                 const tmx::utils::Point &location);
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -101,7 +101,7 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
-                                const std::string &local_ip,  const uint time_sync_port, const uint sensor_detected_object_detection_port,  const uint v2x_port, 
+                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
                                 const tmx::utils::Point &location);
             
             /**
@@ -113,7 +113,7 @@ namespace CDASimAdapter {
              * @param simulation_v2x_port port on which CARMA-Simulation is listening for incoming v2x messages.
              * @return true if setup is successful and false otherwise.
              */
-            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint sensor_detected_object_detection_port, 
+            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
             /**
              * @brief Method to attempt to establish connection between CARMA-Simulation and infrastucture. Returns true if succesful
@@ -136,13 +136,13 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint sensor_detected_object_detection_port,
+            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,
                 const uint v2x_port, const tmx::utils::Point &location) const;             
             std::string _simulation_ip;
             uint _simulation_registration_port;
             std::string _infrastructure_id;
             uint _simulation_v2x_port;
-            uint _sensor_detected_object_detection_port;
+            uint _simulated_interaction_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;

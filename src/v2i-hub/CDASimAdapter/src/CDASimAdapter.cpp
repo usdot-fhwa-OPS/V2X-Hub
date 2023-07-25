@@ -91,7 +91,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            uint sensor_detected_object_detection_port = std::stoul(sim::get_sim_config(sim::SIM_SENSOR_DETECTED_OBJECT_PORT));
+            uint simulated_interaction_port = std::stoul(sim::get_sim_config(sim::SIM_INTERACTION_PORT));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
@@ -101,11 +101,11 @@ namespace CDASimAdapter{
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, sensor_detected_object_detection_port, v2x_port, location ));
+                                                time_sync_port, simulated_interaction_port, v2x_port, location ));
             }
             else {
                 connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, sensor_detected_object_detection_port, v2x_port, location);
+                                                            time_sync_port, simulated_interaction_port, v2x_port, location);
             }
         }       
         catch (const TmxException &e) {
