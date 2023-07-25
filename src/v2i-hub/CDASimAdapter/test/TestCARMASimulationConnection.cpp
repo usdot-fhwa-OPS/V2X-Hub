@@ -31,7 +31,7 @@ namespace CDASimAdapter {
             }
         public:
             std::shared_ptr<CDASimConnection> connection;
-            std::string sensors_file_path = "/var/www/plugins/MAP/sensors.json";
+            std::string sensors_file_path = "../CDASimAdapter/sensors.json";
         
 
     };
@@ -89,7 +89,7 @@ namespace CDASimAdapter {
         location.Z = -77.149;
         Json::Value sensorsJsonV;
         ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, location, sensorsJsonV), 
-        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
+        "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
