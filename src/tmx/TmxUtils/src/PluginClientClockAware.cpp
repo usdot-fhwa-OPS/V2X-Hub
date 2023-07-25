@@ -8,11 +8,11 @@ namespace tmx::utils {
         : PluginClient(name)
     {
         // check for simulation mode enabled by environment variable
-        bool simulationMode = sim::is_simulation_mode();
+        _simulation_mode = sim::is_simulation_mode();
 
         using namespace fwha_stol::lib::time;
-        clock = std::make_shared<CarmaClock>(simulationMode);
-        if (simulationMode) {
+        clock = std::make_shared<CarmaClock>(_simulation_mode);
+        if (_simulation_mode) {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
 
         }
@@ -25,7 +25,6 @@ namespace tmx::utils {
         this->getClock()->update( msg.get_timestep() );
         if (sim::is_simulation_mode() ) {
             SetStatus(Key_Simulation_Time_Step, Clock::ToUtcPreciseTimeString(msg.get_timestep()));
-
         }
     }
 
@@ -34,6 +33,10 @@ namespace tmx::utils {
         if (state == IvpPluginState_registered && sim::is_simulation_mode()) {
             SetStatus(Key_Simulation_Mode, "ON");
         }
+    }
+
+    bool PluginClientClockAware::isSimulationMode() const {
+        return _simulation_mode;
     }
 
 }

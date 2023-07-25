@@ -2,7 +2,7 @@
 #include <UdpServer.h>
 #include <UdpClient.h>
 #include <tmx/tmx.h>
-#include <WGS84Point.h>
+#include <Point.h>
 #include <TimeSyncMessage.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
@@ -31,11 +31,10 @@ namespace CDASimAdapter {
              * @param time_sync_port Port on which connection listens for time synchronization messages.
              * @param v2x_port Port on which connecction listens for incoming v2x messages.
              * @param location Simulationed location of infrastructure.
-             * @param producer Kafka Producer for forwarding time synchronization messages.
              */
-            explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location, const std::string &sensor_json_file_path);
+                                const tmx::utils::Point &location, const std::string &sensor_json_file_path);
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -97,9 +96,9 @@ namespace CDASimAdapter {
              * @param sensors_json_v A list of sensors sent to CARLA for sensor generation.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port,
+            bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location, const Json::Value& sensors_json_v);
+                                const tmx::utils::Point &location, const Json::Value& sensors_json_v);
             
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
@@ -140,7 +139,7 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::WGS84Point &location, const Json::Value& sensors_json_v) const; 
+                const uint v2x_port, const tmx::utils::Point &location, const Json::Value& sensors_json_v) const; 
             
             /**
              * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
@@ -157,12 +156,12 @@ namespace CDASimAdapter {
 
             std::string _simulation_ip;
             uint _simulation_registration_port;
-            uint _infrastructure_id;
+            std::string _infrastructure_id;
             uint _simulation_v2x_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
-            tmx::utils::WGS84Point _location;
+            tmx::utils::Point _location;
             bool _connected = false;
             std::string _sensor_json_file_path;
             //Global variable to store the sensors information

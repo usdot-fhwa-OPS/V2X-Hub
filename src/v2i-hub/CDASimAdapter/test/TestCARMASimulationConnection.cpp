@@ -3,7 +3,6 @@
 #include "include/CDASimConnection.hpp"
 #include "include/CDASimAdapter.hpp"
 #include <WGS84Point.h>
-#include <kafka/mock_kafka_producer_worker.h>
 #include <MockUdpClient.h>
 #include <MockUdpServer.h>
 #include <filesystem>
@@ -24,9 +23,8 @@ namespace CDASimAdapter {
         protected:
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
-                WGS84Point location; 
+                Point location; 
                 connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567, 4678, "127.0.0.1", 1213, 1214, location, sensors_file_path);
-
             }
             void TearDown() override {
 
@@ -85,13 +83,13 @@ namespace CDASimAdapter {
     }
 
     TEST_F( TestCARMASimulationConnection, get_handshake_json) {
-        WGS84Point location;
-        location.Elevation = 1000;
-        location.Latitude = 38.955; 
-        location.Longitude = -77.149;
+        Point location;
+        location.X = 1000;
+        location.Y = 38.955; 
+        location.Z = -77.149;
         Json::Value sensorsJsonV;
         ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, location, sensorsJsonV), 
-        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
+        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
