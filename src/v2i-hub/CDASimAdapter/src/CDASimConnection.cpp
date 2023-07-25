@@ -39,7 +39,7 @@ namespace CDASimAdapter{
         return _connected;
     }
 
-    std::string CDASimConnection::get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+    std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
                                 const Point &location, const Json::Value& sensors_json_v) const
 
     {
