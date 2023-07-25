@@ -13,13 +13,14 @@ import time
 count_num = 0
 
 def generate_sim_external_object():
-    jsonResult = 
-    {
-        "type": "Application",
-        "subtype": "SensorDetectedObject",
-        "content": {
+    jsonResult = {
+        "metadata": {
+            "type": "Application",
+            "subtype": "SensorDetectedObject",
             "timestamp": 123,
-            "isSimulated": true,
+            "isSimulated": True
+        },
+        "payload": {
             "sensor": {
             "id": "SomeID",
             "type": "SematicLidar",
