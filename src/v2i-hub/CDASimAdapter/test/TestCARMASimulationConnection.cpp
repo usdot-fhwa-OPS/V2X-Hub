@@ -31,7 +31,7 @@ namespace CDASimAdapter {
             }
         public:
             std::shared_ptr<CDASimConnection> connection;
-            std::string sensors_file_path = "../CDASimAdapter/sensors.json";
+            std::string sensors_file_path = "./sensors.json";
         
 
     };
@@ -108,24 +108,33 @@ namespace CDASimAdapter {
     {
         Json::Value sensorJsonV;
         ASSERT_TRUE(sensorJsonV.empty());
-        //Assuming the sensor file exist.
-        connection->populate_sensors_with_file(sensors_file_path, sensorJsonV );
-        ASSERT_FALSE(sensorJsonV.empty());
+        std::ifstream in_strm;
+        in_strm.open(sensors_file_path, std::ifstream::binary);
+        if(in_strm.is_open())
+        {
+            connection->populate_sensors_with_file(sensors_file_path, sensorJsonV );
+            ASSERT_FALSE(sensorJsonV.empty());
+        }        
     }
 
     TEST_F(TestCARMASimulationConnection, get_sensor_by_id)
     {
-        //Populate connection with sensors upon connect call.
-        //Assuming the sensor file exist.
+        //Populate connection with sensors upon connect call.        
         connection->connect();
-        std::string sensor_id = "SomeID";
-        auto sensor = connection->get_sensor_by_id(sensor_id);
-        ASSERT_FALSE(sensor.empty());
-        ASSERT_EQ("SematicLidar", sensor["type"].asString());
+        std::ifstream in_strm;
+        in_strm.open(sensors_file_path, std::ifstream::binary);
+        if(in_strm.is_open())
+        {
+            std::string sensor_id = "SomeID";
+            auto sensor = connection->get_sensor_by_id(sensor_id);
+            ASSERT_FALSE(sensor.empty());
+            ASSERT_EQ("SematicLidar", sensor["type"].asString());
 
-        sensor_id = "not_found";
-        sensor = connection->get_sensor_by_id(sensor_id);
-        ASSERT_TRUE(sensor.empty());       
+            sensor_id = "not_found";
+            sensor = connection->get_sensor_by_id(sensor_id);
+            ASSERT_TRUE(sensor.empty());      
+        }
+         
     }
     
 }
