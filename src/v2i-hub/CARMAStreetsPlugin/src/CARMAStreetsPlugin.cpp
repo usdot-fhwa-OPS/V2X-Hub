@@ -25,7 +25,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	AddMessageFilter < simulation::SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedExternalMessage );
+	AddMessageFilter < simulation::SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage );
 
 	SubscribeToMessages();
 }
@@ -51,7 +51,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
-	GetConfigValue<string>("SimExternalObjTopic", _transmitSimExternalObjTopic); 
+	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -630,10 +630,10 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 }
 
-void CARMAStreetsPlugin::HandleSimulatedExternalMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
+void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
 {
-	PLOG(logINFO) <<  "Produce External Object Message in JSON format:  " << msg.to_string() <<std::endl;
-	produce_kafka_msg( msg.to_string(), _transmitSimExternalObjTopic);
+	PLOG(logINFO) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
+	produce_kafka_msg( msg.to_string(), _transmitSimSensorDetectedObjTopic);
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )

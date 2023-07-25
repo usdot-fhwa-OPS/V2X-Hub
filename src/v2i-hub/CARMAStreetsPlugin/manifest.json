@@ -118,9 +118,9 @@
             "description": "Apache Kafka consumer group ID for spat consumer."
         },
         {
-            "key": "SimExternalObjTopic",
-            "default": "v2xhub_sim_external_object",
-            "description": "Apache Kafka topic plugin will transmit simulated external object to."               
+            "key": "SimSensorDetectedObjTopic",
+            "default": "v2xhub_sim_sensor_detected_object",
+            "description": "Apache Kafka topic plugin will transmit simulated sensor detected object to."               
         }
         
     ]
