@@ -45,7 +45,7 @@ namespace tmx::utils::sim{
          * @brief Name of environment variable for storing port for forwarding v2x messages to CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.
          */
-        constexpr inline static const char *SIM_EXTERNAL_OBJECT_PORT = "SIM_EXTERNAL_OBJECT_PORT";
+        constexpr inline static const char *SIM_SENSOR_DETECTED_OBJECT_PORT = "SIM_SENSOR_DETECTED_OBJECT_PORT";
         /**
          * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.

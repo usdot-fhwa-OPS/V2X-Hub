@@ -39,7 +39,7 @@ def generate_sim_external_object():
             "y": 2.5,
             "z": 1.1
             },
-            "positionCovariance" : ["a11", "a12", "a13", "a21", "a22", "a23", "a31", "a32", "a33"],
+            "positionCovariance" : [12,12,2, 34, 34, 55],
             "velocity": {
             "x": 1.0,
             "y": 2.5,

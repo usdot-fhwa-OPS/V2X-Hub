@@ -60,7 +60,7 @@ namespace CDASimAdapter{
 
             if ( connection->is_connected() ) {
                 start_time_sync_thread_timer();
-                start_external_object_detection_thread();
+                start_sensor_detected_object_detection_thread();
                 start_immediate_forward_thread();
                 start_message_receiver_thread();
             }else {
@@ -79,7 +79,7 @@ namespace CDASimAdapter{
         
     }
 
-    void CDASimAdapter::forward_simulated_external_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg) {
         PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
         this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);        
     }
@@ -91,7 +91,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            uint external_object_detection_port = std::stoul(sim::get_sim_config(sim::SIM_EXTERNAL_OBJECT_PORT));
+            uint sensor_detected_object_detection_port = std::stoul(sim::get_sim_config(sim::SIM_sensor_detected_object_PORT));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
@@ -101,11 +101,11 @@ namespace CDASimAdapter{
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, external_object_detection_port, v2x_port, location ));
+                                                time_sync_port, sensor_detected_object_detection_port, v2x_port, location ));
             }
             else {
                 connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, external_object_detection_port, v2x_port, location);
+                                                            time_sync_port, sensor_detected_object_detection_port, v2x_port, location);
             }
         }       
         catch (const TmxException &e) {
@@ -167,7 +167,7 @@ namespace CDASimAdapter{
         }
     }
 
-    void CDASimAdapter::start_external_object_detection_thread() {
+    void CDASimAdapter::start_sensor_detected_object_detection_thread() {
         PLOG(logDEBUG) << "Creating Thread Timer for simulated external object" << std::endl;
         try 
         {
@@ -176,14 +176,14 @@ namespace CDASimAdapter{
                 external_bject_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
             }            
             external_bject_detection_thread_timer->AddPeriodicTick([this](){
-                PLOG(logDEBUG1) << "Listening for External Object Message from CDASim." << std::endl;
-                auto msg = connection->consume_external_object_message();
+                PLOG(logDEBUG1) << "Listening for Sensor Detected Message from CDASim." << std::endl;
+                auto msg = connection->consume_sensor_detected_object_message();
                 if ( !msg.is_empty()) {             
-                    this->forward_simulated_external_message(msg);
+                    this->forward_simulated_detected_message(msg);
                 }
                 else 
                 {
-                    PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated external message!" << std::endl;
+                    PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated sensor detected message!" << std::endl;
                 }
             }//End lambda
             , std::chrono::milliseconds(100));

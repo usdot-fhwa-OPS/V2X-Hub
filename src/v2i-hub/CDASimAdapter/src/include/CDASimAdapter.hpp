@@ -90,10 +90,10 @@ namespace CDASimAdapter
          */
         void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
          /**
-         * @brief Forward simulated external object message to TMX message bus for other V2X-Hub Plugin 
+         * @brief Forward simulated sensor detected object message to TMX message bus for other V2X-Hub Plugin 
          * @param msg simulation::SensorDetectedObject.
          */
-        void forward_simulated_external_message(tmx::messages::simulation::SensorDetectedObject &msg);
+        void forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg);
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */
@@ -106,7 +106,7 @@ namespace CDASimAdapter
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */
-        void start_external_object_detection_thread();
+        void start_sensor_detected_object_detection_thread();
         
     private:
         // Simulated location of RSU
