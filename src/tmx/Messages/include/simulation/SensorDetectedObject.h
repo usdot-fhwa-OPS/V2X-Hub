@@ -3,7 +3,6 @@
 
 #include <tmx/messages/message.hpp>
 #include <MessageTypes.h>
-#include <simulation/Covariance.h>
 
 namespace tmx
 {
