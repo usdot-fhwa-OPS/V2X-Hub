@@ -45,7 +45,7 @@ namespace CDASimAdapter{
         message["infrastructureId"] = infrastructure_id;
         message["rxMessagePort"] = v2x_port;
         message["timeSyncPort"] = time_sync_port;
-        message["SensorDetectedObjectDetectionPort"] = sensor_detected_object_detection_port;
+        message["simulatedInteractionPort"] = sensor_detected_object_detection_port;
         message["location"]["x"] = location.X;
         message["location"]["y"] = location.Y;
         message["location"]["z"] = location.Z;
