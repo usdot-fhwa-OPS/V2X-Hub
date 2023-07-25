@@ -7,6 +7,7 @@
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
+#include <fstream>
 
 
 namespace CDASimAdapter {
@@ -34,7 +35,7 @@ namespace CDASimAdapter {
              */
             explicit CDASimConnection( const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
+                                const tmx::utils::WGS84Point &location, const std::string &sensor_json_file_path);
 
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -93,11 +94,12 @@ namespace CDASimAdapter {
              * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
              * @param location simulated location of infrastructure hardware.
+             * @param sensors_json_v A list of sensors sent to CARLA for sensor generation.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::WGS84Point &location);
+                                const tmx::utils::WGS84Point &location, const Json::Value& sensors_json_v);
             
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
@@ -121,6 +123,11 @@ namespace CDASimAdapter {
              * @return Returns true if CARMA-Simulation connection is active and false if the connection is inactive.
              */
             bool is_connected() const;
+            /**
+             * @brief Search the list of sensors stored by this plugin and identify the sensor based on the input id.
+             * @param sensor_id A unique sensor identifier
+            */
+            Json::Value get_sensor_by_id(std::string &sensor_id);
 
         private:
             /**
@@ -129,11 +136,25 @@ namespace CDASimAdapter {
              * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
              * @param location simulated location of infrastructure hardware.
+             * @param sensors_json_v A list of sensors sent to CARLA for sensor generation.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             std::string get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::WGS84Point &location) const; 
+                const uint v2x_port, const tmx::utils::WGS84Point &location, const Json::Value& sensors_json_v) const; 
             
+            /**
+             * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
+             * @param file_path A string of file location in the host machine.
+             * @param sensors_json_v A reference to the location where the sensors inforation is updated and stored.
+            */
+            void populate_sensors_with_file(const std::string file_path, Json::Value& sensors_json_v);
+             /**
+             * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
+             * @param json_str A JSON string.
+             * @param json_v A reference to JSON value.
+            */
+            void populate_json_with_string(const std::string &json_str, Json::Value& json_v);
+
             std::string _simulation_ip;
             uint _simulation_registration_port;
             uint _infrastructure_id;
@@ -143,6 +164,9 @@ namespace CDASimAdapter {
             uint _v2x_port;
             tmx::utils::WGS84Point _location;
             bool _connected = false;
+            std::string _sensor_json_file_path;
+            //Global variable to store the sensors information
+            Json::Value _sensors_json_v;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
@@ -152,6 +176,7 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
 
             FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
+            FRIEND_TEST(TestCARMASimulationConnection, populate_sensors_with_file);
     };
 
 }

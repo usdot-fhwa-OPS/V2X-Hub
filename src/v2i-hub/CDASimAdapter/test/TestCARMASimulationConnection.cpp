@@ -6,6 +6,7 @@
 #include <kafka/mock_kafka_producer_worker.h>
 #include <MockUdpClient.h>
 #include <MockUdpServer.h>
+#include <filesystem>
 
 
 using testing::_;
@@ -24,7 +25,7 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 WGS84Point location; 
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567, 4678, "127.0.0.1", 1213, 1214, location);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", 1212, 4567, 4678, "127.0.0.1", 1213, 1214, location, sensors_file_path);
 
             }
             void TearDown() override {
@@ -32,6 +33,7 @@ namespace CDASimAdapter {
             }
         public:
             std::shared_ptr<CDASimConnection> connection;
+            std::string sensors_file_path = "/var/www/plugins/MAP/sensors.json";
         
 
     };
@@ -87,19 +89,45 @@ namespace CDASimAdapter {
         location.Elevation = 1000;
         location.Latitude = 38.955; 
         location.Longitude = -77.149;
-
-        ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, location), 
-        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
+        Json::Value sensorsJsonV;
+        ASSERT_EQ(connection->get_handshake_json(4566, "127.0.0.1", 4567, 4568, location, sensorsJsonV), 
+        "{\n   \"infrastructureId\" : 4566,\n   \"location\" : {\n      \"elevation\" : 1000.0,\n      \"latitude\" : 38.954999999999998,\n      \"longitude\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
         WGS84Point location;
+        Json::Value sensorsJsonV;
         // UDP creation error
         ASSERT_FALSE(connection->carma_simulation_handshake("", 45, NULL, 
-                                "",  45, 45, location));
+                                "",  45, 45, location, sensorsJsonV));
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {
         ASSERT_TRUE(connection->connect());
     }
+
+    TEST_F(TestCARMASimulationConnection, populate_sensors_with_file)
+    {
+        Json::Value sensorJsonV;
+        ASSERT_TRUE(sensorJsonV.empty());
+        //Assuming the sensor file exist.
+        connection->populate_sensors_with_file(sensors_file_path, sensorJsonV );
+        ASSERT_FALSE(sensorJsonV.empty());
+    }
+
+    TEST_F(TestCARMASimulationConnection, get_sensor_by_id)
+    {
+        //Populate connection with sensors upon connect call.
+        //Assuming the sensor file exist.
+        connection->connect();
+        std::string sensor_id = "SomeID";
+        auto sensor = connection->get_sensor_by_id(sensor_id);
+        ASSERT_FALSE(sensor.empty());
+        ASSERT_EQ("SematicLidar", sensor["type"].asString());
+
+        sensor_id = "not_found";
+        sensor = connection->get_sensor_by_id(sensor_id);
+        ASSERT_TRUE(sensor.empty());       
+    }
+    
 }

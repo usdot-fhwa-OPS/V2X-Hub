@@ -6,10 +6,10 @@ using namespace tmx::utils;
 namespace CDASimAdapter{ 
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                                        const WGS84Point &location) : 
+                                                        const WGS84Point &location, const std::string &sensor_json_file_path) : 
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _v2x_port(v2x_port),
-                                                        _location(location)  {
+                                                        _location(location) ,_sensor_json_file_path(sensor_json_file_path) {
         PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
     } 
 
@@ -20,7 +20,13 @@ namespace CDASimAdapter{
     }
 
     bool CDASimConnection::connect() {
-        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
+        //Read local sensor file and populate the sensors JSON
+        populate_sensors_with_file(_sensor_json_file_path, _sensors_json_v);
+        if(_sensors_json_v.empty())
+        {
+            PLOG(logERROR) << "Sensors JSON is empty!" << std::endl;
+        }     
+        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location, _sensors_json_v)) {
             _connected = false;
             return _connected;
         }
@@ -34,7 +40,7 @@ namespace CDASimAdapter{
     }
 
     std::string CDASimConnection::get_handshake_json(const uint infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const WGS84Point &location) const
+                                const WGS84Point &location, const Json::Value& sensors_json_v) const
 
     {
         Json::Value message;   
@@ -47,6 +53,7 @@ namespace CDASimAdapter{
         message["location"]["latitude"] = location.Latitude;
         message["location"]["longitude"] = location.Longitude;
         message["location"]["elevation"] = location.Elevation;
+        message["sensors"] = sensors_json_v;
         Json::StyledWriter writer;
         message_str = writer.write(message);
         return message_str;
@@ -54,12 +61,12 @@ namespace CDASimAdapter{
 
     bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const uint infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const WGS84Point &location) 
+                                const WGS84Point &location, const Json::Value& sensors_json_v ) 
     {
         // Create JSON message with the content 
         std::string payload = "";
     
-        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
+        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location, sensors_json_v);
     
         try
         {
@@ -217,4 +224,67 @@ namespace CDASimAdapter{
         forward_message( msg , message_receiver_publisher );
     }
 
+    void CDASimConnection::populate_sensors_with_file(const std::string file_path, Json::Value& sensors_json_v){
+        //Read file from disk
+        std::ifstream in_strm;
+        in_strm.open(file_path, std::ifstream::binary);
+        if(!in_strm.is_open())
+        {
+            PLOG(logERROR) << "File cannot be opened. File path: " << file_path <<std::endl;
+            return;
+        }
+        std::string line;
+        std::stringstream ss;
+        while (std::getline(in_strm, line)) {
+            ss << line;
+        }
+        in_strm.close();
+
+       populate_json_with_string(ss.str(), sensors_json_v);
+    }
+
+    void CDASimConnection::populate_json_with_string(const std::string& json_str, Json::Value& json_v){
+        //Update JSON value with information from file
+        Json::CharReaderBuilder builder;
+        std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+        JSONCPP_STRING err;
+        if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
+        {
+            PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
+            return;
+        }
+    }
+
+    Json::Value CDASimConnection::get_sensor_by_id(std::string &sensor_id)
+    {
+        Json::Value result;
+        if(_sensors_json_v.empty())
+        {
+            PLOG(logERROR) << "CDASimAdapter stored sensors are empty." << std::endl;
+            return result;
+        }
+
+        if(_sensors_json_v.isArray())
+        {
+           std::for_each( _sensors_json_v.begin(), _sensors_json_v.end(), [&result, &sensor_id](auto& item){
+                if(item["id"] == sensor_id)
+                {
+                    result = item;
+                }
+           });
+        }
+        else if(_sensors_json_v.isObject())
+        {
+            if(_sensors_json_v["id"] == sensor_id)
+            {
+                result = _sensors_json_v;
+            }
+        }
+
+        if(result.empty())
+        {
+            PLOG(logERROR) << "CDASimAdapter stored sensors do not have sensor with id = " << sensor_id << std::endl;
+        }
+        return result;
+    }
 }
