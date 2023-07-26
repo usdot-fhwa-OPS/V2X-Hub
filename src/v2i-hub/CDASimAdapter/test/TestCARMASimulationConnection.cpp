@@ -104,18 +104,23 @@ namespace CDASimAdapter {
         ASSERT_TRUE(connection->connect());
     }
 
-    TEST_F(TestCARMASimulationConnection, populate_sensors_with_file)
+    TEST_F(TestCARMASimulationConnection, read_json_file)
     {        
-        Json::Value sensorJsonV;
-        connection->populate_sensors_with_file("Invalid_file_path", sensorJsonV );
+        auto sensorJsonV = connection->read_json_file("Invalid_file_path" );
         ASSERT_TRUE(sensorJsonV.empty());
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
         {
-            connection->populate_sensors_with_file(sensors_file_path, sensorJsonV );
+            sensorJsonV = connection->read_json_file(sensors_file_path );
             ASSERT_FALSE(sensorJsonV.empty());
         }        
+    }
+
+    TEST_F(TestCARMASimulationConnection, string_to_json)
+    {        
+        auto sensorJsonV = connection->string_to_json("Invalid Json");
+        ASSERT_TRUE(sensorJsonV.empty());
     }
 
     TEST_F(TestCARMASimulationConnection, get_sensor_by_id)

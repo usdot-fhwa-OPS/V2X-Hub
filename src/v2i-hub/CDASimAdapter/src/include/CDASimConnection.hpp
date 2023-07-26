@@ -144,15 +144,15 @@ namespace CDASimAdapter {
             /**
              * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
              * @param file_path A string of file location in the host machine.
-             * @param sensors_json_v A reference to the location where the sensors inforation is updated and stored.
+             * @return A reference to the location where the sensors inforation is updated and stored.
             */
-            void populate_sensors_with_file(const std::string& file_path, Json::Value& sensors_json_v);
+            Json::Value read_json_file(const std::string& file_path) const;
              /**
              * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
              * @param json_str A JSON string.
-             * @param json_v A reference to JSON value.
+             * @return A reference to JSON value.
             */
-            void populate_json_with_string(const std::string &json_str, Json::Value& json_v);
+            Json::Value string_to_json(const std::string &json_str) const;
 
             std::string _simulation_ip;
             uint _simulation_registration_port;
@@ -175,7 +175,8 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
 
             FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
-            FRIEND_TEST(TestCARMASimulationConnection, populate_sensors_with_file);
+            FRIEND_TEST(TestCARMASimulationConnection, read_json_file);
+            FRIEND_TEST(TestCARMASimulationConnection, string_to_json);
     };
 
 }

@@ -21,7 +21,7 @@ namespace CDASimAdapter{
 
     bool CDASimConnection::connect() {
         //Read local sensor file and populate the sensors JSON
-        populate_sensors_with_file(_sensor_json_file_path, _sensors_json_v);
+        _sensors_json_v = read_json_file(_sensor_json_file_path);
         if(_sensors_json_v.empty())
         {
             PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
@@ -224,14 +224,15 @@ namespace CDASimAdapter{
         forward_message( msg , message_receiver_publisher );
     }
 
-    void CDASimConnection::populate_sensors_with_file(const std::string& file_path, Json::Value& sensors_json_v){
+    Json::Value CDASimConnection::read_json_file(const std::string& file_path) const{
+        Json::Value sensors_json_v;
         //Read file from disk
         std::ifstream in_strm;
         in_strm.open(file_path, std::ifstream::binary);
         if(!in_strm.is_open())
         {
             PLOG(logERROR) << "File cannot be opened. File path: " << file_path <<std::endl;
-            return;
+            return sensors_json_v;
         }
         std::string line;
         std::stringstream ss;
@@ -240,11 +241,12 @@ namespace CDASimAdapter{
         }
         in_strm.close();
 
-       populate_json_with_string(ss.str(), sensors_json_v);
+       return string_to_json(ss.str());
     }
 
-    void CDASimConnection::populate_json_with_string(const std::string& json_str, Json::Value& json_v){
-        //Update JSON value with information from file
+    Json::Value CDASimConnection::string_to_json(const std::string& json_str) const{
+        //Update JSON value with information from string
+        Json::Value json_v;
         Json::CharReaderBuilder builder;
         std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
         JSONCPP_STRING err;
@@ -252,6 +254,7 @@ namespace CDASimAdapter{
         {
             PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
         }
+        return json_v;
     }
 
     Json::Value CDASimConnection::get_sensor_by_id(std::string &sensor_id)
