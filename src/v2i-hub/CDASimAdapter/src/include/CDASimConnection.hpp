@@ -93,12 +93,11 @@ namespace CDASimAdapter {
              * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
              * @param location simulated location of infrastructure hardware.
-             * @param sensors_json_v A list of sensors sent to CARLA for sensor generation.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::Point &location, const Json::Value& sensors_json_v);
+                                const tmx::utils::Point &location);
             
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
@@ -130,11 +129,10 @@ namespace CDASimAdapter {
              * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
              * @param location simulated location of infrastructure hardware.
-             * @param sensors_json_v A list of sensors sent to CARLA for sensor generation.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::Point &location, const Json::Value& sensors_json_v) const; 
+                const uint v2x_port, const tmx::utils::Point &location) const; 
             
             /**
              * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.

@@ -87,17 +87,15 @@ namespace CDASimAdapter {
         location.X = 1000;
         location.Y = 38.955; 
         location.Z = -77.149;
-        Json::Value sensorsJsonV;
-        ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, location, sensorsJsonV), 
+        ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, location), 
         "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : null,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
         Point location;
-        Json::Value sensorsJsonV;
         // UDP creation error
         ASSERT_FALSE(connection->carma_simulation_handshake("", "45", NULL, 
-                                "",  45, 45, location, sensorsJsonV));
+                                "",  45, 45, location));
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {

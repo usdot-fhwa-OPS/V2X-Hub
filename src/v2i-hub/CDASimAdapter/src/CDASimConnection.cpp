@@ -20,13 +20,7 @@ namespace CDASimAdapter{
     }
 
     bool CDASimConnection::connect() {
-        //Read local sensor file and populate the sensors JSON
-        auto sensors_json_v = read_json_file(_sensor_json_file_path);
-        if(sensors_json_v.empty())
-        {
-            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
-        }     
-        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location, sensors_json_v)) {
+        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location)) {
             _connected = false;
             return _connected;
         }
@@ -40,7 +34,7 @@ namespace CDASimAdapter{
     }
 
     std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const Point &location, const Json::Value& sensors_json_v) const
+                                const Point &location) const
 
     {
         Json::Value message;   
@@ -53,6 +47,13 @@ namespace CDASimAdapter{
         message["location"]["x"] = location.X;
         message["location"]["y"] = location.Y;
         message["location"]["z"] = location.Z;
+
+        //Read local sensor file and populate the sensors JSON
+        auto sensors_json_v = read_json_file(_sensor_json_file_path);
+        if(sensors_json_v.empty())
+        {
+            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
+        }     
         message["sensors"] = sensors_json_v;
         Json::StyledWriter writer;
         message_str = writer.write(message);
@@ -61,12 +62,12 @@ namespace CDASimAdapter{
 
     bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint v2x_port,
-                                const Point &location, const Json::Value& sensors_json_v ) 
+                                const Point &location) 
     {
         // Create JSON message with the content 
         std::string payload = "";
     
-        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location, sensors_json_v);
+        payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, v2x_port, location);
     
         try
         {
