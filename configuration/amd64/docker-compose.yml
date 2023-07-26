@@ -38,17 +38,6 @@ services:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - SIMULATION_MODE=true
-      - SIMULATION_IP=127.0.0.1
-      - SIMULATION_REGISTRATION_PORT=6767
-      - LOCAL_IP=127.0.0.1
-      - TIME_SYNC_TOPIC=time_sync
-      - TIME_SYNC_PORT=7575
-      - SIM_V2X_PORT=5757
-      - SIM_INTERACTION_PORT=7576
-      - V2X_PORT=8686
-      - INFRASTRUCTURE_ID=1
-      - KAFKA_BROKER_ADDRESS=127.0.0.1:9092
     secrets:
       - mysql_password
     volumes:

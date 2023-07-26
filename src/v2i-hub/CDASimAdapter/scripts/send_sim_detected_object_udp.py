@@ -33,21 +33,21 @@ def generate_sim_external_object():
             },
             "positionCovariance" : [12,12,2, 34, 34, 55],
             "velocity": {
-            "x": 1.0,
-            "y": 2.5,
-            "z": 1.1
+                "x": 1.0,
+                "y": 2.5,
+                "z": 1.1
             },
             "velocityCovariance" : ["a11", "a12", "a13", "a21", "a22", "a23", "a31", "a32", "a33"],
             "angularVelocity":{
-            "x": 1.0,
-            "y": 2.5,
-            "z": 1.1
+                "x": 1.0,
+                "y": 2.5,
+                "z": 1.1
             },
             "angularVelocityCovariance" : ["a11", "a12", "a13", "a21", "a22", "a23", "a31", "a32", "a33"],
             "size": {
-            "length": 0.1,
-            "width": 0.4,
-            "height": 1.5
+                "length": 0.1,
+                "width": 0.4,
+                "height": 1.5
             }     
         }
     }
