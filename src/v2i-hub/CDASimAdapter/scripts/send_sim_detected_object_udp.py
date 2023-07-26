@@ -22,6 +22,7 @@ def generate_sim_external_object():
         },
         "payload": {
             "sensor_id": "sensor1",
+            "proj_string": "asdlasdkasd",
             "type": "Car",
             "confidence": "0.7",
             "objectId": "Object1",
