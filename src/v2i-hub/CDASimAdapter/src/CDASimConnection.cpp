@@ -257,7 +257,7 @@ namespace CDASimAdapter{
         return json_v;
     }
 
-    Json::Value CDASimConnection::get_sensor_by_id(std::string &sensor_id)
+    Json::Value CDASimConnection::get_sensor_by_id(const std::string &sensor_id)
     {
         Json::Value result;
         if(_sensors_json_v.empty())

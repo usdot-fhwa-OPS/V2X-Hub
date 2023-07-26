@@ -126,7 +126,7 @@ namespace CDASimAdapter {
              * @brief Search the list of sensors stored by this plugin and identify the sensor based on the input id.
              * @param sensor_id A unique sensor identifier
             */
-            Json::Value get_sensor_by_id(std::string &sensor_id);
+            Json::Value get_sensor_by_id(const std::string &sensor_id);
 
         private:
             /**
