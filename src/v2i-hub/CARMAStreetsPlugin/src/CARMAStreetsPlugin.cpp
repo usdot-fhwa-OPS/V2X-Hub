@@ -632,7 +632,7 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 
 void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
 {
-	PLOG(logINFO) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
+	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
 	produce_kafka_msg( msg.to_string(), _transmitSimSensorDetectedObjTopic);
 }
 

@@ -21,23 +21,14 @@ def generate_sim_external_object():
             "isSimulated": True
         },
         "payload": {
-            "sensor": {
-            "id": "SomeID",
-            "type": "SematicLidar",
-            "location": {
-                "x": 0.0,
-                "y": 0.0,
-                "z": 0.0
-            },
-            "proj_string": "+proj=tmerc +lat_0=38.95197911150576 +lon_0=-77.14835128349988 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs"
-            },
+            "sensor_id": "sensor1",
             "type": "Car",
             "confidence": "0.7",
             "objectId": "Object1",
             "position": {
-            "x": 1.0,
-            "y": 2.5,
-            "z": 1.1
+                "x": 1.0,
+                "y": 2.5,
+                "z": 1.1
             },
             "positionCovariance" : [12,12,2, 34, 34, 55],
             "velocity": {
