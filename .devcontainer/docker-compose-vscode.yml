@@ -25,7 +25,6 @@ services:
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=1
       - SENSOR_JSON_FILE_PATH=/var/www/plugins/MAP/sensors.json
-      - KAFKA_BROKER_ADDRESS=127.0.0.1:9092
     secrets:
       - mysql_password
 

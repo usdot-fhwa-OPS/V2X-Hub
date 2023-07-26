@@ -120,15 +120,19 @@ namespace CDASimAdapter {
 
     TEST_F(TestCARMASimulationConnection, get_sensor_by_id)
     {
+        Point location; 
+        auto conn = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, location, "");
+        std::string invalidId = "invalidId";
+        auto sensor = conn->get_sensor_by_id(invalidId);
+        ASSERT_TRUE(sensor.empty());
         //Populate connection with sensors upon connect call.        
         connection->connect();
-        std::string sensor_id = "SomeID";
-        connection->get_sensor_by_id(sensor_id);
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
         {
-            auto sensor = connection->get_sensor_by_id(sensor_id);
+            std::string sensor_id = "SomeID";
+            sensor = connection->get_sensor_by_id(sensor_id);
             ASSERT_FALSE(sensor.empty());
             ASSERT_EQ("SematicLidar", sensor["type"].asString());
 

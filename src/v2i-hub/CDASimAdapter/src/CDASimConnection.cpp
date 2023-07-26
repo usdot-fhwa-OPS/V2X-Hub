@@ -251,7 +251,6 @@ namespace CDASimAdapter{
         if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
         {
             PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
-            return;
         }
     }
 
