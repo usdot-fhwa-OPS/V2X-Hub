@@ -21,12 +21,12 @@ namespace CDASimAdapter{
 
     bool CDASimConnection::connect() {
         //Read local sensor file and populate the sensors JSON
-        _sensors_json_v = read_json_file(_sensor_json_file_path);
-        if(_sensors_json_v.empty())
+        auto sensors_json_v = read_json_file(_sensor_json_file_path);
+        if(sensors_json_v.empty())
         {
             PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
         }     
-        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location, _sensors_json_v)) {
+        if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location, sensors_json_v)) {
             _connected = false;
             return _connected;
         }
@@ -255,38 +255,5 @@ namespace CDASimAdapter{
             PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
         }
         return json_v;
-    }
-
-    Json::Value CDASimConnection::get_sensor_by_id(const std::string &sensor_id)
-    {
-        Json::Value result;
-        if(_sensors_json_v.empty())
-        {
-            PLOG(logERROR) << "CDASimAdapter stored sensors are empty." << std::endl;
-            return result;
-        }
-
-        if(_sensors_json_v.isArray())
-        {
-           std::for_each( _sensors_json_v.begin(), _sensors_json_v.end(), [&result, &sensor_id](auto& item){
-                if(item.isMember("sensor_id") && item["sensor_id"] == sensor_id)
-                {
-                    result = item;
-                }
-           });
-        }
-        else if(_sensors_json_v.isObject())
-        {
-            if(_sensors_json_v.isMember("sensor_id") && _sensors_json_v["sensor_id"] == sensor_id)
-            {
-                result = _sensors_json_v;
-            }
-        }
-
-        if(result.empty())
-        {
-            PLOG(logERROR) << "CDASimAdapter stored sensors do not have sensor with id = " << sensor_id << std::endl;
-        }
-        return result;
     }
 }

@@ -122,11 +122,6 @@ namespace CDASimAdapter {
              * @return Returns true if CARMA-Simulation connection is active and false if the connection is inactive.
              */
             bool is_connected() const;
-            /**
-             * @brief Search the list of sensors stored by this plugin and identify the sensor based on the input id.
-             * @param sensor_id A unique sensor identifier
-            */
-            Json::Value get_sensor_by_id(const std::string &sensor_id);
 
         private:
             /**
@@ -164,8 +159,6 @@ namespace CDASimAdapter {
             tmx::utils::Point _location;
             bool _connected = false;
             std::string _sensor_json_file_path;
-            //Global variable to store the sensors information
-            Json::Value _sensors_json_v;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
