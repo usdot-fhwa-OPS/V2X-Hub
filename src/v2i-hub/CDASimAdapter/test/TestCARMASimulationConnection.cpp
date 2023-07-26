@@ -105,8 +105,9 @@ namespace CDASimAdapter {
     }
 
     TEST_F(TestCARMASimulationConnection, populate_sensors_with_file)
-    {
+    {        
         Json::Value sensorJsonV;
+        connection->populate_sensors_with_file("Invalid_file_path", sensorJsonV );
         ASSERT_TRUE(sensorJsonV.empty());
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
@@ -121,11 +122,12 @@ namespace CDASimAdapter {
     {
         //Populate connection with sensors upon connect call.        
         connection->connect();
+        std::string sensor_id = "SomeID";
+        connection->get_sensor_by_id(sensor_id);
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
         {
-            std::string sensor_id = "SomeID";
             auto sensor = connection->get_sensor_by_id(sensor_id);
             ASSERT_FALSE(sensor.empty());
             ASSERT_EQ("SematicLidar", sensor["type"].asString());
