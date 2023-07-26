@@ -86,7 +86,7 @@ namespace CDASimAdapter {
         location.Y = 38.955; 
         location.Z = -77.149;
         ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, 4569, location), 
-        "{\n   \"SensorDetectedObjectDetectionPort\" : 4568,\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"timeSyncPort\" : 4567\n}\n");
+        "{\n   \"simulatedInteractionPort\" : 4568,\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"timeSyncPort\" : 4567\n}\n");
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
