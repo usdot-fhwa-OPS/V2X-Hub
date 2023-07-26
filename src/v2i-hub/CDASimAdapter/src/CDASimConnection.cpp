@@ -266,7 +266,7 @@ namespace CDASimAdapter{
         if(_sensors_json_v.isArray())
         {
            std::for_each( _sensors_json_v.begin(), _sensors_json_v.end(), [&result, &sensor_id](auto& item){
-                if(item["sensor_id"] == sensor_id)
+                if(item.isMember("sensor_id") && item["sensor_id"] == sensor_id)
                 {
                     result = item;
                 }
@@ -274,7 +274,7 @@ namespace CDASimAdapter{
         }
         else if(_sensors_json_v.isObject())
         {
-            if(_sensors_json_v["sensor_id"] == sensor_id)
+            if(_sensors_json_v.isMember("sensor_id") && _sensors_json_v["sensor_id"] == sensor_id)
             {
                 result = _sensors_json_v;
             }
