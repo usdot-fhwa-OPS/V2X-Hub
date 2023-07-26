@@ -24,7 +24,7 @@ namespace CDASimAdapter{
         populate_sensors_with_file(_sensor_json_file_path, _sensors_json_v);
         if(_sensors_json_v.empty())
         {
-            PLOG(logERROR) << "Sensors JSON is empty!" << std::endl;
+            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
         }     
         if (!carma_simulation_handshake(_simulation_ip, _infrastructure_id, _simulation_registration_port, _local_ip, _time_sync_port, _v2x_port, _location, _sensors_json_v)) {
             _connected = false;
@@ -224,7 +224,7 @@ namespace CDASimAdapter{
         forward_message( msg , message_receiver_publisher );
     }
 
-    void CDASimConnection::populate_sensors_with_file(const std::string file_path, Json::Value& sensors_json_v){
+    void CDASimConnection::populate_sensors_with_file(const std::string& file_path, Json::Value& sensors_json_v){
         //Read file from disk
         std::ifstream in_strm;
         in_strm.open(file_path, std::ifstream::binary);

@@ -146,7 +146,7 @@ namespace CDASimAdapter {
              * @param file_path A string of file location in the host machine.
              * @param sensors_json_v A reference to the location where the sensors inforation is updated and stored.
             */
-            void populate_sensors_with_file(const std::string file_path, Json::Value& sensors_json_v);
+            void populate_sensors_with_file(const std::string& file_path, Json::Value& sensors_json_v);
              /**
              * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
              * @param json_str A JSON string.
