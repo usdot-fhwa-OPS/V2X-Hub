@@ -35,7 +35,7 @@ namespace CDASimAdapter{
 
 
     std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
-                                const Point &location) const
+                                const tmx::utils::Point &location) const
 
     {
         Json::Value message;   
@@ -65,7 +65,7 @@ namespace CDASimAdapter{
 
     bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
-                                const Point &location) 
+                                const tmx::utils::Point &location) 
     {
         // Create JSON message with the content 
         std::string payload = "";
