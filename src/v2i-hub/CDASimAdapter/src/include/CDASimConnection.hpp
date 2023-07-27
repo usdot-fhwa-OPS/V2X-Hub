@@ -8,6 +8,7 @@
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
+#include <fstream>
 
 
 namespace CDASimAdapter {
@@ -34,7 +35,7 @@ namespace CDASimAdapter {
              */
             explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
-                                const tmx::utils::Point &location);
+                                const tmx::utils::Point &location, const std::string &sensor_json_file_path);
              /**
              * @brief Method to forward v2x message to CARMA Simulation
              * @param v2x_message string
@@ -136,8 +137,22 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,
-                const uint v2x_port, const tmx::utils::Point &location) const;             
+            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
+                const uint v2x_port, const tmx::utils::Point &location) const; 
+            
+            /**
+             * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
+             * @param file_path A string of file location in the host machine.
+             * @return A reference to the location where the sensors inforation is updated and stored.
+            */
+            Json::Value read_json_file(const std::string& file_path) const;
+             /**
+             * @brief Read local file that has the sensor information in JSON format from disk. Populate global sensor json variable with the information.
+             * @param json_str A JSON string.
+             * @return A reference to JSON value.
+            */
+            Json::Value string_to_json(const std::string &json_str) const;
+
             std::string _simulation_ip;
             uint _simulation_registration_port;
             std::string _infrastructure_id;
@@ -148,6 +163,7 @@ namespace CDASimAdapter {
             uint _v2x_port;
             tmx::utils::Point _location;
             bool _connected = false;
+            std::string _sensor_json_file_path;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
@@ -158,6 +174,8 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> sensor_detected_object_listener;
 
             FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
+            FRIEND_TEST(TestCARMASimulationConnection, read_json_file);
+            FRIEND_TEST(TestCARMASimulationConnection, string_to_json);
     };
 
 }

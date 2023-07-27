@@ -6,10 +6,10 @@ using namespace tmx::utils;
 namespace CDASimAdapter{ 
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port,const uint simulated_interaction_port, const uint v2x_port, 
-                                                        const Point &location) : 
+                                                        const Point &location, const std::string &sensor_json_file_path) : 
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _simulated_interaction_port(simulated_interaction_port),_v2x_port(v2x_port),
-                                                        _location(location)  {
+                                                        _location(location) ,_sensor_json_file_path(sensor_json_file_path)  {
         PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
     } 
 
@@ -49,6 +49,15 @@ namespace CDASimAdapter{
         message["location"]["x"] = location.X;
         message["location"]["y"] = location.Y;
         message["location"]["z"] = location.Z;
+
+        //Read local sensor file and populate the sensors JSON
+        //Sample sensors.json: https://raw.githubusercontent.com/usdot-fhwa-OPS/V2X-Hub/develop/src/v2i-hub/CDASimAdapter/test/sensors.json
+        auto sensors_json_v = read_json_file(_sensor_json_file_path);
+        if(sensors_json_v.empty())
+        {
+            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
+        }     
+        message["sensors"] = sensors_json_v;
         Json::StyledWriter writer;
         message_str = writer.write(message);
         return message_str;
@@ -237,4 +246,36 @@ namespace CDASimAdapter{
         forward_message( msg , message_receiver_publisher );
     }
 
+    Json::Value CDASimConnection::read_json_file(const std::string& file_path) const{
+        Json::Value sensors_json_v;
+        //Read file from disk
+        std::ifstream in_strm;
+        in_strm.open(file_path, std::ifstream::binary);
+        if(!in_strm.is_open())
+        {
+            PLOG(logERROR) << "File cannot be opened. File path: " << file_path <<std::endl;
+            return sensors_json_v;
+        }
+        std::string line;
+        std::stringstream ss;
+        while (std::getline(in_strm, line)) {
+            ss << line;
+        }
+        in_strm.close();
+
+       return string_to_json(ss.str());
+    }
+
+    Json::Value CDASimConnection::string_to_json(const std::string& json_str) const{
+        //Update JSON value with information from string
+        Json::Value json_v;
+        Json::CharReaderBuilder builder;
+        std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+        JSONCPP_STRING err;
+        if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
+        {
+            PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
+        }
+        return json_v;
+    }
 }

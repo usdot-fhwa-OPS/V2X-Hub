@@ -5,6 +5,7 @@
 #include <WGS84Point.h>
 #include <MockUdpClient.h>
 #include <MockUdpServer.h>
+#include <filesystem>
 
 
 using testing::_;
@@ -23,13 +24,14 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location and mock kafka producer.
                 Point location; 
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, 1215, location);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, 1215, location, sensors_file_path);
             }
             void TearDown() override {
 
             }
         public:
             std::shared_ptr<CDASimConnection> connection;
+            std::string sensors_file_path = "../../CDASimAdapter/test/sensors.json";
         
 
     };
@@ -85,8 +87,13 @@ namespace CDASimAdapter {
         location.X = 1000;
         location.Y = 38.955; 
         location.Z = -77.149;
-        ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, 4569, location), 
-        "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"simulatedInteractionPort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
+        std::ifstream in_strm;
+        in_strm.open(sensors_file_path, std::ifstream::binary);
+        if(in_strm.is_open())
+        {
+            ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, 4569, location), 
+            "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"simulatedInteractionPort\" : 4568,\n   \"sensors\" : [\n      {\n         \"location\" : {\n            \"x\" : 0.0,\n            \"y\" : 0.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 0.0\n         },\n         \"sensorId\" : \"SomeID\",\n         \"type\" : \"SematicLidar\"\n      },\n      {\n         \"location\" : {\n            \"x\" : 1.0,\n            \"y\" : 2.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 23.0\n         },\n         \"sensorId\" : \"SomeID2\",\n         \"type\" : \"SematicLidar\"\n      }\n   ],\n   \"timeSyncPort\" : 4567\n}\n");
+        }
     }
 
     TEST_F( TestCARMASimulationConnection, carma_simulation_handshake) {
@@ -98,5 +105,24 @@ namespace CDASimAdapter {
 
     TEST_F(TestCARMASimulationConnection, connect) {
         ASSERT_TRUE(connection->connect());
+    }
+
+    TEST_F(TestCARMASimulationConnection, read_json_file)
+    {        
+        auto sensorJsonV = connection->read_json_file("Invalid_file_path" );
+        ASSERT_TRUE(sensorJsonV.empty());
+        std::ifstream in_strm;
+        in_strm.open(sensors_file_path, std::ifstream::binary);
+        if(in_strm.is_open())
+        {
+            sensorJsonV = connection->read_json_file(sensors_file_path );
+            ASSERT_FALSE(sensorJsonV.empty());
+        }        
+    }
+
+    TEST_F(TestCARMASimulationConnection, string_to_json)
+    {        
+        auto sensorJsonV = connection->string_to_json("Invalid Json");
+        ASSERT_TRUE(sensorJsonV.empty());
     }
 }
