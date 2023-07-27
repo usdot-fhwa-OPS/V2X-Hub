@@ -32,6 +32,11 @@ namespace tmx::utils::sim{
          */
         constexpr inline static const char *SIMULATION_REGISTRATION_PORT = "SIMULATION_REGISTRATION_PORT";
         /**
+         * @brief sensors file location
+        */
+        constexpr inline static const char *SENSOR_JSON_FILE_PATH = "SENSOR_JSON_FILE_PATH";
+        
+        /**
          * @brief Name of environment varaible for storing port for receiving time sync messages from CDASim. Only 
          * necessary in SIMULATION MODE for CDASim time sync.
          */

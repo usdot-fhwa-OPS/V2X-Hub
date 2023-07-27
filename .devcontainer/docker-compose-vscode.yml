@@ -24,6 +24,7 @@ services:
       - SIM_V2X_PORT=5757
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=1
+      - SENSOR_JSON_FILE_PATH=/var/www/plugins/MAP/sensors.json
     secrets:
       - mysql_password
 
