@@ -49,6 +49,7 @@ namespace CDASimAdapter{
         message["location"]["z"] = location.Z;
 
         //Read local sensor file and populate the sensors JSON
+        //Sample sensors.json: https://raw.githubusercontent.com/usdot-fhwa-OPS/V2X-Hub/develop/src/v2i-hub/CDASimAdapter/test/sensors.json
         auto sensors_json_v = read_json_file(_sensor_json_file_path);
         if(sensors_json_v.empty())
         {
