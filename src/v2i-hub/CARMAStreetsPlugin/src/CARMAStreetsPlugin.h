@@ -50,7 +50,7 @@ protected:
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	/**
-	 * @brief Handler to be invoked when the plugin received detected object, and forward the detected object to Kafka topic.
+	 * @brief Callback function when the plugin received detected object, and forward the detected object to Kafka topic.
 	 * @param msg Detected object received from TMX bus.
 	 * @param routeableMsg routeable_message for detected object.
 	 */
