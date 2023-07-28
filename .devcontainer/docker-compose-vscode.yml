@@ -22,6 +22,7 @@ services:
       - TIME_SYNC_TOPIC=time_sync
       - TIME_SYNC_PORT=7575
       - SIM_V2X_PORT=5757
+      - SIM_INTERACTION_PORT=7576
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=1
       - SENSOR_JSON_FILE_PATH=/var/www/plugins/MAP/sensors.json

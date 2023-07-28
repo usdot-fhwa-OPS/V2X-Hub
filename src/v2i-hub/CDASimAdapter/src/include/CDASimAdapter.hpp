@@ -89,6 +89,11 @@ namespace CDASimAdapter
          * @param msg TimeSyncMessage.
          */
         void forward_time_sync_message(tmx::messages::TimeSyncMessage &msg);
+         /**
+         * @brief Forward simulated sensor detected object message to TMX message bus for other V2X-Hub Plugin 
+         * @param msg simulation::SensorDetectedObject.
+         */
+        void forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg);
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */
@@ -98,6 +103,11 @@ namespace CDASimAdapter
          */
         void attempt_time_sync();
 
+        /**
+         * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
+         */
+        void start_sensor_detected_object_detection_thread();
+        
     private:
         // Simulated location of RSU
         tmx::utils::Point location;
@@ -109,6 +119,7 @@ namespace CDASimAdapter
         std::unique_ptr<CDASimConnection> connection;
         // Mutex for configuration parameter thread safety
         std::mutex _lock;
+        std::unique_ptr<tmx::utils::ThreadTimer> external_object_detection_thread_timer;
         // Time sync thread to forward time sync messages to PluginClientClockAware V2X-Hub plugins.
         std::unique_ptr<tmx::utils::ThreadTimer> time_sync_timer;
         // Time sync thread id

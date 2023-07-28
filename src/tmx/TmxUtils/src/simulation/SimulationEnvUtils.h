@@ -47,6 +47,11 @@ namespace tmx::utils::sim{
          */
         constexpr inline static const char *SIM_V2X_PORT = "SIM_V2X_PORT";
         /**
+         * @brief Name of environment variable for storing port for forwarding v2x messages to CDASim. Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        constexpr inline static const char *SIM_INTERACTION_PORT= "SIM_INTERACTION_PORT";
+        /**
          * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.
          */

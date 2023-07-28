@@ -34,6 +34,11 @@
         "type":"J2735",
         "subtype":"SPAT-P",
         "description":"Signal Phase and Timing (SPAT) status for the signalized intersection."
+    },
+    {
+        "type":"Application",
+        "subtype":"SensorDetectedObject",
+        "description": "Sensor detected object for cooperative perception."
     }
     ],
     "configuration": [
@@ -116,6 +121,11 @@
             "key": "SpatConsumerGroupId",
             "default": "v2xhub_spat",
             "description": "Apache Kafka consumer group ID for spat consumer."
+        },
+        {
+            "key": "SimSensorDetectedObjTopic",
+            "default": "v2xhub_sim_sensor_detected_object",
+            "description": "Apache Kafka topic plugin will transmit simulated sensor detected object to."               
         }
         
     ]

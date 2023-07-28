@@ -60,6 +60,7 @@ namespace CDASimAdapter{
 
             if ( connection->is_connected() ) {
                 start_time_sync_thread_timer();
+                start_sensor_detected_object_detection_thread();
                 start_immediate_forward_thread();
                 start_message_receiver_thread();
             }else {
@@ -78,6 +79,11 @@ namespace CDASimAdapter{
         
     }
 
+    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+        PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
+        this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);        
+    }
+
     bool CDASimAdapter::connect() {
         try {
             std::string simulation_ip = sim::get_sim_config(sim::SIMULATION_IP);
@@ -85,6 +91,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
+            auto simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
@@ -95,11 +102,11 @@ namespace CDASimAdapter{
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, v2x_port, location, sensor_json_file_path));
+                                                time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path ));
             }
             else {
                 connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, v2x_port, location, sensor_json_file_path);
+                                                            time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path);
             }
         }       
         catch (const TmxException &e) {
@@ -157,6 +164,34 @@ namespace CDASimAdapter{
             }
         }
         catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    void CDASimAdapter::start_sensor_detected_object_detection_thread() {
+        PLOG(logDEBUG) << "Creating Thread Timer for simulated external object" << std::endl;
+        try 
+        {
+            if(!external_object_detection_thread_timer)
+            {
+                external_object_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
+            }            
+            external_object_detection_thread_timer->AddPeriodicTick([this](){
+                PLOG(logDEBUG1) << "Listening for Sensor Detected Message from CDASim." << std::endl;
+                auto msg = connection->consume_sensor_detected_object_message();
+                if ( !msg.is_empty()) {             
+                    this->forward_simulated_detected_message(msg);
+                }
+                else 
+                {
+                    PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated sensor detected message!" << std::endl;
+                }
+            }//End lambda
+            , std::chrono::milliseconds(100));
+            external_object_detection_thread_timer->Start();
+        }
+        catch ( const UdpServerRuntimeError &e ) 
+        {
             PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
         }
     }

@@ -24,7 +24,7 @@ namespace CDASimAdapter {
             void SetUp() override {
                 // Initialize CARMA Simulation connection with (0,0,0) location.
                 Point location; 
-                connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, location, sensors_file_path);
+                connection = std::make_shared<CDASimConnection>("127.0.0.1", "1212", 4567, 4678, "127.0.0.1", 1213, 1214, 1215, location, sensors_file_path);
             }
             void TearDown() override {
 
@@ -79,7 +79,7 @@ namespace CDASimAdapter {
     }
 
     TEST_F( TestCARMASimulationConnection, setup_upd_connection) {
-        ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569));
+        ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569, 4570));
     }
 
     TEST_F( TestCARMASimulationConnection, get_handshake_json) {
@@ -91,8 +91,8 @@ namespace CDASimAdapter {
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
         {
-            ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, location), 
-            "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4568,\n   \"sensors\" : [\n      {\n         \"location\" : {\n            \"x\" : 0.0,\n            \"y\" : 0.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 0.0\n         },\n         \"sensorId\" : \"SomeID\",\n         \"type\" : \"SematicLidar\"\n      },\n      {\n         \"location\" : {\n            \"x\" : 1.0,\n            \"y\" : 2.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 23.0\n         },\n         \"sensorId\" : \"SomeID2\",\n         \"type\" : \"SematicLidar\"\n      }\n   ],\n   \"timeSyncPort\" : 4567\n}\n");
+            ASSERT_EQ(connection->get_handshake_json("4566", "127.0.0.1", 4567, 4568, 4569, location), 
+            "{\n   \"infrastructureId\" : \"4566\",\n   \"location\" : {\n      \"x\" : 1000.0,\n      \"y\" : 38.954999999999998,\n      \"z\" : -77.149000000000001\n   },\n   \"rxMessageIpAddress\" : \"127.0.0.1\",\n   \"rxMessagePort\" : 4569,\n   \"sensors\" : [\n      {\n         \"location\" : {\n            \"x\" : 0.0,\n            \"y\" : 0.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 0.0\n         },\n         \"sensorId\" : \"SomeID\",\n         \"type\" : \"SematicLidar\"\n      },\n      {\n         \"location\" : {\n            \"x\" : 1.0,\n            \"y\" : 2.0,\n            \"z\" : 0.0\n         },\n         \"orientation\" : {\n            \"pitch\" : 0.0,\n            \"roll\" : 0.0,\n            \"yaw\" : 23.0\n         },\n         \"sensorId\" : \"SomeID2\",\n         \"type\" : \"SematicLidar\"\n      }\n   ],\n   \"simulatedInteractionPort\" : 4568,\n   \"timeSyncPort\" : 4567\n}\n");
         }
     }
 
@@ -100,7 +100,7 @@ namespace CDASimAdapter {
         Point location;
         // UDP creation error
         ASSERT_FALSE(connection->carma_simulation_handshake("", "45", NULL, 
-                                "",  45, 45, location));
+                                "",  45, 45, 45, location));
     }
 
     TEST_F(TestCARMASimulationConnection, connect) {

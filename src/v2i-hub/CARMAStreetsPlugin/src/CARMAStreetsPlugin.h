@@ -20,6 +20,7 @@
 #include <kafka/kafka_client.h>
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
+#include <simulation/SensorDetectedObject.h>
 #include "PluginClientClockAware.h"
 
 
@@ -48,6 +49,12 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	/**
+	 * @brief Callback function when the plugin received detected object, and forward the detected object to Kafka topic.
+	 * @param msg Detected object received from TMX bus.
+	 * @param routeableMsg routeable_message for detected object.
+	 */
+	void HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg,  routeable_message &routeableMsg);
 	/**
 	 * @brief Overide PluginClientClockAware HandleTimeSyncMessage to producer TimeSyncMessage to kafka for CARMA Streets Time Synchronization.
 	 * @param msg TimeSyncMessage received by plugin when in simulation mode. Message provides current simulation time to all processes.
@@ -104,6 +111,7 @@ private:
 	std::string _transmitBSMTopic;
 	std::string _transmitMAPTopic;
 	std::string _transmitSRMTopic;
+	std::string _transmitSimSensorDetectedObjTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;
