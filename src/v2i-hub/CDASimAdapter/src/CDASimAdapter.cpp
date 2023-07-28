@@ -91,7 +91,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            uint simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
+            auto simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
