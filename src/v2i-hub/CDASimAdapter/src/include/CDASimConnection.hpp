@@ -85,7 +85,7 @@ namespace CDASimAdapter {
             tmx::messages::TimeSyncMessage consume_time_sync_message() const;
             /**
              * @brief Method to consume incoming external object message.
-             * //To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
+             * To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
              * @return simulation::SensorDetectedObject.
              */
             tmx::messages::simulation::SensorDetectedObject consume_sensor_detected_object_message() const;

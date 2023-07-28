@@ -91,7 +91,7 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            uint simulated_interaction_port = std::stoul(sim::get_sim_config(sim::SIM_INTERACTION_PORT));
+            uint simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
@@ -172,11 +172,11 @@ namespace CDASimAdapter{
         PLOG(logDEBUG) << "Creating Thread Timer for simulated external object" << std::endl;
         try 
         {
-            if(!external_bject_detection_thread_timer)
+            if(!external_object_detection_thread_timer)
             {
-                external_bject_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
+                external_object_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
             }            
-            external_bject_detection_thread_timer->AddPeriodicTick([this](){
+            external_object_detection_thread_timer->AddPeriodicTick([this](){
                 PLOG(logDEBUG1) << "Listening for Sensor Detected Message from CDASim." << std::endl;
                 auto msg = connection->consume_sensor_detected_object_message();
                 if ( !msg.is_empty()) {             
@@ -188,7 +188,7 @@ namespace CDASimAdapter{
                 }
             }//End lambda
             , std::chrono::milliseconds(100));
-            external_bject_detection_thread_timer->Start();
+            external_object_detection_thread_timer->Start();
         }
         catch ( const UdpServerRuntimeError &e ) 
         {

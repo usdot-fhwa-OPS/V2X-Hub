@@ -49,7 +49,12 @@ protected:
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 	void HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg);
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg);
+	/**
+	 * @brief Handler to be invoked when the plugin received detected object, and forward the detected object to Kafka topic.
+	 * @param msg Detected object received from TMX bus.
+	 * @param routeableMsg routeable_message for detected object.
+	 */
+	void HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg,  routeable_message &routeableMsg);
 	/**
 	 * @brief Overide PluginClientClockAware HandleTimeSyncMessage to producer TimeSyncMessage to kafka for CARMA Streets Time Synchronization.
 	 * @param msg TimeSyncMessage received by plugin when in simulation mode. Message provides current simulation time to all processes.

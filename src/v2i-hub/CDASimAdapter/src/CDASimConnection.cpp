@@ -132,7 +132,7 @@ namespace CDASimAdapter{
             msg.set_contents( str_msg );
         }
         else {
-            throw std::runtime_error("Time Sync UDP Server is not initialized");
+            throw UdpServerRuntimeError("Time Sync UDP Server is not initialized");
         }
         return msg;
 
@@ -149,7 +149,7 @@ namespace CDASimAdapter{
         }
         else
         {
-            throw std::runtime_error("Simulated External Object UDP Server is not initialized.");
+            throw UdpServerRuntimeError("Simulated External Object UDP Server is not initialized.");
         }
         return externalObj;
     }
@@ -200,7 +200,7 @@ namespace CDASimAdapter{
             return msg;
         }
         else {
-            throw std::runtime_error("CARMA Simulation UDP Server is not initialized!");
+            throw UdpServerRuntimeError("CARMA Simulation UDP Server is not initialized!");
         }
         return "";
 
@@ -212,7 +212,7 @@ namespace CDASimAdapter{
             return msg;
         }
         else {
-            throw std::runtime_error("Immediate Forward UDP Server is not initialized!");
+            throw UdpServerRuntimeError("Immediate Forward UDP Server is not initialized!");
         }
         return "";
 
