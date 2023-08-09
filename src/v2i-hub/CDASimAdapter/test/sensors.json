@@ -1,7 +1,7 @@
 [
   {
     "sensorId": "SomeID",
-    "type": "SematicLidar",
+    "type": "SemanticLidar",
     "location": {
       "x": 0.0,
       "y": 0.0,
@@ -15,7 +15,7 @@
   },
   {
     "sensorId": "SomeID2",
-    "type": "SematicLidar",
+    "type": "SemanticLidar",
     "location": {
       "x": 1.0,
       "y": 2.0,
