@@ -88,6 +88,7 @@ enum MsgSubType
 		signalStatusMessage = 30,
 		travelerInformation = 31,
 		personalSafetyMessage = 32,
+		sensorDataSharingMessage = 41,
 		personalMobilityMessage = 245,
 		testMessage00 = 240,
 		testMessage01 = 241,
@@ -143,6 +144,7 @@ static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE02_STRING = "TMSG02-P";
 static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE03_STRING = "TMSG03-P";
 static CONSTEXPR const char *MSGSUBTYPE_J2735_END_STRING = "J2735_end";
 static CONSTEXPR const char *MSGSUBTYPE_GID_STRING = "GID";
+static CONSTEXPR const char *MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING = "SDSM";
 			
 enum Encoding 
 {
@@ -194,6 +196,7 @@ enum msgPSID
 	rtcmCorrections_PSID = 0x8000,
 	signalRequestMessage_PSID = 0xE0000016,
 	signalStatusMessage_PSID = 0x8002,
+	sensorDataSharingMessage_PSID = 0x8002,
 	travelerInformation_PSID = 0x8003,
 	personalSafetyMessage_PSID = 0x27,
 	testMessage00_PSID = 0xBFEE,
@@ -218,6 +221,7 @@ static CONSTEXPR const char *MSGPSID_ROADSIDEALERT_PSID_STRING = "0x8003";
 static CONSTEXPR const char *MSGPSID_RTCMCORRECTIONS_PSID_STRING = "0x8000";
 static CONSTEXPR const char *MSGPSID_SIGNALREQUESTMESSAGE_PSID_STRING = "0xE0000016";
 static CONSTEXPR const char *MSGPSID_SIGNALSTATUSMESSAGE_PSID_STRING = "0x8002";
+static CONSTEXPR const char *MSGPSID_SENSORDATASHARINGMESSAGE_PSID_STRING = "0x8002";
 static CONSTEXPR const char *MSGPSID_TRAVELERINFORMATION_PSID_STRING = "0x8003";
 static CONSTEXPR const char *MSGPSID_PERSONALSAFETYMESSAGE_PSID_STRING = "0x27";
 static CONSTEXPR const char *MSGPSID_TESTMESSAGE00_PSID_STRING = "0xBFEE";

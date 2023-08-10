@@ -748,4 +748,61 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
 	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
 }
+
+TEST_F(J2735MessageTest, EncodeSDSM)
+{
+	auto message = (SensorDataSharingMessage_t*)calloc(1, sizeof(SensorDataSharingMessage_t));
+	message->msgCnt = 10;
+	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	message->sourceID.buf = my_bytes_id;
+	message->sourceID.size = sizeof(my_bytes_id);
+	message->equipmentType = EquipmentType_unknown;
+	
+
+	auto sDSMTimeStamp = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
+	auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
+	*year= 2023;
+	sDSMTimeStamp->year = year;
+	message->sDSMTimeStamp = *sDSMTimeStamp;
+
+	message->refPos.lat = 38.121212;
+	message->refPos.Long = -77.121212;
+
+	message->refPosXYConf.orientation = 10;
+	message->refPosXYConf.semiMajor = 12;
+	message->refPosXYConf.semiMinor = 52;
+
+	auto objects = (DetectedObjectList_t*) calloc(1, sizeof(DetectedObjectList_t));
+	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
+	objectData->detObjCommon.objType = ObjectType_unknown;
+	objectData->detObjCommon.objTypeCfd = 1;
+	objectData->detObjCommon.measurementTime = 1;
+	objectData->detObjCommon.timeConfidence = 1;
+	objectData->detObjCommon.pos.offsetX = 1;
+	objectData->detObjCommon.pos.offsetY = 1;
+	objectData->detObjCommon.posConfidence.elevation = 1;
+	objectData->detObjCommon.posConfidence.pos = 1;
+	objectData->detObjCommon.speed = 1;
+	objectData->detObjCommon.speedConfidence = 1;
+	objectData->detObjCommon.heading = 1;
+	objectData->detObjCommon.headingConf = 1;
+	ASN_SEQUENCE_ADD(&objects->list.array, objectData);
+	message->objects = *objects;
+	xer_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message);
+
+	//Encode SDSM 
+	tmx::messages::SdsmEncodedMessage SdsmEncodeMessage;
+	auto _sdsmMessage = new tmx::messages::SdsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_sdsmMessage->get_j2735_data());
+	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
+	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c35a4e9266b49d1b20c34000a00000020000bba0a000200004400240009";
+	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
+
+	//Decode SDSM
+	auto sdsm_ptr = SdsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	ASSERT_EQ(10, sdsm_ptr->msgCnt);
+}
 }
