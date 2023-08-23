@@ -41,11 +41,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	//
  	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
-	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
  	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
 	GetConfigValue<string>("SsmTopic", _subscribeToSsmTopic);
-	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
-	GetConfigValue<string>("SsmConsumerGroupId", _subscribeToSSMConsumerGroupId);
 	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
@@ -76,28 +73,28 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	_kafka_producer_ptr = client.create_producer(kafkaConnectString);
 	if(!_kafka_producer_ptr->init_producer())
 	{
-		return;
+		throw TmxException("Failed to create Kafka producer.");
+		
 	}
 
 	//Consumers
-	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,_subscribeToSpatConsumerGroupId);
-	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic,_subscribeToSchedulingPlanConsumerGroupId);
-	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,_subscribeToSSMConsumerGroupId);
+	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,this->_name);
+	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic, this->_name);
+	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,this->_name);
 	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr)
 	{
-		PLOG(logERROR) <<"Failed to create Kafka consumers.";
-		return;
+		throw TmxException("Failed to create Kafka consumers.");
 	}
 	PLOG(logDEBUG) <<"Kafka consumers created";
 	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init())
 	{
-		PLOG(logERROR) <<"Kafka consumers init() failed!";
-		return;
+		throw TmxException("Kafka consumers init() failed!");
 	}
-
+	// TODO: Replace with tmxutil ThreadTimer or some other more appropriate Thread wrapper.
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
-	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);	
+	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);
+
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -468,6 +465,7 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 
 void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 {	
+	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
@@ -525,6 +523,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 }
 
 void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
+	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSpatTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
@@ -578,7 +577,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 }
 
 void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
-
+	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSsmTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSSMKafkaTopics:" <<_subscribeToSsmTopic << std::endl;
