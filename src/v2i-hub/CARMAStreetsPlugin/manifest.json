@@ -98,11 +98,6 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "SchedulingPlanConsumerGroupId",
-            "default": "v2xhub_scheduling_plan",
-            "description": "Apache Kafka consumer group ID for scheduling plan consumer."
-        },
-        {
             "key": "SpatTopic",
             "default": "modified_spat",
             "description": "Apache Kafka topic plugin will transmit message to."
@@ -111,16 +106,6 @@
             "key": "SsmTopic",
             "default": "v2xhub_ssm_sub",
             "description": "Apache Kafka topic plugin will transmit message to."            
-        },
-        {
-            "key": "SsmConsumerGroupId",
-            "default": "v2xhub_ssm",
-            "description": "Apache Kafka consumer group ID for spat consumer."
-        },
-        {
-            "key": "SpatConsumerGroupId",
-            "default": "v2xhub_spat",
-            "description": "Apache Kafka consumer group ID for spat consumer."
         },
         {
             "key": "SimSensorDetectedObjTopic",

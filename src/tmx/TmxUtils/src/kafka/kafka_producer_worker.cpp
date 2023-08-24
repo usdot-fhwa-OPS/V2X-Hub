@@ -93,6 +93,7 @@ namespace tmx::utils
         delete conf;
 
         FILE_LOG(logINFO) << "Created producer: " << _producer->name() << std::endl;
+        return true;
     }
 
     bool kafka_producer_worker::init_topic()

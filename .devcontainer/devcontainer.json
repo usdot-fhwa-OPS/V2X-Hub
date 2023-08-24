@@ -35,7 +35,9 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "container/database.sh && container/library.sh && container/setup.sh && ldconfig"
+	"postCreateCommand": "container/database.sh && container/library.sh && container/setup.sh && ldconfig",
+	
+	"shutdownAction": "stopCompose"
 
 	// Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
 	// "mounts": [
