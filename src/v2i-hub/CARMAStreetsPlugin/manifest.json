@@ -39,6 +39,11 @@
         "type":"Application",
         "subtype":"SensorDetectedObject",
         "description": "Sensor detected object for cooperative perception."
+    },
+    {
+        "type":"J2735",
+        "subtype": "SensorDataSharingMessage",
+        "description": "Message to share detected object data."
     }
     ],
     "configuration": [
