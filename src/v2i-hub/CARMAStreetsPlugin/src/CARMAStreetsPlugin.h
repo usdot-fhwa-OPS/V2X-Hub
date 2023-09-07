@@ -21,6 +21,8 @@
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
 #include <simulation/SensorDetectedObject.h>
+#include "JsonToJ3224SDSMConverter.h"
+#include "J3224ToSDSMJsonConverter.h"
 #include "PluginClientClockAware.h"
 
 
@@ -68,6 +70,12 @@ protected:
 	 */
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	/**
+	 * @brief Subscribe to SDSM broadcast.
+	 * @param msg The J3224 SDSM received from the internal 
+	 * @param routeableMsg 
+	 */
+	void HandleSDSMMessage(SdsmMessage &msg, routeable_message &routeableMsg);
+	/**
 	 * @brief Subscribe to SRM message received from RSU and publish the message to a Kafka topic
 	*/
 	void HandleSRMMessage (SrmMessage &msg, routeable_message &routeableMsg);
@@ -83,6 +91,10 @@ protected:
 	 * @brief Subcribe to SSM Kafka topic created by carma-streets
 	 */
 	void SubscribeSSMKafkaTopic();
+	/**
+	 * @brief Subcribe to SDSM Kafka topic created by carma-streets
+	 */
+	void SubscribeSDSMKafkaTopic();
 
 	bool getEncodedtsm3(tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json);
 	/**
@@ -105,6 +117,7 @@ private:
 	std::string _subscribeToSchedulingPlanConsumerGroupId;
 	std::string _subscribeToSpatTopic;
 	std::string _subscribeToSsmTopic;
+	std::string _subscribeToSdsmTopic;
 	std::string _subscribeToSpatConsumerGroupId;
 	std::string _subscribeToSSMConsumerGroupId;
 	std::string _transmitMobilityPathTopic;
@@ -112,12 +125,14 @@ private:
 	std::string _transmitMAPTopic;
 	std::string _transmitSRMTopic;
 	std::string _transmitSimSensorDetectedObjTopic;
+	std::string _transmitSDSMTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _spat_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _scheduing_plan_kafka_consumer_ptr;
 	std::shared_ptr<kafka_consumer_worker> _ssm_kafka_consumer_ptr;
+	std::shared_ptr<kafka_consumer_worker> _sdsm_kafka_consumer_ptr;
 	std::vector<std::string> _strategies;
 	tmx::messages::tsm3Message *_tsm3Message{NULL};
 	std::mutex data_lock;
@@ -191,6 +206,16 @@ private:
 	 * @brief Count for SSM messages skipped due to errors.
 	 */
 	uint _ssmMessageSkipped = 0;
+
+	/**
+	 * @brief Status label for SDSM messages skipped due to errors.
+	 */
+	const char*  Key_SDSMMessageSkipped =  "SDSM messages skipped due to errors.";
+
+	/**
+	 * @brief Count for SDSM messages skipped due to errors.
+	 */
+	uint _sdsmMessageSkipped = 0;
 
 	/**
 	 * @brief Intersection Id for intersection

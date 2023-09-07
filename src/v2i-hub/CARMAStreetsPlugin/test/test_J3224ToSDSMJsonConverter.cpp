@@ -365,8 +365,8 @@ namespace unit_test
         ASSERT_EQ(13, sdsmJson["ref_pos_el_conf"].asInt());
 
         // Object 1 detected object common data
-        ASSERT_EQ(1, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["object_type"].asInt());
-        ASSERT_EQ(65, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["object_type_conf"].asInt());
+        ASSERT_EQ(1, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["obj_type"].asInt());
+        ASSERT_EQ(65, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["obj_type_cfd"].asInt());
         ASSERT_EQ(1200, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["object_id"].asInt());
         ASSERT_EQ(500, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["measurement_time"].asInt());
         ASSERT_EQ(8, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["time_confidence"].asInt());
@@ -381,7 +381,7 @@ namespace unit_test
         ASSERT_EQ(5, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"].asInt());
         ASSERT_EQ(15000, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["heading"].asInt());
         ASSERT_EQ(5, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["heading_conf"].asInt());
-        ASSERT_EQ(200, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"].asInt());
+        ASSERT_EQ(200, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["Long"].asInt());
         ASSERT_EQ(-500, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"].asInt());
         ASSERT_EQ(1, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"].asInt());
         ASSERT_EQ(400, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt());
@@ -422,12 +422,12 @@ namespace unit_test
 
         // Only test the ID and optional obstacle data for the 3rd object
         ASSERT_EQ(1000, sdsmJson["objects"][2]["detected_object_data"]["detected_object_common_data"]["object_id"].asInt());
-        ASSERT_EQ(400, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["width"].asInt());
-        ASSERT_EQ(300, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["length"].asInt());
-        ASSERT_EQ(100, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["height"].asInt());
-        ASSERT_EQ(4, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["width_confidence"].asInt());
-        ASSERT_EQ(5, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["length_confidence"].asInt());
-        ASSERT_EQ(6, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obst_data"]["obst_size"]["height_confidence"].asInt());
+        ASSERT_EQ(400, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["width"].asInt());
+        ASSERT_EQ(300, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["length"].asInt());
+        ASSERT_EQ(100, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["height"].asInt());
+        ASSERT_EQ(4, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["width_confidence"].asInt());
+        ASSERT_EQ(5, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["length_confidence"].asInt());
+        ASSERT_EQ(6, sdsmJson["objects"][2]["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["height_confidence"].asInt());
 
     }
 

@@ -61,8 +61,8 @@ namespace CARMAStreetsPlugin
                 auto det_object = det_obj_list.list.array[i];
 
                 // Detected object common data
-                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["object_type"] = det_object->detObjCommon.objType;
-                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["object_type_conf"] = det_object->detObjCommon.objTypeCfd;
+                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["obj_type"] = det_object->detObjCommon.objType;
+                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["obj_type_cfd"] = det_object->detObjCommon.objTypeCfd;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["object_id"] = det_object->detObjCommon.objectID;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["measurement_time"] = det_object->detObjCommon.measurementTime;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["time_confidence"] = det_object->detObjCommon.timeConfidence;
@@ -84,7 +84,7 @@ namespace CARMAStreetsPlugin
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["speed_z"] = *det_object->detObjCommon.speedZ;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"] = *det_object->detObjCommon.speedConfidenceZ;
 
-                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"] = det_object->detObjCommon.accel4way->Long;
+                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["Long"] = det_object->detObjCommon.accel4way->Long;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"] = det_object->detObjCommon.accel4way->lat;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"] = det_object->detObjCommon.accel4way->vert;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"] = det_object->detObjCommon.accel4way->yaw;
@@ -156,13 +156,13 @@ namespace CARMAStreetsPlugin
                             break;
 
                         case DetectedObjectOptionalData_PR_detObst:
-                            optionalDataJson["detected_obst_data"]["obst_size"]["width"] = det_object->detObjOptData->choice.detObst.obstSize.width;
-                            optionalDataJson["detected_obst_data"]["obst_size"]["length"] = det_object->detObjOptData->choice.detObst.obstSize.length;
-                            optionalDataJson["detected_obst_data"]["obst_size"]["height"] = *det_object->detObjOptData->choice.detObst.obstSize.height; // optional
+                            optionalDataJson["detected_obstacle_data"]["obst_size"]["width"] = det_object->detObjOptData->choice.detObst.obstSize.width;
+                            optionalDataJson["detected_obstacle_data"]["obst_size"]["length"] = det_object->detObjOptData->choice.detObst.obstSize.length;
+                            optionalDataJson["detected_obstacle_data"]["obst_size"]["height"] = *det_object->detObjOptData->choice.detObst.obstSize.height; // optional
 
-                            optionalDataJson["detected_obst_data"]["obst_size"]["width_confidence"] = det_object->detObjOptData->choice.detObst.obstSizeConfidence.widthConfidence;
-                            optionalDataJson["detected_obst_data"]["obst_size"]["length_confidence"] = det_object->detObjOptData->choice.detObst.obstSizeConfidence.lengthConfidence;
-                            optionalDataJson["detected_obst_data"]["obst_size"]["height_confidence"] = *det_object->detObjOptData->choice.detObst.obstSizeConfidence.heightConfidence;
+                            optionalDataJson["detected_obstacle_data"]["obst_size_confidence"]["width_confidence"] = det_object->detObjOptData->choice.detObst.obstSizeConfidence.widthConfidence;
+                            optionalDataJson["detected_obstacle_data"]["obst_size_confidence"]["length_confidence"] = det_object->detObjOptData->choice.detObst.obstSizeConfidence.lengthConfidence;
+                            optionalDataJson["detected_obstacle_data"]["obst_size_confidence"]["height_confidence"] = *det_object->detObjOptData->choice.detObst.obstSizeConfidence.heightConfidence;
                             break;
                     }
                     detectedObjectJson["detected_object_data"]["detected_object_optional_data"] = optionalDataJson;
@@ -173,5 +173,7 @@ namespace CARMAStreetsPlugin
 
             }
         }
+
+        //std::cout << SDSMDataJson.toStyledString() << std::endl;
     }
 }

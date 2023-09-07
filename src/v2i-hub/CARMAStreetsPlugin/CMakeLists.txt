@@ -9,7 +9,7 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} tmxutils  rdkafka++ jsoncpp)
 #############
 enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)
-add_library(${PROJECT_NAME}_lib src/J2735MapToJsonConverter.cpp src/JsonToJ2735SSMConverter.cpp src/JsonToJ2735SpatConverter.cpp src/J2735ToSRMJsonConverter.cpp src/J3224ToSDSMJsonConverter.cpp)
+add_library(${PROJECT_NAME}_lib src/J2735MapToJsonConverter.cpp src/JsonToJ2735SSMConverter.cpp src/JsonToJ2735SpatConverter.cpp src/J2735ToSRMJsonConverter.cpp src/J3224ToSDSMJsonConverter.cpp src/JsonToJ3224SDSMConverter.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC ${TMXAPI_LIBRARIES} 
                                         ${ASN_J2735_LIBRARIES} 
                                         ${MYSQL_LIBRARIES} 
