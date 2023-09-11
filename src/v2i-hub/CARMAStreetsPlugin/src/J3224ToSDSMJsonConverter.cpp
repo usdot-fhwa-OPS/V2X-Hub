@@ -173,7 +173,5 @@ namespace CARMAStreetsPlugin
 
             }
         }
-
-        //std::cout << SDSMDataJson.toStyledString() << std::endl;
     }
 }

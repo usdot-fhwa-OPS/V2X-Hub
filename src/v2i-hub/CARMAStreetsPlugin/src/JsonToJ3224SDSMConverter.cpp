@@ -2,7 +2,7 @@
 
 namespace CARMAStreetsPlugin
 {
-
+    // TODO: Move these template functions to a more central location such as in a utility file
     // Template to use when created shared pointer objects for optional data
     template <typename T>
     T *create_store_shared(std::vector<std::shared_ptr<void>> &shared_pointers)
@@ -21,7 +21,7 @@ namespace CARMAStreetsPlugin
         return array_shared.get();
     }
 
-
+    // TODO: Consolidate parseJsonString into a more central location since it is being used verbatim in other converters
     bool JsonToJ3224SDSMConverter::parseJsonString(const std::string &consumedMsg, Json::Value &sdsmJsonOut) const
     {
         const auto jsonLen = static_cast<int>(consumedMsg.length());
@@ -55,8 +55,8 @@ namespace CARMAStreetsPlugin
         sdsm->sourceID = tempID;
 
         sdsm->equipmentType = sdsm_json["equipment_type"].asInt64();
-        
 
+        
         // sDSMTimeStamp
         auto sdsm_time_stamp_ptr = CARMAStreetsPlugin::create_store_shared<DDateTime_t>(shared_ptrs);
 
@@ -201,17 +201,17 @@ namespace CARMAStreetsPlugin
                     // set presence val to veh
                     optional_data_ptr->present = DetectedObjectOptionalData_PR_detVeh;
 
-                    // TODO: find a better way to convert lights val
-                    // lights
-                    auto lights_ptr = CARMAStreetsPlugin::create_store_shared<ExteriorLights_t>(shared_ptrs);
-                    auto lights = static_cast<int16_t>((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["lights"].asInt());
-                    lights_ptr->buf = (uint8_t *)calloc(2, sizeof(uint8_t)); // TODO: find calloc alternative if possible, causes a memory leak
-                    lights_ptr->size = 2 * sizeof(uint8_t);
-                    lights_ptr->bits_unused = 0;
-                    lights_ptr->buf[1] = static_cast<int8_t>(lights);
-                    lights_ptr->buf[0] = (lights >> 8);
+                    // TODO: find a better way to convert/test lights val without calloc
+                    // // lights
+                    // auto lights_ptr = CARMAStreetsPlugin::create_store_shared<ExteriorLights_t>(shared_ptrs);
+                    // auto lights = static_cast<int16_t>((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["lights"].asInt());
+                    // lights_ptr->buf = (uint8_t *)calloc(2, sizeof(uint8_t)); // TODO: find calloc alternative if possible, causes a memory leak
+                    // lights_ptr->size = 2 * sizeof(uint8_t);
+                    // lights_ptr->bits_unused = 0;
+                    // lights_ptr->buf[1] = static_cast<int8_t>(lights);
+                    // lights_ptr->buf[0] = (lights >> 8);
 
-                    optional_data_ptr->choice.detVeh.lights = lights_ptr;
+                    // optional_data_ptr->choice.detVeh.lights = lights_ptr;
 
 
                     // vehAttitude

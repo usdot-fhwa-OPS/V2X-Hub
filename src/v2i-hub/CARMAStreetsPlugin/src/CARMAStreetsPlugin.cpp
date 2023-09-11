@@ -668,7 +668,7 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
 					continue;
 				}
-				//Convert the SSM JSON string into J3224 SDSM message and encode it.
+				//Convert the SDSM JSON string into J3224 SDSM message and encode it.
 				auto sdsm_ptr = std::make_shared<SensorDataSharingMessage>();
 				sdsm_convertor.convertJsonToSDSM(sdsmDoc, sdsm_ptr);
 				tmx::messages::SdsmEncodedMessage sdsmEncodedMsg;
@@ -689,7 +689,7 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // same as above
 				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
 
-				//Broadcast the encoded SSM message
+				//Broadcast the encoded SDSM message
 				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				sdsmEncodedMsg.addDsrcMetadata(0x8002);
 				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));		
