@@ -109,8 +109,17 @@ void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
 void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
 	PluginClientClockAware::HandleTimeSyncMessage(msg, routeableMsg);
 	if ( isSimulationMode()) {
-		PLOG(logINFO) << "Handling TimeSync messages!" << std::endl;
-		produce_kafka_msg(msg.to_string(), "time_sync");
+		// TODO: This is a temporary fix for tmx message container property tree
+		// serializing all attributes as strings. This issue needs to be fixed but
+		// is currently out of scope. TMX Messages should be correctly serialize to 
+		// and from json. This temporary fix simply using regex to look for numeric,
+		// null, and bool values and removes the quotations around them.
+		boost::regex exp("\"(null|true|false|[0-9]+(\\.[0-9]+)?)\"");
+		std::stringstream ss;
+		std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
+		PLOG(logINFO) << "Sending Time Sync Message " << rv << std::endl;
+
+		produce_kafka_msg(rv, "time_sync");
 	}
 }
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
