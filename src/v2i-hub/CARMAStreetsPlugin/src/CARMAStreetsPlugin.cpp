@@ -49,6 +49,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
 	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
+	GetConfigValue<string>("SdsmSubscribeTopic", _subscribeToSdsmTopic);
+	GetConfigValue<string>("SdsmTransmitTopic", _transmitSDSMTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -81,12 +83,13 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,this->_name);
 	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic, this->_name);
 	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,this->_name);
-	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr)
+	_sdsm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSdsmTopic,this->_name);
+	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr || !_sdsm_kafka_consumer_ptr)
 	{
 		throw TmxException("Failed to create Kafka consumers.");
 	}
 	PLOG(logDEBUG) <<"Kafka consumers created";
-	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init())
+	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init() || !_sdsm_kafka_consumer_ptr->init())
 	{
 		throw TmxException("Kafka consumers init() failed!");
 	}
@@ -94,6 +97,7 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
 	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);
+	boost::thread thread_sdsm(&CARMAStreetsPlugin::SubscribeSDSMKafkaTopic, this);
 
 }
 
@@ -458,6 +462,19 @@ void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message
 	produce_kafka_msg(message, _transmitMAPTopic);	
 }
 
+void CARMAStreetsPlugin::HandleSDSMMessage(SdsmMessage &msg, routeable_message &routeableMsg)
+{
+	std::shared_ptr<SensorDataSharingMessage> sdsmMsgPtr = msg.get_j2735_data(); 
+	PLOG(logDEBUG) << "Detected object count: " << sdsmMsgPtr->objects.list.count << std::endl;
+	Json::Value sdsmJson;
+	Json::StreamWriterBuilder builder;
+	J3224ToSDSMJsonConverter jsonConverter;
+	jsonConverter.convertJ3224ToSDSMJSON(sdsmMsgPtr, sdsmJson);
+	PLOG(logDEBUG) << "sdsmJson: " << sdsmJson << std::endl;
+	const std::string message 	= Json::writeString(builder, sdsmJson);
+	produce_kafka_msg(message, _transmitSDSMTopic);	
+}
+
 void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
 {
 	_kafka_producer_ptr->send(message, topic_name);
@@ -632,6 +649,59 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 				ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				ssmEncodedMsg.addDsrcMetadata(0x8002);
 				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
+			}
+		}
+	}
+
+}
+
+void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
+	// TODO: Update methods to represent consuming a single message from Kafka topic
+	if(_subscribeToSdsmTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSDSMKafkaTopics:" <<_subscribeToSdsmTopic << std::endl;
+		_sdsm_kafka_consumer_ptr->subscribe();
+		//Initialize Json to J3224 SDSM convertor 
+		JsonToJ3224SDSMConverter sdsm_convertor;
+		while (_sdsm_kafka_consumer_ptr->is_running()) 
+		{
+			std::string payload_str = _sdsm_kafka_consumer_ptr->consume(500);			
+			if(payload_str.length() > 0)
+			{
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value sdsmDoc;
+				auto parse_sucessful = sdsm_convertor.parseJsonString(payload_str, sdsmDoc);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
+					continue;
+				}
+				//Convert the SDSM JSON string into J3224 SDSM message and encode it.
+				auto sdsm_ptr = std::make_shared<SensorDataSharingMessage>();
+				sdsm_convertor.convertJsonToSDSM(sdsmDoc, sdsm_ptr);
+				tmx::messages::SdsmEncodedMessage sdsmEncodedMsg;
+				try
+				{
+					sdsm_convertor.encodeSDSM(sdsm_ptr, sdsmEncodedMsg);
+				}
+				catch (TmxException &ex) 
+				{
+					// Skip messages that fail to encode.
+					PLOG(logERROR) << "Failed to encoded SDSM message : \n" << payload_str << std::endl << "Exception encountered: " 
+						<< ex.what() << std::endl;
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // may be unnecessary
+					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
+					continue;
+				}
+				
+				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // same as above
+				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
+
+				//Broadcast the encoded SDSM message
+				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+				sdsmEncodedMsg.addDsrcMetadata(0x8002);
+				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));		
 			}
 		}
 	}

@@ -116,6 +116,16 @@
             "key": "SimSensorDetectedObjTopic",
             "default": "v2xhub_sim_sensor_detected_object",
             "description": "Apache Kafka topic plugin will transmit simulated sensor detected object to."               
+        },
+        {
+            "key": "SdsmSubscribeTopic",
+            "default": "v2xhub_sdsm_sub",
+            "description": "Apache Kafka topic plugin that will subscribe to SDSM streams."            
+        },
+        {
+            "key": "SdsmTransmitTopic",
+            "default": "v2xhub_sdsm_tra",
+            "description": "Apache Kafka topic plugin that will transmit SDSMs."            
         }
         
     ]
