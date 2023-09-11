@@ -70,7 +70,7 @@ protected:
 	 */
 	void HandleMapMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	/**
-	 * @brief Subscribe to SDSM broadcast.
+	 * @brief Subscribes to incoming ASN.1, C-Struct formatted SDSMs generated from broadcasting RSUs. These SDSM C-Structs are then converted to JSON to be forwarded to CARMA Streets/Kafka by the handler.
 	 * @param msg The J3224 SDSM received from the internal 
 	 * @param routeableMsg 
 	 */

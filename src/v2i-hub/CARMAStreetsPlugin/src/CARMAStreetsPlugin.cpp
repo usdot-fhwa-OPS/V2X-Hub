@@ -49,8 +49,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
 	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
 	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
-	GetConfigValue<string>("SdsmTopic", _subscribeToSdsmTopic);
-	GetConfigValue<string>("SdsmTopic", _transmitSDSMTopic);
+	GetConfigValue<string>("SdsmSubscribeTopic", _subscribeToSdsmTopic);
+	GetConfigValue<string>("SdsmTransmitTopic", _transmitSDSMTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);

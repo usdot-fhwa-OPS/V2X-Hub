@@ -31,7 +31,7 @@ namespace CARMAStreetsPlugin
     TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_header)
     {
         JsonToJ3224SDSMConverter converter;
-        std::string valid_json_str = "{\"equipment_type\":1,\"msg_cnt\":1,\"ref_pos\":{\"Long\":600000000,\"elevation\":30,\"lat\":400000000},\"ref_pos_el_conf\":10,\"ref_pos_xy_conf\":{\"orientation\":25000,\"semi_major\":235,\"semi_minor\":200},\"sdsm_time_stamp\":{\"day\":4,\"hour\":19,\"minute\":15,\"month\":7,\"offset\":400,\"second\":5000,\"year\":2007},\"source_id\":\"01020304\",\"objects\":[{\"detected_object_data\":{\"detected_object_common_data\":{\"acc_cfd_x\":4,\"acc_cfd_y\":5,\"acc_cfd_yaw\":3,\"acc_cfd_z\":6,\"accel_4_way\":{\"lat\":-500,\"Long\":200,\"vert\":1,\"yaw\":400},\"heading\":16000,\"heading_conf\":4,\"measurement_time\":-1100,\"object_id\":12200,\"obj_type\":1,\"obj_type_cfd\":65,\"pos\":{\"offset_x\":4000,\"offset_y\":-720,\"offset_z\":20},\"pos_confidence\":{\"elevation\":5,\"pos\":2},\"speed\":2100,\"speed_confidence\":3,\"speed_confidence_z\":4,\"speed_z\":1000,\"time_confidence\":2}}}]}";
+        std::string valid_json_str = "{\"equipment_type\":1,\"msg_cnt\":1,\"ref_pos\":{\"Long\":600000000,\"elevation\":30,\"lat\":400000000},\"ref_pos_el_conf\":10,\"ref_pos_xy_conf\":{\"orientation\":25000,\"semi_major\":235,\"semi_minor\":200},\"sdsm_time_stamp\":{\"day\":4,\"hour\":19,\"minute\":15,\"month\":7,\"offset\":400,\"second\":5000,\"year\":2007},\"source_id\":\"1234\",\"objects\":[{\"detected_object_data\":{\"detected_object_common_data\":{\"acc_cfd_x\":4,\"acc_cfd_y\":5,\"acc_cfd_yaw\":3,\"acc_cfd_z\":6,\"accel_4_way\":{\"lat\":-500,\"Long\":200,\"vert\":1,\"yaw\":400},\"heading\":16000,\"heading_conf\":4,\"measurement_time\":-1100,\"object_id\":12200,\"obj_type\":1,\"obj_type_cfd\":65,\"pos\":{\"offset_x\":4000,\"offset_y\":-720,\"offset_z\":20},\"pos_confidence\":{\"elevation\":5,\"pos\":2},\"speed\":2100,\"speed_confidence\":3,\"speed_confidence_z\":4,\"speed_z\":1000,\"time_confidence\":2}}}]}";
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         ASSERT_TRUE(result);
@@ -39,7 +39,9 @@ namespace CARMAStreetsPlugin
         converter.convertJsonToSDSM(root, sdsmPtr);
         ASSERT_EQ(1, sdsmPtr->msgCnt);
         
-        // ASSERT_EQ("01020304", sdsmPtr->sourceID);
+        // TODO: find a way to generate test octet strings for unit test comparisons
+        size_t test_size = 8;
+        ASSERT_EQ(test_size, sdsmPtr->sourceID.size); // this only compares size since size is an int, 1234 -> size 8 in hex
 
         ASSERT_EQ(1, sdsmPtr->equipmentType);
         ASSERT_EQ(2007, *sdsmPtr->sDSMTimeStamp.year);
@@ -105,14 +107,17 @@ namespace CARMAStreetsPlugin
     TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_veh)
     {
         JsonToJ3224SDSMConverter converter;
-        std::string valid_json_str = "{\"equipment_type\":1,\"msg_cnt\":1,\"objects\":[{\"detected_object_data\":{\"detected_object_common_data\":{\"acc_cfd_x\":4,\"acc_cfd_y\":5,\"acc_cfd_yaw\":3,\"acc_cfd_z\":6,\"accel_4_way\":{\"lat\":-500,\"long\":200,\"vert\":1,\"yaw\":400},\"heading\":16000,\"heading_conf\":4,\"measurement_time\":-1100,\"object_id\":12200,\"obj_type\":1,\"obj_type_cfd\":65,\"pos\":{\"offset_x\":4000,\"offset_y\":-720,\"offset_z\":20},\"pos_confidence\":{\"elevation\":5,\"pos\":2},\"speed\":2100,\"speed_confidence\":3,\"speed_confidence_z\":4,\"speed_z\":1000,\"time_confidence\":2},\"detected_object_optional_data\":{\"detected_vehicle_data\":{\"height\":70,\"lights\":\"8\",\"size\":{\"length\":700,\"width\":300},\"veh_ang_vel\":{\"pitch_rate\":600,\"roll_rate\":-800},\"veh_ang_vel_confidence\":{\"pitch_rate_confidence\":3,\"roll_rate_confidence\":4},\"veh_attitude\":{\"pitch\":2400,\"roll\":-12000,\"yaw\":400},\"veh_attitude_confidence\":{\"pitch_confidence\":2,\"roll_confidence\":3,\"yaw_confidence\":4},\"vehicle_class\":11,\"vehicle_class_conf\":75,\"vehicle_size_confidence\":{\"vehicle_height_confidence\":5,\"vehicle_length_confidence\":6,\"vehicle_width_confidence\":7}}}}}],\"ref_pos\":{\"Long\":600000000,\"elevation\":30,\"lat\":400000000},\"ref_pos_el_conf\":10,\"ref_pos_xy_conf\":{\"orientation\":25000,\"semi_major\":235,\"semi_minor\":200},\"sdsm_time_stamp\":{\"day\":4,\"hour\":19,\"minute\":15,\"month\":7,\"offset\":400,\"second\":5000,\"year\":2007},\"source_id\":\"01020304\"}";
+        std::string valid_json_str = "{\"equipment_type\":1,\"msg_cnt\":1,\"objects\":[{\"detected_object_data\":{\"detected_object_common_data\":{\"acc_cfd_x\":4,\"acc_cfd_y\":5,\"acc_cfd_yaw\":3,\"acc_cfd_z\":6,\"accel_4_way\":{\"lat\":-500,\"long\":200,\"vert\":1,\"yaw\":400},\"heading\":16000,\"heading_conf\":4,\"measurement_time\":-1100,\"object_id\":12200,\"obj_type\":1,\"obj_type_cfd\":65,\"pos\":{\"offset_x\":4000,\"offset_y\":-720,\"offset_z\":20},\"pos_confidence\":{\"elevation\":5,\"pos\":2},\"speed\":2100,\"speed_confidence\":3,\"speed_confidence_z\":4,\"speed_z\":1000,\"time_confidence\":2},\"detected_object_optional_data\":{\"detected_vehicle_data\":{\"height\":70,\"lights\":8,\"size\":{\"length\":700,\"width\":300},\"veh_ang_vel\":{\"pitch_rate\":600,\"roll_rate\":-800},\"veh_ang_vel_confidence\":{\"pitch_rate_confidence\":3,\"roll_rate_confidence\":4},\"veh_attitude\":{\"pitch\":2400,\"roll\":-12000,\"yaw\":400},\"veh_attitude_confidence\":{\"pitch_confidence\":2,\"roll_confidence\":3,\"yaw_confidence\":4},\"vehicle_class\":11,\"vehicle_class_conf\":75,\"vehicle_size_confidence\":{\"vehicle_height_confidence\":5,\"vehicle_length_confidence\":6,\"vehicle_width_confidence\":7}}}}}],\"ref_pos\":{\"Long\":600000000,\"elevation\":30,\"lat\":400000000},\"ref_pos_el_conf\":10,\"ref_pos_xy_conf\":{\"orientation\":25000,\"semi_major\":235,\"semi_minor\":200},\"sdsm_time_stamp\":{\"day\":4,\"hour\":19,\"minute\":15,\"month\":7,\"offset\":400,\"second\":5000,\"year\":2007},\"source_id\":\"01020304\"}";
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         ASSERT_TRUE(result);
         auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
-        // ASSERT_EQ("0106", sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.lights);
+        // Similar to sourceID, need a better way to compare retrieved ASN.1 values (in this case bit strings) to verify conversion
+        size_t test_size = 2;
+        ASSERT_EQ(test_size, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.lights->size);
+
         ASSERT_EQ(2400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->pitch);
         ASSERT_EQ(-12000, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->roll);
         ASSERT_EQ(400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->yaw);

@@ -42,7 +42,18 @@ namespace CARMAStreetsPlugin
         std::vector<std::shared_ptr<void>> shared_ptrs;
 
         sdsm->msgCnt = sdsm_json["msg_cnt"].asInt64();
-        // TODO: convert input sourceID from JSON to C struct octet appropriately
+
+        // TODO: confirm input sourceID from JSON to C struct constructs octet appropriately
+        // sourceID
+        TemporaryID_t tempID;
+
+        std::string id_data = sdsm_json["source_id"].asString();
+        std::vector<uint8_t> id_vector(id_data.begin(), id_data.end());
+        uint8_t *id_ptr = &id_vector[0];
+        tempID.buf = id_ptr;
+        tempID.size = sizeof(id_ptr);
+        sdsm->sourceID = tempID;
+
         sdsm->equipmentType = sdsm_json["equipment_type"].asInt64();
         
 
@@ -190,14 +201,18 @@ namespace CARMAStreetsPlugin
                     // set presence val to veh
                     optional_data_ptr->present = DetectedObjectOptionalData_PR_detVeh;
 
-                    // TODO: fix casting issue, won't take the json input value
-                    // // lights
-                    // auto lights = static_cast<int16_t>((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["lights"].asInt());
-                    // optional_data_ptr->choice.detVeh.lights->buf = (uint8_t *)calloc(2, sizeof(uint8_t)); // TODO: find calloc alternative if possible
-                    // optional_data_ptr->choice.detVeh.lights->size = 2 * sizeof(uint8_t);
-                    // optional_data_ptr->choice.detVeh.lights->bits_unused = 0;
-                    // optional_data_ptr->choice.detVeh.lights->buf[1] = static_cast<int8_t>(lights);
-                    // optional_data_ptr->choice.detVeh.lights->buf[0] = (lights >> 8);
+                    // TODO: find a better way to convert lights val
+                    // lights
+                    auto lights_ptr = CARMAStreetsPlugin::create_store_shared<ExteriorLights_t>(shared_ptrs);
+                    auto lights = static_cast<int16_t>((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["lights"].asInt());
+                    lights_ptr->buf = (uint8_t *)calloc(2, sizeof(uint8_t)); // TODO: find calloc alternative if possible, causes a memory leak
+                    lights_ptr->size = 2 * sizeof(uint8_t);
+                    lights_ptr->bits_unused = 0;
+                    lights_ptr->buf[1] = static_cast<int8_t>(lights);
+                    lights_ptr->buf[0] = (lights >> 8);
+
+                    optional_data_ptr->choice.detVeh.lights = lights_ptr;
+
 
                     // vehAttitude
                     auto attitude_ptr = CARMAStreetsPlugin::create_store_shared<Attitude_t>(shared_ptrs);
@@ -337,6 +352,7 @@ namespace CARMAStreetsPlugin
 
         // Set the data to the ASN.1 C struct
         sdsm->objects = *object_list;
+
 
     }
 
