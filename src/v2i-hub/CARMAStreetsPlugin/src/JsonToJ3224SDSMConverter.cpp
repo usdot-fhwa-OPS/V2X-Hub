@@ -93,7 +93,7 @@ namespace CARMAStreetsPlugin
         // refPos
         auto ref_pos_ptr = CARMAStreetsPlugin::create_store_shared<Position3D_t>(shared_ptrs);
         ref_pos_ptr->lat = sdsm_json["ref_pos"]["lat"].asInt64();
-        ref_pos_ptr->Long = sdsm_json["ref_pos"]["Long"].asInt64();
+        ref_pos_ptr->Long = sdsm_json["ref_pos"]["long"].asInt64();
         auto elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
         *elevation_ptr = sdsm_json["ref_pos"]["elevation"].asInt64();
         ref_pos_ptr->elevation = elevation_ptr;
@@ -160,7 +160,7 @@ namespace CARMAStreetsPlugin
 
                 // accel4way
                 auto accel_4_way_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationSet4Way_t>(shared_ptrs);
-                accel_4_way_ptr->Long   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["Long"].asInt64();
+                accel_4_way_ptr->Long   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"].asInt64();
                 accel_4_way_ptr->lat    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"].asInt64();
                 accel_4_way_ptr->vert   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"].asInt64();
                 accel_4_way_ptr->yaw    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt64();

@@ -357,7 +357,7 @@ namespace unit_test
         ASSERT_EQ(10000, sdsmJson["sdsm_time_stamp"]["second"].asInt());
         ASSERT_EQ(2000, sdsmJson["sdsm_time_stamp"]["offset"].asInt());
         ASSERT_EQ(400000000, sdsmJson["ref_pos"]["lat"].asInt());
-        ASSERT_EQ(800000000, sdsmJson["ref_pos"]["Long"].asInt());
+        ASSERT_EQ(800000000, sdsmJson["ref_pos"]["long"].asInt());
         ASSERT_EQ(30, sdsmJson["ref_pos"]["elevation"].asInt());
         ASSERT_EQ(250, sdsmJson["ref_pos_xy_conf"]["semi_major"].asInt());
         ASSERT_EQ(200, sdsmJson["ref_pos_xy_conf"]["semi_minor"].asInt());
@@ -381,7 +381,7 @@ namespace unit_test
         ASSERT_EQ(5, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"].asInt());
         ASSERT_EQ(15000, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["heading"].asInt());
         ASSERT_EQ(5, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["heading_conf"].asInt());
-        ASSERT_EQ(200, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["Long"].asInt());
+        ASSERT_EQ(200, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"].asInt());
         ASSERT_EQ(-500, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"].asInt());
         ASSERT_EQ(1, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"].asInt());
         ASSERT_EQ(400, sdsmJson["objects"][0]["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt());

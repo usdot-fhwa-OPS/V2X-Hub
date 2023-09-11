@@ -35,7 +35,7 @@ namespace CARMAStreetsPlugin
 
         Json::Value refPos;
         refPos["lat"] = sdsmMsgPtr->refPos.lat;
-        refPos["Long"] = sdsmMsgPtr->refPos.Long;
+        refPos["long"] = sdsmMsgPtr->refPos.Long;
         refPos["elevation"] = *sdsmMsgPtr->refPos.elevation;
         SDSMDataJson["ref_pos"] = refPos;
 
@@ -84,7 +84,7 @@ namespace CARMAStreetsPlugin
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["speed_z"] = *det_object->detObjCommon.speedZ;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"] = *det_object->detObjCommon.speedConfidenceZ;
 
-                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["Long"] = det_object->detObjCommon.accel4way->Long;
+                detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"] = det_object->detObjCommon.accel4way->Long;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"] = det_object->detObjCommon.accel4way->lat;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"] = det_object->detObjCommon.accel4way->vert;
                 detectedObjectJson["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"] = det_object->detObjCommon.accel4way->yaw;
