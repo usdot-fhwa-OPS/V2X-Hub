@@ -17,17 +17,17 @@
 
 // Need to include all the types
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#if SAEJ2735_SPEC < 63
-#include <tmx/j2735_messages/BasicSafetyMessageVerbose.hpp>
-#endif
+// #if SAEJ2735_SPEC < 63
+// #include <tmx/j2735_messages/BasicSafetyMessageVerbose.hpp>
+// #endif
 #include <tmx/j2735_messages/CommonSafetyRequestMessage.hpp>
 #include <tmx/j2735_messages/EmergencyVehicleAlertMessage.hpp>
 #include <tmx/j2735_messages/IntersectionCollisionMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/NmeaMessage.hpp>
-#if SAEJ2735_SPEC < 63
-#include <tmx/j2735_messages/PersonalMobilityMessage.hpp>
-#endif
+// #if SAEJ2735_SPEC < 63
+// #include <tmx/j2735_messages/PersonalMobilityMessage.hpp>
+// #endif
 #include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 #include <tmx/j2735_messages/ProbeDataManagementMessage.hpp>
 #include <tmx/j2735_messages/ProbeVehicleDataMessage.hpp>
@@ -43,7 +43,7 @@
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <tmx/j2735_messages/testMessage04.hpp>
 #include <tmx/j2735_messages/testMessage05.hpp>
-#include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
+// #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
 
 namespace tmx {
 namespace messages {
@@ -54,18 +54,18 @@ struct ENDOFLIST {};
 template <class... T> struct message_type_list {};
 using message_types = message_type_list<
 		BsmMessage,
-#if SAEJ2735_SPEC < 63
-		BsmvMessage,
-#endif
+// #if SAEJ2735_SPEC < 63
+// 		BsmvMessage,
+// #endif
 		CsrMessage,
 		EvaMessage,
 		IntersectionCollisionMessage,
 		MapDataMessage,
 		NmeaMessage,
 		PdmMessage,
-#if SAEJ2735_SPEC < 63
-		PmmMessage,
-#endif
+// #if SAEJ2735_SPEC < 63
+// 		PmmMessage,
+// #endif
 		PsmMessage,
 		PvdMessage,
 		RsaMessage,
@@ -79,8 +79,8 @@ using message_types = message_type_list<
 		tsm0Message,
 		tsm1Message,
 		tsm2Message,
-		tsm3Message,
-		SdsmMessage
+		tsm3Message
+		// SdsmMessage
 >;
 
 /// Base allocator type
@@ -179,18 +179,18 @@ public:
 		if (byInt.size() <= 0 || byStr.size() <= 0)
 		{
 			add_allocator_to_maps<BsmMessage>();
-#if SAEJ2735_SPEC < 63
-			add_allocator_to_maps<BsmvMessage>();
-#endif
+// #if SAEJ2735_SPEC < 63
+// 			add_allocator_to_maps<BsmvMessage>();
+// #endif
 			add_allocator_to_maps<CsrMessage>();
 			add_allocator_to_maps<EvaMessage>();
 			add_allocator_to_maps<IntersectionCollisionMessage>();
 			add_allocator_to_maps<MapDataMessage>();
 			add_allocator_to_maps<NmeaMessage>();
 			add_allocator_to_maps<PdmMessage>();
-#if SAEJ2735_SPEC < 63
-			add_allocator_to_maps<PmmMessage>();
-#endif
+// #if SAEJ2735_SPEC < 63
+// 			add_allocator_to_maps<PmmMessage>();
+// #endif
 			add_allocator_to_maps<PvdMessage>();
 			add_allocator_to_maps<PsmMessage>();
 			add_allocator_to_maps<RsaMessage>();
@@ -205,10 +205,10 @@ public:
 			add_allocator_to_maps<tsm1Message>();
 			add_allocator_to_maps<tsm2Message>();
 			add_allocator_to_maps<tsm3Message>();
-			add_allocator_to_maps<SdsmMessage>();
-#if SAEJ2735_SPEC < 63
-			add_allocator_to_maps<UperFrameMessage>();
-#endif
+			// add_allocator_to_maps<SdsmMessage>();
+// #if SAEJ2735_SPEC < 63
+// 			add_allocator_to_maps<UperFrameMessage>();
+// #endif
 		}
 	}
 
@@ -417,11 +417,11 @@ private:
 
 		// Always try the default encoding first
 		ASN1_CODEC<MessageFrameMessage> Codec;
-#if SAEJ2735_SPEC < 63
-		tmx::messages::codec::uper<MessageFrameMessage> OtherCodec;
-#else
+// #if SAEJ2735_SPEC < 63
+// 		tmx::messages::codec::uper<MessageFrameMessage> OtherCodec;
+// #else
 		tmx::messages::codec::der<MessageFrameMessage> OtherCodec;
-#endif
+// #endif
 
 		int id = Codec.decode_contentId(bytes);
 

@@ -14,18 +14,18 @@
 #include <TravelerInformation.h>
 #include <ITIScodesAndText.h>
 
-#if SAEJ2735_SPEC < 63
-typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
-typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
-typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
-#else
+// #if SAEJ2735_SPEC < 63
+// typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
+// typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
+// typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
+// #else
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText ItisList;
 #include <NodeListXY.h>
 typedef NodeListXY NodeList_t;
 #include <Count.h>
-#endif
+// #endif
 
 class DsrcBuilder
 {

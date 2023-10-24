@@ -11,16 +11,16 @@
 
 //#include <asn_j2735/AlaCarte.h>
 #include <BasicSafetyMessage.h>
-#if SAEJ2735_SPEC < 63
-#include <BasicSafetyMessageVerbose.h>
-#include <NMEA-Corrections.h>
-#include <RTCM-Corrections.h>
-#include <SignalRequestMsg.h>
-#else
+// #if SAEJ2735_SPEC < 63
+// #include <BasicSafetyMessageVerbose.h>
+// #include <NMEA-Corrections.h>
+// #include <RTCM-Corrections.h>
+// #include <SignalRequestMsg.h>
+// #else
 #include <NMEAcorrections.h>
 #include <RTCMcorrections.h>
 #include <SignalRequestMessage.h>
-#endif
+// #endif
 #include <CommonSafetyRequest.h>
 #include <EmergencyVehicleAlert.h>
 #include <IntersectionCollision.h>
@@ -42,35 +42,35 @@ asn_TYPE_descriptor_t *getTypeDescriptorFromMsgId(e_DSRCmsgID msgId)
 	{
 //		case DSRCmsgID_alaCarteMessage: return &asn_DEF_AlaCarte;
 		case DSRCmsgID_basicSafetyMessage: return &asn_DEF_BasicSafetyMessage;
-#if SAEJ2735_SPEC < 63
-		case DSRCmsgID_basicSafetyMessageVerbose: return &asn_DEF_BasicSafetyMessageVerbose;
-#endif
+// #if SAEJ2735_SPEC < 63
+// 		case DSRCmsgID_basicSafetyMessageVerbose: return &asn_DEF_BasicSafetyMessageVerbose;
+// #endif
 		case DSRCmsgID_commonSafetyRequest: return &asn_DEF_CommonSafetyRequest;
 		case DSRCmsgID_emergencyVehicleAlert: return &asn_DEF_EmergencyVehicleAlert;
 		case DSRCmsgID_intersectionCollisionAlert: return &asn_DEF_IntersectionCollision;
 		case DSRCmsgID_mapData: return &asn_DEF_MapData;
 		case DSRCmsgID_nmeaCorrections:
-#if SAEJ2735_SPEC < 63
-			return &asn_DEF_NMEA_Corrections;
-#else
+// #if SAEJ2735_SPEC < 63
+// 			return &asn_DEF_NMEA_Corrections;
+// #else
 			return &asn_DEF_NMEAcorrections;
-#endif
+// #endif
 		case DSRCmsgID_probeDataManagement: return &asn_DEF_ProbeDataManagement;
 		case DSRCmsgID_probeVehicleData: return &asn_DEF_ProbeVehicleData;
 		case DSRCmsgID_roadSideAlert: return &asn_DEF_RoadSideAlert;
 		case DSRCmsgID_rtcmCorrections:
-#if SAEJ2735_SPEC < 63
-			return &asn_DEF_RTCM_Corrections;
-#else
+// #if SAEJ2735_SPEC < 63
+// 			return &asn_DEF_RTCM_Corrections;
+// #else
 			return &asn_DEF_RTCMcorrections;
-#endif
+// #endif
 		case DSRCmsgID_signalPhaseAndTimingMessage: return &asn_DEF_SPAT;
 		case DSRCmsgID_signalRequestMessage:
-#if SAEJ2735_SPEC < 63
-			return &asn_DEF_SignalRequestMsg;
-#else
+// #if SAEJ2735_SPEC < 63
+// 			return &asn_DEF_SignalRequestMsg;
+// #else
 			return &asn_DEF_SignalRequestMessage;
-#endif
+// #endif
 		case DSRCmsgID_signalStatusMessage: return &asn_DEF_SignalStatusMessage;
 		case DSRCmsgID_travelerInformation: return &asn_DEF_TravelerInformation;
 		default: break;
@@ -85,7 +85,7 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 	{
 //		case DSRCmsgID_alaCarteMessage: return "ACM";
 		case DSRCmsgID_basicSafetyMessage: return "BSM";
-		case DSRCmsgID_basicSafetyMessageVerbose: return "BSMV";
+		// case DSRCmsgID_basicSafetyMessageVerbose: return "BSMV";
 		case DSRCmsgID_commonSafetyRequest: return "CSR";
 		case DSRCmsgID_emergencyVehicleAlert: return "EVA";
 		case DSRCmsgID_intersectionCollisionAlert: return "IC";
@@ -111,7 +111,7 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 	{
 //		case DSRCmsgID_alaCarteMessage: return "DSRC AlaCarte Message";
 		case DSRCmsgID_basicSafetyMessage: return "DSRC Basic Safety Message";
-		case DSRCmsgID_basicSafetyMessageVerbose: return "DSRC Basic Safety Message Verbose";
+		// case DSRCmsgID_basicSafetyMessageVerbose: return "DSRC Basic Safety Message Verbose";
 		case DSRCmsgID_commonSafetyRequest: return "DSRC Common Safety Request";
 		case DSRCmsgID_emergencyVehicleAlert: return "DSRC Emergency Vehicle Alert";
 		case DSRCmsgID_intersectionCollisionAlert: return "DSRC Intersection Collision";
