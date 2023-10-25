@@ -54,7 +54,7 @@ namespace unit_test
 
         message->refPos.lat = 400000000;
         message->refPos.Long = 800000000;
-        auto pos_elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
+        auto pos_elevation_ptr = CARMAStreetsPlugin::create_store_shared<Common_Elevation_t>(shared_ptrs);
         *pos_elevation_ptr = 30;
         message->refPos.elevation = pos_elevation_ptr;
 

@@ -286,7 +286,8 @@ TiDataFrame* XmlCurveParser::ReadRegions(DOMElement* regionsElement)
 	DsrcBuilder::SetStartTimeToYesterday(frame);
 
 	// Set the duration (minutes) to its max value.
-	frame->duratonTime = 32000;
+	// frame->duratonTime = 32000;
+	frame->durationTime = 32000;
 
 	frame->startYear = NULL;
 	frame->url = NULL;
@@ -445,7 +446,8 @@ Position3D* XmlCurveParser::ReadReferencePoint(DOMElement* referencePointElement
 // 			anchor->elevation->buf[0] = elevation >> 8;
 // 			anchor->elevation->buf[1] = elevation & 0xFF;
 // #else
-			anchor->elevation = (DSRC_Elevation_t *)malloc(sizeof(DSRC_Elevation_t));
+			// anchor->elevation = (DSRC_Elevation_t *)malloc(sizeof(DSRC_Elevation_t));
+			anchor->elevation = (Common_Elevation_t *)malloc(sizeof(Common_Elevation_t));
 			*(anchor->elevation) = elevation;
 // #endif
 			if (_debugOutput)

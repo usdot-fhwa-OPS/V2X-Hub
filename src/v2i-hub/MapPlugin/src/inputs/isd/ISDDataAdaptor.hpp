@@ -23,7 +23,8 @@
 #define COMPUTED_NODE NodeListXY_PR_computed
 #define ENUM_NAME(X) NodeOffsetPointXY_PR_node_ ## X
 typedef NodeXY Node;
-typedef DSRC_Elevation_t Elevation2_t;
+// typedef DSRC_Elevation_t Elevation2_t;
+typedef Common_Elevation_t Elevation2_t;
 typedef NodeAttributeSetXY NodeAttributeSet;
 // #endif
 
@@ -178,7 +179,8 @@ private:
 // #if SAEJ2735_SPEC < 63
 //     ro_attribute(this->msg, reference_point_attribute<msgCount>, MsgCount_t, msgCount, get_, 0);
 // #else
-    ro_attribute(this->msg, reference_point_attribute<msgCount>, DSRC_MsgCount_t, msgCount, get_, 0);
+    // ro_attribute(this->msg, reference_point_attribute<msgCount>, DSRC_MsgCount_t, msgCount, get_, 0);
+	ro_attribute(this->msg, reference_point_attribute<msgCount>, Common_MsgCount_t, msgCount, get_, 0);
 // #endif
     ro_attribute(this->msg, reference_point_attribute<masterLaneWidth>, LaneWidth_t, masterLaneWidth, get_, -1L);
     ro_attribute(this->msg, reference_point_attribute<referenceLat>, double, referenceLat, get_, 0.0);

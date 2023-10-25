@@ -164,7 +164,8 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 		return false;
 	}
 	//Duration is unit of minute
-	auto duration = timPtr->dataFrames.list.array[0]->duratonTime; 
+	// auto duration = timPtr->dataFrames.list.array[0]->duratonTime; 
+	auto duration = timPtr->dataFrames.list.array[0]->durationTime; 
 	bool isPersist = false;
 	if(duration >= 32000)
 	{

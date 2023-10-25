@@ -22,9 +22,11 @@ using namespace tmx::utils;
 
 // #if SAEJ2735_SPEC < 63
 // #else
-typedef DSRC_MsgCount_t MsgCount_t;
+// typedef DSRC_MsgCount_t MsgCount_t;
+typedef Common_MsgCount_t MsgCount_t;
 typedef DSecond_t DSecond2_t;
-typedef DSRC_TimeMark_t TimeMark_t;
+// typedef DSRC_TimeMark_t TimeMark_t;
+typedef SPAT_TimeMark_t TimeMark_t;
 // #endif
 
 void Ntcip1202::setSignalGroupMappingList(string json)

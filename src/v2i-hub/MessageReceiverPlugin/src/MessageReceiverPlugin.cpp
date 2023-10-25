@@ -140,9 +140,11 @@ SrmMessage* MessageReceiverPlugin::DecodeSrm(uint32_t vehicleId, uint32_t headin
 				srm->requestor.position->position.lat = (Latitude_t)(10.0 * latitude - 1800000000);
 				srm->requestor.position->position.Long = (Longitude_t)(10.0 * longitude - 1800000000);
 				srm->requestor.position->heading =
-						(DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+						// (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+						(Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
 				if (srm->requestor.position->heading)
-					*(srm->requestor.position->heading) = (DSRC_Angle_t)(heading / 12500.0);
+					// *(srm->requestor.position->heading) = (DSRC_Angle_t)(heading / 12500.0);
+					*(srm->requestor.position->heading) = (Common_Angle_t)(heading / 12500.0);
 				srm->requestor.position->speed =
 						(TransmissionAndSpeed *)calloc(1, sizeof(TransmissionAndSpeed));
 				if (srm->requestor.position->speed)
