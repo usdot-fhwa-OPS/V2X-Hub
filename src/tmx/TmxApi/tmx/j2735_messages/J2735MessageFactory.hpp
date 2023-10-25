@@ -43,7 +43,7 @@
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <tmx/j2735_messages/testMessage04.hpp>
 #include <tmx/j2735_messages/testMessage05.hpp>
-// #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
+#include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
 
 namespace tmx {
 namespace messages {
@@ -79,8 +79,8 @@ using message_types = message_type_list<
 		tsm0Message,
 		tsm1Message,
 		tsm2Message,
-		tsm3Message
-		// SdsmMessage
+		tsm3Message,
+		SdsmMessage
 >;
 
 /// Base allocator type
@@ -205,7 +205,7 @@ public:
 			add_allocator_to_maps<tsm1Message>();
 			add_allocator_to_maps<tsm2Message>();
 			add_allocator_to_maps<tsm3Message>();
-			// add_allocator_to_maps<SdsmMessage>();
+			add_allocator_to_maps<SdsmMessage>();
 // #if SAEJ2735_SPEC < 63
 // 			add_allocator_to_maps<UperFrameMessage>();
 // #endif
