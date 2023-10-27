@@ -94,8 +94,11 @@ namespace CARMAStreetsPlugin
         auto ref_pos_ptr = CARMAStreetsPlugin::create_store_shared<Position3D_t>(shared_ptrs);
         ref_pos_ptr->lat = sdsm_json["ref_pos"]["lat"].asInt64();
         ref_pos_ptr->Long = sdsm_json["ref_pos"]["long"].asInt64();
-        // auto elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
+        #if SAEJ2735_SPEC < 2020
+        auto elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
+        #else
         auto elevation_ptr = CARMAStreetsPlugin::create_store_shared<Common_Elevation_t>(shared_ptrs);
+        #endif
         *elevation_ptr = sdsm_json["ref_pos"]["elevation"].asInt64();
         ref_pos_ptr->elevation = elevation_ptr;
 

@@ -244,9 +244,9 @@ MapData *ISDToJ2735r41::to_map() {
     allocate(map);
 
     memset(map, 0, sizeof(MapData));
-// #if SAEJ2735_SPEC < 63
-//     map->msgID = api::mapData;
-// #endif
+#if SAEJ2735_SPEC < 63
+    map->msgID = api::mapData;
+#endif
     map->msgIssueRevision = 0;
 
     // Layer type from string

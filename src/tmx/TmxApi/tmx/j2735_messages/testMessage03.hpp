@@ -13,7 +13,7 @@
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 
-// #if SAEJ2735_SPEC >= 63
+#if SAEJ2735_SPEC >= 63
 TMX_J2735_DECLARE(tsm3, TestMessage03, api::testMessage03, api::MSGSUBTYPE_TESTMESSAGE03_STRING)
 
 // Specialize the unique key function
@@ -36,7 +36,7 @@ TMX_J2735_NAMESPACE_END(j2735)
 TMX_J2735_NAMESPACE_END(messages)
 TMX_J2735_NAMESPACE_END(tmx)
 
-// #endif
+#endif
 
 
 #endif /* TMX_J2735_MESSAGES_TESTMESSAGE00_HPP_ */

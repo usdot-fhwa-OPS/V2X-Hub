@@ -16,7 +16,11 @@ namespace unit_test
         CARMAStreetsPlugin::J2735MapToJsonConverter converter;
         MapData *mapData = (MapData *)calloc(1, sizeof(MapData));
         LayerID_t layer_id = 1;
+        #if SAEJ2735_SPEC < 2020
+        DSRC_MsgCount_t msgIssueRevision = 2;
+        #else
         Common_MsgCount_t msgIssueRevision = 2;
+        #endif
         mapData->layerID = &layer_id;
         mapData->msgIssueRevision = msgIssueRevision;
         auto layer_type = std::make_unique<LayerType_t>(1);

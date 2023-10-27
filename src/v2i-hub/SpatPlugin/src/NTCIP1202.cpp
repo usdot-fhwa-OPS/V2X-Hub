@@ -20,14 +20,15 @@ using namespace std;
 using namespace boost::property_tree;
 using namespace tmx::utils;
 
-// #if SAEJ2735_SPEC < 63
-// #else
-// typedef DSRC_MsgCount_t MsgCount_t;
+#if SAEJ2735_SPEC < 63
+#elif SAEJ2735_SPEC < 2020
+typedef DSRC_MsgCount_t MsgCount_t;
+typedef DSRC_TimeMark_t TimeMark_t;
+#else
 typedef Common_MsgCount_t MsgCount_t;
-typedef DSecond_t DSecond2_t;
-// typedef DSRC_TimeMark_t TimeMark_t;
 typedef SPAT_TimeMark_t TimeMark_t;
-// #endif
+#endif
+typedef DSecond_t DSecond2_t;
 
 void Ntcip1202::setSignalGroupMappingList(string json)
 {
@@ -233,9 +234,9 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
 
-// #if SAEJ2735_SPEC < 63
-// 	spat->msgID = tmx::messages::SpatMessage::get_default_messageId();
-// #endif
+#if SAEJ2735_SPEC < 63
+	spat->msgID = tmx::messages::SpatMessage::get_default_messageId();
+#endif
 
 	IntersectionState *intersection = (IntersectionState *)calloc(1, sizeof(IntersectionState));
 

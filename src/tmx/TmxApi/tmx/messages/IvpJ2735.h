@@ -27,7 +27,7 @@ extern "C"
 #endif
 
 // Include this for backwards compability
-// #if SAEJ2735_SPEC >= 63
+#if SAEJ2735_SPEC >= 63
 /* Dependencies */
 typedef enum DSRCmsgID {
 	DSRCmsgID_reserved	= 0,
@@ -60,7 +60,7 @@ typedef enum DSRCmsgID {
 	 */
 } e_DSRCmsgID;
 
-// #endif
+#endif
 
 typedef struct {
 	void *msgStructure;

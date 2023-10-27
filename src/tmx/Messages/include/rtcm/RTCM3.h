@@ -229,30 +229,30 @@ public:
 	tmx::messages::RtcmMessage get_RtcmMessage() {
 		tmx::byte_stream msgContents = get_contents();
 
-// #if SAEJ2735_SPEC < 63
-// 		RTCM_Corrections *rtcm = (RTCM_Corrections *)calloc(1, sizeof(RTCM_Corrections));
-// 		memset(rtcm, 0, sizeof(RTCM_Corrections));
+#if SAEJ2735_SPEC < 63
+		RTCM_Corrections *rtcm = (RTCM_Corrections *)calloc(1, sizeof(RTCM_Corrections));
+		memset(rtcm, 0, sizeof(RTCM_Corrections));
 
-// 		rtcm->msgID = DSRCmsgID_rtcmCorrections;
-// 		rtcm->rev = RTCM_Revision_rtcmRev3_0;
+		rtcm->msgID = DSRCmsgID_rtcmCorrections;
+		rtcm->rev = RTCM_Revision_rtcmRev3_0;
 
-// 		// Set the header
-// 		rtcm->rtcmHeader.buf = (uint8_t *)malloc(5*sizeof(uint8_t));
-// 		rtcm->rtcmHeader.size = 5;
-// 		rtcm->rtcmHeader.buf[0] = 0x0E;
-// 		rtcm->rtcmHeader.buf[1] = 0x00;
-// 		rtcm->rtcmHeader.buf[2] = 0x00;
-// 		rtcm->rtcmHeader.buf[3] = 0x00;
-// 		rtcm->rtcmHeader.buf[4] = 0x00;
+		// Set the header
+		rtcm->rtcmHeader.buf = (uint8_t *)malloc(5*sizeof(uint8_t));
+		rtcm->rtcmHeader.size = 5;
+		rtcm->rtcmHeader.buf[0] = 0x0E;
+		rtcm->rtcmHeader.buf[1] = 0x00;
+		rtcm->rtcmHeader.buf[2] = 0x00;
+		rtcm->rtcmHeader.buf[3] = 0x00;
+		rtcm->rtcmHeader.buf[4] = 0x00;
 
-// 		// Copy the message bytes
-// 		RTCMmsg *rtcmMessage = (RTCMmsg*)calloc(1, sizeof(RTCMmsg));
-// 		rtcmMessage->payload.size = msgContents.size();
-// 		rtcmMessage->payload.buf = (byte_t *)calloc(rtcmMessage->payload.size, sizeof(byte_t));
-// 		memcpy(rtcmMessage->payload.buf, msgContents.data(), rtcmMessage->payload.size);
+		// Copy the message bytes
+		RTCMmsg *rtcmMessage = (RTCMmsg*)calloc(1, sizeof(RTCMmsg));
+		rtcmMessage->payload.size = msgContents.size();
+		rtcmMessage->payload.buf = (byte_t *)calloc(rtcmMessage->payload.size, sizeof(byte_t));
+		memcpy(rtcmMessage->payload.buf, msgContents.data(), rtcmMessage->payload.size);
 
-// 		ASN_SET_ADD(&rtcm->rtcmSets.list, rtcmMessage);
-// #else
+		ASN_SET_ADD(&rtcm->rtcmSets.list, rtcmMessage);
+#else
 		RTCMcorrections *rtcm = (RTCMcorrections *)calloc(1, sizeof(RTCMcorrections));
 		memset(rtcm, 0, sizeof(RTCMcorrections));
 
@@ -265,7 +265,7 @@ public:
 		memcpy(rtcmMessage->buf, msgContents.data(), rtcmMessage->size);
 
 		ASN_SET_ADD(&rtcm->msgs.list, rtcmMessage);
-// #endif
+#endif
 		rtcm->msgCnt = 0;
 
 		return tmx::messages::RtcmMessage(rtcm);
