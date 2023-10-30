@@ -7,14 +7,6 @@
 
 #include "RegionalExtension.h"
 
-static const long asn_VAL_10_DSRC_addGrpCarma = 128;
-static const asn_ioc_cell_t asn_IOS_Reg_BasicSafetyMessage_1_rows[] = {
-	{ "&id", aioc__value, &asn_DEF_RegionId, &asn_VAL_10_DSRC_addGrpCarma },
-	{ "&Type", aioc__type, &asn_DEF_BasicSafetyMessage_addGrpCarma }
-};
-static const asn_ioc_set_t asn_IOS_Reg_BasicSafetyMessage_1[] = {
-	{ 1, 2, asn_IOS_Reg_BasicSafetyMessage_1_rows }
-};
 static const long asn_VAL_3_addGrpB = 2;
 static const asn_ioc_cell_t asn_IOS_Reg_LaneDataAttribute_1_rows[] = {
 	{ "&id", aioc__value, &asn_DEF_RegionId, &asn_VAL_3_addGrpB },
@@ -82,6 +74,15 @@ static const asn_ioc_cell_t asn_IOS_Reg_MovementEvent_1_rows[] = {
 static const asn_ioc_set_t asn_IOS_Reg_MovementEvent_1[] = {
 	{ 1, 2, asn_IOS_Reg_MovementEvent_1_rows }
 };
+static const long asn_VAL_10_DSRC_addGrpCarma = 128;
+static const asn_ioc_cell_t asn_IOS_Reg_BasicSafetyMessage_1_rows[] = {
+	{ "&id", aioc__value, &asn_DEF_RegionId, &asn_VAL_10_DSRC_addGrpCarma },
+	{ "&Type", aioc__type, &asn_DEF_BasicSafetyMessage_addGrpCarma }
+};
+static const asn_ioc_set_t asn_IOS_Reg_BasicSafetyMessage_1[] = {
+	{ 1, 2, asn_IOS_Reg_BasicSafetyMessage_1_rows }
+};
+
 static int
 memb_regionId_constraint_1(const asn_TYPE_descriptor_t *td, const void *sptr,
 			asn_app_constraint_failed_f *ctfailcb, void *app_key) {

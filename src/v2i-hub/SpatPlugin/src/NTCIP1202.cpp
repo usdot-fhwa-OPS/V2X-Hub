@@ -369,7 +369,7 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	if (getVehicleMaxTime(phase) > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getVehicleMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = 36111; //getAdjustedTime(getVehicleMaxTime(phase));
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase

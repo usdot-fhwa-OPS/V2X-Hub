@@ -389,6 +389,7 @@ typedef struct Reg_Position3D {
 		union Reg_Position3D__regExtValue_u {
 			Position3D_addGrpB_t	 Position3D_addGrpB;
 			Position3D_addGrpC_t	 Position3D_addGrpC;
+			Position3D_addGrpCarma_t Position3D_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */
