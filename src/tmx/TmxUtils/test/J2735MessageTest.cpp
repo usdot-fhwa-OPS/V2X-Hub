@@ -542,7 +542,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 
 	// BSM regional extension
     auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-    auto reg_bsm = (Reg_BasicSafetyMessage_t*) calloc(1, sizeof(Reg_BasicSafetyMessage_t));
+    auto reg_bsm = (Reg_BasicSafetyMessage) calloc(1, sizeof(Reg_BasicSafetyMessage));
     reg_bsm->regionId = 128;
     reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
 
