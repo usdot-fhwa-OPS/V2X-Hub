@@ -548,13 +548,13 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 
     auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
     auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
-    auto point = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    auto point = (Position3D_addGrpCarma_t*) calloc(1, sizeof(Position3D_addGrpCarma_t));
 	auto dummy_lat = 12;
 	auto dummy_long = 1312;
     point->lat = dummy_lat;
     point->Long = dummy_long;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point);
-    auto point2 = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    auto point2 = (Position3D_addGrpCarma_t*) calloc(1, sizeof(Position3D_addGrpCarma_t));
     point2->lat = dummy_lat + 1000;
     point2->Long = dummy_long + 1000;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
