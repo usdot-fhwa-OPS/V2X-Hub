@@ -56,6 +56,8 @@ namespace RSUHealthMonitor
             ptree pt;
             istringstream iss(json_str);
             read_json(iss, pt);
+            
+            //Clear the RSU OID mapping variable
             _rsuOIDConfigMap.clear();
             BOOST_FOREACH (ptree::value_type &child, pt.get_child("RSUOIDConfig"))
             {
