@@ -9,6 +9,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "SNMPClient.h"
 #include <jsoncpp/json/json.h>
+#include "RSUStatusMessage.h"
 
 using namespace tmx::utils;
 using namespace std;

@@ -56,6 +56,7 @@ namespace RSUHealthMonitor
             ptree pt;
             istringstream iss(json_str);
             read_json(iss, pt);
+            _rsuOIDConfigMap.clear();
             BOOST_FOREACH (ptree::value_type &child, pt.get_child("RSUOIDConfig"))
             {
                 // Array elements have no names.
@@ -84,14 +85,14 @@ namespace RSUHealthMonitor
     {
         while (true)
         {
-            PLOG(logERROR) << "RSU status update call at every " << _interval;
-
-            for_each(_rsuOIDConfigMap.begin(), _rsuOIDConfigMap.end(), [this](RSUOIDConfig &config)
+            PLOG(logDEBUG) << "RSU status update call at every " << _interval << "seconds!";
+            Json::Value rsuStatuJson;
+            //Sending RSU SNMP call for each field as each field has its own OID.
+            for_each(_rsuOIDConfigMap.begin(), _rsuOIDConfigMap.end(), [this, &rsuStatuJson](RSUOIDConfig &config)
                      {
                         try
                         {
-                            Json::Value rsuStatuJson;
-                            PLOG(logINFO) << "SNMP RSU status call for field:"<< config.field << ", OID: " << config.oid << " RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase;
+                            PLOG(logINFO) << "SNMP RSU status call for field:"<< config.field << ", OID: " << config.oid;
                             snmp_response_obj responseVal;
                             if(_snmpClientPtr != nullptr)
                             {
@@ -104,16 +105,22 @@ namespace RSUHealthMonitor
                                 {
                                     string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
                                     rsuStatuJson[config.field] = response_str;
-                                }
-                                Json::FastWriter fasterWirter;
-                                string json_str = fasterWirter.write(rsuStatuJson);
-                                PLOG(logINFO) << "SNMP Response: "<< json_str; 
+                                }                                
                             }
                         }
                         catch (std::exception &ex)
                         {
                             PLOG(logERROR) << "SNMP call failure due to: " << ex.what();
                         } });
+            //Broadcast the RSU status info when there are any RSU responses.
+            if (!rsuStatuJson.empty())
+            {
+                Json::FastWriter fasterWirter;
+                string json_str = fasterWirter.write(rsuStatuJson);
+                tmx::messages::RSUStatusMessage sendRsuStatusMsg;
+                sendRsuStatusMsg.set_contents(json_str);
+                BroadcastMessage(sendRsuStatusMsg);
+            }
             this_thread::sleep_for(chrono::seconds(_interval));
         }
     }

@@ -178,6 +178,7 @@ namespace tmx::utils {
                     // get Integer value
                     if(vars->type == ASN_INTEGER){
                         if(vars->val.integer){
+                            val.type = snmp_response_obj::response_type::INTEGER;
                             val.val_int = *vars->val.integer;
                             PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
                         }
@@ -194,6 +195,7 @@ namespace tmx::utils {
                             {
                                 val.val_string.push_back(vars->val.string[i]);   
                             }
+                            val.type = snmp_response_obj::response_type::STRING;
                             
                         }
                         else{
