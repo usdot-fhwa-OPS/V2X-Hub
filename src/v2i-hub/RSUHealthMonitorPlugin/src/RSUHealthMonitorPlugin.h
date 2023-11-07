@@ -7,6 +7,8 @@
 #include <boost/format.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include "SNMPClient.h"
+#include <jsoncpp/json/json.h>
 
 using namespace tmx::utils;
 using namespace std;
@@ -31,12 +33,12 @@ namespace RSUHealthMonitor
         string _authPassPhrase;
         string _securityUser;
         vector<RSUOIDConfig> _rsuOIDConfigMap;
+        std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
          * @brief Update RSU OID configuration map with input JSON string.
          * @param JSON string with RSU OID configuration.
-         * @return boolean indicator whether the RSU OID configuration map is updated successfully or not.
          */
-        bool UpdateRSUOIDConfig(string &json_str);
+        void UpdateRSUOIDConfig(string &json_str);
         void PeriodicRSUStatusReq();
 
     public:
