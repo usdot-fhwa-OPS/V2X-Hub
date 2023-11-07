@@ -1,0 +1,46 @@
+{
+    "name": "RSUHealthMonitor",
+    "description": "Monitor RSU health status",
+    "version": "@PROJECT_VERSION@",
+    "exeLocation": "/bin/RSUHealthMonitorPlugin",
+    "coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+    "messageTypes": [],
+    "configuration": [
+        {
+            "key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
+        },
+        {
+            "key":"Interval",
+            "default":"1",
+            "description": "Sending RSU SNMP GET request at every configured interval. Default every 1 second. Unit of measure: second."
+        },
+		{
+            "key":"RSUIp",
+            "default":"192.168.XX.XX",
+            "description":"An IP address of the RSU the V2X hub is connected to."
+        },
+		{
+            "key":"SNMPPort",
+            "default":"161",
+            "description":"The SNMP port for sending message or command."
+        },
+		{
+            "key":"AuthPassPhrase",
+            "default":"dummy",
+            "description":"SNMP v3 authentication passphrase"
+        },
+		{
+            "key":"SecurityUser",
+            "default":"authOnlyUser",
+            "description":"SNMP Security Name"
+        },
+		{
+            "key":"RSUOIDConfigMap",
+            "default":"{\"RSUOIDConfig\":[{\"RsuField\":\"rsuGpsOutpuString\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuID\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuMibVersion\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuFirmwareVersion\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuManufacturer\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMIndex\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMPsid\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMDsrcMsgId\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMTxMode\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMTxChannel\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMEnable\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuIFMStatus\",\"OID\":\"1.0.15628.4.1.8.5.0\"},{\"RsuField\":\"rsuMode\",\"OID\":\"1.0.15628.4.1.8.5.0\"}]}",
+            "description":"OID (Object Identifier) uniquely identify managed objects in a MIB database."
+        }
+    ]
+}
