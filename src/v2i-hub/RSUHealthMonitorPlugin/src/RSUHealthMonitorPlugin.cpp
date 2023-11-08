@@ -11,7 +11,7 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
         // Send SNMP call to RSU status at configurable interval.
         std::thread rsuStatus_t(&RSUHealthMonitorPlugin::PeriodicRSUStatusReq, this);
-        rsuStatus_t.detach();
+        rsuStatus_t.join();
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -49,6 +49,7 @@ namespace RSUHealthMonitor
         if (json_str.length() == 0)
         {
             PLOG(logERROR) << "Error updating RSU OID config due to JSON is empty.";
+            return;
         }
         try
         {
@@ -56,8 +57,8 @@ namespace RSUHealthMonitor
             ptree pt;
             istringstream iss(json_str);
             read_json(iss, pt);
-            
-            //Clear the RSU OID mapping variable
+
+            // Clear the RSU OID mapping variable
             _rsuOIDConfigMap.clear();
             BOOST_FOREACH (ptree::value_type &child, pt.get_child("RSUOIDConfig"))
             {
@@ -88,37 +89,11 @@ namespace RSUHealthMonitor
         while (true)
         {
             PLOG(logDEBUG) << "RSU status update call at every " << _interval << "seconds!";
-            Json::Value rsuStatuJson;
-            //Sending RSU SNMP call for each field as each field has its own OID.
-            for_each(_rsuOIDConfigMap.begin(), _rsuOIDConfigMap.end(), [this, &rsuStatuJson](RSUOIDConfig &config)
-                     {
-                        try
-                        {
-                            PLOG(logINFO) << "SNMP RSU status call for field:"<< config.field << ", OID: " << config.oid;
-                            snmp_response_obj responseVal;
-                            if(_snmpClientPtr != nullptr)
-                            {
-                                _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
-                                if(responseVal.type == snmp_response_obj::response_type::INTEGER)
-                                {
-                                    rsuStatuJson[config.field] = responseVal.val_int;
-                                }
-                                else if(responseVal.type == snmp_response_obj::response_type::STRING)
-                                {
-                                    string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
-                                    rsuStatuJson[config.field] = response_str;
-                                }                                
-                            }
-                        }
-                        catch (std::exception &ex)
-                        {
-                            PLOG(logERROR) << "SNMP call failure due to: " << ex.what();
-                        } });
-            //Broadcast the RSU status info when there are any RSU responses.
-            if (!rsuStatuJson.empty())
+
+            // Broadcast the RSU status info when there are any RSU responses.
+            string json_str = getRSUstatus();
+            if (json_str.length() > 0)
             {
-                Json::FastWriter fasterWirter;
-                string json_str = fasterWirter.write(rsuStatuJson);
                 tmx::messages::RSUStatusMessage sendRsuStatusMsg;
                 sendRsuStatusMsg.set_contents(json_str);
                 BroadcastMessage(sendRsuStatusMsg);
@@ -127,8 +102,79 @@ namespace RSUHealthMonitor
         }
     }
 
+    string RSUHealthMonitorPlugin::getRSUstatus()
+    {
+        Json::Value rsuStatuJson;
+        // Sending RSU SNMP call for each field as each field has its own OID.
+        for_each(_rsuOIDConfigMap.begin(), _rsuOIDConfigMap.end(), [this, &rsuStatuJson](RSUOIDConfig &config)
+                 {
+                    try
+                    {
+                        PLOG(logINFO) << "SNMP RSU status call for field:"<< config.field << ", OID: " << config.oid;
+                        snmp_response_obj responseVal;
+                        if(_snmpClientPtr != nullptr)
+                        {
+                            _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
+                            if(responseVal.type == snmp_response_obj::response_type::INTEGER)
+                            {
+                                rsuStatuJson[config.field] = responseVal.val_int;
+                            }
+                            else if(responseVal.type == snmp_response_obj::response_type::STRING)
+                            {
+                                string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
+                                if(boost::iequals("rsuGpsOutputString", config.field))
+                                {
+                                    auto gps = ParseGPS(response_str);
+                                    rsuStatuJson["rsuGpsOutputStringLatitude"] = gps[0];
+                                    rsuStatuJson["rsuGpsOutputStringLongitude"] = gps[1];
+                                }else{
+                                    rsuStatuJson[config.field] = response_str;
+                                }                                
+                            }                                
+                        }
+                    }
+                    catch (std::exception &ex)
+                    {
+                        PLOG(logERROR) << "SNMP call failure due to: " << ex.what();
+                    } });
+
+        if (!rsuStatuJson.empty())
+        {
+            Json::FastWriter fasterWirter;
+            string json_str = fasterWirter.write(rsuStatuJson);
+            return json_str;
+        }
+        return "";
+    }
+
+    std::map<long, long> RSUHealthMonitorPlugin::ParseGPS(const std::string &gps_nmea_data)
+    {
+        std::map<long, long> result;
+        nmea::NMEAParser parser;
+        nmea::GPSService gps(parser);
+        try
+        {
+            parser.readLine(gps_nmea_data);
+            std::stringstream ss;
+            ss << std::setprecision(8) << std::fixed << gps.fix.latitude << std::endl;
+            auto latitude_str = ss.str();
+            std::stringstream sss;
+            sss << std::setprecision(8) << std::fixed << gps.fix.longitude << std::endl;
+            auto longitude_str = sss.str();
+            boost::erase_all(longitude_str, ".");
+            boost::erase_all(latitude_str, ".");
+            result.insert({std::stol(latitude_str), std::stol(longitude_str)});
+        }
+        catch (nmea::NMEAParseError &e)
+        {
+            fprintf(stderr, "Error:%s\n", e.message.c_str());
+        }
+        return result;
+    }
+
     RSUHealthMonitorPlugin::~RSUHealthMonitorPlugin()
     {
+        _rsuOIDConfigMap.clear();
     }
 
 } // namespace RSUHealthMonitor

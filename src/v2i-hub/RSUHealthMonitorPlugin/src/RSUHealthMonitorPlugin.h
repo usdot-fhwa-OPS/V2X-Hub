@@ -10,6 +10,7 @@
 #include "SNMPClient.h"
 #include <jsoncpp/json/json.h>
 #include "RSUStatusMessage.h"
+#include <nmeaparse/nmea.h>
 
 using namespace tmx::utils;
 using namespace std;
@@ -40,7 +41,20 @@ namespace RSUHealthMonitor
          * @param JSON string with RSU OID configuration.
          */
         void UpdateRSUOIDConfig(string &json_str);
+        /**
+         * @brief Periodically sending SNMP requests to get RSU status info.
+         */
         void PeriodicRSUStatusReq();
+        /**
+         * @brief Sending SNMP requests to get info for each field in the _rsuOIDConfigMap, and return the RSU status in JSON string
+         */
+        string getRSUstatus();
+        /**
+         * @brief Parse NMEA GPS sentense and return GPS related data
+         * @param gps_nmea_data NMEA GPS sentense
+         * @return map<long, long>  A map of latitude and longitude
+         */
+        std::map<long, long> ParseGPS(const std::string &gps_nmea_data);
 
     public:
         RSUHealthMonitorPlugin(std::string name);
