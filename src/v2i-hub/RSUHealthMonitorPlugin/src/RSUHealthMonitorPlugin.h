@@ -11,6 +11,7 @@
 #include <jsoncpp/json/json.h>
 #include "RSUStatusMessage.h"
 #include <nmeaparse/nmea.h>
+#include <algorithm>
 
 using namespace tmx::utils;
 using namespace std;
@@ -23,6 +24,7 @@ namespace RSUHealthMonitor
     {
         string field;
         string oid;
+        bool required; // Indicate whether this field is required to before broadcasting the RSU status.
     };
 
     class RSUHealthMonitorPlugin : public PluginClient
@@ -35,7 +37,7 @@ namespace RSUHealthMonitor
         string _authPassPhrase;
         string _securityUser;
         vector<RSUOIDConfig> _rsuOIDConfigMap;
-        std::shared_ptr<snmp_client> _snmpClientPtr;
+        // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
          * @brief Update RSU OID configuration map with input JSON string.
          * @param JSON string with RSU OID configuration.
@@ -48,13 +50,17 @@ namespace RSUHealthMonitor
         /**
          * @brief Sending SNMP requests to get info for each field in the _rsuOIDConfigMap, and return the RSU status in JSON string
          */
-        string getRSUstatus();
+        Json::Value getRSUstatus();
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data
          * @param gps_nmea_data NMEA GPS sentense
          * @return map<long, long>  A map of latitude and longitude
          */
         std::map<long, long> ParseGPS(const std::string &gps_nmea_data);
+        /**
+         * @brief determine if all required fields in the RSU config map _rsuOIDConfigMap present in the input fields
+         */
+        bool isAllRequiredFieldsPresent(vector<string> fields);
 
     public:
         RSUHealthMonitorPlugin(std::string name);

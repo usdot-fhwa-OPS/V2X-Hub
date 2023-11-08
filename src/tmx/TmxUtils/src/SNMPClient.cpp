@@ -160,7 +160,7 @@ namespace tmx::utils {
                 }
             }
 
-            PLOG(logERROR) << "Created OID for input: " << input_oid;
+            PLOG(logINFO) << "Created OID for input: " << input_oid;
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
@@ -183,6 +183,7 @@ namespace tmx::utils {
                             PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
                         }
                         else{
+                            snmp_free_pdu(response);
                             PLOG(logERROR) << "Response specifies type integer, but no integer value found";
                             return false;
                         }
@@ -199,11 +200,13 @@ namespace tmx::utils {
                             
                         }
                         else{
+                            snmp_free_pdu(response);
                             PLOG(logERROR) << "Response specifies type string, but no string value found";
                             return false;
                         }
                     }
                     else{
+                        snmp_free_pdu(response);
                         PLOG(logERROR) << "Received a message type which isn't an integer or string";
                         return false;
                     }
