@@ -38,6 +38,11 @@
             "description":"SNMP Security Name"
         },
 		{
+            "key":"SecurityLevel",
+            "default":"authPriv",
+            "description":"SNMP Security level"
+        },
+		{
             "key":"RSUOIDConfigMap",
             "default":"{\"RSUOIDConfig\":[{\"RsuField\":\"rsuGpsOutputString\",\"OID\":\"iso.0.15628.4.1.8.5.0\",\"Required\":false},{\"RsuField\":\"rsuID\",\"OID\":\"iso.0.15628.4.1.17.4.0\",\"Required\":false},{\"RsuField\":\"rsuMibVersion\",\"OID\":\"iso.0.15628.4.1.17.1.0\",\"Required\":false},{\"RsuField\":\"rsuFirmwareVersion\",\"OID\":\"iso.0.15628.4.1.17.2.0 \",\"Required\":false},{\"RsuField\":\"rsuManufacturer\",\"OID\":\"iso.0.15628.4.1.17.5.0\",\"Required\":false},{\"RsuField\":\"rsuIFMIndex\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMPsid\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMDsrcMsgId\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMTxMode\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMTxChannel\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMEnable\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuIFMStatus\",\"OID\":\"iso.3.6.1.2.1.1.7.0\",\"Required\":false},{\"RsuField\":\"rsuMode\",\"OID\":\"iso.0.15628.4.1.99.0\",\"Required\":false}]}",
             "description":"OID (Object Identifier) uniquely identify managed objects in a MIB database."

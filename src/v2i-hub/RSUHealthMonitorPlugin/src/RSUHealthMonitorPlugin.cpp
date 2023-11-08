@@ -24,6 +24,8 @@ namespace RSUHealthMonitor
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("SecurityUser", _securityUser);
+        GetConfigValue<string>("SecurityLevel", _securityLevel);
+        
 
         // Update the OID to RSU field mapping
         string rsuOIDMapJsonStr;
@@ -117,9 +119,9 @@ namespace RSUHealthMonitor
         PLOG(logDEBUG) << "RSU status update call at every " << _interval << " seconds!\n";
 
         // Create SNMP client and use SNMP V3 protocol
-        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, "authNoPriv", _authPassPhrase, 3);
+        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, 3);
         PLOG(logINFO) << "Updated SNMP client call: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
-                      << "authNoPriv";
+                      << _securityLevel;
         if (_snmpClientPtr == nullptr)
         {
             PLOG(logERROR) << "Error creating SNMP client!";

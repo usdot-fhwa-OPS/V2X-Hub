@@ -36,6 +36,7 @@ namespace RSUHealthMonitor
         uint16_t _snmpPort;
         string _authPassPhrase;
         string _securityUser;
+        string _securityLevel;
         vector<RSUOIDConfig> _rsuOIDConfigMap;
         // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
