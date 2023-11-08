@@ -1,22 +1,23 @@
 #include "SNMPClient.h"
 
-namespace tmx::utils {
-    
-    // Client defaults to SNMPv3
-    snmp_client::snmp_client(const std::string& ip, const int& port, const std::string& community, 
-        const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version, int timeout)
+namespace tmx::utils
+{
 
-        : ip_(ip), port_(port), community_(community),snmp_version_(snmp_version), timeout_(timeout)
+    // Client defaults to SNMPv3
+    snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
+                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version, int timeout)
+
+        : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
-        
+
         PLOG(logDEBUG1) << "Starting SNMP Client";
         PLOG(logDEBUG1) << "Target device IP address: " << ip_;
         PLOG(logINFO) << "Target device NTCIP port: " << port_;
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
-        std::string ip_port_string = ip_ + ":" + std::to_string(port_);    
-        char* ip_port = &ip_port_string[0];
-        
+        std::string ip_port_string = ip_ + ":" + std::to_string(port_);
+        char *ip_port = &ip_port_string[0];
+
         // Initialize SNMP session parameters
         init_snmp("carma_snmp");
         snmp_sess_init(&session);
@@ -28,29 +29,33 @@ namespace tmx::utils {
         session.securityModel = USM_SEC_MODEL_NUMBER;
 
         // Fallback behavior to setup a community for SNMP V1/V2
-        if(snmp_version_ != 3){
+        if (snmp_version_ != 3)
+        {
             char community_char[community_.length()];
             std::copy(community_.begin(), community_.end(), community_char);
-            unsigned char* comm = reinterpret_cast<unsigned char*>(community_char);
-        
+            unsigned char *comm = reinterpret_cast<unsigned char *>(community_char);
+
             session.community = comm;
             session.community_len = community_.length();
         }
 
         // SNMP authorization/privach config
-        if (securityLevel == "authPriv") {
+        if (securityLevel == "authPriv")
+        {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
         }
 
-        else if (securityLevel == "authNoPriv") {
+        else if (securityLevel == "authNoPriv")
+        {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
         }
 
-        else session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
+        else
+            session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
 
         // Passphrase used for both authentication and privacy
         auto phrase_len = authPassPhrase.length();
-        auto phrase = (u_char *) authPassPhrase.c_str();
+        auto phrase = (u_char *)authPassPhrase.c_str();
 
         // Defining and generating auth config with SHA1
         session.securityAuthProto = usmHMACSHA1AuthProtocol;
@@ -59,7 +64,7 @@ namespace tmx::utils {
 
         if (generate_Ku(session.securityAuthProto,
                         session.securityAuthProtoLen,
-                        phrase,phrase_len,
+                        phrase, phrase_len,
                         session.securityAuthKey,
                         &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
         {
@@ -68,20 +73,20 @@ namespace tmx::utils {
         }
 
         // Defining and generating priv config with AES (since using SHA1)
-        session.securityPrivProto = usmAESPrivProtocol;
-        session.securityAuthProtoLen = USM_PRIV_PROTO_AES_LEN;
         session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-
+        session.securityPrivProto =
+            snmp_duplicate_objid(usmAESPrivProtocol,
+                                 OID_LENGTH(usmAESPrivProtocol));
+        session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
         if (generate_Ku(session.securityAuthProto,
                         session.securityAuthProtoLen,
-                        phrase,phrase_len,
+                        phrase, phrase_len,
                         session.securityPrivKey,
                         &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
         {
             std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
             throw snmp_client_exception(errMsg);
         }
-
 
         session.timeout = timeout_;
 
@@ -98,18 +103,17 @@ namespace tmx::utils {
         {
             PLOG(logINFO) << "Established session with device at " << ip_;
         }
-        
     }
-    
-    snmp_client::~snmp_client(){
+
+    snmp_client::~snmp_client()
+    {
         PLOG(logINFO) << "Closing SNMP session";
         snmp_close(ss);
     }
 
-
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
-    bool snmp_client::process_snmp_request(const std::string& input_oid, const request_type& request_type, snmp_response_obj& val){
-
+    bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
+    {
 
         /*Structure to hold response from the remote host*/
         snmp_pdu *response;
@@ -125,7 +129,8 @@ namespace tmx::utils {
             PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val.val_int;
             pdu = snmp_pdu_create(SNMP_MSG_SET);
         }
-        else{
+        else
+        {
             PLOG(logERROR) << "Invalid request type, method accpets only GET and SET";
         }
 
@@ -133,26 +138,29 @@ namespace tmx::utils {
         // net-snmp has several methods for creating an OID object
         // their documentation suggests using get_node. read_objid seems like a simpler approach
         // TO DO: investigate update to get_node
-        if(!read_objid(input_oid.c_str(), OID, &OID_len)){
+        if (!read_objid(input_oid.c_str(), OID, &OID_len))
+        {
             // If oid cannot be created
             PLOG(logERROR) << "OID could not be created from input: " << input_oid;
             return false;
-            
         }
-        else{
-            
-            if(request_type == request_type::GET)
+        else
+        {
+
+            if (request_type == request_type::GET)
             {
                 // Add OID to pdu for get request
                 snmp_add_null_var(pdu, OID, OID_len);
             }
-            else if(request_type == request_type::SET)
+            else if (request_type == request_type::SET)
             {
-                if(val.type == snmp_response_obj::response_type::INTEGER){
+                if (val.type == snmp_response_obj::response_type::INTEGER)
+                {
                     snmp_add_var(pdu, OID, OID_len, 'i', (std::to_string(val.val_int)).c_str());
                 }
                 // Needs to be finalized to support octet string use
-                else if(val.type == snmp_response_obj::response_type::STRING){
+                else if (val.type == snmp_response_obj::response_type::STRING)
+                {
                     PLOG(logERROR) << "Setting string value is currently not supported";
                     // std::string str_input(val.val_string.begin(), val.val_string.end());
                     // snmp_add_var(pdu, OID, OID_len, 's', str_input.c_str());
@@ -167,77 +175,89 @@ namespace tmx::utils {
         PLOG(logDEBUG) << "Response request status: " << status;
 
         // Check response
-        if(status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR) {
-            
+        if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
+        {
+
             PLOG(logINFO) << "STAT_SUCCESS, received a response";
-            
-            if(request_type == request_type::GET){
-                for(auto vars = response->variables; vars; vars = vars->next_variable){
+
+            if (request_type == request_type::GET)
+            {
+                for (auto vars = response->variables; vars; vars = vars->next_variable)
+                {
                     // Get value of variable depending on ASN.1 type
                     // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
                     // get Integer value
-                    if(vars->type == ASN_INTEGER){
-                        if(vars->val.integer){
+                    if (vars->type == ASN_INTEGER)
+                    {
+                        if (vars->val.integer)
+                        {
                             val.type = snmp_response_obj::response_type::INTEGER;
                             val.val_int = *vars->val.integer;
                             PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
                         }
-                        else{
+                        else
+                        {
                             snmp_free_pdu(response);
                             PLOG(logERROR) << "Response specifies type integer, but no integer value found";
                             return false;
                         }
-                        
                     }
-                    else if(vars->type == ASN_OCTET_STR){
-                        if(vars->val.string){
+                    else if (vars->type == ASN_OCTET_STR)
+                    {
+                        if (vars->val.string)
+                        {
                             size_t str_len = vars->val_len;
-                            for(size_t i = 0; i < str_len; ++i)
+                            for (size_t i = 0; i < str_len; ++i)
                             {
-                                val.val_string.push_back(vars->val.string[i]);   
+                                val.val_string.push_back(vars->val.string[i]);
                             }
                             val.type = snmp_response_obj::response_type::STRING;
-                            
                         }
-                        else{
+                        else
+                        {
                             snmp_free_pdu(response);
                             PLOG(logERROR) << "Response specifies type string, but no string value found";
                             return false;
                         }
                     }
-                    else{
+                    else
+                    {
                         snmp_free_pdu(response);
                         PLOG(logERROR) << "Received a message type which isn't an integer or string";
                         return false;
                     }
                 }
             }
-            else if(request_type == request_type::SET){
-                
-                if(val.type == snmp_response_obj::response_type::INTEGER){
+            else if (request_type == request_type::SET)
+            {
+
+                if (val.type == snmp_response_obj::response_type::INTEGER)
+                {
                     PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int;
                 }
 
-                else if(val.type == snmp_response_obj::response_type::STRING){
+                else if (val.type == snmp_response_obj::response_type::STRING)
+                {
                     PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: ";
-                    for(auto data : val.val_string){
+                    for (auto data : val.val_string)
+                    {
                         PLOG(logDEBUG1) << data;
                     }
                 }
             }
-        
         }
-        else 
+        else
         {
             log_error(status, request_type, response);
             return false;
         }
 
-        if (response){
+        if (response)
+        {
             snmp_free_pdu(response);
             OID_len = MAX_OID_LEN;
         }
-        
+
         return true;
     }
 
@@ -248,7 +268,7 @@ namespace tmx::utils {
 
         std::string result = "";
         auto pdu = snmp_pdu_create(SNMP_MSG_GET);
-        
+
         if (!snmp_parse_oid(req_oid.c_str(), OID, &OID_len))
         {
             snmp_perror(req_oid.c_str());
@@ -259,7 +279,7 @@ namespace tmx::utils {
 
         snmp_add_null_var(pdu, OID, OID_len);
         int status = snmp_synch_response(ss, pdu, &response);
-        
+
         if (!response)
         {
             throw snmp_client_exception("No response for SNMP Get request!");
@@ -288,16 +308,14 @@ namespace tmx::utils {
         if (response)
             snmp_free_pdu(response);
         return result;
-    }    
-
+    }
 
     int snmp_client::get_port() const
     {
         return port_;
     }
 
-
-    void snmp_client::log_error(const int& status, const request_type& request_type, snmp_pdu *response) const
+    void snmp_client::log_error(const int &status, const request_type &request_type, snmp_pdu *response) const
     {
 
         if (status == STAT_SUCCESS)
@@ -305,19 +323,22 @@ namespace tmx::utils {
             PLOG(logERROR) << "Variable type: " << response->variables->type;
             PLOG(logERROR) << "Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
         }
-        else if (status == STAT_TIMEOUT){ 
-        
+        else if (status == STAT_TIMEOUT)
+        {
+
             PLOG(logERROR) << "Timeout, no response from server";
         }
-        else{
-            if(request_type == request_type::GET){
+        else
+        {
+            if (request_type == request_type::GET)
+            {
                 PLOG(logERROR) << "Unknown SNMP Error for GET";
             }
-            else if(request_type == request_type::SET){
+            else if (request_type == request_type::SET)
+            {
                 PLOG(logERROR) << "Unknown SNMP Error for SET";
             }
         }
-        
     }
 
 } // namespace
