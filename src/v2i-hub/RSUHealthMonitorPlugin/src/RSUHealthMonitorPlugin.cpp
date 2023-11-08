@@ -41,7 +41,6 @@ namespace RSUHealthMonitor
         }
         try
         {
-            // Example:"{\"RSUOIDConfig\": [{\"RsuField\": \"rsuGpsOutpuString\", \"OID\": \"1.0.15628.4.1.8.5.0\"}, {\"RsuField\": \"rsuID\", \"OID\": \"1.0.15628.4.1.8.5.0\"}] }"
             ptree pt;
             istringstream iss(json_str);
             read_json(iss, pt);
