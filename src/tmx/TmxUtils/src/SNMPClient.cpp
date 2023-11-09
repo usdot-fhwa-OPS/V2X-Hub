@@ -58,7 +58,7 @@ namespace tmx::utils
         auto phrase = (u_char *)authPassPhrase.c_str();
 
         // Defining and generating auth config with SHA1
-        session.securityAuthProto = usmHMACSHA1AuthProtocol;
+        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);;
         session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
         session.securityAuthKeyLen = USM_AUTH_KU_LEN;
         if(session.securityLevel != SNMP_SEC_LEVEL_NOAUTH)
