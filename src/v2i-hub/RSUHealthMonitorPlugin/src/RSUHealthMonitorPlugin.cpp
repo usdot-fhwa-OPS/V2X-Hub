@@ -198,7 +198,7 @@ namespace RSUHealthMonitor
             std::stringstream sss;
             sss << std::setprecision(8) << std::fixed << gps.fix.longitude << std::endl;
             auto longitude_str = sss.str();
-            result.insert({std::stol(latitude_str), std::stol(longitude_str)});
+            result.insert({std::stod(latitude_str), std::stod(longitude_str)});
             PLOG(logDEBUG) << "Parse GPS NMEA string: " << gps_nmea_data << ". Result (Latitude, Longitude): (" << latitude_str << "," << longitude_str << ")";
         }
         catch (nmea::NMEAParseError &e)
