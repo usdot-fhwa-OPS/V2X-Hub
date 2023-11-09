@@ -38,6 +38,7 @@ namespace RSUHealthMonitor
         string _securityUser;
         string _securityLevel;
         vector<RSUOIDConfig> _rsuOIDConfigMap;
+        const long SEC_TO_MICRO = 1000000;
         // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
          * @brief Update RSU OID configuration map with input JSON string.

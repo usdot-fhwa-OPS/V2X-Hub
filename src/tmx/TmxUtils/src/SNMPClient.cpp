@@ -26,7 +26,7 @@ namespace tmx::utils
         session.securityName = (char *)snmp_user.c_str();
         session.securityNameLen = snmp_user.length();
 
-        session.securityModel = USM_SEC_MODEL_NUMBER;
+        // session.securityModel = USM_SEC_MODEL_NUMBER;
 
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != 3)

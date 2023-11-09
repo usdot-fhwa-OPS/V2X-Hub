@@ -118,9 +118,9 @@ namespace RSUHealthMonitor
         PLOG(logDEBUG) << "RSU status update call at every " << _interval << " seconds!\n";
 
         // Create SNMP client and use SNMP V3 protocol
-        PLOG(logINFO) << "Updated SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
+        PLOG(logINFO) << "Update SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
                       << _securityLevel;
-        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, 3);
+        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, 3, SEC_TO_MICRO);
         if (_snmpClientPtr == nullptr)
         {
             PLOG(logERROR) << "Error creating SNMP client!";
