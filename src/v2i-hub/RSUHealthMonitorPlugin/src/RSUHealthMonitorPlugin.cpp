@@ -153,8 +153,8 @@ namespace RSUHealthMonitor
                     if (boost::iequals("rsuGpsOutputString", config.field))
                     {
                         auto gps = ParseGPS(response_str);
-                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps[0];
-                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps[1];
+                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
+                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
                     }
                     else
                     {
