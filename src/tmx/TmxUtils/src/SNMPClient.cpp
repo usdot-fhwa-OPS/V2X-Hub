@@ -61,7 +61,7 @@ namespace tmx::utils
         session.securityAuthProto = usmHMACSHA1AuthProtocol;
         session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
         session.securityAuthKeyLen = USM_AUTH_KU_LEN;
-        if(session.securityLevel == SNMP_SEC_LEVEL_AUTHNOPRIV)
+        if(session.securityLevel != SNMP_SEC_LEVEL_NOAUTH)
         {
             if (generate_Ku(session.securityAuthProto,
                             session.securityAuthProtoLen,
