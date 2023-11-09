@@ -9,7 +9,7 @@ namespace RSUHealthMonitor
     RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(std::string name) : PluginClient(name)
     {
         UpdateConfigSettings();
-        // Send SNMP call to RSU status at configurable interval.
+        // Send SNMP call to RSU periodically at configurable interval.
         std::thread rsuStatus_t(&RSUHealthMonitorPlugin::PeriodicRSUStatusReq, this);
         rsuStatus_t.join();
     }
@@ -62,7 +62,7 @@ namespace RSUHealthMonitor
         }
         catch (const std::exception &e)
         {
-            PLOG(logERROR) << "Error updating RSU OID config" << e.what();
+            PLOG(logERROR) << "Error updating RSU OID config " << e.what();
         }
     }
 
@@ -75,12 +75,12 @@ namespace RSUHealthMonitor
     void RSUHealthMonitorPlugin::PeriodicRSUStatusReq()
     {
         while (true)
-        {
-            // Broadcast the RSU status info when there are any RSU responses.
+        {            
             try
             {
+                //SNMP call to get RSU status
                 auto rsuStatusJson = getRSUstatus();
-
+                // Broadcast the RSU status info when there are RSU responses.
                 if (!rsuStatusJson.empty())
                 {
                     vector<string> rsuStatusFields;
@@ -95,7 +95,8 @@ namespace RSUHealthMonitor
                         string json_str = fasterWirter.write(rsuStatusJson);
                         tmx::messages::RSUStatusMessage sendRsuStatusMsg;
                         sendRsuStatusMsg.set_contents(json_str);
-                        BroadcastMessage(sendRsuStatusMsg);
+                        string source = RSUHealthMonitorPlugin::GetName();
+                        BroadcastMessage(sendRsuStatusMsg, source);
                         PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
                     }
                 }

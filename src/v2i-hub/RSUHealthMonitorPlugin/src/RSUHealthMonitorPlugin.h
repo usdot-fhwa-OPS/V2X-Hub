@@ -50,7 +50,7 @@ namespace RSUHealthMonitor
          */
         void PeriodicRSUStatusReq();
         /**
-         * @brief Sending SNMP requests to get info for each field in the _rsuOIDConfigMap, and return the RSU status in JSON string
+         * @brief Sending SNMP requests to get info for each field in the _rsuOIDConfigMap, and return the RSU status in JSON
          */
         Json::Value getRSUstatus();
         /**
@@ -61,6 +61,7 @@ namespace RSUHealthMonitor
         std::map<double, double> ParseGPS(const std::string &gps_nmea_data);
         /**
          * @brief determine if all required fields in the RSU config map _rsuOIDConfigMap present in the input fields
+         * @return True if all required fields found. Otherwise, false.
          */
         bool isAllRequiredFieldsPresent(vector<string> fields);
 
