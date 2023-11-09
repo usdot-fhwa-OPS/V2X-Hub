@@ -100,7 +100,7 @@ namespace RSUHealthMonitor
                     }
                 }
             }
-            catch (std::exception &ex)
+            catch (const std::exception &ex)
             {
                 PLOG(logERROR) << ex.what();
             }
@@ -120,7 +120,7 @@ namespace RSUHealthMonitor
         // Create SNMP client and use SNMP V3 protocol
         PLOG(logINFO) << "Update SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
                       << _securityLevel;
-        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, 3, SEC_TO_MICRO);
+        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, SNMP_VERSION_3, SEC_TO_MICRO);
         if (_snmpClientPtr == nullptr)
         {
             PLOG(logERROR) << "Error creating SNMP client!";
@@ -162,7 +162,7 @@ namespace RSUHealthMonitor
                     }
                 }
             }
-            catch (std::exception &ex)
+            catch (const std::exception &ex)
             {
                 PLOG(logERROR) << "SNMP call failure due to: " << ex.what();
             }

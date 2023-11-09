@@ -10,9 +10,7 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG1) << "Starting SNMP Client";
-        PLOG(logDEBUG1) << "Target device IP address: " << ip_;
-        PLOG(logINFO) << "Target device NTCIP port: " << port_;
+        PLOG(logDEBUG1) << "Starting SNMP Client. Target device IP address: " << ip_<< "Target device SNMP port: " << port_;
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
@@ -27,7 +25,7 @@ namespace tmx::utils
         session.securityNameLen = snmp_user.length();
 
         // Fallback behavior to setup a community for SNMP V1/V2
-        if (snmp_version_ != 3)
+        if (snmp_version_ != SNMP_VERSION_3)
         {
             char community_char[community_.length()];
             std::copy(community_.begin(), community_.end(), community_char);
