@@ -184,9 +184,9 @@ namespace RSUHealthMonitor
         return isAllPresent;
     }
 
-    std::map<long, long> RSUHealthMonitorPlugin::ParseGPS(const std::string &gps_nmea_data)
+    std::map<double, double> RSUHealthMonitorPlugin::ParseGPS(const std::string &gps_nmea_data)
     {
-        std::map<long, long> result;
+        std::map<double, double> result;
         nmea::NMEAParser parser;
         nmea::GPSService gps(parser);
         try

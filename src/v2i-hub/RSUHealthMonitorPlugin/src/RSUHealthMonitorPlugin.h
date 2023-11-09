@@ -56,9 +56,9 @@ namespace RSUHealthMonitor
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data
          * @param gps_nmea_data NMEA GPS sentense
-         * @return map<long, long>  A map of latitude and longitude
+         * @return map<double, double>  A map of latitude and longitude
          */
-        std::map<long, long> ParseGPS(const std::string &gps_nmea_data);
+        std::map<double, double> ParseGPS(const std::string &gps_nmea_data);
         /**
          * @brief determine if all required fields in the RSU config map _rsuOIDConfigMap present in the input fields
          */
