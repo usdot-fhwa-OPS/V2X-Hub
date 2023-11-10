@@ -14,7 +14,11 @@ namespace RSUHealthMonitor
         RSUStatusConfigTable rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMIB_V_4_1);
         ASSERT_EQ(14, rsuStatusConfigTbl.size());
 
-        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(UNAVAILABLE_MIB_V);
+        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(UNKOWN_MIB_V);
+        ASSERT_EQ(0, rsuStatusConfigTbl.size());
+
+        RSUMibVersion mibVersionDefault;
+        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(mibVersionDefault);
         ASSERT_EQ(0, rsuStatusConfigTbl.size());
     }
 

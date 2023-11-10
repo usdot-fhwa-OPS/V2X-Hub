@@ -36,7 +36,7 @@ namespace RSUHealthMonitor
         }
         else
         {
-            PLOG(logERROR) << "Unknow RSU Mib version: " + _rsuMIBVersionStr;
+            _rsuMibVersion = UNKOWN_MIB_V;
         }
     }
 
@@ -94,7 +94,7 @@ namespace RSUHealthMonitor
         auto rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
         if (rsuStatusConfigTbl.size() == 0)
         {
-            PLOG(logERROR) << "RSU status update call failed due to  RSU stataus config table is empty!";
+            PLOG(logERROR) << "RSU status update call failed due to the RSU status config table is empty!";
             return Json::nullValue;
         }
         // Create SNMP client and use SNMP V3 protocol

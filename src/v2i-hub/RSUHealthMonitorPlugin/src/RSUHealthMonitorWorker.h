@@ -16,7 +16,7 @@ namespace RSUHealthMonitor
 {
     enum RSUMibVersion
     {
-        UNAVAILABLE_MIB_V = 0,
+        UNKOWN_MIB_V = 0,
         RSUMIB_V_4_1 = 1,
         RSUMIB_V_1218 = 2
     };
