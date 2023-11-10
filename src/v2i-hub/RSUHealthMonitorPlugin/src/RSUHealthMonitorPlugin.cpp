@@ -8,6 +8,7 @@ namespace RSUHealthMonitor
 
     RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(std::string name) : PluginClient(name)
     {
+        _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
         UpdateConfigSettings();
         // Send SNMP call to RSU periodically at configurable interval.
         std::thread rsuStatus_t(&RSUHealthMonitorPlugin::PeriodicRSUStatusReq, this);
@@ -25,44 +26,17 @@ namespace RSUHealthMonitor
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("SecurityUser", _securityUser);
         GetConfigValue<string>("SecurityLevel", _securityLevel);
-
-        // Update the OID to RSU field mapping
-        string rsuOIDMapJsonStr;
-        GetConfigValue<string>("RSUOIDConfigMap", rsuOIDMapJsonStr);
-        UpdateRSUOIDConfig(rsuOIDMapJsonStr);
-    }
-
-    void RSUHealthMonitorPlugin::UpdateRSUOIDConfig(string &json_str)
-    {
-
-        if (json_str.length() == 0)
+        GetConfigValue<string>("RSUMIBVersion", _rsuMIBVersionStr);
+        boost::trim_left(_rsuMIBVersionStr);
+        boost::trim_right(_rsuMIBVersionStr);
+        // Support RSU MIB version 4.1
+        if (boost::iequals(_rsuMIBVersionStr, RSU4_1_str))
         {
-            PLOG(logERROR) << "Error updating RSU OID config due to JSON is empty.";
-            return;
+            _rsuMibVersion = RSUMIB_4_1;
         }
-        try
+        else
         {
-            ptree pt;
-            istringstream iss(json_str);
-            read_json(iss, pt);
-
-            // Clear the RSU OID mapping variable
-            _rsuOIDConfigMap.clear();
-            BOOST_FOREACH (ptree::value_type &child, pt.get_child("RSUOIDConfig"))
-            {
-                // Array elements have no names.
-                assert(child.first.empty());
-                RSUOIDConfig config;
-                config.field = child.second.get<string>("RsuField");
-                config.oid = child.second.get<string>("OID");
-                config.required = child.second.get<bool>("Required");
-                // Add RSU OID to the map
-                _rsuOIDConfigMap.push_back(config);
-            }
-        }
-        catch (const std::exception &e)
-        {
-            PLOG(logERROR) << "Error updating RSU OID config " << e.what();
+            PLOG(logERROR) << "Unknow RSU Mib version: " + _rsuMIBVersionStr;
         }
     }
 
@@ -75,10 +49,10 @@ namespace RSUHealthMonitor
     void RSUHealthMonitorPlugin::PeriodicRSUStatusReq()
     {
         while (true)
-        {            
+        {
             try
             {
-                //SNMP call to get RSU status
+                // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
                 auto rsuStatusJson = getRSUstatus();
                 // Broadcast the RSU status info when there are RSU responses.
                 if (!rsuStatusJson.empty())
@@ -89,7 +63,7 @@ namespace RSUHealthMonitor
                         rsuStatusFields.push_back(field);
                     }
                     // Only broadcast RSU status when all required fields are present.
-                    if (isAllRequiredFieldsPresent(rsuStatusFields))
+                    if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
                     {
                         Json::FastWriter fasterWirter;
                         string json_str = fasterWirter.write(rsuStatusJson);
@@ -111,13 +85,18 @@ namespace RSUHealthMonitor
 
     Json::Value RSUHealthMonitorPlugin::getRSUstatus()
     {
-        if (_rsuOIDConfigMap.size() == 0)
+        if (!_rsuWorker)
         {
-            PLOG(logERROR) << "RSU status update call failed due to  RSUOIDConfigMap is empty!";
+            PLOG(logERROR) << "RSU status update call failed due to fail to initialize RSU worker!";
             return Json::nullValue;
         }
-        PLOG(logDEBUG) << "RSU status update call at every " << _interval << " seconds!\n";
-
+        
+        auto rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
+        if (rsuStatusConfigTbl.size() == 0)
+        {
+            PLOG(logERROR) << "RSU status update call failed due to  RSU stataus config table is empty!";
+            return Json::nullValue;
+        }
         // Create SNMP client and use SNMP V3 protocol
         PLOG(logINFO) << "Update SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
                       << _securityLevel;
@@ -130,7 +109,7 @@ namespace RSUHealthMonitor
 
         Json::Value rsuStatuJson;
         // Sending RSU SNMP call for each field as each field has its own OID.
-        for (auto &config : _rsuOIDConfigMap)
+        for (auto &config : rsuStatusConfigTbl)
         {
             try
             {
@@ -138,11 +117,10 @@ namespace RSUHealthMonitor
                 snmp_response_obj responseVal;
                 auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
                 if (!success)
-                {
                     // If any snmp request failed, stop any furthur snmp requests using the same current snmp session as the next OID will not be created.
                     break;
-                }
-                else if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
+
+                if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
                 {
                     rsuStatuJson[config.field] = responseVal.val_int;
                 }
@@ -153,7 +131,7 @@ namespace RSUHealthMonitor
                     // Proess GPS nmea string
                     if (boost::iequals("rsuGpsOutputString", config.field))
                     {
-                        auto gps = ParseGPS(response_str);
+                        auto gps = _rsuWorker->ParseRSUGPS(response_str);
                         rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
                         rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
                     }
@@ -171,47 +149,8 @@ namespace RSUHealthMonitor
         return rsuStatuJson;
     }
 
-    bool RSUHealthMonitorPlugin::isAllRequiredFieldsPresent(vector<string> fields)
-    {
-        bool isAllPresent = true;
-        for (auto &config : _rsuOIDConfigMap)
-        {
-            if (config.required && std::find(fields.begin(), fields.end(), config.field) == fields.end())
-            {
-                isAllPresent = false;
-                PLOG(logWARNING) << "No broadcast as required field " << config.field << " is not present!";
-            }
-        }
-        return isAllPresent;
-    }
-
-    std::map<double, double> RSUHealthMonitorPlugin::ParseGPS(const std::string &gps_nmea_data)
-    {
-        std::map<double, double> result;
-        nmea::NMEAParser parser;
-        nmea::GPSService gps(parser);
-        try
-        {
-            parser.readLine(gps_nmea_data);
-            std::stringstream ss;
-            ss << std::setprecision(8) << std::fixed << gps.fix.latitude << std::endl;
-            auto latitude_str = ss.str();
-            std::stringstream sss;
-            sss << std::setprecision(8) << std::fixed << gps.fix.longitude << std::endl;
-            auto longitude_str = sss.str();
-            result.insert({std::stod(latitude_str), std::stod(longitude_str)});
-            PLOG(logDEBUG) << "Parse GPS NMEA string: " << gps_nmea_data << ". Result (Latitude, Longitude): (" << latitude_str << "," << longitude_str << ")";
-        }
-        catch (nmea::NMEAParseError &e)
-        {
-            fprintf(stderr, "Error:%s\n", e.message.c_str());
-        }
-        return result;
-    }
-
     RSUHealthMonitorPlugin::~RSUHealthMonitorPlugin()
     {
-        _rsuOIDConfigMap.clear();
     }
 
 } // namespace RSUHealthMonitor

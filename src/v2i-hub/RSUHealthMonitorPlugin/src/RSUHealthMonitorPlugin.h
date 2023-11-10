@@ -1,17 +1,11 @@
 
-#ifndef RSUHEALTHMONITORLUGIN_H_
-#define RSUHEALTHMONITORLUGIN_H_
+#pragma once
 
 #include "PluginClient.h"
-#include <boost/foreach.hpp>
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include "SNMPClient.h"
 #include <jsoncpp/json/json.h>
 #include "RSUStatusMessage.h"
-#include <nmeaparse/nmea.h>
-#include <algorithm>
+#include "RSUHealthMonitorWorker.h"
 
 using namespace tmx::utils;
 using namespace std;
@@ -19,13 +13,6 @@ using namespace boost::property_tree;
 
 namespace RSUHealthMonitor
 {
-
-    struct RSUOIDConfig
-    {
-        string field;
-        string oid;
-        bool required; // Indicate whether this field is required to before broadcasting the RSU status.
-    };
 
     class RSUHealthMonitorPlugin : public PluginClient
     {
@@ -37,7 +24,11 @@ namespace RSUHealthMonitor
         string _authPassPhrase;
         string _securityUser;
         string _securityLevel;
-        vector<RSUOIDConfig> _rsuOIDConfigMap;
+        string _rsuMIBVersionStr;
+        RSUMibVersion _rsuMibVersion;
+        const char *RSU4_1_str = "RSU4.1";
+        const char *RSU1218_str = "RSU1218";
+        std::shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
         const long SEC_TO_MICRO = 1000000;
         // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
@@ -50,20 +41,10 @@ namespace RSUHealthMonitor
          */
         void PeriodicRSUStatusReq();
         /**
-         * @brief Sending SNMP requests to get info for each field in the _rsuOIDConfigMap, and return the RSU status in JSON
+         * @brief Sending SNMP requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
+         * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
          */
         Json::Value getRSUstatus();
-        /**
-         * @brief Parse NMEA GPS sentense and return GPS related data
-         * @param gps_nmea_data NMEA GPS sentense
-         * @return map<double, double>  A map of latitude and longitude
-         */
-        std::map<double, double> ParseGPS(const std::string &gps_nmea_data);
-        /**
-         * @brief determine if all required fields in the RSU config map _rsuOIDConfigMap present in the input fields
-         * @return True if all required fields found. Otherwise, false.
-         */
-        bool isAllRequiredFieldsPresent(vector<string> fields);
 
     public:
         RSUHealthMonitorPlugin(std::string name);
@@ -73,5 +54,3 @@ namespace RSUHealthMonitor
     };
 
 } // namespace RSUHealthMonitorPlugin
-
-#endif
