@@ -19,6 +19,9 @@ namespace RSUHealthMonitor
     {
         vector<string> requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion", "rsuManufacturer", "rsuGpsOutputString", "rsuMode", "rsuChanStatus"};
         ASSERT_TRUE(_rsuWorker->isAllRequiredFieldsPresent(RSUMIB_4_1, requiredFields));
+
+        requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion"};
+        ASSERT_FALSE(_rsuWorker->isAllRequiredFieldsPresent(RSUMIB_4_1, requiredFields));
     }
 
     TEST_F(test_RSUHealthMonitorWorker, ParseRSUGPS)
