@@ -7,15 +7,15 @@ namespace RSUHealthMonitor
     {
         _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
         // Current only support RSU MIB version 4.1. Other future supported versions will be inserted here.
-        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMIB_4_1);
-        _RSUSTATUSConfigMapPtr->insert({RSUMIB_4_1, rsuRstatusTable});
+        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMIB_V_4_1);
+        _RSUSTATUSConfigMapPtr->insert({RSUMIB_V_4_1, rsuRstatusTable});
     }
 
     RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion)
     {
         RSUStatusConfigTable rsuStatusTbl;
         // Populate custome defined RSU Status table with RSU MIB version 4.1.
-        if (mibVersion == RSUMIB_4_1)
+        if (mibVersion == RSUMIB_V_4_1)
         {
             RSUFieldOIDStruct rsuID = {"rsuID", RSU_ID_OID, true};
             rsuStatusTbl.push_back(rsuID);
@@ -76,9 +76,18 @@ namespace RSUHealthMonitor
         return isAllPresent;
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion& mibVersion)
+    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion &mibVersion)
     {
-        return _RSUSTATUSConfigMapPtr->at(mibVersion);
+        RSUStatusConfigTable result;
+        try
+        {
+            result = _RSUSTATUSConfigMapPtr->at(mibVersion);
+        }
+        catch (const out_of_range &ex)
+        {
+            PLOG(logERROR) << "Unknown MIB version!";
+        }
+        return result;
     }
 
     std::map<double, double> RSUHealthMonitorWorker::ParseRSUGPS(const std::string &gps_nmea_data)

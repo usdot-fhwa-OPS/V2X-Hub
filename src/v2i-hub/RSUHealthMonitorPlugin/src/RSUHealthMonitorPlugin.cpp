@@ -32,7 +32,7 @@ namespace RSUHealthMonitor
         // Support RSU MIB version 4.1
         if (boost::iequals(_rsuMIBVersionStr, RSU4_1_str))
         {
-            _rsuMibVersion = RSUMIB_4_1;
+            _rsuMibVersion = RSUMIB_V_4_1;
         }
         else
         {

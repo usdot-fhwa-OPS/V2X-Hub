@@ -16,8 +16,9 @@ namespace RSUHealthMonitor
 {
     enum RSUMibVersion
     {
-        RSUMIB_4_1 = 0,
-        RSUMIB_1218 = 1
+        UNAVAILABLE_MIB_V = 0,
+        RSUMIB_V_4_1 = 1,
+        RSUMIB_V_1218 = 2
     };
 
     struct RSUFieldOIDStruct

@@ -25,7 +25,7 @@ namespace RSUHealthMonitor
         string _securityUser;
         string _securityLevel;
         string _rsuMIBVersionStr;
-        RSUMibVersion _rsuMibVersion;
+        RSUMibVersion _rsuMibVersion = UNAVAILABLE_MIB_V;
         const char *RSU4_1_str = "RSU4.1";
         const char *RSU1218_str = "RSU1218";
         std::shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
