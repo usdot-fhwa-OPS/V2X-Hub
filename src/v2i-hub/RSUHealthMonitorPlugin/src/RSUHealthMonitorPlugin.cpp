@@ -90,7 +90,7 @@ namespace RSUHealthMonitor
             PLOG(logERROR) << "RSU status update call failed due to fail to initialize RSU worker!";
             return Json::nullValue;
         }
-        
+
         auto rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
         if (rsuStatusConfigTbl.size() == 0)
         {
@@ -116,8 +116,8 @@ namespace RSUHealthMonitor
                 PLOG(logINFO) << "SNMP RSU status call for field:" << config.field << ", OID: " << config.oid;
                 snmp_response_obj responseVal;
                 auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
-                if (!success)
-                    // If any snmp request failed, stop any furthur snmp requests using the same current snmp session as the next OID will not be created.
+                if (!success && config.required)
+                    PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed!";
                     break;
 
                 if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
@@ -129,16 +129,10 @@ namespace RSUHealthMonitor
                     string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
                     PLOG(logDEBUG) << "String value in response: " << response_str;
                     // Proess GPS nmea string
-                    if (boost::iequals("rsuGpsOutputString", config.field))
-                    {
-                        auto gps = _rsuWorker->ParseRSUGPS(response_str);
-                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
-                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
-                    }
-                    else
-                    {
-                        rsuStatuJson[config.field] = response_str;
-                    }
+                    auto gps = _rsuWorker->ParseRSUGPS(response_str);
+                    rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
+                    rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
+                    rsuStatuJson[config.field] = response_str;
                 }
             }
             catch (const std::exception &ex)
