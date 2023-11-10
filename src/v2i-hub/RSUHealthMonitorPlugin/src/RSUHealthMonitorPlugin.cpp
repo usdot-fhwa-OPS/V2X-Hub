@@ -129,11 +129,13 @@ namespace RSUHealthMonitor
                 else if (success && responseVal.type == snmp_response_obj::response_type::STRING)
                 {
                     string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
-                    PLOG(logDEBUG) << "String value in response: " << response_str;
                     // Proess GPS nmea string
-                    auto gps = _rsuWorker->ParseRSUGPS(response_str);
-                    rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
-                    rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
+                    if (boost::iequals(config.field, "rsuGpsOutputString"))
+                    {
+                        auto gps = _rsuWorker->ParseRSUGPS(response_str);
+                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
+                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
+                    }
                     rsuStatuJson[config.field] = response_str;
                 }
             }
