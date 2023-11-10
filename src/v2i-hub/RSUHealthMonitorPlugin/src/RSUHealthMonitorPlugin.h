@@ -44,7 +44,7 @@ namespace RSUHealthMonitor
          * @brief Sending SNMP requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
          * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
          */
-        Json::Value getRSUstatus();
+        Json::Value getRSUStatus();
 
     public:
         RSUHealthMonitorPlugin(std::string name);

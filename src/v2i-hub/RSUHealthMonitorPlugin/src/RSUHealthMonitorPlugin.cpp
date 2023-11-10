@@ -53,7 +53,7 @@ namespace RSUHealthMonitor
             try
             {
                 // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
-                auto rsuStatusJson = getRSUstatus();
+                auto rsuStatusJson = getRSUStatus();
                 // Broadcast the RSU status info when there are RSU responses.
                 if (!rsuStatusJson.empty())
                 {
@@ -83,7 +83,7 @@ namespace RSUHealthMonitor
         }
     }
 
-    Json::Value RSUHealthMonitorPlugin::getRSUstatus()
+    Json::Value RSUHealthMonitorPlugin::getRSUStatus()
     {
         if (!_rsuWorker)
         {
