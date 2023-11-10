@@ -6,7 +6,7 @@ namespace RSUHealthMonitor
     RSUHealthMonitorWorker::RSUHealthMonitorWorker()
     {
         _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
-        // Current only support RSU MIB version 4.1. Other future supported versions will be inserted here.
+        // Currently only support RSU MIB version 4.1. Other future supported versions will be inserted here.
         RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMIB_V_4_1);
         _RSUSTATUSConfigMapPtr->insert({RSUMIB_V_4_1, rsuRstatusTable});
     }

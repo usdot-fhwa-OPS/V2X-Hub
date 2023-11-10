@@ -45,7 +45,7 @@
 		{
             "key":"RSUMIBVersion",
             "default":"RSU4.1",
-            "description":"THe version of RSU MIB (Management Information Base). E.G. RSU4.1 or RSU1218"
+            "description":"The version of RSU MIB (Management Information Base). E.G. RSU4.1 or RSU1218. Currently only support RSU4.1"
         }
     ]
 }

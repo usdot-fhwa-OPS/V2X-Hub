@@ -37,6 +37,7 @@ namespace RSUHealthMonitor
         else
         {
             _rsuMibVersion = UNKOWN_MIB_V;
+            PLOG(logERROR) << "Uknown RSU MIB version: " <<_rsuMIBVersionStr;
         }
     }
 
