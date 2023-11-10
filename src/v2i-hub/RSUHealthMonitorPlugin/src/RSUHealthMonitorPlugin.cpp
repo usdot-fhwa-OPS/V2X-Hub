@@ -117,8 +117,8 @@ namespace RSUHealthMonitor
                 snmp_response_obj responseVal;
                 auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
                 if (!success && config.required)
-                    PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed!";
-                    break;
+                    PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed! Return empty RSU status!";
+                    return Json::nullValue;
 
                 if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
                 {
