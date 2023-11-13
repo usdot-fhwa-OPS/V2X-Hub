@@ -9,10 +9,19 @@ namespace RSUHealthMonitor
     RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(std::string name) : PluginClient(name)
     {
         _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
+
         UpdateConfigSettings();
+
         // Send SNMP call to RSU periodically at configurable interval.
-        std::thread rsuStatus_t(&RSUHealthMonitorPlugin::PeriodicRSUStatusReq, this);
-        rsuStatus_t.join();
+        _rsuStatusTimer = make_unique<ThreadTimer>();
+        _rsuStatusTimer->AddPeriodicTick([this]()
+                                         {
+            // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
+            auto rsuStatusJson = getRSUStatus();
+
+            //Broadcast RSU status periodically at _interval
+            BroadcastRSUStatus(rsuStatusJson); },
+                                         chrono::seconds(_interval));
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -37,7 +46,7 @@ namespace RSUHealthMonitor
         else
         {
             _rsuMibVersion = UNKOWN_MIB_V;
-            PLOG(logERROR) << "Uknown RSU MIB version: " <<_rsuMIBVersionStr;
+            PLOG(logERROR) << "Uknown RSU MIB version: " << _rsuMIBVersionStr;
         }
     }
 
@@ -47,40 +56,34 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
     }
 
-    void RSUHealthMonitorPlugin::PeriodicRSUStatusReq()
+    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
     {
-        while (true)
+        try
         {
-            try
+            // Broadcast the RSU status info when there are RSU responses.
+            if (!rsuStatusJson.empty())
             {
-                // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
-                auto rsuStatusJson = getRSUStatus();
-                // Broadcast the RSU status info when there are RSU responses.
-                if (!rsuStatusJson.empty())
+                vector<string> rsuStatusFields;
+                for (auto const &field : rsuStatusJson.getMemberNames())
                 {
-                    vector<string> rsuStatusFields;
-                    for (auto const &field : rsuStatusJson.getMemberNames())
-                    {
-                        rsuStatusFields.push_back(field);
-                    }
-                    // Only broadcast RSU status when all required fields are present.
-                    if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
-                    {
-                        Json::FastWriter fasterWirter;
-                        string json_str = fasterWirter.write(rsuStatusJson);
-                        tmx::messages::RSUStatusMessage sendRsuStatusMsg;
-                        sendRsuStatusMsg.set_contents(json_str);
-                        string source = RSUHealthMonitorPlugin::GetName();
-                        BroadcastMessage(sendRsuStatusMsg, source);
-                        PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
-                    }
+                    rsuStatusFields.push_back(field);
+                }
+                // Only broadcast RSU status when all required fields are present.
+                if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
+                {
+                    Json::FastWriter fasterWirter;
+                    string json_str = fasterWirter.write(rsuStatusJson);
+                    tmx::messages::RSUStatusMessage sendRsuStatusMsg;
+                    sendRsuStatusMsg.set_contents(json_str);
+                    string source = RSUHealthMonitorPlugin::GetName();
+                    BroadcastMessage(sendRsuStatusMsg, source);
+                    PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
                 }
             }
-            catch (const std::exception &ex)
-            {
-                PLOG(logERROR) << ex.what();
-            }
-            this_thread::sleep_for(chrono::seconds(_interval));
+        }
+        catch (const std::exception &ex)
+        {
+            PLOG(logERROR) << ex.what();
         }
     }
 

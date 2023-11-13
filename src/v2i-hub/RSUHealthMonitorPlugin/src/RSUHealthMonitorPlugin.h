@@ -28,7 +28,8 @@ namespace RSUHealthMonitor
         RSUMibVersion _rsuMibVersion;
         const char *RSU4_1_str = "RSU4.1";
         const char *RSU1218_str = "RSU1218";
-        std::shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
+        shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
+        unique_ptr<ThreadTimer> _rsuStatusTimer;
         const long SEC_TO_MICRO = 1000000;
         // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
@@ -37,9 +38,9 @@ namespace RSUHealthMonitor
          */
         void UpdateRSUOIDConfig(string &json_str);
         /**
-         * @brief Periodically sending SNMP requests to get RSU status info.
+         * @brief Broadcast RSU status
          */
-        void PeriodicRSUStatusReq();
+        void BroadcastRSUStatus(const Json::Value& rsuStatusJson);
         /**
          * @brief Sending SNMP requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
          * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
