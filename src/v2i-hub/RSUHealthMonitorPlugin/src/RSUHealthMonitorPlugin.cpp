@@ -13,14 +13,14 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
 
         // Send SNMP call to RSU periodically at configurable interval.
-        timer_t_id = _rsuStatusTimer->AddPeriodicTick([this]()
-                                         {
+        _timerThId = _rsuStatusTimer->AddPeriodicTick([this]()
+                                                      {
             // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
             auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _securityUser, _authPassPhrase, _securityLevel, SEC_TO_MICRO);
             PLOG(logINFO) << "Updating _interval: " << _interval;
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
-                                         std::chrono::milliseconds(_interval * SEC_TO_MILLI));
+                                                      std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         _rsuStatusTimer->Start();
     }
 
@@ -30,7 +30,6 @@ namespace RSUHealthMonitor
 
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
-        _rsuStatusTimer->ChangeFrequency(timer_t_id, std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
@@ -48,6 +47,15 @@ namespace RSUHealthMonitor
         {
             _rsuMibVersion = RSUMibVersion::UNKOWN_MIB_V;
             PLOG(logERROR) << "Uknown RSU MIB version: " << _rsuMIBVersionStr;
+        }
+
+        try
+        {
+            _rsuStatusTimer->ChangeFrequency(_timerThId, std::chrono::milliseconds(_interval * SEC_TO_MILLI));
+        }
+        catch (const tmx::TmxException &ex)
+        {
+            PLOG(logERROR) << ex.what();
         }
     }
 
