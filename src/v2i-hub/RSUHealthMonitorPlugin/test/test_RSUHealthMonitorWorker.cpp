@@ -53,5 +53,8 @@ namespace RSUHealthMonitor
         uint16_t port = 161;
         auto json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "testtesttest", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
+
+        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "test", "authPriv", 1000);
+        ASSERT_TRUE(json.empty());
     }
 }

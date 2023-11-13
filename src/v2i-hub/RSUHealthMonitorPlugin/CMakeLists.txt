@@ -2,15 +2,11 @@ PROJECT(RSUHealthMonitorPlugin VERSION 7.5.1 LANGUAGES CXX)
 
 set(TMX_PLUGIN_NAME "RSU Health Monitor")
 
-find_library(NETSNMPAGENT "netsnmpagent")
-find_library(NETSNMPMIBS "netsnmpmibs")
-find_library(NETSNMP "netsnmp")
 find_library(libasn1c .)
 
 BuildTmxPlugin()
 
-TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${NETSNMP_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES} jsoncpp NemaTode)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils jsoncpp NemaTode)
 
 #############
 ## Testing ##
@@ -20,10 +16,6 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 add_library(${PROJECT_NAME}_lib src/RSUHealthMonitorWorker.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils
-                                        ${NETSNMPAGENT} 
-                                        ${NETSNMPMIBS} 
-                                        ${NETSNMP} 
-                                        ${NETSNMP_LIBRARIES} 
                                         NemaTode
                                         jsoncpp)
 set(BINARY ${PROJECT_NAME}_test)

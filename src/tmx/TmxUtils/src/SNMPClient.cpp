@@ -124,6 +124,7 @@ namespace tmx::utils
         else
         {
             PLOG(logERROR) << "Invalid request type, method accpets only GET and SET";
+            return false;
         }
 
         // Read input OID into an OID variable:

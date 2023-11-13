@@ -1,7 +1,9 @@
 PROJECT ( tmxutils CXX )
 FILE (GLOB_RECURSE HEADERS "src/" "*.h*")
 FILE (GLOB_RECURSE SOURCES  "src/" "*.c*")
-
+find_library(NETSNMPAGENT "netsnmpagent")
+find_library(NETSNMPMIBS "netsnmpmibs")
+find_library(NETSNMP "netsnmp")
 
 FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
@@ -16,12 +18,18 @@ TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} SYSTEM PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
                             $<BUILD_INTERFACE:${TMXMESSAGES_INCLUDE_DIR}>
                             ${MYSQL_INCLUDE_DIR}
+                            ${NETSNMP_INCLUDE_DIRS}
                             ${MYSQLCPPCONN_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC 
                        ${TMXAPI_LIBRARIES} 
                        ${MYSQL_LIBRARIES} 
                        ${MYSQLCPPCONN_LIBRARIES}
                        ${UUID_LIBRARY}
+                       ${UUID_LIBRARY} 
+                       ${NETSNMPAGENT} 
+                       ${NETSNMPMIBS} 
+                       ${NETSNMP} 
+                       ${NETSNMP_LIBRARIES} 
                        rdkafka++ 
                        ::carma-clock
                        gmock
@@ -54,4 +62,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES}  gtest)

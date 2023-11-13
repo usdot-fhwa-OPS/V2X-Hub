@@ -32,11 +32,6 @@ namespace RSUHealthMonitor
         const long SEC_TO_MICRO = 1000000;
         const long SEC_TO_MILLI= 1000;
         /**
-         * @brief Update RSU OID configuration map with input JSON string.
-         * @param JSON string with RSU OID configuration.
-         */
-        void UpdateRSUOIDConfig(string &json_str);
-        /**
          * @brief Broadcast RSU status
          * @param Json::Value RSU status in JSON format
          */
