@@ -9,7 +9,6 @@ namespace RSUHealthMonitor
     RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(std::string name) : PluginClient(name)
     {
         _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
-
         UpdateConfigSettings();
 
         // Send SNMP call to RSU periodically at configurable interval.
@@ -17,7 +16,7 @@ namespace RSUHealthMonitor
         _rsuStatusTimer->AddPeriodicTick([this]()
                                          {
             // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
-            auto rsuStatusJson = getRSUStatus();
+            auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _authPassPhrase, _securityUser, _securityLevel, SEC_TO_MICRO);
 
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
@@ -85,70 +84,6 @@ namespace RSUHealthMonitor
         {
             PLOG(logERROR) << ex.what();
         }
-    }
-
-    Json::Value RSUHealthMonitorPlugin::getRSUStatus()
-    {
-        if (!_rsuWorker)
-        {
-            PLOG(logERROR) << "RSU status update call failed due to fail to initialize RSU worker!";
-            return Json::nullValue;
-        }
-
-        auto rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
-        if (rsuStatusConfigTbl.size() == 0)
-        {
-            PLOG(logERROR) << "RSU status update call failed due to the RSU status config table is empty!";
-            return Json::nullValue;
-        }
-        // Create SNMP client and use SNMP V3 protocol
-        PLOG(logINFO) << "Update SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
-                      << _securityLevel;
-        auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, SNMP_VERSION_3, SEC_TO_MICRO);
-        if (_snmpClientPtr == nullptr)
-        {
-            PLOG(logERROR) << "Error creating SNMP client!";
-            return Json::nullValue;
-        }
-
-        Json::Value rsuStatuJson;
-        // Sending RSU SNMP call for each field as each field has its own OID.
-        for (auto &config : rsuStatusConfigTbl)
-        {
-            try
-            {
-                PLOG(logINFO) << "SNMP RSU status call for field:" << config.field << ", OID: " << config.oid;
-                snmp_response_obj responseVal;
-                auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
-                if (!success && config.required)
-                {
-                    PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed! Return empty RSU status!";
-                    return Json::nullValue;
-                }
-
-                if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
-                {
-                    rsuStatuJson[config.field] = responseVal.val_int;
-                }
-                else if (success && responseVal.type == snmp_response_obj::response_type::STRING)
-                {
-                    string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
-                    // Proess GPS nmea string
-                    if (boost::iequals(config.field, "rsuGpsOutputString"))
-                    {
-                        auto gps = _rsuWorker->ParseRSUGPS(response_str);
-                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
-                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
-                    }
-                    rsuStatuJson[config.field] = response_str;
-                }
-            }
-            catch (const std::exception &ex)
-            {
-                PLOG(logERROR) << "SNMP call failure due to: " << ex.what();
-            }
-        }
-        return rsuStatuJson;
     }
 
     RSUHealthMonitorPlugin::~RSUHealthMonitorPlugin()

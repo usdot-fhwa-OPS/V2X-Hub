@@ -2,14 +2,12 @@
 #pragma once
 
 #include "PluginClient.h"
-#include "SNMPClient.h"
 #include <jsoncpp/json/json.h>
 #include "RSUStatusMessage.h"
 #include "RSUHealthMonitorWorker.h"
 
 using namespace tmx::utils;
 using namespace std;
-using namespace boost::property_tree;
 
 namespace RSUHealthMonitor
 {
@@ -39,13 +37,9 @@ namespace RSUHealthMonitor
         void UpdateRSUOIDConfig(string &json_str);
         /**
          * @brief Broadcast RSU status
+         * @param Json::Value RSU status in JSON format
          */
         void BroadcastRSUStatus(const Json::Value& rsuStatusJson);
-        /**
-         * @brief Sending SNMP requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
-         * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
-         */
-        Json::Value getRSUStatus();
 
     public:
         RSUHealthMonitorPlugin(std::string name);

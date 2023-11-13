@@ -18,13 +18,14 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils ${NETSNMPAGENT} ${NETSNMPM
 enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)
 add_library(${PROJECT_NAME}_lib src/RSUHealthMonitorWorker.cpp)
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC ${TMXAPI_LIBRARIES} 
-                                        ${ASN_J2735_LIBRARIES} 
-                                        ${MYSQL_LIBRARIES} 
-                                        ${MYSQLCPPCONN_LIBRARIES}
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils
+                                        ${NETSNMPAGENT} 
+                                        ${NETSNMPMIBS} 
+                                        ${NETSNMP} 
+                                        ${NETSNMP_LIBRARIES} 
                                         NemaTode
-                                        ${UUID_LIBRARY})
+                                        jsoncpp)
 set(BINARY ${PROJECT_NAME}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
 set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)

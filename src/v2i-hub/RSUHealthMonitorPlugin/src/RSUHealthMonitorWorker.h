@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <nmeaparse/nmea.h>
 #include "PluginLog.h"
+#include <jsoncpp/json/json.h>
+#include "SNMPClient.h"
+#include <boost/algorithm/string/predicate.hpp>
 
 using namespace std;
 using namespace tmx::utils;
@@ -70,6 +73,19 @@ namespace RSUHealthMonitor
          * @return map<double, double>  A map of latitude and longitude
          */
         std::map<double, double> ParseRSUGPS(const std::string &gps_nmea_data);
+
+        /**
+         * @brief Sending SNMP V3 requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
+         * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
+         * @param RSUMibVersion The RSU MIB version used
+         * @param string RSU IP address
+         * @param uint16_t SNMP port
+         * @param string security user used for SNMP authentication
+         * @param string authentication password
+         * @param string security level: authPriv or authNoPriv.
+         * @param long session time out
+         */
+        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const string &_authPassPhrase, const string &_securityLevel, long timeout);
 
         // Clear the RSU status map in destructor
         ~RSUHealthMonitorWorker();
