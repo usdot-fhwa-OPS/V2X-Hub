@@ -13,7 +13,7 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
 
         // Send SNMP call to RSU periodically at configurable interval.
-        _rsuStatusTimer->AddPeriodicTick([this]()
+        timer_t_id = _rsuStatusTimer->AddPeriodicTick([this]()
                                          {
             // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
             auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _securityUser, _authPassPhrase, _securityLevel, SEC_TO_MICRO);
