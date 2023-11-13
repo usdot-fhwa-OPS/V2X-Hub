@@ -13,12 +13,17 @@ namespace unit_test
     {
     public:
         shared_ptr<snmp_client> scPtr;
+        uint16_t port = 161;
         test_SNMPClient()
         {
-            uint16_t port = 161;
             scPtr = make_shared<snmp_client>("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000);
         };
     };
+
+    TEST_F(test_SNMPClient, constructor_error)
+    {
+        ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
+    }
 
     TEST_F(test_SNMPClient, get_port)
     {
@@ -51,6 +56,9 @@ namespace unit_test
         ASSERT_FALSE(scPtr->process_snmp_request(RSU_ID_OID, request_type::GET, response));
         ASSERT_FALSE(scPtr->process_snmp_request(RSU_ID_OID, request_type::SET, response));
         ASSERT_FALSE(scPtr->process_snmp_request(RSU_ID_OID, request_type::OTHER, response));
+
+
+        ASSERT_FALSE(scPtr->process_snmp_request("Invalid OID", request_type::GET, response));
     }
 
 }
