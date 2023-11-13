@@ -28,6 +28,7 @@ namespace RSUHealthMonitor
         const char *RSU1218_str = "RSU1218";
         shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
         unique_ptr<ThreadTimer> _rsuStatusTimer;
+        uint timer_t_id;
         const long SEC_TO_MICRO = 1000000;
         const long SEC_TO_MILLI= 1000;
         /**

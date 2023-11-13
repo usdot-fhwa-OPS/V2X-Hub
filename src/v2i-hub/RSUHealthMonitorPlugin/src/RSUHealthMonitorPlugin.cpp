@@ -9,10 +9,10 @@ namespace RSUHealthMonitor
     RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(const std::string &name) : PluginClient(name)
     {
         _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
+        _rsuStatusTimer = make_unique<ThreadTimer>();
         UpdateConfigSettings();
 
         // Send SNMP call to RSU periodically at configurable interval.
-        _rsuStatusTimer = make_unique<ThreadTimer>();
         _rsuStatusTimer->AddPeriodicTick([this]()
                                          {
             // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
@@ -30,6 +30,7 @@ namespace RSUHealthMonitor
 
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
+        _rsuStatusTimer->ChangeFrequency(timer_t_id, std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
