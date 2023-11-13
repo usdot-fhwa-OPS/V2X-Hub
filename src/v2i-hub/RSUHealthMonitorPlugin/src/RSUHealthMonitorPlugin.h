@@ -29,7 +29,6 @@ namespace RSUHealthMonitor
         shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
         unique_ptr<ThreadTimer> _rsuStatusTimer;
         const long SEC_TO_MICRO = 1000000;
-        // std::shared_ptr<snmp_client> _snmpClientPtr;
         /**
          * @brief Update RSU OID configuration map with input JSON string.
          * @param JSON string with RSU OID configuration.
@@ -42,10 +41,9 @@ namespace RSUHealthMonitor
         void BroadcastRSUStatus(const Json::Value& rsuStatusJson);
 
     public:
-        RSUHealthMonitorPlugin(std::string name);
-        virtual ~RSUHealthMonitorPlugin();
+        explicit RSUHealthMonitorPlugin(const std::string &name);
         void UpdateConfigSettings();
-        void OnConfigChanged(const char *key, const char *value);
+        void OnConfigChanged(const char *key, const char *value) override;
     };
 
 } // namespace RSUHealthMonitorPlugin

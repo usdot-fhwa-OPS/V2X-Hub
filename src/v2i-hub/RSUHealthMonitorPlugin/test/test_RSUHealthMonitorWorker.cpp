@@ -11,10 +11,10 @@ namespace RSUHealthMonitor
 
     TEST_F(test_RSUHealthMonitorWorker, GetRSUStatusConfig)
     {
-        RSUStatusConfigTable rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMIB_V_4_1);
+        RSUStatusConfigTable rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::RSUMIB_V_4_1);
         ASSERT_EQ(14, rsuStatusConfigTbl.size());
 
-        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(UNKOWN_MIB_V);
+        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::UNKOWN_MIB_V);
         ASSERT_EQ(0, rsuStatusConfigTbl.size());
 
         RSUMibVersion mibVersionDefault;
@@ -25,10 +25,10 @@ namespace RSUHealthMonitor
     TEST_F(test_RSUHealthMonitorWorker, isAllRequiredFieldsPresent)
     {
         vector<string> requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion", "rsuManufacturer", "rsuGpsOutputString", "rsuMode", "rsuChanStatus"};
-        ASSERT_TRUE(_rsuWorker->isAllRequiredFieldsPresent(RSUMIB_V_4_1, requiredFields));
+        ASSERT_TRUE(_rsuWorker->isAllRequiredFieldsPresent(RSUMibVersion::RSUMIB_V_4_1, requiredFields));
 
         requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion"};
-        ASSERT_FALSE(_rsuWorker->isAllRequiredFieldsPresent(RSUMIB_V_4_1, requiredFields));
+        ASSERT_FALSE(_rsuWorker->isAllRequiredFieldsPresent(RSUMibVersion::RSUMIB_V_4_1, requiredFields));
     }
 
     TEST_F(test_RSUHealthMonitorWorker, ParseRSUGPS)

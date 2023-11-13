@@ -17,7 +17,7 @@ using namespace tmx::utils::rsu41::mib::oid;
 
 namespace RSUHealthMonitor
 {
-    enum RSUMibVersion
+    enum class RSUMibVersion
     {
         UNKOWN_MIB_V = 0,
         RSUMIB_V_4_1 = 1,
@@ -49,7 +49,7 @@ namespace RSUHealthMonitor
          * @param mibVersion specified
          * @return RSUStatusTable the self defined RSU status https://usdot-carma.atlassian.net/wiki/spaces/WFD2/pages/2640740360/RSU+Health+Monitor+Plugin+Design
          */
-        RSUStatusConfigTable constructRsuStatusConfigTable(const RSUMibVersion &mibVersion);
+        RSUStatusConfigTable constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const;
 
     public:
         // Populate the RSU Status Table with predefined fields and their mapping OIDs in constructor
@@ -72,7 +72,7 @@ namespace RSUHealthMonitor
          * @param gps_nmea_data NMEA GPS sentense
          * @return map<double, double>  A map of latitude and longitude
          */
-        std::map<double, double> ParseRSUGPS(const std::string &gps_nmea_data);
+        std::map<double, double> ParseRSUGPS(const std::string &gps_nmea_data) const;
 
         /**
          * @brief Sending SNMP V3 requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
@@ -87,7 +87,10 @@ namespace RSUHealthMonitor
          */
         Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const string &_authPassPhrase, const string &_securityLevel, long timeout);
 
-        // Clear the RSU status map in destructor
-        ~RSUHealthMonitorWorker();
+        //Delete move constructor
+        RSUHealthMonitorWorker(RSUHealthMonitorWorker &&worker) = delete;
+        
+        //Delete copy constructor
+        RSUHealthMonitorWorker(RSUHealthMonitorWorker &worker) = delete;
     };
 } // namespace RSUHealthMonitor

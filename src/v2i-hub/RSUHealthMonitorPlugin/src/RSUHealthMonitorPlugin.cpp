@@ -6,7 +6,7 @@ using namespace tmx::utils;
 namespace RSUHealthMonitor
 {
 
-    RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(std::string name) : PluginClient(name)
+    RSUHealthMonitorPlugin::RSUHealthMonitorPlugin(const std::string &name) : PluginClient(name)
     {
         _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
         UpdateConfigSettings();
@@ -21,6 +21,7 @@ namespace RSUHealthMonitor
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
                                          chrono::seconds(_interval));
+        _rsuStatusTimer->Start();
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -40,11 +41,11 @@ namespace RSUHealthMonitor
         // Support RSU MIB version 4.1
         if (boost::iequals(_rsuMIBVersionStr, RSU4_1_str))
         {
-            _rsuMibVersion = RSUMIB_V_4_1;
+            _rsuMibVersion = RSUMibVersion::RSUMIB_V_4_1;
         }
         else
         {
-            _rsuMibVersion = UNKOWN_MIB_V;
+            _rsuMibVersion = RSUMibVersion::UNKOWN_MIB_V;
             PLOG(logERROR) << "Uknown RSU MIB version: " << _rsuMIBVersionStr;
         }
     }
@@ -84,10 +85,6 @@ namespace RSUHealthMonitor
         {
             PLOG(logERROR) << ex.what();
         }
-    }
-
-    RSUHealthMonitorPlugin::~RSUHealthMonitorPlugin()
-    {
     }
 
 } // namespace RSUHealthMonitor
