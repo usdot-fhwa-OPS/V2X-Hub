@@ -47,4 +47,11 @@ namespace RSUHealthMonitor
         auto gps_map_invalid = _rsuWorker->ParseRSUGPS(invalid_gps_nmea_data);
         ASSERT_EQ(0, gps_map_invalid.size());
     }
+
+    TEST_F(test_RSUHealthMonitorWorker, getRSUStatus)
+    {
+        uint16_t port = 161;
+        auto json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "testtesttest", "authPriv", 1000);
+        ASSERT_TRUE(json.empty());
+    }
 }

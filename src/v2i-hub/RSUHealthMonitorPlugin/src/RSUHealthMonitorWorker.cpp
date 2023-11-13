@@ -76,7 +76,7 @@ namespace RSUHealthMonitor
         return isAllPresent;
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion &mibVersion)
+    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion &mibVersion) const
     {
         RSUStatusConfigTable result;
         try
@@ -86,7 +86,6 @@ namespace RSUHealthMonitor
         catch (const out_of_range &ex)
         {
             PLOG(logERROR) << "Unknown MIB version! " << ex.what();
-            ;
         }
         return result;
     }

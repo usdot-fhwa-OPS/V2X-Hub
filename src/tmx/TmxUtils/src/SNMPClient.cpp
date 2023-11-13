@@ -10,7 +10,7 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG1) << "Starting SNMP Client. Target device IP address: " << ip_<< ", Target device SNMP port: " << port_;
+        PLOG(logDEBUG1) << "Starting SNMP Client. Target device IP address: " << ip_ << ", Target device SNMP port: " << port_;
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
@@ -27,11 +27,7 @@ namespace tmx::utils
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
         {
-            char community_char[community_.length()];
-            std::copy(community_.begin(), community_.end(), community_char);
-            unsigned char *comm = reinterpret_cast<unsigned char *>(community_char);
-
-            session.community = comm;
+            session.community = (unsigned char *)community.c_str();
             session.community_len = community_.length();
         }
 
@@ -54,40 +50,35 @@ namespace tmx::utils
         auto phrase = (u_char *)authPassPhrase.c_str();
 
         // Defining and generating auth config with SHA1
-        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);;
+        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
         session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
         session.securityAuthKeyLen = USM_AUTH_KU_LEN;
-        if(session.securityLevel != SNMP_SEC_LEVEL_NOAUTH)
+        if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
+                                                                          session.securityAuthProtoLen,
+                                                                          phrase, phrase_len,
+                                                                          session.securityAuthKey,
+                                                                          &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
         {
-            if (generate_Ku(session.securityAuthProto,
-                            session.securityAuthProtoLen,
-                            phrase, phrase_len,
-                            session.securityAuthKey,
-                            &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
-            {
-                std::string errMsg = "Error generating Ku from authentication pass phrase. \n";
-                throw snmp_client_exception(errMsg);
-            }
+            std::string errMsg = "Error generating Ku from authentication pass phrase. \n";
+            throw snmp_client_exception(errMsg);
         }
 
         // Defining and generating priv config with AES (since using SHA1)
-        if(session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV)
+        session.securityPrivKeyLen = USM_PRIV_KU_LEN;
+        session.securityPrivProto =
+            snmp_duplicate_objid(usmAESPrivProtocol,
+                                 OID_LENGTH(usmAESPrivProtocol));
+        session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
+
+        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+                                                                            session.securityAuthProtoLen,
+                                                                            phrase, phrase_len,
+                                                                            session.securityPrivKey,
+                                                                            &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
         {
-            session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-            session.securityPrivProto =
-                snmp_duplicate_objid(usmAESPrivProtocol,
-                                    OID_LENGTH(usmAESPrivProtocol));
-            session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
-            if (generate_Ku(session.securityAuthProto,
-                            session.securityAuthProtoLen,
-                            phrase, phrase_len,
-                            session.securityPrivKey,
-                            &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
-            {
-                std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
-                throw snmp_client_exception(errMsg);
-            }
-        }        
+            std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
+            throw snmp_client_exception(errMsg);
+        }
 
         session.timeout = timeout_;
 
@@ -316,7 +307,7 @@ namespace tmx::utils
         return port_;
     }
 
-    void snmp_client::log_error(const int &status, const request_type &request_type, snmp_pdu *response) const
+    void snmp_client::log_error(const int &status, const request_type &request_type, const snmp_pdu *response) const
     {
 
         if (status == STAT_SUCCESS)

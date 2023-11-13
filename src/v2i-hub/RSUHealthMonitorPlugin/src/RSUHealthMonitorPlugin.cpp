@@ -16,11 +16,11 @@ namespace RSUHealthMonitor
         _rsuStatusTimer->AddPeriodicTick([this]()
                                          {
             // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
-            auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _authPassPhrase, _securityUser, _securityLevel, SEC_TO_MICRO);
-
+            auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _securityUser, _authPassPhrase, _securityLevel, SEC_TO_MICRO);
+            PLOG(logINFO) << "Updating _interval: " << _interval;
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
-                                         chrono::seconds(_interval));
+                                         std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         _rsuStatusTimer->Start();
     }
 
@@ -58,32 +58,25 @@ namespace RSUHealthMonitor
 
     void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
     {
-        try
+        // Broadcast the RSU status info when there are RSU responses.
+        if (!rsuStatusJson.empty())
         {
-            // Broadcast the RSU status info when there are RSU responses.
-            if (!rsuStatusJson.empty())
+            vector<string> rsuStatusFields;
+            for (auto const &field : rsuStatusJson.getMemberNames())
             {
-                vector<string> rsuStatusFields;
-                for (auto const &field : rsuStatusJson.getMemberNames())
-                {
-                    rsuStatusFields.push_back(field);
-                }
-                // Only broadcast RSU status when all required fields are present.
-                if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
-                {
-                    Json::FastWriter fasterWirter;
-                    string json_str = fasterWirter.write(rsuStatusJson);
-                    tmx::messages::RSUStatusMessage sendRsuStatusMsg;
-                    sendRsuStatusMsg.set_contents(json_str);
-                    string source = RSUHealthMonitorPlugin::GetName();
-                    BroadcastMessage(sendRsuStatusMsg, source);
-                    PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
-                }
+                rsuStatusFields.push_back(field);
             }
-        }
-        catch (const std::exception &ex)
-        {
-            PLOG(logERROR) << ex.what();
+            // Only broadcast RSU status when all required fields are present.
+            if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
+            {
+                Json::FastWriter fasterWirter;
+                string json_str = fasterWirter.write(rsuStatusJson);
+                tmx::messages::RSUStatusMessage sendRsuStatusMsg;
+                sendRsuStatusMsg.set_contents(json_str);
+                string source = RSUHealthMonitorPlugin::GetName();
+                BroadcastMessage(sendRsuStatusMsg, source);
+                PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
+            }
         }
     }
 

@@ -84,7 +84,10 @@ class snmp_client
         snmp_client(const std::string& ip, const int& port, const std::string& community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = 0, int timeout = 100);
 
         /* Disable default copy constructor*/
-        snmp_client() = delete;
+        snmp_client(snmp_client& sc) = delete;
+
+        /* Disable default move constructor*/
+        snmp_client(snmp_client&& sc) = delete;
 
 
         /** @brief Returns true or false depending on whether the request could be processed for given input OID at the Traffic Signal Controller.
@@ -106,7 +109,7 @@ class snmp_client
         
         virtual int get_port() const; // Returns the current port (should always be 161 or 162)
 
-        void log_error(const int& status, const request_type& request_type, snmp_pdu *response) const;
+        void log_error(const int& status, const request_type& request_type, const snmp_pdu *response) const;
 
         /** @brief Destructor for client. Closes the snmp session**/
         virtual ~snmp_client();

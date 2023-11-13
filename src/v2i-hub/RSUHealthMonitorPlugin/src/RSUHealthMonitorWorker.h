@@ -56,7 +56,7 @@ namespace RSUHealthMonitor
         RSUHealthMonitorWorker();
 
         // Access to the RSU status table based in the RSU MIB version provided
-        RSUStatusConfigTable GetRSUStatusConfig(const RSUMibVersion &mibVersion);
+        RSUStatusConfigTable GetRSUStatusConfig(const RSUMibVersion &mibVersion) const;
 
         /**
          * @brief determine if all required fields in the RSU config map _RSUSTATUSConfigMapPtr present in the input fields
