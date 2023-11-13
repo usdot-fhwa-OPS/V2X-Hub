@@ -65,7 +65,7 @@ namespace RSUHealthMonitor
          * @param vector<string> Input RSU fields to verify
          * @return True if all required fields found. Otherwise, false.
          */
-        bool isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields);
+        bool isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields) const;
 
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data

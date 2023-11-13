@@ -155,9 +155,6 @@ namespace tmx::utils
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
                     PLOG(logERROR) << "Setting string value is currently not supported";
-                    // std::string str_input(val.val_string.begin(), val.val_string.end());
-                    // snmp_add_var(pdu, OID, OID_len, 's', str_input.c_str());
-                    // return false;
                 }
             }
 
@@ -180,38 +177,20 @@ namespace tmx::utils
                     // Get value of variable depending on ASN.1 type
                     // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
                     // get Integer value
-                    if (vars->type == ASN_INTEGER)
+                    if (vars->type == ASN_INTEGER && vars->val.integer)
                     {
-                        if (vars->val.integer)
-                        {
-                            val.type = snmp_response_obj::response_type::INTEGER;
-                            val.val_int = *vars->val.integer;
-                            PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
-                        }
-                        else
-                        {
-                            snmp_free_pdu(response);
-                            PLOG(logERROR) << "Response specifies type integer, but no integer value found";
-                            return false;
-                        }
+                        val.type = snmp_response_obj::response_type::INTEGER;
+                        val.val_int = *vars->val.integer;
+                        PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
                     }
-                    else if (vars->type == ASN_OCTET_STR)
+                    else if (vars->type == ASN_OCTET_STR && vars->val.string)
                     {
-                        if (vars->val.string)
+                        size_t str_len = vars->val_len;
+                        for (size_t i = 0; i < str_len; ++i)
                         {
-                            size_t str_len = vars->val_len;
-                            for (size_t i = 0; i < str_len; ++i)
-                            {
-                                val.val_string.push_back(vars->val.string[i]);
-                            }
-                            val.type = snmp_response_obj::response_type::STRING;
+                            val.val_string.push_back(vars->val.string[i]);
                         }
-                        else
-                        {
-                            snmp_free_pdu(response);
-                            PLOG(logERROR) << "Response specifies type string, but no string value found";
-                            return false;
-                        }
+                        val.type = snmp_response_obj::response_type::STRING;
                     }
                     else
                     {
@@ -228,7 +207,6 @@ namespace tmx::utils
                 {
                     PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int;
                 }
-
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
                     PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: ";
@@ -295,7 +273,7 @@ namespace tmx::utils
         else
         {
             // FAILURE: Print what went wrong!
-            std::string errMsg = snmp_errstring(response->errstat);
+            std::string errMsg = snmp_errstring(static_cast<int>(response->errstat));
             throw snmp_client_exception("Error in packet. Reason:" + errMsg);
         }
         if (response)
@@ -313,24 +291,15 @@ namespace tmx::utils
 
         if (status == STAT_SUCCESS)
         {
-            PLOG(logERROR) << "Variable type: " << response->variables->type;
-            PLOG(logERROR) << "Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
+            PLOG(logERROR) << "Variable type: " << response->variables->type << ". Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
         }
         else if (status == STAT_TIMEOUT)
         {
-
             PLOG(logERROR) << "Timeout, no response from server";
         }
         else
         {
-            if (request_type == request_type::GET)
-            {
-                PLOG(logERROR) << "Unknown SNMP Error for GET";
-            }
-            else if (request_type == request_type::SET)
-            {
-                PLOG(logERROR) << "Unknown SNMP Error for SET";
-            }
+            PLOG(logERROR) << "Unknown SNMP Error for " << (request_type == request_type::GET ? "GET" : "SET");
         }
     }
 

@@ -62,7 +62,7 @@ namespace RSUHealthMonitor
         return rsuStatusTbl;
     }
 
-    bool RSUHealthMonitorWorker::isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields)
+    bool RSUHealthMonitorWorker::isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields) const
     {
         bool isAllPresent = true;
         for (const auto &config : GetRSUStatusConfig(mibVersion))
