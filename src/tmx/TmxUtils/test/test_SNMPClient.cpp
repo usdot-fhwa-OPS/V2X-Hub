@@ -42,6 +42,7 @@ namespace unit_test
         ASSERT_THROW(scPtr->SNMPGet("Invalid OID"), snmp_client_exception);
 
         EXPECT_CALL(*scPtr, SNMPGet(RSU_ID_OID)).WillOnce(Return("RSU 4.1"));
+        scPtr->SNMPGet(RSU_ID_OID);
     }
 
     TEST_F(test_SNMPClient, log_error)
