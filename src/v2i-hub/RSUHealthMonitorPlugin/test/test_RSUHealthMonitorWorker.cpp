@@ -61,4 +61,46 @@ namespace RSUHealthMonitor
         json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "test", "test", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
     }
+
+    TEST_F(test_RSUHealthMonitorWorker, convertJsonToTMXMsg)
+    {
+        Json::Value json;
+        json["rsuID"] = "RSU4.1";
+        json["rsuMode"] = 4;
+        auto rsuStatusTmxMsg = _rsuWorker->convertJsonToTMXMsg(json);
+        string expectedStr = "{\"rsuID\":\"RSU4.1\",\"rsuMode\":4}\n";
+        ASSERT_EQ(expectedStr, rsuStatusTmxMsg.to_string());
+    }
+
+    TEST_F(test_RSUHealthMonitorWorker, populateJson)
+    {
+        Json::Value rsuStatusJson;
+        snmp_response_obj stringObj;
+        stringObj.type = snmp_response_obj::response_type::STRING;
+        std::string gps_nmea_data = "$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62";
+        vector<char> rgps_nmea_data_c;
+        copy(gps_nmea_data.begin(), gps_nmea_data.end(), back_inserter(rgps_nmea_data_c));
+        stringObj.val_string = rgps_nmea_data_c;
+
+        auto json = _rsuWorker->populateJson("rsuGpsOutputString", stringObj);
+        double expected_latitude = 38.9551;
+        double expected_longitude = -77.1496;
+        ASSERT_NEAR(expected_latitude, json["rsuGpsOutputStringLatitude"].asDouble(), 0.001);
+        ASSERT_NEAR(expected_longitude, json["rsuGpsOutputStringLongitude"].asDouble(), 0.001);
+        rsuStatusJson.append(json);
+
+        snmp_response_obj intObj;
+        intObj.type = snmp_response_obj::response_type::INTEGER;
+        intObj.val_int = 4;
+
+        json = _rsuWorker->populateJson("rsuMode", intObj);
+        ASSERT_EQ(4, json["rsuMode"].asInt64());
+        rsuStatusJson.append(json);
+
+        Json::FastWriter fasterWirter;
+        string json_str = fasterWirter.write(rsuStatusJson);
+        string expectedStr = "[{\"rsuGpsOutputString\":\"$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62\",\"rsuGpsOutputStringLatitude\":38.955108330000002,\"rsuGpsOutputStringLongitude\":-77.149556669999996},{\"rsuMode\":4}]\n";
+        ASSERT_EQ(expectedStr, json_str);
+    }
+
 }

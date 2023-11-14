@@ -76,16 +76,12 @@ namespace RSUHealthMonitor
                 rsuStatusFields.push_back(field);
             }
             auto configTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
+            
             // Only broadcast RSU status when all required fields are present.
             if (_rsuWorker && _rsuWorker->validateAllRequiredFieldsPresent(configTbl, rsuStatusFields))
             {
-                Json::FastWriter fasterWirter;
-                string json_str = fasterWirter.write(rsuStatusJson);
-                tmx::messages::RSUStatusMessage sendRsuStatusMsg;
-                sendRsuStatusMsg.set_contents(json_str);
-                string source = RSUHealthMonitorPlugin::GetName();
-                BroadcastMessage(sendRsuStatusMsg, source);
-                PLOG(logINFO) << "Broadcast RSU status:  " << json_str;
+                auto sendRsuStatusMsg = _rsuWorker->convertJsonToTMXMsg(rsuStatusJson);
+                BroadcastMessage(sendRsuStatusMsg, RSUHealthMonitorPlugin::GetName());
             }
         }
     }

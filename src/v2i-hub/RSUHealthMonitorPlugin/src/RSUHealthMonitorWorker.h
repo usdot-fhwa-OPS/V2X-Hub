@@ -10,10 +10,12 @@
 #include <jsoncpp/json/json.h>
 #include "SNMPClient.h"
 #include <boost/algorithm/string/predicate.hpp>
+#include "RSUStatusMessage.h"
 
 using namespace std;
 using namespace tmx::utils;
 using namespace tmx::utils::rsu41::mib::oid;
+using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
@@ -65,7 +67,7 @@ namespace RSUHealthMonitor
          * @param vector<string> Input RSU fields to verify
          * @return True if all required fields found. Otherwise, false.
          */
-        bool validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable  &configTbl, const vector<string> &fields) const;
+        bool validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable &configTbl, const vector<string> &fields) const;
 
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data
@@ -87,10 +89,25 @@ namespace RSUHealthMonitor
          */
         Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const string &_authPassPhrase, const string &_securityLevel, long timeout);
 
-        //Delete move constructor
+        /***
+         *@brief Convert the JSON message into TMX message
+         @param Json Input Json value
+         @return RSUStatusMessage TMX message
+        */
+        RSUStatusMessage convertJsonToTMXMsg(const Json::Value &json) const;
+
+        /**
+         * @brief Populate Json with snmp response object.
+         * @param string The field that maps to an OID.
+         * @param snmp_response_obj The response returned by SNMP call for the OID.
+         * @return Json value populated with response object.
+         */
+        Json::Value populateJson(const string &field, const snmp_response_obj &response) const;
+
+        // Delete move constructor
         RSUHealthMonitorWorker(RSUHealthMonitorWorker &&worker) = delete;
-        
-        //Delete copy constructor
+
+        // Delete copy constructor
         RSUHealthMonitorWorker(RSUHealthMonitorWorker &worker) = delete;
     };
 } // namespace RSUHealthMonitor

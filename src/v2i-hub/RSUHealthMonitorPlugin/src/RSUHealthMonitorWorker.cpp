@@ -62,7 +62,7 @@ namespace RSUHealthMonitor
         return rsuStatusTbl;
     }
 
-    bool RSUHealthMonitorWorker::validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable  &configTbl, const vector<string> &fields) const
+    bool RSUHealthMonitorWorker::validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable &configTbl, const vector<string> &fields) const
     {
         bool isAllPresent = true;
         for (const auto &config : configTbl)
@@ -128,11 +128,6 @@ namespace RSUHealthMonitor
             PLOG(logINFO) << "Update SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
                           << _securityLevel;
             auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, SNMP_VERSION_3, timeout);
-            if (_snmpClientPtr == nullptr)
-            {
-                PLOG(logERROR) << "Error creating SNMP client!";
-                return Json::nullValue;
-            }
 
             Json::Value rsuStatuJson;
             // Sending RSU SNMP call for each field as each field has its own OID.
@@ -140,28 +135,18 @@ namespace RSUHealthMonitor
             {
                 PLOG(logINFO) << "SNMP RSU status call for field:" << config.field << ", OID: " << config.oid;
                 snmp_response_obj responseVal;
-                auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
-                if (!success && config.required)
+                if (_snmpClientPtr)
                 {
-                    PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed! Return empty RSU status!";
-                    return Json::nullValue;
-                }
-
-                if (success && responseVal.type == snmp_response_obj::response_type::INTEGER)
-                {
-                    rsuStatuJson[config.field] = responseVal.val_int;
-                }
-                else if (success && responseVal.type == snmp_response_obj::response_type::STRING)
-                {
-                    string response_str(responseVal.val_string.begin(), responseVal.val_string.end());
-                    // Proess GPS nmea string
-                    if (boost::iequals(config.field, "rsuGpsOutputString"))
+                    auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
+                    if (!success && config.required)
                     {
-                        auto gps = ParseRSUGPS(response_str);
-                        rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
-                        rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
+                        PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed! Return empty RSU status!";
+                        return Json::nullValue;
                     }
-                    rsuStatuJson[config.field] = response_str;
+                    else if (success)
+                    {
+                        rsuStatuJson.append(populateJson(config.field, responseVal));
+                    }
                 }
             }
             return rsuStatuJson;
@@ -171,5 +156,36 @@ namespace RSUHealthMonitor
             PLOG(logERROR) << ex.what();
             return Json::nullValue;
         }
+    }
+
+    Json::Value RSUHealthMonitorWorker::populateJson(const string &field, const snmp_response_obj &response) const
+    {
+        Json::Value rsuStatuJson;
+        if (response.type == snmp_response_obj::response_type::INTEGER)
+        {
+            rsuStatuJson[field] = response.val_int;
+        }
+        else if (response.type == snmp_response_obj::response_type::STRING)
+        {
+            string response_str(response.val_string.begin(), response.val_string.end());
+            // Proess GPS nmea string
+            if (boost::iequals(field, "rsuGpsOutputString"))
+            {
+                auto gps = ParseRSUGPS(response_str);
+                rsuStatuJson["rsuGpsOutputStringLatitude"] = gps.begin()->first;
+                rsuStatuJson["rsuGpsOutputStringLongitude"] = gps.begin()->second;
+            }
+            rsuStatuJson[field] = response_str;
+        }
+        return rsuStatuJson;
+    }
+
+    RSUStatusMessage RSUHealthMonitorWorker::convertJsonToTMXMsg(const Json::Value &json) const
+    {
+        Json::FastWriter fasterWirter;
+        string json_str = fasterWirter.write(json);
+        tmx::messages::RSUStatusMessage rsuStatusMsg;
+        rsuStatusMsg.set_contents(json_str);
+        return rsuStatusMsg;
     }
 }
