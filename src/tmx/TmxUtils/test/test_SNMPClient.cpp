@@ -31,6 +31,7 @@ namespace unit_test
         ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
         ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000));
         ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "testtesttest", SNMP_VERSION_3, 1000));
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "testtesttest", SNMP_VERSION_1, 1000));
         ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "testtesttest", SNMP_VERSION_3, 1000));
         ASSERT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
     }
