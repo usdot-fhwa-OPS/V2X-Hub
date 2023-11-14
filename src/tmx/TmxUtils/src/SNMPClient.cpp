@@ -162,7 +162,7 @@ namespace tmx::utils
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logINFO) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR && request_type == request_type::GET)

@@ -21,6 +21,7 @@ namespace RSUHealthMonitor
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
                                                       std::chrono::milliseconds(_interval * SEC_TO_MILLI));
+        _rsuStatusTimer->Start();
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -62,7 +63,6 @@ namespace RSUHealthMonitor
     {
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
-        _rsuStatusTimer->Start();
     }
 
     void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
