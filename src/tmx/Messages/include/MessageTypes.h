@@ -92,6 +92,7 @@ static CONSTEXPR const char *MSGSUBTYPE_OUTGOING_STRING = "Outgoing";
 static CONSTEXPR const char *MSGSUBTYPE_SHUTDOWN_STRING = "Shutdown";
 static CONSTEXPR const char *MSGSUBTYPE_TIMESYNC_STRING = "TimeSync";
 static CONSTEXPR const char *MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING = "SensorDetectedObject";
+static CONSTEXPR const char *MSGSUBTYPE_RSU_STATUS_STRING = "RSUStatus";
 		
 } /* End namespace messages */
 	
