@@ -162,39 +162,29 @@ namespace tmx::utils
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logDEBUG) << "Response request status: " << status << "(=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
-        // Check response
-        if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
+        // Check GET response
+        if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR && request_type == request_type::GET)
         {
-            if (request_type == request_type::GET)
+            for (auto vars = response->variables; vars; vars = vars->next_variable)
             {
-                for (auto vars = response->variables; vars; vars = vars->next_variable)
+                // Get value of variable depending on ASN.1 type
+                // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
+                // get Integer value
+                if (vars->type == ASN_INTEGER && vars->val.integer)
                 {
-                    // Get value of variable depending on ASN.1 type
-                    // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
-                    // get Integer value
-                    if (vars->type == ASN_INTEGER && vars->val.integer)
+                    val.type = snmp_response_obj::response_type::INTEGER;
+                    val.val_int = *vars->val.integer;
+                }
+                else if (vars->type == ASN_OCTET_STR && vars->val.string)
+                {
+                    size_t str_len = vars->val_len;
+                    for (size_t i = 0; i < str_len; ++i)
                     {
-                        val.type = snmp_response_obj::response_type::INTEGER;
-                        val.val_int = *vars->val.integer;
-                        PLOG(logDEBUG1) << "Integer value in object: " << val.val_int;
+                        val.val_string.push_back(vars->val.string[i]);
                     }
-                    else if (vars->type == ASN_OCTET_STR && vars->val.string)
-                    {
-                        size_t str_len = vars->val_len;
-                        for (size_t i = 0; i < str_len; ++i)
-                        {
-                            val.val_string.push_back(vars->val.string[i]);
-                        }
-                        val.type = snmp_response_obj::response_type::STRING;
-                    }
-                    else
-                    {
-                        snmp_free_pdu(response);
-                        PLOG(logERROR) << "Received a message type which isn't an integer or string";
-                        return false;
-                    }
+                    val.type = snmp_response_obj::response_type::STRING;
                 }
             }
         }
