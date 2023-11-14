@@ -82,6 +82,16 @@ namespace unit_test
         scPtr->process_snmp_request(RSU_MODE, request_type::SET, response);
         scPtr->process_snmp_request("Invalid OID", request_type::GET, response);
         scPtr->process_snmp_request("Invalid OID", request_type::SET, response);
+
+        snmp_client scClient("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000);
+        scClient.process_snmp_request(RSU_ID_OID,request_type::GET,reqponseRSUID);
+        scClient.process_snmp_request(RSU_ID_OID,request_type::SET,reqponseRSUID);
+        scClient.process_snmp_request(RSU_ID_OID,request_type::OTHER,reqponseRSUID);
+        scClient.process_snmp_request("INVALID OID",request_type::GET,reqponseRSUID);
+
+        scClient.process_snmp_request(RSU_MODE,request_type::GET,reqponseMode);
+        scClient.process_snmp_request(RSU_MODE,request_type::SET,reqponseMode);
+        scClient.process_snmp_request(RSU_MODE,request_type::OTHER,reqponseMode);
     }
 
 }
