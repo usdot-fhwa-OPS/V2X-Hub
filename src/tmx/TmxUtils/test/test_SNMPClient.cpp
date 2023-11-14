@@ -28,21 +28,13 @@ namespace unit_test
 
     TEST_F(test_SNMPClient, constructor_error)
     {
-        ASSERT_THROW(mock_snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
+        ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "testtesttest", SNMP_VERSION_3, 1000));
     }
 
     TEST_F(test_SNMPClient, get_port)
     {
         ASSERT_EQ(161, scPtr->get_port());
-    }
-
-    TEST_F(test_SNMPClient, SNMPGet)
-    {
-        ON_CALL(*scPtr, SNMPGet("Invalid OID")).WillByDefault(Throw(snmp_client_exception("Invalid OID")));
-        ASSERT_THROW(scPtr->SNMPGet("Invalid OID"), snmp_client_exception);
-
-        EXPECT_CALL(*scPtr, SNMPGet(RSU_ID_OID)).WillOnce(Return("RSU 4.1"));
-        scPtr->SNMPGet(RSU_ID_OID);
     }
 
     TEST_F(test_SNMPClient, log_error)
@@ -84,14 +76,14 @@ namespace unit_test
         scPtr->process_snmp_request("Invalid OID", request_type::SET, response);
 
         snmp_client scClient("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000);
-        scClient.process_snmp_request(RSU_ID_OID,request_type::GET,reqponseRSUID);
-        scClient.process_snmp_request(RSU_ID_OID,request_type::SET,reqponseRSUID);
-        scClient.process_snmp_request(RSU_ID_OID,request_type::OTHER,reqponseRSUID);
-        scClient.process_snmp_request("INVALID OID",request_type::GET,reqponseRSUID);
+        scClient.process_snmp_request(RSU_ID_OID, request_type::GET, reqponseRSUID);
+        scClient.process_snmp_request(RSU_ID_OID, request_type::SET, reqponseRSUID);
+        scClient.process_snmp_request(RSU_ID_OID, request_type::OTHER, reqponseRSUID);
+        scClient.process_snmp_request("INVALID OID", request_type::GET, reqponseRSUID);
 
-        scClient.process_snmp_request(RSU_MODE,request_type::GET,reqponseMode);
-        scClient.process_snmp_request(RSU_MODE,request_type::SET,reqponseMode);
-        scClient.process_snmp_request(RSU_MODE,request_type::OTHER,reqponseMode);
+        scClient.process_snmp_request(RSU_MODE, request_type::GET, reqponseMode);
+        scClient.process_snmp_request(RSU_MODE, request_type::SET, reqponseMode);
+        scClient.process_snmp_request(RSU_MODE, request_type::OTHER, reqponseMode);
     }
 
 }

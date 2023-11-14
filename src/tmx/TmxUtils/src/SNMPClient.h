@@ -104,8 +104,6 @@ class snmp_client
          *  @param status The integer value corresponding to net-snmp defined errors. macros considered are STAT_SUCCESS(0) and STAT_TIMEOUT(2)
          *  @param request_type The request type for which the error is being logged (GET/SET).
          *  @param response The snmp_pdu struct */
-
-        virtual std::string SNMPGet(const std::string &oid); // Placeholder until ERVCloudForwarding updated
         
         virtual int get_port() const; // Returns the current port (should always be 161 or 162)
 

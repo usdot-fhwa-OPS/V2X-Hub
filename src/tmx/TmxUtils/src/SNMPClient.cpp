@@ -162,14 +162,11 @@ namespace tmx::utils
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logDEBUG) << "Response request status: " << status;
+        PLOG(logDEBUG) << "Response request status: " << status << "(=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check response
         if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
         {
-
-            PLOG(logINFO) << "STAT_SUCCESS, received a response";
-
             if (request_type == request_type::GET)
             {
                 for (auto vars = response->variables; vars; vars = vars->next_variable)
@@ -200,22 +197,6 @@ namespace tmx::utils
                     }
                 }
             }
-            else if (request_type == request_type::SET)
-            {
-
-                if (val.type == snmp_response_obj::response_type::INTEGER)
-                {
-                    PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int;
-                }
-                else if (val.type == snmp_response_obj::response_type::STRING)
-                {
-                    PLOG(logDEBUG1) << "Success in SET for OID: " << input_oid << " Value: ";
-                    for (auto data : val.val_string)
-                    {
-                        PLOG(logDEBUG1) << data;
-                    }
-                }
-            }
         }
         else
         {
@@ -230,55 +211,6 @@ namespace tmx::utils
         }
 
         return true;
-    }
-
-    // Backup GET function for use with prexisting ERVCloudForwarding client
-    std::string snmp_client::SNMPGet(const std::string &req_oid)
-    {
-        snmp_pdu *response;
-
-        std::string result = "";
-        auto pduGet = snmp_pdu_create(SNMP_MSG_GET);
-
-        if (!snmp_parse_oid(req_oid.c_str(), OID, &OID_len))
-        {
-            snmp_perror(req_oid.c_str());
-            std::string errMsg = "OID could not be created from input:" + req_oid;
-            throw snmp_client_exception(errMsg);
-            SOCK_CLEANUP;
-        }
-
-        snmp_add_null_var(pduGet, OID, OID_len);
-        int status = snmp_synch_response(ss, pduGet, &response);
-
-        if (!response)
-        {
-            throw snmp_client_exception("No response for SNMP Get request!");
-        }
-        else if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
-        {
-            // SUCCESS: Return the response as result
-            for (auto vars = response->variables; vars; vars = vars->next_variable)
-            {
-                if (vars->type == ASN_OCTET_STR)
-                {
-                    result = reinterpret_cast<char *>(vars->val.string);
-                }
-                else
-                {
-                    throw snmp_client_exception("Received respones type is not a string");
-                }
-            }
-        }
-        else
-        {
-            // FAILURE: Print what went wrong!
-            std::string errMsg = snmp_errstring(static_cast<int>(response->errstat));
-            throw snmp_client_exception("Error in packet. Reason:" + errMsg);
-        }
-        if (response)
-            snmp_free_pdu(response);
-        return result;
     }
 
     int snmp_client::get_port() const
@@ -302,5 +234,4 @@ namespace tmx::utils
             PLOG(logERROR) << "Unknown SNMP Error for " << (request_type == request_type::GET ? "GET" : "SET");
         }
     }
-
 } // namespace
