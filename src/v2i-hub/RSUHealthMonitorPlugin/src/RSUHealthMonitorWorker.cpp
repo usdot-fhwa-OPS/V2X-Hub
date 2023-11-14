@@ -188,4 +188,30 @@ namespace RSUHealthMonitor
         rsuStatusMsg.set_contents(json_str);
         return rsuStatusMsg;
     }
+
+    vector<string> RSUHealthMonitorWorker::getJsonKeys(const Json::Value &json) const
+    {
+        vector<string> keys;
+        if (json.isArray())
+        {
+            for (auto itr = json.begin(); itr != json.end(); itr++)
+            {
+                if (itr->isObject())
+                {
+                    for (auto const &field : itr->getMemberNames())
+                    {
+                        keys.push_back(field);
+                    }
+                }
+            }
+        }
+        else if (json.isObject())
+        {
+            for (auto const &field : json.getMemberNames())
+            {
+                keys.push_back(field);
+            }
+        }
+        return keys;
+    }
 }

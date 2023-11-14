@@ -68,17 +68,13 @@ namespace RSUHealthMonitor
     void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
     {
         // Broadcast the RSU status info when there are RSU responses.
-        if (!rsuStatusJson.empty())
+        if (!rsuStatusJson.empty() && _rsuWorker)
         {
-            vector<string> rsuStatusFields;
-            for (auto const &field : rsuStatusJson.getMemberNames())
-            {
-                rsuStatusFields.push_back(field);
-            }
+            auto rsuStatusFields = _rsuWorker->getJsonKeys(rsuStatusJson);
             auto configTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
-            
+
             // Only broadcast RSU status when all required fields are present.
-            if (_rsuWorker && _rsuWorker->validateAllRequiredFieldsPresent(configTbl, rsuStatusFields))
+            if (_rsuWorker->validateAllRequiredFieldsPresent(configTbl, rsuStatusFields))
             {
                 auto sendRsuStatusMsg = _rsuWorker->convertJsonToTMXMsg(rsuStatusJson);
                 BroadcastMessage(sendRsuStatusMsg, RSUHealthMonitorPlugin::GetName());

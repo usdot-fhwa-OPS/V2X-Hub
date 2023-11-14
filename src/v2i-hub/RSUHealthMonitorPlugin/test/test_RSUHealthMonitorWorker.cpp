@@ -101,6 +101,8 @@ namespace RSUHealthMonitor
         string json_str = fasterWirter.write(rsuStatusJson);
         string expectedStr = "[{\"rsuGpsOutputString\":\"$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62\",\"rsuGpsOutputStringLatitude\":38.955108330000002,\"rsuGpsOutputStringLongitude\":-77.149556669999996},{\"rsuMode\":4}]\n";
         ASSERT_EQ(expectedStr, json_str);
+        ASSERT_EQ(4, _rsuWorker->getJsonKeys(rsuStatusJson).size());
+        ASSERT_EQ(1, _rsuWorker->getJsonKeys(json).size());
     }
 
 }

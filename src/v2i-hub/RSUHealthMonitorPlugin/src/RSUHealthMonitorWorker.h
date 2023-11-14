@@ -104,6 +104,13 @@ namespace RSUHealthMonitor
          */
         Json::Value populateJson(const string &field, const snmp_response_obj &response) const;
 
+        /**
+         * @brief List the keys from the input Json values
+         * @param Json Input JSON values
+         * @return vector of key strings
+        */
+        vector<string> getJsonKeys(const Json::Value &json) const;
+
         // Delete move constructor
         RSUHealthMonitorWorker(RSUHealthMonitorWorker &&worker) = delete;
 
