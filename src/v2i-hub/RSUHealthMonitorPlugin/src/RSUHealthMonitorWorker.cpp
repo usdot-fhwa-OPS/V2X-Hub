@@ -14,7 +14,7 @@ namespace RSUHealthMonitor
     RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const
     {
         RSUStatusConfigTable rsuStatusTbl;
-        // Populate custome defined RSU Status table with RSU MIB version 4.1.
+        // Populate custom defined RSU Status table with RSU MIB version 4.1.
         if (mibVersion == RSUMibVersion::RSUMIB_V_4_1)
         {
             RSUFieldOIDStruct rsuID = {"rsuID", RSU_ID_OID, true};
@@ -62,10 +62,10 @@ namespace RSUHealthMonitor
         return rsuStatusTbl;
     }
 
-    bool RSUHealthMonitorWorker::isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields) const
+    bool RSUHealthMonitorWorker::validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable  &configTbl, const vector<string> &fields) const
     {
         bool isAllPresent = true;
-        for (const auto &config : GetRSUStatusConfig(mibVersion))
+        for (const auto &config : configTbl)
         {
             if (config.required && find(fields.begin(), fields.end(), config.field) == fields.end())
             {
@@ -107,9 +107,9 @@ namespace RSUHealthMonitor
             result.insert({std::stod(latitude_str), std::stod(longitude_str)});
             PLOG(logDEBUG) << "Parse GPS NMEA string: " << gps_nmea_data << ". Result (Latitude, Longitude): (" << latitude_str << "," << longitude_str << ")";
         }
-        catch (nmea::NMEAParseError &e)
+        catch (const nmea::NMEAParseError &e)
         {
-            fprintf(stderr, "Error:%s\n", e.message.c_str());
+            PLOG(logERROR) << e.message.c_str();
         }
         return result;
     }

@@ -21,7 +21,6 @@ namespace RSUHealthMonitor
             //Broadcast RSU status periodically at _interval
             BroadcastRSUStatus(rsuStatusJson); },
                                                       std::chrono::milliseconds(_interval * SEC_TO_MILLI));
-        _rsuStatusTimer->Start();
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -63,6 +62,7 @@ namespace RSUHealthMonitor
     {
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
+        _rsuStatusTimer->Start();
     }
 
     void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
@@ -75,8 +75,9 @@ namespace RSUHealthMonitor
             {
                 rsuStatusFields.push_back(field);
             }
+            auto configTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
             // Only broadcast RSU status when all required fields are present.
-            if (_rsuWorker && _rsuWorker->isAllRequiredFieldsPresent(_rsuMibVersion, rsuStatusFields))
+            if (_rsuWorker && _rsuWorker->validateAllRequiredFieldsPresent(configTbl, rsuStatusFields))
             {
                 Json::FastWriter fasterWirter;
                 string json_str = fasterWirter.write(rsuStatusJson);

@@ -32,8 +32,8 @@ namespace RSUHealthMonitor
     };
 
     /**
-     * RSUStatusTable is custome defined RSU status information.
-     * The fields are the subset of fields from RSU MIB definition https://github.com/certificationoperatingcouncil/COC_TestSpecs/blob/master/AppNotes/RSU/RSU-MIB.txt
+     * RSUStatusTable is custom defined RSU status information.
+     * The fields are a subset of the fields from the RSU MIB definition used to quantify the health of the RSU. https://github.com/certificationoperatingcouncil/COC_TestSpecs/blob/master/AppNotes/RSU/RSU-MIB.txt
      */
     using RSUStatusConfigTable = vector<RSUFieldOIDStruct>;
 
@@ -61,11 +61,11 @@ namespace RSUHealthMonitor
         /**
          * @brief determine if all required fields in the RSU config map _RSUSTATUSConfigMapPtr present in the input fields
          * Use _RSUSTATUSConfigMapPtr RSU status config map that defines all fields and whether the fields are required.
-         * @param RSUMibVersion RSU MIB version
+         * @param RSUStatusConfigTable RSU Status configration table to compare with.
          * @param vector<string> Input RSU fields to verify
          * @return True if all required fields found. Otherwise, false.
          */
-        bool isAllRequiredFieldsPresent(const RSUMibVersion &mibVersion, const vector<string> &fields) const;
+        bool validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable  &configTbl, const vector<string> &fields) const;
 
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data

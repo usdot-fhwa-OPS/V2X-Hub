@@ -238,7 +238,7 @@ namespace tmx::utils
         snmp_pdu *response;
 
         std::string result = "";
-        auto pdu = snmp_pdu_create(SNMP_MSG_GET);
+        auto pduGet = snmp_pdu_create(SNMP_MSG_GET);
 
         if (!snmp_parse_oid(req_oid.c_str(), OID, &OID_len))
         {
@@ -248,8 +248,8 @@ namespace tmx::utils
             SOCK_CLEANUP;
         }
 
-        snmp_add_null_var(pdu, OID, OID_len);
-        int status = snmp_synch_response(ss, pdu, &response);
+        snmp_add_null_var(pduGet, OID, OID_len);
+        int status = snmp_synch_response(ss, pduGet, &response);
 
         if (!response)
         {

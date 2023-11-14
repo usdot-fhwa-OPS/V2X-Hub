@@ -22,13 +22,14 @@ namespace RSUHealthMonitor
         ASSERT_EQ(0, rsuStatusConfigTbl.size());
     }
 
-    TEST_F(test_RSUHealthMonitorWorker, isAllRequiredFieldsPresent)
+    TEST_F(test_RSUHealthMonitorWorker, validateAllRequiredFieldsPresent)
     {
+        auto config = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::RSUMIB_V_4_1);
         vector<string> requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion", "rsuManufacturer", "rsuGpsOutputString", "rsuMode", "rsuChanStatus"};
-        ASSERT_TRUE(_rsuWorker->isAllRequiredFieldsPresent(RSUMibVersion::RSUMIB_V_4_1, requiredFields));
+        ASSERT_TRUE(_rsuWorker->validateAllRequiredFieldsPresent(config, requiredFields));
 
         requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion"};
-        ASSERT_FALSE(_rsuWorker->isAllRequiredFieldsPresent(RSUMibVersion::RSUMIB_V_4_1, requiredFields));
+        ASSERT_FALSE(_rsuWorker->validateAllRequiredFieldsPresent(config, requiredFields));
     }
 
     TEST_F(test_RSUHealthMonitorWorker, ParseRSUGPS)
