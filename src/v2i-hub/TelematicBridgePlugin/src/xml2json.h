@@ -28,7 +28,7 @@ static const char xml2json_attribute_name_prefix[] = "@";
 /* Example:
    <node_name attribute_name="attribute_value">value</node_name> ---> "node_name":{"#text":"value","@attribute_name":"attribute_value"}
 */
-static const bool xml2json_numeric_support = false;
+static const bool xml2json_numeric_support = true;
 /* Example:
    xml2json_numeric_support = false:
    <number>26.026</number>  ---> "number":"26.026"
