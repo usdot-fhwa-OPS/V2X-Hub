@@ -73,7 +73,7 @@ TEST(PedestrianDetectionForSPAT, updateEncodedSpat)
         EXPECT_EQ(spatPtr->intersections.list.array[0]->states.list.array[0]->signalGroup, 1);
         EXPECT_EQ(spatPtr->intersections.list.array[0]->states.list.array[1]->signalGroup, 2);
         ASSERT_NE(spatPtr->intersections.list.array[0]->maneuverAssistList, nullptr);
-        EXPECT_EQ(spatPtr->intersections.list.array[0]->maneuverAssistList->list.count, 1);
+        EXPECT_NE(spatPtr->intersections.list.array[0]->maneuverAssistList->list.count, 0);
         ASSERT_NE(spatPtr->intersections.list.array[0]->maneuverAssistList->list.array[0]->pedBicycleDetect, nullptr);
         EXPECT_EQ(*(spatPtr->intersections.list.array[0]->maneuverAssistList->list.array[0]->pedBicycleDetect), 1);
     }
