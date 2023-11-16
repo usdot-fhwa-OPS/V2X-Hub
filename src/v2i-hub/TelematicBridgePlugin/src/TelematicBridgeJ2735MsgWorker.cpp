@@ -65,16 +65,7 @@ namespace TelematicBridge
         if (decode_rval.code != RC_OK)
         {
             erroross.str("");
-            erroross << "failed ASN.1 binary decoding of element " << asn_DEF_MessageFrame.name << ": ";
-            if (decode_rval.code == RC_FAIL)
-            {
-                erroross << "bad data.";
-            }
-            else
-            {
-                erroross << "more data expected.";
-            }
-            erroross << " Successfully decoded " << decode_rval.consumed << " bytes.";
+            erroross << "failed ASN.1 binary decoding of element " << asn_DEF_MessageFrame.name << ": bad data. Successfully decoded " << decode_rval.consumed << " bytes.";
             throw TelematicBridgeException(erroross.str());
         }
     }
