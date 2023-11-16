@@ -41,7 +41,7 @@ namespace TelematicBridge
         return true;
     }
 
-    void TelematicBridgeJ2735MsgWorker::DecodeJ2735Msg(const string &hexPaylod, MessageFrame_t* messageFrame)
+    void TelematicBridgeJ2735MsgWorker::DecodeJ2735Msg(const string &hexPaylod, MessageFrame_t *messageFrame)
     {
         /**
          * Decode J2735 message
@@ -49,13 +49,12 @@ namespace TelematicBridge
         ostringstream erroross;
         vector<char> byte_buffer;
         static constexpr size_t max_errbuf_size = 128;
-        size_t errlen = max_errbuf_size;
         if (!HexToBytes(hexPaylod, byte_buffer))
         {
             throw TelematicBridgeException("Failed attempt to decode MessageFrame hex string: cannot convert to bytes.");
         }
         asn_dec_rval_t decode_rval = asn_decode(
-            0,
+            nullptr,
             ATS_UNALIGNED_BASIC_PER,
             &asn_DEF_MessageFrame,
             (void **)&messageFrame,
@@ -75,7 +74,7 @@ namespace TelematicBridge
         /**
          * Convert J2735 message into XML
          */
-        buffer_structure_t xml_buffer = {0, 0, 0};
+        buffer_structure_t xml_buffer = {nullptr, 0, 0};
         asn_enc_rval_t encode_rval = xer_encode(
             &asn_DEF_MessageFrame,
             messageFrame,
@@ -91,13 +90,13 @@ namespace TelematicBridge
 
     int TelematicBridgeJ2735MsgWorker::dynamic_buffer_append(const void *buffer, size_t size, void *app_key)
     {
-        buffer_structure_t *xb = static_cast<buffer_structure_t *>(app_key);
+        auto *xb = static_cast<buffer_structure_t *>(app_key);
 
         while (xb->buffer_size + size + 1 > xb->allocated_size)
         {
             // increase size of buffer.
             size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
-            char *new_buf = static_cast<char *>(MALLOC(new_size));
+            auto new_buf = static_cast<char *>(MALLOC(new_size));
             if (!new_buf)
                 return -1;
             // move old to new.

@@ -15,7 +15,8 @@ TEST_F(test_xml2json, xml2json)
     string expectedJSONStr = "{\"MessageFrame\":{\"messageId\":20,\"value\":{\"BasicSafetyMessage\":{\"coreData\":{\"msgCnt\":117,\"id\":\"67458B6B\",\"secMark\":24440,\"lat\":389565434,\"long\":-771500475,\"elev\":745,\"accuracy\":{\"semiMajor\":255,\"semiMinor\":255,\"orientation\":65535},\"transmission\":{\"neutral\":null},\"speed\":8191,\"heading\":28800,\"angle\":127,\"accelSet\":{\"long\":2001,\"lat\":2001,\"vert\":-127,\"yaw\":0},\"brakes\":{\"wheelBrakes\":0,\"traction\":{\"unavailable\":null},\"abs\":{\"unavailable\":null},\"scs\":{\"unavailable\":null},\"brakeBoost\":{\"unavailable\":null},\"auxBrakes\":{\"unavailable\":null}},\"size\":{\"width\":200,\"length\":500}}}}}}";
     ASSERT_EQ(expectedJSONStr, json);
 
-    expectedXMLStr ="<tl attr=\"added attr\"><null_node_without_attr/><id tid=\"added tid\">1234567890a</id><id tid=\"12.3\">1234567890a</id><id tid=\"12\">1234567890a</id></tl>";
-    cout <<  xml2json(expectedXMLStr.c_str());
-
+    expectedXMLStr = "<tl attr=\"added attr\"><null_node_without_attr/><id tid=\"added tid\">1234567890a</id><id tid=\"12.3\">1234567890a</id><id tid=\"12\">1234567890a</id></tl>";
+    json = xml2json(expectedXMLStr.c_str());
+    expectedJSONStr ="{\"tl\":{\"@attr\":\"added attr\",\"null_node_without_attr\":null,\"id\":[{\"#text\":\"1234567890a\",\"@tid\":\"added tid\"},{\"#text\":\"1234567890a\",\"@tid\":12.3},{\"#text\":\"1234567890a\",\"@tid\":12}]}}";
+    ASSERT_EQ(json , expectedJSONStr);
 }

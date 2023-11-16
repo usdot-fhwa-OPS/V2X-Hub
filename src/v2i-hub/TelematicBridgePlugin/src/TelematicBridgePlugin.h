@@ -18,8 +18,8 @@ namespace TelematicBridge
         void OnMessageReceived(IvpMessage *msg);
 
     public:
-        TelematicBridgePlugin(string name);
-        virtual ~TelematicBridgePlugin();
+        explicit TelematicBridgePlugin(const string& name);
+        ~TelematicBridgePlugin() override = default;
     };
 
 } // namespace TelematicBridge

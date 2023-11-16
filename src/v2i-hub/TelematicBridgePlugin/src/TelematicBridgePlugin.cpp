@@ -2,14 +2,10 @@
 
 namespace TelematicBridge
 {
-    TelematicBridgePlugin::TelematicBridgePlugin(string name) : PluginClient(name)
+    TelematicBridgePlugin::TelematicBridgePlugin(const string& name) : PluginClient(name)
     {
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         SubscribeToMessages();
-    }
-
-    TelematicBridgePlugin::~TelematicBridgePlugin()
-    {
     }
 
     void TelematicBridgePlugin::OnMessageReceived(IvpMessage *msg)

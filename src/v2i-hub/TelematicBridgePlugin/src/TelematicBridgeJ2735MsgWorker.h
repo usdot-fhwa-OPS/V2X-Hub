@@ -9,12 +9,12 @@ using namespace tmx::messages;
 
 namespace TelematicBridge
 {
-    typedef struct buffer_structure
+    using buffer_structure_t = struct buffer_structure
     {
-        char *buffer;           //buffer array
+        char *buffer;          // buffer array
         size_t buffer_size;    // this is really where we will write next.
         size_t allocated_size; // this is the total size of the buffer.
-    } buffer_structure_t;
+    };
 
     class TelematicBridgeJ2735MsgWorker
     {
