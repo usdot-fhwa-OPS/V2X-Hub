@@ -56,3 +56,13 @@ cmake .
 make -j${numCPU}
 make install
 popd
+
+# Nats C API
+pushd /tmp
+git clone https://github.com/nats-io/nats.c
+cd nats.c
+cmake . -DNATS_BUILD_NO_SPIN=ON
+make -j${numCPU}
+make install
+popd
+
