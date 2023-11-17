@@ -2,6 +2,7 @@
 #include "PluginLog.h"
 #include <tmx/messages/TmxJ2735.hpp>
 #include "TelematicBridgeException.h"
+#include "jsoncpp/json/json.h"
 
 using namespace tmx::utils;
 using namespace std;
@@ -16,7 +17,7 @@ namespace TelematicBridge
         size_t allocated_size; // this is the total size of the buffer.
     };
 
-    class TelematicBridgeJ2735MsgWorker
+    class TelematicBridgeMsgWorker
     {
     public:
         /**
@@ -41,8 +42,21 @@ namespace TelematicBridge
          */
         static string ConvertJ2735FrameToXML(const MessageFrame_t *messageframe);
         static int dynamic_buffer_append(const void *buffer, size_t size, void *app_key);
-        TelematicBridgeJ2735MsgWorker() = delete;
-        ~TelematicBridgeJ2735MsgWorker() = delete;
+        /**
+         * @brief convert JSON value into string
+         * @param JSON input Json::Value
+         * @return string
+        */
+        static string JsonToString(const Json::Value &json);
+
+        /**
+         * @brief create Telematic payload from given IVP message
+         * @param IVPMessage V2xHub interval exchanged message
+         * @return JSON value
+        */
+        static Json::Value constructTelematicJSONPayload(const IvpMessage *msg);
+        TelematicBridgeMsgWorker() = delete;
+        ~TelematicBridgeMsgWorker() = delete;
     };
 
 } // TelematicBridge

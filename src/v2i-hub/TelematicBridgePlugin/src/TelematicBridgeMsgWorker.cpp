@@ -1,8 +1,8 @@
-#include "TelematicBridgeJ2735MsgWorker.h"
+#include "TelematicBridgeMsgWorker.h"
 
 namespace TelematicBridge
 {
-    bool TelematicBridgeJ2735MsgWorker::HexToBytes(const string &hexPaylod, vector<char> &byteBuffer)
+    bool TelematicBridgeMsgWorker::HexToBytes(const string &hexPaylod, vector<char> &byteBuffer)
     {
         uint8_t d = 0;
         int i = 0;
@@ -41,7 +41,7 @@ namespace TelematicBridge
         return true;
     }
 
-    void TelematicBridgeJ2735MsgWorker::DecodeJ2735Msg(const string &hexPaylod, MessageFrame_t *messageFrame)
+    void TelematicBridgeMsgWorker::DecodeJ2735Msg(const string &hexPaylod, MessageFrame_t *messageFrame)
     {
         /**
          * Decode J2735 message
@@ -69,7 +69,7 @@ namespace TelematicBridge
         }
     }
 
-    string TelematicBridgeJ2735MsgWorker::ConvertJ2735FrameToXML(const MessageFrame_t *messageFrame)
+    string TelematicBridgeMsgWorker::ConvertJ2735FrameToXML(const MessageFrame_t *messageFrame)
     {
         /**
          * Convert J2735 message into XML
@@ -88,7 +88,7 @@ namespace TelematicBridge
         return string(xml_buffer.buffer);
     }
 
-    int TelematicBridgeJ2735MsgWorker::dynamic_buffer_append(const void *buffer, size_t size, void *app_key)
+    int TelematicBridgeMsgWorker::dynamic_buffer_append(const void *buffer, size_t size, void *app_key)
     {
         auto *xb = static_cast<buffer_structure_t *>(app_key);
 
@@ -112,5 +112,28 @@ namespace TelematicBridge
         // null terminate the string.
         xb->buffer[xb->buffer_size] = '\0';
         return 0;
+    }
+
+    string TelematicBridgeMsgWorker::JsonToString(const Json::Value &json)
+    {
+        Json::FastWriter fasterWirter;
+        string json_str = fasterWirter.write(json);
+        return json_str;
+    }
+
+    Json::Value TelematicBridgeMsgWorker::constructTelematicJSONPayload(const IvpMessage *msg)
+    {
+        Json::Value json;
+        json["type"] = msg->type;
+        json["subType"] = msg->subtype;
+        json["channel"] = msg->dsrcMetadata->channel;
+        json["psid"] = msg->dsrcMetadata->psid;
+        json["encoding"] = msg->encoding;
+        json["source"] = msg->source;
+        json["sourceId"] = msg->sourceId;
+        json["flags"] = msg->flags;
+        json["timestamp"] = msg->timestamp;
+        json["payload"] = msg->payload->valuestring;
+        return json;
     }
 } // TelematicBridge

@@ -2,7 +2,7 @@
 #define _TelematicBRIDGEPLUGIN_H_
 
 #include "PluginClient.h"
-#include "TelematicBridgeJ2735MsgWorker.h"
+#include "TelematicBridgeMsgWorker.h"
 #include "xml2json.h"
 
 using namespace tmx::utils;
