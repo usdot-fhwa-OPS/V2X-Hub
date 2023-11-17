@@ -93,7 +93,8 @@ void xml2json_add_attributes(const rapidxml::xml_node<> *xmlnode, rapidjson::Val
 {
     for (auto myattr = xmlnode->first_attribute(); myattr; myattr = myattr->next_attribute())
     {
-        rapidjson::Value jn, jv;
+        rapidjson::Value jn;
+        rapidjson::Value jv;
         jn.SetString((std::string(xml2json_attribute_name_prefix) + myattr->name()).c_str(), allocator);
 
         if (xml2json_numeric_support == false)
@@ -131,7 +132,6 @@ void xml2json_traverse_node(rapidxml::xml_node<> *xmlnode, rapidjson::Value &jsv
 
     jsvalue.SetObject();
     jsvalue_chd.SetObject();
-    rapidxml::xml_node<> *xmlnode_chd;
 
     // classified discussion:
     if ((xmlnode->type() == rapidxml::node_data || xmlnode->type() == rapidxml::node_cdata) && xmlnode->value())
@@ -146,7 +146,8 @@ void xml2json_traverse_node(rapidxml::xml_node<> *xmlnode, rapidjson::Value &jsv
             if (xmlnode->first_node() && xmlnode->first_node()->type() == rapidxml::node_data && count_children(xmlnode) == 1)
             {
                 // case: <e attr="xxx">text</e>
-                rapidjson::Value jn, jv;
+                rapidjson::Value jn;
+                rapidjson::Value jv;
                 jn.SetString(xml2json_text_additional_name, allocator);
                 jv.SetString(xmlnode->first_node()->value(), allocator);
                 jsvalue.AddMember(jn, jv, allocator);
@@ -191,7 +192,7 @@ void xml2json_traverse_node(rapidxml::xml_node<> *xmlnode, rapidjson::Value &jsv
                         else
                         {
                             long int value = std::strtol(xmlnode->first_node()->value(), nullptr, 0);
-                            jsvalue.SetInt(value);
+                            jsvalue.SetInt(static_cast<int>(value));
                         }
                     }
                 }
@@ -202,11 +203,12 @@ void xml2json_traverse_node(rapidxml::xml_node<> *xmlnode, rapidjson::Value &jsv
         {
             // case: complex else...
             std::map<std::string, int> name_count;
-            for (xmlnode_chd = xmlnode->first_node(); xmlnode_chd; xmlnode_chd = xmlnode_chd->next_sibling())
+            for (auto xmlnode_chd = xmlnode->first_node(); xmlnode_chd; xmlnode_chd = xmlnode_chd->next_sibling())
             {
                 std::string current_name;
-                const char *name_ptr = NULL;
-                rapidjson::Value jn, jv;
+                const char *name_ptr = nullptr;
+                rapidjson::Value jn;
+                rapidjson::Value jv;
                 if (xmlnode_chd->type() == rapidxml::node_data || xmlnode_chd->type() == rapidxml::node_cdata)
                 {
                     current_name = xml2json_text_additional_name;

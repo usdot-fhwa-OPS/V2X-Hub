@@ -48,7 +48,6 @@ namespace TelematicBridge
          */
         ostringstream erroross;
         vector<char> byte_buffer;
-        static constexpr size_t max_errbuf_size = 128;
         if (!HexToBytes(hexPaylod, byte_buffer))
         {
             throw TelematicBridgeException("Failed attempt to decode MessageFrame hex string: cannot convert to bytes.");
@@ -170,14 +169,13 @@ namespace TelematicBridge
         json["timestamp"] = msg->timestamp;
         if (msg->payload)
         {
-            switch (msg->payload->type)
+            if (msg->payload->type == cJSON_Number)
             {
-            case cJSON_Number:
-                json["payload"] = (msg->payload->valueint == 0 ? msg->payload->valuedouble : msg->payload->valueint);
-                break;
-            default:
+                json["payload"] = (msg->payload->valueint == 0 ? msg->payload->valuedouble : static_cast<double>(msg->payload->valueint));
+            }
+            else
+            {
                 json["payload"] = StringToJson(cJSON_Print(msg->payload));
-                break;
             }
         }
 
