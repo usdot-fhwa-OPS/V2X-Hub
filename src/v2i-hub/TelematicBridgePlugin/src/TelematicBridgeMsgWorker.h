@@ -3,6 +3,7 @@
 #include <tmx/messages/TmxJ2735.hpp>
 #include "TelematicBridgeException.h"
 #include "jsoncpp/json/json.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace tmx::utils;
 using namespace std;
@@ -46,15 +47,20 @@ namespace TelematicBridge
          * @brief convert JSON value into string
          * @param JSON input Json::Value
          * @return string
-        */
+         */
         static string JsonToString(const Json::Value &json);
-
+         /**
+         * @brief convert string into JSON value
+         * @param string input string
+         * @return JSON::Value
+         */
+        static Json::Value StringToJson(const string &str);
         /**
-         * @brief create Telematic payload from given IVP message
+         * @brief create JSON payload from given IVP message
          * @param IVPMessage V2xHub interval exchanged message
          * @return JSON value
-        */
-        static Json::Value constructTelematicJSONPayload(const IvpMessage *msg);
+         */
+        static Json::Value ivpMessageToJson(const IvpMessage *msg);
         TelematicBridgeMsgWorker() = delete;
         ~TelematicBridgeMsgWorker() = delete;
     };

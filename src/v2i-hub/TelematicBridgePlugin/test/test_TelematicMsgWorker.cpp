@@ -52,8 +52,9 @@ TEST_F(test_TelematicJ2735MsgWorker, ConvertJ2735FrameToXML)
 TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
 {
     IvpMessage msg;
-    cJSON *payload = cJSON_CreateObject();
-    payload->valuestring = "{\"payload\": \"test\"}";
+    auto payload = cJSON_CreateObject();
+    payload->valuedouble = 12;
+    payload->type = cJSON_Number;
     msg.payload = payload;
     msg.source = "Plugin";
     msg.encoding = "json";
@@ -66,19 +67,33 @@ TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
     metadata.channel = 12;
     metadata.psid = 120;
     msg.dsrcMetadata = &metadata;
-    auto json = TelematicBridgeMsgWorker::constructTelematicJSONPayload(&msg);
-    ASSERT_EQ("Application", json["type"].asString());
-    ASSERT_EQ("alive", json["subType"].asString());
-    ASSERT_EQ(12, json["channel"].asInt64());
-    ASSERT_EQ("json", json["encoding"].asString());
-    ASSERT_EQ("Plugin", json["source"].asString());
-    ASSERT_EQ(123, json["sourceId"].asInt64());
-    ASSERT_EQ(10, json["flags"].asInt64());
-    ASSERT_EQ(10, json["timestamp"].asInt());
-    ASSERT_EQ(120, json["psid"].asInt());
-    ASSERT_EQ(12, json["channel"].asInt());
-    ASSERT_EQ("{\"payload\": \"test\"}", json["payload"].asString());
+    auto json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
     auto str = TelematicBridgeMsgWorker::JsonToString(json);
-    string expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":\"{\\\"payload\\\": \\\"test\\\"}\",\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}\n";
+    string expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":12.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
     ASSERT_EQ(expectedStr, str);
+
+    payload->valueint = 13;
+    payload->type = cJSON_Number;
+    msg.payload = payload;
+    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    str = TelematicBridgeMsgWorker::JsonToString(json);
+    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":13.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
+    ASSERT_EQ(expectedStr, str);
+
+    payload->valuestring = "test";
+    payload->type = cJSON_String;
+    msg.payload = payload;
+    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    str = TelematicBridgeMsgWorker::JsonToString(json);
+    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":\"test\",\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
+    ASSERT_EQ(expectedStr, str);
+
+    msg.payload = cJSON_Parse("[{\"test\":12}]");
+    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    str = TelematicBridgeMsgWorker::JsonToString(json);
+    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":[{\"test\":12}],\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
+    ASSERT_EQ(expectedStr, str);
+
+    json = TelematicBridgeMsgWorker::StringToJson("{\"test\":12}");
+    ASSERT_EQ(12,json["test"].asInt64());
 }

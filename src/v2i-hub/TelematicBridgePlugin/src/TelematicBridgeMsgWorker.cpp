@@ -117,23 +117,70 @@ namespace TelematicBridge
     string TelematicBridgeMsgWorker::JsonToString(const Json::Value &json)
     {
         Json::FastWriter fasterWirter;
-        string json_str = fasterWirter.write(json);
-        return json_str;
+        string jsonStr = fasterWirter.write(json);
+        boost::replace_all(jsonStr, "\\n", "");
+        boost::replace_all(jsonStr, "\n", "");
+        boost::replace_all(jsonStr, "\\t", "");
+        boost::replace_all(jsonStr, "\\", "");
+        return jsonStr;
     }
 
-    Json::Value TelematicBridgeMsgWorker::constructTelematicJSONPayload(const IvpMessage *msg)
+    Json::Value TelematicBridgeMsgWorker::StringToJson(const string &str)
+    {
+        Json::Value root;
+        Json::Reader reader;
+        bool parsingSuccessful = reader.parse(str, root);
+        if (!parsingSuccessful)
+        {
+            throw TelematicBridgeException("Error parsing the string");
+        }
+        return root;
+    }
+
+    Json::Value TelematicBridgeMsgWorker::ivpMessageToJson(const IvpMessage *msg)
     {
         Json::Value json;
-        json["type"] = msg->type;
-        json["subType"] = msg->subtype;
-        json["channel"] = msg->dsrcMetadata->channel;
-        json["psid"] = msg->dsrcMetadata->psid;
-        json["encoding"] = msg->encoding;
-        json["source"] = msg->source;
+        if (msg->type)
+        {
+            json["type"] = msg->type;
+        }
+
+        if (msg->subtype)
+        {
+            json["subType"] = msg->subtype;
+        }
+
+        if (msg->dsrcMetadata)
+        {
+            json["channel"] = msg->dsrcMetadata->channel;
+            json["psid"] = msg->dsrcMetadata->psid;
+        }
+
+        if (msg->encoding)
+        {
+            json["encoding"] = msg->encoding;
+        }
+
+        if (msg->source)
+        {
+            json["source"] = msg->source;
+        }
         json["sourceId"] = msg->sourceId;
         json["flags"] = msg->flags;
         json["timestamp"] = msg->timestamp;
-        json["payload"] = msg->payload->valuestring;
+        if (msg->payload)
+        {
+            switch (msg->payload->type)
+            {
+            case cJSON_Number:
+                json["payload"] = (msg->payload->valueint == 0 ? msg->payload->valuedouble : msg->payload->valueint);
+                break;
+            default:
+                json["payload"] = StringToJson(cJSON_Print(msg->payload));
+                break;
+            }
+        }
+
         return json;
     }
 } // TelematicBridge
