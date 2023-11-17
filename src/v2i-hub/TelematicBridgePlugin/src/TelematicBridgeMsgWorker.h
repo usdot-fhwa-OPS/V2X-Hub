@@ -42,7 +42,7 @@ namespace TelematicBridge
          * @return string XML formatted J2735 message
          */
         static string ConvertJ2735FrameToXML(const MessageFrame_t *messageframe);
-        static int dynamic_buffer_append(const void *buffer, size_t size, void *app_key);
+        static int DynamicBufferAppend(const void *buffer, size_t size, void *app_key);
         /**
          * @brief convert JSON value into string
          * @param JSON input Json::Value
@@ -60,7 +60,7 @@ namespace TelematicBridge
          * @param IVPMessage V2xHub interval exchanged message
          * @return JSON value
          */
-        static Json::Value ivpMessageToJson(const IvpMessage *msg);
+        static Json::Value IvpMessageToJson(const IvpMessage *msg);
         TelematicBridgeMsgWorker() = delete;
         ~TelematicBridgeMsgWorker() = delete;
     };

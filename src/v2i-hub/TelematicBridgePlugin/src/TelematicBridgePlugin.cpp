@@ -14,7 +14,7 @@ namespace TelematicBridge
         {
             PLOG(logDEBUG2) << "Message Received."
                             << " Type: " << msg->type << ", SubType: " << msg->subtype << ", DSRC metadata: " << msg->dsrcMetadata << ", encoding: " << msg->encoding << ", source: " << msg->source << ", sourceId: " << msg->sourceId << ", flags: " << msg->flags << ", timestamp: " << msg->timestamp << ", payload: " << cJSON_Print(msg->payload);
-            auto json = TelematicBridgeMsgWorker::ivpMessageToJson(msg);
+            auto json = TelematicBridgeMsgWorker::IvpMessageToJson(msg);
             // Process J2735 message payload hex string
             if (strcasecmp(msg->type, Telematic_MSGTYPE_J2735_STRING) == 0)
             {

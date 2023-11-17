@@ -67,7 +67,7 @@ TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
     metadata.channel = 12;
     metadata.psid = 120;
     msg.dsrcMetadata = &metadata;
-    auto json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    auto json = TelematicBridgeMsgWorker::IvpMessageToJson(&msg);
     auto str = TelematicBridgeMsgWorker::JsonToString(json);
     string expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":12.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
     ASSERT_EQ(expectedStr, str);
@@ -75,7 +75,7 @@ TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
     payload->valueint = 13;
     payload->type = cJSON_Number;
     msg.payload = payload;
-    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    json = TelematicBridgeMsgWorker::IvpMessageToJson(&msg);
     str = TelematicBridgeMsgWorker::JsonToString(json);
     expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":13.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
     ASSERT_EQ(expectedStr, str);
@@ -83,13 +83,13 @@ TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
     payload->valuestring = "test";
     payload->type = cJSON_String;
     msg.payload = payload;
-    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    json = TelematicBridgeMsgWorker::IvpMessageToJson(&msg);
     str = TelematicBridgeMsgWorker::JsonToString(json);
     expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":\"test\",\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
     ASSERT_EQ(expectedStr, str);
 
     msg.payload = cJSON_Parse("[{\"test\":12}]");
-    json = TelematicBridgeMsgWorker::ivpMessageToJson(&msg);
+    json = TelematicBridgeMsgWorker::IvpMessageToJson(&msg);
     str = TelematicBridgeMsgWorker::JsonToString(json);
     expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":[{\"test\":12}],\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
     ASSERT_EQ(expectedStr, str);

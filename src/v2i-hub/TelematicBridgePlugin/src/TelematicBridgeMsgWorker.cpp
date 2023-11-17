@@ -79,7 +79,7 @@ namespace TelematicBridge
             &asn_DEF_MessageFrame,
             messageFrame,
             XER_F_CANONICAL,
-            dynamic_buffer_append,
+            DynamicBufferAppend,
             static_cast<void *>(&xml_buffer));
         if (encode_rval.encoded == -1)
         {
@@ -88,7 +88,7 @@ namespace TelematicBridge
         return string(xml_buffer.buffer);
     }
 
-    int TelematicBridgeMsgWorker::dynamic_buffer_append(const void *buffer, size_t size, void *app_key)
+    int TelematicBridgeMsgWorker::DynamicBufferAppend(const void *buffer, size_t size, void *app_key)
     {
         auto *xb = static_cast<buffer_structure_t *>(app_key);
 
@@ -137,7 +137,7 @@ namespace TelematicBridge
         return root;
     }
 
-    Json::Value TelematicBridgeMsgWorker::ivpMessageToJson(const IvpMessage *msg)
+    Json::Value TelematicBridgeMsgWorker::IvpMessageToJson(const IvpMessage *msg)
     {
         Json::Value json;
         if (msg->type)
