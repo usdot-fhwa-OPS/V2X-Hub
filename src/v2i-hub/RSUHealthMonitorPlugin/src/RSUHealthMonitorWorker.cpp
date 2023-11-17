@@ -145,7 +145,11 @@ namespace RSUHealthMonitor
                     }
                     else if (success)
                     {
-                        rsuStatuJson.append(populateJson(config.field, responseVal));
+                        auto json = populateJson(config.field, responseVal);
+                        for(const auto &key: json.getMemberNames())
+                        {
+                            rsuStatuJson[key] = json[key];
+                        }
                     }
                 }
             }
