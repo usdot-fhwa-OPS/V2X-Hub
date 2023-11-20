@@ -50,6 +50,9 @@ popd
 
 # GPS Parser
 pushd /tmp
+if [ -d "NemaTode" ]; then
+    rm -r NemaTode
+fi
 git clone https://github.com/ckgt/NemaTode.git
 cd NemaTode
 cmake .
@@ -59,6 +62,9 @@ popd
 
 # Nats C API
 pushd /tmp
+if [ -d "nats.c" ]; then
+    rm -r nats.c
+fi
 git clone https://github.com/nats-io/nats.c
 cd nats.c
 cmake . -DNATS_BUILD_NO_SPIN=ON
