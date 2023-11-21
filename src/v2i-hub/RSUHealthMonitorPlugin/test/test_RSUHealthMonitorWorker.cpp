@@ -87,7 +87,10 @@ namespace RSUHealthMonitor
         double expected_longitude = -77.1496;
         ASSERT_NEAR(expected_latitude, json["rsuGpsOutputStringLatitude"].asDouble(), 0.001);
         ASSERT_NEAR(expected_longitude, json["rsuGpsOutputStringLongitude"].asDouble(), 0.001);
-        rsuStatusJson.append(json);
+        for(const auto& key: json.getMemberNames())
+        {
+            rsuStatusJson[key] = json[key];
+        }
 
         snmp_response_obj intObj;
         intObj.type = snmp_response_obj::response_type::INTEGER;
@@ -95,11 +98,11 @@ namespace RSUHealthMonitor
 
         json = _rsuWorker->populateJson("rsuMode", intObj);
         ASSERT_EQ(4, json["rsuMode"].asInt64());
-        rsuStatusJson.append(json);
+        rsuStatusJson["rsuMode"] = json["rsuMode"];
 
         Json::FastWriter fasterWirter;
         string json_str = fasterWirter.write(rsuStatusJson);
-        string expectedStr = "[{\"rsuGpsOutputString\":\"$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62\",\"rsuGpsOutputStringLatitude\":38.955108330000002,\"rsuGpsOutputStringLongitude\":-77.149556669999996},{\"rsuMode\":4}]\n";
+        string expectedStr = "{\"rsuGpsOutputString\":\"$GPGGA,142440.00,3857.3065,N,07708.9734,W,2,18,0.65,86.18,M,-34.722,M,,*62\",\"rsuGpsOutputStringLatitude\":38.955108330000002,\"rsuGpsOutputStringLongitude\":-77.149556669999996,\"rsuMode\":4}\n";
         ASSERT_EQ(expectedStr, json_str);
         ASSERT_EQ(4, _rsuWorker->getJsonKeys(rsuStatusJson).size());
         ASSERT_EQ(1, _rsuWorker->getJsonKeys(json).size());

@@ -31,6 +31,9 @@ DEPENDENCIES="build-essential \
     wget \
     zip \
     zlib1g \
+    rapidjson-dev \
+    librapidxml-dev \
+    libprotobuf-c-dev \
     curl"
 
 # STOL library dependencies
