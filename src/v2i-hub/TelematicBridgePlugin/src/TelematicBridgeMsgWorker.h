@@ -4,10 +4,14 @@
 #include "TelematicBridgeException.h"
 #include "jsoncpp/json/json.h"
 #include <boost/algorithm/string.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 using namespace tmx::utils;
 using namespace std;
 using namespace tmx::messages;
+namespace pt = boost::property_tree;
 
 namespace TelematicBridge
 {
@@ -176,6 +180,19 @@ namespace TelematicBridge
             throw TelematicBridgeException("Error parsing the string");
         }
         return root;
+    }
+    /**
+     * @brief Convert XML string into JSON string
+     */
+    string xml2Json(const string &xml_str)
+    {
+        stringstream xmlss;
+        xmlss << xml_str;
+        pt::ptree root;
+        pt::read_xml(xmlss, root);
+        stringstream jsonss;
+        pt::write_json(jsonss, root, false);
+        return jsonss.str();
     }
     /**
      * @brief create JSON payload from given IVP message

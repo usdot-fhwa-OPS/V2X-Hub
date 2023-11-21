@@ -3,13 +3,9 @@
 
 #include "PluginClient.h"
 #include "TelematicBridgeMsgWorker.h"
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/xml_parser.hpp>
 
 using namespace tmx::utils;
 using namespace std;
-namespace pt = boost::property_tree;
 namespace TelematicBridge
 {
 
