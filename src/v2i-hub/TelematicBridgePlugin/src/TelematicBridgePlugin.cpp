@@ -53,7 +53,7 @@ namespace TelematicBridge
         if (_telematicUnitPtr)
         {
             _telematicUnitPtr->setUnit(unit);
-            _telematicUnitPtr->excludedTopics = _excludedTopics;
+            _telematicUnitPtr->updateExcludedTopics(_excludedTopics);
         }
     }
 

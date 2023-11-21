@@ -25,30 +25,40 @@ namespace TelematicBridge
 
     class TelematicUnit
     {
-    public:
+    private:
         mutex _unitMutex;
         mutex _availableTopicsMutex;
-        atomic<bool> _isConnected{false};
-        atomic<bool> _isRegistered{false};
+        mutex _excludedTopicsMutex;
+        atomic<bool> _isRegistered{false};                                    // Global variable to indicate whether the unit is registered with the NATS server
         unit_st _unit;                                                        // Global variable to store the unit information
-        vector<string> availableTopics;                                       // Global variable to store available topics
-        string excludedTopics;                                                // Global variable to store topics that are excluded by the users
-        vector<string> selectedTopics;                                        // Global variable to store selected topics confirmed by users
+        vector<string> _availableTopics;                                      // Global variable to store available topics
+        string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
+        vector<string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
         static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
         static CONSTEXPR const char *CHECK_STATUS = ".check_status";          // NATS subject to pub/sub checking unit status
-        unique_ptr<ThreadTimer> _natsRegisterTh;
-        natsConnection *_conn = nullptr; // Global NATS connection object
-        natsOptions *_opts = nullptr;
-        natsSubscription *subAvailableTopic = nullptr;
-        natsSubscription *subSelectedTopic = nullptr;
-        natsSubscription *subCheckStatus = nullptr;
-        int64_t TIME_OUT = 10000;
-        string _eventName;
-        string _eventLocation;
-        string _testingType;
+        natsConnection *_conn = nullptr;                                      // Global NATS connection object
+        natsSubscription *_subAvailableTopic = nullptr;                       // Global NATS subscription object
+        natsSubscription *_subSelectedTopic = nullptr;                        // Global NATS subscription object
+        natsSubscription *_subCheckStatus = nullptr;                          // Global NATS subscription object
+        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
+        string _eventName;                                                    // Testing event the unit is assigned to
+        string _eventLocation;                                                // Testing event location
+        string _testingType;                                                  // Testing type
+        static CONSTEXPR const char *LOCATION = "location";                   // location key used to find location value from JSON
+        static CONSTEXPR const char *TESTING_TYPE = "testing_type";           // testing_type key used to find testing_type value from JSON
+        static CONSTEXPR const char *EVENT_NAME = "event_name";               // event_name key used to find event_name value from JSON
+        static CONSTEXPR const char *UNIT_ID = "unit_id";                     // unit_id key used to find unit_id value from JSON
+        static CONSTEXPR const char *UNIT_NAME = "unit_name";                 // unit_name key used to find unit_name value from JSON
+        static CONSTEXPR const char *UNIT_TYPE = "unit_type";                 // unit_type key used to find unit_type value from JSON
+        static CONSTEXPR const char *TOPIC_NAME = "topic_name";               // topic_name key used to find topic_name value from JSON
+        static CONSTEXPR const char *TIMESTAMP = "timestamp";                 // timestamp key used to find timestamp value from JSON
+        static CONSTEXPR const char *PAYLOAD = "payload";                     // payload key used to find payload value from JSON
+        static CONSTEXPR const char *TOPICS = "topics";                       // topics key used to find topics value from JSON
+        static CONSTEXPR const char *NAME = "name";                           // topics key used to find topics value from JSON
 
+    public:
         /**
          *@brief Construct telematic unit
          */
@@ -60,29 +70,6 @@ namespace TelematicBridge
          * @param uint16_t The timeout for between connection attempts
          */
         void connect(const string &natsURL, uint16_t natsConnAttempts, uint16_t natsConnTimeout);
-
-        /**
-         * @brief A function to update available topics global variables when discovering a new topic.
-         */
-        void updateAvailableTopics(const string &newTopic);
-
-        /**
-         * @brief A function to publish message stream into NATS server
-         */
-        void publishMessage(const string &topic, const Json::Value &payload);
-
-        /**
-         * @brief A function to update global unit variable
-         * @param unit_st object that has the unit id, type and name information
-         */
-        void setUnit(unit_st unit);
-
-        /**
-         * @brief Check if the given topic is inside the selectedTopics list
-         * @param string A topic to check for existence
-         * @return boolean indicator whether the input topic eixst.
-         */
-        bool inSelectedTopics(const string &topic);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
@@ -107,6 +94,66 @@ namespace TelematicBridge
          * @brief A NATS replier to publish unit status upon receiving a request for status check from telematic server.
          */
         void checkStatusReplier();
+
+        /**
+         * @brief A function to publish message stream into NATS server
+         */
+        void publishMessage(const string &topic, const Json::Value &payload);
+
+        /**
+         * @brief A function to parse a JSON string and create a JSON object.
+         * @param string input json string
+         * @return Json::Value
+         */
+        static Json::Value parseJson(const string &jsonStr);
+
+        /**
+         * @brief construct available topic response
+         * @param unit_st struct that contains unit related information
+         * @param vector of available topics
+         * @param string Excluded topics separated by commas
+         */
+        static string constructAvailableTopicsReplyString(const unit_st &unit, const vector<string> &availableTopicList, const string &excludedTopics);
+
+        /**
+         * @brief Update isregisterd indicator
+         */
+        void setRegistered(bool isRegistered);
+
+        /**
+         * @brief A function to update available topics global variables when discovering a new topic.
+         */
+        void updateAvailableTopics(const string &newTopic);
+
+        /**
+         * @brief construct Json data string that will be streamed into the cloud by a publisher
+         * @param unit_st struct that contains unit related information
+         * @param string Event location
+         * @param string Testing type
+         * @param string Event name
+         * @param string Topic name is a combination of type_subtype_source from TMX IVPMessage
+         * @param string Payload is the actual data generated by V2xHub plugin
+         */
+        string constructPublishedDataString(const unit_st &unit, const string &_eventLocation, const string &_testingType, const string &_eventName, const string &topicName, const Json::Value payload);
+
+        /**
+         * @brief A function to update global unit variable
+         * @param unit_st object that has the unit id, type and name information
+         */
+        void setUnit(unit_st unit);
+
+        /**
+         * @brief A function to update excluded topics.
+         * @param string Excluded topics separated by commas
+         */
+        void updateExcludedTopics(const string &excludedTopics);
+
+        /**
+         * @brief Check if the given topic is inside the selectedTopics list
+         * @param string A topic to check for existence
+         * @return boolean indicator whether the input topic eixst.
+         */
+        bool inSelectedTopics(const string &topic);
 
         static void onAvailableTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
         static void onSelectedTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
