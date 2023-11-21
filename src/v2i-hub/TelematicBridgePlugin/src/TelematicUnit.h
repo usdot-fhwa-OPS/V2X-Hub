@@ -27,8 +27,8 @@ namespace TelematicBridge
     public:
         mutex _unitMutex;
         mutex _availableTopicsMutex;
-        atomic<bool> isConnected {false};
-        atomic<bool> isRegistered{false};
+        atomic<bool> _isConnected {false};
+        atomic<bool> _isRegistered{false};
         unit_st _unit;                                                          // Global variable to store the unit information
         vector<string> availableTopics;                                         // Global variable to store available topics
         vector<string> selectedTopics;                                          // Global variable to store selected topics confirmed by users

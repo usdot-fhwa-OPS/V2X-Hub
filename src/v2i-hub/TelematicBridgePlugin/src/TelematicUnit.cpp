@@ -30,24 +30,24 @@ namespace TelematicBridge
 
     void TelematicUnit::connect(const string &natsURL, uint16_t natsConnAttempts, uint16_t natsConnTimeout)
     {
-        if (!isConnected)
+        // Reset connection and registration status based on the latest config update
+        _isConnected = false;
+        _isRegistered = false;
+        PLOG(logINFO) << "Trying to connect to " << natsURL << " attempts: " << natsConnAttempts << ", nats connect timeout: " << natsConnTimeout;
+        // auto s = natsConnection_Connect(&_conn, _opts);
+        auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
+        PLOG(logINFO) << "natsConnection_Connect returned: " << natsStatus_GetText(s);
+        if (s == NATS_OK)
         {
-            PLOG(logINFO) << "Trying to connect to " << natsURL << " attempts: " << natsConnAttempts << ", nats connect timeout: " << natsConnTimeout;
-            // auto s = natsConnection_Connect(&_conn, _opts);
-            auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
-            PLOG(logINFO) << "natsConnection_Connect returned: " << natsStatus_GetText(s);
-            if (s == NATS_OK)
-            {
-                isConnected = true;
-                registerUnitRequestor();
-            }
-            else
-            {
-                isConnected = false;
-                nats_PrintLastErrorStack(stderr);
-                printf("NATS Connection Error: %u - %s\n", s, natsStatus_GetText(s));
-                throw TelematicBridgeException(natsStatus_GetText(s));
-            }
+            _isConnected = true;
+            registerUnitRequestor();
+        }
+        else
+        {
+            _isConnected = false;
+            nats_PrintLastErrorStack(stderr);
+            printf("NATS Connection Error: %u - %s\n", s, natsStatus_GetText(s));
+            throw TelematicBridgeException(natsStatus_GetText(s));
         }
     }
 
@@ -69,7 +69,7 @@ namespace TelematicBridge
 
     void TelematicUnit::registerUnitRequestor()
     {
-        while (!isRegistered)
+        while (!_isRegistered)
         {
             PLOG(logINFO) << "Inside register unit requestor";
             natsMsg *reply = nullptr;
@@ -77,8 +77,7 @@ namespace TelematicBridge
             auto s = natsConnection_RequestString(&reply, _conn, REGISTER_UNIT_TOPIC, payload.c_str(), TIME_OUT);
             if (s == NATS_OK)
             {
-                isRegistered = true;
-                PLOG(logINFO) << "Received regitered reply: " << natsMsg_GetData(reply);
+                PLOG(logINFO) << "Received registered reply: " << natsMsg_GetData(reply);
                 Json::Value root;
                 Json::Reader reader;
                 bool parsingSuccessful = reader.parse(natsMsg_GetData(reply), root);
@@ -86,29 +85,35 @@ namespace TelematicBridge
                 {
                     throw TelematicBridgeException("Error parsing the reply message");
                 }
-                if (root.isMember("location"))
+
+                if (root.isMember("location") && root.isMember("location") && root.isMember("event_name"))
                 {
                     _eventLocation = root["location"].asString();
-                }
-                if (root.isMember("location"))
-                {
                     _testingType = root["testing_type"].asString();
-                }
-                if (root.isMember("event_name"))
-                {
                     _eventName = root["event_name"].asString();
+
+                    // Unit is registered when server responds with event information (location, testing_type, event_name)
+                    _isRegistered = true;
+
+                    // Provide below services when the unit is registered
+                    availableTopicsReplier();
+                    selectedTopicsReplier();
+                    checkStatusReplier();
                 }
-                availableTopicsReplier();
-                selectedTopicsReplier();
-                checkStatusReplier();
+                else
+                {
+                    _isRegistered = false;
+                    PLOG(logERROR) << "Failed to register unit (=" << _unit.unitId << "). The unit is not registered with an active event!";
+                }
             }
             else
             {
-                isRegistered = false;
+                _isRegistered = false;
                 nats_PrintLastErrorStack(stderr);
-                printf("NATS regiter Error: %u - %s\n", s, natsStatus_GetText(s));
+                PLOG(logERROR) << "NATS regsiter Error: " << s << "-" << natsStatus_GetText(s);
             }
             natsMsg_Destroy(reply);
+            sleep(1);
         }
     }
 
@@ -161,7 +166,7 @@ namespace TelematicBridge
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);
         auto s = natsConnection_PublishString(_conn, pubMsgTopic.c_str(), jsonStr.c_str());
-        if (s != NATS_OK)
+        if (s == NATS_OK)
         {
             PLOG(logINFO) << "Topic: " << pubMsgTopic << ". Published: " << jsonStr;
         }

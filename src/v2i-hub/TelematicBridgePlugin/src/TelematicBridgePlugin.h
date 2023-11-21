@@ -27,6 +27,7 @@ namespace TelematicBridge
     public:
         explicit TelematicBridgePlugin(const string &name);
         void OnConfigChanged(const char *key, const char *value) override;
+        void OnStateChange(IvpPluginState state) override;
         void UpdateConfigSettings();
         ~TelematicBridgePlugin() override = default;
     };

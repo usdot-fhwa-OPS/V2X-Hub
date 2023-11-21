@@ -57,14 +57,24 @@ namespace TelematicBridge
         }
     }
 
+    void TelematicBridgePlugin::OnStateChange(IvpPluginState state)
+    {
+        PluginClient::OnStateChange(state);
+        if (state == IvpPluginState_registered)
+        {
+            UpdateConfigSettings();
+            if (_telematicUnitPtr)
+            {
+                _telematicUnitPtr->connect(_natsURL, _natsConnAttempts, _natsConnTimeOut);
+            }
+        }
+    }
+
     void TelematicBridgePlugin::OnConfigChanged(const char *key, const char *value)
     {
+        PLOG(logDEBUG1) << "OnConfigChanged called";
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
-        if (_telematicUnitPtr)
-        {
-            _telematicUnitPtr->connect(_natsURL, _natsConnAttempts, _natsConnTimeOut);
-        }
     }
 }
 
