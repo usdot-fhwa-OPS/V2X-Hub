@@ -1,0 +1,94 @@
+## NATS Publisher/Subscriber
+### NATS Connections and registration
+#### Telematic plugin sends registration request to telematic server
+##### Subject
+NATS subject: *.register_unit
+##### Request
+```
+{
+  "unit_id": "<unit_id>"
+}
+```
+##### Response
+```
+{
+  "unit_id": "<unit_id>",
+  "unit_type": "infrastructure",
+  "unit_name": "East Intersection",
+  "timestamp": "1678998191815233965",
+  "event_name": "wfd_integration_testing",
+  "location": "TFHRC",
+  "testing_type": "Integration"
+}
+```
+
+### Available topics
+#### Telematic plugin receives request from telematic UI
+##### Subject
+NATS subject: <unit_id>.available_topics
+##### Request 
+```
+{
+  "unit_id": "<unit_id>"
+}
+```
+##### Reply
+
+```
+ {
+  "unit_id": "<unit_id>",
+  "unit_type": "infrastructure",
+  "unit_name": "East Intersection",
+  "timestamp": "1678998191815233965",
+  "event_name": "wfd_integration_testing",
+  "location": "TFHRC",
+  "testing_type": "Integration",
+  "topics": [
+    {
+      "name": "J2735_TMSG03-P_CARMAStreetsPlugin"
+    },
+    {
+      "name": "<topic_name_2>"
+    }
+  ]
+}
+```
+
+### Selected topics
+#### Telematic plugin receives selected topics from telematic UI
+##### Subject
+NATS subject: <unit_id>.publish_topics
+#### Request
+```
+{
+  "unit_id": "<unit_id>",
+  "unit_type": "infrastructure",
+  "timestamp": 1663084528513000400,
+  "event_name": "wfd_integration_testing",
+  "location": "TFHRC",
+  "testing_type": "Integration",
+  "topics": [
+    "<topic_name_1>",
+    "<topic_name_2>"
+  ]
+}
+```
+##### Reply
+```
+"request received!"
+```
+
+## Check status
+#### Telematic plugin receives live status request from telematic server
+##### Subject
+NATS subject: <unit_id>.check_status
+##### Request
+```
+{
+  "unit_id": "<unit_id>"
+}
+```
+##### Reponse
+```
+"OK"
+```

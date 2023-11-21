@@ -3,7 +3,7 @@ PROJECT (TelematicBridgePlugin VERSION 7.5.1 LANGUAGES CXX)
 set (TMX_PLUGIN_NAME "Telematic Bridge")
 
 BuildTmxPlugin()
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils jsoncpp)
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils jsoncpp nats)
 
 ####################################################
 ##################  Testing  #######################

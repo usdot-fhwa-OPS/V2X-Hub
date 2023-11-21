@@ -3,22 +3,32 @@
 
 #include "PluginClient.h"
 #include "TelematicBridgeMsgWorker.h"
+#include "TelematicUnit.h"
 #include "xml2json.h"
 
 using namespace tmx::utils;
 using namespace std;
 namespace TelematicBridge
 {
-
-   
     class TelematicBridgePlugin : public tmx::utils::PluginClient
     {
     private:
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
+        shared_ptr<TelematicUnit> _telematicUnitPtr;
+        int _natsConnAttempts;
+        //The time, in milliseconds, allowed for an individual connect (or reconnect) to complete.
+        int64_t _natsConnTimeOut;
+        string _unitId;
+        string _unitType;
+        string _unitName;
+        string _natsURL;
+        mutex _configMutex;
         void OnMessageReceived(IvpMessage *msg);
 
     public:
-        explicit TelematicBridgePlugin(const string& name);
+        explicit TelematicBridgePlugin(const string &name);
+        void OnConfigChanged(const char *key, const char *value) override;
+        void UpdateConfigSettings();
         ~TelematicBridgePlugin() override = default;
     };
 
