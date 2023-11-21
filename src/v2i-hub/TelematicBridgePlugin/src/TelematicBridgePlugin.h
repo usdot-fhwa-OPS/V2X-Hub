@@ -4,7 +4,6 @@
 #include "PluginClient.h"
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
-#include "xml2json.h"
 
 using namespace tmx::utils;
 using namespace std;
