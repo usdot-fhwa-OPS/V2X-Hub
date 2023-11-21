@@ -8,6 +8,7 @@
 #include "ThreadTimer.h"
 #include "TelematicBridgeException.h"
 #include <jsoncpp/json/json.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace tmx::utils;
@@ -27,17 +28,18 @@ namespace TelematicBridge
     public:
         mutex _unitMutex;
         mutex _availableTopicsMutex;
-        atomic<bool> _isConnected {false};
+        atomic<bool> _isConnected{false};
         atomic<bool> _isRegistered{false};
-        unit_st _unit;                                                          // Global variable to store the unit information
-        vector<string> availableTopics;                                         // Global variable to store available topics
-        vector<string> selectedTopics;                                          // Global variable to store selected topics confirmed by users
-        static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";    // NATS subject to pub/sub available topics
-        static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit";   // NATS subject to pub/sub registering unit
-        static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";        // NATS subject to publish data stream
-        static CONSTEXPR const char *CHECK_STATUS = ".check_status";            // NATS subject to pub/sub checking unit status
+        unit_st _unit;                                                        // Global variable to store the unit information
+        vector<string> availableTopics;                                       // Global variable to store available topics
+        string excludedTopics;                                                // Global variable to store topics that are excluded by the users
+        vector<string> selectedTopics;                                        // Global variable to store selected topics confirmed by users
+        static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
+        static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
+        static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
+        static CONSTEXPR const char *CHECK_STATUS = ".check_status";          // NATS subject to pub/sub checking unit status
         unique_ptr<ThreadTimer> _natsRegisterTh;
-        natsConnection *_conn = nullptr;                                        // Global NATS connection object
+        natsConnection *_conn = nullptr; // Global NATS connection object
         natsOptions *_opts = nullptr;
         natsSubscription *subAvailableTopic = nullptr;
         natsSubscription *subSelectedTopic = nullptr;
@@ -50,9 +52,9 @@ namespace TelematicBridge
         /**
          *@brief Construct telematic unit
          */
-        explicit TelematicUnit();
+        explicit TelematicUnit() = default;
         /**
-         * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         * 
+         * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param const string NATS server URL
          * @param uint16_t The numbers of attempts to make connections to NATS server
          * @param uint16_t The timeout for between connection attempts
@@ -79,8 +81,8 @@ namespace TelematicBridge
          * @brief Check if the given topic is inside the selectedTopics list
          * @param string A topic to check for existence
          * @return boolean indicator whether the input topic eixst.
-        */
-        bool inSelectedTopics(const string& topic);
+         */
+        bool inSelectedTopics(const string &topic);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.

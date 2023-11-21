@@ -21,6 +21,7 @@ namespace TelematicBridge
         string _unitType;
         string _unitName;
         string _natsURL;
+        string _excludedTopics;
         mutex _configMutex;
         void OnMessageReceived(IvpMessage *msg);
 

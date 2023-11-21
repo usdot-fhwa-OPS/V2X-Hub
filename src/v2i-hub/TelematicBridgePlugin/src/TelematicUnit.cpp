@@ -2,41 +2,15 @@
 
 namespace TelematicBridge
 {
-    TelematicUnit::TelematicUnit()
-    {
-        // natsStatus s;
-        // s = natsOptions_SetTimeout(_opts, natsConnTimeout);
-        // if (s == NATS_OK)
-        // {
-        //     natsOptions_SetMaxReconnect(_opts, natsConnAttempts);
-        // }
-
-        // if (s == NATS_OK)
-        // {
-        //     s = natsOptions_SetRetryOnFailedConnect(_opts, true, nullptr, nullptr);
-        // }
-
-        // if (s == NATS_OK)
-        // {
-        // s = natsOptions_SetURL(_opts, natsURL);
-        // }
-
-        // if (s != NATS_OK)
-        // {
-        //     nats_PrintLastErrorStack(stderr);
-        //     throw TelematicBridgeException(natsStatus_GetText(s));
-        // }
-    }
-
     void TelematicUnit::connect(const string &natsURL, uint16_t natsConnAttempts, uint16_t natsConnTimeout)
     {
-        // Reset connection and registration status based on the latest config update
+        // Reset connection and registration status
         _isConnected = false;
         _isRegistered = false;
         PLOG(logINFO) << "Trying to connect to " << natsURL << " attempts: " << natsConnAttempts << ", nats connect timeout: " << natsConnTimeout;
         // auto s = natsConnection_Connect(&_conn, _opts);
         auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
-        PLOG(logINFO) << "natsConnection_Connect returned: " << natsStatus_GetText(s);
+        PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);
         if (s == NATS_OK)
         {
             _isConnected = true;
@@ -45,8 +19,6 @@ namespace TelematicBridge
         else
         {
             _isConnected = false;
-            nats_PrintLastErrorStack(stderr);
-            printf("NATS Connection Error: %u - %s\n", s, natsStatus_GetText(s));
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
     }
@@ -109,7 +81,6 @@ namespace TelematicBridge
             else
             {
                 _isRegistered = false;
-                nats_PrintLastErrorStack(stderr);
                 PLOG(logERROR) << "NATS regsiter Error: " << s << "-" << natsStatus_GetText(s);
             }
             natsMsg_Destroy(reply);
@@ -172,7 +143,6 @@ namespace TelematicBridge
         }
         else
         {
-            nats_PrintLastErrorStack(stderr);
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
     }
@@ -201,9 +171,12 @@ namespace TelematicBridge
             Json::Value topics;
             for (const auto &topic : obj->availableTopics)
             {
-                Json::Value topicJson;
-                topicJson["name"] = topic;
-                topics.append(topicJson);
+                if (!boost::icontains(obj->excludedTopics, topic))
+                {
+                    Json::Value topicJson;
+                    topicJson["name"] = topic;
+                    topics.append(topicJson);
+                }
             }
             payload["topics"] = topics;
             Json::FastWriter fasterWirter;
@@ -231,6 +204,10 @@ namespace TelematicBridge
             }
             if (root["topics"].isArray())
             {
+                // clear old selected topics
+                obj->selectedTopics.clear();
+
+                // update selected topics with selected topics from latest request
                 for (auto itr = root["topics"].begin(); itr != root["topics"].end(); itr++)
                 {
                     obj->selectedTopics.push_back(itr->asString());

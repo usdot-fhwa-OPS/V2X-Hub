@@ -13,28 +13,14 @@
             "description": "The log level for this plugin"
         },
         {
-            "key": "NATSConnectionTimeOut",
-            "default": "1000",
-            "description": "The log level for this plugin"
-            
-        },
-        {
-            "key": "NATSConnectionAttempts",
-            "default": "10",
-            "description": "The log level for this plugin"
-            
-        },
-        {
             "key": "NATSUrl",
             "default": "nats://127.0.0.1:4222",
-            "description": "The log level for this plugin"
-            
+            "description": "The log level for this plugin"            
         },
         {
             "key": "UnitId",
             "default": "v2xhub_id",
-            "description": "The log level for this plugin"
-            
+            "description": "The log level for this plugin"            
         },
         {
             "key": "UnitName",
@@ -45,8 +31,12 @@
         {
             "key": "UnitType",
             "default": "Infrastructure",
-            "description": "The log level for this plugin"
-            
+            "description": "The log level for this plugin"            
+        },
+        {
+            "key": "TopicExclusionList",
+            "default": "System_Alive_CommandPlugin,System_Alive_CARMAStreetsPlugin",
+            "description": "The list of topics are excluded from the available topic list."            
         }
     ]
 }

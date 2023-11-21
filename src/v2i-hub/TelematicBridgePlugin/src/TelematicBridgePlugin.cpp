@@ -41,12 +41,11 @@ namespace TelematicBridge
     void TelematicBridgePlugin::UpdateConfigSettings()
     {
         lock_guard<mutex> lock(_configMutex);
-        GetConfigValue<int64_t>("NATSConnectionTimeOut", _natsConnTimeOut);
-        GetConfigValue<int>("NATSConnectionAttempts", _natsConnAttempts);
         GetConfigValue<string>("NATSUrl", _natsURL);
         GetConfigValue<string>("UnitId", _unitId);
         GetConfigValue<string>("UnitName", _unitName);
         GetConfigValue<string>("UnitType", _unitType);
+        GetConfigValue<string>("TopicExclusionList", _excludedTopics);
         unit_st unit;
         unit.unitId = _unitId;
         unit.unitName = _unitName;
@@ -54,6 +53,7 @@ namespace TelematicBridge
         if (_telematicUnitPtr)
         {
             _telematicUnitPtr->setUnit(unit);
+            _telematicUnitPtr->excludedTopics = _excludedTopics;
         }
     }
 
@@ -72,7 +72,6 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::OnConfigChanged(const char *key, const char *value)
     {
-        PLOG(logDEBUG1) << "OnConfigChanged called";
         PluginClient::OnConfigChanged(key, value);
         UpdateConfigSettings();
     }
