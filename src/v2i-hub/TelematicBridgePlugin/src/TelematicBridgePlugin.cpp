@@ -17,12 +17,17 @@ namespace TelematicBridge
             // Process J2735 message payload hex string
             if (strcasecmp(msg->type, Telematic_MSGTYPE_J2735_STRING) == 0)
             {
-                auto messageFm = (MessageFrame_t *)malloc(sizeof(MessageFrame_t));
+                auto messageFm = (MessageFrame_t *)calloc(1, sizeof(MessageFrame_t));
                 DecodeJ2735Msg(msg->payload->valuestring, messageFm);
                 string xml_payload_str = ConvertJ2735FrameToXML(messageFm);
                 ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFm);
-                string json_payload_str = xml2json(xml_payload_str.c_str());
-                json["payload"] = StringToJson(json_payload_str);
+                stringstream xmlss;
+                xmlss << xml_payload_str;
+                pt::ptree root;
+                pt::read_xml(xmlss, root);
+                stringstream jsonss;
+                pt::write_json(jsonss, root, false);
+                json["payload"] = StringToJson(jsonss.str());
             }
 
             auto jsonStr = JsonToString(json);
