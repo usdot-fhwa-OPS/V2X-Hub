@@ -133,10 +133,10 @@ namespace TelematicBridge
         _telematicUnitPtr->clearSelectedTopics();
         ASSERT_FALSE(_telematicUnitPtr->inSelectedTopics(selectedTopic));
     }
-    TEST_F(test_TelematicUnit, updateRegisterStatus)
+    TEST_F(test_TelematicUnit, validateRegisterStatus)
     {
         string replyStr = "{\"event_name\":\"Test\",\"location\":\"Local\",\"testing_type\":\"Integration\"}";        
-        _telematicUnitPtr->updateRegisterStatus(replyStr);
+        _telematicUnitPtr->validateRegisterStatus(replyStr);
         ASSERT_EQ("Local", _telematicUnitPtr->getEventLocation());
         ASSERT_EQ("Test", _telematicUnitPtr->getEventName());
         ASSERT_EQ("Integration", _telematicUnitPtr->getTestingType());

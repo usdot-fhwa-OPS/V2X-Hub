@@ -31,9 +31,9 @@ namespace TelematicBridge
             {
                 auto replyStr = natsMsg_GetData(reply);
                 PLOG(logINFO) << "Received registered reply: " << replyStr;
-                
+
                 // Unit is registered when server responds with event information (location, testing_type, event_name)
-                isRegistered = updateRegisterStatus(replyStr);
+                isRegistered = validateRegisterStatus(replyStr);
                 natsMsg_Destroy(reply);
             }
             else
@@ -52,7 +52,7 @@ namespace TelematicBridge
         }
     }
 
-    bool TelematicUnit::updateRegisterStatus(const string &registerReply)
+    bool TelematicUnit::validateRegisterStatus(const string &registerReply)
     {
         auto root = parseJson(registerReply);
         if (root.isMember(LOCATION) && root.isMember(TESTING_TYPE) && root.isMember(EVENT_NAME))

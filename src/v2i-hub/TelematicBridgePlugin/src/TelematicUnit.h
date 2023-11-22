@@ -122,9 +122,9 @@ namespace TelematicBridge
         /**
          * @brief Update telematic unit registration status with the registration reply from NATS server
          * @param string Register reply in Json format
-         * @return True when status are updated, otherwise false.
+         * @return True when status are validated, otherwise false.
         */
-        bool updateRegisterStatus(const string& registerReply);
+        bool validateRegisterStatus(const string& registerReply);
 
         /**
          * @brief construct Json data string that will be streamed into the cloud by a publisher
