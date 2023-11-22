@@ -116,9 +116,9 @@ namespace TelematicBridge
             const auto obj = (TelematicUnit *)object;
             if (obj)
             {
-                auto reply = constructAvailableTopicsReplyString(obj->_unit, obj->_availableTopics, obj->_excludedTopics);
-                PLOG(logDEBUG3) << "Available topics replied! " << reply;
+                auto reply = constructAvailableTopicsReplyString(obj->getUnit(), obj->getEventLocation(), obj->getTestingType(), obj->getEventName(), obj->getAvailableTopics(), obj->getExcludedTopics());
                 natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
+                PLOG(logDEBUG3) << "Available topics replied! " << reply;
             }
             natsMsg_Destroy(msg);
         }
@@ -136,17 +136,17 @@ namespace TelematicBridge
             {
                 auto obj = (TelematicUnit *)object;
                 // clear old selected topics
-                obj->_selectedTopics.clear();
+                obj->clearSelectedTopics();
 
                 // update selected topics with selected topics from latest request
                 for (auto itr = root[TOPICS].begin(); itr != root[TOPICS].end(); itr++)
                 {
-                    obj->_selectedTopics.push_back(itr->asString());
+                    obj->addSelectedTopic(itr->asString());
                 }
             }
             string reply = "request received!";
-            PLOG(logDEBUG3) << "Selected topics replied: " << reply;
             natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
+            PLOG(logDEBUG3) << "Selected topics replied: " << reply;
             natsMsg_Destroy(msg);
         }
     }
@@ -155,15 +155,13 @@ namespace TelematicBridge
     {
         if (natsMsg_GetReply(msg) != nullptr)
         {
-            PLOG(logDEBUG3) << "Received check status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);
-            string payload = "OK";
-            PLOG(logDEBUG3) << "Status Check: " << payload;
-            natsConnection_PublishString(nc, natsMsg_GetReply(msg), payload.c_str());
+            natsConnection_PublishString(nc, natsMsg_GetReply(msg), "OK");
+            PLOG(logDEBUG3) << "Received check status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
             natsMsg_Destroy(msg);
         }
     }
 
-    string TelematicUnit::constructPublishedDataString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const string &topicName, const Json::Value& payload) const
+    string TelematicUnit::constructPublishedDataString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const string &topicName, const Json::Value &payload) const
     {
         Json::Value message;
         message[UNIT_ID] = unit.unitId;
@@ -192,12 +190,15 @@ namespace TelematicBridge
         return root;
     }
 
-    string TelematicUnit::constructAvailableTopicsReplyString(const unit_st &unit, const vector<string> &availableTopicList, const string &excludedTopics)
+    string TelematicUnit::constructAvailableTopicsReplyString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const vector<string> &availableTopicList, const string &excludedTopics)
     {
         Json::Value message;
         message[UNIT_ID] = unit.unitId;
         message[UNIT_NAME] = unit.unitName;
         message[UNIT_TYPE] = unit.unitType;
+        message[LOCATION] = eventLocation;
+        message[TESTING_TYPE] = testingType;
+        message[EVENT_NAME] = eventName;
         message[TIMESTAMP] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         Json::Value topics;
         for (const auto &topic : availableTopicList)
@@ -213,12 +214,6 @@ namespace TelematicBridge
         Json::FastWriter fasterWirter;
         string reply = fasterWirter.write(message);
         return reply;
-    }
-
-    void TelematicUnit::setUnit(const unit_st& unit)
-    {
-        lock_guard<mutex> lock(_unitMutex);
-        _unit = unit;
     }
 
     void TelematicUnit::updateAvailableTopics(const string &newTopic)
@@ -244,6 +239,52 @@ namespace TelematicBridge
             return false;
         }
         return true;
+    }
+
+    void TelematicUnit::setUnit(const unit_st &unit)
+    {
+        lock_guard<mutex> lock(_unitMutex);
+        _unit = unit;
+    }
+
+    unit_st TelematicUnit::getUnit() const
+    {
+        return _unit;
+    }
+
+    string TelematicUnit::getEventName() const
+    {
+        return _eventName;
+    }
+
+    string TelematicUnit::getEventLocation() const
+    {
+        return _eventLocation;
+    }
+
+    string TelematicUnit::getTestingType() const
+    {
+        return _testingType;
+    }
+
+    vector<string> TelematicUnit::getAvailableTopics() const
+    {
+        return _availableTopics;
+    }
+
+    string TelematicUnit::getExcludedTopics() const
+    {
+        return _excludedTopics;
+    }
+
+    void TelematicUnit::addSelectedTopic(const string &newSelectedTopic)
+    {
+        _selectedTopics.push_back(newSelectedTopic);
+    }
+
+    void TelematicUnit::clearSelectedTopics()
+    {
+        _selectedTopics.clear();
     }
 
     TelematicUnit::~TelematicUnit()

@@ -17,16 +17,12 @@ namespace TelematicBridge
     TEST_F(test_TelematicUnit, setUnit)
     {
         ASSERT_NO_THROW(_telematicUnitPtr->setUnit(unit));
+        ASSERT_EQ(unit.unitId, _telematicUnitPtr->getUnit().unitId);
     }
 
     TEST_F(test_TelematicUnit, updateExcludedTopics)
     {
         ASSERT_NO_THROW(_telematicUnitPtr->updateExcludedTopics("test_topic"));
-    }
-
-    TEST_F(test_TelematicUnit, inSelectedTopics)
-    {
-        ASSERT_FALSE(_telematicUnitPtr->inSelectedTopics("test_topic"));
     }
 
     TEST_F(test_TelematicUnit, updateAvailableTopics)
@@ -38,7 +34,10 @@ namespace TelematicBridge
     {
         vector<string> topics = {"test_topic", "excluded_topic"};
         string excluded_topic = "excluded_topic";
-        auto reply = TelematicUnit::constructAvailableTopicsReplyString(unit, topics, excluded_topic);
+        string eventLocation = "location";
+        string testingType = "unit_test";
+        string eventName = "testing";
+        auto reply = TelematicUnit::constructAvailableTopicsReplyString(unit, eventLocation, testingType, eventName, topics, excluded_topic);
         auto json = TelematicUnit::parseJson(reply);
         ASSERT_EQ("test_topic", json["topics"][0]["name"].asString());
     }
@@ -113,5 +112,23 @@ namespace TelematicBridge
     TEST_F(test_TelematicUnit, connect)
     {
         ASSERT_THROW(_telematicUnitPtr->connect("nats://127.0.0.1:4222"), TelematicBridgeException);
+    }
+
+    TEST_F(test_TelematicUnit, getters)
+    {
+        ASSERT_EQ(0, _telematicUnitPtr->getAvailableTopics().size());
+        ASSERT_EQ("", _telematicUnitPtr->getEventLocation());
+        ASSERT_EQ("", _telematicUnitPtr->getEventName());
+        ASSERT_EQ("", _telematicUnitPtr->getExcludedTopics());
+        ASSERT_EQ("", _telematicUnitPtr->getTestingType());
+    }
+
+    TEST_F(test_TelematicUnit, selectedTopics)
+    {
+        string selectedTopic = "test_selected_topics";
+        _telematicUnitPtr->addSelectedTopic(selectedTopic);
+        ASSERT_TRUE(_telematicUnitPtr->inSelectedTopics(selectedTopic));
+        _telematicUnitPtr->clearSelectedTopics();
+        ASSERT_FALSE(_telematicUnitPtr->inSelectedTopics(selectedTopic));
     }
 }
