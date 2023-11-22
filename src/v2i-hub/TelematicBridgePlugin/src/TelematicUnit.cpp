@@ -29,18 +29,9 @@ namespace TelematicBridge
             auto s = natsConnection_RequestString(&reply, _conn, REGISTER_UNIT_TOPIC, payload.c_str(), TIME_OUT);
             if (s == NATS_OK)
             {
-                auto responseStr = natsMsg_GetData(reply);
-                PLOG(logINFO) << "Received registered reply: " << responseStr;
-                auto root = parseJson(responseStr);
-                if (root.isMember(LOCATION) && root.isMember(TESTING_TYPE) && root.isMember(EVENT_NAME))
-                {
-                    _eventLocation = root[LOCATION].asString();
-                    _testingType = root[TESTING_TYPE].asString();
-                    _eventName = root[EVENT_NAME].asString();
-
-                    // Unit is registered when server responds with event information (location, testing_type, event_name)
-                    _isRegistered = true;
-                }
+                auto replyStr = natsMsg_GetData(reply);
+                PLOG(logINFO) << "Received registered reply: " << replyStr;
+                updateRegisterStatus(replyStr);
                 natsMsg_Destroy(reply);
             }
             else
@@ -56,6 +47,20 @@ namespace TelematicBridge
             availableTopicsReplier();
             selectedTopicsReplier();
             checkStatusReplier();
+        }
+    }
+
+    void TelematicUnit::updateRegisterStatus(const string &registerReply)
+    {
+        auto root = parseJson(registerReply);
+        if (root.isMember(LOCATION) && root.isMember(TESTING_TYPE) && root.isMember(EVENT_NAME))
+        {
+            _eventLocation = root[LOCATION].asString();
+            _testingType = root[TESTING_TYPE].asString();
+            _eventName = root[EVENT_NAME].asString();
+
+            // Unit is registered when server responds with event information (location, testing_type, event_name)
+            _isRegistered = true;
         }
     }
 

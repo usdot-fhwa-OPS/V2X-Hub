@@ -121,6 +121,12 @@ namespace TelematicBridge
         void updateAvailableTopics(const string &newTopic);
 
         /**
+         * @brief Update telematic unit registration status with the registration reply from NATS server
+         * @param string Register reply in Json format
+        */
+        void updateRegisterStatus(const string& registerReply);
+
+        /**
          * @brief construct Json data string that will be streamed into the cloud by a publisher
          * @param unit_st struct that contains unit related information
          * @param string Event location
