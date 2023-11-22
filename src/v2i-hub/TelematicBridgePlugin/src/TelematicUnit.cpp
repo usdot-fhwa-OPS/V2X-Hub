@@ -115,9 +115,12 @@ namespace TelematicBridge
         {
             const auto obj = (TelematicUnit *)object;
             auto reply = constructAvailableTopicsReplyString(obj->getUnit(), obj->getEventLocation(), obj->getTestingType(), obj->getEventName(), obj->getAvailableTopics(), obj->getExcludedTopics());
-            natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
-            PLOG(logDEBUG3) << "Available topics replied! " << reply;
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
             natsMsg_Destroy(msg);
+            if (s == NATS_OK)
+            {
+                PLOG(logDEBUG3) << "Available topics replied: " << reply;
+            }
         }
     }
 
@@ -142,9 +145,12 @@ namespace TelematicBridge
                 }
             }
             string reply = "request received!";
-            natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
-            PLOG(logDEBUG3) << "Selected topics replied: " << reply;
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
             natsMsg_Destroy(msg);
+            if (s == NATS_OK)
+            {
+                PLOG(logDEBUG3) << "Selected topics replied: " << reply;
+            }
         }
     }
 
@@ -152,8 +158,11 @@ namespace TelematicBridge
     {
         if (natsMsg_GetReply(msg) != nullptr)
         {
-            natsConnection_PublishString(nc, natsMsg_GetReply(msg), "OK");
-            PLOG(logDEBUG3) << "Received check status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), "OK");
+            if (s == NATS_OK)
+            {
+                PLOG(logDEBUG3) << "Received check status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
+            }
             natsMsg_Destroy(msg);
         }
     }

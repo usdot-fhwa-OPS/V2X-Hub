@@ -34,7 +34,7 @@
         },
         {
             "key": "TopicExclusionList",
-            "default": "System_Alive_CommandPlugin,System_Alive_CARMAStreetsPlugin",
+            "default": "System_KeepAlive_CommandPlugin,System_KeepAlive_CARMAStreetsPlugin,System_KeepAlive_CDASimAdapter,System_KeepAlive_MessageReceiver",
             "description": "The list of topics are excluded from the available topic list."            
         }
     ]
