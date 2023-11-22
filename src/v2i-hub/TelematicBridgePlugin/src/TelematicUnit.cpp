@@ -111,15 +111,12 @@ namespace TelematicBridge
     {
         PLOG(logDEBUG3) << "Received available topics: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);
         // Sends a reply
-        if (natsMsg_GetReply(msg) != nullptr)
+        if (object && natsMsg_GetReply(msg) != nullptr)
         {
             const auto obj = (TelematicUnit *)object;
-            if (obj)
-            {
-                auto reply = constructAvailableTopicsReplyString(obj->getUnit(), obj->getEventLocation(), obj->getTestingType(), obj->getEventName(), obj->getAvailableTopics(), obj->getExcludedTopics());
-                natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
-                PLOG(logDEBUG3) << "Available topics replied! " << reply;
-            }
+            auto reply = constructAvailableTopicsReplyString(obj->getUnit(), obj->getEventLocation(), obj->getTestingType(), obj->getEventName(), obj->getAvailableTopics(), obj->getExcludedTopics());
+            natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
+            PLOG(logDEBUG3) << "Available topics replied! " << reply;
             natsMsg_Destroy(msg);
         }
     }
@@ -132,7 +129,7 @@ namespace TelematicBridge
         {
             auto msgStr = natsMsg_GetData(msg);
             auto root = parseJson(msgStr);
-            if (root.isMember(TOPICS) && root[TOPICS].isArray())
+            if (object && root.isMember(TOPICS) && root[TOPICS].isArray())
             {
                 auto obj = (TelematicUnit *)object;
                 // clear old selected topics

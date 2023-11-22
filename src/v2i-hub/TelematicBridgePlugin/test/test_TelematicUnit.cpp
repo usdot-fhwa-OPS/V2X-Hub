@@ -68,9 +68,9 @@ namespace TelematicBridge
     TEST_F(test_TelematicUnit, onSelectedTopicsCallback)
     {
         natsMsg *msg;
-        string data = "{\"data\":\"test\"}";
+        string data = "{\"topics\":\"test_topic\"}";
         natsMsg_Create(&msg, "test_subject", "Test_reply", data.c_str(), data.size());
-        ASSERT_NO_THROW(TelematicUnit::onSelectedTopicsCallback(nullptr, nullptr, msg, nullptr));
+        ASSERT_NO_THROW(TelematicUnit::onSelectedTopicsCallback(nullptr, nullptr, msg, _telematicUnitPtr.get()));
     }
 
     TEST_F(test_TelematicUnit, onAvailableTopicsCallback)
