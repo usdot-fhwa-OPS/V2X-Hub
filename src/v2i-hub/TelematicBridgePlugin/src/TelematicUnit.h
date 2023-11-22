@@ -19,8 +19,8 @@ namespace TelematicBridge
     using unit_st = struct unit
     {
         string unitId;   // Unique identifier for each unit
-        string unitType; // Unit categorized base on unit type: platform or infrastructure
         string unitName; // Descriptive name for each unit
+        string unitType; // Unit categorized base on unit type: platform or infrastructure
     };
 
     class TelematicUnit

@@ -55,6 +55,7 @@ namespace TelematicBridge
         ASSERT_EQ(eventLocation, json["location"].asString());
         ASSERT_EQ(testingType, json["testing_type"].asString());
         ASSERT_EQ(eventName, json["event_name"].asString());
+        ASSERT_THROW(TelematicUnit::parseJson("Invalid Json"), TelematicBridgeException);
     }
 
     TEST_F(test_TelematicUnit, onCheckStatusCallback)
@@ -68,9 +69,10 @@ namespace TelematicBridge
     TEST_F(test_TelematicUnit, onSelectedTopicsCallback)
     {
         natsMsg *msg;
-        string data = "{\"topics\":\"test_topic\"}";
+        string data = "{\"topics\":[\"test_topic\"]}";
         natsMsg_Create(&msg, "test_subject", "Test_reply", data.c_str(), data.size());
         ASSERT_NO_THROW(TelematicUnit::onSelectedTopicsCallback(nullptr, nullptr, msg, _telematicUnitPtr.get()));
+        ASSERT_TRUE(_telematicUnitPtr->inSelectedTopics("test_topic"));
     }
 
     TEST_F(test_TelematicUnit, onAvailableTopicsCallback)

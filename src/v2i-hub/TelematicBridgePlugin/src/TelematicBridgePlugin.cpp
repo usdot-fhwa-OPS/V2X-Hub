@@ -46,10 +46,7 @@ namespace TelematicBridge
         GetConfigValue<string>("UnitName", _unitName);
         GetConfigValue<string>("UnitType", _unitType);
         GetConfigValue<string>("TopicExclusionList", _excludedTopics);
-        unit_st unit;
-        unit.unitId = _unitId;
-        unit.unitName = _unitName;
-        unit.unitType = _unitType;
+        unit_st unit = {_unitId, _unitName, _unitType};
         if (_telematicUnitPtr)
         {
             _telematicUnitPtr->setUnit(unit);
