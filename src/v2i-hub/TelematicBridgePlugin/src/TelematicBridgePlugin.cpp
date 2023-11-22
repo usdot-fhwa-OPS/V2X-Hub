@@ -4,11 +4,8 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
     {
-<<<<<<< HEAD
         _telematicUnitPtr = make_shared<TelematicUnit>();
         UpdateConfigSettings();
-=======
->>>>>>> develop
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
@@ -68,7 +65,7 @@ namespace TelematicBridge
             UpdateConfigSettings();
             if (_telematicUnitPtr)
             {
-                _telematicUnitPtr->connect(_natsURL, _natsConnAttempts, _natsConnTimeOut);
+                _telematicUnitPtr->connect(_natsURL);
             }
         }
     }

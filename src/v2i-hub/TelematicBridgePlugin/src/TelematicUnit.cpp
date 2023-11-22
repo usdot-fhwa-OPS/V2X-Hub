@@ -2,7 +2,7 @@
 
 namespace TelematicBridge
 {
-    void TelematicUnit::connect(const string &natsURL, uint16_t natsConnAttempts, uint16_t natsConnTimeout)
+    void TelematicUnit::connect(const string &natsURL)
     {
         auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
         PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);

@@ -25,8 +25,7 @@
         {
             "key": "UnitName",
             "default": "East Intersection",
-            "description": "The log level for this plugin"
-            
+            "description": "The log level for this plugin"            
         },
         {
             "key": "UnitType",

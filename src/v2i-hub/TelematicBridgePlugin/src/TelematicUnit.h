@@ -66,10 +66,8 @@ namespace TelematicBridge
         /**
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param const string NATS server URL
-         * @param uint16_t The numbers of attempts to make connections to NATS server
-         * @param uint16_t The timeout for between connection attempts
          */
-        void connect(const string &natsURL, uint16_t natsConnAttempts, uint16_t natsConnTimeout);
+        void connect(const string &natsURL);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
