@@ -14,9 +14,6 @@ namespace TelematicBridge
     private:
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
         shared_ptr<TelematicUnit> _telematicUnitPtr;
-        int _natsConnAttempts;
-        //The time, in milliseconds, allowed for an individual connect (or reconnect) to complete.
-        int64_t _natsConnTimeOut;
         string _unitId;
         string _unitType;
         string _unitName;

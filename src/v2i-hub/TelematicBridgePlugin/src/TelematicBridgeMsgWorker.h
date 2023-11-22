@@ -78,7 +78,6 @@ namespace TelematicBridge
         /**
          * Decode J2735 message
          */
-        // messageFrame = (MessageFrame_t *)malloc(sizeof(MessageFrame_t));
         ostringstream erroross;
         vector<char> byte_buffer;
         if (!HexToBytes(hexPaylod, byte_buffer))

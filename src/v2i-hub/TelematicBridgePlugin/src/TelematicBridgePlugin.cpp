@@ -4,8 +4,11 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
     {
+<<<<<<< HEAD
         _telematicUnitPtr = make_shared<TelematicUnit>();
         UpdateConfigSettings();
+=======
+>>>>>>> develop
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
