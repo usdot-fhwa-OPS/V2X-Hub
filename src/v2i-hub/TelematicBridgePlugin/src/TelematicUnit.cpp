@@ -19,9 +19,9 @@ namespace TelematicBridge
     void TelematicUnit::registerUnitRequestor()
     {
         // Reset registration status
-        _isRegistered = false;
+        bool isRegistered = false;
 
-        while (!_isRegistered)
+        while (!isRegistered)
         {
             PLOG(logDEBUG2) << "Inside register unit requestor";
             natsMsg *reply = nullptr;
@@ -31,7 +31,9 @@ namespace TelematicBridge
             {
                 auto replyStr = natsMsg_GetData(reply);
                 PLOG(logINFO) << "Received registered reply: " << replyStr;
-                updateRegisterStatus(replyStr);
+                
+                // Unit is registered when server responds with event information (location, testing_type, event_name)
+                isRegistered = updateRegisterStatus(replyStr);
                 natsMsg_Destroy(reply);
             }
             else
@@ -41,7 +43,7 @@ namespace TelematicBridge
             sleep(1);
         }
 
-        if (_isRegistered)
+        if (isRegistered)
         {
             // Provide below services when the unit is registered
             availableTopicsReplier();
@@ -50,7 +52,7 @@ namespace TelematicBridge
         }
     }
 
-    void TelematicUnit::updateRegisterStatus(const string &registerReply)
+    bool TelematicUnit::updateRegisterStatus(const string &registerReply)
     {
         auto root = parseJson(registerReply);
         if (root.isMember(LOCATION) && root.isMember(TESTING_TYPE) && root.isMember(EVENT_NAME))
@@ -58,10 +60,9 @@ namespace TelematicBridge
             _eventLocation = root[LOCATION].asString();
             _testingType = root[TESTING_TYPE].asString();
             _eventName = root[EVENT_NAME].asString();
-
-            // Unit is registered when server responds with event information (location, testing_type, event_name)
-            _isRegistered = true;
+            return true;
         }
+        return false;
     }
 
     void TelematicUnit::availableTopicsReplier()

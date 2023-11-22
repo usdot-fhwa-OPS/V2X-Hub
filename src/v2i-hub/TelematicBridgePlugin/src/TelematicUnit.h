@@ -29,7 +29,6 @@ namespace TelematicBridge
         mutex _unitMutex;
         mutex _availableTopicsMutex;
         mutex _excludedTopicsMutex;
-        atomic<bool> _isRegistered{false};                                    // Global variable to indicate whether the unit is registered with the NATS server
         unit_st _unit;                                                        // Global variable to store the unit information
         vector<string> _availableTopics;                                      // Global variable to store available topics
         string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
@@ -123,8 +122,9 @@ namespace TelematicBridge
         /**
          * @brief Update telematic unit registration status with the registration reply from NATS server
          * @param string Register reply in Json format
+         * @return True when status are updated, otherwise false.
         */
-        void updateRegisterStatus(const string& registerReply);
+        bool updateRegisterStatus(const string& registerReply);
 
         /**
          * @brief construct Json data string that will be streamed into the cloud by a publisher
