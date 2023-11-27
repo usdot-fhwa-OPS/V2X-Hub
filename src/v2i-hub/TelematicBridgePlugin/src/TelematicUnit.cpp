@@ -62,6 +62,7 @@ namespace TelematicBridge
             _eventName = root[EVENT_NAME].asString();
             return true;
         }
+        PLOG(logERROR) << "Failed to register unit as event information (locatoin, testing type and event name) does not exist.";
         return false;
     }
 
