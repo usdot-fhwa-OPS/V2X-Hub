@@ -50,6 +50,7 @@ namespace TelematicBridge
         string topicName = "test_topic";
         Json::Value payload;
         payload["timestamp"] = 1701099016033;
+
         auto reply = _telematicUnitPtr->constructPublishedDataString(unit, eventLocation, testingType, eventName, topicName, payload);
         auto json = TelematicUnit::parseJson(reply);
         ASSERT_EQ(eventLocation, json["location"].asString());
@@ -57,6 +58,12 @@ namespace TelematicBridge
         ASSERT_EQ(eventName, json["event_name"].asString());
         ASSERT_EQ(1701099016033000, json["timestamp"].asUInt64());
         ASSERT_THROW(TelematicUnit::parseJson("Invalid Json"), TelematicBridgeException);
+
+        Json::Value payload2;
+        payload2["body"] = "invalid";
+        reply = _telematicUnitPtr->constructPublishedDataString(unit, eventLocation, testingType, eventName, topicName, payload2);
+        json = TelematicUnit::parseJson(reply);
+        ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 100);
     }
 
     TEST_F(test_TelematicUnit, onCheckStatusCallback)
@@ -136,11 +143,11 @@ namespace TelematicBridge
     }
     TEST_F(test_TelematicUnit, validateRegisterStatus)
     {
-        string replyStr = "{\"event_name\":\"Test\",\"location\":\"Local\",\"testing_type\":\"Integration\"}";        
+        string replyStr = "{\"event_name\":\"Test\",\"location\":\"Local\",\"testing_type\":\"Integration\"}";
         _telematicUnitPtr->validateRegisterStatus(replyStr);
         ASSERT_EQ("Local", _telematicUnitPtr->getEventLocation());
         ASSERT_EQ("Test", _telematicUnitPtr->getEventName());
         ASSERT_EQ("Integration", _telematicUnitPtr->getTestingType());
     }
-    
+
 }
