@@ -184,7 +184,7 @@ namespace TelematicBridge
         message[TESTING_TYPE] = testingType;
         message[EVENT_NAME] = eventName;
         message[TOPIC_NAME] = topicName;
-        message[TIMESTAMP] = payload.isMember("timestamp") ? payload["timestamp"].asUInt64() : duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        message[TIMESTAMP] = payload.isMember("timestamp") ? payload["timestamp"].asUInt64() * MILLI_TO_MICRO : duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
         message[PAYLOAD] = payload;
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);

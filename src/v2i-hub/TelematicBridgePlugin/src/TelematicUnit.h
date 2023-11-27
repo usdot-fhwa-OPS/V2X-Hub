@@ -56,6 +56,7 @@ namespace TelematicBridge
         static CONSTEXPR const char *PAYLOAD = "payload";                     // payload key used to find payload value from JSON
         static CONSTEXPR const char *TOPICS = "topics";                       // topics key used to find topics value from JSON
         static CONSTEXPR const char *NAME = "name";                           // topics key used to find topics value from JSON
+        static const uint16_t MILLI_TO_MICRO = 1000;
 
     public:
         /**
