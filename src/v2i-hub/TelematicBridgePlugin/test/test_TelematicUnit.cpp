@@ -49,12 +49,13 @@ namespace TelematicBridge
         string eventName = "testing";
         string topicName = "test_topic";
         Json::Value payload;
-        payload["body"] = "test_body";
+        payload["timestamp"] = 1701099016033;
         auto reply = _telematicUnitPtr->constructPublishedDataString(unit, eventLocation, testingType, eventName, topicName, payload);
         auto json = TelematicUnit::parseJson(reply);
         ASSERT_EQ(eventLocation, json["location"].asString());
         ASSERT_EQ(testingType, json["testing_type"].asString());
         ASSERT_EQ(eventName, json["event_name"].asString());
+        ASSERT_EQ(1701099016033000, json["timestamp"].asUInt64());
         ASSERT_THROW(TelematicUnit::parseJson("Invalid Json"), TelematicBridgeException);
     }
 
