@@ -15,27 +15,27 @@
         {
             "key": "NATSUrl",
             "default": "nats://127.0.0.1:4222",
-            "description": "The log level for this plugin"            
+            "description": "The NATS connection URL"            
         },
         {
             "key": "UnitId",
             "default": "v2xhub_id",
-            "description": "The log level for this plugin"            
+            "description": "The unique identifier for a telematic unit"            
         },
         {
             "key": "UnitName",
             "default": "East Intersection",
-            "description": "The log level for this plugin"            
+            "description": "A descriptive name for each telematic unit"            
         },
         {
             "key": "UnitType",
             "default": "Infrastructure",
-            "description": "The log level for this plugin"            
+            "description": "The type of telematic unit. V2xhub belongs to infrastructure category."            
         },
         {
             "key": "TopicExclusionList",
             "default": "System_KeepAlive_CommandPlugin,System_KeepAlive_CARMAStreetsPlugin,System_KeepAlive_CDASimAdapter,System_KeepAlive_MessageReceiver",
-            "description": "The list of topics are excluded from the available topic list."            
+            "description": "The list of topics are excluded from the available topic list. Topic name is a combination of message type, subtype and source separated by underscore. E.G: type_subtype_source"            
         }
     ]
 }
