@@ -7,7 +7,7 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
     {
-        _telematicUnitPtr = make_shared<TelematicUnit>();
+        _telematicUnitPtr = make_unique<TelematicUnit>();
         UpdateConfigSettings();
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);

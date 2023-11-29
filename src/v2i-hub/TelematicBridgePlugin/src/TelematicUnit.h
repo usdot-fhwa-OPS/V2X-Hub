@@ -54,6 +54,7 @@ namespace TelematicBridge
         static CONSTEXPR const char *TOPICS_KEY = "topics";                       // topics key used to find topics value from JSON
         static CONSTEXPR const char *NAME_KEY = "name";                           // topics key used to find topics value from JSON
         static const int MILLI_TO_MICRO = 1000;
+        static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
 
     public:
         /**

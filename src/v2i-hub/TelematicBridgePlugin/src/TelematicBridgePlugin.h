@@ -13,7 +13,7 @@ namespace TelematicBridge
     private:
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
         static CONSTEXPR const char *UNIT_TYPE_INFRASTRUCTURE = "Infrastructure";
-        std::shared_ptr<TelematicUnit> _telematicUnitPtr;
+        std::unique_ptr<TelematicUnit> _telematicUnitPtr;
         std::string _unitId;
         std::string _unitName;
         std::string _natsURL;
