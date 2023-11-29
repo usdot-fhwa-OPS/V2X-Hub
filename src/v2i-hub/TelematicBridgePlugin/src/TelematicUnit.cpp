@@ -139,14 +139,14 @@ namespace TelematicBridge
         {
             auto msgStr = natsMsg_GetData(msg);
             auto root = parseJson(msgStr);
-            if (object && root.isMember(TOPICS) && root[TOPICS].isArray())
+            if (object && root.isMember(TOPICS_KEY) && root[TOPICS_KEY].isArray())
             {
                 auto obj = (TelematicUnit *)object;
                 // clear old selected topics
                 obj->clearSelectedTopics();
 
                 // update selected topics with selected topics from latest request
-                for (auto itr = root[TOPICS].begin(); itr != root[TOPICS].end(); itr++)
+                for (auto itr = root[TOPICS_KEY].begin(); itr != root[TOPICS_KEY].end(); itr++)
                 {
                     obj->addSelectedTopic(itr->asString());
                 }
