@@ -25,7 +25,7 @@
         {
             "key": "UnitName",
             "default": "East Intersection",
-            "description": "A descriptive name for each telematic unit"            
+            "description": "A descriptive name for each telematic unit. It can also be the intersection name where this unit collect data from."            
         },
         {
             "key": "UnitType",
