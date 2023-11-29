@@ -1,5 +1,8 @@
 #include <gtest/gtest.h>
 #include "TelematicUnit.h"
+using namespace std;
+using namespace tmx::utils;
+using namespace std::chrono;
 
 namespace TelematicBridge
 {

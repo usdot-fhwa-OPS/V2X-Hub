@@ -1,5 +1,8 @@
 #include "TelematicBridgePlugin.h"
 
+using namespace tmx::utils;
+using namespace std;
+
 namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
@@ -45,12 +48,12 @@ namespace TelematicBridge
         GetConfigValue<string>("UnitId", _unitId);
         GetConfigValue<string>("UnitName", _unitName);
         GetConfigValue<string>("UnitType", _unitType);
-        GetConfigValue<string>("TopicExclusionList", _excludedTopics);
+        GetConfigValue<string>("MessageExclusionList", _excludedMessages);
         unit_st unit = {_unitId, _unitName, _unitType};
         if (_telematicUnitPtr)
         {
             _telematicUnitPtr->setUnit(unit);
-            _telematicUnitPtr->updateExcludedTopics(_excludedTopics);
+            _telematicUnitPtr->updateExcludedTopics(_excludedMessages);
         }
     }
 

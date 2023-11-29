@@ -10,29 +10,26 @@
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
 
-using namespace std;
-using namespace tmx::utils;
-using namespace std::chrono;
 
 namespace TelematicBridge
 {
     using unit_st = struct unit
     {
-        string unitId;   // Unique identifier for each unit
-        string unitName; // Descriptive name for each unit
-        string unitType; // Unit categorized base on unit type: platform or infrastructure
+        std::string unitId;   // Unique identifier for each unit
+        std::string unitName; // Descriptive name for each unit
+        std::string unitType; // Unit categorized base on unit type: platform or infrastructure
     };
 
     class TelematicUnit
     {
     private:
-        mutex _unitMutex;
-        mutex _availableTopicsMutex;
-        mutex _excludedTopicsMutex;
+        std::mutex _unitMutex;
+        std::mutex _availableTopicsMutex;
+        std::mutex _excludedTopicsMutex;
         unit_st _unit;                                                        // Global variable to store the unit information
-        vector<string> _availableTopics;                                      // Global variable to store available topics
-        string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
-        vector<string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
+        std::vector<std::string> _availableTopics;                                      // Global variable to store available topics
+        std::string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
+        std::vector<std::string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
         static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
@@ -42,9 +39,9 @@ namespace TelematicBridge
         natsSubscription *_subSelectedTopic = nullptr;                        // Global NATS subscription object
         natsSubscription *_subCheckStatus = nullptr;                          // Global NATS subscription object
         int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
-        string _eventName;                                                    // Testing event the unit is assigned to
-        string _eventLocation;                                                // Testing event location
-        string _testingType;                                                  // Testing type
+        std::string _eventName;                                                    // Testing event the unit is assigned to
+        std::string _eventLocation;                                                // Testing event location
+        std::string _testingType;                                                  // Testing type
         static CONSTEXPR const char *LOCATION_KEY = "location";                   // location key used to find location value from JSON
         static CONSTEXPR const char *TESTING_TYPE_KEY = "testing_type";           // testing_type key used to find testing_type value from JSON
         static CONSTEXPR const char *EVENT_NAME_KEY = "event_name";               // event_name key used to find event_name value from JSON
@@ -67,7 +64,7 @@ namespace TelematicBridge
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
          */
-        void connect(const string &natsURL);
+        void connect(const std::string &natsURL);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
@@ -98,14 +95,14 @@ namespace TelematicBridge
         /**
          * @brief A function to publish message stream into NATS server
          */
-        void publishMessage(const string &topic, const Json::Value &payload);
+        void publishMessage(const std::string &topic, const Json::Value &payload);
 
         /**
          * @brief A function to parse a JSON string and create a JSON object.
          * @param string input json string
          * @return Json::Value
          */
-        static Json::Value parseJson(const string &jsonStr);
+        static Json::Value parseJson(const std::string &jsonStr);
 
         /**
          * @brief construct available topic response
@@ -113,19 +110,19 @@ namespace TelematicBridge
          * @param vector of available topics
          * @param string Excluded topics separated by commas
          */
-        static string constructAvailableTopicsReplyString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const vector<string> &availableTopicList, const string &excludedTopics);
+        static std::string constructAvailableTopicsReplyString(const unit_st &unit, const std::string &eventLocation, const std::string &testingType, const std::string &eventName, const std::vector<std::string> &availableTopicList, const std::string &excludedTopics);
 
         /**
          * @brief A function to update available topics global variables when discovering a new topic.
          */
-        void updateAvailableTopics(const string &newTopic);
+        void updateAvailableTopics(const std::string &newTopic);
 
         /**
          * @brief Update telematic unit registration status when receiving registration reply from NATS server
          * @param string Register reply in Json format
          * @return True when reply with event information (location, testing type, event name), otherwise false.
         */
-        bool validateRegisterStatus(const string& registerReply);
+        bool validateRegisterStatus(const std::string& registerReply);
 
         /**
          * @brief construct Json data string that will be streamed into the cloud by a publisher
@@ -136,7 +133,7 @@ namespace TelematicBridge
          * @param string Topic name is a combination of type_subtype_source from TMX IVPMessage
          * @param Json::Value Payload is the actual data generated by V2xHub plugin
          */
-        string constructPublishedDataString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const string &topicName, const Json::Value &payload) const;
+        std::string constructPublishedDataString(const unit_st &unit, const std::string &eventLocation, const std::string &testingType, const std::string &eventName, const std::string &topicName, const Json::Value &payload) const;
 
         /**
          * @brief A function to update global unit variable
@@ -152,32 +149,32 @@ namespace TelematicBridge
         /**
          * @brief Return list of available topics
          */
-        vector<string> getAvailableTopics() const;
+        std::vector<std::string> getAvailableTopics() const;
 
         /**
          * @brief Return excluded topics string.
          */
-        string getExcludedTopics() const;
+        std::string getExcludedTopics() const;
 
         /**
          * @brief Return event name
          */
-        string getEventName() const;
+        std::string getEventName() const;
 
         /**
          * @brief Return event location
          */
-        string getEventLocation() const;
+        std::string getEventLocation() const;
 
         /**
          * @brief Return testing type
          */
-        string getTestingType() const;
+        std::string getTestingType() const;
 
         /**
          * @brief Add new selected topic into the selected topics list
          */
-        void addSelectedTopic(const string &newSelectedTopic);
+        void addSelectedTopic(const std::string &newSelectedTopic);
 
         /**
          * @brief Clear selected topics list
@@ -188,14 +185,14 @@ namespace TelematicBridge
          * @brief A function to update excluded topics.
          * @param string Excluded topics separated by commas
          */
-        void updateExcludedTopics(const string &excludedTopics);
+        void updateExcludedTopics(const std::string &excludedTopics);
 
         /**
          * @brief Check if the given topic is inside the selectedTopics list
          * @param string A topic to check for existence
          * @return boolean indicator whether the input topic eixst.
          */
-        bool inSelectedTopics(const string &topic);
+        bool inSelectedTopics(const std::string &topic);
 
         /**
          * @brief A callback function for available topic replier
