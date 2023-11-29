@@ -45,17 +45,17 @@ namespace TelematicBridge
         string _eventName;                                                    // Testing event the unit is assigned to
         string _eventLocation;                                                // Testing event location
         string _testingType;                                                  // Testing type
-        static CONSTEXPR const char *LOCATION = "location";                   // location key used to find location value from JSON
-        static CONSTEXPR const char *TESTING_TYPE = "testing_type";           // testing_type key used to find testing_type value from JSON
-        static CONSTEXPR const char *EVENT_NAME = "event_name";               // event_name key used to find event_name value from JSON
-        static CONSTEXPR const char *UNIT_ID = "unit_id";                     // unit_id key used to find unit_id value from JSON
-        static CONSTEXPR const char *UNIT_NAME = "unit_name";                 // unit_name key used to find unit_name value from JSON
-        static CONSTEXPR const char *UNIT_TYPE = "unit_type";                 // unit_type key used to find unit_type value from JSON
-        static CONSTEXPR const char *TOPIC_NAME = "topic_name";               // topic_name key used to find topic_name value from JSON
-        static CONSTEXPR const char *TIMESTAMP = "timestamp";                 // timestamp key used to find timestamp value from JSON
-        static CONSTEXPR const char *PAYLOAD = "payload";                     // payload key used to find payload value from JSON
-        static CONSTEXPR const char *TOPICS = "topics";                       // topics key used to find topics value from JSON
-        static CONSTEXPR const char *NAME = "name";                           // topics key used to find topics value from JSON
+        static CONSTEXPR const char *LOCATION_KEY = "location";                   // location key used to find location value from JSON
+        static CONSTEXPR const char *TESTING_TYPE_KEY = "testing_type";           // testing_type key used to find testing_type value from JSON
+        static CONSTEXPR const char *EVENT_NAME_KEY = "event_name";               // event_name key used to find event_name value from JSON
+        static CONSTEXPR const char *UNIT_ID_KEY = "unit_id";                     // unit_id key used to find unit_id value from JSON
+        static CONSTEXPR const char *UNIT_NAME_KEY = "unit_name";                 // unit_name key used to find unit_name value from JSON
+        static CONSTEXPR const char *UNIT_TYPE_KEY = "unit_type";                 // unit_type key used to find unit_type value from JSON
+        static CONSTEXPR const char *TOPIC_NAME_KEY = "topic_name";               // topic_name key used to find topic_name value from JSON
+        static CONSTEXPR const char *TIMESTAMP_KEY = "timestamp";                 // timestamp key used to find timestamp value from JSON
+        static CONSTEXPR const char *PAYLOAD_KEY = "payload";                     // payload key used to find payload value from JSON
+        static CONSTEXPR const char *TOPICS_KEY = "topics";                       // topics key used to find topics value from JSON
+        static CONSTEXPR const char *NAME_KEY = "name";                           // topics key used to find topics value from JSON
         static const int MILLI_TO_MICRO = 1000;
 
     public:
@@ -121,9 +121,9 @@ namespace TelematicBridge
         void updateAvailableTopics(const string &newTopic);
 
         /**
-         * @brief Update telematic unit registration status with the registration reply from NATS server
+         * @brief Update telematic unit registration status when receiving registration reply from NATS server
          * @param string Register reply in Json format
-         * @return True when status are validated, otherwise false.
+         * @return True when reply with event information (location, testing type, event name), otherwise false.
         */
         bool validateRegisterStatus(const string& registerReply);
 

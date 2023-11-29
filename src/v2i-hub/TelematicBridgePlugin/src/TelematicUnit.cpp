@@ -55,11 +55,11 @@ namespace TelematicBridge
     bool TelematicUnit::validateRegisterStatus(const string &registerReply)
     {
         auto root = parseJson(registerReply);
-        if (root.isMember(LOCATION) && root.isMember(TESTING_TYPE) && root.isMember(EVENT_NAME))
+        if (root.isMember(LOCATION_KEY) && root.isMember(TESTING_TYPE_KEY) && root.isMember(EVENT_NAME_KEY))
         {
-            _eventLocation = root[LOCATION].asString();
-            _testingType = root[TESTING_TYPE].asString();
-            _eventName = root[EVENT_NAME].asString();
+            _eventLocation = root[LOCATION_KEY].asString();
+            _testingType = root[TESTING_TYPE_KEY].asString();
+            _eventName = root[EVENT_NAME_KEY].asString();
             return true;
         }
         PLOG(logERROR) << "Failed to register unit as event information (locatoin, testing type and event name) does not exist.";
@@ -177,15 +177,15 @@ namespace TelematicBridge
     string TelematicUnit::constructPublishedDataString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const string &topicName, const Json::Value &payload) const
     {
         Json::Value message;
-        message[UNIT_ID] = unit.unitId;
-        message[UNIT_NAME] = unit.unitName;
-        message[UNIT_TYPE] = unit.unitType;
-        message[LOCATION] = eventLocation;
-        message[TESTING_TYPE] = testingType;
-        message[EVENT_NAME] = eventName;
-        message[TOPIC_NAME] = topicName;
-        message[TIMESTAMP] = payload.isMember("timestamp") ? payload["timestamp"].asUInt64() * MILLI_TO_MICRO : duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
-        message[PAYLOAD] = payload;
+        message[UNIT_ID_KEY] = unit.unitId;
+        message[UNIT_NAME_KEY] = unit.unitName;
+        message[UNIT_TYPE_KEY] = unit.unitType;
+        message[LOCATION_KEY] = eventLocation;
+        message[TESTING_TYPE_KEY] = testingType;
+        message[EVENT_NAME_KEY] = eventName;
+        message[TOPIC_NAME_KEY] = topicName;
+        message[TIMESTAMP_KEY] = payload.isMember("timestamp") ? payload["timestamp"].asUInt64() * MILLI_TO_MICRO : duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
+        message[PAYLOAD_KEY] = payload;
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);
         return jsonStr;
@@ -206,24 +206,24 @@ namespace TelematicBridge
     string TelematicUnit::constructAvailableTopicsReplyString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const vector<string> &availableTopicList, const string &excludedTopics)
     {
         Json::Value message;
-        message[UNIT_ID] = unit.unitId;
-        message[UNIT_NAME] = unit.unitName;
-        message[UNIT_TYPE] = unit.unitType;
-        message[LOCATION] = eventLocation;
-        message[TESTING_TYPE] = testingType;
-        message[EVENT_NAME] = eventName;
-        message[TIMESTAMP] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        message[UNIT_ID_KEY] = unit.unitId;
+        message[UNIT_NAME_KEY] = unit.unitName;
+        message[UNIT_TYPE_KEY] = unit.unitType;
+        message[LOCATION_KEY] = eventLocation;
+        message[TESTING_TYPE_KEY] = testingType;
+        message[EVENT_NAME_KEY] = eventName;
+        message[TIMESTAMP_KEY] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         Json::Value topics;
         for (const auto &topic : availableTopicList)
         {
             if (!boost::icontains(excludedTopics, topic))
             {
                 Json::Value topicJson;
-                topicJson[NAME] = topic;
+                topicJson[NAME_KEY] = topic;
                 topics.append(topicJson);
             }
         }
-        message[TOPICS] = topics;
+        message[TOPICS_KEY] = topics;
         Json::FastWriter fasterWirter;
         string reply = fasterWirter.write(message);
         return reply;
