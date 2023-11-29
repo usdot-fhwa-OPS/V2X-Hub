@@ -47,9 +47,8 @@ namespace TelematicBridge
         GetConfigValue<string>("NATSUrl", _natsURL);
         GetConfigValue<string>("UnitId", _unitId);
         GetConfigValue<string>("UnitName", _unitName);
-        GetConfigValue<string>("UnitType", _unitType);
         GetConfigValue<string>("MessageExclusionList", _excludedMessages);
-        unit_st unit = {_unitId, _unitName, _unitType};
+        unit_st unit = {_unitId, _unitName, UNIT_TYPE_INFRASTRUCTURE};
         if (_telematicUnitPtr)
         {
             _telematicUnitPtr->setUnit(unit);
