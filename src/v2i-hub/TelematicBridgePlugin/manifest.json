@@ -18,16 +18,6 @@
             "description": "The NATS connection URL"            
         },
         {
-            "key": "UnitId",
-            "default": "v2xhub_id",
-            "description": "The unique identifier for a telematic unit"            
-        },
-        {
-            "key": "UnitName",
-            "default": "East Intersection",
-            "description": "A descriptive name for each telematic unit. It can also be the intersection name where this unit collect data from."            
-        },
-        {
             "key": "MessageExclusionList",
             "default": "System_KeepAlive_CommandPlugin,System_KeepAlive_CARMAStreetsPlugin,System_KeepAlive_CDASimAdapter,System_KeepAlive_MessageReceiver",
             "description": "The list of messages are excluded from the available message list. Message name is a combination of message type, subtype and source separated by underscore. E.G: type_subtype_source"            
