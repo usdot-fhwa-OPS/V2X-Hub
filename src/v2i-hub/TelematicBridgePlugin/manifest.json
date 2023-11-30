@@ -11,6 +11,16 @@
             "key": "LogLevel",
             "default": "INFO",
             "description": "The log level for this plugin"
+        },
+        {
+            "key": "NATSUrl",
+            "default": "nats://127.0.0.1:4222",
+            "description": "The NATS connection URL"            
+        },
+        {
+            "key": "MessageExclusionList",
+            "default": "System_KeepAlive_CommandPlugin,System_KeepAlive_CARMAStreetsPlugin,System_KeepAlive_CDASimAdapter,System_KeepAlive_MessageReceiver",
+            "description": "The list of messages are excluded from the available message list. Message name is a combination of message type, subtype and source separated by underscore. E.G: type_subtype_source"            
         }
     ]
 }
