@@ -8,8 +8,8 @@ namespace TelematicBridge
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
     {
         _telematicUnitPtr = make_unique<TelematicUnit>();
-        _unitId = sim::get_sim_config("INFRASTRUCTURE_ID");
-        _unitName = sim::get_sim_config("INFRASTRUCTURE_NAME");
+        _unitId = std::getenv("INFRASTRUCTURE_ID");
+        _unitName = std::getenv("INFRASTRUCTURE_NAME");
         UpdateConfigSettings();
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
