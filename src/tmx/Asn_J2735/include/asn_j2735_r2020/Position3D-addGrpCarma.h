@@ -9,13 +9,13 @@
 #define	_Position3D_addGrpCarma_H_
 
 
-#include <asn_application.h>
+#include "asn_application.h"
 
 /* Including external dependencies */
 #include "Latitude.h"
 #include "Longitude.h"
 #include "Common_Elevation.h"
-#include <constr_SEQUENCE.h>
+#include "constr_SEQUENCE.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,4 +45,4 @@ extern asn_TYPE_member_t asn_MBR_Position3D_addGrpCarma_1[3];
 #endif
 
 #endif	/* _Position3D_addGrpCarma_H_ */
-#include <asn_internal.h>
+#include "asn_internal.h"

@@ -4501,8 +4501,8 @@ static asn_CHOICE_specifics_t asn_SPC_regExtValue_specs_3 = {
 	offsetof(struct Reg_BasicSafetyMessage__regExtValue, _asn_ctx),
 	offsetof(struct Reg_BasicSafetyMessage__regExtValue, present),
 	sizeof(((struct Reg_BasicSafetyMessage__regExtValue *)0)->present),
-	0,	/* No top level tags */
-	0,	/* No tags in the map */
+	asn_MAP_regExtValue_tag2el_3,
+	1,	/* Count of tags in the map */
 	0, 0,
 	-1	/* Extensions start */
 };
@@ -4524,7 +4524,8 @@ asn_TYPE_descriptor_t asn_DEF_regExtValue_3 = {
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
 		OPEN_TYPE_constraint
 	},
-	0, 0,	/* No members */
+	asn_MBR_regExtValue_3,
+	1,	/* Elements count */
 	&asn_SPC_regExtValue_specs_3	/* Additional specs */
 };
 
@@ -4550,7 +4551,7 @@ asn_TYPE_member_t asn_MBR_Reg_BasicSafetyMessage_1[] = {
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		+1,	/* EXPLICIT tag at current level */
 		&asn_DEF_regExtValue_3,
-		0,
+		select_Reg_BasicSafetyMessage_regExtValue_type,
 		{
 #if !defined(ASN_DISABLE_OER_SUPPORT)
 			&asn_OER_memb_regExtValue_constr_3,
