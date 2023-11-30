@@ -4,6 +4,7 @@
 #include "PluginClient.h"
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
+#include <simulation/SimulationEnvUtils.h>
 
 
 namespace TelematicBridge

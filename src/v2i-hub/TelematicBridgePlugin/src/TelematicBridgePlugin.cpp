@@ -8,6 +8,9 @@ namespace TelematicBridge
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
     {
         _telematicUnitPtr = make_unique<TelematicUnit>();
+        _unitId = sim::get_sim_config("INFRASTRUCTURE_ID");
+        _unitName = sim::get_sim_config("INFRASTRUCTURE_NAME");
+        PLOG(logERROR) << "_unitId: "<< _unitId;
         UpdateConfigSettings();
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
@@ -45,8 +48,6 @@ namespace TelematicBridge
     {
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<string>("NATSUrl", _natsURL);
-        GetConfigValue<string>("UnitId", _unitId);
-        GetConfigValue<string>("UnitName", _unitName);
         GetConfigValue<string>("MessageExclusionList", _excludedMessages);
         unit_st unit = {_unitId, _unitName, UNIT_TYPE_INFRASTRUCTURE};
         if (_telematicUnitPtr)
