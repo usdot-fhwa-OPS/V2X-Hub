@@ -10,7 +10,6 @@ namespace TelematicBridge
         _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = sim::get_sim_config("INFRASTRUCTURE_ID");
         _unitName = sim::get_sim_config("INFRASTRUCTURE_NAME");
-        PLOG(logERROR) << "_unitId: "<< _unitId;
         UpdateConfigSettings();
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
