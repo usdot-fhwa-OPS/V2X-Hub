@@ -38,7 +38,7 @@ services:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - SIMULATION_MODE=true
+      - SIMULATION_MODE=false
       - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
       - INFRASTRUCTURE_NAME=<RSU_NAME>
     secrets:
