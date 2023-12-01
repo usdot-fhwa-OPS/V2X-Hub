@@ -782,8 +782,8 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	sDSMTimeStamp->year = year;
 	message->sDSMTimeStamp = *sDSMTimeStamp;
 
-	message->refPos.lat = 38.121212;
-	message->refPos.Long = -77.121212;
+	message->refPos.lat = 38121212;
+	message->refPos.Long = -77121212;
 
 	message->refPosXYConf.orientation = 10;
 	message->refPosXYConf.semiMajor = 12;
@@ -793,6 +793,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
 	objectData->detObjCommon.objType = ObjectType_unknown;
 	objectData->detObjCommon.objTypeCfd = 1;
+	objectData->detObjCommon.objectID = 1;
 	objectData->detObjCommon.measurementTime = 1;
 	objectData->detObjCommon.timeConfidence = 1;
 	objectData->detObjCommon.pos.offsetX = 1;
@@ -805,7 +806,6 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	objectData->detObjCommon.headingConf = 1;
 	ASN_SEQUENCE_ADD(&objects->list.array, objectData);
 	message->objects = *objects;
-	std::cout << message <<std::endl;
 	xer_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message);
 
 	//Encode SDSM 
