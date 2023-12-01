@@ -816,7 +816,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c35a4e9266b49d1b20c34000a00000020000bba0a000200004400240009";
+	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
 	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
