@@ -108,7 +108,7 @@ asn_TYPE_member_t asn_MBR_TrafficControlSchedule_1[] = {
 	{ ATF_POINTER, 3, offsetof(struct TrafficControlSchedule, dow),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		&asn_DEF_DayOfWeek,
+		&asn_DEF_DSRC_DayOfWeek,
 		0,
 		{ 0, 0, 0 },
 		0, 0, /* No default value */

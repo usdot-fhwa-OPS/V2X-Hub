@@ -13,7 +13,7 @@
 
 /* Including external dependencies */
 #include "EpochMins.h"
-#include "DayOfWeek.h"
+#include "DSRC_DayOfWeek.h"
 #include "asn_SEQUENCE_OF.h"
 #include "constr_SEQUENCE_OF.h"
 #include "constr_SEQUENCE.h"
@@ -30,7 +30,7 @@ struct DailySchedule;
 typedef struct TrafficControlSchedule {
 	EpochMins_t	 start;
 	EpochMins_t	*end;	/* OPTIONAL */
-	DayOfWeek_t	*dow;	/* OPTIONAL */
+	DSRC_DayOfWeek_t	*dow;	/* OPTIONAL */
 	struct TrafficControlSchedule__between {
 		A_SEQUENCE_OF(struct DailySchedule) list;
 		
