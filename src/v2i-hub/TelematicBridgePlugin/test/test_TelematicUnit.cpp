@@ -43,6 +43,10 @@ namespace TelematicBridge
         auto reply = TelematicUnit::constructAvailableTopicsReplyString(unit, eventLocation, testingType, eventName, topics, excluded_topic);
         auto json = TelematicUnit::parseJson(reply);
         ASSERT_EQ("test_topic", json["topics"][0]["name"].asString());
+
+        reply = TelematicUnit::constructAvailableTopicsReplyString(unit, eventLocation, testingType, eventName, {}, excluded_topic);
+        json = TelematicUnit::parseJson(reply);
+        ASSERT_EQ(1, json["topics"].isArray());
     }
 
     TEST_F(test_TelematicUnit, constructPublishedDataString)
