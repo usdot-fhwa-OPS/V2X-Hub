@@ -219,7 +219,7 @@ namespace TelematicBridge
         message[TESTING_TYPE_KEY] = testingType;
         message[EVENT_NAME_KEY] = eventName;
         message[TIMESTAMP_KEY] = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-        Json::Value topics;
+        Json::Value topics = Json::arrayValue;
         for (const auto &topic : availableTopicList)
         {
             if (!boost::icontains(excludedTopics, topic))
