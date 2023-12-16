@@ -33,12 +33,14 @@ namespace CARMAStreetsPlugin
          */
         void convertJsonToSDSM(const Json::Value &sdsm_json, std::shared_ptr<SensorDataSharingMessage>  sdsm) const;
 
+        void convertJson2SDSM(const Json::Value &sdsm_json, std::shared_ptr<SensorDataSharingMessage_t> sdsm) const;
+
         /***
          * @brief Encode J3224 SDSM
          * @param Pointer to  J3224 SDSM object
          * @param Encoded J3224 SDSM
          */
-        void encodeSDSM(const std::shared_ptr<SensorDataSharingMessage> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const;
+        void encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const;
 
         ~JsonToJ3224SDSMConverter() = default;
     };
