@@ -40,8 +40,10 @@ namespace CARMAStreetsPlugin
          * @param Encoded J3224 SDSM
          */
         void encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const;
-
+    
         ~JsonToJ3224SDSMConverter() = default;
+    private:
+        void populateOptionalData(const Json::Value &optional_data_json, DetectedObjectOptionalData_t *optional_data) const;
     };
 
 }

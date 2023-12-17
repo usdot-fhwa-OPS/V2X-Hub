@@ -163,7 +163,67 @@ namespace CARMAStreetsPlugin
                                     yaw":400
                                 },
                                 "heading":16000,
-                                "heading_conf":4,"measurement_time":-1100,"object_id":12200,"obj_type":1,"obj_type_cfd":65,"pos":{"offset_x":4000,"offset_y":-720,"offset_z":20},"pos_confidence":{"elevation":5,"pos":2},"speed":2100,"speed_confidence":3,"speed_confidence_z":4,"speed_z":1000,"time_confidence":2},"detected_object_optional_data":{"detected_vehicle_data":{"height":70,"lights":8,"size":{"length":700,"width":300},"veh_ang_vel":{"pitch_rate":600,"roll_rate":-800},"veh_ang_vel_confidence":{"pitch_rate_confidence":3,"roll_rate_confidence":4},"veh_attitude":{"pitch":2400,"roll":-12000,"yaw":400},"veh_attitude_confidence":{"pitch_confidence":2,"roll_confidence":3,"yaw_confidence":4},"vehicle_class":11,"vehicle_class_conf":75,"vehicle_size_confidence":{"vehicle_height_confidence":5,"vehicle_length_confidence":6,"vehicle_width_confidence":7}}}}}],"ref_pos":{"long":600000000,"elevation":30,"lat":400000000},"ref_pos_el_conf":10,"ref_pos_xy_conf":{"orientation":25000,"semi_major":235,"semi_minor":200},"sdsm_time_stamp":{"day":4,"hour":19,"minute":15,"month":7,"offset":400,"second":5000,"year":2007},"source_id":"01020304"})";
+                                "heading_conf":4,
+                                "measurement_time":-1100,
+                                "object_id":12200,
+                                "obj_type":1,
+                                "obj_type_cfd":65,
+                                "pos":{"offset_x":4000,"offset_y":-720,"offset_z":20},
+                                "pos_confidence":{"elevation":5,"pos":2},
+                                "speed":2100,
+                                "speed_confidence":3,
+                                "speed_confidence_z":4,
+                                "speed_z":1000,
+                                "time_confidence":2
+                            },
+                            "detected_object_optional_data":{
+                                "detected_vehicle_data":{
+                                    "height":70,
+                                    "lights":8,
+                                    "size":{
+                                        "length":700,
+                                        "width":300
+                                    },
+                                    "veh_ang_vel":{
+                                        "pitch_rate":600,
+                                        "roll_rate":-800
+                                    },
+                                    "veh_ang_vel_confidence":{
+                                        "pitch_rate_confidence":3,
+                                        "roll_rate_confidence":4
+                                    },
+                                    "veh_attitude":{
+                                        "pitch":2400,
+                                        "roll":-12000,
+                                        "yaw":400
+                                    },
+                                    "veh_attitude_confidence":{
+                                        "pitch_confidence":2,
+                                        "roll_confidence":3,
+                                        "yaw_confidence":4
+                                    },
+                                    "vehicle_class":11,
+                                    "vehicle_class_conf":75,
+                                    "vehicle_size_confidence":{
+                                        "vehicle_height_confidence":5,
+                                        "vehicle_length_confidence":6,
+                                        "vehicle_width_confidence":7
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "ref_pos":{
+                    "long":600000000,
+                    "elevation":30,
+                    "lat":400000000
+                },
+                "ref_pos_el_conf":10,
+                "ref_pos_xy_conf":{"orientation":25000,"semi_major":235,"semi_minor":200},
+                "sdsm_time_stamp":{"day":4,"hour":19,"minute":15,"month":7,"offset":400,"second":5000,"year":2007},
+                "source_id":"01020304"
+            })";
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         ASSERT_TRUE(result);
@@ -171,16 +231,16 @@ namespace CARMAStreetsPlugin
         converter.convertJsonToSDSM(root, sdsmPtr);
 
 
-        // ASSERT_EQ(2400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->pitch);
-        // ASSERT_EQ(-12000, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->roll);
-        // ASSERT_EQ(400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->yaw);
+        ASSERT_EQ(2400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->pitch);
+        ASSERT_EQ(-12000, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->roll);
+        ASSERT_EQ(400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitude->yaw);
 
-        // ASSERT_EQ(2, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->pitchConfidence);
-        // ASSERT_EQ(3, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->rollConfidence);
-        // ASSERT_EQ(4, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->yawConfidence);
+        ASSERT_EQ(2, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->pitchConfidence);
+        ASSERT_EQ(3, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->rollConfidence);
+        ASSERT_EQ(4, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAttitudeConfidence->yawConfidence);
 
-        // ASSERT_EQ(600, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->pitchRate);
-        // ASSERT_EQ(-800, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->rollRate);
+        ASSERT_EQ(600, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->pitchRate);
+        ASSERT_EQ(-800, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->rollRate);
 
         // ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->pitchRateConfidence);
         // ASSERT_EQ(4, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->rollRateConfidence);

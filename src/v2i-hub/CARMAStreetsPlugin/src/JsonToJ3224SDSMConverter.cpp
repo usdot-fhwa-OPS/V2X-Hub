@@ -194,6 +194,12 @@ namespace CARMAStreetsPlugin
                     *acc_cfd_yaw = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_yaw"].asInt64();
                     objectData->detObjCommon.accCfdYaw = acc_cfd_yaw;
                 }
+                // Object Optional Data
+                if ((*itr)["detected_object_data"].isMember("detected_object_optional_data") ){
+                    auto optional_data = (DetectedObjectOptionalData_t*)calloc(1, sizeof(DetectedObjectOptionalData_t));
+                    populateOptionalData((*itr)["detected_object_data"]["detected_object_optional_data"], optional_data);
+                    objectData->detObjOptData = optional_data;
+                }
 	            ASN_SEQUENCE_ADD(&objects->list.array, objectData);
             }
             sdsm->objects = *objects;
@@ -214,5 +220,33 @@ namespace CARMAStreetsPlugin
         delete(_sdsmMessage);
     }
 
+    void JsonToJ3224SDSMConverter::populateOptionalData(const Json::Value &optional_data_json, DetectedObjectOptionalData_t *optional_data) const {
+        if ( optional_data_json.isMember("detected_vehicle_data") ) {
+            optional_data->present = DetectedObjectOptionalData_PR_detVeh;
+            // Optional Vehicle Attitude 
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_attitude")) {
+                auto attitude = (Attitude_t*) calloc( 1, sizeof(Attitude_t));
+                attitude->pitch = optional_data_json["detected_vehicle_data"]["veh_attitude"]["pitch"].asInt64();
+                attitude->roll = optional_data_json["detected_vehicle_data"]["veh_attitude"]["roll"].asInt64();
+                attitude->yaw = optional_data_json["detected_vehicle_data"]["veh_attitude"]["yaw"].asInt64();
+                optional_data->choice.detVeh.vehAttitude = attitude;
+            }
+            // Optional Vehicle Attitude Confidence 
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_attitude_confidence")) {
+                auto attitude_confidence = (AttitudeConfidence_t*) calloc( 1, sizeof(AttitudeConfidence_t));
+                attitude_confidence->pitchConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["pitch_confidence"].asInt64();
+                attitude_confidence->rollConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["roll_confidence"].asInt64();
+                attitude_confidence->yawConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["yaw_confidence"].asInt64();
+                optional_data->choice.detVeh.vehAttitudeConfidence = attitude_confidence;
+            }
+            // Optional Vehicle Angular Velocity
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_ang_vel")) {
+                auto angular_velocity = (AngularVelocity_t*) calloc( 1, sizeof(AngularVelocity_t));
+                angular_velocity->pitchRate = optional_data_json["detected_vehicle_data"]["veh_ang_vel"]["pitch_rate"].asInt64();
+                angular_velocity->rollRate = optional_data_json["detected_vehicle_data"]["veh_ang_vel"]["roll_rate"].asInt64();
+                optional_data->choice.detVeh.vehAngVel = angular_velocity;
+            }
+        }
+    }
 
 }
