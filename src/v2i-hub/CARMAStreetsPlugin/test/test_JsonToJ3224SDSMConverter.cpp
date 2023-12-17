@@ -253,8 +253,8 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(6, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleLengthConfidence);
         ASSERT_EQ(5, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleHeightConfidence);
 
-        // ASSERT_EQ(11, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleClass);
-        // ASSERT_EQ(75, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.classConf);
+        ASSERT_EQ(11, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleClass);
+        ASSERT_EQ(75, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.classConf);
 
     }
 

@@ -286,6 +286,18 @@ namespace CARMAStreetsPlugin
                 }
                 optional_data->choice.detVeh.vehicleSizeConfidence = veh_size_confidence;
             }
+            // Optional Vehicle Class
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_class"))  {
+                auto vehicle_class = (BasicVehicleClass_t*)calloc(1, sizeof(BasicVehicleClass_t));
+                *vehicle_class = optional_data_json["detected_vehicle_data"]["vehicle_class"].asInt64();
+                optional_data->choice.detVeh.vehicleClass = vehicle_class;
+            }
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_class_conf"))  {
+                auto vehicle_class_conf = (ClassificationConfidence_t*)calloc(1, sizeof(ClassificationConfidence_t));
+                *vehicle_class_conf = optional_data_json["detected_vehicle_data"]["vehicle_class_conf"].asInt64();
+                optional_data->choice.detVeh.classConf = vehicle_class_conf;
+            }
+
         }
     }
 
