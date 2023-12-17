@@ -242,8 +242,8 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(600, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->pitchRate);
         ASSERT_EQ(-800, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVel->rollRate);
 
-        // ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->pitchRateConfidence);
-        // ASSERT_EQ(4, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->rollRateConfidence);
+        ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->pitchRateConfidence);
+        ASSERT_EQ(4, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->rollRateConfidence);
 
         // ASSERT_EQ(300, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->width);
         // ASSERT_EQ(700, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->length);

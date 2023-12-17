@@ -246,6 +246,21 @@ namespace CARMAStreetsPlugin
                 angular_velocity->rollRate = optional_data_json["detected_vehicle_data"]["veh_ang_vel"]["roll_rate"].asInt64();
                 optional_data->choice.detVeh.vehAngVel = angular_velocity;
             }
+            // Optional Vehicle Angular Velocity
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_ang_vel_confidence")) {
+                auto angular_velocity_confidence = (AngularVelocityConfidence_t*) calloc( 1, sizeof(AngularVelocityConfidence_t));
+                if (optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"].isMember("pitch_rate_confidence")) {
+                    auto pitch_rate_confidence = (PitchRateConfidence_t*) calloc(1, sizeof(PitchRateConfidence_t));
+                    *pitch_rate_confidence = optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"]["pitch_rate_confidence"].asInt64();
+                    angular_velocity_confidence->pitchRateConfidence = pitch_rate_confidence;
+                }
+                if (optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"].isMember("roll_rate_confidence")) {
+                    auto roll_rate_confidence = (RollRateConfidence_t*) calloc(1, sizeof(RollRateConfidence_t));
+                    *roll_rate_confidence = optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"]["roll_rate_confidence"].asInt64();
+                    angular_velocity_confidence->rollRateConfidence = roll_rate_confidence;
+                }
+                optional_data->choice.detVeh.vehAngVelConfidence = angular_velocity_confidence;
+            }
         }
     }
 
