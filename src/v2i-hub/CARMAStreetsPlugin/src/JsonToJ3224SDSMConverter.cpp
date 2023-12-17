@@ -338,6 +338,24 @@ namespace CARMAStreetsPlugin
             }
 
 
+        }else if (optional_data_json.isMember("detected_obstacle_data")) {
+            optional_data->present = DetectedObjectOptionalData_PR_detObst;
+            optional_data->choice.detObst.obstSize.length = optional_data_json["detected_obstacle_data"]["obst_size"]["length"].asInt64();
+            optional_data->choice.detObst.obstSize.width = optional_data_json["detected_obstacle_data"]["obst_size"]["width"].asInt64();
+            // Optional Obstacle Height
+            if (optional_data_json["detected_obstacle_data"]["obst_size"].isMember("height")) {
+                auto obst_height = (SizeValue_t*)calloc(1, sizeof(SizeValue_t));
+                *obst_height = optional_data_json["detected_obstacle_data"]["obst_size"]["height"].asInt64();
+                optional_data->choice.detObst.obstSize.height = obst_height;
+            }
+            optional_data->choice.detObst.obstSizeConfidence.lengthConfidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["length_confidence"].asInt64();
+            optional_data->choice.detObst.obstSizeConfidence.widthConfidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["width_confidence"].asInt64();
+            // Optional Obstalce Height Confidence
+            if (optional_data_json["detected_obstacle_data"]["obst_size_confidence"].isMember("height_confidence")) {
+                auto obst_height_confidence = (SizeValueConfidence_t*)calloc(1, sizeof(SizeValueConfidence_t));
+                *obst_height_confidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["height_confidence"].asInt64();
+                optional_data->choice.detObst.obstSizeConfidence.heightConfidence = obst_height_confidence;
+            }
         }
     }
 
