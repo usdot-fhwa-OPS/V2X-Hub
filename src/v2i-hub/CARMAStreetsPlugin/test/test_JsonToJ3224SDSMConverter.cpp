@@ -255,7 +255,7 @@ namespace CARMAStreetsPlugin
 
         ASSERT_EQ(11, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleClass);
         ASSERT_EQ(75, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.classConf);
-         tmx::messages::SdsmEncodedMessage encodedSdsm;
+        tmx::messages::SdsmEncodedMessage encodedSdsm;
         converter.encodeSDSM(sdsmPtr, encodedSdsm);
         ASSERT_EQ(41,  encodedSdsm.get_msgId());
 	
@@ -347,10 +347,16 @@ namespace CARMAStreetsPlugin
         auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
-        // ASSERT_EQ(1, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.basicType);
-        // ASSERT_EQ(2, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.propulsion->choice.human);
-        // ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.attachment);
-        // ASSERT_EQ(30, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.radius);
+        ASSERT_EQ(1, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.basicType);
+        ASSERT_EQ(2, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.propulsion->choice.human);
+        ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.attachment);
+        ASSERT_EQ(30, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.radius);
+        tmx::messages::SdsmEncodedMessage encodedSdsm;
+        converter.encodeSDSM(sdsmPtr, encodedSdsm);
+        ASSERT_EQ(41,  encodedSdsm.get_msgId());
+	
+        std::string expectedSDSMEncHex = "00293d81303330343fdf5dc933c4e226c29af8da011e1a2ffe203dd790c3514017f304bea06402c7cfbe97c00992a0d18fa23e809130bb901031f2e6f88231e0";
+        ASSERT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());
 
     }
 

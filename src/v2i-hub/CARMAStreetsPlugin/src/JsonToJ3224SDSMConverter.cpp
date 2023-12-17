@@ -299,6 +299,46 @@ namespace CARMAStreetsPlugin
             }
 
         }
+        else if (optional_data_json.isMember("detected_vru_data") ) {
+            optional_data->present = DetectedObjectOptionalData_PR_detVRU;
+            // Optional VRU Basic Type
+            if ( optional_data_json["detected_vru_data"].isMember("basic_type")) {
+                auto basic_type = (PersonalDeviceUserType_t*) calloc(1, sizeof(PersonalDeviceUserType_t));
+                *basic_type = optional_data_json["detected_vru_data"]["basic_type"].asInt64();
+                optional_data->choice.detVRU.basicType = basic_type;
+            }
+            // Optional propulsion information
+            if (optional_data_json["detected_vru_data"].isMember("propulsion")) {
+                auto propelled_info = (PropelledInformation_t*) calloc(1, sizeof(PropelledInformation_t));
+                if (optional_data_json["detected_vru_data"]["propulsion"].isMember("human") ) {
+                    propelled_info->present = PropelledInformation_PR_human;
+                    propelled_info->choice.human =  optional_data_json["detected_vru_data"]["propulsion"]["human"].asInt64();
+                }
+                else if (optional_data_json["detected_vru_data"]["propulsion"].isMember("animal") ) {
+                    propelled_info->present = PropelledInformation_PR_animal;
+                    propelled_info->choice.animal =  optional_data_json["detected_vru_data"]["propulsion"]["animal"].asInt64();
+                }
+                else if (optional_data_json["detected_vru_data"]["propulsion"].isMember("motor") ) {
+                    propelled_info->present = PropelledInformation_PR_motor;
+                    propelled_info->choice.motor =  optional_data_json["detected_vru_data"]["propulsion"]["motor"].asInt64();
+                }
+                optional_data->choice.detVRU.propulsion = propelled_info;
+            }
+            // Optional VRU Attachment
+            if ( optional_data_json["detected_vru_data"].isMember("attachment")) {
+                auto attachment = (Attachment_t*) calloc(1, sizeof(Attachment_t));
+                *attachment = optional_data_json["detected_vru_data"]["attachment"].asInt64();
+                optional_data->choice.detVRU.attachment = attachment;
+            }
+            // Optional VRU Attachment Radius
+            if ( optional_data_json["detected_vru_data"].isMember("radius")) {
+                auto radius = (AttachmentRadius_t*) calloc(1, sizeof(AttachmentRadius_t));
+                *radius = optional_data_json["detected_vru_data"]["radius"].asInt64();
+                optional_data->choice.detVRU.radius = radius;
+            }
+
+
+        }
     }
 
 }
