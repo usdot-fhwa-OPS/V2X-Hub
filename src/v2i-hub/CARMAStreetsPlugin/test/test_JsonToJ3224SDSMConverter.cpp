@@ -126,11 +126,16 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(-500, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->lat);
         ASSERT_EQ(1, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->vert);
         ASSERT_EQ(400, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->yaw);
+        ASSERT_EQ(4, *sdsmPtr->objects.list.array[0]->detObjCommon.accCfdX);
+        ASSERT_EQ(5, *sdsmPtr->objects.list.array[0]->detObjCommon.accCfdY);
+        ASSERT_EQ(6, *sdsmPtr->objects.list.array[0]->detObjCommon.accCfdZ);
+        ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjCommon.accCfdYaw);
+
         tmx::messages::SdsmEncodedMessage encodedSdsm;
         converter.encodeSDSM(sdsmPtr, encodedSdsm);
         ASSERT_EQ(41,  encodedSdsm.get_msgId());
 	
-        std::string expectedSDSMEncHex = "00293881313233343fdf5dc933c4e226c29af8da011e1a2ffe203dd790c35140070304bea06402c7cfbe97c00992a0d18fa23e809130bb901031e0";
+        std::string expectedSDSMEncHex = "00293981313233343fdf5dc933c4e226c29af8da011e1a2ffe203dd790c3514007f304bea06402c7cfbe97c00992a0d18fa23e809130bb901031f2e6";
         ASSERT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());	
     }
 

@@ -41,7 +41,7 @@ namespace CARMAStreetsPlugin
         sdsm->msgCnt = sdsm_json["msg_cnt"].asInt64();
         // Source ID (Expecting format "rsu_<4-digit-number>")
         std::string id_data = sdsm_json["source_id"].asString().substr(4);
-	    TemporaryID_t *tempID = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+	    auto *tempID = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
         OCTET_STRING_fromString(tempID, id_data.c_str());
         sdsm->sourceID = *tempID;
         free(tempID);
@@ -170,6 +170,30 @@ namespace CARMAStreetsPlugin
                     accel_4way->yaw    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt64();
                     objectData->detObjCommon.accel4way = accel_4way;
                 }
+                // Optional acceleration confidence X 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_x") ) {
+                    auto acc_cfd_x = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_x = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_x"].asInt64();
+                    objectData->detObjCommon.accCfdX = acc_cfd_x;
+                }
+                // Optional acceleration confidence Y
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_y") ) {
+                    auto acc_cfd_y = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_y = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_y"].asInt64();
+                    objectData->detObjCommon.accCfdY = acc_cfd_y;
+                }
+                // Optional acceleration confidence Z 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_z") ) {
+                    auto acc_cfd_z = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_z = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_z"].asInt64();
+                    objectData->detObjCommon.accCfdZ = acc_cfd_z;
+                }
+                // Optional acceleration confidence Yaw 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_yaw") ) {
+                    auto acc_cfd_yaw = (AccelerationConfidence_t*)calloc(1, sizeof(YawRateConfidence_t));
+                    *acc_cfd_yaw = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_yaw"].asInt64();
+                    objectData->detObjCommon.accCfdYaw = acc_cfd_yaw;
+                }
 	            ASN_SEQUENCE_ADD(&objects->list.array, objectData);
             }
             sdsm->objects = *objects;
@@ -187,6 +211,7 @@ namespace CARMAStreetsPlugin
         encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
         asn_fprint(stdout, &asn_DEF_MessageFrame, frame.get_j2735_data().get());
         free(frame.get_j2735_data().get());
+        delete(_sdsmMessage);
     }
 
 
