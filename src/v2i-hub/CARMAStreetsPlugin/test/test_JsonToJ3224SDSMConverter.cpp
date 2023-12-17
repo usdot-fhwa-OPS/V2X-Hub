@@ -67,14 +67,79 @@ namespace CARMAStreetsPlugin
     TEST_F(test_JsonToJ3224SDSMConverter, convert2Sdsm)
     {
         JsonToJ3224SDSMConverter converter;
-        std::string valid_json_str = "{\"equipment_type\":1,\"msg_cnt\":1,\"ref_pos\":{\"long\":600000000,\"elevation\":30,\"lat\":400000000},\"ref_pos_el_conf\":10,\"ref_pos_xy_conf\":{\"orientation\":25000,\"semi_major\":235,\"semi_minor\":200},\"sdsm_time_stamp\":{\"day\":4,\"hour\":19,\"minute\":15,\"month\":7,\"offset\":400,\"second\":5000,\"year\":2007},\"source_id\":\"01020304\",\"objects\":[{\"detected_object_data\":{\"detected_object_common_data\":{\"acc_cfd_x\":4,\"acc_cfd_y\":5,\"acc_cfd_yaw\":3,\"acc_cfd_z\":6,\"accel_4_way\":{\"lat\":-500,\"long\":200,\"vert\":1,\"yaw\":400},\"heading\":16000,\"heading_conf\":4,\"measurement_time\":-1100,\"object_id\":12200,\"obj_type\":1,\"obj_type_cfd\":65,\"pos\":{\"offset_x\":4000,\"offset_y\":-720,\"offset_z\":20},\"pos_confidence\":{\"elevation\":5,\"pos\":2},\"speed\":2100,\"speed_confidence\":3,\"speed_confidence_z\":4,\"speed_z\":1000,\"time_confidence\":2}}}]}";
+        std::string valid_json_str = R"(
+            {
+                "equipment_type":1,
+                "msg_cnt":1,
+                "ref_pos":{
+                    "long":600000000,
+                    "elevation":30,
+                    "lat":400000000
+                },
+                "ref_pos_el_conf":10,
+                "ref_pos_xy_conf":{
+                    "orientation":25000,
+                    "semi_major":235,
+                    "semi_minor":200
+                },
+                "sdsm_time_stamp":{
+                    "day":4,
+                    "hour":19,
+                    "minute":15,
+                    "month":7,
+                    "offset":400,
+                    "second":5000,
+                    "year":2007
+                },
+                "source_id":"rsu_1234",
+                "objects":[
+                    {
+                        "detected_object_data":{
+                            "detected_object_common_data":{
+                                "acc_cfd_x":4,
+                                "acc_cfd_y":5,
+                                "acc_cfd_yaw":3,
+                                "acc_cfd_z":6,
+                                "accel_4_way":{
+                                    "lat":-500,
+                                    "long":200,
+                                    "vert":1,
+                                    "yaw":400
+                                },
+                                "heading":16000,
+                                "heading_conf":4,
+                                "measurement_time":-1100,
+                                "object_id":12200,
+                                "obj_type":1,
+                                "obj_type_cfd":65,
+                                "pos":{
+                                    "offset_x":4000,
+                                    "offset_y":-720,
+                                    "offset_z":20
+                                },
+                                "pos_confidence":{
+                                    "elevation":5,
+                                    "pos":2
+                                },
+                                "speed":2100,
+                                "speed_confidence":3,
+                                "speed_confidence_z":4,
+                                "speed_z":1000,
+                                "time_confidence":2
+                            }
+                        }
+                    }
+                ]
+            }
+        )";
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         ASSERT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = std::make_shared<SensorDataSharingMessage_t>();
         converter.convertJson2SDSM(root, sdsmPtr);
+        asn_fprint(stdout, &asn_DEF_SensorDataSharingMessage, sdsmPtr.get());
+
         tmx::messages::SdsmEncodedMessage encodedSdsm;
-        converter.encodeSDSM(sdsmPtr, encodedSdsm);
         ASSERT_EQ(1, sdsmPtr->objects.list.array[0]->detObjCommon.objType);
         ASSERT_EQ(65, sdsmPtr->objects.list.array[0]->detObjCommon.objTypeCfd);
         ASSERT_EQ(12200, sdsmPtr->objects.list.array[0]->detObjCommon.objectID);
@@ -100,10 +165,12 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(-500, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->lat);
         ASSERT_EQ(1, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->vert);
         ASSERT_EQ(400, sdsmPtr->objects.list.array[0]->detObjCommon.accel4way->yaw);
-        
-        ASSERT_EQ(41,  encodedSdsm.get_msgId());	
-        // std::string expectedSDSMEncHex = "00293681c0de24f33d9f5dc8789c429af8da011e1a2ffe203dd790c35140070304bea06402c7cfbe97c00992a0d18fa23e809130bb901031e0";
-        // ASSERT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());	
+        converter.encodeSDSM(sdsmPtr, encodedSdsm);
+
+        ASSERT_EQ(41,  encodedSdsm.get_msgId());
+	
+        std::string expectedSDSMEncHex = "00293881313233343fdf5dc933c4e226c29af8da011e1a2ffe203dd790c35140070304bea06402c7cfbe97c00992a0d18fa23e809130bb901031e0";
+        ASSERT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());	
     }
 
     // // Test for SDSM common data

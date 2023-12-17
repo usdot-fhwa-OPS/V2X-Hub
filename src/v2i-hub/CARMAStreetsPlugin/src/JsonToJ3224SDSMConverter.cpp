@@ -35,39 +35,65 @@ namespace CARMAStreetsPlugin
         }
         return parseResult;
     }
-    void JsonToJ3224SDSMConverter::convertJson2SDSM(const Json::Value &sdsm_json, std::shared_ptr<SensorDataSharingMessage_t> sdsm) const {
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, sdsm.get());
+    void JsonToJ3224SDSMConverter::convertJson2SDSM(const Json::Value &sdsm_json, const std::shared_ptr<SensorDataSharingMessage_t> &sdsm) const {
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm.get());
         // Message Count
         sdsm->msgCnt = sdsm_json["msg_cnt"].asInt64();
-        // Source ID
-        std::string id_data = sdsm_json["source_id"].asString();
-        TemporaryID_t tempID;
-        std::vector<uint8_t> id_vector(id_data.begin(), id_data.end());
-        uint8_t *id_ptr = &id_vector[0];
-        tempID.buf = id_ptr;
-        tempID.size = sizeof(4);
-        sdsm->sourceID = tempID;
+        // Source ID (Expecting format "rsu_<4-digit-number>")
+        std::string id_data = sdsm_json["source_id"].asString().substr(4);
+	    TemporaryID_t *tempID = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+        OCTET_STRING_fromString(tempID, id_data.c_str());
+        sdsm->sourceID = *tempID;
+        free(tempID);
+
         // Equipment Type
         sdsm->equipmentType = sdsm_json["equipment_type"].asInt64();
 
         // SDSM DateTime timestamp
-        auto sDSMTimeStamp = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
-        auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
-        *year = sdsm_json["sdsm_time_stamp"]["year"].asInt64();
-        sDSMTimeStamp->year = year;
-        auto month = (DMonth_t*) calloc(1, sizeof(DMonth_t));
-        *month = sdsm_json["sdsm_time_stamp"]["month"].asInt64();
-        sDSMTimeStamp->month = month;
-        auto day = (DDay_t*) calloc(1, sizeof(DDay_t));
-        *day = sdsm_json["sdsm_time_stamp"]["day"].asInt64();
-        sDSMTimeStamp->day = day;
-        auto minute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
-        *minute = sdsm_json["sdsm_time_stamp"]["minute"].asInt64();
-        sDSMTimeStamp->minute = minute;
-        auto second = (DSecond_t*) calloc(1, sizeof(DSecond_t));
-        *second = sdsm_json["sdsm_time_stamp"]["second"].asInt64();
-        sDSMTimeStamp->second = second;
-        sdsm->sDSMTimeStamp = *sDSMTimeStamp;
+        DDateTime_t sDSMTimeStamp;
+        // Optional Year
+        if ( sdsm_json["sdsm_time_stamp"].isMember("year") ) {
+            auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
+            *year = sdsm_json["sdsm_time_stamp"]["year"].asInt64();
+            sDSMTimeStamp.year = year;
+        }
+        // Optional Month
+        if ( sdsm_json["sdsm_time_stamp"].isMember("month") ) {
+            auto month = (DMonth_t*) calloc(1, sizeof(DMonth_t));
+            *month = sdsm_json["sdsm_time_stamp"]["month"].asInt64();
+            sDSMTimeStamp.month = month;
+        }
+        // Optional Day
+        if ( sdsm_json["sdsm_time_stamp"].isMember("day") ) {
+            auto day = (DDay_t*) calloc(1, sizeof(DDay_t));
+            *day = sdsm_json["sdsm_time_stamp"]["day"].asInt64();
+            sDSMTimeStamp.day = day;
+        }
+        // Optional Hour
+        if ( sdsm_json["sdsm_time_stamp"].isMember("hour") ) {
+            auto hour = (DHour_t*) calloc(1, sizeof(DHour_t));
+            *hour = sdsm_json["sdsm_time_stamp"]["hour"].asInt64();
+            sDSMTimeStamp.hour = hour;
+        }
+        // Optional Minute
+        if ( sdsm_json["sdsm_time_stamp"].isMember("minute") ) {
+            auto minute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
+            *minute = sdsm_json["sdsm_time_stamp"]["minute"].asInt64();
+            sDSMTimeStamp.minute = minute;
+        }
+        // Optional Second
+        if ( sdsm_json["sdsm_time_stamp"].isMember("second") ) {
+            auto second = (DSecond_t*) calloc(1, sizeof(DSecond_t));
+            *second = sdsm_json["sdsm_time_stamp"]["second"].asInt64();
+            sDSMTimeStamp.second = second;
+        }
+        // Optional Offset
+        if ( sdsm_json["sdsm_time_stamp"].isMember("offset") ) {
+            auto offset = (DOffset_t*) calloc( 1, sizeof(DOffset_t));
+            *offset = sdsm_json["sdsm_time_stamp"]["offset"].asInt64();
+            sDSMTimeStamp.offset = offset;
+        }
+        sdsm->sDSMTimeStamp = sDSMTimeStamp;
         // Reference Position
         sdsm->refPos.lat = sdsm_json["ref_pos"]["lat"].asInt64();
         sdsm->refPos.Long = sdsm_json["ref_pos"]["long"].asInt64();
@@ -170,7 +196,7 @@ namespace CARMAStreetsPlugin
         std::vector<uint8_t> id_vector(id_data.begin(), id_data.end());
         uint8_t *id_ptr = &id_vector[0];
         tempID.buf = id_ptr;
-        tempID.size = sizeof(id_ptr);
+        tempID.size = sizeof(id_vector);
         sdsm->sourceID = tempID;
 
         sdsm->equipmentType = sdsm_json["equipment_type"].asInt64();
@@ -477,6 +503,15 @@ namespace CARMAStreetsPlugin
 
 
     void JsonToJ3224SDSMConverter::encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
+    {
+        auto _sdsmMessage = new tmx::messages::SdsmMessage(sdsmPtr);
+        tmx::messages::MessageFrameMessage frame(_sdsmMessage->get_j2735_data());
+        encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
+        asn_fprint(stdout, &asn_DEF_MessageFrame, frame.get_j2735_data().get());
+        free(frame.get_j2735_data().get());
+    }
+
+    void JsonToJ3224SDSMConverter::encodeSDSM(SensorDataSharingMessage_t *sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
     {
         auto _sdsmMessage = new tmx::messages::SdsmMessage(sdsmPtr);
         tmx::messages::MessageFrameMessage frame(_sdsmMessage->get_j2735_data());
