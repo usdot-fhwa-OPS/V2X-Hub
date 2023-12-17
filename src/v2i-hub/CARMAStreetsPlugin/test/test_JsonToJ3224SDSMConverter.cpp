@@ -245,13 +245,13 @@ namespace CARMAStreetsPlugin
         ASSERT_EQ(3, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->pitchRateConfidence);
         ASSERT_EQ(4, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehAngVelConfidence->rollRateConfidence);
 
-        // ASSERT_EQ(300, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->width);
-        // ASSERT_EQ(700, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->length);
-        // ASSERT_EQ(70, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.height);
+        ASSERT_EQ(300, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->width);
+        ASSERT_EQ(700, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.size->length);
+        ASSERT_EQ(70, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.height);
 
-        // ASSERT_EQ(7, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleWidthConfidence);
-        // ASSERT_EQ(6, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleLengthConfidence);
-        // ASSERT_EQ(5, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleHeightConfidence);
+        ASSERT_EQ(7, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleWidthConfidence);
+        ASSERT_EQ(6, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleLengthConfidence);
+        ASSERT_EQ(5, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleSizeConfidence->vehicleHeightConfidence);
 
         // ASSERT_EQ(11, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.vehicleClass);
         // ASSERT_EQ(75, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVeh.classConf);

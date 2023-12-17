@@ -261,6 +261,31 @@ namespace CARMAStreetsPlugin
                 }
                 optional_data->choice.detVeh.vehAngVelConfidence = angular_velocity_confidence;
             }
+            // Optional Vehicle Size
+            if (optional_data_json["detected_vehicle_data"].isMember("size")) {
+                auto veh_size = (VehicleSize_t*) calloc( 1, sizeof(VehicleSize_t));
+                veh_size->length = optional_data_json["detected_vehicle_data"]["size"]["length"].asInt64();
+                veh_size->width = optional_data_json["detected_vehicle_data"]["size"]["width"].asInt64();
+                optional_data->choice.detVeh.size = veh_size;
+            }
+            // Optional Vehicle Height
+            if (optional_data_json["detected_vehicle_data"].isMember("height")) {
+                auto veh_height = (VehicleHeight_t*)calloc(1, sizeof(VehicleHeight_t));
+                *veh_height = optional_data_json["detected_vehicle_data"]["height"].asInt64();
+                optional_data->choice.detVeh.height = veh_height;
+            }
+            // Optional Vehicle Size Confidence
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_size_confidence"))  {
+                auto veh_size_confidence = (VehicleSizeConfidence_t*)calloc(1, sizeof(VehicleSizeConfidence_t));
+                veh_size_confidence->vehicleLengthConfidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_length_confidence"].asInt64();
+                veh_size_confidence->vehicleWidthConfidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_width_confidence"].asInt64();
+                if (optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"].isMember("vehicle_height_confidence")) {
+                    auto veh_height_confidence = (SizeValueConfidence_t*)calloc(1, sizeof(SizeValueConfidence_t));
+                    *veh_height_confidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_height_confidence"].asInt64();
+                    veh_size_confidence->vehicleHeightConfidence = veh_height_confidence;
+                }
+                optional_data->choice.detVeh.vehicleSizeConfidence = veh_size_confidence;
+            }
         }
     }
 
