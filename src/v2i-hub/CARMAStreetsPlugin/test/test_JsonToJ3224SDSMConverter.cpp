@@ -554,7 +554,7 @@ namespace CARMAStreetsPlugin
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
             {
-                "msg_cnt": 128,
+                "msg_cnt": 127,
                 "source_id": "rsu_1234",
                 "equipment_type": 1,
                 "sdsm_time_stamp": {
@@ -686,13 +686,13 @@ namespace CARMAStreetsPlugin
         converter.convertJsonToSDSM(root, sdsmPtr);
 
         EXPECT_EQ(3, sdsmPtr->objects.list.count);
-        // TODO Add back once fix exception
-        // tmx::messages::SdsmEncodedMessage encodedSdsm;
-        // converter.encodeSDSM(sdsmPtr, encodedSdsm);
-        // EXPECT_EQ(41,  encodedSdsm.get_msgId());
+        // Encode message
+        tmx::messages::SdsmEncodedMessage encodedSdsm;
+        converter.encodeSDSM(sdsmPtr, encodedSdsm);
+        EXPECT_EQ(41,  encodedSdsm.get_msgId());
 	
-        // std::string expectedSDSMEncHex = "00293f81303330343fdf5dc933c4e226c29af8da011e1a2ffe203dd790c3514017f304bea06402c7cfbe97c00992a0d18fa23e809130bb901031f2e75904b064b3c0";
-        // EXPECT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());
+        std::string expectedSDSMEncHex = "0029617f313233343fdf9f234001bd5a406b49d200d693a3fe00000000054011800057700bffa3ff5bfef80011800c80000a028280500280a300012ee017ff47feb7fdf0000d0000000008500c600035dc02ffe8ffd6ffbe0001a0000000000301901928";
+        EXPECT_EQ(expectedSDSMEncHex, encodedSdsm.get_payload_str());
     }
     
 }
