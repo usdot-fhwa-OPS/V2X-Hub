@@ -31,16 +31,19 @@ namespace CARMAStreetsPlugin
          * @param json Incoming Json value with sdsm information that is consumed from a Kafka topic.
          * @param sdsm Outgoing J3224 sdsm object that is populated by the json value.
          */
-        void convertJsonToSDSM(const Json::Value &sdsm_json, std::shared_ptr<SensorDataSharingMessage>  sdsm) const;
+
+        void convertJsonToSDSM(const Json::Value &sdsm_json, const std::shared_ptr<SensorDataSharingMessage_t> &sdsm) const;
 
         /***
          * @brief Encode J3224 SDSM
          * @param Pointer to  J3224 SDSM object
          * @param Encoded J3224 SDSM
          */
-        void encodeSDSM(const std::shared_ptr<SensorDataSharingMessage> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const;
-
+        void encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const;
+    
         ~JsonToJ3224SDSMConverter() = default;
+    private:
+        void populateOptionalData(const Json::Value &optional_data_json, DetectedObjectOptionalData_t *optional_data) const;
     };
 
 }

@@ -685,23 +685,19 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 				{
 					sdsm_convertor.encodeSDSM(sdsm_ptr, sdsmEncodedMsg);
 				}
-				catch (TmxException &ex) 
+				catch( std::exception const & x )
 				{
-					// Skip messages that fail to encode.
-					PLOG(logERROR) << "Failed to encoded SDSM message : \n" << payload_str << std::endl << "Exception encountered: " 
-						<< ex.what() << std::endl;
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // may be unnecessary
+					PLOG(logERROR) << "Failed to encoded SDSM message : " << payload_str << std::endl << boost::diagnostic_information( x ) << std::endl;
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
 					continue;
 				}
 				
-				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // same as above
 				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
-
 				//Broadcast the encoded SDSM message
 				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				sdsmEncodedMsg.addDsrcMetadata(0x8002);
-				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));		
+				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));
+		
 			}
 		}
 	}

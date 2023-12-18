@@ -35,334 +35,328 @@ namespace CARMAStreetsPlugin
         }
         return parseResult;
     }
-
-
-    void JsonToJ3224SDSMConverter::convertJsonToSDSM(const Json::Value &sdsm_json, std::shared_ptr<SensorDataSharingMessage> sdsm) const
-    {
-        std::vector<std::shared_ptr<void>> shared_ptrs;
-
+    void JsonToJ3224SDSMConverter::convertJsonToSDSM(const Json::Value &sdsm_json, const std::shared_ptr<SensorDataSharingMessage_t> &sdsm) const {
+        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm.get());
+        // Message Count
         sdsm->msgCnt = sdsm_json["msg_cnt"].asInt64();
+        // Source ID (Expecting format "rsu_<4-digit-number>")
+        std::string id_data = sdsm_json["source_id"].asString().substr(4);
+	    auto *tempID = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+        OCTET_STRING_fromString(tempID, id_data.c_str());
+        sdsm->sourceID = *tempID;
+        free(tempID);
 
-        // TODO: confirm input sourceID from JSON to C struct constructs octet appropriately
-        // sourceID
-        TemporaryID_t tempID;
-
-        std::string id_data = sdsm_json["source_id"].asString();
-        std::vector<uint8_t> id_vector(id_data.begin(), id_data.end());
-        uint8_t *id_ptr = &id_vector[0];
-        tempID.buf = id_ptr;
-        tempID.size = sizeof(id_ptr);
-        sdsm->sourceID = tempID;
-
+        // Equipment Type
         sdsm->equipmentType = sdsm_json["equipment_type"].asInt64();
 
-        
-        // sDSMTimeStamp
-        auto sdsm_time_stamp_ptr = CARMAStreetsPlugin::create_store_shared<DDateTime_t>(shared_ptrs);
-
-        auto year_ptr = CARMAStreetsPlugin::create_store_shared<DYear_t>(shared_ptrs);
-        *year_ptr = sdsm_json["sdsm_time_stamp"]["year"].asInt64();
-        sdsm_time_stamp_ptr->year = year_ptr;
-
-        auto month_ptr = CARMAStreetsPlugin::create_store_shared<DMonth_t>(shared_ptrs);
-        *month_ptr = sdsm_json["sdsm_time_stamp"]["month"].asInt64();
-        sdsm_time_stamp_ptr->month = month_ptr;
-
-        auto day_ptr = CARMAStreetsPlugin::create_store_shared<DDay_t>(shared_ptrs);
-        *day_ptr = sdsm_json["sdsm_time_stamp"]["day"].asInt64();
-        sdsm_time_stamp_ptr->day = day_ptr;
-
-        auto hour_ptr = CARMAStreetsPlugin::create_store_shared<DHour_t>(shared_ptrs);
-        *hour_ptr = sdsm_json["sdsm_time_stamp"]["hour"].asInt64();
-        sdsm_time_stamp_ptr->hour = hour_ptr;
-
-        auto minute_ptr = CARMAStreetsPlugin::create_store_shared<DMinute_t>(shared_ptrs);
-        *minute_ptr = sdsm_json["sdsm_time_stamp"]["minute"].asInt64();
-        sdsm_time_stamp_ptr->minute = minute_ptr;
-
-        auto second_ptr = CARMAStreetsPlugin::create_store_shared<DSecond_t>(shared_ptrs);
-        *second_ptr = sdsm_json["sdsm_time_stamp"]["second"].asInt64();
-        sdsm_time_stamp_ptr->second = second_ptr;
-
-        auto offset_ptr = CARMAStreetsPlugin::create_store_shared<DOffset_t>(shared_ptrs);
-        *offset_ptr = sdsm_json["sdsm_time_stamp"]["offset"].asInt64();
-        sdsm_time_stamp_ptr->offset = offset_ptr;
-
-        sdsm->sDSMTimeStamp = *sdsm_time_stamp_ptr;
-
-        // refPos
-        auto ref_pos_ptr = CARMAStreetsPlugin::create_store_shared<Position3D_t>(shared_ptrs);
-        ref_pos_ptr->lat = sdsm_json["ref_pos"]["lat"].asInt64();
-        ref_pos_ptr->Long = sdsm_json["ref_pos"]["long"].asInt64();
-        auto elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
-        *elevation_ptr = sdsm_json["ref_pos"]["elevation"].asInt64();
-        ref_pos_ptr->elevation = elevation_ptr;
-
-        sdsm->refPos = *ref_pos_ptr;
-
-        // refPosXYConf
-        PositionalAccuracy_t ref_pos_xy_conf;
-        ref_pos_xy_conf.semiMajor = sdsm_json["ref_pos_xy_conf"]["semi_major"].asInt64();
-        ref_pos_xy_conf.semiMinor = sdsm_json["ref_pos_xy_conf"]["semi_minor"].asInt64();
-        ref_pos_xy_conf.orientation = sdsm_json["ref_pos_xy_conf"]["orientation"].asInt64();
-
-        sdsm->refPosXYConf = ref_pos_xy_conf;
-
-        // refPosElConf
-        auto ref_pos_el_conf_ptr = CARMAStreetsPlugin::create_store_shared<ElevationConfidence_t>(shared_ptrs);
-        *ref_pos_el_conf_ptr = sdsm_json["ref_pos_el_conf"].asInt64();
-        sdsm->refPosElConf = ref_pos_el_conf_ptr;
-
-        // Creat initial pointers for detected object list and contained objects
-        auto object_list = CARMAStreetsPlugin::create_store_shared<DetectedObjectList_t>(shared_ptrs);
-        auto object_data = CARMAStreetsPlugin::create_store_shared<DetectedObjectData_t>(shared_ptrs);
-
-
-        if(sdsm_json.isMember("objects") && sdsm_json["objects"].isArray()){
+        // SDSM DateTime timestamp
+        DDateTime_t sDSMTimeStamp;
+        // Optional Year
+        if ( sdsm_json["sdsm_time_stamp"].isMember("year") ) {
+            auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
+            *year = sdsm_json["sdsm_time_stamp"]["year"].asInt64();
+            sDSMTimeStamp.year = year;
+        }
+        // Optional Month
+        if ( sdsm_json["sdsm_time_stamp"].isMember("month") ) {
+            auto month = (DMonth_t*) calloc(1, sizeof(DMonth_t));
+            *month = sdsm_json["sdsm_time_stamp"]["month"].asInt64();
+            sDSMTimeStamp.month = month;
+        }
+        // Optional Day
+        if ( sdsm_json["sdsm_time_stamp"].isMember("day") ) {
+            auto day = (DDay_t*) calloc(1, sizeof(DDay_t));
+            *day = sdsm_json["sdsm_time_stamp"]["day"].asInt64();
+            sDSMTimeStamp.day = day;
+        }
+        // Optional Hour
+        if ( sdsm_json["sdsm_time_stamp"].isMember("hour") ) {
+            auto hour = (DHour_t*) calloc(1, sizeof(DHour_t));
+            *hour = sdsm_json["sdsm_time_stamp"]["hour"].asInt64();
+            sDSMTimeStamp.hour = hour;
+        }
+        // Optional Minute
+        if ( sdsm_json["sdsm_time_stamp"].isMember("minute") ) {
+            auto minute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
+            *minute = sdsm_json["sdsm_time_stamp"]["minute"].asInt64();
+            sDSMTimeStamp.minute = minute;
+        }
+        // Optional Second
+        if ( sdsm_json["sdsm_time_stamp"].isMember("second") ) {
+            auto second = (DSecond_t*) calloc(1, sizeof(DSecond_t));
+            *second = sdsm_json["sdsm_time_stamp"]["second"].asInt64();
+            sDSMTimeStamp.second = second;
+        }
+        // Optional Offset
+        if ( sdsm_json["sdsm_time_stamp"].isMember("offset") ) {
+            auto offset = (DOffset_t*) calloc( 1, sizeof(DOffset_t));
+            *offset = sdsm_json["sdsm_time_stamp"]["offset"].asInt64();
+            sDSMTimeStamp.offset = offset;
+        }
+        sdsm->sDSMTimeStamp = sDSMTimeStamp;
+        // Reference Position
+        sdsm->refPos.lat = sdsm_json["ref_pos"]["lat"].asInt64();
+        sdsm->refPos.Long = sdsm_json["ref_pos"]["long"].asInt64();
+        // Optional elevation 
+        if (sdsm_json["ref_pos"].isMember("elevation") ) {
+            auto elevation = (DSRC_Elevation_t*) calloc(1, sizeof(DSRC_Elevation_t));
+            *elevation = sdsm_json["ref_pos"]["elevation"].asInt64();
+            sdsm->refPos.elevation = elevation;
+        }
+        // Positional accuracy
+        sdsm->refPosXYConf.semiMajor = sdsm_json["ref_pos_xy_conf"]["semi_major"].asInt64();
+        sdsm->refPosXYConf.semiMinor = sdsm_json["ref_pos_xy_conf"]["semi_minor"].asInt64();
+        sdsm->refPosXYConf.orientation = sdsm_json["ref_pos_xy_conf"]["orientation"].asInt64();
+        if (sdsm_json.isMember("ref_pos_el_conf")) {
+            auto elevation_confidence = (ElevationConfidence_t*) calloc(1, sizeof(ElevationConfidence_t));
+            *elevation_confidence = sdsm_json["ref_pos_el_conf"].asInt64();
+            sdsm->refPosElConf = elevation_confidence;
+        }
+        if (sdsm_json.isMember("objects") && sdsm_json["objects"].isArray() ) {
+            auto objects = (DetectedObjectList_t*) calloc(1, sizeof(DetectedObjectList_t));
             Json::Value objectsJsonArr = sdsm_json["objects"];
             for(auto itr = objectsJsonArr.begin(); itr != objectsJsonArr.end(); itr++){
-
-                auto common_data = CARMAStreetsPlugin::create_store_shared<DetectedObjectCommonData_t>(shared_ptrs);
-            
-                // Propegate common data
-                common_data->objType         = (*itr)["detected_object_data"]["detected_object_common_data"]["obj_type"].asInt64();;
-                common_data->objTypeCfd      = (*itr)["detected_object_data"]["detected_object_common_data"]["obj_type_cfd"].asInt64();
-                common_data->objectID        = (*itr)["detected_object_data"]["detected_object_common_data"]["object_id"].asInt64();
-                common_data->measurementTime = (*itr)["detected_object_data"]["detected_object_common_data"]["measurement_time"].asInt64();
-                common_data->timeConfidence  = (*itr)["detected_object_data"]["detected_object_common_data"]["time_confidence"].asInt64();
-                
-                // pos (posOffsetXYZ)
-                common_data->pos.offsetX = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_x"].asInt64();
-                common_data->pos.offsetY = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_y"].asInt64();
-                auto offset_z_ptr = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
-                *offset_z_ptr = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_z"].asInt64();
-                common_data->pos.offsetZ = offset_z_ptr;
-
-                // posConfidence
-                common_data->posConfidence.pos       = (*itr)["detected_object_data"]["detected_object_common_data"]["pos_confidence"]["pos"].asInt64();
-                common_data->posConfidence.elevation = (*itr)["detected_object_data"]["detected_object_common_data"]["pos_confidence"]["elevation"].asInt64();
-
-                // speed/speedConfidence
-                common_data->speed           = (*itr)["detected_object_data"]["detected_object_common_data"]["speed"].asInt64();
-                common_data->speedConfidence = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_confidence"].asInt64();
-
-                // speedZ/speedConfidenceZ
-                auto speed_z_ptr = CARMAStreetsPlugin::create_store_shared<Speed_t>(shared_ptrs);
-                *speed_z_ptr        = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_z"].asInt64();
-                common_data->speedZ = speed_z_ptr;
-                auto speed_conf_z_ptr = CARMAStreetsPlugin::create_store_shared<SpeedConfidence_t>(shared_ptrs);
-                *speed_conf_z_ptr   = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"].asInt64();
-                common_data->speedConfidenceZ = speed_conf_z_ptr;
-
-                // heading/headingConf
-                common_data->heading     = (*itr)["detected_object_data"]["detected_object_common_data"]["heading"].asInt64();
-                common_data->headingConf = (*itr)["detected_object_data"]["detected_object_common_data"]["heading_conf"].asInt64();
-
-                // accel4way
-                auto accel_4_way_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationSet4Way_t>(shared_ptrs);
-                accel_4_way_ptr->Long   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"].asInt64();
-                accel_4_way_ptr->lat    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"].asInt64();
-                accel_4_way_ptr->vert   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"].asInt64();
-                accel_4_way_ptr->yaw    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt64();
-                common_data->accel4way = accel_4_way_ptr;
-
-                // accCfd(X/Y/Z/Yaw)
-                auto acc_cfd_x_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
-                *acc_cfd_x_ptr = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_x"].asInt64();
-                common_data->accCfdX = acc_cfd_x_ptr;
-
-                auto acc_cfd_y_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
-                *acc_cfd_y_ptr = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_y"].asInt64();
-                common_data->accCfdY = acc_cfd_y_ptr;
-
-                auto acc_cfd_z_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
-                *acc_cfd_z_ptr = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_z"].asInt64();
-                common_data->accCfdZ = acc_cfd_z_ptr;
-
-                auto acc_cfd_yaw_ptr = CARMAStreetsPlugin::create_store_shared<YawRateConfidence_t>(shared_ptrs);
-                *acc_cfd_yaw_ptr = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_yaw"].asInt64();
-                common_data->accCfdYaw = acc_cfd_yaw_ptr;
-
-
-                // Add common data to object data
-                object_data->detObjCommon = *common_data;
-
-
-
-                // Propegate optional data fields
-
-                // detectedObjectOptionalData
-                auto optional_data_ptr = CARMAStreetsPlugin::create_store_shared<DetectedObjectOptionalData_t>(shared_ptrs);
-
-                // determine which optional data choice is being used if any
-                // detVeh
-                if((*itr)["detected_object_data"]["detected_object_optional_data"].isMember("detected_vehicle_data")){
-
-                    // set presence val to veh
-                    optional_data_ptr->present = DetectedObjectOptionalData_PR_detVeh;
-
-                    // TODO: find a better way to convert/test lights val without calloc
-                    // // lights
-                    // auto lights_ptr = CARMAStreetsPlugin::create_store_shared<ExteriorLights_t>(shared_ptrs);
-                    // auto lights = static_cast<int16_t>((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["lights"].asInt());
-                    // lights_ptr->buf = (uint8_t *)calloc(2, sizeof(uint8_t)); // TODO: find calloc alternative if possible, causes a memory leak
-                    // lights_ptr->size = 2 * sizeof(uint8_t);
-                    // lights_ptr->bits_unused = 0;
-                    // lights_ptr->buf[1] = static_cast<int8_t>(lights);
-                    // lights_ptr->buf[0] = (lights >> 8);
-
-                    // optional_data_ptr->choice.detVeh.lights = lights_ptr;
-
-
-                    // vehAttitude
-                    auto attitude_ptr = CARMAStreetsPlugin::create_store_shared<Attitude_t>(shared_ptrs);
-                    attitude_ptr->pitch = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude"]["pitch"].asInt64();
-                    attitude_ptr->roll = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude"]["roll"].asInt64();
-                    attitude_ptr->yaw = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude"]["yaw"].asInt64();
-                    optional_data_ptr->choice.detVeh.vehAttitude = attitude_ptr;
-
-                    // vehAttitudeConfidence
-                    auto attitude_conf_ptr = CARMAStreetsPlugin::create_store_shared<AttitudeConfidence_t>(shared_ptrs);
-                    attitude_conf_ptr->pitchConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude_confidence"]["pitch_confidence"].asInt64();
-                    attitude_conf_ptr->rollConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude_confidence"]["roll_confidence"].asInt64();
-                    attitude_conf_ptr->yawConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_attitude_confidence"]["yaw_confidence"].asInt64();
-                    optional_data_ptr->choice.detVeh.vehAttitudeConfidence = attitude_conf_ptr;
-
-                    // vehAngVel
-                    auto ang_vel_ptr = CARMAStreetsPlugin::create_store_shared<AngularVelocity_t>(shared_ptrs);
-                    ang_vel_ptr->pitchRate = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_ang_vel"]["pitch_rate"].asInt64();
-                    ang_vel_ptr->rollRate = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_ang_vel"]["roll_rate"].asInt64();
-                    optional_data_ptr->choice.detVeh.vehAngVel = ang_vel_ptr;
-
-                    // vehAngVelConfidence
-                    auto ang_vel_conf_ptr = CARMAStreetsPlugin::create_store_shared<AngularVelocityConfidence_t>(shared_ptrs);
-                    auto pitch_conf_ptr = CARMAStreetsPlugin::create_store_shared<PitchRateConfidence_t>(shared_ptrs);
-                    *pitch_conf_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_ang_vel_confidence"]["pitch_rate_confidence"].asInt64();
-                    ang_vel_conf_ptr->pitchRateConfidence = pitch_conf_ptr;
-                    auto roll_conf_ptr = CARMAStreetsPlugin::create_store_shared<RollRateConfidence_t>(shared_ptrs);
-                    *roll_conf_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["veh_ang_vel_confidence"]["roll_rate_confidence"].asInt64();
-                    ang_vel_conf_ptr->rollRateConfidence = roll_conf_ptr;
-                    optional_data_ptr->choice.detVeh.vehAngVelConfidence = ang_vel_conf_ptr;
-
-                    // size (VehicleSize)
-                    auto size_ptr = CARMAStreetsPlugin::create_store_shared<VehicleSize_t>(shared_ptrs);
-                    size_ptr->width = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["size"]["width"].asInt64();
-                    size_ptr->length = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["size"]["length"].asInt64();
-                    optional_data_ptr->choice.detVeh.size = size_ptr;
-
-                    // height
-                    auto height_ptr = CARMAStreetsPlugin::create_store_shared<VehicleHeight_t>(shared_ptrs);
-                    *height_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["height"].asInt64();
-                    optional_data_ptr->choice.detVeh.height = height_ptr;
-
-                    // vehcleSizeConfidence
-                    auto size_conf_ptr = CARMAStreetsPlugin::create_store_shared<VehicleSizeConfidence_t>(shared_ptrs);
-                    size_conf_ptr->vehicleWidthConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_width_confidence"].asInt64();
-                    size_conf_ptr->vehicleLengthConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_length_confidence"].asInt64();
-                    auto height_conf_ptr = CARMAStreetsPlugin::create_store_shared<SizeValueConfidence_t>(shared_ptrs);
-                    *height_conf_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_height_confidence"].asInt64();
-                    size_conf_ptr->vehicleHeightConfidence = height_conf_ptr;
-                    optional_data_ptr->choice.detVeh.vehicleSizeConfidence = size_conf_ptr;
-
-                    // vehicleClass
-                    auto veh_class_ptr = CARMAStreetsPlugin::create_store_shared<BasicVehicleClass_t>(shared_ptrs);
-                    *veh_class_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["vehicle_class"].asInt64();
-                    optional_data_ptr->choice.detVeh.vehicleClass = veh_class_ptr;
-
-                    // vehClassConf
-                    auto veh_class_conf_ptr = CARMAStreetsPlugin::create_store_shared<ClassificationConfidence_t>(shared_ptrs);
-                    *veh_class_conf_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vehicle_data"]["vehicle_class_conf"].asInt64();
-                    optional_data_ptr->choice.detVeh.classConf = veh_class_conf_ptr;
+                auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
+                // Object Common Required Properties
+                // Object Type
+                objectData->detObjCommon.objType = (*itr)["detected_object_data"]["detected_object_common_data"]["obj_type"].asInt64();
+                // Object Type Classification confidence
+                objectData->detObjCommon.objTypeCfd = (*itr)["detected_object_data"]["detected_object_common_data"]["obj_type_cfd"].asInt64();
+                // Object ID
+                objectData->detObjCommon.objectID = (*itr)["detected_object_data"]["detected_object_common_data"]["object_id"].asInt64();
+                // Time offset from SDSM timestamp
+                objectData->detObjCommon.measurementTime = (*itr)["detected_object_data"]["detected_object_common_data"]["measurement_time"].asInt64();
+                // Time offset confidence
+                objectData->detObjCommon.timeConfidence = (*itr)["detected_object_data"]["detected_object_common_data"]["time_confidence"].asInt64();
+                // Position offset from reference position
+                objectData->detObjCommon.pos.offsetX = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_x"].asInt64();
+                objectData->detObjCommon.pos.offsetY =  (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_y"].asInt64();
+                // Optional Z offset
+                if ( (*itr)["detected_object_data"]["detected_object_common_data"]["pos"].isMember("offset_z") ) {
+                    auto offset_z = (ObjectDistance_t*) calloc(1, sizeof(ObjectDistance_t));
+                    *offset_z = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_z"].asInt64();
+                    objectData->detObjCommon.pos.offsetZ = offset_z;
                 }
-
-                // detVRU
-                else if((*itr)["detected_object_data"]["detected_object_optional_data"].isMember("detected_vru_data")){
-
-                    optional_data_ptr->present = DetectedObjectOptionalData_PR_detVRU;
-
-                    // basicType
-                    auto basic_type_ptr = CARMAStreetsPlugin::create_store_shared<PersonalDeviceUserType_t>(shared_ptrs);
-                    *basic_type_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["basic_type"].asInt64();
-                    optional_data_ptr->choice.detVRU.basicType = basic_type_ptr;
-
-                    // propulsion choice struct (check to see if propulsion exists)
-                    auto propulsion_ptr = CARMAStreetsPlugin::create_store_shared<PropelledInformation_t>(shared_ptrs);
-
-                    if((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"].isMember("human")){
-                        propulsion_ptr->present = PropelledInformation_PR_human;
-                        propulsion_ptr->choice.human = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"]["human"].asInt64();
-                    }
-                    else if((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"].isMember("animal")){
-                        propulsion_ptr->present = PropelledInformation_PR_animal;
-                        propulsion_ptr->choice.animal = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"]["animal"].asInt64();
-                    }
-                    else if((*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"].isMember("motor")){
-                        propulsion_ptr->present = PropelledInformation_PR_motor;
-                        propulsion_ptr->choice.motor = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["propulsion"]["motor"].asInt64();
-                    }
-                    else{
-                        propulsion_ptr->present = PropelledInformation_PR_NOTHING;
-                        std::cout << "Value was nothing" << std::endl;
-                    }
-                    optional_data_ptr->choice.detVRU.propulsion = propulsion_ptr;
-
-                    // attachement
-                    auto attachment_ptr = CARMAStreetsPlugin::create_store_shared<Attachment_t>(shared_ptrs);
-                    *attachment_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["attachment"].asInt64();
-                    optional_data_ptr->choice.detVRU.attachment = attachment_ptr;
-
-                    // radius
-                    auto radius_ptr = CARMAStreetsPlugin::create_store_shared<AttachmentRadius_t>(shared_ptrs);
-                    *radius_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_vru_data"]["radius"].asInt64();
-                    optional_data_ptr->choice.detVRU.radius = radius_ptr;
+                // Position Confidence
+                objectData->detObjCommon.posConfidence.pos = (*itr)["detected_object_data"]["detected_object_common_data"]["pos_confidence"]["pos"].asInt64();
+                // Elevation Confidence
+                objectData->detObjCommon.posConfidence.elevation = (*itr)["detected_object_data"]["detected_object_common_data"]["pos_confidence"]["elevation"].asInt64();
+                // Horizontal Speed
+                objectData->detObjCommon.speed = (*itr)["detected_object_data"]["detected_object_common_data"]["speed"].asInt64();
+                // Horizontal Speed confidence
+                objectData->detObjCommon.speedConfidence = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_confidence"].asInt64();
+                // Optional Vertical Speed
+                if ( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("speed_z") ) {
+                    auto speed_z = (Speed_t*) calloc(1, sizeof(Speed_t));
+                    *speed_z = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_z"].asInt64();
+                    objectData->detObjCommon.speedZ = speed_z;
                 }
-
-
-                // detObst
-                else if((*itr)["detected_object_data"]["detected_object_optional_data"].isMember("detected_obstacle_data")){
-                    optional_data_ptr->present = DetectedObjectOptionalData_PR_detObst;
-
-                    ObstacleSize obst_size;
-                    obst_size.width = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["width"].asInt64();
-                    obst_size.length = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["length"].asInt64();
-                    auto obst_height_ptr = CARMAStreetsPlugin::create_store_shared<SizeValue_t>(shared_ptrs);
-                    *obst_height_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size"]["height"].asInt64();
-                    obst_size.height = obst_height_ptr;
-                    optional_data_ptr->choice.detObst.obstSize = obst_size;
-
-                    ObstacleSizeConfidence obst_size_conf;
-                    obst_size_conf.widthConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["width_confidence"].asInt64();
-                    obst_size_conf.lengthConfidence = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["length_confidence"].asInt64();
-                    auto obst_height_conf_ptr = CARMAStreetsPlugin::create_store_shared<SizeValueConfidence_t>(shared_ptrs);
-                    *obst_height_conf_ptr = (*itr)["detected_object_data"]["detected_object_optional_data"]["detected_obstacle_data"]["obst_size_confidence"]["height_confidence"].asInt64();
-                    obst_size_conf.heightConfidence = obst_height_conf_ptr;
-                    optional_data_ptr->choice.detObst.obstSizeConfidence = obst_size_conf;
+                // Optional Vertical Speed confidence
+                if ( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("speed_confidence_z")) {
+                    auto speed_confidence_z = (SpeedConfidence_t*) calloc(1, sizeof(SpeedConfidence_t));
+                    *speed_confidence_z = (*itr)["detected_object_data"]["detected_object_common_data"]["speed_confidence_z"].asInt64();
+                    objectData->detObjCommon.speedConfidenceZ = speed_confidence_z;
                 }
+                // Heading
+                objectData->detObjCommon.heading = (*itr)["detected_object_data"]["detected_object_common_data"]["heading"].asInt64();
+                // Heading Confidence
+                objectData->detObjCommon.headingConf = (*itr)["detected_object_data"]["detected_object_common_data"]["heading_conf"].asInt64();
+                // Optional 4 way acceleration
+                if ( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("accel_4_way") ){
+                    auto accel_4way = (AccelerationSet4Way_t*) calloc(1, sizeof(AccelerationSet4Way_t));
+                    accel_4way->Long   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["long"].asInt64();
+                    accel_4way->lat    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["lat"].asInt64();
+                    accel_4way->vert   = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["vert"].asInt64();
+                    accel_4way->yaw    = (*itr)["detected_object_data"]["detected_object_common_data"]["accel_4_way"]["yaw"].asInt64();
+                    objectData->detObjCommon.accel4way = accel_4way;
+                }
+                // Optional acceleration confidence X 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_x") ) {
+                    auto acc_cfd_x = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_x = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_x"].asInt64();
+                    objectData->detObjCommon.accCfdX = acc_cfd_x;
+                }
+                // Optional acceleration confidence Y
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_y") ) {
+                    auto acc_cfd_y = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_y = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_y"].asInt64();
+                    objectData->detObjCommon.accCfdY = acc_cfd_y;
+                }
+                // Optional acceleration confidence Z 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_z") ) {
+                    auto acc_cfd_z = (AccelerationConfidence_t*)calloc(1, sizeof(AccelerationConfidence_t));
+                    *acc_cfd_z = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_z"].asInt64();
+                    objectData->detObjCommon.accCfdZ = acc_cfd_z;
+                }
+                // Optional acceleration confidence Yaw 
+                if( (*itr)["detected_object_data"]["detected_object_common_data"].isMember("acc_cfd_yaw") ) {
+                    auto acc_cfd_yaw = (AccelerationConfidence_t*)calloc(1, sizeof(YawRateConfidence_t));
+                    *acc_cfd_yaw = (*itr)["detected_object_data"]["detected_object_common_data"]["acc_cfd_yaw"].asInt64();
+                    objectData->detObjCommon.accCfdYaw = acc_cfd_yaw;
+                }
+                // Object Optional Data
+                if ((*itr)["detected_object_data"].isMember("detected_object_optional_data") ){
+                    auto optional_data = (DetectedObjectOptionalData_t*)calloc(1, sizeof(DetectedObjectOptionalData_t));
+                    populateOptionalData((*itr)["detected_object_data"]["detected_object_optional_data"], optional_data);
+                    objectData->detObjOptData = optional_data;
+                }
+	            ASN_SEQUENCE_ADD(&objects->list.array, objectData);
+            }
+            sdsm->objects = *objects;
+            free(objects);
+
+        }
+        asn_fprint(stdout, &asn_DEF_SensorDataSharingMessage, sdsm.get());
+    }
 
 
-                // Add optional data to object data
-                object_data->detObjOptData = optional_data_ptr;
+    void JsonToJ3224SDSMConverter::encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
+    {
+        auto _sdsmMessage = new tmx::messages::SdsmMessage(sdsmPtr);
+        tmx::messages::MessageFrameMessage frame(_sdsmMessage->get_j2735_data());
+        encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
+        asn_fprint(stdout, &asn_DEF_MessageFrame, frame.get_j2735_data().get());
+        free(frame.get_j2735_data().get());
+        delete(_sdsmMessage);
+    }
+
+    void JsonToJ3224SDSMConverter::populateOptionalData(const Json::Value &optional_data_json, DetectedObjectOptionalData_t *optional_data) const {
+        if ( optional_data_json.isMember("detected_vehicle_data") ) {
+            optional_data->present = DetectedObjectOptionalData_PR_detVeh;
+            // Optional Vehicle Attitude 
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_attitude")) {
+                auto attitude = (Attitude_t*) calloc( 1, sizeof(Attitude_t));
+                attitude->pitch = optional_data_json["detected_vehicle_data"]["veh_attitude"]["pitch"].asInt64();
+                attitude->roll = optional_data_json["detected_vehicle_data"]["veh_attitude"]["roll"].asInt64();
+                attitude->yaw = optional_data_json["detected_vehicle_data"]["veh_attitude"]["yaw"].asInt64();
+                optional_data->choice.detVeh.vehAttitude = attitude;
+            }
+            // Optional Vehicle Attitude Confidence 
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_attitude_confidence")) {
+                auto attitude_confidence = (AttitudeConfidence_t*) calloc( 1, sizeof(AttitudeConfidence_t));
+                attitude_confidence->pitchConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["pitch_confidence"].asInt64();
+                attitude_confidence->rollConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["roll_confidence"].asInt64();
+                attitude_confidence->yawConfidence = optional_data_json["detected_vehicle_data"]["veh_attitude_confidence"]["yaw_confidence"].asInt64();
+                optional_data->choice.detVeh.vehAttitudeConfidence = attitude_confidence;
+            }
+            // Optional Vehicle Angular Velocity
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_ang_vel")) {
+                auto angular_velocity = (AngularVelocity_t*) calloc( 1, sizeof(AngularVelocity_t));
+                angular_velocity->pitchRate = optional_data_json["detected_vehicle_data"]["veh_ang_vel"]["pitch_rate"].asInt64();
+                angular_velocity->rollRate = optional_data_json["detected_vehicle_data"]["veh_ang_vel"]["roll_rate"].asInt64();
+                optional_data->choice.detVeh.vehAngVel = angular_velocity;
+            }
+            // Optional Vehicle Angular Velocity
+            if (optional_data_json["detected_vehicle_data"].isMember("veh_ang_vel_confidence")) {
+                auto angular_velocity_confidence = (AngularVelocityConfidence_t*) calloc( 1, sizeof(AngularVelocityConfidence_t));
+                if (optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"].isMember("pitch_rate_confidence")) {
+                    auto pitch_rate_confidence = (PitchRateConfidence_t*) calloc(1, sizeof(PitchRateConfidence_t));
+                    *pitch_rate_confidence = optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"]["pitch_rate_confidence"].asInt64();
+                    angular_velocity_confidence->pitchRateConfidence = pitch_rate_confidence;
+                }
+                if (optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"].isMember("roll_rate_confidence")) {
+                    auto roll_rate_confidence = (RollRateConfidence_t*) calloc(1, sizeof(RollRateConfidence_t));
+                    *roll_rate_confidence = optional_data_json["detected_vehicle_data"]["veh_ang_vel_confidence"]["roll_rate_confidence"].asInt64();
+                    angular_velocity_confidence->rollRateConfidence = roll_rate_confidence;
+                }
+                optional_data->choice.detVeh.vehAngVelConfidence = angular_velocity_confidence;
+            }
+            // Optional Vehicle Size
+            if (optional_data_json["detected_vehicle_data"].isMember("size")) {
+                auto veh_size = (VehicleSize_t*) calloc( 1, sizeof(VehicleSize_t));
+                veh_size->length = optional_data_json["detected_vehicle_data"]["size"]["length"].asInt64();
+                veh_size->width = optional_data_json["detected_vehicle_data"]["size"]["width"].asInt64();
+                optional_data->choice.detVeh.size = veh_size;
+            }
+            // Optional Vehicle Height
+            if (optional_data_json["detected_vehicle_data"].isMember("height")) {
+                auto veh_height = (VehicleHeight_t*)calloc(1, sizeof(VehicleHeight_t));
+                *veh_height = optional_data_json["detected_vehicle_data"]["height"].asInt64();
+                optional_data->choice.detVeh.height = veh_height;
+            }
+            // Optional Vehicle Size Confidence
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_size_confidence"))  {
+                auto veh_size_confidence = (VehicleSizeConfidence_t*)calloc(1, sizeof(VehicleSizeConfidence_t));
+                veh_size_confidence->vehicleLengthConfidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_length_confidence"].asInt64();
+                veh_size_confidence->vehicleWidthConfidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_width_confidence"].asInt64();
+                if (optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"].isMember("vehicle_height_confidence")) {
+                    auto veh_height_confidence = (SizeValueConfidence_t*)calloc(1, sizeof(SizeValueConfidence_t));
+                    *veh_height_confidence = optional_data_json["detected_vehicle_data"]["vehicle_size_confidence"]["vehicle_height_confidence"].asInt64();
+                    veh_size_confidence->vehicleHeightConfidence = veh_height_confidence;
+                }
+                optional_data->choice.detVeh.vehicleSizeConfidence = veh_size_confidence;
+            }
+            // Optional Vehicle Class
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_class"))  {
+                auto vehicle_class = (BasicVehicleClass_t*)calloc(1, sizeof(BasicVehicleClass_t));
+                *vehicle_class = optional_data_json["detected_vehicle_data"]["vehicle_class"].asInt64();
+                optional_data->choice.detVeh.vehicleClass = vehicle_class;
+            }
+            if (optional_data_json["detected_vehicle_data"].isMember("vehicle_class_conf"))  {
+                auto vehicle_class_conf = (ClassificationConfidence_t*)calloc(1, sizeof(ClassificationConfidence_t));
+                *vehicle_class_conf = optional_data_json["detected_vehicle_data"]["vehicle_class_conf"].asInt64();
+                optional_data->choice.detVeh.classConf = vehicle_class_conf;
+            }
+
+        }
+        else if (optional_data_json.isMember("detected_vru_data") ) {
+            optional_data->present = DetectedObjectOptionalData_PR_detVRU;
+            // Optional VRU Basic Type
+            if ( optional_data_json["detected_vru_data"].isMember("basic_type")) {
+                auto basic_type = (PersonalDeviceUserType_t*) calloc(1, sizeof(PersonalDeviceUserType_t));
+                *basic_type = optional_data_json["detected_vru_data"]["basic_type"].asInt64();
+                optional_data->choice.detVRU.basicType = basic_type;
+            }
+            // Optional propulsion information
+            if (optional_data_json["detected_vru_data"].isMember("propulsion")) {
+                auto propelled_info = (PropelledInformation_t*) calloc(1, sizeof(PropelledInformation_t));
+                if (optional_data_json["detected_vru_data"]["propulsion"].isMember("human") ) {
+                    propelled_info->present = PropelledInformation_PR_human;
+                    propelled_info->choice.human =  optional_data_json["detected_vru_data"]["propulsion"]["human"].asInt64();
+                }
+                else if (optional_data_json["detected_vru_data"]["propulsion"].isMember("animal") ) {
+                    propelled_info->present = PropelledInformation_PR_animal;
+                    propelled_info->choice.animal =  optional_data_json["detected_vru_data"]["propulsion"]["animal"].asInt64();
+                }
+                else if (optional_data_json["detected_vru_data"]["propulsion"].isMember("motor") ) {
+                    propelled_info->present = PropelledInformation_PR_motor;
+                    propelled_info->choice.motor =  optional_data_json["detected_vru_data"]["propulsion"]["motor"].asInt64();
+                }
+                optional_data->choice.detVRU.propulsion = propelled_info;
+            }
+            // Optional VRU Attachment
+            if ( optional_data_json["detected_vru_data"].isMember("attachment")) {
+                auto attachment = (Attachment_t*) calloc(1, sizeof(Attachment_t));
+                *attachment = optional_data_json["detected_vru_data"]["attachment"].asInt64();
+                optional_data->choice.detVRU.attachment = attachment;
+            }
+            // Optional VRU Attachment Radius
+            if ( optional_data_json["detected_vru_data"].isMember("radius")) {
+                auto radius = (AttachmentRadius_t*) calloc(1, sizeof(AttachmentRadius_t));
+                *radius = optional_data_json["detected_vru_data"]["radius"].asInt64();
+                optional_data->choice.detVRU.radius = radius;
+            }
 
 
+        }else if (optional_data_json.isMember("detected_obstacle_data")) {
+            optional_data->present = DetectedObjectOptionalData_PR_detObst;
+            optional_data->choice.detObst.obstSize.length = optional_data_json["detected_obstacle_data"]["obst_size"]["length"].asInt64();
+            optional_data->choice.detObst.obstSize.width = optional_data_json["detected_obstacle_data"]["obst_size"]["width"].asInt64();
+            // Optional Obstacle Height
+            if (optional_data_json["detected_obstacle_data"]["obst_size"].isMember("height")) {
+                auto obst_height = (SizeValue_t*)calloc(1, sizeof(SizeValue_t));
+                *obst_height = optional_data_json["detected_obstacle_data"]["obst_size"]["height"].asInt64();
+                optional_data->choice.detObst.obstSize.height = obst_height;
+            }
+            optional_data->choice.detObst.obstSizeConfidence.lengthConfidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["length_confidence"].asInt64();
+            optional_data->choice.detObst.obstSizeConfidence.widthConfidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["width_confidence"].asInt64();
+            // Optional Obstalce Height Confidence
+            if (optional_data_json["detected_obstacle_data"]["obst_size_confidence"].isMember("height_confidence")) {
+                auto obst_height_confidence = (SizeValueConfidence_t*)calloc(1, sizeof(SizeValueConfidence_t));
+                *obst_height_confidence = optional_data_json["detected_obstacle_data"]["obst_size_confidence"]["height_confidence"].asInt64();
+                optional_data->choice.detObst.obstSizeConfidence.heightConfidence = obst_height_confidence;
             }
         }
-
-        // Append the object to the detected objects list
-        asn_sequence_add(&object_list->list.array, object_data);
-
-        // Set the data to the ASN.1 C struct
-        sdsm->objects = *object_list;
-
-
     }
-
-
-    void JsonToJ3224SDSMConverter::encodeSDSM(const std::shared_ptr<SensorDataSharingMessage> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
-    {
-        tmx::messages::MessageFrameMessage frame(sdsmPtr);
-        encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-        free(frame.get_j2735_data().get());
-    }
-
 
 }
