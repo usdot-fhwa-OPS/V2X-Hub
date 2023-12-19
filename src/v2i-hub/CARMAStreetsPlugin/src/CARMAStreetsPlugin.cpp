@@ -712,7 +712,7 @@ void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::Sensor
 	// and from json. This temporary fix simply using regex to look for numeric,
 	// null, and bool values and removes the quotations around them.
 	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
-	boost::regex exp("\"(null|true|false|[0-9]+(\\.[0-9]+)?)\"");
+	boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
 	std::stringstream ss;
 	std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
 	produce_kafka_msg( rv, _transmitSimSensorDetectedObjTopic);
