@@ -706,8 +706,16 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 
 void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
 {
+	// TODO: This is a temporary fix for tmx message container property tree
+	// serializing all attributes as strings. This issue needs to be fixed but
+	// is currently out of scope. TMX Messages should be correctly serialize to 
+	// and from json. This temporary fix simply using regex to look for numeric,
+	// null, and bool values and removes the quotations around them.
 	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
-	produce_kafka_msg( msg.to_string(), _transmitSimSensorDetectedObjTopic);
+	boost::regex exp("\"(null|true|false|[0-9]+(\\.[0-9]+)?)\"");
+	std::stringstream ss;
+	std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
+	produce_kafka_msg( rv, _transmitSimSensorDetectedObjTopic);
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
