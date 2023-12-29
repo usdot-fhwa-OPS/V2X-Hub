@@ -14,7 +14,7 @@
     },
     {
       "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG05-P\", \"SendType\": \"TMSG05-P\", \"PSID\": \"0x8003\", \"Channel\": \"183\" }, { \"TmxType\": \"SSM\", \"SendType\": \"SSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }] }",
+      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"PSM\", \"SendType\": \"PSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" } ,{ \"TmxType\": \"TMSG07\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03-P\", \"PSID\": \"0xBFEE\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG05-P\", \"SendType\": \"TMSG05-P\", \"PSID\": \"0x8003\", \"Channel\": \"183\" }, { \"TmxType\": \"SSM\", \"SendType\": \"SSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"SDSM\", \"SendType\": \"SDSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }] }",
       "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 1."
     },
     {
