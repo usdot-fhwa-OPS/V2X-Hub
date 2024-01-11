@@ -695,7 +695,7 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
 				//Broadcast the encoded SDSM message
 				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-				sdsmEncodedMsg.addDsrcMetadata(0x8002);
+				sdsmEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::sensorDataSharingMessage_PSID);
 				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));
 		
 			}
