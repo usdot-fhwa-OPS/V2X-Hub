@@ -49,6 +49,54 @@ services:
     image: usdotfhwaops/port-drayage-webservice:latest
     container_name: port_drayage_webservice
     network_mode: host
+
+  pg_data_wh:
+    container_name: pg_data_wh
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: my_data_wh_db
+      POSTGRES_USER: my_data_wh_user
+      POSTGRES_PASSWORD: my_data_wh_pwd
+    ports:
+      - "5488:5432"
+    volumes:
+      - pg_data_wh:/var/lib/postgresql/data
+      - ./dataset:/docker-entrypoint-initdb.d
+      
+  pg_grafana:
+    container_name: pg_grafana
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: my_grafana_db
+      POSTGRES_USER: my_grafana_user
+      POSTGRES_PASSWORD: my_grafana_pwd
+    ports:
+      - "5499:5432"
+    volumes:
+      - pg_grafana:/var/lib/postgresql/data
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    user: "0:0"
+    environment:
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: pg_grafana:5432
+      GF_DATABASE_NAME: my_grafana_db
+      GF_DATABASE_USER: my_grafana_user
+      GF_DATABASE_PASSWORD: my_grafana_pwd
+      GF_DATABASE_SSL_MODE: disable
+    restart: unless-stopped
+    depends_on:
+        - pg_grafana
+    ports:
+      - 3111:3000
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./dashboards:/etc/grafana/provisioning/dashboards/
+
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
@@ -57,3 +105,9 @@ secrets:
 
 volumes:
   mysql-datavolume:
+  pg_grafana:
+    driver: local
+  grafana:
+    driver: local
+  pg_data_wh:
+    driver: local
