@@ -80,7 +80,7 @@ MACRO (BuildTmxPlugin)
     
     FILE (GLOB_RECURSE SOURCES "src/*.c*")
 
-    ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES})
+    ADD_EXECUTABLE (${PROJECT_NAME} ${SOURCES} "/opt/carma/lib/libcarma-clock.so")
     # generate executables in the bin directory to use in a zip file
     SET_TARGET_PROPERTIES (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin")
                       

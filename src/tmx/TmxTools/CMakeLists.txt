@@ -9,7 +9,7 @@ FOREACH (TOOL ${CLI_TOOLS})
         GET_FILENAME_COMPONENT (TOOLNAME ${TOOL} NAME)
         FILE (GLOB_RECURSE TOOLSRC "${TOOL}/*.c*")
         
-        ADD_EXECUTABLE (${TOOLNAME} ${TOOLSRC})
+        ADD_EXECUTABLE (${TOOLNAME} ${TOOLSRC} "/opt/carma/lib/libcarma-clock.so") # Full path to the carma-clock library)
         IF (TMX_BIN_DIR)
             SET_TARGET_PROPERTIES (${TOOLNAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${TMX_BIN_DIR}")
         ENDIF ()

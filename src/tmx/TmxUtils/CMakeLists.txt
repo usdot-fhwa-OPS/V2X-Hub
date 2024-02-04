@@ -31,7 +31,7 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        ${NETSNMP} 
                        ${NETSNMP_LIBRARIES} 
                        rdkafka++ 
-                       ::carma-clock
+                       "/opt/carma/lib/libcarma-clock.so" # Full path to the carma-clock library
                        gmock
                        pthread m rt)
                        
@@ -62,4 +62,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES}  gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES} "/opt/carma/lib/libcarma-clock.so"  gtest)
