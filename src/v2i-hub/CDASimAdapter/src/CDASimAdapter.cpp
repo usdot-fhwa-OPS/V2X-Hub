@@ -216,13 +216,13 @@ namespace CDASimAdapter{
     void CDASimAdapter::start_time_sync_thread_timer() {
         PLOG(logDEBUG) << "Creating Thread Timer for time sync" << std::endl;
         if ( !time_sync_timer ) {
-            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
         time_sync_tick_id = time_sync_timer->AddPeriodicTick([this]() {
             PLOG(logDEBUG1) << "Listening for time sync messages from CDASim." << std::endl;
             this->attempt_time_sync();
         } // end of lambda expression
-        , std::chrono::milliseconds(100));
+        , std::chrono::milliseconds(5));
         time_sync_timer->Start();
     }
 
