@@ -30,7 +30,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:latest
+    image: usdotfhwaops/v2xhubamd:voices-pilot2-0.0.1
     container_name: v2xhub
     network_mode: host
     restart: always
@@ -40,15 +40,14 @@ services:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
       - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
       - INFRASTRUCTURE_NAME=<RSU_NAME>
+      - TENA_HOME=/home/TENA
+      - LD_LIBRARY_PATH=/home/TENA/lib
     secrets:
       - mysql_password
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
-  port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice:latest
-    container_name: port_drayage_webservice
-    network_mode: host
+
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt

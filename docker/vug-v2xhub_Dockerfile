@@ -1,0 +1,71 @@
+#
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build --build-arg LEIDOS_TOKEN=$LEIDOS_TOKEN -t usdotfhwaops/v2xhubamd:voices-pilot2-0.0.1 . --progress=plain -f vug-v2xhub_Dockerfile
+#
+
+FROM usdotfhwaops/v2xhubamd:latest-test
+
+LABEL version="0.0.1"
+LABEL description="Custom V2X-Hub with VUG adapters installed"
+
+ARG DEBIAN_FRONTEND="noninteractive"
+ARG LEIDOS_TOKEN
+
+SHELL ["/bin/bash", "-ec"]
+
+# install TENA components
+RUN --mount=type=bind,target=/home/BUILD,readonly,source=vug-build \
+    /home/BUILD/TENA-MiddlewareSDK-v6.0.8.B@Product@u2004-gcc9-64-*.bin -i /home/ --auto && \
+    /home/BUILD/VUG-Combined-Distribution-*.bin -i /home/ --auto && \
+    rm -rf /tmp/*
+
+# install cmake library
+RUN git clone https://${LEIDOS_TOKEN}@github.com/usdot-fhwa-stol/vug-cmake-package.git cmake_temp && \
+	mv cmake_temp/cmake/ /home/TENA/lib/ && \
+	rm -rf cmake_temp
+
+# install boost from source
+RUN apt-get update && \
+   apt-get install -y software-properties-common
+
+# install test repo for old gcc (from u20)
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test
+
+RUN apt-get update && \
+    apt-get install -y \
+        # gcc version from u20
+        gcc-9 g++-9 \
+        # install build dependencies for boost 
+        build-essential g++ python3-dev autotools-dev libicu-dev libbz2-dev libboost-all-dev
+
+# change default gcc/g++ to 9
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 10
+RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 10
+
+WORKDIR /home
+
+# download and build boost 1.71 from source
+RUN wget https://boostorg.jfrog.io/artifactory/main/release/1.71.0/source/boost_1_71_0.tar.gz
+
+RUN tar xvf boost_1_71_0.tar.gz
+
+WORKDIR /home/boost_1_71_0
+
+# fix compile bug from here: https://github.com/boostorg/thread/pull/297
+RUN find boost/thread/pthread/thread_data.hpp -type f -exec sed -i 's/if PTHREAD_STACK_MIN > 0/ifdef PTHREAD_STACK_MIN/g' {} \;
+
+RUN ./bootstrap.sh --prefix=/usr/
+
+RUN ./b2 install
+
+# copy in TENA plugins
+COPY vug-build/TenaBsmPlugin.zip /usr/local/plugins/TenaBsmPlugin.zip
+COPY vug-build/TenaSpatPlugin.zip /usr/local/plugins/TenaSpatPlugin.zip
+
+# set tena env
+RUN source /home/TENA/6.0.8/scripts/tenaenv-u2004-gcc9-64-v6.0.8.sh
+
+RUN echo 'source /home/TENA/6.0.8/scripts/tenaenv-u2004-gcc9-64-v6.0.8.sh' >> /root/.bashrc
+
+WORKDIR /var/log/tmx
+
+ENTRYPOINT ["/usr/local/bin/service.sh"]
