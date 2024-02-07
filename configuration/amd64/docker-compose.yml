@@ -30,7 +30,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhubamd:voices-pilot2-0.0.1
+    image: usdotfhwaops/v2xhubamd:voices-pilot2-latest
     container_name: v2xhub
     network_mode: host
     restart: always
