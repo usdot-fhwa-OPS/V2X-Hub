@@ -1,6 +1,6 @@
 //============================================================================
 // Name        : SharedCodeTest.cpp
-// Description : Example unit test code that uses shared code from the src directory.
+// Description : PhantomTraffic unit test code that uses shared code from the src directory.
 //============================================================================
 
 #include <gtest/gtest.h>
@@ -15,7 +15,7 @@ namespace unit_test {
 
 /**
  * Nothing is setup/torn down in this test fixture.
- * For a more detailed example test, see ExampleTest.cpp.
+ * For a more detailed PhantomTraffic test, see PhantomTrafficTest.cpp.
  */
 class SharedCodeTest : public testing::Test
 {
@@ -29,7 +29,7 @@ TEST_F(SharedCodeTest, TestSampleDataClass)
 {
 	// Use a class that comes from the main "src" directory (not the "test" directory).
 	// Support for *.cpp files from the "src" directory were added in "CMakeLists.txt".
-	ExamplePlugin::SampleData data;
+	PhantomTrafficPlugin::SampleData data;
 
 	EXPECT_EQ(456, data.Value);
 }

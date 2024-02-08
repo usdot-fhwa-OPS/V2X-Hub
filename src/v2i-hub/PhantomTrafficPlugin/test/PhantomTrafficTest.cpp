@@ -1,5 +1,5 @@
 //============================================================================
-// Name        : ExampleTest.cpp
+// Name        : PhantomTrafficTest.cpp
 // Description : Example unit test code using a test fixture.
 //============================================================================
 
