@@ -143,14 +143,14 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 	// Coordinates of slowdown region
 	// Longitude = east-west (increases towards east,more negative towards west)
 	// Latitude = south-north (increases north, more negative towards south)
-	double top_left_long;
-	double top_left_lat;
-	double top_right_long;
-	double top_right_lat;
-	double bottom_left_long;
-	double bottom_left_lat;
-	double bottom_right_long;
-	double bottom_right_lat;
+	double top_left_long; // top left corner 
+	double top_left_lat; // top left corner
+	double top_right_long; // top right corner
+	double top_right_lat; // top right corner
+	double bottom_left_long; // bottom left corner
+	double bottom_left_lat; // bottom left corner
+	double bottom_right_long; // bottom right corner
+	double bottom_right_lat; // bottom right corner
 
 
 	// Coordinates of the vehicle
@@ -160,44 +160,41 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 	// Vehicle ID
 	int32_t vehicle_id = msg.get_TemporaryId();
 
-	bool vehicle_tracked = false;
-
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
 	
-	// Check if we are already tracking the vehicle in the slowdown region
-	if (find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) != vehicle_ids.end())
-	{
-		vehicle_tracked = true;
-		PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is already being tracked.";
-		
-		// The lock_guard automatically unlocks the mutex when it goes out of scope
-		return;
-	}
 
-
-	// Check if the vehicle is in the slowdown region
+	// Check if the vehicle is in the slowdown region.
 	if (vehicle_long >= top_left_long && vehicle_long <= top_right_long && vehicle_lat >= bottom_left_lat && vehicle_lat <= top_left_lat)
 	{
-		if (!vehicle_tracked) // If vehicle is not currently tracked, add to count
+		// Add the vehicle to the list of vehicles being tracked if it's not already tracked
+		if (!find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) != vehicle_ids.end())
 		{
 			vehicle_ids.push_back(vehicle_id);
 			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is now being tracked.";
-
 			vehicle_count += 1;
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
 		}
-	
+		// If the vehicle is already being tracked, do nothing
+		else
+		{
+			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is already being tracked.";
+		}
 	}
-	else // Check if the vehicle is not in the slowdown region and we are tracking it
+	else // Vehicle is not in the slowdown region
 	{
-		if (vehicle_tracked)
+		// Remove the vehicle from the list of vehicles being tracked if it's being tracked
+		if (find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) != vehicle_ids.end())
 		{
 			vehicle_ids.erase(remove(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id), vehicle_ids.end());
 			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is no longer being tracked as it left the slowdown region.";
-
 			vehicle_count -= 1;
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
+		}
+		// If the vehicle is not being tracked, do nothing
+		else
+		{
+			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is not being tracked.";
 		}
 	}
 
