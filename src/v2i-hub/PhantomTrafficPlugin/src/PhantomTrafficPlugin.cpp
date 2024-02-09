@@ -23,7 +23,7 @@ namespace PhantomTrafficPlugin
 {
 
 /**
- * This plugin is an example to demonstrate the capabilities of a TMX plugin.
+ * This plugin observes vehicle counts in a slowdown region and slows down vehicles prior to it.
  */
 class PhantomTrafficPlugin: public PluginClient
 {
@@ -44,6 +44,9 @@ protected:
 private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
+	std::atomic<uint64_t> vehicle_count; // vehicle count in the slowdown region
+	vector<int32_t> vehicle_ids; // vehicle IDs in the slowdown region 
+	std::mutex vehicle_ids_mutex; // mutex for vehicle IDs
 };
 
 /**
@@ -66,6 +69,8 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
+
+	vehicle_count = 0; // Set initial vehicle count to 0 upon creation of plugin.
 }
 
 PhantomTrafficPlugin::~PhantomTrafficPlugin()
@@ -120,13 +125,80 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 	// Determine if location, speed, and heading are valid.
 	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
 
+	if (!isValid) 
+	{
+		PLOG(logDEBUG) << "Received BSM with invalid location, speed, or heading.";
+		return;
+	}
+
 	// Print some of the BSM values.
 	PLOG(logDEBUG) << "ID: " << msg.get_TemporaryId()
 		<< ", Location: (" <<  msg.get_Latitude() << ", " <<  msg.get_Longitude() << ")"
-		<< ", Speed: " << msg.get_Speed_mph() << " mph"
-		<< ", Heading: " << msg.get_Heading() << "°"
-		<< ", All Valid: " << isValid
-		<< ", IsOutgoing: " << msg.get_IsOutgoing();
+		<< ", Speed: " << msg.get_Speed_kph() << "kph"
+		<< ", Heading: " << msg.get_Heading() << "°";
+
+	// Coordinates of slowdown region
+	// Longitude = east-west (increases towards east,more negative towards west)
+	// Latitude = south-north (increases north, more negative towards south)
+	double top_left_long;
+	double top_left_lat;
+	double top_right_long;
+	double top_right_lat;
+	double bottom_left_long;
+	double bottom_left_lat;
+	double bottom_right_long;
+	double bottom_right_lat;
+
+
+	// Coordinates of the vehicle
+	double vehicle_long = msg.get_Longitude();
+	double vehicle_lat = msg.get_Latitude();
+
+	// Vehicle ID
+	int32_t vehicle_id = msg.get_TemporaryId();
+
+	bool vehicle_tracked = false;
+
+	// Lock the mutex
+	std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
+	
+	// Check if we are already tracking the vehicle in the slowdown region
+	if (find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) != vehicle_ids.end())
+	{
+		vehicle_tracked = true;
+		PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is already being tracked.";
+		
+		// The lock_guard automatically unlocks the mutex when it goes out of scope
+		return;
+	}
+
+
+	// Check if the vehicle is in the slowdown region
+	if (vehicle_long >= top_left_long && vehicle_long <= top_right_long && vehicle_lat >= bottom_left_lat && vehicle_lat <= top_left_lat)
+	{
+		if (!vehicle_tracked) // If vehicle is not currently tracked, add to count
+		{
+			vehicle_ids.push_back(vehicle_id);
+			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is now being tracked.";
+
+			vehicle_count += 1;
+			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
+		}
+	
+	}
+	else // Check if the vehicle is not in the slowdown region and we are tracking it
+	{
+		if (vehicle_tracked)
+		{
+			vehicle_ids.erase(remove(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id), vehicle_ids.end());
+			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is no longer being tracked as it left the slowdown region.";
+
+			vehicle_count -= 1;
+			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
+		}
+	}
+
+	// The lock_guard automatically unlocks the mutex when it goes out of scope
 }
 
 // Example of handling
@@ -145,21 +217,33 @@ int PhantomTrafficPlugin::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
 
-	uint msCount = 0;
+	double original_speed = 50.0; // km/h
+
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
+		PLOG(logDEBUG4) << "Sleeping for 5 seconds" << endl;
 
-		this_thread::sleep_for(chrono::milliseconds(10));
+		long long ms_to_sleep = 5000; // 5 seconds
 
-		msCount += 10;
+		this_thread::sleep_for(chrono::milliseconds(ms_to_sleep));
 
-		// Example showing usage of _frequency configuraton parameter from main thread.
-		// Access is thread safe since _frequency is declared using std::atomic.
-		if (_plugin->state == IvpPluginState_registered && _frequency <= msCount)
+		// Only do work if the plugin is registered
+		if (_plugin->state == IvpPluginState_registered)
 		{
-			PLOG(logINFO) << _frequency << " ms wait is complete.";
-			msCount = 0;
+			// Reduce speed to a minimum of 10km/h if 7 vehicles are in the slowdown region
+			double new_speed = original_speed - (vehicle_count * (40. / 7.));  // 40km/h reduction for 7 vehicles
+
+			// Ensure speed does not go below 10km/h
+			if (new_speed < 10.0)
+			{
+				new_speed = 10.0;
+			}
+
+			// Print the new speed
+			PLOG(logDEBUG) << "New speed: " << new_speed << "km/h";
+
+			// TODO: Output new speed
+	
 		}
 	}
 
