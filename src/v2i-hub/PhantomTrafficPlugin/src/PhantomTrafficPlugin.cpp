@@ -71,6 +71,9 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 	SubscribeToMessages();
 
 	vehicle_count = 0; // Set initial vehicle count to 0 upon creation of plugin.
+
+	bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Initial vehicle count in slowdown region is 0
+	bool speed_limit_status = SetStatus("SpeedLimit", 50.0); // Initial speed limit is 50km/h
 }
 
 PhantomTrafficPlugin::~PhantomTrafficPlugin()
@@ -242,8 +245,20 @@ int PhantomTrafficPlugin::Main()
 			// Print the new speed
 			PLOG(logDEBUG) << "New speed: " << new_speed << "km/h";
 
-			// TODO: Output new speed
-	
+			// Output new speed
+			int msgPSID = api::msgPSID::basicSafetyMessage_PSID; // 0x20
+			TimMessage timMsg(_tim);
+			TimEncodedMessage timEncMsg;
+			timEncMsg.initialize(timMsg);
+			timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
+			timEncMsg.addDsrcMetadata(msgPSID);
+
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
+			if (rMsg) BroadcastMessage(*rMsg);
+
+			// Set status information for monitoring in the admin portal
+			bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Vehicle count in slowdown region
+			bool speed_limit_status = SetStatus("SpeedLimit", new_speed); 					// New speed limit
 		}
 	}
 
