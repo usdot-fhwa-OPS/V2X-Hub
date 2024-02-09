@@ -176,10 +176,6 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
 		}
 		// If the vehicle is already being tracked, do nothing
-		else
-		{
-			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is already being tracked.";
-		}
 	}
 	else // Vehicle is not in the slowdown region
 	{
@@ -192,10 +188,6 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
 		}
 		// If the vehicle is not being tracked, do nothing
-		else
-		{
-			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is not being tracked.";
-		}
 	}
 
 	// The lock_guard automatically unlocks the mutex when it goes out of scope
