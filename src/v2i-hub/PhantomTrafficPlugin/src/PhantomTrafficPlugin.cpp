@@ -12,7 +12,6 @@
 #include <atomic>
 #include <thread>
 #include <DecodedBsmMessage.h>
-#include <tmx/j2735_messages/MapDataMessage.hpp>
 
 using namespace std;
 using namespace tmx;
@@ -38,7 +37,6 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
 private:
@@ -64,8 +62,6 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 
 	// This is an internal message type that is used to track some plugin data that changes
 	AddMessageFilter<DataChangeMessage>(this, &PhantomTrafficPlugin::HandleDataChangeMessage);
-
-	AddMessageFilter<MapDataMessage>(this, &PhantomTrafficPlugin::HandleMapDataMessage);
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
@@ -107,18 +103,7 @@ void PhantomTrafficPlugin::OnStateChange(IvpPluginState state)
 	if (state == IvpPluginState_registered)
 	{
 		UpdateConfigSettings();
-		SetStatus("ReceivedMaps", 0);
 	}
-}
-
-void PhantomTrafficPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
-{
-	static std::atomic<int> count {0};
-
-	PLOG(logINFO) << "New MAP: " << msg;
-
-	int mapCount = count;
-	SetStatus("ReceivedMaps", mapCount);
 }
 
 void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
