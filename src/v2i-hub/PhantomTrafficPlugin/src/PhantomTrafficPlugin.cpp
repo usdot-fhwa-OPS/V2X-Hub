@@ -222,6 +222,9 @@ int PhantomTrafficPlugin::Main()
 		// Only do work if the plugin is registered
 		if (_plugin->state == IvpPluginState_registered)
 		{
+			// Lock the mutex
+			std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
+
 			// Reduce speed to a minimum of 10km/h if 7 vehicles are in the slowdown region
 			double new_speed = original_speed - (vehicle_count * (40. / 7.));  // 40km/h reduction for 7 vehicles
 
@@ -248,6 +251,8 @@ int PhantomTrafficPlugin::Main()
 			// Set status information for monitoring in the admin portal
 			bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Vehicle count in slowdown region
 			bool speed_limit_status = SetStatus("SpeedLimit", new_speed); 					// New speed limit
+
+			// The lock_guard automatically unlocks the mutex when it goes out of scope
 		}
 	}
 
