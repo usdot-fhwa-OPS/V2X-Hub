@@ -126,13 +126,13 @@ namespace CDASimAdapter{
 
     void CDASimAdapter::start_immediate_forward_thread() {
         if ( !immediate_forward_timer ) {
-            immediate_forward_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            immediate_forward_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
         immediate_forward_tick_id = immediate_forward_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_v2xhub();
             
         } // end of lambda expression
-        , std::chrono::milliseconds(100) );
+        , std::chrono::milliseconds(5) );
         
         immediate_forward_timer->Start();
 
@@ -140,13 +140,13 @@ namespace CDASimAdapter{
 
     void CDASimAdapter::start_message_receiver_thread() {
         if ( !message_receiver_timer ) {
-            message_receiver_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            message_receiver_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
 
         message_receiver_tick_id = message_receiver_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_simulation();
         } // end of lambda expression
-        , std::chrono::milliseconds(100) );
+        , std::chrono::milliseconds(5) );
         message_receiver_timer->Start();
 
     }
@@ -174,7 +174,7 @@ namespace CDASimAdapter{
         {
             if(!external_object_detection_thread_timer)
             {
-                external_object_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>();
+                external_object_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
             }            
             external_object_detection_thread_timer->AddPeriodicTick([this](){
                 PLOG(logDEBUG1) << "Listening for Sensor Detected Message from CDASim." << std::endl;
@@ -187,7 +187,7 @@ namespace CDASimAdapter{
                     PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated sensor detected message!" << std::endl;
                 }
             }//End lambda
-            , std::chrono::milliseconds(100));
+            , std::chrono::milliseconds(5));
             external_object_detection_thread_timer->Start();
         }
         catch ( const UdpServerRuntimeError &e ) 
@@ -216,13 +216,13 @@ namespace CDASimAdapter{
     void CDASimAdapter::start_time_sync_thread_timer() {
         PLOG(logDEBUG) << "Creating Thread Timer for time sync" << std::endl;
         if ( !time_sync_timer ) {
-            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
         time_sync_tick_id = time_sync_timer->AddPeriodicTick([this]() {
             PLOG(logDEBUG1) << "Listening for time sync messages from CDASim." << std::endl;
             this->attempt_time_sync();
         } // end of lambda expression
-        , std::chrono::milliseconds(100));
+        , std::chrono::milliseconds(5));
         time_sync_timer->Start();
     }
 

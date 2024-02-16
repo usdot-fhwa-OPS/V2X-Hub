@@ -685,23 +685,19 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 				{
 					sdsm_convertor.encodeSDSM(sdsm_ptr, sdsmEncodedMsg);
 				}
-				catch (TmxException &ex) 
+				catch( std::exception const & x )
 				{
-					// Skip messages that fail to encode.
-					PLOG(logERROR) << "Failed to encoded SDSM message : \n" << payload_str << std::endl << "Exception encountered: " 
-						<< ex.what() << std::endl;
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // may be unnecessary
+					PLOG(logERROR) << "Failed to encoded SDSM message : " << payload_str << std::endl << boost::diagnostic_information( x ) << std::endl;
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
 					continue;
 				}
 				
-				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm_ptr.get()); // same as above
 				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
-
 				//Broadcast the encoded SDSM message
 				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-				sdsmEncodedMsg.addDsrcMetadata(0x8002);
-				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));		
+				sdsmEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::sensorDataSharingMessage_PSID);
+				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));
+		
 			}
 		}
 	}
@@ -710,8 +706,16 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 
 void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
 {
+	// TODO: This is a temporary fix for tmx message container property tree
+	// serializing all attributes as strings. This issue needs to be fixed but
+	// is currently out of scope. TMX Messages should be correctly serialize to 
+	// and from json. This temporary fix simply using regex to look for numeric,
+	// null, and bool values and removes the quotations around them.
 	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
-	produce_kafka_msg( msg.to_string(), _transmitSimSensorDetectedObjTopic);
+	boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
+	std::stringstream ss;
+	std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
+	produce_kafka_msg( rv, _transmitSimSensorDetectedObjTopic);
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )

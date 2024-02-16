@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0
           submodules: recursive
       - name:  Install sonar-scanner and build-wrapper
-        uses: sonarsource/sonarcloud-github-c-cpp@v1
+        uses: sonarsource/sonarcloud-github-c-cpp@v2
       - name: Run install_dependencies.sh script
         run: |
           scripts/install_dependencies.sh
