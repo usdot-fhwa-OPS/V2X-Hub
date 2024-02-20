@@ -21,11 +21,14 @@ using namespace boost::property_tree;
 using namespace tmx::utils;
 
 #if SAEJ2735_SPEC < 63
-#else
+#elif SAEJ2735_SPEC < 2020
 typedef DSRC_MsgCount_t MsgCount_t;
-typedef DSecond_t DSecond2_t;
 typedef DSRC_TimeMark_t TimeMark_t;
+#else
+typedef Common_MsgCount_t MsgCount_t;
+typedef SPAT_TimeMark_t TimeMark_t;
 #endif
+typedef DSecond_t DSecond2_t;
 
 void Ntcip1202::setSignalGroupMappingList(string json)
 {
