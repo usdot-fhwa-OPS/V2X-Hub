@@ -241,6 +241,18 @@ int PhantomTrafficPlugin::Main()
 			double throughput = vehicle_count / MSG_INTERVAL; // throughput = vehicle count / message interval
 			DatabaseMessage db_msg = DatabaseMessage(Clock::GetMillisecondsSinceEpoch(), vehicle_count, average_speed, new_speed, throughput);
 
+			// Refer: Plugin Programming Guide Page 13 for dynamic cast
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(&DatabaseMessage);
+			if (rMsg) {
+				BroadcastMessage(*rMsg);
+				// Log
+				PLOG(logDEBUG) << "Database Message sent to Database Plugin: " << db_msg.get_payload_str();
+			} else {
+				PLOG(logERROR) << "Failed to cast Database Message to routeable_message.";
+			}
+
+
+
 			// The lock_guard automatically unlocks the mutex when it goes out of scope
 		}
 	}
