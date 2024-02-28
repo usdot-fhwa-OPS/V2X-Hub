@@ -24,7 +24,7 @@ namespace DatabasePlugin
 {
 
 /**
- * This plugin is an example to demonstrate the capabilities of a TMX plugin.
+ * This plugin is used to post PhantomTraffic data to our database.
  */
 class DatabasePlugin: public PluginClient
 {
