@@ -12,11 +12,15 @@
 #include <atomic>
 #include <thread>
 #include <DecodedBsmMessage.h>
+#include <DatabaseMessage.h>
+#include "Clock.h"
 
 using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
+
+#define MSG_INTERVAL 5 // 5 seconds
 
 namespace PhantomTrafficPlugin
 {
@@ -45,6 +49,7 @@ private:
 	std::atomic<uint64_t> vehicle_count; // vehicle count in the slowdown region
 	vector<int32_t> vehicle_ids; // vehicle IDs in the slowdown region 
 	std::mutex vehicle_ids_mutex; // mutex for vehicle IDs
+	std::atomic<double> average_speed; // average speed of vehicles in the slowdown region
 };
 
 /**
@@ -161,6 +166,10 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
 		}
 		// If the vehicle is already being tracked, do nothing
+
+		// Calculate the average speed of vehicles in the slowdown region
+		// vehicle_count - 1 because the vehicle count has already been incremented
+		average_speed = (average_speed * (vehicle_count - 1) + msg.get_Speed_kph()) / vehicle_count;
 	}
 	else // Vehicle is not in the slowdown region
 	{
@@ -173,6 +182,10 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 			PLOG(logDEBUG) << "Vehicle count in slowdown region: " << vehicle_count;
 		}
 		// If the vehicle is not being tracked, do nothing
+
+		// Update the average speed
+		// vehicle_count + 1 because the vehicle count has already been decremented
+		average_speed = (average_speed * (vehicle_count + 1) - msg.get_Speed_kph()) / vehicle_count;
 	}
 
 	// The lock_guard automatically unlocks the mutex when it goes out of scope
@@ -200,9 +213,7 @@ int PhantomTrafficPlugin::Main()
 	{
 		PLOG(logDEBUG4) << "Sleeping for 5 seconds" << endl;
 
-		long long ms_to_sleep = 5000; // 5 seconds
-
-		this_thread::sleep_for(chrono::milliseconds(ms_to_sleep));
+		this_thread::sleep_for(chrono::milliseconds(MSG_INTERVAL * 1000));
 
 		// Only do work if the plugin is registered
 		if (_plugin->state == IvpPluginState_registered)
@@ -222,20 +233,13 @@ int PhantomTrafficPlugin::Main()
 			// Print the new speed
 			PLOG(logDEBUG) << "New speed: " << new_speed << "km/h";
 
-			// Output new speed
-			int msgPSID = api::msgPSID::basicSafetyMessage_PSID; // 0x20
-			TimMessage timMsg(_tim);
-			TimEncodedMessage timEncMsg;
-			timEncMsg.initialize(timMsg);
-			timEncMsg.set_flags(IvpMsgFlags_RouteDSRC);
-			timEncMsg.addDsrcMetadata(msgPSID);
-
-			routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
-			if (rMsg) BroadcastMessage(*rMsg);
-
 			// Set status information for monitoring in the admin portal
 			bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Vehicle count in slowdown region
 			bool speed_limit_status = SetStatus("SpeedLimit", new_speed); 					// New speed limit
+
+			// Create Database Message to send to the Database Plugin
+			double throughput = vehicle_count / MSG_INTERVAL; // throughput = vehicle count / message interval
+			DatabaseMessage db_msg = DatabaseMessage(Clock::GetMillisecondsSinceEpoch(), vehicle_count, average_speed, new_speed, throughput);
 
 			// The lock_guard automatically unlocks the mutex when it goes out of scope
 		}
