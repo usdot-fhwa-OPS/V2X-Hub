@@ -42,7 +42,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
+	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
 private:
 	std::atomic<uint64_t> _frequency{0};
@@ -65,7 +65,7 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
 
 	// Add a message filter and handler for each message this plugin wants to receive.
-	AddMessageFilter<DecodedBsmMessage>(this, &PhantomTrafficPlugin::HandleDecodedBsmMessage);
+	AddMessageFilter<BsmMessage>(this, &PhantomTrafficPlugin::HandleBasicSafetyMessage);
 
 	// This is an internal message type that is used to track some plugin data that changes
 	AddMessageFilter<DataChangeMessage>(this, &PhantomTrafficPlugin::HandleDataChangeMessage);
@@ -118,12 +118,14 @@ void PhantomTrafficPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
+void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
-	//PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
+	// Decode the BSM message
+	DecodedBsmMessage decoded_msg = DecodedBsmMessage(msg.get_j2735_data());
+	PLOG(logDEBUG) << "Received Decoded BSM: " << decoded_msg;
 
 	// Determine if location, speed, and heading are valid.
-	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
+	bool isValid = decoded_msg.get_IsLocationValid() && decoded_msg.get_IsSpeedValid() && decoded_msg.get_IsHeadingValid();
 
 	if (!isValid) 
 	{
@@ -132,10 +134,10 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 	}
 
 	// Print some of the BSM values.
-	PLOG(logDEBUG) << "ID: " << msg.get_TemporaryId()
-		<< ", Location: (" <<  msg.get_Latitude() << ", " <<  msg.get_Longitude() << ")"
-		<< ", Speed: " << msg.get_Speed_kph() << "kph"
-		<< ", Heading: " << msg.get_Heading() << "°";
+	PLOG(logDEBUG) << "ID: " << decoded_msg.get_TemporaryId()
+		<< ", Location: (" <<  decoded_msg.get_Latitude() << ", " <<  decoded_msg.get_Longitude() << ")"
+		<< ", Speed: " << decoded_msg.get_Speed_kph() << "kph"
+		<< ", Heading: " << decoded_msg.get_Heading() << "°";
 
 	// Coordinates of slowdown region
 	// Longitude = east-west (increases towards east,more negative towards west)
@@ -151,11 +153,11 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 
 
 	// Coordinates of the vehicle
-	double vehicle_long = msg.get_Longitude();
-	double vehicle_lat = msg.get_Latitude();
+	double vehicle_long = decoded_msg.get_Longitude();
+	double vehicle_lat = decoded_msg.get_Latitude();
 
 	// Vehicle ID
-	int32_t vehicle_id = msg.get_TemporaryId();
+	int32_t vehicle_id = decoded_msg.get_TemporaryId();
 
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
@@ -176,7 +178,7 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 
 		// Calculate the average speed of vehicles in the slowdown region
 		// vehicle_count - 1 because the vehicle count has already been incremented
-		average_speed = (average_speed * (vehicle_count - 1) + msg.get_Speed_kph()) / vehicle_count;
+		average_speed = (average_speed * (vehicle_count - 1) + decoded_msg.get_Speed_kph()) / vehicle_count;
 	}
 	else // Vehicle is not in the slowdown region
 	{
@@ -192,7 +194,7 @@ void PhantomTrafficPlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, route
 
 		// Update the average speed
 		// vehicle_count + 1 because the vehicle count has already been decremented
-		average_speed = (average_speed * (vehicle_count + 1) - msg.get_Speed_kph()) / vehicle_count;
+		average_speed = (average_speed * (vehicle_count + 1) - decoded_msg.get_Speed_kph()) / vehicle_count;
 	}
 
 	// The lock_guard automatically unlocks the mutex when it goes out of scope
