@@ -1,0 +1,27 @@
+{
+	"name":"PhantomTraffic",
+	"description":"PhantomTraffic plugin for the IVP system.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PhantomTrafficPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"TIM",
+			"description":"Travelor Information Message with ..."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the TIM in milliseconds."
+		},
+		{
+			"key":"Instance",
+			"default":"0",
+			"description":"The instance of this plugin."
+		}
+	]
+}

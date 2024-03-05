@@ -24,7 +24,7 @@ namespace DatabasePlugin
 {
 
 /**
- * This plugin is an example to demonstrate the capabilities of a TMX plugin.
+ * This plugin is used to post PhantomTraffic data to our database.
  */
 class DatabasePlugin: public PluginClient
 {
@@ -42,6 +42,7 @@ protected:
 	void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
 	void DummyInsertion();
+	void HandleDatabaseMessage(DatabaseMessage &msg, routeable_message &routeableMsg);
 private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
@@ -62,6 +63,9 @@ DatabasePlugin::DatabasePlugin(string name): PluginClient(name)
 
 	// This is an internal message type that is used to track some plugin data that changes
 	AddMessageFilter<DataChangeMessage>(this, &DatabasePlugin::HandleDataChangeMessage);
+
+	// This is an internal message type that is used to send PhantomTrafficPlugin data to the database
+	AddMessageFilter<DatabaseMessage>(this, &DatabasePlugin::HandleDatabaseMessage);
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
@@ -163,6 +167,39 @@ void DatabasePlugin::DummyInsertion()
         std::cerr << "Error: " << e.what() << std::endl;
     }
 }
+
+/* 
+ * Handle Incoming Database Message 
+ * Parse data here and push to database using libcq++ function.
+ */
+void DatabasePlugin::HandleDatabaseMessage(DatabaseMessage &msg, routeable_message &routeableMsg)
+{
+	PLOG(logINFO) << "Received a database message: " << msg;
+
+	// Parse the message and push to database
+	// Get Fields from the message
+
+	// Timestamp
+	uint64_t timestamp = msg.get_Timestamp();
+
+	// Number of vehicles in road segment
+	int number_of_vehicles_in_road_segment = msg.get_NumberOfVehiclesInRoadSegment();
+
+	// Average speed of vehicles in road segment
+	double average_speed_of_vehicles_in_road_segment = msg.get_AverageSpeedOfVehiclesInRoadSegment();
+
+	// Speed limit of road segment
+	double speed_limit_of_road_segment = msg.get_SpeedLimitOfRoadSegment();
+
+	// Throughput of road segment
+	double throughput_of_road_segment = msg.get_ThroughputOfRoadSegment();
+
+	// Push to database
+
+
+
+}
+
 
 // Override of main method of the plugin that should not return until the plugin exits.
 // This method does not need to be overridden if the plugin does not want to use the main thread.
