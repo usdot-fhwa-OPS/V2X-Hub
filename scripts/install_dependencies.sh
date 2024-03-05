@@ -39,6 +39,7 @@ DEPENDENCIES="build-essential \
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \
     carma-clock-1 \
+    libpqxx-dev \
 "
 
 # install all things needed for deployment, always done

@@ -13,6 +13,7 @@
 #include <thread>
 #include <DecodedBsmMessage.h>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <pqxx/pqxx>
 
 using namespace std;
 using namespace tmx;
@@ -38,9 +39,9 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 	void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
+	void DummyInsertion();
 private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
@@ -61,8 +62,6 @@ DatabasePlugin::DatabasePlugin(string name): PluginClient(name)
 
 	// This is an internal message type that is used to track some plugin data that changes
 	AddMessageFilter<DataChangeMessage>(this, &DatabasePlugin::HandleDataChangeMessage);
-
-	AddMessageFilter<MapDataMessage>(this, &DatabasePlugin::HandleMapDataMessage);
 
 	// Subscribe to all messages specified by the filters above.
 	SubscribeToMessages();
@@ -103,31 +102,11 @@ void DatabasePlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void DatabasePlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
-{
-	static std::atomic<int> count {0};
-
-	PLOG(logINFO) << "New MAP: " << msg;
-
-	int mapCount = count;
-	SetStatus("ReceivedMaps", mapCount);
-}
-
 void DatabasePlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
 {
-	//PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
-
-	// Determine if location, speed, and heading are valid.
-	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
-
-	// Print some of the BSM values.
-	PLOG(logDEBUG) << "ID: " << msg.get_TemporaryId()
-		<< ", Location: (" <<  msg.get_Latitude() << ", " <<  msg.get_Longitude() << ")"
-		<< ", Speed: " << msg.get_Speed_mph() << " mph"
-		<< ", Heading: " << msg.get_Heading() << "°"
-		<< ", All Valid: " << isValid
-		<< ", IsOutgoing: " << msg.get_IsOutgoing();
+	DummyInsertion();	
 }
+
 
 // Example of handling
 void DatabasePlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg)
@@ -139,6 +118,52 @@ void DatabasePlugin::HandleDataChangeMessage(DataChangeMessage &msg, routeable_m
 			" to " << msg.get_untyped(msg.NewValue, to_string(_frequency));
 }
 
+void DatabasePlugin::DummyInsertion() 
+{
+	try {
+        // Connection parameters
+        const std::string host = "127.0.1.1";
+        const std::string port = "5488";
+        const std::string dbname = "my_data_wh_db";
+        const std::string user = "my_data_wh_user";
+        const std::string password = "my_data_wh_pwd";
+
+        // Construct the connection string
+        std::string conn_string = "host=" + host + " port=" + port + " dbname=" + dbname +
+                                  " user=" + user + " password=" + password;
+
+        // Establish a connection
+        pqxx::connection conn(conn_string);
+
+        if (conn.is_open()) {
+            // Create a transaction
+            pqxx::work txn(conn);
+
+            try {
+                // Perform an INSERT operation
+                txn.exec("INSERT INTO t_oil (region, country, year, production, consumption) VALUES ('TEST', 'TEST', 2021, 100, 100)");
+
+                // Commit the transaction
+                txn.commit();
+
+                std::cout << "Data inserted successfully." << std::endl;
+            } catch (const std::exception &e) {
+                // Rollback the transaction in case of an error
+                txn.abort();
+                throw;
+            }
+        } else {
+            std::cout << "Failed to open database" << std::endl;
+        }
+        
+
+        // Close the connection when done
+        conn.disconnect();
+    } catch (const std::exception &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+}
+
 // Override of main method of the plugin that should not return until the plugin exits.
 // This method does not need to be overridden if the plugin does not want to use the main thread.
 int DatabasePlugin::Main()
@@ -146,6 +171,7 @@ int DatabasePlugin::Main()
 	PLOG(logINFO) << "Starting plugin.";
 
 	uint msCount = 0;
+	DummyInsertion();
 	while (_plugin->state != IvpPluginState_error)
 	{
 		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
