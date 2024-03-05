@@ -13,6 +13,7 @@
 #include <thread>
 #include <DecodedBsmMessage.h>
 #include <DatabaseMessage.h>
+#include <UdpClient.h>
 #include "Clock.h"
 
 using namespace std;
@@ -50,6 +51,7 @@ private:
 	vector<int32_t> vehicle_ids; // vehicle IDs in the slowdown region 
 	std::mutex vehicle_ids_mutex; // mutex for vehicle IDs
 	std::atomic<double> average_speed; // average speed of vehicles in the slowdown region
+	tmx::utils::UdpClient *_signSimClient = NULL; // UDP client for sending speed limit to simulation
 };
 
 /**
@@ -75,6 +77,11 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 
 	bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Initial vehicle count in slowdown region is 0
 	bool speed_limit_status = SetStatus("SpeedLimit", 50.0); // Initial speed limit is 50km/h
+
+	// Create UDP client for sending speed limit to simulation
+	const std::string& address = "127.0.0.1"; // localhost
+	int port = 4500; // port 4500
+	_signSimClient = new tmx::utils::UdpClient(address, port);
 }
 
 PhantomTrafficPlugin::~PhantomTrafficPlugin()
@@ -251,7 +258,10 @@ int PhantomTrafficPlugin::Main()
 				PLOG(logERROR) << "Failed to cast Database Message to routeable_message.";
 			}
 
-
+			// Send updated speed limit to simulation using UDP at port 4500
+			// Create string of just new speed limit
+			std::string new_speed_str = std::to_string(new_speed);
+			_signSimClient->Send(new_speed_str);
 
 			// The lock_guard automatically unlocks the mutex when it goes out of scope
 		}
