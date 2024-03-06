@@ -12,6 +12,7 @@
 #include <atomic>
 #include <thread>
 #include <DecodedBsmMessage.h>
+#include <DatabaseMessage.h>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <pqxx/pqxx>
 
