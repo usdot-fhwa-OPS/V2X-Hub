@@ -121,23 +121,24 @@ void PhantomTrafficPlugin::OnStateChange(IvpPluginState state)
 void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
 	// Decode the BSM message
-	DecodedBsmMessage decoded_msg = DecodedBsmMessage(msg.get_j2735_data());
-	PLOG(logDEBUG) << "Received Decoded BSM: " << decoded_msg;
+	// DecodedBsmMessage bsm->coreData = DecodedBsmMessage(msg.get_j2735_data());
+	auto bsm = msg.get_j2735_data();
+	// PLOG(logDEBUG) << "Received Decoded BSM: " << bsm->coreData;
 
 	// Determine if location, speed, and heading are valid.
-	bool isValid = decoded_msg.get_IsLocationValid() && decoded_msg.get_IsSpeedValid() && decoded_msg.get_IsHeadingValid();
+	// bool isValid = bsm->coreData.get_IsLocationValid() && bsm->coreData.get_IsSpeedValid() && bsm->coreData.get_IsHeadingValid();
 
-	if (!isValid) 
-	{
-		PLOG(logDEBUG) << "Received BSM with invalid location, speed, or heading.";
-		return;
-	}
+	// if (!isValid) 
+	// {
+	// 	PLOG(logDEBUG) << "Received BSM with invalid location, speed, or heading.";
+	// 	return;
+	// }
 
 	// Print some of the BSM values.
-	PLOG(logDEBUG) << "ID: " << decoded_msg.get_TemporaryId()
-		<< ", Location: (" <<  decoded_msg.get_Latitude() << ", " <<  decoded_msg.get_Longitude() << ")"
-		<< ", Speed: " << decoded_msg.get_Speed_kph() << "kph"
-		<< ", Heading: " << decoded_msg.get_Heading() << "°";
+	// PLOG(logDEBUG) << "ID: " << bsm->coreData.get_TemporaryId()
+	// 	<< ", Location: (" <<  bsm->coreData.get_Latitude() << ", " <<  bsm->coreData.get_Longitude() << ")"
+	// 	<< ", Speed: " << bsm->coreData.get_Speed_kph() << "kph"
+	// 	<< ", Heading: " << bsm->coreData.get_Heading() << "°";
 
 	// Coordinates of slowdown region
 	// Longitude = east-west (increases towards east,more negative towards west)
@@ -153,11 +154,11 @@ void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_m
 
 
 	// Coordinates of the vehicle
-	double vehicle_long = decoded_msg.get_Longitude();
-	double vehicle_lat = decoded_msg.get_Latitude();
+	double vehicle_long = bsm->coreData.Long;
+	double vehicle_lat = bsm->coreData.lat;
 
 	// Vehicle ID
-	int32_t vehicle_id = decoded_msg.get_TemporaryId();
+	int32_t vehicle_id = (int32_t) bsm->coreData.id;
 
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
@@ -178,7 +179,7 @@ void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_m
 
 		// Calculate the average speed of vehicles in the slowdown region
 		// vehicle_count - 1 because the vehicle count has already been incremented
-		average_speed = (average_speed * (vehicle_count - 1) + decoded_msg.get_Speed_kph()) / vehicle_count;
+		average_speed = (average_speed * (vehicle_count - 1) + bsm->coreData.speed) / vehicle_count;
 	}
 	else // Vehicle is not in the slowdown region
 	{
@@ -194,7 +195,7 @@ void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_m
 
 		// Update the average speed
 		// vehicle_count + 1 because the vehicle count has already been decremented
-		average_speed = (average_speed * (vehicle_count + 1) - decoded_msg.get_Speed_kph()) / vehicle_count;
+		average_speed = (average_speed * (vehicle_count + 1) - bsm->coreData.speed) / vehicle_count;
 	}
 
 	// The lock_guard automatically unlocks the mutex when it goes out of scope
