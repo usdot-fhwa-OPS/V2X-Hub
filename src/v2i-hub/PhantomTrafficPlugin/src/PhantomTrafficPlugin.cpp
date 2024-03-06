@@ -230,8 +230,8 @@ int PhantomTrafficPlugin::Main()
 			// Lock the mutex
 			std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
 
-			// Reduce speed to a minimum of 10km/h if 7 vehicles are in the slowdown region
-			double new_speed = original_speed - (vehicle_count * (40. / 7.));  // 40km/h reduction for 7 vehicles
+			// Reduce speed to a minimum of 10km/h if 20 vehicles are in the slowdown region
+			double new_speed = original_speed - (vehicle_count * (40. / 20.));  // 40km/h reduction for 20 vehicles
 
 			// Ensure speed does not go below 10km/h
 			if (new_speed < 10.0)
