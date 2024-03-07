@@ -121,8 +121,7 @@ void PhantomTrafficPlugin::OnStateChange(IvpPluginState state)
 void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
 	// Decode the BSM message
-	// DecodedBsmMessage bsm->coreData = DecodedBsmMessage(msg.get_j2735_data());
-	auto bsm = msg.get_j2735_data();
+	BasicSafetyMessage *bsm = msg.get_j2735_data();
 	// PLOG(logDEBUG) << "Received Decoded BSM: " << bsm->coreData;
 
 	// Determine if location, speed, and heading are valid.
