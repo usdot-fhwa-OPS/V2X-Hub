@@ -15,6 +15,9 @@
 #include <DatabaseMessage.h>
 #include <UdpClient.h>
 #include "Clock.h"
+#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <BasicSafetyMessage.h>
+
 
 using namespace std;
 using namespace tmx;
@@ -44,6 +47,10 @@ protected:
 
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
+	void GetInt32(unsigned char *buf, int32_t *value)
+	{
+		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
+	}
 private:
 	std::atomic<uint64_t> _frequency{0};
 	DATA_MONITOR(_frequency);   // Declares the
@@ -75,8 +82,8 @@ PhantomTrafficPlugin::PhantomTrafficPlugin(string name): PluginClient(name)
 
 	vehicle_count = 0; // Set initial vehicle count to 0 upon creation of plugin.
 
-	bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Initial vehicle count in slowdown region is 0
-	bool speed_limit_status = SetStatus("SpeedLimit", 50.0); // Initial speed limit is 50km/h
+	//bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Initial vehicle count in slowdown region is 0
+	//bool speed_limit_status = SetStatus("SpeedLimit", 50.0); // Initial speed limit is 50km/h
 
 	// Create UDP client for sending speed limit to simulation
 	const std::string& address = "127.0.0.1"; // localhost
@@ -121,7 +128,8 @@ void PhantomTrafficPlugin::OnStateChange(IvpPluginState state)
 void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
 	// Decode the BSM message
-	BasicSafetyMessage *bsm = msg.get_j2735_data();
+	std::shared_ptr<BasicSafetyMessage> bsm_shared = msg.get_j2735_data();
+	BasicSafetyMessage* bsm = bsm_shared.get();
 	// PLOG(logDEBUG) << "Received Decoded BSM: " << bsm->coreData;
 
 	// Determine if location, speed, and heading are valid.
@@ -157,7 +165,8 @@ void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_m
 	double vehicle_lat = bsm->coreData.lat;
 
 	// Vehicle ID
-	int32_t vehicle_id = (int32_t) bsm->coreData.id;
+	int32_t vehicle_id;
+	GetInt32((unsigned char *)bsm->coreData.id.buf, &vehicle_id); // vehicle ID (
 
 	// Lock the mutex
 	std::lock_guard<std::mutex> lock(vehicle_ids_mutex);
@@ -167,7 +176,7 @@ void PhantomTrafficPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_m
 	if (vehicle_long >= top_left_long && vehicle_long <= top_right_long && vehicle_lat >= bottom_left_lat && vehicle_lat <= top_left_lat)
 	{
 		// Add the vehicle to the list of vehicles being tracked if it's not already tracked
-		if (!find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) != vehicle_ids.end())
+		if (find(vehicle_ids.begin(), vehicle_ids.end(), vehicle_id) == vehicle_ids.end())
 		{
 			vehicle_ids.push_back(vehicle_id);
 			PLOG(logDEBUG) << "Vehicle ID " << vehicle_id << " is now being tracked.";
@@ -243,19 +252,19 @@ int PhantomTrafficPlugin::Main()
 			PLOG(logDEBUG) << "New speed: " << new_speed << "km/h";
 
 			// Set status information for monitoring in the admin portal
-			bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Vehicle count in slowdown region
-			bool speed_limit_status = SetStatus("SpeedLimit", new_speed); 					// New speed limit
+			//bool vehicle_count_status = SetStatus("VehicleCountInSlowdown", vehicle_count); // Vehicle count in slowdown region
+			// bool speed_limit_status = SetStatus("SpeedLimit", new_speed); 					// New speed limit
 
 			// Create Database Message to send to the Database Plugin
 			double throughput = vehicle_count / MSG_INTERVAL; // throughput = vehicle count / message interval
 			DatabaseMessage db_msg = DatabaseMessage(Clock::GetMillisecondsSinceEpoch(), vehicle_count, average_speed, new_speed, throughput);
 
 			// Refer: Plugin Programming Guide Page 13 for dynamic cast
-			routeable_message *rMsg = dynamic_cast<routeable_message *>(&DatabaseMessage);
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(&db_msg);
 			if (rMsg) {
 				BroadcastMessage(*rMsg);
 				// Log
-				PLOG(logDEBUG) << "Database Message sent to Database Plugin: " << db_msg.get_payload_str();
+				PLOG(logDEBUG) << "Database Message sent to Database Plugin";
 			} else {
 				PLOG(logERROR) << "Failed to cast Database Message to routeable_message.";
 			}
