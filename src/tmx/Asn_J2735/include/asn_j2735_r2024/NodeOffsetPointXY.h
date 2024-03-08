@@ -19,12 +19,16 @@
 #include "Node-XY-28b.h"
 #include "Node-XY-32b.h"
 #include "Node-LLmD-64b.h"
-#include "RegionalExtension.h"
+// #include "RegionalExtension.h"
 #include "constr_CHOICE.h"
+#include "asn_SEQUENCE_OF.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Forward declarations */
+struct Reg_NodeOffsetPointXY;
 
 /* Dependencies */
 typedef enum NodeOffsetPointXY_PR {
@@ -50,7 +54,15 @@ typedef struct NodeOffsetPointXY {
 		Node_XY_28b_t	 node_XY5;
 		Node_XY_32b_t	 node_XY6;
 		Node_LLmD_64b_t	 node_LatLon;
-		Reg_NodeOffsetPointXY_t	 regional;
+		// Reg_NodeOffsetPointXY_t	 regional;
+
+		struct NodeOffsetPointXY__regional {
+			A_SEQUENCE_OF(struct Reg_NodeOffsetPointXY) list;
+			
+			/* Context for parsing across buffer boundaries */
+			asn_struct_ctx_t _asn_ctx;
+		} *regional;
+
 	} choice;
 	
 	/* Context for parsing across buffer boundaries */
@@ -66,6 +78,9 @@ extern asn_per_constraints_t asn_PER_type_NodeOffsetPointXY_constr_1;
 #ifdef __cplusplus
 }
 #endif
+
+/* Referred external types */
+#include "RegionalExtension.h"
 
 #endif	/* _NodeOffsetPointXY_H_ */
 #include "asn_internal.h"
