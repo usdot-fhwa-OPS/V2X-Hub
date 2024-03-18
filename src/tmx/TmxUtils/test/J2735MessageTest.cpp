@@ -527,7 +527,6 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
 	partIICnt->partII_Id = 1;
 	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
-
 	auto specialVEx = (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
 	auto emergencyDetails = (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
 	emergencyDetails->lightsUse = LightbarInUse_inUse;

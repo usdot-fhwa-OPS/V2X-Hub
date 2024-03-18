@@ -9,7 +9,7 @@
 #define CONVERSIONS_H_
 
 #include "WGS84Point.h"
-#include "Units.h"
+#include "../../Messages/include/Units.h"
 
 namespace tmx {
 namespace utils {
