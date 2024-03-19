@@ -52,7 +52,7 @@ extern asn_TYPE_member_t asn_MBR_CooperativeControlMessage_1[2];
 #endif
 
 /* Referred external types */
-#include "PartIIcontent.h"
+#include "CCMPartIIcontent.h"
 
 #endif	/* _CooperativeControlMessage_H_ */
 #include "asn_internal.h"

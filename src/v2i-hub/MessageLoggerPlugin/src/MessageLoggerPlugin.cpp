@@ -311,9 +311,11 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_me
 
 		if(bsm->partII != NULL) {
 			if (bsm->partII[0].list.count >= BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions ) {
+				// TrailerData is deprecated in SAE J2735 2024
+				#if SAEJ2735_SPEC < 2024
 				try
 				{
-					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
+					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers != NULL){
 						cJSON_AddItemToObject(_BsmMessageContent, "trailerPivot", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset));
 						cJSON_AddItemToObject(_BsmMessageContent, "trailreLength", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length));
 						cJSON_AddItemToObject(_BsmMessageContent, "trailerHeight", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]));
@@ -329,6 +331,7 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_me
 				{
 					PLOG(logDEBUG)<<"Standard Exception:: Trailers unavailable "<<e.what();
 				}
+				#endif
 				try {
 					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts != NULL){
 						cJSON_AddItemToObject(_BsmMessageContent, "SirenState", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse));	

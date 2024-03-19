@@ -9,7 +9,9 @@
 #define DSRCBUILDER_H_
 
 #include <string>
+#include <sstream>
 #include <stdexcept>
+#include <OCTET_STRING.h>
 
 #include <TravelerInformation.h>
 #if SAEJ2735_SPEC < 2024
@@ -17,6 +19,8 @@
 #else
 #include <ITIS_ITIScodesAndText.h>
 #endif
+
+#include "Clock.h"
 
 #if SAEJ2735_SPEC < 63
 typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;

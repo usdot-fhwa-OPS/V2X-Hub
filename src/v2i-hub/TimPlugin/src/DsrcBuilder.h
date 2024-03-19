@@ -9,19 +9,34 @@
 #define DSRCBUILDER_H_
 
 #include <string>
+#include <sstream>
 #include <stdexcept>
+#include <OCTET_STRING.h>
 
 #include <TravelerInformation.h>
+#if SAEJ2735_SPEC < 2024
 #include <ITIScodesAndText.h>
+#else
+#include <ITIS_ITIScodesAndText.h>
+#endif
+
+#include "Clock.h"
 
 #if SAEJ2735_SPEC < 63
 typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
 typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
-#else
+#elif SAEJ2735_SPEC < 2024
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText ItisList;
+#else
+typedef TravelerDataFrame TiDataFrame;
+typedef ITIS_ITIScodesAndText__Member ItisMember;
+typedef ITIS_ITIScodesAndText ItisList;
+#endif
+
+#if SAEJ2735_SPEC > 63
 #include <NodeListXY.h>
 typedef NodeListXY NodeList_t;
 #include <Count.h>

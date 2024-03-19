@@ -27,6 +27,7 @@
 #include "ConnectionManeuverAssist-addGrpC.h"
 #include "IntersectionState-addGrpC.h"
 #include "MovementEvent-addGrpB.h"
+#include "BasicSafetyMessage-addGrpCarma.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,8 +35,8 @@ extern "C" {
 
 /* Dependencies */
 typedef enum Reg_BasicSafetyMessage__regExtValue_PR {
-	Reg_BasicSafetyMessage__regExtValue_PR_NOTHING	/* No components present */
-	
+	Reg_BasicSafetyMessage__regExtValue_PR_NOTHING,	/* No components present */
+	Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma
 } Reg_BasicSafetyMessage__regExtValue_PR;
 typedef enum Reg_EventDescription__regExtValue_PR {
 	Reg_EventDescription__regExtValue_PR_NOTHING	/* No components present */
@@ -285,6 +286,7 @@ typedef struct Reg_BasicSafetyMessage {
 	struct Reg_BasicSafetyMessage__regExtValue {
 		Reg_BasicSafetyMessage__regExtValue_PR present;
 		union Reg_BasicSafetyMessage__regExtValue_u {
+			BasicSafetyMessage_addGrpCarma_t	 BasicSafetyMessage_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */
@@ -387,6 +389,7 @@ typedef struct Reg_Position3D {
 		union Reg_Position3D__regExtValue_u {
 			Position3D_addGrpB_t	 Position3D_addGrpB;
 			Position3D_addGrpC_t	 Position3D_addGrpC;
+			Position3D_addGrpCarma_t Position3D_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */

@@ -84,7 +84,11 @@ namespace unit_test
 
         test_obj1.detObjCommon.pos.offsetX = 1000;
         test_obj1.detObjCommon.pos.offsetY = 750;
+        #if SAEJ2735_SPEC < 2024
         auto offsetZ_ptr = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        #else
+        auto offsetZ_ptr = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        #endif
         *offsetZ_ptr = 50;
         test_obj1.detObjCommon.pos.offsetZ = offsetZ_ptr;
 
@@ -204,7 +208,11 @@ namespace unit_test
 
         test_obj2.detObjCommon.pos.offsetX = 1000;
         test_obj2.detObjCommon.pos.offsetY = 750;
+        #if SAEJ2735_SPEC < 2024
         auto offsetZ_ptr2 = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        #else
+        auto offsetZ_ptr2 = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        #endif
         *offsetZ_ptr2 = 50;
         test_obj2.detObjCommon.pos.offsetZ = offsetZ_ptr2;
 
@@ -281,7 +289,11 @@ namespace unit_test
 
         test_obj3.detObjCommon.pos.offsetX = 1000;
         test_obj3.detObjCommon.pos.offsetY = 750;
+        #if SAEJ2537_SPEC < 2024
         auto offsetZ_ptr3 = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        #else
+        auto offsetZ_ptr3 = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        #endif
         *offsetZ_ptr3 = 50;
         test_obj3.detObjCommon.pos.offsetZ = offsetZ_ptr3;
 

@@ -5,13 +5,7 @@
  *      Author: ivp
  */
 
-#include <string>
-#include <sstream>
-#include <OCTET_STRING.h>
-#include <ITIScodesAndText.h>
-
 #include "DsrcBuilder.h"
-#include "Clock.h"
 
 using namespace tmx::utils;
 
@@ -22,9 +16,6 @@ void DsrcBuilder::AddTimAdvisory(TiDataFrame *frame, unsigned int speedLimit)
 	std::stringstream speedText;
 	speedText << speedLimit << " MPH";
 
-
-
-
 	AddItisCode(&frame->content.choice.advisory, 27); // "warning advice"
 	AddItisText(&frame->content.choice.advisory, "curve ahead");
 	AddItisCode(&frame->content.choice.advisory, 2564); // "speed restriction"
@@ -32,29 +23,52 @@ void DsrcBuilder::AddTimAdvisory(TiDataFrame *frame, unsigned int speedLimit)
 	AddItisCode(&frame->content.choice.advisory, 8720); // "MPH"
 }
 
+#if SAEJ2735_SPEC < 2024
 void DsrcBuilder::AddItisCode(ITIScodesAndText *advisory, long code)
+#else
+void DsrcBuilder::AddItisCode(ITIS_ITIScodesAndText *advisory, long code)
+#endif
 {
+	#if SAEJ2735_SPEC < 2024
 	ITIScodesAndText__Member* member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-	#if SAEJ2735_SPEC < 2020
+	#else
+	ITIS_ITIScodesAndText__Member* member = (ITIS_ITIScodesAndText__Member*)malloc(sizeof(ITIS_ITIScodesAndText__Member));
+	#endif
+
+	#if SAEJ2735_SPEC < 2024
+	member->item.present = ITIScodesAndText__Member__item_PR_itis;
+	#elif SAEJ2735_SPEC < 2020
 	member->item.present = ITIScodesAndText__Memberitem_PR_itis;
 	#else
-	member->item.present = ITIScodesAndText__Member__item_PR_itis;
+	member->item.present = ITIS_ITIScodesAndText__Member__item_PR_itis;
 	#endif
+	
 	member->item.choice.itis = code;
 	ASN_SEQUENCE_ADD(&advisory->list, member);
 }
 
+#if SAEJ2735_SPEC < 2024
 void DsrcBuilder::AddItisText(ITIScodesAndText *advisory, std::string text)
+#else
+void DsrcBuilder::AddItisText(ITIS_ITIScodesAndText *advisory, std::string text)
+#endif
 {
 	int textLength = text.length();
 
+	#if SAEJ2735_SPEC < 2024
 	ITIScodesAndText__Member* member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-	#if SAEJ2735_SPEC < 2020
+	#else
+	ITIS_ITIScodesAndText__Member* member = (ITIS_ITIScodesAndText__Member*)malloc(sizeof(ITIS_ITIScodesAndText__Member));
+	#endif
+
+	#if SAEJ2735_SPEC < 2024
+	member->item.present = ITIScodesAndText__Member__item_PR_text;
+	#elif SAEJ2735_SPEC < 2020
 	member->item.present = ITIScodesAndText__Memberitem_PR_text;
 	#else
-	member->item.present = ITIScodesAndText__Member__item_PR_text;
+	member->item.present = ITIS_ITIScodesAndText__Member__item_PR_text;
 	#endif
-	
+
 	member->item.choice.text.buf = NULL;
 	OCTET_STRING_fromString(&(member->item.choice.text), text.c_str());
 
