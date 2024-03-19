@@ -1,9 +1,9 @@
 ## Develop CI/CD Processes
-| V2X-Hub Docker Image Builds (AMD) | V2X-Hub Docker Image Builds (ARM) |  Sonar Code Quality |
+| V2X-Hub Docker Image Builds (x86 or AMD) | V2X-Hub Docker Image Builds (ARM) |  Sonar Code Quality |
 |----------------------|---------------------|---------------------|
  [![Build Workflows](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml)|[![CircleCI](https://dl.circleci.com/status-badge/img/gh/usdot-fhwa-OPS/V2X-Hub/tree/develop.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/usdot-fhwa-OPS/V2X-Hub/tree/develop)| [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
  ## Release CI/CD Processes
-| V2X-Hub Docker Image Builds (AMD) | V2X-Hub Docker Image Builds (ARM) | 
+| V2X-Hub Docker Image Builds (x86 or AMD) | V2X-Hub Docker Image Builds (ARM) | 
 |----------------------|---------------------|
  [![Build Workflows](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml)|[![CircleCI](https://dl.circleci.com/status-badge/img/gh/usdot-fhwa-OPS/V2X-Hub/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/usdot-fhwa-OPS/V2X-Hub/tree/master)|
 # Overview
