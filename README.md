@@ -1,12 +1,11 @@
-# Develop
+## Develop CI/CD Processes
 | V2X-Hub Docker Image Builds (AMD) | V2X-Hub Docker Image Builds (ARM) |  Sonar Code Quality |
 |----------------------|---------------------|---------------------|
  [![Build Workflows](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml/badge.svg?branch=develop)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml)|[![CircleCI](https://dl.circleci.com/status-badge/img/gh/usdot-fhwa-OPS/V2X-Hub/tree/develop.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/usdot-fhwa-OPS/V2X-Hub/tree/develop)| [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
- # Release
+ ## Release CI/CD Processes
 | V2X-Hub Docker Image Builds (AMD) | V2X-Hub Docker Image Builds (ARM) | 
 |----------------------|---------------------|
  [![Build Workflows](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/build.yml)|[![CircleCI](https://dl.circleci.com/status-badge/img/gh/usdot-fhwa-OPS/V2X-Hub/tree/master.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/usdot-fhwa-OPS/V2X-Hub/tree/master)|
-## All Develop ARM Builds
 # Overview
 In order to bring infrastructure components into the Connected Vehicle architecture, you need software that will facilitate the exchange of data in a format that can be understood by both vehicles and infrastructure devices The V2X Hub, takes in data from vehicles via Basic Safety Messages (BSM) in a Society of Automotive Engineers (SAE) standard format and translates the data to a National Transportation Communications for ITS Protocol (NTCIP) that infrastructure components can understand.  And vice versa.   It translates Signal Phase and Timing (SPaT) data from NTCIP to SAE and sends it to the Roadside Unit (RSU) for broadcast to mobile devices, including vehicles. 
 
