@@ -9,9 +9,6 @@ sudo apt update -y && sudo apt upgrade -y
 sudo apt-get install chromium-browser -y      #Chrome required for CARMA platform/V2X Hub UI(?)
 sudo apt install curl -y                      #Curl for downloading files over internet
 
-#install docker
-curl -L https://raw.githubusercontent.com/usdot-fhwa-stol/carma-platform/develop/engineering_tools/install-docker.sh | bash 
-
 #make passwords for mysql
 mkdir -p secrets && cd secrets
 
@@ -45,10 +42,8 @@ arch=$(dpkg --print-architecture)
 curl -fsSL https://download.docker.com/linux/$OS/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=$arch] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
 sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-sudo apt -y install python3-pip
-sudo pip3 install docker-compose
 sudo apt update -y && sudo apt upgrade -y
-sudo docker-compose up -d
+sudo docker compose up -d
 
 #create v2xhub user
 cd $mysqlDir
