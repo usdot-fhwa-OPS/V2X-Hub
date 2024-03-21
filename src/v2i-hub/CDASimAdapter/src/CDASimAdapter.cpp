@@ -78,7 +78,9 @@ namespace CDASimAdapter{
         auto time_now = std::chrono::system_clock::now();
         auto epoch = time_now.time_since_epoch();
         auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
-        PLOG(logDEBUG1) << "Simulation Time: " << msg.timestep << " where current system time is: " << milliseconds << ", where msgs: " << msg << std::endl;
+        PLOG(logDEBUG1) << "Simulation Time: " << msg.timestep << " where current system time is: " << milliseconds.count() << ", where msgs: " << msg << std::endl;
+
+
         this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
 
     }
