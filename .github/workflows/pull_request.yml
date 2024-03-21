@@ -1,0 +1,57 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  docker-image-builds:
+    strategy:
+      matrix:
+        include:
+          - architecture: x64
+            ubuntu-codename: jammy
+            target: x64-version
+          - architecture: arm64
+            ubuntu-codename: jammy
+            target: cross-compile-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: usdotfhwaops/php
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+      - name: V2X-Hub Docker build
+        uses: docker/build-push-action@v4
+        with:
+          file: Dockerfile
+          build-args: |
+            BUILD_ARCHITECTURE=${{ matrix.architecture }}
+            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
+      - name: PHP Docker build
+        uses: docker/build-push-action@v4
+        with:
+          file: docker/Dockerfile-php
+          build-args: |
+            BUILD_ARCHITECTURE=${{ matrix.architecture }}
+            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
+      - name: Port Drayage Docker build
+        uses: docker/build-push-action@v4
+        with:
+          context: tools/port-drayage-webservice
+          build-args: |
+            BUILD_ARCHITECTURE=${{ matrix.architecture }}
+            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
