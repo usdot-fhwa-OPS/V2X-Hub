@@ -31,8 +31,14 @@
 #include <SPAT.h>
 #include <SignalStatusMessage.h>
 #include <TravelerInformation.h>
-#if SAEJ2735_SPEC > 2024
 #include <PersonalSafetyMessage.h>
+#include <TestMessage00.h>
+#include <TestMessage01.h>
+#include <TestMessage02.h>
+#include <TestMessage03.h>
+#include <TestMessage04.h>
+#include <TestMessage05.h>
+#if SAEJ2735_SPEC > 2020
 #include <RoadSafetyMessage.h>
 #include <RoadWeatherMessage.h>
 #include <ProbeDataConfigMessage.h>
@@ -51,12 +57,6 @@
 #include <RoadUserChargingConfigMessage.h>
 #include <RoadUserChargingReportMessage.h>
 #include <TrafficLightStatusMessage.h>
-#include <TestMessage00.h>
-#include <TestMessage01.h>
-#include <TestMessage02.h>
-#include <TestMessage03.h>
-#include <TestMessage04.h>
-#include <TestMessage05.h>
 #include <TestMessage06.h>
 #include <TestMessage07.h>
 #include <TestMessage08.h>
@@ -144,8 +144,9 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case DSRCmsgID_signalRequestMessage: return "SRM";
 		case DSRCmsgID_signalStatusMessage: return "SSM";
 		case DSRCmsgID_travelerInformation: return "TIM";
-		#if SAEJ2735_SPEC > 2024
 		case DSRCmsgID_personalSafetyMessage: return "PSM";
+		case DSRCmsgID_sensorDataSharingMessage: return "SDSM";
+		#if SAEJ2735_SPEC > 2020
 		case DSRCmsgID_roadSafetyMessage: return "RSM";
 		case DSRCmsgID_roadWeatherMessage: return "RWM";
 		case DSRCmsgID_probeDataConfigMessage: return "PDC";
@@ -154,7 +155,6 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case DSRCmsgID_tollUsageMessage: return "TUM";
 		case DSRCmsgID_tollUsageAckMessage: return "TUMack";
 		case DSRCmsgID_cooperativeControlMessage: return "CCM";
-		case DSRCmsgID_sensorDataSharingMessage: return "SDSM";
 		case DSRCmsgID_maneuverSharingAndCoordinatingMessage: return "MSCM";
 		case DSRCmsgID_roadGeometryAndAttributes: return "RGA";
 		case DSRCmsgID_personalSafetyMessage2: return "PSM2";
@@ -195,8 +195,9 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 		case DSRCmsgID_signalRequestMessage: return "DSRC Signal Request Message";
 		case DSRCmsgID_signalStatusMessage: return "DSRC Signal Status Message";
 		case DSRCmsgID_travelerInformation: return "DSRC Traveler Information Message";
-		#if SAEJ2735_SPEC > 2024
 		case DSRCmsgID_personalSafetyMessage: return "DSRC Personal Safety Message";
+		case DSRCmsgID_sensorDataSharingMessage: return "DSRC Sensor Data Sharing Message";
+		#if SAEJ2735_SPEC > 2020
 		case DSRCmsgID_roadSafetyMessage: return "DSRC Road Safety Message";
 		case DSRCmsgID_roadWeatherMessage: return "DSRC Road Weather Message";
 		case DSRCmsgID_probeDataConfigMessage: return "DSRC Probe Data Config Message";
@@ -205,7 +206,6 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 		case DSRCmsgID_tollUsageMessage: return "DSRC Toll Usage Message";
 		case DSRCmsgID_tollUsageAckMessage: return "DSRC Toll Usage Ack Message";
 		case DSRCmsgID_cooperativeControlMessage: return "DSRC Cooperative Control Message";
-		case DSRCmsgID_sensorDataSharingMessage: return "DSRC Sensor Data Sharing Message";
 		case DSRCmsgID_maneuverSharingAndCoordinatingMessage: return "DSRC Maneuver Sharing And Coordinating Message";
 		case DSRCmsgID_roadGeometryAndAttributes: return "DSRC Road Geometry And Attributes";
 		case DSRCmsgID_personalSafetyMessage2: return "DSRC Personal Safety Message2";

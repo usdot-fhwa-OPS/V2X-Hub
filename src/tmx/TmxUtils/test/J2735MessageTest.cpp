@@ -179,9 +179,11 @@ protected:
 			//enumNames[api::travelerInformation] = api::MSGSUBTYPE_TRAVELERINFORMATION_STRING;
 			enumNames[api::uperFrame_D] = api::MSGSUBTYPE_UPERFRAME_D_STRING;
 		//	msgTypes[api::uperFrame_D] = new msg_type_impl<UperFrameMessage>();
+			#if SAEJ2735_SPEC < 2020
 			enumNames[api::personalMobilityMessage] = api::MSGSUBTYPE_PERSONALMOBILITYMESSAGE_STRING;
 		//	msgTypes[api::personalMobilityMessage] = new msg_type_impl<PmmMessage>();
 			testBytes[api::personalMobilityMessage] = "303a800111830200f58431482362c99e568d5b375b95c39c4b58b2c8cd6e168d5b2d68c9b366ad5a3460c1830000d693a401ad2747fc7e09b3720034";
+			#endif
 		}
 	}
 
@@ -602,8 +604,23 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
-	std::cout << psmENC.get_payload_str()<<std::endl;
+	std::cout << psmENC.get_payload_str() << std::endl;
 	ASSERT_EQ(32,  psmENC.get_msgId());
+}
+
+TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
+{
+	string rsm="<RoadSafetyMessage><commonContainer><eventInfo><eventID><operatorID><fullRdAuthID>1.3.6.1.4.1.9999.1</fullRdAuthID></operatorID><uniqueID>8901D5</uniqueID></eventID><eventUpdate>12</eventUpdate><eventCancellation>0</eventCancellation><startDateTime><year>2024</year><month>3</month><day>19</day><hour>15</hour><minute>30</minute><second>45</second><offset>0</offset></startDateTime><eventRecurrence><monday>1</monday><tuesday>1</tuesday><wednesday>1</wednesday><thursday>1</thursday><friday>1</friday><saturday>1</saturday><sunday>1</sunday></eventRecurrence><causeCode>7</causeCode><affectedVehicles><list>9217</list></affectedVehicles></eventInfo><regionInfo><referencePoint><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></referencePoint></regionInfo></commonContainer><content><dynamicInfoContainer><priority>3</priority><dmsSignString><list>WrongWayDriver</list></dmsSignString><applicableRegion><referencePoint><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></referencePoint></applicableRegion></dynamicInfoContainer></content></RoadSafetyMessage>";
+	std::stringstream ss;
+	RsmMessage rsmmessage;
+	RsmEncodedMessage rsmENC;
+	tmx::message_container_type container;
+	ss<<rsm;
+	container.load<XML>(ss);
+	rsmmessage.set_contents(container.get_storage().get_tree());
+	rsmENC.encode_j2735_message(rsmmessage);
+	std::cout << rsmENC.get_payload_str() << std::endl;
+	ASSERT_EQ(33,  rsmENC.get_msgId());
 }
 	
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){

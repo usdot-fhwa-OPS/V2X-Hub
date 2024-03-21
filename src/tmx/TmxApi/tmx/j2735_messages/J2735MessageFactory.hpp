@@ -44,6 +44,7 @@
 #include <tmx/j2735_messages/testMessage04.hpp>
 #include <tmx/j2735_messages/testMessage05.hpp>
 #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
+#include <tmx/j2735_messages/RoadSafetyMessage.hpp>
 
 namespace tmx {
 namespace messages {
@@ -69,18 +70,19 @@ using message_types = message_type_list<
 		PsmMessage,
 		PvdMessage,
 		RsaMessage,
+		RsmMessage,
 		RtcmMessage,
+		SdsmMessage,
 		SrmMessage,
 		SsmMessage,
 		SpatMessage,
 		TimMessage,
-		tsm4Message,
-		tsm5Message,
 		tsm0Message,
 		tsm1Message,
 		tsm2Message,
 		tsm3Message,
-		SdsmMessage
+		tsm4Message,
+		tsm5Message
 >;
 
 /// Base allocator type
@@ -194,18 +196,19 @@ public:
 			add_allocator_to_maps<PvdMessage>();
 			add_allocator_to_maps<PsmMessage>();
 			add_allocator_to_maps<RsaMessage>();
+			add_allocator_to_maps<RsmMessage>();
 			add_allocator_to_maps<RtcmMessage>();
+			add_allocator_to_maps<SdsmMessage>();
 			add_allocator_to_maps<SrmMessage>();
 			add_allocator_to_maps<SsmMessage>();
 			add_allocator_to_maps<SpatMessage>();
 			add_allocator_to_maps<TimMessage>();
-			add_allocator_to_maps<tsm4Message>();
-			add_allocator_to_maps<tsm5Message>();
 			add_allocator_to_maps<tsm0Message>();
 			add_allocator_to_maps<tsm1Message>();
 			add_allocator_to_maps<tsm2Message>();
 			add_allocator_to_maps<tsm3Message>();
-			add_allocator_to_maps<SdsmMessage>();
+			add_allocator_to_maps<tsm4Message>();
+			add_allocator_to_maps<tsm5Message>();
 #if SAEJ2735_SPEC < 63
 			add_allocator_to_maps<UperFrameMessage>();
 #endif
