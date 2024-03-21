@@ -75,11 +75,13 @@ namespace CDASimAdapter{
     void CDASimAdapter::forward_time_sync_message(tmx::messages::TimeSyncMessage &msg) {
 
         std::string payload =msg.to_string();
+        // A script to validate time synchronization of tools in CDASim currently relies on the following
+        // log line. TODO: This line is meant to be removed in the future upon completion of this work:
+        // https://github.com/usdot-fhwa-stol/carma-analytics-fotda/pull/43
         auto time_now = std::chrono::system_clock::now();
         auto epoch = time_now.time_since_epoch();
         auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
         PLOG(logDEBUG1) << "Simulation Time: " << msg.timestep << " where current system time is: " << milliseconds.count() << ", where msgs: " << msg << std::endl;
-
 
         this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
 
