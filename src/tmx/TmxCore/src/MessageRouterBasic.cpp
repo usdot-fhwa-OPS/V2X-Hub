@@ -50,11 +50,11 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 
 	//PerformanceTimer timer;
 
-	pthread_mutex_lock(&this->mMapLock);
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
-	this->mActiveBroadcasts++;
+	// Volatile type should not be used in compound operations cpp:S6191
+	auto val = this->mActiveBroadcasts;
+	this->mActiveBroadcasts = val + 1;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);
-	pthread_mutex_unlock(&this->mMapLock);
 
 	int broadcastCount = 0;
 
@@ -107,9 +107,10 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 			}
 		}
 	}
-
+	// Volatile type should not be used in compound operations cpp:S6191
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
-	this->mActiveBroadcasts--;
+	auto val = this->mActiveBroadcasts;
+	this->mActiveBroadcasts = val - 1;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);
 
 	//LOG_DEBUG("MessageRouterBasic::broadcastMessage for " << msg->subtype << " from "<< sender->pluginName << " Time (ms) "<<timer_ms);
