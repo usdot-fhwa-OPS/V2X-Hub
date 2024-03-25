@@ -610,22 +610,23 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 
 TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 {
-	// string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <causeCode>0</causeCode> </eventInfo> <regionInfo> </regionInfo> </commonContainer> <content> </content> </RoadSafetyMessage>";
-	// std::stringstream ss;
-	// RsmMessage rsmmessage;
-	// RsmEncodedMessage rsmENC;
-	// tmx::message_container_type container;
-	// ss<<rsm;
-	// container.load<XML>(ss);
-	// rsmmessage.set_contents(container.get_storage().get_tree());
-	// rsmENC.encode_j2735_message(rsmmessage);
-	// std::cout << rsmENC.get_payload_str() << std::endl;
-	// ASSERT_EQ(33,  rsmENC.get_msgId());
+	// Encode RSM XML
+	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
+	std::stringstream ss;
+	RsmMessage rsmmessage;
+	RsmEncodedMessage rsmENC;
+	tmx::message_container_type container;
+	ss<<rsm;
+	container.load<XML>(ss);
+	rsmmessage.set_contents(container.get_storage().get_tree());
+	rsmENC.encode_j2735_message(rsmmessage);
+	std::cout << rsmENC.get_payload_str() << std::endl;
+	ASSERT_EQ(33,  rsmENC.get_msgId());
 
 
-	//***********************************************************************************
-	
-
+	/**
+	 * Populate RSM 
+	*/	
 	auto message = (RoadSafetyMessage_t*) calloc(1, sizeof(RoadSafetyMessage_t));
 	auto commonContainer = (CommonContainer_t*) calloc(1, sizeof(CommonContainer_t));
 	auto eventInfo = (EventInfo_t*) calloc(1, sizeof(EventInfo_t));
@@ -692,38 +693,67 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	asn_sequence_add(&rsmAffectedVehicles->list.array, affectedVehCnt);
 	eventInfo->affectedVehicles = rsmAffectedVehicles;
 
+	commonContainer->eventInfo = *eventInfo;
+
 
 	// Region info
 	auto regionInfo = (CommonContainer::CommonContainer__regionInfo*) calloc(1, sizeof(CommonContainer::CommonContainer__regionInfo));
-	auto referencePointCnt = (Position3D_t*) calloc(1, sizeof(Position3D_t));
-	referencePointCnt->lat = 38954961;
-	referencePointCnt->Long = -77149303;
+	auto regionInfoCnt = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	// auto referencePointCnt = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	regionInfoCnt->referencePoint.lat = 38954961;
+	regionInfoCnt->referencePoint.Long = -77149303;
 	auto elev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
 	*elev = 390;
-	referencePointCnt->elevation = elev;
+	regionInfoCnt->referencePoint.elevation = elev;
 	
 	// // 3D regional info
-	auto rsmRegional = (Position3D::Position3D__regional*) calloc(1, sizeof(Position3D::Position3D__regional));
-	auto regionalPosCnt = (Reg_Position3D_t*) calloc(1, sizeof(Reg_Position3D_t));
-	regionalPosCnt->regionId = 1;
+	// auto rsmRegional = (Position3D::Position3D__regional*) calloc(1, sizeof(Position3D::Position3D__regional));
+	// auto regionalPosCnt = (Reg_Position3D_t*) calloc(1, sizeof(Reg_Position3D_t));
+	// regionalPosCnt->regionId = 1;
+	// regionalPosCnt->regExtValue.present = Reg_Position3D__regExtValue_PR_Position3D_addGrpB;
+	
+	// auto addGrpB = (Position3D_addGrpB_t*) calloc(1, sizeof(Position3D_addGrpB_t));
+	// addGrpB->latitude.d = 38;
+	// addGrpB->latitude.m = 57;
+	// addGrpB->latitude.s = 178596;
+	// addGrpB->longitude.d = 77;
+	// addGrpB->longitude.m = 8;
+	// addGrpB->longitude.s = 574908;
+	// addGrpB->elevation = 390;
+    // regionalPosCnt->regExtValue.choice.Position3D_addGrpB = *addGrpB;
+	// asn_sequence_add(&rsmRegional->list.array, regionalPosCnt);
+	// regionInfoCnt->referencePoint.regional = rsmRegional;
 
-	// Final 3D Pos Struct
-	auto regExtValue = (Reg_Position3D::Reg_Position3D__regExtValue*) calloc(1, sizeof(Reg_Position3D::Reg_Position3D__regExtValue));
-	// regExtVal->present = Reg_Position3D__regExtValue_PR_NOTHING;
-	asn_sequence_add(&rsmRegional->list.array, referencePointCnt);
+	asn_sequence_add(&regionInfo->list.array, regionInfoCnt);
 
-
-	referencePointCnt->regional = rsmRegional;
-	asn_sequence_add(&regionInfo->list.array, referencePointCnt);
+	commonContainer->regionInfo = *regionInfo;
+	message->commonContainer = *commonContainer;
 
 	// Content
 	auto content = (RoadSafetyMessage::RoadSafetyMessage__content*) calloc(1, sizeof(RoadSafetyMessage::RoadSafetyMessage__content));
+	auto contentCnt = (ContentContainer_t*) calloc(1, sizeof(ContentContainer_t));
+	contentCnt->present = ContentContainer_PR_dynamicInfoContainer;
 
+	auto dynamicInfoContainer = (DynamicInfoContainer_t*) calloc(1, sizeof(DynamicInfoContainer_t));
+	dynamicInfoContainer->priority = 3;
+	auto dmsString = (DynamicInfoContainer::DynamicInfoContainer__dmsSignString*) calloc(1, sizeof(DynamicInfoContainer::DynamicInfoContainer__dmsSignString));
+	auto myString = (ShortString_t*) calloc(1, sizeof(ShortString_t));
+	char* my_str = (char *) "Wrong Way Driver";
+	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	myString->buf = my_bytes;
+	myString->size = strlen(my_str);
+	asn_sequence_add(&dmsString->list.array, myString);
+	dynamicInfoContainer->dmsSignString = *dmsString;
+	dynamicInfoContainer->applicableRegion.referencePoint.lat = 38954961;
+	dynamicInfoContainer->applicableRegion.referencePoint.Long = -77149303;
+	auto appElev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	*appElev = 390;
+	dynamicInfoContainer->applicableRegion.referencePoint.elevation = appElev;
 
-	commonContainer->eventInfo = *eventInfo;
-	commonContainer->regionInfo = *regionInfo;
-	message->commonContainer = *commonContainer;
+	contentCnt->choice.dynamicInfoContainer = *dynamicInfoContainer;
+	asn_sequence_add(&content->list.array, contentCnt);
 	message->content = *content;
+
 	xer_fprint(stdout, &asn_DEF_RoadSafetyMessage, message);
 
 	//Encode RSM 
@@ -735,12 +765,16 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	free(frame_msg.get_j2735_data().get());
 	std::cout << RsmEncodeMessage.get_payload_str() << std::endl;
 	ASSERT_EQ(33,  RsmEncodeMessage.get_msgId());	
-	// std::string expectedRSMEncHex = "";
-	// ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
+	std::string expectedRSMEncHex = "00213e0500802060c020218181431f9fa0e6f7800b400fe0e000009bfba868b3584ec408c306c1f5f96fdd9d057c3e5044e5a7b65e4026feea1a2cd613b10230c0";
+	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
+
+	//Decode RSM
+	auto rsm_ptr = RsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	ASSERT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 	
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
-	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0.3</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
+	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
 	tsm4Message tsm4msg;
 	tsm4EncodedMessage tsm4Enc;
