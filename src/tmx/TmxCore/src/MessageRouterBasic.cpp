@@ -51,7 +51,6 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 	//PerformanceTimer timer;
 
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
-	// Volatile type should not be used in compound operations cpp:S6191
 	this->mActiveBroadcasts++;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);
 
@@ -107,7 +106,6 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 		}
 	}
 	
-	// Volatile type should not be used in compound operations cpp:S6191
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
 	this->mActiveBroadcasts--;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);
