@@ -52,7 +52,7 @@ private:
 	 * Keeps track of how many threads are actively inside the broadcast method in a thread safe manner (using mActiveBroadcastsLock).
 	 * This is to allow concurrent execution of the broadcast, but give the register and unregister methods a way to tell when broadcasts are inactive.
 	 */
-	volatile int mActiveBroadcasts;
+	int mActiveBroadcasts;
 
 	/*!
 	 * Used to keep the mActiveBroadcast count accurate since multiple thread's may be accessing.
