@@ -1,7 +1,10 @@
 on:
   push:
-    # run on branches and not PRs due to secrets used
     branches:
+      - develop
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened]
 name: Sonar Workflow
 jobs:
   sonarcloud:
