@@ -1,0 +1,38 @@
+{
+	"name":"RSM",
+	"description":"Provides Road Safety Message (RSM).",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/RsmPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"RSM",
+			"description":"Road Safety Message used to provide road safety information to travelers."
+		}
+	],
+	"configuration":[
+		{
+			"key":"Interval",
+			"default":"1000",
+			"description":"The interval to send the RSM, in milliseconds."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"127.0.0.1",
+			"description":"IP address at which the web service exists"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"12000",
+			"description":"Port at which Web service exists"
+		},
+		{
+			"key":"LogLevel",
+			"default":"DEBUG",
+			"description": "RSM Plugin Log Level controls which log statements are printed to the terminal."
+		}
+
+	]
+}
