@@ -9,9 +9,6 @@ sudo apt update -y && sudo apt upgrade -y
 sudo apt-get install chromium-browser -y      #Chrome required for CARMA platform/V2X Hub UI(?)
 sudo apt install curl -y                      #Curl for downloading files over internet
 
-#install docker
-curl -L https://raw.githubusercontent.com/usdot-fhwa-stol/carma-platform/develop/engineering_tools/install-docker.sh | bash 
-
 #make passwords for mysql
 mkdir -p secrets && cd secrets
 
@@ -38,17 +35,21 @@ fi
 
 #ARM initialization
 cd $directory
-sudo apt-get -y remove docker docker-engine docker.io containerd runc
-sudo apt-get -y install apt-transport-https ca-certificates curl gnupg-agent software-properties-common
-OS=$(lsb_release -i | awk 'FS=":" {print $3;}' | awk '{print tolower($0)}')
-arch=$(dpkg --print-architecture)
-curl -fsSL https://download.docker.com/linux/$OS/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=$arch] https://download.docker.com/linux/$OS $(lsb_release -cs) stable"
-sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-compose-plugin
-sudo apt -y install python3-pip
-sudo pip3 install docker-compose
-sudo apt update -y && sudo apt upgrade -y
-sudo docker-compose up -d
+for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
+# Add Docker's official GPG key:
+sudo apt-get -y install ca-certificates
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo docker compose up -d
 
 #create v2xhub user
 cd $mysqlDir
