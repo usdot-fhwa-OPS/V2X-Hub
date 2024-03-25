@@ -1,3 +1,5 @@
+version: '3.4'
+
 services:
   db:
     image: mariadb:10.4
@@ -14,6 +16,7 @@ services:
       - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      ## uncomment line to enable port drayage database
       # - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
       - mysql-datavolume:/var/lib/mysql
 
@@ -42,6 +45,7 @@ services:
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
+  ## uncomment section to enable port drayage service
   # port_drayage_webservice:
   #   image: usdotfhwaops/port-drayage-webservice_arm:latest
   #   container_name: port_drayage_webservice
