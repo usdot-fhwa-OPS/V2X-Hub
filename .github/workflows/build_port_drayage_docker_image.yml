@@ -5,7 +5,7 @@ on:
       - develop
       - master
       - 'release/**'
-      - vh-1278-update-github-actions
+      - vh-1278-update-to-github-actions
        # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'

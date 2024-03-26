@@ -5,6 +5,7 @@ on:
       - develop
       - master
       - 'release/**'
+      - vh-1278-update-to-github-actions
     # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
@@ -40,7 +41,6 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          context: .
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
