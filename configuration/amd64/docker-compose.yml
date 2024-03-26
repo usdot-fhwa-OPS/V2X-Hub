@@ -47,7 +47,7 @@ services:
       - ./MAP:/var/www/plugins/MAP
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:develop
-    container_name: port_drayage_webservicedock
+    container_name: port_drayage_webservice
     network_mode: host
 secrets:
     mysql_password:
