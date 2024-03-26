@@ -1,10 +1,11 @@
-name: Build Port Drayage Web App Docker Image
+name: Build PHP V2X-Hub Web UI
 on:
   push:
     branches:
       - develop
       - master
       - 'release/**'
+      - vh-1278-update-github-actions
       # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
@@ -27,7 +28,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: usdotfhwaops/port_drayage_webservice
+          images: usdotfhwaops/php
           tags: |
             type=schedule
             type=ref,event=branch
@@ -40,7 +41,7 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          context: tools/port-drayage-webservice/
+          file: Dockerfile-php
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
