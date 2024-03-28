@@ -611,7 +611,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 {
 	// Encode RSM XML
-	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
+	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
 	std::stringstream ss;
 	RsmMessage rsmmessage;
 	RsmEncodedMessage rsmENC;
@@ -683,8 +683,11 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	asn_sequence_add(&rsmEventRecurrence->list.array, eventRecCnt);
 	eventInfo->eventRecurrence = rsmEventRecurrence;
 
-	// ITIS cause code
+	// ITIS cause codes
 	eventInfo->causeCode = 7;
+	auto subCode = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
+	*subCode = 1793;
+	eventInfo->subCauseCode = subCode;
 
 	// ITIS affected vehicle code list
 	auto rsmAffectedVehicles = (EventInfo::EventInfo__affectedVehicles*) calloc(1, sizeof(EventInfo::EventInfo__affectedVehicles));
@@ -765,7 +768,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	free(frame_msg.get_j2735_data().get());
 	std::cout << RsmEncodeMessage.get_payload_str() << std::endl;
 	ASSERT_EQ(33,  RsmEncodeMessage.get_msgId());	
-	std::string expectedRSMEncHex = "00213e0500802060c020218181431f9fa0e6f7800b400fe0e000009bfba868b3584ec408c306c1f5f96fdd9d057c3e5044e5a7b65e4026feea1a2cd613b10230c0";
+	std::string expectedRSMEncHex = "0021400700802060c020218181431f9fa0e6f7800b400fe0e0e02000009bfba868b3584ec408c306c1f5f96fdd9d057c3e5044e5a7b65e4026feea1a2cd613b10230c0";
 	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
 
 	//Decode RSM
