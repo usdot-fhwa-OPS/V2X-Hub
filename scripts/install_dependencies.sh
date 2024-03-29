@@ -3,10 +3,8 @@
 # exit on errors
 set -e
 
-distro=$(cat /etc/lsb-release | grep DISTRIB_CODENAME |  tr -d "DISTRIB_CODENAME=")
-
 # add the STOL APT repository
-echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository ${distro} main" > /etc/apt/sources.list.d/stol-apt-repository.list
+echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository develop main" > /etc/apt/sources.list.d/stol-apt-repository.list
 
 apt-get update
 
