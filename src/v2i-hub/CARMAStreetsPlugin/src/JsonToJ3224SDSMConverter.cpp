@@ -99,7 +99,11 @@ namespace CARMAStreetsPlugin
         sdsm->refPos.Long = sdsm_json["ref_pos"]["long"].asInt64();
         // Optional elevation 
         if (sdsm_json["ref_pos"].isMember("elevation") ) {
+            #if SAEJ2735_SPEC < 2020
             auto elevation = (DSRC_Elevation_t*) calloc(1, sizeof(DSRC_Elevation_t));
+            #else
+            auto elevation = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+            #endif
             *elevation = sdsm_json["ref_pos"]["elevation"].asInt64();
             sdsm->refPos.elevation = elevation;
         }

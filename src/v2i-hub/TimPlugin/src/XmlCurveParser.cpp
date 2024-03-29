@@ -286,8 +286,12 @@ TiDataFrame* XmlCurveParser::ReadRegions(DOMElement* regionsElement)
 	DsrcBuilder::SetStartTimeToYesterday(frame);
 
 	// Set the duration (minutes) to its max value.
+	#if SAEJ2735_SPEC < 2020
 	frame->duratonTime = 32000;
-
+	#else
+	frame->durationTime = 32000;
+	#endif
+	
 	frame->startYear = NULL;
 	frame->url = NULL;
 	// Priority is 0-7 with 7 the highest priority.
@@ -437,17 +441,21 @@ Position3D* XmlCurveParser::ReadReferencePoint(DOMElement* referencePointElement
 		{
 			int16_t elevation = atoi(XMLString::transcode(currentElement->getTextContent())) * 10;
 
-#if SAEJ2735_SPEC < 63
+			#if SAEJ2735_SPEC < 63
 			anchor->elevation = (Elevation_t *)malloc(sizeof(Elevation_t));
 			anchor->elevation->buf = (uint8_t *)calloc(1,2);
 			anchor->elevation->size = 2;
 
 			anchor->elevation->buf[0] = elevation >> 8;
 			anchor->elevation->buf[1] = elevation & 0xFF;
-#else
+			
+			#elif SAEJ2735_SPEC < 2020
 			anchor->elevation = (DSRC_Elevation_t *)malloc(sizeof(DSRC_Elevation_t));
+			#else
+			anchor->elevation = (Common_Elevation_t *)malloc(sizeof(Common_Elevation_t));
 			*(anchor->elevation) = elevation;
-#endif
+			#endif
+
 			if (_debugOutput)
 				cout << "ReferencePoint Elevation: " << elevation << endl;
 		}

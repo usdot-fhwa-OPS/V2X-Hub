@@ -14,7 +14,7 @@
 #include <utility>
 
 #ifndef SAEJ2735_SPEC
-#define SAEJ2735_SPEC 63
+#define SAEJ2735_SPEC 2020
 #endif
 
 #define DEFINE_MEMBER_CHECKER(member) \

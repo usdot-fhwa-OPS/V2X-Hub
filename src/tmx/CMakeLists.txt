@@ -45,6 +45,7 @@ LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 #
 ADD_SUBDIRECTORY (Asn_J2735)
 ADD_LIBRARY (libasn_j2735 ALIAS ${ASN_J2735_LIBRARIES})
+MESSAGE (STATUS "Added ${ASN_J2735_LIBRARIES} library.")
 #
 # Set up some required platform dependencies, including MySQL
 #

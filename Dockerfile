@@ -40,6 +40,7 @@ RUN ./library.sh
 RUN ldconfig
 
 COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
+COPY --from=dependencies /usr/local/include/ /usr/local/include/
 COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
 COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
 COPY --from=dependencies /usr/lib/ /usr/lib/

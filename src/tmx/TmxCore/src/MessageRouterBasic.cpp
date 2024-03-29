@@ -50,11 +50,9 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 
 	//PerformanceTimer timer;
 
-	pthread_mutex_lock(&this->mMapLock);
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
 	this->mActiveBroadcasts++;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);
-	pthread_mutex_unlock(&this->mMapLock);
 
 	int broadcastCount = 0;
 
@@ -107,7 +105,7 @@ void MessageRouterBasic::broadcastMessage(MessageReceiver *sender, IvpMessage *m
 			}
 		}
 	}
-
+	
 	pthread_mutex_lock(&this->mActiveBroadcastsLock);
 	this->mActiveBroadcasts--;
 	pthread_mutex_unlock(&this->mActiveBroadcastsLock);

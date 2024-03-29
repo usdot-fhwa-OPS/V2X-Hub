@@ -527,8 +527,9 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
 	partIICnt->partII_Id = 1;
 	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
-	auto specialVEx= (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
-	auto emergencyDetails= (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
+
+	auto specialVEx = (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
+	auto emergencyDetails = (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
 	emergencyDetails->lightsUse = LightbarInUse_inUse;
 	auto resp_type = (ResponseType_t*) calloc(1, sizeof(ResponseType_t));
 	*resp_type = ResponseType_emergency;
@@ -540,20 +541,20 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	message->partII = bsmPartII;
 
 	// BSM regional extension
-    auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-    auto reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+    auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
+    auto reg_bsm = (Reg_BasicSafetyMessage_t*) calloc(1, sizeof(Reg_BasicSafetyMessage_t));
     reg_bsm->regionId = 128;
     reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
 
-    auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
-    auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
-    auto point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+    auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
+    auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
+    auto point = (Position3D_t*) calloc(1, sizeof(Position3D_t));
 	auto dummy_lat = 12;
 	auto dummy_long = 1312;
     point->lat = dummy_lat;
     point->Long = dummy_long;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point);
-    auto point2 = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+    auto point2 = (Position3D_t*) calloc(1, sizeof(Position3D_t));
     point2->lat = dummy_lat + 1000;
     point2->Long = dummy_long + 1000;
     asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
@@ -562,6 +563,8 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 
     asn_sequence_add(&regional->list.array, reg_bsm);
     message->regional = regional;
+
+	xer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
 
 	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
@@ -579,7 +582,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
 	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
 	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-	auto decoded_reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
+	auto decoded_reg_bsm = (Reg_BasicSafetyMessage_t *)calloc(1, sizeof(Reg_BasicSafetyMessage_t));
 	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
 	decoded_regional = decoded_bsm_ptr->regional;
 	decoded_reg_bsm = decoded_regional->list.array[0];
@@ -621,7 +624,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 
 TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
-	string tsm5str="<TestMessage05><body> <tcmV01> <reqid>30642B129B984162</reqid> <reqseq>0</reqseq> <msgtot>9</msgtot> <msgnum>9</msgnum> <id>0034b8d88d084ffdaf23837926031658</id> <updated>0</updated> <package> <label>workzone - lane closed</label> <tcids> <Id128b>0034b8d88d084ffdaf23837926031658</Id128b> </tcids> </package> <params> <vclasses> <micromobile/> <motorcycle/> <passenger-car/> <light-truck-van/> <bus/> <two-axle-six-tire-single-unit-truck/> <three-axle-single-unit-truck/> <four-or-more-axle-single-unit-truck/> <four-or-fewer-axle-single-trailer-truck/> <five-axle-single-trailer-truck/> <six-or-more-axle-single-trailer-truck/> <five-or-fewer-axle-multi-trailer-truck/> <six-axle-multi-trailer-truck/> <seven-or-more-axle-multi-trailer-truck/> </vclasses> <schedule> <start>27506547</start> <end>153722867280912</end> <dow>1111111</dow> </schedule> <regulatory><true/></regulatory> <detail> <closed><notopen/></closed> </detail> </params> <geometry> <proj>epsg:3785</proj> <datum>WGS84</datum> <reftime>27506547</reftime> <reflon>-818331529</reflon> <reflat>281182119</reflat> <refelv>0</refelv> <refwidth>424</refwidth> <heading>3403</heading> <nodes> <PathNode><x>0</x><y>0</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-204</x><y>722</y><width>2</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>-2</width></PathNode> <PathNode><x>-203</x><y>721</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-203</x><y>722</y><width>0</width></PathNode> <PathNode><x>-13</x><y>46</y><width>0</width></PathNode> </nodes> </geometry> </tcmV01> </body></TestMessage05>";
+	string tsm5str="<TestMessage05><body><tcmV01><reqid>30642B129B984162</reqid><reqseq>0</reqseq><msgtot>9</msgtot><msgnum>9</msgnum><id>0034b8d88d084ffdaf23837926031658</id><updated>0</updated><package><label>workzone-laneclosed</label><tcids><Id128b>0034b8d88d084ffdaf23837926031658</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27506547</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27506547</reftime><reflon>-818331529</reflon><reflat>281182119</reflat><refelv>0</refelv><refwidth>424</refwidth><heading>3403</heading><nodes><PathNode><x>0</x><y>0</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-204</x><y>722</y><width>2</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>-2</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-13</x><y>46</y><width>0</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
 	std::stringstream ss;
 	tsm5Message tsm5msg;
 	tsm5EncodedMessage tsm5Enc;
@@ -660,11 +663,19 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	requestType->role = 0;
 	requestor->type = requestType;
 	RequestorPositionVector_t *position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+	#if SAEJ2735_SPEC < 2020
 	DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+	#else
+	Common_Angle_t *heading_angle = (Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
+	#endif
 	*heading_angle = 123;
 	position->heading = heading_angle;
 	Position3D_t *position_point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+	#if SAEJ2735_SPEC < 2020
 	DSRC_Elevation_t *elev = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+	#else
+	Common_Elevation_t *elev = (Common_Elevation_t *)calloc(1, sizeof(Common_Elevation_t));
+	#endif
 	*elev = 12;
 	position_point->elevation = elev;
 	position_point->lat = 3712333;
@@ -735,7 +746,11 @@ TEST_F (J2735MessageTest, EncodeSrm)
 
 TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	//Advisory
+	#if SAEJ2735_SPEC < 2020
 	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
+	#else
+	string timStr="<TravelerInformation><msgCnt>1</msgCnt><packetID>00000000000F9E1D8D</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><unknown/></frameType><msgId><roadSignID><position><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></position><viewAngle>0000000000000000</viewAngle><mutcdCode><none/></mutcdCode></roadSignID></msgId><startYear>2023</startYear><startTime>394574</startTime><durationTime>32000</durationTime><priority>5</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></anchor><laneWidth>366</laneWidth><directionality><forward/></directionality><closedPath><false/></closedPath><direction>0000000000000000</direction><description><path><offset><xy><nodes><NodeXY><delta><node-LatLon><lon>-771489394</lon><lat>389549194</lat></node-LatLon></delta><attributes><dElevation>-10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771487215</lon><lat>389548996</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771485210</lon><lat>389548981</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY></nodes></xy></offset></path></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><speedLimit><SEQUENCE><item><itis>27</itis></item></SEQUENCE><SEQUENCE><item><text>Curve Ahead</text></item></SEQUENCE><SEQUENCE><item><itis>2564</itis></item></SEQUENCE><SEQUENCE><item><text>25</text></item></SEQUENCE><SEQUENCE><item><itis>8720</itis></item></SEQUENCE></speedLimit></content></TravelerDataFrame></dataFrames></TravelerInformation>";
+	#endif
 	std::stringstream ss;
 	TimMessage timMsg;
 	TimEncodedMessage timEnc;
@@ -745,7 +760,11 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	timMsg.set_contents(container.get_storage().get_tree());
 	timEnc.encode_j2735_message(timMsg);
 	ASSERT_EQ(31,  timEnc.get_msgId());	
+	#if SAEJ2735_SPEC < 2020
 	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
+	#else
+	string expectedHex = "001f6820100000000000f9e1d8d0803299b9eac27a9baa74232000000fcec0a9df4028007e53373d584f53754e846400b720000000b8f5374e3666e7ac5013ece3d4ddc1099b9e988050538f5378f9666e7a5a814140034000dea1f5e5db2a083a32e1c80a048b26a22100";
+	#endif
 	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
 }
 
@@ -765,8 +784,8 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	sDSMTimeStamp->year = year;
 	message->sDSMTimeStamp = *sDSMTimeStamp;
 
-	message->refPos.lat = 38.121212;
-	message->refPos.Long = -77.121212;
+	message->refPos.lat = 38121212;
+	message->refPos.Long = -77121212;
 
 	message->refPosXYConf.orientation = 10;
 	message->refPosXYConf.semiMajor = 12;
@@ -776,6 +795,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
 	objectData->detObjCommon.objType = ObjectType_unknown;
 	objectData->detObjCommon.objTypeCfd = 1;
+	objectData->detObjCommon.objectID = 1;
 	objectData->detObjCommon.measurementTime = 1;
 	objectData->detObjCommon.timeConfidence = 1;
 	objectData->detObjCommon.pos.offsetX = 1;
@@ -798,7 +818,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c35a4e9266b49d1b20c34000a00000020000bba0a000200004400240009";
+	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
 	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
