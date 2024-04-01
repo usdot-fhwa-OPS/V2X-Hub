@@ -286,7 +286,7 @@ typedef struct Reg_BasicSafetyMessage {
 	struct Reg_BasicSafetyMessage__regExtValue {
 		Reg_BasicSafetyMessage__regExtValue_PR present;
 		union Reg_BasicSafetyMessage__regExtValue_u {
-			BasicSafetyMessage_addGrpCarma_t	 BasicSafetyMessage_addGrpCarma;
+BasicSafetyMessage_addGrpCarma_t	 BasicSafetyMessage_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */
@@ -389,7 +389,7 @@ typedef struct Reg_Position3D {
 		union Reg_Position3D__regExtValue_u {
 			Position3D_addGrpB_t	 Position3D_addGrpB;
 			Position3D_addGrpC_t	 Position3D_addGrpC;
-			Position3D_addGrpCarma_t Position3D_addGrpCarma;
+Position3D_addGrpCarma_t Position3D_addGrpCarma;
 		} choice;
 		
 		/* Context for parsing across buffer boundaries */
