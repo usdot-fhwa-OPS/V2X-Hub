@@ -4,15 +4,16 @@
 set -e
 
 dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+mainDir="`( cd \"$dir\" && cd ../ && pwd )`"
 
 sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
-$dir/scripts/install_dependencies.sh
+$mainDir/scripts/install_dependencies.sh
 
 # build out ext components
-cd $dir/ext/
+cd $mainDir/ext/
 ./build.sh
 
-cd $dir/container/
+cd $mainDir/container/
 cp wait-for-it.sh /usr/local/bin/
 cp service.sh /usr/local/bin/
 
@@ -21,17 +22,17 @@ cp service.sh /usr/local/bin/
 ldconfig
 
 # build internal components
-cd $dir/src/
+cd $mainDir/src/
 ./build.sh release
 ldconfig
 
-$dir/scripts/deployment_dependencies.sh
+$mainDir/scripts/deployment_dependencies.sh
 
-cp $dir/src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
-cp $dir/src/tmx/TmxCore/tmxcore.service /usr/sbin/
+cp $mainDir/src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
+cp $mainDir/src/tmx/TmxCore/tmxcore.service /usr/sbin/
 ldconfig
 
-$dir/container/setup.sh
+$mainDir/container/setup.sh
 
 cd /var/log/tmx/
 /usr/local/bin/service.sh
