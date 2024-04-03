@@ -67,5 +67,5 @@ mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "CREATE DATABASE 
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "GRANT ALL PRIVILEGES ON $MYSQL_USER.* To '$MYSQL_USER'@'localhost';"
 
 if [ -f $mainDir/configuration/amd64/mysql/localhost.sql ]; then
-	mysql -v -u$MYSQL_USER -p --silent < $mainDir/configuration/amd64/mysql/localhost.sql
+	mysql -v -u$MYSQL_USER -p -h127.0.0.1 --silent < $mainDir/configuration/amd64/mysql/localhost.sql
 fi
