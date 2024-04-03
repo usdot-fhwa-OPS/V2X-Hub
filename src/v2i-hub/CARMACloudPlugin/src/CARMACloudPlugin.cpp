@@ -477,7 +477,7 @@ int CARMACloudPlugin::StartWebService()
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logERROR)<<"CARMACloudPlugin:: Started web service";
+	PLOG(logINFO)<<"CARMACloudPlugin:: Started web service";
 	return a.exec();
 
 }
