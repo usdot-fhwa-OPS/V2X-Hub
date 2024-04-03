@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # exit on errors
-#set -e
+# set -e
 
 directory="`dirname \"$0\"`"
 mainDir="`( cd \"$directory\" && cd ../ && pwd )`"
@@ -45,8 +45,7 @@ fi
 echo "# V2X HUB ADDITIONS" | tee -a $HOME/.bashrc > /dev/null
 echo "export MYSQL_DATABASE=IVP" | tee -a $HOME/.bashrc > /dev/null
 echo "export MYSQL_USER=IVP" | tee -a $HOME/.bashrc > /dev/null
-echo "export MYSQL_PASSWORD_FILE=$secretsDir/mysql_password.txt" | tee -a $HOME/.bashrc > /dev/null
-echo "export MYSQL_ROOT_PASSWORD_FILE=$secretsDir/mysql_root_password.txt" | tee -a $HOME/.bashrc > /dev/null
+echo "export MYSQL_PASSWORD=$secretsDir/mysql_password.txt" | tee -a $HOME/.bashrc > /dev/null
 
 # Database setup
 MYSQL_ROOT_USER="root"

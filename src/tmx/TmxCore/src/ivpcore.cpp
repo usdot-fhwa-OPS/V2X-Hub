@@ -136,7 +136,7 @@ std::string GetPwd(){
 	pwdFile = std::getenv(EnvVar);
 
 	if (pwdFile == nullptr) {
-		LOG_ERROR("Unable to get MYSQL_PASSWORD)");
+		LOG_ERROR("Unable to get MYSQL_PASSWORD");
 	} else{
 		std::ifstream t(pwdFile);
 		if (t) {
