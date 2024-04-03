@@ -17,8 +17,8 @@ if [ "" = "$PKG_OK" ]; then
 fi
 
 # Make passwords for mysql
-mkdir -p $mainDir/secrets
-secretsDir=$mainDir/secrets
+mkdir -p /run/secrets
+secretsDir=/run/secrets
 cd $secretsDir
 
 FILE1=mysql_root_password.txt
@@ -39,15 +39,16 @@ else
     echo "$sql_pass" > sql_pass.txt
     #remove endline characters from password files
     tr -d '\n' <sql_pass.txt> mysql_password && rm sql_pass.txt
+
 fi
 
 # Set environment values
 echo "# V2X HUB ADDITIONS" | tee -a $HOME/.bashrc > /dev/null
 echo "export MYSQL_DATABASE=IVP" | tee -a $HOME/.bashrc > /dev/null
 echo "export MYSQL_USER=IVP" | tee -a $HOME/.bashrc > /dev/null
-echo "export MYSQL_PASSWORD_FILE=$secretsDir/mysql_password" | tee -a $HOME/.bashrc > /dev/null
-echo "export MYSQL_ROOT_PASSWORD_FILE=$secretsDir/mysql_root_password" | tee -a $HOME/.bashrc > /dev/null
-echo "export MYSQL_PASSWORD=$secretsDir/mysql_password" | tee -a $HOME/.bashrc > /dev/null
+echo "export MYSQL_PASSWORD_FILE=/run/secrets/mysql_password" | tee -a $HOME/.bashrc > /dev/null
+echo "export MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password" | tee -a $HOME/.bashrc > /dev/null
+echo "export MYSQL_PASSWORD=/run/secrets/mysql_password" | tee -a $HOME/.bashrc > /dev/null
 
 # Database setup
 MYSQL_ROOT_USER="root"
@@ -64,10 +65,7 @@ MYSQL_PASSWORD=$(grep -v '^#' $secretsDir/mysql_password | xargs -d '\n')
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS $MYSQL_USER;"
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "GRANT ALL PRIVILEGES ON $MYSQL_USER.* To '$MYSQL_USER'@'localhost';"
-mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "FLUSH PRIVILEGES;"
 
 if [ -f $mainDir/configuration/amd64/mysql/localhost.sql ]; then
 	mysql -v -u$MYSQL_USER -p --silent < $mainDir/configuration/amd64/mysql/localhost.sql
 fi
-
-$mainDir/configuration/amd64/mysql/add_v2xhub_user.bash
