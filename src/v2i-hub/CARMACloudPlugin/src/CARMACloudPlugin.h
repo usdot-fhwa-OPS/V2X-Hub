@@ -174,7 +174,7 @@ private:
 	pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
 	J2735MessageFactory factory;
 	uint64_t _frequency = 0;
-	string url;
+	string carma_cloud_url;
 	string base_hb;
 	string base_req;
 	string method;

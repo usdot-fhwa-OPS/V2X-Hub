@@ -27,7 +27,6 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	SubscribeToMessages();
 	std::thread webthread(&CARMACloudPlugin::StartWebService,this);
 	webthread.detach(); // wait for the thread to finish 
-	url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
 	base_hb = "/carmacloud/v2xhub";
 	base_req = "/carmacloud/tcmreq";
 	base_ack = "/carmacloud/tcmack";
@@ -95,7 +94,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest port=\"%s\" list=\"%s\"><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",std::to_string(webport).c_str(),list_tcm.c_str(),reqid, reqseq,scale,bounds_str);
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
-	CloudSend(xml_str,url, base_req, method);
+	CloudSend(xml_str,carma_cloud_url, base_req, method);
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
@@ -179,7 +178,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 					<< "</acknowledgement><description>" << even_log_description
 					<< "</description></TrafficControlAcknowledgement>"; 
 			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
-			CloudSendAsync(sss.str(),url, base_ack, method);
+			CloudSendAsync(sss.str(),carma_cloud_url, base_ack, method);
 		}
 	}
 }
@@ -366,7 +365,7 @@ void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
 						<< "</description></TrafficControlAcknowledgement>"; 
 				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-				CloudSendAsync(sss.str(),url, base_ack, method);		
+				CloudSendAsync(sss.str(),carma_cloud_url, base_ack, method);		
 
 				_not_ACK_TCMs->erase(tcmv01_req_id_hex);
 				//If time out, stop tracking the starting time of the TCMs being broadcast so far
@@ -478,7 +477,7 @@ int CARMACloudPlugin::StartWebService()
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logERROR)<<"CARMACloudPlugin:: Started web service";
+	PLOG(logINFO)<<"CARMACloudPlugin:: Started web service";
 	return a.exec();
 
 }
@@ -496,7 +495,12 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
 	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
 	GetConfigValue<string>("listTCM",list_tcm);
-
+	std::string carma_cloud_ip;
+	uint carma_cloud_port;
+	GetConfigValue<string>("CARMACloudIP",carma_cloud_ip);
+	GetConfigValue<uint>("CARMACloudPort",carma_cloud_port);
+	carma_cloud_url = carma_cloud_ip + ":" + std::to_string(carma_cloud_port);
+	PLOG(logDEBUG) << "Setting CARMA Cloud URL to " << carma_cloud_url << std::endl;
 	
 }
 
