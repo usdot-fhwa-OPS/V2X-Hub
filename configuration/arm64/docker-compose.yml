@@ -39,6 +39,8 @@ services:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
+      - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
+      - INFRASTRUCTURE_NAME=<RSU_NAME>
     secrets:
       - mysql_password
     volumes:
