@@ -26,7 +26,7 @@ FILE2=mysql_password.txt
 if test -f "$FILE1"; then
     echo "$FILE1 exists."
 else
-    read -p "enter password for the mysql_root_password: " sql_root_pass
+    read -s -p "enter password for the mysql_root_password: " sql_root_pass
     echo "$sql_root_pass" > sql_root_pass.txt
     #remove endline characters from password files
     tr -d '\n' <sql_root_pass.txt> mysql_root_password && rm sql_root_pass.txt
@@ -35,7 +35,7 @@ fi
 if test -f "$FILE2"; then
     echo "$FILE2 exists."
 else
-    read -p "enter password for mysql_password: " sql_pass
+    read -s -p "enter password for mysql_password: " sql_pass
     echo "$sql_pass" > sql_pass.txt
     #remove endline characters from password files
     tr -d '\n' <sql_pass.txt> mysql_password && rm sql_pass.txt
@@ -53,19 +53,19 @@ echo "export MYSQL_PASSWORD=/run/secrets/mysql_password" | tee -a $HOME/.bashrc 
 # Database setup
 MYSQL_ROOT_USER="root"
 MYSQL_ROOT_PASSWORD=$(grep -v '^#' $secretsDir/mysql_root_password | xargs -d '\n')
-mysql -u$MYSQL_ROOT_USER -h127.0.0.1 -e "ALTER USER '$MYSQL_ROOT_USER'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
+mysql -u$MYSQL_ROOT_USER -e "ALTER USER '$MYSQL_ROOT_USER'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
 
 # Test out the connection to the server
-mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;"
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "SHOW STATUS WHERE Variable_name = 'Uptime' and Value > 0;"
 
 # Install the database
 MYSQL_USER="IVP"
 MYSQL_PASSWORD=$(grep -v '^#' $secretsDir/mysql_password | xargs -d '\n')
 
-mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
-mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "CREATE DATABASE IF NOT EXISTS $MYSQL_USER;"
-mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -h127.0.0.1 -e "GRANT ALL PRIVILEGES ON $MYSQL_USER.* To '$MYSQL_USER'@'localhost';"
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS $MYSQL_USER;"
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $MYSQL_USER.* To '$MYSQL_USER'@'localhost';"
 
 if [ -f $mainDir/configuration/amd64/mysql/localhost.sql ]; then
-	mysql -v -u$MYSQL_USER -p -h127.0.0.1 --silent < $mainDir/configuration/amd64/mysql/localhost.sql
+	mysql -v -u$MYSQL_USER -p --silent < $mainDir/configuration/amd64/mysql/localhost.sql
 fi
