@@ -72,3 +72,6 @@ mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $MYS
 if [ -f $mainDir/configuration/amd64/mysql/localhost.sql ]; then
 	mysql -v -u$MYSQL_USER -p --silent < $mainDir/configuration/amd64/mysql/localhost.sql
 fi
+
+sleep 1
+$mainDir/scripts/add_mysql_user.sh
