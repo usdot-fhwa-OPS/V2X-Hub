@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # exit on errors
 # set -e
@@ -62,6 +62,8 @@ mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "SHOW STATUS WHERE Variable_n
 MYSQL_USER="IVP"
 MYSQL_PASSWORD=$(grep -v '^#' $secretsDir/mysql_password | xargs -d '\n')
 
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "DROP USER '$MYSQL_USER'@localhost;"
+mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "FLUSH PRIVILAGES;"
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "CREATE USER '$MYSQL_USER'@'localhost' IDENTIFIED BY '$MYSQL_PASSWORD';"
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "CREATE DATABASE IF NOT EXISTS $MYSQL_USER;"
 mysql -u$MYSQL_ROOT_USER -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $MYSQL_USER.* To '$MYSQL_USER'@'localhost';"
