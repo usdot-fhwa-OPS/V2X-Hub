@@ -25,7 +25,7 @@
 		},
 		{
 			"key":"WebServiceIP",
-			"default":"127.0.0.1",
+			"default":"0.0.0.0",
 			"description":"Server IP address for V2X hub"
 		},
 		{
@@ -36,12 +36,12 @@
 		{
 			"key":"CARMACloudIP",
 			"default":"http://127.0.0.1",
-			"description":"Server IP address for V2X hub"
+			"description":"Server IP address of carma-cloud"
 		},
 		{
 			"key":"CARMACloudPort",
 			"default":"33333",
-			"description":"Server Port for V2X hub to receive TCM messages"
+			"description":"Server Port for V2X hub to send TCR messages to carma-cloud"
 		},
 		{
 			"key":"fetchTime",
