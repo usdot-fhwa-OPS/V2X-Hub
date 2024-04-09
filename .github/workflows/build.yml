@@ -2,7 +2,14 @@ name: Build Workflows
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   push:
+    branches:
+      - develop
+      - master
+      - "release/*"
+    tags:
+      - "*"
 
 # TODO push to dockerhub with correct tags
 jobs:
