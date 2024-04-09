@@ -66,9 +66,6 @@ jobs:
         name: Docker Pull Release
         # Pull all built images associated with github tag
         command: |
-          docker pull usdotfhwaops/php:master
-          docker pull usdotfhwaops/port-drayage-webservice:master
-          docker pull usdotfhwaops/v2xhubamd:master
           docker pull usdotfhwaops/php_arm:master
           docker pull usdotfhwaops/port-drayage-webservice_arm:master
           docker pull usdotfhwaops/v2xhubarm:master
@@ -76,9 +73,6 @@ jobs:
         name: Docker Tag Release
         # Tag all pulled images with github tag name
         command: | 
-          docker tag usdotfhwaops/php:master usdotfhwaops/php:${CIRCLE_TAG}
-          docker tag usdotfhwaops/port-drayage-webservice:master usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
-          docker tag usdotfhwaops/v2xhubamd:master usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
           docker tag usdotfhwaops/php_arm:master usdotfhwaops/php_arm:${CIRCLE_TAG}
           docker tag usdotfhwaops/port-drayage-webservice_arm:master usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_TAG}
           docker tag usdotfhwaops/v2xhubarm:master usdotfhwaops/v2xhubarm:${CIRCLE_TAG}
@@ -87,9 +81,6 @@ jobs:
         # Push all tagged images
         command: |
           echo "$DOCKERHUB_PASSWORD" | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          docker push usdotfhwaops/php:${CIRCLE_TAG}
-          docker push usdotfhwaops/port-drayage-webservice:${CIRCLE_TAG}
-          docker push usdotfhwaops/v2xhubamd:${CIRCLE_TAG}
           docker push usdotfhwaops/php_arm:${CIRCLE_TAG}
           docker push usdotfhwaops/port-drayage-webservice_arm:${CIRCLE_TAG}
           docker push usdotfhwaops/v2xhubarm:${CIRCLE_TAG}
