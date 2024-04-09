@@ -8,7 +8,6 @@ on:
       - develop
       - master
       - "release/*"
-      - feature-update-release-version
     tags:
       - "*"
 
