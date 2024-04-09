@@ -109,6 +109,7 @@ namespace TelematicBridge
             // increase size of buffer.
             size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
             auto new_buf = static_cast<char *>(MALLOC(new_size));
+            // auto new_buf = new char[new_size];
             if (!new_buf)
                 return -1;
             // move old to new.
@@ -147,7 +148,9 @@ namespace TelematicBridge
         {
             throw TelematicBridgeException("Failed to  convert message with ID (=" + to_string(messageFrame->messageId) + ") to XML ");
         }
-        return string(xml_buffer.buffer);
+        auto output = string(xml_buffer.buffer);
+        FREEMEM(xml_buffer.buffer);
+        return output;
     }
 
     /**
