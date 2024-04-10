@@ -20,8 +20,8 @@ typedef unsigned int IvpMsgFlags;
 #define IvpMsgFlags_RouteDSRC 0x01
 
 typedef struct IvpDsrcMetadata {
-	int channel;
 	int psid;
+	int channel;
 } IvpDsrcMetadata;
 
 typedef struct IvpMessage {
@@ -64,7 +64,7 @@ typedef enum {
  */
 IvpMessage *ivpMsg_create(const char *type, const char *subtype, const char *encoding, IvpMsgFlags flags, cJSON *payload);
 
-IvpMessage *ivpMsg_addDsrcMetadata(IvpMessage *msg, int channel, int psid);
+IvpMessage *ivpMsg_addDsrcMetadata(IvpMessage *msg, int psid, int channel);
 
 /*!
  * Creates a new IvpMessage from a json string.

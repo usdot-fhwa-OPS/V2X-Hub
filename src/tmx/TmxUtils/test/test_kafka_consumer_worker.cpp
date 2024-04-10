@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "kafka/kafka_client.h"
+#include "PluginLog.h"
 
 TEST(test_kafka_consumer_worker, create_consumer)
 {

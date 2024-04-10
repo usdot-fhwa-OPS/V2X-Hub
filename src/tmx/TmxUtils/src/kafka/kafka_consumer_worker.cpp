@@ -8,6 +8,10 @@ namespace tmx::utils
         _partition(partition)
     {
     }
+    kafka_consumer_worker::~kafka_consumer_worker() {
+        stop();
+        FILE_LOG(logWARNING) << "Kafka consumer destroyed!" << std::endl;
+    }
 
     bool kafka_consumer_worker::init()
     {
@@ -39,6 +43,12 @@ namespace tmx::utils
         if (conf->set(ENABLE_PARTITION_END_OF, "true", errstr) != RdKafka::Conf::CONF_OK)
         {
             FILE_LOG(logWARNING) << "RDKafka conf set partition end of failed: " << errstr.c_str() << std::endl;
+            return false;
+        }
+
+        if (conf->set(ENABLE_AUTO_COMMIT, "true", errstr) != RdKafka::Conf::CONF_OK)
+        {
+            FILE_LOG(logWARNING) << "RDKafka conf set enable auto commit failed: " << errstr.c_str() << std::endl;
             return false;
         }
 
@@ -87,9 +97,12 @@ namespace tmx::utils
 
     void kafka_consumer_worker::stop()
     {
+        FILE_LOG(logWARNING) << "Stopping Kafka Consumer!" << std::endl;
         _run = false;
-        /*Destroy kafka instance*/ // Wait for RdKafka to decommission.
-        RdKafka::wait_destroyed(5000);
+        //Close and shutdown the consumer.
+        _consumer->close();
+        FILE_LOG(logWARNING) << "Kafka Consumer Stopped!" << std::endl;
+
     }
 
     void kafka_consumer_worker::subscribe()
@@ -134,7 +147,7 @@ namespace tmx::utils
         switch (message->err())
         {
         case RdKafka::ERR__TIMED_OUT:
-            FILE_LOG(logWARNING) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
+            FILE_LOG(logDEBUG4) << _consumer->name() << " consume failed: " <<  message->errstr() << std::endl;
             break;
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;

@@ -53,7 +53,26 @@ namespace tmx::utils
              * @param topic_str topic producer should produce to.
              * @param n_partition partition producer should be assigned to.
              */
-            kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
+            explicit kafka_producer_worker(const std::string &brokers, const std::string &topics, int n_partition = 0);
+            /**
+             * @brief Construct a new kafka producer worker object
+             * 
+             * @param broker_str network address of kafka broker.
+             */
+            explicit kafka_producer_worker(const std::string &brokers);
+            /**
+             * @brief Destroy the kafka producer worker object. Calls stop on producer to clean up resources.
+             */
+            virtual ~kafka_producer_worker();
+            // Rule of 5 because destructor is define (https://www.codementor.io/@sandesh87/the-rule-of-five-in-c-1pdgpzb04f)
+            // delete copy constructor
+            kafka_producer_worker(kafka_producer_worker& other) = delete;
+            // delete copy assignment
+            kafka_producer_worker& operator=(const kafka_producer_worker& other) = delete;
+            // delete move constructor
+            kafka_producer_worker(kafka_producer_worker &&producer) = delete;
+            // delete move assignment
+            kafka_producer_worker const & operator=(kafka_producer_worker &&producer) = delete;
             /**
              * @brief Initialize kafka_producer_worker. This method must be called before send!
              * 
@@ -61,12 +80,29 @@ namespace tmx::utils
              * @return false if unsuccessful.
              */
             virtual bool init();
+             /**
+             * @brief Initialize kafka topic.
+             * @return true if successful.
+             * @return false if unsuccessful.
+             */
+            virtual bool init_topic();
+             /**
+             * @brief Initialize kafka producer.
+             * @return true if successful.
+             * @return false if unsuccessful.
+             */
+            virtual bool init_producer();
             /**
              * @brief Produce to topic. Will result in segmentation fault if init() is not called on producer first.
-             * 
              * @param msg message to produce.
              */
             virtual void send(const std::string &msg);
+            /**
+             * @brief Produce to a specific topic. Will result in segmentation fault if init() is not called on producer first.
+             * @param msg message to produce.
+             * @param topic_name topic to send the message to.
+             */
+            virtual void send(const std::string& message, const std::string& topic_name ) const;
             /**
              * @brief Is kafka_producer_worker still running?
              * 
@@ -77,16 +113,12 @@ namespace tmx::utils
             /**
              * @brief Stop running kafka producer.
              */
-            virtual void stop();
+            void stop();
             /**
              * @brief Print current configurations.
              */
             virtual void printCurrConf();
-            /**
-             * @brief Destroy the kafka producer worker object
-             * 
-             */
-            virtual ~kafka_producer_worker() = default;
+           
         };
 }
 

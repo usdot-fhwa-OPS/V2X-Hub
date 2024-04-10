@@ -32,6 +32,11 @@ namespace tmx::utils::sim{
          */
         constexpr inline static const char *SIMULATION_REGISTRATION_PORT = "SIMULATION_REGISTRATION_PORT";
         /**
+         * @brief sensors file location
+        */
+        constexpr inline static const char *SENSOR_JSON_FILE_PATH = "SENSOR_JSON_FILE_PATH";
+        
+        /**
          * @brief Name of environment varaible for storing port for receiving time sync messages from CDASim. Only 
          * necessary in SIMULATION MODE for CDASim time sync.
          */
@@ -41,6 +46,11 @@ namespace tmx::utils::sim{
          * necessary in SIMULATION MODE for CDASim message forwarding.
          */
         constexpr inline static const char *SIM_V2X_PORT = "SIM_V2X_PORT";
+        /**
+         * @brief Name of environment variable for storing port for forwarding v2x messages to CDASim. Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        constexpr inline static const char *SIM_INTERACTION_PORT= "SIM_INTERACTION_PORT";
         /**
          * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.
@@ -56,6 +66,12 @@ namespace tmx::utils::sim{
          * for CDASim connection.
          */
         constexpr inline static const char *INFRASTRUCTURE_ID = "INFRASTRUCTURE_ID";
+
+        /**
+         * @brief Name of environment variable for storing infrastructure name of v2xhub. Only necessary in SIMULATION MODE 
+         * for CDASim connection.
+        */
+        constexpr inline static const char *INFRASTRUCTURE_NAME = "INFRASTRUCTURE_NAME";
         /**
          * @brief Function to return bool indicating whether V2X-Hub deployment is in SIMULATION MODE or not.
          * @return true if SIMULATION_MODE is "true" or "TRUE" and false otherwise.

@@ -19,20 +19,17 @@ namespace CARMAStreetsPlugin {
  * @param name The name to give the plugin for identification purposes
  */
 CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
-		PluginClient(name) {
-			
+		PluginClientClockAware(name) {
 	AddMessageFilter < BsmMessage > (this, &CARMAStreetsPlugin::HandleBasicSafetyMessage);
 	AddMessageFilter < tsm3Message > (this, &CARMAStreetsPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	
+	AddMessageFilter < simulation::SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage );
+
 	SubscribeToMessages();
-
 }
 
-CARMAStreetsPlugin::~CARMAStreetsPlugin() {
-}
 
 void CARMAStreetsPlugin::UpdateConfigSettings() {
 
@@ -44,14 +41,16 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
 	//
  	GetConfigValue<string>("SchedulingPlanTopic", _subscribeToSchedulingPlanTopic);
-	GetConfigValue<string>("SchedulingPlanConsumerGroupId", _subscribeToSchedulingPlanConsumerGroupId);
  	GetConfigValue<string>("SpatTopic", _subscribeToSpatTopic);
-	GetConfigValue<string>("SpatConsumerGroupId", _subscribeToSpatConsumerGroupId);
+	GetConfigValue<string>("SsmTopic", _subscribeToSsmTopic);
 	GetConfigValue<string>("BsmTopic", _transmitBSMTopic);
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
-	GetConfigValue<string>("SRMTopic", _transmitSRMTopic);
+	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
+	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
+	GetConfigValue<string>("SdsmSubscribeTopic", _subscribeToSdsmTopic);
+	GetConfigValue<string>("SdsmTransmitTopic", _transmitSDSMTopic);
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -59,81 +58,47 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	_strategies.clear();
 	while( ss.good() ) {
 		std::string substring;
+
 		getline( ss, substring, ',');
 		_strategies.push_back( substring);
 	}
+}
+
+void CARMAStreetsPlugin::InitKafkaConsumerProducers()
+{
  	std::string kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	std::string error_string;	
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
-	kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	kafka_conf_sp_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-	kafka_conf_spat_consumer = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	kafka_client client;
 
-	PLOG(logDEBUG) <<"Attempting to connect to " << kafkaConnectString;
-	if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
-		PLOG(logERROR) <<"Setting kafka config options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
-		exit(1);
-	} else {
-		PLOG(logDEBUG) <<"Kafka config options set successfully";
-	}
-	
-	kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
-	if (!kafka_producer) {
-		PLOG(logERROR) <<"Creating kafka producer failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
-		exit(1);
-	} 			
-	PLOG(logDEBUG) <<"Kafka producer created";
-
-	if (kafka_conf_sp_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK
-		 || (kafka_conf_sp_consumer->set("group.id", _subscribeToSchedulingPlanConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)
-		 || (kafka_conf_spat_consumer->set("bootstrap.servers", kafkaConnectString, error_string)  != RdKafka::Conf::CONF_OK)
-		 || (kafka_conf_spat_consumer->set("group.id", _subscribeToSpatConsumerGroupId, error_string) != RdKafka::Conf::CONF_OK)) {
-		PLOG(logERROR) <<"Setting kafka config group.id options failed with error:" << error_string << "\n" <<"Exiting with exit code 1";
-		exit(1);
-	} else {
-		PLOG(logDEBUG) <<"Kafka config group.id options set successfully";
-	}
-	kafka_conf_sp_consumer->set("enable.partition.eof", "true", error_string);
-	kafka_conf_spat_consumer->set("enable.partition.eof", "true", error_string);
-
-	_scheduing_plan_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_sp_consumer, error_string);
-	_spat_kafka_consumer = RdKafka::KafkaConsumer::create(kafka_conf_spat_consumer, error_string);
-
-	if ( !_scheduing_plan_kafka_consumer || !_spat_kafka_consumer) {
-		PLOG(logERROR) << "Failed to create Kafka consumers: " << error_string << std::endl;
-		exit(1);
-	}
-	PLOG(logDEBUG) << "Created consumer " << _scheduing_plan_kafka_consumer->name() << std::endl;
-	PLOG(logDEBUG) << "Created consumer " << _spat_kafka_consumer->name() << std::endl;
-
-	//create kafka topics
-	RdKafka::Conf *tconf_spat = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	RdKafka::Conf *tconf_sp = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
-	if(!tconf_spat && !tconf_sp)
+	//Producer
+	_kafka_producer_ptr = client.create_producer(kafkaConnectString);
+	if(!_kafka_producer_ptr->init_producer())
 	{
-		PLOG(logERROR) << "RDKafka create topic conf failed ";
-		return;
-	}   
-
-	_scheduing_plan_topic = RdKafka::Topic::create(_scheduing_plan_kafka_consumer,_subscribeToSchedulingPlanTopic,tconf_sp,error_string);
-	if(!_scheduing_plan_topic)
-	{
-		PLOG(logERROR) << "RDKafka create scheduing plan topic failed:" << error_string;
-		return ;
+		throw TmxException("Failed to create Kafka producer.");
+		
 	}
 
-	_spat_topic = RdKafka::Topic::create(_spat_kafka_consumer,_subscribeToSpatTopic,tconf_spat,error_string);
-	if(!_spat_topic)
+	//Consumers
+	_spat_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSpatTopic,this->_name);
+	_scheduing_plan_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSchedulingPlanTopic, this->_name);
+	_ssm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSsmTopic,this->_name);
+	_sdsm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSdsmTopic,this->_name);
+	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr || !_sdsm_kafka_consumer_ptr)
 	{
-		PLOG(logERROR) << "RDKafka create SPAT topic failed:" << error_string;
-		return ;
+		throw TmxException("Failed to create Kafka consumers.");
 	}
-
-	delete tconf_sp;
-	delete tconf_spat;
-	
+	PLOG(logDEBUG) <<"Kafka consumers created";
+	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init() || !_sdsm_kafka_consumer_ptr->init())
+	{
+		throw TmxException("Kafka consumers init() failed!");
+	}
+	// TODO: Replace with tmxutil ThreadTimer or some other more appropriate Thread wrapper.
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
 	boost::thread thread_spat(&CARMAStreetsPlugin::SubscribeSpatKafkaTopic, this);
+	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);
+	boost::thread thread_sdsm(&CARMAStreetsPlugin::SubscribeSDSMKafkaTopic, this);
+
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -141,14 +106,29 @@ void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
 	UpdateConfigSettings();
 }
 
+void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
+	PluginClientClockAware::HandleTimeSyncMessage(msg, routeableMsg);
+	if ( isSimulationMode()) {
+		// TODO: This is a temporary fix for tmx message container property tree
+		// serializing all attributes as strings. This issue needs to be fixed but
+		// is currently out of scope. TMX Messages should be correctly serialize to 
+		// and from json. This temporary fix simply using regex to look for numeric,
+		// null, and bool values and removes the quotations around them.
+		boost::regex exp("\"(null|true|false|[0-9]+(\\.[0-9]+)?)\"");
+		std::stringstream ss;
+		std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
+		PLOG(logINFO) << "Sending Time Sync Message " << rv << std::endl;
+
+		produce_kafka_msg(rv, "time_sync");
+	}
+}
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
 	try 
 	{
 		auto mobilityOperation = msg.get_j2735_data();
 		PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
 					  << "Body Strategy : " << mobilityOperation->body.strategy.buf<< "\n"
-					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic << " " 
-		  			  << kafka_producer->outq_len() <<"messages already in queue";
+					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic;
 
 		std::stringstream strat;
 		std::stringstream payload; 
@@ -482,36 +462,22 @@ void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message
 	produce_kafka_msg(message, _transmitMAPTopic);	
 }
 
+void CARMAStreetsPlugin::HandleSDSMMessage(SdsmMessage &msg, routeable_message &routeableMsg)
+{
+	std::shared_ptr<SensorDataSharingMessage> sdsmMsgPtr = msg.get_j2735_data(); 
+	PLOG(logDEBUG) << "Detected object count: " << sdsmMsgPtr->objects.list.count << std::endl;
+	Json::Value sdsmJson;
+	Json::StreamWriterBuilder builder;
+	J3224ToSDSMJsonConverter jsonConverter;
+	jsonConverter.convertJ3224ToSDSMJSON(sdsmMsgPtr, sdsmJson);
+	PLOG(logDEBUG) << "sdsmJson: " << sdsmJson << std::endl;
+	const std::string message 	= Json::writeString(builder, sdsmJson);
+	produce_kafka_msg(message, _transmitSDSMTopic);	
+}
+
 void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
 {
-	bool retry = true;
-	while (retry) 
-	{
-		RdKafka::ErrorCode produce_error = kafka_producer->produce(topic_name, 
-																	RdKafka::Topic::PARTITION_UA,
-																	RdKafka::Producer::RK_MSG_COPY, 
-																	const_cast<char *>(message.c_str()),
-																	message.size(), 
-																	nullptr, 0, 0, nullptr);
-
-		if (produce_error == RdKafka::ERR_NO_ERROR) {
-			PLOG(logDEBUG) <<"Queued message:" << message;
-			retry = false;
-		}
-		else 
-		{
-			PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-			if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-				PLOG(logERROR) <<"Message queue full...retrying...";
-				kafka_producer->poll(500);  /* ms */
-				retry = true;
-			}
-			else {
-				PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-				retry = false;
-			}
-		}	
-	}
+	_kafka_producer_ptr->send(message, topic_name);
 }
 
 void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
@@ -519,144 +485,237 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 
 	if (state == IvpPluginState_registered) {
 		UpdateConfigSettings();
+		InitKafkaConsumerProducers();
 	}
 }
 
 void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 {	
+	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
-		std::vector<std::string> topics;
-		topics.emplace_back(_subscribeToSchedulingPlanTopic);
+		_scheduing_plan_kafka_consumer_ptr->subscribe();
 
-		RdKafka::ErrorCode err = _scheduing_plan_kafka_consumer->subscribe(topics);
-		if (err) 
+		while (_scheduing_plan_kafka_consumer_ptr->is_running()) 
 		{
-			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
-			return;
-		}
-
-		while (true) 
-		{
-			auto msg = _scheduing_plan_kafka_consumer->consume( 500 );
-			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			std::string payload_str = _scheduing_plan_kafka_consumer_ptr->consume(500);
+			if(payload_str.length() > 0)
 			{
-				auto payload_str = static_cast<const char *>( msg->payload() );
-				if(msg->len() > 0)
-				{
-					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
-					Json::Value  payload_root;
-					Json::Reader payload_reader;
-					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
-					if( !parse_sucessful )
-					{	
-						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
-						SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
-						continue;
-					}
-
-					Json::Value metadata = payload_root["metadata"];
-					Json::Value payload_json_array = payload_root["payload"];
-					
-					for ( int index = 0; index < payload_json_array.size(); ++index )
-					{
-						PLOG(logDEBUG) << payload_json_array[index] << std::endl;
-						Json::Value payload_json =  payload_json_array[index];
-						tsm3EncodedMessage tsm3EncodedMsgs;
-						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
-						{
-							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
-							tsm3EncodedMsgs.addDsrcMetadata(0xBFEE );
-							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
-							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
-						}
-					}
-					//Empty payload
-					if(payload_json_array.empty())
-					{
-						Json::Value payload_json = {};
-						tsm3EncodedMessage tsm3EncodedMsgs;
-						if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
-						{
-							tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
-							tsm3EncodedMsgs.addDsrcMetadata(0xBFEE);
-							PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
-							BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
-						}
-					}			
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value  payload_root;
+				Json::Reader payload_reader;
+				bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
+					continue;
 				}
+
+				Json::Value metadata = payload_root["metadata"];
+				Json::Value payload_json_array = payload_root["payload"];
+				
+				for ( int index = 0; index < payload_json_array.size(); ++index )
+				{
+					PLOG(logDEBUG) << payload_json_array[index] << std::endl;
+					Json::Value payload_json =  payload_json_array[index];
+					tsm3EncodedMessage tsm3EncodedMsgs;
+					if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
+					{
+						tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
+						tsm3EncodedMsgs.addDsrcMetadata(0xBFEE );
+						PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
+						BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
+					}
+				}
+				//Empty payload
+				if(payload_json_array.empty())
+				{
+					Json::Value payload_json = {};
+					tsm3EncodedMessage tsm3EncodedMsgs;
+					if( getEncodedtsm3 (&tsm3EncodedMsgs,  metadata,  payload_json) )
+					{
+						tsm3EncodedMsgs.set_flags( IvpMsgFlags_RouteDSRC );
+						tsm3EncodedMsgs.addDsrcMetadata(0xBFEE);
+						PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
+						BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
+					}
+				}			
 			}
-			delete msg;
 		}
 
 	}
 }
 
 void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
+	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSpatTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
-		std::vector<std::string> topics;		
-		topics.emplace_back(_subscribeToSpatTopic);
-
-		RdKafka::ErrorCode err = _spat_kafka_consumer->subscribe(topics);
-		if (err) 
-		{
-			PLOG(logERROR) <<  "Failed to subscribe to " << topics.size() << " topics: " << RdKafka::err2str(err) << std::endl;
-			return;
-		}
-		//Initialize Json to J2735 Spat convertor 
+		_spat_kafka_consumer_ptr->subscribe();
+		//Initialize Json to J2735 Spat convertor		
 		JsonToJ2735SpatConverter spat_convertor;
-		while (true) 
+		while (_spat_kafka_consumer_ptr->is_running()) 
 		{
-			auto msg = _spat_kafka_consumer->consume( 500 );
-			if( msg->err() == RdKafka::ERR_NO_ERROR )
+			std::string payload_str = _spat_kafka_consumer_ptr->consume(500);
+			if(payload_str.length() > 0)
 			{
-				auto payload_str = static_cast<const char *>( msg->payload() );
-				if(msg->len() > 0)
-				{
-					PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
-					Json::Value  payload_root;
-					Json::Reader payload_reader;
-					bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
-					if( !parse_sucessful )
-					{	
-						PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
-						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
-						continue;
-					}
-					//Convert the SPAT JSON string into J2735 SPAT message and encode it.
-					auto spat_ptr = std::make_shared<SPAT>();
-					spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
-					tmx::messages::SpatEncodedMessage spatEncodedMsg;
-					try
-					{
-						spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
-					}
-					catch (TmxException &ex) 
-					{
-						// Skip messages that fail to encode.
-						PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
-							<< ex.what() << std::endl;
-						ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
-						SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
-
-						continue;
-					}
-					
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
-					PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
-
-					//Broadcast the encoded SPAT message
-					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncodedMsg.addDsrcMetadata(0x8002);
-					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value  payload_root;
+				Json::Reader payload_reader;
+				bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
+					continue;
 				}
+				//Convert the SPAT JSON string into J2735 SPAT message and encode it.
+				auto spat_ptr = std::make_shared<SPAT>();
+				spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
+				tmx::messages::SpatEncodedMessage spatEncodedMsg;
+				try
+				{
+					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
+				}
+				catch (TmxException &ex) 
+				{
+					// Skip messages that fail to encode.
+					PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
+						<< ex.what() << std::endl;
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
+
+					continue;
+				}
+				
+				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
+				PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
+
+				//Broadcast the encoded SPAT message
+				spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+				spatEncodedMsg.addDsrcMetadata(0x8002);
+				BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
 			}
-			delete msg;
 		}
 	}
+}
+
+void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
+	// TODO: Update methods to represent consuming a single message from Kafka topic
+	if(_subscribeToSsmTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSSMKafkaTopics:" <<_subscribeToSsmTopic << std::endl;
+		_ssm_kafka_consumer_ptr->subscribe();
+		//Initialize Json to J2735 SSM convertor 
+		JsonToJ2735SSMConverter ssm_convertor;
+		while (_ssm_kafka_consumer_ptr->is_running()) 
+		{
+			std::string payload_str = _ssm_kafka_consumer_ptr->consume(500);			
+			if(payload_str.length() > 0)
+			{
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value ssmDoc;
+				auto parse_sucessful = ssm_convertor.parseJsonString(payload_str, ssmDoc);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
+					continue;
+				}
+				//Convert the SSM JSON string into J2735 SSM message and encode it.
+				auto ssm_ptr = std::make_shared<SignalStatusMessage>();
+				ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
+				tmx::messages::SsmEncodedMessage ssmEncodedMsg;
+				try
+				{
+					ssm_convertor.encodeSSM(ssm_ptr, ssmEncodedMsg);
+				}
+				catch (TmxException &ex) 
+				{
+					// Skip messages that fail to encode.
+					PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
+						<< ex.what() << std::endl;
+					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
+					continue;
+				}
+				
+				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
+				PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
+
+				//Broadcast the encoded SSM message
+				ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+				ssmEncodedMsg.addDsrcMetadata(0x8002);
+				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
+			}
+		}
+	}
+
+}
+
+void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
+	// TODO: Update methods to represent consuming a single message from Kafka topic
+	if(_subscribeToSdsmTopic.length() > 0)
+	{
+		PLOG(logDEBUG) << "SubscribeSDSMKafkaTopics:" <<_subscribeToSdsmTopic << std::endl;
+		_sdsm_kafka_consumer_ptr->subscribe();
+		//Initialize Json to J3224 SDSM convertor 
+		JsonToJ3224SDSMConverter sdsm_convertor;
+		while (_sdsm_kafka_consumer_ptr->is_running()) 
+		{
+			std::string payload_str = _sdsm_kafka_consumer_ptr->consume(500);			
+			if(payload_str.length() > 0)
+			{
+				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
+				Json::Value sdsmDoc;
+				auto parse_sucessful = sdsm_convertor.parseJsonString(payload_str, sdsmDoc);
+				if( !parse_sucessful )
+				{	
+					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
+					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
+					continue;
+				}
+				//Convert the SDSM JSON string into J3224 SDSM message and encode it.
+				auto sdsm_ptr = std::make_shared<SensorDataSharingMessage>();
+				sdsm_convertor.convertJsonToSDSM(sdsmDoc, sdsm_ptr);
+				tmx::messages::SdsmEncodedMessage sdsmEncodedMsg;
+				try
+				{
+					sdsm_convertor.encodeSDSM(sdsm_ptr, sdsmEncodedMsg);
+				}
+				catch( std::exception const & x )
+				{
+					PLOG(logERROR) << "Failed to encoded SDSM message : " << payload_str << std::endl << boost::diagnostic_information( x ) << std::endl;
+					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
+					continue;
+				}
+				
+				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
+				//Broadcast the encoded SDSM message
+				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
+				sdsmEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::sensorDataSharingMessage_PSID);
+				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));
+		
+			}
+		}
+	}
+
+}
+
+void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
+{
+	// TODO: This is a temporary fix for tmx message container property tree
+	// serializing all attributes as strings. This issue needs to be fixed but
+	// is currently out of scope. TMX Messages should be correctly serialize to 
+	// and from json. This temporary fix simply using regex to look for numeric,
+	// null, and bool values and removes the quotations around them.
+	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
+	boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
+	std::stringstream ss;
+	std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
+	produce_kafka_msg( rv, _transmitSimSensorDetectedObjTopic);
 }
 
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
@@ -785,7 +844,6 @@ int CARMAStreetsPlugin::Main() {
 	uint64_t lastSendTime = 0;
 
 	while (_plugin->state != IvpPluginState_error) {
-		
 
 
 		usleep(100000); //sleep for microseconds set from config.

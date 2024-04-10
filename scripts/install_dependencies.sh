@@ -31,6 +31,9 @@ DEPENDENCIES="build-essential \
     wget \
     zip \
     zlib1g \
+    rapidjson-dev \
+    librapidxml-dev \
+    libprotobuf-c-dev \
     curl"
 
 # STOL library dependencies
@@ -41,9 +44,12 @@ LIBRARY_DEPENDENCIES=" \
 # install all things needed for deployment, always done
 apt-get install -y $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
 
+numCPU=$(nproc)
+
 # install gtest
 cd /usr/src/googletest/
 mkdir -p build/
 cd build
 cmake ..
+make -j${numCPU}
 make install

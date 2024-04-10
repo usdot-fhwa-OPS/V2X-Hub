@@ -33,13 +33,31 @@ namespace tmx::utils
     {
     }
 
+    kafka_producer_worker::kafka_producer_worker(const std::string &brokers)
+        : _broker_str(brokers), _run(true)
+    {	
+    }
+
+    kafka_producer_worker::~kafka_producer_worker() {
+        stop();
+        FILE_LOG(logWARNING) << "Kafka Producer Worker Destroyed!" << std::endl;
+    }
+
     bool kafka_producer_worker::init()
+    {
+        if(init_producer())
+        {
+            return init_topic();
+        }
+        return false;
+    }
+
+    bool kafka_producer_worker::init_producer()
     {
         std::string errstr = "";
 
         // Create configuration objects
         RdKafka::Conf *conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
-        RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
 
         /***
          * Set Configuration properties
@@ -75,7 +93,13 @@ namespace tmx::utils
         delete conf;
 
         FILE_LOG(logINFO) << "Created producer: " << _producer->name() << std::endl;
+        return true;
+    }
 
+    bool kafka_producer_worker::init_topic()
+    {
+        RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
+        std::string errstr = "";
         // Create topic handle
         _topic = RdKafka::Topic::create(_producer, _topics_str, tconf, errstr);
         if (!_topic)
@@ -156,6 +180,38 @@ namespace tmx::utils
         _producer->poll(0);
     }
 
+    void kafka_producer_worker::send(const std::string& message, const std::string& topic_name ) const
+    {
+        bool retry = true;
+        while (retry) 
+        {
+            RdKafka::ErrorCode produce_error = _producer->produce(topic_name, 
+                                                                        RdKafka::Topic::PARTITION_UA,
+                                                                        RdKafka::Producer::RK_MSG_COPY, 
+                                                                        const_cast<char *>(message.c_str()),
+                                                                        message.size(), 
+                                                                        nullptr, 0, 0, nullptr);
+
+            if (produce_error == RdKafka::ERR_NO_ERROR) {
+                PLOG(logDEBUG) <<"Queued message:" << message;
+                retry = false;
+            }
+            else 
+            {
+                PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
+                if (produce_error == RdKafka::ERR__QUEUE_FULL) {
+                    PLOG(logERROR) <<"Message queue full...retrying...";
+                    _producer->poll(500);  /* ms */
+                    retry = true;
+                }
+                else {
+                    PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
+                    retry = false;
+                }
+            }	
+        }
+    }
+
     void kafka_producer_worker::stop()
     {
         /* Wait for final messages to be delivered or fail.
@@ -167,16 +223,18 @@ namespace tmx::utils
         {
             if (_producer)
             {
-                _producer->flush(10 * 1000 /* wait for max 10 seconds */);
-
+                auto error =_producer->flush(10 * 1000 /* wait for max 10 seconds */);
+                if (error == RdKafka::ERR__TIMED_OUT)
+                    FILE_LOG(logERROR) << "Flush attempt timed out!" << std::endl;
                 if (_producer->outq_len() > 0)
-                   FILE_LOG(logWARNING) << _producer->name() << _producer->outq_len() << " message(s) were not delivered." << std::endl;
+                   FILE_LOG(logERROR) << _producer->name() << _producer->outq_len() << " message(s) were not delivered." << std::endl;
             }
         }
         catch (const std::runtime_error &e)
         {
             FILE_LOG(logERROR) << "Error encountered flushing producer : " << e.what() << std::endl;
         }
+        FILE_LOG(logWARNING) << "Kafka producer stopped!" << std::endl;
     }
 
     void kafka_producer_worker::printCurrConf()

@@ -1,5 +1,5 @@
 #include "include/CDASimAdapter.hpp"
-
+#include <chrono>
 
 using namespace tmx::utils;
 
@@ -18,12 +18,12 @@ namespace CDASimAdapter{
         success = GetConfigValue<double>("X", location.X);
         success = success && GetConfigValue<double>("Y", location.Y);
         success = success && GetConfigValue<double>("Z", location.Z);
-        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", " 
+        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", "
             << location.Y << ", " << location.Z << "}." << std::endl;
         success = success && GetConfigValue<int>("MaxConnectionAttempts", max_connection_attempts);
         success = success && GetConfigValue<uint>("ConnectionSleepTime", connection_sleep_time);
         if (connection_sleep_time < 1 ) {
-            PLOG(logWARNING) << "ConnectionSleepTime of " << connection_sleep_time << " is invalid. Valid values are <= 1." << std::endl;      
+            PLOG(logWARNING) << "ConnectionSleepTime of " << connection_sleep_time << " is invalid. Valid values are <= 1." << std::endl;
             connection_sleep_time = 1;
         }
         if (!success) {
@@ -33,7 +33,7 @@ namespace CDASimAdapter{
 
     void CDASimAdapter::OnConfigChanged(const char *key, const char *value) {
         PluginClient::OnConfigChanged(key, value);
-	    UpdateConfigSettings();    
+	    UpdateConfigSettings();
     }
 
     void CDASimAdapter::OnStateChange(IvpPluginState state) {
@@ -41,7 +41,7 @@ namespace CDASimAdapter{
 
         if (state == IvpPluginState_registered) {
             UpdateConfigSettings();
-           
+
             // While CARMA Simulation connection is down, attempt to reconnect
             int connection_attempts = 0;
             while ( (!connection || !connection->is_connected()) && (connection_attempts < max_connection_attempts || max_connection_attempts < 1 ) ) {
@@ -60,45 +60,36 @@ namespace CDASimAdapter{
 
             if ( connection->is_connected() ) {
                 start_time_sync_thread_timer();
+                start_sensor_detected_object_detection_thread();
                 start_immediate_forward_thread();
                 start_message_receiver_thread();
             }else {
                 PLOG(logERROR) << "CDASim connection failed!" << std::endl;
             }
-            
+
         }
     }
 
-    bool CDASimAdapter::initialize_time_producer() {
-        try {
-            std::string _broker_str = sim::get_sim_config(sim::KAFKA_BROKER_ADDRESS);
-            std::string _topic = sim::get_sim_config(sim::TIME_SYNC_TOPIC);
 
-            kafka_client client;
-            time_producer =  client.create_producer(_broker_str,_topic);
-            return time_producer->init();
-
-        }
-        catch( const runtime_error &e ) {
-            PLOG(logWARNING) << "Initialization of time producer failed: " << e.what() << std::endl; 
-        }
-        return false;
-
-    }
 
     void CDASimAdapter::forward_time_sync_message(tmx::messages::TimeSyncMessage &msg) {
+
         std::string payload =msg.to_string();
-        PLOG(logDEBUG1) << "Sending Time Sync Message " << msg << std::endl;
+        // A script to validate time synchronization of tools in CDASim currently relies on the following
+        // log line. TODO: This line is meant to be removed in the future upon completion of this work:
+        // https://github.com/usdot-fhwa-stol/carma-analytics-fotda/pull/43
+        auto time_now = std::chrono::system_clock::now();
+        auto epoch = time_now.time_since_epoch();
+        auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(epoch);
+        PLOG(logDEBUG1) << "Simulation Time: " << msg.get_timestep() << " where current system time is: " << milliseconds.count() << ", where msgs: " << msg << std::endl;
+
         this->BroadcastMessage<tmx::messages::TimeSyncMessage>(msg, _name, 0 , IvpMsgFlags_None);
-        if (time_producer && time_producer->is_running()) {
-            try {
-                time_producer->send(payload);
-            }
-            catch( const runtime_error &e ) {
-                PLOG(logERROR) << "Exception encountered during kafka time sync forward : " << e.what() << std::endl;
-            }
-        }
-        
+
+    }
+
+    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+        PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
+        this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
     }
 
     bool CDASimAdapter::connect() {
@@ -108,63 +99,62 @@ namespace CDASimAdapter{
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
+            auto simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
+            std::string sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH);
 
-            PLOG(logINFO) << "CDASim connecting " << simulation_ip << 
+            PLOG(logINFO) << "CDASim connecting " << simulation_ip <<
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
-            if (!initialize_time_producer()) {
-                return false;
-            }
             if ( connection ) {
                 connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, v2x_port, location ));
+                                                time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path ));
             }
             else {
                 connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, v2x_port, location);
+                                                            time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path);
             }
-        }       
+        }
         catch (const TmxException &e) {
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << std::endl;
             return false;
         }
         catch (const std::invalid_argument &e ) {
             // std::stoul throws invalid arguement exception when provided with a string that contains characters that are not numbers.
-            PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() << 
+            PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() <<
                 ". Check environment variables are set to the correct type!";
             return false;
-        }   
+        }
         return connection->connect();
     }
-    
+
 
 
     void CDASimAdapter::start_immediate_forward_thread() {
         if ( !immediate_forward_timer ) {
-            immediate_forward_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            immediate_forward_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
         immediate_forward_tick_id = immediate_forward_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_v2xhub();
-            
+
         } // end of lambda expression
-        , std::chrono::milliseconds(100) );
-        
+        , std::chrono::milliseconds(5) );
+
         immediate_forward_timer->Start();
 
     }
 
     void CDASimAdapter::start_message_receiver_thread() {
         if ( !message_receiver_timer ) {
-            message_receiver_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            message_receiver_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
 
         message_receiver_tick_id = message_receiver_timer->AddPeriodicTick([this]() {
             this->attempt_message_from_simulation();
         } // end of lambda expression
-        , std::chrono::milliseconds(100) );
+        , std::chrono::milliseconds(5) );
         message_receiver_timer->Start();
 
     }
@@ -182,6 +172,34 @@ namespace CDASimAdapter{
             }
         }
         catch ( const UdpServerRuntimeError &e ) {
+            PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
+        }
+    }
+
+    void CDASimAdapter::start_sensor_detected_object_detection_thread() {
+        PLOG(logDEBUG) << "Creating Thread Timer for simulated external object" << std::endl;
+        try
+        {
+            if(!external_object_detection_thread_timer)
+            {
+                external_object_detection_thread_timer  = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
+            }
+            external_object_detection_thread_timer->AddPeriodicTick([this](){
+                PLOG(logDEBUG1) << "Listening for Sensor Detected Message from CDASim." << std::endl;
+                auto msg = connection->consume_sensor_detected_object_message();
+                if ( !msg.is_empty()) {
+                    this->forward_simulated_detected_message(msg);
+                }
+                else
+                {
+                    PLOG(logDEBUG1) << "CDASim connection has not yet received an simulated sensor detected message!" << std::endl;
+                }
+            }//End lambda
+            , std::chrono::milliseconds(5));
+            external_object_detection_thread_timer->Start();
+        }
+        catch ( const UdpServerRuntimeError &e )
+        {
             PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
         }
     }
@@ -206,13 +224,13 @@ namespace CDASimAdapter{
     void CDASimAdapter::start_time_sync_thread_timer() {
         PLOG(logDEBUG) << "Creating Thread Timer for time sync" << std::endl;
         if ( !time_sync_timer ) {
-            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>();
+            time_sync_timer = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
         }
         time_sync_tick_id = time_sync_timer->AddPeriodicTick([this]() {
             PLOG(logDEBUG1) << "Listening for time sync messages from CDASim." << std::endl;
             this->attempt_time_sync();
         } // end of lambda expression
-        , std::chrono::milliseconds(100));
+        , std::chrono::milliseconds(5));
         time_sync_timer->Start();
     }
 
@@ -228,23 +246,23 @@ namespace CDASimAdapter{
         }
     }
 
-        
+
     int CDASimAdapter::Main() {
 
 
-        PLOG(logINFO) << "Starting plugin " << _name << std::endl;		
+        PLOG(logINFO) << "Starting plugin " << _name << std::endl;
 
         while (_plugin->state != IvpPluginState_error) {
 
             if (IsPluginState(IvpPluginState_registered))
             {
-                
+
             }
         }
 
 	    return EXIT_SUCCESS;
     }
-        
+
 }
 
 

@@ -29,9 +29,9 @@
 			"description":"Port for the incoming message network connection."
 		},
 		{
-			"key":"RouteDSRC",
+			"key":"RouteJ2735",
 			"default":"false",
-			"description":"Set the flag to route a received J2735 message."
+			"description":"Set the flag to route/broadcast a received J2735 message to TMX Core."
 		},
 		{
 			"key":"EnableSimulatedBSM",

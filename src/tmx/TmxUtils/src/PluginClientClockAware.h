@@ -28,7 +28,7 @@ public:
      * @param msg TimeSyncMessage broadcast on TMX core 
      * @param routeableMsg 
      */
-    void HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg );
+    virtual void HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg );
 
     
 protected:
@@ -41,6 +41,9 @@ protected:
     }
 
     void OnStateChange(IvpPluginState state) override; 
+
+    bool isSimulationMode() const;
+
     
 private:
     /**
@@ -55,6 +58,8 @@ private:
 	 * @brief Status label to indicate whether plugin is in Simulation Mode.
 	 */
 	const char* Key_Simulation_Mode = "Simulation Mode ";
+
+    bool _simulation_mode;
     
 };
 

@@ -34,5 +34,19 @@ namespace tmx::utils
         }
     }
 
+    std::shared_ptr<kafka_producer_worker> kafka_client::create_producer(const std::string &bootstrap_server) const
+    {
+        try
+        {
+            auto producer_ptr = std::make_shared<kafka_producer_worker>(bootstrap_server);
+            return producer_ptr;
+        }
+        catch (const std::runtime_error &e)
+        {
+            FILE_LOG(logERROR) <<  "Create producer failure: " <<  e.what() << std::endl;
+            exit(1);
+        }
+    }
+
 
 }

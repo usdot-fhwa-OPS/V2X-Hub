@@ -40,6 +40,7 @@ namespace tmx::utils {
             const std::string GROUP_ID="group.id";
             const std::string MAX_PARTITION_FETCH_SIZE="max.partition.fetch.bytes";
             const std::string ENABLE_PARTITION_END_OF="enable.partition.eof";
+            const std::string ENABLE_AUTO_COMMIT="enable.auto.commit";
 
             //maximum size for pulling message from a single partition at a time
             std::string STR_FETCH_NUM = "10240000";
@@ -68,6 +69,19 @@ namespace tmx::utils {
              */
             kafka_consumer_worker(const std::string &broker_str, const std::string &topic_str, const std::string & group_id, int64_t cur_offset = 0, int32_t partition = 0);
             /**
+             * @brief Destroy the kafka consumer worker object. Calls stop on consumer to clean up resources.
+             */
+            ~kafka_consumer_worker();
+            // Rule of 5 because destructor is define (https://www.codementor.io/@sandesh87/the-rule-of-five-in-c-1pdgpzb04f)
+            // Delete copy constructor
+            kafka_consumer_worker(kafka_consumer_worker& other) = delete;
+            // Delete copy assigment 
+            kafka_consumer_worker& operator=(const kafka_consumer_worker& other) = delete;
+            // delete move constructor
+            kafka_consumer_worker(kafka_consumer_worker &&consumer) = delete;
+            // delete move assignment
+            kafka_consumer_worker const & operator=(kafka_consumer_worker &&consumer) = delete;
+            /**
              * @brief Initialize kafka_consumer_worker
              * 
              * @return true if successful.
@@ -88,7 +102,7 @@ namespace tmx::utils {
             /**
              * @brief Stop running kafka consumer.
              */
-            virtual void stop();
+            void stop();
             /**
              * @brief Print current configurations.
              */
@@ -100,11 +114,6 @@ namespace tmx::utils {
              * @return false if kafka consumer is stopped.
              */
             virtual bool is_running() const;
-            /**
-             * @brief Destroy the kafka consumer worker object
-             * 
-             */
-            virtual ~kafka_consumer_worker() = default;
     };
     
 }

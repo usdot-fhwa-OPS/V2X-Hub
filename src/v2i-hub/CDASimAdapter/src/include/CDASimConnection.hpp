@@ -4,9 +4,11 @@
 #include <tmx/tmx.h>
 #include <Point.h>
 #include <TimeSyncMessage.h>
+#include <simulation/SensorDetectedObject.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
+#include <fstream>
 
 
 namespace CDASimAdapter {
@@ -30,12 +32,10 @@ namespace CDASimAdapter {
              * @param time_sync_port Port on which connection listens for time synchronization messages.
              * @param v2x_port Port on which connecction listens for incoming v2x messages.
              * @param location Simulationed location of infrastructure.
-             * @param producer Kafka Producer for forwarding time synchronization messages.
              */
             explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
-                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
-                                const tmx::utils::Point &location);
-
+                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
+                                const tmx::utils::Point &location, const std::string &sensor_json_file_path);
              /**
              * @brief Method to forward v2x message to CARMA Simulation
              * @param v2x_message string
@@ -84,6 +84,12 @@ namespace CDASimAdapter {
              */
             tmx::messages::TimeSyncMessage consume_time_sync_message() const;
             /**
+             * @brief Method to consume incoming external object message.
+             * To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
+             * @return simulation::SensorDetectedObject.
+             */
+            tmx::messages::simulation::SensorDetectedObject consume_sensor_detected_object_message() const;
+            /**
              * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,
              * initialize UDP Servers and Clients for message forwarding, and set connected property. 
@@ -96,7 +102,7 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
-                                const std::string &local_ip,  const uint time_sync_port, const uint v2x_port, 
+                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
                                 const tmx::utils::Point &location);
             
             /**
@@ -108,7 +114,7 @@ namespace CDASimAdapter {
              * @param simulation_v2x_port port on which CARMA-Simulation is listening for incoming v2x messages.
              * @return true if setup is successful and false otherwise.
              */
-            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, 
+            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, 
                                 const uint v2x_port, const uint simulation_v2x_port);
             /**
              * @brief Method to attempt to establish connection between CARMA-Simulation and infrastucture. Returns true if succesful
@@ -131,18 +137,33 @@ namespace CDASimAdapter {
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, 
-                const uint v2x_port, const tmx::utils::Point &location) const; 
+            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
+                                const tmx::utils::Point &location) const; 
             
+            /**
+             * @brief Read Json file specified by the file path from disk, and convert the json into Json::Value object.
+             * @param file_path A string of file path in the host machine.
+             * @return A Json::Value object.
+            */
+            Json::Value read_json_file(const std::string& file_path) const;
+             /**
+             * @brief Convert the Json string into Json::Value object.
+             * @param json_str A JSON string.
+             * @return A Json::Value object.
+            */
+            Json::Value string_to_json(const std::string &json_str) const;
+
             std::string _simulation_ip;
             uint _simulation_registration_port;
             std::string _infrastructure_id;
             uint _simulation_v2x_port;
+            uint _simulated_interaction_port;
             std::string _local_ip;
             uint _time_sync_port;
             uint _v2x_port;
             tmx::utils::Point _location;
             bool _connected = false;
+            std::string _sensor_json_file_path;
 
             std::shared_ptr<tmx::utils::UdpServer> carma_simulation_listener;
             std::shared_ptr<tmx::utils::UdpClient> carma_simulation_publisher;
@@ -150,8 +171,11 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> immediate_forward_listener;
             std::shared_ptr<tmx::utils::UdpClient> message_receiver_publisher;
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
+            std::shared_ptr<tmx::utils::UdpServer> sensor_detected_object_listener;
 
             FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
+            FRIEND_TEST(TestCARMASimulationConnection, read_json_file);
+            FRIEND_TEST(TestCARMASimulationConnection, string_to_json);
     };
 
 }

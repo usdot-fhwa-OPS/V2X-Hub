@@ -1,0 +1,30 @@
+[
+  {
+    "sensorId": "SomeID",
+    "type": "SemanticLidar",
+    "location": {
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+     },
+     "orientation": {
+       "yaw": 0.0,
+       "pitch": 0.0,
+       "roll": 0.0
+      }
+  },
+  {
+    "sensorId": "SomeID2",
+    "type": "SemanticLidar",
+    "location": {
+      "x": 1.0,
+      "y": 2.0,
+      "z": 0.0
+     },
+     "orientation": {
+       "yaw": 23.0,
+       "pitch": 0.0,
+       "roll": 0.0
+      }
+  }
+]

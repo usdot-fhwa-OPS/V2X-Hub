@@ -3,6 +3,9 @@
 # exit on errors
 set -e
 
+# Find number of cores available
+numCPU=$(nproc)
+
 # An OPENAPI based Qt webservice is needed by the plugins for http requests processing. A custom generated code using OPENAPI framework is located in GitHub.
 pushd /tmp
 QHTTPENGINE_VERSION=1.0.1
@@ -10,7 +13,7 @@ wget -O qhttpengine-${QHTTPENGINE_VERSION}.tar.gz https://github.com/nitroshare/
 tar xvf qhttpengine-${QHTTPENGINE_VERSION}.tar.gz
 cd qhttpengine-${QHTTPENGINE_VERSION}/
 cmake .
-make 
+make -j${numCPU}
 make install
 popd
 
@@ -20,7 +23,7 @@ wget -O date-${DATELIB_VERSION}.tar.gz https://github.com/HowardHinnant/date/arc
 tar xvf date-${DATELIB_VERSION}.tar.gz
 cd date-${DATELIB_VERSION}/
 cmake .
-make
+make -j${numCPU}
 make install
 popd
 
@@ -29,27 +32,43 @@ ldconfig
 # Server for the Qt webservice
 pushd server
 cmake .
-make
+make -j${numCPU}
 make install
 popd
 
 pushd ccserver
 cmake . 
-make
+make -j${numCPU}
 make install
 popd
 
 pushd pdclient
 cmake .
-make
+make -j${numCPU}
 make install
 popd
 
 # GPS Parser
 pushd /tmp
+if [ -d "NemaTode" ]; then
+    rm -r NemaTode
+fi
 git clone https://github.com/ckgt/NemaTode.git
 cd NemaTode
 cmake .
-make
+make -j${numCPU}
 make install
 popd
+
+# Nats C API
+pushd /tmp
+if [ -d "nats.c" ]; then
+    rm -r nats.c
+fi
+git clone https://github.com/nats-io/nats.c --branch v3.7.0
+cd nats.c
+cmake . -DNATS_BUILD_NO_SPIN=ON
+make -j${numCPU}
+make install
+popd
+

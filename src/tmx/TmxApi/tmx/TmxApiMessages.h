@@ -88,6 +88,7 @@ enum MsgSubType
 		signalStatusMessage = 30,
 		travelerInformation = 31,
 		personalSafetyMessage = 32,
+		sensorDataSharingMessage = 41,
 		personalMobilityMessage = 245,
 		testMessage00 = 240,
 		testMessage01 = 241,
@@ -143,6 +144,7 @@ static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE02_STRING = "TMSG02-P";
 static CONSTEXPR const char *MSGSUBTYPE_TESTMESSAGE03_STRING = "TMSG03-P";
 static CONSTEXPR const char *MSGSUBTYPE_J2735_END_STRING = "J2735_end";
 static CONSTEXPR const char *MSGSUBTYPE_GID_STRING = "GID";
+static CONSTEXPR const char *MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING = "SDSM";
 			
 enum Encoding 
 {
@@ -177,7 +179,58 @@ static CONSTEXPR const char *STATUS_STARTED_STRING = "Started, waiting for conne
 static CONSTEXPR const char *STATUS_RUNNING_STRING = "Running";
 static CONSTEXPR const char *STATUS_STALE_STRING = "Connection going stale";
 static CONSTEXPR const char *STATUS_STOPPED_STRING = "Stopped / Disconnected";
-			
+
+enum msgPSID
+{
+	None_PSID = 0x00,
+	mapData_PSID = 0x8002,
+	signalPhaseAndTimingMessage_PSID = 0x8002,
+	basicSafetyMessage_PSID = 0x20,
+	commonSafetyRequest_PSID = 0x20,
+	emergencyVehicleAlert_PSID = 0x8005,
+	intersectionCollision_PSID = 0x8002,
+	nmeaCorrections_PSID = 0x8000,
+	probeDataManagement_PSID = 0x8004,
+	probeVehicleData_PSID = 0x8004,
+	roadSideAlert_PSID = 0x8003,
+	rtcmCorrections_PSID = 0x8000,
+	signalRequestMessage_PSID = 0xE0000016,
+	signalStatusMessage_PSID = 0x8002,
+	sensorDataSharingMessage_PSID = 0x90,
+	travelerInformation_PSID = 0x8003,
+	personalSafetyMessage_PSID = 0x27,
+	testMessage00_PSID = 0xBFEE,
+	testMessage01_PSID = 0xBFEE,
+	testMessage02_PSID = 0xBFEE,
+	testMessage03_PSID = 0xBFEE,
+	testMessage04_PSID = 0x8003,
+	testMessage05_PSID = 0x8003
+};
+
+static CONSTEXPR const char *MSGPSID_NONE_PSID_STRING = "None";
+static CONSTEXPR const char *MSGPSID_MAPDATA_PSID_STRING = "0x8002";
+static CONSTEXPR const char *MSGPSID_SIGNALPHASEANDTIMINGMESSAGE_PSID_STRING = "0x8002";
+static CONSTEXPR const char *MSGPSID_BASICSAFETYMESSAGE_PSID_STRING = "0x20";
+static CONSTEXPR const char *MSGPSID_COMMONSAFETYREQUEST_PSID_STRING = "0x20";
+static CONSTEXPR const char *MSGPSID_EMERGENCYVEHICLEALERT_PSID_STRING = "0x8005";
+static CONSTEXPR const char *MSGPSID_INTERSECTIONCOLLISION_PSID_STRING = "0x8002";
+static CONSTEXPR const char *MSGPSID_NMEACORRECTIONS_PSID_STRING = "0x8000";
+static CONSTEXPR const char *MSGPSID_PROBEDATAMANAGEMENT_PSID_STRING = "0x8004";
+static CONSTEXPR const char *MSGPSID_PROBEVEHICLEDATA_PSID_STRING = "0x8004";
+static CONSTEXPR const char *MSGPSID_ROADSIDEALERT_PSID_STRING = "0x8003";
+static CONSTEXPR const char *MSGPSID_RTCMCORRECTIONS_PSID_STRING = "0x8000";
+static CONSTEXPR const char *MSGPSID_SIGNALREQUESTMESSAGE_PSID_STRING = "0xE0000016";
+static CONSTEXPR const char *MSGPSID_SIGNALSTATUSMESSAGE_PSID_STRING = "0x8002";
+static CONSTEXPR const char *MSGPSID_SENSORDATASHARINGMESSAGE_PSID_STRING = "0x90";
+static CONSTEXPR const char *MSGPSID_TRAVELERINFORMATION_PSID_STRING = "0x8003";
+static CONSTEXPR const char *MSGPSID_PERSONALSAFETYMESSAGE_PSID_STRING = "0x27";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE00_PSID_STRING = "0xBFEE";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE01_PSID_STRING = "0xBFEE";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE02_PSID_STRING = "0xBFEE";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE03_PSID_STRING = "0xBFEE";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE04_PSID_STRING = "0x8003";
+static CONSTEXPR const char *MSGPSID_TESTMESSAGE05_PSID_STRING = "0x8003";
+
 } /* End namespace api */
 		
 } /* End namespace messages */

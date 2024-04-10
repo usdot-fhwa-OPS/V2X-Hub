@@ -34,6 +34,16 @@
         "type":"J2735",
         "subtype":"SPAT-P",
         "description":"Signal Phase and Timing (SPAT) status for the signalized intersection."
+    },
+    {
+        "type":"Application",
+        "subtype":"SensorDetectedObject",
+        "description": "Sensor detected object for cooperative perception."
+    },
+    {
+        "type":"J2735",
+        "subtype": "SensorDataSharingMessage",
+        "description": "Message to share detected object data."
     }
     ],
     "configuration": [
@@ -93,19 +103,29 @@
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "SchedulingPlanConsumerGroupId",
-            "default": "v2xhub_scheduling_plan",
-            "description": "Apache Kafka consumer group ID for scheduling plan consumer."
-        },
-        {
             "key": "SpatTopic",
             "default": "modified_spat",
             "description": "Apache Kafka topic plugin will transmit message to."
         },
         {
-            "key": "SpatConsumerGroupId",
-            "default": "v2xhub_spat",
-            "description": "Apache Kafka consumer group ID for spat consumer."
+            "key": "SsmTopic",
+            "default": "v2xhub_ssm_sub",
+            "description": "Apache Kafka topic plugin will transmit message to."            
+        },
+        {
+            "key": "SimSensorDetectedObjTopic",
+            "default": "v2xhub_sim_sensor_detected_object",
+            "description": "Apache Kafka topic plugin will transmit simulated sensor detected object to."               
+        },
+        {
+            "key": "SdsmSubscribeTopic",
+            "default": "v2xhub_sdsm_sub",
+            "description": "Apache Kafka topic plugin that will subscribe to SDSM streams."            
+        },
+        {
+            "key": "SdsmTransmitTopic",
+            "default": "v2xhub_sdsm_tra",
+            "description": "Apache Kafka topic plugin that will transmit SDSMs."            
         }
         
     ]

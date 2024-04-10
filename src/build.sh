@@ -18,6 +18,8 @@ set -e
 # script executes all tmx and v2i build and coverage steps so that they can be singularly
 # wrapped by the sonarcloud build-wrapper
 
+numCPU=$(nproc)
+
 RELEASE_BUILD=0
 if [ "$1" = "release" ]; then
     RELEASE_BUILD=1
@@ -36,7 +38,7 @@ fi
 pushd tmx
 cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;\/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
 pushd build
-make
+make -j${numCPU}
 make install
 popd
 popd
@@ -44,6 +46,7 @@ popd
 pushd v2i-hub
 cmake -Bbuild  -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;\/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
 pushd build
+make -j${numCPU}
 make install
 popd
 popd
