@@ -25,7 +25,7 @@
 		},
 		{
 			"key":"WebServiceIP",
-			"default":"127.0.0.1",
+			"default":"0.0.0.0",
 			"description":"Server IP address for V2X hub"
 		},
 		{
@@ -35,7 +35,7 @@
 		},
 		{
 			"key":"CARMACloudIP",
-			"default":"http://127.0.0.1",
+			"default":"http://0.0.0.0",
 			"description":"Server IP address for V2X hub"
 		},
 		{
