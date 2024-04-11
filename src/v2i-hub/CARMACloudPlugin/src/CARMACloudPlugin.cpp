@@ -625,7 +625,7 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) c
             strm.avail_out = BUFFER_SIZE;
             strm.next_out = (Byte *)buffer;
             isDone = inflate(&strm, Z_NO_FLUSH);
-			outBuf.append(buffer, BUFFER_SIZE - strm.avail_out);
+            outBuf.append(buffer, BUFFER_SIZE - strm.avail_out);
 		} while (Z_STREAM_END != isDone); // Reach the end of stream to be uncompressed
 	}else{
 		PLOG(logWARNING) << "Error initalize stream. Err code = " << err << std::endl;
