@@ -219,7 +219,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	}
 	PLOG(logINFO) << "Received TCM bytes size: " << st.size()<< std::endl;
 
-	string tcm = "";
+	std::string tcm = "";
 	bool isCompressed = socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE;
 	if (isCompressed)
 	{
