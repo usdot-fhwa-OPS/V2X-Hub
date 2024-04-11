@@ -240,6 +240,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
+	PLOG(logDEBUG2) << "Received TCM: " << tcm << std::endl;
 
 	std::list<std::string> tcmSL = {};
 	if (isCompressed)
