@@ -109,7 +109,6 @@ namespace TelematicBridge
             // increase size of buffer.
             size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
             auto new_buf = static_cast<char *>(MALLOC(new_size));
-            // auto new_buf = new char[new_size];
             if (!new_buf)
                 return -1;
             // move old to new.
@@ -241,7 +240,10 @@ namespace TelematicBridge
             }
             else
             {
-                json["payload"] = StringToJson(cJSON_Print(msg->payload));
+                // Render a cJSON entity to text for transfer/storage. Free the char* when finished.
+                char * payloadPtr = cJSON_Print(msg->payload);
+                json["payload"] = StringToJson(payloadPtr);
+                free(payloadPtr);
             }
         }
 
