@@ -208,6 +208,7 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	QByteArray st; 
 	while(socket->bytesAvailable()>0)
 	{	
+		PLOG(logDEBUG) << "Bytes available." << std::endl;
 		auto readBytes = socket->readAll();
 		st.append(readBytes);
 	}
@@ -219,11 +220,16 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	}
 	PLOG(logINFO) << "Received TCM bytes size: " << st.size()<< std::endl;
 
-	string tcm = "";
+	std::string tcm = "";
 	bool isCompressed = socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE;
 	if (isCompressed)
 	{
-		tcm = UncompressBytes(st).data();
+		QByteArray tcmBytes = UncompressBytes(st);
+		if(tcmBytes.size() == 0)
+		{
+			return;
+		}
+		tcm = tcmBytes.data();
 	}else{
 		tcm = st.data();		
 	}
@@ -234,16 +240,17 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
+	PLOG(logDEBUG2) << "Received TCM: " << tcm << std::endl;
 
-	std::list<std::string> tcm_sl = {};
+	std::list<std::string> tcmSL = {};
 	if (isCompressed)
 	{
-		tcm_sl = FilterTCMs(tcm);
+		tcmSL = FilterTCMs(tcm);
 	}else{
-		tcm_sl.push_back(tcm);
+		tcmSL.push_back(tcm);
 	}
 
-	for(const auto tcm_s: tcm_sl)
+	for(const auto tcm_s: tcmSL)
 	{
 		tsm5Message tsm5message;
 		tsm5EncodedMessage tsm5ENC;
@@ -625,10 +632,10 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) c
             strm.avail_out = BUFFER_SIZE;
             strm.next_out = (Byte *)buffer;
             isDone = inflate(&strm, Z_NO_FLUSH);
-			outBuf.append(buffer, BUFFER_SIZE - strm.avail_out);
+            outBuf.append(buffer, BUFFER_SIZE - strm.avail_out);
 		} while (Z_STREAM_END != isDone); // Reach the end of stream to be uncompressed
 	}else{
-		PLOG(logWARNING) << "Error initalize stream. Err code = " << err << std::endl;
+		PLOG(logERROR) << "Error initalize stream. Err code = " << err << std::endl;
 	}
 	//Finished decompress data stream
     inflateEnd(&strm);
