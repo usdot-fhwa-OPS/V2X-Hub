@@ -67,6 +67,7 @@
 #include <unistd.h>
 #endif
 #include <qhttpengine/server.h>
+#include <qhttpengine/qobjecthandler.h>
 #include <v2xhubWebAPI/OAIApiRouter.h>
 
 
@@ -210,6 +211,8 @@ private:
 	const char *CONTENT_ENCODING_KEY = "Content-Encoding";
     const char *CONTENT_ENCODING_VALUE = "gzip";
 	std::string list_tcm = "true";
+	//API URL to accept TCM response
+	const std::string TCM_REPLY="tcmreply";
 	
 };
 std::mutex _cfgLock;

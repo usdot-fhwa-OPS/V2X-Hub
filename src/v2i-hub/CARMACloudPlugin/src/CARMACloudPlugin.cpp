@@ -463,25 +463,14 @@ int CARMACloudPlugin::StartWebService()
  	QHostAddress address = QHostAddress(QString::fromStdString (webip));
 	quint16 port = static_cast<quint16>(webport);
 
-	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
-	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
+	QHttpEngine::QObjectHandler apiHandler;
+	apiHandler.registerMethod(TCM_REPLY, [&](QHttpEngine::Socket *socket)
+							  { 
+							CARMAResponseHandler(socket);
+							socket->close(); });
+	QHttpEngine::Server server(&apiHandler);
 
-	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-    router->setUpRoutes();
-
-    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
-
-		CARMAResponseHandler(socket);
-    });
-
-    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
-
-		router->processRequest(socket);
-    });
-
-    QHttpEngine::Server server(handler.data());
-
-    if (!server.listen(address, port)) {
+	if (!server.listen(address, port)) {
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
