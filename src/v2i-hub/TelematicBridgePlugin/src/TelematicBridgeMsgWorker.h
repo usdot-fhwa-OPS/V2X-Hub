@@ -241,9 +241,8 @@ namespace TelematicBridge
             else
             {
                 // Render a cJSON entity to text for transfer/storage. Free the char* when finished.
-                char * payloadPtr = cJSON_Print(msg->payload);
-                json["payload"] = StringToJson(payloadPtr);
-                free(payloadPtr);
+                auto payloadPtr = std::make_unique<char*>(cJSON_Print(msg->payload));
+                json["payload"] = StringToJson(*payloadPtr);                
             }
         }
 
