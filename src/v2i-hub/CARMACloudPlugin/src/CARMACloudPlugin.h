@@ -212,7 +212,7 @@ private:
     const char *CONTENT_ENCODING_VALUE = "gzip";
 	std::string list_tcm = "true";
 	//API URL to accept TCM response
-	const std::string TCM_REPLY="tcmreply";
+	const QString TCM_REPLY="tcmreply";
 	
 };
 std::mutex _cfgLock;
