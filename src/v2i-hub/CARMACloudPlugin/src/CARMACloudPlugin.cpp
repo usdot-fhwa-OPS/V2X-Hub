@@ -464,9 +464,9 @@ int CARMACloudPlugin::StartWebService()
 	quint16 port = static_cast<quint16>(webport);
 
 	QHttpEngine::QObjectHandler apiHandler;
-	apiHandler.registerMethod(TCM_REPLY, [&](QHttpEngine::Socket *socket)
+	apiHandler.registerMethod(TCM_REPLY, [this](QHttpEngine::Socket *socket)
 							  { 
-							CARMAResponseHandler(socket);
+							this->CARMAResponseHandler(socket);
 							socket->close(); });
 	QHttpEngine::Server server(&apiHandler);
 
