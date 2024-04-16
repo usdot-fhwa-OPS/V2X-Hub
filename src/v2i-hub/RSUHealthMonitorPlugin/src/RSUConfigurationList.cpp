@@ -22,6 +22,7 @@ namespace RSUHealthMonitor
     void RSUConfigurationList::parseRSUs(std::string rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
+        std::vector<RSUConfiguration> tempConfigs;
         RSUConfiguration config;
         auto rsuArray = json["RSUS"];
         if (!rsuArray.isArray())
@@ -41,11 +42,12 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(SNMPPortKey))
             {
-                config.snmpPort = atoi(rsuArray[i][SNMPPortKey].asCString());
+                auto port = atoi(rsuArray[i][SNMPPortKey].asCString());
+                port != 0 ? config.snmpPort = port : throw RSUConfigurationException("Invalid port number in string format.");
             }
             else
             {
-                throw RSUConfigurationException("SNMP port does not exist.");
+                throw RSUConfigurationException("Either SNMP port does not exist.");
             }
 
             if (rsuArray[i].isMember(AuthPassPhraseKey))
@@ -75,15 +77,18 @@ namespace RSUHealthMonitor
             {
                 throw RSUConfigurationException("RSU mib version does not exist.");
             }
-            configs.push_back(config);
+            tempConfigs.push_back(config);
         }
+        // Only update RSU configurations when all configs are processed correctly.
+        configs.clear();
+        configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
     RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr)
     {
         boost::trim_left(mibVersionStr);
         boost::trim_right(mibVersionStr);
-        // Support RSU MIB version 4.1
+        // Only support RSU MIB version 4.1
         if (boost::iequals(mibVersionStr, RSU4_1_str))
         {
             return RSUMibVersion::RSUMIB_V_4_1;

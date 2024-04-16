@@ -15,6 +15,10 @@ namespace RSUHealthMonitor
         std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
         rsuConfigList->parseRSUs(rsuConfigsStr);
         ASSERT_EQ(2, rsuConfigList->getConfigs().size());
+        std::stringstream ss;
+        ss << rsuConfigList->getConfigs()[0];
+        std::string expected = "RSUIp: 192.168.XX.XX, SNMPPort: 161, User: authOnlyUser, AuthPassPhrase: dummy, SecurityLevel: authPriv, RSUMIBVersion: RSU 4.1";
+        ASSERT_EQ(expected, ss.str());
     }
     TEST_F(test_RSUConfigurationList, parseAndGetConfigs_MalformatJSON)
     {
@@ -36,6 +40,13 @@ namespace RSUHealthMonitor
     {
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
         std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort_Missing\": \"161\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
+        ASSERT_THROW(rsuConfigList->parseRSUs(rsuConfigsStr), RSUHealthMonitor::RSUConfigurationException);
+        ASSERT_EQ(0, rsuConfigList->getConfigs().size());
+    }
+
+    TEST_F(test_RSUConfigurationList, parseAndGetConfigs_INVALID_SNMPPORT)
+    {
+        auto rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.01.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"INVALID_PORT\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
         ASSERT_THROW(rsuConfigList->parseRSUs(rsuConfigsStr), RSUHealthMonitor::RSUConfigurationException);
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
     }

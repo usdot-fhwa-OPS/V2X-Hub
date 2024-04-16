@@ -38,11 +38,15 @@ namespace RSUHealthMonitor
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
         GetConfigValue<string>("RSUConfigurationList", _rsuConfigListStr);
-        _rsuConfigListPtr->parseRSUs(_rsuConfigListStr);
 
         try
         {
+            _rsuConfigListPtr->parseRSUs(_rsuConfigListStr);
             _rsuStatusTimer->ChangeFrequency(_timerThId, std::chrono::milliseconds(_interval * SEC_TO_MILLI));
+        }
+        catch (const RSUConfigurationException &ex)
+        {
+            PLOG(logERROR) << "Cannot update RSU configurations due to error: " << ex.what();
         }
         catch (const tmx::TmxException &ex)
         {

@@ -18,13 +18,6 @@ namespace RSUHealthMonitor
     private:
         mutex _configMutex;
         uint16_t _interval;
-        // string _rsuIp;
-        // uint16_t _snmpPort;
-        // string _authPassPhrase;
-        // string _securityUser;
-        // string _securityLevel;
-        // string _rsuMIBVersionStr;
-        // RSUMibVersion _rsuMibVersion;
         string _rsuConfigListStr;
         shared_ptr<RSUConfigurationList> _rsuConfigListPtr;
         shared_ptr<RSUHealthMonitorWorker> _rsuWorker;
