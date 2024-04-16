@@ -46,7 +46,7 @@ namespace RSUHealthMonitor
 
     TEST_F(test_RSUConfigurationList, parseAndGetConfigs_INVALID_SNMPPORT)
     {
-        auto rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.01.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"INVALID_PORT\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
+        std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.01.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"INVALID_PORT\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
         ASSERT_THROW(rsuConfigList->parseRSUs(rsuConfigsStr), RSUHealthMonitor::RSUConfigurationException);
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
     }

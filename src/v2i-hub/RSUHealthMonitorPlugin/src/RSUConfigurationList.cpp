@@ -3,7 +3,7 @@
 
 namespace RSUHealthMonitor
 {
-    Json::Value RSUConfigurationList::parseJson(std::string rsuConfigsStr)
+    Json::Value RSUConfigurationList::parseJson(std::string &rsuConfigsStr) const
     {
         JSONCPP_STRING err;
         Json::Value root;
@@ -19,7 +19,7 @@ namespace RSUHealthMonitor
         return root;
     }
 
-    void RSUConfigurationList::parseRSUs(std::string rsuConfigsStr)
+    void RSUConfigurationList::parseRSUs(std::string &rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
         std::vector<RSUConfiguration> tempConfigs;
@@ -42,7 +42,7 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(SNMPPortKey))
             {
-                auto port = atoi(rsuArray[i][SNMPPortKey].asCString());
+                auto port = static_cast<uint16_t>(atoi(rsuArray[i][SNMPPortKey].asCString()));
                 port != 0 ? config.snmpPort = port : throw RSUConfigurationException("Invalid port number in string format.");
             }
             else
@@ -84,7 +84,7 @@ namespace RSUHealthMonitor
         configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
-    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr)
+    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr) const
     {
         boost::trim_left(mibVersionStr);
         boost::trim_right(mibVersionStr);
@@ -108,10 +108,10 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const RSUMibVersion &mib)
     {
-        const std::string nameMibs[] = {"UNKOWN MIB",
-                                        "RSU 4.1",
-                                        "NTCIP 1218"};
-        return os << nameMibs[mib];
+        const std::vector<std::string> nameMibs = {"UNKOWN MIB",
+                                                   "RSU 4.1",
+                                                   "NTCIP 1218"};
+        return os << nameMibs[static_cast<int>(mib)];
     }
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)

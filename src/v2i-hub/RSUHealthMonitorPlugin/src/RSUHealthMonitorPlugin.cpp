@@ -17,7 +17,7 @@ namespace RSUHealthMonitor
         _timerThId = _rsuStatusTimer->AddPeriodicTick([this]()
                                                       {
                         this->monitorRSUs();
-                        PLOG(logINFO) << "Updating RSU _interval: " << _interval; },
+                        PLOG(logINFO) << "Monitoring RSU at interval (second): " << _interval; },
                                                       std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         _rsuStatusTimer->Start();
     }

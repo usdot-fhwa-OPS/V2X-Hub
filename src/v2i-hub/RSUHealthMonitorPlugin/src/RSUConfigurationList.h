@@ -17,7 +17,7 @@ namespace RSUHealthMonitor
     static constexpr const char *RSU4_1_str = "RSU4.1";
     static constexpr const char *RSU1218_str = "RSU1218";
 
-    enum RSUMibVersion
+    enum class RSUMibVersion
     {
         UNKOWN_MIB_V = 0,
         RSUMIB_V_4_1 = 1,
@@ -44,8 +44,8 @@ namespace RSUHealthMonitor
          * @param rsuConfigsStr  A JSON string includes all RSUs related configrations.
          * @return JSON::Value A JSON object that includes RSUS information.
          */
-        Json::Value parseJson(std::string rsuConfigsStr);
-        RSUMibVersion strToMibVersion(std::string &mibVersionStr);
+        Json::Value parseJson(std::string &rsuConfigsStr) const;
+        RSUMibVersion strToMibVersion(std::string &mibVersionStr) const;
 
     public:
         RSUConfigurationList() = default;
@@ -54,7 +54,7 @@ namespace RSUHealthMonitor
          * @brief Parse RSUs configrations in JSON string representation, and update the memeber of list of RSUConfiguration struct.
          * @param rsuConfigsStr A JSON string includes all RSUs related configrations.
          */
-        void parseRSUs(std::string rsuConfigsStr);
+        void parseRSUs(std::string &rsuConfigsStr);
         /**
          * @brief Get a list of RSUConfiguration struct.
          */
