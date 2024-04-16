@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <jsoncpp/json/json.h>
+#include <boost/algorithm/string.hpp>
 #include "RSUConfigurationException.h"
 
 namespace RSUHealthMonitor
@@ -13,6 +14,16 @@ namespace RSUHealthMonitor
     static constexpr const char *AuthPassPhraseKey = "AuthPassPhrase";
     static constexpr const char *RSUMIBVersionKey = "RSUMIBVersion";
     static constexpr const char *SecurityLevelKey = "SecurityLevel";
+    static constexpr const char *RSU4_1_str = "RSU4.1";
+    static constexpr const char *RSU1218_str = "RSU1218";
+
+    enum RSUMibVersion
+    {
+        UNKOWN_MIB_V = 0,
+        RSUMIB_V_4_1 = 1,
+        RSUMIB_V_1218 = 2
+    };
+
     struct RSUConfiguration
     {
         std::string rsuIp;
@@ -20,12 +31,8 @@ namespace RSUHealthMonitor
         std::string user;
         std::string authPassPhrase;
         std::string securityLevel = "authPriv";
-        std::string mibVersion;
-        friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
-        {
-            os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
-            return os;
-        }
+        RSUMibVersion mibVersion;
+        friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);
     };
 
     class RSUConfigurationList
@@ -38,6 +45,7 @@ namespace RSUHealthMonitor
          * @return JSON::Value A JSON object that includes RSUS information.
          */
         Json::Value parseJson(std::string rsuConfigsStr);
+        RSUMibVersion strToMibVersion(std::string &mibVersionStr);
 
     public:
         RSUConfigurationList() = default;

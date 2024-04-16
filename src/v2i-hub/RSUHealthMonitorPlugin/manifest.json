@@ -17,35 +17,10 @@
             "default":"1",
             "description": "Sending RSU SNMP GET request at every configured interval. Default every 1 second. Unit of measure: second."
         },
-		{
-            "key":"RSUIp",//RSUConfiguration ->RSUS
-            "default":"192.168.XX.XX",
-            "description":"An IP address of the RSU the V2X hub is connected to."
-        },
-		{
-            "key":"SNMPPort",
-            "default":"161",
-            "description":"The SNMP port for sending message or command."
-        },
-		{
-            "key":"AuthPassPhrase",
-            "default":"dummy",
-            "description":"SNMP v3 authentication passphrase"
-        },
-		{
-            "key":"SecurityUser", // user
-            "default":"authOnlyUser",
-            "description":"SNMP Security Name"
-        },
-		{
-            "key":"SecurityLevel", 
-            "default":"authPriv", //Make this constant
-            "description":"SNMP Security level"
-        },
-		{
-            "key":"RSUMIBVersion",//mibVersion
-            "default":"RSU4.1",
-            "description":"The version of RSU MIB (Management Information Base). E.G. RSU4.1 or RSU1218. Currently only support RSU4.1"
+        {
+            "key":"RSUConfigurationList",
+            "default":"{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }",
+            "description":"Configurations of the RSUs the V2X hub is connected to."
         }
     ]
 }

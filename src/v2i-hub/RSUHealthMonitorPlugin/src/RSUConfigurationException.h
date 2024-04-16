@@ -3,17 +3,13 @@
 
 namespace RSUHealthMonitor
 {
-    class RSUConfigurationException : public std::exception
+    class RSUConfigurationException : public std::runtime_error
     {
     private:
         std::string message;
 
     public:
-        RSUConfigurationException(const char *msg) : message(msg){};
-        const char *what()
-        {
-            return message.c_str();
-        }
+        RSUConfigurationException(const char *msg) : runtime_error(msg){};
     };
 
 }

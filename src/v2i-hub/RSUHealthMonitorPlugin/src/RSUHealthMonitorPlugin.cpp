@@ -10,18 +10,25 @@ namespace RSUHealthMonitor
     {
         _rsuWorker = std::make_shared<RSUHealthMonitorWorker>();
         _rsuStatusTimer = make_unique<ThreadTimer>();
+        _rsuConfigListPtr = std::make_shared<RSUConfigurationList>();
         UpdateConfigSettings();
 
         // Send SNMP call to RSU periodically at configurable interval.
         _timerThId = _rsuStatusTimer->AddPeriodicTick([this]()
                                                       {
-            // Periodic SNMP call to get RSU status based on RSU MIB version 4.1
-            auto rsuStatusJson =  _rsuWorker->getRSUStatus(_rsuMibVersion, _rsuIp, _snmpPort, _securityUser, _authPassPhrase, _securityLevel, SEC_TO_MICRO);
-            PLOG(logINFO) << "Updating _interval: " << _interval;
-            //Broadcast RSU status periodically at _interval
-            BroadcastRSUStatus(rsuStatusJson); },
+                        this->monitorRSUs();
+                        PLOG(logINFO) << "Updating RSU _interval: " << _interval; },
                                                       std::chrono::milliseconds(_interval * SEC_TO_MILLI));
         _rsuStatusTimer->Start();
+    }
+
+    void RSUHealthMonitorPlugin::monitorRSUs()
+    {
+        for (auto rsuConfig : _rsuConfigListPtr->getConfigs())
+        {
+            auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
+            BroadcastRSUStatus(rsuStatusJson, rsuConfig.mibVersion);
+        }
     }
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
@@ -30,24 +37,8 @@ namespace RSUHealthMonitor
 
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
-        GetConfigValue<string>("RSUIp", _rsuIp);
-        GetConfigValue<uint16_t>("SNMPPort", _snmpPort);
-        GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
-        GetConfigValue<string>("SecurityUser", _securityUser);
-        GetConfigValue<string>("SecurityLevel", _securityLevel);
-        GetConfigValue<string>("RSUMIBVersion", _rsuMIBVersionStr);
-        boost::trim_left(_rsuMIBVersionStr);
-        boost::trim_right(_rsuMIBVersionStr);
-        // Support RSU MIB version 4.1
-        if (boost::iequals(_rsuMIBVersionStr, RSU4_1_str))
-        {
-            _rsuMibVersion = RSUMibVersion::RSUMIB_V_4_1;
-        }
-        else
-        {
-            _rsuMibVersion = RSUMibVersion::UNKOWN_MIB_V;
-            PLOG(logERROR) << "Uknown RSU MIB version: " << _rsuMIBVersionStr;
-        }
+        GetConfigValue<string>("RSUConfigurationList", _rsuConfigListStr);
+        _rsuConfigListPtr->parseRSUs(_rsuConfigListStr);
 
         try
         {
@@ -65,13 +56,13 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
     }
 
-    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson)
+    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson, const RSUMibVersion &mibVersion)
     {
         // Broadcast the RSU status info when there are RSU responses.
         if (!rsuStatusJson.empty() && _rsuWorker)
         {
             auto rsuStatusFields = _rsuWorker->getJsonKeys(rsuStatusJson);
-            auto configTbl = _rsuWorker->GetRSUStatusConfig(_rsuMibVersion);
+            auto configTbl = _rsuWorker->GetRSUStatusConfig(mibVersion);
 
             // Only broadcast RSU status when all required fields are present.
             if (_rsuWorker->validateAllRequiredFieldsPresent(configTbl, rsuStatusFields))

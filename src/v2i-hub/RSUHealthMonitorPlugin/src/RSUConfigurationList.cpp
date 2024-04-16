@@ -12,13 +12,13 @@ namespace RSUHealthMonitor
         std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
         if (!reader->parse(rsuConfigsStr.c_str(), rsuConfigsStr.c_str() + length, &root, &err))
         {
-            std::stringstream oss;
-            oss << "Parse RSUs raw string error: ";
-            oss << err.c_str();
-            throw RSUConfigurationException(oss.str().c_str());
+            std::stringstream ss;
+            ss << "Parse RSUs raw string error: " << err;
+            throw RSUConfigurationException(ss.str().c_str());
         }
         return root;
     }
+
     void RSUConfigurationList::parseRSUs(std::string rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
@@ -68,7 +68,8 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
-                config.mibVersion = rsuArray[i][RSUMIBVersionKey].asString();
+                auto _rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
+                config.mibVersion = strToMibVersion(_rsuMIBVersionStr);
             }
             else
             {
@@ -77,8 +78,40 @@ namespace RSUHealthMonitor
             configs.push_back(config);
         }
     }
+
+    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr)
+    {
+        boost::trim_left(mibVersionStr);
+        boost::trim_right(mibVersionStr);
+        // Support RSU MIB version 4.1
+        if (boost::iequals(mibVersionStr, RSU4_1_str))
+        {
+            return RSUMibVersion::RSUMIB_V_4_1;
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "Uknown RSU MIB version: " << mibVersionStr;
+            throw RSUConfigurationException(ss.str().c_str());
+        }
+    }
+
     std::vector<RSUConfiguration> RSUConfigurationList::getConfigs()
     {
         return configs;
+    }
+
+    std::ostream &operator<<(std::ostream &os, const RSUMibVersion &mib)
+    {
+        const std::string nameMibs[] = {"UNKOWN MIB",
+                                        "RSU 4.1",
+                                        "NTCIP 1218"};
+        return os << nameMibs[mib];
+    }
+
+    std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
+    {
+        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
+        return os;
     }
 }
