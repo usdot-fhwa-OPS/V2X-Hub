@@ -19,7 +19,7 @@ namespace RSUHealthMonitor
         return root;
     }
 
-    void RSUConfigurationList::parseRSUs(std::string &rsuConfigsStr)
+    void RSUConfigurationList::parseRSUs(const std::string &rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
         std::vector<RSUConfiguration> tempConfigs;
@@ -70,8 +70,8 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
-                auto _rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
-                config.mibVersion = strToMibVersion(_rsuMIBVersionStr);
+                auto rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
+                config.mibVersion = strToMibVersion(rsuMIBVersionStr);
             }
             else
             {

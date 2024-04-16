@@ -55,7 +55,7 @@ namespace RSUHealthMonitor
          * @brief Parse RSUs configrations in JSON string representation, and update the memeber of list of RSUConfiguration struct.
          * @param rsuConfigsStr A JSON string includes all RSUs related configrations.
          */
-        void parseRSUs(std::string &rsuConfigsStr);
+        void parseRSUs(const std::string &rsuConfigsStr);
         /**
          * @brief Get a list of RSUConfiguration struct.
          */
