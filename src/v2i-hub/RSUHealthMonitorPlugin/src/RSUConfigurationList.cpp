@@ -3,7 +3,7 @@
 
 namespace RSUHealthMonitor
 {
-    Json::Value RSUConfigurationList::parseJson(std::string &rsuConfigsStr) const
+    Json::Value RSUConfigurationList::parseJson(const std::string &rsuConfigsStr) const
     {
         JSONCPP_STRING err;
         Json::Value root;
@@ -19,12 +19,12 @@ namespace RSUHealthMonitor
         return root;
     }
 
-    void RSUConfigurationList::parseRSUs(std::string &rsuConfigsStr)
+    void RSUConfigurationList::parseRSUs(const std::string &rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
         std::vector<RSUConfiguration> tempConfigs;
         RSUConfiguration config;
-        auto rsuArray = json["RSUS"];
+        auto rsuArray = json[RSUSKey];
         if (!rsuArray.isArray())
         {
             throw RSUConfigurationException("RSUS is not an array.");
@@ -84,7 +84,7 @@ namespace RSUHealthMonitor
         configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
-    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr) const
+    RSUMibVersion RSUConfigurationList::strToMibVersion(const std::string &mibVersionStr) const
     {
         boost::trim_left(mibVersionStr);
         boost::trim_right(mibVersionStr);
@@ -101,7 +101,7 @@ namespace RSUHealthMonitor
         }
     }
 
-    std::vector<RSUConfiguration> RSUConfigurationList::getConfigs()
+    std::vector<RSUConfiguration> RSUConfigurationList::getConfigs() const
     {
         return configs;
     }
@@ -109,8 +109,8 @@ namespace RSUHealthMonitor
     std::ostream &operator<<(std::ostream &os, const RSUMibVersion &mib)
     {
         const std::vector<std::string> nameMibs = {"UNKOWN MIB",
-                                                   "RSU 4.1",
-                                                   "NTCIP 1218"};
+                                                   "RSU4.1",
+                                                   "NTCIP1218"};
         return os << nameMibs[static_cast<int>(mib)];
     }
 

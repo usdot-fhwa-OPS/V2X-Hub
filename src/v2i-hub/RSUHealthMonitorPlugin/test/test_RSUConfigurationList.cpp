@@ -17,7 +17,7 @@ namespace RSUHealthMonitor
         ASSERT_EQ(2, rsuConfigList->getConfigs().size());
         std::stringstream ss;
         ss << rsuConfigList->getConfigs()[0];
-        std::string expected = "RSUIp: 192.168.XX.XX, SNMPPort: 161, User: authOnlyUser, AuthPassPhrase: dummy, SecurityLevel: authPriv, RSUMIBVersion: RSU 4.1";
+        std::string expected = "RSUIp: 192.168.XX.XX, SNMPPort: 161, User: authOnlyUser, AuthPassPhrase: dummy, SecurityLevel: authPriv, RSUMIBVersion: RSU4.1";
         ASSERT_EQ(expected, ss.str());
     }
     TEST_F(test_RSUConfigurationList, parseAndGetConfigs_MalformatJSON)
