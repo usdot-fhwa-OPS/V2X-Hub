@@ -19,7 +19,7 @@ namespace RSUHealthMonitor
         return root;
     }
 
-    void RSUConfigurationList::parseRSUs(const std::string &rsuConfigsStr)
+    void RSUConfigurationList::parseRSUs(std::string &rsuConfigsStr)
     {
         auto json = parseJson(rsuConfigsStr);
         std::vector<RSUConfiguration> tempConfigs;
@@ -84,7 +84,7 @@ namespace RSUHealthMonitor
         configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
-    RSUMibVersion RSUConfigurationList::strToMibVersion(const std::string &mibVersionStr) const
+    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr) const
     {
         boost::trim_left(mibVersionStr);
         boost::trim_right(mibVersionStr);

@@ -46,7 +46,7 @@ namespace RSUHealthMonitor
          * @return JSON::Value A JSON object that includes RSUS information.
          */
         Json::Value parseJson(const std::string &rsuConfigsStr) const;
-        RSUMibVersion strToMibVersion(const std::string &mibVersionStr) const;
+        RSUMibVersion strToMibVersion(std::string &mibVersionStr) const;
 
     public:
         RSUConfigurationList() = default;
@@ -55,7 +55,7 @@ namespace RSUHealthMonitor
          * @brief Parse RSUs configrations in JSON string representation, and update the memeber of list of RSUConfiguration struct.
          * @param rsuConfigsStr A JSON string includes all RSUs related configrations.
          */
-        void parseRSUs(const std::string &rsuConfigsStr);
+        void parseRSUs(std::string &rsuConfigsStr);
         /**
          * @brief Get a list of RSUConfiguration struct.
          */
