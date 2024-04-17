@@ -27,7 +27,7 @@ namespace RSUHealthMonitor
         auto rsuArray = json[RSUSKey];
         if (!rsuArray.isArray())
         {
-            throw RSUConfigurationException("RSUS is not an array.");
+            throw RSUConfigurationException("RSUConfigurationList: Missing RSUS array.");
         }
         for (auto i = 0; i != rsuArray.size(); i++)
         {
@@ -37,17 +37,20 @@ namespace RSUHealthMonitor
             }
             else
             {
-                throw RSUConfigurationException("RSU IP does not exist.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU IP [" + std::string(RSUIpKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
             }
 
             if (rsuArray[i].isMember(SNMPPortKey))
             {
                 auto port = static_cast<uint16_t>(atoi(rsuArray[i][SNMPPortKey].asCString()));
-                port != 0 ? config.snmpPort = port : throw RSUConfigurationException("Invalid port number in string format.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Invalid SNMP port number in string format.";
+                port != 0 ? config.snmpPort = port : throw RSUConfigurationException(errMsg);
             }
             else
             {
-                throw RSUConfigurationException("Either SNMP port does not exist.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: SNMP port [" + std::string(SNMPPortKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
             }
 
             if (rsuArray[i].isMember(AuthPassPhraseKey))
@@ -56,7 +59,8 @@ namespace RSUHealthMonitor
             }
             else
             {
-                throw RSUConfigurationException("Authentication pass phrase does not exist.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication pass phrase [" + std::string(AuthPassPhraseKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
             }
 
             if (rsuArray[i].isMember(UserKey))
@@ -65,7 +69,8 @@ namespace RSUHealthMonitor
             }
             else
             {
-                throw RSUConfigurationException("User does not exist.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: User [" + std::string(UserKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
             }
 
             if (rsuArray[i].isMember(RSUMIBVersionKey))
@@ -75,7 +80,8 @@ namespace RSUHealthMonitor
             }
             else
             {
-                throw RSUConfigurationException("RSU mib version does not exist.");
+                std::string errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU MIB version [" + std::string(RSUMIBVersionKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
             }
             tempConfigs.push_back(config);
         }

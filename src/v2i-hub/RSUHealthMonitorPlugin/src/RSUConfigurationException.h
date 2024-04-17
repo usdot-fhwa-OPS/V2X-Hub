@@ -1,11 +1,10 @@
 #pragma once
-#include <tmx/TmxException.hpp>
 
 namespace RSUHealthMonitor
 {
-    class RSUConfigurationException : public tmx::TmxException
+    class RSUConfigurationException : public std::runtime_error
     {
     public:
-        using TmxException::TmxException;
+        RSUConfigurationException(const std::string &msg) : std::runtime_error(msg){};
     };
 }
