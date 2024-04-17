@@ -67,6 +67,7 @@
 #include <unistd.h>
 #endif
 #include <qhttpengine/server.h>
+#include <qhttpengine/qobjecthandler.h>
 #include <v2xhubWebAPI/OAIApiRouter.h>
 
 
@@ -99,6 +100,7 @@ public:
 	uint16_t webport;
 	std::string webip;
 	uint16_t fetchtime;
+	void CARMAResponseHandler(QHttpEngine::Socket *socket);
 protected:
 
 	void UpdateConfigSettings();
@@ -109,7 +111,6 @@ protected:
 	void OnStateChange(IvpPluginState state);
 
 	int  StartWebService();
-	void CARMAResponseHandler(QHttpEngine::Socket *socket);
 	int CloudSend(const string& msg,const string& url, const string& base, const string& method);
 	//Send HTTP request async
 	void CloudSendAsync(const string& msg,const string& url, const string& base, const string& method);
@@ -210,6 +211,8 @@ private:
 	const char *CONTENT_ENCODING_KEY = "Content-Encoding";
     const char *CONTENT_ENCODING_VALUE = "gzip";
 	std::string list_tcm = "true";
+	//API URL to accept TCM response
+	const QString TCM_REPLY="tcmreply";
 	
 };
 std::mutex _cfgLock;
