@@ -1,114 +1,17 @@
-
-#include <atomic>
-#include <iostream>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <sstream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <thread>
-#include <time.h>
-#include <sys/time.h>
-
-#include <tmx/tmx.h>
-#include <tmx/IvpPlugin.h>
-#include <tmx/messages/IvpBattelleDsrc.h>
-#include <tmx/messages/IvpSignalControllerStatus.h>
-#include <tmx/messages/IvpJ2735.h>
-#include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include "XmlMapParser.h"
-#include "ConvertToJ2735r41.h"
-#include "inputs/isd/ISDToJ2735r41.h"
-
-#define USE_STD_CHRONO
-#include <FrequencyThrottle.h>
-#include <PluginClientClockAware.h>
-
-#include "utils/common.h"
-#include "utils/map.h"
-
-#include <MapSupport.h>
-using namespace std;
-using namespace tmx;
-using namespace tmx::messages;
-using namespace tmx::utils;
+#include "MapPlugin.h"
+#include <chrono>
+#include <fstream>
+#include <boost/algorithm/string.hpp>
 
 namespace MapPlugin {
 
-#if SAEJ2735_SPEC < 63
-UPERframe _uperFrameMessage;
-#endif
-
-class MapFile: public tmx::message {
-public:
-	MapFile(): tmx::message() {}
-	virtual ~MapFile() {}
-
-	std_attribute(this->msg, int, Action, -1, );
-	std_attribute(this->msg, std::string, FilePath, "", );
-	std_attribute(this->msg, std::string, InputType, "", );
-	std_attribute(this->msg, std::string, Bytes, "", );
-public:
-	static tmx::message_tree_type to_tree(MapFile m) {
-		return tmx::message::to_tree(static_cast<tmx::message>(m));
-	}
-
-	static MapFile from_tree(tmx::message_tree_type tree) {
-		MapFile m;
-		m.set_contents(tree);
-		return m;
-	}
-};
-
-//int _mapAction = -1;
-//bool _isMapFilesNew = false;
-//bool _isMapLoaded = false;
-
-volatile int gMessageCount = 0;
-
-class MapPlugin: public PluginClientClockAware {
-public:
-	MapPlugin(string name);
-	virtual ~MapPlugin();
-
-	virtual int Main();
-protected:
-	void UpdateConfigSettings();
-
-	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnMessageReceived(IvpMessage *msg);
-	void OnStateChange(IvpPluginState state);
-
-private:
-	std::atomic<int> _mapAction {-1};
-	std::atomic<bool> _isMapFileNew {false};
-	std::atomic<bool> _cohdaR63 {false};
-
-	std::map<int, MapFile> _mapFiles;
-	std::mutex data_lock;
-
-	J2735MessageFactory factory;
-
-	int sendFrequency = 1000;
-	FrequencyThrottle<int> errThrottle;
-
-	bool LoadMapFiles();
-	void DebugPrintMapFiles();
-};
-
-MapPlugin::MapPlugin(string name) :
-		PluginClientClockAware(name) {
-	AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
-	SubscribeToMessages();
-	errThrottle.set_Frequency(std::chrono::minutes(30));
+MapPlugin::MapPlugin(string name) : PluginClientClockAware(name) {
+    AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
+    SubscribeToMessages();
+    errThrottle.set_Frequency(std::chrono::minutes(30));
 }
 
-MapPlugin::~MapPlugin() {
-
-}
+MapPlugin::~MapPlugin() {}
 
 void MapPlugin::UpdateConfigSettings() {
 	GetConfigValue("Frequency", sendFrequency);
@@ -337,30 +240,42 @@ bool MapPlugin::LoadMapFiles()
 						ISDToJ2735r41 converter(fn);
 						mapFile.set_Bytes(converter.to_encoded_message().get_payload_str());
 
-						PLOG(logINFO) << fn << " ISD file encoded as " << mapFile.get_Bytes();
+						PLOG(logINFO) << fn << "ISD file encoded as " << mapFile.get_Bytes();
 					}
 					else if (inType == "TXT")
 					{
-						byte_stream bytes;
-						ifstream in(fn);
-						in >> bytes;
+						std::ifstream in;
+						try {
+							in.open(fn, std::ios::in | std::ios::binary );
+							if (in.is_open()) {
+								std::string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
+								PLOG(logINFO) << fn << " MAP encoded bytes: " << fileContent;
 
-						PLOG(logINFO) << fn << " MAP encoded bytes are " << bytes;
+								byte_stream bytes(fileContent.begin(), fileContent.end());
+								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
 
-						MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage> >(bytes);
-						if (mapMsg) {
-							PLOG(logDEBUG) << "Map is " << *mapMsg;
+								if (mapMsg) {
+									PLOG(logDEBUG) << "Map is: " << *mapMsg;
 
-							MapDataEncodedMessage mapEnc;
-							mapEnc.encode_j2735_message(*mapMsg);
-							mapFile.set_Bytes(mapEnc.get_payload_str());
+									MapDataEncodedMessage mapEnc;
+									mapEnc.encode_j2735_message(*mapMsg);
+									mapFile.set_Bytes(mapEnc.get_payload_str());
 
-							PLOG(logINFO) << fn << " J2735 message bytes encoded as " << mapFile.get_Bytes();
+									PLOG(logINFO) << fn << " J2735 message bytes encoded as: " << mapFile.get_Bytes();
+								}
+							}
+							else {
+								PLOG(logERROR) << "Failed to open file: " << fn;
+							}
+						}
+						catch( const ios_base::failure &e) {
+							PLOG(logERROR) << "Exception Encountered : \n" << e.what();
 						}
 					}
 					else if (inType == "UPER")
 					{
-						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame." << std::endl;
+						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame.";
 						std::ifstream in; 
 						try {
 							in.open(fn, std::ios::in | std::ios::binary );
@@ -368,17 +283,18 @@ bool MapPlugin::LoadMapFiles()
 								in.seekg(0, std::ios::end);
 								int fileSize = in.tellg();
 								in.seekg(0, std::ios::beg);
-								PLOG(logDEBUG) << "File size is " << fileSize <<std::endl;
+								PLOG(logDEBUG) << "File size is: " << fileSize;
 								std::string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-								PLOG(logDEBUG) << "File contents : " << bytes_string << std::endl;
+								bytes_string.erase(remove(bytes_string.begin(), bytes_string.end(), '\n'), bytes_string.end());
+								PLOG(logDEBUG) << "File contents: " << bytes_string;
 								mapFile.set_Bytes(bytes_string);								
 							}
 							else {
-								PLOG(logERROR) << "Failed to open file " << fn << "." << std::endl;
+								PLOG(logERROR) << "Failed to open file: " << fn << ".";
 							}
 						}
 						catch( const ios_base::failure &e) {
-							PLOG(logERROR) << "Exception Encountered : \n" << e.what();
+							PLOG(logERROR) << "Exception Encountered: \n" << e.what();
 						}
 					}
 					else if (inType == "XML")
@@ -396,7 +312,7 @@ bool MapPlugin::LoadMapFiles()
 							mapEnc.encode_j2735_message(mapMsg);
 							mapFile.set_Bytes(mapEnc.get_payload_str());
 
-							PLOG(logINFO) << fn << " XML file encoded as " << mapFile.get_Bytes();
+							PLOG(logINFO) << fn << " XML file encoded as: " << mapFile.get_Bytes();
 						}
 						else
 						{
@@ -421,7 +337,7 @@ bool MapPlugin::LoadMapFiles()
 
 									mapFile.set_Bytes(mapEnc->get_payload_str());
 
-									PLOG(logINFO) << fn << " input file encoded as " << mapEnc->get_payload_str();
+									PLOG(logINFO) << fn << " input file encoded as: " << mapEnc->get_payload_str();
 								}
 								else
 								{
