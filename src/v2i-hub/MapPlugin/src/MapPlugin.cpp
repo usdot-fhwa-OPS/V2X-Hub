@@ -244,34 +244,31 @@ bool MapPlugin::LoadMapFiles()
 					}
 					else if (inType == "TXT")
 					{
-						std::ifstream in;
-						try {
-							in.open(fn, std::ios::in | std::ios::binary );
-							if (in.is_open()) {
+						byte_stream bytes;
+						std::ifstream in(fn, std::ios::binary);
+						if (!in) {
+							PLOG(logERROR) << "Failed to open file: " << fn;
+						} else {
+							try {
 								std::string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+								in.close();
 								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
-								PLOG(logINFO) << fn << " MAP encoded bytes: " << fileContent;
-								mapFile.set_Bytes(fileContent);
 
-								// byte_stream bytes(fileContent.begin(), fileContent.end());
-								// MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
+								std::istringstream streamableContent(fileContent);
+								streamableContent >> bytes;								
+								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
+								if (mapMsg) {
+									PLOG(logDEBUG) << "Map is " << *mapMsg;
 
-								// if (mapMsg) {
-								// 	PLOG(logDEBUG) << "Map is: " << *mapMsg;
+									MapDataEncodedMessage mapEnc;
+									mapEnc.encode_j2735_message(*mapMsg);
+									mapFile.set_Bytes(mapEnc.get_payload_str());
 
-								// 	MapDataEncodedMessage mapEnc;
-								// 	mapEnc.encode_j2735_message(*mapMsg);
-								// 	mapFile.set_Bytes(mapEnc.get_payload_str());
-
-								// 	PLOG(logINFO) << fn << " J2735 message bytes encoded as: " << mapFile.get_Bytes();
-								// }
+									PLOG(logINFO) << fn << " J2735 message bytes encoded as " << mapFile.get_Bytes();
+								}
+							} catch (const std::ios_base::failure& e) {
+								PLOG(logERROR) << "Exception encountered while reading file: " << e.what();
 							}
-							else {
-								PLOG(logERROR) << "Failed to open file: " << fn;
-							}
-						}
-						catch( const ios_base::failure &e) {
-							PLOG(logERROR) << "Exception Encountered : \n" << e.what();
 						}
 					}
 					else if (inType == "UPER")
