@@ -252,7 +252,16 @@ bool MapPlugin::LoadMapFiles()
 							try {
 								std::string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 								in.close();
+								// Remove any newline characters
 								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
+
+								// Check for and remove MessageFrame
+								if (fileContent.size() >= 4 && fileContent.substr(0, 4) == "0012") {
+									size_t pos = fileContent.find("38");
+									PLOG(logDEBUG) << "Beginning of MapData found at: " << pos;
+									fileContent.erase(0, pos);
+									PLOG(logDEBUG) << "Payload without MessageFrame: " << fileContent;
+								}
 
 								std::istringstream streamableContent(fileContent);
 								streamableContent >> bytes;								
