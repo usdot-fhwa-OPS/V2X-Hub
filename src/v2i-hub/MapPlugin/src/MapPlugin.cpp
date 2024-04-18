@@ -240,7 +240,7 @@ bool MapPlugin::LoadMapFiles()
 						ISDToJ2735r41 converter(fn);
 						mapFile.set_Bytes(converter.to_encoded_message().get_payload_str());
 
-						PLOG(logINFO) << fn << "ISD file encoded as " << mapFile.get_Bytes();
+						PLOG(logINFO) << fn << " ISD file encoded as " << mapFile.get_Bytes();
 					}
 					else if (inType == "TXT")
 					{
@@ -264,7 +264,8 @@ bool MapPlugin::LoadMapFiles()
 								}
 
 								std::istringstream streamableContent(fileContent);
-								streamableContent >> bytes;								
+								streamableContent >> bytes;
+								PLOG(logINFO) << fn << " MAP encoded bytes are " << bytes;
 								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
 								if (mapMsg) {
 									PLOG(logDEBUG) << "Map is " << *mapMsg;
@@ -356,7 +357,7 @@ bool MapPlugin::LoadMapFiles()
 				}
 				catch (exception &ex)
 				{
-					PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << " : " << ex.what();
+					PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << ": " << ex.what();
 					return false;
 				}
 			}
