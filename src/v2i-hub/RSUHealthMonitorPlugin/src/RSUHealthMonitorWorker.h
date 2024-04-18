@@ -11,6 +11,7 @@
 #include "SNMPClient.h"
 #include <boost/algorithm/string/predicate.hpp>
 #include "RSUStatusMessage.h"
+#include "RSUConfigurationList.h"
 
 using namespace std;
 using namespace tmx::utils;
@@ -19,12 +20,6 @@ using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
-    enum class RSUMibVersion
-    {
-        UNKOWN_MIB_V = 0,
-        RSUMIB_V_4_1 = 1,
-        RSUMIB_V_1218 = 2
-    };
 
     struct RSUFieldOIDStruct
     {
