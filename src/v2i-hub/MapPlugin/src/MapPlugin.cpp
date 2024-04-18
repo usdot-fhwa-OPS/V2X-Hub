@@ -251,19 +251,20 @@ bool MapPlugin::LoadMapFiles()
 								std::string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
 								PLOG(logINFO) << fn << " MAP encoded bytes: " << fileContent;
+								mapFile.set_Bytes(fileContent);
 
-								byte_stream bytes(fileContent.begin(), fileContent.end());
-								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
+								// byte_stream bytes(fileContent.begin(), fileContent.end());
+								// MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
 
-								if (mapMsg) {
-									PLOG(logDEBUG) << "Map is: " << *mapMsg;
+								// if (mapMsg) {
+								// 	PLOG(logDEBUG) << "Map is: " << *mapMsg;
 
-									MapDataEncodedMessage mapEnc;
-									mapEnc.encode_j2735_message(*mapMsg);
-									mapFile.set_Bytes(mapEnc.get_payload_str());
+								// 	MapDataEncodedMessage mapEnc;
+								// 	mapEnc.encode_j2735_message(*mapMsg);
+								// 	mapFile.set_Bytes(mapEnc.get_payload_str());
 
-									PLOG(logINFO) << fn << " J2735 message bytes encoded as: " << mapFile.get_Bytes();
-								}
+								// 	PLOG(logINFO) << fn << " J2735 message bytes encoded as: " << mapFile.get_Bytes();
+								// }
 							}
 							else {
 								PLOG(logERROR) << "Failed to open file: " << fn;
@@ -349,7 +350,7 @@ bool MapPlugin::LoadMapFiles()
 				}
 				catch (exception &ex)
 				{
-					PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << ": " << ex.what();
+					PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << " : " << ex.what();
 					return false;
 				}
 			}
