@@ -97,6 +97,8 @@ private:
 
 	bool LoadMapFiles();
 	void DebugPrintMapFiles();
+	string removeMessageFrame(string &fileContent);
+
 };
 
 } // namespace MapPlugin

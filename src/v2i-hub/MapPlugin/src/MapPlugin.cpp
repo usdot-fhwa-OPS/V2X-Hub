@@ -207,6 +207,17 @@ int MapPlugin::Main() {
 	return (EXIT_SUCCESS);
 }
 
+string MapPlugin::removeMessageFrame(string &fileContent) {
+    // Check for and remove MessageFrame
+	if (fileContent.size() >= 4 && fileContent.substr(0, 4) == "0012") {
+        size_t pos = fileContent.find("38");
+        PLOG(logDEBUG) << "Beginning of MapData found at: " << pos;
+        fileContent.erase(0, pos);
+        PLOG(logDEBUG) << "Payload without MessageFrame: " << fileContent;
+    }
+	return fileContent;
+}
+
 bool MapPlugin::LoadMapFiles()
 {
 	if (_mapFiles.empty())
@@ -255,13 +266,7 @@ bool MapPlugin::LoadMapFiles()
 								// Remove any newline characters
 								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
 
-								// Check for and remove MessageFrame
-								if (fileContent.size() >= 4 && fileContent.substr(0, 4) == "0012") {
-									size_t pos = fileContent.find("38");
-									PLOG(logDEBUG) << "Beginning of MapData found at: " << pos;
-									fileContent.erase(0, pos);
-									PLOG(logDEBUG) << "Payload without MessageFrame: " << fileContent;
-								}
+								fileContent = removeMessageFrame(fileContent);
 
 								std::istringstream streamableContent(fileContent);
 								streamableContent >> bytes;
