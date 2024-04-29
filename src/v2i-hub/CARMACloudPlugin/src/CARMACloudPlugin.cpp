@@ -71,11 +71,12 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	while(cnt<totBounds)
 	{
 
-		uint32_t oldest=tm;
+		
 		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
-
 	
+		auto oldest = sim::is_simulation_mode()? convertOldest(carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest): tm;
+
 		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
 		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
 		long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltax;
@@ -83,7 +84,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
 		long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
 
-		sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%u</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+		sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%lu</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
 
 		cnt++;
 
@@ -95,6 +96,17 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,carma_cloud_url, base_req, method);
+}
+
+uint64_t CARMACloudPlugin::convertOldest(const EpochMins_t& oldest){
+	auto size = oldest.size;
+	uint64_t result = 0;
+	for (auto i = 0; i < size; i++)
+	{
+		result = result << 8;
+		result |= oldest.buf[i];
+	}
+	return result;
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){

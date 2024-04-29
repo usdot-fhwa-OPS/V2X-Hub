@@ -74,7 +74,7 @@
 #include <curl/curl.h>
 #include <algorithm>
 
-
+#include <simulation/SimulationEnvUtils.h>
 
 using namespace std;
 
@@ -213,7 +213,12 @@ private:
 	std::string list_tcm = "true";
 	//API URL to accept TCM response
 	const QString TCM_REPLY="tcmreply";
-	
+	/**
+	 * @brief Convert the EpochMins to integer type.
+	 * @param oldest Timestamp of oldest traffic control message within bounds.
+	 * @returns Unit of minutes
+	*/
+	uint64_t convertOldest(const EpochMins_t& oldest);
 };
 std::mutex _cfgLock;
 }
