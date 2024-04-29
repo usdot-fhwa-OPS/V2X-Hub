@@ -147,7 +147,9 @@ namespace TelematicBridge
         {
             throw TelematicBridgeException("Failed to  convert message with ID (=" + to_string(messageFrame->messageId) + ") to XML ");
         }
-        return string(xml_buffer.buffer);
+        auto output = string(xml_buffer.buffer);
+        FREEMEM(xml_buffer.buffer);
+        return output;
     }
 
     /**
@@ -238,7 +240,10 @@ namespace TelematicBridge
             }
             else
             {
-                json["payload"] = StringToJson(cJSON_Print(msg->payload));
+                // Render a cJSON entity to text for transfer/storage. Free the char* when finished.
+                auto payloadPtr = cJSON_Print(msg->payload);    
+                json["payload"] = StringToJson(payloadPtr);
+                FREEMEM(payloadPtr);
             }
         }
 

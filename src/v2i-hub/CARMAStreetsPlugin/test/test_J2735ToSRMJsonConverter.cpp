@@ -29,11 +29,19 @@ protected:
         requestType->role = 0;
         requestor->type = requestType;
         RequestorPositionVector_t *position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+        #if SAEJ2735_SPEC < 2020
         DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+        #else
+        Common_Angle_t *heading_angle = (Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
+        #endif
         *heading_angle = 123;
         position->heading = heading_angle;
         Position3D_t *position_point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+        #if SAEJ2735_SPEC < 2020
         DSRC_Elevation_t *elev = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+        #else
+        Common_Elevation_t *elev = (Common_Elevation_t *)calloc(1, sizeof(Common_Elevation_t));
+        #endif
         *elev = 12;
         position_point->elevation = elev;
         position_point->lat = 3712333;

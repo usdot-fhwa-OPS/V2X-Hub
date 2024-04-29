@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 #ifndef SAEJ2735_SPEC
-#define SAEJ2735_SPEC 63
+#define SAEJ2735_SPEC 2020
 #endif
 
 #include <DSRCmsgID.h>

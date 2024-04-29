@@ -13,7 +13,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils jsoncpp NemaTode)
 #############
 enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)
-add_library(${PROJECT_NAME}_lib src/RSUHealthMonitorWorker.cpp)
+add_library(${PROJECT_NAME}_lib src/RSUHealthMonitorWorker.cpp src/RSUConfigurationList)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils
                                         NemaTode

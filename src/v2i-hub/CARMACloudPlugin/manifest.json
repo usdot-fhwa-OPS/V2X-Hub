@@ -25,8 +25,23 @@
 		},
 		{
 			"key":"WebServiceIP",
-			"default":"127.0.0.1",
+			"default":"0.0.0.0",
 			"description":"Server IP address for V2X hub"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"22222",
+			"description":"Server Port for V2X hub to receive TCM messages"
+		},
+		{
+			"key":"CARMACloudIP",
+			"default":"http://127.0.0.1",
+			"description":"Server IP address of carma-cloud"
+		},
+		{
+			"key":"CARMACloudPort",
+			"default":"33333",
+			"description":"Server Port for V2X hub to send TCR messages to carma-cloud"
 		},
 		{
 			"key":"fetchTime",
@@ -62,11 +77,6 @@
 			"key": "TCMNOAcknowledgementDescription",
 			"default": "No response received from CMV after repeatedly broadcast TCMs.",
 			"description": "If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI."
-		},
-		{
-			"key":"WebServicePort",
-			"default":"22222",
-			"description":"Server Port for V2X hub to receive TCM messages"
 		},
 		{
 			"key":"listTCM",
