@@ -1,7 +1,11 @@
 on:
   push:
-    # run on branches and not PRs due to secrets used
     branches:
+      - develop
+      - master
+      - "release/*"
+  pull_request:
+    types: [opened, synchronize, reopened]
 name: Sonar Workflow
 jobs:
   sonarcloud:
@@ -9,13 +13,13 @@ jobs:
     container:
       image: ubuntu:jammy-20230126
     steps:
-      - name: Install curl, zip, git, gcovr
+      - name: Install gcovr
         run: |
           apt update
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y curl zip git gcovr
+          apt-get install -y gcovr
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
