@@ -72,7 +72,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat;
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
 
-		auto oldest = std::max(tm, 0); // Replace tm with 0 if negative
+		auto oldest = std::max(oldestInMins, 0); // Replace tm with 0 if negative
 
 		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
 		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
