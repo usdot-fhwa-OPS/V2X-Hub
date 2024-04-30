@@ -65,7 +65,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	strcpy(bounds_str, "");
 
 	//  get current time
-	std::time_t tm = getClock()->nowInMilliseconds() / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
+	std::time_t tm = getClock()->nowInMilliseconds() / 1000 / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
 
 	while (cnt < totBounds)
 	{
@@ -73,7 +73,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat;
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
 
-		auto oldest = std::max(tm, 0); // Replace tm with 0 if negative
+		auto oldest = std::max(static_cast<uint32_t>(tm), 0); // Replace tm with 0 if negative
 
 		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
 		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
