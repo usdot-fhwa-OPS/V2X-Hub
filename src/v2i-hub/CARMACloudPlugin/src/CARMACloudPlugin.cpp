@@ -16,7 +16,8 @@ namespace CARMACloudPlugin {
  *
  * @param name The name to give the plugin for identification purposes
  */
-CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
+CARMACloudPlugin::CARMACloudPlugin(string name) : PluginClientClockAware(name)
+{
 
 	UpdateConfigSettings();
 	std::lock_guard<mutex> lock(_cfgLock);
@@ -36,9 +37,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	_tcm_broadcast_starting_time = std::make_shared<std::map<string, std::time_t>>();
 	std::thread Broadcast_t(&CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM, this);
 	Broadcast_t.detach();
-
 }
-
 
 void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &routeableMsg)
 {
@@ -63,19 +62,18 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
 	int cnt=0;
 	char bounds_str[5000];
-		strcpy(bounds_str,"");	
-	
-	//  get current time 
-	std::time_t tm = std::time(0)/60-fetchtime*24*60; //  T minus 24 hours in  min  
+	strcpy(bounds_str, "");
 
-	while(cnt<totBounds)
+	//  get current time
+	std::time_t tm = getClock()->nowInMilliseconds() / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
+
+	while (cnt < totBounds)
 	{
 
-		
-		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
+		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat;
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
-	
-		auto oldest = sim::is_simulation_mode()? convertOldest(carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->oldest): tm;
+
+		auto oldest = std::max(tm, 0); // Replace tm with 0 if negative
 
 		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
 		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
@@ -84,11 +82,9 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
 		long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
 
-		sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%lu</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+		sprintf(bounds_str + strlen(bounds_str), "<bounds><oldest>%u</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>", oldest, longg, lat, dtx0, dty0, dtx1, dty1, dtx2, dty2);
 
 		cnt++;
-
-
 	}
 
 	char xml_str[10000]; 
@@ -96,17 +92,6 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
 	CloudSend(xml_str,carma_cloud_url, base_req, method);
-}
-
-uint64_t CARMACloudPlugin::convertOldest(const EpochMins_t& oldest){
-	auto size = oldest.size;
-	uint64_t result = 0;
-	for (auto i = 0; i < size; i++)
-	{
-		result = result << 8;
-		result |= oldest.buf[i];
-	}
-	return result;
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){

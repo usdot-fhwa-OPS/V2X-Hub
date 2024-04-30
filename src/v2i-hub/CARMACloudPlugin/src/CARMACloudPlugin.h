@@ -92,7 +92,8 @@ enum acknowledgement_status {
 	acknowledgement_status__not_acknowledged 	= 3  //CMV does not respond at all within the v2xhub repeatedly broadcast time period
 };
 
-class CARMACloudPlugin: public PluginClient {
+class CARMACloudPlugin : public PluginClientClockAware
+{
 public:
 	CARMACloudPlugin(std::string);
 	virtual ~CARMACloudPlugin();
@@ -212,13 +213,7 @@ private:
     const char *CONTENT_ENCODING_VALUE = "gzip";
 	std::string list_tcm = "true";
 	//API URL to accept TCM response
-	const QString TCM_REPLY="tcmreply";
-	/**
-	 * @brief Convert the EpochMins to integer type.
-	 * @param oldest Timestamp of oldest traffic control message within bounds.
-	 * @returns Unit of minutes
-	*/
-	uint64_t convertOldest(const EpochMins_t& oldest);
+	const QString TCM_REPLY = "tcmreply";
 };
 std::mutex _cfgLock;
 }
