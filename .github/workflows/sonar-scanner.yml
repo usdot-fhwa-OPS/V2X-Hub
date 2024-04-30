@@ -13,11 +13,14 @@ jobs:
     container:
       image: ubuntu:jammy-20230126
     steps:
-      - name: Install gcovr and git (Checkout action)
+      - name: Install curl, zip, git, gcovr
+        # Installing gcovr for unit test code coverage
+        # Installing git for checkout action
+        # installing curl/zip for sonar-cpp action
         run: |
           apt update
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y gcovr git
+          apt-get install -y curl zip git gcovr
       - name: Checkout
         uses: actions/checkout@v4
         with:
