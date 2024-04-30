@@ -73,8 +73,7 @@
 
 #include <curl/curl.h>
 #include <algorithm>
-
-
+#include <PluginClientClockAware.h>
 
 using namespace std;
 
@@ -92,7 +91,8 @@ enum acknowledgement_status {
 	acknowledgement_status__not_acknowledged 	= 3  //CMV does not respond at all within the v2xhub repeatedly broadcast time period
 };
 
-class CARMACloudPlugin: public PluginClient {
+class CARMACloudPlugin : public PluginClientClockAware
+{
 public:
 	CARMACloudPlugin(std::string);
 	virtual ~CARMACloudPlugin();
@@ -212,8 +212,7 @@ private:
     const char *CONTENT_ENCODING_VALUE = "gzip";
 	std::string list_tcm = "true";
 	//API URL to accept TCM response
-	const QString TCM_REPLY="tcmreply";
-	
+	const QString TCM_REPLY = "tcmreply";
 };
 std::mutex _cfgLock;
 }
