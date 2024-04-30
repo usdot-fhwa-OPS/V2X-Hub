@@ -64,8 +64,7 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	char bounds_str[5000];
 	strcpy(bounds_str, "");
 
-	//  get current time
-	uint32_t tm = getClock()->nowInSeconds() / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
+	uint32_t oldestInMins = getClock()->nowInSeconds() / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
 
 	while (cnt < totBounds)
 	{
