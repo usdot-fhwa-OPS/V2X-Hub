@@ -13,11 +13,11 @@ jobs:
     container:
       image: ubuntu:jammy-20230126
     steps:
-      - name: Install gcovr
+      - name: Install gcovr and git (Checkout action)
         run: |
           apt update
           export DEBIAN_FRONTEND=noninteractive
-          apt-get install -y gcovr
+          apt-get install -y gcovr git
       - name: Checkout
         uses: actions/checkout@v4
         with:
