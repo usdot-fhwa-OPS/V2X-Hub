@@ -20,7 +20,7 @@ services:
       - mysql-datavolume:/var/lib/mysql
 
   php:
-    image: usdotfhwaops/php:develop
+    image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
     network_mode: host
     depends_on: 
@@ -30,7 +30,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhub:develop
+    image: usdotfhwaops/v2xhubamd:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
     network_mode: host
     restart: always
@@ -38,15 +38,25 @@ services:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
-      - INFRASTRUCTURE_NAME=<RSU_NAME>
+      - SIMULATION_MODE=${SIMULATION_MODE:-false}
+      - SIMULATION_IP=${SIMULATION_IP:-127.0.0.1}
+      - SIMULATION_REGISTRATION_PORT=6767
+      - LOCAL_IP=${LOCAL_IP:-127.0.0.1}
+      - TIME_SYNC_TOPIC=time_sync
+      - TIME_SYNC_PORT=7575
+      - SIM_V2X_PORT=5757
+      - SIM_INTERACTION_PORT=7576
+      - V2X_PORT=8686
+      - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
+      - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
+      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
     secrets:
       - mysql_password
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
   port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice:develop
+    image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
     network_mode: host
 secrets:

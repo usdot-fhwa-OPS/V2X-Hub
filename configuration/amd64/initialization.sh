@@ -35,6 +35,7 @@ else
     #remove endline characters from password files
     tr -d '\n' <sql_pass.txt> mysql_password.txt && rm sql_pass.txt
 fi
+# TODO VH-1303 Allow for version and configuration selection in initialization script
 
 #AMD64 initialzation
 cd $directory

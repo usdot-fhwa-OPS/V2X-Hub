@@ -1,4 +1,4 @@
-PROJECT(RSUHealthMonitorPlugin VERSION 7.5.1 LANGUAGES CXX)
+PROJECT(RSUHealthMonitorPlugin VERSION 7.6.0 LANGUAGES CXX)
 
 set(TMX_PLUGIN_NAME "RSU Health Monitor")
 
