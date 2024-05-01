@@ -23,7 +23,8 @@ services:
     image: usdotfhwaops/php_arm:${V2XHUB_VERSION:-develop}
     container_name: php
     network_mode: host
-    depends_on: 
+    restart: always
+    depends_on:
       - db
       - v2xhub
     stdin_open: true
@@ -34,10 +35,12 @@ services:
     container_name: v2xhub
     network_mode: host
     restart: always
-    depends_on: 
+    depends_on:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
+      - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
+      - INFRASTRUCTURE_NAME=<RSU_NAME>
     secrets:
       - mysql_password
     volumes:

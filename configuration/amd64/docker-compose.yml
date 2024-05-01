@@ -23,7 +23,8 @@ services:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
     network_mode: host
-    depends_on: 
+    restart: always
+    depends_on:
       - db
       - v2xhub
     stdin_open: true
