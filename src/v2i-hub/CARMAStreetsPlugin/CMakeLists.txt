@@ -1,4 +1,4 @@
-PROJECT ( CARMAStreetsPlugin VERSION 7.5.1 LANGUAGES CXX )
+PROJECT ( CARMAStreetsPlugin VERSION 7.6.0 LANGUAGES CXX )
 
 BuildTmxPlugin ( )
 
