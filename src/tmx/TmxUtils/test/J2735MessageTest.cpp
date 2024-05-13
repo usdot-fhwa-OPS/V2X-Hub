@@ -1033,17 +1033,17 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	message->sourceID.buf = my_bytes_id;
 	message->sourceID.size = sizeof(my_bytes_id);
-	message->equipmentType = EquipmentType_unknown;
+	message->equipmentType = EquipmentType_rsu;
 	
 
 	auto sDSMTimeStamp = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
 	auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
-	*year= 2023;
+	*year= 2024;
 	sDSMTimeStamp->year = year;
 	message->sDSMTimeStamp = *sDSMTimeStamp;
 
-	message->refPos.lat = 38121212;
-	message->refPos.Long = -77121212;
+	message->refPos.lat = 42301007;
+	message->refPos.Long = -83698766;
 
 	message->refPosXYConf.orientation = 10;
 	message->refPosXYConf.semiMajor = 12;
@@ -1051,19 +1051,19 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 
 	auto objects = (DetectedObjectList_t*) calloc(1, sizeof(DetectedObjectList_t));
 	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
-	objectData->detObjCommon.objType = ObjectType_unknown;
-	objectData->detObjCommon.objTypeCfd = 1;
-	objectData->detObjCommon.objectID = 1;
+	objectData->detObjCommon.objType = ObjectType_vru;
+	objectData->detObjCommon.objTypeCfd = 98;
+	objectData->detObjCommon.objectID = 8010;
 	objectData->detObjCommon.measurementTime = 1;
-	objectData->detObjCommon.timeConfidence = 1;
+	objectData->detObjCommon.timeConfidence = 8;
 	objectData->detObjCommon.pos.offsetX = 1;
 	objectData->detObjCommon.pos.offsetY = 1;
-	objectData->detObjCommon.posConfidence.elevation = 1;
-	objectData->detObjCommon.posConfidence.pos = 1;
+	objectData->detObjCommon.posConfidence.pos = 11;
+	objectData->detObjCommon.posConfidence.elevation = 11;
 	objectData->detObjCommon.speed = 1;
-	objectData->detObjCommon.speedConfidence = 1;
-	objectData->detObjCommon.heading = 1;
-	objectData->detObjCommon.headingConf = 1;
+	objectData->detObjCommon.speedConfidence = 2;
+	objectData->detObjCommon.heading = 0;
+	objectData->detObjCommon.headingConf = 2;
 	ASN_SEQUENCE_ADD(&objects->list.array, objectData);
 	message->objects = *objects;
 	xer_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message);
@@ -1076,7 +1076,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
+	std::string expectedSDSMEncHex = "0029250a010c0c0a301fa0382a5f4f664cadb10c34000a00002c43e94bba4200020002ec00280002";
 	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
