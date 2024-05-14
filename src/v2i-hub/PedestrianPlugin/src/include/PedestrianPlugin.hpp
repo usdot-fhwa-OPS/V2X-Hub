@@ -13,18 +13,14 @@
 
 #include <atomic>
 #include <thread>
-#include <DecodedBsmMessage.h>
-#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#include <BasicSafetyMessage.h>
-#include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <PersonalSafetyMessage.h>
+#include <tmx/TmxApiMessages.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 
 #include <UdpClient.h>
 #include <tmx/messages/auto_message.hpp>
 #include "PedestrianPluginWorker.hpp"
-
 #include "FLIRWebSockAsyncClnSession.hpp"
 
 
@@ -46,6 +42,8 @@
 #include <qserverPedestrian/OAIPSM.h>
 #include <queue>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 using namespace std;
 using namespace tmx;
@@ -63,7 +61,6 @@ class PedestrianPlugin: public PluginClient
 {
 public:
 	PedestrianPlugin(std::string);
-	PedestrianPlugin();
 	virtual ~PedestrianPlugin();
 	int Main();
 	uint16_t webport;
@@ -82,8 +79,6 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
-	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	void BroadcastPsm(char *psmJson);
 
 	int  StartWebService();

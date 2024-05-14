@@ -21,13 +21,6 @@ PedestrianPlugin::PedestrianPlugin(string name): PluginClient(name)
 {
 	// The log level can be changed from the default here.
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
-
-	AddMessageFilter<MapDataMessage>(this, &PedestrianPlugin::HandleMapDataMessage);
-
-	AddMessageFilter <BsmMessage> (this, &PedestrianPlugin::HandleBasicSafetyMessage);
-
-	// Subscribe to all messages specified by the filters above.
-	SubscribeToMessages();
 }
 
 void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
@@ -47,14 +40,14 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
 	catch(const J2735Exception &e) {
-        PLOG(logERROR) << "Error parsing file: " << e.what() << std::endl;
+        PLOG(logERROR) << "Error parsing file: " << e.what();
 		writeResponse(QHttpEngine::Socket::BadRequest, socket);
 	}
 }
 
 int PedestrianPlugin::StartWebSocket()
 {
-	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket " << std::endl;
+	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
 	// The io_context is required for all I/O
     net::io_context ioc;
 
@@ -63,13 +56,26 @@ int PedestrianPlugin::StartWebSocket()
     // Launch the asynchronous operation
 	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str());	
 
-	PLOG(logDEBUG) << "Successfully running the I/O service" << std::endl;	
+	PLOG(logDEBUG) << "Successfully running the I/O service";	
 
     // Run the I/O service. The call will return when
     // the socket is closed.
     ioc.run();
 
 	return EXIT_SUCCESS;
+}
+
+void PedestrianPlugin::OnWebSocketClosed()
+{
+	if (flirSession)
+	{
+		boost::beast::error_code ec;
+		flirSession->on_close(ec);
+	}
+	else
+	{
+		PLOG(logDEBUG) << "WebSocket session already closed.";
+	}
 }
 
 int PedestrianPlugin::checkXML()
@@ -82,7 +88,7 @@ int PedestrianPlugin::checkXML()
 	{
 		if (flirSession == nullptr)
 		{
-			PLOG(logDEBUG) << "flir session not yet initialized: " << std::endl;
+			PLOG(logDEBUG) << "flir session not yet initialized: ";
 		}
 		else
 		{	
@@ -155,33 +161,34 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
 	GetConfigValue<string>("HostString",hostString);
 
-	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str() << std::endl;
-	PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str() << std::endl;
+	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str();
+	PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str();
 
 	if (dataprovider.compare("FLIR") == 0)
 	{
 		try
 		{
 			std::thread webthread(&PedestrianPlugin::StartWebSocket,this);
-			PLOG(logDEBUG) << "Thread started!!: " << std::endl;
+			PLOG(logDEBUG) << "Thread started!!: ";
 			
 			webthread.detach(); // wait for the thread to finish
 
 			std::thread xmlThread(&PedestrianPlugin::checkXML,this);
-			PLOG(logDEBUG) << "XML Thread started!!: " << std::endl;
+			PLOG(logDEBUG) << "XML Thread started!!: ";
 			
 			xmlThread.detach(); // wait for the thread to finish
 
 		}
 		catch(const std::exception& e)
 		{
-			PLOG(logERROR) << "Error connecting to websocket: " << e.what() << std::endl;
+			PLOG(logERROR) << "Error connecting to websocket: " << e.what();
 		}
 				
 			
 	}
 	else  // default if PSM XML data consumed using the webservice implementation
 	{
+		OnWebSocketClosed();
 		std::thread webthread(&PedestrianPlugin::StartWebService,this);
 		webthread.detach(); // wait for the thread to finish
 	}
@@ -204,60 +211,73 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PedestrianPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
-{
-	static std::atomic<int> count {0};
-
-	int mapCount = count;
-	SetStatus("ReceivedMaps", mapCount);
-}
-
-
-
-void PedestrianPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) {
-	PLOG(logDEBUG)<<"HandleBasicSafetyMessage";
-}
-
-
-void PedestrianPlugin::BroadcastPsm(char * psmJson) {  //overloaded 
-
+void PedestrianPlugin::BroadcastPsm(char * msgJson) {  //overloaded 
 
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
+	SdsmMessage sdsmMsg;
+	SdsmEncodedMessage sdsmENC;
 	tmx::message_container_type container;
-	std::unique_ptr<PsmEncodedMessage> msg;	
+	std::unique_ptr<PsmEncodedMessage> pMsg;	
+	std::unique_ptr<SdsmEncodedMessage> sMsg;
 
 	try
 	{
 		std::stringstream ss;
-		ss << psmJson;
+		ss << msgJson;
 
 		container.load<XML>(ss);
-		psmmessage.set_contents(container.get_storage().get_tree());
 
-		const std::string psmString(psmJson);
+		if(dataprovider.compare("PSM") == 0)
+		{
+			psmmessage.set_contents(container.get_storage().get_tree());
 
-		psmENC.encode_j2735_message(psmmessage);
+			const std::string psmString(msgJson);
 
-		msg.reset();
-		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+			psmENC.encode_j2735_message(psmmessage);
 
-		string enc = psmENC.get_encoding();
-		msg->refresh_timestamp();
-		msg->set_payload(psmENC.get_payload_str());
-		msg->set_encoding(enc);
-		msg->set_flags(IvpMsgFlags_RouteDSRC);
-		msg->addDsrcMetadata(0x8002);
-		msg->refresh_timestamp();
+			pMsg.reset();
+			pMsg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 
-		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-		BroadcastMessage(*rMsg);
+			string enc = psmENC.get_encoding();
+			pMsg->refresh_timestamp();
+			pMsg->set_payload(psmENC.get_payload_str());
+			pMsg->set_encoding(enc);
+			pMsg->set_flags(IvpMsgFlags_RouteDSRC);
+			pMsg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
+			pMsg->refresh_timestamp();
 
-		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str() << std::endl;
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(pMsg.get());
+			BroadcastMessage(*rMsg);
+			PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		}
+		else if (dataprovider.compare("SDSM") == 0)
+		{
+			sdsmMsg.set_contents(container.get_storage().get_tree());
+
+			const std::string sdsmString(msgJson);
+
+			sdsmENC.encode_j2735_message(sdsmMsg);
+
+			sMsg.reset();
+			sMsg.reset(dynamic_cast<SdsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING)));
+
+			string enc = sdsmENC.get_encoding();
+			sMsg->refresh_timestamp();
+			sMsg->set_payload(sdsmENC.get_payload_str());
+			sMsg->set_encoding(enc);
+			sMsg->set_flags(IvpMsgFlags_RouteDSRC);
+			sMsg->addDsrcMetadata(tmx::messages::api::sensorDataSharingMessage_PSID);
+			sMsg->refresh_timestamp();
+
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(sMsg.get());
+			BroadcastMessage(*rMsg);
+			PLOG(logINFO) << " Pedestrian Plugin :: Broadcast SDSM:: " << sdsmENC.get_payload_str();
+		}
 	}
 	catch(const std::exception& e)
 	{
-		PLOG(logWARNING) << "Error: " << e.what() << " broadcasting PSM for xml: " << psmJson << std::endl;
+		PLOG(logWARNING) << "Error: " << e.what() << " broadcasting message for xml: " << msgJson;
 
 	}
 
@@ -290,9 +310,17 @@ int PedestrianPlugin::Main()
 
 		if (_plugin->state == IvpPluginState_registered)
 		{
-			PersonalSafetyMessage psm_1;
-			PersonalSafetyMessage &psm = psm_1;
-			//BroadcastPsm(psm);
+			if(dataprovider.compare("PSM") == 0)
+			{
+				PersonalSafetyMessage psm_1;
+				PersonalSafetyMessage &psm = psm_1;
+				//BroadcastPsm(psm);
+			}
+			else if(dataprovider.compare("SDSM") == 0)
+			{
+				SensorDataSharingMessage sdsm_1;
+				SensorDataSharingMessage &sdsm = sdsm_1;
+			}
 
 			this_thread::sleep_for(chrono::milliseconds(100));
 
