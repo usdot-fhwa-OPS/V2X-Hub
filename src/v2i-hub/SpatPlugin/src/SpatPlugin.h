@@ -52,7 +52,6 @@ private:
 	unsigned int derEncodedBytes = 0;
 
 	SignalController sc;
-	int _actionNumber = -1;
 
 	std::mutex data_lock;
 	std::string localIp;

@@ -29,8 +29,7 @@ class SignalController
 		void spat_load();
 		void start_signalController();
 		int getActionNumber();
-		void setConfigs(std::string ip, std::string udpPort, std::string snmpIP, std::string snmpPort, std::string ptlmFile, std::string intersectionName, int intersectionId);
-		void updatePtlmFile(const char* ptlmFile);
+		void setConfigs(std::string ip, std::string udpPort, std::string snmpIP, std::string snmpPort, std::string intersectionName, int intersectionId);
 		int getIsConnected();
 
 		//int getDerEncodedSpat(unsigned char* derEncodedBuffer);
@@ -59,7 +58,6 @@ class SignalController
 		uint32_t _tscRemoteSnmpPort;
 
 		std::string _signalGroupMappingJson;
-		std::shared_ptr<tmx::messages::SpatMessage> _spatMessage;
 		int counter;
 		unsigned long normalstate;
 		unsigned long crossstate;

@@ -10,7 +10,6 @@ namespace SpatPlugin {
 
 SpatPlugin::SpatPlugin(string name) :
 		PluginClientClockAware(name), sc(getClock()), intersectionId(0) {
-	AddMessageFilter<PedestrianMessage>(this, &SpatPlugin::HandlePedestrianDetection);
 	SubscribeToMessages();
 }
 
@@ -46,17 +45,12 @@ void SpatPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-void SpatPlugin::HandlePedestrianDetection(PedestrianMessage &pedMsg, routeable_message &routeableMsg) {
-	lock_guard<mutex> lock(data_lock);
-	_pedMessage = pedMsg;
-}
 
 int SpatPlugin::Main() {
 
 	int iCounter = 0;
 
 	PLOG(logINFO) << "Waiting for clock initialization";
-
 	// wait for the clock to be initialized and record the time when it is ready
 	getClock()->wait_for_initialization();
 	auto nextSpatTime = getClock()->nowInMilliseconds();
@@ -68,35 +62,17 @@ int SpatPlugin::Main() {
 			if (isConfigurationLoaded) {
 				if (!isConfigured) {
 
-					usleep(200000);
-
-					int action = sc.getActionNumber();
-
-					/*pthread_mutex_lock(&gSettingsMutex);
-					 std::cout <<  "Get PTLM file specified by configuration settings" << std::endl;
-					 std::string ptlmFile = GetPtlmFile(action);
-					 pthread_mutex_unlock(&gSettingsMutex);
-					 */
-					//if (!ptlmFile.empty())
-					//{
-					_actionNumber = action;
-
-					// sc.spat_message_mutex does not need locked because the thread is not running yet.
-
 					{
 						std::lock_guard<std::mutex> lock(data_lock);
 						string ptlm = "";
 						sc.setConfigs(localIp, localUdpPort, tscIp,
-								tscRemoteSnmpPort, ptlm, intersectionName,
+								tscRemoteSnmpPort, intersectionName,
 								intersectionId);
 					}
 					// Start the signal controller thread.
 					sc.Start(signalGroupMappingJson);
 					// Give the spatdata pointer to the message class
-					//smr41.setSpatData(sc.getSpatData());
-
 					isConfigured = true;
-					//}
 				}
 
 				// SPaT must be sent exactly every 100 ms.  So adjust for how long it took to do the last send.
@@ -107,22 +83,6 @@ int SpatPlugin::Main() {
 
 				bool messageSent = false;
 
-				// Update PTLM file if the action number has changed.
-				int actionNumber = sc.getActionNumber();
-				if (_actionNumber != actionNumber) {
-					_actionNumber = actionNumber;
-
-					//pthread_mutex_lock(&gSettingsMutex);
-					//std::string ptlmFile = GetPtlmFile(_actionNumber);
-					//pthread_mutex_unlock(&gSettingsMutex);
-
-					/*if (!ptlmFile.empty())
-					 {
-					 pthread_mutex_lock(&sc.spat_message_mutex);
-					 sc.updatePtlmFile(ptlmFile.c_str());
-					 pthread_mutex_unlock(&sc.spat_message_mutex);
-					 }*/
-				}
 				if (sc.getIsConnected()) {
 					SetStatus<string>("TSC Connection", "Connected");
 
@@ -137,36 +97,25 @@ int SpatPlugin::Main() {
 					}
 
 					SpatEncodedMessage spatEncodedMsg;
-					sc.getEncodedSpat(&spatEncodedMsg, pedZones);
+					
 
 					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 					spatEncodedMsg.addDsrcMetadata(0x8002);
 
-					//PLOG(logDEBUG) << spatEncodedMsg;
 
 					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
 
-					if (iCounter % 20 == 0) {
-						iCounter = 0;
-						// Action Number
-						IvpMessage *actionMsg = ivpSigCont_createMsg(
-								sc.getActionNumber());
-						if (actionMsg != NULL) {
-							ivp_broadcastMessage(_plugin, actionMsg);
-							ivpMsg_destroy(actionMsg);
-						}
-					}
 					
 				} else {
 					SetStatus<string>("TSC Connection", "Disconnected");
 				}
 			}
 		}
-	} catch (exception &ex) {
+	} catch (const exception &ex) {
 		stringstream ss;
-		ss << "SpatPlugin terminating from unhandled exception: " << ex.what();
+		PLOG(logERROR) << "SpatPlugin terminating from unhandled exception: " << ex.what();
 
-		ivp_addEventLog(_plugin, IvpLogLevel_error, ss.str().c_str());
+		ivp_addEventLog(_plugin, IvpLogLevel_error, ex.what().c_str());
 		std::terminate();
 	}
 

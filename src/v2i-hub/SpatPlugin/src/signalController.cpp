@@ -12,11 +12,7 @@
 #include <pthread.h>
 #include <errno.h>
 
-#include <unistd.h>
 #include <netinet/in.h>
-#ifndef __CYGWIN__
-#include <sys/prctl.h>
-#endif
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -59,7 +55,7 @@ void *SignalController::get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void SignalController::setConfigs(std::string localIp, std::string localUdpPort, std::string tscIp, std::string tscRemoteSnmpPort, std::string ptlmFile, std::string intersectionName, int intersectionId)
+void SignalController::setConfigs(std::string localIp, std::string localUdpPort, std::string tscIp, std::string tscRemoteSnmpPort, std::string intersectionName, int intersectionId)
 {
 	_localIp = strdup(localIp.c_str());
 	_localUdpPort = strdup(localUdpPort.c_str());
@@ -71,12 +67,7 @@ void SignalController::setConfigs(std::string localIp, std::string localUdpPort,
 
 void SignalController::start_signalController()
 {
-#ifndef __CYGWIN__
-	prctl(PR_SET_NAME, "SpatGenSC", 0, 0, 0);
-#endif
 
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,nullptr);
-	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,nullptr);
 
 	int maxDataSize = 1000;
 
@@ -107,7 +98,6 @@ void SignalController::start_signalController()
 	    IsReceiving = 0;
 
 	    while (1) {
-		PLOG(logDEBUG) << "Top of While Loop";
 			if ((rv = getaddrinfo(_localIp, _localUdpPort, &hints, &servinfo)) != 0) {
 			PLOG(logERROR) << "Getaddrinfo Failed " << _localIp << " " << _localUdpPort << ". Exiting thread!!!";
 	    		return;
@@ -169,20 +159,10 @@ void SignalController::start_signalController()
 						pthread_mutex_lock(&spat_message_mutex);
 						auto ntcip1202 = std::make_shared<Ntcip1202>(clock);
 						ntcip1202->setSignalGroupMappingList(_signalGroupMappingJson);
-						//printf("Signal Controller calling ntcip1202 copyBytesIntoNtcip1202");
 						ntcip1202->copyBytesIntoNtcip1202(buf, numbytes);
 
-						//printf("Signal Controller calling ntcip1202 ToJ2735r41SPAT");
 						SPAT *_spat = (SPAT *) calloc(1, sizeof(SPAT));
 						ntcip1202->ToJ2735r41SPAT(_spat, _intersectionName, _intersectionId);
-						
-						//printf("Signal Controller calling _spatMessage set_j2735_data\n");
-						//_spatMessage.set_j2735_data(_spat);
-						if (_spatMessage != nullptr)
-						{
-							_spatMessage = nullptr;
-						}
-						_spatMessage = std::make_shared<tmx::messages::SpatMessage>(_spat);
 
 						pthread_mutex_unlock(&spat_message_mutex);
 						PLOG(logDEBUG) << *_spatMessage;
@@ -193,18 +173,6 @@ void SignalController::start_signalController()
 	    }
 }
 
-void SignalController::getEncodedSpat(SpatEncodedMessage* spatEncodedMsg, std::string currentPedLanes)
-{
-	pthread_mutex_lock(&spat_message_mutex);
-
-	if (_spatMessage != nullptr) {
-		PedestrianDetectionForSPAT pedDetect;
-		pedDetect.updateEncodedSpat(*spatEncodedMsg, _spatMessage, currentPedLanes);
-	}
-
-	pthread_mutex_unlock(&spat_message_mutex);
-
-}
 
 int SignalController::getIsConnected()
 {
@@ -213,7 +181,7 @@ int SignalController::getIsConnected()
 
 int SignalController::getActionNumber()
 {
-	return 1;//sd.actionNumber;
+	return 1;
 }
 
 void SignalController::SNMPOpenSession()
