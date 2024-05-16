@@ -153,17 +153,17 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 
 bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 {
-	PLOG(logINFO)<<"TimPlugin:: Reached in TimDuration upcon receiving TIM message.";
+	PLOG(logINFO) << "TimPlugin:: Reached in TimDuration upcon receiving TIM message.";
 	lock_guard<mutex> lock(_cfgLock);
 	auto timPtr = TimMsg->get_j2735_data();
-	//startTime unit of minute
+	// startTime unit of minute
 	auto startTime = timPtr->dataFrames.list.array[0]->startTime;
 	if(startTime >= 527040)
 	{
 		PLOG(logERROR) << "Invalid startTime." << std::endl;
 		return false;
 	}
-	//Duration is unit of minute
+	// Duration is unit of minute
 	#if SAEJ2735_SPEC < 2020
 	auto duration = timPtr->dataFrames.list.array[0]->duratonTime;
 	#else 
@@ -176,7 +176,7 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 		isPersist = true;
 	}
 
-	//Get year start UTC in seconds
+	// Get year start UTC in seconds
 	auto t = time(nullptr);
 	struct tm* timeInfo = gmtime(&t);
 	ostringstream currentYearStartOS;
@@ -190,15 +190,15 @@ bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
 		<< currentYearStartTimeInfo.tm_sec << " DST:"  << currentYearStartTimeInfo.tm_isdst << std::endl;
 	time_t secondsYearStart = mktime( &currentYearStartTimeInfo );
 	
-	//Start Time in seconds
+	// Start Time in seconds
 	time_t secondsStart = secondsYearStart + startTime * 60;
-	//Stop Time in seconds
+	// Stop Time in seconds
 	time_t secondsStop = secondsStart + duration * 60;
 
 	// Current UTC Time in seconds;
 	auto secondsCurrent = time(nullptr);
 
-	//Comparing current time with start and end time 
+	// Comparing current time with start and end time 
 	PLOG(logINFO) << "Year Start(s): " << secondsYearStart << " Broadcast Start(s):" << secondsStart << " Broadcast Stop(s): " << secondsStop << 
 		" Current(s):" << secondsCurrent << " Elpased minutes since year start(min):" << ((secondsCurrent-secondsYearStart)/60.0)<< std::endl;
 	if ( secondsStart <= secondsCurrent && (secondsCurrent <= secondsStop || isPersist)) {

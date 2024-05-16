@@ -2,7 +2,7 @@
 // Name        : RsmPlugin.cpp
 // Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2023 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2024 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Rsm Plugin
 //==========================================================================
 
@@ -19,23 +19,18 @@ RsmPlugin::RsmPlugin(string name): PluginClient(name)
 {
 	// The log level can be changed from the default here.
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
-
-	AddMessageFilter<RsmMessage>(this, &RsmPlugin::HandleRoadSafetyMessage);
-
-	// Subscribe to all messages specified by the filters above.
-	SubscribeToMessages();
 }
 
 void RsmPlugin::RsmRequestHandler(QHttpEngine::Socket *socket)
 {
 	if(socket->bytesAvailable() == 0)
 	{
-		PLOG(logERROR) << "RSM Plugin does not receive web service request content!" << endl;
+		PLOG(logERROR) << "RSM Plugin does not receive web service request content!";
 		writeResponse(QHttpEngine::Socket::BadRequest, socket);
 		return;
 	}
 
-	// should read from the websocket and parse 
+	// Read from the websocket and parse
 	QString st; 
 	while(socket->bytesAvailable()>0)
 	{	
@@ -44,11 +39,10 @@ void RsmPlugin::RsmRequestHandler(QHttpEngine::Socket *socket)
 	QByteArray array = st.toLocal8Bit();
 
 	char* rsmMsgdef = array.data();	
-	// Catch parse exceptions
 
 	stringstream ss;
 	ss << rsmMsgdef;
-	PLOG(logDEBUG) << "Received from webservice: " << ss.str() << endl;
+	PLOG(logDEBUG) << "Received from webservice:\n" << ss.str();
 	
     try {
 	    BroadcastRsm(rsmMsgdef);
@@ -60,10 +54,9 @@ void RsmPlugin::RsmRequestHandler(QHttpEngine::Socket *socket)
 	}
 }
 
-
 int RsmPlugin::StartWebService()
 {
-	//Web services 
+	// Web services 
 	char *placeholderX[1]={0};
 	int placeholderC=1;
 	QCoreApplication a(placeholderC,placeholderX);
@@ -93,9 +86,8 @@ int RsmPlugin::StartWebService()
         qCritical("RsmPlugin:: Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logINFO)<<"RsmPlugin:: Started web service";
+	PLOG(logINFO) << "RsmPlugin:: Started web service";
 	return a.exec();
-
 }
 
 RsmPlugin::~RsmPlugin()
@@ -110,10 +102,10 @@ void RsmPlugin::UpdateConfigSettings()
 	// This method does NOT execute in the main thread, so variables must be protected
 	// (e.g. using atomic, mutex, etc.).
 
-	lock_guard<mutex> lock(_cfgLock);
-
+	lock_guard<mutex> lock(cfgLock);
 	GetConfigValue<string>("WebServiceIP", webip);
 	GetConfigValue<uint16_t>("WebServicePort", webport);
+	GetConfigValue<uint64_t>("Interval", interval);
 }
 
 void RsmPlugin::OnConfigChanged(const char *key, const char *value)
@@ -136,14 +128,8 @@ void RsmPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void RsmPlugin::HandleRoadSafetyMessage(RsmMessage &msg, routeable_message &routeableMsg)
-{
-	PLOG(logDEBUG)<<"HandleRoadSafetyMessage";
-}
-
 void RsmPlugin::BroadcastRsm(char * rsmJson) 
 {
-
 	RsmMessage rsmmessage;
 	RsmEncodedMessage rsmENC;
 	tmx::message_container_type container;
@@ -160,64 +146,145 @@ void RsmPlugin::BroadcastRsm(char * rsmJson)
 		const string rsmString(rsmJson);
 
 		rsmENC.encode_j2735_message(rsmmessage);
+		
+		while (RsmDuration(rsmENC))
+		{
+			lock_guard<mutex> lock(cfgLock);
+			uint64_t sendInterval = interval;
 
-		msg.reset();
-		msg.reset(dynamic_cast<RsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_ROADSAFETYMESSAGE_STRING)));
+			msg.reset();
+			msg.reset(dynamic_cast<RsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_ROADSAFETYMESSAGE_STRING)));
 
-		string enc = rsmENC.get_encoding();
-		msg->refresh_timestamp();
-		msg->set_payload(rsmENC.get_payload_str());
-		msg->set_encoding(enc);
-		msg->set_flags(IvpMsgFlags_RouteDSRC);
-		msg->addDsrcMetadata(0x8003);
-		msg->refresh_timestamp();
+			string enc = rsmENC.get_encoding();
+			msg->refresh_timestamp();
+			msg->set_payload(rsmENC.get_payload_str());
+			msg->set_encoding(enc);
+			msg->set_flags(IvpMsgFlags_RouteDSRC);
+			msg->addDsrcMetadata(tmx::messages::api::roadSafetyMessage_PSID);
+			msg->refresh_timestamp();
 
-		routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
-		BroadcastMessage(*rMsg);
+			routeable_message *rMsg = dynamic_cast<routeable_message *>(msg.get());
+			BroadcastMessage(*rMsg);
+			PLOG(logINFO) << "RSM Plugin :: Broadcast RSM:: " << rsmENC.get_payload_str();
 
-		PLOG(logINFO) << " RSM Plugin :: Broadcast RSM:: " << rsmENC.get_payload_str();	
+			// Make sure Interval configuration is positive. Otherwise, set to default 1000 milliseconds.
+			sendInterval = sendInterval > 0 ? sendInterval: 1000;
+			// Sleep sendInterval for every attempt to broadcast RSM.
+			this_thread::sleep_for(chrono::milliseconds(sendInterval));
+		}	
 	}
 	catch(const exception& e)
 	{
-		PLOG(logWARNING) << "Error: " << e.what() << " broadcasting RSM for xml: " << rsmJson << endl;
+		PLOG(logWARNING) << "Error: " << e.what() << " broadcasting RSM for xml: " << rsmJson;
 	}
-	
-	
+}
 
+bool RsmPlugin::RsmDuration(RsmEncodedMessage RsmEncMsg)
+{
+	auto rsm_ptr = RsmEncMsg.decode_j2735_message().get_j2735_data();
+	auto startYear = rsm_ptr->commonContainer.eventInfo.startDateTime.year;
+	auto startMonth = rsm_ptr->commonContainer.eventInfo.startDateTime.month;
+	auto startDay = rsm_ptr->commonContainer.eventInfo.startDateTime.day;
+	auto startHour = rsm_ptr->commonContainer.eventInfo.startDateTime.hour;
+	auto startMin = rsm_ptr->commonContainer.eventInfo.startDateTime.minute;
+	auto startSec = rsm_ptr->commonContainer.eventInfo.startDateTime.second;
+
+	PLOG(logINFO) << "Start Date yy/mm/dd : " << *startYear << "/" << *startMonth << "/" << *startDay;
+	PLOG(logINFO) << "Start Time hh:mm:ss : " << *startHour << ":" << *startMin << ":" << *startSec;
+
+	if (!rsm_ptr->commonContainer.eventInfo.endDateTime)
+	{
+		PLOG(logINFO) << "No End Date/Time in message.";
+		return true;
+	}
+	else
+	{
+		auto endYear = rsm_ptr->commonContainer.eventInfo.endDateTime->year;
+		auto endMonth = rsm_ptr->commonContainer.eventInfo.endDateTime->month;
+		auto endDay = rsm_ptr->commonContainer.eventInfo.endDateTime->day;
+		auto endHour = rsm_ptr->commonContainer.eventInfo.endDateTime->hour;
+		auto endMin = rsm_ptr->commonContainer.eventInfo.endDateTime->minute;
+		auto endSec = rsm_ptr->commonContainer.eventInfo.endDateTime->second;
+
+		PLOG(logINFO) << "End Date yy/mm/dd : " << *endYear << "/" << *endMonth << "/" << *endDay;
+		PLOG(logINFO) << "End Time hh:mm:ss : " << *endHour << ":" << *endMin << ":" << *endSec;
+
+		time_t now = time(0);
+		// Current UTC datetime
+		tm *utcTM = gmtime(&now);
+		auto currentYear = 1900 + utcTM->tm_year;
+		auto currentMonth = 1 + utcTM->tm_mon;
+		auto currentDay = utcTM->tm_mday;
+		auto currentHour = utcTM->tm_hour;
+		auto currentMin = utcTM->tm_min;
+		auto currentSec = utcTM->tm_sec;
+		PLOG(logDEBUG) << "Current UTC DateTime yy/mm/dd hh:mm:ss : " << currentYear << "/" << currentMonth << "/" << currentDay << " " << currentHour << ":" << currentMin << ":" << currentSec;
+
+		auto diffYear = *endYear - currentYear;
+		auto diffMonth = *endMonth - currentMonth;
+		auto diffDay = (*endDay - currentDay);
+		PLOG(logDEBUG4) << "Diff Date yy/mm/dd: " << diffYear << "/" << diffMonth << "/" << diffDay;
+
+		if (diffYear > 0)
+		{
+			return true;
+		}
+		else if (diffMonth > 0)
+		{
+			return true;
+		}
+		else if (diffDay > 0)
+		{
+			return true;
+		}
+		else
+		{
+			auto diffHour = (*endHour - currentHour)*3600;
+			auto diffMin = (*endMin - currentMin)*60;
+			auto diffSec = *endSec - currentSec;
+			PLOG(logDEBUG4) << "Time difference h:m:s " << diffHour << ":" << diffMin << ":" << diffSec;
+
+			// Message duration in seconds
+			auto rsmDuration = diffHour + diffMin + diffSec;
+			
+			if (rsmDuration > 0)
+			{
+				PLOG(logDEBUG) << "RSM will transmit for: " << rsmDuration << " seconds";
+				return true;
+			}
+			else 
+			{
+				PLOG(logINFO) << "RSM endDateTime has passed.";
+				return false;
+			}
+		}
+	}
 }
 
 /**
  * Write HTTP response. 
  */
-void RsmPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket) {
+void RsmPlugin::writeResponse(int responseCode , QHttpEngine::Socket *socket)
+{
 	socket->setStatusCode(responseCode);
     socket->writeHeaders();
     if(socket->isOpen()){
         socket->close();
     }
-
 }
 
 
 int RsmPlugin::Main()
 {
-	PLOG(logINFO) << "RsmPlugin:: Starting plugin.\n";
+	PLOG(logINFO) << "RsmPlugin:: Starting plugin.";
 
-	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-
-		msCount += 10;
-
-		if (_plugin->state == IvpPluginState_registered)
+		if (IsPluginState(IvpPluginState_registered))
 		{
-			RoadSafetyMessage rsm_1;
-			RoadSafetyMessage &rsm = rsm_1;
-
-			this_thread::sleep_for(chrono::milliseconds(100));
-
-			msCount = 0;
+			// this_thread::sleep_for(chrono::milliseconds(100));
 		}
+		this_thread::sleep_for(chrono::milliseconds(100));
 	}
 
 	PLOG(logINFO) << "Plugin terminating gracefully.";
