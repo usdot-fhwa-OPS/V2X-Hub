@@ -67,21 +67,21 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-	void HandleRoadSafetyMessage(RsmMessage &msg, routeable_message &routeableMsg);
 	void BroadcastRsm(char *rsmJson);
 	
 	int  StartWebService();
 	void RsmRequestHandler(QHttpEngine::Socket *socket);
 	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
+	bool RsmDuration(RsmEncodedMessage RsmEncMsg);
 
 private:
 	tmx::utils::UdpClient *_signSimClient = NULL;
 	J2735MessageFactory factory;
 	
+	uint64_t interval = 0;
 	uint16_t webport;
 	string webip;
 
 };
-mutex _cfgLock;
-
+mutex cfgLock;
 }

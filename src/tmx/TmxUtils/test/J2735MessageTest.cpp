@@ -611,7 +611,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 {
 	// Encode RSM XML
-	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>38954961</lat> <long>-77149303</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
+	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
 	std::stringstream ss;
 	RsmMessage rsmmessage;
 	RsmEncodedMessage rsmENC;
@@ -670,6 +670,28 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	rsmStartDateTime->second = second;
 	eventInfo->startDateTime = *rsmStartDateTime;
 
+	// End Date time
+	auto rsmEndDateTime = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
+	auto endYear = (DYear_t*) calloc(1, sizeof(DYear_t));
+	auto endMonth = (DMonth_t*) calloc(1, sizeof(DMonth_t));
+	auto endDay = (DDay_t*) calloc(1, sizeof(DDay_t));
+	auto endHour = (DHour_t*) calloc(1, sizeof(DHour_t));
+	auto endMinute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
+	auto endSecond = (DSecond_t*) calloc(1, sizeof(DSecond_t));
+	*endYear = 2024;
+	*endMonth = 5;
+	*endDay = 17;
+	*endHour = 12;
+	*endMinute = 0;
+	*endSecond = 0;
+	rsmEndDateTime->year = endYear;
+	rsmEndDateTime->month = endMonth;
+	rsmEndDateTime->day = endDay;
+	rsmEndDateTime->hour = endHour;
+	rsmEndDateTime->minute = endMinute;
+	rsmEndDateTime->second = endSecond;
+	eventInfo->endDateTime = rsmEndDateTime;
+
 	// Event recurrence list
 	auto rsmEventRecurrence = (EventInfo::EventInfo__eventRecurrence*) calloc(1, sizeof(EventInfo::EventInfo__eventRecurrence));
 	auto eventRecCnt = (EventRecurrence_t*) calloc(1, sizeof(EventRecurrence_t));
@@ -702,10 +724,10 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// Region info
 	auto regionInfo = (CommonContainer::CommonContainer__regionInfo*) calloc(1, sizeof(CommonContainer::CommonContainer__regionInfo));
 	auto regionInfoCnt = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
-	regionInfoCnt->referencePoint.lat = 42301083;
-	regionInfoCnt->referencePoint.Long = -83699070;
+	regionInfoCnt->referencePoint.lat = 423010836;
+	regionInfoCnt->referencePoint.Long = -836990707;
 	auto elev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
-	*elev = 243;
+	*elev = 2380;
 	regionInfoCnt->referencePoint.elevation = elev;
 
 	auto approachRegion = (AreaType_t*) calloc(1, sizeof(AreaType_t));
@@ -766,8 +788,8 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// myString->size = strlen(my_str);
 	// asn_sequence_add(&dmsString->list.array, myString);
 	// dynamicInfoContainer->dmsSignString = *dmsString;
-	// dynamicInfoContainer->applicableRegion.referencePoint.lat = 38954961;
-	// dynamicInfoContainer->applicableRegion.referencePoint.Long = -77149303;
+	// dynamicInfoContainer->applicableRegion.referencePoint.lat = 389549610;
+	// dynamicInfoContainer->applicableRegion.referencePoint.Long = -771493030;
 	// auto appElev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
 	// *appElev = 390;
 	// dynamicInfoContainer->applicableRegion.referencePoint.elevation = appElev;
@@ -781,10 +803,10 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	curveContainer->advisorySpeed = 112;
 	auto curveRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
 	auto refPointCurve = (Position3D_t*) calloc(1, sizeof(Position3D_t));
-	refPointCurve->lat = 42301083;
-	refPointCurve->Long = -83699070;
+	refPointCurve->lat = 423010836;
+	refPointCurve->Long = -836990707;
 	auto elevCurve = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
-	*elevCurve = 238;
+	*elevCurve = 2380;
 	refPointCurve->elevation = elevCurve;
 	curveRegion->referencePoint = *refPointCurve;
 	auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
@@ -798,36 +820,35 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	curvePath->pathWidth = 26;
 	auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode1->present = NodePointLLE_PR_node_3Doffset;
-	pathNode1->choice.node_3Doffset.lat_offset = -3;
-	pathNode1->choice.node_3Doffset.long_offset = 0;
+	pathNode1->choice.node_3Doffset.lat_offset = 14;
+	pathNode1->choice.node_3Doffset.long_offset = 23;
 	auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode2->present = NodePointLLE_PR_node_3Doffset;
-	pathNode2->choice.node_3Doffset.lat_offset = 130;
-	pathNode2->choice.node_3Doffset.long_offset = 3;
+	pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	pathNode2->choice.node_3Doffset.long_offset = 50;
 	auto pathNode3 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode3->present = NodePointLLE_PR_node_3Doffset;
-	pathNode3->choice.node_3Doffset.lat_offset = 196;
-	pathNode3->choice.node_3Doffset.long_offset = 11;
+	pathNode3->choice.node_3Doffset.lat_offset = 1945;
+	pathNode3->choice.node_3Doffset.long_offset = 131;
+	auto node3elevOff = (ElevOffset_t*) calloc(1, sizeof(ElevOffset_t));
+	*node3elevOff = 10;
+	pathNode3->choice.node_3Doffset.elev_offset = node3elevOff;
 	auto pathNode4 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode4->present = NodePointLLE_PR_node_3Doffset;
-	pathNode4->choice.node_3Doffset.lat_offset = 252;
-	pathNode4->choice.node_3Doffset.long_offset = 39;
+	pathNode4->choice.node_3Doffset.lat_offset = 2645;
+	pathNode4->choice.node_3Doffset.long_offset = 483;
 	auto pathNode5 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode5->present = NodePointLLE_PR_node_3Doffset;
-	pathNode5->choice.node_3Doffset.lat_offset = 295;
-	pathNode5->choice.node_3Doffset.long_offset = 78;
+	pathNode5->choice.node_3Doffset.lat_offset = 3095;
+	pathNode5->choice.node_3Doffset.long_offset = 956;
 	auto pathNode6 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode6->present = NodePointLLE_PR_node_3Doffset;
-	pathNode6->choice.node_3Doffset.lat_offset = 327;
-	pathNode6->choice.node_3Doffset.long_offset = 117;
+	pathNode6->choice.node_3Doffset.lat_offset = 3475;
+	pathNode6->choice.node_3Doffset.long_offset = 1538;
 	auto pathNode7 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode7->present = NodePointLLE_PR_node_3Doffset;
-	pathNode7->choice.node_3Doffset.lat_offset = 353;
-	pathNode7->choice.node_3Doffset.long_offset = 173;
-	auto pathNode8 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode8->present = NodePointLLE_PR_node_3Doffset;
-	pathNode8->choice.node_3Doffset.lat_offset = 367;
-	pathNode8->choice.node_3Doffset.long_offset = 215;
+	pathNode7->choice.node_3Doffset.lat_offset = 3685;
+	pathNode7->choice.node_3Doffset.long_offset = 2024;
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode1);
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode2);
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode3);
@@ -835,7 +856,6 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode5);
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode6);
 	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode7);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode8);
 	asn_sequence_add(&pathList->list.array, curvePath);
 	curveApproachReg->choice.paths = *pathList;
 	curveRegion->approachRegion = curveApproachReg;
@@ -857,7 +877,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	free(frame_msg.get_j2735_data().get());
 	std::cout << RsmEncodeMessage.get_payload_str() << std::endl;
 	ASSERT_EQ(33,  RsmEncodeMessage.get_msgId());	
-	std::string expectedRSMEncHex = "0021750700802060c020218181431f9fa15ac00000000fe363eb4000029c152fcdb326564088798000140d20573f3a4815d02c51fddc0d947db9068d1f3a422247ce8fcb0209c094e0a97e6d9932b20443b840068323ffd80009020a001a40c48016903f2013a4127809c9051e03aa4161815a905be06b80";
+	std::string expectedRSMEncHex = "0021790f00802060c020218181431f9fa15ac000003f3f42c5800000001fc6c7d68000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960413812a76dc58a1cb32d860ca60800d054801d005d2296403258f33020e014929560f1a4c1787789364e30124e658fd00";
 	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
 
 	//Decode RSM
@@ -1042,8 +1062,11 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	sDSMTimeStamp->year = year;
 	message->sDSMTimeStamp = *sDSMTimeStamp;
 
-	message->refPos.lat = 42301007;
-	message->refPos.Long = -83698766;
+	message->refPos.lat = 423010070;
+	message->refPos.Long = -836987660;
+	auto elevObj = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	*elevObj = 2380;
+	message->refPos.elevation = elevObj;
 
 	message->refPosXYConf.orientation = 10;
 	message->refPosXYConf.semiMajor = 12;
@@ -1076,7 +1099,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a301fa0382a5f4f664cadb10c34000a00002c43e94bba4200020002ec00280002";
+	std::string expectedSDSMEncHex = "0029270a010c0c0a301fa14edb8816396666f3194c0c34000a00002c43e94bba4200020002ec00280002";
 	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
