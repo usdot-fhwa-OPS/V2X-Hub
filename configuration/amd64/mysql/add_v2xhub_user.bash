@@ -3,7 +3,12 @@
 #set -e
 
 # Ensure mysql-client is installed
-REQUIRED_PKG="mysql-client"
+arch=$(dpkg --print-architecture)
+if [ $arch = "amd64" ]; then
+    REQUIRED_PKG="mysql-client"
+else
+    REQUIRED_PKG="mariadb-client"
+fi
 PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
 echo Checking for $REQUIRED_PKG: $PKG_OK
 if [ "" = "$PKG_OK" ]; then
