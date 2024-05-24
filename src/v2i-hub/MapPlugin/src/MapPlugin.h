@@ -16,6 +16,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <string>
+#include <cstdio>
 
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
@@ -23,6 +24,7 @@
 #include <tmx/messages/IvpSignalControllerStatus.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <tmx/TmxApiMessages.h>
 #include "XmlMapParser.h"
 #include "ConvertToJ2735r41.h"
 #include "inputs/isd/ISDToJ2735r41.h"
@@ -95,8 +97,11 @@ private:
 	int sendFrequency = 1000;
 	FrequencyThrottle<int> errThrottle;
 
+	char mapID_buffer[5];
+
 	bool LoadMapFiles();
 	void DebugPrintMapFiles();
+	string enum_to_hex_string();
 	string removeMessageFrame(string &fileContent);
 
 };

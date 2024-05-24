@@ -177,7 +177,7 @@ int MapPlugin::Main() {
 				msg->set_payload(byteStr);
 				msg->set_encoding(enc);
 				msg->set_flags(IvpMsgFlags_RouteDSRC);
-				msg->addDsrcMetadata(0x8002);
+				msg->addDsrcMetadata(tmx::messages::api::mapData_PSID);
 
 				activeAction = temp;
 				PLOG(logINFO) << "Map for action " << activeAction << " will be sent";
@@ -207,15 +207,37 @@ int MapPlugin::Main() {
 	return (EXIT_SUCCESS);
 }
 
-string MapPlugin::removeMessageFrame(string &fileContent) {
+string MapPlugin::enum_to_hex_string()
+{
+	sprintf(mapID_buffer, "%04X", tmx::messages::api::mapData);
+	string map_messageID = mapID_buffer;
+	return map_messageID;
+}
+
+string MapPlugin::removeMessageFrame(string &fileContent)
+{
+    string map_messageID = enum_to_hex_string();
+
     // Check for and remove MessageFrame
-	if (fileContent.size() >= 4 && fileContent.substr(0, 4) == "0012") {
-        size_t pos = fileContent.find("38");
-        PLOG(logDEBUG) << "Beginning of MapData found at: " << pos;
-        fileContent.erase(0, pos);
-        PLOG(logDEBUG) << "Payload without MessageFrame: " << fileContent;
+    if (fileContent.size() >= 4 && fileContent.substr(0, 4) == map_messageID)
+    {
+		// Check if message is hex size > 255, remove appropriate header
+		string tempFrame = fileContent;
+		tempFrame.erase(0, 6);
+		PLOG(logDEBUG4) << "Checking size of: " << tempFrame;
+        if (tempFrame.size() > 510)
+		{
+			fileContent.erase(0, 8);
+
+		}
+		else
+		{
+			fileContent.erase(0, 6);
+		}
+		
+		PLOG(logDEBUG4) << "Payload without MessageFrame: " << fileContent;
     }
-	return fileContent;
+    return fileContent;
 }
 
 bool MapPlugin::LoadMapFiles()
@@ -257,22 +279,28 @@ bool MapPlugin::LoadMapFiles()
 					{
 						byte_stream bytes;
 						std::ifstream in(fn, std::ios::binary);
-						if (!in) {
+						if (!in)
+						{
 							PLOG(logERROR) << "Failed to open file: " << fn;
-						} else {
-							try {
-								std::string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+						}
+						else
+						{
+							try
+							{
+								string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 								in.close();
 								// Remove any newline characters
 								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
-
+								PLOG(logDEBUG4) << "Map without newline " << fileContent;
 								fileContent = removeMessageFrame(fileContent);
 
 								std::istringstream streamableContent(fileContent);
 								streamableContent >> bytes;
 								PLOG(logINFO) << fn << " MAP encoded bytes are " << bytes;
 								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
-								if (mapMsg) {
+
+								if (mapMsg)
+								{
 									PLOG(logDEBUG) << "Map is " << *mapMsg;
 
 									MapDataEncodedMessage mapEnc;
@@ -281,7 +309,8 @@ bool MapPlugin::LoadMapFiles()
 
 									PLOG(logINFO) << fn << " J2735 message bytes encoded as " << mapFile.get_Bytes();
 								}
-							} catch (const std::ios_base::failure& e) {
+							} catch (const std::ios_base::failure& e)
+							{
 								PLOG(logERROR) << "Exception encountered while reading file: " << e.what();
 							}
 						}
@@ -289,24 +318,27 @@ bool MapPlugin::LoadMapFiles()
 					else if (inType == "UPER")
 					{
 						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame.";
-						std::ifstream in; 
+						std::ifstream in;
 						try {
 							in.open(fn, std::ios::in | std::ios::binary );
-							if (in.is_open()) {
+							if (in.is_open())
+							{
 								in.seekg(0, std::ios::end);
 								int fileSize = in.tellg();
 								in.seekg(0, std::ios::beg);
 								PLOG(logDEBUG) << "File size is: " << fileSize;
-								std::string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+								string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
 								bytes_string.erase(remove(bytes_string.begin(), bytes_string.end(), '\n'), bytes_string.end());
 								PLOG(logDEBUG) << "File contents: " << bytes_string;
-								mapFile.set_Bytes(bytes_string);								
+								mapFile.set_Bytes(bytes_string);
 							}
-							else {
+							else
+							{
 								PLOG(logERROR) << "Failed to open file: " << fn << ".";
 							}
 						}
-						catch( const ios_base::failure &e) {
+						catch( const ios_base::failure &e) 
+						{
 							PLOG(logERROR) << "Exception Encountered: \n" << e.what();
 						}
 					}
