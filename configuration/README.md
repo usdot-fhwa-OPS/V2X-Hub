@@ -1,5 +1,9 @@
 ## Introduction
 This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures.
+
+> [!NOTE]
+> Separate deployment files/configurations are no longer necessary for arm64 and x86 deployments.
+
 ### Deployment Instructions
 Once downloaded, navigate to the configuration directory:
 ```
