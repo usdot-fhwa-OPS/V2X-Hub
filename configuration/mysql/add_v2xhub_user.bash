@@ -4,6 +4,7 @@
 
 # Ensure mysql-client is installed
 arch=$(dpkg --print-architecture)
+# TODO: Add a common mysql-client that works for ARM and AMD devices 
 if [ $arch = "amd64" ]; then
     REQUIRED_PKG="mysql-client"
 else
