@@ -2,14 +2,13 @@
 ### Introduction
 This directory contains deployment configurations for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures. 
 ### Deployment Instructions
-Once downloaded, navigate to the directory corresponding to your computer’s processor (1) or (2):
+Once downloaded, navigate to the configuration directory:
 ```
-cd ~/V2X-Hub/configuration/arm64/
-cd ~/V2X-Hub/configuration/amd64/
+cd ~/V2X-Hub/configuration/
 ```
 Run the initialization script:
 ```
-./initialization.sh
+sudo ./initialization.sh
 ```
 Follow the prompts during installation.
 
