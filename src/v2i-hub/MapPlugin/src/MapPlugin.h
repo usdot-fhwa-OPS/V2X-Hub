@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef MAPPLUGIN_H_
-#define MAPPLUGIN_H_
-
 #include <atomic>
 #include <iostream>
 #include <map>
@@ -17,6 +14,9 @@
 #include <sys/time.h>
 #include <string>
 #include <cstdio>
+#include <chrono>
+#include <fstream>
+#include <boost/algorithm/string.hpp>
 
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
@@ -97,7 +97,7 @@ private:
 	int sendFrequency = 1000;
 	FrequencyThrottle<int> errThrottle;
 
-	char mapID_buffer[5];
+	char mapID_buffer[5] = {0};
 
 	bool LoadMapFiles();
 	void DebugPrintMapFiles();
@@ -107,5 +107,3 @@ private:
 };
 
 } // namespace MapPlugin
-
-#endif /* MAPPLUGIN_H_ */

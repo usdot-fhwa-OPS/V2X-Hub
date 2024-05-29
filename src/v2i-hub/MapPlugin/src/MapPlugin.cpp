@@ -1,7 +1,4 @@
 #include "MapPlugin.h"
-#include <chrono>
-#include <fstream>
-#include <boost/algorithm/string.hpp>
 
 namespace MapPlugin {
 
