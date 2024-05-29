@@ -27,6 +27,7 @@ namespace RSUHealthMonitor
         for (auto rsuConfig : _rsuConfigListPtr->getConfigs())
         {
             auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
+            rsuStatusJson[RSUIdentifierKey] = rsuConfig.RSUIdentifier;
             BroadcastRSUStatus(rsuStatusJson, rsuConfig.mibVersion);
         }
     }

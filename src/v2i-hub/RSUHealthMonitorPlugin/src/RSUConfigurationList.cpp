@@ -83,6 +83,26 @@ namespace RSUHealthMonitor
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU MIB version [" + std::string(RSUMIBVersionKey) + "] is required.";
                 throw RSUConfigurationException(errMsg);
             }
+
+            if (rsuArray[i].isMember(RSUIdentifierKey))
+            {
+                config.RSUIdentifier = rsuArray[i][RSUIdentifierKey].asString()
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU Identifier [" + std::string(RSUIdentifierKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
+
+            if (rsuArray[i].isMember(SecurityLevelKey))
+            {
+                config.securityLevel = rsuArray[i][SecurityLevelKey].asString()
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU Security Level [" + std::string(SecurityLevelKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
             tempConfigs.push_back(config);
         }
         // Only update RSU configurations when all configs are processed correctly.
@@ -122,7 +142,7 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
     {
-        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
+        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion ", " << RSUIdentifierKey << ": " << config.RSUIdentifier;
         return os;
     }
 }
