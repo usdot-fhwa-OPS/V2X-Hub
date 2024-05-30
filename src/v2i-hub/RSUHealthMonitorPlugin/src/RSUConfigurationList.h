@@ -17,7 +17,6 @@ namespace RSUHealthMonitor
     static constexpr const char *SecurityLevelKey = "SecurityLevel";
     static constexpr const char *RSU4_1_str = "RSU4.1";
     static constexpr const char *RSU1218_str = "RSU1218";
-    static constexpr const char *RSUIdentifierKey = "RSUIdentifier";
 
     enum class RSUMibVersion
     {
@@ -34,7 +33,6 @@ namespace RSUHealthMonitor
         std::string authPassPhrase;
         std::string securityLevel;
         RSUMibVersion mibVersion;
-        std::string RSUIdentifier;
         friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);
     };
 
