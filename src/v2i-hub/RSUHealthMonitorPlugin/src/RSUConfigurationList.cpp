@@ -86,7 +86,7 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(RSUIdentifierKey))
             {
-                config.RSUIdentifier = rsuArray[i][RSUIdentifierKey].asString()
+                config.RSUIdentifier = rsuArray[i][RSUIdentifierKey].asString();
             }
             else
             {
@@ -96,7 +96,7 @@ namespace RSUHealthMonitor
 
             if (rsuArray[i].isMember(SecurityLevelKey))
             {
-                config.securityLevel = rsuArray[i][SecurityLevelKey].asString()
+                config.securityLevel = rsuArray[i][SecurityLevelKey].asString();
             }
             else
             {
