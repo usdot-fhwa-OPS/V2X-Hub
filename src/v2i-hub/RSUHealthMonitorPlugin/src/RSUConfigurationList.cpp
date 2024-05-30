@@ -142,7 +142,7 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
     {
-        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion ", " << RSUIdentifierKey << ": " << config.RSUIdentifier;
+        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion << ", " << RSUIdentifierKey << ": " << config.RSUIdentifier;
         return os;
     }
 }
