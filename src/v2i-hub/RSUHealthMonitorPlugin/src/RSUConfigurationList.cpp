@@ -83,6 +83,16 @@ namespace RSUHealthMonitor
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU MIB version [" + std::string(RSUMIBVersionKey) + "] is required.";
                 throw RSUConfigurationException(errMsg);
             }
+
+            if (rsuArray[i].isMember(SecurityLevelKey))
+            {
+                config.securityLevel = rsuArray[i][SecurityLevelKey].asString();
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU Security Level [" + std::string(SecurityLevelKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
             tempConfigs.push_back(config);
         }
         // Only update RSU configurations when all configs are processed correctly.

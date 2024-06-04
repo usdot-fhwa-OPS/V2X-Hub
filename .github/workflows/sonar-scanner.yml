@@ -3,6 +3,7 @@ on:
     branches:
       - develop
       - master
+      - "release/*"
   pull_request:
     types: [opened, synchronize, reopened]
 name: Sonar Workflow
@@ -13,6 +14,9 @@ jobs:
       image: ubuntu:jammy-20230126
     steps:
       - name: Install curl, zip, git, gcovr
+        # Installing gcovr for unit test code coverage
+        # Installing git for checkout action
+        # installing curl/zip for sonar-cpp action
         run: |
           apt update
           export DEBIAN_FRONTEND=noninteractive
