@@ -29,7 +29,7 @@ services:
       - mysql_password
 
   db:
-    image: mysql:5.7
+    image: mysql:8.0
     container_name: mysql
     restart: always
     environment:
@@ -42,7 +42,7 @@ services:
       - mysql_password
       - mysql_root_password
     volumes:
-      - ../configuration/amd64/mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+      - ../configuration/mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       # include creation of a user (user/user) to be able to log in
       - ./mysql_add_dev_user.sql:/docker-entrypoint-initdb.d/mysql_add_dev_user.sql
       - mysql-datavolume:/var/lib/mysql
