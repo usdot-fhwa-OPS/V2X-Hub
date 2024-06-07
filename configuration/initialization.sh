@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Default values for the variables
-PORT_DRAYAGE_ENABLED_DEFAULT="TRUE"
+PORT_DRAYAGE_ENABLED_DEFAULT="FALSE"
 INFRASTRUCTURE_ID_DEFAULT="rsu_1234"
 INFRASTRUCTURE_NAME_DEFAULT="East Intersection"
 V2XHUB_IP_DEFAULT="127.0.0.1"
@@ -62,8 +62,11 @@ if [[ $SIMULATION_MODE == "TRUE" ]]; then
     SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-$SENSOR_JSON_FILE_PATH_DEFAULT}
 fi
 
-# Write to .env file
-cat <<EOF > .env
+echo "WARNING: This will overwrite the existing .env file if it exists."
+read -r -p "Are you sure you want to continue? (Y/N): " overwrite_confirm
+if [[ "$overwrite_confirm" =~ [yY](es)* ]]; then
+    # Write to .env file
+    cat <<EOF > .env
 V2XHUB_VERSION=$V2XHUB_VERSION
 INFRASTRUCTURE_ID=$INFRASTRUCTURE_ID
 INFRASTRUCTURE_NAME=$INFRASTRUCTURE_NAME
@@ -71,10 +74,13 @@ V2XHUB_IP=$V2XHUB_IP
 SIMULATION_MODE=$SIMULATION_MODE
 EOF
 
-# Adding Simulation IP and Sensor Path if Simulation Mode is TRUE
-if [[ $SIMULATION_MODE == "TRUE" ]]; then
-    echo "SIMULATION_IP=$SIMULATION_IP" >> .env
-    echo "SENSOR_JSON_FILE_PATH=$SENSOR_JSON_FILE_PATH" >> .env
+    # Adding Simulation IP and Sensor Path if Simulation Mode is TRUE
+    if [[ $SIMULATION_MODE == "TRUE" ]]; then
+        echo "SIMULATION_IP=$SIMULATION_IP" >> .env
+        echo "SENSOR_JSON_FILE_PATH=$SENSOR_JSON_FILE_PATH" >> .env
+    fi
+else
+    echo "Aborting. No changes were made to the .env file."
 fi
 
 directory=$(pwd)
@@ -87,7 +93,7 @@ sudo apt update -y && sudo apt upgrade -y
 sudo apt-get install chromium-browser -y
 
 # Make passwords for mysql
-mkdir -p secrets && cd secrets || return
+mkdir -p secrets && cd secrets || return # return in case cd fails
 
 # Creates password files where user inputs password
 FILE1=mysql_root_password.txt
@@ -111,7 +117,7 @@ else
 fi
 
 # AMD64 initialization
-cd "$directory" || return
+cd "$directory" || return # return in case cd fails
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
 # Add Docker's official GPG key:
 sudo apt-get update
@@ -139,7 +145,7 @@ else
 fi
 
 # Create V2X Hub user
-cd "$mysqlDir" || return
+cd "$mysqlDir" || return # return in case cd fails
 ./add_v2xhub_user.bash
 
 chromium-browser "http://127.0.0.1" > /dev/null 2>&1 &
