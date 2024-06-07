@@ -93,7 +93,7 @@ sudo apt update -y && sudo apt upgrade -y
 sudo apt-get install chromium-browser -y
 
 # Make passwords for mysql
-mkdir -p secrets && cd secrets || return # return in case cd fails
+mkdir -p secrets && cd secrets || return # SC2164 - Use return in case cd fails 
 
 # Creates password files where user inputs password
 FILE1=mysql_root_password.txt
@@ -101,7 +101,7 @@ FILE2=mysql_password.txt
 if test -f "$FILE1"; then
     echo "$FILE1 exists."
 else
-    read -r -p "enter password for the mysql_root_password: " sql_root_pass
+    read -r -p "enter password for the mysql_root_password: " sql_root_pass # SC2162 - read without -r will mangle backslashes 
     echo "$sql_root_pass" > sql_root_pass.txt
     # Remove endline characters from password files
     tr -d '\n' <sql_root_pass.txt> mysql_root_password.txt && rm sql_root_pass.txt
