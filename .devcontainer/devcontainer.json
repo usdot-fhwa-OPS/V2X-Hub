@@ -3,7 +3,7 @@
 {
 	// Docker Compose syntax from https://github.com/devcontainers/templates/blob/main/src/docker-existing-docker-compose/.devcontainer/devcontainer.json
 	// and https://github.com/microsoft/vscode-dev-containers/blob/main/container-templates/docker-compose/.devcontainer/devcontainer.json
-	"name": "V2XHUB Docker Compose Dev",
+	"name": "V2X Hub Docker Compose Dev",
 
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	"dockerComposeFile": "docker-compose-vscode.yml",

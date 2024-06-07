@@ -670,46 +670,46 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	rsmStartDateTime->second = second;
 	eventInfo->startDateTime = *rsmStartDateTime;
 
-	// End Date time
-	auto rsmEndDateTime = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
-	auto endYear = (DYear_t*) calloc(1, sizeof(DYear_t));
-	auto endMonth = (DMonth_t*) calloc(1, sizeof(DMonth_t));
-	auto endDay = (DDay_t*) calloc(1, sizeof(DDay_t));
-	auto endHour = (DHour_t*) calloc(1, sizeof(DHour_t));
-	auto endMinute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
-	auto endSecond = (DSecond_t*) calloc(1, sizeof(DSecond_t));
-	*endYear = 2024;
-	*endMonth = 5;
-	*endDay = 17;
-	*endHour = 12;
-	*endMinute = 0;
-	*endSecond = 0;
-	rsmEndDateTime->year = endYear;
-	rsmEndDateTime->month = endMonth;
-	rsmEndDateTime->day = endDay;
-	rsmEndDateTime->hour = endHour;
-	rsmEndDateTime->minute = endMinute;
-	rsmEndDateTime->second = endSecond;
-	eventInfo->endDateTime = rsmEndDateTime;
+	// // End Date time
+	// auto rsmEndDateTime = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
+	// auto endYear = (DYear_t*) calloc(1, sizeof(DYear_t));
+	// auto endMonth = (DMonth_t*) calloc(1, sizeof(DMonth_t));
+	// auto endDay = (DDay_t*) calloc(1, sizeof(DDay_t));
+	// auto endHour = (DHour_t*) calloc(1, sizeof(DHour_t));
+	// auto endMinute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
+	// auto endSecond = (DSecond_t*) calloc(1, sizeof(DSecond_t));
+	// *endYear = 2024;
+	// *endMonth = 5;
+	// *endDay = 17;
+	// *endHour = 12;
+	// *endMinute = 0;
+	// *endSecond = 0;
+	// rsmEndDateTime->year = endYear;
+	// rsmEndDateTime->month = endMonth;
+	// rsmEndDateTime->day = endDay;
+	// rsmEndDateTime->hour = endHour;
+	// rsmEndDateTime->minute = endMinute;
+	// rsmEndDateTime->second = endSecond;
+	// eventInfo->endDateTime = rsmEndDateTime;
 
-	// Event recurrence list
-	auto rsmEventRecurrence = (EventInfo::EventInfo__eventRecurrence*) calloc(1, sizeof(EventInfo::EventInfo__eventRecurrence));
-	auto eventRecCnt = (EventRecurrence_t*) calloc(1, sizeof(EventRecurrence_t));
-	eventRecCnt->monday = 1;
-	eventRecCnt->tuesday = 1;
-	eventRecCnt->wednesday = 1;
-	eventRecCnt->thursday = 1;
-	eventRecCnt->friday = 1;
-	eventRecCnt->saturday = 1;
-	eventRecCnt->sunday = 1;
-	asn_sequence_add(&rsmEventRecurrence->list.array, eventRecCnt);
-	eventInfo->eventRecurrence = rsmEventRecurrence;
+	// // Event recurrence list
+	// auto rsmEventRecurrence = (EventInfo::EventInfo__eventRecurrence*) calloc(1, sizeof(EventInfo::EventInfo__eventRecurrence));
+	// auto eventRecCnt = (EventRecurrence_t*) calloc(1, sizeof(EventRecurrence_t));
+	// eventRecCnt->monday = 1;
+	// eventRecCnt->tuesday = 1;
+	// eventRecCnt->wednesday = 1;
+	// eventRecCnt->thursday = 1;
+	// eventRecCnt->friday = 1;
+	// eventRecCnt->saturday = 1;
+	// eventRecCnt->sunday = 1;
+	// asn_sequence_add(&rsmEventRecurrence->list.array, eventRecCnt);
+	// eventInfo->eventRecurrence = rsmEventRecurrence;
 
 	// ITIS cause codes
-	eventInfo->causeCode = 27;
-	auto subCode = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
-	*subCode = 8026;
-	eventInfo->subCauseCode = subCode;
+	eventInfo->causeCode = 2;
+	// auto subCode = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
+	// *subCode = 8026;
+	// eventInfo->subCauseCode = subCode;
 
 	// ITIS affected vehicle code list
 	auto rsmAffectedVehicles = (EventInfo::EventInfo__affectedVehicles*) calloc(1, sizeof(EventInfo::EventInfo__affectedVehicles));
@@ -773,9 +773,79 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	commonContainer->regionInfo = *regionInfo;
 	message->commonContainer = *commonContainer;
 
+	/// Begin Container Content
+	auto content = (RoadSafetyMessage::RoadSafetyMessage__content*) calloc(1, sizeof(RoadSafetyMessage::RoadSafetyMessage__content));
+	auto contentCnt = (ContentContainer_t*) calloc(1, sizeof(ContentContainer_t));
+
+	// // Reduced Speed Zone Content
+	// contentCnt->present = ContentContainer_PR_rszContainer;
+
+	// auto reducedSpeedCnt = (ReducedSpeedZoneContainer_t*) calloc(1, sizeof(ReducedSpeedZoneContainer_t));
+	// reducedSpeedCnt->speedLimit.type = 3;
+	// reducedSpeedCnt->speedLimit.speed = 20;
+
+	// auto rszReg = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	// auto refPointRsz = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	// refPointRsz->lat = 423010836;
+	// refPointRsz->Long = -836990707;
+	// auto elevRsz = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	// *elevRsz = 2380;
+	// refPointRsz->elevation = elevRsz;
+	// rszReg->referencePoint = *refPointRsz;
+	// auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
+	// *refPointType = 0;
+	// rszReg->referencePointType = refPointType;
+
+	// auto rszApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	// rszApproachReg->present = AreaType_PR_paths;
+	// auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
+	// auto rszPath = (Path_t*) calloc(1, sizeof(Path_t));
+	// rszPath->pathWidth = 26;
+	// auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode1->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode1->choice.node_3Doffset.lat_offset = 14;
+	// pathNode1->choice.node_3Doffset.long_offset = 23;
+	// auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode2->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	// pathNode2->choice.node_3Doffset.long_offset = 50;
+	// auto pathNode3 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode3->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode3->choice.node_3Doffset.lat_offset = 1945;
+	// pathNode3->choice.node_3Doffset.long_offset = 131;
+	// auto node3elevOff = (ElevOffset_t*) calloc(1, sizeof(ElevOffset_t));
+	// *node3elevOff = 10;
+	// pathNode3->choice.node_3Doffset.elev_offset = node3elevOff;
+	// auto pathNode4 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode4->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode4->choice.node_3Doffset.lat_offset = 2645;
+	// pathNode4->choice.node_3Doffset.long_offset = 483;
+	// auto pathNode5 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode5->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode5->choice.node_3Doffset.lat_offset = 3095;
+	// pathNode5->choice.node_3Doffset.long_offset = 956;
+	// auto pathNode6 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode6->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode6->choice.node_3Doffset.lat_offset = 3475;
+	// pathNode6->choice.node_3Doffset.long_offset = 1538;
+	// auto pathNode7 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode7->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode7->choice.node_3Doffset.lat_offset = 3685;
+	// pathNode7->choice.node_3Doffset.long_offset = 2024;
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode1);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode2);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode3);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode4);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode5);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode6);
+	// asn_sequence_add(&rszPath->pathPoints.list.array, pathNode7);
+	// asn_sequence_add(&pathList->list.array, rszPath);
+	// rszApproachReg->choice.paths = *pathList;
+	// rszReg->approachRegion = rszApproachReg;
+	// reducedSpeedCnt->rszRegion = *rszReg;
+
+
 	// // Dynamic Content
-	// auto content = (RoadSafetyMessage::RoadSafetyMessage__content*) calloc(1, sizeof(RoadSafetyMessage::RoadSafetyMessage__content));
-	// auto contentCnt = (ContentContainer_t*) calloc(1, sizeof(ContentContainer_t));
 	// contentCnt->present = ContentContainer_PR_dynamicInfoContainer;
 
 	// auto dynamicInfoContainer = (DynamicInfoContainer_t*) calloc(1, sizeof(DynamicInfoContainer_t));
@@ -794,30 +864,151 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// *appElev = 390;
 	// dynamicInfoContainer->applicableRegion.referencePoint.elevation = appElev;
 
-	// Curve Content
-	auto content = (RoadSafetyMessage::RoadSafetyMessage__content*) calloc(1, sizeof(RoadSafetyMessage::RoadSafetyMessage__content));
-	auto contentCnt = (ContentContainer_t*) calloc(1, sizeof(ContentContainer_t));
-	contentCnt->present = ContentContainer_PR_curveContainer;
+	// // Curve Content
+	// contentCnt->present = ContentContainer_PR_curveContainer;
 
-	auto curveContainer = (CurveContainer_t*) calloc(1, sizeof(CurveContainer_t));
-	curveContainer->advisorySpeed = 112;
-	auto curveRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
-	auto refPointCurve = (Position3D_t*) calloc(1, sizeof(Position3D_t));
-	refPointCurve->lat = 423010836;
-	refPointCurve->Long = -836990707;
-	auto elevCurve = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
-	*elevCurve = 2380;
-	refPointCurve->elevation = elevCurve;
-	curveRegion->referencePoint = *refPointCurve;
+	// auto curveContainer = (CurveContainer_t*) calloc(1, sizeof(CurveContainer_t));
+	// curveContainer->advisorySpeed = 112;
+	// auto curveRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	// auto refPointCurve = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	// refPointCurve->lat = 423010836;
+	// refPointCurve->Long = -836990707;
+	// auto elevCurve = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	// *elevCurve = 2380;
+	// refPointCurve->elevation = elevCurve;
+	// curveRegion->referencePoint = *refPointCurve;
+	// auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
+	// *refPointType = 0;
+	// curveRegion->referencePointType = refPointType;
+
+	// auto curveApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	// curveApproachReg->present = AreaType_PR_paths;
+	// auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
+	// auto curvePath = (Path_t*) calloc(1, sizeof(Path_t));
+	// curvePath->pathWidth = 26;
+	// auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode1->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode1->choice.node_3Doffset.lat_offset = 14;
+	// pathNode1->choice.node_3Doffset.long_offset = 23;
+	// auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode2->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	// pathNode2->choice.node_3Doffset.long_offset = 50;
+	// auto pathNode3 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode3->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode3->choice.node_3Doffset.lat_offset = 1945;
+	// pathNode3->choice.node_3Doffset.long_offset = 131;
+	// auto node3elevOff = (ElevOffset_t*) calloc(1, sizeof(ElevOffset_t));
+	// *node3elevOff = 10;
+	// pathNode3->choice.node_3Doffset.elev_offset = node3elevOff;
+	// auto pathNode4 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode4->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode4->choice.node_3Doffset.lat_offset = 2645;
+	// pathNode4->choice.node_3Doffset.long_offset = 483;
+	// auto pathNode5 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode5->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode5->choice.node_3Doffset.lat_offset = 3095;
+	// pathNode5->choice.node_3Doffset.long_offset = 956;
+	// auto pathNode6 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode6->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode6->choice.node_3Doffset.lat_offset = 3475;
+	// pathNode6->choice.node_3Doffset.long_offset = 1538;
+	// auto pathNode7 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode7->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode7->choice.node_3Doffset.lat_offset = 3685;
+	// pathNode7->choice.node_3Doffset.long_offset = 2024;
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode1);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode2);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode3);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode4);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode5);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode6);
+	// asn_sequence_add(&curvePath->pathPoints.list.array, pathNode7);
+	// asn_sequence_add(&pathList->list.array, curvePath);
+	// curveApproachReg->choice.paths = *pathList;
+	// curveRegion->approachRegion = curveApproachReg;
+	// curveContainer->curveRegion = curveRegion;
+
+
+	// // Incidents Content
+	// contentCnt->present = ContentContainer_PR_incidentsContainer;
+
+	// auto incidentsCnt = (IncidentsContainer_t*) calloc(1, sizeof(IncidentsContainer_t));
+	// auto responderType = (IncidentsContainer_t::IncidentsContainer__responderType*) calloc(1, sizeof(IncidentsContainer_t::IncidentsContainer__responderType));
+	// auto resp1 = (ITIS_ResponderGroupAffected_t*) calloc(1, sizeof(ITIS_ResponderGroupAffected_t));
+	// *resp1 = 9733;
+	// auto resp2 = (ITIS_ResponderGroupAffected_t*) calloc(1, sizeof(ITIS_ResponderGroupAffected_t));
+	// *resp2 = 9734;
+	// asn_sequence_add(&responderType->list.array, resp1);
+	// asn_sequence_add(&responderType->list.array, resp2);
+	// incidentsCnt->responderType = responderType;
+
+	// auto incRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	// auto refPointInc = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	// refPointInc->lat = 423010836;
+	// refPointInc->Long = -836990707;
+	// auto elevInc = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	// *elevInc = 2380;
+	// refPointInc->elevation = elevInc;
+	// incRegion->referencePoint = *refPointInc;
+	// auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
+	// *refPointType = 0;
+	// incRegion->referencePointType = refPointType;
+
+	// auto incApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	// incApproachReg->present = AreaType_PR_paths;
+	// auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
+	// auto incPath = (Path_t*) calloc(1, sizeof(Path_t));
+	// incPath->pathWidth = 26;
+	// auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode1->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode1->choice.node_3Doffset.lat_offset = 14;
+	// pathNode1->choice.node_3Doffset.long_offset = 23;
+	// auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode2->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	// pathNode2->choice.node_3Doffset.long_offset = 50;
+	// asn_sequence_add(&incPath->pathPoints.list.array, pathNode1);
+	// asn_sequence_add(&incPath->pathPoints.list.array, pathNode2);
+	// asn_sequence_add(&pathList->list.array, incPath);
+	// incApproachReg->choice.paths = *pathList;
+	// incRegion->approachRegion = incApproachReg;
+	// incidentsCnt->incidentLocation = *incRegion;
+
+
+	// Situational Content
+	contentCnt->present = ContentContainer_PR_situationalContainer;
+
+	auto situationalCnt = (SituationalContainer_t*) calloc(1, sizeof(SituationalContainer_t));
+	auto obstr = (Obstructions_t*) calloc(1, sizeof(Obstructions_t));
+	obstr->location.lat = 423010836;
+	obstr->location.Long = -836990707;
+	auto obstrElev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	*obstrElev = 2380;
+	obstr->location.elevation = obstrElev;
+	auto desc = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
+	*desc = 532;
+	obstr->description = desc;
+	situationalCnt->obstructions = obstr;
+
+	auto obstrRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	auto refPointobstr = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	refPointobstr->lat = 423010836;
+	refPointobstr->Long = -836990707;
+	auto elevobstr = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	*elevobstr = 2380;
+	refPointobstr->elevation = elevobstr;
+	obstrRegion->referencePoint = *refPointobstr;
+	obstrRegion->referencePoint = *refPointobstr;
 	auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
 	*refPointType = 0;
-	curveRegion->referencePointType = refPointType;
+	obstrRegion->referencePointType = refPointType;
 
-	auto curveApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
-	curveApproachReg->present = AreaType_PR_paths;
+	auto obstrApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	obstrApproachReg->present = AreaType_PR_paths;
 	auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
-	auto curvePath = (Path_t*) calloc(1, sizeof(Path_t));
-	curvePath->pathWidth = 26;
+	auto obstrPath = (Path_t*) calloc(1, sizeof(Path_t));
+	obstrPath->pathWidth = 26;
 	auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
 	pathNode1->present = NodePointLLE_PR_node_3Doffset;
 	pathNode1->choice.node_3Doffset.lat_offset = 14;
@@ -826,43 +1017,19 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	pathNode2->present = NodePointLLE_PR_node_3Doffset;
 	pathNode2->choice.node_3Doffset.lat_offset = 1324;
 	pathNode2->choice.node_3Doffset.long_offset = 50;
-	auto pathNode3 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode3->present = NodePointLLE_PR_node_3Doffset;
-	pathNode3->choice.node_3Doffset.lat_offset = 1945;
-	pathNode3->choice.node_3Doffset.long_offset = 131;
-	auto node3elevOff = (ElevOffset_t*) calloc(1, sizeof(ElevOffset_t));
-	*node3elevOff = 10;
-	pathNode3->choice.node_3Doffset.elev_offset = node3elevOff;
-	auto pathNode4 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode4->present = NodePointLLE_PR_node_3Doffset;
-	pathNode4->choice.node_3Doffset.lat_offset = 2645;
-	pathNode4->choice.node_3Doffset.long_offset = 483;
-	auto pathNode5 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode5->present = NodePointLLE_PR_node_3Doffset;
-	pathNode5->choice.node_3Doffset.lat_offset = 3095;
-	pathNode5->choice.node_3Doffset.long_offset = 956;
-	auto pathNode6 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode6->present = NodePointLLE_PR_node_3Doffset;
-	pathNode6->choice.node_3Doffset.lat_offset = 3475;
-	pathNode6->choice.node_3Doffset.long_offset = 1538;
-	auto pathNode7 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode7->present = NodePointLLE_PR_node_3Doffset;
-	pathNode7->choice.node_3Doffset.lat_offset = 3685;
-	pathNode7->choice.node_3Doffset.long_offset = 2024;
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode1);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode2);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode3);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode4);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode5);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode6);
-	asn_sequence_add(&curvePath->pathPoints.list.array, pathNode7);
-	asn_sequence_add(&pathList->list.array, curvePath);
-	curveApproachReg->choice.paths = *pathList;
-	curveRegion->approachRegion = curveApproachReg;
-	curveContainer->curveRegion = curveRegion;
+	asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode1);
+	asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode2);
+	asn_sequence_add(&pathList->list.array, obstrPath);
+	obstrApproachReg->choice.paths = *pathList;
+	obstrRegion->approachRegion = obstrApproachReg;
+	situationalCnt->applicableRegion = *obstrRegion;
 
+
+	// contentCnt->choice.rszContainer = *reducedSpeedCnt;
 	// contentCnt->choice.dynamicInfoContainer = *dynamicInfoContainer;
-	contentCnt->choice.curveContainer = *curveContainer;
+	// contentCnt->choice.curveContainer = *curveContainer;
+	// contentCnt->choice.incidentsContainer = *incidentsCnt;
+	contentCnt->choice.situationalContainer = *situationalCnt;
 	asn_sequence_add(&content->list.array, contentCnt);
 	message->content = *content;
 
