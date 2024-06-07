@@ -31,7 +31,7 @@ namespace RSUHealthMonitor
         uint16_t snmpPort;
         std::string user;
         std::string authPassPhrase;
-        std::string securityLevel = "authPriv";
+        std::string securityLevel;
         RSUMibVersion mibVersion;
         friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);
     };
