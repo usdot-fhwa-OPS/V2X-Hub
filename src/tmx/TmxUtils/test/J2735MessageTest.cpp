@@ -845,6 +845,50 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// reducedSpeedCnt->rszRegion = *rszReg;
 
 
+	// Lane Closure Content
+	contentCnt->present = ContentContainer_PR_laneClosureContainer;
+
+	auto laneClosureCnt = (LaneClosureContainer_t*) calloc(1, sizeof(LaneClosureContainer_t));
+	auto lnStatus = (LaneClosureContainer::LaneClosureContainer__laneStatus*) calloc(1, sizeof(LaneClosureContainer::LaneClosureContainer__laneStatus));
+	auto laneInfo1 = (LaneInfo_t*) calloc(1, sizeof(LaneInfo_t));
+	laneInfo1->lanePosition = 1;
+	laneInfo1->laneClosed = true;
+	asn_sequence_add(&lnStatus->list.array, laneInfo1);
+	laneClosureCnt->laneStatus = lnStatus;
+
+	auto closureReg = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	auto refPointClosure = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	refPointClosure->lat = 423010836;
+	refPointClosure->Long = -836990707;
+	auto elevClosure = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	*elevClosure = 2380;
+	refPointClosure->elevation = elevClosure;
+	closureReg->referencePoint = *refPointClosure;
+	auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
+	*refPointType = 0;
+	closureReg->referencePointType = refPointType;
+
+	auto closureApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	closureApproachReg->present = AreaType_PR_paths;
+	auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
+	auto closurePath = (Path_t*) calloc(1, sizeof(Path_t));
+	closurePath->pathWidth = 26;
+	auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	pathNode1->present = NodePointLLE_PR_node_3Doffset;
+	pathNode1->choice.node_3Doffset.lat_offset = 14;
+	pathNode1->choice.node_3Doffset.long_offset = 23;
+	auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	pathNode2->present = NodePointLLE_PR_node_3Doffset;
+	pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	pathNode2->choice.node_3Doffset.long_offset = 50;
+	asn_sequence_add(&closurePath->pathPoints.list.array, pathNode1);
+	asn_sequence_add(&closurePath->pathPoints.list.array, pathNode2);
+	asn_sequence_add(&pathList->list.array, closurePath);
+	closureApproachReg->choice.paths = *pathList;
+	closureReg->approachRegion = closureApproachReg;
+	laneClosureCnt->closureRegion = *closureReg;
+
+
 	// // Dynamic Content
 	// contentCnt->present = ContentContainer_PR_dynamicInfoContainer;
 
@@ -976,60 +1020,61 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// incidentsCnt->incidentLocation = *incRegion;
 
 
-	// Situational Content
-	contentCnt->present = ContentContainer_PR_situationalContainer;
+	// // Situational Content
+	// contentCnt->present = ContentContainer_PR_situationalContainer;
 
-	auto situationalCnt = (SituationalContainer_t*) calloc(1, sizeof(SituationalContainer_t));
-	auto obstr = (Obstructions_t*) calloc(1, sizeof(Obstructions_t));
-	obstr->location.lat = 423010836;
-	obstr->location.Long = -836990707;
-	auto obstrElev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
-	*obstrElev = 2380;
-	obstr->location.elevation = obstrElev;
-	auto desc = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
-	*desc = 532;
-	obstr->description = desc;
-	situationalCnt->obstructions = obstr;
+	// auto situationalCnt = (SituationalContainer_t*) calloc(1, sizeof(SituationalContainer_t));
+	// auto obstr = (Obstructions_t*) calloc(1, sizeof(Obstructions_t));
+	// obstr->location.lat = 423010836;
+	// obstr->location.Long = -836990707;
+	// auto obstrElev = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	// *obstrElev = 2380;
+	// obstr->location.elevation = obstrElev;
+	// auto desc = (ITIS_ITIScodes_t*) calloc(1, sizeof(ITIS_ITIScodes_t));
+	// *desc = 532;
+	// obstr->description = desc;
+	// situationalCnt->obstructions = obstr;
 
-	auto obstrRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
-	auto refPointobstr = (Position3D_t*) calloc(1, sizeof(Position3D_t));
-	refPointobstr->lat = 423010836;
-	refPointobstr->Long = -836990707;
-	auto elevobstr = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
-	*elevobstr = 2380;
-	refPointobstr->elevation = elevobstr;
-	obstrRegion->referencePoint = *refPointobstr;
-	obstrRegion->referencePoint = *refPointobstr;
-	auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
-	*refPointType = 0;
-	obstrRegion->referencePointType = refPointType;
+	// auto obstrRegion = (RegionInfo_t*) calloc(1, sizeof(RegionInfo_t));
+	// auto refPointobstr = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+	// refPointobstr->lat = 423010836;
+	// refPointobstr->Long = -836990707;
+	// auto elevobstr = (Common_Elevation_t*) calloc(1, sizeof(Common_Elevation_t));
+	// *elevobstr = 2380;
+	// refPointobstr->elevation = elevobstr;
+	// obstrRegion->referencePoint = *refPointobstr;
+	// obstrRegion->referencePoint = *refPointobstr;
+	// auto refPointType = (ReferencePointType_t*) calloc(1, sizeof(ReferencePointType_t));
+	// *refPointType = 0;
+	// obstrRegion->referencePointType = refPointType;
 
-	auto obstrApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
-	obstrApproachReg->present = AreaType_PR_paths;
-	auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
-	auto obstrPath = (Path_t*) calloc(1, sizeof(Path_t));
-	obstrPath->pathWidth = 26;
-	auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode1->present = NodePointLLE_PR_node_3Doffset;
-	pathNode1->choice.node_3Doffset.lat_offset = 14;
-	pathNode1->choice.node_3Doffset.long_offset = 23;
-	auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
-	pathNode2->present = NodePointLLE_PR_node_3Doffset;
-	pathNode2->choice.node_3Doffset.lat_offset = 1324;
-	pathNode2->choice.node_3Doffset.long_offset = 50;
-	asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode1);
-	asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode2);
-	asn_sequence_add(&pathList->list.array, obstrPath);
-	obstrApproachReg->choice.paths = *pathList;
-	obstrRegion->approachRegion = obstrApproachReg;
-	situationalCnt->applicableRegion = *obstrRegion;
+	// auto obstrApproachReg = (AreaType_t*) calloc(1, sizeof(AreaType_t));
+	// obstrApproachReg->present = AreaType_PR_paths;
+	// auto pathList = (PathList_t*) calloc(1, sizeof(PathList_t));
+	// auto obstrPath = (Path_t*) calloc(1, sizeof(Path_t));
+	// obstrPath->pathWidth = 26;
+	// auto pathNode1 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode1->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode1->choice.node_3Doffset.lat_offset = 14;
+	// pathNode1->choice.node_3Doffset.long_offset = 23;
+	// auto pathNode2 = (NodePointLLE_t*) calloc(1, sizeof(NodePointLLE_t));
+	// pathNode2->present = NodePointLLE_PR_node_3Doffset;
+	// pathNode2->choice.node_3Doffset.lat_offset = 1324;
+	// pathNode2->choice.node_3Doffset.long_offset = 50;
+	// asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode1);
+	// asn_sequence_add(&obstrPath->pathPoints.list.array, pathNode2);
+	// asn_sequence_add(&pathList->list.array, obstrPath);
+	// obstrApproachReg->choice.paths = *pathList;
+	// obstrRegion->approachRegion = obstrApproachReg;
+	// situationalCnt->applicableRegion = *obstrRegion;
 
 
 	// contentCnt->choice.rszContainer = *reducedSpeedCnt;
+	contentCnt->choice.laneClosureContainer = *laneClosureCnt;
 	// contentCnt->choice.dynamicInfoContainer = *dynamicInfoContainer;
 	// contentCnt->choice.curveContainer = *curveContainer;
 	// contentCnt->choice.incidentsContainer = *incidentsCnt;
-	contentCnt->choice.situationalContainer = *situationalCnt;
+	// contentCnt->choice.situationalContainer = *situationalCnt;
 	asn_sequence_add(&content->list.array, contentCnt);
 	message->content = *content;
 
@@ -1044,7 +1089,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	free(frame_msg.get_j2735_data().get());
 	std::cout << RsmEncodeMessage.get_payload_str() << std::endl;
 	ASSERT_EQ(33,  RsmEncodeMessage.get_msgId());	
-	std::string expectedRSMEncHex = "0021790f00802060c020218181431f9fa15ac000003f3f42c5800000001fc6c7d68000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960413812a76dc58a1cb32d860ca60800d054801d005d2296403258f33020e014929560f1a4c1787789364e30124e658fd00";
+	std::string expectedRSMEncHex = "0021570100802060c020218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
 	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
 
 	//Decode RSM
