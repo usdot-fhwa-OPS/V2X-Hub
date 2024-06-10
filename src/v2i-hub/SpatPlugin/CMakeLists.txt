@@ -16,7 +16,7 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock rdkafka++ jsoncpp
 ################################
 enable_testing()
 
-add_library(${PROJECT_NAME}_spat_lib src/NTCIP1202.cpp src/signalController.cpp src/PedestrianDetectionForSPAT.cpp)
+add_library(${PROJECT_NAME}_spat_lib src/NTCIP1202.cpp)
 target_include_directories( ${PROJECT_NAME}_spat_lib PUBLIC  
                                                     ${PROJECT_SOURCE_DIR}/src
                                                     ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS})

@@ -1,0 +1,246 @@
+/*
+ ============================================================================
+ Name        : snmpClient.cpp
+ Author      : William Gibbs
+ Version     :
+ Copyright   : Battelle
+ Description : Query Signal Controller and populate the SPaT message
+ ============================================================================
+ */
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <errno.h>
+
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
+#include <PluginLog.h>
+
+#include "signalController.h"
+
+#include "NTCIP1202.h"
+
+using namespace tmx::messages;
+using namespace tmx::utils;
+using namespace std;
+
+SignalController::~SignalController() {	
+	SNMPCloseSession();
+}
+
+void SignalController::Start(std::string signalGroupMappingJson)
+{
+	_signalGroupMappingJson = signalGroupMappingJson;
+    // launch update thread
+    auto sigcon_thread_id = boost::thread(&SignalController::start_signalController, this);
+	sigcon_thread_id.join();
+}
+
+// get sockaddr, IPv4 or IPv6:
+void *SignalController::get_in_addr(struct sockaddr *sa)
+{
+    if (sa->sa_family == AF_INET) {
+        return &(((struct sockaddr_in*)sa)->sin_addr);
+    }
+
+    return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+void SignalController::setConfigs(std::string localIp,const std::string localUdpPort, std::string tscIp, std::string tscRemoteSnmpPort, std::string intersectionName, int intersectionId)
+{
+	_localIp = localIp;
+	_localUdpPort = std::stoi(localUdpPort);
+	_intersectionId = intersectionId;
+	_intersectionName = strdup(intersectionName.c_str());
+	_tscIp = tscIp;
+	_tscRemoteSnmpPort = stoi(tscRemoteSnmpPort);
+}
+
+void SignalController::start_signalController()
+{
+
+
+	int maxDataSize = 1000;
+
+    int sockfd, numbytes;
+    char buf[maxDataSize];
+    struct addrinfo hints, *servinfo;
+    int rv;
+    struct timeval tv;
+    int on = 1;
+	int errnoVal;
+
+		//Enable SPAT
+		// 0 = disable
+		// 2 = enable SPAT
+		// 6 = enable SPAT wit pedestrian data
+		PLOG(logINFO) << "Enable SPAT Sent";
+		SNMPSet("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", 2);
+		SNMPCloseSession();
+
+		// Create UDP Socket
+	    memset(&hints, 0, sizeof hints);
+	    hints.ai_family = AF_UNSPEC;
+	    hints.ai_socktype = SOCK_DGRAM;
+	    hints.ai_protocol = IPPROTO_UDP;
+	    hints.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+
+	    EthernetIsConnected = 0;
+	    IsReceiving = 0;
+
+	    while (1) {
+			if ((rv = getaddrinfo(_localIp, _localUdpPort, &hints, &servinfo)) != 0) {
+			PLOG(logERROR) << "Getaddrinfo Failed " << _localIp << " " << _localUdpPort << ". Exiting thread!!!";
+	    		return;
+			}
+			PLOG(logDEBUG) << "Getting Socket";
+			if ((sockfd = socket(servinfo->ai_family, servinfo->ai_socktype,	servinfo->ai_protocol)) == -1) {
+			PLOG(logERROR) << "Get Socket Failed " << _localIp << " " << _localUdpPort << ". Exiting thread!!!";
+				return;
+			}
+
+			rv = setsockopt(sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
+
+			// Set the socket to time out on reads if no data comes in during the timeout value then the socket will close and
+			// then try to re-open during the normal execution
+			// Wait up to 10 seconds.
+		    tv.tv_sec = 10;
+		    tv.tv_usec = 0;
+		    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO,(struct timeval *)&tv,sizeof(struct timeval));
+
+			if (bind(sockfd,servinfo->ai_addr,servinfo->ai_addrlen)==-1) {
+			PLOG(logERROR) << "Could not bind to Socket " << _localIp << " " << _localUdpPort << ". Exiting thread!!!";
+				return;
+			}
+
+			if (servinfo == nullptr) {
+				PLOG(logERROR) << "Could not connect";
+				EthernetIsConnected = 0;
+			}
+			else {
+				PLOG(logDEBUG) << "Connected";
+				EthernetIsConnected = 1;
+			}
+
+			if (EthernetIsConnected) {
+				//printf("Signal Controller UDP Client Connected to %s:%s\n",_localIp, _localUdpPort);
+				freeaddrinfo(servinfo); // all done with this structure
+//				client_socket = sockfd;
+				// Receive Packets and process until disconnected
+				while(EthernetIsConnected) {
+					//printf("Signal Controller ethernet connected, reading data\n");
+					numbytes = recv(sockfd, buf, maxDataSize-1, 0);
+					errnoVal = errno;
+					//printf("Signal Controller read %d bytes\n", numbytes);
+					//TODO - Check the start byte for 0xcd, then check for len of 245.
+					//TODO - store in temp space if less than 245, send only from 0xcd (byte 0) to byte 245 to new processing function
+					if ((numbytes == -1) || (numbytes == 0)){
+						if (numbytes == 0 || errnoVal == EAGAIN || errnoVal == EWOULDBLOCK) {
+							PLOG(logINFO) << "Signal Controller Timed out";
+						} else {
+							PLOG(logINFO) << "Signal Controller Client closed";
+							EthernetIsConnected = 0;
+							close(sockfd);
+						}
+						IsReceiving = 0;
+					}
+					else {
+
+						IsReceiving = 1;
+						auto ntcip1202 = std::make_shared<Ntcip1202>(clock);
+						ntcip1202->setSignalGroupMappingList(_signalGroupMappingJson);
+						ntcip1202->copyBytesIntoNtcip1202(buf, numbytes);
+
+						SPAT *_spat = (SPAT *) calloc(1, sizeof(SPAT));
+						ntcip1202->ToJ2735r41SPAT(_spat, _intersectionName, _intersectionId);
+
+						pthread_mutex_unlock(&spat_message_mutex);
+						PLOG(logDEBUG) << *_spatMessage;
+					}
+				}
+			}
+			sleep(3);
+	    }
+}
+
+
+int SignalController::getIsConnected()
+{
+	return EthernetIsConnected && IsReceiving;
+}
+
+
+void SignalController::SNMPOpenSession()
+{
+	//check for valid TSC info
+	if (_tscIp == "" || _tscRemoteSnmpPort == 0)
+		return;
+	//open snmp session
+	snmp_sess_init(&_session_info);
+	string peername = _tscIp;
+	peername.append(":");
+	peername.append(to_string(_tscRemoteSnmpPort));
+	_session_info.peername = (char*)peername.c_str();
+	_session_info.version = SNMP_VERSION_1;
+	_session_info.community = (u_char*)"public";
+	_session_info.community_len = strlen("public");
+	_session = snmp_open(&_session_info);
+	if (_session)
+		_snmpSessionOpen = true;
+}
+
+void SignalController::SNMPCloseSession()
+{
+	//close session
+	if (_snmpSessionOpen)
+		snmp_close(_session);
+	_snmpSessionOpen = false;
+}
+
+bool SignalController::SNMPSet(string targetOid, int32_t value)
+{
+	return SNMPSet(targetOid, ASN_INTEGER, (const void *)&value, sizeof(value));
+}
+
+bool SignalController::SNMPSet(string targetOid, u_char type, const void *value, size_t len)
+{
+	struct snmp_pdu *pdu;
+	struct snmp_pdu *response;
+	oid anOID[MAX_OID_LEN];
+	size_t anOID_len = MAX_OID_LEN;
+	int status;
+	bool rc = true;
+
+	//check is snmp session open
+	if (!_snmpSessionOpen)
+	{
+		SNMPOpenSession();
+		if (!_snmpSessionOpen)
+			return false;
+		_snmpDestinationChanged = false;
+	}
+	//check destination change
+	if (_snmpDestinationChanged)
+	{
+		SNMPCloseSession();
+		SNMPOpenSession();
+		if (!_snmpSessionOpen)
+			return false;
+		_snmpDestinationChanged = false;
+	}
+
+	pdu = snmp_pdu_create(SNMP_MSG_SET);
+	read_objid(targetOid.c_str(), anOID, &anOID_len);
+	snmp_pdu_add_variable(pdu, anOID, anOID_len, type, value, len);
+	status = snmp_synch_response(_session, pdu, &response);
+	if (status != STAT_SUCCESS || response->errstat != SNMP_ERR_NOERROR)
+		rc = false;
+	if (response)
+		snmp_free_pdu(response);
+
+	return rc;
+}
+

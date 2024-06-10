@@ -186,23 +186,6 @@ bool Ntcip1202::isPhaseFlashing()
 
 void Ntcip1202::printDebug()
 {
-	//printf("phase %d spatVehMinTimeToChange: %02x\r\n",1, ntcip1202Data.phaseTimes[1].spatVehMinTimeToChange);
-
-	//printf("header: %02x\r\n", ntcip1202Data.header);
-	//printf("phases: %02x\r\n", ntcip1202Data.numOfPhases);
-
-	/*for(int i=0; i<16; i++)
-	{
-		printf("phase %d number: %02x\r\n",i, ntcip1202Data.phaseTimes[i].phaseNumber);
-
-		printf("phase %d spatVehMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatVehMinTimeToChange);
-		printf("phase %d spatVehMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatVehMaxTimeToChange);
-		printf("phase %d spatPedMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatPedMinTimeToChange);
-		printf("phase %d spatPedMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatPedMaxTimeToChange);
-		printf("phase %d spatOvlpMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatOvlpMinTimeToChange);
-		printf("phase %d spatOvpMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatOvpMaxTimeToChange);
-	}
-*/
 	for(int i=0; i<16; i++)
 	{
 		int phaseNum = i+1;
@@ -216,7 +199,7 @@ void Ntcip1202::printDebug()
 	}
 }
 
-bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionID_t intersectionId)
+bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, IntersectionID_t intersectionId)
 {
 	time_t epochSec = clock->nowInSeconds();
 	struct tm utctime;
@@ -242,9 +225,9 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 
 	intersection->name = (DescriptiveName_t *) calloc(1, sizeof(DescriptiveName_t));
 
-	intersection->name->size = strlen(intersectionName);
-	intersection->name->buf = (uint8_t *) calloc(1, strlen(intersectionName));
-	memcpy(intersection->name->buf, intersectionName, strlen(intersectionName));
+	intersection->name->size = strlen(intersectionName.c_str());
+	intersection->name->buf = (uint8_t *) calloc(1, strlen(intersectionName.c_str()));
+	memcpy(intersection->name->buf, intersectionName.c_str(), strlen(intersectionName.c_str()));
 	intersection->id.id = intersectionId;
 	intersection->revision = (MsgCount_t) 1;
 
@@ -373,16 +356,6 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase
-//	if(getSpatPedestrianDetect(phase))
-//	{
-//		movement->maneuverAssistList = (ManeuverAssistList *) calloc(1, sizeof(ManeuverAssistList));
-//		ConnectionManeuverAssist *pedDetect = (ConnectionManeuverAssist *) calloc(1, sizeof(ConnectionManeuverAssist));
-//		pedDetect->connectionID = 0;
-//		pedDetect->pedBicycleDetect = (PedestrianBicycleDetect_t *) calloc(1, sizeof(PedestrianBicycleDetect_t));
-//
-//		*(pedDetect->pedBicycleDetect) = 1;
-//		ASN_SEQUENCE_ADD(&movement->maneuverAssistList->list, pedDetect);
-//	}
 
 	ASN_SEQUENCE_ADD(&movement->state_time_speed.list, stateTimeSpeed);
 }

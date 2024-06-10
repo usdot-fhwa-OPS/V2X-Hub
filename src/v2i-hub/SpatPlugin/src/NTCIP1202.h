@@ -105,7 +105,7 @@ class Ntcip1202
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
-		bool ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionID_t intersectionId);
+		bool ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, IntersectionID_t intersectionId);
 
 		void printDebug();
 	private:

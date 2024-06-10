@@ -22,8 +22,8 @@ services:
       - SIM_V2X_PORT=5757
       - SIM_INTERACTION_PORT=7576
       - V2X_PORT=8686
-      - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
-      - INFRASTRUCTURE_NAME=<RSU_NAME>
+      - INFRASTRUCTURE_ID=rsu_123
+      - INFRASTRUCTURE_NAME=SOmething
       - SENSOR_JSON_FILE_PATH=/var/www/plugins/MAP/sensors.json
     secrets:
       - mysql_password
