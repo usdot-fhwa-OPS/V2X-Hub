@@ -61,6 +61,9 @@ namespace CDASimAdapter{
             }     
             message["sensors"] = sensors_json_v;
         }
+        else {
+            PLOG(logWARNING) << "No sensors where configured for this V2X-Hub instance."
+        }
         Json::StyledWriter writer;
         message_str = writer.write(message);
         return message_str;

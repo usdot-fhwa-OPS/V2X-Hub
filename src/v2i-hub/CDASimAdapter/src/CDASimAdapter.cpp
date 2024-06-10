@@ -106,24 +106,30 @@ namespace CDASimAdapter{
             // Sensor JSON file path is an optional environment variable that allows configuration of
             // simulated sensor if provided.
             std::string sensor_json_file_path = "";
-            try
-            {
-                sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH);
-            }
-            catch (const TmxException &e ) {
-                PLOG(logWARNING) << "Optional " << sim::SENSOR_JSON_FILE_PATH << " is not set. No sensors will be configured for this V2X-Hub instance in simulaton." << std::endl;
-            }
+            sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH, false);
 
             PLOG(logINFO) << "CDASim connecting " << simulation_ip <<
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if ( connection ) {
-                connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                if ( sensor_json_file_path.empty()) {
+                    connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                                                time_sync_port, simulated_interaction_port, v2x_port, location ));
+                }
+                else {
+                    connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                 time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path ));
+                }
             }
             else {
-                connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                if ( sensor_json_file_path.empty()) {
+                    connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                                                            time_sync_port, simulated_interaction_port, v2x_port, location);
+                }
+                else {
+                    connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                             time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path);
+                }
             }
         }
         catch (const TmxException &e) {
