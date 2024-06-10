@@ -6,7 +6,7 @@ using namespace tmx::utils;
 namespace CDASimAdapter{ 
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port,const uint simulated_interaction_port, const uint v2x_port, 
-                                                        const Point &location, const std::string &sensor_json_file_path) : 
+                                                        const Point &location, const std::string &sensor_json_file_path = "") : 
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _simulated_interaction_port(simulated_interaction_port),_v2x_port(v2x_port),
                                                         _location(location) ,_sensor_json_file_path(sensor_json_file_path)  {
@@ -52,12 +52,15 @@ namespace CDASimAdapter{
 
         //Read local sensor file and populate the sensors JSON
         //Sample sensors.json: https://raw.githubusercontent.com/usdot-fhwa-OPS/V2X-Hub/develop/src/v2i-hub/CDASimAdapter/test/sensors.json
-        auto sensors_json_v = read_json_file(_sensor_json_file_path);
-        if(sensors_json_v.empty())
-        {
-            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
-        }     
-        message["sensors"] = sensors_json_v;
+        // Sensor configuration is an optional part of registration message.
+        if ( !_sensor_json_file_path.empty() ) {
+            auto sensors_json_v = read_json_file(_sensor_json_file_path);
+            if(sensors_json_v.empty())
+            {
+                PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
+            }     
+            message["sensors"] = sensors_json_v;
+        }
         Json::StyledWriter writer;
         message_str = writer.write(message);
         return message_str;
