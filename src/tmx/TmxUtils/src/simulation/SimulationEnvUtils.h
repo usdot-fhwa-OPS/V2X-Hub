@@ -78,6 +78,6 @@ namespace tmx::utils::sim{
          */
         bool is_simulation_mode();
 
-        std::string get_sim_config(const char *config_name);
+        std::string get_sim_config(const char *config_name, bool required = true);
 
 }

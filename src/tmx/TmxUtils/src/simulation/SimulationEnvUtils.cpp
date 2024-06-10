@@ -13,7 +13,7 @@ namespace tmx::utils::sim{
 
     }
 
-    std::string get_sim_config(const char *config_name, bool required = true) {
+    std::string get_sim_config(const char *config_name, bool required) {
         if (is_simulation_mode() && config_name) {
             try {
                 std::string config =  std::getenv(config_name);
