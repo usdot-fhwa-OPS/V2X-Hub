@@ -112,24 +112,12 @@ namespace CDASimAdapter{
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
                     " Time Sync Port: " << std::to_string( time_sync_port) << " and V2X Port: " << std::to_string(v2x_port) << std::endl;
             if ( connection ) {
-                if ( sensor_json_file_path.empty()) {
-                    connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                time_sync_port, simulated_interaction_port, v2x_port, location ));
-                }
-                else {
-                    connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                connection.reset(new CDASimConnection( simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                 time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path ));
-                }
             }
             else {
-                if ( sensor_json_file_path.empty()) {
-                    connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
-                                                            time_sync_port, simulated_interaction_port, v2x_port, location);
-                }
-                else {
-                    connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
+                connection = std::make_unique<CDASimConnection>(simulation_ip, infrastructure_id, simulation_registration_port, sim_v2x_port, local_ip,
                                                             time_sync_port, simulated_interaction_port, v2x_port, location, sensor_json_file_path);
-                }
             }
         }
         catch (const TmxException &e) {
