@@ -44,14 +44,17 @@ Enter the login credentials you created in step 5b and login.
 Installation complete!
 
 ### Simulation Setup
+
 To support execution in a simulated environment, V2X-Hub is in the process of integrating with CDASim, a Co-Simulation tool built as an extension of Eclipse Mosiac. This extension will incorporate integration with several other platforms including CARMA-Platform and CARLA. The setup for this simply requires setting environment variables inside the V2X-Hub docker container.
- * **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
- * **KAFKA_BROKER_ADDRESS** – Environment variable for storing Kafka broker connection string (including port).
- * **TIME_SYNC_TOPIC** – Environment variable for storing Kafka time sync topic.
- * **SIMULATION_IP** – Environment variable for storing IP address of CDASim application.
- * **SIMULATION_REGISTRATION_PORT** – Environment variable for storing port on CDASim that handles registration attempts.
- * **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
- * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
- * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
- * **LOCAL_IP** – Environment variable for storing local IP of V2X Hub.
- * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub..
+
+* **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
+* **KAFKA_BROKER_ADDRESS** – Environment variable for storing Kafka broker connection string (including port).
+* **TIME_SYNC_TOPIC** – Environment variable for storing Kafka time sync topic.
+* **SIMULATION_IP** – Environment variable for storing IP address of CDASim application.
+* **SIMULATION_REGISTRATION_PORT** – Environment variable for storing port on CDASim that handles registration attempts.
+* **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
+* **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
+* **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
+* **LOCAL_IP** – Environment variable for storing local IP of V2X Hub.
+* **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
+* **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
