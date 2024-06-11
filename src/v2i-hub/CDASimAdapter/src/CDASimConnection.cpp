@@ -103,10 +103,8 @@ namespace CDASimAdapter{
             // Initialize V2X-Hub UDP Server and Client to foward V2X messages between CARMA Simulation Infrastructure 
             // Adapter and V2X-Hub.
             // TODO: Using TMX Utils get immediate forward port
-            // TODO: Replace 0 with immediate forward port
             immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 5678);
             // TODO: Using TMX Utils get message receiver port
-            // TODO: Replace 0 with message receiver port
             message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 8765);
             // Initialize UDP Server for listening for incoming CARMA-Simulation time synchronization.
             PLOG(logDEBUG) << "Creating UDPServer for Time Sync Messages: " << local_ip << ":" << std::to_string(time_sync_port) << "\n" 
