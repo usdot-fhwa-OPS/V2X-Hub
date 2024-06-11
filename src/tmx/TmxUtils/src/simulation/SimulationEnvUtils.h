@@ -77,7 +77,13 @@ namespace tmx::utils::sim{
          * @return true if SIMULATION_MODE is "true" or "TRUE" and false otherwise.
          */
         bool is_simulation_mode();
-
+        /**
+         * @brief Get simulation configuration. 
+         * @param config_name Name of configuration parameter
+         * @param required bool flag whether configuration paramter is required (Default: true)
+         * @throws tmx::TmxException if required configuration is unset or system not in simulation mode.
+         * @return string value of sim configuration
+         */
         std::string get_sim_config(const char *config_name, bool required = true);
 
 }
