@@ -15,11 +15,11 @@ namespace tmx::utils::sim{
 
     std::string get_sim_config(const char *config_name, bool required) {
         if (is_simulation_mode() && config_name) {
-            try {
+            if ( std::getenv(config_name) != nullptr) {
                 std::string config =  std::getenv(config_name);
                 return config;
             }
-            catch(const std::logic_error &e) {
+            else {
                 std::string config_name_str = config_name;
                 if ( required ) {
                     throw TmxException("Required simulation config " + config_name_str + " not set!");
