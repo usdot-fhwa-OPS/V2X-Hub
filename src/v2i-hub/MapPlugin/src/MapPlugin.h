@@ -1,5 +1,12 @@
-#pragma once
+//============================================================================
+// Name        : MapPlugin.cpp
+// Author      : FHWA Saxton Transportation Operations Laboratory
+// Version     : 7.6.0
+// Copyright   : Copyright (c) 2024 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
+// Description : MAP Plugin
+//============================================================================
 
+#pragma once
 #include <atomic>
 #include <iostream>
 #include <map>
@@ -20,6 +27,8 @@
 
 #include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
+#include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <MapData.h>
 #include <tmx/messages/IvpBattelleDsrc.h>
 #include <tmx/messages/IvpSignalControllerStatus.h>
 #include <tmx/messages/IvpJ2735.h>
@@ -38,7 +47,6 @@
 
 #include <MapSupport.h>
 
-using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -52,18 +60,18 @@ UPERframe _uperFrameMessage;
 class MapFile: public tmx::message {
 public:
 	MapFile(): tmx::message() {}
-	virtual ~MapFile() {}
+	virtual ~MapFile() = default;
 
 	std_attribute(this->msg, int, Action, -1, );
 	std_attribute(this->msg, std::string, FilePath, "", );
 	std_attribute(this->msg, std::string, InputType, "", );
 	std_attribute(this->msg, std::string, Bytes, "", );
 
-	static tmx::message_tree_type to_tree(MapFile m) {
+	static tmx::message_tree_type to_tree(MapFile& m) {
 		return tmx::message::to_tree(static_cast<tmx::message>(m));
 	}
 
-	static MapFile from_tree(tmx::message_tree_type tree) {
+	static MapFile from_tree(const tmx::message_tree_type &tree) {
 		MapFile m;
 		m.set_contents(tree);
 		return m;
@@ -72,17 +80,17 @@ public:
 
 class MapPlugin: public PluginClientClockAware {
 public:
-	MapPlugin(string name);
-	virtual ~MapPlugin();
-	virtual int Main();
+	explicit MapPlugin(const std::string &name);
+	virtual ~MapPlugin() = default;
+	int Main() override;
 
 protected:
 	void UpdateConfigSettings();
 
 	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnMessageReceived(IvpMessage *msg);
-	void OnStateChange(IvpPluginState state);
+	void OnConfigChanged(const char *key, const char *value) override;
+	void OnMessageReceived(IvpMessage *msg) override;
+	void OnStateChange(IvpPluginState state) override;
 
 private:
 	std::atomic<int> _mapAction {-1};
@@ -97,12 +105,13 @@ private:
 	int sendFrequency = 1000;
 	FrequencyThrottle<int> errThrottle;
 
-	char mapID_buffer[5] = {0};
+	std::array<char, 5> mapID_buffer;
 
 	bool LoadMapFiles();
 	void DebugPrintMapFiles();
-	string enum_to_hex_string();
-	string removeMessageFrame(string &fileContent);
+	std::string enum_to_hex_string();
+	std::string removeMessageFrame(const std::string &fileContent);
+	std::string checkMapContent(std::ifstream &in, const std::string &fileName);
 
 };
 

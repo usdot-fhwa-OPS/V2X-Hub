@@ -2,13 +2,11 @@
 
 namespace MapPlugin {
 
-MapPlugin::MapPlugin(string name) : PluginClientClockAware(name) {
+MapPlugin::MapPlugin(const std::string &name) : PluginClientClockAware(name) {
     AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
     SubscribeToMessages();
     errThrottle.set_Frequency(std::chrono::minutes(30));
 }
-
-MapPlugin::~MapPlugin() {}
 
 void MapPlugin::UpdateConfigSettings() {
 	GetConfigValue("Frequency", sendFrequency);
@@ -69,7 +67,7 @@ void MapPlugin::OnConfigChanged(const char *key, const char *value) {
 		// Check for special case Cohda R63 messages
 		if (strcmp("Cohda R63", key))
 		{
-			string strValue(value);
+			std::string strValue(value);
 
 			if (boost::iequals(strValue, "1")
 				|| boost::iequals(strValue, "true")
@@ -156,7 +154,7 @@ int MapPlugin::Main() {
 		if (temp != activeAction)
 		{
 			lock_guard<mutex> lock(data_lock);
-			string byteStr = _mapFiles[temp].get_Bytes();
+			std::string byteStr = _mapFiles[temp].get_Bytes();
 			if (!byteStr.empty())
 			{
 				msg.reset(dynamic_cast<MapDataEncodedMessage *>(factory.NewMessage(api::MSGSUBTYPE_MAPDATA_STRING)));
@@ -169,7 +167,7 @@ int MapPlugin::Main() {
 					continue;
 				}
 
-				string enc = msg->get_encoding();
+				std::string enc = msg->get_encoding();
 				msg->refresh_timestamp();
 				msg->set_payload(byteStr);
 				msg->set_encoding(enc);
@@ -204,37 +202,55 @@ int MapPlugin::Main() {
 	return (EXIT_SUCCESS);
 }
 
-string MapPlugin::enum_to_hex_string()
+std::string MapPlugin::enum_to_hex_string()
 {
-	sprintf(mapID_buffer, "%04X", tmx::messages::api::mapData);
-	string map_messageID = mapID_buffer;
-	return map_messageID;
+    std::snprintf(mapID_buffer.data(), mapID_buffer.size(), "%04X", tmx::messages::api::mapData);
+    std::string map_messageID(mapID_buffer.data());
+
+    return map_messageID;
 }
 
-string MapPlugin::removeMessageFrame(string &fileContent)
+std::string MapPlugin::removeMessageFrame(const std::string &fileContent)
 {
-    string map_messageID = enum_to_hex_string();
+    std::string map_messageID = enum_to_hex_string();
 
     // Check for and remove MessageFrame
     if (fileContent.size() >= 4 && fileContent.substr(0, 4) == map_messageID)
     {
 		// Check if message is hex size > 255, remove appropriate header
-		string tempFrame = fileContent;
+		std::string tempFrame = fileContent;
+		std::string newFrame = fileContent;
 		tempFrame.erase(0, 6);
 		PLOG(logDEBUG4) << "Checking size of: " << tempFrame;
-        if (tempFrame.size() > 510)
-		{
-			fileContent.erase(0, 8);
-
-		}
-		else
-		{
-			fileContent.erase(0, 6);
-		}
+        auto headerSize = (tempFrame.size() > 510) ? 8 : 6;
+		newFrame.erase(0, headerSize);
 		
-		PLOG(logDEBUG4) << "Payload without MessageFrame: " << fileContent;
+		PLOG(logDEBUG4) << "Payload without MessageFrame: " << newFrame;
+		return newFrame;
     }
-    return fileContent;
+	else
+	{
+		return fileContent;
+	}
+}
+
+std::string MapPlugin::checkMapContent(std::ifstream &in, const std::string &fileName)
+{
+	try
+	{
+		std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+		in.close();
+		// Remove any newline characters
+		content.erase(remove(content.begin(), content.end(), '\n'), content.end());
+		PLOG(logDEBUG4) << "Map without newline " << content;
+		std::string payload = removeMessageFrame(content);
+
+		return payload;
+	}
+	catch (const std::ios_base::failure& e)
+	{
+		PLOG(logERROR) << "Exception encountered while reading file: " << e.what();
+	}
 }
 
 bool MapPlugin::LoadMapFiles()
@@ -249,12 +265,12 @@ bool MapPlugin::LoadMapFiles()
 		if (mapFile.get_Bytes() == "")
 		{
 			// Fill in the bytes for each map file
-			string inType = mapFile.get_InputType();
+			std::string inType = mapFile.get_InputType();
 			if (inType.empty())
 			{
 				try
 				{
-					string fn = mapFile.get_FilePath();
+					std::string fn = mapFile.get_FilePath();
 
 					if (fn.substr(fn.size() - 5) == ".json")
 						inType = "ISD";
@@ -274,7 +290,6 @@ bool MapPlugin::LoadMapFiles()
 					}
 					else if (inType == "TXT")
 					{
-						byte_stream bytes;
 						std::ifstream in(fn, std::ios::binary);
 						if (!in)
 						{
@@ -282,61 +297,23 @@ bool MapPlugin::LoadMapFiles()
 						}
 						else
 						{
-							try
+							std::string payload = checkMapContent(in, fn);
+							byte_stream bytes;
+							std::istringstream streamableContent(payload);
+							streamableContent >> bytes;
+							PLOG(logINFO) << "MAP encoded bytes are " << bytes;
+							MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
+
+							if (mapMsg)
 							{
-								string fileContent((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-								in.close();
-								// Remove any newline characters
-								fileContent.erase(remove(fileContent.begin(), fileContent.end(), '\n'), fileContent.end());
-								PLOG(logDEBUG4) << "Map without newline " << fileContent;
-								fileContent = removeMessageFrame(fileContent);
+								PLOG(logDEBUG) << "Map is " << *mapMsg;
 
-								std::istringstream streamableContent(fileContent);
-								streamableContent >> bytes;
-								PLOG(logINFO) << fn << " MAP encoded bytes are " << bytes;
-								MapDataMessage *mapMsg = MapDataEncodedMessage::decode_j2735_message<codec::uper<MapDataMessage>>(bytes);
+								MapDataEncodedMessage mapEnc;
+								mapEnc.encode_j2735_message(*mapMsg);
+								mapFile.set_Bytes(mapEnc.get_payload_str());
 
-								if (mapMsg)
-								{
-									PLOG(logDEBUG) << "Map is " << *mapMsg;
-
-									MapDataEncodedMessage mapEnc;
-									mapEnc.encode_j2735_message(*mapMsg);
-									mapFile.set_Bytes(mapEnc.get_payload_str());
-
-									PLOG(logINFO) << fn << " J2735 message bytes encoded as " << mapFile.get_Bytes();
-								}
-							} catch (const std::ios_base::failure& e)
-							{
-								PLOG(logERROR) << "Exception encountered while reading file: " << e.what();
+								PLOG(logINFO) << "J2735 message bytes encoded as " << mapFile.get_Bytes();
 							}
-						}
-					}
-					else if (inType == "UPER")
-					{
-						PLOG(logDEBUG) << "Reading MAP file as UPER encoded hex bytes including MessageFrame.";
-						std::ifstream in;
-						try {
-							in.open(fn, std::ios::in | std::ios::binary );
-							if (in.is_open())
-							{
-								in.seekg(0, std::ios::end);
-								int fileSize = in.tellg();
-								in.seekg(0, std::ios::beg);
-								PLOG(logDEBUG) << "File size is: " << fileSize;
-								string bytes_string((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-								bytes_string.erase(remove(bytes_string.begin(), bytes_string.end(), '\n'), bytes_string.end());
-								PLOG(logDEBUG) << "File contents: " << bytes_string;
-								mapFile.set_Bytes(bytes_string);
-							}
-							else
-							{
-								PLOG(logERROR) << "Failed to open file: " << fn << ".";
-							}
-						}
-						catch( const ios_base::failure &e) 
-						{
-							PLOG(logERROR) << "Exception Encountered: \n" << e.what();
 						}
 					}
 					else if (inType == "XML")
