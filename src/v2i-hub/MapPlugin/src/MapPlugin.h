@@ -52,6 +52,13 @@ UPERframe _uperFrameMessage;
 class MapFile: public tmx::message {
 public:
 	using tmx::message::message;
+    ~MapFile() override = default;
+
+    MapFile(MapFile&&) noexcept = default;
+    MapFile& operator=(MapFile&&) noexcept = default;
+
+    MapFile(const MapFile&) = default;
+    MapFile& operator=(const MapFile&) = default;
 
 	std_attribute(this->msg, int, Action, -1, );
 	std_attribute(this->msg, std::string, FilePath, "", );
@@ -59,7 +66,7 @@ public:
 	std_attribute(this->msg, std::string, Bytes, "", );
 
 	static tmx::message_tree_type to_tree(const MapFile& m) {
-		return tmx::message::to_tree(static_cast<tmx::message>(m));
+		return tmx::message::to_tree(static_cast<const tmx::message&>(m));
 	}
 
 	static MapFile from_tree(const tmx::message_tree_type &tree) {
