@@ -25,15 +25,11 @@
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 
-#include <tmx/tmx.h>
 #include <tmx/IvpPlugin.h>
-#include <tmx/j2735_messages/MapDataMessage.hpp>
-#include <MapData.h>
 #include <tmx/messages/IvpBattelleDsrc.h>
 #include <tmx/messages/IvpSignalControllerStatus.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include <tmx/TmxApiMessages.h>
 #include "XmlMapParser.h"
 #include "ConvertToJ2735r41.h"
 #include "inputs/isd/ISDToJ2735r41.h"
@@ -47,10 +43,6 @@
 
 #include <MapSupport.h>
 
-using namespace tmx;
-using namespace tmx::messages;
-using namespace tmx::utils;
-
 namespace MapPlugin {
 
 #if SAEJ2735_SPEC < 63
@@ -59,15 +51,14 @@ UPERframe _uperFrameMessage;
 
 class MapFile: public tmx::message {
 public:
-	MapFile(): tmx::message() {}
-	virtual ~MapFile() = default;
+	using tmx::message::message;
 
 	std_attribute(this->msg, int, Action, -1, );
 	std_attribute(this->msg, std::string, FilePath, "", );
 	std_attribute(this->msg, std::string, InputType, "", );
 	std_attribute(this->msg, std::string, Bytes, "", );
 
-	static tmx::message_tree_type to_tree(MapFile& m) {
+	static tmx::message_tree_type to_tree(const MapFile& m) {
 		return tmx::message::to_tree(static_cast<tmx::message>(m));
 	}
 
@@ -78,10 +69,9 @@ public:
 	}
 };
 
-class MapPlugin: public PluginClientClockAware {
+class MapPlugin: public tmx::utils::PluginClientClockAware {
 public:
 	explicit MapPlugin(const std::string &name);
-	virtual ~MapPlugin() = default;
 	int Main() override;
 
 protected:
@@ -100,10 +90,10 @@ private:
 	std::map<int, MapFile> _mapFiles;
 	std::mutex data_lock;
 
-	J2735MessageFactory factory;
+	tmx::messages::J2735MessageFactory factory;
 
 	int sendFrequency = 1000;
-	FrequencyThrottle<int> errThrottle;
+	tmx::utils::FrequencyThrottle<int> errThrottle;
 
 	std::array<char, 5> mapID_buffer;
 
@@ -111,7 +101,7 @@ private:
 	void DebugPrintMapFiles();
 	std::string enum_to_hex_string();
 	std::string removeMessageFrame(const std::string &fileContent);
-	std::string checkMapContent(std::ifstream &in, const std::string &fileName);
+	std::string checkMapContent(std::ifstream &in);
 
 };
 
