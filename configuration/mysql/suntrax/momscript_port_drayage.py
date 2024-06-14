@@ -36,10 +36,8 @@ def send_messages(messages):
                 continue
         unhexed = ba.unhexlify(message)
         sk.sendto(unhexed,(udpip,udpport))
-        # Wait 5 second before sending another one
         print(f'\n{title}. Sent: {message}')
         input("Press enter to send next arrival message.")
-        time.sleep(1)
 
 if __name__ == '__main__':
     while True:
