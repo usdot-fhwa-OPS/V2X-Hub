@@ -1,6 +1,8 @@
+# Port Drayage Plugin Documentation
 ## Introduction
 The Port Drayage Plugin in V2x-Hub facilitates infrastructure, vehicle and container handling equipment (CHE) communication for port drayage operations. The plugin provides and montior drayage actions for a freight truck inside and between a mock port and staging area. The list of actions includes ENTER_STAGING_AREA, PICKUP, EXIT_STAGING_AREA, ENTER_PORT, DROPOFF, PORT_CHECKPOINT, HOLDING_AREA, and EXIT_PORT.
-### Deployment Instructions
+
+## Configuration/Deployment
 Clone V2x-Hub GitHub repos:
 ```
 git clone https://github.com/usdot-fhwa-OPS/V2X-Hub
@@ -62,6 +64,8 @@ INSERT INTO `freight` VALUES ('DOT-80550',NULL,28.1128156,-81.8314745,'ENTER_POR
 Open a browser and get certificate in internet browser: Https://127.0.0.1:19760. 
 
 Open another tab, navigate to  http://127.0.0.1 and land on V2x-Hub plugin management page. Enable `MessageReceiverPlugin` , `PortDrayagePlugin`, and `ImmediateForwardPlugin`.
+
+## Functionality Testing or Regression Testing
 
 Open another tab and type in `localhost:8090` to navigate to port drayage web UI. Click `Staging Area` or `Port Area` button to test V2x-Hub located at staging or port area.
 
