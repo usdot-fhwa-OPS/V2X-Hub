@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Port Drayage Plugin in V2x-Hub facilitates infrastructure, vehicle and container handling equipment (CHE) communication for port drayage operations. The plugin provides and montior drayage actions for a freight truck inside and between a mock port and staging area. The list of actions includes ENTER_STAGING_AREA, PICKUP, EXIT_STAGING_AREA, ENTER_PORT, DROPOFF, PORT_CHECKPOINT, HOLDING_AREA, and EXIT_PORT.
+The Port Drayage Plugin in V2x-Hub facilitates infrastructure, vehicle and container handling equipment (CHE) communication for port drayage operations. The plugin provides and montior drayage actions for a freight truck inside and between a mock port and staging area. The list of actions includes `ENTER_STAGING_AREA`, `PICKUP`, `EXIT_STAGING_AREA`, `ENTER_PORT`, `DROPOFF`, `PORT_CHECKPOINT`, `HOLDING_AREA`, and `EXIT_PORT`.
 
 ## Related Plugins
 
