@@ -1,0 +1,26 @@
+{
+    "name": "RSUHealthMonitor",
+    "description": "Monitor RSU health status",
+    "version": "@PROJECT_VERSION@",
+    "exeLocation": "/bin/RSUHealthMonitorPlugin",
+    "coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+    "messageTypes": [],
+    "configuration": [
+        {
+            "key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
+        },
+        {
+            "key":"Interval",
+            "default":"1",
+            "description": "Sending RSU SNMP GET request at every configured interval. Default every 1 second. Unit of measure: second."
+        },
+        {
+            "key":"RSUConfigurationList",
+            "default":"{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SecurityLevel\":\"authPriv\", \"SNMPPort\": \"161\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"RSU4.1\" },{ \"RSUIp\": \"192.168.00.XX\", \"SecurityLevel\":\"authPriv\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }",
+            "description":"Configurations of the RSUs the V2X hub is connected to."
+        }
+    ]
+}
