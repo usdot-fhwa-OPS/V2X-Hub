@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <stdexcept>      // std::out_of_range
 #include <simulation/SensorDetectedObject.h>
+#include <PluginLog.h>
 
 namespace MUSTSensorDriverPlugin {
 

@@ -12,19 +12,20 @@ namespace MUSTSensorDriverPlugin {
             std::getline(ss, substr, ',');
             csv_values.push_back(substr);
         }
-        if (csv.size() != 9 ){
-            throw std::runtime_error("Failed to parse csv MUST Detection data");
+        if (csv_values.size() != 9 ){
+            FILE_LOG(tmx::utils::logWARNING) << "CSV data " << csv <<" is size " << csv_values.size() << std::endl;
+            throw std::runtime_error("Failed to parse CSV MUST Detection data");
         }
         // Read out CSV information
-        detection.cl = fromStringToDetectionClassification(&csv.at(0));
-        detection.position_x = std::stod(&csv.at(1));
-        detection.position_y = std::stod(&csv.at(2));
-        detection.heading = std::stod(&csv.at(3));
-        detection.speed = std::stod(&csv.at(4));
-        detection.size = fromStringToDetectionSize(&csv.at(5));
-        detection.confidence = std::stod(&csv.at(6));
-        detection.trackID = std::stoi(&csv.at(7));
-        detection.timestamp = std::stoll(&csv.at(8));
+        detection.cl = fromStringToDetectionClassification(csv_values.at(0));
+        detection.position_x = std::stod(csv_values.at(1));
+        detection.position_y = std::stod(csv_values.at(2));
+        detection.heading = std::stod(csv_values.at(3));
+        detection.speed = std::stod(csv_values.at(4));
+        detection.size = fromStringToDetectionSize(csv_values.at(5));
+        detection.confidence = std::stod(csv_values.at(6));
+        detection.trackID = std::stoi(csv_values.at(7));
+        detection.timestamp = std::stoll(csv_values.at(8));
         return detection;
     }
 

@@ -3,6 +3,7 @@
 
 #include <tmx/messages/message.hpp>
 #include <MessageTypes.h>
+#include <Point.h>
 
 namespace tmx
 {
@@ -26,8 +27,16 @@ namespace tmx
 
                 // // Message sub type for routing this message through TMX core
                 static constexpr const char *MessageSubType = MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING;
-            };
 
+                std::string type;
+                double confidence;
+                std::string sensorId;
+                std::string projString;
+                int objectId;
+                tmx::utils::Point position;
+                tmx::utils::Point velocity;
+                long timestamp;
+            };
         }
     }
 

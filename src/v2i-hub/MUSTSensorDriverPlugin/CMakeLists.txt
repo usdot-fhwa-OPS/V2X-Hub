@@ -13,6 +13,7 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils )
 #############
 enable_testing()
 add_library(${PROJECT_NAME}_lib src/MUSTSensorDetection.cpp)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}_lib PUBLIC tmxutils )
 
 set(BINARY ${PROJECT_NAME}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
