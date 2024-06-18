@@ -17,6 +17,12 @@
 
 #include <PluginClientClockAware.h>
 #include <UdpServer.h>
+#include <ThreadWorker.h>
+#include <mutex>
+#include <simulation/SensorDetectedObject.h>
+
+#include "MUSTSensorDetection.h"
+
 
 
 
@@ -35,13 +41,16 @@ namespace MUSTSensorDriverPlugin
             const char* keySensorConnectionStatus = "Sensor Connection Status";
 
             std::unique_ptr<tmx::utils::UdpServer> mustSensorPacketReceiver;
+
+            std::unique_ptr<tmx::utils::ThreadTimer> mustSensorPacketReceiverThread;
             /**
              * @brief Callback triggered on configuration updates
              */
             void UpdateConfigSettings();
             void OnConfigChanged(const char *key, const char *value) override;
-            void initializeMustSensorPacketReceiver();
-            
+            void createUdpServer(const std::string &address, unsigned int port);
+
+            void processMUSTSensorDetection();
 
         public:
             /**

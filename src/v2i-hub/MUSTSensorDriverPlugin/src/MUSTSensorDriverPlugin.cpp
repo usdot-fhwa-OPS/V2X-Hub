@@ -22,7 +22,7 @@ namespace MUSTSensorDriverPlugin {
 	
 	MUSTSensorDriverPlugin::MUSTSensorDriverPlugin(const string &name): PluginClientClockAware(name)
 	{
-
+		mustSensorPacketReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
 		// Subscribe to all messages specified by the filters above.
 		SubscribeToMessages();
 	}
@@ -34,8 +34,37 @@ namespace MUSTSensorDriverPlugin {
 		// Configuration settings are retrieved from the API using the GetConfigValue template class.
 		// This method does NOT execute in the main thread, so variables must be protected
 		// (e.g. using std::atomic, std::mutex, etc.).
+		if (this->IsPluginState(IvpPluginState_registered)) {
+			std::scoped_lock<std::mutex> lock(_configMutex);
+			std::string ip_address;
+			unsigned int port;
+			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
+			GetConfigValue<uint>("DetectionReceiverPort", port);
+			createUdpServer(ip_address, port);
+			auto message_receiver_tick_id = mustSensorPacketReceiverThread->AddPeriodicTick([this]() {
+            	this->processMUSTSensorDetection();
+       		 	} // end of lambda expression
+        		, std::chrono::milliseconds(5) );
+        	mustSensorPacketReceiverThread->Start();
+		}
+	}
+	void MUSTSensorDriverPlugin::processMUSTSensorDetection(){
+		if (mustSensorPacketReceiver) {
+			MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
+			tmx::messages::simulation::SensorDetectedObject msg = mustDectionToSensorDetectedObject(detection);
+			PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
+       		this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+		}
 	}
 
+	void MUSTSensorDriverPlugin::createUdpServer(const std::string &address, unsigned int port) {
+		if ( mustSensorPacketReceiver ) {
+			mustSensorPacketReceiver.reset(new UdpServer(address, port));
+		}
+		else {
+			mustSensorPacketReceiver = std::make_unique<UdpServer>(address, port);
+		}
+	}
 
 	void MUSTSensorDriverPlugin::OnConfigChanged(const char *key, const char *value)
 	{

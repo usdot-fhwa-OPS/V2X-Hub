@@ -13,6 +13,7 @@
 #include <netdb.h>
 #include <stdexcept>
 #include <tmx/TmxException.hpp>
+#include <PluginLog.h>
 
 namespace tmx {
 namespace utils {
@@ -35,6 +36,8 @@ public:
 
 	virtual int Receive(char *msg, size_t maxSize);
 	virtual int TimedReceive(char *msg, size_t maxSize, int maxWait_ms);
+
+	virtual std::string stringTimedReceive();
 
 private:
 	int _socket;
