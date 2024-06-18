@@ -29,13 +29,14 @@ namespace MUSTSensorDriverPlugin {
         return detection;
     }
 
-    tmx::messages::simulation::SensorDetectedObject mustDectionToSensorDetectedObject(const MUSTSensorDetection &detection) {
-        tmx::messages::simulation::SensorDetectedObject detectedObject;
+    tmx::messages::SensorDetectedObject mustDectionToSensorDetectedObject(const MUSTSensorDetection &detection) {
+        tmx::messages::SensorDetectedObject detectedObject;
         detectedObject.objectId = detection.trackID;
         detectedObject.position.X = detection.position_x;
         detectedObject.position.Y = detection.position_y;
         detectedObject.confidence = detection.confidence;
         detectedObject.timestamp = detection.timestamp;
+        detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
         return detectedObject;
     }
     const DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
@@ -56,5 +57,13 @@ namespace MUSTSensorDriverPlugin {
         catch( const std::out_of_range &e) {
             return DetectionSize::NA;
         }
+    };
+
+    tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed) {
+        tmx::utils::Vector3d velocity;
+        velocity.X = - std::sin(M_PI/180* heading) * speed;
+        velocity.Y = std::cos(M_PI/180 * heading) * speed;
+        velocity.Z = 0;
+        return velocity;
     };
 }

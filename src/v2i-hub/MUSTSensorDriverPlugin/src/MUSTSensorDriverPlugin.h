@@ -19,7 +19,7 @@
 #include <UdpServer.h>
 #include <ThreadWorker.h>
 #include <mutex>
-#include <simulation/SensorDetectedObject.h>
+#include <SensorDetectedObject.h>
 
 #include "MUSTSensorDetection.h"
 

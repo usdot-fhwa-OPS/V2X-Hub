@@ -4,7 +4,7 @@
 #include <tmx/tmx.h>
 #include <Point.h>
 #include <TimeSyncMessage.h>
-#include <simulation/SensorDetectedObject.h>
+#include <SensorDetectedObject.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
@@ -88,7 +88,7 @@ namespace CDASimAdapter {
              * To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
              * @return simulation::SensorDetectedObject.
              */
-            tmx::messages::simulation::SensorDetectedObject consume_sensor_detected_object_message() const;
+            tmx::messages::SensorDetectedObject consume_sensor_detected_object_message() const;
             /**
              * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,

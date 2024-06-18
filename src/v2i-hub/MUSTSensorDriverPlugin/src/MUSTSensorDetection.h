@@ -2,8 +2,9 @@
 #include <string>
 #include <unordered_map>
 #include <stdexcept>      // std::out_of_range
-#include <simulation/SensorDetectedObject.h>
+#include <SensorDetectedObject.h>
 #include <PluginLog.h>
+#include <Vector3d.h>
 
 namespace MUSTSensorDriverPlugin {
 
@@ -54,6 +55,7 @@ namespace MUSTSensorDriverPlugin {
 
     MUSTSensorDetection csvToDectection(const std::string &csv );
 
-    tmx::messages::simulation::SensorDetectedObject mustDectionToSensorDetectedObject(const MUSTSensorDetection &detection);
+    tmx::messages::SensorDetectedObject mustDectionToSensorDetectedObject(const MUSTSensorDetection &detection);
 
+    tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed);
 }

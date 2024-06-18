@@ -51,9 +51,9 @@ namespace MUSTSensorDriverPlugin {
 	void MUSTSensorDriverPlugin::processMUSTSensorDetection(){
 		if (mustSensorPacketReceiver) {
 			MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
-			tmx::messages::simulation::SensorDetectedObject msg = mustDectionToSensorDetectedObject(detection);
+			tmx::messages::SensorDetectedObject msg = mustDectionToSensorDetectedObject(detection);
 			PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
-       		this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+       		this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
 		}
 	}
 

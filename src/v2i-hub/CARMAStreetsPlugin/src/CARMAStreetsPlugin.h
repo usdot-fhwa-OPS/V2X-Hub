@@ -20,7 +20,7 @@
 #include <kafka/kafka_client.h>
 #include <kafka/kafka_consumer_worker.h>
 #include "JsonToJ2735SSMConverter.h"
-#include <simulation/SensorDetectedObject.h>
+#include <SensorDetectedObject.h>
 #include "JsonToJ3224SDSMConverter.h"
 #include "J3224ToSDSMJsonConverter.h"
 #include "PluginClientClockAware.h"
@@ -56,7 +56,7 @@ protected:
 	 * @param msg Detected object received from TMX bus.
 	 * @param routeableMsg routeable_message for detected object.
 	 */
-	void HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg,  routeable_message &routeableMsg);
+	void HandleSimulatedSensorDetectedMessage(SensorDetectedObject &msg,  routeable_message &routeableMsg);
 	/**
 	 * @brief Overide PluginClientClockAware HandleTimeSyncMessage to producer TimeSyncMessage to kafka for CARMA Streets Time Synchronization.
 	 * @param msg TimeSyncMessage received by plugin when in simulation mode. Message provides current simulation time to all processes.

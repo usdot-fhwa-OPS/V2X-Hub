@@ -142,9 +142,9 @@ namespace CDASimAdapter{
 
     }
 
-    tmx::messages::simulation::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
+    tmx::messages::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
     {
-        tmx::messages::simulation::SensorDetectedObject externalObj;
+        tmx::messages::SensorDetectedObject externalObj;
         externalObj.clear();
         if(sensor_detected_object_listener)
         {
