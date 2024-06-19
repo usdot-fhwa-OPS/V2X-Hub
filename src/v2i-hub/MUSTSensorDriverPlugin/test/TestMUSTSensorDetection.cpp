@@ -69,3 +69,11 @@ TEST(TestMUSTSensorDetection, mustDectionToSensorDetectedObject ) {
     EXPECT_NEAR(4.33, sensorDetectedObject.velocity.Y, 0.001);
     EXPECT_NEAR(2.5, sensorDetectedObject.velocity.X, 0.001);
 }
+
+TEST(TestMUSTSensorDetection, detectionClassificationToString ) {
+    EXPECT_STRCASEEQ("SEDAN", detectionClassificationToString(DetectionClassification::SEDAN).c_str());
+    EXPECT_STRCASEEQ("VAN", detectionClassificationToString(DetectionClassification::VAN).c_str());
+    EXPECT_STRCASEEQ("TRUCK", detectionClassificationToString(DetectionClassification::TRUCK).c_str());
+    EXPECT_THROW(detectionClassificationToString(DetectionClassification::NA).c_str(), std::runtime_error);
+
+}

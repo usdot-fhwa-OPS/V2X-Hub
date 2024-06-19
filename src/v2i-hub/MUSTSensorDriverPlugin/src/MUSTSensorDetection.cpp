@@ -39,7 +39,7 @@ namespace MUSTSensorDriverPlugin {
         detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
         return detectedObject;
     }
-    const DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
+    DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
         try {
             
             return stringToDetectionClassificationMap.at(str);
@@ -49,7 +49,20 @@ namespace MUSTSensorDriverPlugin {
         }
     }
 
-    const DetectionSize fromStringToDetectionSize(const std::string &str) noexcept {
+    std::string detectionClassificationToString(const DetectionClassification &classification) {
+       for (auto const &[name, cl] : stringToDetectionClassificationMap){
+            if (classification == cl) {
+                std::string rtn = name;
+                std::transform(rtn.begin(), rtn.end(), rtn.begin(), ::toupper);
+                return rtn;
+            }
+       }
+       throw std::runtime_error("DetectionClassification type is not registered in stringToDetectionClassificationMap!");
+    }
+
+
+
+    DetectionSize fromStringToDetectionSize(const std::string &str) noexcept {
         try {
             
             return stringToDetectionSizeMap.at(str);

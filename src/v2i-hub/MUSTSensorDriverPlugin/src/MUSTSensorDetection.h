@@ -5,6 +5,8 @@
 #include <SensorDetectedObject.h>
 #include <PluginLog.h>
 #include <Vector3d.h>
+#include <algorithm>
+
 
 namespace MUSTSensorDriverPlugin {
 
@@ -35,9 +37,11 @@ namespace MUSTSensorDriverPlugin {
         {"van", DetectionClassification::VAN}
     };
 
-    const DetectionSize fromStringToDetectionSize(const std::string &str) noexcept;
+    DetectionSize fromStringToDetectionSize(const std::string &str) noexcept;
 
-    const DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept;
+    DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept;
+
+    std::string detectionClassificationToString(const DetectionClassification &classifcation);
 
     struct MUSTSensorDetection {
         DetectionClassification cl = DetectionClassification::NA;
