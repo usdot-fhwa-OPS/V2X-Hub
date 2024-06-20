@@ -29,7 +29,7 @@ namespace MUSTSensorDriverPlugin {
         return detection;
     }
 
-    tmx::messages::SensorDetectedObject mustDectionToSensorDetectedObject(const MUSTSensorDetection &detection) {
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, const std::string &sensorId, const std::string &projString) {
         tmx::messages::SensorDetectedObject detectedObject;
         detectedObject.objectId = detection.trackID;
         detectedObject.position.X = detection.position_x;
@@ -37,6 +37,9 @@ namespace MUSTSensorDriverPlugin {
         detectedObject.confidence = detection.confidence;
         detectedObject.timestamp = detection.timestamp;
         detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
+        detectedObject.type = detectionClassificationToString(detection.cl);
+        detectedObject.sensorId = sensorId;
+        detectedObject.projString = projString;
         return detectedObject;
     }
     DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {

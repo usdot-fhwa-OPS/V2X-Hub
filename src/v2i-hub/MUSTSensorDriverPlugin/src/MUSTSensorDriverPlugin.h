@@ -43,6 +43,10 @@ namespace MUSTSensorDriverPlugin
             std::unique_ptr<tmx::utils::UdpServer> mustSensorPacketReceiver;
 
             std::unique_ptr<tmx::utils::ThreadTimer> mustSensorPacketReceiverThread;
+
+            std::string sensorId;
+
+            std::string projString;
             /**
              * @brief Callback triggered on configuration updates
              */

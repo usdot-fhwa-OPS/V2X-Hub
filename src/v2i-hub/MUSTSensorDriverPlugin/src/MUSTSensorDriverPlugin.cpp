@@ -36,6 +36,9 @@ namespace MUSTSensorDriverPlugin {
 		// (e.g. using std::atomic, std::mutex, etc.).
 		if (this->IsPluginState(IvpPluginState_registered)) {
 			std::scoped_lock<std::mutex> lock(_configMutex);
+			GetConfigValue<std::string>("ProjectionString", projString);
+			GetConfigValue<std::string>("SensorId", sensorId);
+			// Setup  UDP Server 
 			std::string ip_address;
 			unsigned int port;
 			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
@@ -51,7 +54,7 @@ namespace MUSTSensorDriverPlugin {
 	void MUSTSensorDriverPlugin::processMUSTSensorDetection(){
 		if (mustSensorPacketReceiver) {
 			MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
-			tmx::messages::SensorDetectedObject msg = mustDectionToSensorDetectedObject(detection);
+			tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString);
 			PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
        		this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
 		}

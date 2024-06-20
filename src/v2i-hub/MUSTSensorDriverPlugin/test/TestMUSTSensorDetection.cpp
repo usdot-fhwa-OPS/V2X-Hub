@@ -46,7 +46,7 @@ TEST(TestMUSTSensorDetection, csvToDectectionEmptyString ){
     EXPECT_THROW(csvToDectection(valid_csv_data), std::runtime_error);
 }
 
-TEST(TestMUSTSensorDetection, mustDectionToSensorDetectedObject ) {
+TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     using namespace std::chrono;
 
     MUSTSensorDetection detection;
@@ -60,7 +60,7 @@ TEST(TestMUSTSensorDetection, mustDectionToSensorDetectedObject ) {
     detection.trackID = 324;
     detection.speed = 5;
 
-    auto sensorDetectedObject = mustDectionToSensorDetectedObject(detection);
+    auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String");
 
     EXPECT_EQ(detection.trackID, sensorDetectedObject.objectId);
     EXPECT_DOUBLE_EQ(detection.confidence, sensorDetectedObject.confidence);
@@ -68,6 +68,10 @@ TEST(TestMUSTSensorDetection, mustDectionToSensorDetectedObject ) {
     EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.position.Y);
     EXPECT_NEAR(4.33, sensorDetectedObject.velocity.Y, 0.001);
     EXPECT_NEAR(2.5, sensorDetectedObject.velocity.X, 0.001);
+    EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.type.c_str());
+    EXPECT_EQ(detection.timestamp, sensorDetectedObject.timestamp);
+    EXPECT_EQ("MUSTSensor1", sensorDetectedObject.sensorId);
+    EXPECT_EQ("PROJ String", sensorDetectedObject.projString);
 }
 
 TEST(TestMUSTSensorDetection, detectionClassificationToString ) {

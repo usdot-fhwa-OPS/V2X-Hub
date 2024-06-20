@@ -36,6 +36,7 @@ namespace tmx
             tmx::utils::Point position = tmx::utils::Point();
             tmx::utils::Vector3d velocity = tmx::utils::Vector3d();
             long timestamp = 0;
+
         };
 
     }
