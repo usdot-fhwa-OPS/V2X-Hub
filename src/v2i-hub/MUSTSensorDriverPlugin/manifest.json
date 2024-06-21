@@ -1,21 +1,22 @@
 {
-    "name": "RSUHealthMonitor",
-    "description": "Monitor RSU health status",
+    "name": "MUSTSensorDriver",
+    "description": "Plugin for processing MUST Sensor Data.",
     "version": "@PROJECT_VERSION@",
-    "exeLocation": "/bin/RSUHealthMonitorPlugin",
+    "exeLocation": "/bin/MUSTSensorDriverPlugin",
     "coreIpAddr":"127.0.0.1",
 	"corePort":24601,
-    "messageTypes": [],
+    "messageTypes": [
+        {
+            "type": "Application",
+            "subtype": "SensorDetectedObject",
+            "description": "Generic message for detection from Sensor."
+        }
+    ],
     "configuration": [
         {
             "key": "LogLevel",
             "default": "INFO",
             "description": "The log level for this plugin"
-        },
-        {
-            "key":"Interval",
-            "default":"1",
-            "description": "Sending RSU SNMP GET request at every configured interval. Default every 1 second. Unit of measure: second."
         },
         {
             "key":"DetectionReceiverIP",

@@ -38,7 +38,7 @@ namespace MUSTSensorDriverPlugin
             /**
              * @brief Status label simulation time to be displayed by each plugin.
              */
-            const char* keySensorConnectionStatus = "Sensor Connection Status";
+            const char* keyMUSTSensorConnectionStatus = "MUST Sensor Connection Status";
 
             std::unique_ptr<tmx::utils::UdpServer> mustSensorPacketReceiver;
 
@@ -47,6 +47,11 @@ namespace MUSTSensorDriverPlugin
             std::string sensorId;
 
             std::string projString;
+
+            bool connected = false;
+
+            // Message receiver thread id
+            int mustSensorPacketReceiverThreadId;
             /**
              * @brief Callback triggered on configuration updates
              */

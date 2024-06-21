@@ -29,7 +29,7 @@ namespace MUSTSensorDriverPlugin {
         return detection;
     }
 
-    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, const std::string &sensorId, const std::string &projString) {
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString) {
         tmx::messages::SensorDetectedObject detectedObject;
         detectedObject.objectId = detection.trackID;
         detectedObject.position.X = detection.position_x;
@@ -47,7 +47,8 @@ namespace MUSTSensorDriverPlugin {
             
             return stringToDetectionClassificationMap.at(str);
         }
-        catch( const std::out_of_range &e) {
+        catch( const std::out_of_range ) {
+            FILE_LOG(tmx::utils::logWARNING) << "No registered Detection Classification for " << str << " in stringToDetectionClassificationMap! Setting classification as NA." << std::endl;
             return DetectionClassification::NA;
         }
     }
@@ -70,7 +71,8 @@ namespace MUSTSensorDriverPlugin {
             
             return stringToDetectionSizeMap.at(str);
         }
-        catch( const std::out_of_range &e) {
+        catch( const std::out_of_range ) {
+            FILE_LOG(tmx::utils::logWARNING) << "No registered Detection Size for " << str << " in stringToDetectionSizeMap! Setting classification as NA." << std::endl;
             return DetectionSize::NA;
         }
     };

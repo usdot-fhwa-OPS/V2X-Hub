@@ -44,8 +44,11 @@ namespace MUSTSensorDriverPlugin {
 			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
 			GetConfigValue<uint>("DetectionReceiverPort", port);
 			createUdpServer(ip_address, port);
-			auto message_receiver_tick_id = mustSensorPacketReceiverThread->AddPeriodicTick([this]() {
+			SetStatus(keyMUSTSensorConnectionStatus, "IDLE", true);
+
+			mustSensorPacketReceiverThreadId = mustSensorPacketReceiverThread->AddPeriodicTick([this]() {
             	this->processMUSTSensorDetection();
+
        		 	} // end of lambda expression
         		, std::chrono::milliseconds(5) );
         	mustSensorPacketReceiverThread->Start();
@@ -53,10 +56,23 @@ namespace MUSTSensorDriverPlugin {
 	}
 	void MUSTSensorDriverPlugin::processMUSTSensorDetection(){
 		if (mustSensorPacketReceiver) {
-			MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
-			tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString);
-			PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
-       		this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+			try {
+				MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
+				if ( !connected ) {
+					connected = true;
+					SetStatus(keyMUSTSensorConnectionStatus, "CONNECTED", true);
+				}
+				tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString);
+				PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
+				this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+			}
+			catch( const tmx::utils::UdpServerRuntimeError &e) {
+				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED", true);
+				connected = false;
+			}
+		}else {
+			SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED", true);
+			connected = false;
 		}
 	}
 

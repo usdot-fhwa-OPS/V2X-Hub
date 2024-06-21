@@ -59,7 +59,7 @@ namespace MUSTSensorDriverPlugin {
 
     MUSTSensorDetection csvToDectection(const std::string &csv );
 
-    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, const std::string &sensorId, const std::string &projString);
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString);
 
     tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed);
 }

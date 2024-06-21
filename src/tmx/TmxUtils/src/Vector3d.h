@@ -4,7 +4,7 @@ namespace tmx::utils {
 
 
     /// Three dimensional Vector
-    typedef struct Vector3d
+    using Vector3d = struct Vector3d
     {
         Vector3d() : X(0), Y(0), Z(0) {}
 
@@ -14,6 +14,6 @@ namespace tmx::utils {
         double X;
         double Y;
         double Z;
-    } Vector3d;
+    };
 
 } // namespace tmx::utils

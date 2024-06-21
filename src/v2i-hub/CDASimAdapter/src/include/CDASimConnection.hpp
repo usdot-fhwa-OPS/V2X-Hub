@@ -64,12 +64,6 @@ namespace CDASimAdapter {
              * @param _client UDP client to forward message with.
              */
             void forward_message(const std::string &v2x_message, const std::shared_ptr<tmx::utils::UdpClient> _client ) const ;
-            /**
-             * @brief Method to consume incoming std::string message from UDP Server.
-             * @param _server UDP Server to consume string message from.
-             * @return string of message.
-             */
-            std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
 
             /**
              * @brief Method to consume incoming std::string message in hex format from UDP Server.
