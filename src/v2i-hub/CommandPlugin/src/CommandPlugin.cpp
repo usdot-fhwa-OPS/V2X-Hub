@@ -633,7 +633,7 @@ int CommandPlugin::WSCallbackBASE64(
 											argsList[arg.first] = arg.second.data();
 										}
 									}
-									catch (exception argsEx)
+									catch (exception &argsEx)
 									{
 										//no args
 										FILE_LOG(logDEBUG) << "WSCallbackBASE64 process command error: no arguments";

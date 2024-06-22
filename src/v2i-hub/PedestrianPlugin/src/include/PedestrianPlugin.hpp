@@ -13,13 +13,9 @@
 
 #include <atomic>
 #include <thread>
-#include <DecodedBsmMessage.h>
-#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#include <BasicSafetyMessage.h>
-#include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <mutex>
 #include <PersonalSafetyMessage.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 
 #include <UdpClient.h>
 #include <tmx/messages/auto_message.hpp>
@@ -46,13 +42,6 @@
 #include <qserverPedestrian/OAIPSM.h>
 #include <queue>
 
-
-using namespace std;
-using namespace tmx;
-using namespace tmx::messages;
-using namespace tmx::utils;
-using namespace OpenAPI;
-
 namespace PedestrianPlugin
 {
 
@@ -62,51 +51,56 @@ namespace PedestrianPlugin
 class PedestrianPlugin: public PluginClient
 {
 public:
-	PedestrianPlugin(std::string);
-	PedestrianPlugin();
-	virtual ~PedestrianPlugin();
-	int Main();
-	uint16_t webport;
-	std::string webip; 
-	std::string webSocketIP;
-	std::string webSocketURLExt;
-	std::string dataprovider;
-	float cameraRotation;
-	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
-	std::string hostString;
+	explicit PedestrianPlugin(const std::string &name);
+	int Main() override;
 
 protected:
 	void UpdateConfigSettings();
 
 	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnStateChange(IvpPluginState state);
+	void OnConfigChanged(const char *key, const char *value) override;
+	void OnStateChange(IvpPluginState state) override;
 
-	void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
-	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void BroadcastPsm(char *psmJson);
+	void BroadcastPsm(const char *psmJson);
 
 	int  StartWebService();
+	int  StartWebSocket();
+	void StopWebService();
+	void StopWebSocket();
 	void PedestrianRequestHandler(QHttpEngine::Socket *socket);
-	void writeResponse(int responseCode , QHttpEngine::Socket *socket);
-
-	int StartWebSocket();
+	void writeResponse(int responseCode , QHttpEngine::Socket *socket) const;
 
 	void OnWebSocketConnected();
 	void OnWebSocketDataReceived(QString message);
 	void OnWebSocketClosed();
 	
-	int checkXML();
-
-
+	[[noreturn]] int checkXML();
 
 private:
-	tmx::utils::UdpClient *_signSimClient = NULL;
+	std::unique_ptr<tmx::utils::UdpClient> _signSimClient = nullptr;
+
 	J2735MessageFactory factory;
 	
+	std::mutex _cfgLock;
 
+	uint16_t webport;
+	std::string webip; 
+	std::string webSocketIP;
+	std::string webSocketURLExt;
+	int instance;
+	std::string dataprovider;
+	float cameraRotation;
+	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
+	std::string hostString;
+
+	std::atomic<bool> runningWebSocket;
+	std::atomic<bool> runningWebService;
+	std::thread webSocketThread;
+	std::thread webServiceThread;
+
+	// The io_context is required for all I/O
+    net::io_context ioc;
 };
-std::mutex _cfgLock;
 
 };
 
