@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[MUST](https://www.aiwaysion.com/technology) (Mobile Unit for Sensing Traffic) Sensor from AI Waysion is a camera based sensor, planned to be used for cooperative perception in freight use cases.<Some sentence about what ever university is developing the detection algorythms for this sensor>. The MUST Sensor provides detections via UDP packets made up of CSV (Comma Separated Values) string data. The V2X-Hub MUST Sensor Driver Plugin will then consume these messages and translate them to **Sensor Detected Object** messages, which is V2X-Hub's generic detection message. This message is consumable by the  **CARMA Streets [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/blob/develop/sensor_data_sharing_service/README.md)** which will generate **Sensor Data Sharing Message**s according to the J3224 standard for broadcast to other traffic actors in the area.
+[MUST](https://www.aiwaysion.com/technology) (Mobile Unit for Sensing Traffic) Sensor from AI Waysion is a camera based sensor, planned to be used for cooperative perception in freight use cases. The MUST Sensor provides detections via UDP packets made up of CSV (Comma Separated Values) string data. The V2X-Hub MUST Sensor Driver Plugin will then consume these messages and translate them to **Sensor Detected Object** messages, which is V2X-Hub's generic detection message. This message is consumable by the  **CARMA Streets [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/blob/develop/sensor_data_sharing_service/README.md)** which will generate **Sensor Data Sharing Message**s according to the J3224 standard for broadcast to other traffic actors in the area.
 
 ## Related Plugins
 

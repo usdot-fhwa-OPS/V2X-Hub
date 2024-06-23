@@ -37,7 +37,7 @@ public:
 	virtual int Receive(char *msg, size_t maxSize);
 	virtual int TimedReceive(char *msg, size_t maxSize, int maxWait_ms);
 
-	virtual std::string stringTimedReceive();
+	virtual std::string stringTimedReceive(int maxWait_ms=5);
 
 private:
 	int _socket;

@@ -27,7 +27,12 @@ namespace MUSTSensorDriverPlugin {
 		SubscribeToMessages();
 	}
 
-	
+	void  MUSTSensorDriverPlugin::OnStateChange(IvpPluginState state) {
+		PluginClientClockAware::OnStateChange(state);
+		if (state == IvpPluginState_registered) {
+			UpdateConfigSettings();
+		}
+	}
 
 	void MUSTSensorDriverPlugin::UpdateConfigSettings()
 	{
@@ -44,7 +49,7 @@ namespace MUSTSensorDriverPlugin {
 			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
 			GetConfigValue<uint>("DetectionReceiverPort", port);
 			createUdpServer(ip_address, port);
-			SetStatus(keyMUSTSensorConnectionStatus, "IDLE", true);
+			SetStatus(keyMUSTSensorConnectionStatus, "IDLE");
 
 			mustSensorPacketReceiverThreadId = mustSensorPacketReceiverThread->AddPeriodicTick([this]() {
             	this->processMUSTSensorDetection();
@@ -60,18 +65,24 @@ namespace MUSTSensorDriverPlugin {
 				MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
 				if ( !connected ) {
 					connected = true;
-					SetStatus(keyMUSTSensorConnectionStatus, "CONNECTED", true);
+					SetStatus(keyMUSTSensorConnectionStatus, "CONNECTED");
 				}
 				tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString);
 				PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
 				this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
 			}
 			catch( const tmx::utils::UdpServerRuntimeError &e) {
-				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED", true);
+				PLOG(logERROR) << "Error occurred processing MUSTSensorDetection" << e << std::endl;
+				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
 				connected = false;
 			}
+			catch ( const std::runtime_error &e){
+				PLOG(logERROR) << "Error occurred processing MUSTSensorDetection" << e.what() << std::endl;
+				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
+				connected = false;
+			} 
 		}else {
-			SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED", true);
+			SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
 			connected = false;
 		}
 	}

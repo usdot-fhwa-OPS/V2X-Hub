@@ -35,8 +35,8 @@ class MUSTDetection:
     track_id: int
     timestamp: int
 
-    def to_csv():
-        return f'{self.classification},{self.x},{self.y},{self.heading},{self.speed},{self.size},{self.confidence},{self.track_id},{self.timstamp}'
+    def to_csv(self):
+        return f'{self.classification.value},{self.x},{self.y},{self.heading},{self.speed},{self.size.value},{self.confidence},{self.track_id},{self.timestamp}'
 
 def move_detection():
     return 
@@ -48,7 +48,7 @@ def create_socket():
         print('Socket error because of %s' %(err))
 def send_detection(sock, detection, host):
     try:
-        msg = detection
+        msg = detection.to_csv()
         encoded_msg = str.encode(msg)
         sock.sendto(encoded_msg,host)
         print( encoded_msg.decode(encoding= 'UTF-8'), 'was sent to ', host)

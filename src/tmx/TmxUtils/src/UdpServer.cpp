@@ -198,9 +198,9 @@ namespace tmx::utils {
         return -1;
     }
 
-    std::string UdpServer::stringTimedReceive() {
+    std::string UdpServer::stringTimedReceive(int maxWait_ms) {
         std::vector<char> msg(4000);
-        int num_of_bytes = this->TimedReceive(msg.data(),4000, 5);
+        int num_of_bytes = this->TimedReceive(msg.data(),4000, maxWait_ms);
         if (num_of_bytes > 0 ) {
             msg.resize(num_of_bytes);
             std::string ret(msg.data());
