@@ -43,9 +43,19 @@ This plugin consists of a simple UDP Server listening for detection data from th
 
 ### Coordinate Frame Translation
 
+MUST Sensor produces detection data as CSV Strings. The detection data includes position as a 2 dimensional cartesian offset (in meters) from the sensor location. Velocity is provided using a NE (yNorth xEast) heading (in degrees) and a speed (in m/s). This needs to be translated to an ENU (xEast,yNorth,zUp) cartesian cordinate position and velocity vector. The position does not need any translation since both of xEast yNorth. The heading and speed must be translated to a velocity vector using trigonometry.
+![Alt text](docs/sensor_coordinate_frame.png)
+
+![Alt text](docs/heading.png)
+
+To convert the heading to unit circle we simple subtract 270 degrees from any heading value, then we can take the `cos()` for x values and the `sin()` for y values.
+
+![Alt text](docs/unit_circle.png)
+
 ### Messages
 
 **Sensor Detected Object**: V2X-Hub's generic message for detection data.
 
 ## Functionality Testing
 
+Start up plugin and use `scripts/MockMUSTSensor.py` script to send mock detection data to plugin at 1 Hz.

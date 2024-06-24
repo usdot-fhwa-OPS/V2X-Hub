@@ -78,9 +78,11 @@ namespace MUSTSensorDriverPlugin {
     };
 
     tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed) {
+        // Convert North East heading to 
+        heading = heading - 270;
         tmx::utils::Vector3d velocity;
-        velocity.X = - std::sin(M_PI/180* heading) * speed;
-        velocity.Y = std::cos(M_PI/180 * heading) * speed;
+        velocity.X = std::cos(M_PI/180 * heading) * speed;
+        velocity.Y = std::sin(M_PI/180 * heading) * speed;
         velocity.Z = 0;
         return velocity;
     };
