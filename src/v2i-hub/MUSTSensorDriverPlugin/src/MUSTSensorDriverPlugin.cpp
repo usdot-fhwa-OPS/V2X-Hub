@@ -23,14 +23,19 @@ namespace MUSTSensorDriverPlugin {
 	MUSTSensorDriverPlugin::MUSTSensorDriverPlugin(const string &name): PluginClientClockAware(name)
 	{
 		mustSensorPacketReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
-		// Subscribe to all messages specified by the filters above.
-		SubscribeToMessages();
+		if (PluginClientClockAware::isSimulationMode()) {
+			PLOG(tmx::utils::logINFO) << "Simulation mode on " << std::endl;
+			SubscribeToMessages();
+		}
 	}
 
 	void  MUSTSensorDriverPlugin::OnStateChange(IvpPluginState state) {
 		PluginClientClockAware::OnStateChange(state);
 		if (state == IvpPluginState_registered) {
 			UpdateConfigSettings();
+		}else {
+			connected = false;
+			SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
 		}
 	}
 

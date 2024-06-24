@@ -56,7 +56,7 @@ def send_detection(sock, detection, host):
         print ('There an error resolving the host')
 
 detections = []
-detections.append(MUSTDetection(DetectionClassification.SEDAN, 0, 0, 330, 1, DetectionSize.MEDIUM, 95, 2,round(time.time() * 1000)))
+detections.append(MUSTDetection(DetectionClassification.SEDAN, 0, 0, 330, 1, DetectionSize.MEDIUM, 95, 2,round(time.time())))
 
 def main():
     parser = argparse.ArgumentParser(description='Script to mock detection data coming from MUST Sensor')
@@ -70,6 +70,7 @@ def main():
     while True:
         for detection in detections:
             send_detection(sock,detection,host)
+            time.sleep(1)
 
 if __name__ == '__main__':
     main()
