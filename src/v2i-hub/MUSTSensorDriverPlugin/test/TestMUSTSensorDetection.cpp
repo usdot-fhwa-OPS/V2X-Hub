@@ -81,3 +81,9 @@ TEST(TestMUSTSensorDetection, detectionClassificationToString ) {
     EXPECT_THROW(detectionClassificationToString(DetectionClassification::NA).c_str(), std::runtime_error);
 
 }
+
+TEST(TestMUSTSensorDetection, headingSpeedToVelocity ) {
+    auto velocity = headingSpeedToVelocity(30, 5);
+    EXPECT_NEAR(4.33, velocity.Y, 0.001);
+    EXPECT_NEAR(-2.5, velocity.X, 0.001);
+}
