@@ -6,6 +6,7 @@
 #include <PluginLog.h>
 #include <Vector3d.h>
 #include <algorithm>
+#include <tmx/TmxException.hpp>
 
 
 namespace MUSTSensorDriverPlugin {

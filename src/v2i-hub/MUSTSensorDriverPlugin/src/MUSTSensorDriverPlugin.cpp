@@ -81,7 +81,7 @@ namespace MUSTSensorDriverPlugin {
 				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
 				connected = false;
 			}
-			catch ( const std::runtime_error &e){
+			catch ( const tmx::TmxException &e){
 				PLOG(logERROR) << "Error occurred processing MUSTSensorDetection" << e.what() << std::endl;
 				SetStatus(keyMUSTSensorConnectionStatus, "DISCONNECTED");
 				connected = false;

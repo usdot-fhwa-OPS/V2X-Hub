@@ -58,7 +58,7 @@ namespace MUSTSensorDriverPlugin
             void UpdateConfigSettings();
             void OnConfigChanged(const char *key, const char *value) override;
             void createUdpServer(const std::string &address, unsigned int port);
-            void OnStateChange(IvpPluginState state);
+            void OnStateChange(IvpPluginState state) override;
             void processMUSTSensorDetection();
 
         public:
@@ -67,7 +67,6 @@ namespace MUSTSensorDriverPlugin
              * @param name Plugin Name
              */
             explicit MUSTSensorDriverPlugin(const std::string &name);
-        protected:
             
     };
 

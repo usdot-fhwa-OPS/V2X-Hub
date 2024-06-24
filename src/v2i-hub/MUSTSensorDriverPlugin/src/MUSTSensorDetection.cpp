@@ -14,7 +14,7 @@ namespace MUSTSensorDriverPlugin {
         }
         if (csv_values.size() != 9 ){
             FILE_LOG(tmx::utils::logWARNING) << "CSV data " << csv <<" is size " << csv_values.size() << std::endl;
-            throw std::runtime_error("Failed to parse CSV MUST Detection data");
+            throw tmx::TmxException("Failed to parse CSV MUST Detection data");
         }
         // Read out CSV information
         detection.cl = fromStringToDetectionClassification(csv_values.at(0));
@@ -47,8 +47,8 @@ namespace MUSTSensorDriverPlugin {
             
             return stringToDetectionClassificationMap.at(str);
         }
-        catch( const std::out_of_range ) {
-            FILE_LOG(tmx::utils::logWARNING) << "No registered Detection Classification for " << str << " in stringToDetectionClassificationMap! Setting classification as NA." << std::endl;
+        catch( const std::out_of_range &e ) {
+            FILE_LOG(tmx::utils::logWARNING) << e.what() << "No registered Detection Classification for " << str << " in stringToDetectionClassificationMap! Setting classification as NA." << std::endl;
             return DetectionClassification::NA;
         }
     }
@@ -61,7 +61,7 @@ namespace MUSTSensorDriverPlugin {
                 return rtn;
             }
        }
-       throw std::runtime_error("DetectionClassification type is not registered in stringToDetectionClassificationMap!");
+       throw tmx::TmxException("DetectionClassification type is not registered in stringToDetectionClassificationMap!");
     }
 
 
@@ -71,8 +71,8 @@ namespace MUSTSensorDriverPlugin {
             
             return stringToDetectionSizeMap.at(str);
         }
-        catch( const std::out_of_range ) {
-            FILE_LOG(tmx::utils::logWARNING) << "No registered Detection Size for " << str << " in stringToDetectionSizeMap! Setting classification as NA." << std::endl;
+        catch( const std::out_of_range &e) {
+            FILE_LOG(tmx::utils::logWARNING) << e.what() << "No registered Detection Size for " << str << " in stringToDetectionSizeMap! Setting classification as NA." << std::endl;
             return DetectionSize::NA;
         }
     };
