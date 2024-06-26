@@ -81,6 +81,8 @@ private:
 	
 	J2735MessageFactory factory;
 	
+	std::mutex _cfgLock;
+	
 	uint16_t webport;
 	std::string webip; 
 	std::string webSocketIP;
@@ -104,6 +106,6 @@ private:
 	// API URL to accept PSM XML
 	const QString PSM_Receive = "";
 };
-std::mutex _cfgLock;
+
 };
 
