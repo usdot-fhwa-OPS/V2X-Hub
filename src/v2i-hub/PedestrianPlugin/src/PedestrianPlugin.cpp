@@ -22,39 +22,9 @@ namespace PedestrianPlugin
  * @param name The name to give the plugin for identification purposes.
  */
 PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name), runningWebSocket(false), runningWebService(false)
-{	
+{
 	if (_signSimClient != nullptr)
 		_signSimClient.reset();
-}
-
-void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
-{
-	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-	QString st;
-	while(socket->bytesAvailable()>0)
-	{	
-		st.append(socket->readAll());
-	}
-	QByteArray array = st.toLocal8Bit();
-
-	char* psmMsgdef = array.data();
-
-	if (psmMsgdef == nullptr || strlen(psmMsgdef) == 0) 
-	{
-        PLOG(logWARNING) << "Received empty PSM message.";
-        writeResponse(QHttpEngine::Socket::BadRequest, socket);
-        return;
-    }
-
-	// Catch parse exceptions
-    try {
-	    BroadcastPsm(psmMsgdef);
-		writeResponse(QHttpEngine::Socket::Created, socket);
-	}
-	catch(const J2735Exception &e) {
-        PLOG(logERROR) << "Error parsing file: " << e.what();
-		writeResponse(QHttpEngine::Socket::BadRequest, socket);
-	}
 }
 
 int PedestrianPlugin::StartWebSocket()
@@ -69,11 +39,10 @@ int PedestrianPlugin::StartWebSocket()
 	PLOG(logDEBUG) << "Successfully running the I/O service";	
     runningWebSocket = true;
 
-    std::thread([this]
-	{
-        this->ioc.run();
-        runningWebSocket = false;
-    }).detach();
+    // Run the I/O service. The call will return when
+    // the socket is closed.
+    ioc.run();
+	runningWebSocket = false;
 
     return EXIT_SUCCESS;
 }
@@ -95,9 +64,6 @@ void PedestrianPlugin::StopWebSocket()
 
 [[noreturn]] int PedestrianPlugin::checkXML()
 {
-	//first xml will be empty string
-	std::string lastGeneratedXML = "";
-
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
 	while (true)
 	{
@@ -121,24 +87,63 @@ void PedestrianPlugin::StopWebSocket()
 	}	
 }
 
+void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
+{
+	QByteArray st;
+	while(socket->bytesAvailable() > 0)
+	{	
+		auto readBytes = socket->readAll();
+		st.append(readBytes);
+	}
+
+	if(st.size() == 0)
+	{
+		PLOG(logERROR) << "Received PSM is empty and skipped.";
+		socket->setStatusCode(QHttpEngine::Socket::BadRequest);
+		socket->writeHeaders();
+		socket->close();
+		return;
+	}
+	PLOG(logINFO) << "Received PSM bytes size: " << st.size();
+
+	std::string psmMsgdef = st.data();
+	std::list<std::string> psmSL = {};
+	psmSL.push_back(psmMsgdef);
+
+	// Catch parse exceptions
+    try {
+		for(const auto psm_s: psmSL)
+		{
+			BroadcastPsm(psm_s);
+			socket->setStatusCode(QHttpEngine::Socket::Created);
+		}
+	}
+	catch(const J2735Exception &e) {
+        PLOG(logERROR) << "Error parsing file: " << e.what();
+		socket->setStatusCode(QHttpEngine::Socket::BadRequest);
+	}
+	
+	socket->writeHeaders();
+	socket->close();
+}
+
 int PedestrianPlugin::StartWebService()
 {
+	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebService";
+	
 	// Web services 
 	std::array<char*, 1> placeholderX = {nullptr};
 	int placeholderC = 1;
 	QCoreApplication a(placeholderC, placeholderX.data());
 
  	auto address = QHostAddress(QString::fromStdString (webip));
-
-	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
-	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
-
-    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [this](QHttpEngine::Socket *socket) 
-	{
-		this->PedestrianRequestHandler(socket);
-	});
-
-    QHttpEngine::Server server(handler.data());
+	
+	QHttpEngine::QObjectHandler apiHandler;
+	apiHandler.registerMethod(PSM_Receive, [this](QHttpEngine::Socket *socket)
+							  { 
+							this->PedestrianRequestHandler(socket);
+							});
+	QHttpEngine::Server server(&apiHandler);
 
     if (!server.listen(address, webport))
 	{
@@ -156,10 +161,6 @@ void PedestrianPlugin::StopWebService()
     {
         PLOG(logDEBUG) << "Stopping WebService";
         QCoreApplication::quit();
-        if (webServiceThread.joinable())
-        {
-            webServiceThread.join();
-        }
     }
     runningWebService = false;
 }
@@ -171,20 +172,17 @@ void PedestrianPlugin::UpdateConfigSettings()
 	// (e.g. using std::atomic, std::mutex, etc.).
 
 	std::lock_guard<mutex> lock(_cfgLock);
-
-	GetConfigValue<std::string>("WebServiceIP",webip);
-	GetConfigValue<uint16_t>("WebServicePort",webport);
-	GetConfigValue<std::string>("WebSocketHost",webSocketIP);
-	GetConfigValue<std::string>("WebSocketPort",webSocketURLExt);
+	GetConfigValue<std::string>("WebServiceIP", webip);
+	GetConfigValue<uint16_t>("WebServicePort", webport);
+	GetConfigValue<std::string>("WebSocketHost", webSocketIP);
+	GetConfigValue<std::string>("WebSocketPort", webSocketURLExt);
 	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<std::string>("DataProvider", dataprovider);
-	GetConfigValue<float>("FLIRCameraRotation",cameraRotation);
-	GetConfigValue<std::string>("HostString",hostString);
+	GetConfigValue<float>("FLIRCameraRotation", cameraRotation);
+	GetConfigValue<std::string>("HostString", hostString);
 
-	PLOG(logDEBUG) << "Pedestrian data provider: "<< dataprovider.c_str();
-
-	// std::vector<std::thread> threads;
-
+	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
+	
 	if (dataprovider.compare("FLIR") == 0)
     {
 		PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str();
@@ -192,28 +190,35 @@ void PedestrianPlugin::UpdateConfigSettings()
         StopWebService();
         if (!runningWebSocket)
         {
-            StartWebSocket();
-            PLOG(logDEBUG) << "WebSocket service started";
+			PLOG(logDEBUG) << "Starting WebSocket Thread";
+            std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
+            PLOG(logDEBUG) << "WebSocket Thread started!!";
+			webSocketThread.detach(); // wait for the thread to finish
+
+			PLOG(logDEBUG) << "Starting XML Thread";
+			std::thread xmlThread(&PedestrianPlugin::checkXML, this);
+			PLOG(logDEBUG) << "XML Thread started!!";
+			xmlThread.detach(); // wait for the thread to finish
         }
     }
 
-	else  // default if PSM XML data consumed using the webservice implementation
+	else if (dataprovider.compare("PSM") == 0) // default if PSM XML data consumed using the webservice implementation
 	{
         StopWebSocket();
         if (!runningWebService)
         {
-            StartWebService();
-            PLOG(logDEBUG) << "WebService started";
+			PLOG(logDEBUG) << "Starting WebService Thread";
+            std::thread webServiceThread(&PedestrianPlugin::StartWebService, this);
+			webServiceThread.detach(); // wait for the thread to finish
+            PLOG(logDEBUG) << "WebService Thread started";
         }
     }
-
-	// for (auto &thread : threads)
-    // {
-    //     if (thread.joinable())
-    //     {
-    //         thread.join();
-    //     }
-    // }
+	else
+	{
+		PLOG(logWARNING) << "Incorrect DataProvider entered!";
+		StopWebService();
+		StopWebSocket();
+	}
 }
 
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)
@@ -232,74 +237,38 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PedestrianPlugin::BroadcastPsm(const char * psmJson) {  //overloaded 
-
-	if (psmJson == nullptr || strlen(psmJson) == 0) 
-	{
-        PLOG(logWARNING) << "Attempted to broadcast an empty PSM message.";
-        return;
-    }
+void PedestrianPlugin::BroadcastPsm(const std::string &psmJson) 
+{ //overloaded 
 
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
 	tmx::message_container_type container;
-	std::unique_ptr<PsmEncodedMessage> msg;	
 
-	try
-	{
-		std::stringstream ss;
-		ss << psmJson;
+	std::stringstream ss;
+	ss << psmJson;
 
-		container.load<XML>(ss);
-		psmmessage.set_contents(container.get_storage().get_tree());
+	container.load<XML>(ss);
+	psmmessage.set_contents(container.get_storage().get_tree());
 
-		const std::string psmString(psmJson);
+	psmENC.encode_j2735_message(psmmessage);
 
-		psmENC.encode_j2735_message(psmmessage);
+	std::unique_ptr<PsmEncodedMessage> msg(new PsmEncodedMessage());	
+	msg.reset();
+	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 
-		msg.reset();
-		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+	std::string enc = psmENC.get_encoding();
+	msg->refresh_timestamp();
+	msg->set_payload(psmENC.get_payload_str());
+	msg->set_encoding(enc);
+	msg->set_flags(IvpMsgFlags_RouteDSRC);
+	msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
+	msg->refresh_timestamp();
 
-		std::string enc = psmENC.get_encoding();
-		msg->refresh_timestamp();
-		msg->set_payload(psmENC.get_payload_str());
-		msg->set_encoding(enc);
-		msg->set_flags(IvpMsgFlags_RouteDSRC);
-		msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
-		msg->refresh_timestamp();
+	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+	BroadcastMessage(*rMsg);
 
-		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
-		BroadcastMessage(*rMsg);
-
-		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
-	}
-    catch (const std::invalid_argument &e)
-    {
-        PLOG(logWARNING) << "Invalid argument error: " << e.what() << " broadcasting PSM for xml: " << psmJson;
-    }
-    catch (const std::out_of_range &e)
-    {
-        PLOG(logWARNING) << "Out of range error: " << e.what() << " broadcasting PSM for xml: " << psmJson;
-    }
-    catch (const std::exception &e)
-    {
-        PLOG(logWARNING) << "General error: " << e.what() << " broadcasting PSM for xml: " << psmJson;
-    }
+	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
 }
-
-/**
- * Write HTTP response. 
- */
-void PedestrianPlugin::writeResponse(int responseCode, QHttpEngine::Socket *socket) const
-{
-	socket->setStatusCode(responseCode);
-    socket->writeHeaders();
-    if(socket->isOpen())
-	{
-        socket->close();
-    }
-}
-
 
 int PedestrianPlugin::Main()
 {

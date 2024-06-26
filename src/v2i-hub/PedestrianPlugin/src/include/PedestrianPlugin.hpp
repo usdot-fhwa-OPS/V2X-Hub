@@ -61,7 +61,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value) override;
 	void OnStateChange(IvpPluginState state) override;
 
-	void BroadcastPsm(const char *psmJson);
+	void BroadcastPsm(const std::string &psmJson);
 
 	int  StartWebService();
 	int  StartWebSocket();
@@ -73,16 +73,14 @@ protected:
 	void OnWebSocketConnected();
 	void OnWebSocketDataReceived(QString message);
 	void OnWebSocketClosed();
-	
-	[[noreturn]] int checkXML();
 
+	[[noreturn]] int checkXML();
+	
 private:
 	std::unique_ptr<tmx::utils::UdpClient> _signSimClient = nullptr;
-
+	
 	J2735MessageFactory factory;
 	
-	std::mutex _cfgLock;
-
 	uint16_t webport;
 	std::string webip; 
 	std::string webSocketIP;
@@ -93,14 +91,19 @@ private:
 	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
 	std::string hostString;
 
+	std::thread webSocketThread;
+	std::thread xmlThread;
+	std::thread webServiceThread;
+
 	std::atomic<bool> runningWebSocket;
 	std::atomic<bool> runningWebService;
-	std::thread webSocketThread;
-	std::thread webServiceThread;
 
 	// The io_context is required for all I/O
     net::io_context ioc;
-};
 
+	// API URL to accept PSM XML
+	const QString PSM_Receive = "";
+};
+std::mutex _cfgLock;
 };
 
