@@ -37,7 +37,7 @@ namespace MUSTSensorDriverPlugin {
         detectedObject.confidence = detection.confidence;
         detectedObject.timestamp = detection.timestamp;
         detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
-        detectedObject.type = detectionClassificationToString(detection.cl);
+        detectedObject.type = detectionClassificationToSensorDetectedObjectType(detection.cl);
         detectedObject.sensorId = sensorId;
         detectedObject.projString = projString;
         return detectedObject;
@@ -53,7 +53,7 @@ namespace MUSTSensorDriverPlugin {
         }
     }
 
-    std::string detectionClassificationToString(const DetectionClassification &classification) {
+    std::string detectionClassificationToSensorDetectedObjectType(const DetectionClassification &classification) {
        for (auto const &[name, cl] : stringToDetectionClassificationMap){
             if (classification == cl) {
                 std::string rtn = name;

@@ -74,11 +74,11 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     EXPECT_EQ("PROJ String", sensorDetectedObject.projString);
 }
 
-TEST(TestMUSTSensorDetection, detectionClassificationToString ) {
-    EXPECT_STRCASEEQ("SEDAN", detectionClassificationToString(DetectionClassification::SEDAN).c_str());
-    EXPECT_STRCASEEQ("VAN", detectionClassificationToString(DetectionClassification::VAN).c_str());
-    EXPECT_STRCASEEQ("TRUCK", detectionClassificationToString(DetectionClassification::TRUCK).c_str());
-    EXPECT_THROW(detectionClassificationToString(DetectionClassification::NA).c_str(), std::runtime_error);
+TEST(TestMUSTSensorDetection, detectionClassificationToSensorDetectedObjectType ) {
+    EXPECT_STRCASEEQ("SEDAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::SEDAN).c_str());
+    EXPECT_STRCASEEQ("VAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::VAN).c_str());
+    EXPECT_STRCASEEQ("TRUCK", detectionClassificationToSensorDetectedObjectType(DetectionClassification::TRUCK).c_str());
+    EXPECT_THROW(detectionClassificationToSensorDetectedObjectType(DetectionClassification::NA).c_str(), std::runtime_error);
 
 }
 

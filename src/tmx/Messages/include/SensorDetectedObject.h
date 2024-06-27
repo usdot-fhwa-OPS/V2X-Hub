@@ -28,6 +28,7 @@ namespace tmx
             // // Message sub type for routing this message through TMX core
             static constexpr const char *MessageSubType = MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING;
 
+            // TODO: Convert this member variable to std::attributes and handle nested object and arrays. (see [CloudHeartbeatMessage.h](./CloudHearbeatMessage.h) array_attribute )
             std::string type = "";
             double confidence = 0.0;
             std::string sensorId = "";
@@ -36,7 +37,7 @@ namespace tmx
             tmx::utils::Point position = tmx::utils::Point();
             tmx::utils::Vector3d velocity = tmx::utils::Vector3d();
             long timestamp = 0;
-
+           
         };
 
     }

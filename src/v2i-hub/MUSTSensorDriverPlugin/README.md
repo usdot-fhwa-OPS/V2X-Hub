@@ -32,7 +32,7 @@ This plugin has several configuration parameters. Below these are listed out as 
 **ProjectionString**: This parameter holds a string that describes coordinate transforms necessary for projecting the detection data provide in cartesian coordinates to WSG84 coordinate frame.
 
 > [!NOTE]
-> Both **CARMA Streets** and our vehicle automatation **CARMA Platform** rely on the PROJ4 library for projecting data between internal local maps coordinate frames and WSG84. Additional documentation on the projection string can be found in PROJ documentation (https://proj.org/en/9.4/index.html)(https://proj.org/en/9.4/usage/quickstart.html)(https://proj.org/en/9.4/usage/transformation.html)
+> Both **CARMA Streets** and our vehicle automatation **CARMA Platform** rely on the PROJ4 library for projecting data between internal local maps coordinate frames and WSG84. Additional documentation on the projection string can be found in PROJ documentation (<https://proj.org/en/9.4/index.html>)(<https://proj.org/en/9.4/usage/quickstart.html>)(<https://proj.org/en/9.4/usage/transformation.html>)
 
 After setting these configuration parameters the plugin can simply be enabled.
 
