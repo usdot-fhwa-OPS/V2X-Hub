@@ -65,7 +65,7 @@ public:
 	std_attribute(this->msg, std::string, InputType, "", );
 	std_attribute(this->msg, std::string, Bytes, "", );
 
-	static tmx::message_tree_type to_tree(const MapFile& m) {
+	static tmx::message_tree_type to_tree(const MapFile &m) {
 		return tmx::message::to_tree(static_cast<const tmx::message&>(m));
 	}
 
@@ -89,27 +89,26 @@ protected:
 	void OnMessageReceived(IvpMessage *msg) override;
 	void OnStateChange(IvpPluginState state) override;
 
+	bool LoadMapFiles();
+	void DebugPrintMapFiles();
+
+	std::string enum_to_hex_string();
+	std::string removeMessageFrame(const std::string &fileContent);
+	std::string checkMapContent(const std::string &fn);
+
 private:
+	tmx::messages::J2735MessageFactory factory;
+	tmx::utils::FrequencyThrottle<int> errThrottle;
+
 	std::atomic<int> _mapAction {-1};
 	std::atomic<bool> _isMapFileNew {false};
 	std::atomic<bool> _cohdaR63 {false};
 
-	std::map<int, MapFile> _mapFiles;
 	std::mutex data_lock;
-
-	tmx::messages::J2735MessageFactory factory;
-
+	std::map<int, MapFile> _mapFiles;
 	int sendFrequency = 1000;
-	tmx::utils::FrequencyThrottle<int> errThrottle;
 
 	std::array<char, 5> mapID_buffer;
-
-	bool LoadMapFiles();
-	void DebugPrintMapFiles();
-	std::string enum_to_hex_string();
-	std::string removeMessageFrame(const std::string &fileContent);
-	std::string checkMapContent(std::ifstream &in);
-
 };
 
 } // namespace MapPlugin

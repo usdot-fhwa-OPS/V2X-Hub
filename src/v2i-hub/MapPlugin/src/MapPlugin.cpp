@@ -236,23 +236,33 @@ namespace MapPlugin {
 		}
 	}
 
-	std::string MapPlugin::checkMapContent(std::ifstream &in)
+	std::string MapPlugin::checkMapContent(const std::string &fn)
 	{
+		PLOG(logDEBUG4) << "In MapPlugin :: checkMapContent";
 		try
 		{
-			std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-			in.close();
-			// Remove any newline characters
-			content.erase(remove(content.begin(), content.end(), '\n'), content.end());
-			PLOG(logDEBUG4) << "Map without newline " << content;
-			std::string payload = removeMessageFrame(content);
+			std::ifstream in(fn.c_str(), std::ios::binary);
+			if (!in)
+			{
+				PLOG(logERROR) << "Failed to open file: " << fn.c_str();
+				throw std::ios_base::failure("Failed to open file: " + fn);
+			}
+			else
+			{
+				std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+				in.close();
+				// Remove any newline characters
+				content.erase(remove(content.begin(), content.end(), '\n'), content.end());
+				PLOG(logDEBUG4) << "Map without newline " << content;
+				std::string payload = removeMessageFrame(content);
 
-			return payload;
+				return payload;
+			}
 		}
 		catch (const std::ios_base::failure& e)
 		{
 			PLOG(logERROR) << "Exception encountered while reading file: " << e.what();
-			return "";
+			throw;
 		}
 	}
 
@@ -279,10 +289,10 @@ namespace MapPlugin {
 							inType = "ISD";
 						else if (fn.substr(fn.size() - 4) == ".txt")
 							inType = "TXT";
-						else if (fn.substr(fn.size()- 5) == ".uper")
-							inType ="UPER";
-						else
+						else if (fn.substr(fn.size() - 4) == ".xml")
 							inType = "XML";
+						else 
+							PLOG(logWARNING) << "Incorrect MapFile extension entered!";
 
 						if (inType == "ISD")
 						{
@@ -293,30 +303,22 @@ namespace MapPlugin {
 						}
 						else if (inType == "TXT")
 						{
-							std::ifstream in(fn, std::ios::binary);
-							if (!in)
+							std::string payload = checkMapContent(fn);
+							byte_stream bytes;
+							std::istringstream streamableContent(payload);
+							streamableContent >> bytes;
+							PLOG(logINFO) << "MAP encoded bytes are " << bytes;
+							tmx::messages::MapDataMessage *mapMsg = tmx::messages::MapDataEncodedMessage::decode_j2735_message<tmx::messages::codec::uper<tmx::messages::MapDataMessage>>(bytes);
+
+							if (mapMsg)
 							{
-								PLOG(logERROR) << "Failed to open file: " << fn;
-							}
-							else
-							{
-								std::string payload = checkMapContent(in);
-								byte_stream bytes;
-								std::istringstream streamableContent(payload);
-								streamableContent >> bytes;
-								PLOG(logINFO) << "MAP encoded bytes are " << bytes;
-								tmx::messages::MapDataMessage *mapMsg = tmx::messages::MapDataEncodedMessage::decode_j2735_message<tmx::messages::codec::uper<tmx::messages::MapDataMessage>>(bytes);
+								PLOG(logDEBUG) << "Map is " << *mapMsg;
 
-								if (mapMsg)
-								{
-									PLOG(logDEBUG) << "Map is " << *mapMsg;
+								tmx::messages::MapDataEncodedMessage mapEnc;
+								mapEnc.encode_j2735_message(*mapMsg);
+								mapFile.set_Bytes(mapEnc.get_payload_str());
 
-									tmx::messages::MapDataEncodedMessage mapEnc;
-									mapEnc.encode_j2735_message(*mapMsg);
-									mapFile.set_Bytes(mapEnc.get_payload_str());
-
-									PLOG(logINFO) << "J2735 message bytes encoded as " << mapFile.get_Bytes();
-								}
+								PLOG(logINFO) << "J2735 message bytes encoded as " << mapFile.get_Bytes();
 							}
 						}
 						else if (inType == "XML")
