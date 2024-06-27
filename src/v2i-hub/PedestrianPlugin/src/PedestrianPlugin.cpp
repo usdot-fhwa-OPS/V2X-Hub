@@ -25,6 +25,13 @@ PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
 	if (_signSimClient != nullptr)
 		_signSimClient.reset();
+	
+	UpdateConfigSettings();
+	std::lock_guard<mutex> lock(_cfgLock);
+
+	std::thread webServiceThread(&PedestrianPlugin::StartWebService, this);
+	webServiceThread.detach(); // wait for the thread to finish
+	runningWebService = true;
 }
 
 int PedestrianPlugin::StartWebSocket()
