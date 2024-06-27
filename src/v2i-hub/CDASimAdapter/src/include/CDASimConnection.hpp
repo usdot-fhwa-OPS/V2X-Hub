@@ -35,7 +35,7 @@ namespace CDASimAdapter {
              */
             explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
                                 const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
-                                const tmx::utils::Point &location, const std::string &sensor_json_file_path);
+                                const tmx::utils::Point &location, const std::string &sensor_json_file_path = "");
              /**
              * @brief Method to forward v2x message to CARMA Simulation
              * @param v2x_message string
@@ -173,9 +173,12 @@ namespace CDASimAdapter {
             std::shared_ptr<tmx::utils::UdpServer> time_sync_listener;
             std::shared_ptr<tmx::utils::UdpServer> sensor_detected_object_listener;
 
-            FRIEND_TEST(TestCARMASimulationConnection, get_handshake_json);
-            FRIEND_TEST(TestCARMASimulationConnection, read_json_file);
-            FRIEND_TEST(TestCARMASimulationConnection, string_to_json);
+            FRIEND_TEST(TestCDASimConnection, get_handshake_json);
+            FRIEND_TEST(TestCDASimConnection, get_handshake_json_no_sensor_config);
+            FRIEND_TEST(TestCDASimConnection, read_json_file);
+            FRIEND_TEST(TestCDASimConnection, string_to_json);
+
+            
     };
 
 }
