@@ -22,9 +22,9 @@ TEST(TestMUSTSensorDetection, fromStringToDetectionClassification)
 
 }
 
-TEST(TestMUSTSensorDetection, csvToDectection ){
+TEST(TestMUSTSensorDetection, csvToDetection ){
     std::string valid_csv_data = "truck,13.3,22.4,30.5,35.8,large,95.1,1,1714374738";
-    auto detection = csvToDectection(valid_csv_data);
+    auto detection = csvToDetection(valid_csv_data);
     EXPECT_EQ(detection.cl, DetectionClassification::TRUCK);
     EXPECT_DOUBLE_EQ(detection.position_x, 13.3);
     EXPECT_DOUBLE_EQ(detection.position_y, 22.4);
@@ -37,13 +37,13 @@ TEST(TestMUSTSensorDetection, csvToDectection ){
 }
 
 TEST(TestMUSTSensorDetection, csvToDectectionInvalidCSV ){
-    std::string valid_csv_data = "truck,13.3,22.4,30.5,35.8,large,95.1,1,1714374738,20";
-    EXPECT_THROW(csvToDectection(valid_csv_data), std::runtime_error);
+    std::string invalid_csv_data = "truck,13.3,22.4,30.5,35.8,large,95.1,1,1714374738,20";
+    EXPECT_THROW(csvToDetection(invalid_csv_data), tmx::TmxException);
 }
 
 TEST(TestMUSTSensorDetection, csvToDectectionEmptyString ){
-    std::string valid_csv_data = "";
-    EXPECT_THROW(csvToDectection(valid_csv_data), std::runtime_error);
+    std::string empty_string = "";
+    EXPECT_THROW(csvToDetection(empty_string), tmx::TmxException);
 }
 
 TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {

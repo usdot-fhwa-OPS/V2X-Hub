@@ -101,7 +101,7 @@ namespace MUSTSensorDriverPlugin {
      * @return MUSTSensorDetection 
      * @throws tmx::TmxException if string is misformatted.
      */
-    MUSTSensorDetection csvToDectection(const std::string &csv );
+    MUSTSensorDetection csvToDetection(const std::string &csv );
 
     /**
      * @brief Function to convert MUSTSensorDetections to SensorDetectedObject

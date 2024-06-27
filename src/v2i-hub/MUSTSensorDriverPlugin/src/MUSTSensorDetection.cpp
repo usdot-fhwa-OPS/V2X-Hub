@@ -3,7 +3,7 @@
 namespace MUSTSensorDriverPlugin {
 
     
-    MUSTSensorDetection csvToDectection(const std::string &csv ) {
+    MUSTSensorDetection csvToDetection(const std::string &csv ) {
         MUSTSensorDetection detection;
         std::vector<std::string> csv_values;
         std::stringstream ss(csv);
@@ -13,7 +13,7 @@ namespace MUSTSensorDriverPlugin {
             csv_values.push_back(substr);
         }
         if (csv_values.size() != 9 ){
-            FILE_LOG(tmx::utils::logWARNING) << "CSV data " << csv <<" is size " << csv_values.size() << std::endl;
+            FILE_LOG(tmx::utils::logERROR) << "Data " << csv << " does not match expected csv data format : \'class,x,y,heading,speed,size,confidence,trackId,timestamp\'" << std::endl;
             throw tmx::TmxException("Failed to parse CSV MUST Detection data");
         }
         // Read out CSV information
@@ -78,11 +78,13 @@ namespace MUSTSensorDriverPlugin {
     };
 
     tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed) {
-        // Convert North East heading to 
+        // Convert North East heading to Angle with 0 at (1, 0) (See README Unit Circle)
         heading = heading - 270;
+        // factor for converting heading from degrees to radians
+        auto headingInRad = M_PI / 180;
         tmx::utils::Vector3d velocity;
-        velocity.X = std::cos(M_PI/180 * heading) * speed;
-        velocity.Y = std::sin(M_PI/180 * heading) * speed;
+        velocity.X = std::cos(headingInRad * heading) * speed;
+        velocity.Y = std::sin(headingInRad * heading) * speed;
         velocity.Z = 0;
         return velocity;
     };

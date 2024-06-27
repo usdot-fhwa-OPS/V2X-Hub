@@ -68,7 +68,7 @@ namespace MUSTSensorDriverPlugin {
 		if (mustSensorPacketReceiver) {
 			try {
 				PLOG(logDEBUG1) << "Processing MUST Sensor Detection ... " << std::endl;
-				MUSTSensorDetection detection = csvToDectection(mustSensorPacketReceiver->stringTimedReceive());
+				MUSTSensorDetection detection = csvToDetection(mustSensorPacketReceiver->stringTimedReceive());
 				if ( !connected ) {
 					connected = true;
 					SetStatus(keyMUSTSensorConnectionStatus, "CONNECTED");
