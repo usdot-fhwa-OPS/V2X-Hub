@@ -25,7 +25,7 @@ namespace MUSTSensorDriverPlugin {
         detection.size = fromStringToDetectionSize(csv_values.at(5));
         detection.confidence = std::stod(csv_values.at(6));
         detection.trackID = std::stoi(csv_values.at(7));
-        detection.timestamp = std::stoll(csv_values.at(8));
+        detection.timestamp = std::stod(csv_values.at(8));
         return detection;
     }
 
@@ -35,7 +35,7 @@ namespace MUSTSensorDriverPlugin {
         detectedObject.position.X = detection.position_x;
         detectedObject.position.Y = detection.position_y;
         detectedObject.confidence = detection.confidence;
-        detectedObject.timestamp = detection.timestamp;
+        detectedObject.timestamp = static_cast<long>(detection.timestamp*1000); // convert decimal seconds to int milliseconds.
         detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
         detectedObject.type = detectionClassificationToSensorDetectedObjectType(detection.cl);
         detectedObject.sensorId = sensorId;

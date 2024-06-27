@@ -42,10 +42,8 @@ def move_detection():
     return 
 
 def create_socket():       
-    try:
-        return socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    except socket.error as err:
-        print('Socket error because of %s' %(err))
+    return socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    
 def send_detection(sock, detection, host):
     try:
         msg = detection.to_csv()

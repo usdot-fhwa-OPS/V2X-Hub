@@ -64,7 +64,8 @@ namespace MUSTSensorDriverPlugin {
     DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept;
 
     /**
-     * @brief Converts DetectionClassification enumeration to string type for SensorDetectedObject
+     * @brief Converts DetectionClassification enumeration to string type for SensorDetectedObject. All types are 
+     * assumed to be capitalize versions of the DetectionClassifications.
      * @param classifcation DetectionClassification
      * @return std::string type for SensorDetectedObject
      * @throws tmx::TmxException if DetectionClassification is not included in map.
@@ -88,9 +89,9 @@ namespace MUSTSensorDriverPlugin {
         // Confidence in type
         double confidence = 0;
         // Unique ID
-        unsigned trackID = 0;
+        unsigned int trackID = 0;
         // Timestamp in seconds
-        unsigned long timestamp = 0; 
+        double timestamp = 0; 
 
     };
 

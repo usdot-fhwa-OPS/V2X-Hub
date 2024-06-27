@@ -56,7 +56,7 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     detection.position_x = 10.5;
     detection.position_y = -20.3;
     detection.size = DetectionSize::SMALL;
-    detection.timestamp = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    detection.timestamp = 1719506355.4;
     detection.trackID = 324;
     detection.speed = 5;
 
@@ -69,7 +69,7 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     EXPECT_NEAR(4.33, sensorDetectedObject.velocity.Y, 0.001);
     EXPECT_NEAR(2.5, sensorDetectedObject.velocity.X, 0.001);
     EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.type.c_str());
-    EXPECT_EQ(detection.timestamp, sensorDetectedObject.timestamp);
+    EXPECT_EQ(1719506355400, sensorDetectedObject.timestamp);
     EXPECT_EQ("MUSTSensor1", sensorDetectedObject.sensorId);
     EXPECT_EQ("PROJ String", sensorDetectedObject.projString);
 }
