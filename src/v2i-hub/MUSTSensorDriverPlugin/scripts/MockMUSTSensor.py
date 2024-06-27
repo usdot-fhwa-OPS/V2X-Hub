@@ -1,21 +1,21 @@
 #!/usr/bin/python3
 
 import socket
-import sys
 import time
 import argparse
 from dataclasses import dataclass
 from enum import Enum
+import random
 
 
 class DetectionClassification(Enum):
-    """Enumeration used for indentifying type of detection
+    """Enumeration used for identifying type of detection
     """
     SEDAN='sedan'
     VAN='van'
     TRUCK='truck'
 class DetectionSize(Enum):
-    """Enumeration used for indentifying the type of KafkaLogMessage
+    """Enumeration used for identifying the type of KafkaLogMessage
     """
     SMALL='small'
     MEDIUM='medium'
@@ -38,8 +38,15 @@ class MUSTDetection:
     def to_csv(self):
         return f'{self.classification.value},{self.x},{self.y},{self.heading},{self.speed},{self.size.value},{self.confidence},{self.track_id},{self.timestamp}'
 
-def move_detection():
-    return 
+def update_detection(detection):
+    """Function moves detection and heading by random increment and changes speed to a random value between 0 and 10.
+    """
+    detection.x = random.uniform(-1.0, 1.0) + detection.x
+    detection.y = random.uniform(-1.0, 1.0) + detection.y
+    detection.heading = random.uniform(-5.0, 5.0) + detection.heading
+    detection.speed = random.uniform(0.0, 10)
+    detection.timestamp = round(time.time())
+     
 
 def create_socket():       
     return socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
@@ -67,6 +74,7 @@ def main():
     print("Mocking MUST Sensor detections ...")
     while True:
         for detection in detections:
+            update_detection(detection)
             send_detection(sock,detection,host)
             time.sleep(1)
 
