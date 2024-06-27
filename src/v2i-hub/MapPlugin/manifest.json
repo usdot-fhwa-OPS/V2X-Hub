@@ -31,7 +31,7 @@
 		{
 			"key":"MAP_Files",
 			"default":"{ \"MapFiles\": [ {\"Action\":0, \"FilePath\":\"/var/www/plugins/MAP/MAP_9709_UPER.txt\"}] }",
-			"description":"JSON data defining a list of map files.  One map file for each action set specified by the TSC."
+			"description":"JSON data defining a list of map files. One map file for each action set specified by the TSC."
 		}
 	]
 }
