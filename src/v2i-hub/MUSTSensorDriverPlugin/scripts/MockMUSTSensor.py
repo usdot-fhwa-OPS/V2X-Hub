@@ -76,7 +76,8 @@ def main():
         for detection in detections:
             update_detection(detection)
             send_detection(sock,detection,host)
-            time.sleep(1)
+            # MUST Sensor broadcasts detection data at 30 Hz
+            time.sleep(0.0333333)
 
 if __name__ == '__main__':
     main()

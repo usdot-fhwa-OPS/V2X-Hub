@@ -58,4 +58,23 @@ To convert the heading to unit circle we simple subtract 270 degrees from any he
 
 ## Functionality Testing
 
-Start up plugin and use `scripts/MockMUSTSensor.py` script to send mock detection data to plugin at 1 Hz.
+Included in this directory is a script that can be used to provide Mock MUST Sensor data. Start up plugin and use `scripts/MockMUSTSensor.py` script to send mock detection data from a single mock object to plugin at 30 Hz. The script will update the timestamp of this object as well as move it randomly in space. 
+
+```bash
+Script to mock detection data coming from MUST Sensor
+
+options:
+  -h, --help   show this help message and exit
+  --ip IP      IP address to send detection data to.
+  --port PORT  Port to send detection data to.
+```
+
+Addition addition objects for which to send mock detections can be done by appending detections to the `detections` array in the python script.
+
+### Confirming Functionality
+
+On startup of the plugin, the V2X-Hub Web UI should show the plugin as enabled and the `MUST Sensor Connection Status` should be `IDLE` reflecting that the plugin is listening for detections but has not yet received any.
+![Alt text](docs/idle_connection.png)
+After running the `MockMUSTSensor.py` script the `MUST Sensor Connection Status` should be `CONNECTED` reflecting that it is currently receiving valid messages from the MUST Sensor. Additionally the **Messages** tab will reveal that the plugin is also sending **SensorDetectedObject** messages as a result.
+![Alt text](docs/connected_connection.png)
+A status of `DISCONNECTED` represents some error behavior that is likely related to the connection or the incomming data. Please inspect configuration parameters on the MUST Plugin and the MUST Sensor Detection data and confirm it is valid
