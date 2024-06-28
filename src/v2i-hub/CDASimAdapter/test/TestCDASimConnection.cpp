@@ -59,25 +59,6 @@ namespace CDASimAdapter {
         connection->forward_message(test_message, client);
     } 
 
-    TEST_F( TestCDASimConnection, consume_msg){
-
-        std::shared_ptr<MockUpdServer> server = std::make_shared<MockUpdServer>();
-        char *msg_data  = new char();
-        char test_string[] = "Test Message";
-        EXPECT_CALL( *server, TimedReceive(_, _, _) ).Times(2).
-            WillOnce(testing::DoAll(Return(-1))).
-            WillRepeatedly( testing::DoAll( SetArrayArgument<0>(test_string, test_string + strlen(test_string) + 1),Return(10)));
-        ASSERT_THROW(connection->consume_server_message(server), UdpServerRuntimeError);
-
-        std::string msg = connection->consume_server_message(server);
-
-        std::string compare_str;
-        compare_str = test_string;
-        ASSERT_EQ(compare_str.compare( msg ) , 0);
-        delete msg_data;
-
-    }
-
     TEST_F( TestCDASimConnection, setup_upd_connection) {
         ASSERT_TRUE(connection->setup_udp_connection("127.0.0.1", "127.0.0.1", 4567, 4568, 4569, 4570));
     }

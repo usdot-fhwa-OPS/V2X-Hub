@@ -198,4 +198,22 @@ namespace tmx::utils {
         return -1;
     }
 
+    std::string UdpServer::stringTimedReceive(int maxWait_ms) {
+        std::vector<char> msg(4000);
+        int num_of_bytes = this->TimedReceive(msg.data(),4000, maxWait_ms);
+        if (num_of_bytes > 0 ) {
+            msg.resize(num_of_bytes);
+            std::string ret(msg.data());
+            FILE_LOG(logDEBUG) << "UDP Server message received : " << ret << " of size " << num_of_bytes << std::endl;
+            return ret;
+        }
+        else if ( num_of_bytes == 0 ) {
+            throw UdpServerRuntimeError("Received empty message!");
+        }
+        else {
+            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
+        }
+        return "";
+    }
+
 } // namespace tmx::utils
