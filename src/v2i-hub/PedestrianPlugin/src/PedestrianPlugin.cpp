@@ -21,7 +21,7 @@ namespace PedestrianPlugin
  *
  * @param name The name to give the plugin for identification purposes.
  */
-PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name), runningWebSocket(false), runningWebService(false)
+PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
 	if (_signSimClient != nullptr)
 		_signSimClient.reset();
@@ -31,12 +31,14 @@ PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 
 	std::thread webServiceThread(&PedestrianPlugin::StartWebService, this);
 	webServiceThread.detach(); // wait for the thread to finish
+	// StartWebService = std::move(std::jthread{StartWebService});
 	runningWebService = true;
 }
 
 int PedestrianPlugin::StartWebSocket()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
+	// std::jthread StartWebSocket;
 
 	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
@@ -71,6 +73,7 @@ void PedestrianPlugin::StopWebSocket()
 
 [[noreturn]] int PedestrianPlugin::checkXML()
 {
+	// std::jthread checkXML;
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
 	while (true)
 	{
@@ -85,7 +88,7 @@ void PedestrianPlugin::StopWebSocket()
 
 			while(!currentPSMQueue.empty())
 			{		
-				char* char_arr = &currentPSMQueue.front()[0];
+				const char* char_arr = &currentPSMQueue.front()[0];
 
 				BroadcastPsm(char_arr);
 				currentPSMQueue.pop();
@@ -119,7 +122,7 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 
 	// Catch parse exceptions
     try {
-		for(const auto psm_s: psmSL)
+		for(const auto& psm_s: psmSL)
 		{
 			BroadcastPsm(psm_s);
 			socket->setStatusCode(QHttpEngine::Socket::Created);
@@ -137,7 +140,8 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 int PedestrianPlugin::StartWebService()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebService";
-	
+	// std::jthread webServiceThread;
+
 	// Web services 
 	std::array<char*, 1> placeholderX = {nullptr};
 	int placeholderC = 1;
@@ -199,11 +203,13 @@ void PedestrianPlugin::UpdateConfigSettings()
         {
 			PLOG(logDEBUG) << "Starting WebSocket Thread";
             std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
+			// StartWebSocket = std::move(std::jthread{StartWebSocket});
             PLOG(logDEBUG) << "WebSocket Thread started!!";
 			webSocketThread.detach(); // wait for the thread to finish
 
 			PLOG(logDEBUG) << "Starting XML Thread";
 			std::thread xmlThread(&PedestrianPlugin::checkXML, this);
+			// checkXML = std::move(std::jthread{checkXML});
 			PLOG(logDEBUG) << "XML Thread started!!";
 			xmlThread.detach(); // wait for the thread to finish
         }
@@ -259,7 +265,8 @@ void PedestrianPlugin::BroadcastPsm(const std::string &psmJson)
 
 	psmENC.encode_j2735_message(psmmessage);
 
-	std::unique_ptr<PsmEncodedMessage> msg(new PsmEncodedMessage());	
+	// std::unique_ptr<PsmEncodedMessage> msg;
+	auto msg = std::make_unique<PsmEncodedMessage>();
 	msg.reset();
 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 

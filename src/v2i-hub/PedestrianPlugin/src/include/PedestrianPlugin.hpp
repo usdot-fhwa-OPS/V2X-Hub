@@ -93,12 +93,8 @@ private:
 	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
 	std::string hostString;
 
-	std::thread webSocketThread;
-	std::thread xmlThread;
-	std::thread webServiceThread;
-
-	std::atomic<bool> runningWebSocket;
-	std::atomic<bool> runningWebService;
+	bool runningWebSocket = false;
+    bool runningWebService = false;
 
 	// The io_context is required for all I/O
     net::io_context ioc;
