@@ -1,6 +1,5 @@
 # PVL Actions
 These are Port Drayage actions created for the PVL Lab for testing of C1T functionality.
-<b>Optional: Included some screen shot of the actions on a map</b>
 
 ## Instructions
 ```
