@@ -13,16 +13,11 @@
 #include <map>
 #include <mutex>
 #include <vector>
-#include "PluginClientClockAware.h"
-#include "UdpClient.h"
-#include "signalController.h"
-
-#include <tmx/j2735_messages/SpatMessage.hpp>
-#include <tmx/messages/IvpSignalControllerStatus.h>
-#include <tmx/messages/IvpJ2735.h>
-#include <boost/chrono.hpp>
-#include <FrequencyThrottle.h>
-#include <PedestrianMessage.h>
+#include <UdpServer.h>
+#include <PluginClientClockAware.h>
+#include <ThreadTimer.h>
+#include <SNMPClient.h>
+#include "SignalControllerConnection.h"
 
 namespace SpatPlugin {
 
@@ -32,9 +27,7 @@ public:
 
 	SpatPlugin(std::string name);
 	virtual ~SpatPlugin();
-	virtual int Main();
 
-	void HandlePedestrianDetection(tmx::messages::PedestrianMessage &pedMsg, tmx::routeable_message &routeableMsg);
 
 protected:
 
@@ -44,33 +37,14 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	void OnStateChange(IvpPluginState state);
 
-
 private:
 
-
-	unsigned char derEncoded[4000];
-	unsigned int derEncodedBytes = 0;
-
-	SignalController sc;
-
 	std::mutex data_lock;
-	std::string localIp;
-	std::string localUdpPort;
-	std::string tscIp;
-	std::string tscRemoteSnmpPort;
-	std::string signalGroupMappingJson;
 
-	std::string intersectionName;
+	std::unique_ptr<SignalControllerConnection> scConnection;
 
-	int intersectionId;
 
-	bool isConfigurationLoaded = false;
-	bool isConfigured = false;
 
-	bool encodeSpat();
-	bool createUPERframe_DERencoded_msg();
-
-	tmx::messages::PedestrianMessage _pedMessage;
 };
 } /* namespace SpatPlugin */
 
