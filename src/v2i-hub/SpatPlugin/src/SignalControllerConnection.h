@@ -3,6 +3,7 @@
 #include <UdpServer.h>
 #include <SNMPClient.h>
 #include <tmx/j2735_messages/SpatMessage.hpp>
+#include "NTCIP1202.h"
 
 namespace SpatPlugin {
     enum class SPAT_MODE
