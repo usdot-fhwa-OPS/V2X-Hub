@@ -68,8 +68,7 @@ struct SignalGroupMapping
 class Ntcip1202
 {
 	public:
-		inline explicit Ntcip1202(std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock) :
-			clock(clock) {};
+		inline explicit Ntcip1202() {};
 		void setSignalGroupMappingList(string json);
 
 		void copyBytesIntoNtcip1202(char* buff, int numBytes);
@@ -100,16 +99,15 @@ class Ntcip1202
 		uint16_t getOverlapMinTime(int phaseNumber);
 		uint16_t getOverlapMaxTime(int phaseNumber);
 
-		long getAdjustedTime(unsigned int offset);
+		long getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch);
 
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
-		bool ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, IntersectionID_t intersectionId);
+		bool ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId);
 
 		void printDebug();
 	private:
-		std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
 
 		Ntcip1202Ext ntcip1202Data;
 		std::map<uint8_t, int> _phaseToIndexMapping;
@@ -121,9 +119,9 @@ class Ntcip1202
 		int getVehicleSignalGroupForPhase(int phase);
 		int getPedestrianSignalGroupForPhase(int phase);
 
-		void populateVehicleSignalGroup(MovementState *movement, int phase);
-		void populatePedestrianSignalGroup(MovementState *movement, int phase);
-		void populateOverlapSignalGroup(MovementState *movement, int phase);
+		void populateVehicleSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
+		void populatePedestrianSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
+		void populateOverlapSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
 };
 
 

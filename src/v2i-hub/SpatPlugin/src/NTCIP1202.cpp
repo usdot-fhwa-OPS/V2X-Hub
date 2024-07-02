@@ -199,9 +199,9 @@ void Ntcip1202::printDebug()
 	}
 }
 
-bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, IntersectionID_t intersectionId)
+bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId)
 {
-	time_t epochSec = clock->nowInSeconds();
+	time_t epochSec = msEpoch/1000;
 	struct tm utctime;
 	gmtime_r( &epochSec, &utctime );
 
@@ -210,7 +210,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, 
 	long minOfYear = utctime.tm_min + (utctime.tm_hour * 60) + (utctime.tm_yday * 24 * 60);
 
 	// Calculate the millisecond of the minute
-	auto epochMs = clock->nowInMilliseconds();
+	auto epochMs = msEpoch;
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
 
 	std::lock_guard<std::mutex> lock(_spat_lock);
@@ -259,7 +259,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, 
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populateVehicleSignalGroup(movement, phase);
+					populateVehicleSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -276,7 +276,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, 
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populatePedestrianSignalGroup(movement, phase);
+					populatePedestrianSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -292,7 +292,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, 
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populateOverlapSignalGroup(movement, phase);
+					populateOverlapSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -308,7 +308,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, const std::string &intersectionName, 
 	return true;
 }
 
-void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -347,12 +347,12 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getVehicleMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getVehicleMinTime(phase),msEpoch);
 
 	if (getVehicleMaxTime(phase) > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getVehicleMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getVehicleMaxTime(phase), msEpoch);
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase
@@ -360,7 +360,7 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	ASN_SEQUENCE_ADD(&movement->state_time_speed.list, stateTimeSpeed);
 }
 
-void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -382,12 +382,12 @@ void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getPedMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getPedMinTime(phase), msEpoch);
 
 	if (ntcip1202Data.phaseTimes[phase].spatPedMaxTimeToChange > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getPedMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getPedMaxTime(phase), msEpoch);
 	}
 
 	if(getSpatPedestrianDetect(phase))
@@ -403,7 +403,7 @@ void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase
 	ASN_SEQUENCE_ADD(&movement->state_time_speed.list, stateTimeSpeed);
 }
 
-void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -438,12 +438,12 @@ void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase)
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getOverlapMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getOverlapMinTime(phase), msEpoch);
 
 	if (getOverlapMaxTime(phase) > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getOverlapMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getOverlapMaxTime(phase), msEpoch);
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase
@@ -491,13 +491,13 @@ int Ntcip1202::getPedestrianSignalGroupForPhase(int phase)
 	return signalGroupId;
 }
 
-long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec)
+long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch)
 {
 	// generate J2735 TimeMark which is:
 	// Tenths of a second in the current or next hour
 	// In units of 1/10th second from UTC time
 	// first get new time is absolute milliseconds
-	auto epochMs = clock->nowInMilliseconds() + (offset_tenthofSec * 100);
+	auto epochMs = msEpoch + (offset_tenthofSec * 100);
 	// get minute and second of hour from UTC time
 	time_t epochSec = epochMs / 1000;
 	struct tm utctime;

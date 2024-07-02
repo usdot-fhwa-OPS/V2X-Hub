@@ -40,9 +40,23 @@ namespace SpatPlugin {
 			else {
 				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signalGroupMappingJson, scIp, scSNMPPort, intersectionName, intersectionId);
 			}
+			 spatReceiverThread->AddPeriodicTick([this]() {
+            	this->processSpat();
+
+       		 	} // end of lambda expression
+        		, std::chrono::milliseconds(5) );
+        	spatReceiverThread->Start();
 		}
 	}
 
+	void SpatPlugin::processSpat() {
+		if (this->scConnection ) {
+			auto spatMessage = scConnection->receiveSPAT(PluginClientClockAware::getClock()->nowInMilliseconds());
+			spatMessage.set_flags(IvpMsgFlags_RouteDSRC);
+			spatMessage.addDsrcMetadata(0x8002);
+			BroadcastMessage(static_cast<routeable_message &>(spatMessage));
+		}
+	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
 		PluginClientClockAware::OnConfigChanged(key, value);
 		UpdateConfigSettings();

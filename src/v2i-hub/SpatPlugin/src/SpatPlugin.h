@@ -41,10 +41,11 @@ private:
 
 	std::mutex data_lock;
 
+    std::unique_ptr<tmx::utils::ThreadTimer> spatReceiverThread;
+
 	std::unique_ptr<SignalControllerConnection> scConnection;
 
-
-
+	void processSpat();
 };
 } /* namespace SpatPlugin */
 

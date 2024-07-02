@@ -19,7 +19,7 @@ TEST(NTCIP1202Test, copyBytesIntoNtcip1202)
 
     auto clock = std::make_shared<CarmaClock>();
     clock->wait_for_initialization();
-    auto ntcip1202_p = std::make_shared<Ntcip1202>(clock);
+    auto ntcip1202_p = std::make_shared<Ntcip1202>();
     unsigned int raw_data[] =  {4294967245, 16, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 118, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 4294967208, 0, 4294967208, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 118, 0, 118, 0, 0, 0, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 4294967208, 0, 4294967208, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4294967295, 4294967261, 0, 0, 0, 34, 4294967295, 4294967295, 0, 0, 0, 0, 4294967295, 4294967295, 0, 0, 0, 0, 0, 0, 0, 0, 4294967168, 0, 8, 103, 1, 10, 4294967237, 0, 0};
     int numBytes = sizeof(raw_data)/sizeof(unsigned int);
     char buf[ numBytes] = {};
@@ -32,7 +32,7 @@ TEST(NTCIP1202Test, copyBytesIntoNtcip1202)
     ntcip1202_p->copyBytesIntoNtcip1202(buf, numBytes);
 
     SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
-    ntcip1202_p->ToJ2735r41SPAT(spat_ptr, reinterpret_cast<char *>(update_to_intersection_name->buf), update_to_intersection_id->id);
+    ntcip1202_p->ToJ2735r41SPAT(spat_ptr,clock->nowInMilliseconds(), "test intersection name", update_to_intersection_id->id);
     ASSERT_EQ(3,  spat_ptr->intersections.list.array[0]->states.list.array[0]->state_time_speed.list.array[0]->eventState);
     free(spat_ptr);
 }
@@ -41,7 +41,7 @@ TEST(NTCIP1202Test, ToJ2735r41SPAT)
 {
     auto clock = std::make_shared<CarmaClock>();
     clock->wait_for_initialization();
-    auto ntcip1202_p = std::make_shared<Ntcip1202>(clock);
+    auto ntcip1202_p = std::make_shared<Ntcip1202>();
     SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
 
     char *my_string = (char*)"test intersection name";
@@ -56,7 +56,7 @@ TEST(NTCIP1202Test, ToJ2735r41SPAT)
     update_to_intersection_id->id = 9012;
 
 
-    bool transform_status = ntcip1202_p->ToJ2735r41SPAT(spat_ptr, reinterpret_cast<char *>(update_to_intersection_name->buf), update_to_intersection_id->id);
+    bool transform_status = ntcip1202_p->ToJ2735r41SPAT(spat_ptr, clock->nowInMilliseconds(), reinterpret_cast<char *>(update_to_intersection_name->buf), update_to_intersection_id->id);
     auto _spatMessage = std::make_shared<tmx::messages::SpatMessage>(spat_ptr);
     auto spat = _spatMessage->get_j2735_data();
     ASSERT_EQ(transform_status, true);
@@ -69,15 +69,15 @@ TEST(NTCIP1202Test, TestAdjustedTime)
     timeStampMilliseconds tsMsec = ((uint64_t)1677775434 * 1000) + 400;
     auto baseTenthsOfSeconds = 43 * 600 + 54 * 10 + 4;
     clock->update(tsMsec);
-    auto ntcip1202_p = std::make_shared<Ntcip1202>(clock);
-    auto result = ntcip1202_p->getAdjustedTime(0);
+    auto ntcip1202_p = std::make_shared<Ntcip1202>();
+    auto result = ntcip1202_p->getAdjustedTime(0, clock->nowInMilliseconds());
     EXPECT_EQ(baseTenthsOfSeconds, result);
-    result = ntcip1202_p->getAdjustedTime(46);
+    result = ntcip1202_p->getAdjustedTime(46, clock->nowInMilliseconds());
     EXPECT_EQ(baseTenthsOfSeconds + 46, result);
     // cross minute boundary
-    result = ntcip1202_p->getAdjustedTime(200);
+    result = ntcip1202_p->getAdjustedTime(200, clock->nowInMilliseconds());
     EXPECT_EQ(baseTenthsOfSeconds + 200, result);
     // cross hour boundary
-    result = ntcip1202_p->getAdjustedTime(10200);
+    result = ntcip1202_p->getAdjustedTime(10200, clock->nowInMilliseconds());
     EXPECT_EQ((baseTenthsOfSeconds + 10200) % 36000, result);
 }
