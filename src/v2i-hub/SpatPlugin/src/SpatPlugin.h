@@ -45,6 +45,9 @@ private:
 
 	std::unique_ptr<SignalControllerConnection> scConnection;
 
+	const char* keyConnectionStatus = "Connection Status";
+
+
 	void processSpat();
 };
 } /* namespace SpatPlugin */

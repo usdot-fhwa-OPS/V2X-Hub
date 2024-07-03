@@ -57,7 +57,6 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 
 void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 {
-	std::lock_guard<std::mutex> lock(_spat_lock);
 
 	std::memcpy(&ntcip1202Data, buff, numBytes);
 
@@ -199,7 +198,7 @@ void Ntcip1202::printDebug()
 	}
 }
 
-bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId)
+void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId)
 {
 	time_t epochSec = msEpoch/1000;
 	struct tm utctime;
@@ -212,8 +211,6 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::st
 	// Calculate the millisecond of the minute
 	auto epochMs = msEpoch;
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
-
-	std::lock_guard<std::mutex> lock(_spat_lock);
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
 
@@ -303,9 +300,6 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::st
 
 	}
 	ASN_SEQUENCE_ADD(&(spat->intersections.list), intersection);
-
-
-	return true;
 }
 
 void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
@@ -317,10 +311,7 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase, u
 
 	if(getPhaseRedStatus(phase))
 	{
-		PLOG(logDEBUG3) << "Phase " << phase <<
-				" Red " << getPhaseRedStatus(phase) <<
-				", isFlashing  " << isFlashing <<
-				", forceFlashing " << forceFlashing ;
+		PLOG(logDEBUG3) << "Phase " << phase << " Red " << getPhaseRedStatus(phase) << ", isFlashing  " << isFlashing << ", forceFlashing " << forceFlashing ;
 		if(isFlashing)
 			stateTimeSpeed->eventState = MovementPhaseState_stop_Then_Proceed;
 		else

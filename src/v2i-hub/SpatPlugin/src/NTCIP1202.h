@@ -104,7 +104,7 @@ class Ntcip1202
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
-		bool ToJ2735r41SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId);
+		void ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId);
 
 		void printDebug();
 	private:
@@ -112,7 +112,6 @@ class Ntcip1202
 		Ntcip1202Ext ntcip1202Data;
 		std::map<uint8_t, int> _phaseToIndexMapping;
 
-		std::mutex _spat_lock;
 
 		list<SignalGroupMapping> signalGroupMappingList;
 

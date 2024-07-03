@@ -165,27 +165,46 @@ namespace tmx::utils
         PLOG(logINFO) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check GET response
-        if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR && request_type == request_type::GET)
+        if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR )
         {
-            for (auto vars = response->variables; vars; vars = vars->next_variable)
-            {
-                // Get value of variable depending on ASN.1 type
-                // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
-                // get Integer value
-                if (vars->type == ASN_INTEGER && vars->val.integer)
+            if ( request_type == request_type::GET ) {
+                for (auto vars = response->variables; vars; vars = vars->next_variable)
                 {
-                    val.type = snmp_response_obj::response_type::INTEGER;
-                    val.val_int = *vars->val.integer;
-                }
-                else if (vars->type == ASN_OCTET_STR && vars->val.string)
-                {
-                    size_t str_len = vars->val_len;
-                    for (size_t i = 0; i < str_len; ++i)
+                    // Get value of variable depending on ASN.1 type
+                    // Variable could be a integer, string, bitstring, ojbid, counter : defined here https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/types.h
+                    // get Integer value
+                    if (vars->type == ASN_INTEGER && vars->val.integer)
                     {
-                        val.val_string.push_back(vars->val.string[i]);
+                        val.type = snmp_response_obj::response_type::INTEGER;
+                        val.val_int = *vars->val.integer;
                     }
-                    val.type = snmp_response_obj::response_type::STRING;
+                    else if (vars->type == ASN_OCTET_STR && vars->val.string)
+                    {
+                        size_t str_len = vars->val_len;
+                        for (size_t i = 0; i < str_len; ++i)
+                        {
+                            val.val_string.push_back(vars->val.string[i]);
+                        }
+                        val.type = snmp_response_obj::response_type::STRING;
+                    }
                 }
+            }
+            else if( request_type == request_type::SET){
+                
+                if(val.type == snmp_response_obj::response_type::INTEGER){
+                    FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int << std::endl;
+                }
+
+                else if(val.type == snmp_response_obj::response_type::STRING){
+                    FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid << " Value:" << std::endl;
+                    for(auto data : val.val_string){
+                        FILE_LOG(logDEBUG) <<  data ;
+                    }
+                }
+            }
+            else {
+                log_error(status, request_type, response);
+                return false;
             }
         }
         else

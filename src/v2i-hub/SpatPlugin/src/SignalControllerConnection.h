@@ -4,6 +4,7 @@
 #include <SNMPClient.h>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include "NTCIP1202.h"
+#include <PluginLog.h>
 
 namespace SpatPlugin {
     enum class SPAT_MODE
@@ -23,11 +24,10 @@ namespace SpatPlugin {
             std::string signalGroupMapping;
             std::string intersectionName;
             unsigned int intersectionId;
-            void initializeSignalControllerConnection();
 
         public:
             SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionID);
-
+            bool initializeSignalControllerConnection();
             tmx::messages::SpatEncodedMessage receiveSPAT(uint64_t timeMs , const SPAT_MODE &spat_mode = SPAT_MODE::BINARY);
 
     };

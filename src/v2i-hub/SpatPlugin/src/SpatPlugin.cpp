@@ -8,6 +8,8 @@ using namespace tmx::utils;
 namespace SpatPlugin {
 
 	SpatPlugin::SpatPlugin(string name) :PluginClientClockAware(name) {
+		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
+
 		if ( PluginClientClockAware::isSimulationMode() ) {
 			SubscribeToMessages();
 		}
@@ -40,21 +42,32 @@ namespace SpatPlugin {
 			else {
 				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signalGroupMappingJson, scIp, scSNMPPort, intersectionName, intersectionId);
 			}
-			 spatReceiverThread->AddPeriodicTick([this]() {
-            	this->processSpat();
+			auto connected = scConnection->initializeSignalControllerConnection();
+			if  ( connected ) {
+				SetStatus(keyConnectionStatus, "IDLE");
 
-       		 	} // end of lambda expression
-        		, std::chrono::milliseconds(5) );
-        	spatReceiverThread->Start();
+				spatReceiverThread->AddPeriodicTick([this]()
+					{
+						this->processSpat();
+					}, // end of lambda expression
+					std::chrono::milliseconds(5));
+				spatReceiverThread->Start();
+			}
+			else {
+
+			}
 		}
 	}
 
 	void SpatPlugin::processSpat() {
 		if (this->scConnection ) {
+			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
 			auto spatMessage = scConnection->receiveSPAT(PluginClientClockAware::getClock()->nowInMilliseconds());
 			spatMessage.set_flags(IvpMsgFlags_RouteDSRC);
 			spatMessage.addDsrcMetadata(0x8002);
 			BroadcastMessage(static_cast<routeable_message &>(spatMessage));
+			SetStatus(keyConnectionStatus, "CONNECTED");
+
 		}
 	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
