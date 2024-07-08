@@ -54,6 +54,11 @@
 			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP communication."
 		},
 		{
+			"key":"SPAT_Mode",
+			"default":"BINARY",
+			"description":"The format of received SPAT from Traffic Signal Controller (TSC). Acceptance values are BINARY and J2735_HEX."
+		},
+		{
 			"key":"LogLevel",
 			"default":"INFO",
 			"description": "SPAT Plugin Log Level controls which log statements are printed to the terminal."

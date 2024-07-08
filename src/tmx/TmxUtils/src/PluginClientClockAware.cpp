@@ -21,9 +21,9 @@ namespace tmx::utils {
 
 
     void PluginClientClockAware::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
-        PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
-        this->getClock()->update( msg.get_timestep() );
         if (sim::is_simulation_mode() ) {
+            PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
+            this->getClock()->update( msg.get_timestep() );
             SetStatus(Key_Simulation_Time_Step, Clock::ToUtcPreciseTimeString(msg.get_timestep()));
         }
     }

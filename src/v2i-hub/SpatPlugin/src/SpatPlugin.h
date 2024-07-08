@@ -45,6 +45,8 @@ private:
 
 	std::unique_ptr<SignalControllerConnection> scConnection;
 
+	std::string spatMode = "";
+
 	const char* keyConnectionStatus = "Connection Status";
 
 

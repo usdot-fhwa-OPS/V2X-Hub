@@ -188,7 +188,7 @@ void Ntcip1202::printDebug()
 	for(int i=0; i<16; i++)
 	{
 		int phaseNum = i+1;
-		PLOG(logDEBUG3) << "Phase " << phaseNum <<
+		PLOG(logDEBUG) << "Phase " << phaseNum <<
 				", Green " << getPhaseGreensStatus(phaseNum) <<
 				", Yellow " << getPhaseYellowStatus(phaseNum) <<
 				", Red " << getPhaseRedStatus(phaseNum) <<
