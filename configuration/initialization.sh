@@ -150,3 +150,5 @@ cd "$mysqlDir" || return # return in case cd fails
 
 chromium-browser "http://127.0.0.1" > /dev/null 2>&1 &
 chromium-browser "https://127.0.0.1:19760" > /dev/null 2>&1 &
+google-chrome --ignore-certificate-errors localhost
+chromium-browser --ignore-certificate-errors localhost
