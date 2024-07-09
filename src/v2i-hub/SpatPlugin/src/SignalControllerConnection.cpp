@@ -24,21 +24,16 @@ namespace SpatPlugin {
                 // and skipe the SPAT to SpatMessage conversion.
                 FILE_LOG(tmx::utils::logDEBUG) << "Decoding binary SPAT from " << numBytes << " bytes ..." << std::endl;
                 ntcip1202->copyBytesIntoNtcip1202(buf, numBytes);
-                FILE_LOG(tmx::utils::logDEBUG) << "Read SPAT Bytes ..." << std::endl;
 
                
                 ntcip1202->ToJ2735SPAT(spat,timeMs, intersectionName, intersectionId);
-                FILE_LOG(tmx::utils::logDEBUG) << "Copied into SPAT object ..." << std::endl;
+                FILE_LOG(tmx::utils::logDEBUG) << "Sending SPAT ..." << std::endl;
                 if ( tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG) {
                     xer_fprint(stdout, &asn_DEF_SPAT, spat);
                 }
                 tmx::messages::SpatMessage _spatMessage(spat);
                 tmx::messages::SpatEncodedMessage spatEncodedMsg;
                 spatEncodedMsg.initialize(_spatMessage);
-                // tmx::messages::MessageFrameMessage frame(_spatMessage.get_j2735_data());
-                // FILE_LOG(tmx::utils::logDEBUG) << "Copied into  SPAT  Message Frame..." << std::endl;
-                // spatEncodedMsg.set_data(tmx::messages::TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-                FILE_LOG(tmx::utils::logDEBUG) << "Copied into encoded SPAT Message" << std::endl;
                 return spatEncodedMsg;
             }
             else {
@@ -49,14 +44,28 @@ namespace SpatPlugin {
             FILE_LOG(tmx::utils::logDEBUG) << "Receiving J2725 HEX SPAT ..." << std::endl;
 
             tmx::messages::SpatEncodedMessage spatEncodedMsg;
-            tmx::byte_stream buf(4000);
-            int numBytes = spatPacketReceiver->TimedReceive((char *)buf.data(), buf.size(), 3);
+            auto payload = spatPacketReceiver->stringTimedReceive( 1000 );
+            auto index = payload.find("Payload=");
+            FILE_LOG(tmx::utils::logDEBUG) << "Found Payload at index " << index << std::endl;
 
-            if ( numBytes > 0 ) {
-                spatEncodedMsg.set_payload_bytes(buf);
-                 xer_fprint(stdout, &asn_DEF_SPAT, spatEncodedMsg.decode_j2735_message().get_j2735_data().get());
+            if ( index != std::string::npos ) {
+                auto hex = payload.substr(index + 8);
+                hex.erase(std::remove(hex.begin(), hex.end(), '\n'), hex.end());
+                hex.erase(std::remove(hex.begin(), hex.end(), ' '), hex.end());
 
-                return spatEncodedMsg;
+                FILE_LOG(tmx::utils::logDEBUG) << "Reading HEX String " << hex << std::endl;
+                tmx::byte_stream bytes = tmx::byte_stream_decode(hex);
+
+                FILE_LOG(tmx::utils::logDEBUG) << "Reading Bytes " << tmx::byte_stream_encode(bytes) ;
+                tmx::messages::J2735MessageFactory myFactory;
+                auto spatEncodedMsg = dynamic_cast<tmx::messages::SpatEncodedMessage*>(myFactory.NewMessage(bytes));
+                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
+                {
+                    xer_fprint(stdout, &asn_DEF_SPAT, spatEncodedMsg->decode_j2735_message().get_j2735_data().get());
+                    PLOG(tmx::utils::logDEBUG) << "Message is "<< spatEncodedMsg->get_payload_str();
+                }
+
+                return *spatEncodedMsg;
             }
             else {
                 throw std::runtime_error("Something went wrong");

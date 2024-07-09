@@ -1,12 +1,13 @@
-PROJECT ( SpatPlugin VERSION 7.6.0 LANGUAGES CXX )
+project( SpatPlugin VERSION 7.6.0 LANGUAGES CXX )
 
-SET (TMX_PLUGIN_NAME "SPAT")
+set(TMX_PLUGIN_NAME "SPAT")
+set(CMAKE_CXX_STANDARD 17)
 
-FIND_PACKAGE (carma-clock REQUIRED)
+find_package(carma-clock REQUIRED)
 
-BuildTmxPlugin ()
+BuildTmxPlugin()
 
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock jsoncpp)
+target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock jsoncpp)
 
 
 

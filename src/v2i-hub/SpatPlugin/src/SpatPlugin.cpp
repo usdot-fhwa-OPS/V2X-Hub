@@ -76,7 +76,6 @@ namespace SpatPlugin {
 			else {
 				PLOG(tmx::utils::logWARNING) << "SPAT Mode " << spatMode << " is unrecognized. Defaulting to BINARY." << std::endl;
 			}
-			// auto spat_ptr = std::make_shared<SPAT>();
 			SPAT *spat_ptr = (SPAT *) calloc(1, sizeof(SPAT));
 			auto spatMessage = scConnection->receiveSPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds(), mode);
 
