@@ -63,5 +63,8 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 ### Open V2X-Hub in Google Chrome
  To open V2X-Hub in Google Chrome, run this command:
  ```
- google-chrome --ignore-certificate-errors localhost"
+ google-chrome --ignore-certificate-errors localhost
  ```
+
+> [!NOTE]  
+> V2X-Hub Server uses a secure WebSocket connection to communicate with the browser. For this, V2X-Hub Server uses a self-signed certificate instead of one signed by a trusted certificate authority (CA). Most of the browsers do not trust this until explicitly told to do so by navigating to the WebSocket URL (https://<v2xhub_ip>:19760) and accepting the risk. The `--ignore-certificate-errors` option instructs the browser to ignore certificate errors and warnings which removes manually effort of accepting this risk on V2X-Hub deployments. **Using the browser with this option enabled to access the internet or any other application is not advised as it is a security risk**.
