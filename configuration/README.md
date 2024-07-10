@@ -60,7 +60,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
-### Open V2X-Hub in Google Chrome 
+### Access V2X-Hub 
 To access V2X-Hub UI, please use either chromium or google-chrome browser and run the following command 
 ```
 chromium --ignore-certificate-errors <v2xhub_ip>
