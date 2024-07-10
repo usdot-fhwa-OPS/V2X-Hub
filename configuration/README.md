@@ -63,5 +63,5 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 ### Open V2X-Hub in Google Chrome
  To open V2X-Hub in Google Chrome, run this command:
  ```
- google-chrome --ignore-certificate-errors localhost"
+ google-chrome --ignore-certificate-errors localhost
  ```
