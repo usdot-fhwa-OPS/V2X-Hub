@@ -61,9 +61,14 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
 ### Open V2X-Hub in Google Chrome 
-If the chromium browser is not available, run this command to open V2X-Hub in google chrome:
- ```
- google-chrome --ignore-certificate-errors localhost > /dev/null 2>&1 &
+To access V2X-Hub UI, please use either chromium or google-chrome browser and run the following command 
+```
+chromium --ignore-certificate-errors <v2xhub_ip>
+```
+or 
+
+```
+google-chrome --ignore-certificate-errors <v2xhub_ip>
  ```
 
 > [!NOTE]  
