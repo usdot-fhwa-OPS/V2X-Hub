@@ -63,7 +63,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 ### Access V2X-Hub 
 To access V2X-Hub UI, please use either chromium or google-chrome browser and run the following command 
 ```
-chromium --ignore-certificate-errors <v2xhub_ip>
+chromium-browser --ignore-certificate-errors <v2xhub_ip>
 ```
 or 
 
