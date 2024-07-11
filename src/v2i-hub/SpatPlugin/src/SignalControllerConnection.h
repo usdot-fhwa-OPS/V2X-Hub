@@ -7,6 +7,7 @@
 #include <PluginLog.h>
 #include <tmx/messages/byte_stream.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <tmx/TmxException.hpp>
 
 namespace SpatPlugin {
     enum class SPAT_MODE
@@ -32,5 +33,8 @@ namespace SpatPlugin {
             bool initializeSignalControllerConnection();
             tmx::messages::SpatEncodedMessage receiveSPAT(SPAT *spat, uint64_t timeMs , const SPAT_MODE &spat_mode = SPAT_MODE::BINARY);
 
+            void receiveBinarySPAT(std::shared_ptr<SPAT> spat, uint64_t timeMs);
+
+            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> spatEncoded_ptr);
     };
 }

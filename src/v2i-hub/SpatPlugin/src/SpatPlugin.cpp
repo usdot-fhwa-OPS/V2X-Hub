@@ -47,16 +47,32 @@ namespace SpatPlugin {
 			auto connected = scConnection->initializeSignalControllerConnection();
 			if  ( connected ) {
 				SetStatus(keyConnectionStatus, "IDLE");
+				try {
+					spatReceiverThread->AddPeriodicTick([this]()
+							{
+								this->processSpat();
+								if (!this->isConnected) {
+									SetStatus(keyConnectionStatus, "CONNECTED");
+									this->isConnected = true;
+								}
+							}, // end of lambda expression
+							std::chrono::milliseconds(5)
+					);
+					PluginClientClockAware::getClock()->wait_for_initialization();
+					spatReceiverThread->Start();
+				}
+				catch (const TmxException &e) {
+					PLOG(tmx::utils::logERROR) << "Encountered error " << e.what() << " during SPAT Processing." << std::endl
+											   << e.GetBacktrace();
+					SetStatus(keyConnectionStatus, "ERROR"); 
+					this->isConnected = false;
 
-				spatReceiverThread->AddPeriodicTick([this]()
-					{
-						this->processSpat();
-					}, // end of lambda expression
-					std::chrono::milliseconds(5));
-				PluginClientClockAware::getClock()->wait_for_initialization();
-				spatReceiverThread->Start();
+				}
 			}
 			else {
+				PLOG(tmx::utils::logERROR) << "Traffic Signal Controller at " << scIp << ":" << scSNMPPort << " failed!";
+				SetStatus(keyConnectionStatus, "DISCONNECTED");
+				this->isConnected = false;
 
 			}
 		}
@@ -65,27 +81,35 @@ namespace SpatPlugin {
 	void SpatPlugin::processSpat() {
 		if (this->scConnection ) {
 			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
-			SPAT_MODE mode;
-			if (spatMode == "BINARY")
-			{
-				mode = SPAT_MODE::BINARY;
-			}
-			else if (spatMode == "J2735_HEX") {
-				mode = SPAT_MODE::J2735_HEX;
-			}
-			else {
-				PLOG(tmx::utils::logWARNING) << "SPAT Mode " << spatMode << " is unrecognized. Defaulting to BINARY." << std::endl;
-			}
-			SPAT *spat_ptr = (SPAT *) calloc(1, sizeof(SPAT));
-			auto spatMessage = scConnection->receiveSPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds(), mode);
+			try {
+				if (spatMode == "BINARY")
+				{
+					auto spat_ptr = std::make_shared<SPAT>();
+					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+					tmx::messages::SpatMessage _spatMessage(spat_ptr);
+					tmx::messages::SpatEncodedMessage spatEncodedMsg;
+					spatEncodedMsg.initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
+					spatEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
 
-			spatMessage.set_flags(IvpMsgFlags_RouteDSRC);
-			spatMessage.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-
-			BroadcastMessage(static_cast<routeable_message &>(spatMessage));
-			PLOG(tmx::utils::logDEBUG) << "Broadcasting SPAT" << std::endl;
-
-			SetStatus(keyConnectionStatus, "CONNECTED");
+					PLOG(tmx::utils::logDEBUG) << "Broadcasting SPAT" << std::endl;
+					BroadcastMessage(static_cast<routeable_message>(spatEncodedMsg));
+				}
+				else if (spatMode == "J2735_HEX") {
+					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+					scConnection->receiveUPERSPAT(spatEncoded_ptr);
+					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
+					BroadcastMessage(*rMsg);	
+				}
+				else {
+					throw TmxException("SPAT Mode " + spatMode + " is not supported. Support SPAT Modes are J2735_HEX and BINARY.");
+				}
+			}
+			catch (const tmx::J2735Exception &e) {
+				PLOG(tmx::utils::logERROR) << "Encountered J2735 Exception " << e.what() << " attempting to process SPAT." << std::endl
+										   << e.GetBacktrace();
+			}
 		}
 	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {

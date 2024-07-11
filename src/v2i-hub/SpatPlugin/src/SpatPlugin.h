@@ -49,6 +49,9 @@ private:
 
 	const char* keyConnectionStatus = "Connection Status";
 
+	const char* keySkippedMessages = "Skipped Messages";
+
+	bool isConnected = false;
 
 	void processSpat();
 };
