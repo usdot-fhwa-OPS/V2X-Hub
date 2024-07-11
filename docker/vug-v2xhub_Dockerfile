@@ -1,14 +1,15 @@
 #
-# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build --build-arg LEIDOS_TOKEN=$LEIDOS_TOKEN -t usdotfhwaops/v2xhubamd:voices-pilot2-0.0.1 . --progress=plain -f vug-v2xhub_Dockerfile
+# BUILD COMMAND: sudo DOCKER_BUILDKIT=1 docker build --secret id=usdotfhwastol_token,src=$HOME/V2X-Hub/docker/vug-build/usdotfhwastol_token -t usdotfhwaops/v2xhubamd:voices-pilot2-0.0.1 . --progress=plain -f vug-v2xhub_Dockerfile
 #
 
-FROM usdotfhwaops/v2xhubamd:latest-test
+# syntax=docker/dockerfile:1
+
+FROM usdotfhwaops/v2xhubamd:latest
 
 LABEL version="0.0.1"
 LABEL description="Custom V2X-Hub with VUG adapters installed"
 
 ARG DEBIAN_FRONTEND="noninteractive"
-ARG LEIDOS_TOKEN
 
 SHELL ["/bin/bash", "-ec"]
 
@@ -19,7 +20,9 @@ RUN --mount=type=bind,target=/home/BUILD,readonly,source=vug-build \
     rm -rf /tmp/*
 
 # install cmake library
-RUN git clone https://${LEIDOS_TOKEN}@github.com/usdot-fhwa-stol/vug-cmake-package.git cmake_temp && \
+RUN --mount=type=secret,id=usdotfhwastol_token \
+    USDOTFHWASTOL_TOKEN=$(cat /run/secrets/usdotfhwastol_token) && \
+    git clone https://${USDOTFHWASTOL_TOKEN}@github.com/usdot-fhwa-stol/vug-cmake-package.git cmake_temp && \
 	mv cmake_temp/cmake/ /home/TENA/lib/ && \
 	rm -rf cmake_temp
 
