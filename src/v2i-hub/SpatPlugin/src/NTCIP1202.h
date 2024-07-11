@@ -68,7 +68,6 @@ struct SignalGroupMapping
 class Ntcip1202
 {
 	public:
-		inline explicit Ntcip1202() {};
 		void setSignalGroupMappingList(string json);
 
 		void copyBytesIntoNtcip1202(char* buff, int numBytes);
@@ -99,7 +98,7 @@ class Ntcip1202
 		uint16_t getOverlapMinTime(int phaseNumber);
 		uint16_t getOverlapMaxTime(int phaseNumber);
 
-		long getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch);
+		long getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch) const;
 
 		bool isFlashingStatus();
 		bool isPhaseFlashing();

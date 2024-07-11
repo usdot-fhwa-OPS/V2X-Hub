@@ -7,7 +7,7 @@ using namespace tmx::utils;
 
 namespace SpatPlugin {
 
-	SpatPlugin::SpatPlugin(string name) :PluginClientClockAware(name) {
+	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
 		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
 
 		if ( PluginClientClockAware::isSimulationMode() ) {
@@ -92,7 +92,8 @@ namespace SpatPlugin {
 					spatEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
 
 					PLOG(tmx::utils::logDEBUG) << "Broadcasting SPAT" << std::endl;
-					BroadcastMessage(static_cast<routeable_message>(spatEncodedMsg));
+					auto rMsg = static_cast<routeable_message>(spatEncodedMsg);
+					BroadcastMessage(rMsg);
 				}
 				else if (spatMode == "J2735_HEX") {
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
@@ -109,6 +110,8 @@ namespace SpatPlugin {
 			catch (const tmx::J2735Exception &e) {
 				PLOG(tmx::utils::logERROR) << "Encountered J2735 Exception " << e.what() << " attempting to process SPAT." << std::endl
 										   << e.GetBacktrace();
+				
+				SetStatus<uint>(keySkippedMessages, skippedMessages++);
 			}
 		}
 	}

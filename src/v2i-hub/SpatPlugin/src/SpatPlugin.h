@@ -25,7 +25,7 @@ class SpatPlugin: public tmx::utils::PluginClientClockAware {
 
 public:
 
-	SpatPlugin(std::string name);
+	SpatPlugin(const std::string &name);
 	virtual ~SpatPlugin();
 
 
@@ -50,6 +50,8 @@ private:
 	const char* keyConnectionStatus = "Connection Status";
 
 	const char* keySkippedMessages = "Skipped Messages";
+	
+	uint skippedMessages = 0;
 
 	bool isConnected = false;
 

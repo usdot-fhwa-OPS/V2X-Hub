@@ -482,7 +482,7 @@ int Ntcip1202::getPedestrianSignalGroupForPhase(int phase)
 	return signalGroupId;
 }
 
-long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch)
+long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch) const
 {
 	// generate J2735 TimeMark which is:
 	// Tenths of a second in the current or next hour
