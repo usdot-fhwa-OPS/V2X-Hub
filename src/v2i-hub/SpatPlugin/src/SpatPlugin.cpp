@@ -87,13 +87,11 @@ namespace SpatPlugin {
 					auto spat_ptr = std::make_shared<SPAT>();
 					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
 					tmx::messages::SpatMessage _spatMessage(spat_ptr);
-					tmx::messages::SpatEncodedMessage spatEncodedMsg;
-					spatEncodedMsg.initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
-					spatEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-
-					PLOG(tmx::utils::logDEBUG) << "Broadcasting SPAT" << std::endl;
-					auto rMsg = static_cast<routeable_message>(spatEncodedMsg);
-					BroadcastMessage(rMsg);
+					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+					spatEncoded_ptr->initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
+					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
+					BroadcastMessage(*rMsg);
 				}
 				else if (spatMode == "J2735_HEX") {
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
