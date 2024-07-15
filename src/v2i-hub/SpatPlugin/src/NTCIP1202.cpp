@@ -38,13 +38,13 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 	ptree root;
 	read_json(ss, root);
 
-	for(auto & signalGroup : root.get_child("SignalGroups"))
+	for( const auto &[key, value]: root.get_child("SignalGroups"))
 	{
-		int signalGroupId = signalGroup.second.get<int>("SignalGroupId");
-		int phaseNumber = signalGroup.second.get<int>("Phase", 0);
-		string typeName = signalGroup.second.get<string>("Type");
+		int signalGroupId = value.get<int>("SignalGroupId");
+		int phaseNumber = value.get<int>("Phase", 0);
+		string typeName = value.get<string>("Type");
 
-		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<<phaseNumber<<" typeName: "<<typeName<<endl;
+		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
 
 		SignalGroupMapping sgm;
 		sgm.PhaseId = phaseNumber;
