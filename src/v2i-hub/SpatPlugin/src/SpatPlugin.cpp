@@ -108,8 +108,8 @@ namespace SpatPlugin {
 			catch (const tmx::J2735Exception &e) {
 				PLOG(tmx::utils::logERROR) << "Encountered J2735 Exception " << e.what() << " attempting to process SPAT." << std::endl
 										   << e.GetBacktrace();
-				
-				SetStatus<uint>(keySkippedMessages, skippedMessages++);
+				skippedMessages++;
+				SetStatus<uint>(keySkippedMessages, skippedMessages);
 			}
 		}
 	}
