@@ -24,6 +24,6 @@ namespace tmx::utils {
             MOCK_METHOD(std::string, GetAddress, (), (const, override));
             MOCK_METHOD(int, Receive, (char *msg, size_t maxSize), (override));
             MOCK_METHOD(int, GetSocket, (), (override, const));
+            MOCK_METHOD(std::string, stringTimedReceive, (int maxWait_ms), (override));
     };
-    
 }

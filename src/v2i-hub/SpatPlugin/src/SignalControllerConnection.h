@@ -8,6 +8,8 @@
 #include <tmx/messages/byte_stream.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/TmxException.hpp>
+#include <gtest/gtest_prod.h>  
+
 
 namespace SpatPlugin {
     enum class SPAT_MODE
@@ -20,21 +22,23 @@ namespace SpatPlugin {
     {
         private:
             // UDP Server socket listening for SPAT
-            std::unique_ptr<tmx::utils::UdpServer> spatPacketReceiver;
+            std::shared_ptr<tmx::utils::UdpServer> spatPacketReceiver;
 
-            std::unique_ptr<tmx::utils::snmp_client> scSNMPClient;
+            std::shared_ptr<tmx::utils::snmp_client> scSNMPClient;
 
             std::string signalGroupMapping;
             std::string intersectionName;
             unsigned int intersectionId;
+            friend class TestSignalControllerConnection;
+            FRIEND_TEST(TestSignalControllerConnection, initialize);
 
         public:
             SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionID);
+            
             bool initializeSignalControllerConnection();
-            tmx::messages::SpatEncodedMessage receiveSPAT(SPAT *spat, uint64_t timeMs , const SPAT_MODE &spat_mode = SPAT_MODE::BINARY);
 
-            void receiveBinarySPAT(std::shared_ptr<SPAT> spat, uint64_t timeMs);
+            void receiveBinarySPAT(std::shared_ptr<SPAT> &spat, uint64_t timeMs);
 
-            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> spatEncoded_ptr);
+            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr);
     };
 }

@@ -11,7 +11,8 @@ target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock jsoncpp)
 
 
 
-add_library(${PROJECT_NAME}_lib src/NTCIP1202.cpp)
+add_library(${PROJECT_NAME}_lib src/NTCIP1202.cpp
+                                src/SignalControllerConnection.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                                 tmxutils ::carma-clock )
 #############

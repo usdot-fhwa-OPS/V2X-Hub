@@ -12,7 +12,7 @@ namespace SpatPlugin {
         return scSNMPClient->process_snmp_request("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", tmx::utils::request_type::SET, resp);
     };
 
-    void SignalControllerConnection::receiveBinarySPAT(std::shared_ptr<SPAT> spat, uint64_t timeMs ) {
+    void SignalControllerConnection::receiveBinarySPAT(std::shared_ptr<SPAT> &spat, uint64_t timeMs ) {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
         char buf[1000];
         auto numBytes = spatPacketReceiver->TimedReceive(buf, 1000, 1000);
@@ -30,8 +30,8 @@ namespace SpatPlugin {
         }
     }
     
-    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> spatEncoded_ptr) {
-        FILE_LOG(tmx::utils::logDEBUG) << "Receiving J2725 HEX SPAT ..." << std::endl;
+    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) {
+        FILE_LOG(tmx::utils::logDEBUG1) << "Receiving J2725 HEX SPAT ..." << std::endl;
         auto payload = spatPacketReceiver->stringTimedReceive( 1000 );
         auto index = payload.find("Payload=");
         if ( index != std::string::npos ) {
@@ -40,7 +40,7 @@ namespace SpatPlugin {
             // Remove new lines and empty space
             hex.erase(std::remove(hex.begin(), hex.end(), '\n'), hex.end());
             hex.erase(std::remove(hex.begin(), hex.end(), ' '), hex.end());
-            FILE_LOG(tmx::utils::logDEBUG) << "Reading HEX String " << hex << std::endl;
+            FILE_LOG(tmx::utils::logDEBUG1) << "Reading HEX String " << hex << std::endl;
             // Convert to byte stream
             tmx::byte_stream bytes = tmx::byte_stream_decode(hex);
             // Read SpateEncodedMessage from bytes
