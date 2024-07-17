@@ -16,14 +16,17 @@ namespace SpatPlugin {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
         char buf[1000];
         auto numBytes = spatPacketReceiver->TimedReceive(buf, 1000, 1000);
-        
-        if ( numBytes > 0 ) {
+        if (numBytes > 0)
+        {
             // Convert Binary  buffer to SPAT pointer 
             Ntcip1202 ntcip1202;
             ntcip1202.setSignalGroupMappingList(this->signalGroupMapping);
             ntcip1202.copyBytesIntoNtcip1202(buf, numBytes);
             ntcip1202.ToJ2735SPAT(spat.get(),timeMs, intersectionName, intersectionId);
-           
+            if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
+            {
+                xer_fprint(stdout, &asn_DEF_SPAT, spat.get());
+            }
         }
         else {
             throw tmx::utils::UdpServerRuntimeError("UDP Server error occured or socket time out.");

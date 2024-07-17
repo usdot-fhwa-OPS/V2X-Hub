@@ -23,7 +23,6 @@ TEST(NTCIP1202Test, copyBytesIntoNtcip1202)
 
     SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
     ntcip1202_p->ToJ2735SPAT(spat_ptr,tsMsec, "test intersection name", 9012);
-    xer_fprint(stdout, &asn_DEF_SPAT, spat_ptr);
 
     ASSERT_EQ(3,  spat_ptr->intersections.list.array[0]->states.list.array[0]->state_time_speed.list.array[0]->eventState);
 

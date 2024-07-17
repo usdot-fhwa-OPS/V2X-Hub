@@ -9,7 +9,6 @@ namespace SpatPlugin {
 
 	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
 		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
-
 		if ( PluginClientClockAware::isSimulationMode() ) {
 			SubscribeToMessages();
 		}
@@ -82,8 +81,19 @@ namespace SpatPlugin {
 		if (this->scConnection ) {
 			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
 			try {
-				if (spatMode == "BINARY")
-				{
+				
+				if (spatMode == "J2735_HEX") {
+					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+					scConnection->receiveUPERSPAT(spatEncoded_ptr);
+					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
+					BroadcastMessage(*rMsg);	
+				}
+				else {
+					if ( spatMode != "BINARY"){
+						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
+					}
 					auto spat_ptr = std::make_shared<SPAT>();
 					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
 					tmx::messages::SpatMessage _spatMessage(spat_ptr);
@@ -93,24 +103,18 @@ namespace SpatPlugin {
 					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
 					BroadcastMessage(*rMsg);
 				}
-				else if (spatMode == "J2735_HEX") {
-					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-					scConnection->receiveUPERSPAT(spatEncoded_ptr);
-					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-					auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
-					BroadcastMessage(*rMsg);	
-				}
-				else {
-					throw TmxException("SPAT Mode " + spatMode + " is not supported. Support SPAT Modes are J2735_HEX and BINARY.");
-				}
 			}
-			catch (const tmx::J2735Exception &e) {
-				PLOG(tmx::utils::logERROR) << "Encountered J2735 Exception " << e.what() << " attempting to process SPAT." << std::endl
+			catch (const UdpServerRuntimeError &e) {
+				PLOG(tmx::utils::logWARNING) << "Encountered UDP Server Runtime Error" << e.what() << " attempting to process SPAT." << std::endl
+										   << e.GetBacktrace();
+			}
+			catch (const tmx::TmxException &e) {
+				PLOG(tmx::utils::logERROR) << "Encountered Tmx Exception " << e.what() << " attempting to process SPAT." << std::endl
 										   << e.GetBacktrace();
 				skippedMessages++;
 				SetStatus<uint>(keySkippedMessages, skippedMessages);
 			}
+			
 		}
 	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {

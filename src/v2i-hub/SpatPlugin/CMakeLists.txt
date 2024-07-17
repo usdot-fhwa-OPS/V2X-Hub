@@ -7,7 +7,7 @@ find_package(carma-clock REQUIRED)
 
 BuildTmxPlugin()
 
-target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock jsoncpp)
+target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock)
 
 
 

@@ -11,12 +11,8 @@
 #include <gtest/gtest_prod.h>  
 
 
+
 namespace SpatPlugin {
-    enum class SPAT_MODE
-    {
-        J2735_HEX,
-        BINARY
-    };
 
     class SignalControllerConnection
     {
@@ -30,7 +26,6 @@ namespace SpatPlugin {
             std::string intersectionName;
             unsigned int intersectionId;
             friend class TestSignalControllerConnection;
-            FRIEND_TEST(TestSignalControllerConnection, initialize);
 
         public:
             SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionID);
