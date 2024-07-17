@@ -1,12 +1,19 @@
-/*
- * SpatPlugin.h
+/**
+ * Copyright (C) 2024 LEIDOS.
  *
- *  Created on: April 20, 2017
- *      Author: zinkg
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
-
-#ifndef SPATPLUGIN_H_
-#define SPATPLUGIN_H_
+#pragma once
 
 #include <atomic>
 #include <array>
@@ -20,43 +27,75 @@
 #include "SignalControllerConnection.h"
 
 namespace SpatPlugin {
+	/**
+	 * @brief The SPaT Plugin is responsible for receiving information from the Traffic Signal Controller (TSC or SC) necessary
+	 * for broadcasting Signal Phase and Timing (SPaT) messages. This includes querying any SNMP objects to determine
+	 * TSC state and listen for any broadcast SPaT information from the TSC.
+	 */
+	class SpatPlugin: public tmx::utils::PluginClientClockAware {
 
-class SpatPlugin: public tmx::utils::PluginClientClockAware {
+		public:
+			/**
+			 * @brief Plugin Constructor.
+			 * @param name Plugin Name.
+			 */
+			explicit SpatPlugin(const std::string &name);
+			/**
+			 * @brief Plugin Destructor
+			 */
+			virtual ~SpatPlugin();
 
-public:
 
-	SpatPlugin(const std::string &name);
-	virtual ~SpatPlugin();
+		protected:
+			/**
+			 * @brief Method to update plugin after configuration settings have changed.
+			 */
+			void UpdateConfigSettings();
 
+			// Virtual method overrides.
+			void OnConfigChanged(const char *key, const char *value) override;
+			void OnStateChange(IvpPluginState state) override;
 
-protected:
-
-	void UpdateConfigSettings();
-
-	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnStateChange(IvpPluginState state);
-
-private:
-
-	std::mutex data_lock;
-
-    std::unique_ptr<tmx::utils::ThreadTimer> spatReceiverThread;
-
-	std::unique_ptr<SignalControllerConnection> scConnection;
-
-	std::string spatMode = "";
-
-	const char* keyConnectionStatus = "Connection Status";
-
-	const char* keySkippedMessages = "Skipped Messages";
-	
-	uint skippedMessages = 0;
-
-	bool isConnected = false;
-
-	void processSpat();
-};
+		private:
+			/**
+			 * @brief Mutex for thread safety for configuration parameters.
+			 */
+			std::mutex data_lock;
+			/**
+			 * @brief Thread timer used to periodically consume broadcast SPaT
+			 * data from the TSC .
+			 */
+			std::unique_ptr<tmx::utils::ThreadTimer> spatReceiverThread;
+			/**
+			 * @brief TSC Connection.
+			 */
+			std::unique_ptr<SignalControllerConnection> scConnection;
+			/**
+			 * @brief String describing the expected format of received SPaT data.
+			 */
+			std::string spatMode = "";
+			/**
+			 * @brief Key for state object describing TSC Connection Status.
+			 */
+			const char* keyConnectionStatus = "Connection Status";
+			/**
+			 * @brief Key for counting the number of received packets from TSC that 
+			 * have been skipped due to errors.
+			 */
+			const char* keySkippedMessages = "Skipped Messages";
+			/**
+			 * @brief Count of received packets from the TSC that have been skipped due to
+			 * errors.
+			 */
+			uint skippedMessages = 0;
+			/**
+			 * @brief Bool flag for TSC connection status.
+			 */
+			bool isConnected = false;
+			/**
+			 * @brief Method to receive and process TSC broadcast SPaT data.
+			 */
+			void processSpat();
+	};
 } /* namespace SpatPlugin */
 
-#endif /* SPATPLUGIN_H_ */

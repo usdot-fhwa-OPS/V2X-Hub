@@ -1,18 +1,35 @@
-/*
- * NTCIP1202.h
+/**
+ * Copyright (C) 2024 LEIDOS.
  *
- *  Created on: Apr 3, 2017
- *      Author: ivp
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
-#ifndef SRC_NTCIP1202_H_
-#define SRC_NTCIP1202_H_
+#pragma once
 
 #include <mutex>
 #include <list>
 
 #include <tmx/j2735_messages/SpatMessage.hpp>
+#include <iostream>
+#include <cstring>
+#include <netinet/in.h>
+#include <ctime>
+#include <ratio>
+#include <PluginLog.h>
 
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
 #include "carma-clock/carma_clock.h"
 
 using namespace std;
@@ -124,4 +141,3 @@ class Ntcip1202
 
 
 
-#endif /* SRC_NTCIP1202_H_ */

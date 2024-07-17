@@ -1,3 +1,18 @@
+/**
+ * Copyright (C) 2024 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 #include "SignalControllerConnection.h"
 
 namespace SpatPlugin {
@@ -5,14 +20,14 @@ namespace SpatPlugin {
     SignalControllerConnection::SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionId) : spatPacketReceiver(std::make_unique<tmx::utils::UdpServer>(localIp, localPort)) ,scSNMPClient(std::make_unique<tmx::utils::snmp_client>(scIp, scSNMPPort ,"administrator", "", "", "")), signalGroupMapping(signalGroupMapping), intersectionName(intersectionName), intersectionId(intersectionId) {
 
     };
-    bool SignalControllerConnection::initializeSignalControllerConnection() {
+    bool SignalControllerConnection::initializeSignalControllerConnection() const {
         tmx::utils::snmp_response_obj resp;
         resp.val_int = 2;
         resp.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
         return scSNMPClient->process_snmp_request("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", tmx::utils::request_type::SET, resp);
     };
 
-    void SignalControllerConnection::receiveBinarySPAT(std::shared_ptr<SPAT> &spat, uint64_t timeMs ) {
+    void SignalControllerConnection::receiveBinarySPAT(const std::shared_ptr<SPAT> &spat, uint64_t timeMs ) const {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
         char buf[1000];
         auto numBytes = spatPacketReceiver->TimedReceive(buf, 1000, 1000);
@@ -33,7 +48,7 @@ namespace SpatPlugin {
         }
     }
     
-    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) {
+    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const {
         FILE_LOG(tmx::utils::logDEBUG1) << "Receiving J2725 HEX SPAT ..." << std::endl;
         auto payload = spatPacketReceiver->stringTimedReceive( 1000 );
         auto index = payload.find("Payload=");
