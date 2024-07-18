@@ -18,12 +18,14 @@
 #include <UdpServer.h>
 #include <SNMPClient.h>
 #include <tmx/j2735_messages/SpatMessage.hpp>
-#include "NTCIP1202.h"
 #include <PluginLog.h>
 #include <tmx/messages/byte_stream.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/TmxException.hpp>
 #include <gtest/gtest_prod.h>  
+
+#include "NTCIP1202.h"
+#include "NTCIP1202OIDs.h"
 
 
 

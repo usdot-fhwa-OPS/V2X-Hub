@@ -21,10 +21,11 @@ namespace SpatPlugin {
 
     };
     bool SignalControllerConnection::initializeSignalControllerConnection() const {
+        // TODO : Set Intersection ID and  Intersection Name
         tmx::utils::snmp_response_obj resp;
         resp.val_int = 2;
         resp.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-        return scSNMPClient->process_snmp_request("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", tmx::utils::request_type::SET, resp);
+        return scSNMPClient->process_snmp_request(NTCIP1202V3::ENABLE_SPAT_OID, tmx::utils::request_type::SET, resp);
     };
 
     void SignalControllerConnection::receiveBinarySPAT(const std::shared_ptr<SPAT> &spat, uint64_t timeMs ) const {
