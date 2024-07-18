@@ -24,7 +24,8 @@ namespace SpatPlugin {
 
 	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
 		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
-		if ( PluginClientClockAware::isSimulationMode() ) {
+		if (PluginClientClockAware::isSimulationMode()) {
+			PLOG(logDEBUG1) << "Subscribing to TimeSyncMessages ... " ;
 			SubscribeToMessages();
 		}
 	}
@@ -64,6 +65,10 @@ namespace SpatPlugin {
 				try {
 					spatReceiverThread->AddPeriodicTick([this]()
 							{
+								// Ensure Clock has received its first update
+								if (PluginClientClockAware::isSimulationMode()) {
+									PluginClientClockAware::getClock()->wait_for_initialization();
+								}
 								this->processSpat();
 								if (!this->isConnected) {
 									SetStatus(keyConnectionStatus, "CONNECTED");
@@ -72,7 +77,7 @@ namespace SpatPlugin {
 							}, // end of lambda expression
 							std::chrono::milliseconds(5)
 					);
-					PluginClientClockAware::getClock()->wait_for_initialization();
+					
 					spatReceiverThread->Start();
 				}
 				catch (const TmxException &e) {
@@ -110,6 +115,7 @@ namespace SpatPlugin {
 						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
 					}
 					auto spat_ptr = std::make_shared<SPAT>();
+					PLOG(logDEBUG) << "Starting SPaT Receiver ...";
 					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
 					tmx::messages::SpatMessage _spatMessage(spat_ptr);
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
@@ -133,7 +139,7 @@ namespace SpatPlugin {
 		}
 	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
-		PluginClientClockAware::OnConfigChanged(key, value);
+		PluginClient::OnConfigChanged(key, value);
 		UpdateConfigSettings();
 	}
 
