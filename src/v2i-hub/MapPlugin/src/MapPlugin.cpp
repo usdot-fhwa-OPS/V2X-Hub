@@ -132,8 +132,7 @@ namespace MapPlugin {
 		std::unique_ptr<tmx::messages::MapDataEncodedMessage> msg;
 		int activeAction = -1;
 		
-		// wait for the clock to be initialized
-		getClock()->wait_for_initialization();
+		
 
 		while (_plugin->state != IvpPluginState_error) {
 			if (_isMapFileNew) {
