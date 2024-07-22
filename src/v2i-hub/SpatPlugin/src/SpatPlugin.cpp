@@ -75,7 +75,7 @@ namespace SpatPlugin {
 				catch (const TmxException &e) {
 					PLOG(tmx::utils::logERROR) << "Encountered error " << e.what() << " during SPAT Processing." << std::endl
 											   << e.GetBacktrace();
-					SetStatus(keyConnectionStatus, "ERROR"); 
+					SetStatus(keyConnectionStatus, "DISCONNECTED"); 
 					this->isConnected = false;
 
 				}
