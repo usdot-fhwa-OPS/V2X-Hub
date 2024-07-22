@@ -33,15 +33,14 @@ public:
     
 protected:
     /**
-     * @brief Method for child classes to use to retrieve the clock object and get the simulation or real time.
-     * @return 
+     * @brief Method for child classes to use to retrieve the clock object and get the simulation or real time. 
+     * In simulation mode method will block until first time update has been received.
+     * @return clock
      */
-    inline std::shared_ptr<fwha_stol::lib::time::CarmaClock> getClock() const {
-        return clock;
-    }
+    std::shared_ptr<fwha_stol::lib::time::CarmaClock> getClock() const ;
 
     void OnStateChange(IvpPluginState state) override; 
-
+    
     bool isSimulationMode() const;
 
     

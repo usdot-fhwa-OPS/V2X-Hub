@@ -24,10 +24,6 @@ namespace SpatPlugin {
 
 	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
 		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
-		if (PluginClientClockAware::isSimulationMode()) {
-			PLOG(logDEBUG1) << "Subscribing to TimeSyncMessages ... " ;
-			SubscribeToMessages();
-		}
 	}
 
 	SpatPlugin::~SpatPlugin() {
@@ -65,10 +61,6 @@ namespace SpatPlugin {
 				try {
 					spatReceiverThread->AddPeriodicTick([this]()
 							{
-								// Ensure Clock has received its first update
-								if (PluginClientClockAware::isSimulationMode()) {
-									PluginClientClockAware::getClock()->wait_for_initialization();
-								}
 								this->processSpat();
 								if (!this->isConnected) {
 									SetStatus(keyConnectionStatus, "CONNECTED");
