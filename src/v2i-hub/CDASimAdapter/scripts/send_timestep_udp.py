@@ -35,7 +35,7 @@ while True :
         count_num += 1
         sock.sendto(encoded_msg,host)
         print( encoded_msg.decode(encoding= 'UTF-8'), 'was sent to ', host)
-        time.sleep(5)
+        time.sleep(.1)
     except socket.gaierror:
 
         print ('There an error resolving the host')

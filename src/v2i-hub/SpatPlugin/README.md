@@ -36,6 +36,9 @@ This plugin has several configuration parameters. Below these are listed out as 
 **TSC_Remote_SNMP_Port**: The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP communication."
 
 **SPAT_Mode**: The format of received SPAT from Traffic Signal Controller (TSC). Acceptance values are BINARY and J2735_HEX.
+> [!NOTE]
+> **J2735_HEX** is a new added SPAT format. If your TSC is able to send UPER SPAT directly to an RSU, this is the format in which it is being sent. Below is a screen shot of J2735_HEX SPaT via TCP Dump
+![Alt text](docs/hex_tcpdump.png)
 
 ## Design
 
