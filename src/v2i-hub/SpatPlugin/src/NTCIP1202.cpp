@@ -222,9 +222,9 @@ void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::strin
 
 	intersection->name = (DescriptiveName_t *) calloc(1, sizeof(DescriptiveName_t));
 
-	intersection->name->size = strlen(intersectionName.c_str());
-	intersection->name->buf = (uint8_t *) calloc(1, strlen(intersectionName.c_str()));
-	memcpy(intersection->name->buf, intersectionName.c_str(), strlen(intersectionName.c_str()));
+	intersection->name->size = intersectionName.length();
+	intersection->name->buf = (uint8_t *) calloc(1, intersectionName.length());
+	memcpy(intersection->name->buf, intersectionName.c_str(), intersectionName.length());
 	intersection->id.id = intersectionId;
 	intersection->revision = (MsgCount_t) 1;
 

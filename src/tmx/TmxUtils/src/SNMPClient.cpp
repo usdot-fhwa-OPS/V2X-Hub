@@ -198,7 +198,7 @@ namespace tmx::utils
         return port_;
     }
 
-    void snmp_client::process_snmp_get_response( snmp_response_obj &val,  const snmp_pdu &response) const {
+    void snmp_client::process_snmp_get_response(snmp_response_obj &val,  const snmp_pdu &response) const {
         for (auto vars = response.variables; vars; vars = vars->next_variable)
         {
             // Get value of variable depending on ASN.1 type
@@ -221,7 +221,7 @@ namespace tmx::utils
         }
     }
 
-    void snmp_client::process_snmp_set_response( snmp_response_obj &val,  const std::string &input_oid) const {
+    void snmp_client::process_snmp_set_response( const snmp_response_obj &val,  const std::string &input_oid) const {
         if(val.type == snmp_response_obj::response_type::INTEGER){
             FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int << std::endl;
         }
