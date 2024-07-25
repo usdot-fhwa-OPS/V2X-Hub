@@ -150,6 +150,6 @@ fi
 
 # Create V2X Hub user
 cd "$mysqlDir" || return # return in case cd fails
-./add_v2xhub_user.bash
+./add_v2xhub_user.bash "$V2XHUB_VERSION"
 
 chromium-browser --ignore-certificate-errors localhost > /dev/null 2>&1 &

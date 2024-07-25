@@ -2,6 +2,16 @@
 # Fail when any command fails
 #set -e
 
+# Check if V2XHUB_VERSION is passed
+if [ -n "$1" ]; then
+    V2XHUB_VERSION="$1"
+else
+    # Prompt user for V2XHUB_VERSION
+    read -p "Enter the deployed V2X-Hub version number: " V2XHUB_VERSION
+fi
+
+echo "Adding V2X-Hub user for version: $V2XHUB_VERSION"
+
 # Ensure mysql-client is installed
 arch=$(dpkg --print-architecture)
 # TODO: Add a common mysql-client that works for ARM and AMD devices 
@@ -34,7 +44,12 @@ if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q 
     done
     echo "VALID PASSWORD"
     echo "Enter MYSQL ROOT PASSWORD: "
-    mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
+    # Check if V2XHUB_VERSION is >= 7.5.0
+    if [[ "$(echo "$V2XHUB_VERSION 7.5.0" | awk '{print ($1 >= $2)}')" -eq 1 ]]; then
+        mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
+    else    
+        mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
+    fi
     echo "V2X Hub user successfully added"
 else
     echo "INVALID PASSWORD"
