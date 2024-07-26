@@ -7,7 +7,7 @@ if [ -n "$1" ]; then
     V2XHUB_VERSION="$1"
 else
     # Prompt user for V2XHUB_VERSION
-    read -p "Enter the deployed V2X-Hub version number: " V2XHUB_VERSION
+    read -r -p "Enter the deployed V2X-Hub version number: " V2XHUB_VERSION
 fi
 
 echo "Adding V2X-Hub user for version: $V2XHUB_VERSION"
