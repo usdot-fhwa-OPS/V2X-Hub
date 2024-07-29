@@ -19,6 +19,7 @@
 #include <MockSNMPClient.h>
 #include <MockUdpServer.h>
 #include <tmx/messages/J2735Exception.hpp>
+#include <NTCIP1202OIDs.h>
 
 using testing::_;
 using testing::Action;
@@ -91,11 +92,15 @@ namespace SpatPlugin {
     };
 
     TEST_F(TestSignalControllerConnection, initialize) {
-        tmx::utils::snmp_response_obj set_value;
-        set_value.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-        set_value.val_int = 2;
-        EXPECT_CALL(*mockSnmpClient, process_snmp_request("1.3.6.1.4.1.1206.3.5.2.9.44.1.0", tmx::utils::request_type::SET, set_value)).WillOnce(testing::DoAll(SetArgReferee<2>(set_value), Return(true)));
-        EXPECT_TRUE(signalControllerConnection->initializeSignalControllerConnection());
+        tmx::utils::snmp_response_obj enable_spat;
+        enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
+        enable_spat.val_int = 2;
+        tmx::utils::snmp_response_obj intersection_id;
+        intersection_id.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
+        intersection_id.val_int = 9001;
+        EXPECT_CALL(*mockSnmpClient, process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat)).WillOnce(testing::DoAll(SetArgReferee<2>(enable_spat), Return(true)));
+        EXPECT_CALL(*mockSnmpClient, process_snmp_request(NTCIP1202V3::INTERSECTION_ID, tmx::utils::request_type::SET, intersection_id)).WillOnce(testing::DoAll(SetArgReferee<2>(enable_spat), Return(true)));
+        EXPECT_TRUE(signalControllerConnection->initializeSignalControllerConnection(true, true));
     }
 
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {

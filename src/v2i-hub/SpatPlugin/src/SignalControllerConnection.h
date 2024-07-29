@@ -75,11 +75,17 @@ namespace SpatPlugin {
              * @param intersectionID Intersection ID.
              */
             SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionID);
+           
             /**
-             * @brief Method attempts to send SNMP SET request to SNMP object to enable SPAT broadcasting.
+             * @brief Method attempts to send SNMP SET requests to initialize the TSC. NOTE: Some of the
+             * OIDs in called in this initialize method may not be exposed by a TSC depending on which
+             * version of the NTCIP 1202 standard they are complaint with. To avoid failures please use
+             * the bool flags to indicate which OIDs need to be set for initialization.
+             * @param enable_spat bool flag on whether to attempt to set enable spat to true (NOT available for NTCIP 1202 versions >= 3 )
+             * @param set_intersection_id  bool flag on whether to set intersection id (NOT available for NTCIP 1202 versions < 3)
              * @return true if successful and false if not.
              */
-            bool initializeSignalControllerConnection() const;
+            bool initializeSignalControllerConnection(bool enable_spat, bool set_intersection_id) const;
             /**
              * @brief Method to receive SPaT data in binary format from TSC.
              * @param spat an empty SPaT pointer to which the SPAT data will be written.

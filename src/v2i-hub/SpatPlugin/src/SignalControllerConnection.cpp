@@ -20,12 +20,23 @@ namespace SpatPlugin {
     SignalControllerConnection::SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionId) : spatPacketReceiver(std::make_shared<tmx::utils::UdpServer>(localIp, localPort)) ,scSNMPClient(std::make_shared<tmx::utils::snmp_client>(scIp, scSNMPPort ,"administrator", "", "", "")), signalGroupMapping(signalGroupMapping), intersectionName(intersectionName), intersectionId(intersectionId) {
 
     };
-    bool SignalControllerConnection::initializeSignalControllerConnection() const {
-        // TODO : Set Intersection ID and  Intersection Name
-        tmx::utils::snmp_response_obj resp;
-        resp.val_int = 2;
-        resp.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-        return scSNMPClient->process_snmp_request(NTCIP1202V3::ENABLE_SPAT_OID, tmx::utils::request_type::SET, resp);
+    bool SignalControllerConnection::initializeSignalControllerConnection(bool enable_spat, bool set_intersection_id) const {
+        // TODO : Update to more generic TSC Initialization process that simply follows NTCIP 1202 version guidelines.
+        bool status = true;
+        if (enable_spat)
+        {
+            tmx::utils::snmp_response_obj enable_spat;
+            enable_spat.val_int = 2;
+            enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
+            status = status && scSNMPClient->process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat);
+        }
+        if ( set_intersection_id ) {
+            tmx::utils::snmp_response_obj intersection_id;
+            intersection_id.val_int = intersectionId;
+            intersection_id.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
+            status = status && scSNMPClient->process_snmp_request(NTCIP1202V3::INTERSECTION_ID, tmx::utils::request_type::SET, intersection_id);
+        }
+        return status;
     };
 
     void SignalControllerConnection::receiveBinarySPAT(const std::shared_ptr<SPAT> &spat, uint64_t timeMs ) const {
