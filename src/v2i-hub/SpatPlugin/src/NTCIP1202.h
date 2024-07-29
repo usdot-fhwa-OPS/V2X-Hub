@@ -30,7 +30,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
-#include "carma-clock/carma_clock.h"
 
 using namespace std;
 

@@ -30,23 +30,28 @@
 		},
 		{
 			"key":"Local_IP",
-			"default":"<local ip address>",
+			"default":"127.0.0.1",
 			"description":"The IPv4 address of the local computer for receiving Traffic Signal Controller Broadcast Messages."
 		},
 		{
 			"key":"Local_UDP_Port",
-			"default":"local port",
+			"default":"6053",
 			"description":"The local UDP port for reception of Traffic Signal Controller Broadcast Messages from the TSC."
 		},
 		{
 			"key":"TSC_IP",
-			"default":"<ip address of signal controller>",
+			"default":"127.0.0.1",
 			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
 		},
 		{
-			"key":"TSC_Remote_SNMP_Port",
-			"default":"<snmp port used in signal controller>",
-			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP communication."
+			"key":"TSC_SNMP_Port",
+			"default":"5050",
+			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP 1202 communication."
+		},
+		{
+			"key":"TSC_SNMP_Community",
+			"default":"public",
+			"description":"The SNMP Community used for sending SNMP NTCIP 1202 communication to Traffic Signal Controller (TSC). Please refer TSC vendor documentation for SNMP Community."
 		},
 		{
 			"key":"SPAT_Mode",

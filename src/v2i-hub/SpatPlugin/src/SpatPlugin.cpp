@@ -38,22 +38,25 @@ namespace SpatPlugin {
 			unsigned int port;
 			std::string signal_controller_ip;
 			unsigned int signal_controller_snmp_port;
+			std::string signal_controller_snmp_community;
 			std::string intersection_name;
 			unsigned int intersection_id;
 			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json, &data_lock);
 			GetConfigValue<std::string>("Local_IP", ip_address, &data_lock);
 			GetConfigValue<unsigned int>("Local_UDP_Port", port, &data_lock);
 			GetConfigValue<std::string>("TSC_IP", signal_controller_ip, &data_lock);
-			GetConfigValue<unsigned int>("TSC_Remote_SNMP_Port", signal_controller_snmp_port,&data_lock);
+			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port,&data_lock);
+			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community,&data_lock);
+
 			GetConfigValue<std::string>("Intersection_Name", intersection_name,&data_lock);
 			GetConfigValue<unsigned int>("Intersection_Id", intersection_id, &data_lock);
 			GetConfigValue<std::string>("SPAT_Mode", spatMode, &data_lock);
 			
 			if (scConnection) {
-				scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, intersection_name, intersection_id));
+				scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
 			}
 			else {
-				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, intersection_name, intersection_id);
+				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
 			}
 			// Only enable spat broadcast in simulation mode. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
 			// Only set intersection ID in J2735_HEX SPAT Mode. Is only available for TSCs that support J2735 UPER HEX SPaT broadcast, which are all NTCIP 1202V3 or later.  

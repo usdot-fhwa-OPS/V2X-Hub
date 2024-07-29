@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <NTCIP1202.h>
+#include <carma-clock/carma_clock.h>
 
 using namespace fwha_stol::lib::time;
 

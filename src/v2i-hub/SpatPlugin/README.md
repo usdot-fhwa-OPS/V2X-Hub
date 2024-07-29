@@ -33,7 +33,9 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 **TSC_IP**: The IPv4 address of the destination Traffic Signal Controller (TSC).
 
-**TSC_Remote_SNMP_Port**: The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP 1202 communication."
+**TSC_SNMP_Port**: The destination port on the Traffic Signal Controller (TSC) for SNMP NTCIP 1202 communication."
+
+**TSC_SNMP_Community**: The SNMP Community used for sending SNMP NTCIP 1202 communication to Traffic Signal Controller (TSC). Please refer TSC vendor documentation for SNMP Community.
 
 **SPAT_Mode**: The format of received SPAT from Traffic Signal Controller (TSC). Acceptance values are BINARY and J2735_HEX.
 > [!NOTE]

@@ -74,7 +74,7 @@ namespace SpatPlugin {
              * @param intersectionName Name of intersection
              * @param intersectionID Intersection ID.
              */
-            SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionID);
+            SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &scSNMPCommunity, const std::string &intersectionName, unsigned int intersectionID);
            
             /**
              * @brief Method attempts to send SNMP SET requests to initialize the TSC. NOTE: Some of the

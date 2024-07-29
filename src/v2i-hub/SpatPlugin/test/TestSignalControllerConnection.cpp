@@ -56,7 +56,7 @@ namespace SpatPlugin {
                         ]
                     }
                 )";
-                signalControllerConnection = std::make_unique<SignalControllerConnection>("127.0.0.1", 5000, signalGroupMapping, "", 5020, "someIntersection", 9001);
+                signalControllerConnection = std::make_unique<SignalControllerConnection>("127.0.0.1", 5000, signalGroupMapping, "", 5020,"administrator", "someIntersection", 9001);
                 mockSnmpClient = std::make_shared<unit_test::mock_snmp_client>("127.0.0.1", 6045, "administrator", "", "", "");
                 mockUdpServer = std::make_shared<tmx::utils::MockUpdServer>();
                 signalControllerConnection->scSNMPClient = mockSnmpClient;

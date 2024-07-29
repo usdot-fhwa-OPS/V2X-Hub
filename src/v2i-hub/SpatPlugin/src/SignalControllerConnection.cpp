@@ -17,14 +17,16 @@
 
 namespace SpatPlugin {
 
-    SignalControllerConnection::SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &intersectionName, unsigned int intersectionId) : spatPacketReceiver(std::make_shared<tmx::utils::UdpServer>(localIp, localPort)) ,scSNMPClient(std::make_shared<tmx::utils::snmp_client>(scIp, scSNMPPort ,"administrator", "", "", "")), signalGroupMapping(signalGroupMapping), intersectionName(intersectionName), intersectionId(intersectionId) {
+    SignalControllerConnection::SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &scSNMPCommunity, const std::string &intersectionName, unsigned int intersectionId) : spatPacketReceiver(std::make_shared<tmx::utils::UdpServer>(localIp, localPort)) ,scSNMPClient(std::make_shared<tmx::utils::snmp_client>(scIp, scSNMPPort ,scSNMPCommunity, "", "", "")), signalGroupMapping(signalGroupMapping), intersectionName(intersectionName), intersectionId(intersectionId) {
 
     };
     bool SignalControllerConnection::initializeSignalControllerConnection(bool enable_spat, bool set_intersection_id) const {
         // TODO : Update to more generic TSC Initialization process that simply follows NTCIP 1202 version guidelines.
         bool status = true;
         if (enable_spat)
-        {
+        {   
+            // For binary SPAT a value of 2 enables original SPAT binary broadcast on the TSC and a value of 6 enables original SPAT plugin additional Pedestrian Information.
+            // NOTE: Pedestrian information is untested.
             tmx::utils::snmp_response_obj enable_spat;
             enable_spat.val_int = 2;
             enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
