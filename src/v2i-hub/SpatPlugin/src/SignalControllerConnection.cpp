@@ -28,10 +28,10 @@ namespace SpatPlugin {
         {   
             // For binary SPAT a value of 2 enables original SPAT binary broadcast on the TSC and a value of 6 enables original SPAT plugin additional Pedestrian Information.
             // NOTE: Pedestrian information is untested.
-            tmx::utils::snmp_response_obj enable_spat;
-            enable_spat.val_int = 2;
-            enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-            status = status && scSNMPClient->process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat);
+            tmx::utils::snmp_response_obj enable_spat_resp;
+            enable_spat_resp.val_int = 2;
+            enable_spat_resp.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
+            status = status && scSNMPClient->process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat_resp);
         }
     
         return status;
