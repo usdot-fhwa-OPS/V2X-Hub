@@ -59,8 +59,7 @@ namespace SpatPlugin {
 				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
 			}
 			// Only enable spat broadcast in simulation mode. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
-			// Only set intersection ID in J2735_HEX SPAT Mode. Is only available for TSCs that support J2735 UPER HEX SPaT broadcast, which are all NTCIP 1202V3 or later.  
-			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode(), this->spatMode == "J2735_HEX");
+			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode());
 			if  ( connected ) {
 				SetStatus(keyConnectionStatus, "IDLE");
 				try {

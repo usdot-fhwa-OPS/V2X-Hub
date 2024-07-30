@@ -95,12 +95,8 @@ namespace SpatPlugin {
         tmx::utils::snmp_response_obj enable_spat;
         enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
         enable_spat.val_int = 2;
-        tmx::utils::snmp_response_obj intersection_id;
-        intersection_id.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-        intersection_id.val_int = 9001;
         EXPECT_CALL(*mockSnmpClient, process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat)).WillOnce(testing::DoAll(SetArgReferee<2>(enable_spat), Return(true)));
-        EXPECT_CALL(*mockSnmpClient, process_snmp_request(NTCIP1202V3::INTERSECTION_ID, tmx::utils::request_type::SET, intersection_id)).WillOnce(testing::DoAll(SetArgReferee<2>(enable_spat), Return(true)));
-        EXPECT_TRUE(signalControllerConnection->initializeSignalControllerConnection(true, true));
+        EXPECT_TRUE(signalControllerConnection->initializeSignalControllerConnection(true));
     }
 
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {

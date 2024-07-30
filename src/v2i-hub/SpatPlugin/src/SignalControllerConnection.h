@@ -60,7 +60,11 @@ namespace SpatPlugin {
              * @brief Numeric identifier for intersection in SPaT messages.
              */
             unsigned int intersectionId;
-        
+
+            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 1000;
+
+            const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
+
             friend class TestSignalControllerConnection;
 
         public:
@@ -82,10 +86,9 @@ namespace SpatPlugin {
              * version of the NTCIP 1202 standard they are complaint with. To avoid failures please use
              * the bool flags to indicate which OIDs need to be set for initialization.
              * @param enable_spat bool flag on whether to attempt to set enable spat to true (NOT available for NTCIP 1202 versions >= 3 )
-             * @param set_intersection_id  bool flag on whether to set intersection id (NOT available for NTCIP 1202 versions < 3)
              * @return true if successful and false if not.
              */
-            bool initializeSignalControllerConnection(bool enable_spat, bool set_intersection_id) const;
+            bool initializeSignalControllerConnection(bool enable_spat) const;
             /**
              * @brief Method to receive SPaT data in binary format from TSC.
              * @param spat an empty SPaT pointer to which the SPAT data will be written.

@@ -20,8 +20,9 @@ namespace SpatPlugin {
     SignalControllerConnection::SignalControllerConnection(const std::string &localIp, unsigned int localPort, const std::string &signalGroupMapping, const std::string &scIp, unsigned int scSNMPPort, const std::string &scSNMPCommunity, const std::string &intersectionName, unsigned int intersectionId) : spatPacketReceiver(std::make_shared<tmx::utils::UdpServer>(localIp, localPort)) ,scSNMPClient(std::make_shared<tmx::utils::snmp_client>(scIp, scSNMPPort ,scSNMPCommunity, "", "", "")), signalGroupMapping(signalGroupMapping), intersectionName(intersectionName), intersectionId(intersectionId) {
 
     };
-    bool SignalControllerConnection::initializeSignalControllerConnection(bool enable_spat, bool set_intersection_id) const {
-        // TODO : Update to more generic TSC Initialization process that simply follows NTCIP 1202 version guidelines.
+    bool SignalControllerConnection::initializeSignalControllerConnection(bool enable_spat) const {
+        // TODO : Update to more generic TSC Initialization process that simply follows NTCIP 1202 version guidelines. Also
+        // set intersection ID in J2735_HEX SPAT Mode. The HEX payload should include a intersection ID.  
         bool status = true;
         if (enable_spat)
         {   
@@ -32,19 +33,14 @@ namespace SpatPlugin {
             enable_spat.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
             status = status && scSNMPClient->process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat);
         }
-        if ( set_intersection_id ) {
-            tmx::utils::snmp_response_obj intersection_id;
-            intersection_id.val_int = intersectionId;
-            intersection_id.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
-            status = status && scSNMPClient->process_snmp_request(NTCIP1202V3::INTERSECTION_ID, tmx::utils::request_type::SET, intersection_id);
-        }
+    
         return status;
     };
 
     void SignalControllerConnection::receiveBinarySPAT(const std::shared_ptr<SPAT> &spat, uint64_t timeMs ) const {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
-        char buf[1000];
-        auto numBytes = spatPacketReceiver->TimedReceive(buf, 1000, 1000);
+        char buf[SPAT_BINARY_BUFFER_SIZE];
+        auto numBytes = spatPacketReceiver->TimedReceive(buf, SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
         if (numBytes > 0)
         {
             // Convert Binary  buffer to SPAT pointer 
@@ -64,7 +60,7 @@ namespace SpatPlugin {
     
     void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const {
         FILE_LOG(tmx::utils::logDEBUG1) << "Receiving J2725 HEX SPAT ..." << std::endl;
-        auto payload = spatPacketReceiver->stringTimedReceive( 1000 );
+        auto payload = spatPacketReceiver->stringTimedReceive( UDP_SERVER_TIMEOUT_MS );
         auto index = payload.find("Payload=");
         if ( index != std::string::npos ) {
             // Retreive hex string payload
