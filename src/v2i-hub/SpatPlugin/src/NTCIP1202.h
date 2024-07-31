@@ -1,19 +1,35 @@
-/*
- * NTCIP1202.h
+/**
+ * Copyright (C) 2024 LEIDOS.
  *
- *  Created on: Apr 3, 2017
- *      Author: ivp
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
-#ifndef SRC_NTCIP1202_H_
-#define SRC_NTCIP1202_H_
+#pragma once
 
 #include <mutex>
 #include <list>
 
 #include <tmx/j2735_messages/SpatMessage.hpp>
+#include <iostream>
+#include <cstring>
+#include <netinet/in.h>
+#include <ctime>
+#include <ratio>
+#include <PluginLog.h>
 
-#include "carma-clock/carma_clock.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -68,8 +84,6 @@ struct SignalGroupMapping
 class Ntcip1202
 {
 	public:
-		inline explicit Ntcip1202(std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock) :
-			clock(clock) {};
 		void setSignalGroupMappingList(string json);
 
 		void copyBytesIntoNtcip1202(char* buff, int numBytes);
@@ -100,32 +114,29 @@ class Ntcip1202
 		uint16_t getOverlapMinTime(int phaseNumber);
 		uint16_t getOverlapMaxTime(int phaseNumber);
 
-		long getAdjustedTime(unsigned int offset);
+		long getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch) const;
 
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
-		bool ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionID_t intersectionId);
+		void ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId);
 
 		void printDebug();
 	private:
-		std::shared_ptr<fwha_stol::lib::time::CarmaClock> clock;
 
 		Ntcip1202Ext ntcip1202Data;
 		std::map<uint8_t, int> _phaseToIndexMapping;
 
-		std::mutex _spat_lock;
 
 		list<SignalGroupMapping> signalGroupMappingList;
 
 		int getVehicleSignalGroupForPhase(int phase);
 		int getPedestrianSignalGroupForPhase(int phase);
 
-		void populateVehicleSignalGroup(MovementState *movement, int phase);
-		void populatePedestrianSignalGroup(MovementState *movement, int phase);
-		void populateOverlapSignalGroup(MovementState *movement, int phase);
+		void populateVehicleSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
+		void populatePedestrianSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
+		void populateOverlapSignalGroup(MovementState *movement, int phase, unsigned long msEpoch);
 };
 
 
 
-#endif /* SRC_NTCIP1202_H_ */

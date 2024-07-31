@@ -1,6 +1,20 @@
+/**
+ * Copyright (C) 2024 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 #include "SpatPlugin.h"
 
-#include <PluginLog.h>
 
 using namespace std;
 using namespace tmx::messages;
@@ -8,170 +22,131 @@ using namespace tmx::utils;
 
 namespace SpatPlugin {
 
-SpatPlugin::SpatPlugin(string name) :
-		PluginClientClockAware(name), sc(getClock()), intersectionId(0) {
-	AddMessageFilter<PedestrianMessage>(this, &SpatPlugin::HandlePedestrianDetection);
-	SubscribeToMessages();
-}
-
-SpatPlugin::~SpatPlugin() {
-
-}
-
-void SpatPlugin::UpdateConfigSettings() {
-
-	GetConfigValue<string>("SignalGroupMapping", signalGroupMappingJson, &data_lock);
-	GetConfigValue<string>("Local_IP", localIp, &data_lock);
-	GetConfigValue<string>("Local_UDP_Port", localUdpPort, &data_lock);
-	GetConfigValue<string>("TSC_IP", tscIp, &data_lock);
-	GetConfigValue<string>("TSC_Remote_SNMP_Port", tscRemoteSnmpPort,
-			&data_lock);
-	GetConfigValue<string>("Intersection_Name", intersectionName,
-			&data_lock);
-	GetConfigValue<int>("Intersection_Id", intersectionId, &data_lock);
-
-	isConfigurationLoaded = true;
-}
-
-void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
-	PluginClient::OnConfigChanged(key, value);
-	UpdateConfigSettings();
-}
-
-void SpatPlugin::OnStateChange(IvpPluginState state) {
-	PluginClientClockAware::OnStateChange(state);
-
-	if (state == IvpPluginState_registered) {
-		UpdateConfigSettings();
+	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
+		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
 	}
-}
 
-void SpatPlugin::HandlePedestrianDetection(PedestrianMessage &pedMsg, routeable_message &routeableMsg) {
-	lock_guard<mutex> lock(data_lock);
-	_pedMessage = pedMsg;
-}
+	SpatPlugin::~SpatPlugin() {
 
-int SpatPlugin::Main() {
+	}
 
-	int iCounter = 0;
+	void SpatPlugin::UpdateConfigSettings() {
 
-	PLOG(logINFO) << "Waiting for clock initialization";
+		if (this->IsPluginState(IvpPluginState_registered)) {
+			std::string signal_group_mapping_json;
+			std::string ip_address;
+			unsigned int port;
+			std::string signal_controller_ip;
+			unsigned int signal_controller_snmp_port;
+			std::string signal_controller_snmp_community;
+			std::string intersection_name;
+			unsigned int intersection_id;
+			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json, &data_lock);
+			GetConfigValue<std::string>("Local_IP", ip_address, &data_lock);
+			GetConfigValue<unsigned int>("Local_UDP_Port", port, &data_lock);
+			GetConfigValue<std::string>("TSC_IP", signal_controller_ip, &data_lock);
+			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port,&data_lock);
+			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community,&data_lock);
 
-	// wait for the clock to be initialized and record the time when it is ready
-	getClock()->wait_for_initialization();
-	auto nextSpatTime = getClock()->nowInMilliseconds();
-	PLOG(logINFO) << "Initial nextSpatTime=" << nextSpatTime;
-
-	try {
-		while (_plugin->state != IvpPluginState_error) {
-			// wait to send next message
-			if (isConfigurationLoaded) {
-				if (!isConfigured) {
-
-					usleep(200000);
-
-					int action = sc.getActionNumber();
-
-					/*pthread_mutex_lock(&gSettingsMutex);
-					 std::cout <<  "Get PTLM file specified by configuration settings" << std::endl;
-					 std::string ptlmFile = GetPtlmFile(action);
-					 pthread_mutex_unlock(&gSettingsMutex);
-					 */
-					//if (!ptlmFile.empty())
-					//{
-					_actionNumber = action;
-
-					// sc.spat_message_mutex does not need locked because the thread is not running yet.
-
-					{
-						std::lock_guard<std::mutex> lock(data_lock);
-						string ptlm = "";
-						sc.setConfigs(localIp, localUdpPort, tscIp,
-								tscRemoteSnmpPort, ptlm, intersectionName,
-								intersectionId);
-					}
-					// Start the signal controller thread.
-					sc.Start(signalGroupMappingJson);
-					// Give the spatdata pointer to the message class
-					//smr41.setSpatData(sc.getSpatData());
-
-					isConfigured = true;
-					//}
-				}
-
-				// SPaT must be sent exactly every 100 ms.  So adjust for how long it took to do the last send.
-				nextSpatTime += 100;
-				getClock()->sleep_until(nextSpatTime);
-
-				iCounter++;
-
-				bool messageSent = false;
-
-				// Update PTLM file if the action number has changed.
-				int actionNumber = sc.getActionNumber();
-				if (_actionNumber != actionNumber) {
-					_actionNumber = actionNumber;
-
-					//pthread_mutex_lock(&gSettingsMutex);
-					//std::string ptlmFile = GetPtlmFile(_actionNumber);
-					//pthread_mutex_unlock(&gSettingsMutex);
-
-					/*if (!ptlmFile.empty())
-					 {
-					 pthread_mutex_lock(&sc.spat_message_mutex);
-					 sc.updatePtlmFile(ptlmFile.c_str());
-					 pthread_mutex_unlock(&sc.spat_message_mutex);
-					 }*/
-				}
-				if (sc.getIsConnected()) {
-					SetStatus<string>("TSC Connection", "Connected");
-
-					// Add pedestrian detection
-					string pedZones;
-					{
-						lock_guard<mutex> lock(data_lock);
-						pedZones = _pedMessage.get_DetectionZones();
-					}
-					if (!pedZones.empty()) {
-						PLOG(logDEBUG) << "Pedestrians detected in lanes " << pedZones;
-					}
-
-					SpatEncodedMessage spatEncodedMsg;
-					sc.getEncodedSpat(&spatEncodedMsg, pedZones);
-
-					spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncodedMsg.addDsrcMetadata(0x8002);
-
-					//PLOG(logDEBUG) << spatEncodedMsg;
-
-					BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
-
-					if (iCounter % 20 == 0) {
-						iCounter = 0;
-						// Action Number
-						IvpMessage *actionMsg = ivpSigCont_createMsg(
-								sc.getActionNumber());
-						if (actionMsg != NULL) {
-							ivp_broadcastMessage(_plugin, actionMsg);
-							ivpMsg_destroy(actionMsg);
-						}
-					}
+			GetConfigValue<std::string>("Intersection_Name", intersection_name,&data_lock);
+			GetConfigValue<unsigned int>("Intersection_Id", intersection_id, &data_lock);
+			GetConfigValue<std::string>("SPAT_Mode", spatMode, &data_lock);
+			
+			if (scConnection) {
+				scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
+			}
+			else {
+				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
+			}
+			// Only enable spat broadcast in simulation mode. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
+			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode());
+			if  ( connected ) {
+				SetStatus(keyConnectionStatus, "IDLE");
+				try {
+					spatReceiverThread->AddPeriodicTick([this]()
+							{
+								this->processSpat();
+								if (!this->isConnected) {
+									SetStatus(keyConnectionStatus, "CONNECTED");
+									this->isConnected = true;
+								}
+							}, // end of lambda expression
+							std::chrono::milliseconds(5)
+					);
 					
-				} else {
-					SetStatus<string>("TSC Connection", "Disconnected");
+					spatReceiverThread->Start();
+				}
+				catch (const TmxException &e) {
+					PLOG(tmx::utils::logERROR) << "Encountered error " << e.what() << " during SPAT Processing." << std::endl
+											   << e.GetBacktrace();
+					SetStatus(keyConnectionStatus, "DISCONNECTED"); 
+					this->isConnected = false;
+
 				}
 			}
-		}
-	} catch (exception &ex) {
-		stringstream ss;
-		ss << "SpatPlugin terminating from unhandled exception: " << ex.what();
+			else {
+				PLOG(tmx::utils::logERROR) << "Traffic Signal Controller at " << signal_controller_ip << ":" << signal_controller_snmp_port << " failed!";
+				SetStatus(keyConnectionStatus, "DISCONNECTED");
+				this->isConnected = false;
 
-		ivp_addEventLog(_plugin, IvpLogLevel_error, ss.str().c_str());
-		std::terminate();
+			}
+		}
 	}
 
-	return EXIT_SUCCESS;
-}
+	void SpatPlugin::processSpat() {
+		if (this->scConnection ) {
+			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
+			try {
+				
+				if (spatMode == "J2735_HEX") {
+					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+					scConnection->receiveUPERSPAT(spatEncoded_ptr);
+					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
+					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
+					BroadcastMessage(*rMsg);	
+				}
+				else {
+					if ( spatMode != "BINARY"){
+						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
+					}
+					auto spat_ptr = std::make_shared<SPAT>();
+					PLOG(logDEBUG) << "Starting SPaT Receiver ...";
+					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+					tmx::messages::SpatMessage _spatMessage(spat_ptr);
+					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+					spatEncoded_ptr->initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
+					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
+					BroadcastMessage(*rMsg);
+				}
+			}
+			catch (const UdpServerRuntimeError &e) {
+				PLOG(tmx::utils::logWARNING) << "Encountered UDP Server Runtime Error" << e.what() << " attempting to process SPAT." << std::endl
+										   << e.GetBacktrace();
+			}
+			catch (const tmx::TmxException &e) {
+				PLOG(tmx::utils::logERROR) << "Encountered Tmx Exception " << e.what() << " attempting to process SPAT." << std::endl
+										   << e.GetBacktrace();
+				skippedMessages++;
+				SetStatus<uint>(keySkippedMessages, skippedMessages);
+			}
+			
+		}
+	}
+	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
+		PluginClient::OnConfigChanged(key, value);
+		UpdateConfigSettings();
+	}
+
+	void SpatPlugin::OnStateChange(IvpPluginState state) {
+		PluginClientClockAware::OnStateChange(state);
+
+		if (state == IvpPluginState_registered) {
+			UpdateConfigSettings();
+		}
+	}
+
 
 }
 /* End namespace SpatPlugin */
