@@ -14,7 +14,7 @@ services:
       - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+      - ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
       - mysql-datavolume:/var/lib/mysql
 
   php:
