@@ -45,5 +45,13 @@ CREATE TABLE `freight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `freight` WRITE;
-INSERT INTO `freight` VALUES ('C1T-1',NULL,0.2,0.0,'EXIT_STAGING_AREA','32320c8a-e422-11eb-a8cc-000c29ae3c1t','4ace39e6-ee36-11eb-9a03-0242ac130c1t');
+INSERT INTO `freight` VALUES ('C1T-1',NULL,-1.4,-1.4,'ENTER_STAGING_AREA','one','two'),
+('C1T-1',CARGO_A,-1.4,-1.4,'PICKUP','two','three'),
+('C1T-1',CARGO_A,-1.4,-1.4,'EXIT_STAGING_AREA','three','four'),
+('C1T-1',CARGO_A,-1.4,-1.4,'ENTER_PORT','four','five'),
+('C1T-1',CARGO_A,-1.4,-1.4,'DROPOFF','five','six'),
+('C1T-1',CARGO_B,-1.4,-1.4,'PICKUP','six','seven'),
+('C1T-1',CARGO_B,-1.4,-1.4,'PORT_CHECKPOINT','seven','eight'),
+('C1T-1',CARGO_B,-1.4,-1.4,'EXIT_PORT','eight','nine'),
+('C1T-1',CARGO_B,-1.4,-1.4,'ENTER_STAGING_AREA','nine','ten');
 UNLOCK TABLES;
