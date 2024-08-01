@@ -21,6 +21,17 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
+// Function to convert hex string to byte array
+std::vector<uint8_t> hexStringToByteArray(const std::string& hex) {
+    std::vector<uint8_t> bytes;
+    for (unsigned int i = 0; i < hex.length(); i += 2) {
+        std::string byteString = hex.substr(i, 2);
+        uint8_t byte = (uint8_t) strtol(byteString.c_str(), NULL, 16);
+        bytes.push_back(byte);
+    }
+    return bytes;
+}
+
 class msg_type {
 public:
 	msg_type() {}
@@ -1080,7 +1091,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 
 	xer_fprint(stdout, &asn_DEF_RoadSafetyMessage, message);
 
-	//Encode RSM 
+	// Encode RSM 
 	tmx::messages::RsmEncodedMessage RsmEncodeMessage;
 	auto _rsmMessage = new tmx::messages::RsmMessage(message);
 	tmx::messages::MessageFrameMessage frame_msg(_rsmMessage->get_j2735_data());
@@ -1092,11 +1103,27 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	std::string expectedRSMEncHex = "0021570100802060c020218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
 	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
 
-	//Decode RSM
+	// Decode RSM
 	auto rsm_ptr = RsmEncodeMessage.decode_j2735_message().get_j2735_data();
 	ASSERT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
+
+	// Decode any RSM
+	std::string rsmInput = "0021570100802060c020218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
+    std::vector<uint8_t> byteArray = hexStringToByteArray(rsmInput);
+    tmx::messages::RsmEncodedMessage decodedMessage;
+    decodedMessage.set_data(byteArray);
+    auto decodedRsmPtr = decodedMessage.decode_j2735_message();
+
+    // Print out the decoded message
+    std::cout << "Decoded RSM: " << decodedRsmPtr << std::endl;
 }
-	
+
+
+
+
+
+
+
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
