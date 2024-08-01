@@ -45,13 +45,5 @@ CREATE TABLE `freight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `freight` WRITE;
-INSERT INTO `freight` VALUES ('C1T-1',NULL,-1.4,-1.4,'ENTER_STAGING_AREA','one','two'),
-('C1T-1',CARGO_A,-1.4,-1.4,'PICKUP','two','three'),
-('C1T-1',CARGO_A,-1.4,-1.4,'EXIT_STAGING_AREA','three','four'),
-('C1T-1',CARGO_A,-1.4,-1.4,'ENTER_PORT','four','five'),
-('C1T-1',CARGO_A,-1.4,-1.4,'DROPOFF','five','six'),
-('C1T-1',CARGO_B,-1.4,-1.4,'PICKUP','six','seven'),
-('C1T-1',CARGO_B,-1.4,-1.4,'PORT_CHECKPOINT','seven','eight'),
-('C1T-1',CARGO_B,-1.4,-1.4,'EXIT_PORT','eight','nine'),
-('C1T-1',CARGO_B,-1.4,-1.4,'ENTER_STAGING_AREA','nine','ten');
+INSERT INTO `freight` VALUES ('C1T-1',NULL,-1.4,-1.4,'ENTER_STAGING_AREA','one','two'),('C1T-1','CARGO_A',-0.4,-0.4,'PICKUP','two','three'),('C1T-1','CARGO_A',-1.4,-3.4,'EXIT_STAGING_AREA','three','four'),('C1T-1','CARGO_A',-3.4,-3.4,'ENTER_PORT','four','five'),('C1T-1','CARGO_A',-6.4,-1.4,'DROPOFF','five','six'),('C1T-1','CARGO_B',-6.4,0.6,'PICKUP','six','seven'),('C1T-1','CARGO_B',-5.4,2.6,'PORT_CHECKPOINT','seven','eight'),('C1T-1','CARGO_B',-2.4,-2.4,'EXIT_PORT','eight','nine'),('C1T-1','CARGO_B',-1.4,-1.4,'ENTER_STAGING_AREA','nine','ten');
 UNLOCK TABLES;
