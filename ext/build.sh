@@ -72,3 +72,11 @@ make -j${numCPU}
 make install
 popd
 
+# pugixml
+pushd /tmp
+git clone https://github.com/zeux/pugixml.git
+cd pugixml
+cmake .
+make -j${numCPU}
+make install
+popd
