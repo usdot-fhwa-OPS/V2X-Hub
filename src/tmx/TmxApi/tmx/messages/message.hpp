@@ -22,6 +22,11 @@
 	void add_to_##NAME(ELEMENT element) { add_array_element<ELEMENT>(#NAME, element); } \
 	void erase_##NAME()	{ erase_array(#NAME); }
 
+#define object_attribute(ELEMENT, NAME) \
+	ELEMENT get_##NAME() {return get_object<ELEMENT>(#NAME); } \
+	void set_##NAME(ELEMENT obj) {return set_object<ELEMENT>(#NAME, obj); } \
+	void erase_##NAME(){erase_object(#NAME); }
+
 namespace tmx
 {
 
@@ -400,6 +405,34 @@ public:
 
 		// Add the new element
 		tree.get().push_back(typename message_tree_type::value_type("", Element::to_tree(element)));
+	}
+
+	/***
+	 * @brief Get the content of an object fields
+	 * @param Name of the object
+	 * @param Object An object containing all the fields
+	 */
+	template <class Element>
+	Element get_object(const std::string&  objectName){
+		boost::optional<boost::property_tree::ptree &> tree = this->as_tree();
+		return Element::from_tree(tree.get().get_child(objectName));
+	}
+
+	/**
+	 * @brief Set the content of an object fields
+	 * @param Name of the object 
+	 * @param Object An object containing all the fields to set
+	 */
+	template <class Element>
+	void set_object(const std::string&  objectName, Element obj)
+	{
+		erase_object(objectName);
+		this->as_tree().get().add_child(objectName, Element::to_tree(obj));
+	}
+
+	void erase_object(const std::string& objName)
+	{
+		this->as_tree().get().erase(objName);
 	}
 
 	/**
