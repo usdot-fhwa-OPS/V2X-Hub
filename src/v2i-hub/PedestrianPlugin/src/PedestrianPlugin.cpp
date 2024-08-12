@@ -2,7 +2,7 @@
 // Name        : PedestrianPlugin.cpp
 // Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2024 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
 
@@ -25,21 +25,11 @@ PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
 	if (_signSimClient != nullptr)
 		_signSimClient.reset();
-	
-	UpdateConfigSettings();
-	std::lock_guard<mutex> lock(_cfgLock);
-
-	std::thread webServiceThread(&PedestrianPlugin::StartWebService, this);
-	webServiceThread.detach(); // wait for the thread to finish
-	// StartWebService = std::move(std::jthread{StartWebService});
-	runningWebService = true;
 }
 
 int PedestrianPlugin::StartWebSocket()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
-	// std::jthread StartWebSocket;
-
 	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
@@ -48,10 +38,8 @@ int PedestrianPlugin::StartWebSocket()
 	PLOG(logDEBUG) << "Successfully running the I/O service";	
     runningWebSocket = true;
 
-    // Run the I/O service. The call will return when
-    // the socket is closed.
+    // Run the I/O service. The call will return when the socket is closed.
     ioc.run();
-	runningWebSocket = false;
 
     return EXIT_SUCCESS;
 }
@@ -71,7 +59,7 @@ void PedestrianPlugin::StopWebSocket()
     }
 }
 
-[[noreturn]] int PedestrianPlugin::checkXML()
+void PedestrianPlugin::checkXML()
 {
 	// std::jthread checkXML;
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
@@ -140,7 +128,6 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 int PedestrianPlugin::StartWebService()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebService";
-	// std::jthread webServiceThread;
 
 	// Web services 
 	std::array<char*, 1> placeholderX = {nullptr};
@@ -203,15 +190,13 @@ void PedestrianPlugin::UpdateConfigSettings()
         {
 			PLOG(logDEBUG) << "Starting WebSocket Thread";
             std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
-			// StartWebSocket = std::move(std::jthread{StartWebSocket});
             PLOG(logDEBUG) << "WebSocket Thread started!!";
-			webSocketThread.detach(); // wait for the thread to finish
 
 			PLOG(logDEBUG) << "Starting XML Thread";
 			std::thread xmlThread(&PedestrianPlugin::checkXML, this);
-			// checkXML = std::move(std::jthread{checkXML});
 			PLOG(logDEBUG) << "XML Thread started!!";
-			xmlThread.detach(); // wait for the thread to finish
+			webSocketThread.join(); // wait for the thread to finish
+			xmlThread.join(); // wait for the thread to finish
         }
     }
 
@@ -222,8 +207,8 @@ void PedestrianPlugin::UpdateConfigSettings()
         {
 			PLOG(logDEBUG) << "Starting WebService Thread";
             std::thread webServiceThread(&PedestrianPlugin::StartWebService, this);
-			webServiceThread.detach(); // wait for the thread to finish
-            PLOG(logDEBUG) << "WebService Thread started";
+			PLOG(logDEBUG) << "WebService Thread started";
+			webServiceThread.join(); // wait for the thread to finish
         }
     }
 	else
@@ -232,12 +217,13 @@ void PedestrianPlugin::UpdateConfigSettings()
 		StopWebService();
 		StopWebSocket();
 	}
+
 }
 
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)
 {
 	PluginClient::OnConfigChanged(key, value);
-	UpdateConfigSettings();
+	// UpdateConfigSettings();
 }
 
 void PedestrianPlugin::OnStateChange(IvpPluginState state)
@@ -279,6 +265,7 @@ void PedestrianPlugin::BroadcastPsm(const std::string &psmJson)
 	msg->refresh_timestamp();
 
 	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+
 	BroadcastMessage(*rMsg);
 
 	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();

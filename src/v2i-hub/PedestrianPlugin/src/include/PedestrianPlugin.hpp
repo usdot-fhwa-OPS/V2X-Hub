@@ -2,7 +2,7 @@
 // Name        : PedestrianPlugin.cpp
 // Author      : FHWA Saxton Transportation Operations Laboratory  
 // Version     :
-// Copyright   : Copyright (c) 2019 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
+// Copyright   : Copyright (c) 2024 FHWA Saxton Transportation Operations Laboratory. All rights reserved.
 // Description : Pedestrian Plugin
 //==========================================================================
 #pragma once
@@ -74,7 +74,7 @@ protected:
 	void OnWebSocketDataReceived(QString message);
 	void OnWebSocketClosed();
 
-	[[noreturn]] int checkXML();
+	void checkXML();
 	
 private:
 	std::unique_ptr<tmx::utils::UdpClient> _signSimClient = nullptr;
@@ -104,4 +104,3 @@ private:
 };
 
 };
-
