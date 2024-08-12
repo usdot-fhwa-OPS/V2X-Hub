@@ -33,34 +33,34 @@ namespace tmx
 
             // TODO: Convert this member variable to std::attributes and handle nested object and arrays. (see [CloudHeartbeatMessage.h](./CloudHearbeatMessage.h) array_attribute )
             //Flag to indicate whether sensor detected object is simulated.
-            std_attribute(this->msg, bool, ISSimulated, false,);
+            std_attribute(this->msg, bool, isSimulated, false,);
             // Classification of detected object.
-            std_attribute(this->msg, std::string, Type, "",);
+            std_attribute(this->msg, std::string, type, "",);
             // Confidence of type classification
-            std_attribute(this->msg, double, Confidence, 0.0,);
+            std_attribute(this->msg, double, confidence, 0.0,);
             // Unique indentifier of sensor reporting detection.
-            std_attribute(this->msg, std::string, SensorId, "", );
+            std_attribute(this->msg, std::string, sensorId, "", );
             // String describing projection used to convert cartesian data to WGS84 data.
-            std_attribute(this->msg, std::string, ProjString, "", );
+            std_attribute(this->msg, std::string, projString, "", );
             // Unique identifier of detected object.
-            std_attribute(this->msg, int, ObjectId, 0, );
+            std_attribute(this->msg, int, objectId, 0, );
 
                  
-            object_attribute(Position, Position);           
-            array_attribute(Covariance, PositionCovariance);
+            object_attribute(Position, position);    
+            two_dimension_array_attribute(Covariance, positionCovariance);       
             //Linear velocity in meter per second
-            object_attribute(Velocity, Velocity);
+            object_attribute(Velocity, velocity);
             //Covariance associated with linear velocity.
-            array_attribute(Covariance, VelocityCovariance);
+            two_dimension_array_attribute(Covariance, velocityCovariance);
             //Angular velocity in radians per second.
-            object_attribute(Velocity, AngularVelocity);
+            object_attribute(Velocity, angularVelocity);
             //Covariance associated with angular velocity.
-            array_attribute(Covariance, AngularVelocityCovariance);
+            two_dimension_array_attribute(Covariance, angularVelocityCovariance);
 
             // Epoch time in milliseconds.
             // long timestamp = 0;
-            std_attribute(this->msg, long, Timestamp, 0, );            
-            object_attribute(Size, Size);
+            std_attribute(this->msg, long, timestamp, 0, );            
+            object_attribute(Size, size);
            
         };
 
