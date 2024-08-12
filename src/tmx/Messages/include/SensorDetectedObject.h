@@ -5,6 +5,10 @@
 #include <MessageTypes.h>
 #include <Vector3d.h>
 #include <Point.h>
+#include "Position.h"
+#include "Covariance.h"
+#include "Velocity.h"
+#include "Size.h"
 
 namespace tmx
 {
@@ -41,70 +45,13 @@ namespace tmx
             // Unique identifier of detected object.
             std_attribute(this->msg, int, ObjectId, 0, );
 
-            // Cartesian positiion of object. Assumed to be ENU coordinate frame.
-            typedef struct Position{
-                double x,  y, z;
-                Position(){};
-                Position(double x, double y, double z):x(x),y(y),z(z){};
-                static message_tree_type to_tree(const Position& pos){
-                    message_tree_type tree;
-                    tree.put("x", pos.x);
-                    tree.put("y", pos.y);
-                    tree.put("z", pos.z);
-                    return tree;
-                }
-                static Position from_tree(const message_tree_type& tree){
-                    Position pos;
-                    pos.x = tree.get<double>("x");
-                    pos.y = tree.get<double>("y");
-                    pos.z = tree.get<double>("z");
-                    return pos;
-                }
-            } Position;            
-            object_attribute(Position, Position);
-
-            typedef struct Covariance{
-                std::string value;                
-                Covariance(){};
-                Covariance( std::string value):value(value){};
-                static message_tree_type to_tree(const Covariance& cov){
-                    message_tree_type tree;
-                    tree.put("", cov.value);
-                    return tree;
-                }
-                static Covariance from_tree(const message_tree_type& tree){
-                    Covariance cov;
-                    cov.value = tree.get<std::string>("");
-                    return cov;
-                }
-            } Covariance;
+                 
+            object_attribute(Position, Position);           
             array_attribute(Covariance, PositionCovariance);
-            
-            // Cartesian velocity vector of object. Assumed to be ENU coordinate frame.
-            typedef struct Velocity{
-                double x, y, z;
-                Velocity(){};
-                Velocity(double x, double y, double z):x(x),y(y),z(z){};
-                static message_tree_type to_tree(const Velocity& velocity){
-                    message_tree_type tree;
-                    tree.put("x", velocity.x);
-                    tree.put("y", velocity.y);
-                    tree.put("z", velocity.z);
-                    return tree;
-                }
-                static Velocity from_tree(const message_tree_type& tree){
-                    Velocity velocity;
-                    velocity.x = tree.get<double>("x");
-                    velocity.y = tree.get<double>("y");
-                    velocity.z = tree.get<double>("z");
-                    return velocity;
-                }
-            } Velocity;
             //Linear velocity in meter per second
             object_attribute(Velocity, Velocity);
             //Covariance associated with linear velocity.
             array_attribute(Covariance, VelocityCovariance);
-            
             //Angular velocity in radians per second.
             object_attribute(Velocity, AngularVelocity);
             //Covariance associated with angular velocity.
@@ -112,30 +59,7 @@ namespace tmx
 
             // Epoch time in milliseconds.
             // long timestamp = 0;
-            std_attribute(this->msg, long, Timestamp, 0, );
-
-            //Length, width and height of object in meter.
-            typedef struct Size{
-                double length;
-                double width;
-                double height;
-                Size(){};
-                Size(double length, double width, double height): length(length), width(width), height(height){};
-                static message_tree_type to_tree(const Size& size){
-                    message_tree_type tree;
-                    tree.put("length", size.length);
-                    tree.put("width", size.width);
-                    tree.put("height", size.height);
-                    return tree;
-                }
-                static Size from_tree(const message_tree_type & tree){
-                    Size size;
-                    size.length = tree.get<double>("length");
-                    size.width = tree.get<double>("width");
-                    size.height = tree.get<double>("height");
-                    return size;
-                }
-            } Size;
+            std_attribute(this->msg, long, Timestamp, 0, );            
             object_attribute(Size, Size);
            
         };

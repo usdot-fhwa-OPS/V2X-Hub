@@ -32,7 +32,7 @@ namespace MUSTSensorDriverPlugin {
     tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString) {
         tmx::messages::SensorDetectedObject detectedObject;
         detectedObject.set_ObjectId(detection.trackID);
-        tmx::messages::SensorDetectedObject::Position pos(detection.position_x, detection.position_y, 0);
+        tmx::messages::Position pos(detection.position_x, detection.position_y, 0);
         detectedObject.set_Position(pos);
         detectedObject.set_Confidence(detection.confidence);
         detectedObject.set_Timestamp(static_cast<long>(detection.timestamp*1000)); // convert decimal seconds to int milliseconds.
@@ -77,12 +77,12 @@ namespace MUSTSensorDriverPlugin {
         }
     };
 
-    tmx::messages::SensorDetectedObject::Velocity headingSpeedToVelocity(double heading, double speed) {
+    tmx::messages::Velocity headingSpeedToVelocity(double heading, double speed) {
         // Convert North East heading to Angle with 0 at (1, 0) (See README Unit Circle)
         heading = heading - 270;
         // factor for converting heading from degrees to radians
         auto headingInRad = M_PI / 180;
-        tmx::messages::SensorDetectedObject::Velocity velocity;
+        tmx::messages::Velocity velocity;
         velocity.x = std::cos(headingInRad * heading) * speed;
         velocity.y = std::sin(headingInRad * heading) * speed;
         velocity.z = 0;
