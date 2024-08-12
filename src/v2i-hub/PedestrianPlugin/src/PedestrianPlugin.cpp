@@ -61,7 +61,6 @@ void PedestrianPlugin::StopWebSocket()
 
 void PedestrianPlugin::checkXML()
 {
-	// std::jthread checkXML;
 	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
 	while (true)
 	{
@@ -223,7 +222,6 @@ void PedestrianPlugin::UpdateConfigSettings()
 void PedestrianPlugin::OnConfigChanged(const char *key, const char *value)
 {
 	PluginClient::OnConfigChanged(key, value);
-	// UpdateConfigSettings();
 }
 
 void PedestrianPlugin::OnStateChange(IvpPluginState state)
@@ -237,7 +235,7 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 }
 
 void PedestrianPlugin::BroadcastPsm(const std::string &psmJson) 
-{ //overloaded 
+{ 
 
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
@@ -251,7 +249,6 @@ void PedestrianPlugin::BroadcastPsm(const std::string &psmJson)
 
 	psmENC.encode_j2735_message(psmmessage);
 
-	// std::unique_ptr<PsmEncodedMessage> msg;
 	auto msg = std::make_unique<PsmEncodedMessage>();
 	msg.reset();
 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
