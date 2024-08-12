@@ -429,7 +429,11 @@ public:
 		erase_object(objectName);
 		this->as_tree().get().add_child(objectName, Element::to_tree(obj));
 	}
-
+	/**
+	 * @brief Erase a certain object from the tree given the object name.
+	 * @param Name of the object 
+	 * @param Object An object to be erased from the tree
+	 */
 	void erase_object(const std::string& objName)
 	{
 		this->as_tree().get().erase(objName);
