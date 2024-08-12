@@ -1,5 +1,4 @@
-#ifndef INCLUDE_SIMULATED_SensorDetectedObject_H_
-#define INCLUDE_SIMULATED_SensorDetectedObject_H_
+#pragma once
 
 #include <tmx/messages/message.hpp>
 #include <MessageTypes.h>
@@ -67,4 +66,3 @@ namespace tmx
     }
 
 }; // namespace tmx
-#endif
