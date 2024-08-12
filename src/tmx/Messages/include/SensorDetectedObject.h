@@ -2,8 +2,6 @@
 
 #include <tmx/messages/message.hpp>
 #include <MessageTypes.h>
-#include <Vector3d.h>
-#include <Point.h>
 #include "Position.h"
 #include "Covariance.h"
 #include "Velocity.h"
