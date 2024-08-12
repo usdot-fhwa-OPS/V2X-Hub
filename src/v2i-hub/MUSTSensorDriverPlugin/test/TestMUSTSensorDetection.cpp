@@ -62,16 +62,16 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
 
     auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String");
 
-    EXPECT_EQ(detection.trackID, sensorDetectedObject.get_ObjectId());
-    EXPECT_DOUBLE_EQ(detection.confidence, sensorDetectedObject.get_Confidence());
-    EXPECT_DOUBLE_EQ(detection.position_x, sensorDetectedObject.get_Position().x);
-    EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.get_Position().y);
-    EXPECT_NEAR(4.33, sensorDetectedObject.get_Velocity().y, 0.001);
-    EXPECT_NEAR(2.5, sensorDetectedObject.get_Velocity().x, 0.001);
-    EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.get_Type().c_str());
-    EXPECT_EQ(1719506355400, sensorDetectedObject.get_Timestamp());
-    EXPECT_EQ("MUSTSensor1", sensorDetectedObject.get_SensorId());
-    EXPECT_EQ("PROJ String", sensorDetectedObject.get_ProjString());
+    EXPECT_EQ(detection.trackID, sensorDetectedObject.get_objectId());
+    EXPECT_DOUBLE_EQ(detection.confidence, sensorDetectedObject.get_confidence());
+    EXPECT_DOUBLE_EQ(detection.position_x, sensorDetectedObject.get_position().x);
+    EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.get_position().y);
+    EXPECT_NEAR(4.33, sensorDetectedObject.get_velocity().y, 0.001);
+    EXPECT_NEAR(2.5, sensorDetectedObject.get_velocity().x, 0.001);
+    EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.get_type().c_str());
+    EXPECT_EQ(1719506355400, sensorDetectedObject.get_timestamp());
+    EXPECT_EQ("MUSTSensor1", sensorDetectedObject.get_sensorId());
+    EXPECT_EQ("PROJ String", sensorDetectedObject.get_projString());
 }
 
 TEST(TestMUSTSensorDetection, detectionClassificationToSensorDetectedObjectType ) {

@@ -31,15 +31,15 @@ namespace MUSTSensorDriverPlugin {
 
     tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString) {
         tmx::messages::SensorDetectedObject detectedObject;
-        detectedObject.set_ObjectId(detection.trackID);
+        detectedObject.set_objectId(detection.trackID);
         tmx::messages::Position pos(detection.position_x, detection.position_y, 0);
-        detectedObject.set_Position(pos);
-        detectedObject.set_Confidence(detection.confidence);
-        detectedObject.set_Timestamp(static_cast<long>(detection.timestamp*1000)); // convert decimal seconds to int milliseconds.
-        detectedObject.set_Velocity(headingSpeedToVelocity(detection.heading, detection.speed));
-        detectedObject.set_Type(detectionClassificationToSensorDetectedObjectType(detection.cl));
-        detectedObject.set_SensorId(std::string(sensorId));
-        detectedObject.set_ProjString(std::string(projString));
+        detectedObject.set_position(pos);
+        detectedObject.set_confidence(detection.confidence);
+        detectedObject.set_timestamp(static_cast<long>(detection.timestamp*1000)); // convert decimal seconds to int milliseconds.
+        detectedObject.set_velocity(headingSpeedToVelocity(detection.heading, detection.speed));
+        detectedObject.set_type(detectionClassificationToSensorDetectedObjectType(detection.cl));
+        detectedObject.set_sensorId(std::string(sensorId));
+        detectedObject.set_projString(std::string(projString));
         return detectedObject;
     }
     DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
