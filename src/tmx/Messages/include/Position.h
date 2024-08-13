@@ -4,7 +4,9 @@ namespace tmx::messages
 {
     // Cartesian positiion of object. Assumed to be ENU coordinate frame.
     typedef struct Position{
-        double x,  y, z;
+        double x;
+        double y;
+        double z;
         Position()=default;
         explicit Position(double x, double y, double z):x(x),y(y),z(z){};
         static message_tree_type to_tree(const Position& pos){

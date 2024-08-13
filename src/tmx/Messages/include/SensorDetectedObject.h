@@ -17,8 +17,8 @@ namespace tmx::messages
     class SensorDetectedObject : public tmx::message
     {
     public:
-        SensorDetectedObject(){};
-        SensorDetectedObject(const tmx::message_container_type &contents) : tmx::message(contents) {};
+        SensorDetectedObject()=default;
+        explicit SensorDetectedObject(const tmx::message_container_type &contents) : tmx::message(contents) {};
         ~SensorDetectedObject() override{};
         // Message type for routing this message through TMX core
         static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
