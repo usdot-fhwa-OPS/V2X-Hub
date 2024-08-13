@@ -2,7 +2,7 @@
 #include <tmx/messages/message.hpp>
 namespace tmx::messages
 {
-    typedef struct Covariance{
+    struct Covariance{
         double value;             
         Covariance()=default;
         explicit Covariance(double value):value(value){};
@@ -16,5 +16,5 @@ namespace tmx::messages
             cov.value = tree.get<double>("");
             return cov;
         }
-    } Covariance;   
+    };   
 }

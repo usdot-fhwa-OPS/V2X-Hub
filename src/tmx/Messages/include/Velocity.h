@@ -3,7 +3,7 @@
 namespace tmx::messages
 {
     // Cartesian velocity vector of object. Assumed to be ENU coordinate frame.
-    typedef struct Velocity{
+    struct Velocity{
         double x;
         double y;
         double z;
@@ -23,5 +23,5 @@ namespace tmx::messages
             velocity.z = tree.get<double>("z");
             return velocity;
         }
-    } Velocity; 
+    }; 
 }

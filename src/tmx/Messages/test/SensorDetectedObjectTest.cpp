@@ -69,7 +69,88 @@ namespace tmx::messages{
 
     TEST_F(SensorDetectedObjectTest, deserialize){
         auto tmxSdsmPtr2 = std::make_shared<SensorDetectedObject>();
-        std::string expectedStr = "{\"isSimulated\":1,\"type\":\"CAR\",\"confidence\":1.0,\"sensorId\":\"IntersectionLidar\",\"projString\":\"+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs\",\"objectId\":207,\"position\":{\"x\":-5.021,\"y\":64.234,\"z\":-10.297},\"positionCovariance\":[[0.04000000000000001,0.0,0.0],[0.0,0.04000000000000001,0.0],[0.0,0.0,0.04000000000000001]],\"velocity\":{\"x\":0.0,\"y\":0.0,\"z\":0.0},\"velocityCovariance\":[[0.04000000000000001,0.0,0.0],[0.0,0.04000000000000001,0.0],[0.0,0.0,0.04000000000000001]],\"angularVelocity\":{\"x\":0.0,\"y\":-0.0,\"z\":-0.0},\"angularVelocityCovariance\":[[0.010000000000000002,0.0,0.0],[0.0,0.010000000000000002,0.0],[0.0,0.0,0.010000000000000002]],\"size\":{\"length\":2.257,\"height\":1.003,\"width\":0.762},\"timestamp\":110200}";
+        std::string expectedStr = R"(
+                                {
+                                "isSimulated": 1,
+                                "type": "CAR",
+                                "confidence": 1,
+                                "sensorId": "IntersectionLidar",
+                                "projString": "+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs",
+                                "objectId": 207,
+                                "position": {
+                                    "x": -5.021,
+                                    "y": 64.234,
+                                    "z": -10.297
+                                },
+                                "positionCovariance": [
+                                    [
+                                    0.04000000000000001,
+                                    0,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0.04000000000000001,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0,
+                                    0.04000000000000001
+                                    ]
+                                ],
+                                "velocity": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "velocityCovariance": [
+                                    [
+                                    0.04000000000000001,
+                                    0,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0.04000000000000001,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0,
+                                    0.04000000000000001
+                                    ]
+                                ],
+                                "angularVelocity": {
+                                    "x": 0,
+                                    "y": 0,
+                                    "z": 0
+                                },
+                                "angularVelocityCovariance": [
+                                    [
+                                    0.010000000000000002,
+                                    0,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0.010000000000000002,
+                                    0
+                                    ],
+                                    [
+                                    0,
+                                    0,
+                                    0.010000000000000002
+                                    ]
+                                ],
+                                "size": {
+                                    "length": 2.257,
+                                    "height": 1.003,
+                                    "width": 0.762
+                                },
+                                "timestamp": 110200
+                                }
+                                )";
         tmxSdsmPtr2->set_contents(expectedStr);
         EXPECT_EQ(expectedStr, tmxSdsmPtr2->to_string());
         EXPECT_EQ(true, tmxSdsmPtr2->get_isSimulated());

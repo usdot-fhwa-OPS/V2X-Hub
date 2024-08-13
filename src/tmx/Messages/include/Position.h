@@ -3,7 +3,7 @@
 namespace tmx::messages
 {
     // Cartesian positiion of object. Assumed to be ENU coordinate frame.
-    typedef struct Position{
+    struct Position{
         double x;
         double y;
         double z;
@@ -23,5 +23,5 @@ namespace tmx::messages
             pos.z = tree.get<double>("z");
             return pos;
         }
-    } Position;       
+    };       
 }

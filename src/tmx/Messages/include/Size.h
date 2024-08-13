@@ -3,7 +3,7 @@
 namespace tmx::messages
 {
     //Length, width and height of object in meter.
-    typedef struct Size{
+    struct Size{
         double length;
         double width;
         double height;
@@ -23,5 +23,5 @@ namespace tmx::messages
             size.height = tree.get<double>("height");
             return size;
         }
-    } Size;
+    };
 }
