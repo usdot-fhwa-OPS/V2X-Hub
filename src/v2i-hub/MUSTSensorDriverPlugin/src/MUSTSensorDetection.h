@@ -118,5 +118,5 @@ namespace MUSTSensorDriverPlugin {
      * @param speed double speed in m/s
      * @return tmx::utils::Vector3d velocity.
      */
-    tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed);
+    tmx::messages::Velocity headingSpeedToVelocity(double heading, double speed);
 }

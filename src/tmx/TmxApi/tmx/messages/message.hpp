@@ -22,6 +22,16 @@
 	void add_to_##NAME(ELEMENT element) { add_array_element<ELEMENT>(#NAME, element); } \
 	void erase_##NAME()	{ erase_array(#NAME); }
 
+
+#define two_dimension_array_attribute(ELEMENT, NAME) \
+	std::vector<std::vector<ELEMENT>> get_##NAME () { return get_two_dimension_array<ELEMENT>(#NAME); } \
+	void set_##NAME(std::vector<std::vector<ELEMENT>> array) { return set_two_dimension_array<ELEMENT>(#NAME, array); }
+
+#define object_attribute(ELEMENT, NAME) \
+	ELEMENT get_##NAME() {return get_object<ELEMENT>(#NAME); } \
+	void set_##NAME(ELEMENT obj) {return set_object<ELEMENT>(#NAME, obj); } \
+	void erase_##NAME(){erase_object(#NAME); }
+
 namespace tmx
 {
 
@@ -400,6 +410,97 @@ public:
 
 		// Add the new element
 		tree.get().push_back(typename message_tree_type::value_type("", Element::to_tree(element)));
+	}
+
+	/**
+	 * Get the entire contents of a two dimension array field as a vector.
+	 * Note that the template Element type must contain methods with the following signatures:
+	 *   - static Element from_tree(message_tree_type&)
+	 *   - static message_tree_type to_tree(Element element)
+	 * @param The name of the array field.
+	 * @returns A two dimension array of all array elements.
+	 */
+	template <class Element>
+	std::vector<std::vector<Element>> get_two_dimension_array(std::string arrayName)
+	{
+		std::vector<std::vector<Element>> ret;
+		boost::optional<boost::property_tree::ptree&> tree = this->as_tree(arrayName);
+		if(tree)
+		{
+			for(auto& outer_pair: tree.get()){
+				std::vector<Element> temp;
+				for(auto& inner_pair: outer_pair.second){
+					Element element = Element::from_tree(inner_pair.second);
+					temp.push_back(element);
+				}
+				ret.push_back(temp);
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Set the entire contents of a two dimension array field.
+	 * Note that the template Element type must contain methods with the following signatures:
+	 *   - static Element from_tree(message_tree_type&)
+	 *   - static message_tree_type to_tree(Element element)
+	 * @param The name of the array field.
+	 * @param array A two dimenstion array containing all elements to set.
+	 */
+	template <class Element>
+	void set_two_dimension_array(std::string arrayName, std::vector<std::vector<Element>> array)
+	{
+		erase_array(arrayName);
+		boost::optional<boost::property_tree::ptree &> tree = this->as_tree(arrayName);
+		if (!tree)
+		{
+			// Add the empty array
+			message_tree_type emptyTree;
+			this->as_tree().get().add_child(arrayName, emptyTree);
+			tree = this->as_tree(arrayName);
+		}
+
+		for(auto& nested_array: array){
+			boost::property_tree::ptree subtree;
+			//Populate nested array
+			for(auto& element: nested_array){
+				subtree.push_back(typename message_tree_type::value_type("", Element::to_tree(element)));
+			}
+			//Add nested array
+			tree.get().push_back(typename message_tree_type::value_type("", subtree));
+		}
+	}
+
+	/***
+	 * @brief Get the content of an object fields
+	 * @param Name of the object
+	 * @param Object An object containing all the fields
+	 */
+	template <class Element>
+	Element get_object(const std::string&  objectName){
+		boost::optional<boost::property_tree::ptree &> tree = this->as_tree();
+		return Element::from_tree(tree.get().get_child(objectName));
+	}
+
+	/**
+	 * @brief Set the content of an object fields
+	 * @param Name of the object 
+	 * @param Object An object containing all the fields to set
+	 */
+	template <class Element>
+	void set_object(const std::string&  objectName, Element obj)
+	{
+		erase_object(objectName);
+		this->as_tree().get().add_child(objectName, Element::to_tree(obj));
+	}
+	/**
+	 * @brief Erase a certain object from the tree given the object name.
+	 * @param Name of the object 
+	 * @param Object An object to be erased from the tree
+	 */
+	void erase_object(const std::string& objName)
+	{
+		this->as_tree().get().erase(objName);
 	}
 
 	/**
