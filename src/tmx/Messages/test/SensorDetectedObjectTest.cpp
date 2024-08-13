@@ -93,8 +93,11 @@ namespace tmx::messages{
         EXPECT_EQ(110200, tmxSdsmPtr2->get_timestamp());
 
         EXPECT_EQ(3, tmxSdsmPtr2->get_positionCovariance().size());
+        EXPECT_EQ(3, tmxSdsmPtr2->get_positionCovariance().begin()->size());
         EXPECT_EQ(3, tmxSdsmPtr2->get_angularVelocityCovariance().size());
+        EXPECT_EQ(3, tmxSdsmPtr2->get_angularVelocityCovariance().begin()->size());
         EXPECT_EQ(3, tmxSdsmPtr2->get_velocityCovariance().size());
+        EXPECT_EQ(3, tmxSdsmPtr2->get_velocityCovariance().begin()->size());
         
         EXPECT_NEAR(0.04,tmxSdsmPtr2->get_positionCovariance().begin()->begin()->value, 0.0001);
         EXPECT_EQ(0.0, tmxSdsmPtr2->get_positionCovariance().begin()->back().value);

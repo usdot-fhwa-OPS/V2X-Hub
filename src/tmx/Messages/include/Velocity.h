@@ -6,9 +6,11 @@ namespace tmx
     {
        // Cartesian velocity vector of object. Assumed to be ENU coordinate frame.
         typedef struct Velocity{
-            double x, y, z;
-            Velocity(){};
-            Velocity(double x, double y, double z):x(x),y(y),z(z){};
+            double x;
+            double y;
+            double z;
+            Velocity()=default;
+            explicit Velocity(double x, double y, double z):x(x),y(y),z(z){};
             static message_tree_type to_tree(const Velocity& velocity){
                 message_tree_type tree;
                 tree.put("x", velocity.x);
