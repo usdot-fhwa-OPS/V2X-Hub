@@ -164,14 +164,13 @@ void PedestrianPlugin::UpdateConfigSettings()
 	// This method does NOT execute in the main thread, so variables must be protected
 	// (e.g. using std::atomic, std::mutex, etc.).
 
-	std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<std::string>("WebServiceIP", webip);
-	GetConfigValue<uint16_t>("WebServicePort", webport);
-	GetConfigValue<std::string>("WebSocketHost", webSocketIP);
-	GetConfigValue<std::string>("WebSocketPort", webSocketURLExt);
-	GetConfigValue<std::string>("DataProvider", dataprovider);
-	GetConfigValue<float>("FLIRCameraRotation", cameraRotation);
-	GetConfigValue<std::string>("HostString", hostString);
+	GetConfigValue<std::string>("WebServiceIP", webip, &_cfgLock);
+	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
+	GetConfigValue<std::string>("WebSocketHost", webSocketIP, &_cfgLock);
+	GetConfigValue<std::string>("WebSocketPort", webSocketURLExt, &_cfgLock);
+	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
+	GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
+	GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
 
 	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
 	
