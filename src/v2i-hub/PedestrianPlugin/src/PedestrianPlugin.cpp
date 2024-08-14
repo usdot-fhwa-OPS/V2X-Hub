@@ -17,14 +17,11 @@ namespace PedestrianPlugin
 {
 
 /**
- * Construct a new PedestrianPlugin with the given name.
- *
+ * @brief Construct a new PedestrianPlugin with the given name.
  * @param name The name to give the plugin for identification purposes.
  */
 PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
-	if (_signSimClient != nullptr)
-		_signSimClient.reset();
 }
 
 int PedestrianPlugin::StartWebSocket()
@@ -61,16 +58,15 @@ void PedestrianPlugin::StopWebSocket()
 
 void PedestrianPlugin::checkXML()
 {
-	//if a new psm xml has been generated the FLIR web socket, send it to the BroadcastPSM function
 	while (true)
 	{
 		if (flirSession == nullptr)
 		{
-			PLOG(logDEBUG) << "flir session not yet initialized: ";
+			PLOG(logDEBUG) << "FLIR session not yet initialized: ";
 		}
 		else
 		{	
-			//retrieve the PSM queue and send each one to be broadcast, then pop		
+			// Retrieve the PSM queue and send each one to be broadcast, then pop.
 			std::queue<std::string> currentPSMQueue = flirSession->getPSMQueue();
 
 			while(!currentPSMQueue.empty())
@@ -79,9 +75,9 @@ void PedestrianPlugin::checkXML()
 
 				BroadcastPsm(char_arr);
 				currentPSMQueue.pop();
-			}			 
+			}
 		}
-	}	
+	}
 }
 
 void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
@@ -108,7 +104,7 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 	psmSL.push_back(psmMsgdef);
 
 	// Catch parse exceptions
-    try {
+	try {
 		for(const auto& psm_s: psmSL)
 		{
 			BroadcastPsm(psm_s);
@@ -116,7 +112,7 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 		}
 	}
 	catch(const J2735Exception &e) {
-        PLOG(logERROR) << "Error parsing file: " << e.what();
+		PLOG(logERROR) << "Error encoding received PSM data " << psmMsgdef << std::endl << e.what();
 		socket->setStatusCode(QHttpEngine::Socket::BadRequest);
 	}
 	
@@ -128,7 +124,7 @@ int PedestrianPlugin::StartWebService()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebService";
 
-	// Web services 
+	// Web services
 	std::array<char*, 1> placeholderX = {nullptr};
 	int placeholderC = 1;
 	QCoreApplication a(placeholderC, placeholderX.data());
@@ -137,7 +133,7 @@ int PedestrianPlugin::StartWebService()
 	
 	QHttpEngine::QObjectHandler apiHandler;
 	apiHandler.registerMethod(PSM_Receive, [this](QHttpEngine::Socket *socket)
-							  { 
+							{
 							this->PedestrianRequestHandler(socket);
 							});
 	QHttpEngine::Server server(&apiHandler);
@@ -173,7 +169,6 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<uint16_t>("WebServicePort", webport);
 	GetConfigValue<std::string>("WebSocketHost", webSocketIP);
 	GetConfigValue<std::string>("WebSocketPort", webSocketURLExt);
-	GetConfigValue<int>("Instance", instance);
 	GetConfigValue<std::string>("DataProvider", dataprovider);
 	GetConfigValue<float>("FLIRCameraRotation", cameraRotation);
 	GetConfigValue<std::string>("HostString", hostString);
@@ -182,8 +177,6 @@ void PedestrianPlugin::UpdateConfigSettings()
 	
 	if (dataprovider.compare("FLIR") == 0)
     {
-		PLOG(logDEBUG) << "Before creating websocket to: " << webSocketIP.c_str() <<  " on port: " << webSocketURLExt.c_str();
-		
         StopWebService();
         if (!runningWebSocket)
         {
@@ -212,7 +205,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     }
 	else
 	{
-		PLOG(logWARNING) << "Incorrect DataProvider entered!";
+		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, PSM)!";
 		StopWebService();
 		StopWebSocket();
 	}
@@ -235,8 +228,7 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 }
 
 void PedestrianPlugin::BroadcastPsm(const std::string &psmJson) 
-{ 
-
+{
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
 	tmx::message_container_type container;
