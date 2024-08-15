@@ -1,29 +1,25 @@
 V2X-Hub Release Notes
 ---------------------------------
 
-Version 7.7.0, released Aug 14th, 2023
+Version 7.7.0, released Aug 15th, 2024
 --------------------------------------------------------
 
 **Summary:**
 V2X Hub release 7.7.0 introduces key enhancements and fixes to improve data streaming, upgrade MySQL to version 8.0, and support multi-architecture Docker deployments. This release includes updates to initialization scripts and addresses clock reference issues in simulation mode. Additionally, this release removes obsolete Docker tags and makes the SENSOR_JSON_FILE_PATH an optional environment variable to enhance flexibility in simulation setups.
 
-**<ins>V2X Hub CDASim Functionalities </ins>**
-
 Enhancement in this release:  
-- V2X-Hub PR 611: Updated TCR message oldest field to use data sent by carma-platform in simulation mode to address clock reference issues.
+
+- V2X-Hub PR 612: Updated MySQL to 8.0 to support multi-architecture Docker deployment, removed architecture-based configuration folders, and updated initialization scripts. 
+- V2X-Hub PR 611: Updated TCR message oldest field to use data sent by carma-platform in simulation mode to address clock reference issues. 
+- V2X-Hub PR 615: Updated the initialization script to generate a .env file based on user input. 
 
 Fixes in this release: 
-- V2X-Hub PR 616: Updated SENSOR_JSON_FILE_PATH as optional environment variable in simulation since spawning sensors is not required for the base line functionality of V2X-Hub. Before this update CDASimAdapter would accept empty SENSOR_JSON_FILE_PATH files but not missing ones.
 
-Other Enhancements: 
-- V2X-Hub PR 612: Updated MySQL to 8.0 to support multi-architecture Docker deployment, removed architecture-based configuration folders, and updated initialization scripts.
-- V2X-Hub PR 615: Updated the initialization script to generate a .env file based on user input.
-  
-Other Fixes:
-- V2X-Hub PR 614: Removed the "version:" tag at the top of the docker-compose files. These are no longer needed and are obsolete in current and future versions of Docker.
+- V2X-Hub PR 614: Removed the "version:" tag at the top of the docker-compose files. These are no longer needed and are obsolete in current and future versions of Docker. 
+- V2X-Hub PR 616: Updated SENSOR_JSON_FILE_PATH as optional environment variable in simulation since spawning sensors is not required for the base line functionality of V2X-Hub. Before this update CDASimAdapter would accept empty SENSOR_JSON_FILE_PATH files but not missing ones. 
 
 
-Version 7.6.0, released April 16th, 2024
+Version 7.6.0, released April 10th, 2024
 --------------------------------------------------------
 
 **Summary:**
