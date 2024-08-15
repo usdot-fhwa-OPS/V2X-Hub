@@ -152,20 +152,22 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ2735SpatConverter::convertJson2TimeChangeDetail(const Json::Value &time_change_detail_json, TimeChangeDetails_t *timing) const
     {
+        #if SAEJ2735_SPEC < 2020
         timing->startTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *timing->startTime = time_change_detail_json["start_time"].asInt();
-
-        timing->minEndTime = time_change_detail_json["min_end_time"].asInt();
-
         timing->maxEndTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *timing->maxEndTime = time_change_detail_json["max_end_time"].asInt();
-
         timing->likelyTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
-        *timing->likelyTime = time_change_detail_json["likely_time"].asInt();
-
         timing->nextTime = (DSRC_TimeMark_t *)calloc(1, sizeof(DSRC_TimeMark_t));
+        #else
+        timing->startTime = (SPAT_TimeMark_t *)calloc(1, sizeof(SPAT_TimeMark_t));
+        timing->maxEndTime = (SPAT_TimeMark_t *)calloc(1, sizeof(SPAT_TimeMark_t));
+        timing->likelyTime = (SPAT_TimeMark_t *)calloc(1, sizeof(SPAT_TimeMark_t));
+        timing->nextTime = (SPAT_TimeMark_t *)calloc(1, sizeof(SPAT_TimeMark_t));
+        #endif
+        *timing->startTime = time_change_detail_json["start_time"].asInt();
+        timing->minEndTime = time_change_detail_json["min_end_time"].asInt();
+        *timing->maxEndTime = time_change_detail_json["max_end_time"].asInt();
+        *timing->likelyTime = time_change_detail_json["likely_time"].asInt();
         *timing->nextTime = time_change_detail_json["next_time"].asInt();
-
         timing->confidence = (TimeIntervalConfidence_t *)calloc(1, sizeof(TimeIntervalConfidence_t));
         *timing->confidence = time_change_detail_json["confidence"].asInt();
     }

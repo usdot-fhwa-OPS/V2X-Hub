@@ -16,7 +16,8 @@ namespace CARMACloudPlugin {
  *
  * @param name The name to give the plugin for identification purposes
  */
-CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
+CARMACloudPlugin::CARMACloudPlugin(string name) : PluginClientClockAware(name)
+{
 
 	UpdateConfigSettings();
 	std::lock_guard<mutex> lock(_cfgLock);
@@ -27,7 +28,6 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	SubscribeToMessages();
 	std::thread webthread(&CARMACloudPlugin::StartWebService,this);
 	webthread.detach(); // wait for the thread to finish 
-	url ="http://127.0.0.1:33333"; // 33333 is the port that will send from v2xhub to carma cloud ## initally was 23665
 	base_hb = "/carmacloud/v2xhub";
 	base_req = "/carmacloud/tcmreq";
 	base_ack = "/carmacloud/tcmack";
@@ -37,9 +37,7 @@ CARMACloudPlugin::CARMACloudPlugin(string name) :PluginClient(name) {
 	_tcm_broadcast_starting_time = std::make_shared<std::map<string, std::time_t>>();
 	std::thread Broadcast_t(&CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM, this);
 	Broadcast_t.detach();
-
 }
-
 
 void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &routeableMsg)
 {
@@ -64,19 +62,18 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	int totBounds =  carmaRequest->body.choice.tcrV01.bounds.list.count;
 	int cnt=0;
 	char bounds_str[5000];
-		strcpy(bounds_str,"");	
-	
-	//  get current time 
-	std::time_t tm = std::time(0)/60-fetchtime*24*60; //  T minus 24 hours in  min  
+	strcpy(bounds_str, "");
 
-	while(cnt<totBounds)
+	int oldestInMins = getClock()->nowInSeconds() / 60 - fetchtime * 24 * 60; // T minus 24 hours in min
+
+	while (cnt < totBounds)
 	{
 
-		uint32_t oldest=tm;
-		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat; 
+		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat;
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
 
-	
+		auto oldest = std::max(oldestInMins, 0); // Replace tm with 0 if negative
+
 		long dtx0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltax;
 		long dty0 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[0]->deltay;
 		long dtx1 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[1]->deltax;
@@ -84,18 +81,16 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 		long dtx2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltax;
 		long dty2 = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->offsets.list.array[2]->deltay;
 
-		sprintf(bounds_str+strlen(bounds_str),"<bounds><oldest>%u</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>",oldest,longg,lat,dtx0,dty0,dtx1,dty1,dtx2,dty2);
+		sprintf(bounds_str + strlen(bounds_str), "<bounds><oldest>%u</oldest><reflon>%ld</reflon><reflat>%ld</reflat><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets><offsets><deltax>%ld</deltax><deltay>%ld</deltay></offsets></bounds>", oldest, longg, lat, dtx0, dty0, dtx1, dty1, dtx2, dty2);
 
 		cnt++;
-
-
 	}
 
 	char xml_str[10000]; 
 	sprintf(xml_str,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TrafficControlRequest port=\"%s\" list=\"%s\"><reqid>%s</reqid><reqseq>%ld</reqseq><scale>%ld</scale>%s</TrafficControlRequest>",std::to_string(webport).c_str(),list_tcm.c_str(),reqid, reqseq,scale,bounds_str);
 
 	PLOG(logINFO) << "Sent TCR to cloud: "<< xml_str<<endl;
-	CloudSend(xml_str,url, base_req, method);
+	CloudSend(xml_str,carma_cloud_url, base_req, method);
 }
 
 void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg){
@@ -179,7 +174,7 @@ void CARMACloudPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeabl
 					<< "</acknowledgement><description>" << even_log_description
 					<< "</description></TrafficControlAcknowledgement>"; 
 			PLOG(logINFO) << "Sent Negative ACK: "<< sss.str() <<endl;
-			CloudSendAsync(sss.str(),url, base_ack, method);
+			CloudSendAsync(sss.str(),carma_cloud_url, base_ack, method);
 		}
 	}
 }
@@ -206,30 +201,33 @@ string CARMACloudPlugin::updateTags(string str,string tagout, string tagin)
 
 void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 {
-	QString st; 
+	QByteArray st; 
 	while(socket->bytesAvailable()>0)
 	{	
+		PLOG(logDEBUG) << "Bytes available." << std::endl;
 		auto readBytes = socket->readAll();
-		if (socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE)
-        {
-			//readBytes is compressed in gzip format
-            st.append(UncompressBytes(readBytes));			
-        }else{
-			st.append(readBytes);
-		}
+		st.append(readBytes);
 	}
-	QByteArray array = st.toLocal8Bit();
 
-	char* _cloudUpdate = array.data(); // would be the cloud update packet, needs parsing
-	
-	
-	string tcm = _cloudUpdate;
-
-	PLOG(logINFO) << "Received TCM from cloud" << tcm << std::endl;
-	if(tcm.length() == 0)
+	if(st.size() == 0)
 	{
-		PLOG(logERROR) << "Received TCM length is zero, and skipped." << std::endl;
+		PLOG(logERROR) << "Received TCM is empty, and skipped." << std::endl;
 		return;
+	}
+	PLOG(logINFO) << "Received TCM bytes size: " << st.size()<< std::endl;
+
+	std::string tcm = "";
+	bool isCompressed = socket->headers().keys().contains(CONTENT_ENCODING_KEY) && std::string(socket->headers().constFind(CONTENT_ENCODING_KEY).value().data()) == CONTENT_ENCODING_VALUE;
+	if (isCompressed)
+	{
+		QByteArray tcmBytes = UncompressBytes(st);
+		if(tcmBytes.size() == 0)
+		{
+			return;
+		}
+		tcm = tcmBytes.data();
+	}else{
+		tcm = st.data();		
 	}
 
 	//Transform carma-cloud TCM XML to J2735 compatible TCM XML by updating tags
@@ -238,16 +236,21 @@ void CARMACloudPlugin::CARMAResponseHandler(QHttpEngine::Socket *socket)
 	tcm=updateTags(tcm,"TrafficControlParams","params");
 	tcm=updateTags(tcm,"TrafficControlGeometry","geometry");
 	tcm=updateTags(tcm,"TrafficControlPackage","package");
-	
-	//List of tcm in string format
-	std::list<std::string> tcm_sl = FilterTCMs(tcm);	
+	PLOG(logDEBUG2) << "Received TCM: " << tcm << std::endl;
 
-	for(const auto tcm_s: tcm_sl)
+	std::list<std::string> tcmSL = {};
+	if (isCompressed)
+	{
+		tcmSL = FilterTCMs(tcm);
+	}else{
+		tcmSL.push_back(tcm);
+	}
+
+	for(const auto tcm_s: tcmSL)
 	{
 		tsm5Message tsm5message;
 		tsm5EncodedMessage tsm5ENC;
 		tmx::message_container_type container;
-
 
 		std::stringstream ss;
 		ss << tcm_s;
@@ -366,7 +369,7 @@ void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 						<< "</acknowledgement><description>" << _TCMNOAcknowledgementDescription
 						<< "</description></TrafficControlAcknowledgement>"; 
 				PLOG(logINFO) << "Sent No ACK as Time Out: "<< sss.str() <<endl;
-				CloudSendAsync(sss.str(),url, base_ack, method);		
+				CloudSendAsync(sss.str(),carma_cloud_url, base_ack, method);		
 
 				_not_ACK_TCMs->erase(tcmv01_req_id_hex);
 				//If time out, stop tracking the starting time of the TCMs being broadcast so far
@@ -377,7 +380,7 @@ void CARMACloudPlugin::TCMAckCheckAndRebroadcastTCM()
 		}
 		else
 		{
-			PLOG(logDEBUG) << "NO TCMs to broadcast." << std::endl;
+			PLOG(logDEBUG4) << "NO TCMs to broadcast." << std::endl;
 			_tcm_broadcast_times->clear();
 			_tcm_broadcast_starting_time->clear();
 		}
@@ -456,29 +459,18 @@ int CARMACloudPlugin::StartWebService()
  	QHostAddress address = QHostAddress(QString::fromStdString (webip));
 	quint16 port = static_cast<quint16>(webport);
 
-	QSharedPointer<OpenAPI::OAIApiRequestHandler> handler(new OpenAPI::OAIApiRequestHandler());
-	handler = QSharedPointer<OpenAPI::OAIApiRequestHandler> (new OpenAPI::OAIApiRequestHandler());
+	QHttpEngine::QObjectHandler apiHandler;
+	apiHandler.registerMethod(TCM_REPLY, [this](QHttpEngine::Socket *socket)
+							  { 
+							this->CARMAResponseHandler(socket);
+							socket->close(); });
+	QHttpEngine::Server server(&apiHandler);
 
-	auto router = QSharedPointer<OpenAPI::OAIApiRouter>::create();
-    router->setUpRoutes();
-
-    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
-
-		CARMAResponseHandler(socket);
-    });
-
-    QObject::connect(handler.data(), &OpenAPI::OAIApiRequestHandler::requestReceived, [&](QHttpEngine::Socket *socket) {
-
-		router->processRequest(socket);
-    });
-
-    QHttpEngine::Server server(handler.data());
-
-    if (!server.listen(address, port)) {
+	if (!server.listen(address, port)) {
         qCritical("Unable to listen on the specified port.");
         return 1;
     }
-	PLOG(logERROR)<<"CARMACloudPlugin:: Started web service";
+	PLOG(logINFO)<<"CARMACloudPlugin:: Started web service";
 	return a.exec();
 
 }
@@ -496,7 +488,12 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
 	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
 	GetConfigValue<string>("listTCM",list_tcm);
-
+	std::string carma_cloud_ip;
+	uint carma_cloud_port;
+	GetConfigValue<string>("CARMACloudIP",carma_cloud_ip);
+	GetConfigValue<uint>("CARMACloudPort",carma_cloud_port);
+	carma_cloud_url = carma_cloud_ip + ":" + std::to_string(carma_cloud_port);
+	PLOG(logDEBUG) << "Setting CARMA Cloud URL to " << carma_cloud_url << std::endl;
 	
 }
 
@@ -600,13 +597,13 @@ void CARMACloudPlugin::ConvertString2Pair(std::pair<string,string> &str_pair, co
 QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) const
 {
     z_stream strm;
-	strm.zalloc = nullptr;//Refer to zlib docs (https://zlib.net/zlib_how.html)
-	strm.zfree = nullptr; 
-    strm.opaque = nullptr;
+	strm.zalloc = Z_NULL;//Refer to zlib docs (https://zlib.net/zlib_how.html)
+	strm.zfree = Z_NULL; 
+    strm.opaque = Z_NULL;
     strm.avail_in = compressedBytes.size();
-    strm.next_in = (Byte *)compressedBytes.data();
+	strm.next_in = (Byte *)compressedBytes.data();
 	//checking input z_stream to see if there is any error, eg: invalid data etc.
-    auto err = inflateInit2(&strm, MAX_WBITS + 16); // gzip input
+    auto err = inflateInit2(&strm, MAX_WBITS+32); // gzip input https://stackoverflow.com/questions/1838699/how-can-i-decompress-a-gzip-stream-with-zlib
     QByteArray outBuf;
 	//MAX numbers of bytes stored in a buffer 
     const int BUFFER_SIZE = 4092;
@@ -619,12 +616,11 @@ QByteArray CARMACloudPlugin::UncompressBytes(const QByteArray compressedBytes) c
             char buffer[BUFFER_SIZE] = {0};
             strm.avail_out = BUFFER_SIZE;
             strm.next_out = (Byte *)buffer;
-			//Uncompress finished
-            isDone = inflate(&strm, Z_FINISH);
-            outBuf.append(buffer);
-        } while (Z_STREAM_END != isDone); //Reach the end of stream to be uncompressed 
-    }else{
-		PLOG(logWARNING) << "Error initalize stream. Err code = " << err << std::endl;
+            isDone = inflate(&strm, Z_NO_FLUSH);
+            outBuf.append(buffer, BUFFER_SIZE - strm.avail_out);
+		} while (Z_STREAM_END != isDone); // Reach the end of stream to be uncompressed
+	}else{
+		PLOG(logERROR) << "Error initalize stream. Err code = " << err << std::endl;
 	}
 	//Finished decompress data stream
     inflateEnd(&strm);

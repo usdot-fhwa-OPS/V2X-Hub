@@ -14,8 +14,8 @@
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 
 #if SAEJ2735_SPEC >= 63
-//TMX_J2735_DECLARE(tsm6, TestMessage06, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
-//#else
+// TMX_J2735_DECLARE(tsm6, TestMessage06, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
+// #else
 TMX_J2735_DECLARE(tsm4, TestMessage04, api::testMessage04, api::MSGSUBTYPE_TESTMESSAGE04_STRING)
 
 // Specialize the unique key function

@@ -22,10 +22,14 @@
 #define DEFINED_NODE NodeListXY_PR_nodes
 #define COMPUTED_NODE NodeListXY_PR_computed
 #define ENUM_NAME(X) NodeOffsetPointXY_PR_node_ ## X
-typedef NodeXY Node;
-typedef DSRC_Elevation_t Elevation2_t;
-typedef NodeAttributeSetXY NodeAttributeSet;
 #endif
+#if SAEJ2735_SPEC < 2020
+typedef DSRC_Elevation_t Elevation2_t;
+#else
+typedef Common_Elevation_t Elevation2_t;
+#endif
+typedef NodeXY Node;
+typedef NodeAttributeSetXY NodeAttributeSet;
 
 
 #define attribute(X, Y, D) ro_attribute(this->msg, battelle::attributes::standard_attribute<Y>, X, Y, get_, D)
@@ -175,11 +179,13 @@ private:
  	ro_attribute(this->msg, reference_point_attribute<descriptiveIntersctionName>, std::string, descriptiveIntersctionName, get_, "");
     ro_attribute(this->msg, reference_point_attribute<layerID>, LayerID_t, layerID, get_, 0);
     ro_attribute(this->msg, reference_point_attribute<intersectionID>, IntersectionID_t, intersectionID, get_, 0);
-#if SAEJ2735_SPEC < 63
+	#if SAEJ2735_SPEC < 63
     ro_attribute(this->msg, reference_point_attribute<msgCount>, MsgCount_t, msgCount, get_, 0);
-#else
+	#elif SAEJ2735_SPEC < 2020
     ro_attribute(this->msg, reference_point_attribute<msgCount>, DSRC_MsgCount_t, msgCount, get_, 0);
-#endif
+	#else
+	ro_attribute(this->msg, reference_point_attribute<msgCount>, Common_MsgCount_t, msgCount, get_, 0);
+	#endif
     ro_attribute(this->msg, reference_point_attribute<masterLaneWidth>, LaneWidth_t, masterLaneWidth, get_, -1L);
     ro_attribute(this->msg, reference_point_attribute<referenceLat>, double, referenceLat, get_, 0.0);
     ro_attribute(this->msg, reference_point_attribute<referenceLon>, double, referenceLon, get_, 0.0);
