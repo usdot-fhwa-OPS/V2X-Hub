@@ -52,7 +52,7 @@
 #include <AppAlert.h>
 #include <algorithm>
 #include <tmx/messages/message_document.hpp>
-#include <tmx/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 #include <ParsedMap.h>
 #include <MapSupport.h>
 #include <sstream>
