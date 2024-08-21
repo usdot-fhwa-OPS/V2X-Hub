@@ -18,9 +18,9 @@ TEST(TestMUSTSensorDetection, fromStringToDetectionClassification)
     EXPECT_EQ(DetectionClassification::SEDAN, fromStringToDetectionClassification("sedan"));
     EXPECT_EQ(DetectionClassification::VAN, fromStringToDetectionClassification("van"));
     EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("truck"));
-    EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("bus"));
-    EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("pickup truck"));
-    EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("pedestrain"));
+    EXPECT_EQ(DetectionClassification::BUS, fromStringToDetectionClassification("bus"));
+    EXPECT_EQ(DetectionClassification::PICKUP_TRUCK, fromStringToDetectionClassification("pickup truck"));
+    EXPECT_EQ(DetectionClassification::PEDESTRIAN, fromStringToDetectionClassification("pedestrian"));
     EXPECT_EQ(DetectionClassification::NA, fromStringToDetectionClassification("not_a_classification"));
 
 }
