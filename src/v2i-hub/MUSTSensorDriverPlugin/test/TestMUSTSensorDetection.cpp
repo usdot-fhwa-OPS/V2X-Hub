@@ -18,6 +18,9 @@ TEST(TestMUSTSensorDetection, fromStringToDetectionClassification)
     EXPECT_EQ(DetectionClassification::SEDAN, fromStringToDetectionClassification("sedan"));
     EXPECT_EQ(DetectionClassification::VAN, fromStringToDetectionClassification("van"));
     EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("truck"));
+    EXPECT_EQ(DetectionClassification::BUS, fromStringToDetectionClassification("bus"));
+    EXPECT_EQ(DetectionClassification::PICKUP_TRUCK, fromStringToDetectionClassification("pickup truck"));
+    EXPECT_EQ(DetectionClassification::PEDESTRIAN, fromStringToDetectionClassification("pedestrian"));
     EXPECT_EQ(DetectionClassification::NA, fromStringToDetectionClassification("not_a_classification"));
 
 }
@@ -78,6 +81,9 @@ TEST(TestMUSTSensorDetection, detectionClassificationToSensorDetectedObjectType 
     EXPECT_STRCASEEQ("SEDAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::SEDAN).c_str());
     EXPECT_STRCASEEQ("VAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::VAN).c_str());
     EXPECT_STRCASEEQ("TRUCK", detectionClassificationToSensorDetectedObjectType(DetectionClassification::TRUCK).c_str());
+    EXPECT_STRCASEEQ("BUS", detectionClassificationToSensorDetectedObjectType(DetectionClassification::BUS).c_str());
+    EXPECT_STRCASEEQ("PICKUP TRUCK", detectionClassificationToSensorDetectedObjectType(DetectionClassification::PICKUP_TRUCK).c_str());
+    EXPECT_STRCASEEQ("PEDESTRIAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::PEDESTRIAN).c_str());
     EXPECT_THROW(detectionClassificationToSensorDetectedObjectType(DetectionClassification::NA).c_str(), std::runtime_error);
 
 }

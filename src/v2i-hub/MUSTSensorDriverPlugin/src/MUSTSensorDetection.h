@@ -16,6 +16,9 @@ namespace MUSTSensorDriverPlugin {
     enum class DetectionClassification {
         SEDAN,
         TRUCK,
+        BUS,
+        PICKUP_TRUCK,
+        PEDESTRIAN,
         VAN,
         NA
     };
@@ -46,7 +49,10 @@ namespace MUSTSensorDriverPlugin {
     const static std::unordered_map<std::string, DetectionClassification> stringToDetectionClassificationMap = {
         {"sedan", DetectionClassification::SEDAN},
         {"truck", DetectionClassification::TRUCK},
-        {"van", DetectionClassification::VAN}
+        {"van", DetectionClassification::VAN},
+        {"bus", DetectionClassification::BUS},
+        {"pickup truck", DetectionClassification::PICKUP_TRUCK},
+        {"pedestrian", DetectionClassification::PEDESTRIAN}
     };
 
     /**
