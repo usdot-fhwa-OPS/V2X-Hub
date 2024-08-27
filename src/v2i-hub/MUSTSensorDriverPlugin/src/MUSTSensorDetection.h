@@ -94,7 +94,6 @@ namespace MUSTSensorDriverPlugin {
         DetectionSize size = DetectionSize::NA;
         // Confidence in type
         double confidence = 0;
-        int PERCENTAGE_TO_DECIMAL = 100.0;
         // Unique ID
         unsigned int trackID = 0;
         // Timestamp in seconds
