@@ -711,7 +711,7 @@ void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(SensorDetectedObje
 	// is currently out of scope. TMX Messages should be correctly serialize to 
 	// and from json. This temporary fix simply using regex to look for numeric,
 	// null, and bool values and removes the quotations around them.
-	PLOG(logDEBUG) <<  "Produce sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
+	PLOG(logDEBUG) <<  "Receive sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
 	boost::regex exp("\"(null|true|false|-?[0-9]+(\\.[0-9]+)?)\"");
 	std::stringstream ss;
 	std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
