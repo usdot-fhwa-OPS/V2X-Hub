@@ -66,7 +66,7 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String");
 
     EXPECT_EQ(detection.trackID, sensorDetectedObject.get_objectId());
-    EXPECT_DOUBLE_EQ(detection.confidence, sensorDetectedObject.get_confidence());
+    EXPECT_DOUBLE_EQ(detection.confidence/100.0, sensorDetectedObject.get_confidence());
     EXPECT_DOUBLE_EQ(detection.position_x, sensorDetectedObject.get_position().x);
     EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.get_position().y);
     EXPECT_NEAR(4.33, sensorDetectedObject.get_velocity().y, 0.001);

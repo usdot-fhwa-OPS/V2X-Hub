@@ -34,7 +34,7 @@ namespace MUSTSensorDriverPlugin {
         detectedObject.set_objectId(detection.trackID);
         tmx::messages::Position pos(detection.position_x, detection.position_y, 0);
         detectedObject.set_position(pos);
-        detectedObject.set_confidence(detection.confidence);
+        detectedObject.set_confidence(detection.confidence/100.0);
         detectedObject.set_timestamp(static_cast<long>(detection.timestamp*1000)); // convert decimal seconds to int milliseconds.
         detectedObject.set_velocity(headingSpeedToVelocity(detection.heading, detection.speed));
         detectedObject.set_type(detectionClassificationToSensorDetectedObjectType(detection.cl));
