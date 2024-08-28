@@ -4,7 +4,7 @@
 #include <tmx/tmx.h>
 #include <Point.h>
 #include <TimeSyncMessage.h>
-#include <simulation/SensorDetectedObject.h>
+#include <SensorDetectedObject.h>
 #include <jsoncpp/json/json.h>
 #include <PluginLog.h>
 #include <gtest/gtest.h>
@@ -64,12 +64,6 @@ namespace CDASimAdapter {
              * @param _client UDP client to forward message with.
              */
             void forward_message(const std::string &v2x_message, const std::shared_ptr<tmx::utils::UdpClient> _client ) const ;
-            /**
-             * @brief Method to consume incoming std::string message from UDP Server.
-             * @param _server UDP Server to consume string message from.
-             * @return string of message.
-             */
-            std::string consume_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server ) const;
 
             /**
              * @brief Method to consume incoming std::string message in hex format from UDP Server.
@@ -88,7 +82,7 @@ namespace CDASimAdapter {
              * To populate the simulation external object, this JSON string has to follow this specification: https://usdot-carma.atlassian.net/wiki/spaces/CRMSIM/pages/2563899417/Detected+Objects+Specification#CARMA-Street-and-V2xHub
              * @return simulation::SensorDetectedObject.
              */
-            tmx::messages::simulation::SensorDetectedObject consume_sensor_detected_object_message() const;
+            tmx::messages::SensorDetectedObject consume_sensor_detected_object_message() const;
             /**
              * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,

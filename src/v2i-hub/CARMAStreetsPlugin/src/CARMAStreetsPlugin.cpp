@@ -25,7 +25,7 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 	AddMessageFilter < tsm2Message > (this, &CARMAStreetsPlugin::HandleMobilityPathMessage);
 	AddMessageFilter < MapDataMessage > (this, &CARMAStreetsPlugin::HandleMapMessage);
 	AddMessageFilter < SrmMessage > (this, &CARMAStreetsPlugin::HandleSRMMessage);
-	AddMessageFilter < simulation::SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage );
+	AddMessageFilter < SensorDetectedObject > (this, &CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage );
 
 	SubscribeToMessages();
 }
@@ -704,7 +704,7 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 
 }
 
-void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(simulation::SensorDetectedObject &msg, routeable_message &routeableMsg)
+void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(SensorDetectedObject &msg, routeable_message &routeableMsg)
 {
 	// TODO: This is a temporary fix for tmx message container property tree
 	// serializing all attributes as strings. This issue needs to be fixed but

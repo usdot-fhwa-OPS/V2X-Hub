@@ -1,6 +1,28 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.8.0, released Aug 26th, 2024
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.8.0 includes significant enhancements such as a new telematics module for streaming V2X Hub data into the telematics server and Influx database, and an RSU Health Monitor to stream J2735 data from V2X Hub to the cloud in near real-time. The telematics plugin now subscribes to all TMX messages from V2X Hub, improving data integration. Additionally, this release addresses key issues, such as fixing the telematics bridge memory usage and correcting the handling of null topics, ensuring accurate data management and system reliability.
+
+Enhancement in this release:  
+
+- V2X-Hub PR 564: Implemented a RSU Health Monitor Plugin to directly interface with RSUs connected to V2X Hub via SNMP protocol. 
+- V2X-Hub PR 565: Implemented a telematics plugin to subscribe to all TMX messages from V2X Hub. 
+- V2X-Hub PR 567: Implemented the telematic bridge to stream J2735 data from V2XHub to the cloud in near real-time. This includes forwarding JSON messages, 
+  registering with WFD cloud services, mapping TMX message types to topics, and streaming requested TMX messages in JSON format. 
+- Issue 591: Created a telematics module to stream V2X Hub data into the telematics server and Influx database. This includes connecting to V2X Hub, 
+  subscribing/unsubscribing to topics, and streaming data to the telematics tool. 
+- V2X-Hub PR 599: Fixed memory usage issue in the telematics bridge, which increased indefinitely when forwarding messages to the telematics tool. 
+- V2X-Hub PR 606: Updated the RSU Health Monitor plugin to support monitoring the health status of multiple RSUs per V2X Hub instance. 
+- V2X-Hub PR 613: Added configuration parameters for RSU Health Monitor Plugin to identify the source of payload when multiple RSUs are connected.
+  
+Fixes in this release: 
+
+- N/A
+
 Version 7.7.0, released Aug 15th, 2024
 --------------------------------------------------------
 

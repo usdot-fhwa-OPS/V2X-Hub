@@ -132,7 +132,7 @@ namespace CDASimAdapter{
         tmx::messages::TimeSyncMessage msg;
         msg.clear();
         if (time_sync_listener) {
-            std::string str_msg = consume_server_message(time_sync_listener);
+            std::string str_msg = time_sync_listener->stringTimedReceive();
             msg.set_contents( str_msg );
         }
         else {
@@ -142,13 +142,13 @@ namespace CDASimAdapter{
 
     }
 
-    tmx::messages::simulation::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
+    tmx::messages::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
     {
-        tmx::messages::simulation::SensorDetectedObject externalObj;
+        tmx::messages::SensorDetectedObject externalObj;
         externalObj.clear();
         if(sensor_detected_object_listener)
         {
-            std::string str_msg = consume_server_message(sensor_detected_object_listener);
+            std::string str_msg = sensor_detected_object_listener->stringTimedReceive();
             externalObj.set_contents(str_msg);
         }
         else
@@ -180,23 +180,6 @@ namespace CDASimAdapter{
         return "";
     }
 
-    std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
-        std::vector<char> msg(4000);
-        int num_of_bytes = _server->TimedReceive(msg.data(),4000, 5);
-        if (num_of_bytes > 0 ) {
-            msg.resize(num_of_bytes);
-            std::string ret(msg.data());
-            PLOG(logDEBUG) << "UDP Server message received : " << ret << " of size " << num_of_bytes << std::endl;
-            return ret;
-        }
-        else if ( num_of_bytes == 0 ) {
-            throw UdpServerRuntimeError("Received empty message!");
-        }
-        else {
-            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
-        }
-        return "";
-    }
 
     std::string CDASimConnection::consume_v2x_message_from_simulation() const {
         if ( carma_simulation_listener) {

@@ -23,9 +23,12 @@ latest_version=$(echo "$release_info" | grep -o '"tag_name": *"[^"]*"' | cut -d 
 # Fetching all tags from Git repository
 tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F/ '{print $3}' | sort -V)
 
+# Remove curly braces, Properties found, and duplicate entries
+updated_tags=$(echo "$tags" | sed 's/\^{}//' | grep -v '^Properties_Found$' | awk '!seen[$0]++')
+
 # Displaying all available versions
 echo "Available versions:"
-echo "$tags"
+echo "$updated_tags"
 
 # select a version or accept the latest version as default
 read -r -p "Enter V2X-Hub Version (choose from the above, or press Enter to use latest version $latest_version): " chosen_version
@@ -148,5 +151,4 @@ fi
 cd "$mysqlDir" || return # return in case cd fails
 ./add_v2xhub_user.bash
 
-chromium-browser "http://127.0.0.1" > /dev/null 2>&1 &
-chromium-browser "https://127.0.0.1:19760" > /dev/null 2>&1 &
+chromium-browser --ignore-certificate-errors localhost > /dev/null 2>&1 &

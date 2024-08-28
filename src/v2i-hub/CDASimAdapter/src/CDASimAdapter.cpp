@@ -87,9 +87,9 @@ namespace CDASimAdapter{
 
     }
 
-    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::SensorDetectedObject &msg) {
         PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
-        this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+        this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
     }
 
     bool CDASimAdapter::connect() {
