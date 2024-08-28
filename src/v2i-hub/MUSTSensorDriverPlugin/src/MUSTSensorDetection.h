@@ -116,7 +116,7 @@ namespace MUSTSensorDriverPlugin {
      * @param projString std::string describing reference point and WGS84 projection of detection information
      * @return tmx::messages::SensorDetectedObject
      */
-    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString);
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString, double positionVariance, double velocityVariance);
     
     /**
      * @brief Function to convert MUSTSensor provided heading and speed to a velocity vector 

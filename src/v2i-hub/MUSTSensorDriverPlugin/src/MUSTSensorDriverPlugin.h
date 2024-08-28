@@ -48,6 +48,10 @@ namespace MUSTSensorDriverPlugin
 
             std::string projString;
 
+            double positionVariance = 0.0;
+
+            double velocityVariance = 0.0;
+
             bool connected = false;
 
             // Message receiver thread id
