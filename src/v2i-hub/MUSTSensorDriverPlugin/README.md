@@ -34,6 +34,13 @@ This plugin has several configuration parameters. Below these are listed out as 
 > [!NOTE]
 > Both **CARMA Streets** and our vehicle automatation **CARMA Platform** rely on the PROJ4 library for projecting data between internal local maps coordinate frames and WSG84. Additional documentation on the projection string can be found in PROJ documentation (<https://proj.org/en/9.4/index.html>)(<https://proj.org/en/9.4/usage/quickstart.html>)(<https://proj.org/en/9.4/usage/transformation.html>)
 
+**DetectionPositionVariance**: Variance of the reported positon data coming from the sensor. Value is used for cooperative perception messages that enable sensor fusion like the SDMS.
+
+**DetectionVelocityVariance**: Variance of the reported velocity data coming from the sensor. Value is used for cooperative perception messages that enable sensor fusion like the SDMS.
+
+> [!NOTE]
+> Measurement variance can be calcuted from Sensor accuracy data information. For instance if a sensor position accurancy is +/- 0.5 m, assuming a normal distribution and a 95% confidence interval 0.5 m represent 2 standard deviations. Variance is equal the standard deviation squared so a position measurement accuracy of +/- 0.5 m. the variance would be 0.0625 (`(O.5/2)^2`).
+
 After setting these configuration parameters the plugin can simply be enabled.
 
 ## Design
