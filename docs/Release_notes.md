@@ -1,6 +1,77 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.8.0, released Aug 26th, 2024
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.8.0 includes significant enhancements such as a new telematics module for streaming V2X Hub data into the telematics server and Influx database, and an RSU Health Monitor to stream J2735 data from V2X Hub to the cloud in near real-time. The telematics plugin now subscribes to all TMX messages from V2X Hub, improving data integration. Additionally, this release addresses key issues, such as fixing the telematics bridge memory usage and correcting the handling of null topics, ensuring accurate data management and system reliability.
+
+Enhancement in this release:  
+
+- V2X-Hub PR 564: Implemented a RSU Health Monitor Plugin to directly interface with RSUs connected to V2X Hub via SNMP protocol. 
+- V2X-Hub PR 565: Implemented a telematics plugin to subscribe to all TMX messages from V2X Hub. 
+- V2X-Hub PR 567: Implemented the telematic bridge to stream J2735 data from V2XHub to the cloud in near real-time. This includes forwarding JSON messages, 
+  registering with WFD cloud services, mapping TMX message types to topics, and streaming requested TMX messages in JSON format. 
+- Issue 591: Created a telematics module to stream V2X Hub data into the telematics server and Influx database. This includes connecting to V2X Hub, 
+  subscribing/unsubscribing to topics, and streaming data to the telematics tool. 
+- V2X-Hub PR 599: Fixed memory usage issue in the telematics bridge, which increased indefinitely when forwarding messages to the telematics tool. 
+- V2X-Hub PR 606: Updated the RSU Health Monitor plugin to support monitoring the health status of multiple RSUs per V2X Hub instance. 
+- V2X-Hub PR 613: Added configuration parameters for RSU Health Monitor Plugin to identify the source of payload when multiple RSUs are connected.
+  
+Fixes in this release: 
+
+- N/A
+
+Version 7.7.0, released Aug 15th, 2024
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.7.0 introduces key enhancements and fixes to improve data streaming, upgrade MySQL to version 8.0, and support multi-architecture Docker deployments. This release includes updates to initialization scripts and addresses clock reference issues in simulation mode. Additionally, this release removes obsolete Docker tags and makes the SENSOR_JSON_FILE_PATH an optional environment variable to enhance flexibility in simulation setups.
+
+Enhancement in this release:  
+
+- V2X-Hub PR 612: Updated MySQL to 8.0 to support multi-architecture Docker deployment, removed architecture-based configuration folders, and updated initialization scripts. 
+- V2X-Hub PR 611: Updated TCR message oldest field to use data sent by carma-platform in simulation mode to address clock reference issues. 
+- V2X-Hub PR 615: Updated the initialization script to generate a .env file based on user input. 
+
+Fixes in this release: 
+
+- V2X-Hub PR 614: Removed the "version:" tag at the top of the docker-compose files. These are no longer needed and are obsolete in current and future versions of Docker. 
+- V2X-Hub PR 616: Updated SENSOR_JSON_FILE_PATH as optional environment variable in simulation since spawning sensors is not required for the base line functionality of V2X-Hub. Before this update CDASimAdapter would accept empty SENSOR_JSON_FILE_PATH files but not missing ones. 
+
+
+Version 7.6.0, released April 10th, 2024
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.6.0 includes functionality for integrating V2X-Hub with simulated sensors in CDASim. CDASim can now publish detection data to V2X-Hub for ingestion. Furthermore, this release added a functionality to encode/decode J3224 Sensor Data Sharing Message (SDSM) and forward these messages between CARMA-Streets and CDASim for Vulnerable Road User (VRU) Cooperative Perception testing in simulation. Unrelated improvements include initial integration with telematics tool and general system improvements.
+
+**<ins>V2X Hub CDASim Functionalities </ins>**
+
+Enhancements in this release: 
+
+- Issue 549/PR 550: Moved Kafka time producer from CDASimAdapter to CARMA-Streets plugin, and updated CARMA-Streets Plugin to be simulation time aware. CDASim Adapter was previously forwarding time sync messages directly to CARMA-Streets. Improved CARMA Streets Plugin to extend our PluginClientTimeAware class to make it aware of simulation.  
+- Issue 590: Add CDA Sim simulated sensor integration. Allow V2X-Hub to consume detection data from simulated sensor in CDASim. 
+- Issue 589: Implement support for CARMA-Street SDSM functionality. This includes adding SDSM encoding/decoding and message forwarding between CARMA-Streets and CDASim 
+
+Fixes in this release: 
+
+- Issue 538 & Issue543 & PR 547: Fixed CARMA Streets Plugin Kafka Consumers. 1) Removed the Kafka consumer/producer initialization during config parameter update. 2)  Replaced consumer creation with v2xhub kafka_client library. 3) Added producer creation in kafka_client library.  
+- PR 12 (not V2X Hub Repo): Fixed wait_for_initialization for multiple threads  
+
+Other Enhancements: 
+
+- PR 545: Added PSID metadata to BSMs and SRMs that are sent to the Message Receiver plugin. If RouteMessage is enabled, the messages will be available for the Immediate Forward plugin to use 
+- PR 592 / Issue 593: Update initialization script to install necessary dependencies, create secret files, prompt user to enter MySQL passwords, and create v2xhub user and open web browser to correct URL. 
+- Issue 591: V2X-Hub Telematics tool integration. Allows V2X-Hub to stream data to telematics tool for data visualization. Includes development of new RSU Health Monitoring Plugin. 
+- PR 580: Added a copy command from the dependency container to the final container for /usr/local/include/ which ensures the header files get copied to the final container. 
+
+Known issues related to this release: 
+
+- Issue 540: CDASim Time Synchronization is non-time-regulating. If simulation runs too fast (faster than real-time) for V2X Hub to keep up, V2X Hub can fall behind in time. 
+- Issue 507: SPaT plugin throws segfault when in SIM MODE. 
+
 Version 7.5.1, released June 21st, 2023
 --------------------------------------------------------
 
