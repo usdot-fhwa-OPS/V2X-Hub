@@ -62,8 +62,8 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     detection.timestamp = 1719506355.4;
     detection.trackID = 324;
     detection.speed = 5;
-
-    auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String");
+    // 0.0625 variance corresponds to 0.25 std. Assuming Normal distribution and a 95% confidence interval corresponds to +/- 0.5m or m/s respectively. 
+    auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String", 0.0625, 0.0625);
 
     EXPECT_EQ(detection.trackID, sensorDetectedObject.get_objectId());
     EXPECT_DOUBLE_EQ(detection.confidence/100.0, sensorDetectedObject.get_confidence());
@@ -75,6 +75,26 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     EXPECT_EQ(1719506355400, sensorDetectedObject.get_timestamp());
     EXPECT_EQ("MUSTSensor1", sensorDetectedObject.get_sensorId());
     EXPECT_EQ("PROJ String", sensorDetectedObject.get_projString());
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_positionCovariance()[0][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[0][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[0][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[1][0].value);
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_positionCovariance()[1][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[1][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][2].value);
+
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_velocityCovariance()[0][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[0][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[0][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[1][0].value);
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_velocityCovariance()[1][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[1][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][2].value);
+
 }
 
 TEST(TestMUSTSensorDetection, detectionClassificationToSensorDetectedObjectType ) {
