@@ -11,3 +11,8 @@ db:
        - ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
        - ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql
 ```
+
+## Reference Layout
+The following diagram displays the C1T Port Drayage layout used in the Saxton Garage. The above SQL files should be selected based on if the first (port_drayage_lane1.sql) or second (port_drayage_lane2.sql) lane will be used for the Port Pickup action.
+
+![Alt text](docs/garage_diagram.PNG)
