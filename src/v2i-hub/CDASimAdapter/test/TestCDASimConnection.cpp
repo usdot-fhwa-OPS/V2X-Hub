@@ -115,4 +115,12 @@ namespace CDASimAdapter {
     {        
         EXPECT_THROW(connection->string_to_json("Invalid Json"), std::invalid_argument);
     }
+
+    TEST_F(TestCDASimConnection, read_sensor_configuration_file) {
+        auto sensor_registration = connection->read_sensor_configuration_file("../../CDASimAdapter/test/sensors_including_invalid_entries.json");
+        EXPECT_EQ(2, sensor_registration.size());
+        EXPECT_EQ("SomeID", sensor_registration[0]["sensorId"].asString());
+        EXPECT_EQ("SomeID2", sensor_registration[1]["sensorId"].asString());
+
+    }
 }

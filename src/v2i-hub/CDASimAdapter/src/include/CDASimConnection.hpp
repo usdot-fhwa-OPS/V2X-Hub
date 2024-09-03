@@ -180,6 +180,8 @@ namespace CDASimAdapter {
             FRIEND_TEST(TestCDASimConnection, get_handshake_json_no_sensor_config);
             FRIEND_TEST(TestCDASimConnection, read_json_file);
             FRIEND_TEST(TestCDASimConnection, string_to_json);
+            FRIEND_TEST(TestCDASimConnection, read_sensor_configuration_file);
+
 
             
     };

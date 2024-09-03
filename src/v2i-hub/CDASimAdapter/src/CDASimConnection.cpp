@@ -298,7 +298,7 @@ namespace CDASimAdapter{
             }
             sensor["location"] = sensor_configuration[index]["ref"]["location"];
             sensor["orientation"] =sensor_configuration[index]["ref"]["orientation"];
-            sensors_registration[index] = sensor;
+            sensors_registration.append(sensor);
         }
         /** Sensor Registration JSON Format
         [
