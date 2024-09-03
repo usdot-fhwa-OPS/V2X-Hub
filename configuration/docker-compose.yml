@@ -14,7 +14,7 @@ services:
       - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
       # The following 3 volumes are used for C1T. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
       # three files to enable the C1T sql files to be loaded. The container volumes MUST be reset
