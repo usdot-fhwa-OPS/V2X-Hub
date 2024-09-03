@@ -263,6 +263,20 @@ namespace CDASimAdapter{
         {
             PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
         }
-        return json_v;
+        Json::Value sensors_registration;
+        for ( int index = 0; index < json_v.size(); ++index ) {
+            Json::Value sensor;
+            sensor["sensorId"] = json_v[index]["sensorId"];
+            sensor["type"] = json_v[index]["type"];
+            if ( json_v[index]["ref"]["type"] != "CARTESIAN" ){
+                PLOG(logWARNING) << "Skipping sensor configuration for " + sensor["sensorId"].asString() + ". Invalid ref type! Only CARTESIAN ref type currently supported for CDASim!" ;
+                continue;
+            }
+            sensor["location"] = json_v[index]["ref"]["location"];
+            sensor["orientation"] =json_v[index]["ref"]["orientation"];
+            sensors_registration[index] = sensor;
+        }
+
+        return sensors_registration;
     }
 }

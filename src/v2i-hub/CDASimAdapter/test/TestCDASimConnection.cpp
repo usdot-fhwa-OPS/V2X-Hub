@@ -31,7 +31,7 @@ namespace CDASimAdapter {
             }
         public:
             std::shared_ptr<CDASimConnection> connection;
-            std::string sensors_file_path = "../../CDASimAdapter/test/sensors.json";
+            std::string sensors_file_path = "../../CDASimAdapter/test/sensors_new.json";
         
 
     };
