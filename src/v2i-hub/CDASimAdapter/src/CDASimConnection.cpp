@@ -59,7 +59,8 @@ namespace CDASimAdapter{
                 message["sensors"] = sensors_json_v;
             }
             catch(const std::invalid_argument &e) {
-                PLOG(tmx::utils::logWARNING) << e.what();
+                PLOG(tmx::utils::logWARNING) << "Error occured reading sensor configuration file: " << e.what() 
+                    << std::endl << "Not sending any Sensor Registration information with CDASim Infrastructure Registration!";
             }
         }
         else {
@@ -260,9 +261,7 @@ namespace CDASimAdapter{
         JSONCPP_STRING err;
         if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
         {
-            PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
             throw std::invalid_argument("Error parsing JSON from string: " + json_str);
-
         }
         return json_v;
     }
