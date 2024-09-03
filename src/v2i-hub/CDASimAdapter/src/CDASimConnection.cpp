@@ -54,12 +54,13 @@ namespace CDASimAdapter{
         //Sample sensors.json: https://raw.githubusercontent.com/usdot-fhwa-OPS/V2X-Hub/develop/src/v2i-hub/CDASimAdapter/test/sensors.json
         // Sensor configuration is an optional part of registration message.
         if ( !_sensor_json_file_path.empty() ) {
-            auto sensors_json_v = read_json_file(_sensor_json_file_path);
-            if(sensors_json_v.empty())
-            {
-                PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
-            }     
-            message["sensors"] = sensors_json_v;
+            try {
+                auto sensors_json_v = read_sensor_configuration_file(_sensor_json_file_path);
+                message["sensors"] = sensors_json_v;
+            }
+            catch(const std::invalid_argument &e) {
+                PLOG(tmx::utils::logWARNING) << e.what();
+            }
         }
         else {
             PLOG(logWARNING) << "No sensors where configured for this V2X-Hub instance.";
@@ -234,14 +235,12 @@ namespace CDASimAdapter{
     }
 
     Json::Value CDASimConnection::read_json_file(const std::string& file_path) const{
-        Json::Value sensors_json_v;
         //Read file from disk
         std::ifstream in_strm;
         in_strm.open(file_path, std::ifstream::binary);
         if(!in_strm.is_open())
         {
-            PLOG(logERROR) << "File cannot be opened. File path: " << file_path <<std::endl;
-            return sensors_json_v;
+            throw std::invalid_argument("File cannot be opened. File path: " + file_path);
         }
         std::string line;
         std::stringstream ss;
@@ -262,21 +261,64 @@ namespace CDASimAdapter{
         if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
         {
             PLOG(logERROR) << "Error parsing sensors from string: " << json_str << std::endl;
+            throw std::invalid_argument("Error parsing JSON from string: " + json_str);
+
         }
+        return json_v;
+    }
+
+    Json::Value CDASimConnection::read_sensor_configuration_file(const std::string &file_path) const {
+        // Sensor Configuration File JSON format
+        /*  {
+            "sensorId": "sensor_1",
+            "type": "SemanticLidar",
+            "ref": {
+                "type": "CARTESIAN",
+                "location": {
+                    "x": 1.0, 
+                    "y": 2.0, 
+                    "z": -3.2 
+                },
+                "orientation": { 
+                    "yaw": 0.0,
+                    "pitch": 0.0,
+                    "roll": 0.0
+                    }
+            }
+        } 
+        ] */
+        auto sensor_configuration = read_json_file(file_path);
         Json::Value sensors_registration;
-        for ( int index = 0; index < json_v.size(); ++index ) {
+        for ( int index = 0; index < sensor_configuration.size(); ++index ) {
             Json::Value sensor;
-            sensor["sensorId"] = json_v[index]["sensorId"];
-            sensor["type"] = json_v[index]["type"];
-            if ( json_v[index]["ref"]["type"] != "CARTESIAN" ){
+            sensor["sensorId"] = sensor_configuration[index]["sensorId"];
+            sensor["type"] = sensor_configuration[index]["type"];
+            if ( sensor_configuration[index]["ref"]["type"] != "CARTESIAN" ){
                 PLOG(logWARNING) << "Skipping sensor configuration for " + sensor["sensorId"].asString() + ". Invalid ref type! Only CARTESIAN ref type currently supported for CDASim!" ;
                 continue;
             }
-            sensor["location"] = json_v[index]["ref"]["location"];
-            sensor["orientation"] =json_v[index]["ref"]["orientation"];
+            sensor["location"] = sensor_configuration[index]["ref"]["location"];
+            sensor["orientation"] =sensor_configuration[index]["ref"]["orientation"];
             sensors_registration[index] = sensor;
         }
-
+        /** Sensor Registration JSON Format
+        [
+            {
+            "sensorId": "SomeID",
+            "type": "SemanticLidar",
+            "location": {
+                "x": 1.0, 
+                "y": 2.0, 
+                "z": -3.2 
+                },
+                "orientation": {
+                "yaw": 0.0,
+                "pitch": 0.0,
+                "roll": 0.0
+                }
+            }
+        ]
+        */
         return sensors_registration;
     }
 }
