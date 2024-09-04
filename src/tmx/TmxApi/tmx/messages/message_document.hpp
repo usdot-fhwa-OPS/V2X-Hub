@@ -11,7 +11,7 @@
 #include <stdexcept>
 
 #include <tmx/messages/message.hpp>
-#include <tmx/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace tmx {
 

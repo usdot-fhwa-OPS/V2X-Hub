@@ -29,17 +29,30 @@ namespace MUSTSensorDriverPlugin {
         return detection;
     }
 
-    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString) {
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString, double positionVariance, double velocityVariance) {
         tmx::messages::SensorDetectedObject detectedObject;
-        detectedObject.objectId = detection.trackID;
-        detectedObject.position.X = detection.position_x;
-        detectedObject.position.Y = detection.position_y;
-        detectedObject.confidence = detection.confidence;
-        detectedObject.timestamp = static_cast<long>(detection.timestamp*1000); // convert decimal seconds to int milliseconds.
-        detectedObject.velocity = headingSpeedToVelocity(detection.heading, detection.speed);
-        detectedObject.type = detectionClassificationToSensorDetectedObjectType(detection.cl);
-        detectedObject.sensorId = sensorId;
-        detectedObject.projString = projString;
+        detectedObject.set_objectId(detection.trackID);
+        tmx::messages::Position pos(detection.position_x, detection.position_y, 0);
+        detectedObject.set_position(pos);
+        detectedObject.set_confidence(detection.confidence/100.0);
+        detectedObject.set_timestamp(static_cast<long>(detection.timestamp*1000)); // convert decimal seconds to int milliseconds.
+        detectedObject.set_velocity(headingSpeedToVelocity(detection.heading, detection.speed));
+        detectedObject.set_type(detectionClassificationToSensorDetectedObjectType(detection.cl));
+        std::vector<std::vector< tmx::messages::Covariance>> positionCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
+        // Set X and Y position variance in covariance matrix
+        positionCov[0][0] = tmx::messages::Covariance(positionVariance);
+        positionCov[1][1] = tmx::messages::Covariance(positionVariance);
+        detectedObject.set_positionCovariance(positionCov);
+
+        // Set X and Y Velocity variance in covariance matrix
+        std::vector<std::vector< tmx::messages::Covariance>> velocityCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
+        velocityCov[0][0] = tmx::messages::Covariance(velocityVariance);
+        velocityCov[1][1] = tmx::messages::Covariance(velocityVariance);
+        detectedObject.set_velocityCovariance(velocityCov);
+        
+        detectedObject.set_sensorId(std::string(sensorId));
+        detectedObject.set_projString(std::string(projString));
+
         return detectedObject;
     }
     DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
@@ -77,15 +90,15 @@ namespace MUSTSensorDriverPlugin {
         }
     };
 
-    tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed) {
+    tmx::messages::Velocity headingSpeedToVelocity(double heading, double speed) {
         // Convert North East heading to Angle with 0 at (1, 0) (See README Unit Circle)
         heading = heading - 270;
         // factor for converting heading from degrees to radians
         auto headingInRad = M_PI / 180;
-        tmx::utils::Vector3d velocity;
-        velocity.X = std::cos(headingInRad * heading) * speed;
-        velocity.Y = std::sin(headingInRad * heading) * speed;
-        velocity.Z = 0;
+        tmx::messages::Velocity velocity;
+        velocity.x = std::cos(headingInRad * heading) * speed;
+        velocity.y = std::sin(headingInRad * heading) * speed;
+        velocity.z = 0;
         return velocity;
     };
 }

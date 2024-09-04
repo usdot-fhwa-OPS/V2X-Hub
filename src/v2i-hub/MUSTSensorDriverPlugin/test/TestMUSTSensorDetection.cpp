@@ -18,6 +18,9 @@ TEST(TestMUSTSensorDetection, fromStringToDetectionClassification)
     EXPECT_EQ(DetectionClassification::SEDAN, fromStringToDetectionClassification("sedan"));
     EXPECT_EQ(DetectionClassification::VAN, fromStringToDetectionClassification("van"));
     EXPECT_EQ(DetectionClassification::TRUCK, fromStringToDetectionClassification("truck"));
+    EXPECT_EQ(DetectionClassification::BUS, fromStringToDetectionClassification("bus"));
+    EXPECT_EQ(DetectionClassification::PICKUP_TRUCK, fromStringToDetectionClassification("pickup truck"));
+    EXPECT_EQ(DetectionClassification::PEDESTRIAN, fromStringToDetectionClassification("pedestrian"));
     EXPECT_EQ(DetectionClassification::NA, fromStringToDetectionClassification("not_a_classification"));
 
 }
@@ -59,31 +62,54 @@ TEST(TestMUSTSensorDetection, mustDetectionToSensorDetectedObject ) {
     detection.timestamp = 1719506355.4;
     detection.trackID = 324;
     detection.speed = 5;
+    // 0.0625 variance corresponds to 0.25 std. Assuming Normal distribution and a 95% confidence interval corresponds to +/- 0.5m or m/s respectively. 
+    auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String", 0.0625, 0.0625);
 
-    auto sensorDetectedObject = mustDetectionToSensorDetectedObject(detection, "MUSTSensor1", "PROJ String");
+    EXPECT_EQ(detection.trackID, sensorDetectedObject.get_objectId());
+    EXPECT_DOUBLE_EQ(detection.confidence/100.0, sensorDetectedObject.get_confidence());
+    EXPECT_DOUBLE_EQ(detection.position_x, sensorDetectedObject.get_position().x);
+    EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.get_position().y);
+    EXPECT_NEAR(4.33, sensorDetectedObject.get_velocity().y, 0.001);
+    EXPECT_NEAR(2.5, sensorDetectedObject.get_velocity().x, 0.001);
+    EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.get_type().c_str());
+    EXPECT_EQ(1719506355400, sensorDetectedObject.get_timestamp());
+    EXPECT_EQ("MUSTSensor1", sensorDetectedObject.get_sensorId());
+    EXPECT_EQ("PROJ String", sensorDetectedObject.get_projString());
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_positionCovariance()[0][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[0][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[0][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[1][0].value);
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_positionCovariance()[1][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[1][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_positionCovariance()[2][2].value);
 
-    EXPECT_EQ(detection.trackID, sensorDetectedObject.objectId);
-    EXPECT_DOUBLE_EQ(detection.confidence, sensorDetectedObject.confidence);
-    EXPECT_DOUBLE_EQ(detection.position_x, sensorDetectedObject.position.X);
-    EXPECT_DOUBLE_EQ(detection.position_y, sensorDetectedObject.position.Y);
-    EXPECT_NEAR(4.33, sensorDetectedObject.velocity.Y, 0.001);
-    EXPECT_NEAR(2.5, sensorDetectedObject.velocity.X, 0.001);
-    EXPECT_STRCASEEQ("SEDAN", sensorDetectedObject.type.c_str());
-    EXPECT_EQ(1719506355400, sensorDetectedObject.timestamp);
-    EXPECT_EQ("MUSTSensor1", sensorDetectedObject.sensorId);
-    EXPECT_EQ("PROJ String", sensorDetectedObject.projString);
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_velocityCovariance()[0][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[0][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[0][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[1][0].value);
+    EXPECT_DOUBLE_EQ( 0.0625, sensorDetectedObject.get_velocityCovariance()[1][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[1][2].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][0].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][1].value);
+    EXPECT_DOUBLE_EQ( 0.0, sensorDetectedObject.get_velocityCovariance()[2][2].value);
+
 }
 
 TEST(TestMUSTSensorDetection, detectionClassificationToSensorDetectedObjectType ) {
     EXPECT_STRCASEEQ("SEDAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::SEDAN).c_str());
     EXPECT_STRCASEEQ("VAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::VAN).c_str());
     EXPECT_STRCASEEQ("TRUCK", detectionClassificationToSensorDetectedObjectType(DetectionClassification::TRUCK).c_str());
+    EXPECT_STRCASEEQ("BUS", detectionClassificationToSensorDetectedObjectType(DetectionClassification::BUS).c_str());
+    EXPECT_STRCASEEQ("PICKUP TRUCK", detectionClassificationToSensorDetectedObjectType(DetectionClassification::PICKUP_TRUCK).c_str());
+    EXPECT_STRCASEEQ("PEDESTRIAN", detectionClassificationToSensorDetectedObjectType(DetectionClassification::PEDESTRIAN).c_str());
     EXPECT_THROW(detectionClassificationToSensorDetectedObjectType(DetectionClassification::NA).c_str(), std::runtime_error);
 
 }
 
 TEST(TestMUSTSensorDetection, headingSpeedToVelocity ) {
     auto velocity = headingSpeedToVelocity(30, 5);
-    EXPECT_NEAR(4.33, velocity.Y, 0.001);
-    EXPECT_NEAR(-2.5, velocity.X, 0.001);
+    EXPECT_NEAR(4.33, velocity.y, 0.001);
+    EXPECT_NEAR(-2.5, velocity.x, 0.001);
 }
