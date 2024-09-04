@@ -93,7 +93,7 @@ namespace CDASimAdapter
          * @brief Forward simulated sensor detected object message to TMX message bus for other V2X-Hub Plugin 
          * @param msg simulation::SensorDetectedObject.
          */
-        void forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg);
+        void forward_simulated_detected_message(tmx::messages::SensorDetectedObject &msg);
         /**
          * @brief Method to start thread timer for regular interval actions lauched on seperate thread.
          */

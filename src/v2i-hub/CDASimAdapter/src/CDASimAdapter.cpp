@@ -87,9 +87,9 @@ namespace CDASimAdapter{
 
     }
 
-    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::simulation::SensorDetectedObject &msg) {
+    void CDASimAdapter::forward_simulated_detected_message(tmx::messages::SensorDetectedObject &msg) {
         PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
-        this->BroadcastMessage<tmx::messages::simulation::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
+        this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
     }
 
     bool CDASimAdapter::connect() {
@@ -103,7 +103,10 @@ namespace CDASimAdapter{
             uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
             uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
             std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
-            std::string sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH);
+            // Sensor JSON file path is an optional environment variable that allows configuration of
+            // simulated sensor if provided.
+            std::string sensor_json_file_path = "";
+            sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH, false);
 
             PLOG(logINFO) << "CDASim connecting " << simulation_ip <<
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<

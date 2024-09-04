@@ -1,0 +1,42 @@
+{
+    "name": "MUSTSensorDriver",
+    "description": "Plugin for processing MUST Sensor Data.",
+    "version": "@PROJECT_VERSION@",
+    "exeLocation": "/bin/MUSTSensorDriverPlugin",
+    "coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+    "messageTypes": [
+        {
+            "type": "Application",
+            "subtype": "SensorDetectedObject",
+            "description": "Generic message for detection from Sensor."
+        }
+    ],
+    "configuration": [
+        {
+            "key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
+        },
+        {
+            "key":"DetectionReceiverIP",
+            "default":"127.0.0.1",
+            "description":"IP Address V2X-Hub listens for incoming detections"
+        },
+        {
+            "key":"DetectionReceiverPort",
+            "default":"4545",
+            "description":"Port V2X-Hub listens for incoming detections"
+        },
+        {
+            "key":"SensorId",
+            "default":"MUSTSensor1",
+            "description":"Unique Idenifier for Sensor"
+        },
+        {
+            "key":"ProjectionString",
+            "default":"+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs",
+            "description":"Projection string for projecting cartesian detection data into WSG84 coordinates."
+        }
+    ]
+}

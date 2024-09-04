@@ -1,20 +1,20 @@
-/*
- * NTCIP1202.cpp
+/**
+ * Copyright (C) 2024 LEIDOS.
  *
- *  Created on: Apr 3, 2017
- *      Author: ivp
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
-#include <iostream>
-#include <cstring>
 #include "NTCIP1202.h"
-#include <netinet/in.h>
-#include <ctime>
-#include <ratio>
-#include <PluginLog.h>
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace boost::property_tree;
@@ -38,13 +38,13 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 	ptree root;
 	read_json(ss, root);
 
-	for(auto & signalGroup : root.get_child("SignalGroups"))
+	for( const auto &[key, value]: root.get_child("SignalGroups"))
 	{
-		int signalGroupId = signalGroup.second.get<int>("SignalGroupId");
-		int phaseNumber = signalGroup.second.get<int>("Phase", 0);
-		string typeName = signalGroup.second.get<string>("Type");
+		int signalGroupId = value.get<int>("SignalGroupId");
+		int phaseNumber = value.get<int>("Phase", 0);
+		string typeName = value.get<string>("Type");
 
-		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<<phaseNumber<<" typeName: "<<typeName<<endl;
+		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
 
 		SignalGroupMapping sgm;
 		sgm.PhaseId = phaseNumber;
@@ -57,7 +57,6 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 
 void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 {
-	std::lock_guard<std::mutex> lock(_spat_lock);
 
 	std::memcpy(&ntcip1202Data, buff, numBytes);
 
@@ -186,27 +185,10 @@ bool Ntcip1202::isPhaseFlashing()
 
 void Ntcip1202::printDebug()
 {
-	//printf("phase %d spatVehMinTimeToChange: %02x\r\n",1, ntcip1202Data.phaseTimes[1].spatVehMinTimeToChange);
-
-	//printf("header: %02x\r\n", ntcip1202Data.header);
-	//printf("phases: %02x\r\n", ntcip1202Data.numOfPhases);
-
-	/*for(int i=0; i<16; i++)
-	{
-		printf("phase %d number: %02x\r\n",i, ntcip1202Data.phaseTimes[i].phaseNumber);
-
-		printf("phase %d spatVehMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatVehMinTimeToChange);
-		printf("phase %d spatVehMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatVehMaxTimeToChange);
-		printf("phase %d spatPedMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatPedMinTimeToChange);
-		printf("phase %d spatPedMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatPedMaxTimeToChange);
-		printf("phase %d spatOvlpMinTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatOvlpMinTimeToChange);
-		printf("phase %d spatOvpMaxTimeToChange: %02x\r\n",i, ntcip1202Data.phaseTimes[i].spatOvpMaxTimeToChange);
-	}
-*/
 	for(int i=0; i<16; i++)
 	{
 		int phaseNum = i+1;
-		PLOG(logDEBUG3) << "Phase " << phaseNum <<
+		PLOG(logDEBUG) << "Phase " << phaseNum <<
 				", Green " << getPhaseGreensStatus(phaseNum) <<
 				", Yellow " << getPhaseYellowStatus(phaseNum) <<
 				", Red " << getPhaseRedStatus(phaseNum) <<
@@ -216,9 +198,9 @@ void Ntcip1202::printDebug()
 	}
 }
 
-bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionID_t intersectionId)
+void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId)
 {
-	time_t epochSec = clock->nowInSeconds();
+	time_t epochSec = msEpoch/1000;
 	struct tm utctime;
 	gmtime_r( &epochSec, &utctime );
 
@@ -227,10 +209,8 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 	long minOfYear = utctime.tm_min + (utctime.tm_hour * 60) + (utctime.tm_yday * 24 * 60);
 
 	// Calculate the millisecond of the minute
-	auto epochMs = clock->nowInMilliseconds();
+	auto epochMs = msEpoch;
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
-
-	std::lock_guard<std::mutex> lock(_spat_lock);
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
 
@@ -242,9 +222,9 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 
 	intersection->name = (DescriptiveName_t *) calloc(1, sizeof(DescriptiveName_t));
 
-	intersection->name->size = strlen(intersectionName);
-	intersection->name->buf = (uint8_t *) calloc(1, strlen(intersectionName));
-	memcpy(intersection->name->buf, intersectionName, strlen(intersectionName));
+	intersection->name->size = intersectionName.length();
+	intersection->name->buf = (uint8_t *) calloc(1, intersectionName.length());
+	memcpy(intersection->name->buf, intersectionName.c_str(), intersectionName.length());
 	intersection->id.id = intersectionId;
 	intersection->revision = (MsgCount_t) 1;
 
@@ -276,7 +256,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populateVehicleSignalGroup(movement, phase);
+					populateVehicleSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -293,7 +273,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populatePedestrianSignalGroup(movement, phase);
+					populatePedestrianSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -309,7 +289,7 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 					MovementState *movement = (MovementState *) calloc(1, sizeof(MovementState));
 					movement->signalGroup = it->SignalGroupId;
 
-					populateOverlapSignalGroup(movement, phase);
+					populateOverlapSignalGroup(movement, phase, msEpoch);
 
 					ASN_SEQUENCE_ADD(&intersection->states.list, movement);
 				}
@@ -320,12 +300,9 @@ bool Ntcip1202::ToJ2735r41SPAT(SPAT* spat, char* intersectionName, IntersectionI
 
 	}
 	ASN_SEQUENCE_ADD(&(spat->intersections.list), intersection);
-
-
-	return true;
 }
 
-void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -334,10 +311,7 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 
 	if(getPhaseRedStatus(phase))
 	{
-		PLOG(logDEBUG3) << "Phase " << phase <<
-				" Red " << getPhaseRedStatus(phase) <<
-				", isFlashing  " << isFlashing <<
-				", forceFlashing " << forceFlashing ;
+		PLOG(logDEBUG3) << "Phase " << phase << " Red " << getPhaseRedStatus(phase) << ", isFlashing  " << isFlashing << ", forceFlashing " << forceFlashing ;
 		if(isFlashing)
 			stateTimeSpeed->eventState = MovementPhaseState_stop_Then_Proceed;
 		else
@@ -364,30 +338,20 @@ void Ntcip1202::populateVehicleSignalGroup(MovementState *movement, int phase)
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getVehicleMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getVehicleMinTime(phase),msEpoch);
 
 	if (getVehicleMaxTime(phase) > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getVehicleMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getVehicleMaxTime(phase), msEpoch);
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase
-//	if(getSpatPedestrianDetect(phase))
-//	{
-//		movement->maneuverAssistList = (ManeuverAssistList *) calloc(1, sizeof(ManeuverAssistList));
-//		ConnectionManeuverAssist *pedDetect = (ConnectionManeuverAssist *) calloc(1, sizeof(ConnectionManeuverAssist));
-//		pedDetect->connectionID = 0;
-//		pedDetect->pedBicycleDetect = (PedestrianBicycleDetect_t *) calloc(1, sizeof(PedestrianBicycleDetect_t));
-//
-//		*(pedDetect->pedBicycleDetect) = 1;
-//		ASN_SEQUENCE_ADD(&movement->maneuverAssistList->list, pedDetect);
-//	}
 
 	ASN_SEQUENCE_ADD(&movement->state_time_speed.list, stateTimeSpeed);
 }
 
-void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -409,12 +373,12 @@ void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getPedMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getPedMinTime(phase), msEpoch);
 
 	if (ntcip1202Data.phaseTimes[phase].spatPedMaxTimeToChange > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getPedMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getPedMaxTime(phase), msEpoch);
 	}
 
 	if(getSpatPedestrianDetect(phase))
@@ -430,7 +394,7 @@ void Ntcip1202::populatePedestrianSignalGroup(MovementState *movement, int phase
 	ASN_SEQUENCE_ADD(&movement->state_time_speed.list, stateTimeSpeed);
 }
 
-void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase)
+void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase, unsigned long msEpoch)
 {
 	MovementEvent *stateTimeSpeed = (MovementEvent *) calloc(1, sizeof(MovementEvent));
 
@@ -465,12 +429,12 @@ void Ntcip1202::populateOverlapSignalGroup(MovementState *movement, int phase)
 	}
 
 	stateTimeSpeed->timing = (TimeChangeDetails * ) calloc(1, sizeof(TimeChangeDetails));
-	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getOverlapMinTime(phase));
+	stateTimeSpeed->timing->minEndTime =  getAdjustedTime(getOverlapMinTime(phase), msEpoch);
 
 	if (getOverlapMaxTime(phase) > 0)
 	{
 		stateTimeSpeed->timing->maxEndTime = (TimeMark_t *) calloc(1, sizeof(TimeMark_t));
-		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getOverlapMaxTime(phase));
+		*(stateTimeSpeed->timing->maxEndTime) = getAdjustedTime(getOverlapMaxTime(phase), msEpoch);
 	}
 
 	//we only get a phase number 1-16 from ped detect, assume its a ped phase
@@ -518,13 +482,13 @@ int Ntcip1202::getPedestrianSignalGroupForPhase(int phase)
 	return signalGroupId;
 }
 
-long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec)
+long Ntcip1202::getAdjustedTime(unsigned int offset_tenthofSec, unsigned long msEpoch) const
 {
 	// generate J2735 TimeMark which is:
 	// Tenths of a second in the current or next hour
 	// In units of 1/10th second from UTC time
 	// first get new time is absolute milliseconds
-	auto epochMs = clock->nowInMilliseconds() + (offset_tenthofSec * 100);
+	auto epochMs = msEpoch + (offset_tenthofSec * 100);
 	// get minute and second of hour from UTC time
 	time_t epochSec = epochMs / 1000;
 	struct tm utctime;

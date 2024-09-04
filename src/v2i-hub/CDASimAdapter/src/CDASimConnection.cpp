@@ -6,7 +6,7 @@ using namespace tmx::utils;
 namespace CDASimAdapter{ 
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
                                                         const std::string &local_ip,  const uint time_sync_port,const uint simulated_interaction_port, const uint v2x_port, 
-                                                        const Point &location, const std::string &sensor_json_file_path) : 
+                                                        const Point &location, const std::string &sensor_json_file_path ) : 
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _simulated_interaction_port(simulated_interaction_port),_v2x_port(v2x_port),
                                                         _location(location) ,_sensor_json_file_path(sensor_json_file_path)  {
@@ -52,12 +52,18 @@ namespace CDASimAdapter{
 
         //Read local sensor file and populate the sensors JSON
         //Sample sensors.json: https://raw.githubusercontent.com/usdot-fhwa-OPS/V2X-Hub/develop/src/v2i-hub/CDASimAdapter/test/sensors.json
-        auto sensors_json_v = read_json_file(_sensor_json_file_path);
-        if(sensors_json_v.empty())
-        {
-            PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
-        }     
-        message["sensors"] = sensors_json_v;
+        // Sensor configuration is an optional part of registration message.
+        if ( !_sensor_json_file_path.empty() ) {
+            auto sensors_json_v = read_json_file(_sensor_json_file_path);
+            if(sensors_json_v.empty())
+            {
+                PLOG(logWARNING) << "Sensors JSON is empty!" << std::endl;
+            }     
+            message["sensors"] = sensors_json_v;
+        }
+        else {
+            PLOG(logWARNING) << "No sensors where configured for this V2X-Hub instance.";
+        }
         Json::StyledWriter writer;
         message_str = writer.write(message);
         return message_str;
@@ -97,10 +103,8 @@ namespace CDASimAdapter{
             // Initialize V2X-Hub UDP Server and Client to foward V2X messages between CARMA Simulation Infrastructure 
             // Adapter and V2X-Hub.
             // TODO: Using TMX Utils get immediate forward port
-            // TODO: Replace 0 with immediate forward port
             immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 5678);
             // TODO: Using TMX Utils get message receiver port
-            // TODO: Replace 0 with message receiver port
             message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 8765);
             // Initialize UDP Server for listening for incoming CARMA-Simulation time synchronization.
             PLOG(logDEBUG) << "Creating UDPServer for Time Sync Messages: " << local_ip << ":" << std::to_string(time_sync_port) << "\n" 
@@ -128,7 +132,7 @@ namespace CDASimAdapter{
         tmx::messages::TimeSyncMessage msg;
         msg.clear();
         if (time_sync_listener) {
-            std::string str_msg = consume_server_message(time_sync_listener);
+            std::string str_msg = time_sync_listener->stringTimedReceive();
             msg.set_contents( str_msg );
         }
         else {
@@ -138,13 +142,13 @@ namespace CDASimAdapter{
 
     }
 
-    tmx::messages::simulation::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
+    tmx::messages::SensorDetectedObject CDASimConnection::consume_sensor_detected_object_message() const
     {
-        tmx::messages::simulation::SensorDetectedObject externalObj;
+        tmx::messages::SensorDetectedObject externalObj;
         externalObj.clear();
         if(sensor_detected_object_listener)
         {
-            std::string str_msg = consume_server_message(sensor_detected_object_listener);
+            std::string str_msg = sensor_detected_object_listener->stringTimedReceive();
             externalObj.set_contents(str_msg);
         }
         else
@@ -176,23 +180,6 @@ namespace CDASimAdapter{
         return "";
     }
 
-    std::string CDASimConnection::consume_server_message( const std::shared_ptr<UdpServer> _server) const {
-        std::vector<char> msg(4000);
-        int num_of_bytes = _server->TimedReceive(msg.data(),4000, 5);
-        if (num_of_bytes > 0 ) {
-            msg.resize(num_of_bytes);
-            std::string ret(msg.data());
-            PLOG(logDEBUG) << "UDP Server message received : " << ret << " of size " << num_of_bytes << std::endl;
-            return ret;
-        }
-        else if ( num_of_bytes == 0 ) {
-            throw UdpServerRuntimeError("Received empty message!");
-        }
-        else {
-            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
-        }
-        return "";
-    }
 
     std::string CDASimConnection::consume_v2x_message_from_simulation() const {
         if ( carma_simulation_listener) {
