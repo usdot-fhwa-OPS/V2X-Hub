@@ -135,17 +135,26 @@ namespace CDASimAdapter {
                                 const tmx::utils::Point &location) const; 
             
             /**
-             * @brief Read Json file specified by the file path from disk, and convert the json into Json::Value object.
-             * @param file_path A string of file path in the host machine.
+             * @brief Helper method to read JSON file and return resulting Json::Value. 
+             * @param file_path A string of file path in the host machine to the JSON file.
              * @return A Json::Value object.
+             * @throw std::invalid_argument exception if no file is found or file is not readable for provided path.
             */
             Json::Value read_json_file(const std::string& file_path) const;
-             /**
-             * @brief Convert the Json string into Json::Value object.
-             * @param json_str A JSON string.
-             * @return A Json::Value object.
-            */
+            /**
+             * @brief Helper method to convert string JSON content to JSON::Value.
+             * @param json_str A JSON string content of Sensor Configuration JSON file
+             * @return A Json::Value object parsed from string.
+             * @throw std::invalid_argument exception if provided string is not valid JSON
+             */
             Json::Value string_to_json(const std::string &json_str) const;
+            /**
+             * @brief Method to read Sensor Configuration JSON file and return Sensor Registration information
+             * required for Infrastructure Registration to CDASim.
+             * @param file_path Path to Sensor Configuration file.
+             * @return Json::Value correspoding to Sensor Registration information for Infrastructure Registration to CDASim.
+             */
+            Json::Value read_sensor_configuration_file(const std::string &file_path) const;
 
             std::string _simulation_ip;
             uint _simulation_registration_port;
@@ -171,6 +180,8 @@ namespace CDASimAdapter {
             FRIEND_TEST(TestCDASimConnection, get_handshake_json_no_sensor_config);
             FRIEND_TEST(TestCDASimConnection, read_json_file);
             FRIEND_TEST(TestCDASimConnection, string_to_json);
+            FRIEND_TEST(TestCDASimConnection, read_sensor_configuration_file);
+
 
             
     };

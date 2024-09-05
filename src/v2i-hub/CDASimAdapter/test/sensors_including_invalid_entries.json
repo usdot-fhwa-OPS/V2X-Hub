@@ -17,6 +17,18 @@
     }
   },
   {
+    "sensorId": "sensor_1",
+    "type": "SemanticLidar",
+    "ref": {
+      "type": "WGS84",
+      "location": {
+        "latitude": 38.9549716548523, 
+        "longitude": -77.14935313519123, 
+        "altitude": 5.5 
+      }
+    }
+  }, 
+  {
     "sensorId": "SomeID2",
     "type": "SemanticLidar",
     "ref": {
