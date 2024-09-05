@@ -290,12 +290,12 @@ namespace CDASimAdapter{
         Json::Value sensors_registration;
         for ( int index = 0; index < sensor_configuration.size(); ++index ) {
             Json::Value sensor;
-            sensor["sensorId"] = sensor_configuration[index]["sensorId"];
-            sensor["type"] = sensor_configuration[index]["type"];
             if ( sensor_configuration[index]["ref"]["type"] != "CARTESIAN" ){
                 PLOG(logWARNING) << "Skipping sensor configuration for " + sensor["sensorId"].asString() + ". Invalid ref type! Only CARTESIAN ref type currently supported for CDASim!" ;
                 continue;
             }
+            sensor["sensorId"] = sensor_configuration[index]["sensorId"];
+            sensor["type"] = sensor_configuration[index]["type"];
             sensor["location"] = sensor_configuration[index]["ref"]["location"];
             sensor["orientation"] =sensor_configuration[index]["ref"]["orientation"];
             sensors_registration.append(sensor);

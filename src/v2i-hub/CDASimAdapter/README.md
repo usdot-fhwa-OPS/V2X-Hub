@@ -23,23 +23,37 @@ The Message Receiver Plugin for receiving incoming J2735 message from CDASim.
 This plugin uses several system configuration parameters set as enviroment variables described below.
 
 **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
+
 **SIMULATION_IP** – Environment variable for storing IP address of CDASim application.
+
 **SIMULATION_REGISTRATION_PORT** – Environment variable for storing port on CDASim that handles registration attempts.
+
 **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
+
 **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
+
 **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
+
 **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub.
+
 **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
+
 **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
 ### Plugin Configuration
 
 In addition to the system configuration, the CDASim Adapter also has plugin configuration parameters that can be set via the admin portal.
+
 **LogLevel**:The log level for this plugin"
-**X**:Cartesian X coordinate in simulated map (in meters
+
+**X**:Cartesian X coordinate in simulated map (in meters).
+
 **Y**:Cartesian Y coordinate in simulated map (in meters).
+
 **Z**:Cartesian Z coordinate in simulated map (in meters).
+
 **MaxConnectionAttempts**:Number of connection attempts CDASimAdapter plugin will execute before failing. Valid values are any integers greater than or equal to 1. Any value less than 1 will result in unlimited connection attemtps.
+
 **ConnectionSleepTime**:Number of seconds to wait after a failed CDASim connection attempt, before retrying to establish connection. Valid values are equal or greater than 1. Any value less than 1 will be treated as 1.
 
 ## Design
