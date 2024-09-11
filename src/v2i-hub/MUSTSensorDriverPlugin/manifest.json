@@ -37,6 +37,17 @@
             "key":"ProjectionString",
             "default":"+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs",
             "description":"Projection string for projecting cartesian detection data into WSG84 coordinates."
+        },
+        {
+            "key":"DetectionPositionVariance",
+            "default":"0.0625",
+            "description":"Variance of the reported positon data coming from the sensor. Value is used for cooperative perception messages that enable sensor fusion like the SDMS."
+        },
+        {
+            "key":"DetectionVelocityVariance",
+            "default":"0.0625",
+            "description":"Variance of the reported velocity data coming from the sensor. Value is used for cooperative perception messages that enable sensor fusion like the SDMS."
         }
+        
     ]
 }

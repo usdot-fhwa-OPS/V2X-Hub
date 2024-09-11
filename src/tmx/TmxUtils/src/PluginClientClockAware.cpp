@@ -14,16 +14,16 @@ namespace tmx::utils {
         clock = std::make_shared<CarmaClock>(_simulation_mode);
         if (_simulation_mode) {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
-
+            SubscribeToMessages();
         }
 
     }
 
 
     void PluginClientClockAware::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &msg, routeable_message &routeableMsg ) {
-        PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
-        this->getClock()->update( msg.get_timestep() );
-        if (sim::is_simulation_mode() ) {
+        if (_simulation_mode ) {
+            PLOG(logDEBUG) << "Message Received " << msg.to_string() << std::endl;
+            clock->update( msg.get_timestep() );
             SetStatus(Key_Simulation_Time_Step, Clock::ToUtcPreciseTimeString(msg.get_timestep()));
         }
     }
@@ -37,6 +37,11 @@ namespace tmx::utils {
 
     bool PluginClientClockAware::isSimulationMode() const {
         return _simulation_mode;
+    }
+
+    std::shared_ptr<fwha_stol::lib::time::CarmaClock> PluginClientClockAware::getClock() const {
+        clock->wait_for_initialization(); // Blocks until first call to update when in sim mode.
+        return clock;
     }
 
 }

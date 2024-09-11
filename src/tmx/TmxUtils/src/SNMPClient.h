@@ -68,6 +68,18 @@ namespace tmx::utils
         int snmp_version_ = 3; // default to 3 since previous versions not compatable currently
         /*Time after which the the snmp request times out*/
         int timeout_ = 10000;
+        /**
+         * @brief Helper method for populating snmp_respons_obj with SNMP get response.
+         * @param val response object
+         * @param response pdu
+         */
+        void process_snmp_get_response(snmp_response_obj &val,  const snmp_pdu &response) const;
+        /**
+         * @brief Helper method for logging successful SNMP set responses
+         * @param val response object
+         * @param input_oid OID
+         */
+        void process_snmp_set_response( const snmp_response_obj &val,  const std::string &input_oid) const;
 
     public:
         /** @brief Constructor for Traffic Signal Controller Service client.

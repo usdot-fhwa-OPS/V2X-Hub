@@ -814,7 +814,7 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	tmx::messages::SdsmEncodedMessage SdsmEncodeMessage;
 	auto _sdsmMessage = new tmx::messages::SdsmMessage(message);
 	tmx::messages::MessageFrameMessage frame_msg(_sdsmMessage->get_j2735_data());
-	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SdsmMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	

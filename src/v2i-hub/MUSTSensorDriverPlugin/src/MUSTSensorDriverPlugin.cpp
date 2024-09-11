@@ -23,10 +23,6 @@ namespace MUSTSensorDriverPlugin {
 	MUSTSensorDriverPlugin::MUSTSensorDriverPlugin(const string &name): PluginClientClockAware(name)
 	{
 		mustSensorPacketReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
-		if (PluginClientClockAware::isSimulationMode()) {
-			PLOG(tmx::utils::logINFO) << "Simulation mode on " << std::endl;
-			SubscribeToMessages();
-		}
 	}
 
 	void  MUSTSensorDriverPlugin::OnStateChange(IvpPluginState state) {
@@ -53,6 +49,8 @@ namespace MUSTSensorDriverPlugin {
 			unsigned int port;
 			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
 			GetConfigValue<uint>("DetectionReceiverPort", port);
+			GetConfigValue<double>("DetectionPositionVariance", positionVariance);
+			GetConfigValue<double>("DetectionVelocityVariance", velocityVariance);
 			createUdpServer(ip_address, port);
 			SetStatus(keyMUSTSensorConnectionStatus, "IDLE");
 
@@ -73,7 +71,7 @@ namespace MUSTSensorDriverPlugin {
 					connected = true;
 					SetStatus(keyMUSTSensorConnectionStatus, "CONNECTED");
 				}
-				tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString);
+				tmx::messages::SensorDetectedObject msg = mustDetectionToSensorDetectedObject(detection, sensorId, projString,positionVariance, velocityVariance);
 				PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << msg << std::endl;
 				this->BroadcastMessage<tmx::messages::SensorDetectedObject>(msg, _name, 0 , IvpMsgFlags_None);
 			}

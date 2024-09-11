@@ -19,11 +19,6 @@
 			"description":"The frequency to send the PSM in milliseconds."
 		},
 		{
-			"key":"Instance",
-			"default":"0",
-			"description":"The instance of Pedestrian plugin."
-		},
-		{
 			"key":"WebServiceIP",
 			"default":"127.0.0.1",
 			"description":"IP address at which the web service exists"

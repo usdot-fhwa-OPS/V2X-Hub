@@ -16,6 +16,9 @@ namespace MUSTSensorDriverPlugin {
     enum class DetectionClassification {
         SEDAN,
         TRUCK,
+        BUS,
+        PICKUP_TRUCK,
+        PEDESTRIAN,
         VAN,
         NA
     };
@@ -46,7 +49,10 @@ namespace MUSTSensorDriverPlugin {
     const static std::unordered_map<std::string, DetectionClassification> stringToDetectionClassificationMap = {
         {"sedan", DetectionClassification::SEDAN},
         {"truck", DetectionClassification::TRUCK},
-        {"van", DetectionClassification::VAN}
+        {"van", DetectionClassification::VAN},
+        {"bus", DetectionClassification::BUS},
+        {"pickup truck", DetectionClassification::PICKUP_TRUCK},
+        {"pedestrian", DetectionClassification::PEDESTRIAN}
     };
 
     /**
@@ -110,7 +116,7 @@ namespace MUSTSensorDriverPlugin {
      * @param projString std::string describing reference point and WGS84 projection of detection information
      * @return tmx::messages::SensorDetectedObject
      */
-    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString);
+    tmx::messages::SensorDetectedObject mustDetectionToSensorDetectedObject(const MUSTSensorDetection &detection, std::string_view sensorId, std::string_view projString, double positionVariance, double velocityVariance);
     
     /**
      * @brief Function to convert MUSTSensor provided heading and speed to a velocity vector 
@@ -118,5 +124,5 @@ namespace MUSTSensorDriverPlugin {
      * @param speed double speed in m/s
      * @return tmx::utils::Vector3d velocity.
      */
-    tmx::utils::Vector3d headingSpeedToVelocity(double heading, double speed);
+    tmx::messages::Velocity headingSpeedToVelocity(double heading, double speed);
 }
