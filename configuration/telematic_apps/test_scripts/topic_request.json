@@ -1,0 +1,12 @@
+{
+    "unit_id": "rsu_1234",
+    "unit_type": "infrastructure",
+    "timestamp": 1663084528513000400,
+    "event_name": "Final_demo",
+    "location": "TFHRC",
+    "testing_type": "Integration",
+    "topics": [
+      "J2735_BSM_MessageReceiver",
+      "System_KeepAlive_CommandPlugin"
+    ]
+  }

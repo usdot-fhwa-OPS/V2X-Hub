@@ -15,6 +15,7 @@ services:
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+      - ./telematic_apps/wfd_grafana.sql:/docker-entrypoint-initdb.d/wfd_grafana.sql
       # The following 3 volumes are used for C1T. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
       # three files to enable the C1T sql files to be loaded. The container volumes MUST be reset
@@ -61,10 +62,99 @@ services:
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
-  port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
-    container_name: port_drayage_webservice
+#  port_drayage_webservice:
+#    image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
+#    container_name: port_drayage_webservice
+#    network_mode: host
+  nats:
+    image: 'nats:2.7.3-alpine3.15'
+    restart: always
+    container_name: nats
+    logging:
+      options:
+        max-size: "2g"
+        max-file: "1"
     network_mode: host
+
+  grafana:
+      build:
+        context: "./telematic_apps/grafana"
+      image: usdotfhwastoldev/telematic_grafana:develop
+      restart: always
+      container_name: grafana
+      logging:
+        options:
+          max-size: "10m"
+          max-file: "1"
+      network_mode: host
+      depends_on:
+        - db
+      volumes:
+        - /opt/grafana/logs:/var/log/grafana
+        - ./telematic_apps/grafana/grafana.ini:/etc/grafana/grafana.ini
+        - /opt/grafana/data:/var/lib/grafana
+        - /opt/grafana/provisioning:/home/grafana/conf/provisioning
+      user: "472" #grafana user id
+
+  apache2:
+    build:
+      context: "./telematic_apps/apache2"
+      dockerfile: "./local.Dockerfile"
+    image: usdotfhwastoldev/telematic_local_apache2:develop
+    restart: always
+    container_name: apache2
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "1"
+    network_mode: host
+    environment:
+      - CLIENT_LOCAL_URL=http://127.0.0.1:8082/
+      - GRAFANA_LOCAL_URL=http://127.0.0.1:3000/
+      - TOPICSERVICE_LOCAL_URL=http://127.0.0.1:8080/
+      - UISERVICE_LOCAL_URL=http://127.0.0.1:9010/
+      - UISERVICE_LOCAL_UPLOAD_URL=http://127.0.0.1:9011/
+      - PROXY_USER=admin
+    depends_on:
+      - grafana
+    volumes:
+      - /opt/apache2/grafana_htpasswd:/etc/apache2/grafana_htpasswd
+      - ./telematic_apps/apache2/000-default.local.conf:/etc/apache2/sites-available/000-default.conf
+
+  messaging_server:
+    build: 
+      context: "./telematic_cloud_messaging"
+    container_name: messaging_server
+    image: usdotfhwastoldev/telematic_cloud_messaging:develop
+    depends_on:
+      - nats
+      - db
+      - influxdb
+    restart: always
+    logging:
+      options:
+        max-size: "2g"
+        max-file: "1"
+    network_mode: host
+    command: bash -c 'wait-for-it localhost:3306 && wait-for-it localhost:4222 && wait-for-it localhost:8086 && java -jar /telematic_cloud_messaging/app.jar'
+    env_file:
+      - .env
+
+  influxdb:
+    image:  influxdb:latest
+    container_name: influxdb
+    ports:
+      - '8086:8086'
+    restart: always
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "1"
+    env_file:
+      - .env
+    volumes:
+      - /opt/influxdb2/data:/var/lib/influxdb2 # data directory
+      - /opt/influxdb2/:/etc/influxdb2 # config directory
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
