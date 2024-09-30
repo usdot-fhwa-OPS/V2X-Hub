@@ -1,3 +1,19 @@
+/**
+ * Copyright (C) 2024 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
 #include "SampleBSMPlugin.h"
 using namespace tmx;
 using namespace tmx::utils;
@@ -5,7 +21,7 @@ using namespace tmx::messages;
 
 namespace SampleBSMPluginNS
 {
-    SampleBSMPlugin::SampleBSMPlugin(std::string name) : PluginClient(name)
+    SampleBSMPlugin::SampleBSMPlugin(std::string name) : PluginClientClockAware(name)
     {
         AddMessageFilter<BsmMessage>(this, &SampleBSMPlugin::HandleBasicSafetyMessage);
         SubscribeToMessages();
@@ -31,7 +47,6 @@ namespace SampleBSMPluginNS
 
         routeable_message *rMsg = dynamic_cast<routeable_message *>(&bsmEncodeMessage);
         BroadcastMessage(*rMsg);
-        PLOG(logERROR) << " SampleBSMPlugind :: Broadcast BSM:: " << bsmEncodeMessage.get_payload_str();
         free(frame_msg.get_j2735_data().get()); 
         delete bsmMessage;
         
@@ -63,7 +78,7 @@ namespace SampleBSMPluginNS
             bsmEncoded.refresh_timestamp();
             routeable_message *rMsg = dynamic_cast<routeable_message *>(&bsmEncoded);
             BroadcastMessage(*rMsg);
-            PLOG(logERROR) << " SampleBSMPlugin :: Broadcast CREATED BSM:: " << bsmEncoded.get_payload_str();
+            PLOG(logINFO) << "Broadcasted CREATED BSM : " << bsmEncoded.get_payload_str();
         }       
     }
 
@@ -111,12 +126,10 @@ namespace SampleBSMPluginNS
         bsm->coreData.size.length = 500;
         bsm->coreData.size.width = 300;
 
-        std::cout << "createAndSendBSM 7" << std::endl;         
+        PLOG(logINFO) << "Create and Send BSM." ;         
         BsmMessage*  bsmMessage = new BsmMessage(bsm);
         MessageFrameMessage messageFrame( bsmMessage->get_j2735_data() );
-        std::cout << "createAndSendBSM 7.1" << std::endl;
         bsmEncoded.set_data( TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(messageFrame) );
-        std::cout << "createAndSendBSM 7.2" << std::endl;
         free(bsm);
         free(messageFrame.get_j2735_data().get());     
     }
@@ -125,7 +138,7 @@ namespace SampleBSMPluginNS
 
     int SampleBSMPlugin::Main()
     {
-        FILE_LOG(logINFO) << "Starting plugin";
+        PLOG(logINFO) << "Starting plugin";
         while (_plugin->state != IvpPluginState_error)
         {
             if (IsPluginState(IvpPluginState_registered))
