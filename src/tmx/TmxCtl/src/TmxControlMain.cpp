@@ -15,7 +15,7 @@ using namespace tmx::utils;
 int main(int argc, char *argv[])
 {
 	FILELog::ReportingLevel() = logERROR;
-	Output2Eventlog::Enable() = false;
+	Output2Eventlog::Enable() = true;
 
 	try
 	{

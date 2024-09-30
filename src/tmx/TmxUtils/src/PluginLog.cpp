@@ -23,7 +23,29 @@ namespace utils {
 FILE* &Output2FILE::Stream()
 {
     static FILE* pStream = stdout;
-    return pStream;
+
+	
+	static FILE* pFile;
+
+	std::ifstream log_file("/var/log/tmx/v2xhub_logfile.log");
+
+	std::cout<<"TESTING STREAM";
+
+
+	if (log_file.is_open()) {
+		std::cout<<"File is open";
+		log_file.close();
+	} else {
+		std::cout<<"File is not open";
+	}
+
+	pFile = fopen("/var/log/tmx/v2xhub_logfile.log", "w");
+
+	if (pFile == NULL) {
+		fprintf(stderr, "Error opening file");
+	}
+
+    return pFile;
 }
 
 bool &Output2FILE::Enable()
@@ -34,10 +56,14 @@ bool &Output2FILE::Enable()
 
 void Output2FILE::Output(LogMessage &msg)
 {
+	std::cout<<"Checking if enabled";
+
 	if (!Enable())
 		return;
 
     FILE* pStream = Stream();
+	std::cout<<"Checking stream";
+
     if (!pStream)
         return;
 
@@ -47,8 +73,19 @@ void Output2FILE::Output(LogMessage &msg)
 	_loglevel(ss, msg.level);
 	ss << msg.log << std::endl;
 
-    fprintf(pStream, "%s", ss.str().c_str());
-    fflush(pStream);
+    //fprintf(pStream, "%s", ss.str().c_str());
+    //fflush(pStream);
+
+	FILE* pFile = Stream();
+
+	std::cout<<"Starting to write to file";
+
+	if(pFile) {
+		std::cout<< "Opened file, writing...";
+		fputs(ss.str().c_str(), pFile);
+		fflush(pFile);
+		fclose(pFile);
+	}
 }
 
 int Output2Syslog::ToSyslogLevel(LogLevel lvl)
@@ -74,7 +111,7 @@ int Output2Syslog::ToSyslogLevel(LogLevel lvl)
 
 bool &Output2Syslog::Enable()
 {
-	static bool enable = false;
+	static bool enable = true;
 	return enable;
 }
 

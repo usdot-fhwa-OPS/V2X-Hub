@@ -89,15 +89,17 @@ bool Runnable::ProcessOptions(const variables_map &opts)
 
 		if (fn != "-")
 		{
-			logF = fopen(fn.c_str(), "w");
+			//logF = fopen(fn.c_str(), "w");
+			logF = fopen("/var/log/tmx/v2xhub_logfile.log", "a");
 			if (logF == NULL)
 				std::cerr << "Could not open log file: " << strerror(errno) << ".  Logging to standard output." << std::endl;
 		}
+		//Output2FILE::Stream() = stdout;
+		Output2FILE::Stream() = logF;
 
-		if (logF == NULL)
-			Output2FILE::Stream() = stdout;
-		else
-			Output2FILE::Stream() = logF;
+
+			
+		
 	}
 
 	return true;
