@@ -39,11 +39,11 @@ The Example Plugin structure is as follows:
   - manifest.json
   - README.md
 
-The main source code for the plugin resides in the ExamplePlugin.cpp file. This C++ class extends the PluginClientClockAware class from the V2X Hub API. The PluginClientClockAware has methods that can be overwritten to retrieve settings and messages. The next section will describe the source code needed to do the basic functionality for a plugin, and chapter 2 will walk through the process of creating a plugin based on the Example Plugin. The SampleData files are simply examples on how to include other C++ source files into a V2X Hub Plugin. They are currently not used.
+The main source code for the plugin resides in the ExamplePlugin.cpp file. This C++ class extends the PluginClientClockAware class from the V2X Hub API. The PluginClientClockAware has methods that can be overwritten to retrieve settings and messages. The next section will describe the source code needed to do the basic functionality for a plugin, and [section 2](#plugin-creation-from-example-plugin) will walk through the process of creating a plugin based on the Example Plugin. The SampleData files are simply examples on how to include other C++ source files into a V2X Hub Plugin. They are currently not used.
 
 The CMakeLists.txt file contains the needed information for cmake to create the make files needed to compile the project. When creating a new plugin, this file will need to be modified with the plugins information.
 
-The manifest.json file is used by the V2X Hub Core to setup communications between the core and plugin. The file contains a description of the plugin, the executable location, the IP address of the V2X Hub running the core application, port information for communication, messages that are produced by this plugin, and then finally the configuration values for the plugin. The majority of this file will remain untouched, except for the configuration, messageTypes, and description sections. More detail will be given on the modification of those sections in chapter 2.
+The manifest.json file is used by the V2X Hub Core to setup communications between the core and plugin. The file contains a description of the plugin, the executable location, the IP address of the V2X Hub running the core application, port information for communication, messages that are produced by this plugin, and then finally the configuration values for the plugin. The majority of this file will remain untouched, except for the configuration, messageTypes, and description sections. More detail will be given on the modification of those sections in [section 2](#plugin-creation-from-example-plugin).
 
 The README.md is documentation for using the Plugin. Software without usage documentation is very difficult to reuse or extend. It is highly recommended that every new plugin includes usage documentation and follows the documentation template outlined [here](../../../examples/tmx-exampleapps/ExamplePlugin/README.md).
 
@@ -633,7 +633,7 @@ make MyFirstPlugin
 
 ### Custom Messages
 
-As seen in Chapter 1, a V2X Hub message is essentially some encoded string that is routed through the core of the system by its specified type and subtype. The most common message types are encoded using a JSON string. As such, it is very easy to create custom messages for V2X Hub as JSON messages. The default JSON-encoded message class is **tmx::message**, so any sub-class of this can be used as the payload to a V2X Hub routing message. The **message** class itself is flexible enough to be used as a payload, but the data contents inside the object can only be added via manipulation of the JSON string. Data can be retrieved through a generic getter function, which requires a default value in case the data does not exist. For example:
+As seen in [section 1](#example-plugin), a V2X Hub message is essentially some encoded string that is routed through the core of the system by its specified type and subtype. The most common message types are encoded using a JSON string. As such, it is very easy to create custom messages for V2X Hub as JSON messages. The default JSON-encoded message class is **tmx::message**, so any sub-class of this can be used as the payload to a V2X Hub routing message. The **message** class itself is flexible enough to be used as a payload, but the data contents inside the object can only be added via manipulation of the JSON string. Data can be retrieved through a generic getter function, which requires a default value in case the data does not exist. For example:
 
 ```cpp
 tmx::message myMsg;
@@ -768,7 +768,7 @@ A V2X Hub Plugin that has any real value would require much additional functiona
 3. Multiple threads are running in a Plugin. See Plugin Threading section for more details.
 4. The message API provides an excellent base for passing data around, and not just through the V2X Hub Core Server. Consider using a tmx::message type to build a basic data adaptor for configuration data as well. The JSON string can be stored in a configuration parameter with attributes as a type-safe way to retrieve the required data. Variable length JSON arrays are supported in any message class through two static functions called to_tree() and from_tree().
 5. CMake is capable of finding most build dependencies for a Plugin. See [cmake.org](http://cmake.org).
-6. The following chapter will discuss solutions to typical problems and issues needed to create a more functional Plugin.
+6. The following section will discuss solutions to typical problems and issues needed to create a more functional Plugin.
 
 ## Advanced Plugin Capabilities
 
