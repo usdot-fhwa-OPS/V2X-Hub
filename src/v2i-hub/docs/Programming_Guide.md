@@ -32,7 +32,7 @@ The Example Plugin structure is as follows:
   - manifest.json
   - README.md
 
-The main source code for the plugin resides in the ExamplePlugin.cpp file. This C++ class extends the PluginClient class from the V2X Hub API. The PluginClient has methods that can be overwritten to retrieve settings and messages. The next section will describe the source code needed to do the basic functionality for a plugin, and chapter 2 will walk through the process of creating a plugin based on the Example Plugin. The SampleData files are simply examples on how to include other C++ source files into a V2X Hub Plugin. They are currently not used.
+The main source code for the plugin resides in the ExamplePlugin.cpp file. This C++ class extends the PluginClientClockAware class from the V2X Hub API. The PluginClientClockAware has methods that can be overwritten to retrieve settings and messages. The next section will describe the source code needed to do the basic functionality for a plugin, and chapter 2 will walk through the process of creating a plugin based on the Example Plugin. The SampleData files are simply examples on how to include other C++ source files into a V2X Hub Plugin. They are currently not used.
 
 The CMakeLists.txt file contains the needed information for cmake to create the make files needed to compile the project. When creating a new plugin, this file will need to be modified with the plugins information.
 
@@ -184,7 +184,7 @@ A special case of the string encoding is what is referred to as “hexstring” 
 
 There are helper classes in V2X Hub API that assist in decoding a J2735 encoded payload. For example, if the type of the message is “J2735” and the subtype is “BSM”, then the BsmEncodedMessage class can be used to decode the hexstring payload to a BsmMessage class. The decoded message contents can be manipulated through the C-style structures generated from the ASN1C tool, or through its XML representation. See the TmxJ2735Message section in Appedix C for more information on the J2735 message structure.
 
-In order to directly use the `OnMessageReceived()` function, the programmer must be able to correctly decode the incoming messages. However, with the specific message type handling, the decode is done automatically by the default `OnMessageReceived()` function in PluginClient. Therefore, simply registering for a BsmMessage would ensure that the call back to the BSM handler function would contain an already decoded BsmMessage.
+In order to directly use the `OnMessageReceived()` function, the programmer must be able to correctly decode the incoming messages. However, with the specific message type handling, the decode is done automatically by the default `OnMessageReceived()` function in PluginClientClockAware. Therefore, simply registering for a BsmMessage would ensure that the call back to the BSM handler function would contain an already decoded BsmMessage.
 
 In the Example Plugin, the three handler functions are set to receive: a MapDataMessage, which is the decoded version of the J2735 MAP message; a DecodedBsmMessage, which is an exploded JSON version of the J2735 BSM; and a DataChangeMessage, which is an internal message for denoting that a monitored value has been changed.
 
@@ -498,7 +498,7 @@ ASN_SEQUENCE_ADD(&advisory->list, member);
 
 #### Broadcasting
 
-A V2X Hub routeable_message class represents the encoded message passed through the V2X Hub core server. Therefore, the contents are consistent between the plugin that sends the message and the plugin that receives it. Much of the previous sections discussed how a message is received in the plugin, but a plugin may also be a producer of any messages, whether they are J2735 messages or internal ones. The following API is available in the PluginClient parent class to handle the broadcast of a message through the V2X Hub system:
+A V2X Hub routeable_message class represents the encoded message passed through the V2X Hub core server. Therefore, the contents are consistent between the plugin that sends the message and the plugin that receives it. Much of the previous sections discussed how a message is received in the plugin, but a plugin may also be a producer of any messages, whether they are J2735 messages or internal ones. The following API is available in the PluginClientClockAware parent class to handle the broadcast of a message through the V2X Hub system:
 
 ```cpp
 void BroadcastMessage(const IvpMessage *ivpMsg)
@@ -582,7 +582,7 @@ The V2X Hub Example Plugin source code includes the base source file ExamplePlug
 Note that this file contains both the class definition and the implementation. This is for convenience since no other V2X Hub software will likely need to use the MyFirstPlugin class. That said, it would be easy to split these into MyFirstPlugin.h with the definition and MyFirstPlugin.cpp for the implementation.
 
 1. In the class source file, change the namespace declaration to MyFirstPlugin.
-2. In the class source file, change the class name to MyFirstPlugin, including in the class definition (.h), in the constructor and destructor names, and in the fully qualified declaration of the function implementations. The typical parent class should be PluginClient.
+2. In the class source file, change the class name to MyFirstPlugin, including in the class definition (.h), in the constructor and destructor names, and in the fully qualified declaration of the function implementations. The typical parent class should be PluginClientClockAware.
 3. Modify the class definition with any new private data or handler functions.
 4. Re-write the MyFirstPlugin::UpdateConfigSettings() function to retrieve any configuration parameters added to the manifest.json.
 5. Re-write the MyFirstPlugin message handler functions for receiving messages from V2X Hub.
@@ -754,7 +754,7 @@ cout << "Hello " << recvMyMsg.name << ". You are " << recvMyMsg.age << endl;
 
 A V2X Hub Plugin that has any real value would require much additional functionality beyond what is shown in the Example Plugin. Note the following suggestions when adding features to a new Plugin:
 
-1. The Plugin functionality can expand multiple C++ source files and classes, but only the PluginClient implementation class contains the API for obtaining configuration value, broadcasting messages and receiving messages. Therefore, some additional code is commonly required to pass a pointer to the Plugin around for common V2X Hub API requests.
+1. The Plugin functionality can expand multiple C++ source files and classes, but only the PluginClientClockAware implementation class contains the API for obtaining configuration value, broadcasting messages and receiving messages. Therefore, some additional code is commonly required to pass a pointer to the Plugin around for common V2X Hub API requests.
 2. Integrating with hardware can be done easily in a Plugin, including using existing C code, but it is always best to separate the hardware interface component with the Plugin component.
 3. Multiple threads are running in a Plugin. See Plugin Threading section for more details.
 4. The message API provides an excellent base for passing data around, and not just through the V2X Hub Core Server. Consider using a tmx::message type to build a basic data adaptor for configuration data as well. The JSON string can be stored in a configuration parameter with attributes as a type-safe way to retrieve the required data. Variable length JSON arrays are supported in any message class through two static functions called to_tree() and from_tree().
@@ -825,7 +825,7 @@ Since not all plugins generate messages, one is automatically injected as a simp
 
 ### Plugin Threading
 
-Every V2X Hub plugin that inherits from the PluginClient class comes with a built-in threading model. First, there is a main thread, which is kept alive within the Main() function. This main thread is typically used to produce any synchronous messages for the plugin, like TIM or SPaT. Therefore, the thread should be designed to wake up, send a message, and go back to sleep. Every message that is received by that plugin will also spawn a new thread for handling. The implication, therefore, is that receiving messages can occur at the exact same moment as creating a message or receiving others. Some of the most important threading concerns for a plugin, as well as tools to help resolve them, are documented in this section.
+Every V2X Hub plugin that inherits from the PluginClientClockAware class comes with a built-in threading model. First, there is a main thread, which is kept alive within the Main() function. This main thread is typically used to produce any synchronous messages for the plugin, like TIM or SPaT. Therefore, the thread should be designed to wake up, send a message, and go back to sleep. Every message that is received by that plugin will also spawn a new thread for handling. The implication, therefore, is that receiving messages can occur at the exact same moment as creating a message or receiving others. Some of the most important threading concerns for a plugin, as well as tools to help resolve them, are documented in this section.
 
 Because multiple operations could be happening simultaneously in a V2X Hub Plugin, it is key to ensure proper thread safety. For example, if the goal of the Plugin is to create BSM based on current position of the vehicle, the BSM may be created within threads of incoming messages and broadcast in the Main thread. Since memory is shared between the two or more threads, it is common to use a locking mechanism to ensure thread safe access to the common data. The most commonly used for of locking is a `std::mutex`, which is sometimes wrapped within a local `std::lock_guard` to ensure that the lock is always released when finished. Here is an example declaration of a mutex:
 
@@ -921,13 +921,13 @@ Remove a thread assignment for the 1-byte group and 1-byte id. The next `assign(
 
 ##### TmxMessageManager.h
 
-This helper class utilizes a thread group of lock-free threads to set up a network of worker threads to process incoming V2X Hub messages. The class inherits directly from PluginClient, thus implementing classes need to inherit from TmxMessageManager instead. The class is designed to work both as an incoming V2X Hub message decoder and handler using the mechanism described in Message Handling and as a rapid producer of V2X Hub messages. The incoming item may either be a ready-made V2X Hub message pointer, which will simply be passed along to the handler, or a raw set of bytes, which first must be converted into an appropriate V2X Hub message before being passed to the handler. It is important to note that using this class consolidates the processing of messages into a handful of worker threads, including any decoding.
+This helper class utilizes a thread group of lock-free threads to set up a network of worker threads to process incoming V2X Hub messages. The class inherits directly from PluginClientClockAware, thus implementing classes need to inherit from TmxMessageManager instead. The class is designed to work both as an incoming V2X Hub message decoder and handler using the mechanism described in Message Handling and as a rapid producer of V2X Hub messages. The incoming item may either be a ready-made V2X Hub message pointer, which will simply be passed along to the handler, or a raw set of bytes, which first must be converted into an appropriate V2X Hub message before being passed to the handler. It is important to note that using this class consolidates the processing of messages into a handful of worker threads, including any decoding.
 
 ```cpp
 void OnMessageReceived(IvpMessage *msg)
 ```
 
-The PluginClient override that takes the incoming message and quickly assigns the message to a worker thread. No decoding of the message is attempted. By default, this assigns the message to the next available thread, and does **not** using grouping of sources. This function must be re-implemented in a subclass to provide such functionality.
+The PluginClientClockAware override that takes the incoming message and quickly assigns the message to a worker thread. No decoding of the message is attempted. By default, this assigns the message to the next available thread, and does **not** using grouping of sources. This function must be re-implemented in a subclass to provide such functionality.
 
 ```cpp
 void IncomingMessage(const uint8_t *bytes, size_t size, const char *encoding, uint8_t groupId, uint8_t uniqId)
