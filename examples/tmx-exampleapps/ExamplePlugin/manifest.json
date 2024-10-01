@@ -1,6 +1,6 @@
 {
 	"name":"@TMX_PLUGIN_NAME@",
-	"description":"An example plugin for the IVP system.",
+	"description":"An example plugin for the V2X Hub.",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/@PROJECT_NAME@",
 	"coreIpAddr":"127.0.0.1",
@@ -13,6 +13,11 @@
 		}
 	],
 	"configuration":[
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        },
 		{
 			"key":"Frequency",
 			"default":"1000",

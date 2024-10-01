@@ -6,7 +6,7 @@
 // Description : Example Plugin
 //==========================================================================
 
-#include "PluginClient.h"
+#include "PluginClientClockAware.h"
 #include "PluginDataMonitor.h"
 
 #include <atomic>
@@ -25,7 +25,7 @@ namespace ExamplePlugin
 /**
  * This plugin is an example to demonstrate the capabilities of a TMX plugin.
  */
-class ExamplePlugin: public PluginClient
+class ExamplePlugin: public PluginClientClockAware
 {
 public:
 	ExamplePlugin(std::string);
@@ -51,7 +51,7 @@ private:
  *
  * @param name The name to give the plugin for identification purposes.
  */
-ExamplePlugin::ExamplePlugin(string name): PluginClient(name)
+ExamplePlugin::ExamplePlugin(string name): PluginClientClockAware(name)
 {
 	// The log level can be changed from the default here.
 	FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
@@ -115,7 +115,7 @@ void ExamplePlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message 
 
 void ExamplePlugin::HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
 {
-	//PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
+	PLOG(logDEBUG) << "Received Decoded BSM: " << msg;
 
 	// Determine if location, speed, and heading are valid.
 	bool isValid = msg.get_IsLocationValid() && msg.get_IsSpeedValid() && msg.get_IsHeadingValid();
@@ -148,9 +148,9 @@ int ExamplePlugin::Main()
 	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
+		PLOG(logDEBUG4) << "Sleeping 10 ms" << endl;
 
-		this_thread::sleep_for(chrono::milliseconds(10));
+		PluginClientClockAware::getClock()->sleep_for(10);
 
 		msCount += 10;
 
