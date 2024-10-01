@@ -22,8 +22,8 @@ This is an optional, but recommended section that can be used to outline the hig
 
 ### Messages (Recommended)
 
-This is an optional, but recommended section that is intended to described the TMX Messages used by the plugin to communicate with other plugins in V2X-Hub
+This is an optional, but recommended section that is intended to describe the TMX Messages used by the plugin to communicate with other plugins in V2X-Hub
 
 ### Testing (Recommended)
 
-This final section is optional, but recommended and is intended to described methods used to confirm the deployed plugin is functioning correctly. This can include testing scripts used to send mock data through the plugin and/or UI status fields to check to confirm working functionality.
+This final section is optional, but recommended and is intended to describe methods used to confirm the deployed plugin is functioning correctly. This can include testing scripts used to send mock data through the plugin and/or UI status fields to check to confirm working functionality.

@@ -2,9 +2,11 @@
 
 The V2X Hub Programming Guide was developed during the V2I Reference Implementation project for developers of plugins for the V2X Hub in supporting Connected Vehicle (CV) technology. This programming guide gives details on how to create a plugin for the V2X Hub based on the Example Plugin created by Battelle. The Example Plugin can be obtained from OSADP, along with the other V2X Hub software that you will need to compile and setup to do your own V2X Hub development.
 
-The V2X Hub consists of software modules written in C and C++ for Linux. The developer wanting to create a plugin for the V2X Hub must be familiar with C, C++ and Linux, and have a basic knowledge of object-oriented design. Some other important software development practices to be familiar with are threading, network communications, external library integration, and data serialization just to name a few. Development is done using the following tools: cmake, make, g++ compiler, and optionally eclipse. Developers should have familiarity with those tools to successfully create a V2X Hub plugin.
+The V2X Hub consists of software modules written in C and C++ for Linux. The developer wanting to create a plugin for the V2X Hub must be familiar with C, C++ and Linux, and have a basic knowledge of object-oriented design. Some other important software development practices to be familiar with are threading, network communications, external library integration, and data serialization just to name a few. Development is done using the following tools: cmake, git, and optionally Microsoft Visual Studio Code. For developer environment setup instructions please see [Visual Studio Code Setup](../../../docs/Visual_Studio_Code_Setup.md). Developers should have familiarity with those tools to successfully create a V2X Hub plugin.
 
 Additional information on the V2X Hub can be found in the following documents. It is suggested to start with the V2X Hub Guidebook.
+> [!NOTE]
+> We are currently working to migrate,update and consolidate these documents. Most are available in PDF format under `docs/` in the project root directory but maybe outdated.
 
 - Integrated Vehicle-to-Infrastructure Prototype (IVP) V2X Hub Design, March 2017
 - Integrated Vehicle-to-Infrastructure Prototype (IVP) V2X Hub Interface Control Document (ICD), March 2017
