@@ -26,10 +26,15 @@ The Example Plugin showcases the basic functionality needed by a V2X Hub plugin.
 
 The Example Plugin structure is as follows:
 
-- SampleBSMPlugin
+- ExamplePlugin
   - src
-    - SampleBSMPlugin.cpp
-    - SampleBSMPlugin.h
+    - ExamplePlugin.cpp
+    - SampleData.h
+    - SampleData.cpp
+  - test
+    - Main.cpp
+    - ExampleTest.cpp
+    - SharedCodeTest.cpp
   - CMakeLists.txt
   - manifest.json
   - README.md
@@ -40,7 +45,7 @@ The CMakeLists.txt file contains the needed information for cmake to create the 
 
 The manifest.json file is used by the V2X Hub Core to setup communications between the core and plugin. The file contains a description of the plugin, the executable location, the IP address of the V2X Hub running the core application, port information for communication, messages that are produced by this plugin, and then finally the configuration values for the plugin. The majority of this file will remain untouched, except for the configuration, messageTypes, and description sections. More detail will be given on the modification of those sections in chapter 2.
 
-The README.md is documentation for using the Plugin. Software without usage documentation is very difficult to reuse or extend. It is highly recommended that every new plugin includes usage documentation and follows the documentation template outlined [here](../../../examples/tmx-exampleapps/SampleBSMPlugin/README.md).
+The README.md is documentation for using the Plugin. Software without usage documentation is very difficult to reuse or extend. It is highly recommended that every new plugin includes usage documentation and follows the documentation template outlined [here](../../../examples/tmx-exampleapps/ExamplePlugin/README.md).
 
 ### Sample API Calls
 
