@@ -18,7 +18,7 @@ Additional information on the V2X Hub can be found in the following documents. I
 
 ## Example Plugin
 
-The Example Plugin showcases the basic functionality needed by a V2X Hub plugin. The plugin has simple API calls to create, route, and decode messages from the V2X Hub Core. Examples for setting status values, retrieving configuration values and writing logs are also in the example. The Example Plugin is a good foundation to modify when creating our own plugin for the V2X Hub. See [SampleBSMPlugin](../../../examples/tmx-exampleapps/SampleBSMPlugin/) for example plugin
+The Example Plugin showcases the basic functionality needed by a V2X Hub plugin. The plugin has simple API calls to create, route, and decode messages from the V2X Hub Core. Examples for setting status values, retrieving configuration values and writing logs are also in the example. The Example Plugin is a good foundation to modify when creating our own plugin for the V2X Hub. See [ExamplePlugin](../../../examples/tmx-exampleapps/ExamplePlugin/) for example plugin
 > [!NOTE]
 > We are currently working to migrate,update and consolidate the SampleBSMPlugin and ExamplePlugin. Both are located under `/examples/tmx-exampleapps` under project root, but this document and the example plugins may currently contain inaccurate/outdated information.
 
