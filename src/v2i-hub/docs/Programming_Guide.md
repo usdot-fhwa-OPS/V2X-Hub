@@ -19,12 +19,14 @@ Additional information on the V2X Hub can be found in the following documents. I
 ## Example Plugin
 
 The Example Plugin showcases the basic functionality needed by a V2X Hub plugin. The plugin has simple API calls to create, route, and decode messages from the V2X Hub Core. Examples for setting status values, retrieving configuration values and writing logs are also in the example. The Example Plugin is a good foundation to modify when creating our own plugin for the V2X Hub. See [SampleBSMPlugin](../../../examples/tmx-exampleapps/SampleBSMPlugin/) for example plugin
+> [!NOTE]
+> We are currently working to migrate,update and consolidate the SampleBSMPlugin and ExamplePlugin. Both are located under `/examples/tmx-exampleapps` under project root, but this document and the example plugins may currently contain inaccurate/outdated information.
 
 ### Plugin Structure
 
 The Example Plugin structure is as follows:
 
-- Example Plugin
+- SampleBSMPlugin
   - src
     - SampleBSMPlugin.cpp
     - SampleBSMPlugin.h
@@ -37,6 +39,8 @@ The main source code for the plugin resides in the ExamplePlugin.cpp file. This 
 The CMakeLists.txt file contains the needed information for cmake to create the make files needed to compile the project. When creating a new plugin, this file will need to be modified with the plugins information.
 
 The manifest.json file is used by the V2X Hub Core to setup communications between the core and plugin. The file contains a description of the plugin, the executable location, the IP address of the V2X Hub running the core application, port information for communication, messages that are produced by this plugin, and then finally the configuration values for the plugin. The majority of this file will remain untouched, except for the configuration, messageTypes, and description sections. More detail will be given on the modification of those sections in chapter 2.
+
+The README.md is documentation for using the Plugin. Software without usage documentation is very difficult to reuse or extend. It is highly recommended that every new plugin includes usage documentation and follows the documentation template outlined [here](../../../examples/tmx-exampleapps/SampleBSMPlugin/README.md).
 
 ### Sample API Calls
 
