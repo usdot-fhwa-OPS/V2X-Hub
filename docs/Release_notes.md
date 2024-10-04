@@ -1,6 +1,17 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.8.1, released Sep 11th, 2024
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.8.1 includes additional SQL files which are created to store command sequences V2X Hub sends to a C1T vehicle to coordinate Port Drayage. These files contain actions and destination points configured to send the vehicle through a pre-designed mock port environment, with one instructing the vehicle to pick up cargo in Lane 1 and the other instructing the vehicle to proceed to Lane 2.
+
+Enhancement in this release:  
+
+- V2X-Hub PR 639: Added SQL files for use with the C1T Port Drayage configuration and updated docker compose files to streamline deployment. 
+- V2X-Hub PR 641: Updated SQL Port Drayage action locations to improve accuracy in tracking port exits. 
+
 Version 7.8.0, released Aug 26th, 2024
 --------------------------------------------------------
 
