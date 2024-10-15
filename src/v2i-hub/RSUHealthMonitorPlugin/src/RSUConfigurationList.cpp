@@ -109,6 +109,10 @@ namespace RSUHealthMonitor
         {
             return RSUMibVersion::RSUMIB_V_4_1;
         }
+        else if (boost::iequals(mibVersionStr, RSU1218_str))
+        {
+            return RSUMibVersion::RSUMIB_V_1218;
+        }
         else
         {
             std::stringstream ss;

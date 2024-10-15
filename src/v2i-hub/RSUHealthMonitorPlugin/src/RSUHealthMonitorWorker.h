@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "RSU_MIB_4_1.h"
+#include "NTCIP_1218_MIB.h"
 #include <map>
 #include <vector>
 #include <memory>
@@ -30,7 +31,7 @@ namespace RSUHealthMonitor
 
     /**
      * RSUStatusTable is custom defined RSU status information.
-     * The fields are a subset of the fields from the RSU MIB definition used to quantify the health of the RSU. https://github.com/certificationoperatingcouncil/COC_TestSpecs/blob/master/AppNotes/RSU/RSU-MIB.txt
+     * The fields are a subset of the fields from the RSU MIB definition used to quantify the health of the RSU.
      */
     using RSUStatusConfigTable = vector<RSUFieldOIDStruct>;
 
@@ -41,7 +42,7 @@ namespace RSUHealthMonitor
         shared_ptr<map<RSUMibVersion, RSUStatusConfigTable>> _RSUSTATUSConfigMapPtr;
 
         /**
-         * @brief Poupate the RSU status table with the specified version of OIDs and fields.
+         * @brief Populate the RSU status table with the specified version of OIDs and fields.
          * Private: Only allow to initialze the RSU STATUS MAP once
          * @param mibVersion specified
          * @return RSUStatusTable the self defined RSU status https://usdot-carma.atlassian.net/wiki/spaces/WFD2/pages/2640740360/RSU+Health+Monitor+Plugin+Design

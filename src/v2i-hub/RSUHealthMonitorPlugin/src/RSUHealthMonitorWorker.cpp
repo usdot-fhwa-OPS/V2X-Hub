@@ -7,8 +7,10 @@ namespace RSUHealthMonitor
     {
         _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
         // Currently only support RSU MIB version 4.1. Other future supported versions will be inserted here.
-        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
-        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_4_1, rsuRstatusTable});
+        // RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
+        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_1218);
+        // _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_4_1, rsuRstatusTable});
+        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_1218, rsuRstatusTable});
     }
 
     RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const
@@ -58,6 +60,53 @@ namespace RSUHealthMonitor
 
             RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", RSU_CHAN_STATUS, true};
             rsuStatusTbl.push_back(rsuChanStatus);
+        }
+        else if (mibVersion == RSUMibVersion::RSUMIB_V_1218)
+        {
+            RSUFieldOIDStruct rsuID = {"rsuID", rsuIDOid, true};
+            rsuStatusTbl.push_back(rsuID);
+
+            RSUFieldOIDStruct rsuMibVersion = {"rsuMibVersion", rsuMibVersionOid, true};
+            rsuStatusTbl.push_back(rsuMibVersion);
+
+            RSUFieldOIDStruct rsuFirmwareVersion = {"rsuFirmwareVersion", rsuFirmwareVersionOid, true};
+            rsuStatusTbl.push_back(rsuFirmwareVersion);
+
+            RSUFieldOIDStruct rsuRadioDesc = {"rsuRadioDesc", rsuRadioDescOid, true};
+            rsuStatusTbl.push_back(rsuRadioDesc);
+
+            RSUFieldOIDStruct rsuGnssOutputString = {"rsuGnssOutputString", rsuGnssOutputStringOid, true};
+            rsuStatusTbl.push_back(rsuGnssOutputString);
+
+            RSUFieldOIDStruct rsuIFMIndex = {"rsuIFMIndex", rsuIFMIndexOid, false};
+            rsuStatusTbl.push_back(rsuIFMIndex);
+
+            RSUFieldOIDStruct rsuIFMPsid = {"rsuIFMPsid", rsuIFMPsidOid, false};
+            rsuStatusTbl.push_back(rsuIFMPsid);
+
+            RSUFieldOIDStruct rsuIFMTxChannel = {"rsuIFMTxChannel", rsuIFMTxChannelOid, false};
+            rsuStatusTbl.push_back(rsuIFMTxChannel);
+
+            RSUFieldOIDStruct rsuIFMEnable = {"rsuIFMEnable", rsuIFMEnableOid, false};
+            rsuStatusTbl.push_back(rsuIFMEnable);
+
+            RSUFieldOIDStruct rsuIFMStatus = {"rsuIFMStatus", rsuIFMStatusOid, false};
+            rsuStatusTbl.push_back(rsuIFMStatus);
+
+            RSUFieldOIDStruct rsuIFMPriority = {"rsuIFMPriority", rsuIFMPriorityOid, true};
+            rsuStatusTbl.push_back(rsuIFMPriority);
+
+            RSUFieldOIDStruct rsuIFMOptions = {"rsuIFMOptions", rsuIFMOptionsOid, true};
+            rsuStatusTbl.push_back(rsuIFMOptions);
+
+            RSUFieldOIDStruct rsuIFMPayload = {"rsuIFMPayload", rsuIFMPayloadOid, true};
+            rsuStatusTbl.push_back(rsuIFMPayload);
+
+            RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", rsuChanStatusOid, true};
+            rsuStatusTbl.push_back(rsuChanStatus);
+
+            RSUFieldOIDStruct rsuMode = {"rsuMode", rsuModeOid, true};
+            rsuStatusTbl.push_back(rsuMode);
         }
         return rsuStatusTbl;
     }
