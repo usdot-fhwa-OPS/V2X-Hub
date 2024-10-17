@@ -16,7 +16,7 @@ namespace RSUHealthMonitor
     static constexpr const char *RSUMIBVersionKey = "RSUMIBVersion";
     static constexpr const char *SecurityLevelKey = "SecurityLevel";
     static constexpr const char *RSU4_1_str = "RSU4.1";
-    static constexpr const char *RSU1218_str = "RSU1218";
+    static constexpr const char *RSU1218_str = "NTCIP1218";
 
     enum class RSUMibVersion
     {
