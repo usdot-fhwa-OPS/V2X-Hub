@@ -18,6 +18,7 @@ DEPENDENCIES="build-essential \
     libmysqlcppconn-dev \
     libperl-dev \
     librdkafka-dev \
+    libsnmp-dev \
     libssl-dev \
     libwebsockets-dev \
     libxerces-c-dev \

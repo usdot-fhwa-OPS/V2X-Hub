@@ -5,7 +5,7 @@ namespace tmx::utils
 
     // Client defaults to SNMPv3
     snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
-                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version, int timeout)
+                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version, int timeout)
 
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {

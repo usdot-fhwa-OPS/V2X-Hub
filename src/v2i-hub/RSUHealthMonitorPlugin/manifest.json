@@ -19,7 +19,7 @@
         },
         {
             "key":"RSUConfigurationList",
-            "default":"{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SecurityLevel\":\"authPriv\", \"SNMPPort\": \"161\", \"AuthPassPhrase\": \"dummy\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.00.XX\", \"SecurityLevel\":\"authPriv\", \"SNMPPort\": \"162\", \"AuthPassPhrase\": \"tester\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"NTCIP1218\" }] }",
+            "default":"{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.0.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }",
             "description":"Configurations of the RSUs the V2X hub is connected to."
         }
     ]

@@ -89,9 +89,13 @@ namespace tmx::utils
          * @param community The community id as a string. Defaults to "public" if unassigned.
          * @param snmp_version The snmp_version as defined in net-snmp.Default to 0 if unassigned.
          *                      net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3"
+         * @param authProtocol The authentication protocol (MD5|SHA|SHA-224|SHA-256|SHA-384|SHA-512).
+         * @param authPassPhrase The authentication protocol pass phrase.
+         * @param privProtocol The privacy protocol (DES|AES|AES-192|AES-256).
+         * @param privPassPhrase The privacy protocol pass phrase.
          * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 100 if unassigned
          * **/
-        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = 0, int timeout = 100);
+        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version = 0, int timeout = 100);
 
         /* Disable default copy constructor*/
         snmp_client(snmp_client &sc) = delete;
