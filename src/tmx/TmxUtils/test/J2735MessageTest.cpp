@@ -622,7 +622,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 {
 	// Encode RSM XML
-	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>0.1.3.6.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
+	string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>1.0.15628.4.1.17.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
 	std::stringstream ss;
 	RsmMessage rsmmessage;
 	RsmEncodedMessage rsmENC;
@@ -645,10 +645,49 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	// Event ID info
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
-	uint8_t my_bytes_oid[4] = {(uint8_t)1, (uint8_t)3, (uint8_t)6, (uint8_t)1};
-	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+
+	// Enter Road Authority OID via buffer
+	std::string oid_text = "1.0.15628.4.1.17.1";
+	std::vector<uint32_t> oid;
+	std::vector<uint8_t> buffer;
+    std::stringstream ss_oid;
+	std::string item;
+	ss_oid<<oid_text;
+
+    while (std::getline(ss_oid, item, '.')) {
+        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
+	}
+
+    // First byte is (first value * 40) + second value for OIDs of the form x.x...
+    if (oid.size() >= 2) {
+        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
+    } else {
+        std::cout << "OID must have at least two components";
+    }
+
+    // Encode remaining values with Base 128 encoding
+    for (size_t i = 2; i < oid.size(); ++i) {
+        uint32_t value = oid[i];
+        if (value == 0) {
+            buffer.push_back(0);
+        } else {
+            std::vector<uint8_t> temp;
+            while (value > 0) {
+                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
+                value >>= 7;
+            }
+            temp[0] &= 0x7F;  // Clear the MSB of the last byte
+            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
+                buffer.push_back(*it);
+            }
+        }
+    }
+
+    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
+    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
 	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
 	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
 	eventInfo->eventID = *eventID;
@@ -1100,7 +1139,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	free(frame_msg.get_j2735_data().get());
 	std::cout << RsmEncodeMessage.get_payload_str() << std::endl;
 	ASSERT_EQ(33,  RsmEncodeMessage.get_msgId());	
-	std::string expectedRSMEncHex = "0021570100802060c020218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
+	std::string expectedRSMEncHex = "00215b0101051f41808022202000218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
 	ASSERT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
 
 	// Decode RSM
@@ -1108,7 +1147,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
 	ASSERT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 
 	// Decode any RSM
-	std::string rsmInput = "0021570100802060c020218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
+	std::string rsmInput = "0021430700e51f418080222020218181431f9fa0e6f7800b400fe0e0e0200000a66e7b951ea6e2ac88c306c1f5f96fdd9d057c3e5044e5a7b65e40299b9ee547a9b8ab2230c0";
     std::vector<uint8_t> byteArray = hexStringToByteArray(rsmInput);
     tmx::messages::RsmEncodedMessage decodedMessage;
     decodedMessage.set_data(byteArray);
@@ -1117,12 +1156,6 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessage)
     // Print out the decoded message
     std::cout << "Decoded RSM: " << decodedRsmPtr << std::endl;
 }
-
-
-
-
-
-
 
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
