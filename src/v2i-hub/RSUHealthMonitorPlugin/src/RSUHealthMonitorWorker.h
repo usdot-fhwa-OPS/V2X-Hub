@@ -60,8 +60,8 @@ namespace RSUHealthMonitor
         /**
          * @brief determine if all required fields in the RSU config map _RSUSTATUSConfigMapPtr present in the input fields
          * Use _RSUSTATUSConfigMapPtr RSU status config map that defines all fields and whether the fields are required.
-         * @param RSUStatusConfigTable RSU Status configration table to compare with.
-         * @param vector<string> Input RSU fields to verify
+         * @param configTbl RSU Status configration table to compare with.
+         * @param fields Input RSU fields to verify
          * @return True if all required fields found. Otherwise, false.
          */
         bool validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable &configTbl, const vector<string> &fields) const;
@@ -76,34 +76,37 @@ namespace RSUHealthMonitor
         /**
          * @brief Sending SNMP V3 requests to get info for each field in the RSUStatusConfigTable, and return the RSU status in JSON
          * Use RSU Status configuration table include RSU field, OIDs, and whether fields  are required or optional
-         * @param RSUMibVersion The RSU MIB version used
-         * @param string RSU IP address
-         * @param uint16_t SNMP port
-         * @param string security user used for SNMP authentication
-         * @param string authentication password
-         * @param string security level: authPriv or authNoPriv.
-         * @param long session time out
+         * @param mibVersion The RSU MIB version used.
+         * @param _rsuIp RSU IP address.
+         * @param _snmpPort SNMP port.
+         * @param _securityUser Security user used for SNMP authentication.
+         * @param _authProtocol The authentication protocol (MD5|SHA|SHA-224|SHA-256|SHA-384|SHA-512).
+         * @param _authPassPhrase The authentication protocol pass phrase.
+         * @param _privProtocol The privacy protocol (DES|AES|AES-192|AES-256).
+         * @param _privPassPhrase The privacy protocol pass phrase.
+         * @param _securityLevel security level: authPriv or authNoPriv.
+         * @param timeout Session time out.
          */
-        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const string &_authPassPhrase, const string &_securityLevel, long timeout);
+        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout);
 
         /***
          *@brief Convert the JSON message into TMX message
-         @param Json Input Json value
+         @param json Input Json value
          @return RSUStatusMessage TMX message
         */
         RSUStatusMessage convertJsonToTMXMsg(const Json::Value &json) const;
 
         /**
          * @brief Populate Json with snmp response object.
-         * @param string The field that maps to an OID.
-         * @param snmp_response_obj The response returned by SNMP call for the OID.
+         * @param field The field that maps to an OID.
+         * @param response The response returned by SNMP call for the OID.
          * @return Json value populated with response object.
          */
         Json::Value populateJson(const string &field, const snmp_response_obj &response) const;
 
         /**
          * @brief List the keys from the input Json values
-         * @param Json Input JSON values
+         * @param json Input JSON values
          * @return vector of key strings
         */
         vector<string> getJsonKeys(const Json::Value &json) const;

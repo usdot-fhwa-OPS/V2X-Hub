@@ -17,7 +17,7 @@ namespace tmx::utils
         char *ip_port = &ip_port_string[0];
 
         // Initialize SNMP session parameters
-        init_snmp("carma_snmp");
+        init_snmp("snmp_init");
         snmp_sess_init(&session);
         session.peername = ip_port;
         session.version = snmp_version_; // SNMP_VERSION_3
@@ -31,7 +31,7 @@ namespace tmx::utils
             session.community_len = community_.length();
         }
 
-        // SNMP authorization/privach config
+        // SNMP authorization/privacy config
         if (securityLevel == "authPriv")
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
@@ -45,17 +45,38 @@ namespace tmx::utils
         else
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
 
-        // Passphrase used for both authentication and privacy
-        auto phrase_len = authPassPhrase.length();
-        auto phrase = (u_char *)authPassPhrase.c_str();
+        // Passphrase used for authentication
+        auto authPhrase_len = authPassPhrase.length();
+        auto authPhrase = (u_char *)authPassPhrase.c_str();
 
-        // Defining and generating auth config with SHA1
-        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
+        // Defining and generating auth config
+        oid *usmAuthProto;
+        if (authProtocol == "MD5") {
+            usmAuthProto = usmHMACMD5AuthProtocol;
+        }
+        else if (authProtocol == "SHA") {
+            usmAuthProto = usmHMACSHA1AuthProtocol;
+        }
+        else if (authProtocol == "SHA-224") {
+            usmAuthProto = usmHMAC128SHA224AuthProtocol;
+        }
+        else if (authProtocol == "SHA-256") {
+            usmAuthProto = usmHMAC192SHA256AuthProtocol;
+        }
+        else if (authProtocol == "SHA-384") {
+            usmAuthProto = usmHMAC256SHA384AuthProtocol;
+        }
+        else if (authProtocol == "SHA-512") {
+            usmAuthProto = usmHMAC384SHA512AuthProtocol;
+        }
+        else usmAuthProto = usmHMACSHA1AuthProtocol;
+
+        session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
         session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
         session.securityAuthKeyLen = USM_AUTH_KU_LEN;
         if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
                                                                           session.securityAuthProtoLen,
-                                                                          phrase, phrase_len,
+                                                                          authPhrase, authPhrase_len,
                                                                           session.securityAuthKey,
                                                                           &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
         {
@@ -63,16 +84,35 @@ namespace tmx::utils
             throw snmp_client_exception(errMsg);
         }
 
-        // Defining and generating priv config with AES (since using SHA1)
+        // Passphrase used for privacy
+        auto privPhrase_len = privPassPhrase.length();
+        auto privPhrase = (u_char *)privPassPhrase.c_str();
+
+        // Defining and generating priv config
+        oid *usmPrivProto;
+        if (privProtocol == "DES") {
+            usmPrivProto = usmDESPrivProtocol;
+        }
+        else if (privProtocol == "AES") {
+            usmPrivProto = usmAESPrivProtocol;
+        }
+        else if (privProtocol == "AES-192") {
+            usmPrivProto = usmAES192PrivProtocol;
+        }
+        else if (privProtocol == "AES-256") {
+            usmPrivProto = usmAES256PrivProtocol;
+        }
+        else usmPrivProto = usmAESPrivProtocol;
+
         session.securityPrivKeyLen = USM_PRIV_KU_LEN;
         session.securityPrivProto =
-            snmp_duplicate_objid(usmAESPrivProtocol,
-                                 OID_LENGTH(usmAESPrivProtocol));
-        session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
+            snmp_duplicate_objid(usmPrivProto,
+                                 OID_LENGTH(usmPrivProto));
+        session.securityPrivProtoLen = OID_LENGTH(usmPrivProto);
 
-        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
-                                                                            session.securityAuthProtoLen,
-                                                                            phrase, phrase_len,
+        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityPrivProto,
+                                                                            session.securityPrivProtoLen,
+                                                                            privPhrase, privPhrase_len,
                                                                             session.securityPrivKey,
                                                                             &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
         {
