@@ -6,8 +6,10 @@ namespace RSUHealthMonitor
     RSUHealthMonitorWorker::RSUHealthMonitorWorker()
     {
         _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
-        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(rsuConfig.mibVersion);
-        _RSUSTATUSConfigMapPtr->insert({rsuConfig.mibVersion, rsuRstatusTable});
+        RSUStatusConfigTable rsuRstatusTable_4_1 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
+        RSUStatusConfigTable rsuRstatusTable_1218 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_1218);
+        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_1218, rsuRstatusTable_1218});
+
     }
 
     RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const

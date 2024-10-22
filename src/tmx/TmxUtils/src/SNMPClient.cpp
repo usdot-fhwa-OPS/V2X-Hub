@@ -2,6 +2,99 @@
 
 namespace tmx::utils
 {
+    // Client defaults to SNMPv3
+    snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
+                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version, int timeout)
+
+        : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
+    {
+
+        PLOG(logDEBUG1) << "Starting SNMP Client. Target device IP address: " << ip_ << ", Target device SNMP port: " << port_;
+
+        // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
+        std::string ip_port_string = ip_ + ":" + std::to_string(port_);
+        char *ip_port = &ip_port_string[0];
+
+        // Initialize SNMP session parameters
+        init_snmp("snmp_init");
+        snmp_sess_init(&session);
+        session.peername = ip_port;
+        session.version = snmp_version_; // SNMP_VERSION_3
+        session.securityName = (char *)snmp_user.c_str();
+        session.securityNameLen = snmp_user.length();
+
+        // Fallback behavior to setup a community for SNMP V1/V2
+        if (snmp_version_ != SNMP_VERSION_3)
+        {
+            session.community = (unsigned char *)community.c_str();
+            session.community_len = community_.length();
+        }
+
+        // SNMP authorization/privach config
+        if (securityLevel == "authPriv")
+        {
+            session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
+        }
+
+        else if (securityLevel == "authNoPriv")
+        {
+            session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
+        }
+
+        else
+            session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
+
+        // Passphrase used for both authentication and privacy
+        auto phrase_len = authPassPhrase.length();
+        auto phrase = (u_char *)authPassPhrase.c_str();
+
+        // Defining and generating auth config with SHA1
+        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
+        session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
+        session.securityAuthKeyLen = USM_AUTH_KU_LEN;
+        if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
+                                                                          session.securityAuthProtoLen,
+                                                                          phrase, phrase_len,
+                                                                          session.securityAuthKey,
+                                                                          &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
+        {
+            std::string errMsg = "Error generating Ku from authentication pass phrase. \n";
+            throw snmp_client_exception(errMsg);
+        }
+
+        // Defining and generating priv config with AES (since using SHA1)
+        session.securityPrivKeyLen = USM_PRIV_KU_LEN;
+        session.securityPrivProto =
+            snmp_duplicate_objid(usmAESPrivProtocol,
+                                 OID_LENGTH(usmAESPrivProtocol));
+        session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
+
+        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+                                                                            session.securityAuthProtoLen,
+                                                                            phrase, phrase_len,
+                                                                            session.securityPrivKey,
+                                                                            &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
+        {
+            std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
+            throw snmp_client_exception(errMsg);
+        }
+
+        session.timeout = timeout_;
+
+        // Opens the snmp session if it exists
+        ss = snmp_open(&session);
+
+        if (ss == nullptr)
+        {
+            PLOG(logERROR) << "Failed to establish session with target device";
+            snmp_sess_perror("snmpget", &session);
+            throw snmp_client_exception("Failed to establish session with target device");
+        }
+        else
+        {
+            PLOG(logINFO) << "Established session with device at " << ip_;
+        }
+    }
 
     // Client defaults to SNMPv3
     snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
