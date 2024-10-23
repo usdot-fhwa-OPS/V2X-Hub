@@ -30,7 +30,7 @@ namespace tmx::utils
             session.community_len = community_.length();
         }
 
-        // SNMP authorization/privach config
+        // Set security level
         if (securityLevel == "authPriv")
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
@@ -116,6 +116,7 @@ namespace tmx::utils
         session.version = snmp_version_; // SNMP_VERSION_3
         session.securityName = (char *)snmp_user.c_str();
         session.securityNameLen = snmp_user.length();
+        session.securityModel = SNMP_SEC_MODEL_USM;
 
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
@@ -124,7 +125,7 @@ namespace tmx::utils
             session.community_len = community_.length();
         }
 
-        // SNMP authorization/privacy config
+        // Set security level
         if (securityLevel == "authPriv")
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
@@ -138,11 +139,7 @@ namespace tmx::utils
         else
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
 
-        // Passphrase used for authentication
-        auto authPhrase_len = authPassPhrase.length();
-        auto authPhrase = (u_char *)authPassPhrase.c_str();
-
-        // Defining and generating auth config
+        // Defining and generating authentication config
         oid *usmAuthProto;
         if (authProtocol == "MD5") {
             usmAuthProto = usmHMACMD5AuthProtocol;
@@ -164,6 +161,10 @@ namespace tmx::utils
         }
         else usmAuthProto = usmHMACSHA1AuthProtocol;
 
+        // Passphrase used for authentication
+        auto authPhrase_len = authPassPhrase.length();
+        auto authPhrase = (u_char *)authPassPhrase.c_str();
+
         session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
         session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
         session.securityAuthKeyLen = USM_AUTH_KU_LEN;
@@ -173,15 +174,10 @@ namespace tmx::utils
                                                                           session.securityAuthKey,
                                                                           &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
         {
-            std::string errMsg = "Error generating Ku from authentication pass phrase. \n";
-            throw snmp_client_exception(errMsg);
+            throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
         }
 
-        // Passphrase used for privacy
-        auto privPhrase_len = privPassPhrase.length();
-        auto privPhrase = (u_char *)privPassPhrase.c_str();
-
-        // Defining and generating priv config
+        // Defining and generating privacy config
         oid *usmPrivProto;
         if (privProtocol == "DES") {
             usmPrivProto = usmDESPrivProtocol;
@@ -197,20 +193,23 @@ namespace tmx::utils
         }
         else usmPrivProto = usmAESPrivProtocol;
 
+        // Passphrase used for privacy
+        auto privPhrase_len = privPassPhrase.length();
+        auto privPhrase = (u_char *)privPassPhrase.c_str();
+
         session.securityPrivKeyLen = USM_PRIV_KU_LEN;
         session.securityPrivProto =
             snmp_duplicate_objid(usmPrivProto,
                                  OID_LENGTH(usmPrivProto));
         session.securityPrivProtoLen = OID_LENGTH(usmPrivProto);
 
-        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityPrivProto,
-                                                                            session.securityPrivProtoLen,
+        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+                                                                            session.securityAuthProtoLen,
                                                                             privPhrase, privPhrase_len,
                                                                             session.securityPrivKey,
                                                                             &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
         {
-            std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
-            throw snmp_client_exception(errMsg);
+            throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
         }
 
         session.timeout = timeout_;
@@ -380,7 +379,13 @@ namespace tmx::utils
         }
         else
         {
-            PLOG(logERROR) << "Unknown SNMP Error for " << (request_type == request_type::GET ? "GET" : "SET");
+            PLOG(logERROR) << "Unknown SNMP Error (status code: " << status << ") for " << (request_type == request_type::GET ? "GET" : "SET");
         }
+
+        if (response)
+        {
+            PLOG(logERROR) << "SNMP error in response: " << snmp_errstring(response->errstat);
+        }
+
     }
 } // namespace

@@ -84,7 +84,7 @@ namespace tmx::utils
     public:
         /** @brief Overloaded constructor for Traffic Signal Controller Service client.
          *  Uses the arguments provided to establish an snmpv1 connection.
-         * @param ip The ip, as a string, for the tsc_client_service to establish an snmp communication with.
+         * @param ip The ip, as a string, to establish an snmp communication with an snmp server.
          * @param port Target port as integer on the host for snmp communication.
          * @param community The community id as a string. Defaults to "public" if unassigned.
          * @param snmp_user Security user used for SNMP authentication.
