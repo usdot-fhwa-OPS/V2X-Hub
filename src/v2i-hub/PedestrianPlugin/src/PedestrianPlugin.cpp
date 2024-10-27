@@ -191,7 +191,7 @@ void PedestrianPlugin::UpdateConfigSettings()
         }
     }
 
-	else if (dataprovider.compare("PSM") == 0) // default if PSM XML data consumed using the webservice implementation
+	else if (dataprovider.compare("PSM") == 0 || dataprovider.compare("SDSM") == 0) // default if PSM XML data consumed using the webservice implementation
 	{
         StopWebSocket();
         if (!runningWebService)
@@ -204,7 +204,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     }
 	else
 	{
-		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, PSM)!";
+		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, PSM, SDSM)!";
 		StopWebService();
 		StopWebSocket();
 	}
@@ -226,37 +226,68 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PedestrianPlugin::BroadcastPsm(const std::string &psmJson) 
+void PedestrianPlugin::BroadcastPsm(const std::string &msgJson) 
 {
 	PsmMessage psmmessage;
 	PsmEncodedMessage psmENC;
+	SdsmMessage sdsmMsg;
+	SdsmEncodedMessage sdsmENC;
 	tmx::message_container_type container;
 
 	std::stringstream ss;
-	ss << psmJson;
+	ss << msgJson;
 
 	container.load<XML>(ss);
-	psmmessage.set_contents(container.get_storage().get_tree());
 
-	psmENC.encode_j2735_message(psmmessage);
+	if(dataprovider.compare("PSM") == 0)
+	{
+		psmmessage.set_contents(container.get_storage().get_tree());
 
-	auto msg = std::make_unique<PsmEncodedMessage>();
-	msg.reset();
-	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+		psmENC.encode_j2735_message(psmmessage);
 
-	std::string enc = psmENC.get_encoding();
-	msg->refresh_timestamp();
-	msg->set_payload(psmENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
-	msg->refresh_timestamp();
+		auto msg = std::make_unique<PsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
 
-	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		std::string enc = psmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(psmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
+		msg->refresh_timestamp();
 
-	BroadcastMessage(*rMsg);
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
 
-	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		BroadcastMessage(*rMsg);
+
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+	}
+	else if (dataprovider.compare("SDSM") == 0)
+	{
+		sdsmMsg.set_contents(container.get_storage().get_tree());
+
+		sdsmENC.encode_j2735_message(sdsmMsg);
+
+		auto msg = std::make_unique<SdsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<SdsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING)));
+
+		std::string enc = sdsmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(sdsmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::sensorDataSharingMessage_PSID);
+		msg->refresh_timestamp();
+
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+
+		BroadcastMessage(*rMsg);
+
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast SDSM:: " << sdsmENC.get_payload_str();
+	}
+
 }
 
 int PedestrianPlugin::Main()

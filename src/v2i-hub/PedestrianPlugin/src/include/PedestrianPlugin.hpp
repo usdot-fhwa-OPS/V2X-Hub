@@ -76,10 +76,10 @@ protected:
 	// Virtual method overrides END.
 
 	/**
-	 * @brief Add DSRC metadata and broadcast PSM
-	 * @param string PSM in JSON format
+	 * @brief Add DSRC metadata and broadcast PSM or SDSM
+	 * @param string PSM or SDSM in JSON format
 	 */
-	void BroadcastPsm(const std::string &psmJson);
+	void BroadcastPsm(const std::string &msgJson);
 
 	/**
 	 * @brief Starts WebService to handle incoming HTTP POST requests.

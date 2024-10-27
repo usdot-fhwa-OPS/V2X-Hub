@@ -8,15 +8,15 @@
 	"messageTypes":[
 		{
 			"type":"J2735",
-			"subtype":"PSM",
-			"description":"Pedestrian Safety Message"
+			"subtype":"PSM or SDSM",
+			"description":"Pedestrian Safety Message or Sensor Data Sharing Message used to convey pedestrian location information."
 		}
 	],
 	"configuration":[
 		{
 			"key":"Frequency",
 			"default":"1000",
-			"description":"The frequency to send the PSM in milliseconds."
+			"description":"The frequency to send the message, in milliseconds."
 		},
 		{
 			"key":"WebServiceIP",
@@ -31,7 +31,7 @@
 		{
 			"key":"DataProvider",
 			"default":"FLIR",
-			"description":"Possible data providers we handle - FLIR (websocket) or PSM (REST request)"
+			"description":"Possible data providers we handle - FLIR (websocket), PSM (REST request), or SDSM (REST request)"
 		},	
 		{
 			"key":"WebSocketHost",
