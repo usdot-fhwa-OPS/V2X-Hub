@@ -2,10 +2,12 @@
 #include <MockSNMPClient.h>
 #include <gtest/gtest.h>
 #include <RSU_MIB_4_1.h>
+#include <NTCIP_1218_MIB.h>
 
 using namespace tmx::utils;
 using namespace std;
 using namespace tmx::utils::rsu41::mib::oid;
+using namespace tmx::utils::ntcip1218::mib::oid;
 using testing::_;
 using testing::Action;
 using testing::DoDefault;
@@ -22,18 +24,18 @@ namespace unit_test
         uint16_t port = 161;
         test_SNMPClient()
         {
-            scPtr = make_shared<mock_snmp_client>("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000);
+            scPtr = make_shared<mock_snmp_client>("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000);
         }
     };
 
     TEST_F(test_SNMPClient, constructor_error)
     {
-        ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "testtesttest", SNMP_VERSION_1, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
+        ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000), snmp_client_exception);
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_1, 1000));
+        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        ASSERT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
     }
 
     TEST_F(test_SNMPClient, get_port)
@@ -79,7 +81,7 @@ namespace unit_test
         scPtr->process_snmp_request("Invalid OID", request_type::GET, response);
         scPtr->process_snmp_request("Invalid OID", request_type::SET, response);
 
-        snmp_client scClient("127.0.0.1", port, "public", "test", "authPriv", "testtesttest", SNMP_VERSION_3, 1000);
+        snmp_client scClient("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000);
         scClient.process_snmp_request(RSU_ID_OID, request_type::GET, reqponseRSUID);
         scClient.process_snmp_request(RSU_ID_OID, request_type::SET, reqponseRSUID);
         scClient.process_snmp_request(RSU_ID_OID, request_type::OTHER, reqponseRSUID);

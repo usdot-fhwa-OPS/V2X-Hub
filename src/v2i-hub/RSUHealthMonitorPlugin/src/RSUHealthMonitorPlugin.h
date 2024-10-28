@@ -27,7 +27,7 @@ namespace RSUHealthMonitor
         const long SEC_TO_MILLI= 1000;
         /**
          * @brief Broadcast RSU status
-         * @param Json::Value RSU status in JSON format
+         * @param rsuStatusJson RSU status in JSON format
          */
         void BroadcastRSUStatus(const Json::Value &rsuStatusJson, const RSUMibVersion &mibVersion);
 

@@ -53,6 +53,26 @@ namespace RSUHealthMonitor
                 throw RSUConfigurationException(errMsg);
             }
 
+            if (rsuArray[i].isMember(AuthProtocolKey))
+            {
+                config.authProtocol = rsuArray[i][AuthProtocolKey].asString();
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication protocol [" + std::string(AuthProtocolKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
+
+            if (rsuArray[i].isMember(PrivProtocolKey))
+            {
+                config.privProtocol = rsuArray[i][PrivProtocolKey].asString();
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Privacy protocol [" + std::string(PrivProtocolKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
+
             if (rsuArray[i].isMember(AuthPassPhraseKey))
             {
                 config.authPassPhrase = rsuArray[i][AuthPassPhraseKey].asString();
@@ -60,6 +80,16 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication pass phrase [" + std::string(AuthPassPhraseKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
+
+            if (rsuArray[i].isMember(PrivPassPhraseKey))
+            {
+                config.privPassPhrase = rsuArray[i][PrivPassPhraseKey].asString();
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Privacy pass phrase [" + std::string(PrivPassPhraseKey) + "] is required.";
                 throw RSUConfigurationException(errMsg);
             }
 
@@ -109,6 +139,10 @@ namespace RSUHealthMonitor
         {
             return RSUMibVersion::RSUMIB_V_4_1;
         }
+        else if (boost::iequals(mibVersionStr, RSU1218_str))
+        {
+            return RSUMibVersion::RSUMIB_V_1218;
+        }
         else
         {
             std::stringstream ss;
@@ -132,7 +166,7 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
     {
-        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
+        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthProtocolKey << ": " << config.authProtocol << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << PrivProtocolKey << ": " << config.privProtocol << ", " << PrivPassPhraseKey << ": " << config.privPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
         return os;
     }
 }
