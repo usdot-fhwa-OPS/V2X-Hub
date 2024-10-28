@@ -46,15 +46,23 @@ namespace tmx::utils
         // struct that holds information about who we're going to be talking to
         // We need to declare 2 of these, one to fill info with and second which is
         // a pointer returned by the library
-        snmp_session session;
-        snmp_session *ss;
+        struct snmp_session session;
+        struct snmp_session *ss;
 
         /*Structure to hold all of the information that we're going to send to the remote host*/
-        snmp_pdu *pdu;
+        struct snmp_pdu *pdu;
+        /*Structure to hold response from the remote host*/
+        struct snmp_pdu *response;
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
         oid OID[MAX_OID_LEN];
         size_t OID_len = MAX_OID_LEN;
+
+        // Declare missing OID len definitions
+        #define USM_PRIV_PROTO_AES192_LEN 9
+        #define USM_PRIV_PROTO_AES256_LEN 9
+        #define USM_PRIV_PROTO_AES192_CISCO_LEN 11
+        #define USM_PRIV_PROTO_AES256_CISCO_LEN 11
 
         // Values from config
         /*Target device IP address*/
@@ -65,7 +73,7 @@ namespace tmx::utils
         std::string community_ = "public";
         /* net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3
         https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/library/snmp.h */
-        int snmp_version_ = 3; // default to 3 since previous versions not compatable currently
+        int snmp_version_ = SNMP_VERSION_3; // default to 3 since previous versions not compatable currently
         /*Time after which the the snmp request times out*/
         int timeout_ = 10000;
         /**

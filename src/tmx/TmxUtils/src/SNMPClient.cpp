@@ -179,30 +179,47 @@ namespace tmx::utils
 
         // Defining and generating privacy config
         oid *usmPrivProto;
+        size_t privLen;
         if (privProtocol == "DES") {
             usmPrivProto = usmDESPrivProtocol;
+            privLen = USM_PRIV_PROTO_DES_LEN;
         }
         else if (privProtocol == "AES") {
             usmPrivProto = usmAESPrivProtocol;
+            privLen = USM_PRIV_PROTO_AES_LEN;
+        }
+        else if (privProtocol == "AES-128") {
+            usmPrivProto = usmAES128PrivProtocol;
+            privLen = USM_PRIV_PROTO_AES128_LEN;
         }
         else if (privProtocol == "AES-192") {
             usmPrivProto = usmAES192PrivProtocol;
+            privLen = USM_PRIV_PROTO_AES192_LEN;
         }
         else if (privProtocol == "AES-256") {
             usmPrivProto = usmAES256PrivProtocol;
+            privLen = USM_PRIV_PROTO_AES256_LEN;
         }
-        else usmPrivProto = usmAESPrivProtocol;
+        else if (privProtocol == "AES-192-Cisco") {
+            usmPrivProto = usmAES192CiscoPrivProtocol;
+            privLen = USM_PRIV_PROTO_AES192_CISCO_LEN;
+        }
+        else if (privProtocol == "AES-256-Cisco") {
+            usmPrivProto = usmAES256CiscoPrivProtocol;
+            privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
+        }
+        else {
+            usmPrivProto = usmAESPrivProtocol;
+            privLen = USM_PRIV_PROTO_AES_LEN;
+        }
 
         // Passphrase used for privacy
         auto privPhrase_len = privPassPhrase.length();
         auto privPhrase = (u_char *)privPassPhrase.c_str();
 
+        session.securityPrivProto = snmp_duplicate_objid(usmPrivProto, privLen);
+        session.securityPrivProtoLen = privLen;
         session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-        session.securityPrivProto =
-            snmp_duplicate_objid(usmPrivProto,
-                                 OID_LENGTH(usmPrivProto));
-        session.securityPrivProtoLen = OID_LENGTH(usmPrivProto);
-
         if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
                                                                             session.securityAuthProtoLen,
                                                                             privPhrase, privPhrase_len,
@@ -238,10 +255,6 @@ namespace tmx::utils
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
     bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
     {
-
-        /*Structure to hold response from the remote host*/
-        snmp_pdu *response;
-
         // Create pdu for the data
         if (request_type == request_type::GET)
         {
@@ -263,15 +276,14 @@ namespace tmx::utils
         // net-snmp has several methods for creating an OID object
         // their documentation suggests using get_node. read_objid seems like a simpler approach
         // TO DO: investigate update to get_node
-        if (!read_objid(input_oid.c_str(), OID, &OID_len))
-        {
-            // If oid cannot be created
+        if (!snmp_parse_oid(input_oid.c_str(), OID, &OID_len)) {
+            snmp_perror("snmp_parse_oid");
             PLOG(logERROR) << "OID could not be created from input: " << input_oid;
+            snmp_close(ss);
             return false;
         }
         else
         {
-
             if (request_type == request_type::GET)
             {
                 // Add OID to pdu for get request

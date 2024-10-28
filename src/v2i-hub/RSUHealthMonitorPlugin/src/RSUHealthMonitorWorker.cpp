@@ -174,7 +174,7 @@ namespace RSUHealthMonitor
         {
             // Create SNMP client and use SNMP V3 protocol
             PLOG(logINFO) << "SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", Auth protocol: " << _authProtocol << ", Auth pass phrase: " << _authPassPhrase << ", Priv protocol: " << _privProtocol << ", Priv pass phrase: " << _privPassPhrase << ", security level: " << _securityLevel;
-            auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, _securityLevel, SNMP_VERSION_3, timeout);
+            auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, SNMP_VERSION_3, timeout);
 
             Json::Value rsuStatuJson;
             // Sending RSU SNMP call for each field as each field has its own OID.
