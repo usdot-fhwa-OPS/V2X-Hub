@@ -65,7 +65,8 @@ private:
 	std::string signatureData; 
 	std::string url; 
 	std::string baseurl; 
-	unsigned int signState; 
+	unsigned int signState;
+	unsigned int enableHSM;
 
 	// Thread safe bool set to true the first time the configuration has been read.
 	std::atomic<bool> _configRead;

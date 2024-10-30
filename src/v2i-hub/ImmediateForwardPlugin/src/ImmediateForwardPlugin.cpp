@@ -138,6 +138,7 @@ void ImmediateForwardPlugin::UpdateConfigSettings()
 	// Get the signature setting.
 	// The same mutex is used that protects the UDP clients.
 	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
+	GetConfigValue<unsigned int>("EnableHSM", enableHSM, &_mutexUdpClient);
 	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
 	std::string request="sign";
 	url=baseurl+request;
@@ -324,7 +325,7 @@ void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 			/// if signing is Enabled, request signing with HSM 
 			
 
-			if (signState == 1)
+			if (enableHSM == 1)
 			{
 				std::string mType = _messageConfigMap[configIndex].SendType; 
 
