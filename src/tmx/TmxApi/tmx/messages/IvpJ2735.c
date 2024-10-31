@@ -47,7 +47,7 @@ asn_TYPE_descriptor_t *getTypeDescriptorFromMsgId(e_DSRCmsgID msgId)
 #endif
 		case DSRCmsgID_commonSafetyRequest: return &asn_DEF_CommonSafetyRequest;
 		case DSRCmsgID_emergencyVehicleAlert: return &asn_DEF_EmergencyVehicleAlert;
-		case DSRCmsgID_intersectionCollisionAlert: return &asn_DEF_IntersectionCollision;
+		case DSRCmsgID_intersectionCollision: return &asn_DEF_IntersectionCollision;
 		case DSRCmsgID_mapData: return &asn_DEF_MapData;
 		case DSRCmsgID_nmeaCorrections:
 #if SAEJ2735_SPEC < 63
@@ -88,7 +88,7 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case DSRCmsgID_basicSafetyMessageVerbose: return "BSMV";
 		case DSRCmsgID_commonSafetyRequest: return "CSR";
 		case DSRCmsgID_emergencyVehicleAlert: return "EVA";
-		case DSRCmsgID_intersectionCollisionAlert: return "IC";
+		case DSRCmsgID_intersectionCollisionAlert: return "IC"; // I think this can be changed to intersectionCollision
 		case DSRCmsgID_mapData: return "MAP";
 		case DSRCmsgID_nmeaCorrections: return "NMEA";
 		case DSRCmsgID_probeDataManagement: return "PDM";
