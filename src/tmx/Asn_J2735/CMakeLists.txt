@@ -1,7 +1,8 @@
 # Use these lines and rebuild for debug information
 
 PROJECT ( asn_j2735 C )
-option(SAEJ2735_SPEC_VERSION "Version of the SAE J2735 specification." "2020" )
+
+option(SAEJ2735_SPEC_VERSION "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES." "2020" )
 SET (ASN_J2735_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 FILE (GLOB SOURCE_DIRS "${ASN_J2735_DIR}/src/*")
