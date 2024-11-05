@@ -325,22 +325,22 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	message->body.location.timestamp.buf = my_bytes_1;
 	message->body.location.timestamp.size = strlen(my_str_1);
 	
-	message->body.expiration.buf = my_bytes_1;
-	message->body.expiration.size = strlen(my_str_1);
+	message->body.expiration->buf = my_bytes_1;
+	message->body.expiration->size = strlen(my_str_1);
 	
 		
 	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
 	offset->offsetX = 1;
 	offset->offsetY = 1;
 	offset->offsetZ = 1;
-	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
-	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
 
-	message->body.trajectoryStart.ecefX = 1;
-	message->body.trajectoryStart.ecefY = 1;
-	message->body.trajectoryStart.ecefZ = 1;
-	message->body.trajectoryStart.timestamp.buf = my_bytes_1;
-	message->body.trajectoryStart.timestamp.size = strlen(my_str_1);
+	message->body.trajectoryStart->ecefX = 1;
+	message->body.trajectoryStart->ecefY = 1;
+	message->body.trajectoryStart->ecefZ = 1;
+	message->body.trajectoryStart->timestamp.buf = my_bytes_1;
+	message->body.trajectoryStart->timestamp.size = strlen(my_str_1);
 		
 	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
 	tmx::messages::tsm0Message*  _tsm0Message = new tmx::messages::tsm0Message(message);
