@@ -35,11 +35,16 @@ namespace tmx::utils::telemetry
     private:
         PluginInfo _pluginInfo;
         PluginInstallation _pluginInstallation;
+        bool _isInstallationSet;
+        bool _isPluginInfoSet;
     public:
         PluginTelemetry()=default;
-        PluginTelemetry(PluginInfo pluginInfo, PluginInstallation pluginInstallation):_pluginInfo(pluginInfo), _pluginInstallation(pluginInstallation){}
         PluginInfo getPluginInfo();
         PluginInstallation getPluginInstallation();
+        void setPluginInfo(PluginInfo pluginInfo);
+        void setPluginInstallation(PluginInstallation pluginInstallation);
+        bool isInstallationSet();
+        bool isPluginInfoSet();
         ~PluginTelemetry()=default;
     };
     
