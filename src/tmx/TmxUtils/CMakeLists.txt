@@ -16,6 +16,7 @@ ENDIF ()
 
 TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} SYSTEM PUBLIC
                             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+                            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/telemetry>
                             $<BUILD_INTERFACE:${TMXMESSAGES_INCLUDE_DIR}>
                             ${MYSQL_INCLUDE_DIR}
                             ${NETSNMP_INCLUDE_DIRS}
@@ -33,6 +34,7 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        rdkafka++ 
                        ::carma-clock
                        gmock
+                       jsoncpp
                        pthread m rt)
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
