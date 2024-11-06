@@ -1,4 +1,4 @@
-# CDA1tenth Garage Actions
+# CDA1Tenth Garage Actions
 These are Port Drayage actions created the CDA1Tenth functionality and specifically tailored for the Turner Fairbank Highway Research Center's Saxton Laboratory garage demonstration.
 
 ## Instructions
@@ -13,6 +13,6 @@ db:
 ```
 
 ## Reference Layout
-The following diagram displays the CDA1tenth Port Drayage layout used in the Saxton Garage. The above SQL files should be selected based on if the first (port_drayage_lane1.sql) or second (port_drayage_lane2.sql) lane will be used for the Port Pickup action.
+The following diagram displays the CDA1Tenth Port Drayage layout used in the Saxton Garage. The above SQL files should be selected based on if the first (port_drayage_lane1.sql) or second (port_drayage_lane2.sql) lane will be used for the Port Pickup action.
 
 ![Alt text](docs/garage_diagram.PNG)
