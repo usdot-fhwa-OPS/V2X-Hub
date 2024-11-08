@@ -5,6 +5,8 @@
 -- Server version	7.6.0
 -- Current Database: `PORT_DRAYAGE`
 --
+-- Map: Garage (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/maps/garage.pgm)
+-- Route Graph: Garage Port Drayage V2 (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/graphs/garage_graph_port_drayage_v2.geojson)
 
 CREATE DATABASE /*!32312 IF NOT EXISTS*/ `PORT_DRAYAGE` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
