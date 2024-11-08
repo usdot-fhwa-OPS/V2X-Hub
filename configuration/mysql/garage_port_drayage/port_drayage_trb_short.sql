@@ -5,6 +5,8 @@
 -- Server version       7.6.0
 -- Current Database: `PORT_DRAYAGE`
 --
+-- Map: TRB Demo (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/maps/trb_demo.pgm)
+-- Route Graph: TRB Demo (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/graphs/trb_demo.geojson)
 
 CREATE DATABASE /*!32312 IF NOT EXISTS*/ `PORT_DRAYAGE` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
