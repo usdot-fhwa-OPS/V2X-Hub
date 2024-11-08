@@ -1,5 +1,5 @@
 # PVL Actions
-These are Port Drayage actions created for the PVL Lab for testing of CDA1tenth functionality.
+These are Port Drayage actions created for the PVL Lab for testing of CDA1Tenth functionality.
 
 ## Instructions
 Replace the port_drayage.sql file in docker-compose.yml with the file in this directory.

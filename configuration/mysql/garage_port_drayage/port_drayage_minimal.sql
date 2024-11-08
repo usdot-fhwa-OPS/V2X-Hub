@@ -2,7 +2,7 @@
 --
 -- Host: 127.0.0.1    Database: PORT_DRAYAGE
 -- ------------------------------------------------------
--- Server version	7.6.0
+-- Server version       7.6.0
 -- Current Database: `PORT_DRAYAGE`
 --
 
@@ -45,5 +45,5 @@ CREATE TABLE `freight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `freight` WRITE;
-INSERT INTO `freight` VALUES ('RED-TRUCK','NULL',-0.45,-0.45,'EXIT_PORT','zero','one'),('RED-TRUCK','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two'),('RED-TRUCK','CARGO_A',-3.45,-1.44,'PICKUP','two','three'),('RED-TRUCK','CARGO_A',-3.45,-3.45,'EXIT_STAGING_AREA','three','four'),('RED-TRUCK','CARGO_A',-3.45,-5.45,'ENTER_PORT','four','five'),('RED-TRUCK','CARGO_A',-1.45,-6.45,'DROPOFF','five','six'),('RED-TRUCK','CARGO_B',2.55,-4.5,'PICKUP','six','seven'),('RED-TRUCK','CARGO_B',0.55,-3.45,'PORT_CHECKPOINT','seven','eight'),('RED-TRUCK','CARGO_B',-0.45,-0.45,'EXIT_PORT','eight','nine');
+INSERT INTO `freight` VALUES ('RED-TRUCK','NULL',-0.45,-0.45,'EXIT_PORT','zero','one'),('RED-TRUCK','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two'),('RED-TRUCK','CARGO_A',2.55,-4.5,'PICKUP','two','three'),('RED-TRUCK','NULL',-2.46,0.56,'ENTER_STAGING_AREA','three','two');
 UNLOCK TABLES;
