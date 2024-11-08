@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <iostream>
 using namespace std;
 
 namespace tmx::utils::telemetry
@@ -17,8 +18,8 @@ namespace tmx::utils::telemetry
 
     struct PluginInstallation
     {  
-        //Whether the plugin is current enabled or disabled
-        string enabled;
+        //Whether the plugin is current enabled or disabled. When a plugin is not installed, enabled default value is set to -1
+        int enabled = -1;
         //Where the plugin executable is located
         string path;
         //The plugin executable name
@@ -35,16 +36,13 @@ namespace tmx::utils::telemetry
     private:
         PluginInfo _pluginInfo;
         PluginInstallation _pluginInstallation;
-        bool _isInstallationSet;
-        bool _isPluginInfoSet;
     public:
         PluginTelemetry()=default;
-        PluginInfo getPluginInfo();
-        PluginInstallation getPluginInstallation();
+        PluginInfo getPluginInfo() const;
+        PluginInstallation getPluginInstallation() const;
         void setPluginInfo(PluginInfo pluginInfo);
         void setPluginInstallation(PluginInstallation pluginInstallation);
-        bool isInstallationSet();
-        bool isPluginInfoSet();
+        friend ostream& operator <<(ostream& os, const PluginTelemetry& telemetry);
         ~PluginTelemetry()=default;
     };
     

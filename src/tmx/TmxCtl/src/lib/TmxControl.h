@@ -21,6 +21,8 @@
 #include <string>
 #include <boost/regex.hpp>
 
+#include <telemetry/TelemetrySerializer.h>
+
 #ifndef DEFAULT_PLUGINDIRECTORY
 #define DEFAULT_PLUGINDIRECTORY "/var/www/plugins"
 #endif

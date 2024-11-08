@@ -422,14 +422,22 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 	if (processTelemetry)
 	{
 		//build  message
-
-		outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
-
-		outputBuffer->append(dataType);
-		outputBuffer->append("\",\"encoding\":\"jsonstring\",\"timestamp\":\"");
-		oss << GetMsTimeSinceEpoch();
-		outputBuffer->append(oss.str());
-		outputBuffer->append("\",\"flags\":\"0\"},\"payload\":");
+		if (dataType == "List"){
+			tmx::utils::telemetry::TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch()};
+			auto headerContainer = tmx::utils::telemetry::TelemetrySerializer::serializeTelemetryHeader(header);
+			auto headerString = tmx::utils::telemetry::TelemetrySerializer::jsonToString(headerContainer);
+			//Remove the tailing bracket "}" from header
+			outputBuffer->append(headerString.substr(0,headerString.length()-1));
+			outputBuffer->append(",");
+		}else{
+			//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
+			outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
+			outputBuffer->append(dataType);
+			outputBuffer->append("\",\"encoding\":\"jsonstring\",\"timestamp\":\"");
+			oss << GetMsTimeSinceEpoch();
+			outputBuffer->append(oss.str());
+			outputBuffer->append("\",\"flags\":\"0\"},\"payload\":");
+		}
 
 		if (dataType == "Events" || dataType == "SystemConfig")
 		{
@@ -445,7 +453,13 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 		}
 		else
 		{
-			outputBuffer->append(output);
+			if (dataType == "List"){
+				//Remove the first bracket "{" from payload
+				outputBuffer->append(output.substr(1));
+			}else{
+				//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
+				outputBuffer->append(output);
+			}
 		}
 
 		outputBuffer->append("}\x03");

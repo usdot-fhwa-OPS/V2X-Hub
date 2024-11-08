@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "TelemetrySerializer.h"
 
+
 using namespace tmx::utils::telemetry;
 namespace unit_test{
     class TelemetrySerializerTest: public ::testing::Test
@@ -20,11 +21,20 @@ namespace unit_test{
             };
 
             PluginInstallation installation = {
-                "Disabled", //enabled
+                0, //enabled
                 "/var/www/plugins/CARMACloudPlugin", //path
                 "/bin/CARMACloudPlugin", //exeName
                 "manifest.json", //manifest
                 "500000",//maxMessageInterval
+                "",//commandLineParameters
+            };
+
+            PluginInstallation noInstallation = {
+                -1, //enabled
+                "", //path
+                "", //exeName
+                "", //manifest
+                "",//maxMessageInterval
                 "",//commandLineParameters
             };
             
@@ -38,7 +48,6 @@ namespace unit_test{
     };
 
     TEST_F(TelemetrySerializerTest, getPluginInfo){
-        ASSERT_TRUE(telemetryPointer->isPluginInfoSet());
         ASSERT_EQ("1", telemetryPointer->getPluginInfo().id);
         ASSERT_EQ("7.6.0", telemetryPointer->getPluginInfo().version);
         ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.", telemetryPointer->getPluginInfo().description);
@@ -46,40 +55,36 @@ namespace unit_test{
     }
 
     TEST_F(TelemetrySerializerTest, getPluginInstallation){
-        ASSERT_TRUE(telemetryPointer->isInstallationSet());
         ASSERT_EQ("/var/www/plugins/CARMACloudPlugin", telemetryPointer->getPluginInstallation().path);
-        ASSERT_EQ("Disabled", telemetryPointer->getPluginInstallation().enabled);
+        ASSERT_EQ(0, telemetryPointer->getPluginInstallation().enabled);
         ASSERT_EQ("/bin/CARMACloudPlugin", telemetryPointer->getPluginInstallation().exeName);
         ASSERT_EQ("manifest.json", telemetryPointer->getPluginInstallation().manifest);
         ASSERT_EQ("500000", telemetryPointer->getPluginInstallation().maxMessageInterval);
         ASSERT_EQ("", telemetryPointer->getPluginInstallation().commandLineParameters);
     }
 
-    TEST_F(TelemetrySerializerTest, serializePluginTelemetryList){
+    TEST_F(TelemetrySerializerTest, serializeFullPluginTelemetry){
+        auto telemetryContainer = TelemetrySerializer::serializeFullPluginTelemetry(*telemetryPointer.get());
+        string result = TelemetrySerializer::jsonToString(telemetryContainer);
+        string expected = "{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"}";
+        ASSERT_EQ(expected, result);
+    }
+
+    TEST_F(TelemetrySerializerTest, serializeFullPluginTelemetryList){
         vector<PluginTelemetry> pluginTelemetryList;
         pluginTelemetryList.push_back(*telemetryPointer.get());
-        string serializedTelemetry =  TelemetrySerializer::serializePluginTelemetryList(pluginTelemetryList);
-        string expected = "[{\"commandLineParameters\" : \"\",\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"enabled\" : \"Disabled\",\"exeName\" : \"/bin/CARMACloudPlugin\",\"id\" : \"1\",\"manifest\" : \"manifest.json\",\"maxMessageInterval\" : \"500000\",\"name\" : \"CARMACloudPlugin\",\"path\" : \"/var/www/plugins/CARMACloudPlugin\",\"version\" : \"7.6.0\"}]";
-        ASSERT_EQ(expected, serializedTelemetry);
-    }
-
-    TEST_F(TelemetrySerializerTest, serializePluginTelemetryListPluginInfoOnly){
-        vector<PluginTelemetry> pluginTelemetryList;
         pluginTelemetryList.push_back(*telemetryPluginInfoOnlyPointer.get());
-        string serializedTelemetry =  TelemetrySerializer::serializePluginTelemetryList(pluginTelemetryList);
-        string expected = "[{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}]";
-        ASSERT_EQ(expected, serializedTelemetry);
+        auto telemetryContainer = TelemetrySerializer::serializeFullPluginTelemetryList(pluginTelemetryList);
+        string result = TelemetrySerializer::jsonToString(telemetryContainer);
+        string expected = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
+        ASSERT_EQ(expected, result);
     }
 
-    TEST_F(TelemetrySerializerTest, serializePluginTelemetryListEmpty){
-        vector<PluginTelemetry> pluginTelemetryList;
-        ASSERT_THROW(TelemetrySerializer::serializePluginTelemetryList(pluginTelemetryList), TelemetrySerializerException);
-    }
-
-    TEST_F(TelemetrySerializerTest, serializePluginTelemetryContentEmpty){
-        vector<PluginTelemetry> pluginTelemetryList;
-        PluginTelemetry *telemetry = new PluginTelemetry();
-        pluginTelemetryList.push_back(*telemetry);
-        ASSERT_THROW(TelemetrySerializer::serializePluginTelemetryList(pluginTelemetryList), TelemetrySerializerException);
+    TEST_F(TelemetrySerializerTest, serializeTelemetryHeader){
+        TelemetryHeader header{"Telemetry","List","JsonString",12212};
+        auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
+        auto result = TelemetrySerializer::jsonToString(headerContainer);
+        string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\"}}";
+        ASSERT_EQ(expected, result);
     }
 }

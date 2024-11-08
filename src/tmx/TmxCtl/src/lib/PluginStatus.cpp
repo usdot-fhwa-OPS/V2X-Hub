@@ -101,6 +101,8 @@ bool TmxControl::list(pluginlist &plugins, ...)
 		}
 		unique_ptr<ResultSet> rs(stmt->executeQuery());
 
+		vector<tmx::utils::telemetry::PluginTelemetry> telemetryList;
+
 		while (rs->next())
 		{
 			int id = rs->getInt(1);
@@ -116,47 +118,12 @@ bool TmxControl::list(pluginlist &plugins, ...)
 
 			PLOG(logDEBUG) << name << "," << description << "," << version << "," << enabled << "," << maxInt << "," << args;
 
-			message_path_type keyPath(name, ATTRIBUTE_PATH_CHARACTER);
-			message_path_type key;
-			key = keyPath;
-			key /= message_path_type("id", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, to_string(id));
-
-			key = keyPath;
-			key /= message_path_type("description", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, description);
-
-			key = keyPath;
-			key /= message_path_type("version", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, version);
-
-			key = keyPath;
-			key /= message_path_type("enabled", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, !enabled ? "Disabled" : enabled > 0 ? "Enabled" : "External");
-
-			if (enabled < 0)
-				continue;
-
-			key = keyPath;
-			key /= message_path_type("path", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, path);
-
-			key = keyPath;
-			key /= message_path_type("exeName", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, exe);
-
-			key = keyPath;
-			key /= message_path_type("manifest", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, manifest);
-
-			key = keyPath;
-			key /= message_path_type("maxMessageInterval", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, to_string(maxInt));
-
-			key = keyPath;
-			key /= message_path_type("commandLineParameters", ATTRIBUTE_PATH_CHARACTER);
-			_output.store(key, args);
+			tmx::utils::telemetry::PluginTelemetry telemetry;
+			telemetry.setPluginInfo({to_string(id), name, description, version});
+			telemetry.setPluginInstallation({enabled, path, exe, manifest,to_string(maxInt), args});
+			telemetryList.push_back(telemetry);
 		}
+		_output = tmx::utils::telemetry::TelemetrySerializer::serializeFullPluginTelemetryList(telemetryList);
 	}
 	catch (exception &ex)
 	{
