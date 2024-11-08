@@ -15,9 +15,9 @@ services:
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      # The following 5 volumes are used for CDA1tenth. By default the standard "port_drayage.sql" file
+      # The following 5 volumes are used for CDA1Tenth. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
-      # three files to enable the CDA1tenth sql files to be loaded. The container volumes MUST be reset
+      # three files to enable the CDA1Tenth sql files to be loaded. The container volumes MUST be reset
       # to allow for this change, which can be done with "docker compose down -v"
       #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
       #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
