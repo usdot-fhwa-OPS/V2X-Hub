@@ -270,12 +270,13 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 TEST_F(J2735MessageTest, EncodeMobilityRequest)
 {	
 	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
-
+	
 	/**
 	 * Populate MobilityHeader 
 	 */
 	
 	char* my_str = (char *) "sender_id";
+	
 	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->header.hostStaticId.buf = my_bytes;
 	message->header.hostStaticId.size = strlen(my_str);
@@ -297,7 +298,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
 	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
 	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
+	for(int i = 0; i< strlen(my_str_1); i++) 
 	{
 		my_bytes_1[i] =  (uint8_t)my_str_1[i];
 	}
@@ -315,7 +316,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	my_str = (char *) "carma3/Geofence_Acknowledgement";
 	my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str);
+	message->body.strategy.size = strlen(my_str); 
 
 	message->body.urgency = 1;
 	message->body.planType = 0;
@@ -324,11 +325,10 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	message->body.location.ecefZ = 1;
 	message->body.location.timestamp.buf = my_bytes_1;
 	message->body.location.timestamp.size = strlen(my_str_1);
-	
+	message->body.expiration = (MobilityTimestamp_t*)malloc(sizeof(MobilityTimestamp_t));
 	message->body.expiration->buf = my_bytes_1;
 	message->body.expiration->size = strlen(my_str_1);
-	
-		
+
 	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
 	offset->offsetX = 1;
 	offset->offsetY = 1;
@@ -336,6 +336,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
 	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
 
+	message->body.trajectoryStart = (MobilityLocation*)malloc(sizeof(MobilityLocation));
 	message->body.trajectoryStart->ecefX = 1;
 	message->body.trajectoryStart->ecefY = 1;
 	message->body.trajectoryStart->ecefZ = 1;
@@ -347,6 +348,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message->get_j2735_data());
 	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
+
 	free(message);
 	delete my_bytes_1;
 	delete my_str_1;
