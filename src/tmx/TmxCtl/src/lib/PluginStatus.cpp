@@ -123,7 +123,7 @@ bool TmxControl::list(pluginlist &plugins, ...)
 			telemetry.setPluginInstallation({enabled, path, exe, manifest,to_string(maxInt), args});
 			telemetryList.push_back(telemetry);
 		}
-		_output = tmx::utils::telemetry::TelemetrySerializer::serializeFullPluginTelemetryList(telemetryList);
+		_output = tmx::utils::telemetry::TelemetrySerializer::serializeFullPluginTelemetryPayload(telemetryList);
 	}
 	catch (exception &ex)
 	{

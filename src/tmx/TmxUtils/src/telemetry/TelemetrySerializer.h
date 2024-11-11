@@ -16,8 +16,9 @@ namespace tmx::utils::telemetry{
     public:
         TelemetrySerializer()=delete;
         ~TelemetrySerializer()=delete;
-        static tmx::message_container_type serializeFullPluginTelemetry(const PluginTelemetry& pluginTelemetry);
-        static tmx::message_container_type serializeFullPluginTelemetryList(const vector<PluginTelemetry>& pluginTelemetryList);
+        static tmx::message_container_type serializePluginTelemetry(const PluginTelemetry& pluginTelemetry);
+        static tmx::message_container_type serializeFullPluginTelemetryPayload(const vector<PluginTelemetry>& pluginTelemetryList);
+        static string composeFullTelemetry(const string& header, const string& payloadContent);
         static tmx::message_container_type serializeTelemetryHeader(const TelemetryHeader& header);
         static string jsonToString(tmx::message_container_type& container);
     };

@@ -1184,6 +1184,7 @@ int CommandPlugin::WSCallbackBASE64(
 					psdata->lastUpdateSendTimeMS = _lastPluginsUpdateTimeMS;
 					//build full telemetry
 					BuildFullTelemetry(psdata->outputbuffer, "List");
+					FILE_LOG(logERROR) << *psdata->outputbuffer<<std::endl;
 					BuildFullTelemetry(psdata->outputbuffer, "Config");
 					BuildFullTelemetry(psdata->outputbuffer, "Status");
 					BuildFullTelemetry(psdata->outputbuffer, "State");

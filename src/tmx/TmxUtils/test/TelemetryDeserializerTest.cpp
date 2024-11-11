@@ -1,75 +1,63 @@
-// #include <gtest/gtest.h>
-// #include "TelemetryDeserializer.h"
+#include <gtest/gtest.h>
+#include "TelemetryDeserializer.h"
 
-// using namespace tmx::utils::telemetry;
-// namespace unit_test{
-//     class TelemetryDeserializerTest: public ::testing::Test
-//     {
-//     public:
-//         shared_ptr<PluginTelemetry> telemetryPointer;
-//         shared_ptr<PluginTelemetry> telemetryPluginInfoOnlyPointer;
+using namespace tmx::utils::telemetry;
+namespace unit_test{
+    class TelemetryDeserializerTest: public ::testing::Test
+    {
+    public:
+        ~TelemetryDeserializerTest() override {};
+    };
+
+    TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayload){
+        string jsonString = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin2\",\"id\":\"2\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
+        auto telemetryList =  TelemetryDeserializer::desrializeFullPluginTelemetryPayload(jsonString);
+        ASSERT_EQ(2, telemetryList.size());
         
-//         ~TelemetryDeserializerTest() override {};
-        
-//         void SetUp() override{
-//             PluginInfo pluginInfo = {
-//                 "1", //id
-//                 "CARMACloudPlugin", //name
-//                 "CARMA cloud plugin for making websocket connection with CARMA cloud.", //description
-//                 "7.6.0", //version
-//             };
+        ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.",telemetryList.begin()->getPluginInfo().description);
+        ASSERT_EQ("1",telemetryList.begin()->getPluginInfo().id);
+        ASSERT_EQ("CARMACloudPlugin",telemetryList.begin()->getPluginInfo().name);
+        ASSERT_EQ("7.6.0",telemetryList.begin()->getPluginInfo().version);
+        ASSERT_EQ(0,telemetryList.begin()->getPluginInstallation().enabled);
+        ASSERT_EQ("manifest.json",telemetryList.begin()->getPluginInstallation().path);
+        ASSERT_EQ("/bin/CARMACloudPlugin",telemetryList.begin()->getPluginInstallation().exeName);
+        ASSERT_EQ("500000",telemetryList.begin()->getPluginInstallation().maxMessageInterval);
+        ASSERT_EQ("",telemetryList.begin()->getPluginInstallation().commandLineParameters);
 
-//             PluginInstallation installation = {
-//                 0, //enabled
-//                 "/var/www/plugins/CARMACloudPlugin", //path
-//                 "/bin/CARMACloudPlugin", //exeName
-//                 "manifest.json", //manifest
-//                 "500000",//maxMessageInterval
-//                 "",//commandLineParameters
-//             };
-            
-//             telemetryPointer = make_shared<PluginTelemetry>();
-//             telemetryPluginInfoOnlyPointer = make_shared<PluginTelemetry>();
-//             telemetryPointer->setPluginInfo(pluginInfo);
-//             telemetryPluginInfoOnlyPointer->setPluginInfo(pluginInfo);
-//             telemetryPointer->setPluginInstallation(installation);
-//         }
-//         void TearDown() override{}
-//     };
+        ASSERT_EQ("2",telemetryList.back().getPluginInfo().id);
+        ASSERT_EQ("CARMACloudPlugin2",telemetryList.back().getPluginInfo().name);
+        ASSERT_EQ("7.6.0",telemetryList.back().getPluginInfo().version);
+        ASSERT_EQ(-1,telemetryList.back().getPluginInstallation().enabled);
+        ASSERT_EQ("",telemetryList.back().getPluginInstallation().path);
+        ASSERT_EQ("",telemetryList.back().getPluginInstallation().exeName);
+        ASSERT_EQ("",telemetryList.back().getPluginInstallation().maxMessageInterval);
+        ASSERT_EQ("",telemetryList.back().getPluginInstallation().commandLineParameters);
+    }
 
-//     TEST_F(TelemetryDeserializerTest, desrializeTelemetryPluginList){
-//         string jsonString = "[{\"commandLineParameters\" : \"\",\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"enabled\" : \"Disabled\",\"exeName\" : \"/bin/CARMACloudPlugin\",\"id\" : \"1\",\"manifest\" : \"manifest.json\",\"maxMessageInterval\" : \"500000\",\"name\" : \"CARMACloudPlugin\",\"path\" : \"/var/www/plugins/CARMACloudPlugin\",\"version\" : \"7.6.0\"}]";
-//         auto telemetryList =  TelemetryDeserializer::desrializePluginTelemetryList(jsonString);
-//         ASSERT_TRUE(telemetryList.front().isInstallationSet());
-//         ASSERT_TRUE(telemetryList.front().isPluginInfoSet());
-//     }
+    TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadPluginInfoOnly){        
+        string jsonString = "{\"payload\":[{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}]}";
+        auto telemetryList =  TelemetryDeserializer::desrializeFullPluginTelemetryPayload(jsonString);
+        ASSERT_EQ(1, telemetryList.size());
+        ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.",telemetryList.begin()->getPluginInfo().description);
+        ASSERT_EQ("1",telemetryList.begin()->getPluginInfo().id);
+        ASSERT_EQ("CARMACloudPlugin",telemetryList.begin()->getPluginInfo().name);
+        ASSERT_EQ("7.6.0",telemetryList.begin()->getPluginInfo().version);
+    }
 
-//     TEST_F(TelemetryDeserializerTest, desrializeTelemetryPluginListPluginInfoOnly){        
-//         string jsonString = "[{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}]";
-//         auto telemetryList =  TelemetryDeserializer::desrializePluginTelemetryList(jsonString);
-//         ASSERT_FALSE(telemetryList.front().isInstallationSet());
-//         ASSERT_TRUE(telemetryList.front().isPluginInfoSet());
-//     }
+    TEST_F(TelemetryDeserializerTest, deserialzePluginTelemetry){        
+        string jsonString = "{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}";
+        auto telemetry =  TelemetryDeserializer::deserialzePluginTelemetry(jsonString);
+    }
 
-//     TEST_F(TelemetryDeserializerTest, deserialzePluginTelemetry){        
-//         string jsonString = "{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}";
-//         auto telemetry =  TelemetryDeserializer::deserialzePluginTelemetry(jsonString);
-//         ASSERT_FALSE(telemetry.isInstallationSet());
-//         ASSERT_TRUE(telemetry.isPluginInfoSet());
-//     }
+    TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadEmpty){
+        ASSERT_THROW(TelemetryDeserializer::desrializeFullPluginTelemetryPayload(""), TelemetryDeserializerException);
+    }
 
-//     TEST_F(TelemetryDeserializerTest, desrializeTelemetryPluginListEmpty){
-//         ASSERT_THROW(TelemetryDeserializer::desrializePluginTelemetryList(""), TelemetryDeserializerException);
-//     }
+    TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadNotArray){
+        ASSERT_THROW(TelemetryDeserializer::desrializeFullPluginTelemetryPayload("{\"payload\":{\"test\": \"0\"}}"), TelemetryDeserializerException);
+    }
 
-//     TEST_F(TelemetryDeserializerTest, desrializeTelemetryPluginListNotArray){
-//         ASSERT_THROW(TelemetryDeserializer::desrializePluginTelemetryList("{}"), TelemetryDeserializerException);
-//     }
-
-//     TEST_F(TelemetryDeserializerTest, desrializeTelemetryPluginListContentEmpty){
-//         auto telemetryList = TelemetryDeserializer::desrializePluginTelemetryList("[{}]");
-//         ASSERT_TRUE(telemetryList.size()==1);
-//         ASSERT_FALSE(telemetryList.front().isInstallationSet());
-//         ASSERT_FALSE(telemetryList.front().isPluginInfoSet());
-//     }
-// }
+    TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadContentEmpty){
+        ASSERT_THROW(TelemetryDeserializer::desrializeFullPluginTelemetryPayload("{\"payload\":[{}]}"), TelemetryDeserializerException);
+    }
+}

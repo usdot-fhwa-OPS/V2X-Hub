@@ -2,7 +2,7 @@
 
 namespace tmx::utils::telemetry{
 
-    tmx::message_container_type TelemetrySerializer::serializeFullPluginTelemetry(const PluginTelemetry& pluginTelemetry){
+    tmx::message_container_type TelemetrySerializer::serializePluginTelemetry(const PluginTelemetry& pluginTelemetry){
         tmx::message_container_type output;
 
         auto name = pluginTelemetry.getPluginInfo().name;
@@ -43,15 +43,24 @@ namespace tmx::utils::telemetry{
         return output;
     }
 
-    tmx::message_container_type TelemetrySerializer::serializeFullPluginTelemetryList(const vector<PluginTelemetry>& pluginTelemetryList){
+    tmx::message_container_type TelemetrySerializer::serializeFullPluginTelemetryPayload(const vector<PluginTelemetry>& pluginTelemetryList){
         tmx::message_container_type outputContainer;
         boost::property_tree::ptree ptArray;
         for(const auto& pluginTelemetry: pluginTelemetryList){
-            auto output = serializeFullPluginTelemetry(pluginTelemetry);
+            auto output = serializePluginTelemetry(pluginTelemetry);
             ptArray.push_back(boost::property_tree::ptree::value_type("",output.get_storage().get_tree()));
         }
         outputContainer.get_storage().get_tree().put_child("payload", ptArray);
         return outputContainer;
+    }
+
+    string TelemetrySerializer::composeFullTelemetry(const string& header, const string& payload){
+        //Remove the tailing bracket "}" from header
+        string fullJsonString = header.substr(0,header.length()-1);
+        fullJsonString+=",";
+        //Remove the first bracket "{" from payload
+        fullJsonString += payload.substr(1);
+        return fullJsonString;
     }
 
     tmx::message_container_type TelemetrySerializer::serializeTelemetryHeader(const TelemetryHeader& header){
@@ -61,6 +70,7 @@ namespace tmx::utils::telemetry{
         element.push_back(boost::property_tree::ptree::value_type("subtype", header.subtype));
         element.push_back(boost::property_tree::ptree::value_type("encoding", header.encoding));
         element.push_back(boost::property_tree::ptree::value_type("timestamp",to_string(header.timestamp)));
+        element.push_back(boost::property_tree::ptree::value_type("flags","0"));
         headerContainer.get_storage().get_tree().push_back(boost::property_tree::ptree::value_type("header", element));
         return headerContainer;
     }

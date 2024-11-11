@@ -63,18 +63,18 @@ namespace unit_test{
         ASSERT_EQ("", telemetryPointer->getPluginInstallation().commandLineParameters);
     }
 
-    TEST_F(TelemetrySerializerTest, serializeFullPluginTelemetry){
-        auto telemetryContainer = TelemetrySerializer::serializeFullPluginTelemetry(*telemetryPointer.get());
+    TEST_F(TelemetrySerializerTest, serializePluginTelemetry){
+        auto telemetryContainer = TelemetrySerializer::serializePluginTelemetry(*telemetryPointer.get());
         string result = TelemetrySerializer::jsonToString(telemetryContainer);
         string expected = "{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"}";
         ASSERT_EQ(expected, result);
     }
 
-    TEST_F(TelemetrySerializerTest, serializeFullPluginTelemetryList){
+    TEST_F(TelemetrySerializerTest, serializeFullPluginTelemetryPayload){
         vector<PluginTelemetry> pluginTelemetryList;
         pluginTelemetryList.push_back(*telemetryPointer.get());
         pluginTelemetryList.push_back(*telemetryPluginInfoOnlyPointer.get());
-        auto telemetryContainer = TelemetrySerializer::serializeFullPluginTelemetryList(pluginTelemetryList);
+        auto telemetryContainer = TelemetrySerializer::serializeFullPluginTelemetryPayload(pluginTelemetryList);
         string result = TelemetrySerializer::jsonToString(telemetryContainer);
         string expected = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
         ASSERT_EQ(expected, result);
@@ -84,7 +84,15 @@ namespace unit_test{
         TelemetryHeader header{"Telemetry","List","JsonString",12212};
         auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
         auto result = TelemetrySerializer::jsonToString(headerContainer);
-        string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\"}}";
+        string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"}}";
+        ASSERT_EQ(expected, result);
+    }
+
+    TEST_F(TelemetrySerializerTest, composeFullTelemetry){
+        string header = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"}}";
+        string payload = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
+        auto result = TelemetrySerializer::composeFullTelemetry(header,payload);
+        string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"},\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
         ASSERT_EQ(expected, result);
     }
 }

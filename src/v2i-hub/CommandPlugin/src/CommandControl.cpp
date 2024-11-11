@@ -210,6 +210,10 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 					}
 					//close plugin brackets
 					(*pluginsUpdatesJSON)[pluginName].append("}");
+					std::cout <<"print out map of pluginsUpdatesJSON:";
+					for(auto item: *pluginsUpdatesJSON){
+						std::cout << item.first <<" : "<<item.second<<std::endl;
+					}
 				}
 				else if (dataType == "Status")
 				{
@@ -422,14 +426,7 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 	if (processTelemetry)
 	{
 		//build  message
-		if (dataType == "List"){
-			tmx::utils::telemetry::TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch()};
-			auto headerContainer = tmx::utils::telemetry::TelemetrySerializer::serializeTelemetryHeader(header);
-			auto headerString = tmx::utils::telemetry::TelemetrySerializer::jsonToString(headerContainer);
-			//Remove the tailing bracket "}" from header
-			outputBuffer->append(headerString.substr(0,headerString.length()-1));
-			outputBuffer->append(",");
-		}else{
+		if (dataType != "List"){			
 			//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
 			outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
 			outputBuffer->append(dataType);
@@ -454,8 +451,11 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 		else
 		{
 			if (dataType == "List"){
-				//Remove the first bracket "{" from payload
-				outputBuffer->append(output.substr(1));
+				tmx::utils::telemetry::TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch()};
+				auto headerContainer = tmx::utils::telemetry::TelemetrySerializer::serializeTelemetryHeader(header);
+				auto headerString = tmx::utils::telemetry::TelemetrySerializer::jsonToString(headerContainer);
+				outputBuffer->append(tmx::utils::telemetry::TelemetrySerializer::composeFullTelemetry(headerString, output));
+				return; //Return to skip appending any more characters
 			}else{
 				//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
 				outputBuffer->append(output);

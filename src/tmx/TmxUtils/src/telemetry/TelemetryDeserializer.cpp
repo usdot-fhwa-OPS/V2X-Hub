@@ -2,76 +2,78 @@
 
 namespace tmx::utils::telemetry
 {
-    Json::Value TelemetryDeserializer::stringToJson( const string& jsonString){
-        Json::Value root = Json::Value::null;
-        Json::CharReaderBuilder builder;
-        const std::unique_ptr<Json::CharReader> reader (builder.newCharReader());
-        JSONCPP_STRING error;
-        if(!reader->parse(jsonString.c_str(), jsonString.c_str()+jsonString.length(), &root, &error)){
-            throw TelemetryDeserializerException("Cannot parse JSON string due to error "+ error);
+    boost::property_tree::ptree TelemetryDeserializer::stringToJson( const string& jsonString){
+        try{
+            boost::property_tree::ptree pt;
+            stringstream ss;
+            ss << jsonString;
+            boost::property_tree::read_json(ss, pt);
+            return pt;
+        }catch(boost::property_tree::json_parser::json_parser_error error){
+            throw TelemetryDeserializerException("Cannot parse JSON string due to error: "+  error.message());
         }
-        return root;
     }
 
 
-    PluginTelemetry TelemetryDeserializer::populatePluginTelemetry(const Json::Value& value){
-        PluginTelemetry telemetry;
-        if(value.isNull()){
-            throw TelemetryDeserializerException("Cannot deserialize null value!");
-        }
+    PluginTelemetry TelemetryDeserializer::populatePluginTelemetry(const boost::property_tree::ptree& value){
+        try{
+            PluginTelemetry telemetry;
+            if(value.empty()){
+                throw TelemetryDeserializerException("Cannot deserialize empty JSON!");
+            }
 
-        if(value.isMember("id") && value.isMember("name") && value.isMember("description") && value.isMember("version")){
             PluginInfo pluginInfo = {
-                value["id"].asString(),
-                value["name"].asString(),
-                value["description"].asString(),
-                value["version"].asString()
+                value.get<string>("id",""),
+                value.get<string>("name",""),
+                value.get<string>("description",""),
+                value.get<string>("version","")
             };
             telemetry.setPluginInfo(pluginInfo);  
-        }
-        
-        if(value.isMember("enabled") && value.isMember("path") && value.isMember("exeName") && value.isMember("manifest")&& value.isMember("maxMessageInterval")&& value.isMember("commandLineParameters")){
+            string enabledStr = value.get<string>("enabled","");
+            int enabled = enabledStr =="enabled"? 1: enabledStr=="Disabled"?0:-1; 
             PluginInstallation installation = {
-                value["enabled"].asInt(),
-                value["path"].asString(),
-                value["exeName"].asString(),
-                value["manifest"].asString(),
-                value["maxMessageInterval"].asString(),
-                value["commandLineParameters"].asString(),
+                enabled,
+                value.get<string>("path",""),
+                value.get<string>("exeName",""),
+                value.get<string>("manifest",""),
+                value.get<string>("maxMessageInterval",""),
+                value.get<string>("commandLineParameters",""),
             };
             telemetry.setPluginInstallation(installation);
+            return telemetry;
+        }catch(const boost::property_tree::ptree_error& error){
+            throw TelemetryDeserializerException("Cannot get value from JSON due to error: "+  string(error.what()));
         }
-        return telemetry;
     }
 
-    vector<PluginTelemetry> TelemetryDeserializer::desrializePluginTelemetryList(const string& jsonString){
+    vector<PluginTelemetry> TelemetryDeserializer::desrializeFullPluginTelemetryPayload(const string& jsonString){
         vector<PluginTelemetry> result;
-        Json::Value root = stringToJson(jsonString);
-        if(root.isNull()){
-            throw TelemetryDeserializerException("Cannot deserialize null value!");
+        auto root = stringToJson(jsonString);        
+        if(root.empty()){
+            throw TelemetryDeserializerException("JSON cannot be empty!");
         }
-        
-        if(root.isArray()){
-            for(auto itr = root.begin(); itr!=root.end(); ++itr){
-                auto telemetry = populatePluginTelemetry(*itr);
+        try{
+            auto payload = root.get_child("payload");
+            if(payload.empty()){
+                throw TelemetryDeserializerException("JSON payload cannot be empty!");
+            }
+            //Payload content is an array of pluginTelemetry  
+            BOOST_FOREACH(auto& itr, payload){
+                auto telemetry = populatePluginTelemetry(itr.second);
                 result.push_back(telemetry);
             }
-        }else{
-            throw TelemetryDeserializerException("JSON string has to be an array!");
+        }catch(const boost::property_tree::ptree_bad_path & ex){
+            throw TelemetryDeserializerException("Cannot deserialize JSON as the JSON string has no \"payload\" field!");
         }
         return result;
     }
 
     PluginTelemetry TelemetryDeserializer::deserialzePluginTelemetry(const string& jsonString){        
-        Json::Value root = stringToJson(jsonString);
-        if(root.isNull()){
+        auto root = stringToJson(jsonString);
+        if(root.empty()){
             throw TelemetryDeserializerException("Cannot deserialize null value!");
         }
-        if(root.isObject()){
-            auto telemetry =  populatePluginTelemetry(root);
-            return telemetry;
-        }else{
-             throw TelemetryDeserializerException("JSON string has to be an object!");
-        }
+        auto telemetry = populatePluginTelemetry(root);
+        return telemetry;
     }
 } // namespace tmx::utils::telemetry
