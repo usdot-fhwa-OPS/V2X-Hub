@@ -28,7 +28,7 @@ for d in ${component_dir}/* ; do
     sub_dir=${top_dir}/${d}
     build_dir=${top_dir}/${component_dir}/build/$(basename ${d})
     if [ -d ${sub_dir} -a -d ${build_dir} ]; then
-        if ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then 
+        if ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests"; then
             TESTS="./$(ls $build_dir | grep -E "[a-zA-Z]*_test|run[a-zA-Z]*Tests")"
             echo "$TESTS built"
             pushd "$build_dir"
