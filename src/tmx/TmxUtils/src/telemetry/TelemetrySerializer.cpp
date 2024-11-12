@@ -79,12 +79,12 @@ namespace tmx::utils::telemetry{
         return payload;
     }
 
-    string TelemetrySerializer::composeCompleteTelemetry(const string& header, const string& payload){
-        //Remove the tailing bracket "}" from header
-        string fullJsonString = header.substr(0,header.length()-1);
+    string TelemetrySerializer::composeCompleteTelemetry(const string& headerJsonStr, const string& payloadJsonStr){
+        //Remove the tailing bracket "}" from headerJsonStr
+        string fullJsonString = headerJsonStr.substr(0,headerJsonStr.length()-1);
         fullJsonString+=",";
-        //Remove the first bracket "{" from payload
-        fullJsonString += payload.substr(1);
+        //Remove the first bracket "{" from payloadJsonStr
+        fullJsonString += payloadJsonStr.substr(1);
         return fullJsonString;
     }
 
