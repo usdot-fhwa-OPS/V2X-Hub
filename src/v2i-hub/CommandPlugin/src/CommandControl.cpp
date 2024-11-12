@@ -169,11 +169,9 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 						read_json(is, oldPlugin);
 					}
 					//build plugin update json
-					// bool first = true;
-					map<string, string> pluginUpdates;
-					// (*pluginsUpdatesJSON)[pluginName] = "\"";
-					// (*pluginsUpdatesJSON)[pluginName].append(pluginName);
-					pluginUpdates["name"]=pluginName;
+					bool first = true;
+					map<string, string> tmpPluginUpdates;
+					tmpPluginUpdates["name"]=pluginName;
 					if (dataType == "List" || dataType == "State")
 					{
 						(*pluginsUpdatesJSON)[pluginName].append("\": {");
@@ -201,42 +199,25 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 							if (update)
 							{
 								//add this name/value pair to update json
-								// if (first)
-								// 	first = false;
-								// else
-								// 	(*pluginsUpdatesJSON)[pluginName].append(",");
-								// (*pluginsUpdatesJSON)[pluginName].append("\"");
-								// (*pluginsUpdatesJSON)[pluginName].append(nvp.first);
-								// (*pluginsUpdatesJSON)[pluginName].append("\": \"");
-								// string val = nvp.second.data();
-								// boost::replace_all(val, "\"", "\\\"");
-								// (*pluginsUpdatesJSON)[pluginName].append(val);
-								// (*pluginsUpdatesJSON)[pluginName].append("\"");
-								pluginUpdates[nvp.first]=nvp.second.data();
+								tmpPluginUpdates[nvp.first]=nvp.second.data();
 							}
 						}
 						//close plugin brackets
-						// (*pluginsUpdatesJSON)[pluginName].append("}");
-						auto pluginUpdatesJson = TelemetrySerializer::serializeUpdatedTelemetry(pluginUpdates);
+						auto pluginUpdatesJson = TelemetrySerializer::serializeUpdatedTelemetry(tmpPluginUpdates);
 						(*pluginsUpdatesJSON)[pluginName] =  TelemetrySerializer::jsonToString(pluginUpdatesJson);
-						//TODO: Temporarily print out updated JSON to verify it can read payload of telemetry list properly.
-						for(auto item: *pluginsUpdatesJSON){
-							std::cout << item.first <<" : "<<item.second<<std::endl;
-						}
 					}
-					/***
 					else if (dataType == "Status")
 					{
 						//no need to parse since only one value to send
 						(*pluginsUpdatesJSON)[pluginName].append("\": \"");
-						(*pluginsUpdatesJSON)[pluginName].append(plugin.second.data());
+						(*pluginsUpdatesJSON)[pluginName].append(plugin.data());
 						(*pluginsUpdatesJSON)[pluginName].append("\"");
 					}
 					else if (dataType == "Config")
 					{
 						(*pluginsUpdatesJSON)[pluginName].append("\": {");
 						//loop through all config variables of new data
-						BOOST_FOREACH(ptree::value_type &cfg, plugin.second)
+						BOOST_FOREACH(ptree::value_type &cfg, plugin)
 						{
 							bool firstNvp = true;
 							bool addedConfigVariable = false;
@@ -303,7 +284,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 					{
 						(*pluginsUpdatesJSON)[pluginName].append("\": [");
 						//loop through all messages of new data
-						BOOST_FOREACH(ptree::value_type &msg, plugin.second)
+						BOOST_FOREACH(ptree::value_type &msg, plugin)
 						{
 							bool update = false;
 							//get message json
@@ -336,7 +317,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 					else if (dataType == "SystemConfig")
 					{
 						//loop through all config variables of new data
-						BOOST_FOREACH(ptree::value_type &msg, plugin.second)
+						BOOST_FOREACH(ptree::value_type &msg, plugin)
 						{
 							bool update = false;
 							//get config json
@@ -362,7 +343,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 								(*pluginsUpdatesJSON)[pluginName].append(cfgSON);
 							}
 						}
-					} TODO: Commented out temporarily ***/
+					} 
 				}
 				//save json in map
 				(*pluginsJSON)[pluginName] = pJSON;
