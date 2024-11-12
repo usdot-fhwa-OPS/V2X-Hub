@@ -88,11 +88,33 @@ namespace unit_test{
         ASSERT_EQ(expected, result);
     }
 
-    TEST_F(TelemetrySerializerTest, composeFullTelemetry){
+    TEST_F(TelemetrySerializerTest, composeCompleteTelemetry){
         string header = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"}}";
         string payload = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
-        auto result = TelemetrySerializer::composeFullTelemetry(header,payload);
+        auto result = TelemetrySerializer::composeCompleteTelemetry(header,payload);
         string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"},\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
         ASSERT_EQ(expected, result);
+    }
+
+    TEST_F(TelemetrySerializerTest, serializeUpdatedTelemetry){
+        map<string, string> telemetryUpdates;
+        telemetryUpdates.insert({"name","CARMACloudPlugin"});
+        telemetryUpdates.insert({"id","CARMACloudPlugin"});
+        telemetryUpdates.insert({"description","CARMACloudPlugin description"});
+        telemetryUpdates.insert({"version","7.6.0"});
+        telemetryUpdates.insert({"enabled","External"});
+        auto payload = TelemetrySerializer::serializeUpdatedTelemetry(telemetryUpdates);
+        auto result = TelemetrySerializer::jsonToString(payload);
+        string expected =  "{\"description\":\"CARMACloudPlugin description\",\"enabled\":\"External\",\"id\":\"CARMACloudPlugin\",\"name\":\"CARMACloudPlugin\",\"version\":\"7.6.0\"}";
+        ASSERT_EQ(expected, result);
+    }
+
+    TEST_F(TelemetrySerializerTest, serializeUpdatedTelemetryPayload){
+        map<string, string> telemetryUpdates;
+        telemetryUpdates.insert({"CARMACloudPlugin1","{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}"});
+        telemetryUpdates.insert({"dummy","{\"name\":\"dummy\",\"id\":\"1\",\"description\":\"dummy description\",\"version\":\"7.6.0\",\"enabled\":\"External\"}"});
+        auto payload = TelemetrySerializer::composeUpdatedTelemetryPayload(telemetryUpdates);
+        string expected = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"},{\"name\":\"dummy\",\"id\":\"1\",\"description\":\"dummy description\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
+        ASSERT_EQ(expected, payload);
     }
 }

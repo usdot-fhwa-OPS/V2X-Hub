@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <map>
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
 
@@ -18,7 +19,9 @@ namespace tmx::utils::telemetry{
         ~TelemetrySerializer()=delete;
         static tmx::message_container_type serializePluginTelemetry(const PluginTelemetry& pluginTelemetry);
         static tmx::message_container_type serializeFullPluginTelemetryPayload(const vector<PluginTelemetry>& pluginTelemetryList);
-        static string composeFullTelemetry(const string& header, const string& payloadContent);
+        static tmx::message_container_type serializeUpdatedTelemetry(const map<string, string>& updates);
+        static string composeUpdatedTelemetryPayload(const map<string, string>& updates);
+        static string composeCompleteTelemetry(const string& header, const string& payload);
         static tmx::message_container_type serializeTelemetryHeader(const TelemetryHeader& header);
         static string jsonToString(tmx::message_container_type& container);
     };

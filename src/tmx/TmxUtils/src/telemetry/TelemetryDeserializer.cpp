@@ -62,7 +62,7 @@ namespace tmx::utils::telemetry
                 auto telemetry = populatePluginTelemetry(itr.second);
                 result.push_back(telemetry);
             }
-        }catch(const boost::property_tree::ptree_bad_path & ex){
+        }catch(const boost::property_tree::ptree_bad_path & error){
             throw TelemetryDeserializerException("Cannot deserialize JSON as the JSON string has no \"payload\" field!");
         }
         return result;

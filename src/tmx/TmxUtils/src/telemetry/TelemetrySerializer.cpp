@@ -54,7 +54,32 @@ namespace tmx::utils::telemetry{
         return outputContainer;
     }
 
-    string TelemetrySerializer::composeFullTelemetry(const string& header, const string& payload){
+    tmx::message_container_type TelemetrySerializer::serializeUpdatedTelemetry(const map<string, string>& updates){
+        tmx::message_container_type pt;
+        for(const auto update : updates){
+            pt.store(message_path_type(update.first), update.second);
+        }
+        return pt;
+    }
+
+    string TelemetrySerializer::composeUpdatedTelemetryPayload(const map<string, string>& updates){
+        string payload = "{\"payload\":[";
+        //loop through updates
+        bool first = true;
+        for  (auto it = updates.begin();it != updates.end();it++)
+        {
+            if (first)
+                first = false;
+            else
+                payload+=",";
+            //append plugin json
+            payload+=it->second;
+        }
+        payload += "]}";
+        return payload;
+    }
+
+    string TelemetrySerializer::composeCompleteTelemetry(const string& header, const string& payload){
         //Remove the tailing bracket "}" from header
         string fullJsonString = header.substr(0,header.length()-1);
         fullJsonString+=",";
@@ -82,6 +107,7 @@ namespace tmx::utils::telemetry{
         boost::property_tree::write_json(ss, container.get_storage().get_tree(), false);
         string jsonString = ss.str();
         boost::erase_all(jsonString,"\n");
+        boost::replace_all(jsonString, "\\\"", "\"");
         return jsonString;
     }
 }
