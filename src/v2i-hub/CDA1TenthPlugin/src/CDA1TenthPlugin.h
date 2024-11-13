@@ -26,13 +26,13 @@
 #include <cppconn/resultset.h>
 #include <cppconn/statement.h>
 #include <cppconn/prepared_statement.h>
+#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <OAIDefaultApi.h>
 #include <QEventLoop>
 #include <QTimer>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
-#include "WebServiceClient.h"
 
 using namespace std;
 using namespace tmx;
@@ -44,8 +44,11 @@ using namespace OpenAPI;
 namespace CDA1TenthPlugin {
 // constant for MobilityOperation strategy	
 static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
+// TODO future implementation
+// static CONSTEXPR const char *RIDESHARE_STRATEGY = "rideshare";
 
 // Enumeration for different operations
+// !! Rework needed to handle more generic operation, remove switch case
 enum Operation {
 	PICKUP,DROPOFF,CHECKPOINT,HOLDING,ENTER_STAGING,EXIT_STAGING,ENTER_PORT,EXIT_PORT
 };
@@ -71,7 +74,7 @@ std::string operation_to_string( Operation operation ) {
 		default:
 			return "INVALID_OPERATION";
 	}
-} 
+}
 /**
  * TODO DESCRIPTION
  *    
@@ -120,10 +123,10 @@ protected:
 	/**
 	 * Method to create port drayage payload JSON ptree using a CDA1Tenth_Object.
 	 * 
-	 * @param pd_obj Port Drayage object.
+	 * @param cda1t_obj Port Drayage object.
 	 * @return json ptree
 	 */
-	ptree createCDA1TenthJson( const CDA1Tenth_Object &pd_obj);
+	ptree createCDA1TenthJson( const CDA1Tenth_Object &cda1t_obj);
 	/**
 	 * Create CDA1Tenth_Object from ptree JSON.
 	 * 
@@ -147,6 +150,13 @@ protected:
 	 */
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
 
+	/**
+	 * Handle BasicSafety message.
+	 * 
+	 * @param BsmMessage J2735 BasicSafety message
+	 * @param routeableMsg JSON BasicSafety message
+	 */
+	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
 	
 private: 
 	// Database configuration values
@@ -164,8 +174,8 @@ private:
 	// Message Factory for J2735 messages
 	J2735MessageFactory factory;
 	
-	// Web Service Client 
-	std::shared_ptr<WebServiceClient> client;
+	// TODO New Web Service Client 
+	// std::shared_ptr<WebServiceClient> client;
 
 	// Port HOLDING_AREA Configuration
 	double _holding_lat;
