@@ -425,7 +425,9 @@ public:
 		{
 			if (msgId > MessageFrameMessage::get_default_messageId())
 			{
+				std::cout<<"encoding function"<<std::endl;
 				MessageFrameMessage frame(message.get_j2735_data());
+				std::cout<<"got data"<<std::endl;
 				frame.flush();
 				this->set_data(TmxJ2735EncodedMessage<MsgType>::encode_j2735_message<
 						codec::uper<MessageFrameMessage> >(frame));

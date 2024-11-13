@@ -165,6 +165,7 @@ public:
 			asn_dec_rval_t rval;
 
 			rval = xer_decode(NULL, get_descriptor(), (void **)&tmp, myData.c_str(), myData.size());
+			std::cout<<"getting data, checking to see if decoded properly"<<std::endl;
 			if (rval.code != RC_OK)
 			{
 				std::stringstream err;
