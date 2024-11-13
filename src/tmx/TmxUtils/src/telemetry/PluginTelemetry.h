@@ -50,7 +50,6 @@ namespace tmx::utils::telemetry
          */
         tmx::message_container_type serialize() const;
         void deserialize(const boost::property_tree::ptree& jsonContainer);
-        friend ostream& operator <<(ostream& os, const PluginTelemetry& telemetry);
         ~PluginTelemetry()=default;
     };
     
