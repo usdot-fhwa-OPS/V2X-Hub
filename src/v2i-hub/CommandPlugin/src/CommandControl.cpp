@@ -19,6 +19,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 	map<string, string> *pluginsJSON;
 	map<string, string> *pluginsUpdatesJSON;
 	map<string, string> *pluginsRemoveJSON;
+	map<string, tmx::message_container_type> *pluginsUpdatesContainer;
 	string pJSON;
 	plugins.push_back("%");
 	if (dataType == "List")
@@ -27,12 +28,12 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 		if (_haveList)
 		{
 			//save full json output
-			_listJSON = _tmxControl.GetOutput(TmxControlOutputFormat_JSON, false);
+			_listJSON= *_tmxControl.GetOutput();
 			//set flag to process
 			processTelemetry = true;
 			//set pointers
 			pluginsJSON = &_listPluginsJSON;
-			pluginsUpdatesJSON = &_listPluginsUpdatesJSON;
+			pluginsUpdatesContainer = &_listPluginsUpdatesJSON;
 			pluginsRemoveJSON = &_listPluginsRemoveJSON;
 		}
 	}
@@ -129,7 +130,11 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 	if (processTelemetry)
 	{
 		//clear updates
-		pluginsUpdatesJSON->clear();
+		if(dataType =="List"){
+			pluginsUpdatesContainer->clear();
+		}else{
+			pluginsUpdatesJSON->clear();
+		}		
 		//for each plugin
 		tmx::message_container_type *output = _tmxControl.GetOutput();
 		auto payloadExist = output->get_storage().get_tree().get_child_optional("payload");
@@ -151,7 +156,6 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 					tmpTree.put_child(pluginName, plugin);
 				else
 					tmpTree.put(pluginName, plugin.data());
-
 				boost::property_tree::write_json(ss, tmpTree, false);
 				pJSON = ss.str();
 				boost::algorithm::trim(pJSON);
@@ -174,7 +178,6 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 					tmpPluginUpdates["name"]=pluginName;
 					if (dataType == "List" || dataType == "State")
 					{
-						(*pluginsUpdatesJSON)[pluginName].append("\": {");
 						//loop through all name/value pairs of new data and check against old data if updated
 						BOOST_FOREACH(ptree::value_type &nvp, plugin)
 						{
@@ -204,7 +207,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 						}
 						//close plugin brackets
 						auto pluginUpdatesJson = TelemetrySerializer::serializeUpdatedTelemetry(tmpPluginUpdates);
-						(*pluginsUpdatesJSON)[pluginName] =  TelemetrySerializer::jsonToString(pluginUpdatesJson);
+						(*pluginsUpdatesContainer)[pluginName] =  pluginUpdatesJson;
 					}
 					else if (dataType == "Status")
 					{
@@ -372,10 +375,11 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 	ostringstream oss;
 	bool processTelemetry = false;
 	string output;
+	tmx::message_container_type outputContainer;
 
 	if (dataType == "List" && _haveList)
 	{
-		output = _listJSON;
+		outputContainer = _listJSON;
 		processTelemetry = true;
 	}
 	else if (dataType == "Status" && _haveStatus)
@@ -419,7 +423,7 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 	{
 		//build  message
 		if (dataType != "List"){			
-			//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
+			//TODO: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
 			outputBuffer->append("\x02{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"");
 			outputBuffer->append(dataType);
 			outputBuffer->append("\",\"encoding\":\"jsonstring\",\"timestamp\":\"");
@@ -444,12 +448,11 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 		{
 			if (dataType == "List"){
 				TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch()};
-				auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
-				auto headerString = TelemetrySerializer::jsonToString(headerContainer);
-				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerString, output));
+				auto headerJson = TelemetrySerializer::serializeTelemetryHeader(header);
+				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerJson, outputContainer));
 				return; //Return to skip appending any more characters
 			}else{
-				//ToDo: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
+				//TODO: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
 				outputBuffer->append(output);
 			}
 		}
@@ -463,12 +466,13 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, const string & da
 	ostringstream oss;
 	bool processTelemetry = false;
 	static std::map<string, string> *updates;
+	static std::map<string, tmx::message_container_type> *updatesContainer;
 
 	if (dataType == "List" && _haveList)
 	{
 		if (_listPluginsUpdatesJSON.size() > 0)
 		{
-			updates = &_listPluginsUpdatesJSON;
+			updatesContainer = &_listPluginsUpdatesJSON;
 			processTelemetry = true;
 		}
 	}
@@ -553,9 +557,8 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, const string & da
 			if(dataType == "List"){
 				TelemetryHeader header{"Telemetry",dataType, "jsonstring", GetMsTimeSinceEpoch()};
 				auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
-				string headerStr = TelemetrySerializer::jsonToString(headerContainer);
-				string payload = TelemetrySerializer::composeUpdatedTelemetryPayload(*updates);
-				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerStr, payload));
+				auto payloadContainer = TelemetrySerializer::composeUpdatedTelemetryPayload(*updatesContainer);
+				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerContainer, payloadContainer));
 			}else{
 				outputBuffer->append("\",\"flags\":\"0\"},\"payload\":{");
 

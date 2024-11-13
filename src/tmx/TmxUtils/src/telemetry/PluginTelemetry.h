@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <iostream>
+#include <tmx/TmxException.hpp>
+#include <tmx/messages/message.hpp>
 using namespace std;
 
 namespace tmx::utils::telemetry
@@ -42,6 +44,12 @@ namespace tmx::utils::telemetry
         PluginInstallation getPluginInstallation() const;
         void setPluginInfo(PluginInfo pluginInfo);
         void setPluginInstallation(PluginInstallation pluginInstallation);
+         /***
+         * @brief Serialize PluginTelemetry object into JSON container (tmx::message_container_type)
+         * @return A JSON container of tmx::message_container_type
+         */
+        tmx::message_container_type serialize() const;
+        void deserialize(const boost::property_tree::ptree& jsonContainer);
         friend ostream& operator <<(ostream& os, const PluginTelemetry& telemetry);
         ~PluginTelemetry()=default;
     };

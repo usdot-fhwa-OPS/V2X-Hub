@@ -6,6 +6,7 @@
 
 #include "PluginTelemetry.h"
 #include "TelemetryDeserializerException.h"
+#include "TelemetryMetadata.h"
 
 using namespace std;
 
@@ -13,22 +14,35 @@ namespace tmx::utils::telemetry
 {
     class TelemetryDeserializer
     {
-    private:
-        static PluginTelemetry  populatePluginTelemetry(const boost::property_tree::ptree& value);
     public:
         TelemetryDeserializer() = default;
         /***
-         * @brief Deserialize JSON string into a vector of PluginTelemetry objects
+         * @brief Deserialize JSON string into a vector of telemetry objects
          * @param JSON string object 
-         * @return Vector of PluginTelemetry objects
+         * @return Vector of telemetry objects
          */
-        static vector<PluginTelemetry> desrializeFullPluginTelemetryPayload(const string& jsonString);
-        /***
-         * @brief Deserialize JSON string into PluginTelemetry object
-         * @param JSON string object 
-         * @return PluginTelemetry object
-         */
-        static PluginTelemetry deserialzePluginTelemetry(const string & jsonString);
+        template <typename T>
+        static vector<T> desrializeFullTelemetryPayload(const boost::property_tree::ptree& jsonContainer){
+            vector<T> result;      
+            if(jsonContainer.empty()){
+                throw TelemetryDeserializerException("JSON cannot be empty!");
+            }
+            try{
+                auto payload = jsonContainer.get_child(PAYLOAD_STRING);
+                if(payload.empty()){
+                    throw TelemetryDeserializerException("JSON payload cannot be empty!");
+                }
+                //Payload content is an array of T  
+                BOOST_FOREACH(auto& itr, payload){
+                    T telemetry;
+                    telemetry.deserialize(itr.second);
+                    result.push_back(telemetry);
+                }
+            }catch(const boost::property_tree::ptree_bad_path & error){
+                throw TelemetryDeserializerException("Cannot deserialize JSON as the JSON string has no \"payload\" field!");
+            }
+            return result;
+        }
         /***
          * @brief Convert JSON String into boost::property_tree::ptree object
          * @param JSON string object 
