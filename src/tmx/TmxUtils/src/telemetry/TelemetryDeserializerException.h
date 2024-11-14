@@ -5,7 +5,7 @@ namespace tmx::utils::telemetry{
     class TelemetryDeserializerException: public tmx::TmxException
     {
     public:
-        explicit TelemetryDeserializerException(const std::string& errorMessage): tmx::TmxException(errorMessage){};
-        ~TelemetryDeserializerException()=default;
+        using tmx::TmxException::TmxException;
+        ~TelemetryDeserializerException() override =default;
     };
 }

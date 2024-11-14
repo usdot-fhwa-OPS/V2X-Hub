@@ -9,7 +9,7 @@ namespace tmx::utils::telemetry
             ss << jsonString;
             boost::property_tree::read_json(ss, pt);
             return pt;
-        }catch(boost::property_tree::json_parser::json_parser_error error){
+        }catch(boost::property_tree::json_parser::json_parser_error& error){
             throw TelemetryDeserializerException("Cannot parse JSON string due to error: "+  error.message());
         }
     }

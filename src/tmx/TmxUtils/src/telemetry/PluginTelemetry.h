@@ -42,8 +42,8 @@ namespace tmx::utils::telemetry
         PluginTelemetry()=default;
         PluginInfo getPluginInfo() const;
         PluginInstallation getPluginInstallation() const;
-        void setPluginInfo(PluginInfo pluginInfo);
-        void setPluginInstallation(PluginInstallation pluginInstallation);
+        void setPluginInfo(const PluginInfo& pluginInfo);
+        void setPluginInstallation(const PluginInstallation& pluginInstallation);
          /***
          * @brief Serialize PluginTelemetry object into JSON container (tmx::message_container_type)
          * @return A JSON container of tmx::message_container_type

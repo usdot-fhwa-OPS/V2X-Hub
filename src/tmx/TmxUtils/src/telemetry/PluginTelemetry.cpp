@@ -8,11 +8,11 @@ namespace tmx::utils::telemetry{
         return _pluginInstallation;
     }
 
-    void PluginTelemetry::setPluginInfo(PluginInfo pluginInfo){
+    void PluginTelemetry::setPluginInfo(const PluginInfo& pluginInfo){
         _pluginInfo = pluginInfo;
     }
     
-    void PluginTelemetry::setPluginInstallation(PluginInstallation pluginInstallation){
+    void PluginTelemetry::setPluginInstallation(const PluginInstallation& pluginInstallation){
         _pluginInstallation = pluginInstallation;
     }
 

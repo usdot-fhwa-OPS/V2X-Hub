@@ -43,7 +43,6 @@ namespace tmx::utils::telemetry{
         boost::property_tree::write_json(ss, container.get_storage().get_tree(), false);
         string jsonString = ss.str();
         boost::erase_all(jsonString,"\n");
-        boost::replace_all(jsonString, "\\\"", "\"");
         return jsonString;
     }
 }
