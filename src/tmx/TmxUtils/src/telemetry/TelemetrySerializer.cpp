@@ -3,7 +3,7 @@
 namespace tmx::utils::telemetry{
     tmx::message_container_type TelemetrySerializer::serializeUpdatedTelemetry(const map<string, string>& updates){
         tmx::message_container_type pt;
-        for(const auto update : updates){
+        for(const auto& update : updates){
             pt.store(message_path_type(update.first), update.second);
         }
         return pt;
