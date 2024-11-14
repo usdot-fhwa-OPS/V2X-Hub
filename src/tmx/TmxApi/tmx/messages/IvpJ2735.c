@@ -41,38 +41,38 @@ asn_TYPE_descriptor_t *getTypeDescriptorFromMsgId(e_DSRCmsgID msgId)
 	switch(msgId)
 	{
 //		case DSRCmsgID_alaCarteMessage: return &asn_DEF_AlaCarte;
-		case DSRCmsgID_basicSafetyMessage: return &asn_DEF_BasicSafetyMessage;
+		case msgID_basicSafetyMessage: return &asn_DEF_BasicSafetyMessage;
 #if SAEJ2735_SPEC < 63
-		case DSRCmsgID_basicSafetyMessageVerbose: return &asn_DEF_BasicSafetyMessageVerbose;
+		case msgID_basicSafetyMessageVerbose: return &asn_DEF_BasicSafetyMessageVerbose;
 #endif
-		case DSRCmsgID_commonSafetyRequest: return &asn_DEF_CommonSafetyRequest;
-		case DSRCmsgID_emergencyVehicleAlert: return &asn_DEF_EmergencyVehicleAlert;
-		case DSRCmsgID_intersectionCollision: return &asn_DEF_IntersectionCollision;
-		case DSRCmsgID_mapData: return &asn_DEF_MapData;
-		case DSRCmsgID_nmeaCorrections:
+		case msgID_commonSafetyRequest: return &asn_DEF_CommonSafetyRequest;
+		case msgID_emergencyVehicleAlert: return &asn_DEF_EmergencyVehicleAlert;
+		case msgID_intersectionCollisionAlert: return &asn_DEF_IntersectionCollision;
+		case msgID_mapData: return &asn_DEF_MapData;
+		case msgID_nmeaCorrections:
 #if SAEJ2735_SPEC < 63
 			return &asn_DEF_NMEA_Corrections;
 #else
 			return &asn_DEF_NMEAcorrections;
 #endif
-		case DSRCmsgID_probeDataManagement: return &asn_DEF_ProbeDataManagement;
-		case DSRCmsgID_probeVehicleData: return &asn_DEF_ProbeVehicleData;
-		case DSRCmsgID_roadSideAlert: return &asn_DEF_RoadSideAlert;
-		case DSRCmsgID_rtcmCorrections:
+		case msgID_probeDataManagement: return &asn_DEF_ProbeDataManagement;
+		case msgID_probeVehicleData: return &asn_DEF_ProbeVehicleData;
+		case msgID_roadSideAlert: return &asn_DEF_RoadSideAlert;
+		case msgID_rtcmCorrections:
 #if SAEJ2735_SPEC < 63
 			return &asn_DEF_RTCM_Corrections;
 #else
 			return &asn_DEF_RTCMcorrections;
 #endif
-		case DSRCmsgID_signalPhaseAndTimingMessage: return &asn_DEF_SPAT;
-		case DSRCmsgID_signalRequestMessage:
+		case msgID_signalPhaseAndTimingMessage: return &asn_DEF_SPAT;
+		case msgID_signalRequestMessage:
 #if SAEJ2735_SPEC < 63
 			return &asn_DEF_SignalRequestMsg;
 #else
 			return &asn_DEF_SignalRequestMessage;
 #endif
-		case DSRCmsgID_signalStatusMessage: return &asn_DEF_SignalStatusMessage;
-		case DSRCmsgID_travelerInformation: return &asn_DEF_TravelerInformation;
+		case msgID_signalStatusMessage: return &asn_DEF_SignalStatusMessage;
+		case msgID_travelerInformation: return &asn_DEF_TravelerInformation;
 		default: break;
 	}
 
@@ -83,22 +83,22 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 {
 	switch(msgId)
 	{
-//		case DSRCmsgID_alaCarteMessage: return "ACM";
-		case DSRCmsgID_basicSafetyMessage: return "BSM";
-		case DSRCmsgID_basicSafetyMessageVerbose: return "BSMV";
-		case DSRCmsgID_commonSafetyRequest: return "CSR";
-		case DSRCmsgID_emergencyVehicleAlert: return "EVA";
-		case DSRCmsgID_intersectionCollisionAlert: return "IC"; // I think this can be changed to intersectionCollision
-		case DSRCmsgID_mapData: return "MAP";
-		case DSRCmsgID_nmeaCorrections: return "NMEA";
-		case DSRCmsgID_probeDataManagement: return "PDM";
-		case DSRCmsgID_probeVehicleData: return "PVD";
-		case DSRCmsgID_roadSideAlert: return "RSA";
-		case DSRCmsgID_rtcmCorrections: return "RTCM";
-		case DSRCmsgID_signalPhaseAndTimingMessage: return "SPAT";
-		case DSRCmsgID_signalRequestMessage: return "SRM";
-		case DSRCmsgID_signalStatusMessage: return "SSM";
-		case DSRCmsgID_travelerInformation: return "TIM";
+//		case msgID_alaCarteMessage: return "ACM";
+		case msgID_basicSafetyMessage: return "BSM";
+		case msgID_basicSafetyMessageVerbose: return "BSMV";
+		case msgID_commonSafetyRequest: return "CSR";
+		case msgID_emergencyVehicleAlert: return "EVA";
+		case msgID_intersectionCollisionAlert: return "IC"; // I think this can be changed to intersectionCollision
+		case msgID_mapData: return "MAP";
+		case msgID_nmeaCorrections: return "NMEA";
+		case msgID_probeDataManagement: return "PDM";
+		case msgID_probeVehicleData: return "PVD";
+		case msgID_roadSideAlert: return "RSA";
+		case msgID_rtcmCorrections: return "RTCM";
+		case msgID_signalPhaseAndTimingMessage: return "SPAT";
+		case msgID_signalRequestMessage: return "SRM";
+		case msgID_signalStatusMessage: return "SSM";
+		case msgID_travelerInformation: return "TIM";
 		default: break;
 	}
 
@@ -109,22 +109,22 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 {
 	switch(msgId)
 	{
-//		case DSRCmsgID_alaCarteMessage: return "DSRC AlaCarte Message";
-		case DSRCmsgID_basicSafetyMessage: return "DSRC Basic Safety Message";
-		case DSRCmsgID_basicSafetyMessageVerbose: return "DSRC Basic Safety Message Verbose";
-		case DSRCmsgID_commonSafetyRequest: return "DSRC Common Safety Request";
-		case DSRCmsgID_emergencyVehicleAlert: return "DSRC Emergency Vehicle Alert";
-		case DSRCmsgID_intersectionCollisionAlert: return "DSRC Intersection Collision";
-		case DSRCmsgID_mapData: return "DSRC Map Data";
-		case DSRCmsgID_nmeaCorrections: return "DSRC NMEA Corrections";
-		case DSRCmsgID_probeDataManagement: return "DSRC Probe Data Management";
-		case DSRCmsgID_probeVehicleData: return "DSRC Probe Vehicle Data";
-		case DSRCmsgID_roadSideAlert: return "DSRC Road Side Alert";
-		case DSRCmsgID_rtcmCorrections: return "DSRC RTCM Corrections";
-		case DSRCmsgID_signalPhaseAndTimingMessage: return "DSRC SPAT Message";
-		case DSRCmsgID_signalRequestMessage: return "DSRC Signal Request Message";
-		case DSRCmsgID_signalStatusMessage: return "DSRC Signal Status Message";
-		case DSRCmsgID_travelerInformation: return "DSRC Traveler Information Message";
+//		case msgID_alaCarteMessage: return "DSRC AlaCarte Message";
+		case msgID_basicSafetyMessage: return "DSRC Basic Safety Message";
+		case msgID_basicSafetyMessageVerbose: return "DSRC Basic Safety Message Verbose";
+		case msgID_commonSafetyRequest: return "DSRC Common Safety Request";
+		case msgID_emergencyVehicleAlert: return "DSRC Emergency Vehicle Alert";
+		case msgID_intersectionCollisionAlert: return "DSRC Intersection Collision";
+		case msgID_mapData: return "DSRC Map Data";
+		case msgID_nmeaCorrections: return "DSRC NMEA Corrections";
+		case msgID_probeDataManagement: return "DSRC Probe Data Management";
+		case msgID_probeVehicleData: return "DSRC Probe Vehicle Data";
+		case msgID_roadSideAlert: return "DSRC Road Side Alert";
+		case msgID_rtcmCorrections: return "DSRC RTCM Corrections";
+		case msgID_signalPhaseAndTimingMessage: return "DSRC SPAT Message";
+		case msgID_signalRequestMessage: return "DSRC Signal Request Message";
+		case msgID_signalStatusMessage: return "DSRC Signal Status Message";
+		case msgID_travelerInformation: return "DSRC Traveler Information Message";
 		default: break;
 	}
 
@@ -135,7 +135,7 @@ e_DSRCmsgID getMsgIdFromMessageSubType(const char *subtype)
 {
 	assert(subtype != NULL);
 	if (subtype == NULL)
-		return DSRCmsgID_reserved;
+		return msgID_reserved;
 
 	int i;
 	for(i = 0; i <= 255; i++)
@@ -145,7 +145,7 @@ e_DSRCmsgID getMsgIdFromMessageSubType(const char *subtype)
 				return i;
 	}
 
-	return DSRCmsgID_reserved;
+	return msgID_reserved;
 }
 
 e_DSRCmsgID getMsgIdFromRaw(uint8_t *msg, unsigned int msgLength)
@@ -164,7 +164,7 @@ e_DSRCmsgID getMsgIdFromRaw(uint8_t *msg, unsigned int msgLength)
 		return msg[i + 2];
 	}
 
-	return DSRCmsgID_reserved;
+	return msgID_reserved;
 }
 
 int ivpJ2735_isJ2735Msg(IvpMessage *msg)
@@ -244,7 +244,7 @@ IvpJ2735Msg *ivpJ2735_getJ2735Msg(IvpMessage *msg)
 	//vvv the actual working part of the code vvv
 	e_DSRCmsgID msgId = getMsgIdFromMessageSubType(msg->subtype);
 
-	if (msgId == DSRCmsgID_reserved)
+	if (msgId == msgID_reserved)
 		return NULL;
 
 	asn_TYPE_descriptor_t *typeDescriptor = getTypeDescriptorFromMsgId(msgId);
@@ -328,7 +328,7 @@ IvpMessage *ivpJ2735_createMsgFromEncoded(uint8_t *msg, unsigned int msgLength, 
 	if (payload != NULL)
 	{
 		e_DSRCmsgID msgId = getMsgIdFromRaw(msg, msgLength);
-		if (msgId != DSRCmsgID_reserved)
+		if (msgId != msgID_reserved)
 		{
 			const char *subtype = getMessageSubTypeFromMsgId(msgId);
 			assert(subtype != NULL);
@@ -386,7 +386,7 @@ IvpJ2735EncodedMsg *ivpJ2735_getJ2735EncodedMsg(IvpMessage *msg)
 	//vvv the actual working part of the code vvv
 	e_DSRCmsgID msgId = getMsgIdFromMessageSubType(msg->subtype);
 
-	if (msgId == DSRCmsgID_reserved)
+	if (msgId == msgID_reserved)
 		return NULL;
 
 	int payloadLength = strlen(msg->payload->valuestring)/2;
@@ -436,7 +436,7 @@ IvpJ2735Msg *ivpJ2735_decode(uint8_t *msg, unsigned int msgLength)
 	//vvv the actual working part of the code vvv
 	e_DSRCmsgID msgId = getMsgIdFromRaw(msg, msgLength);
 
-	if (msgId == DSRCmsgID_reserved)
+	if (msgId == msgID_reserved)
 		return NULL;
 
 	asn_TYPE_descriptor_t *typeDescriptor = getTypeDescriptorFromMsgId(msgId);
