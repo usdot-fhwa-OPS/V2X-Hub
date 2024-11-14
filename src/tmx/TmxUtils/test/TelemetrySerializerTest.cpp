@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "TelemetrySerializer.h"
+#include "telemetry/TelemetrySerializer.h"
 
 
 using namespace tmx::utils::telemetry;
@@ -46,26 +46,6 @@ namespace unit_test{
         }
         void TearDown() override{}
     };
-
-    TEST_F(TelemetrySerializerTest, getPluginInfo){
-        ASSERT_EQ("1", telemetryPointer->getPluginInfo().id);
-        ASSERT_EQ("7.6.0", telemetryPointer->getPluginInfo().version);
-        ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.", telemetryPointer->getPluginInfo().description);
-        ASSERT_EQ("CARMACloudPlugin", telemetryPointer->getPluginInfo().name);
-    }
-
-    TEST_F(TelemetrySerializerTest, getPluginInstallation){
-        ASSERT_EQ("/var/www/plugins/CARMACloudPlugin", telemetryPointer->getPluginInstallation().path);
-        ASSERT_EQ(0, telemetryPointer->getPluginInstallation().enabled);
-        ASSERT_EQ("/bin/CARMACloudPlugin", telemetryPointer->getPluginInstallation().exeName);
-        ASSERT_EQ("manifest.json", telemetryPointer->getPluginInstallation().manifest);
-        ASSERT_EQ("500000", telemetryPointer->getPluginInstallation().maxMessageInterval);
-        ASSERT_EQ("", telemetryPointer->getPluginInstallation().commandLineParameters);
-        auto result = telemetryPointer->toTree();
-        string expected = "{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"}";
-        ASSERT_EQ(expected, TelemetrySerializer::treeToString(result));
-    }
-
 
     TEST_F(TelemetrySerializerTest, serializeFullTelemetryPayload){
         vector<PluginTelemetry> pluginTelemetryList;

@@ -140,7 +140,7 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 		auto payloadExist = output->get_storage().get_tree().get_child_optional("payload");
 		if(payloadExist){
 			auto payload = payloadExist.get();
-			BOOST_FOREACH(ptree::value_type &payloadItem, payload)
+			for(ptree::value_type &payloadItem: payload)
 			{
 				auto plugin = payloadItem.second;
 				stringstream ss;
@@ -450,7 +450,7 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 				TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch(),"0"};
 				auto headerJson = TelemetrySerializer::serializeTelemetryHeader(header);
 				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerJson, outputContainer));
-				return; //Return to skip appending any more characters
+				return; //TODO: Temporarily return to skip appending any more characters
 			}else{
 				//TODO: Keep existing header build logic as it for the other dataTypes as we are in progress of updating headers for all dataTypes.
 				outputBuffer->append(output);

@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "TelemetryDeserializer.h"
+#include "telemetry/TelemetryDeserializer.h"
 
 using namespace tmx::utils::telemetry;
 namespace unit_test{
