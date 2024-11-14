@@ -634,7 +634,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	ss<<tsm5str;
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());
-	tsm5Enc.encode_j2735_message(tsm5msg); //
+	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
 
