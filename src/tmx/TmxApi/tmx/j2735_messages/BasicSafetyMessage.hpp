@@ -12,7 +12,6 @@
 #include <BasicSafetyMessage.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
-//#include <MessageFrame.h>
 
 #if SAEJ2735_SPEC < 63
 TMX_J2735_DECLARE(Bsm, BasicSafetyMessage, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
