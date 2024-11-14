@@ -48,8 +48,8 @@ namespace tmx::utils::telemetry
          * @brief Serialize PluginTelemetry object into JSON container (tmx::message_container_type)
          * @return A JSON container of tmx::message_container_type
          */
-        tmx::message_container_type serialize() const;
-        void deserialize(const boost::property_tree::ptree& jsonContainer);
+        tmx::message_container_type toTree() const;
+        void fromTree(const boost::property_tree::ptree& jsonContainer);
         ~PluginTelemetry()=default;
     };
     

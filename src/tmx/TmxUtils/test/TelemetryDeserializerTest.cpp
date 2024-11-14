@@ -11,8 +11,8 @@ namespace unit_test{
 
     TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayload){
         string jsonString = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin2\",\"id\":\"2\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
-        auto jsonContainer = TelemetryDeserializer::stringToJson(jsonString);
-        auto telemetryList =  TelemetryDeserializer::desrializeFullTelemetryPayload<PluginTelemetry>(jsonContainer);
+        auto jsonContainer = TelemetryDeserializer::stringToTree(jsonString);
+        auto telemetryList =  TelemetryDeserializer::deserializeFullTelemetryPayload<PluginTelemetry>(jsonContainer);
         ASSERT_EQ(2, telemetryList.size());
         
         ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.",telemetryList.begin()->getPluginInfo().description);
@@ -37,8 +37,8 @@ namespace unit_test{
 
     TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadPluginInfoOnly){        
         string jsonString = "{\"payload\":[{\"description\" : \"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"id\" : \"1\",\"name\" : \"CARMACloudPlugin\",\"version\" : \"7.6.0\"}]}";
-        auto jsonContainer = TelemetryDeserializer::stringToJson(jsonString);
-        auto telemetryList =  TelemetryDeserializer::desrializeFullTelemetryPayload<PluginTelemetry>(jsonContainer);
+        auto jsonContainer = TelemetryDeserializer::stringToTree(jsonString);
+        auto telemetryList =  TelemetryDeserializer::deserializeFullTelemetryPayload<PluginTelemetry>(jsonContainer);
         ASSERT_EQ(1, telemetryList.size());
         ASSERT_EQ("CARMA cloud plugin for making websocket connection with CARMA cloud.",telemetryList.begin()->getPluginInfo().description);
         ASSERT_EQ("1",telemetryList.begin()->getPluginInfo().id);
@@ -47,14 +47,14 @@ namespace unit_test{
     }
 
     TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadEmpty){
-        ASSERT_THROW(TelemetryDeserializer::desrializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToJson("")), tmx::TmxException);
+        ASSERT_THROW(TelemetryDeserializer::deserializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToTree("")), tmx::TmxException);
     }
 
     TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadNotArray){
-        ASSERT_THROW(TelemetryDeserializer::desrializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToJson("{\"payload\":{\"test\": \"0\"}}")), tmx::TmxException);
+        ASSERT_THROW(TelemetryDeserializer::deserializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToTree("{\"payload\":{\"test\": \"0\"}}")), tmx::TmxException);
     }
 
     TEST_F(TelemetryDeserializerTest, desrializeFullPluginTelemetryPayloadContentEmpty){
-        ASSERT_THROW(TelemetryDeserializer::desrializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToJson("{\"payload\":[{}]}")), tmx::TmxException);
+        ASSERT_THROW(TelemetryDeserializer::deserializeFullTelemetryPayload<PluginTelemetry>(TelemetryDeserializer::stringToTree("{\"payload\":[{}]}")), tmx::TmxException);
     }
 }

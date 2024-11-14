@@ -9,5 +9,6 @@ namespace tmx::utils::telemetry{
         string subtype;
         string encoding;
         uint64_t timestamp;
+        string flags;
     };
 }

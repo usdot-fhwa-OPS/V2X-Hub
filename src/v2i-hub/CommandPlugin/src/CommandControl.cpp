@@ -447,7 +447,7 @@ void CommandPlugin::BuildFullTelemetry(string *outputBuffer, const string & data
 		else
 		{
 			if (dataType == "List"){
-				TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch()};
+				TelemetryHeader header{"Telemetry" , dataType, "jsonstring", GetMsTimeSinceEpoch(),"0"};
 				auto headerJson = TelemetrySerializer::serializeTelemetryHeader(header);
 				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerJson, outputContainer));
 				return; //Return to skip appending any more characters
@@ -555,7 +555,7 @@ void CommandPlugin::BuildUpdateTelemetry(string *outputBuffer, const string & da
 		else
 		{
 			if(dataType == "List"){
-				TelemetryHeader header{"Telemetry",dataType, "jsonstring", GetMsTimeSinceEpoch()};
+				TelemetryHeader header{"Telemetry",dataType, "jsonstring", GetMsTimeSinceEpoch(),"0"};
 				auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
 				auto payloadContainer = TelemetrySerializer::composeUpdatedTelemetryPayload(*updatesContainer);
 				outputBuffer->append(TelemetrySerializer::composeCompleteTelemetry(headerContainer, payloadContainer));

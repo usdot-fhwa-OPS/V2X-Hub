@@ -27,7 +27,7 @@ namespace tmx::utils::telemetry{
             tmx::message_container_type outputContainer;
             boost::property_tree::ptree ptArray;
             for(const auto& telemetry: telemetryList){
-                auto output = telemetry.serialize();
+                auto output = telemetry.toTree();
                 ptArray.push_back(boost::property_tree::ptree::value_type("",output.get_storage().get_tree()));
             }
             outputContainer.get_storage().get_tree().put_child(PAYLOAD_STRING, ptArray);
@@ -63,6 +63,6 @@ namespace tmx::utils::telemetry{
          * @param tmx::message_container_type object
          * @return JSON string object
          */
-        static string jsonToString(tmx::message_container_type& container);
+        static string treeToString(tmx::message_container_type& container);
     };
 }

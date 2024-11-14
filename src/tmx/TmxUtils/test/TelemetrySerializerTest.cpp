@@ -61,9 +61,9 @@ namespace unit_test{
         ASSERT_EQ("manifest.json", telemetryPointer->getPluginInstallation().manifest);
         ASSERT_EQ("500000", telemetryPointer->getPluginInstallation().maxMessageInterval);
         ASSERT_EQ("", telemetryPointer->getPluginInstallation().commandLineParameters);
-        auto result = telemetryPointer->serialize();
+        auto result = telemetryPointer->toTree();
         string expected = "{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"}";
-        ASSERT_EQ(expected, TelemetrySerializer::jsonToString(result));
+        ASSERT_EQ(expected, TelemetrySerializer::treeToString(result));
     }
 
 
@@ -72,21 +72,21 @@ namespace unit_test{
         pluginTelemetryList.push_back(*telemetryPointer.get());
         pluginTelemetryList.push_back(*telemetryPluginInfoOnlyPointer.get());
         auto telemetryContainer = TelemetrySerializer::serializeFullTelemetryPayload<PluginTelemetry>(pluginTelemetryList);
-        string result = TelemetrySerializer::jsonToString(telemetryContainer);
+        string result = TelemetrySerializer::treeToString(telemetryContainer);
         string expected = "{\"payload\":[{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"Disabled\",\"path\":\"manifest.json\",\"exeName\":\"\\/bin\\/CARMACloudPlugin\",\"maxMessageInterval\":\"500000\",\"commandLineParameters\":\"\"},{\"name\":\"CARMACloudPlugin\",\"id\":\"1\",\"description\":\"CARMA cloud plugin for making websocket connection with CARMA cloud.\",\"version\":\"7.6.0\",\"enabled\":\"External\"}]}";
         ASSERT_EQ(expected, result);
     }
 
     TEST_F(TelemetrySerializerTest, serializeTelemetryHeader){
-        TelemetryHeader header{"Telemetry","List","JsonString",12212};
+        TelemetryHeader header{"Telemetry","List","JsonString",12212,"0"};
         auto headerContainer = TelemetrySerializer::serializeTelemetryHeader(header);
-        auto result = TelemetrySerializer::jsonToString(headerContainer);
+        auto result = TelemetrySerializer::treeToString(headerContainer);
         string expected = "{\"header\":{\"type\":\"Telemetry\",\"subtype\":\"List\",\"encoding\":\"JsonString\",\"timestamp\":\"12212\",\"flags\":\"0\"}}";
         ASSERT_EQ(expected, result);
     }
 
     TEST_F(TelemetrySerializerTest, composeCompleteTelemetry){
-        TelemetryHeader header{"Telemetry","List","JsonString",12212};
+        TelemetryHeader header{"Telemetry","List","JsonString",12212,"0"};
         auto headerJson = TelemetrySerializer::serializeTelemetryHeader(header);
         
         vector<PluginTelemetry> pluginTelemetryList;
@@ -107,7 +107,7 @@ namespace unit_test{
         telemetryUpdates.insert({"version","7.6.0"});
         telemetryUpdates.insert({"enabled","External"});
         auto payload = TelemetrySerializer::serializeUpdatedTelemetry(telemetryUpdates);
-        auto result = TelemetrySerializer::jsonToString(payload);
+        auto result = TelemetrySerializer::treeToString(payload);
         string expected =  "{\"description\":\"CARMACloudPlugin description\",\"enabled\":\"External\",\"id\":\"CARMACloudPlugin\",\"name\":\"CARMACloudPlugin\",\"version\":\"7.6.0\"}";
         ASSERT_EQ(expected, result);
     }
@@ -134,6 +134,6 @@ namespace unit_test{
         telemetriesUpdates.insert({"dummy",dummy});
         auto payload = TelemetrySerializer::composeUpdatedTelemetryPayload(telemetriesUpdates);
         string expected = "{\"payload\":[{\"description\":\"CARMACloudPlugin description\",\"enabled\":\"External\",\"id\":\"CARMACloudPlugin\",\"name\":\"CARMACloudPlugin\",\"version\":\"7.6.0\"},{\"description\":\"dummy description\",\"enabled\":\"External\",\"id\":\"dummy\",\"name\":\"dummy\",\"version\":\"7.6.0\"}]}";
-        ASSERT_EQ(expected,  TelemetrySerializer::jsonToString(payload));
+        ASSERT_EQ(expected,  TelemetrySerializer::treeToString(payload));
     }
 }

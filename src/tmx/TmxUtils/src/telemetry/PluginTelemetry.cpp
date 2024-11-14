@@ -16,7 +16,7 @@ namespace tmx::utils::telemetry{
         _pluginInstallation = pluginInstallation;
     }
 
-    tmx::message_container_type PluginTelemetry::serialize() const{
+    tmx::message_container_type PluginTelemetry::toTree() const{
         tmx::message_container_type output;
 
         auto name = _pluginInfo.name;
@@ -57,7 +57,7 @@ namespace tmx::utils::telemetry{
         return output;
     }
     
-    void PluginTelemetry::deserialize(const boost::property_tree::ptree& jsonContainer){
+    void PluginTelemetry::fromTree(const boost::property_tree::ptree& jsonContainer){
         try{
             if(jsonContainer.empty()){
                 throw tmx::TmxException("Cannot deserialize empty JSON!");

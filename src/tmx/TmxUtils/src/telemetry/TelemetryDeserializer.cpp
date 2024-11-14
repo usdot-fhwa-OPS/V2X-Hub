@@ -2,7 +2,7 @@
 
 namespace tmx::utils::telemetry
 {
-    boost::property_tree::ptree TelemetryDeserializer::stringToJson( const string& jsonString){
+    boost::property_tree::ptree TelemetryDeserializer::stringToTree( const string& jsonString){
         try{
             boost::property_tree::ptree pt;
             stringstream ss;

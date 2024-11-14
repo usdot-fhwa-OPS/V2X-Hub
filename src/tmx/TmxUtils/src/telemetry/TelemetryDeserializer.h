@@ -22,7 +22,7 @@ namespace tmx::utils::telemetry
          * @return Vector of telemetry objects
          */
         template <typename T>
-        static vector<T> desrializeFullTelemetryPayload(const boost::property_tree::ptree& jsonContainer){
+        static vector<T> deserializeFullTelemetryPayload(const boost::property_tree::ptree& jsonContainer){
             vector<T> result;      
             if(jsonContainer.empty()){
                 throw TelemetryDeserializerException("JSON cannot be empty!");
@@ -33,9 +33,9 @@ namespace tmx::utils::telemetry
                     throw TelemetryDeserializerException("JSON payload cannot be empty!");
                 }
                 //Payload content is an array of T  
-                BOOST_FOREACH(auto& itr, payload){
+                for(auto& itr: payload){
                     T telemetry;
-                    telemetry.deserialize(itr.second);
+                    telemetry.fromTree(itr.second);
                     result.push_back(telemetry);
                 }
             }catch(const boost::property_tree::ptree_bad_path& error){
@@ -48,7 +48,7 @@ namespace tmx::utils::telemetry
          * @param JSON string object 
          * @return boost::property_tree::ptree
          */
-        static boost::property_tree::ptree stringToJson( const string& jsonString);
+        static boost::property_tree::ptree stringToTree( const string& jsonString);
         ~TelemetryDeserializer() = default;
     };
 

@@ -21,7 +21,7 @@ namespace tmx::utils::telemetry{
 
     string TelemetrySerializer::composeCompleteTelemetry(tmx::message_container_type& header, tmx::message_container_type& payload){
         header.get_storage().get_tree().push_back(boost::property_tree::ptree::value_type(PAYLOAD_STRING,payload.get_storage().get_tree().get_child(PAYLOAD_STRING)));
-        return jsonToString(header);
+        return treeToString(header);
     }
 
     tmx::message_container_type TelemetrySerializer::serializeTelemetryHeader(const TelemetryHeader& header){
@@ -31,12 +31,12 @@ namespace tmx::utils::telemetry{
         element.push_back(boost::property_tree::ptree::value_type(SUBTYPE_STRING, header.subtype));
         element.push_back(boost::property_tree::ptree::value_type(ENCODING_STRING, header.encoding));
         element.push_back(boost::property_tree::ptree::value_type(TIMESTAMP_STRING,to_string(header.timestamp)));
-        element.push_back(boost::property_tree::ptree::value_type(FLAGS_STRING,"0"));
+        element.push_back(boost::property_tree::ptree::value_type(FLAGS_STRING,header.flags));
         headerContainer.get_storage().get_tree().push_back(boost::property_tree::ptree::value_type(HEADER_STRING, element));
         return headerContainer;
     }
 
-    string TelemetrySerializer::jsonToString(tmx::message_container_type& container){
+    string TelemetrySerializer::treeToString(tmx::message_container_type& container){
         stringstream ss;
         ss.clear();
         ss.str(string());
