@@ -1,7 +1,8 @@
 #include <gtest/gtest.h>
 #include "telemetry/TelemetrySerializer.h"
 
-
+using std::make_shared;
+using std::shared_ptr;
 using namespace tmx::utils::telemetry;
 namespace unit_test{
     class TelemetrySerializerTest: public ::testing::Test

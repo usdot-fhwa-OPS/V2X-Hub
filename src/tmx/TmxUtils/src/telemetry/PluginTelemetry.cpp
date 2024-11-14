@@ -32,10 +32,17 @@ namespace tmx::utils::telemetry{
             output.store(message_path_type("version"), version);
 
         auto enabled = _pluginInstallation.enabled;
-        //enabled value -> 0: disabled, 1 enabled
-        output.store(message_path_type("enabled"), !enabled ? "Disabled": enabled > 0 ? "Enabled" : "External");
+        //enabled value -> 0: disabled, 1 enabled, -1 external
+        string enabledStr;
+        if(enabled < 0){
+            enabledStr = "External";
+        }else{
+            enabledStr = !enabled? "Disabled": "Enabled";
+        }
+        
+        output.store(message_path_type("enabled"), enabledStr);
 
-        //When enabled is -1, this plugin is not installed
+        //When enabled equals -1, this plugin is not installed
         if(enabled < 0){
             return output;
         }

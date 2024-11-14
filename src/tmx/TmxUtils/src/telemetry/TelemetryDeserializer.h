@@ -39,7 +39,7 @@ namespace tmx::utils::telemetry
                     result.push_back(telemetry);
                 }
             }catch(const boost::property_tree::ptree_bad_path& error){
-                throw TelemetryDeserializerException("Cannot deserialize JSON as the JSON string has no \"payload\" field!");
+                throw TelemetryDeserializerException("Cannot deserialize JSON as the JSON string has no \"payload\" field or due to error: " + std::string(error.what()));
             }
             return result;
         }

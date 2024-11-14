@@ -139,8 +139,8 @@ void CommandPlugin::GetTelemetry(const string & dataType)
 		tmx::message_container_type *output = _tmxControl.GetOutput();
 		auto payloadExist = output->get_storage().get_tree().get_child_optional("payload");
 		if(payloadExist){
-			auto payload = payloadExist.get();
-			for(ptree::value_type &payloadItem: payload)
+			const auto payload = payloadExist.get();
+			for(const ptree::value_type &payloadItem: payload)
 			{
 				auto plugin = payloadItem.second;
 				stringstream ss;

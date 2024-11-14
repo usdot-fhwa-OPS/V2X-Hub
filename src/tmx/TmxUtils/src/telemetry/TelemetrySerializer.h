@@ -10,6 +10,11 @@
 #include "TelemetrySerializerException.h"
 #include "TelemetryHeader.h"
 #include "TelemetryMetadata.h"
+using std::string;
+using std::vector;
+using std::map;
+using std::stringstream;
+using std::to_string;
 
 namespace tmx::utils::telemetry{
     class TelemetrySerializer

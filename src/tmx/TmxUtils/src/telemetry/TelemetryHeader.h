@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-using namespace std;
+using std::string;
 namespace tmx::utils::telemetry{
     struct TelemetryHeader
     {

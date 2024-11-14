@@ -3,10 +3,11 @@
 #include "telemetry/PluginTelemetry.h"
 
 using namespace tmx::utils::telemetry;
+using std::make_shared;
 namespace unit_test{
     class PluginTelemetryTest: public ::testing::Test{
         public:
-            shared_ptr<PluginTelemetry> telemetryPointer;        
+            std::shared_ptr<PluginTelemetry> telemetryPointer;        
             
             void SetUp() override{
                 PluginInfo pluginInfo = {
