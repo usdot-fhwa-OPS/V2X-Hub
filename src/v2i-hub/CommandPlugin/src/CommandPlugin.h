@@ -43,7 +43,8 @@ using namespace std;
 using namespace tmxctl;
 using namespace boost::property_tree;
 using namespace boost::filesystem;
-using namespace tmx::utils::telemetry;
+using tmx::utils::telemetry::TelemetrySerializer;
+using tmx::utils::telemetry::TelemetryHeader;
 
 namespace CommandPlugin
 {
