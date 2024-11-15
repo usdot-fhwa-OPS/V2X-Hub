@@ -8,7 +8,9 @@
 #include "TelemetryDeserializerException.h"
 #include "TelemetryMetadata.h"
 
-using namespace std;
+using std::vector;
+using std::string;
+using std::stringstream;
 
 namespace tmx::utils::telemetry
 {

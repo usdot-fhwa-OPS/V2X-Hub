@@ -27,7 +27,7 @@ namespace unit_test{
                 };
 
                 PluginInstallation noInstallation = {
-                    -1, //enabled
+                    -1, //external
                     "", //path
                     "", //exeName
                     "", //manifest

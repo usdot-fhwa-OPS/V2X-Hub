@@ -3,6 +3,7 @@
 #include <iostream>
 #include <tmx/TmxException.hpp>
 #include <tmx/messages/message.hpp>
+#include "TelemetryMetadata.h"
 using std::string;
 
 namespace tmx::utils::telemetry
