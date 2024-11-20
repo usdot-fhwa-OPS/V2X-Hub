@@ -1,22 +1,22 @@
 # Use these lines and rebuild for debug information
 
 PROJECT ( asn_j2735 C )
-# New Option to set to just SAEJ2735 Version revision number. Defaults to 2020 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
-SET(SAEJ2735_SPEC_VERSION "r2020" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
+# New Option to set to just SAEJ2735 Version revision number. Defaults to 2024 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
+SET(SAEJ2735_SPEC_VERSION "r2024" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
 SET(ASN_J2735_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 FILE (GLOB SOURCE_DIRS "${ASN_J2735_DIR}/src/*")
 LIST (SORT SOURCE_DIRS)
 FOREACH (SOURCE_DIR ${SOURCE_DIRS})
     GET_FILENAME_COMPONENT(SAEJ2735_SPEC "${SOURCE_DIR}" NAME)
-    # r41, r63, r2020
+    # r41, r63, r2020, r2024
     SET (LIBRARY_NAME ${PROJECT_NAME}_${SAEJ2735_SPEC})
-    # asn_j2735_r41, asn_j2735_r63, asn_j2735_r2020
+    # asn_j2735_r41, asn_j2735_r63, asn_j2735_r2020, asn_j2735_r2024
     SET (${LIBRARY_NAME}_INCLUDE_DIR "${ASN_J2735_DIR}/include/asn_j2735_${SAEJ2735_SPEC}")
     
     FILE (GLOB_RECURSE ${LIBRARY_NAME}_SOURCES "${SOURCE_DIR}/*.c*")
     STRING (SUBSTRING ${SAEJ2735_SPEC} 1 -1 SAEJ2735_SPEC_DEF)
-    # SAEJ2735_SPEC_DEF -> 41, 63, 2020
+    # SAEJ2735_SPEC_DEF -> 41, 63, 2020, 2024
     ADD_LIBRARY (${LIBRARY_NAME} SHARED ${${LIBRARY_NAME}_SOURCES})
     TARGET_INCLUDE_DIRECTORIES (${LIBRARY_NAME} PUBLIC
     			$<BUILD_INTERFACE:${${LIBRARY_NAME}_INCLUDE_DIR}>
