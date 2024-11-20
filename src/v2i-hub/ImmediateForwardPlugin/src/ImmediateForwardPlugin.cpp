@@ -363,7 +363,6 @@ void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 					PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 					return;
-; 
 				}
 				PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 				cJSON *root   = cJSON_Parse(result.c_str());
