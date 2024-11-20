@@ -13,10 +13,6 @@
 #include <type_traits>
 #include <utility>
 
-#ifndef SAEJ2735_SPEC
-#define SAEJ2735_SPEC 2024
-#endif
-
 #define DEFINE_MEMBER_CHECKER(member) \
     template<typename T, typename V = bool> \
     struct has_ ## member : std::false_type { }; \

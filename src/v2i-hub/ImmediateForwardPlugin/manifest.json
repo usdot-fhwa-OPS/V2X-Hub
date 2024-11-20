@@ -53,6 +53,11 @@
        "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_4."
     },
     {
+      "key": "TxMode",
+      "default": "CONT",
+      "description": "Transmission channel mode (continuous or alternating). Allowed values: CONT, ALT."
+    },
+    {
       "key": "signMessage",
       "default": "0",
       "description": "0 if False and 1 if True, indicating whether Active File will indicate to sign outgoing J2735 messages."
@@ -70,7 +75,7 @@
     {
       "key": "MuteDsrcRadio",
       "default": "0",
-      "description": "If true (1) then do not send packets to the radio for broadcast"
+      "description": "If true (1) then do not send packets to the radio for broadcast."
     }
   ]
 }

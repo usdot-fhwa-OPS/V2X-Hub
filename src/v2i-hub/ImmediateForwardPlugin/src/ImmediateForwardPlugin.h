@@ -62,9 +62,10 @@ private:
 	std::array<svr_list, 4> _udpClientList;
 	std::vector<MessageConfig> _messageConfigMap;
 	std::map<std::string, int> _messageCountMap;
-	std::string signatureData; 
-	std::string url; 
-	std::string baseurl; 
+	std::string signatureData;
+	std::string url;
+	std::string baseurl;
+	std::string txMode;
 	unsigned int signState;
 	unsigned int enableHSM;
 

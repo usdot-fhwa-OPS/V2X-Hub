@@ -137,9 +137,10 @@ void ImmediateForwardPlugin::UpdateConfigSettings()
 
 	// Get the signature setting.
 	// The same mutex is used that protects the UDP clients.
+	GetConfigValue<string>("TxMode", txMode, &_mutexUdpClient);
 	GetConfigValue<unsigned int>("signMessage", signState, &_mutexUdpClient);
 	GetConfigValue<unsigned int>("EnableHSM", enableHSM, &_mutexUdpClient);
-	GetConfigValue<string>("HSMurl",baseurl, &_mutexUdpClient);
+	GetConfigValue<string>("HSMurl", baseurl, &_mutexUdpClient);
 	std::string request="sign";
 	url=baseurl+request;
 
@@ -362,7 +363,6 @@ void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 					SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 					PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 					return;
-; 
 				}
 				PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 				cJSON *root   = cJSON_Parse(result.c_str());
@@ -391,11 +391,11 @@ void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 			os << "Version=0.7" << "\n";
 			os << "Type=" << _messageConfigMap[configIndex].SendType << "\n" << "PSID=" << _messageConfigMap[configIndex].Psid << "\n";
 			if (_messageConfigMap[configIndex].Channel.empty())
-				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << msg->dsrcMetadata->channel << "\n";
+				os << "Priority=7" << "\n" << "TxMode=" << txMode << "\n" << "TxChannel=" << msg->dsrcMetadata->channel << "\n";
 			else
-				os << "Priority=7" << "\n" << "TxMode=CONT" << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
+				os << "Priority=7" << "\n" << "TxMode=" << txMode << "\n" << "TxChannel=" << _messageConfigMap[configIndex].Channel << "\n";
 			os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
-			os << "Signature="<< (signState == 1 ? "True" : "False") << "\n" << "Encryption=False\n";
+			os << "Signature=" << (signState == 1 ? "True" : "False") << "\n" << "Encryption=False\n";
 			os << "Payload=" << payloadbyte << "\n";
 
 			string message = os.str();
