@@ -30,6 +30,7 @@ DEPENDENCIES="build-essential \
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \
     carma-clock-1 \
+    carma_j2735
 "
 
 # install all things needed for deployment, always done

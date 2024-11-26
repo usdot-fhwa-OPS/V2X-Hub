@@ -30,7 +30,7 @@ BuildTmxPlugin ()
 
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
 
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} PUBLIC tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES} ${QHttpEngine_LIBRARY}  ${Boost_SYSTEM_LIBRARY} ZLIB::ZLIB curl Qt5Widgets Qt5Core Qt5Network ssl crypto qhttpengine v2xhubWebAPI) 
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} PUBLIC tmxutils ::carma_j2735 ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES} ${QHttpEngine_LIBRARY}  ${Boost_SYSTEM_LIBRARY} ZLIB::ZLIB curl Qt5Widgets Qt5Core Qt5Network ssl crypto qhttpengine v2xhubWebAPI) 
 
 
 link_directories(${CMAKE_PREFIX_PATH}/lib)

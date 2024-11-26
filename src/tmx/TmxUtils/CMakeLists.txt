@@ -62,4 +62,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES}  gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} gmock gtest)

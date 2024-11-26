@@ -41,4 +41,11 @@ ENDFOREACH ()
 
 UNSET (LIBRARY_NAME)
 UNSET (SAEJ2735_SPEC)
-SET (ASN_J2735_LIBRARIES "asn_j2735_r63" PARENT_SCOPE)
+
+link_directories(/opt/carma/lib)
+target_link_libraries(${carma_lib} ::carma_j2735)
+target_include_directories(${carma_lib} 
+                                    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include
+                                    $<INSTALL_INTERFACE:include>
+                                    /opt/carma/include/carma_j2735
+                                    )
