@@ -29,13 +29,14 @@ namespace unit_test
     };
 
     TEST_F(test_SNMPClient, constructor_error)
-    {
-        ASSERT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000), snmp_client_exception);
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_1, 1000));
-        ASSERT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
-        ASSERT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
+    {   
+        EXPECT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "test", SNMP_VERSION_3, 1000), snmp_client_exception);
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000));
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_1, 1000));
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
+        EXPECT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
     }
 
     TEST_F(test_SNMPClient, get_port)
