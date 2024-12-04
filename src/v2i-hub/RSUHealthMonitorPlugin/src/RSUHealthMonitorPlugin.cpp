@@ -38,7 +38,7 @@ namespace RSUHealthMonitor
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
         GetConfigValue<string>("RSUConfigurationList", _rsuConfigListStr);
-
+        PLOG(logDEBUG) << "RSU Configuration " << _rsuConfigListStr;
         try
         {
             _rsuConfigListPtr->parseRSUs(_rsuConfigListStr);

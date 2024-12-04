@@ -28,6 +28,8 @@ namespace RSUHealthMonitor
         RSUMIB_V_1218 = 2
     };
 
+    std::string mib_version_to_string(const RSUMibVersion &mibversion);
+
     struct RSUConfiguration
     {
         std::string rsuIp;

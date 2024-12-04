@@ -9,6 +9,7 @@ namespace RSUHealthMonitor
         RSUStatusConfigTable rsuRstatusTable_4_1 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
         RSUStatusConfigTable rsuRstatusTable_1218 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_1218);
         _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_1218, rsuRstatusTable_1218});
+        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_4_1, rsuRstatusTable_4_1});
 
     }
 
@@ -133,7 +134,7 @@ namespace RSUHealthMonitor
         }
         catch (const out_of_range &ex)
         {
-            PLOG(logERROR) << "Unknown MIB version! " << ex.what();
+            PLOG(logERROR) << "Unknown MIB version! " << mib_version_to_string(mibVersion);
         }
         return result;
     }

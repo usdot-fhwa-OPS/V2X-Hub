@@ -3,6 +3,17 @@
 
 namespace RSUHealthMonitor
 {
+    std::string mib_version_to_string(const RSUMibVersion &mibversion) {
+        switch(mibversion) {
+            case RSUMibVersion::RSUMIB_V_4_1:
+                return RSU4_1_str;
+            case RSUMibVersion::RSUMIB_V_1218:
+                return RSU1218_str;
+            default:
+                return "UNKNOWN";
+	    }
+    }
+    
     Json::Value RSUConfigurationList::parseJson(const std::string &rsuConfigsStr) const
     {
         JSONCPP_STRING err;
