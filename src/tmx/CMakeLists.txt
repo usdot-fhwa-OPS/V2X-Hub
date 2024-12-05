@@ -44,11 +44,6 @@ ENDIF (TMX_CROSSCOMPILING)
 
 LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 
-#
-# Add the generated SAE J2735 library and an interface that contains the build properties
-#
-# ADD_SUBDIRECTORY (Asn_J2735)
-ADD_LIBRARY (libasn_j2735 ALIAS ::carma_j2735)
 
 MESSAGE (STATUS "Added ${ASN_J2735_LIBRARIES} library.")
 #
