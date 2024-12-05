@@ -45,7 +45,6 @@ ENDIF (TMX_CROSSCOMPILING)
 LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 
 
-MESSAGE (STATUS "Added ${ASN_J2735_LIBRARIES} library.")
 #
 # Set up some required platform dependencies, including MySQL
 #
