@@ -22,6 +22,10 @@ ENDIF (TMX_VERBOSE)
 ENABLE_LANGUAGE ( C )
 ENABLE_LANGUAGE ( CXX )
 
+
+list(APPEND CMAKE_PREFIX_PATH "/opt/carma/cmake")
+find_package(carma_j2735)
+
 INCLUDE (CheckCCompilerFlag)
 CHECK_C_COMPILER_FLAG ("-fPIC" CMAKE_C_FLAG_FPIC_SUPPORTED)
 
@@ -40,12 +44,7 @@ ENDIF (TMX_CROSSCOMPILING)
 
 LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 
-#
-# Add the generated SAE J2735 library and an interface that contains the build properties
-#
-ADD_SUBDIRECTORY (Asn_J2735)
-ADD_LIBRARY (libasn_j2735 ALIAS ${ASN_J2735_LIBRARIES})
-MESSAGE (STATUS "Added ${ASN_J2735_LIBRARIES} library.")
+
 #
 # Set up some required platform dependencies, including MySQL
 #
@@ -69,10 +68,10 @@ IF (NOT TMX_NO_PLUGINS)
     ADD_SUBDIRECTORY ( TmxTools )
     
     # Installs and exports
-    EXPORT (TARGETS ${ASN_J2735_LIBRARIES} ${TMXAPI_LIBRARIES} ${TMXUTILS_LIBRARIES} ${TMXCTL_LIBRARIES}
+    EXPORT (TARGETS ${TMXAPI_LIBRARIES} ${TMXUTILS_LIBRARIES} ${TMXCTL_LIBRARIES}
             FILE ${CMAKE_BINARY_DIR}/${TMX_APPNAME}-plugin-config.cmake)
 ELSE ()
-    EXPORT (TARGETS ${ASN_J2735_LIBRARIES} ${TMXAPI_LIBRARIES}
+    EXPORT (TARGETS ${TMXAPI_LIBRARIES}
             FILE ${CMAKE_BINARY_DIR}/${TMX_APPNAME}-plugin-config.cmake)
 ENDIF ()
 

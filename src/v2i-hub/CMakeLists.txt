@@ -10,8 +10,11 @@
 
 CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
 set(CMAKE_CXX_STANDARD 14)
-FIND_PACKAGE (carma-clock)
 
+list(APPEND CMAKE_PREFIX_PATH "/opt/carma/cmake")
+
+FIND_PACKAGE (carma-clock)
+FIND_PACKAGE(carma_j2735)
 
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
