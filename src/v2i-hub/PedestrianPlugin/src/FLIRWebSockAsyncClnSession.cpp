@@ -6,10 +6,44 @@ using namespace boost::property_tree;
 
 namespace PedestrianPlugin
 {
+    int 
+    FLIRWebSockAsyncClnSession::calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) {
+    // Set up current time
+    std::tm currentTime = {};
+    currentTime.tm_year = year - 1900;
+    currentTime.tm_mon = month - 1;
+    currentTime.tm_mday = day;
+    currentTime.tm_hour = hour;
+    currentTime.tm_min = minute;
+    currentTime.tm_sec = second;
+
+    // Set up start of the year
+    std::tm startOfYear = {};
+    startOfYear.tm_year = year - 1900;
+    startOfYear.tm_mon = 0;
+    startOfYear.tm_mday = 1;
+    startOfYear.tm_hour = 0;
+    startOfYear.tm_min = 0;
+    startOfYear.tm_sec = 0;
+
+    // Calculate difference in seconds
+    std::time_t current = std::mktime(&currentTime);
+    std::time_t start = std::mktime(&startOfYear);
+    if (current == -1 || start == -1) {
+        throw std::runtime_error("Failed to compute time difference");
+    }
+
+    // Convert seconds to minutes
+    int secondsDifference = static_cast<int>(std::difftime(current, start));
+    int minuteOfYear = secondsDifference / 60;
+
+    return minuteOfYear;
+    }
+
     void
     FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what) const
     {
-        PLOG(logDEBUG) << what << ": " << ec.message() << std::endl;
+        PLOG(logDEBUG) << what << ": " << ec.message();
     }
 
     void
@@ -20,13 +54,13 @@ namespace PedestrianPlugin
         char const* hostString)
     {
         
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::run " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::run ";
 	    // Save these for later
         host_ = host;
         cameraRotation_ = cameraRotation;
         hostString_ = hostString;
 
-        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << " ; host string: "<< hostString << std::endl;       
+        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << " ; host string: "<< hostString;       
 
         // Look up the domain name
         resolver_.async_resolve(
@@ -42,7 +76,7 @@ namespace PedestrianPlugin
          beast::error_code ec,
          tcp::resolver::results_type results)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_resolve " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_resolve ";
         if(ec)
             return fail(ec, "resolve");
 
@@ -61,7 +95,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_connect " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_connect ";
         if(ec)
             return fail(ec, "connect");
 
@@ -87,7 +121,7 @@ namespace PedestrianPlugin
         // Host HTTP header during the WebSocket handshake.
         // See https://tools.ietf.org/html/rfc7230#section-5.4
 
-        PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << hostString_ << std::endl;
+        PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << hostString_;
 
         // Perform the websocket handshake
         ws_.async_handshake(host_, hostString_,
@@ -99,7 +133,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_handshake(beast::error_code ec)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_handshake " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_handshake ";
         if(ec)
             return fail(ec, "handshake");
         
@@ -116,7 +150,7 @@ namespace PedestrianPlugin
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_write " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_write ";
         boost::ignore_unused(bytes_transferred);
 
         if(ec)
@@ -136,7 +170,7 @@ namespace PedestrianPlugin
         beast::error_code ec,
         std::size_t bytes_transferred)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_read " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_read ";
         boost::ignore_unused(bytes_transferred);
 
         if(ec)
@@ -148,7 +182,7 @@ namespace PedestrianPlugin
 	    std::string text(beast::buffers_to_string(buffer_.data()));
         ss<<text; 
 
-        PLOG(logDEBUG) << "Received:  " << text.c_str() << std::endl;
+        PLOG(logDEBUG) << "Received:  " << text.c_str();
 
         try
         {
@@ -156,7 +190,7 @@ namespace PedestrianPlugin
         }
         catch(const ptree_error &e)
         {
-            PLOG(logERROR) << "Error converting json to p tree:  " << e.what() << std::endl;
+            PLOG(logERROR) << "Error converting json to p tree:  " << e.what();
         }
 
         //Example FLIR subscription response json:
@@ -177,7 +211,7 @@ namespace PedestrianPlugin
         if (messageType.compare("Subscription") == 0)
         {
             std::string subscrStatus = pr.get_child("subscription").get_child("returnValue").get_value<string>();
-            PLOG(logDEBUG) << "Ped presence data subscription status: " << subscrStatus << std::endl;
+            PLOG(logDEBUG) << "Ped presence data subscription status: " << subscrStatus;
         
         }
         //Example received pedestrian tracking data       
@@ -189,7 +223,7 @@ namespace PedestrianPlugin
             time = pr.get_child("time").get_value<string>(); 
             type =  pr.get_child("type").get_value<string>();
 
-            PLOG(logINFO) << "Received " << type << " data at time: " << time << std::endl;
+            PLOG(logINFO) << "Received " << type << " data at time: " << time;
 
             if (type.compare("PedestrianPresenceTracking") == 0)
             {
@@ -255,46 +289,52 @@ namespace PedestrianPlugin
                         }
 
                         PLOG(logINFO) << "Received FLIR camera data at: " << dateTimeArr[0] << "/" << dateTimeArr[1] << "/" << dateTimeArr[2]
-                        << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6] << std::endl;  
+                        << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6];  
 
                         PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
-                        ")" << ", travelling at speed: " << speed << ", with heading: " << alpha << " degrees" << std::endl;
+                        ")" << ", travelling at speed: " << speed << ", with heading: " << alpha << " degrees";
 
-                        PLOG(logINFO) << "PSM message count: " << msgCount << std::endl;
+                        PLOG(logINFO) << "PSM message count: " << msgCount;
 
-                        //constructing xml to send to BroadcastPSM function
+                        //constructing xml to send to BroadcastPedDet function
                         char psm_xml_char[10000]; 
-                        snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType>"
-                        "<secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy>"
-                        "<semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy>"
-                        "<speed>%.0f</speed><heading>%i</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month>"
-                        "<day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime>"
-                        "<long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset>"
-                        "<lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory>"
-                        "</PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), speed, alpha, dateTimeArr[0], dateTimeArr[1], 
-                        dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
+                        snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>%.0f</speed><heading>%i</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month><day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), speed, alpha, dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
 
                         std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
 
-		                std::lock_guard<mutex> lock(_psmLock);
+                        //constructing xml to send to BroadcastPedDet function
+                        try {
+                            moy = calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
+                            PLOG(logDEBUG) << "Minute of the year: " << moy;
+                            } 
+                        catch (const std::exception& e) {
+                            PLOG(logERROR) << "Error: " << e.what();
+                        }
+                        char tim_xml_char[10000];
+                        snprintf(tim_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TravelerInformation><msgCnt>%i</msgCnt><packetID>0000000000%s</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>%s</lat><long>-%s</long><elevation>-4096</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>%i</startYear><startTime>%i</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>%s</lat><long>%s</long><elevation>-4096</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>%s</lat><long>%s</long><elevation>-4096</elevation></center><radius>3000</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>", msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), dateTimeArr[0], moy, lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
+
+                        std::string tim_xml_str(tim_xml_char, sizeof(tim_xml_char) / sizeof(tim_xml_char[0]));
+
+		                std::lock_guard<mutex> lock(_msgLock);
                         psmxml = psm_xml_str;
-                        psmQueue.push(psmxml);
+                        timxml = tim_xml_str;
+                        msgQueue.push(psmxml);
+                        msgQueue.push(timxml);
 
-
-                        PLOG(logDEBUG) << "Sending PSM xml to BroadcastPsm: " << psmxml.c_str() <<endl;
+                        PLOG(logDEBUG) << "Sending XMLs to BroadcastPedDet: " << psmxml.c_str() << timxml.c_str();
 
                     }
                 }
                 catch(const ptree_error &e)
                 {
-                    PLOG(logERROR) << "Error with track data:  " << e.what() << std::endl;
+                    PLOG(logERROR) << "Error with track data:  " << e.what();
                 }
 
             }            
         }
         else
         {
-            PLOG(logDEBUG) << "Received unknown message: " << text.c_str() << std::endl;
+            PLOG(logDEBUG) << "Received unknown message: " << text.c_str();
         }
 
         // need to clear the buffer after reading the message
@@ -311,7 +351,7 @@ namespace PedestrianPlugin
     void
     FLIRWebSockAsyncClnSession::on_close(beast::error_code ec)
     {
-        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_close " << std::endl;
+        PLOG(logDEBUG) << "In FLIRWebSockAsyncClnSession::on_close ";
         if(ec)
             return fail(ec, "close");
 
@@ -321,16 +361,16 @@ namespace PedestrianPlugin
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
 
-    std::queue<std::string> FLIRWebSockAsyncClnSession::getPSMQueue()
+    std::queue<std::string> FLIRWebSockAsyncClnSession::getMsgQueue()
     {
-        std::lock_guard<mutex> lock(_psmLock);
+        std::lock_guard<mutex> lock(_msgLock);
 
         //pass copy of the queue to Pedestrian Plugin
-        std::queue<std::string> queueToPass = psmQueue;
+        std::queue<std::string> queueToPass = msgQueue;
 
         //empty the queue internally
         std::queue<std::string> empty;
-        std::swap(psmQueue, empty);
+        std::swap(msgQueue, empty);
         
         return queueToPass;
 

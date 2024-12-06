@@ -16,6 +16,7 @@
 #include <string>
 #include <algorithm>
 #include <queue>
+#include <ctime>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -39,10 +40,13 @@ namespace PedestrianPlugin
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
         std::string psmxml = "";
-        std::queue<std::string> psmQueue;
+        std::string timxml = "";
+        std::string sdsmxml = "";
+        std::queue<std::string> msgQueue;
 
-        std::mutex _psmLock;
+        std::mutex _msgLock;
         int msgCount = 0;
+        int moy = 0;
     public:
 
     // Resolver and socket require an io_context
@@ -53,6 +57,12 @@ namespace PedestrianPlugin
     {
 
     };
+
+    /**
+     * @brief Calculates the current minute of the year to be included in the Traveler Information Message (TIM).
+     */
+    int 
+    calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second);
 
     /**
      * @brief Reports a failure with any of the websocket functions below
@@ -136,12 +146,12 @@ namespace PedestrianPlugin
     on_close(beast::error_code ec);
 
     /**
-     * @brief Get method for queue containing psm for all tracked pedestrians. Copies the queue into
+     * @brief Get method for queue containing message(s) for all tracked pedestrians. Copies the queue into
      * a temporary queue and returns temporary queue. Clears the original queue.
      * 
-     * @return std::queue the psm queue
+     * @return std::queue The message queue.
      */
-    std::queue<std::string> getPSMQueue();
+    std::queue<std::string> getMsgQueue();
 
 
     /**
@@ -155,4 +165,3 @@ namespace PedestrianPlugin
 
 
 };
-
