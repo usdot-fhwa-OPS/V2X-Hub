@@ -46,7 +46,7 @@ namespace tmx::utils
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
 
         // Defining and generating authentication config
-        oid *usmAuthProto;
+        const oid *usmAuthProto;
         if (authProtocol == "MD5") {
             usmAuthProto = usmHMACMD5AuthProtocol;
         }
@@ -84,7 +84,7 @@ namespace tmx::utils
         }
 
         // Defining and generating privacy config
-        oid *usmPrivProto;
+        const oid *usmPrivProto;
         size_t privLen;
         if (privProtocol == "DES") {
             usmPrivProto = usmDESPrivProtocol;
@@ -114,9 +114,8 @@ namespace tmx::utils
             usmPrivProto = usmAES256CiscoPrivProtocol;
             privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
         }
-        else {
-            usmPrivProto = usmAESPrivProtocol;
-            privLen = USM_PRIV_PROTO_AES_LEN;
+        else if (securityLevel == "authPriv" ) {
+            throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
         }
 
         // Passphrase used for privacy

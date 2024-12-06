@@ -14,19 +14,15 @@
 #include "RSUStatusMessage.h"
 #include "RSUConfigurationList.h"
 
-using namespace std;
-using namespace tmx::utils;
-using namespace tmx::utils::rsu41::mib::oid;
-using namespace tmx::utils::ntcip1218::mib::oid;
-using namespace tmx::messages;
+
 
 namespace RSUHealthMonitor
 {
 
     struct RSUFieldOIDStruct
     {
-        string field;
-        string oid;
+        std::string field;
+        std::string oid;
         bool required; // Indicate whether this field is required to before broadcasting the RSU status.
     };
 
@@ -34,13 +30,13 @@ namespace RSUHealthMonitor
      * RSUStatusTable is custom defined RSU status information.
      * The fields are a subset of the fields from the RSU MIB definition used to quantify the health of the RSU.
      */
-    using RSUStatusConfigTable = vector<RSUFieldOIDStruct>;
+    using RSUStatusConfigTable = std::vector<RSUFieldOIDStruct>;
 
     class RSUHealthMonitorWorker
     {
     private:
         // A map of RSU MIB version used and RSUStatusTable
-        shared_ptr<map<RSUMibVersion, RSUStatusConfigTable>> _RSUSTATUSConfigMapPtr;
+        std::shared_ptr<std::map<RSUMibVersion, RSUStatusConfigTable>> _RSUSTATUSConfigMapPtr;
 
         /**
          * @brief Populate the RSU status table with the specified version of OIDs and fields.
@@ -64,7 +60,7 @@ namespace RSUHealthMonitor
          * @param fields Input RSU fields to verify
          * @return True if all required fields found. Otherwise, false.
          */
-        bool validateAllRequiredFieldsPresent(const RSUHealthMonitor::RSUStatusConfigTable &configTbl, const vector<string> &fields) const;
+        bool validateAllRequiredFieldsPresent(const RSUStatusConfigTable &configTbl, const std::vector<std::string> &fields) const;
 
         /**
          * @brief Parse NMEA GPS sentense and return GPS related data
@@ -87,14 +83,14 @@ namespace RSUHealthMonitor
          * @param _securityLevel security level: authPriv or authNoPriv.
          * @param timeout Session time out.
          */
-        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout);
+        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const std::string &_rsuIp, uint16_t &_snmpPort, const std::string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const std::string &_securityLevel, long timeout);
 
         /***
          *@brief Convert the JSON message into TMX message
          @param json Input Json value
          @return RSUStatusMessage TMX message
         */
-        RSUStatusMessage convertJsonToTMXMsg(const Json::Value &json) const;
+        tmx::messages::RSUStatusMessage convertJsonToTMXMsg(const Json::Value &json) const;
 
         /**
          * @brief Populate Json with snmp response object.
@@ -102,14 +98,14 @@ namespace RSUHealthMonitor
          * @param response The response returned by SNMP call for the OID.
          * @return Json value populated with response object.
          */
-        Json::Value populateJson(const string &field, const snmp_response_obj &response) const;
+        Json::Value populateJson(const std::string &field, const tmx::utils::snmp_response_obj &response) const;
 
         /**
          * @brief List the keys from the input Json values
          * @param json Input JSON values
          * @return vector of key strings
         */
-        vector<string> getJsonKeys(const Json::Value &json) const;
+        std::vector<std::string> getJsonKeys(const Json::Value &json) const;
 
         // Delete move constructor
         RSUHealthMonitorWorker(RSUHealthMonitorWorker &&worker) = delete;

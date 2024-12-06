@@ -1,8 +1,13 @@
 #include "RSUHealthMonitorWorker.h"
 
+using namespace std;
+using namespace tmx::utils;
+using namespace tmx::utils::rsu41::mib::oid;
+using namespace tmx::utils::ntcip1218::mib::oid;
+using namespace tmx::messages;
+
 namespace RSUHealthMonitor
 {
-
     RSUHealthMonitorWorker::RSUHealthMonitorWorker()
     {
         _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
@@ -75,7 +80,7 @@ namespace RSUHealthMonitor
             RSUFieldOIDStruct rsuRadioDesc = {"rsuRadioDesc", rsuRadioDescOid, true};
             rsuStatusTbl.push_back(rsuRadioDesc);
 
-            RSUFieldOIDStruct rsuGnssOutputString = {"rsuGnssOutputString", rsuGnssOutputStringOid, true};
+            RSUFieldOIDStruct rsuGnssOutputString = {"rsuGpsOutputString", rsuGnssOutputStringOid, true};
             rsuStatusTbl.push_back(rsuGnssOutputString);
 
             RSUFieldOIDStruct rsuIFMIndex = {"rsuIFMIndex", rsuIFMIndexOid, false};
@@ -107,6 +112,10 @@ namespace RSUHealthMonitor
 
             RSUFieldOIDStruct rsuMode = {"rsuMode", rsuModeOid, true};
             rsuStatusTbl.push_back(rsuMode);
+
+            RSUFieldOIDStruct rsuRadioType = {"rsuRadioType", rsuRadioTypeOid, true};
+            rsuStatusTbl.push_back(rsuRadioType);
+
         }
         return rsuStatusTbl;
     }
@@ -132,7 +141,7 @@ namespace RSUHealthMonitor
         {
             result = _RSUSTATUSConfigMapPtr->at(mibVersion);
         }
-        catch (const out_of_range &ex)
+        catch (const out_of_range&)
         {
             PLOG(logERROR) << "Unknown MIB version! " << mib_version_to_string(mibVersion);
         }

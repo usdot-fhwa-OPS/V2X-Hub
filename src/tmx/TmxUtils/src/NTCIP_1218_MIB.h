@@ -17,6 +17,9 @@ namespace tmx::utils::ntcip1218::mib::oid
     // RSU Radio Description. Name of the radio that the configuration relates to.
     static constexpr const char *rsuRadioDescOid = "1.3.6.1.4.1.1206.4.2.18.1.2.1.2.0";
 
+    // RSU Radio type indicates the type of V2X Radio. pC5 is cellular V2X
+    static constexpr const char *rsuRadioTypeOid = "1.3.6.1.4.1.1206.4.2.18.1.2.1.4.0";
+
     // GNSS Data Output. Contains NMEA 0183 GPGGA or GNGGA output string including the $ starting character and the ending <CR><LF>.
     static constexpr const char *rsuGnssOutputStringOid = "1.3.6.1.4.1.1206.4.2.18.6.5.0";
 

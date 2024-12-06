@@ -1,5 +1,10 @@
 #include "RSUHealthMonitorWorker.h"
 #include <gtest/gtest.h>
+using namespace std;
+using namespace tmx::utils;
+using namespace tmx::utils::rsu41::mib::oid;
+using namespace tmx::utils::ntcip1218::mib::oid;
+using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
