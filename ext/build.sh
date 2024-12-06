@@ -88,5 +88,4 @@ cd net-snmp
 ./configure --enable-blumenthal-aes --with-default-snmp-version="3" --with-sys-contact="@@no.where" --with-sys-location="Unknown" --with-logfile="/var/log/snmpd.log" --with-persistent-directory="/var/net-snmp"
 make -j${numCPU}
 make install
-echo 'export LD_LIBRARY_PATH="/usr/local/lib/"' >> ~/.bashrc
 popd
