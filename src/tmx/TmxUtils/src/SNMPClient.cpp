@@ -46,7 +46,7 @@ namespace tmx::utils
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
 
         // Defining and generating authentication config
-        const oid *usmAuthProto;
+        oid *usmAuthProto;
         if (authProtocol == "MD5") {
             usmAuthProto = usmHMACMD5AuthProtocol;
         }
@@ -84,7 +84,7 @@ namespace tmx::utils
         }
 
         // Defining and generating privacy config
-        const oid *usmPrivProto;
+        oid *usmPrivProto;
         size_t privLen;
         if (privProtocol == "DES") {
             usmPrivProto = usmDESPrivProtocol;

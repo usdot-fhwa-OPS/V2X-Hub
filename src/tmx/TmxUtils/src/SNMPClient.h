@@ -102,7 +102,7 @@ namespace tmx::utils
          *                     net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3"
          * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 100 if unassigned
          * **/
-        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = 0, int timeout = 100): snmp_client(ip, port, community, snmp_user, securityLevel, "SHA", authPassPhrase,"","",snmp_version, timeout ) {};
+        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = SNMP_VERSION_3, int timeout = 100): snmp_client(ip, port, community, snmp_user, securityLevel, "SHA", authPassPhrase,"","",snmp_version, timeout ) {};
 
         /** @brief Constructor for SNMP Service client.
          *  Uses the arguments provided to establish an snmp connection
@@ -119,7 +119,7 @@ namespace tmx::utils
          *                     net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3"
          * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 100 if unassigned
          * **/
-        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version = 3, int timeout = 100);
+        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version = SNMP_VERSION_3, int timeout = 100);
 
         /* Disable default copy constructor*/
         snmp_client(snmp_client &sc) = delete;
