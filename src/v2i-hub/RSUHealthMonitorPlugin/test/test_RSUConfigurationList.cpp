@@ -9,6 +9,11 @@ namespace RSUHealthMonitor
         std::shared_ptr<RSUConfigurationList> rsuConfigList = std::make_shared<RSUConfigurationList>();
     };
 
+    TEST_F(test_RSUConfigurationList, mib_version_to_string) {
+        EXPECT_EQ( RSU1218_str, mib_version_to_string(RSUMibVersion::RSUMIB_V_1218));
+        EXPECT_EQ( RSU4_1_str, mib_version_to_string(RSUMibVersion::RSUMIB_V_4_1));
+        EXPECT_EQ( "UNKNOWN", mib_version_to_string(RSUMibVersion::UNKOWN_MIB_V));
+    }
     TEST_F(test_RSUConfigurationList, parseAndGetConfigs)
     {
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
@@ -51,18 +56,18 @@ namespace RSUHealthMonitor
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
     }
 
-    TEST_F(test_RSUConfigurationList, parseAndGetConfigs_Missing_AuthPassPhrase)
+    TEST_F(test_RSUConfigurationList, parseAndGetConfigs_Missing_Security_Level)
     {
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
-        std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase_Missing\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.0.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
+        std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase_Missing\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.0.XX\", \"SNMPPort\": \"161\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
         ASSERT_THROW(rsuConfigList->parseRSUs(rsuConfigsStr), RSUHealthMonitor::RSUConfigurationException);
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
     }
 
-    TEST_F(test_RSUConfigurationList, parseAndGetConfigs_Missing_User)
+    TEST_F(test_RSUConfigurationList, parseAndGetConfigs_Missing_Ip)
     {
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
-        std::string rsuConfigsStr = "{ \"RSUS\": [ { \"RSUIp\": \"192.168.XX.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User_Missing\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.0.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
+        std::string rsuConfigsStr = "{ \"RSUS\": [ { \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User_Missing\": \"authOnlyUser\", \"RSUMIBVersion\": \"NTCIP1218\" },{ \"RSUIp\": \"192.168.0.XX\", \"SNMPPort\": \"161\", \"SecurityLevel\":\"authPriv\", \"AuthProtocol\": \"SHA-512\", \"AuthPassPhrase\": \"dummy123\", \"PrivacyProtocol\": \"AES-256\", \"PrivacyPassPhrase\": \"dummy123\", \"User\": \"authPrivUser\", \"RSUMIBVersion\": \"RSU4.1\" }] }";
         ASSERT_THROW(rsuConfigList->parseRSUs(rsuConfigsStr), RSUHealthMonitor::RSUConfigurationException);
         ASSERT_EQ(0, rsuConfigList->getConfigs().size());
     }

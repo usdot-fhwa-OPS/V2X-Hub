@@ -41,99 +41,99 @@ namespace tmx::utils
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
         }
-
-        else
+        else {
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
+        }
+        if (securityLevel == "authPriv" || securityLevel == "authNoPriv") {
 
-        // Defining and generating authentication config
-        oid *usmAuthProto;
-        if (authProtocol == "MD5") {
-            usmAuthProto = usmHMACMD5AuthProtocol;
-        }
-        else if (authProtocol == "SHA") {
-            usmAuthProto = usmHMACSHA1AuthProtocol;
-        }
-        else if (authProtocol == "SHA-224") {
-            usmAuthProto = usmHMAC128SHA224AuthProtocol;
-        }
-        else if (authProtocol == "SHA-256") {
-            usmAuthProto = usmHMAC192SHA256AuthProtocol;
-        }
-        else if (authProtocol == "SHA-384") {
-            usmAuthProto = usmHMAC256SHA384AuthProtocol;
-        }
-        else if (authProtocol == "SHA-512") {
-            usmAuthProto = usmHMAC384SHA512AuthProtocol;
-        }
-        else usmAuthProto = usmHMACSHA1AuthProtocol;
+            // Defining and generating authentication config
+            const oid *usmAuthProto;
+            if (authProtocol == "MD5") {
+                usmAuthProto = usmHMACMD5AuthProtocol;
+            }
+            else if (authProtocol == "SHA") {
+                usmAuthProto = usmHMACSHA1AuthProtocol;
+            }
+            else if (authProtocol == "SHA-224") {
+                usmAuthProto = usmHMAC128SHA224AuthProtocol;
+            }
+            else if (authProtocol == "SHA-256") {
+                usmAuthProto = usmHMAC192SHA256AuthProtocol;
+            }
+            else if (authProtocol == "SHA-384") {
+                usmAuthProto = usmHMAC256SHA384AuthProtocol;
+            }
+            else if (authProtocol == "SHA-512") {
+                usmAuthProto = usmHMAC384SHA512AuthProtocol;
+            }
+            else usmAuthProto = usmHMACSHA1AuthProtocol;
+            // Passphrase used for authentication
+            auto authPhrase_len = authPassPhrase.length();
+            auto authPhrase = (u_char *)authPassPhrase.c_str();
 
-        // Passphrase used for authentication
-        auto authPhrase_len = authPassPhrase.length();
-        auto authPhrase = (u_char *)authPassPhrase.c_str();
-
-        session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
-        session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
-        session.securityAuthKeyLen = USM_AUTH_KU_LEN;
-        if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
-                                                                          session.securityAuthProtoLen,
-                                                                          authPhrase, authPhrase_len,
-                                                                          session.securityAuthKey,
-                                                                          &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
-        {
-            throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
-        }
-
-        // Defining and generating privacy config
-        oid *usmPrivProto;
-        size_t privLen;
-        if (privProtocol == "DES") {
-            usmPrivProto = usmDESPrivProtocol;
-            privLen = USM_PRIV_PROTO_DES_LEN;
-        }
-        else if (privProtocol == "AES") {
-            usmPrivProto = usmAESPrivProtocol;
-            privLen = USM_PRIV_PROTO_AES_LEN;
-        }
-        else if (privProtocol == "AES-128") {
-            usmPrivProto = usmAES128PrivProtocol;
-            privLen = USM_PRIV_PROTO_AES128_LEN;
-        }
-        else if (privProtocol == "AES-192") {
-            usmPrivProto = usmAES192PrivProtocol;
-            privLen = USM_PRIV_PROTO_AES192_LEN;
-        }
-        else if (privProtocol == "AES-256") {
-            usmPrivProto = usmAES256PrivProtocol;
-            privLen = USM_PRIV_PROTO_AES256_LEN;
-        }
-        else if (privProtocol == "AES-192-Cisco") {
-            usmPrivProto = usmAES192CiscoPrivProtocol;
-            privLen = USM_PRIV_PROTO_AES192_CISCO_LEN;
-        }
-        else if (privProtocol == "AES-256-Cisco") {
-            usmPrivProto = usmAES256CiscoPrivProtocol;
-            privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
-        }
-        else if (securityLevel == "authPriv" ) {
-            throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
-        }
-
-        // Passphrase used for privacy
-        auto privPhrase_len = privPassPhrase.length();
-        auto privPhrase = (u_char *)privPassPhrase.c_str();
-
-        session.securityPrivProto = snmp_duplicate_objid(usmPrivProto, privLen);
-        session.securityPrivProtoLen = privLen;
-        session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+            session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
+            session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
+            session.securityAuthKeyLen = USM_AUTH_KU_LEN;
+            if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
                                                                             session.securityAuthProtoLen,
-                                                                            privPhrase, privPhrase_len,
-                                                                            session.securityPrivKey,
-                                                                            &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
-        {
-            throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
+                                                                            authPhrase, authPhrase_len,
+                                                                            session.securityAuthKey,
+                                                                            &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
+            {
+                throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
+            }
         }
+        // Defining and generating privacy config
+        if (securityLevel == "authPriv" ) {
+            const oid *usmPrivProto;
+            size_t privLen;
+            if (privProtocol == "DES") {
+                usmPrivProto = usmDESPrivProtocol;
+                privLen = USM_PRIV_PROTO_DES_LEN;
+            }
+            else if (privProtocol == "AES") {
+                usmPrivProto = usmAESPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES_LEN;
+            }
+            else if (privProtocol == "AES-128") {
+                usmPrivProto = usmAES128PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES128_LEN;
+            }
+            else if (privProtocol == "AES-192") {
+                usmPrivProto = usmAES192PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES192_LEN;
+            }
+            else if (privProtocol == "AES-256") {
+                usmPrivProto = usmAES256PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES256_LEN;
+            }
+            else if (privProtocol == "AES-192-Cisco") {
+                usmPrivProto = usmAES192CiscoPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES192_CISCO_LEN;
+            }
+            else if (privProtocol == "AES-256-Cisco") {
+                usmPrivProto = usmAES256CiscoPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
+            }
+            else if (securityLevel == "authPriv" ) {
+                throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
+            }
+            // Passphrase used for privacy
+            auto privPhrase_len = privPassPhrase.length();
+            auto privPhrase = (u_char *)privPassPhrase.c_str();
 
+            session.securityPrivProto = snmp_duplicate_objid(usmPrivProto, privLen);
+            session.securityPrivProtoLen = privLen;
+            session.securityPrivKeyLen = USM_PRIV_KU_LEN;
+            if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+                                                                                session.securityAuthProtoLen,
+                                                                                privPhrase, privPhrase_len,
+                                                                                session.securityPrivKey,
+                                                                                &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
+            {
+                throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
+            }
+        }
         session.timeout = timeout_;
 
         // Opens the snmp session if it exists

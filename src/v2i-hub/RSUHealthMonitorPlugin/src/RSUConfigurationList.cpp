@@ -42,6 +42,7 @@ namespace RSUHealthMonitor
         }
         for (auto i = 0; i != rsuArray.size(); i++)
         {
+
             if (rsuArray[i].isMember(RSUIpKey))
             {
                 config.rsuIp = rsuArray[i][RSUIpKey].asString();
@@ -78,42 +79,23 @@ namespace RSUHealthMonitor
             {
                 config.privProtocol = rsuArray[i][PrivProtocolKey].asString();
             }
-            else
-            {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Privacy protocol [" + std::string(PrivProtocolKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
-            }
-
+        
             if (rsuArray[i].isMember(AuthPassPhraseKey))
             {
                 config.authPassPhrase = rsuArray[i][AuthPassPhraseKey].asString();
             }
-            else
-            {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication pass phrase [" + std::string(AuthPassPhraseKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
-            }
-
+            
             if (rsuArray[i].isMember(PrivPassPhraseKey))
             {
                 config.privPassPhrase = rsuArray[i][PrivPassPhraseKey].asString();
             }
-            else
-            {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Privacy pass phrase [" + std::string(PrivPassPhraseKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
-            }
+        
 
             if (rsuArray[i].isMember(UserKey))
             {
                 config.user = rsuArray[i][UserKey].asString();
             }
-            else
-            {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: User [" + std::string(UserKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
-            }
-
+        
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
                 auto rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
