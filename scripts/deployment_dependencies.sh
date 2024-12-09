@@ -21,6 +21,7 @@ DEPENDENCIES="build-essential \
     libssl-dev \
     libwebsockets-dev \
     libxerces-c-dev \
+    python3-websockets \
     qtbase5-dev \
     uuid-dev \
     zip \

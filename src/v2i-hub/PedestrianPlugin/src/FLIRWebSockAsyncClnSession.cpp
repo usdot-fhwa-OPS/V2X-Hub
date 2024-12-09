@@ -296,13 +296,13 @@ namespace PedestrianPlugin
 
                         PLOG(logINFO) << "PSM message count: " << msgCount;
 
-                        //constructing xml to send to BroadcastPedDet function
+                        // Constructing PSM XML to send to BroadcastPedDet function
                         char psm_xml_char[10000]; 
                         snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>%.0f</speed><heading>%i</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month><day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), speed, alpha, dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
 
                         std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
 
-                        //constructing xml to send to BroadcastPedDet function
+                        // Constructing TIM XML to send to BroadcastPedDet function
                         try {
                             moy = calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
                             PLOG(logDEBUG) << "Minute of the year: " << moy;
@@ -311,7 +311,11 @@ namespace PedestrianPlugin
                             PLOG(logERROR) << "Error: " << e.what();
                         }
                         char tim_xml_char[10000];
-                        snprintf(tim_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TravelerInformation><msgCnt>%i</msgCnt><packetID>0000000000%s</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>%s</lat><long>-%s</long><elevation>-4096</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>%i</startYear><startTime>%i</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>%s</lat><long>%s</long><elevation>-4096</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>%s</lat><long>%s</long><elevation>-4096</elevation></center><radius>3000</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>", msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), dateTimeArr[0], moy, lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
+                        snprintf(tim_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TravelerInformation><msgCnt>%i</msgCnt><packetID>0000000000%s</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>%s</lat><long>%s</long><elevation>-4096</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>%i</startYear><startTime>%i</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>%s</lat><long>%s</long><elevation>-4096</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>%s</lat><long>%s</long><elevation>-4096</elevation></center><radius>3000</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>", msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), dateTimeArr[0], moy, lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
+
+                        // // Constructing SDSM XML to send to BroadcastPedDet function
+                        // char sdsm_xml_char[10000];
+                        // snprintf(sdsm_xml_char,10000,"<SensorDataSharingMessage><msgCnt>%i</msgCnt><sourceID>%s</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>%i</year></sDSMTimeStamp><refPos><lat>%s</lat><long>%s</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>%s</objectID><measurementTime>1</measurementTime><timeConfidence><time-000-200/></timeConfidence><pos><offsetX>1</offsetX><offsetY>1</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>1</speed><speedConfidence><prec10ms/></speedConfidence><heading>0</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage>", msgCount, idResult.c_str(), dateTimeArr[0], lat.c_str(), lon.c_str(), idResult.c_str(), lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
 
                         std::string tim_xml_str(tim_xml_char, sizeof(tim_xml_char) / sizeof(tim_xml_char[0]));
 
@@ -321,7 +325,7 @@ namespace PedestrianPlugin
                         msgQueue.push(psmxml);
                         msgQueue.push(timxml);
 
-                        PLOG(logDEBUG) << "Sending XMLs to BroadcastPedDet: " << psmxml.c_str() << timxml.c_str();
+                        PLOG(logDEBUG) << "Sending XMLs to BroadcastPedDet: " << psmxml.c_str() << std::endl << timxml.c_str();
 
                     }
                 }

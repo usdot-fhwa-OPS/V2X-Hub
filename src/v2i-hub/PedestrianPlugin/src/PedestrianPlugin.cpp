@@ -226,6 +226,22 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
+std::string PedestrianPlugin::parseMessage(const std::string& message) {
+    if (message.find("<PersonalSafetyMessage>") != std::string::npos)
+	{
+        return "PersonalSafetyMessage";
+    }
+	else if (message.find("<SensorDataSharingMessage>") != std::string::npos)
+	{
+        return "SensorDataSharingMessage";
+    }
+	else if (message.find("<TravelerInformation>") != std::string::npos)
+	{
+        return "TravelerInformation";
+    }
+	else return "Unknown Message Type";
+}
+
 void PedestrianPlugin::BroadcastPedDet(const std::string &msgJson) 
 {
 	PsmMessage psmMsg;
@@ -242,67 +258,72 @@ void PedestrianPlugin::BroadcastPedDet(const std::string &msgJson)
 	container.load<XML>(ss);
 
 	PLOG(logDEBUG) << "In PedestrianPlugin::BroadcastPedDet: Incoming Message: " << std::endl << msgJson;
+	auto receivedType = parseMessage(msgJson);
 
-	// if(dataprovider.compare("PSM") == 0)
-	// {
-	// 	psmMsg.set_contents(container.get_storage().get_tree());
-	// 	psmENC.encode_j2735_message(psmMsg);
+	if(receivedType == "PersonalSafetyMessage")
+	{
+		psmMsg.set_contents(container.get_storage().get_tree());
+		psmENC.encode_j2735_message(psmMsg);
 
-	// 	auto msg = std::make_unique<PsmEncodedMessage>();
-	// 	msg.reset();
-	// 	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
-	// 	std::string enc = psmENC.get_encoding();
-	// 	msg->refresh_timestamp();
-	// 	msg->set_payload(psmENC.get_payload_str());
-	// 	msg->set_encoding(enc);
-	// 	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	// 	msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
-	// 	msg->refresh_timestamp();
+		auto msg = std::make_unique<PsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+		std::string enc = psmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(psmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
+		msg->refresh_timestamp();
 
-	// 	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
-	// 	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	// 	BroadcastMessage(*rMsg);
-	// }
-	// else if (dataprovider.compare("SDSM") == 0)
-	// {
-	// 	sdsmMsg.set_contents(container.get_storage().get_tree());
-	// 	sdsmENC.encode_j2735_message(sdsmMsg);
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else if(receivedType == "SensorDataSharingMessage")
+	{
+		sdsmMsg.set_contents(container.get_storage().get_tree());
+		sdsmENC.encode_j2735_message(sdsmMsg);
 
-	// 	auto msg = std::make_unique<SdsmEncodedMessage>();
-	// 	msg.reset();
-	// 	msg.reset(dynamic_cast<SdsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING)));
-	// 	std::string enc = sdsmENC.get_encoding();
-	// 	msg->refresh_timestamp();
-	// 	msg->set_payload(sdsmENC.get_payload_str());
-	// 	msg->set_encoding(enc);
-	// 	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	// 	msg->addDsrcMetadata(tmx::messages::api::sensorDataSharingMessage_PSID);
-	// 	msg->refresh_timestamp();
+		auto msg = std::make_unique<SdsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<SdsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING)));
+		std::string enc = sdsmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(sdsmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::sensorDataSharingMessage_PSID);
+		msg->refresh_timestamp();
 		
-	// 	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast SDSM:: " << sdsmENC.get_payload_str();
-	// 	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	// 	BroadcastMessage(*rMsg);
-	// }
-	// else if (dataprovider.compare("TIM") == 0)
-	// {
-	// 	timMsg.set_contents(container.get_storage().get_tree());
-	// 	timENC.encode_j2735_message(timMsg);
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast SDSM:: " << sdsmENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else if(receivedType == "TravelerInformation")
+	{
+		timMsg.set_contents(container.get_storage().get_tree());
+		timENC.encode_j2735_message(timMsg);
 
-	// 	auto msg = std::make_unique<TimEncodedMessage>();
-	// 	msg.reset();
-	// 	msg.reset(dynamic_cast<TimEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TRAVELERINFORMATION_STRING)));
-	// 	std::string enc = timENC.get_encoding();
-	// 	msg->refresh_timestamp();
-	// 	msg->set_payload(timENC.get_payload_str());
-	// 	msg->set_encoding(enc);
-	// 	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	// 	msg->addDsrcMetadata(tmx::messages::api::travelerInformation_PSID);
-	// 	msg->refresh_timestamp();
+		auto msg = std::make_unique<TimEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<TimEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TRAVELERINFORMATION_STRING)));
+		std::string enc = timENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(timENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::travelerInformation_PSID);
+		msg->refresh_timestamp();
 		
-	// 	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast TIM:: " << timENC.get_payload_str();
-	// 	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
-	// 	BroadcastMessage(*rMsg);
-	// }
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast TIM:: " << timENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else
+	{
+		PLOG(logWARNING) << "Received unknown message: " << msgJson;
+	}
 }
 
 int PedestrianPlugin::Main()
