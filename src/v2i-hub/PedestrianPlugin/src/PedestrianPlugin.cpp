@@ -191,7 +191,7 @@ void PedestrianPlugin::UpdateConfigSettings()
         }
     }
 
-	else if (dataprovider.compare("PSM") == 0 || dataprovider.compare("SDSM") == 0) // default if PSM XML data consumed using the webservice implementation
+	else if (dataprovider.compare("XML") == 0) // default if PSM/SDSM/TIM XML data consumed using the webservice implementation
 	{
         StopWebSocket();
         if (!runningWebService)

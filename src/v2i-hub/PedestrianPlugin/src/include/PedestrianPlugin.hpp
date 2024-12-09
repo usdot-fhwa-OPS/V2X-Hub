@@ -107,7 +107,7 @@ protected:
 	 */
 	void checkXML();
 	/**
-	 * @brief Parses messages received into BroadcastPedDet to check what kind of message it is (e.g. PSM, TIM, SDSM).
+	 * @brief Parses messages received into BroadcastPedDet to check what kind of message it is (e.g. PSM, SDSM, TIM).
 	 * @param message Message XML as a string.
 	 */
 	std::string parseMessage(const std::string& message);

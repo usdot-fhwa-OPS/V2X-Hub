@@ -39,9 +39,10 @@ namespace PedestrianPlugin
         std::string hostString_;
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
-        std::string psmxml = "";
-        std::string timxml = "";
+        /* NOTE: Removed PSM constuction from FLIR input. Keeping as reference and if returned use is desired.
+        std::string psmxml = "";*/
         std::string sdsmxml = "";
+        std::string timxml = "";
         std::queue<std::string> msgQueue;
 
         std::mutex _msgLock;

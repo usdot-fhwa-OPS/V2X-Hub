@@ -206,7 +206,8 @@ namespace PedestrianPlugin
         float speed = 0;        
         std::string timeString = "";
         int id = 0;
-        std::string idResult;
+        std::string idResult = "";
+        int mappedID = 0;
 
         if (messageType.compare("Subscription") == 0)
         {
@@ -260,6 +261,10 @@ namespace PedestrianPlugin
                             int str_length_diff = 8 - idResult.length();
                             idResult.append(str_length_diff, '0');
 
+                            // Need to convert ID for SDSM
+                            // Map the value to be less than 65535
+                            int mappedID = static_cast<int>(id % 65535);
+
                         }
                         if (!it.second.get_child("latitude").data().empty())
                         {
@@ -294,13 +299,20 @@ namespace PedestrianPlugin
                         PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
                         ")" << ", travelling at speed: " << speed << ", with heading: " << alpha << " degrees";
 
-                        PLOG(logINFO) << "PSM message count: " << msgCount;
+                        PLOG(logINFO) << "Message count: " << msgCount;
 
+                        /* NOTE: Removed PSM constuction from FLIR input. Keeping as reference and if returned use is desired.
                         // Constructing PSM XML to send to BroadcastPedDet function
                         char psm_xml_char[10000]; 
                         snprintf(psm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>%i</secMark><msgCnt>%i</msgCnt><id>%s</id><position><lat>%s</lat><long>%s</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>%.0f</speed><heading>%i</heading><pathHistory><initialPosition><utcTime><year>%i</year><month>%i</month><day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>", dateTimeArr[6], msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), speed, alpha, dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
-
                         std::string psm_xml_str(psm_xml_char, sizeof(psm_xml_char) / sizeof(psm_xml_char[0]));
+                        */
+
+                        // Constructing SDSM XML to send to BroadcastPedDet function
+                        char sdsm_xml_char[10000];
+                        snprintf(sdsm_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><SensorDataSharingMessage><msgCnt>%i</msgCnt><sourceID>%s</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>%i</year><month>%i</month><day>%i</day><hour>%i</hour><minute>%i</minute><second>%i</second></sDSMTimeStamp><refPos><lat>%s</lat><long>%s</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>%i</objectID><measurementTime>0</measurementTime><timeConfidence><time-000-001/></timeConfidence><pos><offsetX>0</offsetX><offsetY>0</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>1</speed><speedConfidence><prec0-1ms/></speedConfidence><heading>%i</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage>", msgCount, idResult.c_str(), dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6], lat.c_str(), lon.c_str(), mappedID, alpha);
+
+                        std::string sdsm_xml_str(sdsm_xml_char, sizeof(sdsm_xml_char) / sizeof(sdsm_xml_char[0]));
 
                         // Constructing TIM XML to send to BroadcastPedDet function
                         try {
@@ -313,27 +325,25 @@ namespace PedestrianPlugin
                         char tim_xml_char[10000];
                         snprintf(tim_xml_char,10000,"<?xml version=\"1.0\" encoding=\"UTF-8\"?><TravelerInformation><msgCnt>%i</msgCnt><packetID>0000000000%s</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>%s</lat><long>%s</long><elevation>-4096</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>%i</startYear><startTime>%i</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>%s</lat><long>%s</long><elevation>-4096</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>%s</lat><long>%s</long><elevation>-4096</elevation></center><radius>3000</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>", msgCount, idResult.c_str(), lat.c_str(), lon.c_str(), dateTimeArr[0], moy, lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
 
-                        // // Constructing SDSM XML to send to BroadcastPedDet function
-                        // char sdsm_xml_char[10000];
-                        // snprintf(sdsm_xml_char,10000,"<SensorDataSharingMessage><msgCnt>%i</msgCnt><sourceID>%s</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>%i</year></sDSMTimeStamp><refPos><lat>%s</lat><long>%s</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>%s</objectID><measurementTime>1</measurementTime><timeConfidence><time-000-200/></timeConfidence><pos><offsetX>1</offsetX><offsetY>1</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>1</speed><speedConfidence><prec10ms/></speedConfidence><heading>0</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage>", msgCount, idResult.c_str(), dateTimeArr[0], lat.c_str(), lon.c_str(), idResult.c_str(), lat.c_str(), lon.c_str(), lat.c_str(), lon.c_str());
-
                         std::string tim_xml_str(tim_xml_char, sizeof(tim_xml_char) / sizeof(tim_xml_char[0]));
 
 		                std::lock_guard<mutex> lock(_msgLock);
+                        /* NOTE: Removed PSM constuction from FLIR input. Keeping as reference and if returned use is desired.
                         psmxml = psm_xml_str;
-                        timxml = tim_xml_str;
                         msgQueue.push(psmxml);
+                        */
+                        sdsmxml = sdsm_xml_str;
+                        timxml = tim_xml_str;
+                        msgQueue.push(sdsmxml);
                         msgQueue.push(timxml);
 
-                        PLOG(logDEBUG) << "Sending XMLs to BroadcastPedDet: " << psmxml.c_str() << std::endl << timxml.c_str();
-
+                        PLOG(logDEBUG) << "Sent XMLs to BroadcastPedDet: " << sdsmxml.c_str() << std::endl << timxml.c_str();
                     }
                 }
                 catch(const ptree_error &e)
                 {
                     PLOG(logERROR) << "Error with track data:  " << e.what();
                 }
-
             }            
         }
         else

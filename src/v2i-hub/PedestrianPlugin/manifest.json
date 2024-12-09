@@ -31,7 +31,7 @@
 		{
 			"key":"DataProvider",
 			"default":"FLIR",
-			"description":"Possible data providers we handle - FLIR (websocket) or PSM (REST request)"
+			"description":"Possible data providers we handle - FLIR (websocket) or XML (REST request, accepts PSM/SDSM/TIM)"
 		},	
 		{
 			"key":"WebSocketHost",
