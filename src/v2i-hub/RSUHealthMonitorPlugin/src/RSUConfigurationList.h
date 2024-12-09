@@ -12,11 +12,14 @@ namespace RSUHealthMonitor
     static constexpr const char *RSUIpKey = "RSUIp";
     static constexpr const char *SNMPPortKey = "SNMPPort";
     static constexpr const char *UserKey = "User";
+    static constexpr const char *AuthProtocolKey = "AuthProtocol";
+    static constexpr const char *PrivProtocolKey = "PrivacyProtocol";
     static constexpr const char *AuthPassPhraseKey = "AuthPassPhrase";
+    static constexpr const char *PrivPassPhraseKey = "PrivacyPassPhrase";
     static constexpr const char *RSUMIBVersionKey = "RSUMIBVersion";
     static constexpr const char *SecurityLevelKey = "SecurityLevel";
     static constexpr const char *RSU4_1_str = "RSU4.1";
-    static constexpr const char *RSU1218_str = "RSU1218";
+    static constexpr const char *RSU1218_str = "NTCIP1218";
 
     enum class RSUMibVersion
     {
@@ -25,12 +28,17 @@ namespace RSUHealthMonitor
         RSUMIB_V_1218 = 2
     };
 
+    std::string mib_version_to_string(const RSUMibVersion &mibversion);
+
     struct RSUConfiguration
     {
         std::string rsuIp;
         uint16_t snmpPort;
         std::string user;
+        std::string authProtocol;
+        std::string privProtocol;
         std::string authPassPhrase;
+        std::string privPassPhrase;
         std::string securityLevel;
         RSUMibVersion mibVersion;
         friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);

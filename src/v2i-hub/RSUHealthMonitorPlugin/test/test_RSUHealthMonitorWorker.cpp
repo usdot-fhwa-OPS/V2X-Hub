@@ -1,5 +1,10 @@
 #include "RSUHealthMonitorWorker.h"
 #include <gtest/gtest.h>
+using namespace std;
+using namespace tmx::utils;
+using namespace tmx::utils::rsu41::mib::oid;
+using namespace tmx::utils::ntcip1218::mib::oid;
+using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
@@ -52,13 +57,13 @@ namespace RSUHealthMonitor
     TEST_F(test_RSUHealthMonitorWorker, getRSUStatus)
     {
         uint16_t port = 161;
-        auto json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "testtesttest", "authPriv", 1000);
+        auto json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "testUser", "SHA-512", "testtesttest", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
 
-        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "test", "authPriv", 1000);
+        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
 
-        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "test", "test", "authPriv", 1000);
+        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
     }
 

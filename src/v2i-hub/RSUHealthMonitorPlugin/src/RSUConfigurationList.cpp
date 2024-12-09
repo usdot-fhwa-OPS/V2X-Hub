@@ -3,6 +3,17 @@
 
 namespace RSUHealthMonitor
 {
+    std::string mib_version_to_string(const RSUMibVersion &mibversion) {
+        switch(mibversion) {
+            case RSUMibVersion::RSUMIB_V_4_1:
+                return RSU4_1_str;
+            case RSUMibVersion::RSUMIB_V_1218:
+                return RSU1218_str;
+            default:
+                return "UNKNOWN";
+	    }
+    }
+    
     Json::Value RSUConfigurationList::parseJson(const std::string &rsuConfigsStr) const
     {
         JSONCPP_STRING err;
@@ -31,6 +42,7 @@ namespace RSUHealthMonitor
         }
         for (auto i = 0; i != rsuArray.size(); i++)
         {
+
             if (rsuArray[i].isMember(RSUIpKey))
             {
                 config.rsuIp = rsuArray[i][RSUIpKey].asString();
@@ -53,26 +65,37 @@ namespace RSUHealthMonitor
                 throw RSUConfigurationException(errMsg);
             }
 
+            if (rsuArray[i].isMember(AuthProtocolKey))
+            {
+                config.authProtocol = rsuArray[i][AuthProtocolKey].asString();
+            }
+            else
+            {
+                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication protocol [" + std::string(AuthProtocolKey) + "] is required.";
+                throw RSUConfigurationException(errMsg);
+            }
+
+            if (rsuArray[i].isMember(PrivProtocolKey))
+            {
+                config.privProtocol = rsuArray[i][PrivProtocolKey].asString();
+            }
+        
             if (rsuArray[i].isMember(AuthPassPhraseKey))
             {
                 config.authPassPhrase = rsuArray[i][AuthPassPhraseKey].asString();
             }
-            else
+            
+            if (rsuArray[i].isMember(PrivPassPhraseKey))
             {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication pass phrase [" + std::string(AuthPassPhraseKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                config.privPassPhrase = rsuArray[i][PrivPassPhraseKey].asString();
             }
+        
 
             if (rsuArray[i].isMember(UserKey))
             {
                 config.user = rsuArray[i][UserKey].asString();
             }
-            else
-            {
-                auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: User [" + std::string(UserKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
-            }
-
+        
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
                 auto rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
@@ -109,6 +132,10 @@ namespace RSUHealthMonitor
         {
             return RSUMibVersion::RSUMIB_V_4_1;
         }
+        else if (boost::iequals(mibVersionStr, RSU1218_str))
+        {
+            return RSUMibVersion::RSUMIB_V_1218;
+        }
         else
         {
             std::stringstream ss;
@@ -132,7 +159,7 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)
     {
-        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
+        os << RSUIpKey << ": " << config.rsuIp << ", " << SNMPPortKey << ": " << config.snmpPort << ", " << UserKey << ": " << config.user << ", " << AuthProtocolKey << ": " << config.authProtocol << ", " << AuthPassPhraseKey << ": " << config.authPassPhrase << ", " << PrivProtocolKey << ": " << config.privProtocol << ", " << PrivPassPhraseKey << ": " << config.privPassPhrase << ", " << SecurityLevelKey << ": " << config.securityLevel << ", " << RSUMIBVersionKey << ": " << config.mibVersion;
         return os;
     }
 }

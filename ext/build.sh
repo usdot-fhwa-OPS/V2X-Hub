@@ -80,3 +80,12 @@ cmake .
 make -j${numCPU}
 make install
 popd
+
+# net-snmp
+pushd /tmp
+git clone https://github.com/net-snmp/net-snmp.git --branch v5.9.4
+cd net-snmp
+./configure --enable-blumenthal-aes --with-default-snmp-version="3" --with-sys-contact="@@no.where" --with-sys-location="Unknown" --with-logfile="/var/log/snmpd.log" --with-persistent-directory="/var/net-snmp"
+make -j${numCPU}
+make install
+popd
