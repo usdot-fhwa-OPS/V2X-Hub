@@ -71,11 +71,6 @@
       "key": "HSMurl",
       "default": "http://<softHSM IP>:3000/v1/scms/",
       "description": "REST API endpoint url needed to make HSM calls"
-    },
-    {
-      "key": "MuteDsrcRadio",
-      "default": "0",
-      "description": "If true (1) then do not send packets to the radio for broadcast."
     }
   ]
 }
