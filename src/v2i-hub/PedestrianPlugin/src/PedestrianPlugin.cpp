@@ -204,7 +204,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     }
 	else
 	{
-		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, PSM, SDSM)!";
+		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, XML)!";
 		StopWebService();
 		StopWebSocket();
 	}
