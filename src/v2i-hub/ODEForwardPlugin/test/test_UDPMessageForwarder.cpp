@@ -45,7 +45,14 @@ namespace ODEForwardPlugin{
         EXPECT_TRUE(std::find(allUdpClientMessageTypes.begin(), allUdpClientMessageTypes.end(), UDPMessageType::MAP) != allUdpClientMessageTypes.end());
     }
 
-    TEST_F(test_UDPMessageForwarder, test_getUdpClient){
+    TEST_F(test_UDPMessageForwarder, test_getUdpClient_BEFORE_ATTACH_UDP_CLIENT){
+        EXPECT_THROW(_udpMessageForwarder->getUdpClient(UDPMessageType::TIM), TmxException);
+        EXPECT_THROW(_udpMessageForwarder->getUdpClient(UDPMessageType::BSM), TmxException);
+        EXPECT_THROW(_udpMessageForwarder->getUdpClient(UDPMessageType::SPAT), TmxException);
+        EXPECT_THROW(_udpMessageForwarder->getUdpClient(UDPMessageType::MAP), TmxException);
+    }
+    
+    TEST_F(test_UDPMessageForwarder, test_getUdpClient_AFTER_ATTACH_UDP_CLIENT){
         _udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>("127.0.0.1", 1232));
         _udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>("127.0.0.1", 1233));
         _udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>("127.0.0.1", 1234));
