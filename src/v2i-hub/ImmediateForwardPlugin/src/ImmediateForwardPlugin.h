@@ -55,7 +55,7 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 
 		// Mutex along with the data it protects.
 		std::mutex _mutexUdpClient;
-		typedef std::vector<std::unique_ptr<tmx::utils::UdpClient>> svr_list;
+		using svr_list = std::vector<std::unique_ptr<tmx::utils::UdpClient>>;
 		std::array<svr_list, 4> _udpClientList;
 		std::vector<MessageConfig> _messageConfigMap;
 		std::map<std::string, int> _messageCountMap;

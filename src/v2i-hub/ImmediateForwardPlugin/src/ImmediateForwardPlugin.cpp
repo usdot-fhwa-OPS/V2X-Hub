@@ -205,7 +205,7 @@ namespace ImmediateForward
 		// Iterate over the Messages section of the property tree.
 		// Note that Messages is at the root of the property tree, otherwise the entire
 		// path to the child would have to be specified to get_child.
-		BOOST_FOREACH(ptree::value_type &child, pt.get_child("Messages"))
+		for(const ptree::value_type &child: pt.get_child("Messages"))
 		{
 			// Array elements have no names.
 			assert(child.first.empty());
@@ -219,9 +219,11 @@ namespace ImmediateForward
 			{
 				config.Channel = child.second.get<string>("Channel");
 			}
-			catch(std::exception const & exChannel)
+			catch(const std::exception &e)
 			{
 				config.Channel.clear();
+				PLOG(logERROR) << "Encountered error parsing configuration :  " << e.what();
+				return false;
 			}
 
 			PLOG(logINFO) << "Message Config - Client: " << (config.ClientIndex + 1) <<
@@ -232,9 +234,9 @@ namespace ImmediateForward
 			_messageConfigMap.push_back(config);
 		}
 	}
-	catch(std::exception const & ex)
+	catch(const std::exception &e)
 	{
-		PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+		PLOG(logERROR) << "Error parsing Messages: " << e.what();
 		return false;
 	}
 
