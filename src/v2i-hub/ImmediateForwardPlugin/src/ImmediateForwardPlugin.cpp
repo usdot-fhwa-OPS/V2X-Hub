@@ -219,7 +219,7 @@ namespace ImmediateForward
 			{
 				config.Channel = child.second.get<string>("Channel");
 			}
-			catch(const std::exception &e)
+			catch(const boost::property_tree::ptree_error &e)
 			{
 				config.Channel.clear();
 				PLOG(logERROR) << "Encountered error parsing configuration :  " << e.what();
@@ -234,7 +234,7 @@ namespace ImmediateForward
 			_messageConfigMap.push_back(config);
 		}
 	}
-	catch(const std::exception &e)
+	catch(const boost::property_tree::ptree_error &e)
 	{
 		PLOG(logERROR) << "Error parsing Messages: " << e.what();
 		return false;
