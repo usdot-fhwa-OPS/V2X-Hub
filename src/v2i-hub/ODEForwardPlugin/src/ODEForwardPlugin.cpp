@@ -34,9 +34,11 @@
 
 	AddMessageFilter < BsmMessage > (this, &ODEForwardPlugin::HandleRealTimePublish);
  	AddMessageFilter < SpatMessage > (this, &ODEForwardPlugin::HandleSPaTPublish);
+	AddMessageFilter < MapDataMessage > (this, &ODEForwardPlugin::HandleMapPublish);
+	AddMessageFilter < TimMessage > (this, &ODEForwardPlugin::HandleTimPublish);
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
-
+	_udpMessageForwarder = std::make_shared<UDPMessageForwarder>();
  	PLOG(logDEBUG) <<"ODEForwardPlugin: Exiting ODEForwardPlugin Constructor";
  }
 
@@ -68,6 +70,28 @@
  	GetConfigValue<string>("SPaTKafkaTopic", _SPaTkafkaTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
+	GetConfigValue<int>("MAPUDPPort", _MAPUDPPort);
+	GetConfigValue<int>("TIMUDPPort", _TIMUDPPort);
+	GetConfigValue<int>("BSMUDPPort", _BSMUDPPort);
+	GetConfigValue<int>("SPATUDPPort", _SPATUDPPort);
+	GetConfigValue<string>("UDPServerIpAddress", _udpServerIpAddress);
+	GetConfigValue<string>("CommunicationMode", _communicationMode);
+	//Update communication mode
+	_communicationModeHelper->setMode(_communicationMode);	
+
+	//Throw an error if the communication mode is neither KAFKA not UDP
+	if(!(_communicationModeHelper->getKafkaMode() || _communicationModeHelper->getUDPMode())){
+		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+		throw TmxException("Unknown communication mode: " +_communicationMode);
+	}
+	
+	//Create UDP clients for different messages
+	_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
+	_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
+	_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
+	_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
+
+	//Default fallback to Kafka communication
  	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	std::string error_string;
 	_freqCounter=1;
@@ -139,12 +163,48 @@
   */
  void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg,
  		routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getUDPMode()){
+		sendBsmUDPMessage(msg, routeableMsg);
+	}else if(_communicationModeHelper->getKafkaMode()){
+		sendBsmKafkaMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+	}
+ }
 
+ void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getUDPMode()){
+		sendSpatUDPMessage(msg, routeableMsg);
+	}else if(_communicationModeHelper->getKafkaMode()){
+		sendSpatKafkaMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+	}
+ }
+
+ void ODEForwardPlugin::HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getUDPMode()){
+		sendTimUDPMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+	}
+ }
+
+
+ void ODEForwardPlugin::HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getUDPMode()){
+		sendMapUDPMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+	}
+ }
+
+void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg){
 	auto bsm=msg.get_j2735_data();
 
-        char *teststring=new char[10000];
+	char *teststring=new char[10000];
 
-        std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
+	std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
         if(_freqCounter++%_scheduleFrequency == 0) {
@@ -152,13 +212,29 @@
 		}
 		
 		delete [] teststring;
+}
 
- }
+void ODEForwardPlugin::sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg){
+	std::string message = routeableMsg.get_payload_str().c_str();
+	_udpMessageForwarder->sendMessage(UDPMessageType::BSM, message);
+}
 
+void ODEForwardPlugin::sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg){
+	std::string message = routeableMsg.get_payload_str().c_str();
+	_udpMessageForwarder->sendMessage(UDPMessageType::SPAT, message);
+}
 
- void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg,
- 		routeable_message &routeableMsg) {
+void ODEForwardPlugin::sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg){
+	std::string message = routeableMsg.get_payload_str().c_str();
+	_udpMessageForwarder->sendMessage(UDPMessageType::TIM, message);
+}
 
+void ODEForwardPlugin::sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg){
+	std::string message = routeableMsg.get_payload_str().c_str();
+	_udpMessageForwarder->sendMessage(UDPMessageType::MAP, message);
+}
+
+ void ODEForwardPlugin::sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg){
 	auto spat=msg.get_j2735_data();
 
         char *spatstring=new char[10000];
@@ -171,9 +247,7 @@
 		}
 		
 		delete [] spatstring;	
-
  }
-
 
  void ODEForwardPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {

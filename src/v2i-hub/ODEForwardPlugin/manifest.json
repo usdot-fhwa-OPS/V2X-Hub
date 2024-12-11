@@ -43,8 +43,31 @@
 			"key":"KafkaBrokerPort",
 			"default":"9092",
 			"description":"Port number to be used for KAFKA broker"
+		},
+		{
+			"key": "CommunicationMode",
+			"default": "UDP",
+			"description":"Communication mode to be used for UDP socket connection. Modes: Kafka or UDP"
+		},
+		{
+			"key": "TIMUDPPort",
+			"default": "24601",
+			"description":"Port number to be used for sending TIM message via UDP socket."
+		},
+		{
+			"key": "BSMUDPPort",
+			"default": "24601",
+			"description":"Port number to be used for sending BSM message via UDP socket."
+		},
+		{
+			"key": "MAPUDPPort",
+			"default": "24601",
+			"description":"Port number to be used for sending MAP message via UDP socket."
+		},
+		{
+			"key": "SPATUDPPort",
+			"default": "24601",
+			"description":"Port number to be used for sending SPAT message via UDP socket."
 		}
-
-
 	]
 }
