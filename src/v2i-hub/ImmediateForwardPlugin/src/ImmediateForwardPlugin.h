@@ -55,6 +55,7 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 
 		// Mutex along with the data it protects.
 		std::mutex _mutexUdpClient;
+		// A vector of UDP clients for recieving V2X communication from different RSUs
 		using svr_list = std::vector<std::unique_ptr<tmx::utils::UdpClient>>;
 		std::array<svr_list, 4> _udpClientList;
 		std::vector<MessageConfig> _messageConfigMap;
