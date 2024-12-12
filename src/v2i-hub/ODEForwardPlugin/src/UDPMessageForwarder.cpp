@@ -31,8 +31,8 @@ namespace ODEForwardPlugin
     std::shared_ptr<UdpClient> UDPMessageForwarder::getUdpClient(UDPMessageType messageType) const{
         try{
             return _udpClientsMap.at(messageType);
-        }catch(const std::out_of_range& oor){
-            throw TmxException("UDP Client not found for message type");
+        }catch(const std::out_of_range& ex){
+            throw TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what()));
         }
     }
 }

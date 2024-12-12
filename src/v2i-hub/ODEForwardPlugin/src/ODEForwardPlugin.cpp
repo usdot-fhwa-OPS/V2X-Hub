@@ -167,7 +167,7 @@
   */
  void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg) {
 	if(_communicationModeHelper->getUDPMode()){
-		sendBsmUDPMessage(msg, routeableMsg);
+		sendUDPMessage(routeableMsg, UDPMessageType::BSM);
 	}else if(_communicationModeHelper->getKafkaMode()){
 		sendBsmKafkaMessage(msg, routeableMsg);
 	}else{
@@ -177,7 +177,7 @@
 
  void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg) {
 	if(_communicationModeHelper->getUDPMode()){
-		sendSpatUDPMessage(msg, routeableMsg);
+		sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
 	}else if(_communicationModeHelper->getKafkaMode()){
 		sendSpatKafkaMessage(msg, routeableMsg);
 	}else{
@@ -187,7 +187,7 @@
 
  void ODEForwardPlugin::HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg) {
 	if(_communicationModeHelper->getUDPMode()){
-		sendTimUDPMessage(msg, routeableMsg);
+		sendUDPMessage(routeableMsg, UDPMessageType::TIM);
 	}else{
 		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
 	}
@@ -196,7 +196,7 @@
 
  void ODEForwardPlugin::HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg) {
 	if(_communicationModeHelper->getUDPMode()){
-		sendMapUDPMessage(msg, routeableMsg);
+		sendUDPMessage(routeableMsg, UDPMessageType::MAP);
 	}else{
 		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
 	}
@@ -217,28 +217,9 @@ void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &r
 		delete [] teststring;
 }
 
-void ODEForwardPlugin::sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg) const{
+void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
-	PLOG(logDEBUG1) << "BSM: " << message;
-	_udpMessageForwarder->sendMessage(UDPMessageType::BSM, message);
-}
-
-void ODEForwardPlugin::sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg) const{
-	std::string message = routeableMsg.get_payload_str().c_str();
-	PLOG(logDEBUG1) << "SPAT: " << message;
-	_udpMessageForwarder->sendMessage(UDPMessageType::SPAT, message);
-}
-
-void ODEForwardPlugin::sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg) const{
-	std::string message = routeableMsg.get_payload_str().c_str();
-	PLOG(logDEBUG1) << "TIM: " << message;
-	_udpMessageForwarder->sendMessage(UDPMessageType::TIM, message);
-}
-
-void ODEForwardPlugin::sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg) const{
-	std::string message = routeableMsg.get_payload_str().c_str();
-	PLOG(logDEBUG1) << "MAP: " << message;
-	_udpMessageForwarder->sendMessage(UDPMessageType::MAP, message);
+	_udpMessageForwarder->sendMessage(udpMessageType, message);
 }
 
  void ODEForwardPlugin::sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg){
