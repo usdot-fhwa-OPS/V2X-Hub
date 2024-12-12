@@ -219,6 +219,7 @@ void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &r
 
 void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG) << "Sending UDP Message: " << message;
 	_udpMessageForwarder->sendMessage(udpMessageType, message);
 }
 

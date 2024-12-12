@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <tmx/TmxException.hpp>
 #include <vector>
+#include <bitset>
 
 using tmx::utils::UdpClient;
 using tmx::TmxException;
@@ -51,6 +52,12 @@ namespace ODEForwardPlugin
          * @return The udp client for the given message type
          */
         std::shared_ptr<UdpClient> getUdpClient(UDPMessageType messageType) const;
+        /**
+         * @brief Convert hex string to bytes string
+         * @param hex The hex string to be converted
+         * @return The bytes string
+         */
+        std::string hexToBytes(const std::string& hex) const;
 
     };    
 } 
