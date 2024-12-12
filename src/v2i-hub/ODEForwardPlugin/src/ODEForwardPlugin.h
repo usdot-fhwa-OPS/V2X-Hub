@@ -83,11 +83,11 @@
 
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
 	void sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg);
-	void sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg);
+	void sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg) const;
 	void sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg);
-	void sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg);
+	void sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg) const;
+	void sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg) const;
+	void sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg) const;
 
  	uint16_t _scheduleFrequency;
 	uint16_t _freqCounter;

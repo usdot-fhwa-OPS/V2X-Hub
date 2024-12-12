@@ -39,6 +39,7 @@
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
 	_udpMessageForwarder = std::make_shared<UDPMessageForwarder>();
+	_communicationModeHelper = std::make_shared<CommunicationModeHelper>();
  	PLOG(logDEBUG) <<"ODEForwardPlugin: Exiting ODEForwardPlugin Constructor";
  }
 
@@ -84,38 +85,41 @@
 		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
 		throw TmxException("Unknown communication mode: " +_communicationMode);
 	}
+	PLOG(logINFO) << "Communication Mode: " << _communicationMode;
 	
-	//Create UDP clients for different messages
-	_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
-	_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
-	_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
-	_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
+	if(_communicationModeHelper->getUDPMode()){
+		//Create UDP clients for different messages
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
+	}
 
-	//Default fallback to Kafka communication
- 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
-	std::string error_string;
-	_freqCounter=1;
-	if(_forwardMSG == 1) {
- 		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
- 		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	if(_communicationModeHelper->getKafkaMode()){
+		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
+		std::string error_string;
+		_freqCounter=1;
+		if(_forwardMSG == 1) {
+			kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
+			kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
 
- 		PLOG(logDEBUG) <<"ODEForwardPlugin: Attempting to connect to " << kafkaConnectString;
- 		if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
- 			PLOG(logERROR) <<"ODEForwardPlugin: Setting kafka config options failed with error:" << error_string;
- 			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
- 			exit(1);
- 		} else {
- 			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
- 		}
-		
-		kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
-		if (!kafka_producer) {
-			PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
-			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
-			exit(1);
-		} 			
-		PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
-
+			PLOG(logDEBUG) <<"ODEForwardPlugin: Attempting to connect to " << kafkaConnectString;
+			if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
+				PLOG(logERROR) <<"ODEForwardPlugin: Setting kafka config options failed with error:" << error_string;
+				PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
+				exit(1);
+			} else {
+				PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
+			}
+			
+			kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
+			if (!kafka_producer) {
+				PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
+				PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
+				exit(1);
+			} 			
+			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
+		}
 	}
  }
 
@@ -161,8 +165,7 @@
   * @param msg BSMMessage that is received
   * @routeable_message not used
   */
- void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg,
- 		routeable_message &routeableMsg) {
+ void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg) {
 	if(_communicationModeHelper->getUDPMode()){
 		sendBsmUDPMessage(msg, routeableMsg);
 	}else if(_communicationModeHelper->getKafkaMode()){
@@ -214,23 +217,27 @@ void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &r
 		delete [] teststring;
 }
 
-void ODEForwardPlugin::sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg){
+void ODEForwardPlugin::sendBsmUDPMessage(BsmMessage &msg, routeable_message &routeableMsg) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG1) << "BSM: " << message;
 	_udpMessageForwarder->sendMessage(UDPMessageType::BSM, message);
 }
 
-void ODEForwardPlugin::sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg){
+void ODEForwardPlugin::sendSpatUDPMessage(SpatMessage &msg, routeable_message &routeableMsg) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG1) << "SPAT: " << message;
 	_udpMessageForwarder->sendMessage(UDPMessageType::SPAT, message);
 }
 
-void ODEForwardPlugin::sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg){
+void ODEForwardPlugin::sendTimUDPMessage(TimMessage &msg, routeable_message &routeableMsg) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG1) << "TIM: " << message;
 	_udpMessageForwarder->sendMessage(UDPMessageType::TIM, message);
 }
 
-void ODEForwardPlugin::sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg){
+void ODEForwardPlugin::sendMapUDPMessage(MapDataMessage &msg, routeable_message &routeableMsg) const{
 	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG1) << "MAP: " << message;
 	_udpMessageForwarder->sendMessage(UDPMessageType::MAP, message);
 }
 

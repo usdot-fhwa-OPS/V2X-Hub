@@ -16,11 +16,11 @@ namespace ODEForwardPlugin{
         _isUDPMode = compareCommunicationMode(modeSource, CommunicationMode::UDP);
     }
 
-    bool CommunicationModeHelper::getKafkaMode(){
+    bool CommunicationModeHelper::getKafkaMode() const{
         return _isKAFKAMode;
     }
 
-    bool CommunicationModeHelper::getUDPMode(){
+    bool CommunicationModeHelper::getUDPMode() const{
         return _isUDPMode;
     }
 }

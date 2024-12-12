@@ -44,13 +44,13 @@ namespace ODEForwardPlugin
          * @brief Get all udp client message types
          * @return A vector of all udp client message types
          */
-        std::vector<UDPMessageType> getAllUdpClientMessageTypes();
+        std::vector<UDPMessageType> getAllUdpClientMessageTypes() const;
 
         /**
          * @brief Get the udp client for a given message type
          * @return The udp client for the given message type
          */
-        std::shared_ptr<UdpClient> getUdpClient(UDPMessageType messageType);
+        std::shared_ptr<UdpClient> getUdpClient(UDPMessageType messageType) const;
 
     };    
 } 

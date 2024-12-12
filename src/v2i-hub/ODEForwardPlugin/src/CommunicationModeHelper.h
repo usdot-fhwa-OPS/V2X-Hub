@@ -49,13 +49,13 @@ namespace ODEForwardPlugin
          * @brief Get the Kafka mode
          * @return true if the communication mode is Kafka, false otherwise
          */
-        bool getKafkaMode();
+        bool getKafkaMode() const;
 
         /**
          * @brief Get the UDP mode
          * @return true if the communication mode is UDP, false otherwise
          **/
-        bool getUDPMode();
+        bool getUDPMode() const;
     };
     
 }
