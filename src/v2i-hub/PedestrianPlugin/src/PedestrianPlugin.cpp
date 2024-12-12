@@ -24,13 +24,32 @@ PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
 }
 
+void PedestrianPlugin::getMessageToWrite()
+{
+    std::unordered_set<std::string> parsedValues;
+    std::stringstream ss(flirOutput);
+    std::string token;
+
+    while (std::getline(ss, token, ',')) 
+	{
+        token.erase(0, token.find_first_not_of(" \t"));
+        token.erase(token.find_last_not_of(" \t") + 1);
+        parsedValues.insert(token);
+    }
+
+    // Set the flags based on parsed values
+    generatePSM = parsedValues.count("PSM") > 0;
+    generateTIM = parsedValues.count("TIM") > 0;
+    generateSDSM = parsedValues.count("SDSM") > 0;
+}
+
 int PedestrianPlugin::StartWebSocket()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
 	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
-	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str());	
+	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str(), generatePSM, generateSDSM, generateTIM);	
 
 	PLOG(logDEBUG) << "Successfully running the I/O service";	
     runningWebSocket = true;
@@ -171,11 +190,13 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
 	GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
 	GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
+	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
 
 	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
 	
 	if (dataprovider.compare("FLIR") == 0)
     {
+		getMessageToWrite();
         StopWebService();
         if (!runningWebSocket)
         {
@@ -191,7 +212,7 @@ void PedestrianPlugin::UpdateConfigSettings()
         }
     }
 
-	else if (dataprovider.compare("XML") == 0) // default if PSM/SDSM/TIM XML data consumed using the webservice implementation
+	else if (dataprovider.compare("REST") == 0) // default if PSM/SDSM/TIM XML data consumed using the webservice implementation
 	{
         StopWebSocket();
         if (!runningWebService)
@@ -204,7 +225,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     }
 	else
 	{
-		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, XML)!";
+		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, REST)!";
 		StopWebService();
 		StopWebSocket();
 	}

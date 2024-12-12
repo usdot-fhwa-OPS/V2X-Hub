@@ -274,7 +274,7 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());	
-	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
+	EXPECT_EQ(243,  tsm3EncodeMessage.get_msgId());
 }
 
 
@@ -363,7 +363,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	delete my_str_1;
 	free(offset);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
+	EXPECT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
 
@@ -419,7 +419,7 @@ TEST_F(J2735MessageTest, EncodeMobilityResponse)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
+	EXPECT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
 
 
@@ -479,7 +479,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 		
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+	EXPECT_EQ(20,  bsmEncodeMessage.get_msgId());
 	//Decode the encoded BSM
 	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
 }
@@ -584,23 +584,23 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
+	EXPECT_EQ(20,  bsmEncodeMessage.get_msgId());	
 	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
-	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
+	EXPECT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
 
 	//Decode the encoded BSM
 	auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
-	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
+	EXPECT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
+	EXPECT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
 	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
 	auto decoded_reg_bsm = (Reg_BasicSafetyMessage_t *)calloc(1, sizeof(Reg_BasicSafetyMessage_t));
 	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
 	decoded_regional = decoded_bsm_ptr->regional;
 	decoded_reg_bsm = decoded_regional->list.array[0];
-	ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
-	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
-	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
-	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
+	EXPECT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
+	EXPECT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
+	EXPECT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
+	EXPECT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
 
@@ -615,7 +615,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
 	std::cout << psmENC.get_payload_str()<<std::endl;
-	ASSERT_EQ(32,  psmENC.get_msgId());
+	EXPECT_EQ(32,  psmENC.get_msgId());
 }
 	
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
@@ -629,7 +629,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 	tsm4msg.set_contents(container.get_storage().get_tree());
 	tsm4Enc.encode_j2735_message(tsm4msg);
 	std::cout << tsm4Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(244,  tsm4Enc.get_msgId());
+	EXPECT_EQ(244,  tsm4Enc.get_msgId());
 }
 
 
@@ -645,7 +645,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
+	EXPECT_EQ(245,  tsm5Enc.get_msgId());	
 
 	//No <refwidth> tag in TCM
 	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
@@ -654,7 +654,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
+	EXPECT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
 TEST_F (J2735MessageTest, EncodeSrm)
@@ -750,9 +750,9 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
+	EXPECT_EQ(29,  srmEncodeMessage.get_msgId());	
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
-	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
+	EXPECT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
 TEST_F(J2735MessageTest, EncodeTravelerInformation){
@@ -770,23 +770,21 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	container.load<XML>(ss);
 	timMsg.set_contents(container.get_storage().get_tree());
 	timEnc.encode_j2735_message(timMsg);
-	ASSERT_EQ(31,  timEnc.get_msgId());	
+	EXPECT_EQ(31,  timEnc.get_msgId());	
 	#if SAEJ2735_SPEC < 2020
 	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
 	#else
 	string expectedHex = "001f45201000000000019b3915c0807299b9ea847a9b9dea2001fffe4fd0f23a000078005253373d508f5373bd4400325fffe05b94cdcf53e3d4dcef30e7aa58000002250e1a8880";
 	#endif
-	ASSERT_EQ(expectedHex, timEnc.get_payload_str());
+	EXPECT_EQ(expectedHex, timEnc.get_payload_str());
 
 	// Decode any TIM
 	std::string timInput = "001f45201000000000019b3915c0807299b9ea847a9b9dea2001fffe4fd0f23a000078005253373d508f5373bd4400325fffe05b94cdcf53e3d4dcef30e7aa58000002250e1a8880";
     std::vector<uint8_t> byteArray = hexStringToByteArray(timInput);
-    tmx::messages::TimEncodedMessage decodedTim;
-    decodedTim.set_data(byteArray);
-    auto decodedTimPtr = decodedTim.decode_j2735_message();
-
-    // Print out the decoded message
-    std::cout << "Decoded TIM: " << decodedTimPtr << std::endl;
+    tmx::messages::TimEncodedMessage encodedTim;
+    encodedTim.set_data(byteArray);
+    auto decodedTimPtr = encodedTim.decode_j2735_message().get_j2735_data();
+	EXPECT_EQ(1, decodedTimPtr->msgCnt);
 }
 
 TEST_F(J2735MessageTest, EncodeSDSM)
@@ -852,12 +850,12 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SdsmMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
+	EXPECT_EQ(41,  SdsmEncodeMessage.get_msgId());	
 	std::string expectedSDSMEncHex = "00292a0a010c0c0a3f9fa312c031ce44cdcf8613d4dc900ffffffff00002c4d3d8bb849fffdfffc000035fe050";
-	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
+	EXPECT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
 	auto sdsm_ptr = SdsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(10, sdsm_ptr->msgCnt);
+	EXPECT_EQ(10, sdsm_ptr->msgCnt);
 }
 }

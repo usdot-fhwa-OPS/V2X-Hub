@@ -31,13 +31,17 @@
 		{
 			"key":"DataProvider",
 			"default":"FLIR",
-			"description":"Possible data providers we handle - FLIR (websocket) or XML (REST request, accepts PSM/SDSM/TIM)"
-		},	
+			"description":"Possible data providers we handle - FLIR (websocket) or REST (REST request, accepts PSM/SDSM/TIM as XML)"
+		},
+		{
+			"key":"FLIROutput",
+			"default":"PSM, SDSM, TIM",
+			"description":"List containing messages to be generated. Possible options: PSM, SDSM, and/or TIM. Only used when \"FLIR\" is the selected DataProvider."
+		},
 		{
 			"key":"WebSocketHost",
 			"default":"192.168.55.183",
 			"description":"IP address of the camera to connect to for data"
-
 		},
 		{
 			"key":"WebSocketPort",

@@ -1,6 +1,10 @@
+## This script starts a mock WebSocket server for the Pedestrian Plugin to connect to. 
+## Once connected, the Ped Plugin will periodically receive FLIR's pedestrian presence tracking data.
+
 import asyncio
 import websockets
 import json
+import argparse
 
 # Sample Pededertian Presence Tracking Data
 message = {
@@ -42,9 +46,14 @@ async def handleClient(websocket, path):
         await websocket.close(code=4000, reason="Invalid path")
 
 async def main():
-    # Start server at port 9000, as port 80 is used by V2X Hub
-    server = await websockets.serve(handleClient, "127.0.0.1", 9000)
-    print("WebSocket server started on ws://127.0.0.1:9000/api/subscriptions")
+    parser = argparse.ArgumentParser(description='Script to mock detection data coming from FLIR Sensor')
+    parser.add_argument('--ip', help='IP address to send detection data to.', type=str, default="127.0.0.1") 
+    parser.add_argument('--port', help='Port to send detection data to.', type=int, default=9000)
+    args = parser.parse_args()
+
+    server = await websockets.serve(handleClient, args.ip, args.port)
+    printStr = "WebSocket server started on ws://" + args.ip + ":" + str(args.port) + "/api/subscriptions"
+    print(printStr)
     await server.wait_closed()
 
 if __name__ == "__main__":

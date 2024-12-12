@@ -14,6 +14,10 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <iostream>
+#include <sstream>
+#include <unordered_set>
+#include <algorithm>
 #include <PersonalSafetyMessage.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 
@@ -111,6 +115,11 @@ protected:
 	 * @param message Message XML as a string.
 	 */
 	std::string parseMessage(const std::string& message);
+	/**
+	 * @brief
+	 * @param
+	 */
+	void getMessageToWrite();
 	
 private:
 	J2735MessageFactory factory;
@@ -125,9 +134,14 @@ private:
 	float cameraRotation;
 	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
 	std::string hostString;
+	std::string flirOutput;
 
 	bool runningWebSocket = false;
     bool runningWebService = false;
+
+	bool generatePSM = false;
+	bool generateSDSM = false;
+	bool generateTIM = false;
 
 	// The io_context is required for all I/O
     net::io_context ioc;
