@@ -28,7 +28,7 @@ CREATE TABLE `first_action` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `first_action` WRITE;
-INSERT INTO `first_action` VALUES ('RED-TRUCK','NULL',1.3,0.0,'ENTER_STAGING_AREA','one','two');
+INSERT INTO `first_action` VALUES ('RED-TRUCK','NULL',-0.2,-1.5,'ENTER_STAGING_AREA','one','two');
 UNLOCK TABLES;
 
 --
@@ -47,5 +47,5 @@ CREATE TABLE `freight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `freight` WRITE;
-INSERT INTO `freight` VALUES ('RED-TRUCK','NULL',1.3,0.0,'ENTER_STAGING_AREA','one','two'),('RED-TRUCK','CARGO_A',-0.2,1.4,'PICKUP','two','three'),('RED-TRUCK','NULL',1.3,0.0,'ENTER_PORT','three','four'),('RED-TRUCK','NULL',-0.2,1.4,'DROPOFF','four','five');
+INSERT INTO `freight` VALUES ('RED-TRUCK','NULL',-0.2,-1.5,'ENTER_STAGING_AREA','one','two'),('RED-TRUCK','CARGO_A',1.3,0.0,'PICKUP','two','three'),('RED-TRUCK','CARGO_A',-0.2,1.4,'ENTER_PORT','three','four'),('RED-TRUCK','CARGO_A',-1.7,0.0,'DROPOFF','four','five'),('RED-TRUCK','NULL',-0.2,-1.5,'PORT_CHECKPOINT','five','six'),('RED-TRUCK','NULL',-1.7,0.0,'PORT_EXIT','six','NULL');
 UNLOCK TABLES;
