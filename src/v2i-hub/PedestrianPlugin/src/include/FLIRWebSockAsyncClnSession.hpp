@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <queue>
 #include <ctime>
+#include <cmath>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -60,8 +61,14 @@ namespace PedestrianPlugin
 
     /**
      * @brief Calculates the current minute of the year to be included in the Traveler Information Message (TIM).
+     * @param year Current year
+     * @param month Current month
+     * @param day Current day
+     * @param hour Current hour
+     * @param minute Current minute
+     * @param second Current second
      */
-    int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second);
+    const int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second);
 
     /**
      * @brief Reports a failure with any of the websocket functions below
@@ -103,18 +110,14 @@ namespace PedestrianPlugin
      * @param ec error code containing information describing issue with json send
      * @param bytes_transferred the bytes of the json
      */
-    void on_write(
-        beast::error_code ec,
-        std::size_t bytes_transferred);
+    void on_write(beast::error_code ec, std::size_t bytes_transferred);
 
     /**
      * @brief Used to read in all messages from the camera and parse out desired fields
      * @param ec error code containing information describing issue with reading camera data
      * @param bytes_transferred the bytes of the received camera data
      */
-    void on_read(
-        beast::error_code ec,
-        std::size_t bytes_transferred);
+    void on_read(beast::error_code ec, std::size_t bytes_transferred);
     
     /**
      * @brief Closes the websocket connection to the camera
@@ -125,15 +128,35 @@ namespace PedestrianPlugin
     /**
      * @brief Get method for queue containing message(s) for all tracked pedestrians. Copies the queue into
      * a temporary queue and returns temporary queue. Clears the original queue.
-     * @return std::queue The message queue.
+     * @return The message queue.
      */
     std::queue<std::string> getMsgQueue();
 
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
      * @param datetime string from camera 
-     * @return vector with all components 
+     * @return Vector with all components 
      */
-    std::vector<int> timeStringParser(std::string dateTimeStr) const;        
+    std::vector<int> timeStringParser(std::string dateTimeStr) const;
+
+    /**
+     * @brief Handles messages of type "Subscription" received from the FLIR camera
+     * @param pr Property tree containing the parsed JSON message
+     */
+    void handleSubscriptionMessage(const pt::ptree& pr);
+
+    /**
+     * @brief Handles messages of type "Data" received from the FLIR camera
+     * @param pr Property tree containing the parsed JSON message
+     */
+    void handleDataMessage(const pt::ptree& pr);
+
+    /**
+     * @brief Processes pedestrian presence tracking data, generates appropriate XML messages (PSM, SDSM, TIM), 
+     * and pushes them to a message queue
+     * @param pr Property tree containing the parsed JSON data
+     * @param time Timestamp string associated with received data
+     */
+    void processPedestrianData(const pt::ptree& pr, const std::string& time);
     };
 };
