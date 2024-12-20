@@ -68,7 +68,7 @@ namespace PedestrianPlugin
      * @param minute Current minute
      * @param second Current second
      */
-    const int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second);
+    int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) const;
 
     /**
      * @brief Reports a failure with any of the websocket functions below
@@ -143,7 +143,7 @@ namespace PedestrianPlugin
      * @brief Handles messages of type "Subscription" received from the FLIR camera
      * @param pr Property tree containing the parsed JSON message
      */
-    void handleSubscriptionMessage(const pt::ptree& pr);
+    void handleSubscriptionMessage(const pt::ptree& pr) const;
 
     /**
      * @brief Handles messages of type "Data" received from the FLIR camera

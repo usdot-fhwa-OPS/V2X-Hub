@@ -114,7 +114,7 @@ protected:
 	 * @brief Parses messages received into BroadcastPedDet to check what kind of message it is (e.g. PSM, SDSM, TIM).
 	 * @param message Message XML as a string.
 	 */
-	const std::string parseMessage(const std::string& message);
+	std::string parseMessage(const std::string& message) const;
 	/**
 	 * @brief Parses though user configurations to determine which message(s) to generate. Accepts any combination of PSM, SDSM, and/or TIM. 
 	 */

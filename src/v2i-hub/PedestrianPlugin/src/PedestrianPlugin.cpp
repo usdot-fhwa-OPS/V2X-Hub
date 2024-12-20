@@ -247,7 +247,7 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-const std::string PedestrianPlugin::parseMessage(const std::string& message) {
+std::string PedestrianPlugin::parseMessage(const std::string& message) const {
     if (message.find("<PersonalSafetyMessage>") != std::string::npos)
 	{
         return "PersonalSafetyMessage";
