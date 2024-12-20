@@ -13,27 +13,17 @@
 #include <map>
 #include <mutex>
 #include <vector>
-#include "PluginClient.h"
-#include "UdpClient.h"
+#include <PluginClient.h>
+#include <UdpClient.h>
 
 #include <boost/chrono.hpp>
 #include <FrequencyThrottle.h>
 #include <curl/curl.h>
-#include <tmx/json/cJSON.h>
 #include <tmx/Security/include/base64.h>
-
+#include "ImmediateForwardConfiguration.h"
 
 namespace ImmediateForward
 {
-
-	struct MessageConfig
-	{
-		uint ClientIndex;
-		std::string TmxType;
-		std::string SendType;
-		std::string Psid;
-		std::string Channel;
-	};
 
 class ImmediateForwardPlugin : public tmx::utils::PluginClient
 {
@@ -42,8 +32,6 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 	private:
 		void UpdateConfigSettings();
 		bool UpdateUdpClientFromConfigSettings(uint clientIndex);
-		bool ParseJsonMessageConfig(const std::string& json, uint clientIndex);
-		int GetUdpClientIndexForMessage(std::string subtype);
 		void SendMessageToRadio(IvpMessage *msg);	
 
 
@@ -54,18 +42,11 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 
 
 		// Mutex along with the data it protects.
-		std::mutex _mutexUdpClient;
+		std::mutex _configMutex;
 		// A vector of UDP clients for sending V2X communication to different RSUs for broadcast
-		using svr_list = std::vector<std::unique_ptr<tmx::utils::UdpClient>>;
-		std::array<svr_list, 4> _udpClientList;
-		std::vector<MessageConfig> _messageConfigMap;
+		std::unordered_map<std::string, std::unique_ptr<tmx::utils::UdpClient>> _udpClientMap;
+		std::vector<ImfConfiguration> _imfConfigs;
 		std::map<std::string, int> _messageCountMap;
-		std::string signatureData;
-		std::string url;
-		std::string baseurl;
-		std::string txMode;
-		unsigned int signState;
-		unsigned int enableHSM;
 
 		// Thread safe bool set to true the first time the configuration has been read.
 		std::atomic<bool> _configRead;

@@ -25,7 +25,9 @@ namespace ImmediateForward{
             throw tmx::TmxException("Error parsing Immediate Forward configuration: ImfConfig is not an object!");
         }
         ImfConfiguration imfConfiguration;
+        imfConfiguration.name = imfConfig[NameKey].asString();
         imfConfiguration.address = imfConfig[AddressKey].asString();
+        imfConfiguration.port = imfConfig[PortKey].asUInt();
         imfConfiguration.spec = stringToRSUSpec(imfConfig[RSUSpecKey].asString());
         imfConfiguration.mode = stringToTxMode(imfConfig[TxModeKey].asString());
         imfConfiguration.signMessage = imfConfig[SignKey].asBool();

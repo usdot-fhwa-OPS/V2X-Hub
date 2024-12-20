@@ -9,9 +9,10 @@
 
 namespace ImmediateForward
 {
-    static constexpr const char *ImmediateForwardConfigKey = "ImmediateForwardConfigurations";
+    static constexpr const char *NameKey = "name";
     static constexpr const char *RSUSpecKey = "rsuSpec";
     static constexpr const char *AddressKey = "address";
+    static constexpr const char *PortKey = "port";
     static constexpr const char *MessagesKey = "messages";
     static constexpr const char *TxModeKey = "txMode";
     static constexpr const char *SignKey = "signMessages";
@@ -43,8 +44,10 @@ namespace ImmediateForward
 
     struct ImfConfiguration{
 
+        std::string name;
         RSU_SPEC spec;
         std::string address;
+        unsigned int port;
         std::vector<Message> messages;
         TxMode mode;
         bool signMessage;

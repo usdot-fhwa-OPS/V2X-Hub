@@ -29,8 +29,10 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
     std::string jsonConfiguration = R"(
         [
             {
+                "name": "East Intersection Cohda",
                 "rsuSpec": "RSU4.1",
-                "address": "127.0.0.1:2345",
+                "address": "127.0.0.1",
+                "port": 3745,
                 "txMode": "CONT",
                 "signMessage": false,
                 "messages": [
@@ -53,11 +55,15 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
 
     auto firstImfConfig = immediateForwardConfigs[0];
 
+    EXPECT_EQ(firstImfConfig.name, "East Intersection Cohda");
     EXPECT_EQ(firstImfConfig.spec, RSU_SPEC::RSU_4_1);
-    EXPECT_EQ(firstImfConfig.address, "127.0.0.1:2345");
+    EXPECT_EQ(firstImfConfig.address, "127.0.0.1");
+    EXPECT_EQ(firstImfConfig.port, 3745);
     EXPECT_EQ(firstImfConfig.mode, TxMode::CONT);
     EXPECT_EQ(firstImfConfig.signMessage, false);
     EXPECT_EQ(firstImfConfig.messages.size(), 9);
+    EXPECT_FALSE(firstImfConfig.enableHsm.has_value());
+    EXPECT_FALSE(firstImfConfig.hsmUrl.has_value());
 
     auto firstMessage = firstImfConfig.messages[0];
     EXPECT_EQ(firstMessage.tmxType, "SPAT-P");
