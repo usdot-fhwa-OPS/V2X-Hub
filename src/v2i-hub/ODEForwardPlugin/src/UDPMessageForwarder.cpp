@@ -46,7 +46,6 @@ namespace ODEForwardPlugin
             unsigned char byte = static_cast<unsigned char>(std::stoul(byteString, nullptr, 16));
             bytes.push_back(byte);
         }
-        std::cout << std::endl;
         return std::string(bytes.begin(), bytes.end());
     }
 }
