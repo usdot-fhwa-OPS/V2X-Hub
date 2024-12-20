@@ -13,15 +13,15 @@ namespace ODEForwardPlugin
      */
     enum class CommunicationMode{
         UDP,
-        KAFKA
+        KAFKA,
+        UNSUPPORTED
     };
 
     class CommunicationModeHelper
     {
     private:
-        //Indicator for the communication mode
-        bool _isKAFKAMode = false;
-        bool _isUDPMode = false;
+        //Indicator for the communication mode and default value is UNSUPPORTED
+        CommunicationMode _currentMode = CommunicationMode::UNSUPPORTED;
 
         //Map for communication mode to string
         std::unordered_map<CommunicationMode, std::string> _communicationModeMap = {
@@ -46,16 +46,10 @@ namespace ODEForwardPlugin
          */
         void setMode(std::string& modeSource);
         /**
-         * @brief Get the Kafka mode
-         * @return true if the communication mode is Kafka, false otherwise
+         * @brief Get the current communication mode
+         * @return CommunicationMode enum
          */
-        bool getKafkaMode() const;
-
-        /**
-         * @brief Get the UDP mode
-         * @return true if the communication mode is UDP, false otherwise
-         **/
-        bool getUDPMode() const;
+        CommunicationMode getCurrentMode() const;
     };
     
 }

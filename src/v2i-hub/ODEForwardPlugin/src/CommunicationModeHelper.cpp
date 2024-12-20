@@ -12,15 +12,16 @@ namespace ODEForwardPlugin{
     }
 
     void CommunicationModeHelper::setMode(std::string& modeSource){
-        _isKAFKAMode = compareCommunicationMode(modeSource, CommunicationMode::KAFKA);
-        _isUDPMode = compareCommunicationMode(modeSource, CommunicationMode::UDP);
+        if(compareCommunicationMode(modeSource, CommunicationMode::KAFKA)){
+            _currentMode = CommunicationMode::KAFKA;
+        }else if(compareCommunicationMode(modeSource, CommunicationMode::UDP)){
+            _currentMode = CommunicationMode::UDP;
+        }else{
+            _currentMode = CommunicationMode::UNSUPPORTED;
+        }
     }
 
-    bool CommunicationModeHelper::getKafkaMode() const{
-        return _isKAFKAMode;
-    }
-
-    bool CommunicationModeHelper::getUDPMode() const{
-        return _isUDPMode;
+    CommunicationMode CommunicationModeHelper::getCurrentMode() const{
+        return _currentMode;
     }
 }

@@ -81,13 +81,13 @@
 	_communicationModeHelper->setMode(_communicationMode);	
 
 	//Throw an error if the communication mode is neither KAFKA not UDP
-	if(!(_communicationModeHelper->getKafkaMode() || _communicationModeHelper->getUDPMode())){
-		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
-		throw TmxException("Unknown communication mode: " +_communicationMode);
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UNSUPPORTED){
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+		throw TmxException("Unsuppported communication mode: " +_communicationMode);
 	}
 	PLOG(logINFO) << "Communication Mode: " << _communicationMode;
 	
-	if(_communicationModeHelper->getUDPMode()){
+	if(_communicationModeHelper->getCurrentMode()==CommunicationMode::UDP){
 		//Create UDP clients for different messages
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
@@ -95,7 +95,7 @@
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
 	}
 
-	if(_communicationModeHelper->getKafkaMode()){
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
 		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 		std::string error_string;
 		_freqCounter=1;
@@ -166,39 +166,39 @@
   * @routeable_message not used
   */
  void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg) {
-	if(_communicationModeHelper->getUDPMode()){
+	if(_communicationModeHelper->getCurrentMode()== CommunicationMode::UDP){
 		sendUDPMessage(routeableMsg, UDPMessageType::BSM);
-	}else if(_communicationModeHelper->getKafkaMode()){
+	}else if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
 		sendBsmKafkaMessage(msg, routeableMsg);
 	}else{
-		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
 	}
  }
 
  void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg) {
-	if(_communicationModeHelper->getUDPMode()){
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
 		sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
-	}else if(_communicationModeHelper->getKafkaMode()){
+	}else if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
 		sendSpatKafkaMessage(msg, routeableMsg);
 	}else{
-		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
 	}
  }
 
  void ODEForwardPlugin::HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg) {
-	if(_communicationModeHelper->getUDPMode()){
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
 		sendUDPMessage(routeableMsg, UDPMessageType::TIM);
 	}else{
-		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
 	}
  }
 
 
  void ODEForwardPlugin::HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg) {
-	if(_communicationModeHelper->getUDPMode()){
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
 		sendUDPMessage(routeableMsg, UDPMessageType::MAP);
 	}else{
-		PLOG(logERROR) << "Unknown communication mode: " << _communicationMode;
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
 	}
  }
 
