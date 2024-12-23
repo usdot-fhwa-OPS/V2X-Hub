@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd src && ./build.sh",
+            "command": "cd src && ./build.sh debug",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -34,7 +34,7 @@
         {
             "label": "test",
             "type": "shell",
-            "command": "cd src && ./install_coverage_dependencies.sh && ./coverage.sh",
+            "command": "cd src && ./test.sh",
             "group": {
                 "kind": "test"
             }
