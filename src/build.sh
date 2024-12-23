@@ -21,18 +21,25 @@ set -e
 numCPU=$(nproc)
 
 RELEASE_BUILD=0
+DEBUG_BUILD=0
+COVERAGE_BUILD=0
 if [ "$1" = "release" ]; then
     RELEASE_BUILD=1
-fi
-DEBUG_BUILD=0
-if [ "$1" = "debug" ]; then
+elif [ "$1" = "debug" ]; then
     DEBUG_BUILD=1
+elif [ "$1" = "coverage" ]; then
+    COVERAGE_BUILD=1
 fi
+
 
 if [ $DEBUG_BUILD -eq 1 ]; then
     BUILD_TYPE="Debug"
-elif [ $RELEASE_BUILD -eq 0 ]; then
+elif [ $RELEASE_BUILD -eq 1 ]; then
+    BUILD_TYPE="Release"
+elif [ $COVERAGE_BUILD -eq 1]; then
     COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
+    BUILD_TYPE="Debug"
+else 
     BUILD_TYPE="Debug"
 fi
 pushd tmx

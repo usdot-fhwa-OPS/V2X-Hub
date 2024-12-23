@@ -18,6 +18,10 @@
 
 set -ex
 
+COVERAGE_BUILD=0
+if [ "$1" = "coverage" ]; then
+    COVERAGE_BUILD=1
+fi
 top_dir="$PWD"
 
 COMPONENT_DIRS="tmx v2i-hub"
@@ -36,8 +40,10 @@ for d in ${component_dir}/* ; do
             popd
             # generate a JSON file to be combined per https://gcovr.com/en/master/guide/merging.html
             pushd $(dirname ${top_dir})
+            if [ $COVERAGE_BUILD -eq 1 ]; then
             # generated at the project root
-            gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -r .
+                gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -r .
+            fi
             popd
         else
             echo "no tests built"
@@ -45,5 +51,7 @@ for d in ${component_dir}/* ; do
     fi
 done
 # combine all the JSON files for a component
-gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml
+if [ $COVERAGE_BUILD -eq 1 ]; then
+    gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml
+fi
 done
