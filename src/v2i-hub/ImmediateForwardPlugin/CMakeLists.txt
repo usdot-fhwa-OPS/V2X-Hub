@@ -17,7 +17,6 @@ add_library(${PROJECT_NAME}_lib src/ImmediateForwardConfiguration.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils jsoncpp)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
-set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
 add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
