@@ -13,7 +13,7 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-set -e
+set -ex
 
 # script executes all tmx and v2i build and coverage steps so that they can be singularly
 # wrapped by the sonarcloud build-wrapper
@@ -36,20 +36,20 @@ if [ $DEBUG_BUILD -eq 1 ]; then
     BUILD_TYPE="Debug"
 elif [ $RELEASE_BUILD -eq 1 ]; then
     BUILD_TYPE="Release"
-elif [ $COVERAGE_BUILD -eq 1]; then
+elif [ $COVERAGE_BUILD -eq 1 ]; then
     COVERAGE_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage"
     BUILD_TYPE="Debug"
 else 
     BUILD_TYPE="Debug"
 fi
 pushd tmx
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;\/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
-cmake --build build
+cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
+cmake --build build -j "${numCPU}"
 cmake --install build
 popd
 
 pushd v2i-hub
-cmake -Bbuild  -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;\/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
-cmake --build build
+cmake -Bbuild  -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_C_FLAGS="${COVERAGE_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" .
+cmake --build build -j "${numCPU}"
 cmake --install build
 popd

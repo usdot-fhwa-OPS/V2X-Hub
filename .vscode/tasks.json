@@ -7,6 +7,20 @@
             "label": "build",
             "type": "shell",
             "command": "cd src && ./build.sh debug",
+            "detail": "Task builds V2X Hub with CMake Debug flags",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "build with coverage",
+            "type": "shell",
+            "command": "cd src && ./build.sh coverage",
+            "detail": "Task builds V2X Hub with CMake unit test converage flags",
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -19,6 +33,7 @@
             "label": "clean",
             "type": "shell",
             "command": "cd src/tmx && rm -rf build && cd ../v2i-hub && rm -rf build",
+            "detail": "Task deletes any build folders in src/tmx and src/v2ihub",
             "group": {
                 "kind": "build"
             }
@@ -27,6 +42,7 @@
             "label": "run",
             "type": "shell",
             "command": "ldconfig && container/service.sh",
+            "detail": "Task runs V2X Hub application by executing container/service.sh script",
             "group": {
                 "kind": "build"
             }
@@ -35,6 +51,16 @@
             "label": "test",
             "type": "shell",
             "command": "cd src && ./test.sh",
+            "detail": "Task runs all test executables for V2X Hub by executing test.sh script",
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "test with coverage",
+            "type": "shell",
+            "command": "cd src && ./install_coverage_dependencies.sh && ./test.sh coverage",
+            "detail": "Task runs all test executables and generates line coverage metrics for V2X Hub by executing test.sh script",
             "group": {
                 "kind": "test"
             }
