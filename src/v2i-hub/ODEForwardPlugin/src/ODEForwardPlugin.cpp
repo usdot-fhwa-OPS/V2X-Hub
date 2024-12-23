@@ -34,9 +34,12 @@
 
 	AddMessageFilter < BsmMessage > (this, &ODEForwardPlugin::HandleRealTimePublish);
  	AddMessageFilter < SpatMessage > (this, &ODEForwardPlugin::HandleSPaTPublish);
+	AddMessageFilter < MapDataMessage > (this, &ODEForwardPlugin::HandleMapPublish);
+	AddMessageFilter < TimMessage > (this, &ODEForwardPlugin::HandleTimPublish);
  	// Subscribe to all messages specified by the filters above.
  	SubscribeToMessages();
-
+	_udpMessageForwarder = std::make_shared<UDPMessageForwarder>();
+	_communicationModeHelper = std::make_shared<CommunicationModeHelper>();
  	PLOG(logDEBUG) <<"ODEForwardPlugin: Exiting ODEForwardPlugin Constructor";
  }
 
@@ -68,30 +71,55 @@
  	GetConfigValue<string>("SPaTKafkaTopic", _SPaTkafkaTopic);
  	GetConfigValue<string>("KafkaBrokerIp", _kafkaBrokerIp);
  	GetConfigValue<string>("KafkaBrokerPort", _kafkaBrokerPort);
- 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
-	std::string error_string;
-	_freqCounter=1;
-	if(_forwardMSG == 1) {
- 		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
- 		kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+	GetConfigValue<int>("MAPUDPPort", _MAPUDPPort);
+	GetConfigValue<int>("TIMUDPPort", _TIMUDPPort);
+	GetConfigValue<int>("BSMUDPPort", _BSMUDPPort);
+	GetConfigValue<int>("SPATUDPPort", _SPATUDPPort);
+	GetConfigValue<string>("UDPServerIpAddress", _udpServerIpAddress);
+	GetConfigValue<string>("CommunicationMode", _communicationMode);
+	//Update communication mode
+	_communicationModeHelper->setMode(_communicationMode);	
 
- 		PLOG(logDEBUG) <<"ODEForwardPlugin: Attempting to connect to " << kafkaConnectString;
- 		if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
- 			PLOG(logERROR) <<"ODEForwardPlugin: Setting kafka config options failed with error:" << error_string;
- 			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
- 			exit(1);
- 		} else {
- 			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
- 		}
-		
-		kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
-		if (!kafka_producer) {
-			PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
-			PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
-			exit(1);
-		} 			
-		PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
+	//Throw an error if the communication mode is neither KAFKA not UDP
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UNSUPPORTED){
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+		throw TmxException("Unsuppported communication mode: " +_communicationMode);
+	}
+	PLOG(logINFO) << "Communication Mode: " << _communicationMode;
+	
+	if(_communicationModeHelper->getCurrentMode()==CommunicationMode::UDP){
+		//Create UDP clients for different messages
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
+	}
 
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
+		kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
+		std::string error_string;
+		_freqCounter=1;
+		if(_forwardMSG == 1) {
+			kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
+			kafka_conf = RdKafka::Conf::create(RdKafka::Conf::CONF_GLOBAL);
+
+			PLOG(logDEBUG) <<"ODEForwardPlugin: Attempting to connect to " << kafkaConnectString;
+			if ((kafka_conf->set("bootstrap.servers", kafkaConnectString, error_string) != RdKafka::Conf::CONF_OK)) {
+				PLOG(logERROR) <<"ODEForwardPlugin: Setting kafka config options failed with error:" << error_string;
+				PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
+				exit(1);
+			} else {
+				PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
+			}
+			
+			kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
+			if (!kafka_producer) {
+				PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
+				PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
+				exit(1);
+			} 			
+			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
+		}
 	}
  }
 
@@ -137,14 +165,49 @@
   * @param msg BSMMessage that is received
   * @routeable_message not used
   */
- void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg,
- 		routeable_message &routeableMsg) {
+ void ODEForwardPlugin::HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getCurrentMode()== CommunicationMode::UDP){
+		sendUDPMessage(routeableMsg, UDPMessageType::BSM);
+	}else if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
+		sendBsmKafkaMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+	}
+ }
 
+ void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
+		sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
+	}else if(_communicationModeHelper->getCurrentMode() == CommunicationMode::KAFKA){
+		sendSpatKafkaMessage(msg, routeableMsg);
+	}else{
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+	}
+ }
+
+ void ODEForwardPlugin::HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
+		sendUDPMessage(routeableMsg, UDPMessageType::TIM);
+	}else{
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+	}
+ }
+
+
+ void ODEForwardPlugin::HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg) {
+	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UDP){
+		sendUDPMessage(routeableMsg, UDPMessageType::MAP);
+	}else{
+		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
+	}
+ }
+
+void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg){
 	auto bsm=msg.get_j2735_data();
 
-        char *teststring=new char[10000];
+	char *teststring=new char[10000];
 
-        std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
+	std::sprintf(teststring, "{\"BsmMessageContent\":[{\"metadata\":{\"utctimestamp\":\"%s\"},\"payload\":\"%s\"}]}",getISOCurrentTimestamp<chrono::microseconds>().c_str(),routeableMsg.get_payload_str().c_str());
 
         //  check for schedule
         if(_freqCounter++%_scheduleFrequency == 0) {
@@ -152,13 +215,15 @@
 		}
 		
 		delete [] teststring;
+}
 
- }
+void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const{
+	std::string message = routeableMsg.get_payload_str().c_str();
+	PLOG(logDEBUG) << "Sending UDP Message: " << message;
+	_udpMessageForwarder->sendMessage(udpMessageType, message);
+}
 
-
- void ODEForwardPlugin::HandleSPaTPublish(SpatMessage &msg,
- 		routeable_message &routeableMsg) {
-
+ void ODEForwardPlugin::sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg){
 	auto spat=msg.get_j2735_data();
 
         char *spatstring=new char[10000];
@@ -171,9 +236,7 @@
 		}
 		
 		delete [] spatstring;	
-
  }
-
 
  void ODEForwardPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)
  {

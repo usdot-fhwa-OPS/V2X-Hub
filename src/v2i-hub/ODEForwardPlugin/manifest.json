@@ -8,7 +8,12 @@
 	"messageTypes":[
 		
 	],
-	"configuration":[
+	"configuration":[ 
+		{
+			"key": "LogLevel",
+			"default": "INFO",
+			"description": "The log level for this plugin"
+		},
 		{
 			"key":"instance",
 			"default":"1",
@@ -23,6 +28,11 @@
 			"key":"ForwardMSG",
 			"default":"1",
 			"description":"Enable forwarding of messages"
+		},
+		{
+			"key": "CommunicationMode",
+			"default": "UDP",
+			"description":"Communication mode to be used for UDP socket connection. Modes: Kafka or UDP"
 		},
 		{
 			"key":"BSMKafkaTopic",
@@ -43,8 +53,31 @@
 			"key":"KafkaBrokerPort",
 			"default":"9092",
 			"description":"Port number to be used for KAFKA broker"
+		},
+		{
+			"key": "UDPServerIpAddress",
+			"default": "127.0.0.1",
+			"description":"IP address to be used for UDP socket connection."
+		},
+		{
+			"key": "TIMUDPPort",
+			"default": "47900",
+			"description":"Port number to be used for sending TIM message via UDP socket."
+		},
+		{
+			"key": "BSMUDPPort",
+			"default": "46800",
+			"description":"Port number to be used for sending BSM message via UDP socket."
+		},
+		{
+			"key": "MAPUDPPort",
+			"default": "44920",
+			"description":"Port number to be used for sending MAP message via UDP socket."
+		},
+		{
+			"key": "SPATUDPPort",
+			"default": "44910",
+			"description":"Port number to be used for sending SPAT message via UDP socket."
 		}
-
-
 	]
 }
