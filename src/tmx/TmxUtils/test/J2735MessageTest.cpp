@@ -21,6 +21,17 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
+// Function to convert hex string to byte array
+std::vector<uint8_t> hexStringToByteArray(const std::string& hex) {
+	std::vector<uint8_t> bytes;
+	for (unsigned int i = 0; i < hex.length(); i += 2) {
+		std::string byteString = hex.substr(i, 2);
+		uint8_t byte = (uint8_t) strtol(byteString.c_str(), NULL, 16);
+		bytes.push_back(byte);
+	}
+	return bytes;
+}
+
 class msg_type {
 public:
 	msg_type() {}
@@ -263,7 +274,7 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());	
-	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
+	EXPECT_EQ(243,  tsm3EncodeMessage.get_msgId());
 }
 
 
@@ -352,7 +363,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	delete my_str_1;
 	free(offset);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
+	EXPECT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
 
@@ -408,7 +419,7 @@ TEST_F(J2735MessageTest, EncodeMobilityResponse)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
+	EXPECT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
 
 
@@ -468,7 +479,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 		
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
+	EXPECT_EQ(20,  bsmEncodeMessage.get_msgId());
 	//Decode the encoded BSM
 	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
 }
@@ -573,23 +584,23 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
+	EXPECT_EQ(20,  bsmEncodeMessage.get_msgId());	
 	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
-	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
+	EXPECT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
 
 	//Decode the encoded BSM
 	auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
-	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
+	EXPECT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
+	EXPECT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
 	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
 	auto decoded_reg_bsm = (Reg_BasicSafetyMessage_t *)calloc(1, sizeof(Reg_BasicSafetyMessage_t));
 	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
 	decoded_regional = decoded_bsm_ptr->regional;
 	decoded_reg_bsm = decoded_regional->list.array[0];
-	ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
-	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
-	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
-	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
+	EXPECT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
+	EXPECT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
+	EXPECT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
+	EXPECT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
 
@@ -604,7 +615,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
 	std::cout << psmENC.get_payload_str()<<std::endl;
-	ASSERT_EQ(32,  psmENC.get_msgId());
+	EXPECT_EQ(32,  psmENC.get_msgId());
 }
 	
 TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
@@ -618,7 +629,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 	tsm4msg.set_contents(container.get_storage().get_tree());
 	tsm4Enc.encode_j2735_message(tsm4msg);
 	std::cout << tsm4Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(244,  tsm4Enc.get_msgId());
+	EXPECT_EQ(244,  tsm4Enc.get_msgId());
 }
 
 
@@ -634,7 +645,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
+	EXPECT_EQ(245,  tsm5Enc.get_msgId());	
 
 	//No <refwidth> tag in TCM
 	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
@@ -643,7 +654,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
 	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
+	EXPECT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
 TEST_F (J2735MessageTest, EncodeSrm)
@@ -739,9 +750,9 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
+	EXPECT_EQ(29,  srmEncodeMessage.get_msgId());	
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
-	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
+	EXPECT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
 TEST_F(J2735MessageTest, EncodeTravelerInformation){
@@ -749,7 +760,7 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	#if SAEJ2735_SPEC < 2020
 	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
 	#else
-	string timStr="<TravelerInformation><msgCnt>1</msgCnt><packetID>00000000000F9E1D8D</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><unknown/></frameType><msgId><roadSignID><position><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></position><viewAngle>0000000000000000</viewAngle><mutcdCode><none/></mutcdCode></roadSignID></msgId><startYear>2023</startYear><startTime>394574</startTime><durationTime>32000</durationTime><priority>5</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></anchor><laneWidth>366</laneWidth><directionality><forward/></directionality><closedPath><false/></closedPath><direction>0000000000000000</direction><description><path><offset><xy><nodes><NodeXY><delta><node-LatLon><lon>-771489394</lon><lat>389549194</lat></node-LatLon></delta><attributes><dElevation>-10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771487215</lon><lat>389548996</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771485210</lon><lat>389548981</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY></nodes></xy></offset></path></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><speedLimit><SEQUENCE><item><itis>27</itis></item></SEQUENCE><SEQUENCE><item><text>Curve Ahead</text></item></SEQUENCE><SEQUENCE><item><itis>2564</itis></item></SEQUENCE><SEQUENCE><item><text>25</text></item></SEQUENCE><SEQUENCE><item><itis>8720</itis></item></SEQUENCE></speedLimit></content></TravelerDataFrame></dataFrames></TravelerInformation>";
+	string timStr="<TravelerInformation><msgCnt>1</msgCnt><packetID>000000000019B3915C</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549122</lat><long>-771490570</long><elevation>0</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>2024</startYear><startTime>496080</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>389549122</lat><long>-771490570</long><elevation>0</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>389549118</lat><long>-771490572</long><elevation>-390</elevation></center><radius>2648</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>";
 	#endif
 	std::stringstream ss;
 	TimMessage timMsg;
@@ -759,13 +770,21 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 	container.load<XML>(ss);
 	timMsg.set_contents(container.get_storage().get_tree());
 	timEnc.encode_j2735_message(timMsg);
-	ASSERT_EQ(31,  timEnc.get_msgId());	
+	EXPECT_EQ(31,  timEnc.get_msgId());	
 	#if SAEJ2735_SPEC < 2020
 	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
 	#else
-	string expectedHex = "001f6820100000000000f9e1d8d0803299b9eac27a9baa74232000000fcec0a9df4028007e53373d584f53754e846400b720000000b8f5374e3666e7ac5013ece3d4ddc1099b9e988050538f5378f9666e7a5a814140034000dea1f5e5db2a083a32e1c80a048b26a22100";
+	string expectedHex = "001f45201000000000019b3915c0807299b9ea847a9b9dea2001fffe4fd0f23a000078005253373d508f5373bd4400325fffe05b94cdcf53e3d4dcef30e7aa58000002250e1a8880";
 	#endif
-	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
+	EXPECT_EQ(expectedHex, timEnc.get_payload_str());
+
+	// Decode any TIM
+	std::string timInput = "001f45201000000000019b3915c0807299b9ea847a9b9dea2001fffe4fd0f23a000078005253373d508f5373bd4400325fffe05b94cdcf53e3d4dcef30e7aa58000002250e1a8880";
+    std::vector<uint8_t> byteArray = hexStringToByteArray(timInput);
+    tmx::messages::TimEncodedMessage encodedTim;
+    encodedTim.set_data(byteArray);
+    auto decodedTimPtr = encodedTim.decode_j2735_message().get_j2735_data();
+	EXPECT_EQ(1, decodedTimPtr->msgCnt);
 }
 
 TEST_F(J2735MessageTest, EncodeSDSM)
@@ -775,37 +794,51 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	message->sourceID.buf = my_bytes_id;
 	message->sourceID.size = sizeof(my_bytes_id);
-	message->equipmentType = EquipmentType_unknown;
-	
+	message->equipmentType = EquipmentType_rsu;
 
 	auto sDSMTimeStamp = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
 	auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
-	*year= 2023;
+	auto month = (DMonth_t*) calloc(1, sizeof(DMonth_t));
+	auto day = (DDay_t*) calloc(1, sizeof(DDay_t));
+	auto hour = (DHour_t*) calloc(1, sizeof(DHour_t));
+	auto minute = (DMinute_t*) calloc(1, sizeof(DMinute_t));
+	auto second = (DSecond_t*) calloc(1, sizeof(DSecond_t));
+	*year= 2024;
+	*month = 12;
+	*day = 9;
+	*hour = 12;
+	*minute = 0;
+	*second = 51001;
 	sDSMTimeStamp->year = year;
+	sDSMTimeStamp->month = month;
+	sDSMTimeStamp->day = day;
+	sDSMTimeStamp->hour = hour;
+	sDSMTimeStamp->minute = minute;
+	sDSMTimeStamp->second = second;
 	message->sDSMTimeStamp = *sDSMTimeStamp;
 
-	message->refPos.lat = 38121212;
-	message->refPos.Long = -77121212;
+	message->refPos.lat = 389549921;
+	message->refPos.Long = -771492095;
 
-	message->refPosXYConf.orientation = 10;
-	message->refPosXYConf.semiMajor = 12;
-	message->refPosXYConf.semiMinor = 52;
+	message->refPosXYConf.semiMajor = 255;
+	message->refPosXYConf.semiMinor = 255;
+	message->refPosXYConf.orientation = 65535;
 
 	auto objects = (DetectedObjectList_t*) calloc(1, sizeof(DetectedObjectList_t));
 	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
-	objectData->detObjCommon.objType = ObjectType_unknown;
-	objectData->detObjCommon.objTypeCfd = 1;
-	objectData->detObjCommon.objectID = 1;
-	objectData->detObjCommon.measurementTime = 1;
-	objectData->detObjCommon.timeConfidence = 1;
-	objectData->detObjCommon.pos.offsetX = 1;
-	objectData->detObjCommon.pos.offsetY = 1;
-	objectData->detObjCommon.posConfidence.elevation = 1;
-	objectData->detObjCommon.posConfidence.pos = 1;
+	objectData->detObjCommon.objType = ObjectType_vru;
+	objectData->detObjCommon.objTypeCfd = 98;
+	objectData->detObjCommon.objectID = 27116;
+	objectData->detObjCommon.measurementTime = 0;
+	objectData->detObjCommon.timeConfidence = 9;
+	objectData->detObjCommon.pos.offsetX = 0;
+	objectData->detObjCommon.pos.offsetY = 0;
+	objectData->detObjCommon.posConfidence.elevation = 0;
+	objectData->detObjCommon.posConfidence.pos = 0;
 	objectData->detObjCommon.speed = 1;
-	objectData->detObjCommon.speedConfidence = 1;
-	objectData->detObjCommon.heading = 1;
-	objectData->detObjCommon.headingConf = 1;
+	objectData->detObjCommon.speedConfidence = 5;
+	objectData->detObjCommon.heading = 16320;
+	objectData->detObjCommon.headingConf = 5;
 	ASN_SEQUENCE_ADD(&objects->list.array, objectData);
 	message->objects = *objects;
 	xer_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message);
@@ -817,12 +850,12 @@ TEST_F(J2735MessageTest, EncodeSDSM)
 	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SdsmMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
-	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
+	EXPECT_EQ(41,  SdsmEncodeMessage.get_msgId());	
+	std::string expectedSDSMEncHex = "00292a0a010c0c0a3f9fa312c031ce44cdcf8613d4dc900ffffffff00002c4d3d8bb849fffdfffc000035fe050";
+	EXPECT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
 	//Decode SDSM
 	auto sdsm_ptr = SdsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(10, sdsm_ptr->msgCnt);
+	EXPECT_EQ(10, sdsm_ptr->msgCnt);
 }
 }

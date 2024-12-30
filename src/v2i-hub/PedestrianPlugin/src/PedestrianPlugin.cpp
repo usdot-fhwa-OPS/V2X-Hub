@@ -24,13 +24,32 @@ PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
 }
 
+void PedestrianPlugin::getMessageToWrite()
+{
+    std::unordered_set<std::string> parsedValues;
+    std::stringstream ss(flirOutput);
+    std::string token;
+
+    while (std::getline(ss, token, ',')) 
+	{
+        token.erase(0, token.find_first_not_of(" \t"));
+        token.erase(token.find_last_not_of(" \t") + 1);
+        parsedValues.insert(token);
+    }
+
+    // Set the flags based on parsed values
+    generatePSM = parsedValues.count("PSM") > 0;
+    generateTIM = parsedValues.count("TIM") > 0;
+    generateSDSM = parsedValues.count("SDSM") > 0;
+}
+
 int PedestrianPlugin::StartWebSocket()
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
 	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
-	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str());	
+	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str(), generatePSM, generateSDSM, generateTIM);	
 
 	PLOG(logDEBUG) << "Successfully running the I/O service";	
     runningWebSocket = true;
@@ -66,15 +85,15 @@ void PedestrianPlugin::checkXML()
 		}
 		else
 		{	
-			// Retrieve the PSM queue and send each one to be broadcast, then pop.
-			std::queue<std::string> currentPSMQueue = flirSession->getPSMQueue();
+			// Retrieve the message queue and send each one to be broadcast, then pop.
+			std::queue<std::string> currentMsgQueue = flirSession->getMsgQueue();
 
-			while(!currentPSMQueue.empty())
+			while(!currentMsgQueue.empty())
 			{		
-				const char* char_arr = &currentPSMQueue.front()[0];
+				const char* char_arr = &currentMsgQueue.front()[0];
 
-				BroadcastPsm(char_arr);
-				currentPSMQueue.pop();
+				BroadcastPedDet(char_arr);
+				currentMsgQueue.pop();
 			}
 		}
 	}
@@ -91,28 +110,28 @@ void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 
 	if(st.size() == 0)
 	{
-		PLOG(logERROR) << "Received PSM is empty and skipped.";
+		PLOG(logERROR) << "Received data is empty and skipped.";
 		socket->setStatusCode(QHttpEngine::Socket::BadRequest);
 		socket->writeHeaders();
 		socket->close();
 		return;
 	}
-	PLOG(logINFO) << "Received PSM bytes size: " << st.size();
+	PLOG(logINFO) << "Received data bytes size: " << st.size();
 
-	std::string psmMsgdef = st.data();
-	std::list<std::string> psmSL = {};
-	psmSL.push_back(psmMsgdef);
+	std::string msgDef = st.data();
+	std::list<std::string> msgSL = {};
+	msgSL.push_back(msgDef);
 
 	// Catch parse exceptions
 	try {
-		for(const auto& psm_s: psmSL)
+		for(const auto& msg_s: msgSL)
 		{
-			BroadcastPsm(psm_s);
+			BroadcastPedDet(msg_s);
 			socket->setStatusCode(QHttpEngine::Socket::Created);
 		}
 	}
 	catch(const J2735Exception &e) {
-		PLOG(logERROR) << "Error encoding received PSM data " << psmMsgdef << std::endl << e.what();
+		PLOG(logERROR) << "Error encoding received message data " << msgDef << std::endl << e.what();
 		socket->setStatusCode(QHttpEngine::Socket::BadRequest);
 	}
 	
@@ -132,7 +151,7 @@ int PedestrianPlugin::StartWebService()
  	auto address = QHostAddress(QString::fromStdString (webip));
 	
 	QHttpEngine::QObjectHandler apiHandler;
-	apiHandler.registerMethod(PSM_Receive, [this](QHttpEngine::Socket *socket)
+	apiHandler.registerMethod(Msg_Receive, [this](QHttpEngine::Socket *socket)
 							{
 							this->PedestrianRequestHandler(socket);
 							});
@@ -171,11 +190,13 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
 	GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
 	GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
+	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
 
 	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
 	
 	if (dataprovider.compare("FLIR") == 0)
     {
+		getMessageToWrite();
         StopWebService();
         if (!runningWebSocket)
         {
@@ -191,7 +212,7 @@ void PedestrianPlugin::UpdateConfigSettings()
         }
     }
 
-	else if (dataprovider.compare("PSM") == 0) // default if PSM XML data consumed using the webservice implementation
+	else if (dataprovider.compare("REST") == 0) // default if PSM/SDSM/TIM XML data consumed using the webservice implementation
 	{
         StopWebSocket();
         if (!runningWebService)
@@ -204,7 +225,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     }
 	else
 	{
-		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, PSM)!";
+		PLOG(logWARNING) << "Invalid configured data provider. Pedestrian Plugin requires valid data provider (FLIR, REST)!";
 		StopWebService();
 		StopWebSocket();
 	}
@@ -226,37 +247,104 @@ void PedestrianPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-void PedestrianPlugin::BroadcastPsm(const std::string &psmJson) 
-{
-	PsmMessage psmmessage;
-	PsmEncodedMessage psmENC;
-	tmx::message_container_type container;
+std::string PedestrianPlugin::parseMessage(const std::string& message) const {
+    if (message.find("<PersonalSafetyMessage>") != std::string::npos)
+	{
+        return "PersonalSafetyMessage";
+    }
+	else if (message.find("<SensorDataSharingMessage>") != std::string::npos)
+	{
+        return "SensorDataSharingMessage";
+    }
+	else if (message.find("<TravelerInformation>") != std::string::npos)
+	{
+        return "TravelerInformation";
+    }
+	else return "Unknown Message Type";
+}
 
+void PedestrianPlugin::BroadcastPedDet(const std::string &msgJson) 
+{
+	PsmMessage psmMsg;
+	PsmEncodedMessage psmENC;
+	SdsmMessage sdsmMsg;
+	SdsmEncodedMessage sdsmENC;
+	TimMessage timMsg;
+	TimEncodedMessage timENC;
+
+	tmx::message_container_type container;
 	std::stringstream ss;
-	ss << psmJson;
+	ss << msgJson;
 
 	container.load<XML>(ss);
-	psmmessage.set_contents(container.get_storage().get_tree());
 
-	psmENC.encode_j2735_message(psmmessage);
+	PLOG(logDEBUG) << "In PedestrianPlugin::BroadcastPedDet: Incoming Message: " << std::endl << msgJson;
+	auto receivedType = parseMessage(msgJson);
 
-	auto msg = std::make_unique<PsmEncodedMessage>();
-	msg.reset();
-	msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+	if(receivedType == "PersonalSafetyMessage")
+	{
+		psmMsg.set_contents(container.get_storage().get_tree());
+		psmENC.encode_j2735_message(psmMsg);
 
-	std::string enc = psmENC.get_encoding();
-	msg->refresh_timestamp();
-	msg->set_payload(psmENC.get_payload_str());
-	msg->set_encoding(enc);
-	msg->set_flags(IvpMsgFlags_RouteDSRC);
-	msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
-	msg->refresh_timestamp();
+		auto msg = std::make_unique<PsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<PsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING)));
+		std::string enc = psmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(psmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::personalSafetyMessage_PSID);
+		msg->refresh_timestamp();
 
-	auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else if(receivedType == "SensorDataSharingMessage")
+	{
+		sdsmMsg.set_contents(container.get_storage().get_tree());
+		sdsmENC.encode_j2735_message(sdsmMsg);
 
-	BroadcastMessage(*rMsg);
+		auto msg = std::make_unique<SdsmEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<SdsmEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_SENSORDATASHARINGMESSAGE_STRING)));
+		std::string enc = sdsmENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(sdsmENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::sensorDataSharingMessage_PSID);
+		msg->refresh_timestamp();
+		
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast SDSM:: " << sdsmENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else if(receivedType == "TravelerInformation")
+	{
+		timMsg.set_contents(container.get_storage().get_tree());
+		timENC.encode_j2735_message(timMsg);
 
-	PLOG(logINFO) << " Pedestrian Plugin :: Broadcast PSM:: " << psmENC.get_payload_str();
+		auto msg = std::make_unique<TimEncodedMessage>();
+		msg.reset();
+		msg.reset(dynamic_cast<TimEncodedMessage*>(factory.NewMessage(api::MSGSUBTYPE_TRAVELERINFORMATION_STRING)));
+		std::string enc = timENC.get_encoding();
+		msg->refresh_timestamp();
+		msg->set_payload(timENC.get_payload_str());
+		msg->set_encoding(enc);
+		msg->set_flags(IvpMsgFlags_RouteDSRC);
+		msg->addDsrcMetadata(tmx::messages::api::travelerInformation_PSID);
+		msg->refresh_timestamp();
+		
+		PLOG(logINFO) << " Pedestrian Plugin :: Broadcast TIM:: " << timENC.get_payload_str();
+		auto *rMsg = dynamic_cast<routeable_message *>(msg.get());
+		BroadcastMessage(*rMsg);
+	}
+	else
+	{
+		PLOG(logWARNING) << "Received unknown message: " << msgJson;
+	}
 }
 
 int PedestrianPlugin::Main()
