@@ -126,7 +126,7 @@ protected:
 
 	/**
 	 * @brief Updates the TravelerInformationMessage(TIM) XML 
-	 * with new information (msgCnt, startYear, int startTime, durationTime = 1 minute).
+	 * with new information (msgCnt, startYear, int startTime, durationTime).
 	 * Return the updated TIM in XML format.
 	 * @param staticTimXMLIn Static TravelerInformationMessage(TIM) XML.
 	 * @param msgCount Message count to update.
@@ -135,12 +135,12 @@ protected:
 	 * @param durationTime Duration time to update.
 	 * @return Updated TravelerInformationMessage(TIM) XML.
 	 */
-	string updateTimXML(const string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime = 1);
+	string updateTimXML(const string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime);
 	/**
-	 * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime = 1 minute).
+	 * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime ).
 	 * @param timTree TravelerInformationMessage(TIM) tree to update.
 	 */
-	void updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime = 1);
+	void updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime);
 	
 private:
 	J2735MessageFactory factory;

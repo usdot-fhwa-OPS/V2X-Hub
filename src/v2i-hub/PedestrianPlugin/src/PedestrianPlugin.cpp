@@ -122,21 +122,27 @@ void PedestrianPlugin::processStaticTimXML()
 		else
 		{	
 			bool isAnyPedestrainPresent = false;
-			for(auto flirsession: flirSessions){
-				isAnyPedestrainPresent |= flirsession->isPedestrainPresent();
-			}
-
-			if(isAnyPedestrainPresent){
-				PLOG(logINFO) << "At least one pedestrain detected at the intersection, and broadcast TIM!";
-				auto lastFlirSession = flirSessions.back();
-				BroadcastPedDet(updateTimXML(staticTimXML, msgCount, lastFlirSession->getStartYear(), lastFlirSession->getMoy()));
-				for(auto flirSession: flirSessions){
+			for(auto flirSession: flirSessions){
+				auto isPedestrainPresent = flirSession->isPedestrainPresent();
+				isAnyPedestrainPresent |= isPedestrainPresent;
+				if(isPedestrainPresent){
+					PLOG(logINFO) << "At least one pedestrain detected at the intersection! Reset the pedestrain presence flag to false after checking it.";
+					//Reset the pedestrain presence flag to false after checking it.
 					flirSession->setPedestrainPresence(false);
 				}
+			}
+
+			auto lastFlirSession = flirSessions.back();
+			int durationTime = 0;
+			if(isAnyPedestrainPresent){
+				//If at least one pedestrain is detected, broadcast TIM with duration time of 1 minute.
+				durationTime = 1;
 			}
 			else{
 				PLOG(logINFO) << "No pedestrain detected.";
 			}
+			auto updatedTim = updateTimXML(staticTimXML, msgCount, lastFlirSession->getStartYear(), lastFlirSession->getMoy(), durationTime);
+			BroadcastPedDet(updatedTim);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(period));
 	}
@@ -155,7 +161,7 @@ string PedestrianPlugin::updateTimXML(const std::string& staticTimXMLIn, int msg
 
 void PedestrianPlugin::updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime)
 {	
-	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.msgCnt", msgCount);
+	timTree.put("TravelerInformation.msgCnt", msgCount);
 	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startYear", startYear);
 	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startTime", startTime);
 	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.durationTime", durationTime);
