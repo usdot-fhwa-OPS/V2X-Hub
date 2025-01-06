@@ -22,6 +22,7 @@ namespace PedestrianPlugin
  */
 PedestrianPlugin::PedestrianPlugin(const std::string &name) : PluginClient(name)
 {
+	flirConfigsPtr = std::make_shared<FLIRConfigrations>();
 }
 
 void PedestrianPlugin::getMessageToWrite()
@@ -43,14 +44,14 @@ void PedestrianPlugin::getMessageToWrite()
     generateSDSM = parsedValues.count("SDSM") > 0;
 }
 
-int PedestrianPlugin::StartWebSocket()
+int PedestrianPlugin::StartWebSocket(const FLIRConfiguration & config)
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
-	flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
+	auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 
     // Launch the asynchronous operation
-	flirSession->run(webSocketIP.c_str(), webSocketURLExt.c_str(), cameraRotation, hostString.c_str(), generatePSM, generateSDSM, generateTIM);	
-
+	flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.FLIRCameraRotation, config.apiSubscription.c_str(), generatePSM, generateSDSM, generateTIM);	
+	flirSessions.push_back(flirSession);
 	PLOG(logDEBUG) << "Successfully running the I/O service";	
     runningWebSocket = true;
 
@@ -62,11 +63,13 @@ int PedestrianPlugin::StartWebSocket()
 
 void PedestrianPlugin::StopWebSocket()
 {
-    if (flirSession && runningWebSocket)
+    if (!flirSessions.empty() && runningWebSocket)
     {
         PLOG(logDEBUG) << "Stopping WebSocket session";
 		beast::error_code ec;
-        flirSession->on_close(ec);
+		for(auto flirsession: flirSessions){
+			flirSession->on_close(ec);
+		}        
         runningWebSocket = false;
     }
     else
@@ -79,14 +82,16 @@ void PedestrianPlugin::checkXML()
 {
 	while (true)
 	{
-		if (flirSession == nullptr)
+		if (flirSessions.empty())
 		{
 			PLOG(logDEBUG) << "FLIR session not yet initialized: ";
 		}
 		else
 		{	
-			// Retrieve the message queue and send each one to be broadcast, then pop.
-			std::queue<std::string> currentMsgQueue = flirSession->getMsgQueue();
+			for(auto flirsession: flirSessions){
+				// Retrieve the message queue and send each one to be broadcast, then pop.
+				std::queue<std::string> currentMsgQueue = flirSession->getMsgQueue();
+			}
 
 			while(!currentMsgQueue.empty())
 			{		
@@ -96,6 +101,33 @@ void PedestrianPlugin::checkXML()
 				currentMsgQueue.pop();
 			}
 		}
+	}
+}
+
+void PedestrianPlugin::processStaticTimXML(){
+	PLOG(logINFO) << "Start thread to process static TIM in XML format."
+	while(true){
+		int period = 1.0/staticTimFrequency * 1000;
+		if (flirSessions.empty())
+		{
+			PLOG(logDEBUG) << "FLIR session not yet initialized: ";
+		}
+		else
+		{	
+			bool isAnyPedestrainPresent = false;
+			for(auto flirsession: flirSessions){
+				isAnyPedestrainPresent |= flirsession->isPedestrainPresent();
+			}
+
+			if(isAnyPedestrainPresent){
+				PLOG(logINFO) << "There is at least one eedestrain present at the intersection, broadcast TIM!";
+				PLOG(logINFO) << staticTim;
+			}
+			else{
+				PLOG(logINFO) << "No pedestrain presents at the intersection."
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(period));
 	}
 }
 
@@ -185,29 +217,48 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	GetConfigValue<std::string>("WebServiceIP", webip, &_cfgLock);
 	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
-	GetConfigValue<std::string>("WebSocketHost", webSocketIP, &_cfgLock);
-	GetConfigValue<std::string>("WebSocketPort", webSocketURLExt, &_cfgLock);
+	// GetConfigValue<std::string>("WebSocketHost", webSocketIP, &_cfgLock);
+	// GetConfigValue<std::string>("WebSocketPort", webSocketURLExt, &_cfgLock);
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
-	GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
-	GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
+	// GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
+	// GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
 	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
+
+	std::string flirConfigsStr;
+	GetConfigValue<std::string("FLIRConfigurations", flirConfigsStr, &_cfgLock);
+	flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);
 
 	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
 	
 	if (dataprovider.compare("FLIR") == 0)
     {
+		//Read static TIM message from configuration parameter only when provider set to FLIR as the TIM message size is large.
+		GetConfigValue<std::string> ("StaticTim", staticTim, &_cfgLock);
+		GetConfigValue<int>("StaticTimFrequency", staticTimFrequency, &_cfgLock);
 		getMessageToWrite();
         StopWebService();
         if (!runningWebSocket)
         {
 			PLOG(logDEBUG) << "Starting WebSocket Thread";
-            std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
+            // std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
+			std::vector<std::thread> socketThreads;
+			for(const auto & config: flirConfigsPtr->getConfigs()){
+				socketThreads.emplace_back(&PedestrianPlugin::StartWebSocket, this, config)
+			}			
             PLOG(logDEBUG) << "WebSocket Thread started!!";
 
 			PLOG(logDEBUG) << "Starting XML Thread";
+
+			//This thread is to check flirsession for any SDSM and PSM messages in the queue and broadcast them.
 			std::thread xmlThread(&PedestrianPlugin::checkXML, this);
 			PLOG(logDEBUG) << "XML Thread started!!";
-			webSocketThread.join(); // wait for the thread to finish
+			
+			std::thread staticTimThread(&PedestrianPlugin::processStaticTimXML, this);
+			// webSocketThread.join(); 
+			// wait for all the socket threads to finish
+			for(auto thread: socketThreads){
+				thread.join();
+			}
 			xmlThread.join(); // wait for the thread to finish
         }
     }

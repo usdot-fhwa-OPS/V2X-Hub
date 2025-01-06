@@ -20,6 +20,7 @@
 #include <queue>
 #include <ctime>
 #include <cmath>
+#include <atomic>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -43,6 +44,11 @@ namespace PedestrianPlugin
         bool generatePSM_;
         bool generateSDSM_;
         bool generateTIM_;
+        /***
+         * Each websocket is connected to one camera responsible for one region/view at an intersection.
+         * This isPedestrainPresent indicator signify whether there is a pedestrain in that region or not.
+        ***/
+        std::atomic<bool> isPedestrainPresent_(false);
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
         std::string psmxml = "";
@@ -158,5 +164,14 @@ namespace PedestrianPlugin
      * @param time Timestamp string associated with received data
      */
     void processPedestrianData(const pt::ptree& pr, const std::string& time);
+    /**
+     * @brief Get the latest status whether a pedestrain exists at a crosswalk
+     */
+    bool isPedestrainPresent();
+    /**
+     * @brief Update the pedestrain status to indicator whether there is a pedestrain at a crosswalk
+     * @param isPresent latest pedestian status to update
+     */
+    void setPedestrainPresence(bool isPresent);
     };
 };

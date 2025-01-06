@@ -1,0 +1,67 @@
+{
+	"name":"Pedestrian",
+	"description":"Pedestrian plugin for the IVP system.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PedestrianPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+		{
+			"type":"J2735",
+			"subtype":"PSM",
+			"description":"Pedestrian Safety Message"
+		}
+	],
+	"configuration":[
+		{
+			"key":"Frequency",
+			"default":"1000",
+			"description":"The frequency to send the PSM in milliseconds."
+		},
+		{
+			"key":"WebServiceIP",
+			"default":"127.0.0.1",
+			"description":"IP address at which the web service exists"
+		},
+		{
+			"key":"WebServicePort",
+			"default":"9000",
+			"description":"Port at which Web service exists"
+		},
+		{
+			"key":"DataProvider",
+			"default":"FLIR",
+			"description":"Possible data providers we handle - FLIR (websocket) or REST (REST request, accepts PSM/SDSM/TIM as XML)"
+		},
+		{
+			"key":"FLIROutput",
+			"default":"PSM, SDSM, TIM",
+			"description":"List containing messages to be generated. Possible options: PSM, SDSM, and/or TIM. Only used when \"FLIR\" is the selected DataProvider."
+		},
+		{
+			"key":"WebSocketHost",
+			"default":"192.168.55.183",
+			"description":"IP address of the camera to connect to for data"
+		},
+		{
+			"key":"WebSocketPort",
+			"default":"80",
+			"description":"Extension/port for FLIR camera subscription"
+		},
+		{
+			"key":"HostString",
+			"default":"/api/subscriptions",
+			"description":"Host HTTP header during the WebSocket handshake"
+		},
+		{
+			"key":"FLIRCameraRotation",
+			"default":"16.13",
+			"description":"Measured camera rotation from true north (in degrees) used for heading conversion"
+		},
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin"
+        }
+	]
+}

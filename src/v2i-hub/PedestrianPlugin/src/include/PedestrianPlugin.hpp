@@ -46,6 +46,8 @@
 #include <qserverPedestrian/OAIPSM.h>
 #include <queue>
 
+#include "FLIRConfigurations.hpp"
+
 namespace PedestrianPlugin
 {
 
@@ -91,7 +93,7 @@ protected:
 	/**
 	 * @brief Starts Asyncronous WebSocket Client to connect to FLIR WebSocket Server.
 	 */
-	int  StartWebSocket();
+	int  StartWebSocket(const FLIRConfiguration &config);
 	/**
 	 * @brief Stops WebService before FLIR WebSocket enabled. 
 	 */
@@ -119,6 +121,8 @@ protected:
 	 * @brief Parses though user configurations to determine which message(s) to generate. Accepts any combination of PSM, SDSM, and/or TIM. 
 	 */
 	void getMessageToWrite();
+
+	void processStaticTimXML();
 	
 private:
 	J2735MessageFactory factory;
@@ -127,13 +131,18 @@ private:
 	
 	uint16_t webport;
 	std::string webip; 
-	std::string webSocketIP;
-	std::string webSocketURLExt;
+	// std::string webSocketIP;
+	// std::string webSocketURLExt;
 	std::string dataprovider;
-	float cameraRotation;
-	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
-	std::string hostString;
+	// float cameraRotation;
+	std::vector<std::shared_ptr<FLIRWebSockAsyncClnSession>> flirSessions;
+	// std::string hostString;
+	std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 	std::string flirOutput;
+	//A static TravelerInformationMessage(TIM) that describes regions at an intersection.
+	std::string staticTim;
+	//Initial static TIM broadcast frequency is set to 1HZ
+	int staticTimFrequency = 1;
 
 	bool runningWebSocket = false;
     bool runningWebService = false;
