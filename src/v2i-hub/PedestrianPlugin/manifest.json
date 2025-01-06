@@ -40,7 +40,7 @@
 		},
 		{
 			"key": "FLIRConfigurations",
-			"default": "[{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": 80,\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 16.13, \"FLIRCameraViewName\": \"region-1\"},{\"WebSocketHost\": \"127.0.0.2\",\"WebSocketPort\": 81,\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 11.13, \"FLIRCameraViewName\": \"region-2\"}]",
+			"default": "[{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8081\",\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 16.13, \"FLIRCameraViewName\": \"region-1\"},{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8082\",\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 11.13, \"FLIRCameraViewName\": \"region-2\"}]",
 			"description": ""
 		},
 		{

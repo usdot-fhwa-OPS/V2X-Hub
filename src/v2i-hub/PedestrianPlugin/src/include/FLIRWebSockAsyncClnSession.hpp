@@ -48,9 +48,10 @@ namespace PedestrianPlugin
          * Each websocket is connected to one camera responsible for one region/view at an intersection.
          * This isPedestrainPresent indicator signify whether there is a pedestrain in that region or not.
         ***/
-        std::atomic<bool> isPedestrainPresent_(false);
+        std::atomic<bool> isPedestrainPresent_;
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
+        std::string cameraViewName_;
         std::string psmxml = "";
         std::string sdsmxml = "";
         std::string timxml = "";
@@ -58,12 +59,13 @@ namespace PedestrianPlugin
 
         std::mutex _msgLock;
         int msgCount = 0;
-        int moy = 0;
+        std::atomic<int> moy_;
+        std::atomic<int> startYear_;
     public:
 
     // Resolver and socket require an io_context
     explicit FLIRWebSockAsyncClnSession(net::io_context& ioc)
-        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)){};
+        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), isPedestrainPresent_(false), moy_(0), startYear_(0){};
 
     /**
      * @brief Calculates the current minute of the year to be included in the Traveler Information Message (TIM).
@@ -90,7 +92,7 @@ namespace PedestrianPlugin
      * @param port port to connect to
      * @param cameraRotation calculated camera rotation
      */
-    void run(char const* host, char const* port, float cameraRotation, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM);
+    void run(char const* host, char const* port, float cameraRotation,const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM);
     
     /**
      * @brief Lookup the domain name of the IP address from run function.
@@ -167,11 +169,20 @@ namespace PedestrianPlugin
     /**
      * @brief Get the latest status whether a pedestrain exists at a crosswalk
      */
-    bool isPedestrainPresent();
+    bool isPedestrainPresent() const;
     /**
      * @brief Update the pedestrain status to indicator whether there is a pedestrain at a crosswalk
      * @param isPresent latest pedestian status to update
      */
     void setPedestrainPresence(bool isPresent);
+
+    /**
+     * @brief Get the minute of the year
+     */
+    int getMoy() const;
+    /**
+     * @brief Get the start year of the current year
+     */
+    int getStartYear() const;
     };
 };

@@ -82,9 +82,9 @@ protected:
 
 	/**
 	 * @brief Add DSRC metadata to messages and broadcast pedestrian detection information.
-	 * @param msgJson PSM, SDSM, or TIM in JSON string format.
+	 * @param msgJson PSM, SDSM, or TIM in XML string format.
 	 */
-	void BroadcastPedDet(const std::string &msgJson);
+	void BroadcastPedDet(const std::string &msgXML);
 
 	/**
 	 * @brief Starts WebService to handle incoming HTTP POST requests.
@@ -123,6 +123,24 @@ protected:
 	void getMessageToWrite();
 
 	void processStaticTimXML();
+
+	/**
+	 * @brief Updates the TravelerInformationMessage(TIM) XML 
+	 * with new information (msgCnt, startYear, int startTime, durationTime = 1 minute).
+	 * Return the updated TIM in XML format.
+	 * @param staticTimXMLIn Static TravelerInformationMessage(TIM) XML.
+	 * @param msgCount Message count to update.
+	 * @param startYear Year to update.
+	 * @param startTime Time to update.
+	 * @param durationTime Duration time to update.
+	 * @return Updated TravelerInformationMessage(TIM) XML.
+	 */
+	string updateTimXML(const string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime = 1);
+	/**
+	 * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime = 1 minute).
+	 * @param timTree TravelerInformationMessage(TIM) tree to update.
+	 */
+	void updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime = 1);
 	
 private:
 	J2735MessageFactory factory;
@@ -140,7 +158,7 @@ private:
 	std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 	std::string flirOutput;
 	//A static TravelerInformationMessage(TIM) that describes regions at an intersection.
-	std::string staticTim;
+	std::string staticTimXML;
 	//Initial static TIM broadcast frequency is set to 1HZ
 	int staticTimFrequency = 1;
 

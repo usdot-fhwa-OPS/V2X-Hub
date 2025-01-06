@@ -22,7 +22,7 @@ namespace PedestrianPlugin{
         // IP address of the camera to connect to for data
         string socketIp;
         //Extension/port for FLIR camera subscription
-        int socketPort;
+        string socketPort;
         //Host HTTP header during the WebSocket handshake
         string apiSubscription;
         //Measured camera rotation from true north (in degrees) used for heading conversion

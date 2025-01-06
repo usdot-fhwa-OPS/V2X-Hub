@@ -1,11 +1,11 @@
-#include "FLIRConfigurations.hpp"
+#include "include/FLIRConfigurations.hpp"
 
 namespace PedestrianPlugin
 {
     FLIRConfiguration FLIRConfigurations::parseFLIRConfig(const pt::ptree& configJson){
         FLIRConfiguration config;
         config.socketIp = configJson.get<string>("WebSocketHost");
-        config.socketPort = configJson.get<int>("WebSocketPort");
+        config.socketPort = configJson.get<string>("WebSocketPort");
         config.apiSubscription = configJson.get<string>("HostString");
         config.FLIRCameraRotation = configJson.get<float>("FLIRCameraRotation");
         config.FLIRCameraViewName = configJson.get<string>("FLIRCameraViewName");
@@ -28,7 +28,7 @@ namespace PedestrianPlugin
 
     string FLIRConfigurations::toString(){
         ostringstream oss;
-        pt::write_json(configsTree, oss);
+        pt::write_json(oss, configsTree);
         return oss.str();
     }
 } // namespace PedestrainPlugin
