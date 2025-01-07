@@ -41,7 +41,7 @@
 		{
 			"key": "FLIRConfigurations",
 			"default": "[{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8081\",\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 16.13, \"FLIRCameraViewName\": \"region-1\"},{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8082\",\"HostString\": \"/api/subscriptions\",\"FLIRCameraRotation\": 11.13, \"FLIRCameraViewName\": \"region-2\"}]",
-			"description": ""
+			"description": "A list of dictionaries containing the configuration for each FLIR camera. Each dictionary should contain the following keys: WebSocketHost, WebSocketPort, HostString, FLIRCameraRotation, and FLIRCameraViewName. Only used when \"FLIR\" is the selected DataProvider."
 		},
 		{
             "key":"StaticTim",
