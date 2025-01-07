@@ -63,11 +63,15 @@ namespace PedestrianPlugin
         int msgCount = 0;
         std::atomic<int> moy_;
         std::atomic<int> startYear_;
+
+        //Health status of the FLIR camera
+        std::atomic<bool> isHealthy_;
     public:
 
     // Resolver and socket require an io_context
     explicit FLIRWebSockAsyncClnSession(net::io_context& ioc)
         : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)){
+            isHealthy_.store(false);
             isPedestrainPresent_.store(false);
             moy_.store(TIMHelper::calculateMinuteOfCurrentYear());
             startYear_.store(TIMHelper::calculateCurrentYear());
@@ -78,7 +82,7 @@ namespace PedestrianPlugin
      * @param ec the error code for the specific function 
      * @param what description of the error 
      */
-    void fail(beast::error_code ec, char const* what) const;       
+    void fail(beast::error_code ec, char const* what);       
 
     /**
      * @brief Start the asynchronous web socket connection to the camera. Each function will call the
@@ -179,5 +183,10 @@ namespace PedestrianPlugin
      * @brief Get the start year of the current year
      */
     int getStartYear() const;
+
+    /**
+     * @brief Get the health status of the FLIR camera
+     */
+    bool isHealthy() const;
     };
 };

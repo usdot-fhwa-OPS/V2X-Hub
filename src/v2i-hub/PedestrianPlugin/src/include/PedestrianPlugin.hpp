@@ -151,9 +151,6 @@ private:
 	bool generateSDSM = false;
 	bool generateTIM = false;
 
-	// The io_context is required for all I/O
-    net::io_context ioc;
-
 	// TODO: Set an endpoint for XML post messages and update documentation.
 	// API URL to accept XML
 	const QString Msg_Receive = "";

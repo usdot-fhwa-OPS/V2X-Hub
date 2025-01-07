@@ -7,8 +7,9 @@ using namespace boost::property_tree;
 namespace PedestrianPlugin
 {   
 
-    void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what) const
+    void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what)
     {
+        isHealthy_.store(false);
         PLOG(logERROR) << what << ": " << ec.message();
     }
 
@@ -38,7 +39,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "resolve");
-
+        isHealthy_.store(true);
         // Set the timeout for the operation
         beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
 
@@ -55,7 +56,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "connect");
-
+        isHealthy_.store(true);
         // Turn off the timeout on the tcp_stream, because
         // the websocket stream has its own timeout system.
         beast::get_lowest_layer(ws_).expires_never();      
@@ -91,7 +92,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "handshake");
-        
+        isHealthy_.store(true);
         // Send the message
         ws_.async_write(
             net::buffer(pedPresenceTrackingReq),
@@ -106,7 +107,7 @@ namespace PedestrianPlugin
 
         if(ec)
             return fail(ec, "write");
-
+        isHealthy_.store(true);
         // Read a message into our buffer,
         // this should be the response to the subscribe message
         ws_.async_read(
@@ -122,7 +123,7 @@ namespace PedestrianPlugin
 
         if(ec)
             return fail(ec, "read");
-
+        isHealthy_.store(true);
         // parse the buffer
         std::stringstream ss;
 	    ptree pr;
@@ -322,7 +323,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "close");
-
+        isHealthy_.store(false);
         // If we get here then the connection is closed gracefully
 
         // The make_printable() function helps print a ConstBufferSequence
@@ -407,5 +408,9 @@ namespace PedestrianPlugin
 
     int FLIRWebSockAsyncClnSession::getStartYear() const{
         return startYear_.load();
+    }
+
+    bool FLIRWebSockAsyncClnSession::isHealthy() const{
+        return isHealthy_.load();
     }
 }

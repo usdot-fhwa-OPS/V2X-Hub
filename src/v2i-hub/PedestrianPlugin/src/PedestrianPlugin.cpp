@@ -47,16 +47,20 @@ void PedestrianPlugin::getMessageToWrite()
 int PedestrianPlugin::StartWebSocket(const FLIRConfiguration & config)
 {
 	PLOG(logDEBUG) << "In PedestrianPlugin::StartWebSocket ";
-	auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
+	// The io_context is required for all I/O
+	net::io_context ioc;
 
+	// Create a session and run it
+	auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
     // Launch the asynchronous operation
 	flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.FLIRCameraRotation, config.FLIRCameraViewName.c_str(), config.apiSubscription.c_str(), generatePSM, generateSDSM, generateTIM);	
 	flirSessions.push_back(flirSession);
-	PLOG(logDEBUG) << "Successfully running the I/O service";	
+	PLOG(logDEBUG) << "Successfully running the I/O service.";	
     runningWebSocket = true;
 
     // Run the I/O service. The call will return when the socket is closed.
     ioc.run();
+	PLOG(logDEBUG) << "Successfully terminating the I/O service.";	
 
     return EXIT_SUCCESS;
 }
@@ -101,43 +105,60 @@ void PedestrianPlugin::checkXML()
 				}
 			}			
 		}
+		// Sleep for 10 milliseconds
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
 
 void PedestrianPlugin::processStaticTimXML()
 {
-	int16_t msgCount = 0;
+	auto msgCount = 0;
+	auto period = static_cast<int>(1.0 / staticTimFrequency * 1000.0);
 	while(true)
-	{
-		msgCount = TIMHelper::increaseMsgCount(msgCount);
-		int period = static_cast<int>(1.0 / staticTimFrequency * 1000.0);
+	{		
 		if (flirSessions.empty())
 		{
 			PLOG(logDEBUG) << "FLIR session not yet initialized.";
 		}
 		else
 		{	
-			bool isAnyPedestrainPresent = false;
-			for(auto flirSession: flirSessions){
+			msgCount = TIMHelper::increaseMsgCount(msgCount);
+			auto isAnyPedestrainPresent = false;
+			auto isAnyFLIRSessionHealthy = false;
+
+			for(auto flirSession: flirSessions)
+			{
+				//Check if any of the FLIR sessions are healthy.
+				isAnyFLIRSessionHealthy |= flirSession->isHealthy();
+
+				//Check if any pedestrain is detected at any of the intersection regions/views.
 				auto isPedestrainPresent = flirSession->isPedestrainPresent();
 				isAnyPedestrainPresent |= isPedestrainPresent;
-				if(isPedestrainPresent){
+				if(isPedestrainPresent)
+				{
 					PLOG(logINFO) << "At least one pedestrain detected at one of the intersection regions/views! Reset the pedestrain presence flag to false after checking it.";
 					//Reset the pedestrain presence flag to false after checking it.
 					flirSession->setPedestrainPresence(false);
 				}
 			}
 
-			auto lastFlirSession = flirSessions.back();
-			//If at least one pedestrain is detected, broadcast TIM with duration time of 1 minute.
-			int durationTime = isAnyPedestrainPresent? 1 : 0;
-			/**If at least one pedestrain is detected, use the start year and moy from the last FLIR session.
-			 * Otherwise, use the current year and minute of the year.
-			 * **/
-			int startYear = isAnyPedestrainPresent? lastFlirSession->getStartYear() : TIMHelper::calculateCurrentYear();
-			int moy = isAnyPedestrainPresent? lastFlirSession->getMoy() : TIMHelper::calculateMinuteOfCurrentYear();
-			auto updatedTim = TIMHelper::updateTimXML(staticTimXML, msgCount, startYear, moy, durationTime);
-			BroadcastPedDet(updatedTim);
+			if(isAnyFLIRSessionHealthy)
+			{
+				auto lastFlirSession = flirSessions.back();
+				//If at least one pedestrain is detected, broadcast TIM with duration time of 1 minute.
+				auto durationTime = isAnyPedestrainPresent? 1 : 0;
+				/**If at least one pedestrain is detected, use the start year and moy from the last FLIR session.
+				 * Otherwise, use the current year and minute of the year.
+				 * **/
+				auto startYear = isAnyPedestrainPresent? lastFlirSession->getStartYear() : TIMHelper::calculateCurrentYear();
+				auto moy = isAnyPedestrainPresent? lastFlirSession->getMoy() : TIMHelper::calculateMinuteOfCurrentYear();
+				auto updatedTim = TIMHelper::updateTimXML(staticTimXML, msgCount, startYear, moy, durationTime);
+				BroadcastPedDet(updatedTim);
+			}
+			else
+			{
+				PLOG(logDEBUG) << "No FLIR session is healthy. Skipping the broadcast of TIM message.";
+			}
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(period));
 	}
@@ -270,6 +291,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 				thread.join();
 			}
 			xmlThread.join(); // wait for the thread to finish
+			staticTimThread.join(); // wait for the TIM thread to finish
         }
     }
 
