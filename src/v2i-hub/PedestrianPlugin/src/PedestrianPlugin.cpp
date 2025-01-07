@@ -123,7 +123,7 @@ void PedestrianPlugin::processStaticTimXML()
 				auto isPedestrainPresent = flirSession->isPedestrainPresent();
 				isAnyPedestrainPresent |= isPedestrainPresent;
 				if(isPedestrainPresent){
-					PLOG(logINFO) << "At least one pedestrain detected at the intersection! Reset the pedestrain presence flag to false after checking it.";
+					PLOG(logINFO) << "At least one pedestrain detected at one of the intersection regions/views! Reset the pedestrain presence flag to false after checking it.";
 					//Reset the pedestrain presence flag to false after checking it.
 					flirSession->setPedestrainPresence(false);
 				}
