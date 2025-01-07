@@ -110,14 +110,11 @@ void PedestrianPlugin::processStaticTimXML()
 	int16_t msgCount = 0;
 	while(true)
 	{
-		msgCount += 1;
-		if (msgCount > 127) {
-			msgCount = 0;
-		}
-		int period = 1.0/staticTimFrequency * 1000;
+		msgCount = TIMHelper::increaseMsgCount(msgCount);
+		int period = static_cast<int>(1.0 / staticTimFrequency * 1000.0);
 		if (flirSessions.empty())
 		{
-			PLOG(logDEBUG) << "FLIR session not yet initialized: ";
+			PLOG(logDEBUG) << "FLIR session not yet initialized.";
 		}
 		else
 		{	
@@ -133,39 +130,20 @@ void PedestrianPlugin::processStaticTimXML()
 			}
 
 			auto lastFlirSession = flirSessions.back();
-			int durationTime = 0;
-			if(isAnyPedestrainPresent){
-				//If at least one pedestrain is detected, broadcast TIM with duration time of 1 minute.
-				durationTime = 1;
-			}
-			else{
-				PLOG(logINFO) << "No pedestrain detected.";
-			}
-			auto updatedTim = updateTimXML(staticTimXML, msgCount, lastFlirSession->getStartYear(), lastFlirSession->getMoy(), durationTime);
+			//If at least one pedestrain is detected, broadcast TIM with duration time of 1 minute.
+			int durationTime = isAnyPedestrainPresent? 1 : 0;
+			/**If at least one pedestrain is detected, use the start year and moy from the last FLIR session.
+			 * Otherwise, use the current year and minute of the year.
+			 * **/
+			int startYear = isAnyPedestrainPresent? lastFlirSession->getStartYear() : TIMHelper::calculateCurrentYear();
+			int moy = isAnyPedestrainPresent? lastFlirSession->getMoy() : TIMHelper::calculateMinuteOfCurrentYear();
+			auto updatedTim = TIMHelper::updateTimXML(staticTimXML, msgCount, startYear, moy, durationTime);
 			BroadcastPedDet(updatedTim);
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(period));
 	}
 }
 
-string PedestrianPlugin::updateTimXML(const std::string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime)
-{
-	pt::ptree timTree;
-	istringstream iss(staticTimXMLIn);
-	pt::read_xml(iss, timTree);
-	updateTimTree(timTree, msgCount, startYear, startTime, durationTime);
-	std::ostringstream oss;
-	pt::write_xml(oss, timTree);
-	return oss.str();
-}
-
-void PedestrianPlugin::updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime)
-{	
-	timTree.put("TravelerInformation.msgCnt", msgCount);
-	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startYear", startYear);
-	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startTime", startTime);
-	timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.durationTime", durationTime);
-}
 
 void PedestrianPlugin::PedestrianRequestHandler(QHttpEngine::Socket *socket)
 {
@@ -253,11 +231,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 
 	GetConfigValue<std::string>("WebServiceIP", webip, &_cfgLock);
 	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
-	// GetConfigValue<std::string>("WebSocketHost", webSocketIP, &_cfgLock);
-	// GetConfigValue<std::string>("WebSocketPort", webSocketURLExt, &_cfgLock);
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
-	// GetConfigValue<float>("FLIRCameraRotation", cameraRotation, &_cfgLock);
-	// GetConfigValue<std::string>("HostString", hostString, &_cfgLock);
 	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
 
 	std::string flirConfigsStr;
@@ -289,7 +263,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 			PLOG(logDEBUG) << "XML Thread started!!";
 			
 			std::thread staticTimThread(&PedestrianPlugin::processStaticTimXML, this);
-			// webSocketThread.join(); 
+
 			// wait for all the socket threads to finish
 			for(auto &thread: socketThreads){
 				thread.join();

@@ -29,6 +29,9 @@ namespace PedestrianPlugin
     string FLIRConfigurations::toString(){
         ostringstream oss;
         pt::write_json(oss, configsTree);
-        return oss.str();
+        auto output = oss.str();
+        output = regex_replace(output, regex("\\s+"), "");
+        output = regex_replace(output, regex("\\\\n"), "");
+        return output;
     }
 } // namespace PedestrainPlugin

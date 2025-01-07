@@ -47,7 +47,9 @@
 #include <queue>
 
 #include "FLIRConfigurations.hpp"
+#include "TravelerInformationMessageHelper.hpp"
 
+using TIMHelper = PedestrianPlugin::TravelerInformationMessageHelper;
 namespace PedestrianPlugin
 {
 
@@ -121,26 +123,10 @@ protected:
 	 * @brief Parses though user configurations to determine which message(s) to generate. Accepts any combination of PSM, SDSM, and/or TIM. 
 	 */
 	void getMessageToWrite();
-
+	/**
+	 * @brief Processes the static TravelerInformationMessage(TIM) XML.
+	 */
 	void processStaticTimXML();
-
-	/**
-	 * @brief Updates the TravelerInformationMessage(TIM) XML 
-	 * with new information (msgCnt, startYear, int startTime, durationTime).
-	 * Return the updated TIM in XML format.
-	 * @param staticTimXMLIn Static TravelerInformationMessage(TIM) XML.
-	 * @param msgCount Message count to update.
-	 * @param startYear Year to update.
-	 * @param startTime Time to update.
-	 * @param durationTime Duration time to update.
-	 * @return Updated TravelerInformationMessage(TIM) XML.
-	 */
-	string updateTimXML(const string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime);
-	/**
-	 * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime ).
-	 * @param timTree TravelerInformationMessage(TIM) tree to update.
-	 */
-	void updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime);
 	
 private:
 	J2735MessageFactory factory;
@@ -149,12 +135,8 @@ private:
 	
 	uint16_t webport;
 	std::string webip; 
-	// std::string webSocketIP;
-	// std::string webSocketURLExt;
 	std::string dataprovider;
-	// float cameraRotation;
 	std::vector<std::shared_ptr<FLIRWebSockAsyncClnSession>> flirSessions;
-	// std::string hostString;
 	std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 	std::string flirOutput;
 	//A static TravelerInformationMessage(TIM) that describes regions at an intersection.

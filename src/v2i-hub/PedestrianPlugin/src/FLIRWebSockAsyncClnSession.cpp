@@ -5,43 +5,7 @@ using namespace std;
 using namespace boost::property_tree;
 
 namespace PedestrianPlugin
-{
-    int FLIRWebSockAsyncClnSession::calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) const
-    {
-        // Set up "current" utc time using values received from FLIR
-        std::tm currentTime = {};
-        currentTime.tm_year = year - 1900; // Start of all time in this library is 1900. This calculation is specified in the tm library.
-        currentTime.tm_mon = month - 1;
-        currentTime.tm_mday = day;
-        currentTime.tm_hour = hour;
-        currentTime.tm_min = minute;
-        currentTime.tm_sec = second;
-
-        // Set up start of the "current" year in utc using the year received from FLIR. 
-        // Other values set to the beginning of any year, e.g. <Year>-Jan-01 00:00:00.
-        std::tm startOfYear = {};
-        startOfYear.tm_year = year - 1900;
-        startOfYear.tm_mon = 0;
-        startOfYear.tm_mday = 1;
-        startOfYear.tm_hour = 0;
-        startOfYear.tm_min = 0;
-        startOfYear.tm_sec = 0;
-
-        try {
-            // Calculate difference in seconds. Used to get the current second of the current year.
-            std::time_t current = std::mktime(&currentTime);
-            std::time_t start = std::mktime(&startOfYear);
-
-            // Convert seconds to minutes. Used to get the current minute of the current year.
-            auto secondsDifference = static_cast<int>(std::difftime(current, start));
-            int minuteOfYear = secondsDifference / 60;
-
-            return minuteOfYear;
-        } catch (const std::runtime_error& e) {
-            PLOG(logERROR) << "Error with formatting time. Incorrect values provided. " << e.what();
-        }
-        return -1;
-    }
+{   
 
     void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what) const
     {
@@ -339,7 +303,7 @@ namespace PedestrianPlugin
             }
             if (generateTIM_ == true)
             {
-                int moy = calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
+                int moy = TIMHelper::calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
                 moy_.store(moy);
                 startYear_.store(dateTimeArr[0]);
                 PLOG(logDEBUG) << "Start year: " << startYear_.load();

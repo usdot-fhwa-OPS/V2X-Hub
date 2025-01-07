@@ -21,6 +21,7 @@
 #include <ctime>
 #include <cmath>
 #include <atomic>
+#include "TravelerInformationMessageHelper.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -28,6 +29,7 @@ namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace net = boost::asio;            // from <boost/asio.hpp>
 namespace pt = boost::property_tree;    // from <boost/property_tree/ptree.hpp>
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+using TIMHelper = PedestrianPlugin::TravelerInformationMessageHelper;
 
 //------------------------------------------------------------------------------
 
@@ -65,18 +67,11 @@ namespace PedestrianPlugin
 
     // Resolver and socket require an io_context
     explicit FLIRWebSockAsyncClnSession(net::io_context& ioc)
-        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), isPedestrainPresent_(false), moy_(0), startYear_(0){};
-
-    /**
-     * @brief Calculates the current minute of the year to be included in the Traveler Information Message (TIM).
-     * @param year Current year
-     * @param month Current month
-     * @param day Current day
-     * @param hour Current hour
-     * @param minute Current minute
-     * @param second Current second
-     */
-    int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) const;
+        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)){
+            isPedestrainPresent_.store(false);
+            moy_.store(TIMHelper::calculateMinuteOfCurrentYear());
+            startYear_.store(TIMHelper::calculateCurrentYear());
+        };
 
     /**
      * @brief Reports a failure with any of the websocket functions below

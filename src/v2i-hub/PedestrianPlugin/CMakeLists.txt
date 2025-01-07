@@ -42,13 +42,19 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 # Locate GTest
 find_package(GTest REQUIRED)
 include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/src/include)
+
+add_library(${PROJECT_NAME}_lib src/TravelerInformationMessageHelper.cpp src/FLIRConfigurations.cpp)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils qserverPedestrian)
 
 set(runPedestrianTests_sources
                 test/PedestrianTest.cpp 
+                test/TravelerInformationMessageHelperTest.cpp
+                test/FLIRConfigurationsTest.cpp
                 test/Main.cpp
 )
 
 # Link runTests with what we want to test and the GTest and pthread library
 add_executable(runPedestrianTests ${runPedestrianTests_sources})
 
-target_link_libraries(runPedestrianTests ${GTEST_LIBRARIES} pthread ${QHttpEngine_LIBRARY} Qt5::Widgets Qt5Core Qt5Network ssl crypto qhttpengine)
+target_link_libraries(runPedestrianTests ${PROJECT_NAME}_lib  ${GTEST_LIBRARIES} pthread ${QHttpEngine_LIBRARY} Qt5::Widgets Qt5Core Qt5Network ssl crypto qhttpengine)
