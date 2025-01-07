@@ -106,7 +106,6 @@ void PedestrianPlugin::checkXML()
 
 void PedestrianPlugin::processStaticTimXML()
 {
-	PLOG(logINFO) << "Start thread to process static TIM in XML format.";
 	int16_t msgCount = 0;
 	while(true)
 	{
@@ -255,14 +254,16 @@ void PedestrianPlugin::UpdateConfigSettings()
 			for(const auto & config: flirConfigsPtr->getConfigs()){
 				socketThreads.emplace_back(&PedestrianPlugin::StartWebSocket, this, config);
 			}			
-            PLOG(logDEBUG) << "WebSocket Thread started!!";
+            PLOG(logDEBUG) << "WebSocket thread started!!";
 
-			PLOG(logDEBUG) << "Starting XML Thread";
+			PLOG(logDEBUG) << "Starting XML thread";
 			//This thread is to check flirsession for any SDSM and PSM messages in the queue and broadcast them.
 			std::thread xmlThread(&PedestrianPlugin::checkXML, this);
-			PLOG(logDEBUG) << "XML Thread started!!";
+			PLOG(logDEBUG) << "XML thread started!!";
 			
+			PLOG(logDEBUG) << "Start thread to process static TIM in XML format.";
 			std::thread staticTimThread(&PedestrianPlugin::processStaticTimXML, this);
+			PLOG(logDEBUG) << "TIM processing thread started!!";
 
 			// wait for all the socket threads to finish
 			for(auto &thread: socketThreads){
