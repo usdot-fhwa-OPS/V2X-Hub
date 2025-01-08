@@ -50,6 +50,7 @@
 #include "TravelerInformationMessageHelper.hpp"
 
 using TIMHelper = PedestrianPlugin::TravelerInformationMessageHelper;
+using TIMVariables = PedestrianPlugin::TravelerInformationMessageVariables;
 namespace PedestrianPlugin
 {
 

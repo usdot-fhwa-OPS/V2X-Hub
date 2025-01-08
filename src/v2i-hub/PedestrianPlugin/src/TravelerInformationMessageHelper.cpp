@@ -1,23 +1,50 @@
 #include "include/TravelerInformationMessageHelper.hpp"
 
-namespace PedestrianPlugin{    
-    string TravelerInformationMessageHelper::updateTimXML(const std::string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime)
+namespace PedestrianPlugin{  
+    string TravelerInformationMessageHelper::xmlToJson(const string& xml){
+        pt::ptree timTree;
+        istringstream iss(xml);
+        pt::read_xml(iss, timTree);
+        std::ostringstream oss;
+        pt::write_json(oss, timTree);
+        auto output = removeSpecialCharacters(oss.str());
+        return output;
+    }  
+
+    string TravelerInformationMessageHelper::jsonToXml(const string& json){
+        pt::ptree timTree;
+        istringstream iss(json);
+        pt::read_json(iss, timTree);
+        std::ostringstream oss;
+        pt::write_xml(oss, timTree);
+        auto output = removeSpecialCharacters(oss.str());
+        return output;
+    }
+
+    string  TravelerInformationMessageHelper::removeSpecialCharacters(const string& str){
+        string output = std::regex_replace(str, std::regex(R"(\n)"), "");
+        output = std::regex_replace(output, std::regex(R"(\s+)"), "");
+        output = std::regex_replace(output, std::regex(R"(<\?xml\s*version=\"1\.0\"\s*encoding=\"utf-8\"\?>)"), "");
+        return output;
+    }
+
+    string TravelerInformationMessageHelper::updateTimXML(const std::string& staticTimXMLIn, const TravelerInformationMessageVariables& timVars)
     {
         pt::ptree timTree;
         istringstream iss(staticTimXMLIn);
         pt::read_xml(iss, timTree);
-        updateTimTree(timTree, msgCount, startYear, startTime, durationTime);
+        updateTimTree(timTree, timVars);
         std::ostringstream oss;
         pt::write_xml(oss, timTree);
         return oss.str();
     }
 
-    void TravelerInformationMessageHelper::updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime)
+    void TravelerInformationMessageHelper::updateTimTree(pt::ptree &timTree, const TravelerInformationMessageVariables& timVars)
     {	
-        timTree.put("TravelerInformation.msgCnt", msgCount);
-        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startYear", startYear);
-        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startTime", startTime);
-        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.durationTime", durationTime);
+        timTree.put("TravelerInformation.msgCnt", timVars.msgCnt);
+        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startYear", timVars.startYear);
+        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.startTime", timVars.startTime);
+        timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.durationTime", timVars.durationTime);
     }
 
     int16_t TravelerInformationMessageHelper::increaseMsgCount(int16_t msgCount)

@@ -112,7 +112,8 @@ void PedestrianPlugin::checkXML()
 
 void PedestrianPlugin::processStaticTimXML()
 {
-	auto msgCount = 0;
+	TIMVariables previousTIMVars;
+	int16_t msgCount = 0;
 	auto period = static_cast<int>(1.0 / staticTimFrequency * 1000.0);
 	while(true)
 	{		
@@ -122,7 +123,6 @@ void PedestrianPlugin::processStaticTimXML()
 		}
 		else
 		{	
-			msgCount = static_cast<short>(TIMHelper::increaseMsgCount(msgCount));
 			auto isAnyPedestrainPresent = false;
 			auto isAnyFLIRSessionHealthy = false;
 
@@ -152,7 +152,17 @@ void PedestrianPlugin::processStaticTimXML()
 				 * **/
 				auto startYear = isAnyPedestrainPresent? lastFlirSession->getStartYear() : TIMHelper::calculateCurrentYear();
 				auto moy = isAnyPedestrainPresent? lastFlirSession->getMoy() : TIMHelper::calculateMinuteOfCurrentYear();
-				auto updatedTim = TIMHelper::updateTimXML(staticTimXML, msgCount, startYear, moy, durationTime);
+				TIMVariables currentTIMVars = {msgCount, startYear, moy, durationTime};
+				if(currentTIMVars == previousTIMVars)
+				{
+					PLOG(logDEBUG) << "No change in the TIM variables and do not increase msgCnt.";
+				}else{
+					//Increase the message count in the TIM when there is a change in the TIM variables.
+					msgCount = TIMHelper::increaseMsgCount(msgCount);
+					currentTIMVars.msgCnt = msgCount;
+				}
+				auto updatedTim = TIMHelper::updateTimXML(staticTimXML, currentTIMVars);
+				previousTIMVars = currentTIMVars;
 				BroadcastPedDet(updatedTim);
 			}
 			else
@@ -264,6 +274,7 @@ void PedestrianPlugin::UpdateConfigSettings()
     {
 		//Read static TIM message from configuration parameter only when provider set to FLIR as the TIM message size is large.
 		GetConfigValue<std::string> ("StaticTim", staticTimXML, &_cfgLock);
+		staticTimXML = TIMHelper::jsonToXml(staticTimXML);
 		GetConfigValue<int>("StaticTimFrequency", staticTimFrequency, &_cfgLock);
 		getMessageToWrite();
         StopWebService();

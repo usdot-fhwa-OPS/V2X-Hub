@@ -5,6 +5,7 @@
 #include <PluginLog.h>
 #include <TmxLog.h>
 #include <iostream>
+#include <regex>
 
 using std::string;
 using std::istringstream;
@@ -14,6 +15,20 @@ using tmx::utils::logERROR;
 namespace pt = boost::property_tree;
 
 namespace PedestrianPlugin{
+struct TravelerInformationMessageVariables
+{
+    int16_t msgCnt;
+    int startYear;
+    int startTime;
+    int durationTime;
+
+    // Overload the == operator
+    bool operator==(const TravelerInformationMessageVariables& other) const
+    {
+        return msgCnt == other.msgCnt && startYear == other.startYear && startTime == other.startTime && durationTime == other.durationTime;
+    }
+};
+
 class TravelerInformationMessageHelper
 {
     public:
@@ -26,6 +41,26 @@ class TravelerInformationMessageHelper
         TravelerInformationMessageHelper(const TravelerInformationMessageHelper&&) = delete;
         TravelerInformationMessageHelper& operator=(const TravelerInformationMessageHelper&&) = delete;
         ~TravelerInformationMessageHelper() = default;
+        /***
+         * @brief Converts the XML string to JSON string.
+         * @param xml XML string to convert.
+         * @return JSON string.
+         */
+        static string xmlToJson(const string& xml);
+
+        /**
+         * @brief Removes special characters from the string.
+         * @param str String to remove special characters from.
+         * @return String without special characters.
+         */
+        static string removeSpecialCharacters(const string& str);
+        
+        /**
+         * @brief Converts the JSON string to XML string.
+         * @param json JSON string to convert.
+         * @return XML string.
+         */
+        static string jsonToXml(const string& json);
         /**
          * @brief Updates the TravelerInformationMessage(TIM) XML 
          * with new information (msgCnt, startYear, int startTime, durationTime).
@@ -37,12 +72,12 @@ class TravelerInformationMessageHelper
          * @param durationTime Duration time to update.
          * @return Updated TravelerInformationMessage(TIM) XML.
          */
-        static string updateTimXML(const string& staticTimXMLIn, int msgCount, int startYear, int startTime, int durationTime);
+        static string updateTimXML(const string& staticTimXMLIn, const TravelerInformationMessageVariables& timVars);
         /**
          * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime ).
          * @param timTree TravelerInformationMessage(TIM) tree to update.
          */
-        static void updateTimTree(pt::ptree &timTree, int msgCount, int startYear, int startTime, int durationTime);
+        static void updateTimTree(pt::ptree &timTree, const TravelerInformationMessageVariables& timVars);
         /**
          * @brief Increases the message count in the TravelerInformationMessage(TIM) XML.
          * @param msgCount Message count to increase.
