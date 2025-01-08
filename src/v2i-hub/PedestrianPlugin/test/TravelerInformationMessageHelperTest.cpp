@@ -30,7 +30,7 @@ namespace unit_test {
     TEST(TravelerInformationMessage, calculateCurrentYear){
         int expected = 2025;
         int actual = TIMHelper::calculateCurrentYear();
-        EXPECT_TRUE(expected<= actual);
+        EXPECT_EQ(expected, actual);
     }
 
     TEST(TravelerInformationMessage, increaseMsgCount){

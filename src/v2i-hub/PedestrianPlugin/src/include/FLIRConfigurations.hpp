@@ -43,7 +43,7 @@ namespace PedestrianPlugin{
             /**
              * @brief Parse a single FLIR configuration from a JSON object.
              */
-            FLIRConfiguration parseFLIRConfig(const pt::ptree& config_json);
+            FLIRConfiguration parseFLIRConfig(const pt::ptree& config_json) const;
         public:
             /***
              * @brief Parse FLIR configurations from a JSON string.
@@ -52,11 +52,11 @@ namespace PedestrianPlugin{
             /***
              * @brief Get the parsed FLIR configurations.
              */
-            std::vector<FLIRConfiguration> getConfigs();
+            std::vector<FLIRConfiguration> getConfigs() const;
             /**
              * @brief Convert the FLIR configurations to a string.
              */
-            string toString();
+            string toString() const;
     };
 
 }

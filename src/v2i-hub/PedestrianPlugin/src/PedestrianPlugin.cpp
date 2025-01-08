@@ -122,7 +122,7 @@ void PedestrianPlugin::processStaticTimXML()
 		}
 		else
 		{	
-			msgCount = TIMHelper::increaseMsgCount(msgCount);
+			msgCount = static_cast<short>(TIMHelper::increaseMsgCount(msgCount));
 			auto isAnyPedestrainPresent = false;
 			auto isAnyFLIRSessionHealthy = false;
 
@@ -270,7 +270,6 @@ void PedestrianPlugin::UpdateConfigSettings()
         if (!runningWebSocket)
         {
 			PLOG(logDEBUG) << "Starting WebSocket Thread";
-            // std::thread webSocketThread(&PedestrianPlugin::StartWebSocket, this);
 			std::vector<std::thread> socketThreads;
 			for(const auto & config: flirConfigsPtr->getConfigs()){
 				socketThreads.emplace_back(&PedestrianPlugin::StartWebSocket, this, config);

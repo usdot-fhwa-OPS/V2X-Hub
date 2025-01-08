@@ -2,7 +2,7 @@
 
 namespace PedestrianPlugin
 {
-    FLIRConfiguration FLIRConfigurations::parseFLIRConfig(const pt::ptree& configJson){
+    FLIRConfiguration FLIRConfigurations::parseFLIRConfig(const pt::ptree& configJson) const{
         FLIRConfiguration config;
         config.socketIp = configJson.get<string>("WebSocketHost");
         config.socketPort = configJson.get<string>("WebSocketPort");
@@ -22,16 +22,16 @@ namespace PedestrianPlugin
         }     
     }
 
-    std::vector<FLIRConfiguration> FLIRConfigurations::getConfigs(){
+    std::vector<FLIRConfiguration> FLIRConfigurations::getConfigs() const{
         return _configs;
     }
 
-    string FLIRConfigurations::toString(){
+    string FLIRConfigurations::toString() const{
         ostringstream oss;
         pt::write_json(oss, configsTree);
         auto output = oss.str();
-        output = regex_replace(output, regex("\\s+"), "");
-        output = regex_replace(output, regex("\\\\n"), "");
+        output = regex_replace(output, regex(R"(\s+)"), "");
+        output = regex_replace(output, regex(R"(\n)"), "");
         return output;
     }
 } // namespace PedestrainPlugin

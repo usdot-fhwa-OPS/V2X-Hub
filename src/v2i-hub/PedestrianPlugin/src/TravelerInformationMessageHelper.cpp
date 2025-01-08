@@ -30,14 +30,15 @@ namespace PedestrianPlugin{
 
     int TravelerInformationMessageHelper::calculateMinuteOfCurrentYear()
     {
-        time_t now = time(0);
-        tm *ltm = localtime(&now);
-        int year = 1900 + ltm->tm_year;
-        int month = 1 + ltm->tm_mon;
-        int day = ltm->tm_mday;
-        int hour = ltm->tm_hour;
-        int minute = ltm->tm_min;
-        int second = ltm->tm_sec;
+        time_t now = time(nullptr);
+        tm ltm ;
+        localtime_r(&now, &ltm);
+        int year = 1900 + ltm.tm_year;
+        int month = 1 + ltm.tm_mon;
+        int day = ltm.tm_mday;
+        int hour = ltm.tm_hour;
+        int minute = ltm.tm_min;
+        int second = ltm.tm_sec;
         return calculateMinuteOfYear(year, month, day, hour, minute, second);
     }
 
@@ -80,8 +81,9 @@ namespace PedestrianPlugin{
 
     int TravelerInformationMessageHelper::calculateCurrentYear()
     {
-        time_t now = time(0);
-        tm *ltm = localtime(&now);
-        return 1900 + ltm->tm_year;
+        time_t now = time(nullptr);
+        tm ltm ;
+        localtime_r(&now, &ltm);
+        return 1900 + ltm.tm_year;
     }
 }
