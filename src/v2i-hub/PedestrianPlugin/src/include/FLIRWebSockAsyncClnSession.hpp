@@ -20,6 +20,8 @@
 #include <queue>
 #include <ctime>
 #include <cmath>
+#include <atomic>
+#include "TravelerInformationMessageHelper.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -27,6 +29,7 @@ namespace websocket = beast::websocket; // from <boost/beast/websocket.hpp>
 namespace net = boost::asio;            // from <boost/asio.hpp>
 namespace pt = boost::property_tree;    // from <boost/property_tree/ptree.hpp>
 using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
+using TIMHelper = PedestrianPlugin::TravelerInformationMessageHelper;
 
 //------------------------------------------------------------------------------
 
@@ -43,8 +46,14 @@ namespace PedestrianPlugin
         bool generatePSM_;
         bool generateSDSM_;
         bool generateTIM_;
+        /***
+         * Each websocket is connected to one camera responsible for one region/view at an intersection.
+         * This isPedestrainPresent indicator signify whether there is a pedestrain in that region or not.
+        ***/
+        std::atomic<bool> isPedestrainPresent_;
         std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
         float cameraRotation_;
+        std::string cameraViewName_;
         std::string psmxml = "";
         std::string sdsmxml = "";
         std::string timxml = "";
@@ -52,30 +61,28 @@ namespace PedestrianPlugin
 
         std::mutex _msgLock;
         int msgCount = 0;
-        int moy = 0;
+        std::atomic<int> moy_;
+        std::atomic<int> startYear_;
+
+        //Health status of the FLIR camera
+        std::atomic<bool> isHealthy_;
     public:
 
     // Resolver and socket require an io_context
     explicit FLIRWebSockAsyncClnSession(net::io_context& ioc)
-        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)){};
-
-    /**
-     * @brief Calculates the current minute of the year to be included in the Traveler Information Message (TIM).
-     * @param year Current year
-     * @param month Current month
-     * @param day Current day
-     * @param hour Current hour
-     * @param minute Current minute
-     * @param second Current second
-     */
-    int calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) const;
+        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)){
+            isHealthy_.store(false);
+            isPedestrainPresent_.store(false);
+            moy_.store(TIMHelper::calculateMinuteOfCurrentYear());
+            startYear_.store(TIMHelper::calculateCurrentYear());
+        };
 
     /**
      * @brief Reports a failure with any of the websocket functions below
      * @param ec the error code for the specific function 
      * @param what description of the error 
      */
-    void fail(beast::error_code ec, char const* what) const;       
+    void fail(beast::error_code ec, char const* what);       
 
     /**
      * @brief Start the asynchronous web socket connection to the camera. Each function will call the
@@ -84,7 +91,7 @@ namespace PedestrianPlugin
      * @param port port to connect to
      * @param cameraRotation calculated camera rotation
      */
-    void run(char const* host, char const* port, float cameraRotation, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM);
+    void run(char const* host, char const* port, float cameraRotation,const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM);
     
     /**
      * @brief Lookup the domain name of the IP address from run function.
@@ -158,5 +165,28 @@ namespace PedestrianPlugin
      * @param time Timestamp string associated with received data
      */
     void processPedestrianData(const pt::ptree& pr, const std::string& time);
+    /**
+     * @brief Get the latest status whether a pedestrain exists at a crosswalk
+     */
+    bool isPedestrainPresent() const;
+    /**
+     * @brief Update the pedestrain status to indicator whether there is a pedestrain at a crosswalk
+     * @param isPresent latest pedestian status to update
+     */
+    void setPedestrainPresence(bool isPresent);
+
+    /**
+     * @brief Get the minute of the year
+     */
+    int getMoy() const;
+    /**
+     * @brief Get the start year of the current year
+     */
+    int getStartYear() const;
+
+    /**
+     * @brief Get the health status of the FLIR camera
+     */
+    bool isHealthy() const;
     };
 };

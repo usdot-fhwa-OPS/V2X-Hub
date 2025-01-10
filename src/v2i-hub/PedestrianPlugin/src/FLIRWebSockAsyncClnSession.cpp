@@ -5,54 +5,20 @@ using namespace std;
 using namespace boost::property_tree;
 
 namespace PedestrianPlugin
-{
-    int FLIRWebSockAsyncClnSession::calculateMinuteOfYear(int year, int month, int day, int hour, int minute, int second) const
+{   
+
+    void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what)
     {
-        // Set up "current" utc time using values received from FLIR
-        std::tm currentTime = {};
-        currentTime.tm_year = year - 1900; // Start of all time in this library is 1900. This calculation is specified in the tm library.
-        currentTime.tm_mon = month - 1;
-        currentTime.tm_mday = day;
-        currentTime.tm_hour = hour;
-        currentTime.tm_min = minute;
-        currentTime.tm_sec = second;
-
-        // Set up start of the "current" year in utc using the year received from FLIR. 
-        // Other values set to the beginning of any year, e.g. <Year>-Jan-01 00:00:00.
-        std::tm startOfYear = {};
-        startOfYear.tm_year = year - 1900;
-        startOfYear.tm_mon = 0;
-        startOfYear.tm_mday = 1;
-        startOfYear.tm_hour = 0;
-        startOfYear.tm_min = 0;
-        startOfYear.tm_sec = 0;
-
-        try {
-            // Calculate difference in seconds. Used to get the current second of the current year.
-            std::time_t current = std::mktime(&currentTime);
-            std::time_t start = std::mktime(&startOfYear);
-
-            // Convert seconds to minutes. Used to get the current minute of the current year.
-            auto secondsDifference = static_cast<int>(std::difftime(current, start));
-            int minuteOfYear = secondsDifference / 60;
-
-            return minuteOfYear;
-        } catch (const std::runtime_error& e) {
-            PLOG(logERROR) << "Error with formatting time. Incorrect values provided. " << e.what();
-        }
-        return -1;
-    }
-
-    void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, char const* what) const
-    {
+        isHealthy_.store(false);
         PLOG(logERROR) << what << ": " << ec.message();
     }
 
-    void FLIRWebSockAsyncClnSession::run(char const* host, char const* port, float cameraRotation, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM)
+    void FLIRWebSockAsyncClnSession::run(char const* host, char const* port, float cameraRotation, const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM)
     {
 	    // Save these for later
         host_ = host;
         cameraRotation_ = cameraRotation;
+        cameraViewName_ = cameraViewName;
         hostString_ = hostString;
         generatePSM_ = generatePSM;
         generateSDSM_ = generateSDSM;
@@ -73,7 +39,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "resolve");
-
+        isHealthy_.store(true);
         // Set the timeout for the operation
         beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
 
@@ -90,7 +56,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "connect");
-
+        isHealthy_.store(true);
         // Turn off the timeout on the tcp_stream, because
         // the websocket stream has its own timeout system.
         beast::get_lowest_layer(ws_).expires_never();      
@@ -126,7 +92,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "handshake");
-        
+        isHealthy_.store(true);
         // Send the message
         ws_.async_write(
             net::buffer(pedPresenceTrackingReq),
@@ -141,7 +107,7 @@ namespace PedestrianPlugin
 
         if(ec)
             return fail(ec, "write");
-
+        isHealthy_.store(true);
         // Read a message into our buffer,
         // this should be the response to the subscribe message
         ws_.async_read(
@@ -157,7 +123,7 @@ namespace PedestrianPlugin
 
         if(ec)
             return fail(ec, "read");
-
+        isHealthy_.store(true);
         // parse the buffer
         std::stringstream ss;
 	    ptree pr;
@@ -338,14 +304,13 @@ namespace PedestrianPlugin
             }
             if (generateTIM_ == true)
             {
-                // Constructing TIM XML to send to BroadcastPedDet function
-                moy = calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
-                PLOG(logDEBUG) << "Minute of the year: " << moy;
-
-                std::string tim_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><TravelerInformation><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><packetID>0000000000)xml" + idResult + R"xml(</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><advisory/></frameType><msgId><roadSignID><position><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long><elevation>-4096</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startYear>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</startYear><startTime>)xml" + std::to_string(moy) + R"xml(</startTime><durationTime>1</durationTime><priority>7</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long><elevation>-4096</elevation></anchor><directionality><both/></directionality><description><geometry><direction>1111111111111111</direction><laneWidth>366</laneWidth><circle><center><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long><elevation>-4096</elevation></center><radius>3000</radius><units><centimeter/></units></circle></geometry></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><advisory><SEQUENCE><item><itis>9486</itis></item></SEQUENCE><SEQUENCE><item><itis>13585</itis></item></SEQUENCE></advisory></content></TravelerDataFrame></dataFrames></TravelerInformation>)xml";
-                PLOG(logDEBUG) << std::endl << tim_xml_str;
-                timxml = tim_xml_str;
-                msgQueue.push(timxml);
+                int moy = TIMHelper::calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
+                moy_.store(moy);
+                startYear_.store(dateTimeArr[0]);
+                PLOG(logDEBUG) << "Start year: " << startYear_.load();
+                PLOG(logDEBUG) << "Minute of the year: " << moy_.load();
+                PLOG(logDEBUG) << "Detected pedestraint at region/view: " << cameraViewName_ << std::endl;
+                setPedestrainPresence(true);
             }
         }
     }
@@ -358,7 +323,7 @@ namespace PedestrianPlugin
     {
         if(ec)
             return fail(ec, "close");
-
+        isHealthy_.store(false);
         // If we get here then the connection is closed gracefully
 
         // The make_printable() function helps print a ConstBufferSequence
@@ -426,4 +391,26 @@ namespace PedestrianPlugin
 
         return parsedArr;
     }       
+
+
+    bool FLIRWebSockAsyncClnSession::isPedestrainPresent() const{
+        return isPedestrainPresent_.load();
+    }
+
+    void FLIRWebSockAsyncClnSession::setPedestrainPresence(bool isPresent){
+        PLOG(logDEBUG) << "Set pedestrain presence: " << isPresent << ", region/view: " <<cameraViewName_ << std::endl;
+        isPedestrainPresent_.store(isPresent);
+    }
+
+    int FLIRWebSockAsyncClnSession::getMoy() const{
+        return moy_.load();
+    }
+
+    int FLIRWebSockAsyncClnSession::getStartYear() const{
+        return startYear_.load();
+    }
+
+    bool FLIRWebSockAsyncClnSession::isHealthy() const{
+        return isHealthy_.load();
+    }
 }

@@ -46,6 +46,11 @@
 #include <qserverPedestrian/OAIPSM.h>
 #include <queue>
 
+#include "FLIRConfigurations.hpp"
+#include "TravelerInformationMessageHelper.hpp"
+
+using TIMHelper = PedestrianPlugin::TravelerInformationMessageHelper;
+using TIMVariables = PedestrianPlugin::TravelerInformationMessageVariables;
 namespace PedestrianPlugin
 {
 
@@ -80,9 +85,9 @@ protected:
 
 	/**
 	 * @brief Add DSRC metadata to messages and broadcast pedestrian detection information.
-	 * @param msgJson PSM, SDSM, or TIM in JSON string format.
+	 * @param msgJson PSM, SDSM, or TIM in XML string format.
 	 */
-	void BroadcastPedDet(const std::string &msgJson);
+	void BroadcastPedDet(const std::string &msgXML);
 
 	/**
 	 * @brief Starts WebService to handle incoming HTTP POST requests.
@@ -91,7 +96,7 @@ protected:
 	/**
 	 * @brief Starts Asyncronous WebSocket Client to connect to FLIR WebSocket Server.
 	 */
-	int  StartWebSocket();
+	int  StartWebSocket(const FLIRConfiguration &config);
 	/**
 	 * @brief Stops WebService before FLIR WebSocket enabled. 
 	 */
@@ -119,6 +124,10 @@ protected:
 	 * @brief Parses though user configurations to determine which message(s) to generate. Accepts any combination of PSM, SDSM, and/or TIM. 
 	 */
 	void getMessageToWrite();
+	/**
+	 * @brief Processes the static TravelerInformationMessage(TIM) XML.
+	 */
+	void processStaticTimXML();
 	
 private:
 	J2735MessageFactory factory;
@@ -127,13 +136,14 @@ private:
 	
 	uint16_t webport;
 	std::string webip; 
-	std::string webSocketIP;
-	std::string webSocketURLExt;
 	std::string dataprovider;
-	float cameraRotation;
-	std::shared_ptr<FLIRWebSockAsyncClnSession> flirSession;
-	std::string hostString;
+	std::vector<std::shared_ptr<FLIRWebSockAsyncClnSession>> flirSessions;
+	std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 	std::string flirOutput;
+	//A static TravelerInformationMessage(TIM) that describes regions at an intersection.
+	std::string staticTimXML;
+	//Initial static TIM broadcast frequency is set to 1HZ
+	int staticTimFrequency = 1;
 
 	bool runningWebSocket = false;
     bool runningWebService = false;
@@ -141,9 +151,6 @@ private:
 	bool generatePSM = false;
 	bool generateSDSM = false;
 	bool generateTIM = false;
-
-	// The io_context is required for all I/O
-    net::io_context ioc;
 
 	// TODO: Set an endpoint for XML post messages and update documentation.
 	// API URL to accept XML
