@@ -13,7 +13,7 @@ services:
     command: /bin/sh -c "while sleep 1000; do :; done"  
     environment:
       MYSQL_PASSWORD: /run/secrets/mysql_password
-      SIMULATION_MODE: false
+      SIMULATION_MODE: "false"
       # Environment variables only requires in simulation 
       # SIMULATION_IP: 127.0.0.1
       # SIMULATION_REGISTRATION_PORT: 6767
