@@ -41,7 +41,7 @@ namespace ImmediateForward
         std::string tmxType;
         std::string sendType;
         std::string psid;
-        int channel;
+        std::optional<int> channel;
     };
     /**
      * Immediate forward configuration for an RSU connection
