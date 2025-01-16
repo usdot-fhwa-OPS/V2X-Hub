@@ -22,8 +22,36 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "rsuSpec": "RSU4.1", /** Version of Immediate Forward Protocol to use (RSU4.1 or NTCIP1218) **/
                 "address": "127.0.0.1", /** Address of RSU **/
                 "port": 3745, /** Port for Immediate Forward protocol on RSU **/
-                "txMode": "CONT", /** Transmission Mode () **/
-                "signMessage": false, /** Flag to indicate whether V2X Hub should attempt to sign and verify message signatures via HSM (should be set to false. RSUs should support signing and verifying message signatures.) **/
+                "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
+                "signMessage": false, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
+                [ 
+                    { 
+                        "tmxType": "SPAT-P", /** TMX message type **/
+                        "sendType": "SPAT", /** Message Type **/
+                        "psid": "0x8002", /** Message PSID **/
+                        "channel": 183 /** (optional) RSU Channel to broadcast from (180 for DSRC and 183 for CV2X)  **/
+                    },
+                    { "tmxType": "MAP-P", "sendType": "MAP", "psid": "0x8002", "channel": 183 },
+                    { "tmxType": "PSM-P", "sendType": "PSM", "psid": "0x27", "channel": 183 }, 
+                    { "tmxType": "TIM", "sendType": "TIM", "psid": "0x8003", "channel": 183 },
+                    { "tmxType": "TMSG07-P", "sendType": "TMSG07", "psid": "0x8002", "channel": 183 },
+                    { "tmxType": "TMSG03-P", "sendType": "TMSG03", "psid": "0xBFEE", "channel": 183 },
+                    { "tmxType": "TMSG05-P", "sendType": "TMSG05", "psid": "0x8003", "channel": 183 },
+                    { "tmxType": "SSM-P", "sendType": "SSM", "psid": "0x8002", "channel": 183 },
+                    { "tmxType": "SDSM", "sendType": "SDSM", "psid": "0x8010", "channel": 183 }
+                ]
+            },
+            /** Setup with V2X Hub HSM message signing and signature verifying. NOTE: This functionality is no longer actively maintained. It is preferred to configure the RSU itself to sign and verify signatures of messages! **/
+            {
+                "name": "East Intersection Cohda with HSM signing", /** String Name for RSU **/
+                "rsuSpec": "RSU4.1", /** Version of Immediate Forward Protocol to use (RSU4.1 or NTCIP1218) **/
+                "address": "127.0.0.1", /** Address of RSU **/
+                "port": 3745, /** Port for Immediate Forward protocol on RSU **/
+                "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
+                "signMessage": true, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "enableHsm": true, /** (Optional : default false) Flag to indicate whether V2X Hub should attempt to sign and verify message signatures via HSM **/ 
+                "hsmUrl": "http://<softhsm raspberrypi IP>:3000/v1/scms/", /** (Optional : only read when enableHsm true) URL of HSM API to provide signatures and verify signatures. **/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
                 [ 
                     { 
