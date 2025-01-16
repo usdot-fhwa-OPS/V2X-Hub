@@ -22,6 +22,7 @@ namespace CDA1TenthPlugin
 	{
 		// Plugin Handles MobilityOperation Messages
 		AddMessageFilter<tsm3Message>(this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
+		AddMessageFilter<BsmMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 		SubscribeToMessages();
 	}
 
@@ -424,11 +425,17 @@ namespace CDA1TenthPlugin
 
 	void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 	{
+		receiveBasicSafetyMessage(msg);
+	}
+
+	void CDA1TenthPlugin::receiveBasicSafetyMessage(BsmMessage &msg)
+	{
 		try
 		{
 			auto bsm = msg.get_j2735_data();
 			auto bsmTree = BSMConverter::toTree(*bsm.get());
 			auto bsmJsonString = BSMConverter::toJsonString(bsmTree);
+			PLOG(logDEBUG) << "Received BSM: " << bsmJsonString;
 		}
 		catch (TmxException &ex)
 		{

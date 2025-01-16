@@ -178,6 +178,12 @@ namespace CDA1TenthPlugin
 		CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
 		CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
 
+		/**
+		 * @brief Handle BasicSafetyMessage
+		 * @param msg BasicSafetyMessage
+		 */
+		void receiveBasicSafetyMessage(BsmMessage &msg);
+
 	private:
 		// Database configuration values
 		sql::Driver *driver;
