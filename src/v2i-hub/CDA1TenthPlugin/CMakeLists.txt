@@ -10,10 +10,25 @@ find_package(Qt5Network REQUIRED)
 
 
 include_directories( "/usr/local/include/pdclient")
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
 BuildTmxPlugin ( )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pdclient )
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Network ssl crypto ) 
-target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
+target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils jsoncpp)
+
+#############
+## Testing ##
+#############
+enable_testing()
+add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
+                                        tmxutils)
+set(BINARY ${PROJECT_NAME}_test)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
+add_executable(${BINARY} ${TEST_SOURCES})
+add_test(NAME ${BINARY} COMMAND ${BINARY})
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest)
 
