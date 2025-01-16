@@ -51,21 +51,21 @@ TEST(BSMConverterTest, toTractionString)
     EXPECT_EQ("unavailable", result);
 }
 
-TEST(BSMConverterTest, toBrakeSystemStatusString)
+TEST(BSMConverterTest, toAntiLockBrakeStatusString)
 {
     AntiLockBrakeStatus_t abs = AntiLockBrakeStatus::AntiLockBrakeStatus_on;
-    string result = CDA1TenthPlugin::BSMConverter::toBrakeSystemStatusString(abs);
+    string result = CDA1TenthPlugin::BSMConverter::toAntiLockBrakeStatusString(abs);
     EXPECT_EQ("on", result);
     abs = AntiLockBrakeStatus::AntiLockBrakeStatus_off;
-    result = CDA1TenthPlugin::BSMConverter::toBrakeSystemStatusString(abs);
+    result = CDA1TenthPlugin::BSMConverter::toAntiLockBrakeStatusString(abs);
     EXPECT_EQ("off", result);
 
     abs = AntiLockBrakeStatus::AntiLockBrakeStatus_unavailable;
-    result = CDA1TenthPlugin::BSMConverter::toBrakeSystemStatusString(abs);
+    result = CDA1TenthPlugin::BSMConverter::toAntiLockBrakeStatusString(abs);
     EXPECT_EQ("unavailable", result);
 
     abs = AntiLockBrakeStatus::AntiLockBrakeStatus_engaged;
-    result = CDA1TenthPlugin::BSMConverter::toBrakeSystemStatusString(abs);
+    result = CDA1TenthPlugin::BSMConverter::toAntiLockBrakeStatusString(abs);
     EXPECT_EQ("engaged", result);
 }
 

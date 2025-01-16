@@ -14,15 +14,74 @@ namespace CDA1TenthPlugin
   public:
     BSMConverter() = default;
     ~BSMConverter() = default;
+    /***
+     * @brief Convert a BasicSafetyMessage_t to a JSON ptree
+     * @param bsm BasicSafetyMessage_t
+     * @return JSON ptree
+     */
     static pt toTree(const BasicSafetyMessage_t &bsm);
+    /**
+     * @brief Convert a JSON ptree to a JSON string
+     * @param tree JSON ptree
+     * @return BSM string in JSON format
+     */
     static string toJsonString(const pt &tree);
+    /**
+     * @brief Convert TemporaryID_t to string
+     * @param id TemporaryID_t
+     * @return string
+     */
     static string toTemporaryIdString(const TemporaryID_t &id);
+    /**
+     * @brief Convert TransmissionState_t to string
+     * @param transmission TransmissionState_t
+     * @return string
+     */
     static string toTransmissionString(const TransmissionState_t &transmission);
+    /**
+     * @brief Convert TractionControlStatus_t to string
+     * @param traction TractionControlStatus_t
+     * @return string
+     */
     static string toTractionString(const TractionControlStatus_t &traction);
-    static string toBrakeAppliedStatusString(const BrakeAppliedStatus_t &wheel);
-    static string toBrakeSystemStatusString(const AntiLockBrakeStatus_t &abs);
-    static string toStabilityControlStatusString(const StabilityControlStatus_t &scs);
-    static string toBrakeBoostAppliedString(const BrakeBoostApplied_t &brakeBoost);
+    /**
+     * @brief Converts the AuxiliaryBrakeStatus_t enum to a string representation.
+     *
+     * @param auxBrakes The AuxiliaryBrakeStatus_t enum value to be converted.
+     * @return A string representation of the auxiliary brake status.
+     */
     static string toAuxiliaryBrakeStatusString(const AuxiliaryBrakeStatus_t &auxBrakes);
+
+    /**
+     * @brief Converts the BrakeAppliedStatus_t enum to a string representation.
+     *
+     * @param brakeStatus The BrakeAppliedStatus_t enum value to be converted.
+     * @return A string representation of the brake applied status.
+     */
+    static string toBrakeAppliedStatusString(const BrakeAppliedStatus_t &brakeStatus);
+
+    /**
+     * @brief Converts the AntiLockBrakeStatus_t enum to a string representation.
+     *
+     * @param abs The AntiLockBrakeStatus_t enum value to be converted.
+     * @return A string representation of the brake system status.
+     */
+    static string toAntiLockBrakeStatusString(const AntiLockBrakeStatus_t &abs);
+
+    /**
+     * @brief Converts the StabilityControlStatus_t enum to a string representation.
+     *
+     * @param stabilityControl The StabilityControlStatus_t enum value to be converted.
+     * @return A string representation of the stability control status.
+     */
+    static string toStabilityControlStatusString(const StabilityControlStatus_t &scs);
+
+    /**
+     * @brief Converts the BrakeBoostApplied_t enum to a string representation.
+     *
+     * @param brakeBoost The BrakeBoostApplied_t enum value to be converted.
+     * @return A string representation of the brake boost applied status.
+     */
+    static string toBrakeBoostAppliedString(const BrakeBoostApplied_t &brakeBoost);
   };
 } // namespace CDA1TenthPlugin

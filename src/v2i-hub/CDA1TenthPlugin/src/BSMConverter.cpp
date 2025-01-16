@@ -43,7 +43,7 @@ namespace CDA1TenthPlugin
     brakesChild.add_child("traction", tractionChild);
     // Add abs child
     pt absChild;
-    absChild.put(toBrakeSystemStatusString(bsm.coreData.brakes.abs), "");
+    absChild.put(toAntiLockBrakeStatusString(bsm.coreData.brakes.abs), "");
     brakesChild.add_child("abs", absChild);
     // Add scs child
     pt scsChild;
@@ -110,7 +110,7 @@ namespace CDA1TenthPlugin
     }
   }
 
-  string BSMConverter::toBrakeSystemStatusString(const AntiLockBrakeStatus_t &abs)
+  string BSMConverter::toAntiLockBrakeStatusString(const AntiLockBrakeStatus_t &abs)
   {
     switch (abs)
     {
