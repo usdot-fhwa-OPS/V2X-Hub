@@ -47,6 +47,14 @@ namespace PedestrianPlugin{
         timTree.put("TravelerInformation.dataFrames.TravelerDataFrame.durationTime", timVars.durationTime);
     }
 
+    void  TravelerInformationMessageHelper::updateTimDescNameWithTimestamp(pt::ptree &timTree){
+        auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        auto& geographs = timTree.get_child("TravelerInformation.dataFrames.TravelerDataFrame.regions");
+        for (auto& frame : geographs) {
+            frame.second.put("name", frame.second.get<string>("name") +":"+ std::to_string(now));
+        }
+    }
+
     int16_t TravelerInformationMessageHelper::increaseMsgCount(int16_t msgCount)
     {
         if (msgCount >= 127) {
