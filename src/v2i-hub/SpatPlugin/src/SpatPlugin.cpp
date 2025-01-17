@@ -117,8 +117,10 @@ namespace SpatPlugin {
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 					spatEncoded_ptr->initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
 					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					PLOG(logDEBUG1) << "Generated SPaT " << spatEncoded_ptr->get_payload_str();
 					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
 					BroadcastMessage(*rMsg);
+					PLOG(logDEBUG) << "Broadcast SPaT " << spatEncoded_ptr->get_payload_str();
 				}
 			}
 			catch (const UdpServerRuntimeError &e) {
