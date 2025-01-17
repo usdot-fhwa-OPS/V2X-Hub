@@ -51,7 +51,8 @@ namespace PedestrianPlugin{
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         auto& geographs = timTree.get_child("TravelerInformation.dataFrames.TravelerDataFrame.regions");
         for (auto& frame : geographs) {
-            frame.second.put("name", frame.second.get<string>("name") +":"+ std::to_string(now));
+            //Replace GeographicalPath descriptive name with unique timestamp
+            frame.second.put("name", std::to_string(now));
         }
     }
 
