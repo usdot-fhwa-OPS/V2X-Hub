@@ -23,7 +23,7 @@ CDA1TenthPlugin::CDA1TenthPlugin(string name) :
 		PluginClient(name) {
 	// Plugin Handles MobilityOperation Messages
 	AddMessageFilter < tsm3Message > (this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
-	AddMessageFilter<BsmEncodedMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
+	AddMessageFilter<BsmMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 	SubscribeToMessages();
 
 }
@@ -60,8 +60,8 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 	GetConfigValue<bool>("Webservice_Secure", secure);
 	// Polling Frequency in seconds
 	GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
-
-	client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
+	//TODO: Commented out due to compilation error
+	// client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
 	// Port Holding Area Configurable location
 	GetConfigValue<double>("Holding_Lat", _holding_lat);
 	GetConfigValue<double>("Holding_Lon", _holding_lon);
