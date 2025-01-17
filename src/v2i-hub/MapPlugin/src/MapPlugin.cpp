@@ -331,9 +331,8 @@ namespace MapPlugin {
 							{
 								tmx::messages::MapDataMessage mapMsg;
 								mapMsg.set_contents(container.get_storage().get_tree());
-								// mapMsg.get_j2735_data()->intersections->list.array[0]->name = ;
 
-								PLOG(logDEBUG1) << "Encoding " << mapMsg;
+								PLOG(logDEBUG1) << "Encoding MAP" << mapMsg;
 								tmx::messages::MapDataEncodedMessage mapEnc;
 								mapEnc.encode_j2735_message(mapMsg);
 								mapFile.set_Bytes(mapEnc.get_payload_str());
