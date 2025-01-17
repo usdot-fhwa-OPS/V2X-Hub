@@ -23,6 +23,7 @@ CDA1TenthPlugin::CDA1TenthPlugin(string name) :
 		PluginClient(name) {
 	// Plugin Handles MobilityOperation Messages
 	AddMessageFilter < tsm3Message > (this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
+	AddMessageFilter<BsmEncodedMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 	SubscribeToMessages();
 
 }
@@ -136,21 +137,25 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 		}
 		// Handle actions that require CDA1Tenth WebService Input
 		if ( pd->operation.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
-			client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// TODO: Commented out due to compilation error
+			// client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 		}
 		else if ( pd->operation.compare(operation_to_string(Operation::DROPOFF))  == 0) {
-			client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// TODO: Commented out due to compilation error
+			// client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
 		}
 		else if ( pd->operation.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
 			// If holding == 1 insert HOLDING action into table
-			int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
-			if ( holding == 1 ) {
-				insert_holding_action_into_table( *pd );
-			}	
+			// TODO: Commented out due to compilation error
+			// int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// if ( holding == 1 ) {
+			// 	insert_holding_action_into_table( *pd );
+			// }	
 		}
 		else if ( pd->operation.compare(operation_to_string(Operation::HOLDING)) == 0) {
-			string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
-			client->request_holding( previous_checkpoint_id );
+			// TODO: Commented out due to compilation error
+			// string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
+			// client->request_holding( previous_checkpoint_id );
 		}
 
 		
@@ -390,184 +395,50 @@ CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::readCDA1TenthJson( const ptre
 		return *pd.get();
 	}
 }
+// TODO: Commented out due to compilation error
+// std::string CDA1TenthPlugin::retrieve_holding_inspection_action_id( const std::string &action_id ) {
+// 	try{
+// 		get_action_id_for_previous_action->setString(1, action_id);
+// 		get_action_id_for_previous_action->setString(2, "PORT_CHECKPOINT");
+// 		PLOG(logDEBUG) << "Query : SELECT action_id FROM freight WHERE next_action = " 
+// 			<< action_id << " and operation = PORT_CHECKPOINT " << std::endl;
 
-std::string CDA1TenthPlugin::retrieve_holding_inspection_action_id( const std::string &action_id ) {
-	try{
-		get_action_id_for_previous_action->setString(1, action_id);
-		get_action_id_for_previous_action->setString(2, "PORT_CHECKPOINT");
-		PLOG(logDEBUG) << "Query : SELECT action_id FROM freight WHERE next_action = " 
-			<< action_id << " and operation = PORT_CHECKPOINT " << std::endl;
+// 		sql::ResultSet *res = get_action_id_for_previous_action->executeQuery();
+// 		res->first();
+// 		if ( res->isFirst() ) {
+// 			PLOG(logDEBUG) << "Query Result: " << res->first() << std::endl;
+// 		}
+// 		std::string action_id = res->getString("action_id");
+// 		return action_id;
+// 	}
+// 	catch ( sql::SQLException &e ) {
+// 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+// 			<< "Error code " << e.getErrorCode() << std::endl
+// 			<< "Error status " << e.getSQLState() << std::endl;
+// 		return "";
+// 	}
+// }
 
-		sql::ResultSet *res = get_action_id_for_previous_action->executeQuery();
-		res->first();
-		if ( res->isFirst() ) {
-			PLOG(logDEBUG) << "Query Result: " << res->first() << std::endl;
-		}
-		std::string action_id = res->getString("action_id");
-		return action_id;
-	}
-	catch ( sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
-			<< "Error code " << e.getErrorCode() << std::endl
-			<< "Error status " << e.getSQLState() << std::endl;
-		return "";
-	}
-}
-
-// taken from CARMAStreetsPlugin, untested for this use case. Kafka connection unncessary?
-void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
-{
-	try 
+void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 	{
-		auto bsm = msg.get_j2735_data();
+		receiveBasicSafetyMessage(msg);
+	}
 
-		Json::Value bsmJsonRoot;
-		Json::Value coreData;
-		Json::Value size;
-		Json::StreamWriterBuilder builder;
-
-		std::stringstream msgCnt;
-		msgCnt << bsm->coreData.msgCnt;
-		coreData["msg_count"] = msgCnt.str();
-
-		std::stringstream length;
-		length << bsm->coreData.size.length;
-		size["length"] = length.str();
-
-		std::stringstream width;
-		width << bsm->coreData.size.width;
-		size["width"] = width.str();
-
-		std::stringstream lat;
-		lat << bsm->coreData.lat;
-		coreData["lat"] = lat.str();
-
-		std::stringstream Long;
-		Long << bsm->coreData.Long;
-		coreData["long"] = Long.str();
-
-		std::stringstream elev;
-		elev << bsm->coreData.elev;
-		coreData["elev"] = elev.str();
-
-		std::stringstream speed;
-		speed << bsm->coreData.speed;
-		coreData["speed"] = speed.str();
-
-		std::stringstream secMark;
-		secMark << bsm->coreData.secMark;
-		coreData["sec_mark"]  = secMark.str();
-
-		auto id_len = bsm->coreData.id.size;
-		unsigned long id_num = 0;
-		for(auto i = 0; i < id_len; i++)
-		{			
-			 id_num = (id_num << 8) | bsm->coreData.id.buf[i];
-		}
-		std::stringstream id_fill_ss;
-		id_fill_ss << std::setfill('0') << std::setw(8) <<std::hex << id_num;
-		coreData["id"]  = id_fill_ss.str();
-		
-		Json::Value accuracy;
-
-		std::stringstream orientation;
-		orientation << bsm->coreData.accuracy.orientation;
-		accuracy["orientation"] = orientation.str();
-		
-		std::stringstream semiMajor;
-		semiMajor << bsm->coreData.accuracy.semiMajor;
-		accuracy["semi_major"] = semiMajor.str();
-
-		std::stringstream semiMinor;
-		semiMinor << bsm->coreData.accuracy.semiMinor;
-		accuracy["semi_minor"] = semiMinor.str();
-
-		std::stringstream angle;
-		angle << bsm->coreData.angle;
-		coreData["angle"] = angle.str();
-
-		std::stringstream heading;
-		heading << bsm->coreData.heading;
-		coreData["heading"] = heading.str();
-
-		Json::Value accel_set;
-
-		std::stringstream accelSet_lat;
-		accelSet_lat << bsm->coreData.accelSet.lat;
-		accel_set["lat"] = accelSet_lat.str();
-
-		std::stringstream accelSet_long;
-		accelSet_long << bsm->coreData.accelSet.Long;
-		accel_set["long"] = accelSet_long.str();
-
-		std::stringstream accelSet_vert;
-		accelSet_vert << bsm->coreData.accelSet.vert;
-		accel_set["vert"] = accelSet_vert.str();
-
-		std::stringstream accelSet_yaw;
-		accelSet_yaw << bsm->coreData.accelSet.yaw;
-		accel_set["yaw"] = accelSet_yaw.str();
-
-		std::stringstream transmission;
-		transmission << bsm->coreData.transmission;
-		coreData["transmission"] = transmission.str();
-
-		Json::Value brakes;
-
-		std::stringstream abs;
-		abs << bsm->coreData.brakes.abs;
-		brakes["abs"] = abs.str();
-
-		std::stringstream auxBrakes;
-		auxBrakes << bsm->coreData.brakes.auxBrakes;
-		brakes["aux_brakes"] = auxBrakes.str();
-
-		std::stringstream brake_boost;
-		brake_boost << bsm->coreData.brakes.brakeBoost;
-		brakes["brake_boost"] = brake_boost.str();
-
-		std::stringstream scs;
-		scs << bsm->coreData.brakes.scs;
-		brakes["scs"] = scs.str();
-
-		std::stringstream traction;
-		traction << bsm->coreData.brakes.traction;
-		brakes["traction"] = traction.str();
-
-		uint8_t binary = bsm->coreData.brakes.wheelBrakes.buf[0] >> 3;
-		unsigned int brake_applied_status_type = 4;
-		// e.g. shift the binary right until it equals to 1 (0b00000001) to determine the location of the non-zero bit
-		for (int i = 0; i < 4; i ++)
+	void CDA1TenthPlugin::receiveBasicSafetyMessage(BsmMessage &msg)
+	{
+		try
 		{
-			if ((int)binary == 1) 
-			{
-				brakes["wheel_brakes"] = brake_applied_status_type;
-				break;
-			}
-			else
-			{
-				brake_applied_status_type -= 1;
-				binary = binary >> 1;
-			}
+			auto bsm = msg.get_j2735_data();
+			auto bsmTree = BSMConverter::toTree(*bsm.get());
+			auto bsmJsonString = BSMConverter::toJsonString(bsmTree);
+			PLOG(logDEBUG) << "Received BSM: " << bsmJsonString;
 		}
-
-		coreData["accel_set"]		= accel_set;
-		coreData["brakes"]			= brakes;
-		coreData["accuracy"] 		= accuracy;
-		coreData["size"] 			= size;		
-		bsmJsonRoot["core_data"]  	= coreData; 
-		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
-		// produce_kafka_msg(message, _transmitBSMTopic);
-		
+		catch (TmxException &ex)
+		{
+			PLOG(logERROR) << "Failed to decode message : " << ex.what();
+			SetStatus<uint>(Key_BSMMessageSkipped.c_str(), ++_bsmMessageSkipped);
+		}
 	}
-	catch (TmxException &ex) {
-		PLOG(logERROR) << "Failed to decode message : " << ex.what();
-		SetStatus<uint>(Key_BSMMessageSkipped, ++_bsmMessageSkipped);
-
-	}
-}
-
-
 
 
 /**
