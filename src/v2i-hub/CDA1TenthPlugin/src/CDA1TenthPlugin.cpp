@@ -22,7 +22,6 @@ namespace CDA1TenthPlugin
 	{
 		// Plugin Handles MobilityOperation Messages
 		AddMessageFilter<tsm3Message>(this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
-		AddMessageFilter<BsmMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 		SubscribeToMessages();
 	}
 
@@ -46,8 +45,6 @@ namespace CDA1TenthPlugin
 		GetConfigValue<string>("Database_IP", _database_ip);
 		GetConfigValue<uint16_t>("Database_Port", _database_port);
 		GetConfigValue<string>("Database_Name", _database_name);
-		GetConfigValue<string>("BSM_Transmit_Topic", _transmitBSMTopic);
-
 		// TODO Update for new Web Service Configuration
 		uint16_t polling_frequency;
 		uint16_t polling_timeout;
@@ -62,9 +59,9 @@ namespace CDA1TenthPlugin
 		GetConfigValue<bool>("Webservice_Secure", secure);
 		// Polling Frequency in seconds
 		GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
-
-		// client = std::make_shared<WebServiceClient>(host, port, secure, polling_frequency);
-		// Port Holding Area Configurable location
+		// TODO: Commented out due to compilation error
+		//  client = std::make_shared<WebServiceClient>(host, port, secure, polling_frequency);
+		//  Port Holding Area Configurable location
 		GetConfigValue<double>("Holding_Lat", _holding_lat);
 		GetConfigValue<double>("Holding_Lon", _holding_lon);
 		PLOG(logDEBUG) << "Holding Area set : (" << _holding_lat << ", " << _holding_lon << ")" << std::endl;
@@ -146,15 +143,18 @@ namespace CDA1TenthPlugin
 			// Handle actions that require CDA1Tenth WebService Input
 			if (pd->operation.compare(operation_to_string(Operation::PICKUP)) == 0)
 			{
+				// TODO: Commented out due to compilation error
 				// client->request_loading_action(pd->cmv_id, pd->cargo_id, pd->action_id);
 			}
 			else if (pd->operation.compare(operation_to_string(Operation::DROPOFF)) == 0)
 			{
+				// TODO: Commented out due to compilation error
 				// client->request_unloading_action(pd->cmv_id, pd->cargo_id, pd->action_id);
 			}
 			else if (pd->operation.compare(operation_to_string(Operation::CHECKPOINT)) == 0)
 			{
 				// If holding == 1 insert HOLDING action into table
+				// TODO: Commented out due to compilation error
 				// int holding = client->request_inspection(pd->cmv_id, pd->cargo_id, pd->action_id);
 				// if (holding == 1)
 				// {
@@ -163,6 +163,7 @@ namespace CDA1TenthPlugin
 			}
 			else if (pd->operation.compare(operation_to_string(Operation::HOLDING)) == 0)
 			{
+				// TODO: Commented out due to compilation error
 				// string previous_checkpoint_id = retrieve_holding_inspection_action_id(pd->action_id);
 				// client->request_holding(previous_checkpoint_id);
 			}
@@ -422,6 +423,35 @@ namespace CDA1TenthPlugin
 			return *pd.get();
 		}
 	}
+
+	// TODO: Commented out due to compilation error
+	//  std::string CDA1TenthPlugin::retrieve_holding_inspection_action_id(const std::string &action_id)
+	//  {
+	//  	try
+	//  	{
+	//  		get_action_id_for_previous_action->setString(1, action_id);
+	//  		get_action_id_for_previous_action->setString(2, "PORT_CHECKPOINT");
+	//  		PLOG(logDEBUG) << "Query : SELECT action_id FROM freight WHERE next_action = "
+	//  									 << action_id << " and operation = PORT_CHECKPOINT " << std::endl;
+
+	// 		sql::ResultSet *res = get_action_id_for_previous_action->executeQuery();
+	// 		res->first();
+	// 		if (res->isFirst())
+	// 		{
+	// 			PLOG(logDEBUG) << "Query Result: " << res->first() << std::endl;
+	// 		}
+	// 		std::string action_id = res->getString("action_id");
+	// 		return action_id;
+	// 	}
+	// 	catch (sql::SQLException &e)
+	// 	{
+	// 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl
+	// 									 << e.what() << std::endl
+	// 									 << "Error code " << e.getErrorCode() << std::endl
+	// 									 << "Error status " << e.getSQLState() << std::endl;
+	// 		return "";
+	// 	}
+	// }
 
 	void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 	{

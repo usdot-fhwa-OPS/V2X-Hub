@@ -16,7 +16,7 @@ BuildTmxPlugin ( )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pdclient )
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Network ssl crypto ) 
-target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils jsoncpp)
+target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
 
 #############
 ## Testing ##

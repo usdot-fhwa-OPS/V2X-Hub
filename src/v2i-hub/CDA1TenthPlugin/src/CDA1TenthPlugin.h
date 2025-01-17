@@ -33,7 +33,6 @@
 #include <QTimer>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
-#include <jsoncpp/json/json.h>
 #include "BSMConverter.h"
 
 using namespace std;
@@ -172,6 +171,7 @@ namespace CDA1TenthPlugin
 		 * @param routeableMsg JSON BasicSafety message
 		 */
 		void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+
 		/**
 		 * @brief Retrieve the next action for a given action_id.
 		 */
@@ -180,7 +180,7 @@ namespace CDA1TenthPlugin
 
 		/**
 		 * @brief Handle BasicSafetyMessage
-		 * @param msg BasicSafetyMessage
+		 * @param msg BsmMessage
 		 */
 		void receiveBasicSafetyMessage(BsmMessage &msg);
 
@@ -188,9 +188,9 @@ namespace CDA1TenthPlugin
 		// Database configuration values
 		sql::Driver *driver;
 		sql::Connection *con;
-		std::string _transmitBSMTopic;
 		std::string Key_BSMMessageSkipped = "bsmMessageSkipped";
 		int _bsmMessageSkipped;
+
 		// Prepared Statements
 		sql::PreparedStatement *next_action_id;
 		sql::PreparedStatement *current_action;

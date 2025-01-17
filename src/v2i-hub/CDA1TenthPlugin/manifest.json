@@ -39,11 +39,6 @@
 			"description": "Name of database."
 		},
 		{
-			"key": "BSM_Transmit_Topic",
-			"default": "BSM",
-			"description": "Topic to publish BSM messages"
-		},
-		{
 			"key": "LogLevel",
 			"default": "INFO",
 			"description": "The log level for this plugin"
