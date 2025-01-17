@@ -22,6 +22,7 @@ namespace CDA1TenthPlugin
 	{
 		// Plugin Handles MobilityOperation Messages
 		AddMessageFilter<tsm3Message>(this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
+		AddMessageFilter<BsmEncodedMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 		SubscribeToMessages();
 	}
 

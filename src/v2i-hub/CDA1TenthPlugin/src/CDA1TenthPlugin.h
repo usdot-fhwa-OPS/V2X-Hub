@@ -42,31 +42,20 @@ using namespace tmx::messages;
 using namespace boost::property_tree;
 using namespace OpenAPI;
 
-namespace CDA1TenthPlugin
-{
-	// constant for MobilityOperation strategy
-	static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
-	// TODO future implementation
-	// static CONSTEXPR const char *RIDESHARE_STRATEGY = "rideshare";
+namespace CDA1TenthPlugin {
+// constant for MobilityOperation strategy	
+static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
+// TODO future implementation
+// static CONSTEXPR const char *RIDESHARE_STRATEGY = "rideshare";
 
-	// Enumeration for different operations
-	// !! Rework needed to handle more generic operation, remove switch case
-	enum Operation
-	{
-		PICKUP,
-		DROPOFF,
-		CHECKPOINT,
-		HOLDING,
-		ENTER_STAGING,
-		EXIT_STAGING,
-		ENTER_PORT,
-		EXIT_PORT
-	};
+// Enumeration for different operations
+// !! Rework needed to handle more generic operation, remove switch case
+enum Operation {
+	PICKUP,DROPOFF,CHECKPOINT,HOLDING,ENTER_STAGING,EXIT_STAGING,ENTER_PORT,EXIT_PORT
+};
 
-	std::string operation_to_string(Operation operation)
-	{
-		switch (operation)
-		{
+std::string operation_to_string( Operation operation ) {
+	switch(operation) {
 		case PICKUP:
 			return "PICKUP";
 		case DROPOFF:
@@ -85,131 +74,124 @@ namespace CDA1TenthPlugin
 			return "EXIT_PORT";
 		default:
 			return "INVALID_OPERATION";
-		}
 	}
-	/**
-	 * TODO DESCRIPTION
-	 *
-	 * @author Peyton Johnson
-	 * @version 6.2
-	 */
-	class CDA1TenthPlugin : public PluginClient
-	{
-	public:
-		struct CDA1Tenth_Object
-		{
-			std::string cmv_id;
-			std::string cargo_id;
-			bool cargo;
-			std::string operation;
-			double location_lat;
-			double location_long;
-			double destination_lat;
-			double destination_long;
-			std::string action_id;
-			std::string next_action;
-		};
-		/**
-		 * Construct a new MobililtyOperationPlugin with the given name.
-		 *
-		 * @param name The name to give the plugin for identification purposes
-		 */
-		CDA1TenthPlugin(std::string);
-		/**
-		 * Constructor without paramaters
-		 */
-		virtual ~CDA1TenthPlugin();
-		int Main();
-
-	protected:
-		/**
-		 * Update Configuration
-		 */
-		void UpdateConfigSettings();
-
-		// Virtual method overrides.
-		/**
-		 * Method triggers UpdateConfigSettings() on configuration changes
-		 */
-		void OnConfigChanged(const char *key, const char *value);
-
-		void OnStateChange(IvpPluginState state);
-		/**
-		 * Method to create port drayage payload JSON ptree using a CDA1Tenth_Object.
-		 *
-		 * @param cda1t_obj Port Drayage object.
-		 * @return json ptree
-		 */
-		ptree createCDA1TenthJson(const CDA1Tenth_Object &cda1t_obj);
-		/**
-		 * Create CDA1Tenth_Object from ptree JSON.
-		 *
-		 * @param pr CDA1Tenth JSON
-		 * @return CDA1Tenth_Object
-		 */
-		CDA1Tenth_Object readCDA1TenthJson(const ptree &pr);
-
-		/**
-		 * Method to create MobilityOperation XML ptree.
-		 *
-		 * @param ptree json payload
-		 * @return MobilityOperation message XML ptree
-		 */
-		ptree createMobilityOperationXml(const ptree &json_payload);
-		/**
-		 * Handle MobilityOperation message.
-		 *
-		 * @param tsm3Message J2735 MobilityOperation message
-		 * @param routeableMsg JSON MobilityOperation message
-		 */
-		void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
-
-		/**
-		 * Handle BasicSafety message.
-		 *
-		 * @param BsmMessage J2735 BasicSafety message
-		 * @param routeableMsg JSON BasicSafety message
-		 */
-		void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-
-		/**
-		 * @brief Retrieve the next action for a given action_id.
-		 */
-		CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
-		CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
-
-		/**
-		 * @brief Handle BasicSafetyMessage
-		 * @param msg BsmMessage
-		 */
-		void receiveBasicSafetyMessage(BsmMessage &msg);
-
-	private:
-		// Database configuration values
-		sql::Driver *driver;
-		sql::Connection *con;
-		std::string Key_BSMMessageSkipped = "bsmMessageSkipped";
-		int _bsmMessageSkipped;
-
-		// Prepared Statements
-		sql::PreparedStatement *next_action_id;
-		sql::PreparedStatement *current_action;
-		sql::PreparedStatement *first_action;
-		sql::PreparedStatement *insert_action;
-		sql::PreparedStatement *get_action_id_for_previous_action;
-		sql::PreparedStatement *update_current_action;
-
-		// Message Factory for J2735 messages
-		J2735MessageFactory factory;
-
-		// TODO New Web Service Client
-		// std::shared_ptr<WebServiceClient> client;
-
-		// Port HOLDING_AREA Configuration
-		double _holding_lat;
-		double _holding_lon;
+}
+/**
+ * TODO DESCRIPTION
+ *    
+ * @author Peyton Johnson
+ * @version 6.2
+ */ 
+class CDA1TenthPlugin: public PluginClient {
+public:
+	struct CDA1Tenth_Object {
+		std::string cmv_id; 
+		std::string cargo_id;
+		bool cargo;
+		std::string operation;
+		double location_lat;
+		double location_long;
+		double destination_lat;
+		double destination_long;
+		std::string action_id;
+		std::string next_action;
 	};
-	std::mutex _cfgLock;
+	/**
+	 * Construct a new MobililtyOperationPlugin with the given name.
+	 *
+	 * @param name The name to give the plugin for identification purposes
+	 */
+	CDA1TenthPlugin(std::string);
+	/**
+	 * Constructor without paramaters 
+	 */
+	virtual ~CDA1TenthPlugin();
+	int Main();
+
+protected:
+	/**
+	 * Update Configuration
+	 */
+	void UpdateConfigSettings();
+
+	// Virtual method overrides.
+	/**
+	 * Method triggers UpdateConfigSettings() on configuration changes
+	 */
+	void OnConfigChanged(const char *key, const char *value);
+
+	void OnStateChange(IvpPluginState state);
+	/**
+	 * Method to create port drayage payload JSON ptree using a CDA1Tenth_Object.
+	 * 
+	 * @param cda1t_obj Port Drayage object.
+	 * @return json ptree
+	 */
+	ptree createCDA1TenthJson( const CDA1Tenth_Object &cda1t_obj);
+	/**
+	 * Create CDA1Tenth_Object from ptree JSON.
+	 * 
+	 * @param pr CDA1Tenth JSON
+	 * @return CDA1Tenth_Object 
+	 */
+	CDA1Tenth_Object readCDA1TenthJson( const ptree &pr );
+
+	/**
+	 * Method to create MobilityOperation XML ptree.
+	 * 
+	 * @param ptree json payload
+	 * @return MobilityOperation message XML ptree
+	 */
+	ptree createMobilityOperationXml( const ptree &json_payload);
+	/**
+	 * Handle MobilityOperation message.
+	 * 
+	 * @param tsm3Message J2735 MobilityOperation message
+	 * @param routeableMsg JSON MobilityOperation message
+	 */
+	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
+
+	/**
+	 * Handle BasicSafety message.
+	 * 
+	 * @param BsmMessage J2735 BasicSafety message
+	 * @param routeableMsg JSON BasicSafety message
+	 */
+	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
+	CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
+	/**
+	* @brief Handle BasicSafetyMessage
+	* @param msg BsmMessage
+	*/
+	void receiveBasicSafetyMessage(BsmMessage &msg);
+private: 
+	// Database configuration values
+	sql::Driver *driver;
+	sql::Connection *con;
+	std::string Key_BSMMessageSkipped = "bsmMessageSkipped";
+	int _bsmMessageSkipped;
+	
+	// Prepared Statements
+	sql::PreparedStatement *next_action_id;
+	sql::PreparedStatement *current_action;
+	sql::PreparedStatement *first_action;
+	sql::PreparedStatement *insert_action;
+	sql::PreparedStatement *get_action_id_for_previous_action;
+	sql::PreparedStatement *update_current_action;
+
+	// Message Factory for J2735 messages
+	J2735MessageFactory factory;
+	
+	// TODO New Web Service Client 
+	// std::shared_ptr<WebServiceClient> client;
+
+	// Port HOLDING_AREA Configuration
+	double _holding_lat;
+	double _holding_lon;
+
+};
+std::mutex _cfgLock;
 
 }
 #endif
