@@ -15,17 +15,6 @@ TEST(TestImmediateForwardConfiguration, stringToTxMode) {
     EXPECT_THROW(stringToTxMode("INVALID"), std::out_of_range);
 }
 
-// TEST(TestImmediateForwardConfiguration, rsuSpecToString ) {
-//     EXPECT_EQ("RSU4.1", rsuSpecToString(RSU_SPEC::RSU_4_1));
-//     EXPECT_EQ("NTCIP1218", rsuSpecToString(RSU_SPEC::NTCIP_1218));
-// }
-
-// TEST(TestImmediateForwardConfiguration, stringToRSUSpec) {
-//     EXPECT_EQ(RSU_SPEC::RSU_4_1, stringToRSUSpec("RSU4.1"));
-//     EXPECT_EQ(RSU_SPEC::NTCIP_1218, stringToRSUSpec("NTCIP1218"));
-//     EXPECT_THROW(stringToRSUSpec("INVALID"), std::out_of_range);
-// }
-
 TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
     std::string jsonConfiguration = R"(
         [
