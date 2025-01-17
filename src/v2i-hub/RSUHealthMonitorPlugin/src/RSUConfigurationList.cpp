@@ -3,16 +3,6 @@
 
 namespace RSUHealthMonitor
 {
-    std::string mib_version_to_string(const RSUMibVersion &mibversion) {
-        switch(mibversion) {
-            case RSUMibVersion::RSUMIB_V_4_1:
-                return RSU4_1_str;
-            case RSUMibVersion::RSUMIB_V_1218:
-                return RSU1218_str;
-            default:
-                return "UNKNOWN";
-	    }
-    }
     
     Json::Value RSUConfigurationList::parseJson(const std::string &rsuConfigsStr) const
     {
@@ -99,7 +89,7 @@ namespace RSUHealthMonitor
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
                 auto rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
-                config.mibVersion = strToMibVersion(rsuMIBVersionStr);
+                config.mibVersion = tmx::utils::rsu::stringToRSUSpec(rsuMIBVersionStr);
             }
             else
             {
@@ -123,38 +113,16 @@ namespace RSUHealthMonitor
         configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
-    RSUMibVersion RSUConfigurationList::strToMibVersion(std::string &mibVersionStr) const
-    {
-        boost::trim_left(mibVersionStr);
-        boost::trim_right(mibVersionStr);
-        // Only support RSU MIB version 4.1
-        if (boost::iequals(mibVersionStr, RSU4_1_str))
-        {
-            return RSUMibVersion::RSUMIB_V_4_1;
-        }
-        else if (boost::iequals(mibVersionStr, RSU1218_str))
-        {
-            return RSUMibVersion::RSUMIB_V_1218;
-        }
-        else
-        {
-            std::stringstream ss;
-            ss << "Uknown RSU MIB version: " << mibVersionStr;
-            throw RSUConfigurationException(ss.str().c_str());
-        }
-    }
 
     std::vector<RSUConfiguration> RSUConfigurationList::getConfigs() const
     {
         return configs;
     }
 
-    std::ostream &operator<<(std::ostream &os, const RSUMibVersion &mib)
+    std::ostream &operator<<(std::ostream &os, const tmx::utils::rsu::RSU_SPEC &mib)
     {
-        const std::vector<std::string> nameMibs = {"UNKOWN MIB",
-                                                   "RSU4.1",
-                                                   "NTCIP1218"};
-        return os << nameMibs[static_cast<int>(mib)];
+        
+        return os << tmx::utils::rsu::rsuSpecToString(mib);
     }
 
     std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config)

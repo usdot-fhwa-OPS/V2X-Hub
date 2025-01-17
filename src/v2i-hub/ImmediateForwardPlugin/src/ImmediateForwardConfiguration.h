@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <tmx/TmxException.hpp>
 #include <jsoncpp/json/json.h>
+#include <rsu/RSUSpec.h>
 
 
 namespace ImmediateForward
@@ -30,10 +31,6 @@ namespace ImmediateForward
         ALT = 1
     };
 
-    enum class RSU_SPEC {
-        RSU_4_1 = 0,
-        NTCIP_1218 = 1
-    };
     /**
      * Message configuration
      */
@@ -49,7 +46,7 @@ namespace ImmediateForward
     struct ImfConfiguration{
 
         std::string name;
-        RSU_SPEC spec;
+        tmx::utils::rsu::RSU_SPEC spec;
         std::string address;
         unsigned int port;
         std::vector<Message> messages;
@@ -67,13 +64,6 @@ namespace ImmediateForward
         { "ALT", TxMode::ALT}    
     };
 
-    /**
-     * Map to conver between string RSU spec and enumeration
-     */
-    const static std::unordered_map<std::string, RSU_SPEC> stringToRSUSpecMap = {
-        { "RSU4.1", RSU_SPEC::RSU_4_1},
-        { "NTCIP1218", RSU_SPEC::NTCIP_1218}    
-    };
 
     /**
      * Function to parse Immediate Forward Configurations for RSU connections and return vector of ImfConfigurations
@@ -100,13 +90,4 @@ namespace ImmediateForward
      */
     TxMode stringToTxMode(const std::string &mode);
 
-    /**
-     * Helper function to convert RSU Spec enumeration to string
-     */
-    std::string rsuSpecToString(const RSU_SPEC &spec);
-
-    /**
-     * Helper function to convert string to RSUS Spec enumeration
-     */
-    RSU_SPEC stringToRSUSpec( const std::string &spec);
 }

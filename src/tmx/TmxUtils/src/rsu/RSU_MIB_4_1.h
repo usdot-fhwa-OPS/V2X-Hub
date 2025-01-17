@@ -1,5 +1,5 @@
 #pragma once
-namespace tmx::utils::rsu41::mib::oid
+namespace tmx::utils::rsu::mib::rsu41
 {
     /**
      * @brief This header file contains a subset of RSU MIB definition from https://github.com/certificationoperatingcouncil/COC_TestSpecs/blob/master/AppNotes/RSU/RSU-MIB.txt

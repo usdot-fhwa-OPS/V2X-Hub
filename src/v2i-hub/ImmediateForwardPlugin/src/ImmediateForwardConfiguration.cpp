@@ -28,7 +28,7 @@ namespace ImmediateForward{
         imfConfiguration.name = imfConfig[NameKey].asString();
         imfConfiguration.address = imfConfig[AddressKey].asString();
         imfConfiguration.port = imfConfig[PortKey].asUInt();
-        imfConfiguration.spec = stringToRSUSpec(imfConfig[RSUSpecKey].asString());
+        imfConfiguration.spec = tmx::utils::rsu::stringToRSUSpec(imfConfig[RSUSpecKey].asString());
         imfConfiguration.mode = stringToTxMode(imfConfig[TxModeKey].asString());
         imfConfiguration.signMessage = imfConfig[SignKey].asBool();
         if (imfConfiguration.enableHsm) {
@@ -71,16 +71,4 @@ namespace ImmediateForward{
         return stringToTxModeMap.at(mode);
     }
 
-    RSU_SPEC stringToRSUSpec(const std::string &spec) {
-        return stringToRSUSpecMap.at(spec);
-    }
-
-    std::string rsuSpecToString(const RSU_SPEC &spec) {
-        for (auto const &[name, m] : stringToRSUSpecMap){
-                if (spec == m) {
-                    return name;
-                }
-        }
-        throw tmx::TmxException("RSU Specification is not supported!"); 
-    }
 }
