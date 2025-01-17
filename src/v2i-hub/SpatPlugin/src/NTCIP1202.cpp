@@ -198,8 +198,9 @@ void Ntcip1202::printDebug()
 	}
 }
 
-void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId)
+void Ntcip1202::ToJ2735SPAT(SPAT* spat, std::shared_ptr<fwha_stol::lib::time::CarmaClock> carmaClock , const std::string &intersectionName, IntersectionID_t intersectionId)
 {
+	unsigned long msEpoch = carmaClock->nowInMilliseconds();
 	time_t epochSec = msEpoch/1000;
 	struct tm utctime;
 	gmtime_r( &epochSec, &utctime );

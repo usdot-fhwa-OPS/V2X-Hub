@@ -112,7 +112,7 @@ namespace SpatPlugin {
 					}
 					auto spat_ptr = std::make_shared<SPAT>();
 					PLOG(logDEBUG) << "Starting SPaT Receiver ...";
-					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock());
 					tmx::messages::SpatMessage _spatMessage(spat_ptr);
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 					spatEncoded_ptr->initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);

@@ -20,6 +20,7 @@
 #include <MockUdpServer.h>
 #include <tmx/messages/J2735Exception.hpp>
 #include <NTCIP1202OIDs.h>
+#include "carma-clock/carma_clock.h"
 
 using testing::_;
 using testing::Action;
@@ -103,7 +104,8 @@ namespace SpatPlugin {
         auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
         auto spat = std::make_shared<SPAT>();
-		signalControllerConnection->receiveBinarySPAT(spat, 1721238398773);
+        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(false);
+		signalControllerConnection->receiveBinarySPAT(spat, clock);
         /**
          * <SPAT>
                 <intersections>
@@ -339,7 +341,8 @@ namespace SpatPlugin {
     TEST_F(TestSignalControllerConnection, receiveBinarySPATException) {
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll( Return(0)));
         auto spat = std::make_shared<SPAT>();
-		EXPECT_THROW(signalControllerConnection->receiveBinarySPAT(spat, 1721238398773), tmx::utils::UdpServerRuntimeError);
+        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(false);
+		EXPECT_THROW(signalControllerConnection->receiveBinarySPAT(spat, clock), tmx::utils::UdpServerRuntimeError);
     }
 
     TEST_F(TestSignalControllerConnection, receiveUPERSPAT) {
