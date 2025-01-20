@@ -104,7 +104,8 @@ namespace SpatPlugin {
         auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
         auto spat = std::make_shared<SPAT>();
-        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(false);
+        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(true);
+        clock->update(1721238398773);
 		signalControllerConnection->receiveBinarySPAT(spat, clock);
         /**
          * <SPAT>
