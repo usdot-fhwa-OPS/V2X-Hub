@@ -19,7 +19,6 @@
 #include <boost/algorithm/string.hpp>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 
-using namespace tmx::messages;
 using pt = boost::property_tree::ptree;
 using std::string;
 namespace CDA1TenthPlugin

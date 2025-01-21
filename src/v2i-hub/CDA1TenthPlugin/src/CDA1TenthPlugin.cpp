@@ -436,7 +436,8 @@ void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messag
 		catch (TmxException &ex)
 		{
 			PLOG(logERROR) << "Failed to decode message : " << ex.what();
-			SetStatus<uint>(Key_BSMMessageSkipped.c_str(), ++_bsmMessageSkipped);
+			++_bsmMessageSkipped;
+			SetStatus<uint>(Key_BSMMessageSkipped.c_str(), _bsmMessageSkipped);
 		}
 	}
 

@@ -170,7 +170,7 @@ private:
 	sql::Driver *driver;
 	sql::Connection *con;
 	std::string Key_BSMMessageSkipped = "bsmMessageSkipped";
-	int _bsmMessageSkipped;
+	int _bsmMessageSkipped = 0;
 	
 	// Prepared Statements
 	sql::PreparedStatement *next_action_id;
