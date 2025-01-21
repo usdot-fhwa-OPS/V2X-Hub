@@ -37,7 +37,8 @@ TEST(NTCIP1202Test, copyBytesIntoNtcip1202)
     ntcip1202_p->copyBytesIntoNtcip1202(buf, numBytes);
 
     SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
-    ntcip1202_p->ToJ2735SPAT(spat_ptr,tsMsec, "test intersection name", 9012);
+    auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(false);
+    ntcip1202_p->ToJ2735SPAT(spat_ptr,clock, "test intersection name", 9012);
 
     ASSERT_EQ(3,  spat_ptr->intersections.list.array[0]->states.list.array[0]->state_time_speed.list.array[0]->eventState);
 
@@ -50,7 +51,8 @@ TEST(NTCIP1202Test, ToJ2735SPAT)
 
     auto ntcip1202_p = std::make_shared<Ntcip1202>();
     SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
-    ntcip1202_p->ToJ2735SPAT(spat_ptr, tsMsec, "test intersection name", 9012);
+    auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(false);
+    ntcip1202_p->ToJ2735SPAT(spat_ptr, clock, "test intersection name", 9012);
     auto _spatMessage = std::make_shared<tmx::messages::SpatMessage>(spat_ptr);
     auto spat = _spatMessage->get_j2735_data();
 }

@@ -31,6 +31,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include "carma-clock/carma_clock.h"
 using namespace std;
 
 struct Ntcip1202Ext_PhaseTime
@@ -119,7 +120,7 @@ class Ntcip1202
 		bool isFlashingStatus();
 		bool isPhaseFlashing();
 
-		void ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::string &intersectionName, IntersectionID_t intersectionId);
+		void ToJ2735SPAT(SPAT* spat,std::shared_ptr<fwha_stol::lib::time::CarmaClock> carmaClock , const std::string &intersectionName, IntersectionID_t intersectionId);
 
 		void printDebug();
 	private:
