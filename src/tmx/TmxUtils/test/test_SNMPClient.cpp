@@ -1,13 +1,13 @@
 
 #include <MockSNMPClient.h>
 #include <gtest/gtest.h>
-#include <RSU_MIB_4_1.h>
-#include <NTCIP_1218_MIB.h>
+#include <rsu/RSU_MIB_4_1.h>
+#include <rsu/NTCIP_1218_MIB.h>
 
 using namespace tmx::utils;
 using namespace std;
-using namespace tmx::utils::rsu41::mib::oid;
-using namespace tmx::utils::ntcip1218::mib::oid;
+using namespace tmx::utils::rsu::mib::rsu41;
+using namespace tmx::utils::rsu::mib::ntcip1218;
 using testing::_;
 using testing::Action;
 using testing::DoDefault;

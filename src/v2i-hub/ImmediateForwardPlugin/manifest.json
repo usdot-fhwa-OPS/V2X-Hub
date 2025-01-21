@@ -5,7 +5,8 @@
   "exeLocation": "/bin/ImmediateForwardPlugin",
   "coreIpAddr": "127.0.0.1",
   "corePort": 24601,
-  "messageTypes": [],
+  "messageTypes": [
+  ],
   "configuration": [
     {
       "key":"LogLevel",
@@ -13,64 +14,10 @@
       "description":"The log level for this plugin"
     },
     {
-      "key": "Messages_Destination_1",
-      "default": "{ \"Messages\": [ { \"TmxType\": \"SPAT-P\", \"SendType\": \"SPAT\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"MAP-P\", \"SendType\": \"MAP\", \"PSID\": \"0x8002\", \"Channel\": \"183\" }, { \"TmxType\": \"PSM-P\", \"SendType\": \"PSM\", \"PSID\": \"0x27\", \"Channel\": \"183\" }, { \"TmxType\": \"TIM\", \"SendType\": \"TIM\", \"PSID\": \"0x8003\", \"Channel\": \"183\" }, { \"TmxType\": \"TMSG07-P\", \"SendType\": \"TMSG07\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG03-P\", \"SendType\": \"TMSG03\", \"PSID\": \"0xBFEE\", \"Channel\": \"183\" },{ \"TmxType\": \"TMSG05-P\", \"SendType\": \"TMSG05\", \"PSID\": \"0x8003\", \"Channel\": \"183\" }, { \"TmxType\": \"SSM-P\", \"SendType\": \"SSM\", \"PSID\": \"0x8002\", \"Channel\": \"183\" },{ \"TmxType\": \"SDSM\", \"SendType\": \"SDSM\", \"PSID\": \"0x8010\", \"Channel\": \"183\" }] }",
-      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 1."
-    },
-    {
-      "key": "Messages_Destination_2",
-      "default": "{ \"Messages\": [ ] }",
-      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 2."
-    },
-    {
-      "key": "Messages_Destination_3",
-      "default": "{ \"Messages\": [ ] }",
-      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 3."
-    },
-    {
-      "key": "Messages_Destination_4",
-      "default": "{ \"Messages\": [ ] }",
-      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radio at destination 4."
-    },
-    {
-      "key": "Destination_1",
-      "default": "127.0.0.1:1516",
-      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_1."
-    },
-    {
-      "key": "Destination_2",
-      "default": "0",
-      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_2."
-    },
-    {
-      "key": "Destination_3",
-      "default": "0",
-      "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_3."
-    },
-    {
-      "key": "Destination_4",
-      "default": "0",
-       "description": "The destination UDP server(s) and port number(s) on the V2X radio for all messages specified by Messages_Destination_4."
-    },
-    {
-      "key": "TxMode",
-      "default": "CONT",
-      "description": "Transmission channel mode (continuous or alternating). Allowed values: CONT, ALT."
-    },
-    {
-      "key": "signMessage",
-      "default": "0",
-      "description": "0 if False and 1 if True, indicating whether Active File will indicate to sign outgoing J2735 messages."
-    },
-    {
-      "key": "EnableHSM",
-      "default": "0",
-      "description": "0 if False and 1 if True, indicating whether HSM is connected and will sign outgoing J2735 messages."
-    },
-    {
-      "key": "HSMurl",
-      "default": "http://<softHSM IP>:3000/v1/scms/",
-      "description": "REST API endpoint url needed to make HSM calls"
+      "key": "ImmediateForwardConfigurations",
+      "default": "[{\"name\": \"East Intersection Cohda\", \"rsuSpec\": \"RSU4.1\",\"address\": \"127.0.0.1\",\"port\": 3745,\"txMode\": \"CONT\",\"signMessages\": false,\"messages\": [{ \"tmxType\": \"SPAT-P\", \"sendType\": \"SPAT\", \"psid\": \"0x8002\", \"channel\": 183 },{ \"tmxType\": \"MAP-P\", \"sendType\": \"MAP\", \"psid\": \"0x8002\", \"channel\": 183 },{ \"tmxType\": \"PSM-P\", \"sendType\": \"PSM\", \"psid\": \"0x27\", \"channel\": 183 }, { \"tmxType\": \"TIM\", \"sendType\": \"TIM\", \"psid\": \"0x8003\", \"channel\": 183 },{ \"tmxType\": \"TMSG07-P\", \"sendType\": \"TMSG07\", \"psid\": \"0x8002\", \"channel\": 183 },{ \"tmxType\": \"TMSG03-P\", \"sendType\": \"TMSG03\", \"psid\": \"0xBFEE\", \"channel\": 183 },{ \"tmxType\": \"TMSG05-P\", \"sendType\": \"TMSG05\", \"psid\": \"0x8003\", \"channel\": 183 },{ \"tmxType\": \"SSM-P\", \"sendType\": \"SSM\", \"psid\": \"0x8002\", \"channel\": 183 },{ \"tmxType\": \"SDSM\", \"sendType\": \"SDSM\", \"psid\": \"0x8010\", \"channel\": 183 }]}]",
+      "description": "JSON data defining the message types, PSIDs, and channel number for messages forwarded to the V2X radios. This can include as many independent radio connection configurations as necessary in an array."
     }
+    
   ]
 }

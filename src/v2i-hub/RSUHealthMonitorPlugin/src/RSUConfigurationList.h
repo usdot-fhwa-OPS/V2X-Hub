@@ -4,6 +4,7 @@
 #include <iostream>
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
+#include <rsu/RSUSpec.h>
 #include "RSUConfigurationException.h"
 
 namespace RSUHealthMonitor
@@ -21,14 +22,7 @@ namespace RSUHealthMonitor
     static constexpr const char *RSU4_1_str = "RSU4.1";
     static constexpr const char *RSU1218_str = "NTCIP1218";
 
-    enum class RSUMibVersion
-    {
-        UNKOWN_MIB_V = 0,
-        RSUMIB_V_4_1 = 1,
-        RSUMIB_V_1218 = 2
-    };
-
-    std::string mib_version_to_string(const RSUMibVersion &mibversion);
+  
 
     struct RSUConfiguration
     {
@@ -40,7 +34,7 @@ namespace RSUHealthMonitor
         std::string authPassPhrase;
         std::string privPassPhrase;
         std::string securityLevel;
-        RSUMibVersion mibVersion;
+        tmx::utils::rsu::RSU_SPEC mibVersion;
         friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);
     };
 
@@ -54,7 +48,6 @@ namespace RSUHealthMonitor
          * @return JSON::Value A JSON object that includes RSUS information.
          */
         Json::Value parseJson(const std::string &rsuConfigsStr) const;
-        RSUMibVersion strToMibVersion(std::string &mibVersionStr) const;
 
     public:
         RSUConfigurationList() = default;

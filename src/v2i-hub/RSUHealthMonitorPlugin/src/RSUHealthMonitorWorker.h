@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
-#include "RSU_MIB_4_1.h"
-#include "NTCIP_1218_MIB.h"
+#include <rsu/RSU_MIB_4_1.h>
+#include <rsu/NTCIP_1218_MIB.h>
+#include <rsu/RSUSpec.h>
 #include <map>
 #include <vector>
 #include <memory>
@@ -36,7 +37,7 @@ namespace RSUHealthMonitor
     {
     private:
         // A map of RSU MIB version used and RSUStatusTable
-        std::shared_ptr<std::map<RSUMibVersion, RSUStatusConfigTable>> _RSUSTATUSConfigMapPtr;
+        std::shared_ptr<std::map<tmx::utils::rsu::RSU_SPEC, RSUStatusConfigTable>> _RSUSTATUSConfigMapPtr;
 
         /**
          * @brief Populate the RSU status table with the specified version of OIDs and fields.
@@ -44,14 +45,14 @@ namespace RSUHealthMonitor
          * @param mibVersion specified
          * @return RSUStatusTable the self defined RSU status https://usdot-carma.atlassian.net/wiki/spaces/WFD2/pages/2640740360/RSU+Health+Monitor+Plugin+Design
          */
-        RSUStatusConfigTable constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const;
+        RSUStatusConfigTable constructRsuStatusConfigTable(const tmx::utils::rsu::RSU_SPEC &mibVersion) const;
 
     public:
         // Populate the RSU Status Table with predefined fields and their mapping OIDs in constructor
         RSUHealthMonitorWorker();
 
         // Access to the RSU status table based in the RSU MIB version provided
-        RSUStatusConfigTable GetRSUStatusConfig(const RSUMibVersion &mibVersion) const;
+        RSUStatusConfigTable GetRSUStatusConfig(const tmx::utils::rsu::RSU_SPEC &mibVersion) const;
 
         /**
          * @brief determine if all required fields in the RSU config map _RSUSTATUSConfigMapPtr present in the input fields
@@ -83,7 +84,7 @@ namespace RSUHealthMonitor
          * @param _securityLevel security level: authPriv or authNoPriv.
          * @param timeout Session time out.
          */
-        Json::Value getRSUStatus(const RSUMibVersion &mibVersion, const std::string &_rsuIp, uint16_t &_snmpPort, const std::string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const std::string &_securityLevel, long timeout);
+        Json::Value getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const std::string &_rsuIp, uint16_t &_snmpPort, const std::string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const std::string &_securityLevel, long timeout);
 
         /***
          *@brief Convert the JSON message into TMX message
