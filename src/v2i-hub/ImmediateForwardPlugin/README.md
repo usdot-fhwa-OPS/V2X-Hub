@@ -23,7 +23,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "address": "127.0.0.1", /** Address of RSU **/
                 "port": 3745, /** Port for Immediate Forward protocol on RSU **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
-                "signMessage": false, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "signMessages": false, /** Flag to indicate whether message being forwarded to RSU is already signed**/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
                 [ 
                     { 
@@ -49,7 +49,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "address": "127.0.0.1", /** Address of RSU **/
                 "port": 3745, /** Port for Immediate Forward protocol on RSU **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
-                "signMessage": true, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "signMessages": true, /** Flag to indicate whether message being forwarded to RSU is already signed**/
                 "enableHsm": true, /** (Optional : default false) Flag to indicate whether V2X Hub should attempt to sign and verify message signatures via HSM **/ 
                 "hsmUrl": "http://<softhsm raspberrypi IP>:3000/v1/scms/", /** (Optional : only read when enableHsm true) URL of HSM API to provide signatures and verify signatures. **/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/

@@ -30,9 +30,12 @@ namespace ImmediateForward{
         imfConfiguration.spec = tmx::utils::rsu::stringToRSUSpec(imfConfig[RSUSpecKey].asString());
         imfConfiguration.mode = stringToTxMode(imfConfig[TxModeKey].asString());
         imfConfiguration.signMessage = imfConfig[SignKey].asBool();
-        if (imfConfiguration.enableHsm) {
-            imfConfiguration.enableHsm =imfConfig[EnableHSMKey].asBool();
-            imfConfiguration.hsmUrl = imfConfig[HSMURLKey].asString();
+        if (imfConfig[EnableHSMKey].isBool()) {
+            imfConfiguration.enableHsm = imfConfig[EnableHSMKey].asBool();
+            if (imfConfiguration.enableHsm) {
+                imfConfiguration.hsmUrl = imfConfig[HSMURLKey].asString();
+            }
+
         }
         auto messages =  imfConfig[MessagesKey];
         if (!messages.isArray()) {
