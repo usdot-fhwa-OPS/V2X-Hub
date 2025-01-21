@@ -59,7 +59,7 @@ namespace ImmediateForward
 		{
 			PLOG(logWARNING) << "Config not read yet.  Message Ignored: " <<"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		}
-		else if (msg->dsrcMetadata == NULL)
+		else if (msg->dsrcMetadata == nullptr)
 		{
 			SetStatus<uint>(Key_SkippedNoDsrcMetadata, ++_skippedNoDsrcMetadata);
 			PLOG(logWARNING) << "No DSRC metadata.  Message Ignored: " << "Type: " << msg->type << ", Subtype: " << msg->subtype;
@@ -141,7 +141,7 @@ namespace ImmediateForward
 		//loop through all MessageConfig and send to each with the proper TmxType
 		for (const auto &imfConfig: _imfConfigs)
 		{	
-			for ( const auto messageConfig: imfConfig.messages ) {
+			for ( const auto &messageConfig: imfConfig.messages ) {
 				
 				if (messageConfig.tmxType == msg->subtype)
 				{

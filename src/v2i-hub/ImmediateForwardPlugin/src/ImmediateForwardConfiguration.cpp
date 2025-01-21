@@ -13,8 +13,7 @@ namespace ImmediateForward{
         if (!root.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward Configuration: Root element is not an array!");
         }
-        for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i) {
-            Json::Value element = root[i];
+        for (const auto &element : root) {
             config_obj.push_back(parseImfConfiguration(element));
         }
         return config_obj;
@@ -39,10 +38,9 @@ namespace ImmediateForward{
         if (!messages.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");
         }
-        for (Json::Value::ArrayIndex i = 0; i < messages.size(); ++i) {
-            Json::Value element = messages[i];
+        for (const auto &element : messages) {
             imfConfiguration.messages.push_back(parseMessage(element));
-        } 
+        }
         return imfConfiguration;
     }
 

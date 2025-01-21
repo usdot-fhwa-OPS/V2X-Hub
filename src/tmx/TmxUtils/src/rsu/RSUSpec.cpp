@@ -5,7 +5,7 @@ namespace tmx::utils::rsu {
         try {
             return stringToRSUSpecMap.at(spec);
         }
-        catch (const std::out_of_range ) {
+        catch (const std::out_of_range& ) {
             throw tmx::TmxException("RSU Specification " + spec + " is not supported!"); 
 
         }
