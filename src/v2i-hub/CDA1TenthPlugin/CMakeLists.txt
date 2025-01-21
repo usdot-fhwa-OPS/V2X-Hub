@@ -17,3 +17,18 @@ target_link_libraries(${PROJECT_NAME} PRIVATE pdclient )
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Network ssl crypto ) 
 target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
 
+#############
+## Testing ##
+#############
+enable_testing()
+add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
+                                        tmxutils)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC 
+                                        ${PROJECT_SOURCE_DIR}/src)
+set(BINARY ${PROJECT_NAME}_test)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+add_executable(${BINARY} ${TEST_SOURCES})
+add_test(NAME ${BINARY} COMMAND ${BINARY})
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest)
+

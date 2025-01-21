@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024 LEIDOS.
+ * Copyright (C) 2025 LEIDOS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this except in compliance with the License. You may obtain a copy of
@@ -33,6 +33,7 @@
 #include <QTimer>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
+#include "BSMConverter.h"
 
 using namespace std;
 using namespace tmx;
@@ -157,12 +158,20 @@ protected:
 	 * @param routeableMsg JSON BasicSafety message
 	 */
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	
+	CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
+	CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
+	/**
+	* @brief Handle BasicSafetyMessage
+	* @param msg BsmMessage
+	*/
+	void receiveBasicSafetyMessage(BsmMessage &msg);
 private: 
 	// Database configuration values
 	sql::Driver *driver;
 	sql::Connection *con;
-
+	std::string Key_BSMMessageSkipped = "bsmMessageSkipped";
+	int _bsmMessageSkipped = 0;
+	
 	// Prepared Statements
 	sql::PreparedStatement *next_action_id;
 	sql::PreparedStatement *current_action;
