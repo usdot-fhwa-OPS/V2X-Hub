@@ -14,7 +14,8 @@ Most plugins that broadcast messages via RSU are related the the Immediate Forwa
 This plugin has several configuration parameters. Below these are listed out as together with descriptions on how to set them.
 
 **ImmediateForwardConfigurations**: This is a JSON array of configurations for unique and independent RSU immediate forward configuration. Below the format for this configuration parameter is described.
-
+> [!TIP]
+> Default Immediate Forward protocol port on RSU4.1 is **1516**.
 ```json
 [
             {
