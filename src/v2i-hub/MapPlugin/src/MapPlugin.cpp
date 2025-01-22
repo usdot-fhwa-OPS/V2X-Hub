@@ -193,6 +193,7 @@ namespace MapPlugin {
 				if (rMsg) {
 					rMsg->refresh_timestamp();
 					BroadcastMessage(*rMsg);
+					PLOG(logDEBUG) << "Broadcast MAP message: " << rMsg->get_payload_str();
 				}
 			}
 
@@ -308,6 +309,7 @@ namespace MapPlugin {
 							streamableContent >> bytes;
 							PLOG(logINFO) << "MAP encoded bytes are " << bytes;
 							tmx::messages::MapDataMessage *mapMsg = tmx::messages::MapDataEncodedMessage::decode_j2735_message<tmx::messages::codec::uper<tmx::messages::MapDataMessage>>(bytes);
+							updateMapIntersectionName(mapMsg);
 
 							if (mapMsg)
 							{
@@ -330,7 +332,7 @@ namespace MapPlugin {
 								tmx::messages::MapDataMessage mapMsg;
 								mapMsg.set_contents(container.get_storage().get_tree());
 
-								PLOG(logDEBUG) << "Encoding " << mapMsg;
+								PLOG(logDEBUG1) << "Encoding MAP" << mapMsg;
 								tmx::messages::MapDataEncodedMessage mapEnc;
 								mapEnc.encode_j2735_message(mapMsg);
 								mapFile.set_Bytes(mapEnc.get_payload_str());
@@ -382,6 +384,23 @@ namespace MapPlugin {
 		return true;
 	}
 
+	void MapPlugin::updateMapIntersectionName(tmx::messages::MapDataMessage * mapMsg){
+		auto now = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+		auto nowStr = std::to_string(now);
+		auto nowStrLength = nowStr.length();
+		for(int i=0; i<mapMsg->get_j2735_data()->intersections->list.count; i++){
+			if(!mapMsg->get_j2735_data()->intersections->list.array[i]->name){
+				auto name = (DescriptiveName_t*)calloc(1, sizeof(DescriptiveName_t));
+				name->buf = (uint8_t *) calloc(1, nowStrLength);
+				name->size = nowStrLength;
+				std::memcpy(name->buf, nowStr.c_str(), nowStr.length());
+				mapMsg->get_j2735_data()->intersections->list.array[i]->name = name;
+			}else{
+				std::memcpy(mapMsg->get_j2735_data()->intersections->list.array[i]->name->buf, nowStr.c_str(), nowStr.size());
+				mapMsg->get_j2735_data()->intersections->list.array[i]->name->size = nowStrLength;
+			}
+		}
+	}
 	void MapPlugin::DebugPrintMapFiles() {
 		PLOG(logDEBUG) << _mapFiles.size()
 				<< " map files specified by configuration settings:";

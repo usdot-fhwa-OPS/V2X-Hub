@@ -6,6 +6,7 @@
 #include <TmxLog.h>
 #include <iostream>
 #include <regex>
+#include <chrono>
 
 using std::string;
 using std::istringstream;
@@ -73,6 +74,10 @@ class TravelerInformationMessageHelper
          * @return Updated TravelerInformationMessage(TIM) XML.
          */
         static string updateTimXML(const string& staticTimXMLIn, const TravelerInformationMessageVariables& timVars);
+        /**
+         * @brief Update descriptive name in each dataframe with unique timestamp
+         */
+        static void updateTimDescNameWithTimestamp(pt::ptree &timTree);
         /**
          * @brief Updates the TravelerInformationMessage(TIM) tree with new information (msgCnt, startYear, int startTime, durationTime ).
          * @param timTree TravelerInformationMessage(TIM) tree to update.

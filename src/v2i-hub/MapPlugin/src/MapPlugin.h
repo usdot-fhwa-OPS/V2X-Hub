@@ -95,6 +95,10 @@ protected:
 	std::string enum_to_hex_string();
 	std::string removeMessageFrame(const std::string &fileContent);
 	std::string checkMapContent(const std::string &fn);
+	/**
+	 * @brief update the intersection name with current timestamp
+	 */
+	void updateMapIntersectionName(tmx::messages::MapDataMessage* mapMsg);
 
 private:
 	tmx::messages::J2735MessageFactory factory;

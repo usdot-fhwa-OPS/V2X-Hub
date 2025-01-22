@@ -58,6 +58,12 @@ namespace ODEForwardPlugin
          * @return The bytes string
          */
         std::string hexToBytes(const std::string& hex) const;
+        /**
+         * @brief Convert UDPMessageType enum to string
+         * @param UDPMessageType 
+         * @return String representation of the UDPMessageType
+         */
+        std::string toString(UDPMessageType messageType) const;
 
     };    
 } 

@@ -48,4 +48,19 @@ namespace ODEForwardPlugin
         }
         return std::string(bytes.begin(), bytes.end());
     }
+
+    std::string UDPMessageForwarder::toString(UDPMessageType messageType) const{
+        switch (messageType) {
+            case UDPMessageType::TIM:    
+                return "TIM";
+            case UDPMessageType::BSM:    
+                return "BSM";
+            case UDPMessageType::SPAT:   
+                return "SPAT";
+            case UDPMessageType::MAP: 
+                return "MAP";
+            default:            
+                return "Unknown";
+        }
+    }
 }
