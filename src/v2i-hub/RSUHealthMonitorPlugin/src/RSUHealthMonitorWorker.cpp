@@ -2,27 +2,27 @@
 
 using namespace std;
 using namespace tmx::utils;
-using namespace tmx::utils::rsu41::mib::oid;
-using namespace tmx::utils::ntcip1218::mib::oid;
+using namespace tmx::utils::rsu::mib::rsu41;
+using namespace tmx::utils::rsu::mib::ntcip1218;
 using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
     RSUHealthMonitorWorker::RSUHealthMonitorWorker()
     {
-        _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
-        RSUStatusConfigTable rsuRstatusTable_4_1 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
-        RSUStatusConfigTable rsuRstatusTable_1218 = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_1218);
-        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_1218, rsuRstatusTable_1218});
-        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_4_1, rsuRstatusTable_4_1});
+        _RSUSTATUSConfigMapPtr = make_shared<map<tmx::utils::rsu::RSU_SPEC, RSUStatusConfigTable>>();
+        RSUStatusConfigTable rsuRstatusTable_4_1 = constructRsuStatusConfigTable(tmx::utils::rsu::RSU_SPEC::RSU_4_1);
+        RSUStatusConfigTable rsuRstatusTable_1218 = constructRsuStatusConfigTable(tmx::utils::rsu::RSU_SPEC::NTCIP_1218);
+        _RSUSTATUSConfigMapPtr->insert({tmx::utils::rsu::RSU_SPEC::NTCIP_1218, rsuRstatusTable_1218});
+        _RSUSTATUSConfigMapPtr->insert({tmx::utils::rsu::RSU_SPEC::RSU_4_1, rsuRstatusTable_4_1});
 
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const
+    RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const tmx::utils::rsu::RSU_SPEC &mibVersion) const
     {
         RSUStatusConfigTable rsuStatusTbl;
         // Populate custom defined RSU Status table with RSU MIB version 4.1.
-        if (mibVersion == RSUMibVersion::RSUMIB_V_4_1)
+        if (mibVersion == tmx::utils::rsu::RSU_SPEC::RSU_4_1)
         {
             RSUFieldOIDStruct rsuID = {"rsuID", RSU_ID_OID, true};
             rsuStatusTbl.push_back(rsuID);
@@ -66,7 +66,7 @@ namespace RSUHealthMonitor
             RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", RSU_CHAN_STATUS, true};
             rsuStatusTbl.push_back(rsuChanStatus);
         }
-        else if (mibVersion == RSUMibVersion::RSUMIB_V_1218)
+        else if (mibVersion == tmx::utils::rsu::RSU_SPEC::NTCIP_1218)
         {
             RSUFieldOIDStruct rsuID = {"rsuID", rsuIDOid, true};
             rsuStatusTbl.push_back(rsuID);
@@ -134,7 +134,7 @@ namespace RSUHealthMonitor
         return isAllPresent;
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion &mibVersion) const
+    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const tmx::utils::rsu::RSU_SPEC &mibVersion) const
     {
         RSUStatusConfigTable result;
         try
@@ -143,7 +143,7 @@ namespace RSUHealthMonitor
         }
         catch (const out_of_range&)
         {
-            PLOG(logERROR) << "Unknown MIB version! " << mib_version_to_string(mibVersion);
+            PLOG(logERROR) << "Unknown MIB version! " << tmx::utils::rsu::rsuSpecToString(mibVersion);
         }
         return result;
     }
@@ -172,7 +172,7 @@ namespace RSUHealthMonitor
         return result;
     }
 
-    Json::Value RSUHealthMonitorWorker::getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout)
+    Json::Value RSUHealthMonitorWorker::getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout)
     {
         auto rsuStatusConfigTbl = GetRSUStatusConfig(mibVersion);
         if (rsuStatusConfigTbl.size() == 0)

@@ -1,5 +1,5 @@
 #pragma once
-namespace tmx::utils::ntcip1218::mib::oid
+namespace tmx::utils::rsu::mib::ntcip1218
 {
     /**
      * @brief This header file contains a subset of RSU-specific NTCIP 1218 MIB OIDs from https://www.ntcip.org/file/2021/01/NTCIP-1218v0138-RSU-toUSDOT-20200905.pdf

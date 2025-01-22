@@ -60,7 +60,7 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
     }
 
-    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson, const RSUMibVersion &mibVersion)
+    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson, const tmx::utils::rsu::RSU_SPEC &mibVersion)
     {
         // Broadcast the RSU status info when there are RSU responses.
         if (!rsuStatusJson.empty() && _rsuWorker)

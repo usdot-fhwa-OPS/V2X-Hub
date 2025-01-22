@@ -59,7 +59,7 @@ namespace ImmediateForward
 		{
 			PLOG(logWARNING) << "Config not read yet.  Message Ignored: " <<"Type: " << msg->type << ", Subtype: " << msg->subtype;
 		}
-		else if (msg->dsrcMetadata == NULL)
+		else if (msg->dsrcMetadata == nullptr)
 		{
 			SetStatus<uint>(Key_SkippedNoDsrcMetadata, ++_skippedNoDsrcMetadata);
 			PLOG(logWARNING) << "No DSRC metadata.  Message Ignored: " << "Type: " << msg->type << ", Subtype: " << msg->subtype;
@@ -141,7 +141,7 @@ namespace ImmediateForward
 		//loop through all MessageConfig and send to each with the proper TmxType
 		for (const auto &imfConfig: _imfConfigs)
 		{	
-			for ( const auto messageConfig: imfConfig.messages ) {
+			for ( const auto &messageConfig: imfConfig.messages ) {
 				
 				if (messageConfig.tmxType == msg->subtype)
 				{
@@ -219,12 +219,14 @@ namespace ImmediateForward
 					}
 					os << "Version=0.7" << "\n";
 					os << "Type=" << messageConfig.sendType << "\n" << "PSID=" << messageConfig.psid << "\n";
-					if (messageConfig.channel == 0)
+					if (!messageConfig.channel.has_value()) {
 						os << "Priority=7" << "\n" << "TxMode=" << txModeToString(imfConfig.mode) << "\n" << "TxChannel=" << msg->dsrcMetadata->channel << "\n";
-					else
-						os << "Priority=7" << "\n" << "TxMode=" << txModeToString(imfConfig.mode) << "\n" << "TxChannel=" << messageConfig.channel << "\n";
+					}
+					else {
+						os << "Priority=7" << "\n" << "TxMode=" << txModeToString(imfConfig.mode) << "\n" << "TxChannel=" << messageConfig.channel.value() << "\n";
+					}
 					os << "TxInterval=0" << "\n" << "DeliveryStart=\n" << "DeliveryStop=\n";
-					os << "Signature=" << (imfConfig.signMessage == 1 ? "True" : "False") << "\n" << "Encryption=False\n";
+					os << "Signature=" << (imfConfig.signMessage ? "True" : "False") << "\n" << "Encryption=False\n";
 					os << "Payload=" << payloadbyte << "\n";
 
 					string message = os.str();
@@ -233,11 +235,10 @@ namespace ImmediateForward
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
-					// TODO Add logging back
-					// PLOG(logDEBUG2) << _logPrefix << "Sending - TmxType: " << _messageConfigMap[configIndex].TmxType << ", SendType: " << _messageConfigMap[configIndex].SendType
-							// 	<< ", PSID: " << _messageConfigMap[configIndex].Psid << ", Client: " << _messageConfigMap[configIndex].ClientIndex
-							// 	<< ", Channel: " << (_messageConfigMap[configIndex].Channel.empty() ? ::to_string( msg->dsrcMetadata->channel) : _messageConfigMap[configIndex].Channel)
-							// 	<< ", Port: " << _udpClientList[_messageConfigMap[configIndex].ClientIndex][i]->GetPort();
+					PLOG(logDEBUG2) << _logPrefix << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
+								<< ", PSID: " << messageConfig.psid << ", Client: " << client->GetAddress()
+								<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
+								<< ", Port: " << client->GetAddress();
 				}
 			}
 		}

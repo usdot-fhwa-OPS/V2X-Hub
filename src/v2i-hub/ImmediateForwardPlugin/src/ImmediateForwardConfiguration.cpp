@@ -13,8 +13,7 @@ namespace ImmediateForward{
         if (!root.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward Configuration: Root element is not an array!");
         }
-        for (Json::Value::ArrayIndex i = 0; i < root.size(); ++i) {
-            Json::Value element = root[i];
+        for (const auto &element : root) {
             config_obj.push_back(parseImfConfiguration(element));
         }
         return config_obj;
@@ -28,21 +27,23 @@ namespace ImmediateForward{
         imfConfiguration.name = imfConfig[NameKey].asString();
         imfConfiguration.address = imfConfig[AddressKey].asString();
         imfConfiguration.port = imfConfig[PortKey].asUInt();
-        imfConfiguration.spec = stringToRSUSpec(imfConfig[RSUSpecKey].asString());
+        imfConfiguration.spec = tmx::utils::rsu::stringToRSUSpec(imfConfig[RSUSpecKey].asString());
         imfConfiguration.mode = stringToTxMode(imfConfig[TxModeKey].asString());
         imfConfiguration.signMessage = imfConfig[SignKey].asBool();
-        if (imfConfiguration.enableHsm) {
-            imfConfiguration.enableHsm =imfConfig[EnableHSMKey].asBool();
-            imfConfiguration.hsmUrl = imfConfig[HSMURLKey].asString();
+        if (imfConfig[EnableHSMKey].isBool()) {
+            imfConfiguration.enableHsm = imfConfig[EnableHSMKey].asBool();
+            if (imfConfiguration.enableHsm) {
+                imfConfiguration.hsmUrl = imfConfig[HSMURLKey].asString();
+            }
+
         }
         auto messages =  imfConfig[MessagesKey];
         if (!messages.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");
         }
-        for (Json::Value::ArrayIndex i = 0; i < messages.size(); ++i) {
-            Json::Value element = messages[i];
+        for (const auto &element : messages) {
             imfConfiguration.messages.push_back(parseMessage(element));
-        } 
+        }
         return imfConfiguration;
     }
 
@@ -71,16 +72,4 @@ namespace ImmediateForward{
         return stringToTxModeMap.at(mode);
     }
 
-    RSU_SPEC stringToRSUSpec(const std::string &spec) {
-        return stringToRSUSpecMap.at(spec);
-    }
-
-    std::string rsuSpecToString(const RSU_SPEC &spec) {
-        for (auto const &[name, m] : stringToRSUSpecMap){
-                if (spec == m) {
-                    return name;
-                }
-        }
-        throw tmx::TmxException("RSU Specification is not supported!"); 
-    }
 }
