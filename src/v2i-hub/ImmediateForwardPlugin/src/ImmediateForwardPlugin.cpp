@@ -1,28 +1,23 @@
-/*
- * ImmediateForwardPlugin.cpp
+/**
+ * Copyright (C) 2025 LEIDOS.
  *
- *  Created on: Feb 26, 2016
- *      Author: ivp
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 #include "ImmediateForwardPlugin.h"
 
-#include <chrono>
-#include <iostream>
-#include <sstream>
-#include <thread>
-#include <boost/algorithm/string.hpp>
-#include <boost/foreach.hpp>
-#include <boost/format.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/algorithm/hex.hpp>
-#include "UdpClient.h"
 
-using namespace boost::algorithm;
-using namespace boost::property_tree;
 using namespace std;
-using namespace tmx;
 using namespace tmx::utils;
 
 namespace ImmediateForward
@@ -98,9 +93,12 @@ namespace ImmediateForward
 		SetStatus<uint>(Key_SkippedSignError, _skippedSignErrorResponse);
 		std::string immediateForwardConfigurationsJson;
 		GetConfigValue<string>("ImmediateForwardConfigurations", immediateForwardConfigurationsJson, &_configMutex);
+		_imfConfigs.clear();
 		_imfConfigs =  parseImmediateForwardConfiguration(immediateForwardConfigurationsJson);
 		// Setup UDP Clients
 		_udpClientMap.clear();
+		_snmpClientMap.clear();
+		_imfNtcipMessageTypeIndex.clear();
 		for (const auto &imfConfig: _imfConfigs) {
 			if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
 				_udpClientMap[imfConfig.name] = std::make_unique<tmx::utils::UdpClient>(imfConfig.address, imfConfig.port);
@@ -117,7 +115,8 @@ namespace ImmediateForward
 						imfConfig.snmpAuth.value().privProtocol.value(),
 						imfConfig.snmpAuth.value().privPassPhrase.value()
 					);
-				//TODO Add to SNMP CLient Map
+				clearImmediateForwardTable(_snmpClientMap[imfConfig.name]);
+				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name], imfConfig.messages);
 			}
 		}
 		// The same mutex is used that protects the UDP clients.
