@@ -21,7 +21,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "name": "East Intersection Cohda", /** String Name for RSU **/
                 "rsuSpec": "RSU4.1", /** Version of Immediate Forward Protocol to use (RSU4.1 or NTCIP1218) **/
                 "address": "127.0.0.1", /** Address of RSU **/
-                "port": 3745, /** Port for Immediate Forward protocol on RSU **/
+                "port": 1516, /** Default port for Immediate Forward protocol on RSU4.1 **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
                 "signMessages": false, /** Flag to indicate whether message being forwarded to RSU is already signed**/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
@@ -47,7 +47,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "name": "East Intersection Cohda with HSM signing", /** String Name for RSU **/
                 "rsuSpec": "RSU4.1", /** Version of Immediate Forward Protocol to use (RSU4.1 or NTCIP1218) **/
                 "address": "127.0.0.1", /** Address of RSU **/
-                "port": 3745, /** Port for Immediate Forward protocol on RSU **/
+                "port": 1516, /** Default port for Immediate Forward protocol on RSU4.1 **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
                 "signMessages": true, /** Flag to indicate whether message being forwarded to RSU is already signed**/
                 "enableHsm": true, /** (Optional : default false) Flag to indicate whether V2X Hub should attempt to sign and verify message signatures via HSM **/ 
