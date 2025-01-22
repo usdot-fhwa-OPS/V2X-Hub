@@ -15,6 +15,7 @@
 #include <vector>
 #include <PluginClient.h>
 #include <UdpClient.h>
+#include <SNMPClient.h>
 
 #include <boost/chrono.hpp>
 #include <FrequencyThrottle.h>
@@ -28,7 +29,7 @@ namespace ImmediateForward
 class ImmediateForwardPlugin : public tmx::utils::PluginClient
 {
 	public:
-		ImmediateForwardPlugin(std::string name);
+		ImmediateForwardPlugin(const std::string &name);
 	private:
 		void UpdateConfigSettings();
 		bool UpdateUdpClientFromConfigSettings(uint clientIndex);
@@ -43,8 +44,10 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 
 		// Mutex along with the data it protects.
 		std::mutex _configMutex;
-		// A vector of UDP clients for sending V2X communication to different RSUs for broadcast
+		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
 		std::unordered_map<std::string, std::unique_ptr<tmx::utils::UdpClient>> _udpClientMap;
+		// A map of SNMP Clients for sending V2X communication to different RSUs for broadvast (RSU Spec NTCIP 1218)
+		std::unordered_map<std::string, std::unique_ptr<tmx::utils::snmp_client>> _snmpClientMap;
 		std::vector<ImfConfiguration> _imfConfigs;
 		std::map<std::string, int> _messageCountMap;
 

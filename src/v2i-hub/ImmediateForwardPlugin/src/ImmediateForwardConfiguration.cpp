@@ -19,6 +19,26 @@ namespace ImmediateForward{
         return config_obj;
     }
 
+    SNMPAuth parseSNMPAuth(const Json::Value &snmpAuth){
+        if (!snmpAuth.isObject()) {
+            throw tmx::TmxException("Error parsing Immediate Forward configuration: SNMPAuth is not an object!");
+        }
+        SNMPAuth snmpAuthObj;
+        snmpAuthObj.user = snmpAuth[UserKey].asString();
+        snmpAuthObj.securityLevel = stringToSecurityLevel(snmpAuth[SecurityLevelKey].asString());
+        snmpAuthObj.community = snmpAuth[CommunityKey].asString(); 
+        if (snmpAuthObj.securityLevel != SecurityLevel::NO_AUTH_NO_PRIV) {
+            snmpAuthObj.authProtocol = snmpAuth[AuthProtocolKey].asString();
+            snmpAuthObj.authPassPhrase = snmpAuth[AuthPassPhraseKey].asString();
+            if (snmpAuthObj.securityLevel ==  SecurityLevel::AUTH_PRIV) {
+                snmpAuthObj.privProtocol = snmpAuth[PrivProtocolKey].asString();
+                snmpAuthObj.privPassPhrase = snmpAuth[PrivPassPhraseKey].asString();
+            }
+        }
+        return snmpAuthObj; 
+    }
+
+
     ImfConfiguration parseImfConfiguration(const Json::Value &imfConfig){
         if (!imfConfig.isObject()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: ImfConfig is not an object!");
@@ -28,6 +48,10 @@ namespace ImmediateForward{
         imfConfiguration.address = imfConfig[AddressKey].asString();
         imfConfiguration.port = imfConfig[PortKey].asUInt();
         imfConfiguration.spec = tmx::utils::rsu::stringToRSUSpec(imfConfig[RSUSpecKey].asString());
+        if (imfConfiguration.spec == tmx::utils::rsu::RSU_SPEC::NTCIP_1218) {
+
+            imfConfiguration.snmpAuth = parseSNMPAuth(imfConfig[SNMPAuthKey]);
+        }
         imfConfiguration.mode = stringToTxMode(imfConfig[TxModeKey].asString());
         imfConfiguration.signMessage = imfConfig[SignKey].asBool();
         if (imfConfig[EnableHSMKey].isBool()) {
@@ -71,5 +95,19 @@ namespace ImmediateForward{
     TxMode stringToTxMode(const std::string &mode) {
         return stringToTxModeMap.at(mode);
     }
+
+    std::string securityLevelToString(const SecurityLevel &level) {
+        for (auto const &[name, m] : stringToSecurityLevelMap){
+                if (level == m) {
+                    return name;
+                }
+        }
+        throw tmx::TmxException("SecurityLevel is not supported!");    
+    }
+
+    SecurityLevel stringToSecurityLevel(const std::string &level) {
+        return stringToSecurityLevelMap.at(level);
+    }
+
 
 }
