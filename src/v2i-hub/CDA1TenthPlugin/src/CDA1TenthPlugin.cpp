@@ -26,9 +26,15 @@ CDA1TenthPlugin::CDA1TenthPlugin(string name) :
 	AddMessageFilter<BsmMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 	SubscribeToMessages();
 
+	//Start websocket server
+	std::thread wsThread(&CDA1TenthPlugin::startWebsocketServer, this);
+	wsThread.join();
 }
 
 CDA1TenthPlugin::~CDA1TenthPlugin() {
+	if(ws){
+		ws->setRunning(false);		
+	}
 }
 
 void CDA1TenthPlugin::UpdateConfigSettings() {
@@ -432,6 +438,7 @@ void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messag
 			auto bsmTree = BSMConverter::toTree(*bsm.get());
 			auto bsmJsonString = BSMConverter::toJsonString(bsmTree);
 			PLOG(logDEBUG) << "Received BSM: " << bsmJsonString;
+			ws->addMessage(bsmJsonString);
 		}
 		catch (TmxException &ex)
 		{
@@ -439,6 +446,12 @@ void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messag
 			++_bsmMessageSkipped;
 			SetStatus<uint>(Key_BSMMessageSkipped.c_str(), _bsmMessageSkipped);
 		}
+	}
+
+	void CDA1TenthPlugin::startWebsocketServer()
+	{
+		ws = std::make_shared<WebSocketServer>();
+		ws->run();
 	}
 
 
