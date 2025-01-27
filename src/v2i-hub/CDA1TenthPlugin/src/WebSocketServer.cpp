@@ -67,16 +67,22 @@ namespace CDA1TenthPlugin{
     switch (reason)
     {
     case LWS_CALLBACK_ESTABLISHED:
-       PLOG(logDEBUG) << "Connection established" << std::endl;
+       PLOG(logDEBUG1) << "Connection established" << std::endl;
        server->addLWSClients(wsi);
-      break;
+        break;
     case LWS_CALLBACK_RECEIVE:
        PLOG(logDEBUG2) << "Data received: " << std::string((char*)in, len) << std::endl;
-      break;
+        break;
     case LWS_CALLBACK_CLOSED:
-       PLOG(logDEBUG) << "Connection closed" << std::endl;
+        PLOG(logDEBUG1) << "Connection closed" << std::endl;
         server->removeLWSClients(wsi);
-      break;
+        break;
+    case LWS_CALLBACK_PROTOCOL_INIT:
+        lws_set_timer_usecs(wsi, PULL_PERIOD * LWS_USEC_PER_MS);
+        break;
+    case LWS_CALLBACK_TIMER:
+        lws_set_timer_usecs(wsi, PULL_PERIOD * LWS_USEC_PER_MS);
+        break;
     default:
       break;
     }
@@ -87,7 +93,7 @@ namespace CDA1TenthPlugin{
     setRunning(true); 
      while(isRunning()){
         PLOG(logDEBUG4) << "websocket is running..." << std::endl;  
-        lws_service(context, PULL_PERIOD);
+        lws_service(context, 0);
         sendQueuedMessagesToAllClients();
       }
   }
@@ -139,13 +145,13 @@ namespace CDA1TenthPlugin{
 
   void WebSocketServer::sendQueuedMessagesToAllClients(){
     lock_guard<mutex> lock(message_queue_mutex);
-    if(message_queue.size() > 0){
-      PLOG(logDEBUG2) << "Sending messages. Current client size: " << clients.size() << ", current message queue size: " << message_queue.size() << std::endl;
+    if(message_queue.size() > 0 && clients.size() > 0){
+      PLOG(logDEBUG1) << "Sending messages. Current client size: " << clients.size() << ", current message queue size: " << message_queue.size() << std::endl;
       for(auto msg : message_queue){
         sendMsgToAllClients(msg);
       }
       message_queue.clear(); 
-      PLOG(logDEBUG2) << "Messages sent! Current client size: " << clients.size() << ", current message queue size: " << message_queue.size() << std::endl;        
+      PLOG(logDEBUG1) << "Messages sent! Current client size: " << clients.size() << ", current message queue size: " << message_queue.size() << std::endl;        
     }
    }
 

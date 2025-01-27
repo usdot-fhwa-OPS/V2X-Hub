@@ -21,6 +21,7 @@
 #include "PluginLog.h"
 #include <atomic>
 #include <vector>
+#include <thread>
 
 using tmx::utils::logERROR;
 using tmx::utils::logDEBUG;
@@ -41,7 +42,8 @@ namespace CDA1TenthPlugin{
       static const  int PER_SESSION_USER_DATA_SIZE = 0;
       static const int MAX_FRAME_SIZE = 4096;
       static const int PORT = 9002;
-      static const int PULL_PERIOD = 1000; // ms
+      static const int PULL_PERIOD = 10; // milliseconds
+      static const int LWS_USEC_PER_MS = 1000; // 1 millisecond = 1000 microseconds
 
     //Websocket context  
     lws_context *context;

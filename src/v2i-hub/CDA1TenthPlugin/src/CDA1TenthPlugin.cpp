@@ -66,6 +66,7 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 	GetConfigValue<bool>("Webservice_Secure", secure);
 	// Polling Frequency in seconds
 	GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
+	GetConfigValue<uint16_t>("BSM_Forward_Frequency", bsm_forward_frequency);
 	//TODO: Commented out due to compilation error
 	// client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
 	// Port Holding Area Configurable location
@@ -437,8 +438,16 @@ void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_messag
 			auto bsm = msg.get_j2735_data();
 			auto bsmTree = BSMConverter::toTree(*bsm.get());
 			auto bsmJsonString = BSMConverter::toJsonString(bsmTree);
-			PLOG(logDEBUG) << "Received BSM: " << bsmJsonString;
-			ws->addMessage(bsmJsonString);
+			PLOG(logDEBUG2) << "Received BSM: " << bsmJsonString;
+
+			//Add logic to control the BSM forwarding frequency 
+			uint16_t bsm_forward_interval = 1000/bsm_forward_frequency; //Milliseconds
+			uint64_t current_bsm_forward_time_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			if(current_bsm_forward_time_ms - bsm_last_forward_time_ms >= bsm_forward_interval ){
+					PLOG(logDEBUG1) << "Add BSM to websocket queue: " << bsmJsonString;
+					ws->addMessage(bsmJsonString);
+					bsm_last_forward_time_ms = current_bsm_forward_time_ms;
+			}
 		}
 		catch (TmxException &ex)
 		{

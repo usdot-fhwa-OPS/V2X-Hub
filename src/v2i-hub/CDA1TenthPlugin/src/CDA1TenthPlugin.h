@@ -194,6 +194,8 @@ private:
 	double _holding_lon;
 
 	std::shared_ptr<WebSocketServer> ws;
+	uint16_t bsm_forward_frequency = 1;
+	uint64_t bsm_last_forward_time_ms = 0;
 
 };
 std::mutex _cfgLock;
