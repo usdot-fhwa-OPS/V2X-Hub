@@ -34,6 +34,7 @@ namespace PedestrianPlugin{
         istringstream iss(staticTimXMLIn);
         pt::read_xml(iss, timTree);
         updateTimTree(timTree, timVars);
+        updateTimDescNameWithTimestamp(timTree);
         std::ostringstream oss;
         pt::write_xml(oss, timTree);
         return oss.str();
