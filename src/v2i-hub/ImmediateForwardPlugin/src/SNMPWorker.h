@@ -18,6 +18,8 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <rsu/NTCIP_1218_MIB.h>
+#include <PluginLog.h>
 #include "ImmediateForwardConfiguration.h"
 
 namespace ImmediateForward {
@@ -26,5 +28,6 @@ namespace ImmediateForward {
 
     std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::vector<Message> &messages);
 
+    void sendNTCIP1218ImfMessage(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::string &message, unsigned int index);
 
 }

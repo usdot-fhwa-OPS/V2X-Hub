@@ -78,7 +78,7 @@ namespace ImmediateForward
 
 	void ImmediateForwardPlugin::UpdateConfigSettings()
 	{
-		PLOG(logINFO) << "Updating configuration settings.";
+		PLOG(logDEBUG) << "Updating configuration settings.";
 
 		// Update the configuration setting for all UDP clients.
 		// This includes creation/update of _udpClientList and _imfConfigs
@@ -113,7 +113,9 @@ namespace ImmediateForward
 						imfConfig.snmpAuth.value().authProtocol.value(),
 						imfConfig.snmpAuth.value().authPassPhrase.value(),
 						imfConfig.snmpAuth.value().privProtocol.value(),
-						imfConfig.snmpAuth.value().privPassPhrase.value()
+						imfConfig.snmpAuth.value().privPassPhrase.value(),
+						3,
+						100
 					);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name]);
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name], imfConfig.messages);
@@ -254,6 +256,21 @@ namespace ImmediateForward
 									<< ", PSID: " << messageConfig.psid << ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->GetAddress();
+					}
+					else {
+						auto &client = _snmpClientMap.at(imfConfig.name);
+						sendNTCIP1218ImfMessage(client, payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
+					}
+				}
+			}
+		}
+		if (!foundMessageType)
+		{
+			SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
+			PLOG(logWARNING)<<" WARNING TMX Subtype not found in configuration. Message Ignored: " <<
+					"Type: " << msg->type << ", Subtype: " << msg->subtype;
+			return;
+		}
 					}
 				}
 			}

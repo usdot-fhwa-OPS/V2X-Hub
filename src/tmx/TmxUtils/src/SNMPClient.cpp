@@ -156,7 +156,48 @@ namespace tmx::utils
         PLOG(logINFO) << "Closing SNMP session";
         snmp_close(ss);
     }
+    void snmp_client::process_snmp_set_requests(const std::vector<snmpRequest> &requests) {
+        int failures = 0;
+        for (const auto request : requests) {
+            pdu = snmp_pdu_create(SNMP_MSG_SET);
+            if (snmp_parse_oid(request.oid.c_str(), OID, &OID_len) == NULL) {
+                snmp_perror("snmp_parse_oid");
+                PLOG(logERROR) << "OID could not be created from input: " << request.oid;
+                failures++;
+            }
+            if (snmp_add_var(pdu, OID, OID_len, request.type, request.value.c_str())) {
+                snmp_perror("snmp_add_var");
+                PLOG(logERROR) << "PDU could not be created from input: " << request.oid;
+                failures++;
+            }  
+        }
+        if (failures > 0) {
+            snmp_close(ss);
+        }
+        int status = snmp_synch_response(ss, pdu, &response);
+        PLOG(logINFO) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
+        // Check GET response
+        if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR ) {
+            for (auto vars = response->variables; vars;
+                     vars = vars->next_variable) {
+                print_variable(vars->name, vars->name_length, vars);
+            }
+            
+        } 
+        else {
+            log_error(status, request_type::SET, response);
+        }
+
+        if (response)
+        {
+            snmp_free_pdu(response);
+            OID_len = MAX_OID_LEN;
+        }
+
+
+        
+    }
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
     bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
     {
@@ -203,7 +244,8 @@ namespace tmx::utils
                 // Needs to be finalized to support octet string use
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
-                    PLOG(logERROR) << "Setting string value is currently not supported";
+                    std::string val_string (val.val_string.begin(), val.val_string.end());
+                    snmp_add_var(pdu, OID, OID_len, 'x', val_string.c_str());
                 }
             }
 

@@ -15,6 +15,12 @@ namespace tmx::utils
         GET,
         SET,
         OTHER // Processing this request type is not a defined behavior, included for testing only
+    }; 
+
+    struct snmpRequest {
+        std::string oid;
+        char type;
+        std::string value;
     };
 
     /** @brief A struct to hold the value being sent to the TSC, can be integer or string. Type needs to be defined*/
@@ -141,6 +147,8 @@ namespace tmx::utils
          *  @param status The integer value corresponding to net-snmp defined errors. macros considered are STAT_SUCCESS(0) and STAT_TIMEOUT(2)
          *  @param request_type The request type for which the error is being logged (GET/SET).
          *  @param response The snmp_pdu struct */
+
+        virtual void process_snmp_set_requests(const std::vector<snmpRequest> &requests);
 
         virtual int get_port() const; // Returns the current port (should always be 161 or 162)
 
