@@ -36,14 +36,14 @@ namespace CDA1TenthPlugin
      * @param  mobility_operation_message tsm3Message (MOM)
      * @return JSON ptree
      */
-    static pt toTree(const tsm3Message &mobility_operation_msg);
+    static pt toTree(const tmx::messages::tsm3Message &mobility_operation_msg);
     /**
     * Method to create MobilityOperation XML ptree.
     * 
     * @param ptree JSON payload
     * @return MobilityOperation message XML ptree
     */
-    ptree fromTree( const ptree &json_payload);
+    static pt fromTree( const pt &json_payload);
     /**
      * @brief Convert a JSON ptree to a JSON string
      * @param tree JSON ptree
@@ -51,7 +51,7 @@ namespace CDA1TenthPlugin
      */
     static string toJsonString(const pt &tree);
 
-  }
+  };
 
 
 }

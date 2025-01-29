@@ -79,7 +79,7 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 		// Get current action for given action_id
 		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
 		// Get first action for vehicle
-		first_action = con->prepareStatement("SELECT * FROM first_action WHERE cmv_id = ? " );
+		first_action = con->prepareStatement("SELECT * FROM first_action WHERE veh_id = ? " );
 		// Insert action into freight table
 		insert_action =  con->prepareStatement("INSERT INTO freight VALUES(?,?,?,?,?, UUID(), ?)");
 		// Get action_id of the previous action given action_id
@@ -115,8 +115,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	// Create ptree object for json
 	ptree pr;
 
-	// Create new CDA1Tenth_Object pointer
-	std::unique_ptr<CDA1Tenth_Object> pd( new CDA1Tenth_Object());
+	// Create new Action_Object pointer
+	std::unique_ptr<Action_Object> action_obj( new Action_Object());
 
 	// Read strategy and operationParams
 	strat << mobilityOperation->body.strategy.buf;
@@ -128,63 +128,63 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 		try {
 			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
 				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
-			// Convert JSON payload to CDA1Tenth_Object
+			// Convert JSON payload to Action_Object
 			read_json(payload, pr);
-			*pd = readCDA1TenthJson( pr );
+			*action_obj = readCDA1TenthJson( pr );
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
 		// Handle actions that require CDA1Tenth WebService Input
-		if ( pd->operation.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
+		if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
 			// TODO: Commented out due to compilation error
-			// client->request_loading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// client->request_loading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
 		}
-		else if ( pd->operation.compare(operation_to_string(Operation::DROPOFF))  == 0) {
+		else if (action_obj->area.name.compare(operation_to_string(Operation::DROPOFF))  == 0) {
 			// TODO: Commented out due to compilation error
-			// client->request_unloading_action( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// client->request_unloading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
 		}
-		else if ( pd->operation.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
+		else if (action_obj->area.name.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
 			// If holding == 1 insert HOLDING action into table
 			// TODO: Commented out due to compilation error
-			// int holding = client->request_inspection( pd->cmv_id, pd->cargo_id, pd->action_id );
+			// int holding = client->request_inspection(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
 			// if ( holding == 1 ) {
-			// 	insert_holding_action_into_table( *pd );
+			// 	insert_holding_action_into_table( *action_obj );
 			// }	
 		}
-		else if ( pd->operation.compare(operation_to_string(Operation::HOLDING)) == 0) {
+		else if (action_obj->area.name.compare(operation_to_string(Operation::HOLDING)) == 0) {
 			// TODO: Commented out due to compilation error
-			// string previous_checkpoint_id = retrieve_holding_inspection_action_id( pd->action_id );
+			// string previous_checkpoint_id = retrieve_holding_inspection_action_id(action_obj->action_id );
 			// client->request_holding( previous_checkpoint_id );
 		}
 
 		
-		PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
-			"cmv_id : " << pd->cmv_id << std::endl <<
-			"cargo_id : " << pd->cargo_id << std::endl <<		
-			"cargo : " << pd->cargo << std::endl <<
-			"operation : " << pd->operation << std::endl <<
-			"location_lat : " << pd->location_lat << std::endl <<
-			"location_long : " << pd->location_long << std::endl <<
-			"destination_lat : " << pd->destination_lat << std::endl <<
-			"destination_long : " << pd->destination_long << std::endl <<
-			"action_id : " << pd->action_id << std::endl <<
-			"next_action : " << pd->next_action << std::endl;
+		// PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
+		// 	"veh_id : " << action_obj->vehicle.veh_id << std::endl <<
+		// 	"cargo_uuid : " << action_obj->cargo.cargo_uuid << std::endl <<		
+		// 	"cargo : " << action_obj->cargo << std::endl <<
+		// 	"operation : " << action_obj->operation << std::endl <<
+		// 	"location_lat : " << action_obj->location_lat << std::endl <<
+		// 	"location_long : " << action_obj->location_long << std::endl <<
+		// 	"destination latitude : " << action_obj->area.latitude << std::endl <<
+		// 	"destination longitude : " << action_obj->area.longitude << std::endl <<
+		// 	"action_id : " << action_obj->action_id << std::endl <<
+		// 	"next_action : " << action_obj->next_action << std::endl;
 
 	
 		try{
-			// Retrieve first or next action
-			CDA1Tenth_Object *new_action = new CDA1Tenth_Object();
-			if ( pd->action_id.empty() ) {
-				PLOG(logDEBUG) << "Retrieving first action." << std::endl;
-				*new_action = retrieveFirstAction( pd->cmv_id );
-			}
-			else {
-				PLOG(logDEBUG) << "Retrieving next action." << std::endl;
-				*new_action = retrieveNextAction( pd->action_id );
-			}
+			// // Retrieve first or next action
+			Action_Object *new_action = new Action_Object();
+			// if (action_obj->action_id == -1 ) {
+			// 	PLOG(logDEBUG) << "Retrieving first action." << std::endl;
+			// 	*new_action = retrieveFirstAction(action_obj->vehicle.veh_id);
+			// }
+			// else {
+			// 	PLOG(logDEBUG) << "Retrieving next action." << std::endl;
+			// 	*new_action = retrieveNextAction(action_obj->action_id );
+			// }
 
-			if ( !new_action->action_id.empty()) {
+			if (new_action->action_id != -1) {
 				// Initializer vars
 				tsm3Message mob_msg;
 				tsm3EncodedMessage mobilityENC;
@@ -256,54 +256,54 @@ ptree CDA1TenthPlugin::createMobilityOperationXml( const ptree &json_payload ) {
 }
 
 
-CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::retrieveFirstAction( const std::string &cmv_id ) {
-	std::unique_ptr<CDA1Tenth_Object> rtn( new CDA1Tenth_Object());
-	try{
-		// Set cmv_id
-		first_action->setString(1,cmv_id);
-		// Retrieve first action of first_action table
-		sql::ResultSet *cur_action = first_action->executeQuery();
-		if ( cur_action->first() ) {
-			// Create Port Drayage object
-			rtn->cmv_id = cur_action->getString("cmv_id");
-			rtn->operation = cur_action->getString("operation");
-			rtn->action_id = cur_action->getString("action_id");
-			rtn->cargo_id = cur_action->getString("cargo_id");
-			rtn->destination_long = cur_action->getDouble("destination_long");
-			rtn->destination_lat =  cur_action->getDouble("destination_lat");
-			rtn->next_action =cur_action->getString("next_action");
-			PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
-				"cmv_id : " << rtn->cmv_id << std::endl <<
-				"cargo_id : " << rtn->cargo_id << std::endl <<
-				"operation : " << rtn->operation << std::endl <<
-				"destination_lat : " << rtn->destination_lat << std::endl <<
-				"destination_long : " << rtn->destination_long << std::endl <<
-				"action_id : " << rtn->action_id << std::endl <<
-				"next_action : " << rtn->next_action << std::endl;
-			return *rtn;
-		}
-		else {
-			PLOG(logERROR) << "No first action for cmv_id : " << cmv_id << " found!";
-			return *rtn;
-		}
+// CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveFirstAction( const std::string &veh_id ) {
+// 	std::unique_ptr<Action_Object> rtn( new Action_Object());
+// 	try{
+// 		// Set veh_id
+// 		first_action->setString(1,veh_id);
+// 		// Retrieve first action of first_action table
+// 		sql::ResultSet *cur_action = first_action->executeQuery();
+// 		if ( cur_action->first() ) {
+// 			// Create Port Drayage object
+// 			rtn->vehicle.veh_id = cur_action->getString("veh_id");
+// 			rtn->operation = cur_action->getString("operation");
+// 			rtn->action_id = cur_action->getString("action_id");
+// 			rtn->->cargo.cargo_uuid = cur_action->getString("cargo_uuid");
+// 			rtn->destination_long = cur_action->getDouble("destination_long");
+// 			rtn->destination_lat =  cur_action->getDouble("destination_lat");
+// 			rtn->next_action =cur_action->getString("next_action");
+// 			PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
+// 				"veh_id : " << rtn->vehicle.veh_id << std::endl <<
+// 				"cargo_uuid : " << rtn->cargo.cargo_uuid << std::endl <<
+// 				"operation : " << rtn->operation << std::endl <<
+// 				"destination_lat : " << rtn->destination_lat << std::endl <<
+// 				"destination_long : " << rtn->destination_long << std::endl <<
+// 				"action_id : " << rtn->action_id << std::endl <<
+// 				"next_action : " << rtn->next_action << std::endl;
+// 			return *rtn;
+// 		}
+// 		else {
+// 			PLOG(logERROR) << "No first action for veh_id : " << veh_id << " found!";
+// 			return *rtn;
+// 		}
 		
 
-	}
-	catch ( const sql::SQLException &e ) {
-		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
-			<< "Error code " << e.getErrorCode() << std::endl
-			<< "Error status " << e.getSQLState() << std::endl;
-		return *rtn;
-	}
+// 	}
+// 	catch ( const sql::SQLException &e ) {
+// 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
+// 			<< "Error code " << e.getErrorCode() << std::endl
+// 			<< "Error status " << e.getSQLState() << std::endl;
+// 		return *rtn;
+// 	}
 	
-}
+// }
 
 
-CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::retrieveNextAction(const std::string &action_id ) {
-	std::unique_ptr<CDA1Tenth_Object> rtn( new CDA1Tenth_Object());
+CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveNextAction(const int &action_id ) {
+	std::unique_ptr<Action_Object> rtn( new Action_Object());
 	try{
 		// Set action_id
-		next_action_id->setString(1,action_id);
+		next_action_id->setInt(1,action_id);
 		// Get current action
 		sql::ResultSet *cur_action = next_action_id->executeQuery();
 		if ( cur_action->first() ) {
@@ -312,22 +312,22 @@ CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::retrieveNextAction(const std:
 			current_action->setString(1,next);
 			// Retrieve next action
 			sql::ResultSet *cur_action = current_action->executeQuery();
-			// Create CDA1Tenth_Object
+			// Create Action_Object
 			if ( cur_action->first() ) { 
-				rtn->cmv_id = cur_action->getString("cmv_id");
-				rtn->operation = cur_action->getString("operation");
-				rtn->action_id = cur_action->getString("action_id");
-				rtn->cargo_id = cur_action->getString("cargo_id");
-				rtn->destination_long = cur_action->getDouble("destination_long");
-				rtn->destination_lat =  cur_action->getDouble("destination_lat");
-				rtn->next_action = cur_action->getString("next_action");
+				rtn->vehicle.veh_id = cur_action->getString("veh_id");
+				rtn->area.name = cur_action->getString("area_name");
+				rtn->action_id = cur_action->getInt("action_id");
+				rtn->cargo.cargo_uuid = cur_action->getString("cargo_uuid");
+				rtn->area.longitude = cur_action->getDouble("area_long");
+				rtn->area.latitude =  cur_action->getDouble("area_lat");
+				rtn->next_action = cur_action->getInt("next_action");
 
 				PLOG(logDEBUG) << "Port Drayage Message : " << std::endl << 
-					"cmv_id : " << rtn->cmv_id << std::endl <<
-					"cargo_id : " << rtn->cargo_id << std::endl <<
-					"operation : " << rtn->operation << std::endl <<
-					"destination_lat : " << rtn->destination_lat << std::endl <<
-					"destination_long : " << rtn->destination_long << std::endl <<
+					"veh_id : " << rtn->vehicle.veh_id << std::endl <<
+					"cargo_uuid : " << rtn->cargo.cargo_uuid << std::endl <<
+					"operation : " << rtn->area.name << std::endl <<
+					"destination_lat : " << rtn->area.latitude << std::endl <<
+					"destination_long : " << rtn->area.longitude << std::endl <<
 					"action_id : " << rtn->action_id << std::endl <<
 					"next_action : " << rtn->next_action << std::endl;
 			}
@@ -347,52 +347,52 @@ CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::retrieveNextAction(const std:
 	return *rtn;
 }
 
-ptree CDA1TenthPlugin::createCDA1TenthJson( const CDA1Tenth_Object &cda1t_obj) {
+ptree CDA1TenthPlugin::createCDA1TenthJson( const Action_Object &cda1t_obj) {
 	ptree json_payload;
-	json_payload.put("cmv_id", cda1t_obj.cmv_id );
-	json_payload.put("cargo_id", cda1t_obj.cargo_id );
+	json_payload.put("veh_id", cda1t_obj.vehicle.veh_id );
+	json_payload.put("cargo_uuid", cda1t_obj.cargo.cargo_uuid );
 	ptree destination;
-	destination.put<double>("latitude", cda1t_obj.destination_lat);
-	destination.put<double>("longitude", cda1t_obj.destination_long);
+	destination.put<double>("latitude", cda1t_obj.area.latitude);
+	destination.put<double>("longitude", cda1t_obj.area.longitude);
 	json_payload.put_child("destination",destination);
-	json_payload.put("operation", cda1t_obj.operation );
+	json_payload.put("operation", cda1t_obj.area.name);
 	json_payload.put("action_id", cda1t_obj.action_id );
 	return json_payload;
 }
 
 
-CDA1TenthPlugin::CDA1Tenth_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &pr ) {
-	std::unique_ptr<CDA1Tenth_Object> pd( new CDA1Tenth_Object());
+CDA1TenthPlugin::Action_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &pr ) {
+	std::unique_ptr<Action_Object> action_obj( new Action_Object());
 	try {
-		pd->cmv_id = pr.get_child("cmv_id").get_value<std::string>();
+		action_obj->vehicle.veh_id = pr.get_child("veh_id").get_value<std::string>();
 		boost::optional<const ptree& > child = pr.get_child_optional( "action_id" );
 		if( !child )
 		{
 			PLOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
 		}
 		else {
-			pd->action_id = child.get_ptr()->get_value<string>();
+			action_obj->action_id = child.get_ptr()->get_value<int>();
 			// For eventually tracking of completed actions
-			pd->operation = pr.get_child("operation").get_value<string>();
-			child = pr.get_child_optional("cargo_id");
+			action_obj->area.name = pr.get_child("operation").get_value<string>();
+			child = pr.get_child_optional("cargo_uuid");
 			if ( child ) {
-				pd->cargo_id = pr.get_child("cargo_id").get_value<string>();
+				action_obj->cargo.cargo_uuid = pr.get_child("cargo_uuid").get_value<string>();
 			}
-			child = pr.get_child_optional("location");
-			if ( child ) {
-				ptree location = pr.get_child("location");
-				pd->location_lat =location.get_child("latitude").get_value<double>();
-				pd->location_long = location.get_child("longitude").get_value<double>();
-			}
+			// child = pr.get_child_optional("location");
+			// if ( child ) {
+			// 	ptree location = pr.get_child("location");
+			// 	action_obj->location_lat =location.get_child("latitude").get_value<double>();
+			// 	action_obj->location_long = location.get_child("longitude").get_value<double>();
+			// }
 
 
 		}
-		return *pd.get();
+		return *action_obj.get();
 
 	}
 	catch( const ptree_error &e ) {
 		PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
-		return *pd.get();
+		return *action_obj.get();
 	}
 }
 // TODO: Commented out due to compilation error

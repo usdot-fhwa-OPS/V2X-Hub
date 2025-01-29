@@ -84,18 +84,30 @@ std::string operation_to_string( Operation operation ) {
  */ 
 class CDA1TenthPlugin: public PluginClient {
 public:
-	struct CDA1Tenth_Object {
-		std::string cmv_id; 
-		std::string cargo_id;
-		bool cargo;
-		std::string operation;
-		double location_lat;
-		double location_long;
-		double destination_lat;
-		double destination_long;
-		std::string action_id;
-		std::string next_action;
+	struct Action_Object {
+		int action_id;
+		int next_action;
+		int prev_action;
+		struct Area {
+			std::string name;
+			double latitude;
+			double longitude;
+			bool status;
+			bool is_notify;
+		};
+		Area area;
+		struct Cargo {
+			std::string cargo_uuid;
+			std::string name;
+		};
+		Cargo cargo;
+		struct Vehicle {
+			std::string veh_id;
+			std::string name;
+		};
+		Vehicle vehicle;
 	};
+
 	/**
 	 * Construct a new MobililtyOperationPlugin with the given name.
 	 *
@@ -119,22 +131,22 @@ protected:
 	 * Method triggers UpdateConfigSettings() on configuration changes
 	 */
 	void OnConfigChanged(const char *key, const char *value);
-
+	//TODO NEEDS DESCRIPTION
 	void OnStateChange(IvpPluginState state);
 	/**
-	 * Method to create port drayage payload JSON ptree using a CDA1Tenth_Object.
+	 * Method to create port drayage payload JSON ptree using an Action Object.
 	 * 
-	 * @param cda1t_obj Port Drayage object.
+	 * @param action_obj Action Object.
 	 * @return json ptree
 	 */
-	ptree createCDA1TenthJson( const CDA1Tenth_Object &cda1t_obj);
+	ptree createCDA1TenthJson( const Action_Object &action_obj);
 	/**
-	 * Create CDA1Tenth_Object from ptree JSON.
+	 * Create Action_Object from ptree JSON.
 	 * 
 	 * @param pr CDA1Tenth JSON
-	 * @return CDA1Tenth_Object 
+	 * @return Action_Object 
 	 */
-	CDA1Tenth_Object readCDA1TenthJson( const ptree &pr );
+	Action_Object readCDA1TenthJson( const ptree &pr );
 
 	/**
 	 * Method to create MobilityOperation XML ptree.
@@ -158,8 +170,11 @@ protected:
 	 * @param routeableMsg JSON BasicSafety message
 	 */
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
-	CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
+	Action_Object retrieveNextAction(const int &action_id);
+
+	// Action_Object retrieveFirstAction(const std::string &cmv_id);
+
+
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage

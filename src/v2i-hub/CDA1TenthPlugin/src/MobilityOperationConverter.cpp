@@ -13,37 +13,37 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-#include "MobilityOperationHandler.h"
+#include "MobilityOperationConverter.h"
 
 namespace CDA1TenthPlugin
 {
-  pt MobilityOperationConverter::toTree(const tsm3Message &mobility_operation_msg)
+  pt MobilityOperationConverter::toTree(const tmx::messages::tsm3Message &mobility_operation_msg)
   {
 	pt message;
 	pt strategy;
 	pt payload;
 
-	strategy.put("strategy", mobility_operation_msg.strategy);
-	read_json(mobility_operation_msg.payload, payload);
+	//strategy.put("strategy", mobility_operation_msg->body.strategy.buf);
+	// read_json(mobility_operation_msg->body->payload, payload);
 
-	message.add_child("strategy", strategy);
-	message.add_child("payload", payload);
+	// message.add_child("strategy", strategy);
+	// message.add_child("payload", payload);
 
 	return message;
   }
 
-  ptree MobilityOperationConverter::fromTree(const ptree &json_payload, static CONSTEXPR const char *STRATEGY) 
+  pt MobilityOperationConverter::fromTree(const pt &json_payload) // or config
   {
-	ptree mobilityOperationXml;
+	pt mobilityOperationXml;
 	std::stringstream string_payload;
 	write_json(string_payload, json_payload);
 
 	// Create XML MobilityOperationMessage
-	ptree message;
-	ptree header;
-	ptree body;
-	body.put("strategy",STRATEGY);
-	body.put("operationParams", pl.str());
+	pt message;
+	pt header;
+	pt body;
+	body.put("strategy","carma/port_drayage");
+	body.put("operationParams", string_payload.str());
 	header.put("hostStaticId", "UNSET");
 	header.put("targetStaticId", "UNSET");
 	header.put("hostBSMId", "00000000");
