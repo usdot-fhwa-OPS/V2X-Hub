@@ -30,9 +30,6 @@ jobs:
         with:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            BUILD_ARCHITECTURE=${{ matrix.architecture }}
-            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
       - name: PHP Docker build
         uses: docker/build-push-action@v5
         with:

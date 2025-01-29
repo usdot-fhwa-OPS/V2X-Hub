@@ -10,7 +10,7 @@ on:
       - '*'
 jobs:
   v2xhub-docker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,6 +42,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            BUILD_ARCHITECTURE=${{ matrix.architecture }}
-            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
