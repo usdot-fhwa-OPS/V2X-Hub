@@ -304,7 +304,7 @@ namespace PedestrianPlugin
             }
             if (generateTIM_ == true)
             {
-                int moy = TIMHelper::calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[6]);
+                int moy = TIMHelper::calculateMinuteOfYear(dateTimeArr[0], dateTimeArr[1], dateTimeArr[2], dateTimeArr[3], dateTimeArr[4], dateTimeArr[5]);
                 moy_.store(moy);
                 startYear_.store(dateTimeArr[0]);
                 PLOG(logDEBUG) << "Start year: " << startYear_.load();
