@@ -9,7 +9,7 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG1) << "Starting SNMP Client. Target device IP address: " << ip_ << ", Target device SNMP port: " << port_;
+        PLOG(logDEBUG1) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
@@ -158,8 +158,8 @@ namespace tmx::utils
     }
     void snmp_client::process_snmp_set_requests(const std::vector<snmpRequest> &requests) {
         int failures = 0;
+        pdu = snmp_pdu_create(SNMP_MSG_SET);
         for (const auto request : requests) {
-            pdu = snmp_pdu_create(SNMP_MSG_SET);
             if (snmp_parse_oid(request.oid.c_str(), OID, &OID_len) == NULL) {
                 snmp_perror("snmp_parse_oid");
                 PLOG(logERROR) << "OID could not be created from input: " << request.oid;
@@ -173,9 +173,10 @@ namespace tmx::utils
         }
         if (failures > 0) {
             snmp_close(ss);
+            throw snmp_client_exception("Encountered " + std::to_string(failures) + " failures while creating PDU");
         }
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logINFO) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR ) {
@@ -249,11 +250,11 @@ namespace tmx::utils
                 }
             }
 
-            PLOG(logINFO) << "Created OID for input: " << input_oid;
+            PLOG(logDEBUG) << "Created OID for input: " << input_oid;
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logINFO) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR )
@@ -287,6 +288,11 @@ namespace tmx::utils
     int snmp_client::get_port() const
     {
         return port_;
+    }
+
+    std::string snmp_client::get_ip() const
+    {
+        return ip_;
     }
 
     void snmp_client::process_snmp_get_response(snmp_response_obj &val,  const snmp_pdu &response) const {

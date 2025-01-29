@@ -152,6 +152,8 @@ namespace tmx::utils
 
         virtual int get_port() const; // Returns the current port (should always be 161 or 162)
 
+        virtual std::string get_ip() const; // Returns the current ip address
+
         void log_error(const int &status, const request_type &request_type, const snmp_pdu *response) const;
 
         /** @brief Destructor for client. Closes the snmp session**/

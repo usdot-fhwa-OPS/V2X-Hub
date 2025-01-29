@@ -24,10 +24,24 @@
 
 namespace ImmediateForward {
     
+    /**
+     * @brief Clear the immediate forward table on the RSU
+     * @param client The SNMP client to use for the operation
+     */
     void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client);
-
+    /**
+     * @brief Initialize the immediate forward table on the RSU
+     * @param client The SNMP client to use for the operation
+     * @param messages The message configurations to add to the table
+     */
     std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::vector<Message> &messages);
 
+    /**
+     * @brief Send an NTCIP 1218 message to the RSU
+     * @param client The SNMP client to use for the operation
+     * @param message The IMF message to send
+     * @param index The index of the message in the table
+     */
     void sendNTCIP1218ImfMessage(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::string &message, unsigned int index);
 
 }

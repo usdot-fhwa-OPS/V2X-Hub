@@ -111,9 +111,9 @@ namespace ImmediateForward
      * Map to convert between string SecurityLevel and enumeration
      */
     const static std::unordered_map<std::string, SecurityLevel> stringToSecurityLevelMap = {
-        {"NoAuthNoPriv", SecurityLevel::NO_AUTH_NO_PRIV},
-        {"AuthNoPriv", SecurityLevel::AUTH_NO_PRIV},
-        {"AuthPriv", SecurityLevel::AUTH_PRIV}
+        {"noAuthNoPriv", SecurityLevel::NO_AUTH_NO_PRIV},
+        {"authNoPriv", SecurityLevel::AUTH_NO_PRIV},
+        {"authPriv", SecurityLevel::AUTH_PRIV}
     };
 
 

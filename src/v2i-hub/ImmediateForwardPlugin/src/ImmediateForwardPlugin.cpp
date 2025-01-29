@@ -43,7 +43,9 @@ namespace ImmediateForward
 	void ImmediateForwardPlugin::OnConfigChanged(const char *key, const char *value)
 	{
 		PluginClient::OnConfigChanged(key, value);
-		UpdateConfigSettings();
+		if (IsPluginState(IvpPluginState_registered)) {
+			UpdateConfigSettings();
+		}
 	}
 
 	void ImmediateForwardPlugin::OnMessageReceived(IvpMessage *msg)
@@ -79,7 +81,7 @@ namespace ImmediateForward
 	void ImmediateForwardPlugin::UpdateConfigSettings()
 	{
 		PLOG(logDEBUG) << "Updating configuration settings.";
-
+		
 		// Update the configuration setting for all UDP clients.
 		// This includes creation/update of _udpClientList and _imfConfigs
 		_imfConfigs.clear();
@@ -115,7 +117,7 @@ namespace ImmediateForward
 						imfConfig.snmpAuth.value().privProtocol.value(),
 						imfConfig.snmpAuth.value().privPassPhrase.value(),
 						3,
-						100
+						1000000
 					);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name]);
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name], imfConfig.messages);
@@ -259,6 +261,10 @@ namespace ImmediateForward
 					}
 					else {
 						auto &client = _snmpClientMap.at(imfConfig.name);
+						PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
+									<< ", PSID: " << messageConfig.psid << ", Client: " << client->get_port()
+									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
+									<< ", Port: " << client->get_port();
 						sendNTCIP1218ImfMessage(client, payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
 					}
 				}
@@ -271,19 +277,8 @@ namespace ImmediateForward
 					"Type: " << msg->type << ", Subtype: " << msg->subtype;
 			return;
 		}
-					}
-				}
-			}
-			if (!foundMessageType)
-			{
-				SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
-				PLOG(logWARNING)<<" WARNING TMX Subtype not found in configuration. Message Ignored: " <<
-						"Type: " << msg->type << ", Subtype: " << msg->subtype;
-				return;
-			}
 
 
-		}
 	}
 
 

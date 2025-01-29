@@ -32,7 +32,7 @@
 #include <tmx/Security/include/base64.h>
 
 #include "ImmediateForwardConfiguration.h"
-#include "SNMPWorker.h"
+#include "IMFNTCIP1218Worker.h"
 
 namespace ImmediateForward
 {
