@@ -112,8 +112,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	std::stringstream strat;
 	std::stringstream payload; 
  
-	// Create ptree object for json
-	ptree pr;
+	// Create ptree object for json payload
+	ptree json_payload;
 
 	// Create new Action_Object pointer
 	std::unique_ptr<Action_Object> action_obj( new Action_Object());
@@ -129,8 +129,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
 				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
 			// Convert JSON payload to Action_Object
-			read_json(payload, pr);
-			*action_obj = readCDA1TenthJson( pr );
+			read_json(payload, json_payload);
+			*action_obj = readCDA1TenthJson( json_payload );
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
@@ -158,19 +158,19 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 			// client->request_holding( previous_checkpoint_id );
 		}
 
-		
-		// PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
-		// 	"veh_id : " << action_obj->vehicle.veh_id << std::endl <<
-		// 	"cargo_uuid : " << action_obj->cargo.cargo_uuid << std::endl <<		
-		// 	"cargo : " << action_obj->cargo << std::endl <<
-		// 	"operation : " << action_obj->operation << std::endl <<
-		// 	"location_lat : " << action_obj->location_lat << std::endl <<
-		// 	"location_long : " << action_obj->location_long << std::endl <<
-		// 	"destination latitude : " << action_obj->area.latitude << std::endl <<
-		// 	"destination longitude : " << action_obj->area.longitude << std::endl <<
-		// 	"action_id : " << action_obj->action_id << std::endl <<
-		// 	"next_action : " << action_obj->next_action << std::endl;
-
+		PLOG(logDEBUG) << "Mobility Operation Message : " << std::endl << 
+			"action_id : " << action_obj->action_id << std::endl <<
+			"next_action : " << action_obj->next_action << std::endl <<
+			"prev_action : " << action_obj->prev_action << std::endl <<
+			"area name : " << action_obj->area.name << std::endl <<
+			"area latitude : " << action_obj->area.latitude << std::endl <<
+			"area longitude : " << action_obj->area.longitude << std::endl <<
+			"area status : " << action_obj->area.status << std::endl <<
+			"area is_notify : " << action_obj->area.is_notify << std::endl <<
+			"cargo_uuid : " << action_obj->cargo.cargo_uuid << std::endl <<
+			"cargo name : " << action_obj->cargo.name << std::endl << 
+			"veh_id : " << action_obj->vehicle.veh_id << std::endl <<
+			"vehicle name : " << action_obj->vehicle.name << std::endl;
 	
 		try{
 			// // Retrieve first or next action
@@ -195,7 +195,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				ptree payload = createCDA1TenthJson( *new_action );
 
 				// Create XML MobilityOperationMessage
-				ptree message = createMobilityOperationXml( payload );
+				ptree message = MobilityOperationConverter::fromTree( payload );
 				std::stringstream content;
 				write_xml(content, message);				
 				try {
@@ -231,28 +231,6 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				<< "Error status " << e.getSQLState() << std::endl;
 		}
 	}
-}
-
-
-ptree CDA1TenthPlugin::createMobilityOperationXml( const ptree &json_payload ) {
-	ptree mobilityOperationXml;
-	std::stringstream pl;
-	write_json( pl, json_payload);
-	// Create XML MobilityOperationMessage
-	ptree message;
-	ptree header;
-	ptree body;
-	body.put("strategy",PORT_DRAYAGE_STRATEGY);
-	body.put("operationParams", pl.str());
-	header.put("hostStaticId", "UNSET");
-	header.put("targetStaticId", "UNSET");
-	header.put("hostBSMId", "00000000");
-	header.put("planId", "00000000-0000-0000-0000-000000000000");
-	header.put("timestamp", "0000000000000000000");
-	message.put_child("header", header);
-	message.put_child("body",body);
-	mobilityOperationXml.put_child( "TestMessage03", message);
-	return mobilityOperationXml;
 }
 
 
@@ -314,22 +292,32 @@ CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveNextAction(const int &ac
 			sql::ResultSet *cur_action = current_action->executeQuery();
 			// Create Action_Object
 			if ( cur_action->first() ) { 
-				rtn->vehicle.veh_id = cur_action->getString("veh_id");
-				rtn->area.name = cur_action->getString("area_name");
 				rtn->action_id = cur_action->getInt("action_id");
-				rtn->cargo.cargo_uuid = cur_action->getString("cargo_uuid");
+				rtn->next_action = cur_action->getInt("next_action");
+				rtn->prev_action = cur_action->getInt("prev_action");
+				rtn->area.name = cur_action->getString("area_name");
 				rtn->area.longitude = cur_action->getDouble("area_long");
 				rtn->area.latitude =  cur_action->getDouble("area_lat");
-				rtn->next_action = cur_action->getInt("next_action");
+				rtn->area.status = cur_action->getBoolean("area_status");
+				rtn->area.is_notify = cur_action->getBoolean("area_is_notify");
+				rtn->cargo.cargo_uuid = cur_action->getString("cargo_uuid");
+				rtn->cargo.name = cur_action->getString("cargo_name");
+				rtn->vehicle.veh_id = cur_action->getString("veh_id");
+				rtn->vehicle.name = cur_action->getString("veh_name");
 
-				PLOG(logDEBUG) << "Port Drayage Message : " << std::endl << 
-					"veh_id : " << rtn->vehicle.veh_id << std::endl <<
-					"cargo_uuid : " << rtn->cargo.cargo_uuid << std::endl <<
-					"operation : " << rtn->area.name << std::endl <<
-					"destination_lat : " << rtn->area.latitude << std::endl <<
-					"destination_long : " << rtn->area.longitude << std::endl <<
+				PLOG(logDEBUG) << "Mobility Operation Message : " << std::endl << 
 					"action_id : " << rtn->action_id << std::endl <<
-					"next_action : " << rtn->next_action << std::endl;
+					"next_action : " << rtn->next_action << std::endl <<
+					"prev_action : " << rtn->prev_action << std::endl <<
+					"area name : " << rtn->area.name << std::endl <<
+					"area latitude : " << rtn->area.latitude << std::endl <<
+					"area longitude : " << rtn->area.longitude << std::endl <<
+					"area status : " << rtn->area.status << std::endl <<
+					"area is_notify : " << rtn->area.is_notify << std::endl <<
+					"cargo_uuid : " << rtn->cargo.cargo_uuid << std::endl <<
+					"cargo name : " << rtn->cargo.name << std::endl << 
+					"veh_id : " << rtn->vehicle.veh_id << std::endl <<
+					"vehicle name : " << rtn->vehicle.name << std::endl;
 			}
 			else {
 				// If we are able to retrieve the current action but not it's next_action we can
@@ -347,6 +335,7 @@ CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveNextAction(const int &ac
 	return *rtn;
 }
 
+// action converter obj -> json
 ptree CDA1TenthPlugin::createCDA1TenthJson( const Action_Object &cda1t_obj) {
 	ptree json_payload;
 	json_payload.put("veh_id", cda1t_obj.vehicle.veh_id );
@@ -360,12 +349,12 @@ ptree CDA1TenthPlugin::createCDA1TenthJson( const Action_Object &cda1t_obj) {
 	return json_payload;
 }
 
-
-CDA1TenthPlugin::Action_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &pr ) {
+// action converter json -> obj
+CDA1TenthPlugin::Action_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &json_payload ) {
 	std::unique_ptr<Action_Object> action_obj( new Action_Object());
 	try {
-		action_obj->vehicle.veh_id = pr.get_child("veh_id").get_value<std::string>();
-		boost::optional<const ptree& > child = pr.get_child_optional( "action_id" );
+		action_obj->vehicle.veh_id = json_payload.get_child("veh_id").get_value<std::string>();
+		boost::optional<const ptree& > child = json_payload.get_child_optional( "action_id" );
 		if( !child )
 		{
 			PLOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
@@ -373,14 +362,14 @@ CDA1TenthPlugin::Action_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &
 		else {
 			action_obj->action_id = child.get_ptr()->get_value<int>();
 			// For eventually tracking of completed actions
-			action_obj->area.name = pr.get_child("operation").get_value<string>();
-			child = pr.get_child_optional("cargo_uuid");
+			action_obj->area.name = json_payload.get_child("operation").get_value<string>();
+			child = json_payload.get_child_optional("cargo_uuid");
 			if ( child ) {
-				action_obj->cargo.cargo_uuid = pr.get_child("cargo_uuid").get_value<string>();
+				action_obj->cargo.cargo_uuid = json_payload.get_child("cargo_uuid").get_value<string>();
 			}
-			// child = pr.get_child_optional("location");
+			// child = json_payload.get_child_optional("location");
 			// if ( child ) {
-			// 	ptree location = pr.get_child("location");
+			// 	ptree location = json_payload.get_child("location");
 			// 	action_obj->location_lat =location.get_child("latitude").get_value<double>();
 			// 	action_obj->location_long = location.get_child("longitude").get_value<double>();
 			// }

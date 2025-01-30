@@ -34,6 +34,8 @@
 #include <OAIHelpers.h>
 #include <QCoreApplication>
 #include "BSMConverter.h"
+#include "MobilityOperationConverter.h"
+#include "ActionConverter.h"
 
 using namespace std;
 using namespace tmx;
@@ -143,18 +145,18 @@ protected:
 	/**
 	 * Create Action_Object from ptree JSON.
 	 * 
-	 * @param pr CDA1Tenth JSON
+	 * @param json_payload CDA1Tenth JSON
 	 * @return Action_Object 
 	 */
-	Action_Object readCDA1TenthJson( const ptree &pr );
+	Action_Object readCDA1TenthJson( const ptree &json_payload );
 
-	/**
-	 * Method to create MobilityOperation XML ptree.
-	 * 
-	 * @param ptree json payload
-	 * @return MobilityOperation message XML ptree
-	 */
-	ptree createMobilityOperationXml( const ptree &json_payload);
+	// /**
+	//  * Method to create MobilityOperation XML ptree.
+	//  * 
+	//  * @param ptree json payload
+	//  * @return MobilityOperation message XML ptree
+	//  */
+	// ptree createMobilityOperationXml( const ptree &json_payload);
 	/**
 	 * Handle MobilityOperation message.
 	 * 

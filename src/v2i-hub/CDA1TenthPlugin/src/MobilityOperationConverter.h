@@ -53,5 +53,4 @@ namespace CDA1TenthPlugin
 
   };
 
-
-}
+} // namespace CDA1TenthPlugin
