@@ -64,6 +64,11 @@
 			"description": "Polling Frequency for CDA 1Tenth Webservice action status in seconds"
 		},
 		{
+			"key": "BSM_Forward_Frequency",
+			"default": "1",
+			"description": "Manual configuration to control how frequently the BSM is forwarded to websocket. Default to 1HZ."
+		},
+		{
 			"key":"Holding_Lat",
             "default":"45.45",
             "description":"Latitude Coordinate for Holding Area GPS Location in Degrees(-90,90)."
