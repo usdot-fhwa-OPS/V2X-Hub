@@ -77,5 +77,15 @@ Open a terminal, and run [a python script](../../../configuration/mysql/suntrax/
 ```
 ./momscript_port_drayage.py
 ```
+### Websocket Testing
+Websocket is used to communicate between the V2X-Hub and User Interface. It currently supports the following actions:
+- Connect to websocket
+- Forwarding Basic Safety Message at configured frequency
+#### Connect to websocket
+```
+Use a websocket client connect to: ws://localhost:9002
+```
+#### Forward
+Send a Basic Safety Message to V2xHub. `MessageReceiverPlugin` will receive the message and broadcast internally. `CDA1TenthPlugin` will receive the message and add it to a queue. The websocket server will pull the message from the queue and forward it to all the connected websocket clients.
 
 
