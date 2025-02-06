@@ -33,6 +33,7 @@
 #include <QTimer>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
+//#include "ActionObject.h"
 #include "BSMConverter.h"
 #include "MobilityOperationConverter.h"
 #include "ActionConverter.h"
@@ -86,29 +87,29 @@ std::string operation_to_string( Operation operation ) {
  */ 
 class CDA1TenthPlugin: public PluginClient {
 public:
-	struct Action_Object {
-		int action_id;
-		int next_action;
-		int prev_action;
-		struct Area {
-			std::string name;
-			double latitude;
-			double longitude;
-			bool status;
-			bool is_notify;
-		};
-		Area area;
-		struct Cargo {
-			std::string cargo_uuid;
-			std::string name;
-		};
-		Cargo cargo;
-		struct Vehicle {
-			std::string veh_id;
-			std::string name;
-		};
-		Vehicle vehicle;
-	};
+	// struct Action_Object {
+	// 	int action_id;
+	// 	int next_action;
+	// 	int prev_action;
+	// 	struct Area {
+	// 		std::string name;
+	// 		double latitude;
+	// 		double longitude;
+	// 		bool status;
+	// 		bool is_notify;
+	// 	};
+	// 	Area area;
+	// 	struct Cargo {
+	// 		std::string cargo_uuid;
+	// 		std::string name;
+	// 	};
+	// 	Cargo cargo;
+	// 	struct Vehicle {
+	// 		std::string veh_id;
+	// 		std::string name;
+	// 	};
+	// 	Vehicle vehicle;
+	// };
 
 	/**
 	 * Construct a new MobililtyOperationPlugin with the given name.
@@ -135,28 +136,7 @@ protected:
 	void OnConfigChanged(const char *key, const char *value);
 	//TODO NEEDS DESCRIPTION
 	void OnStateChange(IvpPluginState state);
-	/**
-	 * Method to create port drayage payload JSON ptree using an Action Object.
-	 * 
-	 * @param action_obj Action Object.
-	 * @return json ptree
-	 */
-	ptree createCDA1TenthJson( const Action_Object &action_obj);
-	/**
-	 * Create Action_Object from ptree JSON.
-	 * 
-	 * @param json_payload CDA1Tenth JSON
-	 * @return Action_Object 
-	 */
-	Action_Object readCDA1TenthJson( const ptree &json_payload );
 
-	// /**
-	//  * Method to create MobilityOperation XML ptree.
-	//  * 
-	//  * @param ptree json payload
-	//  * @return MobilityOperation message XML ptree
-	//  */
-	// ptree createMobilityOperationXml( const ptree &json_payload);
 	/**
 	 * Handle MobilityOperation message.
 	 * 
@@ -164,7 +144,6 @@ protected:
 	 * @param routeableMsg JSON MobilityOperation message
 	 */
 	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
-
 	/**
 	 * Handle BasicSafety message.
 	 * 
@@ -172,16 +151,19 @@ protected:
 	 * @param routeableMsg JSON BasicSafety message
 	 */
 	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	/**
+	 * Retrieve the next action in the SQL database.
+	 * 
+	 * @param action_id Action ID of a given start action
+	 */
 	Action_Object retrieveNextAction(const int &action_id);
-
-	// Action_Object retrieveFirstAction(const std::string &cmv_id);
-
-
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
 	*/
 	void receiveBasicSafetyMessage(BsmMessage &msg);
+
+
 private: 
 	// Database configuration values
 	sql::Driver *driver;

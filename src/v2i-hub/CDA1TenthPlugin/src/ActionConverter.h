@@ -16,25 +16,43 @@
 #pragma once
 
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/optional/optional.hpp>
 #include <boost/algorithm/string.hpp>
-#include "CDA1TenthPlugin.h"
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <PluginLog.h>
+#include "PluginClient.h"
+#include "ActionObject.h"
 
-using pt = boost::property_tree::ptree;
 using std::string;
+using namespace tmx;
+using namespace tmx::utils;
+using namespace tmx::messages;
+using namespace boost::property_tree;
 
 namespace CDA1TenthPlugin
 {
-    class ActionConverter
-    {
-        public:
-          ActionConverter() = default;
-          ~ActionConverter() = default;
+  class ActionConverter
+  {
+      public:
+        ActionConverter() = default;
+        ~ActionConverter() = default;
 
+      /**
+       * Method to create port drayage payload JSON ptree using an Action Object.
+       * 
+       * @param action_obj Action Object.
+       * @return json ptree
+       */
+      static ptree toTree(const Action_Object &action_obj);
+      /**
+       * Create Action_Object from ptree JSON.
+       * 
+       * @param json_payload CDA1Tenth JSON
+       * @return Action_Object 
+       */
+      static Action_Object toActionObject(const ptree &json_payload);
 
-          static pt toTree(const CDA1TenthPlugin::Action_Object &cda1t_obj);
-
-          CDA1TenthPlugin::Action_Object toActionObject(const pt &json_payload );
     };
-
 
 } // namespace CDA1TenthPlugin

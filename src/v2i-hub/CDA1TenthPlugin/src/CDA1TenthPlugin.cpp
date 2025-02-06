@@ -16,13 +16,12 @@
 #include "CDA1TenthPlugin.h"
 
 
-
 namespace CDA1TenthPlugin {
 
 CDA1TenthPlugin::CDA1TenthPlugin(string name) :
 		PluginClient(name) {
 	// Plugin Handles MobilityOperation Messages
-	AddMessageFilter < tsm3Message > (this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
+	AddMessageFilter <tsm3Message> (this, &CDA1TenthPlugin::HandleMobilityOperationMessage);
 	AddMessageFilter<BsmMessage>(this, &CDA1TenthPlugin::HandleBasicSafetyMessage);
 	SubscribeToMessages();
 
@@ -130,33 +129,33 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
 			// Convert JSON payload to Action_Object
 			read_json(payload, json_payload);
-			*action_obj = readCDA1TenthJson( json_payload );
+			*action_obj = ActionConverter::toActionObject( json_payload );
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
-		// Handle actions that require CDA1Tenth WebService Input
-		if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
-			// TODO: Commented out due to compilation error
-			// client->request_loading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-		}
-		else if (action_obj->area.name.compare(operation_to_string(Operation::DROPOFF))  == 0) {
-			// TODO: Commented out due to compilation error
-			// client->request_unloading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-		}
-		else if (action_obj->area.name.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
-			// If holding == 1 insert HOLDING action into table
-			// TODO: Commented out due to compilation error
-			// int holding = client->request_inspection(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-			// if ( holding == 1 ) {
-			// 	insert_holding_action_into_table( *action_obj );
-			// }	
-		}
-		else if (action_obj->area.name.compare(operation_to_string(Operation::HOLDING)) == 0) {
-			// TODO: Commented out due to compilation error
-			// string previous_checkpoint_id = retrieve_holding_inspection_action_id(action_obj->action_id );
-			// client->request_holding( previous_checkpoint_id );
-		}
+		// // Handle actions that require CDA1Tenth WebService Input
+		// if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
+		// 	// TODO: Commented out due to compilation error
+		// 	// client->request_loading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
+		// }
+		// else if (action_obj->area.name.compare(operation_to_string(Operation::DROPOFF))  == 0) {
+		// 	// TODO: Commented out due to compilation error
+		// 	// client->request_unloading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
+		// }
+		// else if (action_obj->area.name.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
+		// 	// If holding == 1 insert HOLDING action into table
+		// 	// TODO: Commented out due to compilation error
+		// 	// int holding = client->request_inspection(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
+		// 	// if ( holding == 1 ) {
+		// 	// 	insert_holding_action_into_table( *action_obj );
+		// 	// }	
+		// }
+		// else if (action_obj->area.name.compare(operation_to_string(Operation::HOLDING)) == 0) {
+		// 	// TODO: Commented out due to compilation error
+		// 	// string previous_checkpoint_id = retrieve_holding_inspection_action_id(action_obj->action_id );
+		// 	// client->request_holding( previous_checkpoint_id );
+		// }
 
 		PLOG(logDEBUG) << "Mobility Operation Message : " << std::endl << 
 			"action_id : " << action_obj->action_id << std::endl <<
@@ -173,8 +172,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 			"vehicle name : " << action_obj->vehicle.name << std::endl;
 	
 		try{
-			// // Retrieve first or next action
 			Action_Object *new_action = new Action_Object();
+
 			// if (action_obj->action_id == -1 ) {
 			// 	PLOG(logDEBUG) << "Retrieving first action." << std::endl;
 			// 	*new_action = retrieveFirstAction(action_obj->vehicle.veh_id);
@@ -192,7 +191,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				std::unique_ptr<tsm3EncodedMessage> msg;
 
 				//  Create operationParams payload json
-				ptree payload = createCDA1TenthJson( *new_action );
+				ptree payload = ActionConverter::toTree( *new_action );
 
 				// Create XML MobilityOperationMessage
 				ptree message = MobilityOperationConverter::fromTree( payload );
@@ -233,51 +232,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	}
 }
 
-
-// CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveFirstAction( const std::string &veh_id ) {
-// 	std::unique_ptr<Action_Object> rtn( new Action_Object());
-// 	try{
-// 		// Set veh_id
-// 		first_action->setString(1,veh_id);
-// 		// Retrieve first action of first_action table
-// 		sql::ResultSet *cur_action = first_action->executeQuery();
-// 		if ( cur_action->first() ) {
-// 			// Create Port Drayage object
-// 			rtn->vehicle.veh_id = cur_action->getString("veh_id");
-// 			rtn->operation = cur_action->getString("operation");
-// 			rtn->action_id = cur_action->getString("action_id");
-// 			rtn->->cargo.cargo_uuid = cur_action->getString("cargo_uuid");
-// 			rtn->destination_long = cur_action->getDouble("destination_long");
-// 			rtn->destination_lat =  cur_action->getDouble("destination_lat");
-// 			rtn->next_action =cur_action->getString("next_action");
-// 			PLOG(logDEBUG) << "Port Drayage Message" << std::endl << 
-// 				"veh_id : " << rtn->vehicle.veh_id << std::endl <<
-// 				"cargo_uuid : " << rtn->cargo.cargo_uuid << std::endl <<
-// 				"operation : " << rtn->operation << std::endl <<
-// 				"destination_lat : " << rtn->destination_lat << std::endl <<
-// 				"destination_long : " << rtn->destination_long << std::endl <<
-// 				"action_id : " << rtn->action_id << std::endl <<
-// 				"next_action : " << rtn->next_action << std::endl;
-// 			return *rtn;
-// 		}
-// 		else {
-// 			PLOG(logERROR) << "No first action for veh_id : " << veh_id << " found!";
-// 			return *rtn;
-// 		}
-		
-
-// 	}
-// 	catch ( const sql::SQLException &e ) {
-// 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
-// 			<< "Error code " << e.getErrorCode() << std::endl
-// 			<< "Error status " << e.getSQLState() << std::endl;
-// 		return *rtn;
-// 	}
-	
-// }
-
-
-CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveNextAction(const int &action_id ) {
+Action_Object CDA1TenthPlugin::retrieveNextAction(const int &action_id ) {
 	std::unique_ptr<Action_Object> rtn( new Action_Object());
 	try{
 		// Set action_id
@@ -335,55 +290,7 @@ CDA1TenthPlugin::Action_Object CDA1TenthPlugin::retrieveNextAction(const int &ac
 	return *rtn;
 }
 
-// action converter obj -> json
-ptree CDA1TenthPlugin::createCDA1TenthJson( const Action_Object &cda1t_obj) {
-	ptree json_payload;
-	json_payload.put("veh_id", cda1t_obj.vehicle.veh_id );
-	json_payload.put("cargo_uuid", cda1t_obj.cargo.cargo_uuid );
-	ptree destination;
-	destination.put<double>("latitude", cda1t_obj.area.latitude);
-	destination.put<double>("longitude", cda1t_obj.area.longitude);
-	json_payload.put_child("destination",destination);
-	json_payload.put("operation", cda1t_obj.area.name);
-	json_payload.put("action_id", cda1t_obj.action_id );
-	return json_payload;
-}
 
-// action converter json -> obj
-CDA1TenthPlugin::Action_Object CDA1TenthPlugin::readCDA1TenthJson( const ptree &json_payload ) {
-	std::unique_ptr<Action_Object> action_obj( new Action_Object());
-	try {
-		action_obj->vehicle.veh_id = json_payload.get_child("veh_id").get_value<std::string>();
-		boost::optional<const ptree& > child = json_payload.get_child_optional( "action_id" );
-		if( !child )
-		{
-			PLOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
-		}
-		else {
-			action_obj->action_id = child.get_ptr()->get_value<int>();
-			// For eventually tracking of completed actions
-			action_obj->area.name = json_payload.get_child("operation").get_value<string>();
-			child = json_payload.get_child_optional("cargo_uuid");
-			if ( child ) {
-				action_obj->cargo.cargo_uuid = json_payload.get_child("cargo_uuid").get_value<string>();
-			}
-			// child = json_payload.get_child_optional("location");
-			// if ( child ) {
-			// 	ptree location = json_payload.get_child("location");
-			// 	action_obj->location_lat =location.get_child("latitude").get_value<double>();
-			// 	action_obj->location_long = location.get_child("longitude").get_value<double>();
-			// }
-
-
-		}
-		return *action_obj.get();
-
-	}
-	catch( const ptree_error &e ) {
-		PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
-		return *action_obj.get();
-	}
-}
 // TODO: Commented out due to compilation error
 // std::string CDA1TenthPlugin::retrieve_holding_inspection_action_id( const std::string &action_id ) {
 // 	try{
