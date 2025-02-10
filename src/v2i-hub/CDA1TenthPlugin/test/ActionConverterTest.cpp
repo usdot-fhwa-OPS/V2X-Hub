@@ -1,0 +1,57 @@
+#include <gtest/gtest.h>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include "ActionConverter.h"
+#include "ActionObject.h"
+
+TEST(ActionConverterTest, toTree)
+{
+    std::unique_ptr<Action_Object> test_obj( new Action_Object());
+
+    test_obj->action_id = 2;
+    test_obj->next_action = 3;
+    test_obj->prev_action = 1;
+    test_obj->area.name = "TEST";
+    test_obj->area.longitude = 10000000;
+    test_obj->area.latitude =  11111111;
+    test_obj->area.status = true;
+    test_obj->area.is_notify = true;
+    test_obj->cargo.cargo_uuid = "CARGO_01";
+    test_obj->cargo.name = "TEST_CARGO";
+    test_obj->vehicle.veh_id = "VEH_01";
+    test_obj->vehicle.name = "SOME_VEHICLE";
+
+    ptree result = CDA1TenthPlugin::ActionConverter::toTree(*test_obj);
+
+    EXPECT_EQ(result.get_child("action_id").get_value<int>(), 2);
+    EXPECT_EQ(result.get_child("operation").get_value<string>(), "TEST");
+    EXPECT_EQ(result.get_child("cmv_id").get_value<string>(), "VEH_01");
+    EXPECT_EQ(result.get_child("cargo_id").get_value<string>(), "CARGO_01");
+    EXPECT_EQ(result.get_child("destination").get_child("latitude").get_value<double>(), 11111111);
+    EXPECT_EQ(result.get_child("destination").get_child("longitude").get_value<double>(), 10000000);
+}
+
+TEST(ActionConverterTest, toActionObject)
+{
+    ptree test_tree;
+	test_tree.put("operation", "TEST2");
+	test_tree.put("action_id", 5);
+	test_tree.put("cmv_id", "VEH_02");
+	test_tree.put("cargo_id", "CARGO_02");
+    
+	ptree destination;
+	destination.put<double>("latitude", 12222222);
+	destination.put<double>("longitude", 13333333);
+	test_tree.put_child("destination", destination);
+
+    std::unique_ptr<Action_Object> result_obj( new Action_Object());
+
+    *result_obj = CDA1TenthPlugin::ActionConverter::toActionObject( test_tree );
+
+    EXPECT_EQ(result_obj->action_id, 5);
+    EXPECT_EQ(result_obj->area.name, "TEST2");
+    EXPECT_EQ(result_obj->vehicle.veh_id, "VEH_02");
+    EXPECT_EQ(result_obj->cargo.cargo_uuid, "CARGO_02");
+    EXPECT_EQ(result_obj->area.latitude, 12222222);
+    EXPECT_EQ(result_obj->area.longitude, 13333333);
+
+}

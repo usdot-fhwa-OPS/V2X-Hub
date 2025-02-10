@@ -20,9 +20,11 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include "ActionObject.h"
 
-using pt = boost::property_tree::ptree;
 using std::string;
+using namespace boost::property_tree;
+
 namespace CDA1TenthPlugin
 {
   class MobilityOperationConverter
@@ -31,25 +33,14 @@ namespace CDA1TenthPlugin
     MobilityOperationConverter() = default;
     ~MobilityOperationConverter() = default;
 
-    /***
-     * @brief Convert a tsm3Message (MOM) to a JSON ptree
-     * @param  mobility_operation_message tsm3Message (MOM)
-     * @return JSON ptree
-     */
-    static pt toTree(const tmx::messages::tsm3Message &mobility_operation_msg);
     /**
     * Method to create MobilityOperation XML ptree.
     * 
     * @param ptree JSON payload
+    * @param strategy String representation of the current mobility operaiton strategy
     * @return MobilityOperation message XML ptree
     */
-    static pt fromTree( const pt &json_payload);
-    /**
-     * @brief Convert a JSON ptree to a JSON string
-     * @param tree JSON ptree
-     * @return MOM string in JSON format
-     */
-    static string toJsonString(const pt &tree);
+    static ptree fromTree( const ptree &json_payload, const std::string &strategy);
 
   };
 

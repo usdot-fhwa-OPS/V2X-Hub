@@ -17,32 +17,17 @@
 
 namespace CDA1TenthPlugin
 {
-  pt MobilityOperationConverter::toTree(const tmx::messages::tsm3Message &mobility_operation_msg)
+  ptree MobilityOperationConverter::fromTree(const ptree &json_payload, const string &strategy) // or config
   {
-	pt message;
-	pt strategy;
-	pt payload;
-
-	//strategy.put("strategy", mobility_operation_msg->body.strategy.buf);
-	// read_json(mobility_operation_msg->body->payload, payload);
-
-	// message.add_child("strategy", strategy);
-	// message.add_child("payload", payload);
-
-	return message;
-  }
-
-  pt MobilityOperationConverter::fromTree(const pt &json_payload) // or config
-  {
-	pt mobilityOperationXml;
+	ptree mobilityOperationXml;
 	std::stringstream string_payload;
 	write_json(string_payload, json_payload);
 
 	// Create XML MobilityOperationMessage
-	pt message;
-	pt header;
-	pt body;
-	body.put("strategy","carma/port_drayage");
+	ptree message;
+	ptree header;
+	ptree body;
+	body.put("strategy", strategy);
 	body.put("operationParams", string_payload.str());
 	header.put("hostStaticId", "UNSET");
 	header.put("targetStaticId", "UNSET");
@@ -54,18 +39,6 @@ namespace CDA1TenthPlugin
 	mobilityOperationXml.put_child("TestMessage03", message);
 
 	return mobilityOperationXml;
-  }
-
-  string MobilityOperationConverter::toJsonString(const pt &tree)
-  {
-    std::ostringstream buf;
-    write_json(buf, tree, false);
-    std::string jsonStr = buf.str();
-    boost::algorithm::erase_all(jsonStr, "\n");
-    boost::algorithm::erase_all(jsonStr, "\t");
-    boost::algorithm::erase_all(jsonStr, " ");
-    return jsonStr;
-    return buf.str();
   }
 
 }

@@ -2,30 +2,16 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include "MobilityOperationConverter.h"
 
-// TEST(MobilityOperationConverterTest, toTree)
-// {
-//     tsm3Message_t *mobilityOp = (tsm3Message_t *)calloc(1, sizeof(tsm3Message_t));
 
-//     mobilityOp->header->hostStaticId = "HOST1";
-//     mobilityOp->header->targetStaticId = "TARGET1";
-//     mobilityOp->header->hostBSMId = 12341234;
-//     mobilityOp->header->planId = 15;
-//     mobilityOp->header->timestamp = 12345678;
-//     mobilityOp->body->strategy = "carma/port_drayage";
-//     mobilityOp->body->operationParams = ;
-
-//     boost::property_tree::ptree tree = CDA1TenthPlugin::MobilityOperationConverter::toTree(*mobilityOp);
-
-//     EXPECT_EQ(tree.get<std::string>("MobilityOperationMessage.body.strategy")"carma/port_drayage");
-
-// }
-
-// TEST(MobilityOperationConverterTest, fromTree)
-// {
-    
-// }
-
-// TEST(MobilityOperationConverterTest, toJsonString)
-// {
-    
-// }
+TEST(MobilityOperationConverterTest, fromTree)
+{
+    ptree test_tree;
+	test_tree.put("cmv_id", "VEH_01");
+	test_tree.put("cargo_id", "CARGO_01");
+	ptree destination;
+	destination.put<double>("latitude", 12222222);
+	destination.put<double>("longitude", 13333333);
+	test_tree.put_child("destination",destination);
+	test_tree.put("operation", "TEST2");
+	test_tree.put("action_id", 6);
+}

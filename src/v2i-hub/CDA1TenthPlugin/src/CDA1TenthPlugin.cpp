@@ -61,11 +61,8 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 	GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
 	//TODO: Commented out due to compilation error
 	// client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
-	// Port Holding Area Configurable location
-	GetConfigValue<double>("Holding_Lat", _holding_lat);
-	GetConfigValue<double>("Holding_Lon", _holding_lon);
-	PLOG(logDEBUG) << "Holding Area set : (" << _holding_lat << ", " << _holding_lon << ")" << std::endl;
 
+	// TODO: CHECK PREPARED STATEMENTS AGAINST FINAL DATABASE
 	// Create DB connection
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
 	try {
@@ -78,11 +75,11 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 		// Get current action for given action_id
 		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
 		// Get first action for vehicle
-		first_action = con->prepareStatement("SELECT * FROM first_action WHERE veh_id = ? " );
+		// first_action = con->prepareStatement("SELECT * FROM vehicle WHERE veh_id = ? and action_id = 0 " );
 		// Insert action into freight table
 		insert_action =  con->prepareStatement("INSERT INTO freight VALUES(?,?,?,?,?, UUID(), ?)");
 		// Get action_id of the previous action given action_id
-		get_action_id_for_previous_action = con->prepareStatement("SELECT action_id FROM freight WHERE next_action = ? and operation = ? ");
+		prev_action_id = con->prepareStatement("SELECT prev_action FROM freight WHERE action_id = ? ");
 		// Update next_action for an action with given action_id
 		update_current_action = con->prepareStatement("UPDATE freight SET next_action = ? WHERE action_id = ?");
 
@@ -106,11 +103,15 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 
 	// Retrieve J2735 Message
 	auto mobilityOperation = msg.get_j2735_data();
-	
+
 	// String Stream for strategy and operationParams
-	std::stringstream strat;
-	std::stringstream payload; 
- 
+	std::string strat;
+	std::stringstream payload;
+
+	// Get current strategy from V2X Hub config
+	GetConfigValue<string>("Mobility_Strategy", strat);
+	std::stringstream stratStream(strat);
+
 	// Create ptree object for json payload
 	ptree json_payload;
 
@@ -118,12 +119,12 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	std::unique_ptr<Action_Object> action_obj( new Action_Object());
 
 	// Read strategy and operationParams
-	strat << mobilityOperation->body.strategy.buf;
+	stratStream << mobilityOperation->body.strategy.buf;
 	payload << mobilityOperation->body.operationParams.buf;
 
-	// Compare strategy to CDA1Tenth strategy
-	std::string strategy = strat.str();
-	if ( strategy.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
+	// // Compare strategy to CDA1Tenth strategy
+	// std::string strategy = strat.str();
+	if ( strat.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
 			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
 				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
@@ -134,7 +135,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
-		// // Handle actions that require CDA1Tenth WebService Input
+		// // TODO: NEED TO REASSESS USE OF OPERATION CODES DEFINED IN HEADER
+		// // Handle actions that require CDA1Tenth WebService Input TODO based on web updates
 		// if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
 		// 	// TODO: Commented out due to compilation error
 		// 	// client->request_loading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
@@ -174,14 +176,13 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 		try{
 			Action_Object *new_action = new Action_Object();
 
-			// if (action_obj->action_id == -1 ) {
-			// 	PLOG(logDEBUG) << "Retrieving first action." << std::endl;
-			// 	*new_action = retrieveFirstAction(action_obj->vehicle.veh_id);
-			// }
-			// else {
-			// 	PLOG(logDEBUG) << "Retrieving next action." << std::endl;
-			// 	*new_action = retrieveNextAction(action_obj->action_id );
-			// }
+			if (action_obj->action_id == -1 ) {
+				PLOG(logERROR) << "Action id is invalid" << std::endl;
+			}
+			else {
+				PLOG(logDEBUG) << "Retrieving next action." << std::endl;
+				*new_action = retrieveNextAction(action_obj->action_id );
+			}
 
 			if (new_action->action_id != -1) {
 				// Initializer vars
@@ -194,7 +195,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				ptree payload = ActionConverter::toTree( *new_action );
 
 				// Create XML MobilityOperationMessage
-				ptree message = MobilityOperationConverter::fromTree( payload );
+				ptree message = MobilityOperationConverter::fromTree(payload, strat);
 				std::stringstream content;
 				write_xml(content, message);				
 				try {
@@ -290,31 +291,6 @@ Action_Object CDA1TenthPlugin::retrieveNextAction(const int &action_id ) {
 	return *rtn;
 }
 
-
-// TODO: Commented out due to compilation error
-// std::string CDA1TenthPlugin::retrieve_holding_inspection_action_id( const std::string &action_id ) {
-// 	try{
-// 		get_action_id_for_previous_action->setString(1, action_id);
-// 		get_action_id_for_previous_action->setString(2, "PORT_CHECKPOINT");
-// 		PLOG(logDEBUG) << "Query : SELECT action_id FROM freight WHERE next_action = " 
-// 			<< action_id << " and operation = PORT_CHECKPOINT " << std::endl;
-
-// 		sql::ResultSet *res = get_action_id_for_previous_action->executeQuery();
-// 		res->first();
-// 		if ( res->isFirst() ) {
-// 			PLOG(logDEBUG) << "Query Result: " << res->first() << std::endl;
-// 		}
-// 		std::string action_id = res->getString("action_id");
-// 		return action_id;
-// 	}
-// 	catch ( sql::SQLException &e ) {
-// 		PLOG(logERROR) << "Error occurred during MYSQL Connection " << std::endl << e.what() << std::endl
-// 			<< "Error code " << e.getErrorCode() << std::endl
-// 			<< "Error status " << e.getSQLState() << std::endl;
-// 		return "";
-// 	}
-// }
-
 void CDA1TenthPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 	{
 		receiveBasicSafetyMessage(msg);
@@ -366,4 +342,3 @@ int main(int argc, char *argv[]) {
 	QCoreApplication a(argc, argv);
 	return run_plugin < CDA1TenthPlugin::CDA1TenthPlugin > ("CDA1TenthPlugin", argc, argv);
 }
-

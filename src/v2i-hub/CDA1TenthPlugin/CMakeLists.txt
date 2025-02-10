@@ -21,7 +21,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
 ## Testing ##
 #############
 enable_testing()
-add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp)
+add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp
+                                src/ActionConverter.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC 

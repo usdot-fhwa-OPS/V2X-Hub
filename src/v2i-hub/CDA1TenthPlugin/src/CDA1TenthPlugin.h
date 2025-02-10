@@ -33,7 +33,6 @@
 #include <QTimer>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
-//#include "ActionObject.h"
 #include "BSMConverter.h"
 #include "MobilityOperationConverter.h"
 #include "ActionConverter.h"
@@ -87,30 +86,6 @@ std::string operation_to_string( Operation operation ) {
  */ 
 class CDA1TenthPlugin: public PluginClient {
 public:
-	// struct Action_Object {
-	// 	int action_id;
-	// 	int next_action;
-	// 	int prev_action;
-	// 	struct Area {
-	// 		std::string name;
-	// 		double latitude;
-	// 		double longitude;
-	// 		bool status;
-	// 		bool is_notify;
-	// 	};
-	// 	Area area;
-	// 	struct Cargo {
-	// 		std::string cargo_uuid;
-	// 		std::string name;
-	// 	};
-	// 	Cargo cargo;
-	// 	struct Vehicle {
-	// 		std::string veh_id;
-	// 		std::string name;
-	// 	};
-	// 	Vehicle vehicle;
-	// };
-
 	/**
 	 * Construct a new MobililtyOperationPlugin with the given name.
 	 *
@@ -176,7 +151,7 @@ private:
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
 	sql::PreparedStatement *insert_action;
-	sql::PreparedStatement *get_action_id_for_previous_action;
+	sql::PreparedStatement *prev_action_id;
 	sql::PreparedStatement *update_current_action;
 
 	// Message Factory for J2735 messages
@@ -184,10 +159,6 @@ private:
 	
 	// TODO New Web Service Client 
 	// std::shared_ptr<WebServiceClient> client;
-
-	// Port HOLDING_AREA Configuration
-	double _holding_lat;
-	double _holding_lon;
 
 };
 std::mutex _cfgLock;
