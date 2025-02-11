@@ -23,7 +23,7 @@ namespace CDA1TenthPlugin
 	std::stringstream string_payload;
 	write_json(string_payload, json_payload);
 
-	// Create XML MobilityOperationMessage
+	// Create MobilityOperationMessage ptree
 	ptree message;
 	ptree header;
 	ptree body;

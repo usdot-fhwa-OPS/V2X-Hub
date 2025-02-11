@@ -18,7 +18,6 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional/optional.hpp>
-//#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <PluginLog.h>
 #include "ActionObject.h"
 
@@ -49,7 +48,7 @@ namespace CDA1TenthPlugin
        * @param json_payload CDA1Tenth JSON
        * @return Action_Object 
        */
-      static Action_Object toActionObject(const ptree &json_payload);
+      static Action_Object fromTree(const ptree &json_payload);
 
     };
 

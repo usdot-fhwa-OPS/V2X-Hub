@@ -60,7 +60,7 @@ TEST(ActionConverterTest, toActionObject)
 
     std::unique_ptr<Action_Object> result_obj( new Action_Object());
 
-    *result_obj = CDA1TenthPlugin::ActionConverter::toActionObject( test_tree );
+    *result_obj = CDA1TenthPlugin::ActionConverter::fromTree( test_tree );
 
     EXPECT_EQ(result_obj->action_id, 5);
     EXPECT_EQ(result_obj->area.name, "TEST2");

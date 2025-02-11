@@ -33,7 +33,7 @@ namespace CDA1TenthPlugin
         return json_payload;
     }
 
-    Action_Object ActionConverter::toActionObject( const ptree &json_payload ) {
+    Action_Object ActionConverter::fromTree( const ptree &json_payload ) {
         std::unique_ptr<Action_Object> action_obj( new Action_Object());
         try {
             action_obj->vehicle.veh_id = json_payload.get_child("cmv_id").get_value<std::string>();

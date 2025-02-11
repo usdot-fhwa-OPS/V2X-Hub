@@ -105,12 +105,12 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	auto mobilityOperation = msg.get_j2735_data();
 
 	// String Stream for strategy and operationParams
-	std::string strat;
+	std::string strat_config;
 	std::stringstream payload;
+	std::stringstream strat_msg;
 
 	// Get current strategy from V2X Hub config
-	GetConfigValue<string>("Mobility_Strategy", strat);
-	std::stringstream stratStream(strat);
+	GetConfigValue<string>("Mobility_Strategy", strat_config);
 
 	// Create ptree object for json payload
 	ptree json_payload;
@@ -119,22 +119,23 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	std::unique_ptr<Action_Object> action_obj( new Action_Object());
 
 	// Read strategy and operationParams
-	stratStream << mobilityOperation->body.strategy.buf;
+	strat_msg << mobilityOperation->body.strategy.buf;
 	payload << mobilityOperation->body.operationParams.buf;
 
 	// // Compare strategy to CDA1Tenth strategy
-	if ( strat.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
+	if ( strat_config.compare(strat_msg.str()) == 0 ){
 		try {
 			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
 				<< std::endl << "Body Strategy : " << mobilityOperation->body.strategy.buf; 
 			// Convert JSON payload to Action_Object
 			read_json(payload, json_payload);
-			*action_obj = ActionConverter::toActionObject( json_payload );
+			*action_obj = ActionConverter::fromTree( json_payload );
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
-		// // TODO: NEED TO REASSESS USE OF OPERATION CODES DEFINED IN HEADER
+		// // TODO: NEED TO REASSESS USE OF OPERATION CODES DEFINED IN HEADER. PICKUP, DROPOFF, ETC. CAN POTENTIALLY BE MORE GENERIC.
+		// //		THE CURRENT ENUM/SWITCH CASE IS NOT VERY EXTENSIBLE OR REUSABLE ACROSS USE CASES DUE TO STRING MATCHING IN DB.
 		// // Handle actions that require CDA1Tenth WebService Input TODO based on web updates
 		// if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
 		// 	// TODO: Commented out due to compilation error
@@ -194,7 +195,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				ptree payload = ActionConverter::toTree( *new_action );
 
 				// Create XML MobilityOperationMessage
-				ptree message = MobilityOperationConverter::fromTree(payload, strat);
+				ptree message = MobilityOperationConverter::fromTree(payload, strat_msg.str());
 				std::stringstream content;
 				write_xml(content, message);				
 				try {
