@@ -43,7 +43,7 @@ namespace CDA1TenthPlugin
                 FILE_LOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
             }
             else if(child.get_ptr()->get_value<int>() == -1){
-                FILE_LOG(logINFO) << "The action_id is present but unitialized (-1). Check the action list." << std::endl;
+                FILE_LOG(logINFO) << "The action_id is present but uninitialized (-1). Check the action list." << std::endl;
             }
             else {
                 action_obj->action_id = child.get_ptr()->get_value<int>();

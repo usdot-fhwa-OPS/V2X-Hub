@@ -22,7 +22,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
 #############
 enable_testing()
 add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp
-                                src/ActionConverter.cpp)
+                                src/ActionConverter.cpp
+                                src/MobilityOperationConverter.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC 

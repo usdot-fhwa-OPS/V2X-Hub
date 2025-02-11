@@ -18,10 +18,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional/optional.hpp>
-#include <boost/algorithm/string.hpp>
-#include <tmx/j2735_messages/J2735MessageFactory.hpp>
+//#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <PluginLog.h>
-#include "PluginClient.h"
 #include "ActionObject.h"
 
 using std::string;

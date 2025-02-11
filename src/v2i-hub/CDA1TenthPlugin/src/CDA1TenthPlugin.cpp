@@ -75,7 +75,7 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 		// Get current action for given action_id
 		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
 		// Get first action for vehicle
-		// first_action = con->prepareStatement("SELECT * FROM vehicle WHERE veh_id = ? and action_id = 0 " );
+		first_action = con->prepareStatement("SELECT * FROM vehicle WHERE veh_id = ? and action_id = 0 " );
 		// Insert action into freight table
 		insert_action =  con->prepareStatement("INSERT INTO freight VALUES(?,?,?,?,?, UUID(), ?)");
 		// Get action_id of the previous action given action_id
@@ -123,7 +123,6 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	payload << mobilityOperation->body.operationParams.buf;
 
 	// // Compare strategy to CDA1Tenth strategy
-	// std::string strategy = strat.str();
 	if ( strat.compare(PORT_DRAYAGE_STRATEGY) == 0 ){
 		try {
 			PLOG(logINFO) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf
