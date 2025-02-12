@@ -35,40 +35,33 @@ namespace CDA1TenthPlugin
 
     Action_Object ActionConverter::fromTree( const ptree &json_payload ) {
         std::unique_ptr<Action_Object> action_obj( new Action_Object());
-        try {
-            action_obj->vehicle.veh_id = json_payload.get_child("cmv_id").get_value<std::string>();
-            boost::optional<const ptree& > child = json_payload.get_child_optional( "action_id" );
-            if( !child )
-            {
-                FILE_LOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
-            }
-            else if(child.get_ptr()->get_value<int>() == -1){
-                FILE_LOG(logINFO) << "The action_id is present but uninitialized (-1). Check the action list." << std::endl;
-            }
-            else {
-                action_obj->action_id = child.get_ptr()->get_value<int>();
-                // For eventually tracking of completed actions
-                action_obj->area.name = json_payload.get_child("operation").get_value<string>();
-                child = json_payload.get_child_optional("cargo_id");
-                if ( child ) {
-                    action_obj->cargo.cargo_uuid = json_payload.get_child("cargo_id").get_value<string>();
-                }
-                child = json_payload.get_child_optional("destination");
-                if ( child ) {
-                    ptree destination = json_payload.get_child("destination");
-                    action_obj->area.latitude = destination.get_child("latitude").get_value<double>();
-                    action_obj->area.longitude = destination.get_child("longitude").get_value<double>();
-                }
 
+        action_obj->vehicle.veh_id = json_payload.get_child("cmv_id").get_value<std::string>();
+        boost::optional<const ptree& > child = json_payload.get_child_optional( "action_id" );
+        if( !child )
+        {
+            FILE_LOG(logINFO) << "No action_id present! This is the vehicle's first action" << std::endl;
+        }
+        else if(child.get_ptr()->get_value<int>() == -1){
+            FILE_LOG(logINFO) << "The action_id is present but uninitialized (-1). Check the action list." << std::endl;
+        }
+        else {
+            action_obj->action_id = child.get_ptr()->get_value<int>();
+            // For eventually tracking of completed actions
+            action_obj->area.name = json_payload.get_child("operation").get_value<string>();
+            child = json_payload.get_child_optional("cargo_id");
+            if ( child ) {
+                action_obj->cargo.cargo_uuid = json_payload.get_child("cargo_id").get_value<string>();
             }
-            return *action_obj.get();
+            child = json_payload.get_child_optional("destination");
+            if ( child ) {
+                ptree destination = json_payload.get_child("destination");
+                action_obj->area.latitude = destination.get_child("latitude").get_value<double>();
+                action_obj->area.longitude = destination.get_child("longitude").get_value<double>();
+            }
 
         }
-        catch( const ptree_error &e ) {
-            FILE_LOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
-            return *action_obj.get();
-        }
+        return *action_obj.get();
+
     }
-
-
 }

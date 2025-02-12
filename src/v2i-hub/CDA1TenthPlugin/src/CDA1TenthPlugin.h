@@ -153,6 +153,7 @@ private:
 	sql::PreparedStatement *insert_action;
 	sql::PreparedStatement *prev_action_id;
 	sql::PreparedStatement *update_current_action;
+	sql::PreparedStatement *action_is_notify;
 
 	// Message Factory for J2735 messages
 	J2735MessageFactory factory;

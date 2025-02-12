@@ -59,8 +59,6 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 	GetConfigValue<bool>("Webservice_Secure", secure);
 	// Polling Frequency in seconds
 	GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
-	//TODO: Commented out due to compilation error
-	// client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
 
 	// TODO: CHECK PREPARED STATEMENTS AGAINST FINAL DATABASE
 	// Create DB connection
@@ -70,18 +68,18 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 		con = driver->connect(connection_string,_database_username,_database_password);
 		con->setSchema(_database_name);
 		// Initialize PreparedStatements for MySQL
-		// Get next_action for given action_id 
-		next_action_id = con->prepareStatement("SELECT next_action FROM freight WHERE action_id = ? ");
-		// Get current action for given action_id
-		current_action = con->prepareStatement("SELECT * FROM freight WHERE action_id = ? ");
-		// Get first action for vehicle
-		first_action = con->prepareStatement("SELECT * FROM vehicle WHERE veh_id = ? and action_id = 0 " );
-		// Insert action into freight table
+		// Get next_action for given action_id
+		
+		// SQL preparedStatements for DB interface
+		// Lookup/modify related actions
+		next_action_id = con->prepareStatement("SELECT next_action FROM action WHERE veh_id = ? and action_id = ?");
+		current_action = con->prepareStatement("SELECT * FROM action WHERE veh_id = ? and action_id = ? ");
+		prev_action_id = con->prepareStatement("SELECT prev_action FROM action WHERE veh_id = ? and action_id = ? ");
+		first_action = con->prepareStatement("SELECT * FROM action WHERE veh_id = ? and action_id = 0 " );
 		insert_action =  con->prepareStatement("INSERT INTO freight VALUES(?,?,?,?,?, UUID(), ?)");
-		// Get action_id of the previous action given action_id
-		prev_action_id = con->prepareStatement("SELECT prev_action FROM freight WHERE action_id = ? ");
-		// Update next_action for an action with given action_id
-		update_current_action = con->prepareStatement("UPDATE freight SET next_action = ? WHERE action_id = ?");
+		update_current_action = con->prepareStatement("UPDATE freight SET next_action = ? WHERE veh_id = ? and action_id = ?");
+		// Retrieve data for a given action_id
+		action_is_notify = con->prepareStatement("SELECT is_notify FROM action WHERE veh_id = ? and action_id = ?");
 
 	}
 	catch ( const sql::SQLException &e ) {
@@ -134,32 +132,8 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing Mobility Operation payload: " << e.what() << std::endl;
 		}
-		// // TODO: NEED TO REASSESS USE OF OPERATION CODES DEFINED IN HEADER. PICKUP, DROPOFF, ETC. CAN POTENTIALLY BE MORE GENERIC.
-		// //		THE CURRENT ENUM/SWITCH CASE IS NOT VERY EXTENSIBLE OR REUSABLE ACROSS USE CASES DUE TO STRING MATCHING IN DB.
-		// // Handle actions that require CDA1Tenth WebService Input TODO based on web updates
-		// if (action_obj->area.name.compare(operation_to_string(Operation::PICKUP)) == 0 ) {
-		// 	// TODO: Commented out due to compilation error
-		// 	// client->request_loading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-		// }
-		// else if (action_obj->area.name.compare(operation_to_string(Operation::DROPOFF))  == 0) {
-		// 	// TODO: Commented out due to compilation error
-		// 	// client->request_unloading_action(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-		// }
-		// else if (action_obj->area.name.compare(operation_to_string(Operation::CHECKPOINT)) == 0) {
-		// 	// If holding == 1 insert HOLDING action into table
-		// 	// TODO: Commented out due to compilation error
-		// 	// int holding = client->request_inspection(action_obj->vehicle.veh_id,action_obj->cargo.cargo_uuid,action_obj->action_id );
-		// 	// if ( holding == 1 ) {
-		// 	// 	insert_holding_action_into_table( *action_obj );
-		// 	// }	
-		// }
-		// else if (action_obj->area.name.compare(operation_to_string(Operation::HOLDING)) == 0) {
-		// 	// TODO: Commented out due to compilation error
-		// 	// string previous_checkpoint_id = retrieve_holding_inspection_action_id(action_obj->action_id );
-		// 	// client->request_holding( previous_checkpoint_id );
-		// }
 
-		PLOG(logDEBUG) << "Mobility Operation Message : " << std::endl << 
+		PLOG(logDEBUG) << "Generated Action Object : " << std::endl << 
 			"action_id : " << action_obj->action_id << std::endl <<
 			"next_action : " << action_obj->next_action << std::endl <<
 			"prev_action : " << action_obj->prev_action << std::endl <<
@@ -180,10 +154,31 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				PLOG(logERROR) << "Action id is invalid" << std::endl;
 			}
 			else {
-				PLOG(logDEBUG) << "Retrieving next action." << std::endl;
-				*new_action = retrieveNextAction(action_obj->action_id );
+				if (action_obj->area.is_notify == false){
+					PLOG(logDEBUG) << "Retrieving next action without waiting." << std::endl;
+					*new_action = retrieveNextAction(action_obj->action_id );
+				}
+				else {
+					PLOG(logDEBUG) << "Waiting for user input on next action" << std::endl;
+
+					ptree action_tree = ActionConverter::toTree(*action_obj);
+					string action_string = BSMConverter::toJsonString(action_tree);
+				
+					// TODO: NEED TO REASSESS USE OF OPERATION CODES DEFINED IN HEADER. PICKUP, DROPOFF, ETC. CAN POTENTIALLY BE MORE GENERIC.
+					//		THE CURRENT ENUM/SWITCH CASE IS NOT VERY EXTENSIBLE OR REUSABLE ACROSS USE CASES DUE TO STRING MATCHING IN DB.
+
+					// // forward current action to the UI in json format as a request
+					// 	client->request_cargo_update(action_string); //push to message queue
+					// }
+					// 	client->request_action_queue_update(action_string;
+					// }
+
+					// request that a conencted UI action is performed after UI is processed
+					// check msg queue on a thread and trigger
+				}
 			}
 
+			// make function
 			if (new_action->action_id != -1) {
 				// Initializer vars
 				tsm3Message mob_msg;
@@ -195,7 +190,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				ptree payload = ActionConverter::toTree( *new_action );
 
 				// Create XML MobilityOperationMessage
-				ptree message = MobilityOperationConverter::fromTree(payload, strat_msg.str());
+				ptree message = MobilityOperationConverter::toXML(payload, strat_msg.str());
 				std::stringstream content;
 				write_xml(content, message);				
 				try {
@@ -221,7 +216,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 				}
 			}
 			else {
-				PLOG(logWARNING) << "Could not find action!" << std::endl;
+				PLOG(logWARNING) << "Could not find valid action!" << std::endl;
 			}
 			
 		}

@@ -17,7 +17,7 @@
 
 namespace CDA1TenthPlugin
 {
-  ptree MobilityOperationConverter::fromTree(const ptree &json_payload, const string &strategy) // or config
+  ptree MobilityOperationConverter::toXML(const ptree &json_payload, const string &strategy) // or config
   {
 	ptree mobilityOperationXml;
 	std::stringstream string_payload;

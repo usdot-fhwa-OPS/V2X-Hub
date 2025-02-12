@@ -32,7 +32,7 @@ TEST(MobilityOperationConverterTest, fromTree)
 	test_tree.put("operation", "TEST2");
 	test_tree.put("action_id", 6);
 
-    ptree result = CDA1TenthPlugin::MobilityOperationConverter::fromTree(test_tree, strat);
+    ptree result = CDA1TenthPlugin::MobilityOperationConverter::toXML(test_tree, strat);
 
     std::string expectedJson = R"({
                 "cmv_id": "VEH_01",

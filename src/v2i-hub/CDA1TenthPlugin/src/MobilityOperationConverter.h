@@ -40,7 +40,7 @@ namespace CDA1TenthPlugin
     * @param strategy String representation of the current mobility operaiton strategy
     * @return MobilityOperation message XML ptree
     */
-    static ptree fromTree( const ptree &json_payload, const std::string &strategy);
+    static ptree toXML( const ptree &json_payload, const std::string &strategy);
 
   };
 
