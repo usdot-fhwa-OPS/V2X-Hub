@@ -31,11 +31,13 @@
 #include <OAIDefaultApi.h>
 #include <QEventLoop>
 #include <QTimer>
+#include <thread>
 #include <OAIHelpers.h>
 #include <QCoreApplication>
 #include "BSMConverter.h"
 #include "MobilityOperationConverter.h"
 #include "ActionConverter.h"
+#include "WebSocketServer.h"
 
 using namespace std;
 using namespace tmx;
@@ -137,8 +139,7 @@ protected:
 	* @param msg BsmMessage
 	*/
 	void receiveBasicSafetyMessage(BsmMessage &msg);
-
-
+	void startWebsocketServer();
 private: 
 	// Database configuration values
 	sql::Driver *driver;
@@ -160,6 +161,10 @@ private:
 	
 	// TODO New Web Service Client 
 	// std::shared_ptr<WebServiceClient> client;
+
+	std::shared_ptr<WebSocketServer> ws;
+	uint16_t bsm_forward_frequency = 1;
+	uint64_t bsm_last_forward_time_ms = 0;
 
 };
 std::mutex _cfgLock;

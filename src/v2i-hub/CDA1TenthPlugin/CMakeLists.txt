@@ -5,9 +5,17 @@ set(CMAKE_AUTOMOC ON)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wno-unused-variable")
 
+
+FIND_PATH (WEBSOCKETS_INCLUDE_DIR lws_config.h)
+
+SET (CMAKE_LIBRARY_PATH ${WEBSOCKETS_INCLUDE_DIR}/../lib ${CMAKE_LIBRARY_PATH})
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Network REQUIRED)
-
+find_package(OpenSSL REQUIRED)
+FIND_LIBRARY (EV_LIBRARY ev)
+FIND_LIBRARY (UV_LIBRARY uv)
+FIND_LIBRARY (CAP_LIBRARY cap)
+find_library(WEBSOCKETS_LIBRARY libwebsockets.a)
 
 include_directories( "/usr/local/include/pdclient")
 
@@ -15,7 +23,7 @@ BuildTmxPlugin ( )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE pdclient )
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core Qt5::Network ssl crypto ) 
-target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils)
+target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils ${WEBSOCKETS_LIBRARY} ${OPENSSL_LIBRARIES} ${EV_LIBRARY} ${UV_LIBRARY} ${CAP_LIBRARY})
 
 #############
 ## Testing ##
