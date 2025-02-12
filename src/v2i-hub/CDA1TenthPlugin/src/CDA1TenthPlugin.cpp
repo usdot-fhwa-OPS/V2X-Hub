@@ -66,12 +66,6 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 	// Polling Frequency in seconds
 	GetConfigValue<uint16_t>("Webservice_Polling_Frequency", polling_frequency);
 	GetConfigValue<uint16_t>("BSM_Forward_Frequency", bsm_forward_frequency);
-	//TODO: Commented out due to compilation error
-	// client = std::make_shared<WebServiceClient>( host, port, secure, polling_frequency );
-	// Port Holding Area Configurable location
-	GetConfigValue<double>("Holding_Lat", _holding_lat);
-	GetConfigValue<double>("Holding_Lon", _holding_lon);
-	PLOG(logDEBUG) << "Holding Area set : (" << _holding_lat << ", " << _holding_lon << ")" << std::endl;
 
 	// Create DB connection
 	std::string connection_string = "tcp://" + _database_ip + ":" + std::to_string(_database_port);
