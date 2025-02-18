@@ -103,7 +103,6 @@ The Mobility Operation Messages used for this plugin, incoming and outgoing, are
   "action_id": "1"                // [Required from all] integer to identify action
   }
 
-
 ```
 
 For the actions with the operations `PICKUP` (`LOADING`), `DROPOFF` (`UNLOADING`), `PORT_CHECKPOINT` (`INSPECTION`), and  `HOLDING_AREA` (`INSPECTION`) require user input from container handling equipment (CHE) personnel and inspection personnel. We also use RESTful communication to connect the V2X-Hub Port Drayage Plugin to the Port Drayage Web Service. RESTful communication contains a client (V2X-Hub) and a server (Port Drayage Web Service). The file included below is the OpenAPI API definition, which defines the endpoint, possible requests, possible responses and the JSON objects exchanged between client and service.

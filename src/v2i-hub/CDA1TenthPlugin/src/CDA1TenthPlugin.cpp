@@ -82,9 +82,6 @@ void CDA1TenthPlugin::UpdateConfigSettings() {
 		next_action_id = con->prepareStatement("SELECT next_action_id FROM action WHERE action_id = ?");
 		current_action = con->prepareStatement("SELECT * FROM action WHERE action_id = ? ");
 		prev_action_id = con->prepareStatement("SELECT prev_action_id FROM action WHERE action_id = ? ");
-		insert_action =  con->prepareStatement("INSERT INTO action VALUES(?,?,?,?,?, UUID(), ?)");
-		update_current_action = con->prepareStatement("UPDATE action SET next_action_id = ? WHERE action_id = ?");
-		action_is_notify = con->prepareStatement("SELECT is_notify FROM action WHERE action_id = ?");
 
 	}
 	catch ( const sql::SQLException &e ) {

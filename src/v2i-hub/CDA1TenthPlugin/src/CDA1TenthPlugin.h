@@ -111,7 +111,6 @@ protected:
 	 * Method triggers UpdateConfigSettings() on configuration changes
 	 */
 	void OnConfigChanged(const char *key, const char *value);
-	//TODO NEEDS DESCRIPTION
 	void OnStateChange(IvpPluginState state);
 
 	/**
@@ -175,10 +174,7 @@ private:
 	sql::PreparedStatement *next_action_id;
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
-	sql::PreparedStatement *insert_action;
 	sql::PreparedStatement *prev_action_id;
-	sql::PreparedStatement *update_current_action;
-	sql::PreparedStatement *action_is_notify;
 
 	// Message Factory for J2735 messages
 	J2735MessageFactory factory;
