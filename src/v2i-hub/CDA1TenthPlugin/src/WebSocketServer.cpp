@@ -71,7 +71,12 @@ namespace CDA1TenthPlugin{
        server->addLWSClients(wsi);
         break;
     case LWS_CALLBACK_RECEIVE:
-       PLOG(logDEBUG2) << "Data received: " << std::string((char*)in, len) << std::endl;
+        if (len > 0) {
+            PLOG(logDEBUG2) << "Message received: " << std::string((char*)in, len) << std::endl;
+            server->addReceivedMessage(std::string((char*)in, len));
+        } else {
+            PLOG(logERROR) << "Received empty message" << std::endl;
+        }
         break;
     case LWS_CALLBACK_CLOSED:
         PLOG(logDEBUG1) << "Connection closed" << std::endl;
@@ -154,5 +159,23 @@ namespace CDA1TenthPlugin{
       PLOG(logDEBUG1) << "Messages sent! Current client size: " << clients.size() << ", current message queue size: " << message_queue.size() << std::endl;        
     }
    }
+
+    void WebSocketServer::addReceivedMessage(const std::string& msg){
+      lock_guard<mutex> lock(received_message_queue_mutex);
+      received_message_queue.push_back(msg);
+      PLOG(logDEBUG1) << "Added message and current received message queue size: " << received_message_queue.size() << std::endl; 
+    }
+    
+    std::string WebSocketServer::popReceivedMessage(){
+      lock_guard<mutex> lock(received_message_queue_mutex);
+      std::string msg = received_message_queue.front();
+      received_message_queue.pop_front();
+      PLOG(logDEBUG1) << "Popped message and current message queue size: " << received_message_queue.size() << std::endl;        
+      return msg;
+    }
+
+    bool WebSocketServer::receivedMessageQueueEmpty(){
+      return received_message_queue.empty();
+    };
 
 }

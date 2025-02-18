@@ -17,27 +17,29 @@
 
 #include <boost/algorithm/string.hpp>
 using std::string;
+constexpr int INVALID_ACTION = -1;
 
 struct Action_Object {
-    int action_id;
-    int next_action;
-    int prev_action;
+    int action_id = INVALID_ACTION;
+    int next_action = INVALID_ACTION;
+    int prev_action = INVALID_ACTION;
+    bool is_first_action = false;
 
     struct Area {
-    std::string name;
-    double latitude;
-    double longitude;
-    bool status;
-    bool is_notify;
+        string name;
+        double latitude = 0.0;
+        double longitude = 0.0;
+        string status;
+        bool is_notify = false;
     } area;
 
     struct Cargo {
-    std::string cargo_uuid;
-    std::string name;
+        string cargo_uuid;
+        string name;
     } cargo;
 
     struct Vehicle {
-    std::string veh_id;
-    std::string name;
+        string veh_id;
+        string name;
     } vehicle;
 };

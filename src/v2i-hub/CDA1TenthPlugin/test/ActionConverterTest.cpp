@@ -58,15 +58,53 @@ TEST(ActionConverterTest, toActionObject)
 	destination.put<double>("longitude", 13333333);
 	test_tree.put_child("destination", destination);
 
-    std::unique_ptr<Action_Object> result_obj( new Action_Object());
+    Action_Object result_obj;
+    result_obj = CDA1TenthPlugin::ActionConverter::fromTree( test_tree );
 
-    *result_obj = CDA1TenthPlugin::ActionConverter::fromTree( test_tree );
+    EXPECT_EQ(result_obj.action_id, 5);
+    EXPECT_EQ(result_obj.area.name, "TEST2");
+    EXPECT_EQ(result_obj.vehicle.veh_id, "VEH_02");
+    EXPECT_EQ(result_obj.cargo.cargo_uuid, "CARGO_02");
+    EXPECT_EQ(result_obj.area.latitude, 12222222);
+    EXPECT_EQ(result_obj.area.longitude, 13333333);
 
-    EXPECT_EQ(result_obj->action_id, 5);
-    EXPECT_EQ(result_obj->area.name, "TEST2");
-    EXPECT_EQ(result_obj->vehicle.veh_id, "VEH_02");
-    EXPECT_EQ(result_obj->cargo.cargo_uuid, "CARGO_02");
-    EXPECT_EQ(result_obj->area.latitude, 12222222);
-    EXPECT_EQ(result_obj->area.longitude, 13333333);
+}
+
+TEST(ActionConverterTest, toActionObject_InvalidActionId)
+{
+    ptree test_tree;
+	test_tree.put("operation", "TEST2");
+	test_tree.put("action_id", -1);
+	test_tree.put("cmv_id", "VEH_02");
+	test_tree.put("cargo_id", "CARGO_02");
+    
+	ptree destination;
+	destination.put<double>("latitude", 12222222);
+	destination.put<double>("longitude", 13333333);
+	test_tree.put_child("destination", destination);
+
+    Action_Object result_obj;
+    result_obj = CDA1TenthPlugin::ActionConverter::fromTree( test_tree );
+    EXPECT_EQ(result_obj.action_id, -1);
+    EXPECT_EQ(result_obj.is_first_action, false);
+
+}
+
+TEST(ActionConverterTest, toActionObject_MissingActionId)
+{
+    ptree test_tree;
+	test_tree.put("operation", "TEST2");
+	test_tree.put("cmv_id", "VEH_02");
+	test_tree.put("cargo_id", "CARGO_02");
+    
+	ptree destination;
+	destination.put<double>("latitude", 12222222);
+	destination.put<double>("longitude", 13333333);
+	test_tree.put_child("destination", destination);
+
+    Action_Object result_obj;
+    result_obj = CDA1TenthPlugin::ActionConverter::fromTree( test_tree );
+    EXPECT_EQ(result_obj.action_id, -1);
+    EXPECT_EQ(result_obj.is_first_action, true);
 
 }

@@ -131,15 +131,39 @@ protected:
 	/**
 	 * Retrieve the next action in the SQL database.
 	 * 
-	 * @param action_id Action ID of a given start action
+	 * @param action_id Unique Action ID of a given start action
 	 */
 	Action_Object retrieveNextAction(const int &action_id);
+	/**
+	 * Retrieve the current action in the SQL database.
+	 * 
+	 * @param action_id Unique Action ID of a given start action
+	 */
+	Action_Object retrieveCurrentAction(const int &action_id);
+	/**
+	 * Retrieve the first action for a vehicle from the SQL database.
+	 * 
+	 * @param vehicle_id unique vehicle ID
+	 */
+	Action_Object retrieveFirstAction(const string &vehicle_id);
+
+	void printActionObject(Action_Object &action_obj);
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
 	*/
 	void receiveBasicSafetyMessage(BsmMessage &msg);
 	void startWebsocketServer();
+	/**
+	 * Broadcast Action to all connected clients
+	 * @param action_obj Action_Object
+	 * @param strategy string strategy
+	 */
+	void broadCastAction(Action_Object &action_obj, const string &strategy);
+	/**
+	 * @brief Start UI Message Thread
+	 */
+	void startUIMessageThread();
 private: 
 	// Database configuration values
 	sql::Driver *driver;
@@ -158,9 +182,8 @@ private:
 
 	// Message Factory for J2735 messages
 	J2735MessageFactory factory;
-	
-	// TODO New Web Service Client 
-	// std::shared_ptr<WebServiceClient> client;
+
+	std::string _strat_config;
 
 	std::shared_ptr<WebSocketServer> ws;
 	uint16_t bsm_forward_frequency = 1;
