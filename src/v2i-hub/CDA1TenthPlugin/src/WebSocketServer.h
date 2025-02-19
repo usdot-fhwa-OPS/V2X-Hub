@@ -66,6 +66,12 @@ namespace CDA1TenthPlugin{
     //Mutex for message list
     mutex message_queue_mutex;
 
+    //List of messages received
+    std::deque<string> received_message_queue;
+    
+    //Mutex for received message list
+    mutex received_message_queue_mutex;
+
   public:
     WebSocketServer();
     ~WebSocketServer();
@@ -130,5 +136,20 @@ namespace CDA1TenthPlugin{
      * @brief Send message to a client
      */
     void sendMessage(lws* wsi, const string& message) const;
+
+    /**
+     * @brief Add a received message to the list of received messages
+     * @param msg The message to add
+     */
+    void addReceivedMessage(const std::string& msg);
+    
+    /**
+     * @brief Pop the first received message from the list of received messages
+     * and return it
+     * @return std::string The message
+     */
+    std::string popReceivedMessage();
+
+    bool receivedMessageQueueEmpty() const;
   };
 }

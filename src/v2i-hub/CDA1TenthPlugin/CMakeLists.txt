@@ -29,7 +29,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC tmxutils ${WEBSOCKETS_LIBRARY} ${OP
 ## Testing ##
 #############
 enable_testing()
-add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp)
+add_library(${PROJECT_NAME}_lib src/BSMConverter.cpp
+                                src/ActionConverter.cpp
+                                src/MobilityOperationConverter.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC 
                                         tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC 
