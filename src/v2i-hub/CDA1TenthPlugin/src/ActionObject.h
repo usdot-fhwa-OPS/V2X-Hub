@@ -15,31 +15,33 @@
  */
 #pragma once
 
-#include <boost/algorithm/string.hpp>
 using std::string;
 constexpr int INVALID_ACTION = -1;
+
+struct Area {
+    string name;
+    double latitude = 0.0;
+    double longitude = 0.0;
+    string status;
+    bool is_notify = false;
+};
+
+struct Cargo {
+    string cargo_uuid;
+    string name;
+};
+
+struct Vehicle {
+    string veh_id;
+    string name;
+};
 
 struct Action_Object {
     int action_id = INVALID_ACTION;
     int next_action = INVALID_ACTION;
     int prev_action = INVALID_ACTION;
     bool is_first_action = false;
-
-    struct Area {
-        string name;
-        double latitude = 0.0;
-        double longitude = 0.0;
-        string status;
-        bool is_notify = false;
-    } area;
-
-    struct Cargo {
-        string cargo_uuid;
-        string name;
-    } cargo;
-
-    struct Vehicle {
-        string veh_id;
-        string name;
-    } vehicle;
+    Area area;
+    Cargo cargo;
+    Vehicle vehicle;
 };

@@ -18,6 +18,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/algorithm/string.hpp>
 #include <PluginLog.h>
 #include "ActionObject.h"
 

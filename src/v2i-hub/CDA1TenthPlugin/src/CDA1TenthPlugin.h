@@ -146,7 +146,7 @@ protected:
 	 */
 	Action_Object retrieveFirstAction(const string &vehicle_id);
 
-	void printActionObject(Action_Object &action_obj);
+	void printActionObject(const Action_Object &action_obj);
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
@@ -158,7 +158,7 @@ protected:
 	 * @param action_obj Action_Object
 	 * @param strategy string strategy
 	 */
-	void broadCastAction(Action_Object &action_obj, const string &strategy);
+	void broadCastAction(const Action_Object &action_obj, const string &strategy);
 	/**
 	 * @brief Start UI Message Thread
 	 */

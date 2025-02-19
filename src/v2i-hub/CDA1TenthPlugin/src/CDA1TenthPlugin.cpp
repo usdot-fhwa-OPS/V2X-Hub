@@ -180,7 +180,7 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 	}
 }
 
-void CDA1TenthPlugin::broadCastAction(Action_Object &action_obj, const string &strategy){
+void CDA1TenthPlugin::broadCastAction(const Action_Object &action_obj, const string &strategy){
 	tsm3Message mob_msg;
 	tsm3EncodedMessage mobilityENC;
 	tmx::message_container_type container;
@@ -216,7 +216,7 @@ void CDA1TenthPlugin::broadCastAction(Action_Object &action_obj, const string &s
 	}
 }
 
-void CDA1TenthPlugin::printActionObject(Action_Object &action_obj){
+void CDA1TenthPlugin::printActionObject(const Action_Object &action_obj){
 	PLOG(logDEBUG) << "Action Object : " << std::endl <<
 		"action_id : " << action_obj.action_id << std::endl <<
 		"next_action : " << action_obj.next_action << std::endl <<
@@ -273,8 +273,8 @@ Action_Object CDA1TenthPlugin::retrieveCurrentAction(const int &action_id){
 			rtn.next_action = cur_action->getInt("next_action_id");
 			rtn.prev_action = cur_action->getInt("prev_action_id");
 			rtn.area.name = cur_action->getString("area_name");
-			rtn.area.longitude = cur_action->getDouble("area_long");
-			rtn.area.latitude = cur_action->getDouble("area_lat");
+			rtn.area.longitude = static_cast<double>(cur_action->getDouble("area_long"));
+			rtn.area.latitude = static_cast<double>(cur_action->getDouble("area_lat"));
 			rtn.area.status = cur_action->getString("area_status");
 			rtn.area.is_notify = cur_action->getBoolean("area_is_notify");
 			rtn.cargo.cargo_uuid = cur_action->getString("cargo_uuid");
@@ -303,8 +303,8 @@ Action_Object CDA1TenthPlugin::retrieveFirstAction(const string &vehicle_id){
 			rtn.next_action = first_action_rs->getInt("next_action_id");
 			rtn.prev_action = first_action_rs->getInt("prev_action_id");
 			rtn.area.name = first_action_rs->getString("area_name");
-			rtn.area.longitude = first_action_rs->getDouble("area_long");
-			rtn.area.latitude = first_action_rs->getDouble("area_lat");
+			rtn.area.longitude = static_cast<double>(first_action_rs->getDouble("area_long"));
+			rtn.area.latitude = static_cast<double>(first_action_rs->getDouble("area_lat"));
 			rtn.area.status = first_action_rs->getString("area_status");
 			rtn.area.is_notify = first_action_rs->getBoolean("area_is_notify");
 			rtn.cargo.cargo_uuid = first_action_rs->getString("cargo_uuid");

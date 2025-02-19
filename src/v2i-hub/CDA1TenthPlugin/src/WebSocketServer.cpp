@@ -174,7 +174,7 @@ namespace CDA1TenthPlugin{
       return msg;
     }
 
-    bool WebSocketServer::receivedMessageQueueEmpty(){
+    bool WebSocketServer::receivedMessageQueueEmpty() const{
       return received_message_queue.empty();
     };
 

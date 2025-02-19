@@ -150,6 +150,6 @@ namespace CDA1TenthPlugin{
      */
     std::string popReceivedMessage();
 
-    bool receivedMessageQueueEmpty();
+    bool receivedMessageQueueEmpty() const;
   };
 }
