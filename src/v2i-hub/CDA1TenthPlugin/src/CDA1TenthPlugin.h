@@ -35,14 +35,10 @@
 #include <OAIHelpers.h>
 #include <QCoreApplication>
 #include "BSMConverter.h"
+#include "MobilityOperationConverter.h"
+#include "ActionConverter.h"
 #include "WebSocketServer.h"
 
-using namespace std;
-using namespace tmx;
-using namespace tmx::utils;
-using namespace tmx::messages;
-using namespace boost::property_tree;
-using namespace OpenAPI;
 
 namespace CDA1TenthPlugin {
 // constant for MobilityOperation strategy	
@@ -84,20 +80,8 @@ std::string operation_to_string( Operation operation ) {
  * @author Peyton Johnson
  * @version 6.2
  */ 
-class CDA1TenthPlugin: public PluginClient {
+class CDA1TenthPlugin: public tmx::utils::PluginClient {
 public:
-	struct CDA1Tenth_Object {
-		std::string cmv_id; 
-		std::string cargo_id;
-		bool cargo;
-		std::string operation;
-		double location_lat;
-		double location_long;
-		double destination_lat;
-		double destination_long;
-		std::string action_id;
-		std::string next_action;
-	};
 	/**
 	 * Construct a new MobililtyOperationPlugin with the given name.
 	 *
@@ -121,53 +105,58 @@ protected:
 	 * Method triggers UpdateConfigSettings() on configuration changes
 	 */
 	void OnConfigChanged(const char *key, const char *value);
-
 	void OnStateChange(IvpPluginState state);
-	/**
-	 * Method to create port drayage payload JSON ptree using a CDA1Tenth_Object.
-	 * 
-	 * @param cda1t_obj Port Drayage object.
-	 * @return json ptree
-	 */
-	ptree createCDA1TenthJson( const CDA1Tenth_Object &cda1t_obj);
-	/**
-	 * Create CDA1Tenth_Object from ptree JSON.
-	 * 
-	 * @param pr CDA1Tenth JSON
-	 * @return CDA1Tenth_Object 
-	 */
-	CDA1Tenth_Object readCDA1TenthJson( const ptree &pr );
 
-	/**
-	 * Method to create MobilityOperation XML ptree.
-	 * 
-	 * @param ptree json payload
-	 * @return MobilityOperation message XML ptree
-	 */
-	ptree createMobilityOperationXml( const ptree &json_payload);
 	/**
 	 * Handle MobilityOperation message.
 	 * 
 	 * @param tsm3Message J2735 MobilityOperation message
 	 * @param routeableMsg JSON MobilityOperation message
 	 */
-	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
-
+	void HandleMobilityOperationMessage(tmx::messages::tsm3Message &msg, tmx::routeable_message &routeableMsg);
 	/**
 	 * Handle BasicSafety message.
 	 * 
 	 * @param BsmMessage J2735 BasicSafety message
 	 * @param routeableMsg JSON BasicSafety message
 	 */
-	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	CDA1Tenth_Object retrieveNextAction(const std::string &action_id);
-	CDA1Tenth_Object retrieveFirstAction(const std::string &cmv_id);
+	void HandleBasicSafetyMessage(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
+	/**
+	 * Retrieve the next action in the SQL database.
+	 * 
+	 * @param action_id Unique Action ID of a given start action
+	 */
+	Action_Object retrieveNextAction(const int &action_id);
+	/**
+	 * Retrieve the current action in the SQL database.
+	 * 
+	 * @param action_id Unique Action ID of a given start action
+	 */
+	Action_Object retrieveCurrentAction(const int &action_id);
+	/**
+	 * Retrieve the first action for a vehicle from the SQL database.
+	 * 
+	 * @param vehicle_id unique vehicle ID
+	 */
+	Action_Object retrieveFirstAction(const std::string &vehicle_id);
+
+	void printActionObject(const Action_Object &action_obj) const;
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
 	*/
-	void receiveBasicSafetyMessage(BsmMessage &msg);
+	void receiveBasicSafetyMessage(tmx::messages::BsmMessage &msg);
 	void startWebsocketServer();
+	/**
+	 * Broadcast Action to all connected clients
+	 * @param action_obj Action_Object
+	 * @param strategy string strategy
+	 */
+	void broadCastAction(const Action_Object &action_obj, const std::string &strategy);
+	/**
+	 * @brief Start UI Message Thread
+	 */
+	void startUIMessageThread();
 private: 
 	// Database configuration values
 	sql::Driver *driver;
@@ -179,19 +168,12 @@ private:
 	sql::PreparedStatement *next_action_id;
 	sql::PreparedStatement *current_action;
 	sql::PreparedStatement *first_action;
-	sql::PreparedStatement *insert_action;
-	sql::PreparedStatement *get_action_id_for_previous_action;
-	sql::PreparedStatement *update_current_action;
+	sql::PreparedStatement *prev_action_id;
 
 	// Message Factory for J2735 messages
-	J2735MessageFactory factory;
-	
-	// TODO New Web Service Client 
-	// std::shared_ptr<WebServiceClient> client;
+	tmx::messages::J2735MessageFactory factory;
 
-	// Port HOLDING_AREA Configuration
-	double _holding_lat;
-	double _holding_lon;
+	std::string _strat_config;
 
 	std::shared_ptr<WebSocketServer> ws;
 	uint16_t bsm_forward_frequency = 1;
