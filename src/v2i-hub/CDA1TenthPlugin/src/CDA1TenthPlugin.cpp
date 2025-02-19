@@ -216,7 +216,7 @@ void CDA1TenthPlugin::broadCastAction(const Action_Object &action_obj, const str
 	}
 }
 
-void CDA1TenthPlugin::printActionObject(const Action_Object &action_obj){
+void CDA1TenthPlugin::printActionObject(const Action_Object &action_obj) const{
 	PLOG(logDEBUG) << "Action Object : " << std::endl <<
 		"action_id : " << action_obj.action_id << std::endl <<
 		"next_action : " << action_obj.next_action << std::endl <<

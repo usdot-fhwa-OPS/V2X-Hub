@@ -146,7 +146,7 @@ protected:
 	 */
 	Action_Object retrieveFirstAction(const string &vehicle_id);
 
-	void printActionObject(const Action_Object &action_obj);
+	void printActionObject(const Action_Object &action_obj) const;
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
