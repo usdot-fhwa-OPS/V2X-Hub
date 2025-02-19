@@ -18,6 +18,11 @@
 #include "ActionConverter.h"
 #include "ActionObject.h"
 
+using namespace tmx;
+using namespace tmx::utils;
+using namespace tmx::messages;
+using namespace boost::property_tree;
+
 TEST(ActionConverterTest, toTree)
 {
     std::unique_ptr<Action_Object> test_obj( new Action_Object());

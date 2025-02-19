@@ -15,6 +15,10 @@
  */
 #include "ActionConverter.h"
 
+using namespace tmx;
+using namespace tmx::utils;
+using namespace tmx::messages;
+using namespace boost::property_tree;
 
 namespace CDA1TenthPlugin
 {

@@ -23,7 +23,6 @@
 #include "ActionObject.h"
 
 using std::string;
-using namespace boost::property_tree;
 
 namespace CDA1TenthPlugin
 {
@@ -40,7 +39,7 @@ namespace CDA1TenthPlugin
     * @param strategy String representation of the current mobility operaiton strategy
     * @return MobilityOperation message XML ptree
     */
-    static ptree toXML( const ptree &json_payload, const std::string &strategy);
+    static boost::property_tree::ptree toXML( const boost::property_tree::ptree &json_payload, const std::string &strategy);
 
   };
 

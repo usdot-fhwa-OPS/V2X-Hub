@@ -23,10 +23,6 @@
 #include "ActionObject.h"
 
 using std::string;
-using namespace tmx;
-using namespace tmx::utils;
-using namespace tmx::messages;
-using namespace boost::property_tree;
 
 namespace CDA1TenthPlugin
 {
@@ -42,14 +38,14 @@ namespace CDA1TenthPlugin
        * @param action_obj Action Object.
        * @return json ptree
        */
-      static ptree toTree(const Action_Object &action_obj);
+      static boost::property_tree::ptree toTree(const Action_Object &action_obj);
       /**
        * Create Action_Object from ptree JSON.
        * 
        * @param json_payload CDA1Tenth JSON
        * @return Action_Object 
        */
-      static Action_Object fromTree(const ptree &json_payload);
+      static Action_Object fromTree(const boost::property_tree::ptree &json_payload);
 
     };
 

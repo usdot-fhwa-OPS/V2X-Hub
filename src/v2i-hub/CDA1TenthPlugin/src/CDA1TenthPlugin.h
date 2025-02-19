@@ -39,12 +39,6 @@
 #include "ActionConverter.h"
 #include "WebSocketServer.h"
 
-using namespace std;
-using namespace tmx;
-using namespace tmx::utils;
-using namespace tmx::messages;
-using namespace boost::property_tree;
-using namespace OpenAPI;
 
 namespace CDA1TenthPlugin {
 // constant for MobilityOperation strategy	
@@ -86,7 +80,7 @@ std::string operation_to_string( Operation operation ) {
  * @author Peyton Johnson
  * @version 6.2
  */ 
-class CDA1TenthPlugin: public PluginClient {
+class CDA1TenthPlugin: public tmx::utils::PluginClient {
 public:
 	/**
 	 * Construct a new MobililtyOperationPlugin with the given name.
@@ -119,14 +113,14 @@ protected:
 	 * @param tsm3Message J2735 MobilityOperation message
 	 * @param routeableMsg JSON MobilityOperation message
 	 */
-	void HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg);
+	void HandleMobilityOperationMessage(tmx::messages::tsm3Message &msg, tmx::routeable_message &routeableMsg);
 	/**
 	 * Handle BasicSafety message.
 	 * 
 	 * @param BsmMessage J2735 BasicSafety message
 	 * @param routeableMsg JSON BasicSafety message
 	 */
-	void HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	void HandleBasicSafetyMessage(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
 	/**
 	 * Retrieve the next action in the SQL database.
 	 * 
@@ -144,21 +138,21 @@ protected:
 	 * 
 	 * @param vehicle_id unique vehicle ID
 	 */
-	Action_Object retrieveFirstAction(const string &vehicle_id);
+	Action_Object retrieveFirstAction(const std::string &vehicle_id);
 
 	void printActionObject(const Action_Object &action_obj) const;
 	/**
 	* @brief Handle BasicSafetyMessage
 	* @param msg BsmMessage
 	*/
-	void receiveBasicSafetyMessage(BsmMessage &msg);
+	void receiveBasicSafetyMessage(tmx::messages::BsmMessage &msg);
 	void startWebsocketServer();
 	/**
 	 * Broadcast Action to all connected clients
 	 * @param action_obj Action_Object
 	 * @param strategy string strategy
 	 */
-	void broadCastAction(const Action_Object &action_obj, const string &strategy);
+	void broadCastAction(const Action_Object &action_obj, const std::string &strategy);
 	/**
 	 * @brief Start UI Message Thread
 	 */
@@ -177,7 +171,7 @@ private:
 	sql::PreparedStatement *prev_action_id;
 
 	// Message Factory for J2735 messages
-	J2735MessageFactory factory;
+	tmx::messages::J2735MessageFactory factory;
 
 	std::string _strat_config;
 
