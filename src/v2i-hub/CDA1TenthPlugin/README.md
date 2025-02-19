@@ -91,17 +91,20 @@ The Mobility Operation Messages used for this plugin, incoming and outgoing, are
 ```json
 // Example Mobility Operation strategy_params JSON payload with message's strategy set to "carma/port_drayage":
 {
-  "cmv_id": "DOT-80550",                // [Required from all] string unique identifier for CMV 
-  "operation": "ENTERING_STAGING_AREA", // [Required from all] Enum to indicate the type of action
-                                        // NOTE: Possible operations include: PICKUP, DROPOFF, PORT_CHECKPOINT, HOLDING_AREA, 
-                                        //                                    ENTER_STAGING_AREA, EXIT_STAGING_AREA, ENTER_PORT, EXIT_PORT
-  "cargo_name": "CargoX",                       // [Required from all with PICKUP/DROPOFF operation] boolean flag to indicate whether the CMV is loaded with cargo
-  "cargo_id":"5323f3b5-ee2a-11ef-95d4-000c29d6cea2",             // [Required from all with PICKUP/DROPOFF operation] string unique identifier for cargo
-  "destination": {                         // [Required from CMV] current location of the CMV
-    "longitude": 0, 
-    "latitude": 0},
-  "action_id": "1"                // [Required from all] integer to identify action
+  "MobilityOperationMessage": {
+    "action_id": "2",                                     // [Required from all] integer to identify action
+    "operation": "EXIT_STAGING_AREA",                     // [Required from all] Enum to indicate the type of action
+                                                          // NOTE: Possible operations include: PICKUP, DROPOFF, PORT_CHECKPOINT, HOLDING_AREA, 
+                                                          // ENTER_STAGING_AREA, EXIT_STAGING_AREA, ENTER_PORT, EXIT_PORT
+    "cmv_id": "DOT-101",                                  // [Required from all] string unique identifier for CMV 
+    "cargo_name": "CargoX",                               // [Required from all with PICKUP/DROPOFF operation] boolean flag to indicate whether the CMV is loaded with cargo
+    "cargo_id": "5323f3b5-ee2a-11ef-95d4-000c29d6cea2",   // [Required from all with PICKUP/DROPOFF operation] string unique identifier for cargo
+    "destination": {                                      // [Required from CMV] current location of the CMV
+      "latitude": "40.712775999999998",
+      "longitude": "-74.005973999999995"
+    }
   }
+}
 
 ```
 
