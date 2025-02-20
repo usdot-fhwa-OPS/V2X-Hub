@@ -163,7 +163,9 @@ void CDA1TenthPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable
 			//Check whether notify UI for further operation
 			if(actionObj.area.is_notify){
 				auto actionTree = ActionConverter::toTree(actionObj);
-				string actionJsonString = BSMConverter::toJsonString(actionTree);
+				ptree actionTreeWithType;
+				actionTreeWithType.put_child(ACTION_MESSAGE_PAYLOAD_TYPE, actionTree);
+				string actionJsonString = BSMConverter::toJsonString(actionTreeWithType);
 				PLOG(logDEBUG1) << "Add action object to websocket queue: " << actionJsonString;
 				ws->addMessage(actionJsonString);
 				PLOG(logDEBUG) << "Waiting for user (through UI) input on next action..." << std::endl;
@@ -385,7 +387,8 @@ void CDA1TenthPlugin::startUIMessageThread()
 		ptree jsonPayload;
 		try{
 			read_json(ss, jsonPayload);
-			Action_Object actionObj = ActionConverter::fromTree( jsonPayload );
+			ptree actionPayload = jsonPayload.get_child(ACTION_MESSAGE_PAYLOAD_TYPE);
+			Action_Object actionObj = ActionConverter::fromTree( actionPayload );
 			//Retrieve next action to broadcast
 			PLOG(logDEBUG) << "Retrieving next action for action_id = " << actionObj.action_id << std::endl;
 			auto nextAction = retrieveNextAction(actionObj.action_id);
@@ -393,6 +396,9 @@ void CDA1TenthPlugin::startUIMessageThread()
 				printActionObject(nextAction);
 				broadCastAction(nextAction, _strat_config);
 			}			
+		}
+		catch( const ptree_bad_path &e ) {
+			PLOG(logERROR) << "Error parsing UI message payload: " << e.what() << std::endl;
 		}
 		catch( const ptree_error &e ) {
 			PLOG(logERROR) << "Error parsing UI message payload: " << e.what() << std::endl;
