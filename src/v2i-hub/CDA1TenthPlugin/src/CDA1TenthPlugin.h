@@ -43,6 +43,7 @@
 namespace CDA1TenthPlugin {
 // constant for MobilityOperation strategy	
 static CONSTEXPR const char *PORT_DRAYAGE_STRATEGY = "carma/port_drayage";
+static CONSTEXPR const char *ACTION_MESSAGE_PAYLOAD_TYPE = "MobilityOperationMessage";
 // TODO future implementation
 // static CONSTEXPR const char *RIDESHARE_STRATEGY = "rideshare";
 
