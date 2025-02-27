@@ -5,7 +5,8 @@ on:
     types: [opened, synchronize, reopened]
 jobs:
   docker-image-builds:
-    runs-on: ubuntu-latest
+    # Applied suggested fix: https://github.com/docker/build-push-action/issues/1309 
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,9 +31,6 @@ jobs:
         with:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
-          build-args: |
-            BUILD_ARCHITECTURE=${{ matrix.architecture }}
-            UBUNTU_CODENAME=${{ matrix.ubuntu-codename }}
       - name: PHP Docker build
         uses: docker/build-push-action@v5
         with:
