@@ -26,12 +26,9 @@ namespace MessageLoggerPlugin
  *
  * @param name The name to give the plugin for identification purposes.
  */
-MessageLoggerPlugin::MessageLoggerPlugin(string name): PluginClient(name)
+MessageLoggerPlugin::MessageLoggerPlugin(const std::string &name) : PluginClient(name)
 {
 	PLOG(logDEBUG)<< "In MessageLoggerPlugin Constructor";
-	// The log level can be changed from the default here.
-	// FILELog::ReportingLevel() = FILELog::FromString("DEBUG");
-
 
 	// Add a message filter and handler for each message this plugin wants to receive.
 	AddMessageFilter < BsmMessage > (this, &MessageLoggerPlugin::HandleBasicSafetyMessage);
@@ -660,8 +657,6 @@ int MessageLoggerPlugin::Main()
 		PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping" << endl;
 
 		this_thread::sleep_for(chrono::milliseconds(1000));
-
-
 	}
 
 	PLOG(logDEBUG) << "MessageLoggerPlugin terminating gracefully.";

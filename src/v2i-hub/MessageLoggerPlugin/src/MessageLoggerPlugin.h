@@ -61,9 +61,9 @@ namespace MessageLoggerPlugin
 class MessageLoggerPlugin: public PluginClient
 {
 public:
-	MessageLoggerPlugin(std::string);
-	virtual ~MessageLoggerPlugin();
-	int Main();
+	explicit MessageLoggerPlugin(const std::string &name);
+	int Main() override;
+
 protected:
 	void UpdateConfigSettings();
 
@@ -77,13 +77,16 @@ protected:
 	{
 		*value = (int32_t)((buf[0] << 24) + (buf[1] << 16) + (buf[2] << 8) + buf[3]);
 	}
-private:
-	std::atomic<uint64_t> _frequency{0};
-	DATA_MONITOR(_frequency);   // Declares the
 
 	void OpenMSGLogFile();
 	void CheckMSGLogFileSizeAndRename();
 	std::string  GetCurDateTimeStr();
+
+private:
+	std::mutex _cfgLock;
+
+	std::atomic<uint64_t> _frequency{0};
+	DATA_MONITOR(_frequency);   // Declares the
 
 	std::ofstream _logFile;
 	std::ofstream _logFilebin;
@@ -97,9 +100,6 @@ private:
 	int _maxFilesizeInMB;
 
 };
-std::mutex _cfgLock;
-
-
 } /* namespace MessageLoggerPlugin */
 
 #endif /* MessageLoggerPlugin.h */
