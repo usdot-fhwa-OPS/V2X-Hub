@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # exit on errors
-set -e
+set -ex
 
 # Get ubuntu distribution code name. All STOL APT debian packages are pushed to S3 bucket based on distribution codename.
 . /etc/lsb-release
