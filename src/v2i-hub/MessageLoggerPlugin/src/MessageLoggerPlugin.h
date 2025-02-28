@@ -137,6 +137,7 @@ private:
 	std::mutex _cfgLock;
 
 	std::atomic<uint64_t> _frequency{0};
+	DATA_MONITOR(_frequency);
 
 	std::ofstream _logFile;
 	std::ofstream _logFilebin;
