@@ -20,12 +20,6 @@
 
 namespace MessageLoggerPlugin
 {
-
-/**
- * Construct a new MessageLoggerPlugin with the given name.
- *
- * @param name The name to give the plugin for identification purposes.
- */
 MessageLoggerPlugin::MessageLoggerPlugin(const std::string &name) : PluginClient(name)
 {
 	PLOG(logDEBUG)<< "In MessageLoggerPlugin Constructor";
@@ -40,18 +34,18 @@ MessageLoggerPlugin::MessageLoggerPlugin(const std::string &name) : PluginClient
 	PLOG(logDEBUG) << "Exit MessageLoggerPlugin Constructor";
 }
 
-/**
- * Destructor
- */
+// /**
+//  * Destructor
+//  */
 
-MessageLoggerPlugin::~MessageLoggerPlugin()
-{
-	if (_logFile.is_open())
-	{
-		_logFile.close();
-		_logFilebin.close();
-	}
-}
+// MessageLoggerPlugin::~MessageLoggerPlugin()
+// {
+// 	if (_logFile.is_open())
+// 	{
+// 		_logFile.close();
+// 		_logFilebin.close();
+// 	}
+// }
 
 
 /**
@@ -86,23 +80,11 @@ void MessageLoggerPlugin::UpdateConfigSettings()
 	}
 }
 
-/**
- * Called when configuration is changed
- *
- * @param key Key of the configuration value changed
- * @param value Changed value
- */
 void MessageLoggerPlugin::OnConfigChanged(const char *key, const char *value)
 {
 	PluginClient::OnConfigChanged(key, value);
-	UpdateConfigSettings();
 }
 
-/**
- * Called on plugin state change
- *
- * @para state New plugin state
- */
 void MessageLoggerPlugin::OnStateChange(IvpPluginState state)
 {
 	PluginClient::OnStateChange(state);
@@ -113,14 +95,6 @@ void MessageLoggerPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-/**
- * Method that's called to process a message that this plugin has
- * subscribed for.  This particular method decodes the message and
- * logs selective fields to a log file.
- *
- * @param msg Message that is received
- * @routeable_message not used
- */
 void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg) 
 {
 	// check size of the log file and open new one if needed
@@ -413,15 +387,6 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_me
 
 }
 
-
-/**
- * Method that's called to process a message that this plugin has
- * subscribed for.  This particular method decodes the SPaT message and
- * logs selective fields to a log file.
- *
- * @param msg SPaTMessage that is received
- * @routeable_message not used
- */
 void MessageLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg) 
 {
 	// check size of the log file and open new one if needed
@@ -565,13 +530,6 @@ void MessageLoggerPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message 
 
 }
 
-
-
-/**
- * Opens a new log file in the directory specified of specified name for logging messages. Once the
- * current binary logfile size reaches the configurable maxSize this file is closed, renamed by the current
- * time and date and moved to a /ode/ directory where it can be sent to an ODE using the filewatchscript.sh.
- */
 void MessageLoggerPlugin::OpenMSGLogFile()
 {
 	PLOG(logDEBUG) << "Message Log File: " << _curFilename << std::endl;;
@@ -608,10 +566,6 @@ void MessageLoggerPlugin::OpenMSGLogFile()
 	}
 }
 
-/**
- * Checks the size of the logfile and opens a new_fileDirectory file if it's size is greater
- * than the max size specified.
- */
 void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename()
 {
 	if (_logFile.is_open())
@@ -630,10 +584,6 @@ void MessageLoggerPlugin::CheckMSGLogFileSizeAndRename()
 	}
 }
 
-/**
- * Returns the current data time as string.
- * @return current time in ddmmyyhhmiss format.
- */
 std::string MessageLoggerPlugin::GetCurDateTimeStr()
 {
 	auto t = std::time(nullptr);
@@ -649,28 +599,23 @@ std::string MessageLoggerPlugin::GetCurDateTimeStr()
 // This method does not need to be overridden if the plugin does not want to use the main thread.
 int MessageLoggerPlugin::Main()
 {
-	PLOG(logDEBUG) << "Starting MessageLoggerplugin...";
+	PLOG(logINFO) << "Starting MessageLoggerplugin...";
 
-	uint msCount = 0;
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping" << endl;
-
-		this_thread::sleep_for(chrono::milliseconds(1000));
+		if (_plugin->state == IvpPluginState_registered)
+		{
+			PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping";
+			this_thread::sleep_for(chrono::milliseconds(100));
+		}
 	}
 
-	PLOG(logDEBUG) << "MessageLoggerPlugin terminating gracefully.";
+	PLOG(logINFO) << "MessageLoggerPlugin terminating gracefully.";
 	return EXIT_SUCCESS;
 }
 
 } /* namespace MessageLoggerPlugin */
 
-
-/**
- * Main method for running the plugin
- * @param argc number of arguments
- * @param argv array of arguments
- */
 int main(int argc, char *argv[])
 {
 	return run_plugin<MessageLoggerPlugin::MessageLoggerPlugin>("MessageLoggerPlugin", argc, argv);
