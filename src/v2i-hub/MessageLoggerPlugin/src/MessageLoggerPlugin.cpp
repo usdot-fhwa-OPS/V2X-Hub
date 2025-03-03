@@ -66,6 +66,7 @@ void MessageLoggerPlugin::UpdateConfigSettings()
 void MessageLoggerPlugin::OnConfigChanged(const char *key, const char *value)
 {
 	PluginClient::OnConfigChanged(key, value);
+	UpdateConfigSettings();
 }
 
 void MessageLoggerPlugin::OnStateChange(IvpPluginState state)
