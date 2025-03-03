@@ -34,23 +34,6 @@ MessageLoggerPlugin::MessageLoggerPlugin(const std::string &name) : PluginClient
 	PLOG(logDEBUG) << "Exit MessageLoggerPlugin Constructor";
 }
 
-// /**
-//  * Destructor
-//  */
-
-// MessageLoggerPlugin::~MessageLoggerPlugin()
-// {
-// 	if (_logFile.is_open())
-// 	{
-// 		_logFile.close();
-// 		_logFilebin.close();
-// 	}
-// }
-
-
-/**
- * Updates configuration settings
- */
 void MessageLoggerPlugin::UpdateConfigSettings()
 {
 	// Configuration settings are retrieved from the API using the GetConfigValue template class.
