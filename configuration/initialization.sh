@@ -120,9 +120,6 @@ else
     tr -d '\n' <sql_pass.txt> mysql_password.txt && rm sql_pass.txt
 fi
 
-# Updates permissions for tmx logs created by plugins
-sudo chmod -R 777 ./logs
-
 # AMD64 initialization
 cd "$directory" || return # return in case cd fails
 for pkg in docker.io docker-doc docker-compose podman-docker containerd runc; do sudo apt-get remove $pkg; done
