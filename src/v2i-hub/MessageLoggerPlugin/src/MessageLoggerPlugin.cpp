@@ -586,11 +586,8 @@ int MessageLoggerPlugin::Main()
 
 	while (_plugin->state != IvpPluginState_error)
 	{
-		if (_plugin->state == IvpPluginState_registered)
-		{
-			PLOG(logDEBUG4) << "MessageLoggerPlugin Sleeping";
-			this_thread::sleep_for(chrono::milliseconds(100));
-		}
+		PLOG(logDEBUG4) <<"MessageLoggerPlugin: Sleeping 5 minutes";
+		this_thread::sleep_for(chrono::milliseconds(300000));
 	}
 
 	PLOG(logINFO) << "MessageLoggerPlugin terminating gracefully.";
