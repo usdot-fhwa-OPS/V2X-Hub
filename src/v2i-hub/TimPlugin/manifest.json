@@ -1,6 +1,6 @@
 {
 	"name":"TIM",
-	"description":"Provides Traveller Information Message (TIM).",
+	"description":"Provides Traveler Information Message (TIM).",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/TimPlugin",
 	"coreIpAddr":"127.0.0.1",
@@ -9,7 +9,7 @@
 		{
 			"type":"J2735",
 			"subtype":"TIM",
-			"description":"Travelor Information Message indicating the active Work Zone information."
+			"description":"Traveler Information Message indicating the active Work Zone information."
 		}
 	],
 	"configuration":[

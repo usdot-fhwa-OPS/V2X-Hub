@@ -131,6 +131,13 @@ protected:
 	 */
 	std::string GetCurDateTimeStr();
 
+	/**
+	 * @brief Function to convert a hex string to byte array
+	 * @param hex Input string of hex
+	 * @return Bytes vector
+	 */
+	std::vector<uint8_t> hexStringToByteArray(const std::string& hex);
+
 private:
 	std::mutex _cfgLock;
 
@@ -147,7 +154,6 @@ private:
 	int _logFilesize;
 	int _logFilebinsize;
 	int _maxFilesizeInMB;
-
 };
 } /* namespace MessageLoggerPlugin */
 
