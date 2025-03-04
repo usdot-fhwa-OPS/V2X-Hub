@@ -41,7 +41,7 @@ services:
     container_name: v2xhub
     network_mode: host
     restart: always
-    depends_on: 
+    depends_on:
       - db
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password

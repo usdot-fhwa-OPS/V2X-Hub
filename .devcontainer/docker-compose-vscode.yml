@@ -8,6 +8,7 @@ services:
     volumes:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
+      - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"  
