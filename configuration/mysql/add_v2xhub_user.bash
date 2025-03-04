@@ -47,7 +47,9 @@ if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q 
     # Check if V2XHUB_VERSION is >= 7.5.0
     if [[ "$(echo "$V2XHUB_VERSION 7.5.0" | awk '{print ($1 >= $2)}')" -eq 1 ]]; then
         mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
-    else    
+    elif [[ "$(echo "$V2XHUB_VERSION develop" | awk '{print ($1 == $2)}')" -eq 1 ]]; then
+        mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
+    else
         mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
     fi
     echo "V2X Hub user successfully added"
