@@ -148,6 +148,9 @@ else
     exit 1
 fi
 
+# Update permissions for tmx logs created by plugins
+sudo chmod -R 777 ./logs
+
 # Create V2X Hub user
 cd "$mysqlDir" || return # return in case cd fails
 ./add_v2xhub_user.bash "$V2XHUB_VERSION"
