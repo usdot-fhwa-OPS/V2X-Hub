@@ -55,6 +55,10 @@ RUN ldconfig
 
 RUN /home/V2X-Hub/container/setup.sh
 
+ARG BUILD_DATE="NULL"
+ARG VCS_REF="NULL"
+ARG VERSION="NULL"
+
 WORKDIR /var/log/tmx
 
 # Set metadata labels
