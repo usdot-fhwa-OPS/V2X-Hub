@@ -21,7 +21,7 @@ namespace utils {
 class UdpServerRuntimeError : public tmx::TmxException
 {
 public:
-	UdpServerRuntimeError(const char *w) : tmx::TmxException(w) {}
+	UdpServerRuntimeError(const std::string &w) : tmx::TmxException(w) {}
 };
 
 class UdpServer

@@ -58,8 +58,8 @@ namespace SpatPlugin {
 			else {
 				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
 			}
-			// Only enable spat broadcast in simulation mode. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
-			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode());
+			// Only send SNMP Rquest to enable spat in simulation mode and binary spat. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
+			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode() && spatMode == "BINARY" );
 			if  ( connected ) {
 				SetStatus(keyConnectionStatus, "IDLE");
 				try {
@@ -99,6 +99,7 @@ namespace SpatPlugin {
 			try {
 				
 				if (spatMode == "J2735_HEX") {
+					PLOG(logDEBUG) << "Starting HEX SPaT Receiver ...";
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 					scConnection->receiveUPERSPAT(spatEncoded_ptr);
 					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
@@ -111,7 +112,7 @@ namespace SpatPlugin {
 						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
 					}
 					auto spat_ptr = std::make_shared<SPAT>();
-					PLOG(logDEBUG) << "Starting SPaT Receiver ...";
+					PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
 					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
 					tmx::messages::SpatMessage _spatMessage(spat_ptr);
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
