@@ -7,7 +7,7 @@ set -e
 . /etc/lsb-release
 
 # add the STOL APT repository
-echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository ${DISTRIB_CODENAME} main" > /etc/apt/sources.list.d/stol-apt-repository.list
+echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository develop ${DISTRIB_CODENAME} " > /etc/apt/sources.list.d/stol-apt-repository.list
 
 apt-get update
 
@@ -42,7 +42,7 @@ DEPENDENCIES="build-essential \
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \
     carma-clock-1 \
-    carma-j2735-1
+    stol-j2735-201603-carma-1
 "
 
 # install all things needed for deployment, always done
