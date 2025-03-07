@@ -13,6 +13,7 @@
 #include <chrono>
 #include <sstream>
 #include <cassert>
+#include <stol-j2735-201603-carma/jer_encoder.h>
 
 using namespace std;
 using namespace battelle::attributes;
@@ -567,7 +568,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
     message->regional = regional;
 
 	xer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
-
+	jer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
 	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
 	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);

@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD 14)
 list(APPEND CMAKE_PREFIX_PATH "/opt/carma/cmake")
 
 FIND_PACKAGE (carma-clock)
-FIND_PACKAGE(carma_j2735)
+FIND_PACKAGE(stol-j2735-201603-carma)
 
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")

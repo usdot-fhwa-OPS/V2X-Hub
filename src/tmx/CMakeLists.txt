@@ -23,8 +23,8 @@ ENABLE_LANGUAGE ( C )
 ENABLE_LANGUAGE ( CXX )
 
 
-list(APPEND CMAKE_PREFIX_PATH "/opt/carma/cmake")
-find_package(carma_j2735)
+list(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
+find_package(stol-j2735-201603-carma) 
 
 INCLUDE (CheckCCompilerFlag)
 CHECK_C_COMPILER_FLAG ("-fPIC" CMAKE_C_FLAG_FPIC_SUPPORTED)

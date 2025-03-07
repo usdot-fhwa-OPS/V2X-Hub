@@ -43,9 +43,9 @@ IF (NOT TMXAPI_NO_STATIC)
     ENDIF ()
     TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME}Static SYSTEM PUBLIC
                                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                                /opt/carma/include/carma_j2735
+                                /opt/carma/include/stol-j2735-201603-carma
                                 ${Boost_INCLUDE_DIRS}) 
-    TARGET_LINK_LIBRARIES (${PROJECT_NAME}Static ::carma_j2735 ${Boost_LIBRARIES} ${ICU_LIBRARIES} pugixml)
+    TARGET_LINK_LIBRARIES (${PROJECT_NAME}Static ::stol-j2735-201603-carma ${Boost_LIBRARIES} ${ICU_LIBRARIES} pugixml)
     TARGET_COMPILE_DEFINITIONS (${PROJECT_NAME}Static PUBLIC "-DSAEJ2735_SPEC=2016")
 
     IF (Boost_DEFS)
@@ -70,9 +70,9 @@ IF (NOT TMXAPI_NO_SHARED)
     ENDIF ()
     TARGET_INCLUDE_DIRECTORIES (${PROJECT_NAME} SYSTEM PUBLIC 
                                 $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
-                                /opt/carma/include/carma_j2735
+                                /opt/carma/include/stol-j2735-201603-carma
                                 ${Boost_INCLUDE_DIRS})
-    TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC ::carma_j2735 ${Boost_LIBRARIES} ${ICU_LIBRARIES} pugixml)
+    TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC ::stol-j2735-201603-carma ${Boost_LIBRARIES} ${ICU_LIBRARIES} pugixml)
     TARGET_COMPILE_DEFINITIONS (${PROJECT_NAME} PUBLIC "-DSAEJ2735_SPEC=2016")
 
     IF (Boost_DEFS)
