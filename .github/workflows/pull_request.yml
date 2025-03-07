@@ -31,7 +31,6 @@ jobs:
         with:
           file: Dockerfile
           platforms: linux/amd64
-          push: true
       - name: PHP Docker build
         uses: docker/build-push-action@v5
         with:

@@ -99,7 +99,7 @@ namespace SpatPlugin {
 			try {
 				
 				if (spatMode == "J2735_HEX") {
-					PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
+					PLOG(logDEBUG) << "Starting HEX SPaT Receiver ...";
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 					scConnection->receiveUPERSPAT(spatEncoded_ptr);
 					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
