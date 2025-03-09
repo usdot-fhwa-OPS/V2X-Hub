@@ -19,7 +19,7 @@
 #include <boost/algorithm/hex.hpp>
 #include "UdpClient.h"
 
-using namespace boost::algorithm; 
+using namespace boost::algorithm;
 using namespace boost::property_tree;
 using namespace std;
 using namespace tmx;
@@ -67,7 +67,7 @@ namespace ImmediateForward
 		else {
 			SendMessageToRadio(msg);
 		}
-		
+
 
 	}
 
@@ -110,7 +110,7 @@ namespace ImmediateForward
 
 	}
 
-	
+
 	void ImmediateForwardPlugin::SendMessageToRadio(IvpMessage *msg)
 	{
 		bool foundMessageType = false;
@@ -137,12 +137,12 @@ namespace ImmediateForward
 		for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++)
 			msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 
-		PLOG(logWARNING)<<_imfConfigs.size();
+		PLOG(logDEBUG4)<<_imfConfigs.size();
 		//loop through all MessageConfig and send to each with the proper TmxType
 		for (const auto &imfConfig: _imfConfigs)
-		{	
+		{
 			for ( const auto &messageConfig: imfConfig.messages ) {
-				
+
 				if (messageConfig.tmxType == msg->subtype)
 				{
 					foundMessageType = true;
@@ -154,12 +154,12 @@ namespace ImmediateForward
 
 					stringstream os;
 
-					/// if signing is Enabled, request signing with HSM 
-					
+					/// if signing is Enabled, request signing with HSM
+
 
 					if (imfConfig.enableHsm == 1)
 					{
-						std::string mType = messageConfig.sendType; 
+						std::string mType = messageConfig.sendType;
 
 						std::for_each(mType.begin(), mType.end(), [](char & c){
 							c = ::tolower(c);
@@ -167,29 +167,29 @@ namespace ImmediateForward
 						/* convert to hex array */
 
 						string msgString=msg->payload->valuestring;
-						string base64str=""; 
+						string base64str="";
 
-						hex2base64(msgString,base64str);  
+						hex2base64(msgString,base64str);
 
 						std::string req = "\'{\"type\":\""+mType+"\",\"message\":\""+base64str+"\"}\'";
 
 
 
-						string cmd1="curl -X POST " + imfConfig.hsmUrl.value() + "sign" + " -H \'Content-Type: application/json\' -d "+req; 
-						const char *cmd=cmd1.c_str();  
+						string cmd1="curl -X POST " + imfConfig.hsmUrl.value() + "sign" + " -H \'Content-Type: application/json\' -d "+req;
+						const char *cmd=cmd1.c_str();
 						char buffer[2048];
 						std::string result="";
-						FILE* pipe= popen(cmd,"r"); 
+						FILE* pipe= popen(cmd,"r");
 
-						if (pipe == NULL ) 
+						if (pipe == NULL )
 							throw std::runtime_error("popen() failed!");
 						try{
 							while (fgets(buffer, sizeof(buffer),pipe) != NULL)
 							{
-								result+=buffer; 
+								result+=buffer;
 							}
 						} catch (std::exception const & ex) {
-							
+
 							pclose(pipe);
 							SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
 							PLOG(logERROR) << "Error parsing Messages: " << ex.what();
@@ -213,9 +213,9 @@ namespace ImmediateForward
 						base642hex(signedMsg,payloadbyte); // this allows sending hex of the signed message rather than base64
 
 					}
-					else 
+					else
 					{
-						payloadbyte=msg->payload->valuestring; 
+						payloadbyte=msg->payload->valuestring;
 					}
 					os << "Version=0.7" << "\n";
 					os << "Type=" << messageConfig.sendType << "\n" << "PSID=" << messageConfig.psid << "\n";
