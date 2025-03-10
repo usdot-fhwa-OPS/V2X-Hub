@@ -14,7 +14,7 @@ namespace tmx::utils {
         clock = std::make_shared<CarmaClock>(_simulation_mode);
         if (_simulation_mode) {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
-            PLOG(logDEBUG) << "Added Time Sync Message Filter";
+            PLOG(logDEBUG2) << "Added Time Sync Message Filter";
         }
 
     }
