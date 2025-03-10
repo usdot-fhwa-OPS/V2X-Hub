@@ -234,7 +234,7 @@ namespace ImmediateForward
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
-					PLOG(logDEBUG2) << _logPrefix << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
+					PLOG(logDEBUG1) << _logPrefix << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
 								<< ", PSID: " << messageConfig.psid << ", Client: " << client->GetAddress()
 								<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 								<< ", Port: " << client->GetAddress();
