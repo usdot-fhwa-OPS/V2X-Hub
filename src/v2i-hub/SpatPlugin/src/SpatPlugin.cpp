@@ -23,6 +23,10 @@ using namespace tmx::utils;
 namespace SpatPlugin {
 
 	SpatPlugin::SpatPlugin(const std::string &name) :PluginClientClockAware(name) {
+		if (isSimulationMode()) {
+			// Subscribe to the TimeSyncMessage
+			SubscribeToMessages();
+		}
 		spatReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
 	}
 

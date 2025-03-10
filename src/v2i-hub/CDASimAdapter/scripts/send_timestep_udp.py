@@ -11,11 +11,11 @@ import time
 #
 # TODO Move this script into a more permanent location
 count_num = 0
-
+sim_time =0
 def generate_time_sync():
     jsonResult = {
         "seq":count_num, 
-        "timestep":int(time.time()*1000)
+        "timestep":sim_time
     }
     jsonResult = json.dumps(jsonResult)
     return jsonResult
@@ -35,7 +35,8 @@ while True :
         count_num += 1
         sock.sendto(encoded_msg,host)
         print( encoded_msg.decode(encoding= 'UTF-8'), 'was sent to ', host)
-        time.sleep(5)
+        time.sleep(.1)
+        sim_time+= 100
     except socket.gaierror:
 
         print ('There an error resolving the host')

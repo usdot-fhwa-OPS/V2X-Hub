@@ -22,6 +22,10 @@ namespace MUSTSensorDriverPlugin {
 	
 	MUSTSensorDriverPlugin::MUSTSensorDriverPlugin(const string &name): PluginClientClockAware(name)
 	{
+		if (isSimulationMode()) {
+			// Subscribe to the TimeSyncMessage
+			SubscribeToMessages();
+		}
 		mustSensorPacketReceiverThread = std::make_unique<tmx::utils::ThreadTimer>(std::chrono::milliseconds(5));
 	}
 
