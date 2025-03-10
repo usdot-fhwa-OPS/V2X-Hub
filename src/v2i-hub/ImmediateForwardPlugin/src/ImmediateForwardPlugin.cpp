@@ -137,7 +137,6 @@ namespace ImmediateForward
 		for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++)
 			msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 
-		PLOG(logDEBUG4)<<_imfConfigs.size();
 		//loop through all MessageConfig and send to each with the proper TmxType
 		for (const auto &imfConfig: _imfConfigs)
 		{
