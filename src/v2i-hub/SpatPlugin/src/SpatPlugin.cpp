@@ -63,7 +63,7 @@ namespace SpatPlugin {
 				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
 			}
 			// Only send SNMP Rquest to enable spat in simulation mode and binary spat. TFHRC TSCs do not expose this OID so calls to it will fail in hardware deployment
-			auto connected = scConnection->initializeSignalControllerConnection(PluginClientClockAware::isSimulationMode() && spatMode == "BINARY" );
+			auto connected = scConnection->initializeSignalControllerConnection(false);
 			if  ( connected ) {
 				SetStatus(keyConnectionStatus, "IDLE");
 				try {
