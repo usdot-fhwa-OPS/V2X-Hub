@@ -8,6 +8,7 @@ namespace MapPlugin {
 		AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
 		SubscribeToMessages();
 		errThrottle.set_Frequency(std::chrono::minutes(30));
+		
 	}
 
 	void MapPlugin::UpdateConfigSettings() {

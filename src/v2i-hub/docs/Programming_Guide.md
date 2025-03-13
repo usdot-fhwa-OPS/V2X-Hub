@@ -117,7 +117,7 @@ void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeabl
 SubscribeToMessage()
 ```
 
-The SubscribeToMessages function must be called after the filters are setup, otherwise the plugin will not receive the wanted messages. This function can be invoked more than once, if other filters are added. Currently, the only way to un-subscribe to a message is to restart the plugin.
+The `SubscribeToMessages` function must be called after the filters are setup, otherwise the plugin will not receive the wanted messages. This function can be invoked more than once, but multiple calls to `SubscribeToMessages` will overwrite previously subscribed message filters. 
 
 #### State Changes
 
