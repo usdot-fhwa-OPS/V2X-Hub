@@ -15,6 +15,7 @@ IF (NETSNMP_INCLUDE_DIR)
 ENDIF (NETSNMP_INCLUDE_DIR)
 
 FIND_PATH(NETSNMP_INCLUDE_DIR snmp.h
+  PATHS /usr/local/include/net-snmp/library
   /usr/include/net-snmp/library
 )
 

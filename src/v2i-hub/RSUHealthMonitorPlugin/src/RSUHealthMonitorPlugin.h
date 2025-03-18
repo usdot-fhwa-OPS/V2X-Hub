@@ -1,9 +1,11 @@
 
 #pragma once
 
-#include "PluginClient.h"
+#include <PluginClient.h>
 #include <jsoncpp/json/json.h>
-#include "RSUStatusMessage.h"
+#include <RSUStatusMessage.h>
+#include <rsu/RSUSpec.h>
+
 #include "RSUHealthMonitorWorker.h"
 #include "RSUConfigurationList.h"
 
@@ -27,9 +29,9 @@ namespace RSUHealthMonitor
         const long SEC_TO_MILLI= 1000;
         /**
          * @brief Broadcast RSU status
-         * @param Json::Value RSU status in JSON format
+         * @param rsuStatusJson RSU status in JSON format
          */
-        void BroadcastRSUStatus(const Json::Value &rsuStatusJson, const RSUMibVersion &mibVersion);
+        void BroadcastRSUStatus(const Json::Value &rsuStatusJson, const tmx::utils::rsu::RSU_SPEC &mibVersion);
 
     public:
         explicit RSUHealthMonitorPlugin(const std::string &name);

@@ -1,21 +1,28 @@
 #include "RSUHealthMonitorWorker.h"
 
+using namespace std;
+using namespace tmx::utils;
+using namespace tmx::utils::rsu::mib::rsu41;
+using namespace tmx::utils::rsu::mib::ntcip1218;
+using namespace tmx::messages;
+
 namespace RSUHealthMonitor
 {
-
     RSUHealthMonitorWorker::RSUHealthMonitorWorker()
     {
-        _RSUSTATUSConfigMapPtr = make_shared<map<RSUMibVersion, RSUStatusConfigTable>>();
-        // Currently only support RSU MIB version 4.1. Other future supported versions will be inserted here.
-        RSUStatusConfigTable rsuRstatusTable = constructRsuStatusConfigTable(RSUMibVersion::RSUMIB_V_4_1);
-        _RSUSTATUSConfigMapPtr->insert({RSUMibVersion::RSUMIB_V_4_1, rsuRstatusTable});
+        _RSUSTATUSConfigMapPtr = make_shared<map<tmx::utils::rsu::RSU_SPEC, RSUStatusConfigTable>>();
+        RSUStatusConfigTable rsuRstatusTable_4_1 = constructRsuStatusConfigTable(tmx::utils::rsu::RSU_SPEC::RSU_4_1);
+        RSUStatusConfigTable rsuRstatusTable_1218 = constructRsuStatusConfigTable(tmx::utils::rsu::RSU_SPEC::NTCIP_1218);
+        _RSUSTATUSConfigMapPtr->insert({tmx::utils::rsu::RSU_SPEC::NTCIP_1218, rsuRstatusTable_1218});
+        _RSUSTATUSConfigMapPtr->insert({tmx::utils::rsu::RSU_SPEC::RSU_4_1, rsuRstatusTable_4_1});
+
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const RSUMibVersion &mibVersion) const
+    RSUStatusConfigTable RSUHealthMonitorWorker::constructRsuStatusConfigTable(const tmx::utils::rsu::RSU_SPEC &mibVersion) const
     {
         RSUStatusConfigTable rsuStatusTbl;
         // Populate custom defined RSU Status table with RSU MIB version 4.1.
-        if (mibVersion == RSUMibVersion::RSUMIB_V_4_1)
+        if (mibVersion == tmx::utils::rsu::RSU_SPEC::RSU_4_1)
         {
             RSUFieldOIDStruct rsuID = {"rsuID", RSU_ID_OID, true};
             rsuStatusTbl.push_back(rsuID);
@@ -59,6 +66,57 @@ namespace RSUHealthMonitor
             RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", RSU_CHAN_STATUS, true};
             rsuStatusTbl.push_back(rsuChanStatus);
         }
+        else if (mibVersion == tmx::utils::rsu::RSU_SPEC::NTCIP_1218)
+        {
+            RSUFieldOIDStruct rsuID = {"rsuID", rsuIDOid, true};
+            rsuStatusTbl.push_back(rsuID);
+
+            RSUFieldOIDStruct rsuMibVersion = {"rsuMibVersion", rsuMibVersionOid, true};
+            rsuStatusTbl.push_back(rsuMibVersion);
+
+            RSUFieldOIDStruct rsuFirmwareVersion = {"rsuFirmwareVersion", rsuFirmwareVersionOid, true};
+            rsuStatusTbl.push_back(rsuFirmwareVersion);
+
+            RSUFieldOIDStruct rsuRadioDesc = {"rsuRadioDesc", rsuRadioDescOid, true};
+            rsuStatusTbl.push_back(rsuRadioDesc);
+
+            RSUFieldOIDStruct rsuGnssOutputString = {"rsuGpsOutputString", rsuGnssOutputStringOid, true};
+            rsuStatusTbl.push_back(rsuGnssOutputString);
+
+            RSUFieldOIDStruct rsuIFMIndex = {"rsuIFMIndex", rsuIFMIndexOid, false};
+            rsuStatusTbl.push_back(rsuIFMIndex);
+
+            RSUFieldOIDStruct rsuIFMPsid = {"rsuIFMPsid", rsuIFMPsidOid, false};
+            rsuStatusTbl.push_back(rsuIFMPsid);
+
+            RSUFieldOIDStruct rsuIFMTxChannel = {"rsuIFMTxChannel", rsuIFMTxChannelOid, false};
+            rsuStatusTbl.push_back(rsuIFMTxChannel);
+
+            RSUFieldOIDStruct rsuIFMEnable = {"rsuIFMEnable", rsuIFMEnableOid, false};
+            rsuStatusTbl.push_back(rsuIFMEnable);
+
+            RSUFieldOIDStruct rsuIFMStatus = {"rsuIFMStatus", rsuIFMStatusOid, false};
+            rsuStatusTbl.push_back(rsuIFMStatus);
+
+            RSUFieldOIDStruct rsuIFMPriority = {"rsuIFMPriority", rsuIFMPriorityOid, true};
+            rsuStatusTbl.push_back(rsuIFMPriority);
+
+            RSUFieldOIDStruct rsuIFMOptions = {"rsuIFMOptions", rsuIFMOptionsOid, true};
+            rsuStatusTbl.push_back(rsuIFMOptions);
+
+            RSUFieldOIDStruct rsuIFMPayload = {"rsuIFMPayload", rsuIFMPayloadOid, true};
+            rsuStatusTbl.push_back(rsuIFMPayload);
+
+            RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", rsuChanStatusOid, true};
+            rsuStatusTbl.push_back(rsuChanStatus);
+
+            RSUFieldOIDStruct rsuMode = {"rsuMode", rsuModeOid, true};
+            rsuStatusTbl.push_back(rsuMode);
+
+            RSUFieldOIDStruct rsuRadioType = {"rsuRadioType", rsuRadioTypeOid, true};
+            rsuStatusTbl.push_back(rsuRadioType);
+
+        }
         return rsuStatusTbl;
     }
 
@@ -76,16 +134,16 @@ namespace RSUHealthMonitor
         return isAllPresent;
     }
 
-    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const RSUMibVersion &mibVersion) const
+    RSUStatusConfigTable RSUHealthMonitorWorker::GetRSUStatusConfig(const tmx::utils::rsu::RSU_SPEC &mibVersion) const
     {
         RSUStatusConfigTable result;
         try
         {
             result = _RSUSTATUSConfigMapPtr->at(mibVersion);
         }
-        catch (const out_of_range &ex)
+        catch (const out_of_range&)
         {
-            PLOG(logERROR) << "Unknown MIB version! " << ex.what();
+            PLOG(logERROR) << "Unknown MIB version! " << tmx::utils::rsu::rsuSpecToString(mibVersion);
         }
         return result;
     }
@@ -114,7 +172,7 @@ namespace RSUHealthMonitor
         return result;
     }
 
-    Json::Value RSUHealthMonitorWorker::getRSUStatus(const RSUMibVersion &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const string &_authPassPhrase, const string &_securityLevel, long timeout)
+    Json::Value RSUHealthMonitorWorker::getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout)
     {
         auto rsuStatusConfigTbl = GetRSUStatusConfig(mibVersion);
         if (rsuStatusConfigTbl.size() == 0)
@@ -124,11 +182,21 @@ namespace RSUHealthMonitor
         }
         try
         {
-            // Create SNMP client and use SNMP V3 protocol
-            PLOG(logINFO) << "SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", auth pass phrase: " << _authPassPhrase << ", security level: "
-                          << _securityLevel;
-            auto _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "", _securityUser, _securityLevel, _authPassPhrase, SNMP_VERSION_3, timeout);
+            PLOG(logINFO) << "SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", Auth protocol: " << _authProtocol << ", Auth pass phrase: " << _authPassPhrase << ", Priv protocol: " << _privProtocol << ", Priv pass phrase: " << _privPassPhrase << ", security level: " << _securityLevel;
+            std::unique_ptr<snmp_client> _snmpClientPtr;
+            if ( _securityLevel.empty() ) {
+                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", "", _securityLevel, "", "", "", "", SNMP_VERSION_3, timeout);
 
+            } else if (_securityLevel == "authNoPriv"){
+                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, "", "", SNMP_VERSION_3, timeout);
+
+            } 
+            else if ( _securityLevel == "authPriv") {
+                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, SNMP_VERSION_3, timeout);
+            }
+            else {
+                throw runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\".");
+            }
             Json::Value rsuStatuJson;
             // Sending RSU SNMP call for each field as each field has its own OID.
             for (const auto &config : rsuStatusConfigTbl)

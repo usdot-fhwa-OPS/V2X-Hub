@@ -1,5 +1,10 @@
 #include "RSUHealthMonitorWorker.h"
 #include <gtest/gtest.h>
+using namespace std;
+using namespace tmx::utils;
+using namespace tmx::utils::rsu::mib::rsu41;
+using namespace tmx::utils::rsu::mib::ntcip1218;
+using namespace tmx::messages;
 
 namespace RSUHealthMonitor
 {
@@ -11,20 +16,14 @@ namespace RSUHealthMonitor
 
     TEST_F(test_RSUHealthMonitorWorker, GetRSUStatusConfig)
     {
-        RSUStatusConfigTable rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::RSUMIB_V_4_1);
+        RSUStatusConfigTable rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(tmx::utils::rsu::RSU_SPEC::RSU_4_1);
         ASSERT_EQ(14, rsuStatusConfigTbl.size());
 
-        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::UNKOWN_MIB_V);
-        ASSERT_EQ(0, rsuStatusConfigTbl.size());
-
-        RSUMibVersion mibVersionDefault;
-        rsuStatusConfigTbl = _rsuWorker->GetRSUStatusConfig(mibVersionDefault);
-        ASSERT_EQ(0, rsuStatusConfigTbl.size());
     }
 
     TEST_F(test_RSUHealthMonitorWorker, validateAllRequiredFieldsPresent)
     {
-        auto config = _rsuWorker->GetRSUStatusConfig(RSUMibVersion::RSUMIB_V_4_1);
+        auto config = _rsuWorker->GetRSUStatusConfig(tmx::utils::rsu::RSU_SPEC::RSU_4_1);
         vector<string> requiredFields = {"rsuID", "rsuMibVersion", "rsuFirmwareVersion", "rsuManufacturer", "rsuGpsOutputString", "rsuMode", "rsuChanStatus"};
         ASSERT_TRUE(_rsuWorker->validateAllRequiredFieldsPresent(config, requiredFields));
 
@@ -52,13 +51,13 @@ namespace RSUHealthMonitor
     TEST_F(test_RSUHealthMonitorWorker, getRSUStatus)
     {
         uint16_t port = 161;
-        auto json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "testtesttest", "authPriv", 1000);
+        auto json = _rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "testtesttest", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
 
-        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_4_1, "127.0.0.1", port, "test", "test", "authPriv", 1000);
+        json = _rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
 
-        json = _rsuWorker->getRSUStatus(RSUMibVersion::RSUMIB_V_1218, "127.0.0.1", port, "test", "test", "authPriv", 1000);
+        json = _rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000);
         ASSERT_TRUE(json.empty());
     }
 

@@ -2,10 +2,9 @@
 
 namespace tmx::utils
 {
-
     // Client defaults to SNMPv3
     snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
-                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version, int timeout)
+                             const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version, int timeout)
 
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
@@ -17,12 +16,13 @@ namespace tmx::utils
         char *ip_port = &ip_port_string[0];
 
         // Initialize SNMP session parameters
-        init_snmp("carma_snmp");
+        init_snmp("snmp_init");
         snmp_sess_init(&session);
         session.peername = ip_port;
         session.version = snmp_version_; // SNMP_VERSION_3
         session.securityName = (char *)snmp_user.c_str();
         session.securityNameLen = snmp_user.length();
+        session.securityModel = SNMP_SEC_MODEL_USM;
 
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
@@ -31,7 +31,7 @@ namespace tmx::utils
             session.community_len = community_.length();
         }
 
-        // SNMP authorization/privach config
+        // Set security level
         if (securityLevel == "authPriv")
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHPRIV;
@@ -41,45 +41,99 @@ namespace tmx::utils
         {
             session.securityLevel = SNMP_SEC_LEVEL_AUTHNOPRIV;
         }
-
-        else
+        else {
             session.securityLevel = SNMP_SEC_LEVEL_NOAUTH;
-
-        // Passphrase used for both authentication and privacy
-        auto phrase_len = authPassPhrase.length();
-        auto phrase = (u_char *)authPassPhrase.c_str();
-
-        // Defining and generating auth config with SHA1
-        session.securityAuthProto = snmp_duplicate_objid(usmHMACSHA1AuthProtocol, USM_AUTH_PROTO_SHA_LEN);
-        session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
-        session.securityAuthKeyLen = USM_AUTH_KU_LEN;
-        if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
-                                                                          session.securityAuthProtoLen,
-                                                                          phrase, phrase_len,
-                                                                          session.securityAuthKey,
-                                                                          &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
-        {
-            std::string errMsg = "Error generating Ku from authentication pass phrase. \n";
-            throw snmp_client_exception(errMsg);
         }
+        if (securityLevel == "authPriv" || securityLevel == "authNoPriv") {
 
-        // Defining and generating priv config with AES (since using SHA1)
-        session.securityPrivKeyLen = USM_PRIV_KU_LEN;
-        session.securityPrivProto =
-            snmp_duplicate_objid(usmAESPrivProtocol,
-                                 OID_LENGTH(usmAESPrivProtocol));
-        session.securityPrivProtoLen = OID_LENGTH(usmAESPrivProtocol);
+            // Defining and generating authentication config
+            const oid *usmAuthProto;
+            if (authProtocol == "MD5") {
+                usmAuthProto = usmHMACMD5AuthProtocol;
+            }
+            else if (authProtocol == "SHA") {
+                usmAuthProto = usmHMACSHA1AuthProtocol;
+            }
+            else if (authProtocol == "SHA-224") {
+                usmAuthProto = usmHMAC128SHA224AuthProtocol;
+            }
+            else if (authProtocol == "SHA-256") {
+                usmAuthProto = usmHMAC192SHA256AuthProtocol;
+            }
+            else if (authProtocol == "SHA-384") {
+                usmAuthProto = usmHMAC256SHA384AuthProtocol;
+            }
+            else if (authProtocol == "SHA-512") {
+                usmAuthProto = usmHMAC384SHA512AuthProtocol;
+            }
+            else usmAuthProto = usmHMACSHA1AuthProtocol;
+            // Passphrase used for authentication
+            auto authPhrase_len = authPassPhrase.length();
+            auto authPhrase = (u_char *)authPassPhrase.c_str();
 
-        if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+            session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
+            session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
+            session.securityAuthKeyLen = USM_AUTH_KU_LEN;
+            if (session.securityLevel != SNMP_SEC_LEVEL_NOAUTH && generate_Ku(session.securityAuthProto,
                                                                             session.securityAuthProtoLen,
-                                                                            phrase, phrase_len,
-                                                                            session.securityPrivKey,
-                                                                            &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
-        {
-            std::string errMsg = "Error generating Ku from privacy pass phrase. \n";
-            throw snmp_client_exception(errMsg);
+                                                                            authPhrase, authPhrase_len,
+                                                                            session.securityAuthKey,
+                                                                            &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
+            {
+                throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
+            }
         }
+        // Defining and generating privacy config
+        if (securityLevel == "authPriv" ) {
+            const oid *usmPrivProto;
+            size_t privLen;
+            if (privProtocol == "DES") {
+                usmPrivProto = usmDESPrivProtocol;
+                privLen = USM_PRIV_PROTO_DES_LEN;
+            }
+            else if (privProtocol == "AES") {
+                usmPrivProto = usmAESPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES_LEN;
+            }
+            else if (privProtocol == "AES-128") {
+                usmPrivProto = usmAES128PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES128_LEN;
+            }
+            else if (privProtocol == "AES-192") {
+                usmPrivProto = usmAES192PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES192_LEN;
+            }
+            else if (privProtocol == "AES-256") {
+                usmPrivProto = usmAES256PrivProtocol;
+                privLen = USM_PRIV_PROTO_AES256_LEN;
+            }
+            else if (privProtocol == "AES-192-Cisco") {
+                usmPrivProto = usmAES192CiscoPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES192_CISCO_LEN;
+            }
+            else if (privProtocol == "AES-256-Cisco") {
+                usmPrivProto = usmAES256CiscoPrivProtocol;
+                privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
+            }
+            else if (securityLevel == "authPriv" ) {
+                throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
+            }
+            // Passphrase used for privacy
+            auto privPhrase_len = privPassPhrase.length();
+            auto privPhrase = (u_char *)privPassPhrase.c_str();
 
+            session.securityPrivProto = snmp_duplicate_objid(usmPrivProto, privLen);
+            session.securityPrivProtoLen = privLen;
+            session.securityPrivKeyLen = USM_PRIV_KU_LEN;
+            if (session.securityLevel == SNMP_SEC_LEVEL_AUTHPRIV && generate_Ku(session.securityAuthProto,
+                                                                                session.securityAuthProtoLen,
+                                                                                privPhrase, privPhrase_len,
+                                                                                session.securityPrivKey,
+                                                                                &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
+            {
+                throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
+            }
+        }
         session.timeout = timeout_;
 
         // Opens the snmp session if it exists
@@ -106,10 +160,6 @@ namespace tmx::utils
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
     bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
     {
-
-        /*Structure to hold response from the remote host*/
-        snmp_pdu *response;
-
         // Create pdu for the data
         if (request_type == request_type::GET)
         {
@@ -131,15 +181,14 @@ namespace tmx::utils
         // net-snmp has several methods for creating an OID object
         // their documentation suggests using get_node. read_objid seems like a simpler approach
         // TO DO: investigate update to get_node
-        if (!read_objid(input_oid.c_str(), OID, &OID_len))
-        {
-            // If oid cannot be created
+        if (!snmp_parse_oid(input_oid.c_str(), OID, &OID_len)) {
+            snmp_perror("snmp_parse_oid");
             PLOG(logERROR) << "OID could not be created from input: " << input_oid;
+            snmp_close(ss);
             return false;
         }
         else
         {
-
             if (request_type == request_type::GET)
             {
                 // Add OID to pdu for get request
@@ -247,7 +296,13 @@ namespace tmx::utils
         }
         else
         {
-            PLOG(logERROR) << "Unknown SNMP Error for " << (request_type == request_type::GET ? "GET" : "SET");
+            PLOG(logERROR) << "Unknown SNMP Error (status code: " << status << ") for " << (request_type == request_type::GET ? "GET" : "SET");
         }
+
+        if (response)
+        {
+            PLOG(logERROR) << "SNMP error in response: " << snmp_errstring(response->errstat);
+        }
+
     }
 } // namespace
