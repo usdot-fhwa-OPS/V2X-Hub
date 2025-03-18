@@ -65,7 +65,7 @@
 		},
 		{
 			"key": "BSM_Forward_Frequency",
-			"default": "1",
+			"default": "10",
 			"description": "Manual configuration to control how frequently the BSM is forwarded to websocket. Default to 1HZ."
 		},
 		{
