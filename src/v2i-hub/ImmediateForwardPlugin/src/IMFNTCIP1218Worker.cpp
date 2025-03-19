@@ -19,10 +19,11 @@ namespace ImmediateForward {
                 deleteRowRep.val_int = 6;
                 std::string oid = rsu::mib::ntcip1218::rsuIFMStatusOid +  "." + std::to_string(curIndex);
                 connected = client->process_snmp_request(oid, request_type::SET, deleteRowRep);
-                curIndex++;
                 if (!connected) {
+                    FILE_LOG(logWARNING) << "Cleared IMF Table Rows 0 to "<< curIndex ;
                     break;
                 }
+                curIndex++;
 
             }
         }
