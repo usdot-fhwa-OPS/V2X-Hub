@@ -38,7 +38,7 @@ namespace tmx::utils::rsu::mib::ntcip1218
     static const std::string rsuChanStatusOid = "1.3.6.1.4.1.1206.4.2.18.16.1.0";
 
     // RSU Mode. Commands the current mode of operation of the RSU and provides capability to transition the device into a new mode, e.g. from the operate mode to standby mode, etc.
-    static const std::string rsuModeOid = "1.3.6.1.4.1.1.1206.4.2.18.16.2.0";
+    static const std::string rsuModeOid = "1.3.6.1.4.1.1206.4.2.18.16.2.0";
     /**
      * The maximum number of Immediate Forward messages this Roadside Unit supports. This object indicates the
      * maximum rows which appears in the rsuIFMStatusTable object

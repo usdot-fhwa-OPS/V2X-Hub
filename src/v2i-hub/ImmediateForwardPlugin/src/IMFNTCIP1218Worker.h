@@ -19,6 +19,7 @@
 #include <unordered_map>
 #include <string>
 #include <rsu/NTCIP_1218_MIB.h>
+#include <rsu/RSU_MIB_4_1.h>
 #include <PluginLog.h>
 #include "ImmediateForwardConfiguration.h"
 

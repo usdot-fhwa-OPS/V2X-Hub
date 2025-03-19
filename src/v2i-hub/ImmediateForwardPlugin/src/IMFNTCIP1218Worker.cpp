@@ -5,27 +5,45 @@ using namespace tmx::utils;
 namespace ImmediateForward {
     void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client) {
 
-        FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
-        snmp_response_obj maxImfsRep;
-        maxImfsRep.type = snmp_response_obj::response_type::INTEGER;
-        bool connected = client->process_snmp_request(rsu::mib::ntcip1218::maxRsuIFMs, request_type::GET, maxImfsRep);
-        auto maxImfs = maxImfsRep.val_int;
-        FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
-        auto curIndex = 0;
-        if (connected) {
-            while ( maxImfs > curIndex || 16 > curIndex) {
-                snmp_response_obj deleteRowRep;
-                deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
-                deleteRowRep.val_int = 6;
-                std::string oid = rsu::mib::ntcip1218::rsuIFMStatusOid +  "." + std::to_string(curIndex);
-                connected = client->process_snmp_request(oid, request_type::SET, deleteRowRep);
-                curIndex++;
-                if (!connected) {
-                    break;
-                }
+        // FILE_LOG(logINFO) << "Getting RSU ID";
+        // snmp_response_obj resp;
+        // resp.type = snmp_response_obj::response_type::STRING;
+        // client->process_snmp_request(rsu::mib::rsu41::RSU_ID_OID, request_type::GET, resp);
+        // FILE_LOG(logINFO) << "RSU ID = " << std::string(resp.val_string.begin(), resp.val_string.end());
+        // FILE_LOG(logINFO) << "Setting RSU ID to TEST_RSU";
+        
+        // std::vector<snmpRequest> requests;
+           
+            
+        // snmpRequest psid{
+        //     rsu::mib::rsu41::RSU_ID_OID,
+        //     's',
+        //     "TEST_RSU"
+        // };
+        // requests.push_back(psid);
+        // client->process_snmp_set_requests(requests);
 
-            }
-        }
+        // FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
+        // snmp_response_obj maxImfsRep;
+        // maxImfsRep.type = snmp_response_obj::response_type::INTEGER;
+        // bool connected = client->process_snmp_request(rsu::mib::ntcip1218::maxRsuIFMs, request_type::GET, maxImfsRep);
+        // auto maxImfs = maxImfsRep.val_int;
+        // FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
+        // auto curIndex = 0;
+        // if (connected) {
+        //     while ( maxImfs > curIndex && 16 > curIndex) {
+        //         snmp_response_obj deleteRowRep;
+        //         deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
+        //         deleteRowRep.val_int = 6;
+        //         std::string oid = rsu::mib::ntcip1218::rsuIFMStatusOid +  "." + std::to_string(curIndex);
+        //         connected = client->process_snmp_request(oid, request_type::SET, deleteRowRep);
+        //         curIndex++;
+        //         if (!connected) {
+        //             break;
+        //         }
+
+        //     }
+        // }
         
     }
 
@@ -45,7 +63,7 @@ namespace ImmediateForward {
         for (const auto &message : messages)
         {
             //create new row entry
-            FILE_LOG(logDEBUG1) << "Creating IMF row " + curIndex ;
+            FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
             std::vector<snmpRequest> requests;
            
             size_t pos = message.psid.find("x");
@@ -66,7 +84,7 @@ namespace ImmediateForward {
             snmpRequest payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
-                "00133500100f368500001e0f702001043f8000464fc64f8000780000010237c0002327e327c0003c000000c123e0001193f193e0001e0000"
+                "FE"
             };
             snmpRequest enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
@@ -89,7 +107,7 @@ namespace ImmediateForward {
                 'x',
                 "01"
             };
-            
+            FILE_LOG(logDEBUG1) << "Setting IMR row "  << curIndex << " PSID: " << message.psid << " Channel: " << message.channel.value() << " Payload: FEE Enable: 1 CreateRow: 4  Priority: 6 Options: 01" ; 
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
             client->process_snmp_set_requests(requests);
             

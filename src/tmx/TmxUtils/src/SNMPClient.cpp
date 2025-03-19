@@ -14,6 +14,7 @@ namespace tmx::utils
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
         char *ip_port = &ip_port_string[0];
+        snmp_set_do_debugging(1);
 
         // Initialize SNMP session parameters
         init_snmp("snmp_init");
@@ -246,7 +247,7 @@ namespace tmx::utils
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
                     std::string val_string (val.val_string.begin(), val.val_string.end());
-                    snmp_add_var(pdu, OID, OID_len, 'x', val_string.c_str());
+                    snmp_add_var(pdu, OID, OID_len, 's', val_string.c_str());
                 }
             }
 
@@ -324,10 +325,12 @@ namespace tmx::utils
         }
 
         else if(val.type == snmp_response_obj::response_type::STRING){
-            FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid << " Value:" << std::endl;
-            for(auto data : val.val_string){
-                FILE_LOG(logDEBUG) <<  data ;
-            }
+            FILE_LOG(logDEBUG) << "Success in SET for OID: " 
+                << input_oid 
+                << " Value:" 
+                << std::string(val.val_string.begin(), val.val_string.end()) 
+                << std::endl;
+
         }
     }
 
