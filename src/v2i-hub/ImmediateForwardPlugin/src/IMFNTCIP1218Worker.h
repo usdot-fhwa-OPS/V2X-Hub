@@ -30,6 +30,8 @@ namespace ImmediateForward {
      * @param client The SNMP client to use for the operation
      */
     void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client);
+
+    void setRSUMode(unsigned int mode, const std::unique_ptr<tmx::utils::snmp_client> &client);
     /**
      * @brief Initialize the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation

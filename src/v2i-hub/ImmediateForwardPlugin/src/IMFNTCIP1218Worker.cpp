@@ -47,29 +47,20 @@ namespace ImmediateForward {
         
     }
 
+    void setRSUMode(unsigned int mode, const std::unique_ptr<tmx::utils::snmp_client> &client) {
+        snmp_response_obj obj;
+        obj.type = snmp_response_obj::response_type::INTEGER;
+        obj.val_int = mode;
+        bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET, obj);
+        if (!operational) {
+            throw tmx::TmxException("Failed to set RSU to operational mode");
+        }
+    }
+
     std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable(const std::unique_ptr<snmp_client> &client, const std::vector<Message> &messages){
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         auto curIndex = 1;
         auto status = 0;
-        {
-            snmp_response_obj obj;
-            obj.type = snmp_response_obj::response_type::INTEGER;
-            client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET,obj );
-            status= obj.val_int;
-            FILE_LOG(logDEBUG) << "RSU Operational Status currently " << obj.val_int; 
-        }
-        if (status == 3) {
-            FILE_LOG(logDEBUG1) << "Setting RSU to operational mode (2) Standby" ;
-            snmp_response_obj obj;
-            obj.type = snmp_response_obj::response_type::INTEGER;
-            obj.val_int = 2;
-            bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET, obj);
-            if (!operational) {
-                throw tmx::TmxException("Failed to set RSU to operational mode");
-            }
-            status = 2;
-            sleep(1);
-        }
         FILE_LOG(logDEBUG1) << "Initializing RSU IMF Table" ;
         for (const auto &message : messages)
         {
@@ -125,16 +116,6 @@ namespace ImmediateForward {
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
             // Increment index
             curIndex++;
-        }
-        if (status == 2) {
-            FILE_LOG(logDEBUG1) << "Setting RSU to operational mode (3) Operational" ;
-            snmp_response_obj obj;
-            obj.type = snmp_response_obj::response_type::INTEGER;
-            obj.val_int = 3;
-            bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET, obj);
-            if (!operational) {
-                throw tmx::TmxException("Failed to set RSU to operational mode");
-            }
         }
         return tmxMessageTypeToIMFTableIndex;
     }

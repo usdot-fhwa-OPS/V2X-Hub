@@ -119,8 +119,11 @@ namespace ImmediateForward
 						3,
 						1000000
 					);
+				setRSUMode(2, _snmpClientMap[imfConfig.name]);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name]);
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name], imfConfig.messages);
+				setRSUMode(3, _snmpClientMap[imfConfig.name]);
+
 			}
 		}
 		// The same mutex is used that protects the UDP clients.
