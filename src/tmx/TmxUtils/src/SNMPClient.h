@@ -21,6 +21,9 @@ namespace tmx::utils
         std::string oid;
         char type;
         std::string value;
+        std::string to_string() const {
+            return oid + " " + type +  " " + value;
+        };
     };
 
     /** @brief A struct to hold the value being sent to the TSC, can be integer or string. Type needs to be defined*/
