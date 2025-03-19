@@ -43,7 +43,7 @@ namespace tmx::utils::rsu::mib::ntcip1218
      * The maximum number of Immediate Forward messages this Roadside Unit supports. This object indicates the
      * maximum rows which appears in the rsuIFMStatusTable object
      */
-    static const std::string maxRsuIFMs = "1.3.6.1.4.1.1.1206.4.2.18.4.1";
+    static const std::string maxRsuIFMs = "1.3.6.1.4.1.1.1206.4.2.18.4.1.0";
 
     // Forward Message PSID. The Provider Service Identifier (PSID) for the Immediate Forward Message. The current PSID assignments can be found at https://standards.ieee.org/products-services/regauth/psid/public.html.
     static const std::string rsuIFMPsidOid = "1.3.6.1.4.1.1206.4.2.18.4.2.1.2";

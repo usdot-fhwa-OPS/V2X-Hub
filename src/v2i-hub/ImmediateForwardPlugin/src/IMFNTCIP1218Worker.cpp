@@ -5,45 +5,27 @@ using namespace tmx::utils;
 namespace ImmediateForward {
     void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client) {
 
-        // FILE_LOG(logINFO) << "Getting RSU ID";
-        // snmp_response_obj resp;
-        // resp.type = snmp_response_obj::response_type::STRING;
-        // client->process_snmp_request(rsu::mib::rsu41::RSU_ID_OID, request_type::GET, resp);
-        // FILE_LOG(logINFO) << "RSU ID = " << std::string(resp.val_string.begin(), resp.val_string.end());
-        // FILE_LOG(logINFO) << "Setting RSU ID to TEST_RSU";
-        
-        // std::vector<snmpRequest> requests;
-           
-            
-        // snmpRequest psid{
-        //     rsu::mib::rsu41::RSU_ID_OID,
-        //     's',
-        //     "TEST_RSU"
-        // };
-        // requests.push_back(psid);
-        // client->process_snmp_set_requests(requests);
+        FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
+        snmp_response_obj maxImfsRep;
+        maxImfsRep.type = snmp_response_obj::response_type::INTEGER;
+        bool connected = client->process_snmp_request(rsu::mib::ntcip1218::maxRsuIFMs, request_type::GET, maxImfsRep);
+        auto maxImfs = maxImfsRep.val_int;
+        FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
+        auto curIndex = 1;
+        if (connected) {
+            while ( maxImfs > curIndex && 16 > curIndex) {
+                snmp_response_obj deleteRowRep;
+                deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
+                deleteRowRep.val_int = 6;
+                std::string oid = rsu::mib::ntcip1218::rsuIFMStatusOid +  "." + std::to_string(curIndex);
+                connected = client->process_snmp_request(oid, request_type::SET, deleteRowRep);
+                curIndex++;
+                if (!connected) {
+                    break;
+                }
 
-        // FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
-        // snmp_response_obj maxImfsRep;
-        // maxImfsRep.type = snmp_response_obj::response_type::INTEGER;
-        // bool connected = client->process_snmp_request(rsu::mib::ntcip1218::maxRsuIFMs, request_type::GET, maxImfsRep);
-        // auto maxImfs = maxImfsRep.val_int;
-        // FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
-        // auto curIndex = 0;
-        // if (connected) {
-        //     while ( maxImfs > curIndex && 16 > curIndex) {
-        //         snmp_response_obj deleteRowRep;
-        //         deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
-        //         deleteRowRep.val_int = 6;
-        //         std::string oid = rsu::mib::ntcip1218::rsuIFMStatusOid +  "." + std::to_string(curIndex);
-        //         connected = client->process_snmp_request(oid, request_type::SET, deleteRowRep);
-        //         curIndex++;
-        //         if (!connected) {
-        //             break;
-        //         }
-
-        //     }
-        // }
+            }
+        }
         
     }
 
