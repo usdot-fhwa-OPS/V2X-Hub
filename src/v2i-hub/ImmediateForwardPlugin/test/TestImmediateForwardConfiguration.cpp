@@ -12,7 +12,14 @@ TEST(TestImmediateForwardConfiguration, txModeToString ) {
 TEST(TestImmediateForwardConfiguration, stringToTxMode) {
     EXPECT_EQ(TxMode::CONT, stringToTxMode("CONT"));
     EXPECT_EQ(TxMode::ALT, stringToTxMode("ALT"));
-    EXPECT_THROW(stringToTxMode("INVALID"), std::out_of_range);
+    EXPECT_THROW(stringToTxMode("INVALID"), tmx::TmxException);
+}
+
+TEST(TestImmediateForwardConfiguration, stringToSecurityLevel) {
+    EXPECT_EQ(SecurityLevel::AUTH_PRIV, stringToSecurityLevel("authPriv"));
+    EXPECT_EQ(SecurityLevel::AUTH_NO_PRIV, stringToSecurityLevel("authNoPriv"));
+    EXPECT_EQ(SecurityLevel::NO_AUTH_NO_PRIV, stringToSecurityLevel("noAuthNoPriv"));
+    EXPECT_THROW(stringToSecurityLevel("INVALID"), tmx::TmxException);
 }
 
 TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
@@ -199,7 +206,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
                 "rsuSpec": "NTCIP1218",
                 "snmpAuth": {
                     "user": "authOnlyUser",
-                    "securityLevel": "AuthPriv",
+                    "securityLevel": "authPriv",
                     "community": "public",
                     "authProtocol": "SHA-512",
                     "authPassPhrase": "dummy123",

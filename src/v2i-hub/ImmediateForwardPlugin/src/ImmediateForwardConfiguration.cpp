@@ -108,7 +108,12 @@ namespace ImmediateForward{
     }
 
     TxMode stringToTxMode(const std::string &mode) {
-        return stringToTxModeMap.at(mode);
+        try {
+            return stringToTxModeMap.at(mode);
+        } 
+        catch (const std::out_of_range &e) {
+            throw tmx::TmxException("TxMode " + mode + " is not supported!");    
+        }
     }
 
     std::string securityLevelToString(const SecurityLevel &level) {
@@ -121,7 +126,12 @@ namespace ImmediateForward{
     }
 
     SecurityLevel stringToSecurityLevel(const std::string &level) {
-        return stringToSecurityLevelMap.at(level);
+        try{
+            return stringToSecurityLevelMap.at(level);
+        }
+        catch (const std::out_of_range &e) {
+            throw tmx::TmxException("SecurityLevel " + level + " is not supported!");    
+        }
     }
 
 
