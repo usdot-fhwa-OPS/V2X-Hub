@@ -26,13 +26,23 @@ TEST(TestIMFNTCIP1218Worker, testClearImmediateForwardTable) {
     snmp_response_obj deleteRowRep;
     deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
     deleteRowRep.val_int = 6;
-    EXPECT_CALL( *mockClient, process_snmp_request(_, request_type::SET , _) ).Times(16).WillRepeatedly(testing::DoAll(
-        testing::SetArgReferee<2>(deleteRowRep),
-        Return(true)));
+    // Only have populated entries for first 9 rows
+    EXPECT_CALL( *mockClient, process_snmp_request(_, request_type::SET , _) ).Times(9).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
+        WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(false)));
+
     
     clearImmediateForwardTable(mockClient.get());
 
 }
+
 
 TEST(TestIMFNTCIP1218Worker, testSetRSUMode) {
     // Test the setRSUMode function
