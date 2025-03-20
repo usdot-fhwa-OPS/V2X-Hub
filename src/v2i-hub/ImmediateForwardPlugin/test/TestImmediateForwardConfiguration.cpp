@@ -21,6 +21,11 @@ TEST(TestImmediateForwardConfiguration, stringToSecurityLevel) {
     EXPECT_EQ(SecurityLevel::NO_AUTH_NO_PRIV, stringToSecurityLevel("noAuthNoPriv"));
     EXPECT_THROW(stringToSecurityLevel("INVALID"), tmx::TmxException);
 }
+TEST(TestImmediateFowardConfiguration, securityLevelToString) {
+    EXPECT_EQ("authPriv", securityLevelToString(SecurityLevel::AUTH_PRIV));
+    EXPECT_EQ("authNoPriv", securityLevelToString(SecurityLevel::AUTH_NO_PRIV));
+    EXPECT_EQ("noAuthNoPriv", securityLevelToString(SecurityLevel::NO_AUTH_NO_PRIV));
+}
 
 TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
     std::string jsonConfiguration = R"(

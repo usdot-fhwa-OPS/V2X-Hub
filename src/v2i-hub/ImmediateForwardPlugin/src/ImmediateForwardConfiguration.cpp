@@ -94,7 +94,13 @@ namespace ImmediateForward{
         msg.tmxType = message[TmxTypeKey].asString();
         msg.sendType = message[SendTypeKey].asString();
         msg.psid = message[PSIDKey].asString();
-        msg.channel = message[ChannelKey].asInt();
+        if (message[ChannelKey].isInt()) {
+            msg.channel = message[ChannelKey].asInt();
+        }
+        else {
+            // Default value (see routeable_message.h addDsrcMetadata())
+            msg.channel = 183;
+        }
         return msg;
     }
 
