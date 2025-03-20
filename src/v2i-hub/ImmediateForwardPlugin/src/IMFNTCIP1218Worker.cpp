@@ -93,8 +93,10 @@ namespace ImmediateForward {
                 "01"
             };
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
-            client->process_snmp_set_requests(requests);
-            
+            bool success = client->process_snmp_set_requests(requests);
+            if ( !success) {
+                throw tmx::TmxException("Failed to create IMF row " + std::to_string(curIndex));
+            }
             // Add message to table with index
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
             // Increment index

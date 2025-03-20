@@ -88,7 +88,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     messages.push_back(message);
 
     std::vector<snmpRequest> requests ;
-    EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).WillOnce(::testing::SaveArg<0>(&requests));
+    EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests), Return(true)));
     // Expect these snmpRequests to be called
     // snmpRequest psid{
     //     rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1),

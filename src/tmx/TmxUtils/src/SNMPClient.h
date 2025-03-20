@@ -151,7 +151,7 @@ namespace tmx::utils
          *  @param requests A vector of snmpRequest objects
          *  @return void
          */
-        virtual void process_snmp_set_requests(const std::vector<snmpRequest> &requests);
+        virtual bool process_snmp_set_requests(const std::vector<snmpRequest> &requests);
         /**
          * @brief Returns the current port
          */

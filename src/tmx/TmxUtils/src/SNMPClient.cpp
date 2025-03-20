@@ -156,7 +156,7 @@ namespace tmx::utils
         PLOG(logINFO) << "Closing SNMP session";
         snmp_close(ss);
     }
-    void snmp_client::process_snmp_set_requests(const std::vector<snmpRequest> &requests) {
+    bool snmp_client::process_snmp_set_requests(const std::vector<snmpRequest> &requests) {
         int failures = 0;
         pdu = snmp_pdu_create(SNMP_MSG_SET);
         FILE_LOG(logDEBUG1) << "Sending SNMP Requests length " << requests.size();
