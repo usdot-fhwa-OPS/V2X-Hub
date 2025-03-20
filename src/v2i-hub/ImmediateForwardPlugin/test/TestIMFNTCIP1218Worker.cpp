@@ -49,6 +49,21 @@ TEST(TestIMFNTCIP1218Worker, testSetRSUMode) {
     setRSUMode(mockClient.get(), 2);
 }
 
+TEST(TestIMFNTCIP1218Worker, testSetRSUModeFail) {
+    // Test the setRSUMode function
+    // Create a mock SNMP client
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    // Call the function
+    snmp_response_obj obj;
+    obj.type = snmp_response_obj::response_type::INTEGER;
+    obj.val_int = 2;
+    EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET , obj) ).Times(1).WillRepeatedly(testing::DoAll(
+        testing::SetArgReferee<2>(obj),
+        Return(false)));
+    
+    EXPECT_THROW(setRSUMode(mockClient.get(), 2), tmx::TmxException);
+}
+
 TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     // Test the initializeImmediateForwardTable function
     // Create a mock SNMP client
