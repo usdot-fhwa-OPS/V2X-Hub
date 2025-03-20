@@ -13,7 +13,7 @@ namespace ImmediateForward {
         FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
         auto curIndex = 1;
         if (connected) {
-            while ( maxImfs > curIndex && 16 > curIndex) {
+            while ( maxImfs >= curIndex && 16 >= curIndex) {
                 snmp_response_obj deleteRowRep;
                 deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
                 deleteRowRep.val_int = 6;
@@ -30,7 +30,7 @@ namespace ImmediateForward {
         
     }
 
-    void setRSUMode(unsigned int mode,  tmx::utils::snmp_client* const client) {
+    void setRSUMode(tmx::utils::snmp_client* const client, unsigned int mode) {
         snmp_response_obj obj;
         obj.type = snmp_response_obj::response_type::INTEGER;
         obj.val_int = mode;

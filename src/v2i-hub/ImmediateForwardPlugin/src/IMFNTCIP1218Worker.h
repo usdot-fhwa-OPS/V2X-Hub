@@ -30,8 +30,15 @@ namespace ImmediateForward {
      * @param client The SNMP client to use for the operation
      */
     void clearImmediateForwardTable( tmx::utils::snmp_client* const client);
-
-    void setRSUMode(unsigned int mode,  tmx::utils::snmp_client* const client);
+    /**
+     * @brief Set RSU Operational Mode. It is recommended that before creating or 
+     * removing entries in the RSU Immediate Forward Table, the RSU should be
+     * set to STANDBY (2). After all removals and additions are complete, the RSU
+     * should be set to OPERATIONAL (3).
+     * @param mode The mode to set the RSU to
+     * @param client The SNMP client 
+     */
+    void setRSUMode(tmx::utils::snmp_client* const client, unsigned int mode  );
     /**
      * @brief Initialize the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation

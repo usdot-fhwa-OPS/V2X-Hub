@@ -119,10 +119,10 @@ namespace ImmediateForward
 						3,
 						1000000
 					);
-				setRSUMode(2, _snmpClientMap[imfConfig.name].get());
+				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messages);
-				setRSUMode(3, _snmpClientMap[imfConfig.name].get());
+				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
 
 			}
 		}
