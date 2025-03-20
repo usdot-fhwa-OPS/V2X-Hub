@@ -126,3 +126,19 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests[6].value, "01");
 
 }
+
+TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
+    // Test the sendNTCIP1218ImfMessage function
+    // Create a mock SNMP client
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    // Call the function
+    std::string message = "30818080011183011384780130201b6bd3420c3bb220a9a79e4c3b32a093bba65e5cf2e3e9a77ee03c48100000b00204343a663a66001021a1d331d33001410c0e49800a086874cc74cc0040454396c396c002022a1cb61cb6001c10c0e49800e08a872d872d800604343a663a66003021a1d331d33000410c0e498002086874cc74ccfd002020602a000000001d0054f3857404e2adefc542027154f886dc04e2827f0008143009000000000748017022f7fff14fd0008127e001008300d000000000e802a03a7ce02715879f419004e2ac4590a00271413f40040618108000000003a40077fffbf5f8a7e0004213ec0081008d4c0010000004944c8804bb2b479f3809760400b50234300040000015a011b804f325d8090027981004d008ccc0010000004fca0f804e3acf990320271c1006cc08d8c00100000050f92d4014529851de80a29040236047d100000000001000e0706fffe11f040000000000400f7fffbf69847b100000000001002dfa86fffe11f84000000000040077fffc09a8";
+    unsigned int index = 1;
+    snmp_response_obj resp;
+    resp.type = snmp_response_obj::response_type::STRING;
+    resp.val_string = std::vector<char>(message.begin(), message.end());
+    std::string oid = rsu::mib::ntcip1218::rsuIFMPayloadOid +  "." + std::to_string(index);
+    EXPECT_CALL( *mockClient, process_snmp_request(oid, request_type::SET , resp) ).Times(1).WillRepeatedly(Return(true));
+    
+    sendNTCIP1218ImfMessage(mockClient.get(), message, index);
+}
