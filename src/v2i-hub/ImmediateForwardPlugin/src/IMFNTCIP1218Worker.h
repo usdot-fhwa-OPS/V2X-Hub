@@ -29,15 +29,15 @@ namespace ImmediateForward {
      * @brief Clear the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation
      */
-    void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client);
+    void clearImmediateForwardTable( tmx::utils::snmp_client* const client);
 
-    void setRSUMode(unsigned int mode, const std::unique_ptr<tmx::utils::snmp_client> &client);
+    void setRSUMode(unsigned int mode,  tmx::utils::snmp_client* const client);
     /**
      * @brief Initialize the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation
      * @param messages The message configurations to add to the table
      */
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::vector<Message> &messages);
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( tmx::utils::snmp_client* const client, const std::vector<Message> &messages);
 
     /**
      * @brief Send an NTCIP 1218 message to the RSU
@@ -45,6 +45,6 @@ namespace ImmediateForward {
      * @param message The IMF message to send
      * @param index The index of the message in the table
      */
-    void sendNTCIP1218ImfMessage(const std::unique_ptr<tmx::utils::snmp_client> &client, const std::string &message, unsigned int index);
+    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index);
 
 }

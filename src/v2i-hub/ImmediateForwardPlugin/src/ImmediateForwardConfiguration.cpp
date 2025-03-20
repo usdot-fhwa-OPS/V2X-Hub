@@ -111,7 +111,7 @@ namespace ImmediateForward{
         try {
             return stringToTxModeMap.at(mode);
         } 
-        catch (const std::out_of_range &e) {
+        catch (const std::out_of_range ) {
             throw tmx::TmxException("TxMode " + mode + " is not supported!");    
         }
     }
@@ -129,7 +129,7 @@ namespace ImmediateForward{
         try{
             return stringToSecurityLevelMap.at(level);
         }
-        catch (const std::out_of_range &e) {
+        catch (const std::out_of_range ) {
             throw tmx::TmxException("SecurityLevel " + level + " is not supported!");    
         }
     }

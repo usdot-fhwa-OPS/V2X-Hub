@@ -3,7 +3,7 @@
 using namespace tmx::utils;
 
 namespace ImmediateForward {
-    void clearImmediateForwardTable(const std::unique_ptr<tmx::utils::snmp_client> &client) {
+    void clearImmediateForwardTable( tmx::utils::snmp_client* const client) {
 
         FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
         snmp_response_obj maxImfsRep;
@@ -30,7 +30,7 @@ namespace ImmediateForward {
         
     }
 
-    void setRSUMode(unsigned int mode, const std::unique_ptr<tmx::utils::snmp_client> &client) {
+    void setRSUMode(unsigned int mode,  tmx::utils::snmp_client* const client) {
         snmp_response_obj obj;
         obj.type = snmp_response_obj::response_type::INTEGER;
         obj.val_int = mode;
@@ -40,10 +40,10 @@ namespace ImmediateForward {
         }
     }
 
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable(const std::unique_ptr<snmp_client> &client, const std::vector<Message> &messages){
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<Message> &messages){
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
+        // Immediate Forward Messages Table index starts with 1
         auto curIndex = 1;
-        auto status = 0;
         FILE_LOG(logDEBUG1) << "Initializing RSU IMF Table" ;
         for (const auto &message : messages)
         {
@@ -103,7 +103,7 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage(const std::unique_ptr<snmp_client> &client, const std::string &message, unsigned int index){
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index){
         snmp_response_obj resp;
         resp.type = snmp_response_obj::response_type::STRING;
         resp.val_string = std::vector<char>(message.begin(), message.end());

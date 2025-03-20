@@ -163,7 +163,7 @@ namespace tmx::utils
         std::string request_log = "Outgoing Request :";
         for (const auto &request : requests) {
             request_log.append("\n" + request.to_string());
-            if (snmp_parse_oid(request.oid.c_str(), OID, &OID_len) == NULL) {
+            if (snmp_parse_oid(request.oid.c_str(), OID, &OID_len) == nullptr) {
                 snmp_perror("snmp_parse_oid");
                 PLOG(logERROR) << "OID could not be created from input: " << request.oid;
                 failures++;

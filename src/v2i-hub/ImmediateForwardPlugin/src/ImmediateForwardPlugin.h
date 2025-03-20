@@ -40,7 +40,7 @@ namespace ImmediateForward
 class ImmediateForwardPlugin : public tmx::utils::PluginClient
 {
 	public:
-		ImmediateForwardPlugin(const std::string &name);
+		explicit ImmediateForwardPlugin(const std::string &name);
 	private:
 		void UpdateConfigSettings();
 		bool UpdateUdpClientFromConfigSettings(uint clientIndex);

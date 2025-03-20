@@ -119,10 +119,10 @@ namespace ImmediateForward
 						3,
 						1000000
 					);
-				setRSUMode(2, _snmpClientMap[imfConfig.name]);
-				clearImmediateForwardTable(_snmpClientMap[imfConfig.name]);
-				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name], imfConfig.messages);
-				setRSUMode(3, _snmpClientMap[imfConfig.name]);
+				setRSUMode(2, _snmpClientMap[imfConfig.name].get());
+				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
+				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messages);
+				setRSUMode(3, _snmpClientMap[imfConfig.name].get());
 
 			}
 		}
@@ -263,12 +263,12 @@ namespace ImmediateForward
 									<< ", Port: " << client->GetAddress();
 					}
 					else {
-						auto &client = _snmpClientMap.at(imfConfig.name);
+						const auto &client = _snmpClientMap.at(imfConfig.name);
 						PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
 									<< ", PSID: " << messageConfig.psid << ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->get_port();
-						sendNTCIP1218ImfMessage(client, payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
+						sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
 					}
 				}
 			}
