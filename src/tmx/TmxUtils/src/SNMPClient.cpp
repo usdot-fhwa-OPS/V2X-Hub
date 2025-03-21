@@ -181,9 +181,10 @@ namespace tmx::utils
         int status = snmp_synch_response(ss, pdu, &response);
         PLOG(logDEBUG) << request_log; 
         PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
-
+        bool success = false;
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR ) {
+            success = true;
             for (auto vars = response->variables; vars;
                      vars = vars->next_variable) {
                 print_variable(vars->name, vars->name_length, vars);
@@ -199,6 +200,7 @@ namespace tmx::utils
             snmp_free_pdu(response);
             OID_len = MAX_OID_LEN;
         }
+        return success;
 
 
         
