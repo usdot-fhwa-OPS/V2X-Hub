@@ -13,7 +13,7 @@ namespace ImmediateForward {
         FILE_LOG(logDEBUG) << "Max Imf rows " << maxImfs ;
         auto curIndex = 1;
         if (connected) {
-            while ( maxImfs >= curIndex && 16 >= curIndex) {
+            while ( maxImfs >= curIndex ) {
                 snmp_response_obj deleteRowRep;
                 deleteRowRep.type = snmp_response_obj::response_type::INTEGER;
                 deleteRowRep.val_int = 6;
@@ -49,48 +49,48 @@ namespace ImmediateForward {
         {
             //create new row entry
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
-            std::vector<snmpRequest> requests;
+            std::vector<snmp_request> requests;
            
             size_t pos = message.psid.find("x");
             if (pos == std::string::npos) {
                 throw tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>");
             }
             std::string messagePsidwithoutPrefix = message.psid.substr(pos+1);
-            snmpRequest psid{
+            snmp_request psid{
                 rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(curIndex),
                 'x',
                 messagePsidwithoutPrefix
             };
-            snmpRequest channel{
+            snmp_request channel{
                 rsu::mib::ntcip1218::rsuIFMTxChannelOid + "." + std::to_string(curIndex),
                 'i',
                 std::to_string(message.channel.value())
             };
-            snmpRequest payload{
+            snmp_request payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
                 "FE"
             };
-            snmpRequest enable{
+            snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
                 'i',
                 "1"
             };
-            snmpRequest creatRow{
+            snmp_request creatRow{
                 rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(curIndex),
                 'i',
                 "4"
             };
-            snmpRequest priority{
+            snmp_request priority{
                 rsu::mib::ntcip1218::rsuIFMPriorityOid + "." + std::to_string(curIndex),
                 'i',
                 "6"
             };
 
-            snmpRequest options{
+            snmp_request options{
                 rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(curIndex),
                 'x',
-                "01"
+                "FE"
             };
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
             bool success = client->process_snmp_set_requests(requests);
@@ -99,18 +99,27 @@ namespace ImmediateForward {
             }
             // Add message to table with index
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
+
+            // TODO : Yunex controller returns Bad Value SNMP error unless we have separate command to set payload to FE
+            std::vector reqs {payload};
+            client->process_snmp_set_requests(reqs);
             // Increment index
             curIndex++;
         }
+
+        
         return tmxMessageTypeToIMFTableIndex;
     }
 
     void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index){
-        snmp_response_obj resp;
-        resp.type = snmp_response_obj::response_type::STRING;
-        resp.val_string = std::vector<char>(message.begin(), message.end());
-        std::string oid = rsu::mib::ntcip1218::rsuIFMPayloadOid +  "." + std::to_string(index);
-        client->process_snmp_request(oid, request_type::SET, resp);
+        
+        snmp_request payload {
+            rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
+            'x',
+            message
+        };
+        std::vector reqs {payload};
+        client->process_snmp_set_requests(reqs);
     }
 
 

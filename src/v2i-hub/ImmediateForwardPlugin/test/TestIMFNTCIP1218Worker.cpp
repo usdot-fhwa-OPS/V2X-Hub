@@ -87,41 +87,41 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     message.channel = 183;
     messages.push_back(message);
 
-    std::vector<snmpRequest> requests ;
+    std::vector<snmp_request> requests ;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests), Return(true)));
     // Expect these snmpRequests to be called
-    // snmpRequest psid{
+    // snmp_request psid{
     //     rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1),
     //     'x',
     //     "8002"
     // };
-    // snmpRequest channel{
+    // snmp_request channel{
     //     rsu::mib::ntcip1218::rsuIFMTxChannelOid + "." + std::to_string(1),
     //     'i',
     //     "183"
     // };
-    // snmpRequest enable{
+    // snmp_request enable{
     //     rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1),
     //     'i',
     //     "1"
     // };
-    // snmpRequest payload{
+    // snmp_request payload{
     //     rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1),
     //     'x',
     //     "FE"
     // };
-    // snmpRequest creatRow{
+    // snmp_request creatRow{
     //     rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1),
     //     'i',
     //     "4"
     // };
-    // snmpRequest priority{
+    // snmp_request priority{
     //     rsu::mib::ntcip1218::rsuIFMPriorityOid + "." + std::to_string(1),
     //     'i',
     //     "6"
     // };
 
-    // snmpRequest options{
+    // snmp_request options{
     //     rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1),
     //     'x',
     //     "01"

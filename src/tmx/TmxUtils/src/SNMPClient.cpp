@@ -156,8 +156,12 @@ namespace tmx::utils
         PLOG(logINFO) << "Closing SNMP session";
         snmp_close(ss);
     }
-    bool snmp_client::process_snmp_set_requests(const std::vector<snmpRequest> &requests) {
+    bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
+        /*Structure to hold all of the information that we're going to send to the remote host*/
+        struct snmp_pdu *pdu;
+        /*Structure to hold response from the remote host*/
+        struct snmp_pdu *response;
         pdu = snmp_pdu_create(SNMP_MSG_SET);
         FILE_LOG(logDEBUG1) << "Sending SNMP Requests length " << requests.size();
         std::string request_log = "Outgoing Request :";
@@ -207,7 +211,11 @@ namespace tmx::utils
     }
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
     bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
-    {
+    {  
+        /*Structure to hold all of the information that we're going to send to the remote host*/
+        struct snmp_pdu *pdu;
+        /*Structure to hold response from the remote host*/
+        struct snmp_pdu *response;
         // Create pdu for the data
         if (request_type == request_type::GET)
         {
@@ -216,7 +224,6 @@ namespace tmx::utils
         }
         else if (request_type == request_type::SET)
         {
-            PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val.val_int;
             pdu = snmp_pdu_create(SNMP_MSG_SET);
         }
         else
@@ -246,12 +253,16 @@ namespace tmx::utils
             {
                 if (val.type == snmp_response_obj::response_type::INTEGER)
                 {
+                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val.val_int;
                     snmp_add_var(pdu, OID, OID_len, 'i', (std::to_string(val.val_int)).c_str());
                 }
                 // Needs to be finalized to support octet string use
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
+
                     std::string val_string (val.val_string.begin(), val.val_string.end());
+                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val_string;
+
                     snmp_add_var(pdu, OID, OID_len, 's', val_string.c_str());
                 }
             }
@@ -302,6 +313,7 @@ namespace tmx::utils
     }
 
     void snmp_client::process_snmp_get_response(snmp_response_obj &val,  const snmp_pdu &response) const {
+        /*Structure to hold all of the information that we're going to send to the remote host*/
         for (auto vars = response.variables; vars; vars = vars->next_variable)
         {
             // Get value of variable depending on ASN.1 type

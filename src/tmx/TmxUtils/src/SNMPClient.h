@@ -17,8 +17,11 @@ namespace tmx::utils
         OTHER // Processing this request type is not a defined behavior, included for testing only
     }; 
 
-    struct snmpRequest {
+    struct snmp_request {
         std::string oid;
+        /**
+         * i(INTEGER),u(UNSIGNED),s(STRING),x(HEX STRING),d(DECIMAL STRING),n(NULLOBJ),o(OBJID),t(TIMETICKS),a(IPADDRESS),b(BITS)
+         */
         char type;
         std::string value;
         std::string to_string() const {
@@ -58,10 +61,6 @@ namespace tmx::utils
         struct snmp_session session;
         struct snmp_session *ss;
 
-        /*Structure to hold all of the information that we're going to send to the remote host*/
-        struct snmp_pdu *pdu;
-        /*Structure to hold response from the remote host*/
-        struct snmp_pdu *response;
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
         oid OID[MAX_OID_LEN];
@@ -148,10 +147,10 @@ namespace tmx::utils
         virtual bool process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val);
         
         /** @brief Sends a vector of snmpset requests as a single PDU
-         *  @param requests A vector of snmpRequest objects
+         *  @param requests A vector of snmp_request objects
          *  @return void
          */
-        virtual bool process_snmp_set_requests(const std::vector<snmpRequest> &requests);
+        virtual bool process_snmp_set_requests(const std::vector<snmp_request> &requests);
         /**
          * @brief Returns the current port
          */
