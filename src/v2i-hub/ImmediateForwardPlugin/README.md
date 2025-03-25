@@ -75,16 +75,16 @@ This plugin has several configuration parameters. Below these are listed out as 
         {
             "name": "Yunnex",
             "rsuSpec": "NTCIP1218",
-            "address": "192.168.55.20",
+            "address": "192.168.55.123",
             "port": 161,
             "snmpAuth": { /* (optional) SNMP V3 Auth and Encrypt */
                 "user": "rsuRwUser",
                 "securityLevel": "authPriv",
                 "community": "public",
                 "authProtocol": "SHA-512",
-                "authPassPhrase": "St0lcav1!",
+                "authPassPhrase": "Password",
                 "privacyProtocol": "AES-256",
-                "privacyPassPhrase": "St0lcav1!"
+                "privacyPassPhrase": "Password"
             },
             "txMode": "CONT",
             "signMessages": false,
