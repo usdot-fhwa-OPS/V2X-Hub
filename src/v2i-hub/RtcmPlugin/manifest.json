@@ -51,6 +51,11 @@
 			"key":"Route RTCM",
 			"default":"false",
 			"description":"Route the RTCM messages created from NTRIP internally for use by other plugins."
-		}
+		},
+		{
+			"key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
+		}.
 	]
 }
