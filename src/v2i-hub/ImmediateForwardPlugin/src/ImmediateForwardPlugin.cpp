@@ -122,7 +122,7 @@ namespace ImmediateForward
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
-				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messages);
+				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messageConfigs);
 				// Set to operational mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 3);
 
@@ -164,7 +164,7 @@ namespace ImmediateForward
 		//loop through all MessageConfig and send to each with the proper TmxType
 			for (const auto &imfConfig: _imfConfigs)
 			{
-				for ( const auto &messageConfig: imfConfig.messages ) {
+				for ( const auto &messageConfig: imfConfig.messageConfigs ) {
 
 					if (messageConfig.tmxType == msg->subtype)
 					{

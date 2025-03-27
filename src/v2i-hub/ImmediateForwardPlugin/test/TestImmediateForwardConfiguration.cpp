@@ -63,11 +63,11 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfiguration ) {
     EXPECT_EQ(firstImfConfig.port, 3745);
     EXPECT_EQ(firstImfConfig.mode, TxMode::CONT);
     EXPECT_EQ(firstImfConfig.signMessage, false);
-    EXPECT_EQ(firstImfConfig.messages.size(), 9);
+    EXPECT_EQ(firstImfConfig.messageConfigs.size(), 9);
     EXPECT_FALSE(firstImfConfig.enableHsm.has_value());
     EXPECT_FALSE(firstImfConfig.hsmUrl.has_value());
 
-    auto firstMessage = firstImfConfig.messages[0];
+    auto firstMessage = firstImfConfig.messageConfigs[0];
     EXPECT_EQ(firstMessage.tmxType, "SPAT-P");
     EXPECT_EQ(firstMessage.sendType, "SPAT");
     EXPECT_EQ(firstMessage.psid, "0x8002");
@@ -118,13 +118,13 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationHsm ) 
     EXPECT_EQ(firstImfConfig.port, 3745);
     EXPECT_EQ(firstImfConfig.mode, TxMode::CONT);
     EXPECT_EQ(firstImfConfig.signMessage, true);
-    EXPECT_EQ(firstImfConfig.messages.size(), 9);
+    EXPECT_EQ(firstImfConfig.messageConfigs.size(), 9);
     ASSERT_TRUE(firstImfConfig.enableHsm.has_value());
     ASSERT_TRUE(firstImfConfig.hsmUrl.has_value());
     EXPECT_EQ(firstImfConfig.enableHsm.value(), true);
     EXPECT_EQ(firstImfConfig.hsmUrl.value(), "http://<softhsm raspberrypi IP>:3000/v1/scms/");
 
-    auto firstMessage = firstImfConfig.messages[0];
+    auto firstMessage = firstImfConfig.messageConfigs[0];
     EXPECT_EQ(firstMessage.tmxType, "SPAT-P");
     EXPECT_EQ(firstMessage.sendType, "SPAT");
     EXPECT_EQ(firstMessage.psid, "0x8002");
@@ -241,7 +241,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(firstImfConfig.port, 3745);
     EXPECT_EQ(firstImfConfig.mode, TxMode::CONT);
     EXPECT_EQ(firstImfConfig.signMessage, false);
-    EXPECT_EQ(firstImfConfig.messages.size(), 2);
+    EXPECT_EQ(firstImfConfig.messageConfigs.size(), 2);
     EXPECT_FALSE(firstImfConfig.enableHsm.has_value());
     EXPECT_FALSE(firstImfConfig.hsmUrl.has_value());
 
@@ -256,7 +256,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(snmpAuth.privProtocol, "AES-256");
     EXPECT_EQ(snmpAuth.privPassPhrase, "dummy123");
 
-    auto firstMessage = firstImfConfig.messages[0];
+    auto firstMessage = firstImfConfig.messageConfigs[0];
     EXPECT_EQ(firstMessage.tmxType, "SPAT-P");
     EXPECT_EQ(firstMessage.sendType, "SPAT");
     EXPECT_EQ(firstMessage.psid, "0x8002");

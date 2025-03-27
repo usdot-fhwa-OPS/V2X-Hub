@@ -45,12 +45,12 @@ namespace unit_test
         auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000);
         EXPECT_EQ("127.0.0.1", client->get_ip());
         EXPECT_EQ(161, client->get_port());
-        snmpRequest request {
+        snmp_request request {
             RSU_ID_OID,
             's',
             "RSU4.1"
         };
-        vector<snmpRequest> requests = {request};
+        vector<snmp_request> requests = {request};
         EXPECT_FALSE(client->process_snmp_set_requests(requests));
 
     }

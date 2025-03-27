@@ -40,12 +40,12 @@ namespace ImmediateForward {
         }
     }
 
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<Message> &messages){
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs){
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         // Immediate Forward Messages Table index starts with 1
         auto curIndex = 1;
         FILE_LOG(logDEBUG1) << "Initializing RSU IMF Table" ;
-        for (const auto &message : messages)
+        for (const auto &message : messageConfigs)
         {
             //create new row entry
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
@@ -90,7 +90,7 @@ namespace ImmediateForward {
             snmp_request options{
                 rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(curIndex),
                 'x',
-                "FE"
+                "01"
             };
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
             bool success = client->process_snmp_set_requests(requests);

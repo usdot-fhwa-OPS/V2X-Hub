@@ -76,21 +76,21 @@ namespace ImmediateForward{
             }
 
         }
-        auto messages =  imfConfig[MessagesKey];
-        if (!messages.isArray()) {
+        auto messageConfigs =  imfConfig[MessagesKey];
+        if (!messageConfigs.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");
         }
-        for (const auto &element : messages) {
-            imfConfiguration.messages.push_back(parseMessage(element));
+        for (const auto &element : messageConfigs) {
+            imfConfiguration.messageConfigs.push_back(parseMessage(element));
         }
         return imfConfiguration;
     }
 
-    Message parseMessage( const Json::Value &message) {
+    MessageConfig parseMessage( const Json::Value &message) {
         if (!message.isObject()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages element is not an object!");
         }
-        Message msg;
+        MessageConfig msg;
         msg.tmxType = message[TmxTypeKey].asString();
         msg.sendType = message[SendTypeKey].asString();
         msg.psid = message[PSIDKey].asString();

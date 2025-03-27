@@ -66,7 +66,7 @@ namespace ImmediateForward
     /**
      * Message configuration
      */
-    struct Message {
+    struct MessageConfig {
         std::string tmxType;
         std::string sendType;
         std::string psid;
@@ -93,7 +93,7 @@ namespace ImmediateForward
         std::string address;
         unsigned int port;
         std::optional<SNMPAuth> snmpAuth;
-        std::vector<Message> messages;
+        std::vector<MessageConfig> messageConfigs;
         TxMode mode;
         bool signMessage;
         std::optional<bool> enableHsm;
@@ -125,7 +125,7 @@ namespace ImmediateForward
     /**
      * Helper function to parse Message JSON
      */
-    Message parseMessage(const Json::Value &message);
+    MessageConfig parseMessage(const Json::Value &message);
 
     /**
      * Helper function to parse ImfConfiguration JSON
