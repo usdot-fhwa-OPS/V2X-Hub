@@ -76,7 +76,7 @@ namespace ImmediateForward{
             }
 
         }
-        auto messageConfigs =  imfConfig[MessagesKey];
+        const auto &messageConfigs =  imfConfig[MessagesKey];
         if (!messageConfigs.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");
         }
