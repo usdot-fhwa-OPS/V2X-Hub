@@ -195,19 +195,29 @@ namespace PedestrianPlugin
     void FLIRWebSockAsyncClnSession::processPedestrianData(const pt::ptree& pr, const std::string& time)
     {
     try {
+        // Declare initial null and J2735 default values if not provided by FLIR.
+        int angle = 0;
+        float rawAlpha = 0.0f;
+        int alpha = 28800; // Default for J2735 unavailable DE_Angle
+        std::string lat = "";
+        std::string lon = "";
+        int speed = 8191; // Default for unavailable DE_Speed and DE_Velocity
+        int id = 0;
+        std::string infraId = "";
+        std::string idResult = "";
+        std::string objID = "";
+        std::string xOffset = ""; // Offset of detected track from FLIR position in m
+        std::string yOffset = "";
+        std::string det_obj_xml_str;
+
+        // Parse out seconds from datetime string
+        std::vector<int> dateTimeArr = timeStringParser(time);
+
+        PLOG(logINFO) << "Received FLIR camera data at: " << dateTimeArr[0] << "/" << dateTimeArr[1] << "/" << dateTimeArr[2]
+                        << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6];    
+
         for (auto &it: pr.get_child("track")) 
         {
-            // Declare initial null and J2735 default values if not provided by FLIR.
-            int angle = 0;
-            float rawAlpha = 0.0f;
-            int alpha = 28800; // Default for J2735 unavailable DE_Angle
-            std::string lat = "";
-            std::string lon = "";
-            int speed = 8191; // Default for unavailable DE_Speed and DE_Velocity
-            int id = 0;
-            std::string idResult = "";
-            std::string objID = "";
-
             // Parse angle
             if (!it.second.get_child("angle").data().empty())
             {
@@ -266,24 +276,21 @@ namespace PedestrianPlugin
                 // Convert to units of 0.02 m/s for J2735 Speed and Velocity format
                 float rawSpeed = std::stof(it.second.get_child("speed").data());
                 speed = static_cast<int>(std::round(rawSpeed / 0.02f));
+            }                  
+
+            if (generateSDSM_ == false)
+            {
+                msgCount += 1;
+                if (msgCount > 127) {
+                    msgCount = 0;
+                }
             }
 
-            // Parse out seconds from datetime string
-            std::vector<int> dateTimeArr = timeStringParser(time);                       
-
-            msgCount += 1;
-            if (msgCount > 127) {
-                msgCount = 0;
-            }
-
-            PLOG(logINFO) << "Received FLIR camera data at: " << dateTimeArr[0] << "/" << dateTimeArr[1] << "/" << dateTimeArr[2]
-                          << " " << dateTimeArr[3] << ":" << dateTimeArr[4] << ":" << dateTimeArr[5] << ":" << dateTimeArr[6];  
+            PLOG(logINFO) << "Message count: " << msgCount;
+            PLOG(logDEBUG) << "Sent XMLs to BroadcastPedDet: ";  
 
             PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << lat << ", " << lon <<
                           "), traveling at speed: " << speed << ", with heading: " << alpha << " degrees";
-
-            PLOG(logINFO) << "Message count: " << msgCount;
-            PLOG(logDEBUG) << "Sent XMLs to BroadcastPedDet: ";
 
             std::lock_guard<mutex> lock(_msgLock);
             if (generatePSM_ == true)
@@ -297,10 +304,16 @@ namespace PedestrianPlugin
             if (generateSDSM_ == true)
             {
                 // Constructing SDSM XML to send to BroadcastPedDet function
-                std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + idResult + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>)xml" + objID + R"xml(</objectID><measurementTime>0</measurementTime><timeConfidence><time-000-001/></timeConfidence><pos><offsetX>0</offsetX><offsetY>0</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>)xml" + std::to_string(speed) + R"xml(</speed><speedConfidence><prec0-1ms/></speedConfidence><heading>)xml" + std::to_string(alpha) + R"xml(</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage>)xml";
-                PLOG(logDEBUG) << std::endl << sdsm_xml_str;
-                sdsmxml = sdsm_xml_str;
-                msgQueue.push(sdsmxml);
+                // Append each track as a string to a DetectedObjectList
+                std::string det_obj_temp_str = R"xml(<DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>)xml" + objID + 
+                                                R"xml(</objectID><measurementTime>0</measurementTime><timeConfidence><time-000-001/></timeConfidence><pos><offsetX>)xml" + xOffset + 
+                                                R"xml(</offsetX><offsetY>)xml" + yOffset + 
+                                                R"xml(</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>)xml" + std::to_string(speed) + 
+                                                R"xml(</speed><speedConfidence><prec0-1ms/></speedConfidence><heading>)xml" + std::to_string(alpha) + 
+                                                R"xml(</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData>)xml";
+                PLOG(logDEBUG) << std::endl << det_obj_temp_str;
+
+                det_obj_xml_str.append(det_obj_temp_str);
             }
             if (generateTIM_ == true)
             {
@@ -312,6 +325,25 @@ namespace PedestrianPlugin
                 PLOG(logDEBUG) << "Detected pedestraint at region/view: " << cameraViewName_ << std::endl;
                 setPedestrainPresence(true);
             }
+        }
+        // If generating SDSMs, append the string of DetectedObjects to an sdsm_xml_str
+        if (generateSDSM_ == true)
+        {
+            // separate count due to combined tracks under SDSM
+            msgCount += 1;
+            if (msgCount > 127) {
+                msgCount = 0;
+            }
+
+            // Get the current TemporaryID of the infrastructure source
+            infraId = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
+
+            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + infraId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + det_obj_xml_str;
+            PLOG(logDEBUG) << std::endl << sdsm_xml_str;
+            sdsmxml = sdsm_xml_str;
+            msgQueue.push(sdsmxml);
+
+            det_obj_xml_str = "";
         }
     }
     catch(const ptree_error &e) {
