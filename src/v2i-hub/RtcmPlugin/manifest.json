@@ -55,7 +55,7 @@
 		{
 			"key": "LogLevel",
             "default": "INFO",
-            "description": "The log level for this plugin"
-		}.
+            "description": "The log level for this plugin."
+		}
 	]
 }
