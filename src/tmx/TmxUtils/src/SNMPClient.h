@@ -15,6 +15,18 @@ namespace tmx::utils
         GET,
         SET,
         OTHER // Processing this request type is not a defined behavior, included for testing only
+    }; 
+
+    struct snmp_request {
+        std::string oid;
+        /**
+         * i(INTEGER),u(UNSIGNED),s(STRING),x(HEX STRING),d(DECIMAL STRING),n(NULLOBJ),o(OBJID),t(TIMETICKS),a(IPADDRESS),b(BITS)
+         */
+        char type;
+        std::string value;
+        std::string to_string() const {
+            return oid + " " + type +  " " + value;
+        };
     };
 
     /** @brief A struct to hold the value being sent to the TSC, can be integer or string. Type needs to be defined*/
@@ -49,10 +61,6 @@ namespace tmx::utils
         struct snmp_session session;
         struct snmp_session *ss;
 
-        /*Structure to hold all of the information that we're going to send to the remote host*/
-        struct snmp_pdu *pdu;
-        /*Structure to hold response from the remote host*/
-        struct snmp_pdu *response;
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
         oid OID[MAX_OID_LEN];
@@ -137,12 +145,20 @@ namespace tmx::utils
          *  @return Integer value at the oid, returns false if value cannot be set/requested or oid doesn't have an integer value to return.*/
 
         virtual bool process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val);
-        /** @brief Finds error type from status and logs an error.
-         *  @param status The integer value corresponding to net-snmp defined errors. macros considered are STAT_SUCCESS(0) and STAT_TIMEOUT(2)
-         *  @param request_type The request type for which the error is being logged (GET/SET).
-         *  @param response The snmp_pdu struct */
-
+        
+        /** @brief Sends a vector of snmpset requests as a single PDU
+         *  @param requests A vector of snmp_request objects
+         *  @return void
+         */
+        virtual bool process_snmp_set_requests(const std::vector<snmp_request> &requests);
+        /**
+         * @brief Returns the current port
+         */
         virtual int get_port() const; // Returns the current port (should always be 161 or 162)
+        /**
+         * @brief Returns the current ip address
+         */
+        virtual std::string get_ip() const; // Returns the current ip address
 
         void log_error(const int &status, const request_type &request_type, const snmp_pdu *response) const;
 

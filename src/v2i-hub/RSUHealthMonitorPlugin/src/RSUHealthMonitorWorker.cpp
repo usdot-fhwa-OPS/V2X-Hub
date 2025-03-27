@@ -83,30 +83,6 @@ namespace RSUHealthMonitor
             RSUFieldOIDStruct rsuGnssOutputString = {"rsuGpsOutputString", rsuGnssOutputStringOid, true};
             rsuStatusTbl.push_back(rsuGnssOutputString);
 
-            RSUFieldOIDStruct rsuIFMIndex = {"rsuIFMIndex", rsuIFMIndexOid, false};
-            rsuStatusTbl.push_back(rsuIFMIndex);
-
-            RSUFieldOIDStruct rsuIFMPsid = {"rsuIFMPsid", rsuIFMPsidOid, false};
-            rsuStatusTbl.push_back(rsuIFMPsid);
-
-            RSUFieldOIDStruct rsuIFMTxChannel = {"rsuIFMTxChannel", rsuIFMTxChannelOid, false};
-            rsuStatusTbl.push_back(rsuIFMTxChannel);
-
-            RSUFieldOIDStruct rsuIFMEnable = {"rsuIFMEnable", rsuIFMEnableOid, false};
-            rsuStatusTbl.push_back(rsuIFMEnable);
-
-            RSUFieldOIDStruct rsuIFMStatus = {"rsuIFMStatus", rsuIFMStatusOid, false};
-            rsuStatusTbl.push_back(rsuIFMStatus);
-
-            RSUFieldOIDStruct rsuIFMPriority = {"rsuIFMPriority", rsuIFMPriorityOid, true};
-            rsuStatusTbl.push_back(rsuIFMPriority);
-
-            RSUFieldOIDStruct rsuIFMOptions = {"rsuIFMOptions", rsuIFMOptionsOid, true};
-            rsuStatusTbl.push_back(rsuIFMOptions);
-
-            RSUFieldOIDStruct rsuIFMPayload = {"rsuIFMPayload", rsuIFMPayloadOid, true};
-            rsuStatusTbl.push_back(rsuIFMPayload);
-
             RSUFieldOIDStruct rsuChanStatus = {"rsuChanStatus", rsuChanStatusOid, true};
             rsuStatusTbl.push_back(rsuChanStatus);
 

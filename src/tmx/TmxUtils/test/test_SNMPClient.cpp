@@ -39,9 +39,20 @@ namespace unit_test
         EXPECT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
     }
 
-    TEST_F(test_SNMPClient, get_port)
+
+    TEST_F(test_SNMPClient, simpleTest)
     {
-        ASSERT_EQ(161, scPtr->get_port());
+        auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000);
+        EXPECT_EQ("127.0.0.1", client->get_ip());
+        EXPECT_EQ(161, client->get_port());
+        snmp_request request {
+            RSU_ID_OID,
+            's',
+            "RSU4.1"
+        };
+        vector<snmp_request> requests = {request};
+        EXPECT_FALSE(client->process_snmp_set_requests(requests));
+
     }
 
     TEST_F(test_SNMPClient, log_error)

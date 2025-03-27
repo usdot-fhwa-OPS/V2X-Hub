@@ -1,10 +1,27 @@
+/**
+ * Copyright (C) 2025 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 #pragma once
+
 #include <string>
 #include <vector>
 #include <optional>
 #include <unordered_map>
-#include <tmx/TmxException.hpp>
 #include <jsoncpp/json/json.h>
+
+#include <tmx/TmxException.hpp>
 #include <rsu/RSUSpec.h>
 
 
@@ -23,6 +40,15 @@ namespace ImmediateForward
     static constexpr const char *SendTypeKey = "sendType";
     static constexpr const char *PSIDKey = "psid";
     static constexpr const char *ChannelKey = "channel";
+    static constexpr const char *SNMPAuthKey = "snmpAuth";
+    static constexpr const char *UserKey = "user";
+    static constexpr const char *AuthProtocolKey = "authProtocol";
+    static constexpr const char *PrivProtocolKey = "privacyProtocol";
+    static constexpr const char *AuthPassPhraseKey = "authPassPhrase";
+    static constexpr const char *PrivPassPhraseKey = "privacyPassPhrase";
+    static constexpr const char *SecurityLevelKey = "securityLevel";
+    static constexpr const char *CommunityKey = "community";
+
 
 
     enum class TxMode
@@ -31,14 +57,31 @@ namespace ImmediateForward
         ALT = 1
     };
 
+    enum class SecurityLevel {
+        NO_AUTH_NO_PRIV = 0,
+        AUTH_NO_PRIV =1,
+        AUTH_PRIV
+    };
+
     /**
      * Message configuration
      */
-    struct Message {
+    struct MessageConfig {
         std::string tmxType;
         std::string sendType;
         std::string psid;
         std::optional<int> channel;
+    };
+
+    struct SNMPAuth {
+        std::string user;
+        SecurityLevel securityLevel;
+        std::string community;
+        // Optional depending on security level
+        std::optional<std::string> authProtocol;
+        std::optional<std::string> privProtocol;
+        std::optional<std::string> authPassPhrase;
+        std::optional<std::string> privPassPhrase;
     };
     /**
      * Immediate forward configuration for an RSU connection
@@ -49,7 +92,8 @@ namespace ImmediateForward
         tmx::utils::rsu::RSU_SPEC spec;
         std::string address;
         unsigned int port;
-        std::vector<Message> messages;
+        std::optional<SNMPAuth> snmpAuth;
+        std::vector<MessageConfig> messageConfigs;
         TxMode mode;
         bool signMessage;
         std::optional<bool> enableHsm;
@@ -63,6 +107,14 @@ namespace ImmediateForward
         { "CONT", TxMode::CONT},
         { "ALT", TxMode::ALT}    
     };
+    /** 
+     * Map to convert between string SecurityLevel and enumeration
+     */
+    const static std::unordered_map<std::string, SecurityLevel> stringToSecurityLevelMap = {
+        {"noAuthNoPriv", SecurityLevel::NO_AUTH_NO_PRIV},
+        {"authNoPriv", SecurityLevel::AUTH_NO_PRIV},
+        {"authPriv", SecurityLevel::AUTH_PRIV}
+    };
 
 
     /**
@@ -73,12 +125,16 @@ namespace ImmediateForward
     /**
      * Helper function to parse Message JSON
      */
-    Message parseMessage(const Json::Value &message);
+    MessageConfig parseMessage(const Json::Value &message);
 
     /**
      * Helper function to parse ImfConfiguration JSON
      */
     ImfConfiguration parseImfConfiguration( const Json::Value &imfConfig);
+    /**
+     * Helper function to parse SNMPAuth JSON
+     */
+    SNMPAuth parseSNMPAuth( const Json::Value &SNMPAuth) ;
 
     /**
      * Helper function to convert TxMode enumeration to string
@@ -90,4 +146,13 @@ namespace ImmediateForward
      */
     TxMode stringToTxMode(const std::string &mode);
 
+    /**
+     * Helper function to convert SecurityLevel enumeration to string
+     */
+    std::string securityLevelToString(const SecurityLevel &level);
+    
+    /**
+     * Helper function to convert string SecurityLevel to enumeration
+     */
+    SecurityLevel stringToSecurityLevel(const std::string &level);
 }
