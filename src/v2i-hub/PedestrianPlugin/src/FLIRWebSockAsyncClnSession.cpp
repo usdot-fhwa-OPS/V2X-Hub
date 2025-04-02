@@ -13,7 +13,7 @@ namespace PedestrianPlugin
         PLOG(logERROR) << what << ": " << ec.message();
     }
 
-    void FLIRWebSockAsyncClnSession::run(char const* host, char const* port, float cameraRotation, const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM)
+    void FLIRWebSockAsyncClnSession::run(char const* host, char const* port, float cameraRotation, const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM, double fLIRLat, double fLIRLon)
     {
 	    // Save these for later
         host_ = host;
@@ -23,6 +23,8 @@ namespace PedestrianPlugin
         generatePSM_ = generatePSM;
         generateSDSM_ = generateSDSM;
         generateTIM_ = generateTIM;
+        fLIRLat_ = fLIRLat;
+        fLIRLon_ = fLIRLon;
 
         PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << " ; host string: "<< hostString;
 

@@ -57,6 +57,16 @@
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"
-        }
+        },
+		{
+			"key":"FLIRLat",
+            "default":"45.45",
+            "description":"Latitude coordinate for the FLIR camera location in degrees(-90,90)."
+		},
+		{
+			"key":"FLIRLon",
+            "default":"-45.45",
+            "description":"Longitude coordinate for the FLIR camera location in degrees(-180,180)."
+		}
 	]
 }
