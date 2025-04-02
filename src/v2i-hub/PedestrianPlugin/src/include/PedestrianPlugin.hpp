@@ -152,6 +152,9 @@ private:
 	bool generateSDSM = false;
 	bool generateTIM = false;
 
+	double fLIRLat = 45.45;
+	double fLIRLon = 45.45;
+
 	// TODO: Set an endpoint for XML post messages and update documentation.
 	// API URL to accept XML
 	const QString Msg_Receive = "";

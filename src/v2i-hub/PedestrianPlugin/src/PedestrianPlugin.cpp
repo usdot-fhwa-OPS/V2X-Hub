@@ -53,7 +53,7 @@ int PedestrianPlugin::StartWebSocket(const FLIRConfiguration & config)
 	// Create a session and run it
 	auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
     // Launch the asynchronous operation
-	flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.FLIRCameraRotation, config.FLIRCameraViewName.c_str(), config.apiSubscription.c_str(), generatePSM, generateSDSM, generateTIM);	
+	flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.FLIRCameraRotation, config.FLIRCameraViewName.c_str(), config.apiSubscription.c_str(), generatePSM, generateSDSM, generateTIM, fLIRLat, fLIRLon);	
 	flirSessions.push_back(flirSession);
 	PLOG(logDEBUG) << "Successfully running the I/O service.";	
     runningWebSocket = true;
@@ -263,6 +263,8 @@ void PedestrianPlugin::UpdateConfigSettings()
 	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
 	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
+	GetConfigValue<double>("FLIRLat", fLIRLat, &_cfgLock);
+	GetConfigValue<double>("FLIRLon", fLIRLon, &_cfgLock);
 
 	std::string flirConfigsStr;
 	GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
