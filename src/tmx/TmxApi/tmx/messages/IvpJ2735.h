@@ -27,7 +27,7 @@ extern "C"
 #endif
 
 // Include this for backwards compability
-#if SAEJ2735_SPEC >= 63
+#if SAEJ2735_SPEC >= 2016
 /* Dependencies */
 typedef enum msgID {
 	msgID_reserved	= 0,

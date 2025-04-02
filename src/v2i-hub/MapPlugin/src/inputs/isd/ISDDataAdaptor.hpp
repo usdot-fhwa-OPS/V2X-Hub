@@ -12,7 +12,7 @@
 #include <MinuteOfTheYear.h>
 #include <bitset>
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 #define NO_NODE NodeList2_PR_NOTHING
 #define DEFINED_NODE NodeList2_PR_nodes
 #define COMPUTED_NODE NodeList2_PR_computed
@@ -179,7 +179,7 @@ private:
  	ro_attribute(this->msg, reference_point_attribute<descriptiveIntersctionName>, std::string, descriptiveIntersctionName, get_, "");
     ro_attribute(this->msg, reference_point_attribute<layerID>, LayerID_t, layerID, get_, 0);
     ro_attribute(this->msg, reference_point_attribute<intersectionID>, IntersectionID_t, intersectionID, get_, 0);
-	#if SAEJ2735_SPEC < 63
+	#if SAEJ2735_SPEC < 2016
     ro_attribute(this->msg, reference_point_attribute<msgCount>, MsgCount_t, msgCount, get_, 0);
 	#elif SAEJ2735_SPEC < 2020
     ro_attribute(this->msg, reference_point_attribute<msgCount>, DSRC_MsgCount_t, msgCount, get_, 0);

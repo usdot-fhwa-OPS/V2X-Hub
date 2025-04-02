@@ -13,7 +13,7 @@
 
 #define TMX_J2735_MAX_DATA_SIZE 4000
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 #define ASN1_CODEC tmx::messages::codec::der
 #else
 #define ASN1_CODEC tmx::messages::codec::uper
@@ -177,7 +177,7 @@ struct uper
 		MessageFrameMessage::message_type *frame = NULL;
 		asn_TYPE_descriptor_t *descriptor = NULL;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		static uper<MessageFrameMessage> decoder;
 
 		descriptor = MessageFrameMessage::get_descriptor();
@@ -554,7 +554,7 @@ public:
 
 typedef TmxJ2735EncodedMessage<MessageFrameMessage> MessageFrameEncodedMessage;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 namespace j2735 {
 
 // Decode and encode for UPER frame

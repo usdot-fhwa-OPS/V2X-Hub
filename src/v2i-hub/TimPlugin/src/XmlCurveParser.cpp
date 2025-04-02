@@ -206,7 +206,7 @@ void XmlCurveParser::ReadRoot(DOMElement* root, TravelerInformation *tim)
 
 	SpeedLimit = speedLimit;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	tim->dataFrameCount = (Count_t *)calloc(1, sizeof(Count_t));
 	*tim->dataFrameCount = tim->dataFrames.list.count;
 #endif
@@ -272,7 +272,7 @@ TiDataFrame* XmlCurveParser::ReadRegions(DOMElement* regionsElement)
 
 	frame->frameType = TravelerInfoType_advisory;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	frame->msgId.present = msgId_PR_furtherInfoID;
 #else
 	frame->msgId.present = TravelerDataFrame__msgId_PR_furtherInfoID;
@@ -441,7 +441,7 @@ Position3D* XmlCurveParser::ReadReferencePoint(DOMElement* referencePointElement
 		{
 			int16_t elevation = atoi(XMLString::transcode(currentElement->getTextContent())) * 10;
 
-			#if SAEJ2735_SPEC < 63
+			#if SAEJ2735_SPEC < 2016
 			anchor->elevation = (Elevation_t *)malloc(sizeof(Elevation_t));
 			anchor->elevation->buf = (uint8_t *)calloc(1,2);
 			anchor->elevation->size = 2;

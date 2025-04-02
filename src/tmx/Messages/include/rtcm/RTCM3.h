@@ -229,7 +229,7 @@ public:
 	tmx::messages::RtcmMessage get_RtcmMessage() {
 		tmx::byte_stream msgContents = get_contents();
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		RTCM_Corrections *rtcm = (RTCM_Corrections *)calloc(1, sizeof(RTCM_Corrections));
 		memset(rtcm, 0, sizeof(RTCM_Corrections));
 
