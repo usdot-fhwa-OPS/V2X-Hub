@@ -43,9 +43,22 @@ LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 #
 # Add the generated SAE J2735 library and an interface that contains the build properties
 #
-ADD_SUBDIRECTORY (Asn_J2735)
-ADD_LIBRARY (libasn_j2735 ALIAS ${ASN_J2735_LIBRARIES})
-MESSAGE (STATUS "Added ${ASN_J2735_LIBRARIES} library.")
+# New Option to set to just SAEJ2735 Version revision number. Defaults to 2016 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
+LIST(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
+LIST(APPEND CMAKE_MODULE_PATH "/opt/carma/cmake")
+
+SET(J2735_LIBRARY_NAME "")
+SET(SAEJ2735_SPEC_VERSION "201603" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
+IF( SAEJ2735_SPEC_VERSION EQUAL "201603")
+    SET(J2735_LIBRARY_NAME "::stol-j2735-201603-carma")
+    FIND_PACKAGE(stol-j2735-201603-carma REQUIRED)
+ELSEIF( SAEJ2735_SPEC_VERSION EQUAL "2024")
+    SET(J2735_LIBRARY_NAME "::stol-j2735-2024-carma")
+    FIND_PACKAGE(stol-j2735-2024-carma REQUIRED)
+ELSE()
+    MESSAGE(FATAL_ERROR "Invalid SAEJ2735_SPEC_VERSION: ${SAEJ2735_SPEC_VERSION}")
+ENDIF()
+
 #
 # Set up some required platform dependencies, including MySQL
 #
@@ -69,10 +82,10 @@ IF (NOT TMX_NO_PLUGINS)
     ADD_SUBDIRECTORY ( TmxTools )
     
     # Installs and exports
-    EXPORT (TARGETS ${ASN_J2735_LIBRARIES} ${TMXAPI_LIBRARIES} ${TMXUTILS_LIBRARIES} ${TMXCTL_LIBRARIES}
+    EXPORT (TARGETS ${TMXAPI_LIBRARIES} ${TMXUTILS_LIBRARIES} ${TMXCTL_LIBRARIES}
             FILE ${CMAKE_BINARY_DIR}/${TMX_APPNAME}-plugin-config.cmake)
 ELSE ()
-    EXPORT (TARGETS ${ASN_J2735_LIBRARIES} ${TMXAPI_LIBRARIES}
+    EXPORT (TARGETS ${TMXAPI_LIBRARIES}
             FILE ${CMAKE_BINARY_DIR}/${TMX_APPNAME}-plugin-config.cmake)
 ENDIF ()
 

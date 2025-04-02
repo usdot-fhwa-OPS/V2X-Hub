@@ -35,11 +35,8 @@ void DsrcBuilder::AddTimAdvisory(TiDataFrame *frame, unsigned int speedLimit)
 void DsrcBuilder::AddItisCode(ITIScodesAndText *advisory, long code)
 {
 	ITIScodesAndText__Member* member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-	#if SAEJ2735_SPEC < 2020
-	member->item.present = ITIScodesAndText__Memberitem_PR_itis;
-	#else
 	member->item.present = ITIScodesAndText__Member__item_PR_itis;
-	#endif
+
 	member->item.choice.itis = code;
 	ASN_SEQUENCE_ADD(&advisory->list, member);
 }
@@ -49,11 +46,7 @@ void DsrcBuilder::AddItisText(ITIScodesAndText *advisory, std::string text)
 	int textLength = text.length();
 
 	ITIScodesAndText__Member* member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-	#if SAEJ2735_SPEC < 2020
-	member->item.present = ITIScodesAndText__Memberitem_PR_text;
-	#else
 	member->item.present = ITIScodesAndText__Member__item_PR_text;
-	#endif
 	
 	member->item.choice.text.buf = NULL;
 	OCTET_STRING_fromString(&(member->item.choice.text), text.c_str());
