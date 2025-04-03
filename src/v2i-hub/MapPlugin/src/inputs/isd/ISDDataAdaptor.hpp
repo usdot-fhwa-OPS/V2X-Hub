@@ -24,12 +24,12 @@
 #define ENUM_NAME(X) NodeOffsetPointXY_PR_node_ ## X
 #endif
 #if SAEJ2735_SPEC < 2020
-typedef DSRC_Elevation_t Elevation2_t;
+using  Elevation2_t = DSRC_Elevation_t;
 #else
-typedef Common_Elevation_t Elevation2_t;
+using  Elevation2_t  = Common_Elevation_t;
 #endif
-typedef NodeXY Node;
-typedef NodeAttributeSetXY NodeAttributeSet;
+using Node = NodeXY ;
+using NodeAttributeSet = NodeAttributeSetXY;
 
 
 #define attribute(X, Y, D) ro_attribute(this->msg, battelle::attributes::standard_attribute<Y>, X, Y, get_, D)
