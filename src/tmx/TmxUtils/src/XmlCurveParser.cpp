@@ -13,7 +13,6 @@
 #include <OffsetSystem.h>
 #include <NodeListXY.h>
 
-#include "Clock.h"
 #include "XmlCurveParser.h"
 
 #include <OCTET_STRING.h>
@@ -207,7 +206,7 @@ void XmlCurveParser::ReadRoot(DOMElement* root, TravelerInformation *tim)
 
 	SpeedLimit = speedLimit;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	tim->dataFrameCount = (Count_t *)calloc(1, sizeof(Count_t));
 	*tim->dataFrameCount = tim->dataFrames.list.count;
 #endif
@@ -216,7 +215,7 @@ void XmlCurveParser::ReadRoot(DOMElement* root, TravelerInformation *tim)
 	for (int i = 0; i < tim->dataFrames.list.count; i++)
 	{
 		TiDataFrame *frame = tim->dataFrames.list.array[i];
-		DsrcBuilder::AddCurveSpeedAdvisory(frame, speedLimit);
+		DsrcBuilder::AddTimAdvisory(frame, speedLimit);
 	}
 }
 
@@ -273,7 +272,7 @@ TiDataFrame* XmlCurveParser::ReadRegions(DOMElement* regionsElement)
 
 	frame->frameType = TravelerInfoType_advisory;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	frame->msgId.present = msgId_PR_furtherInfoID;
 #else
 	frame->msgId.present = TravelerDataFrame__msgId_PR_furtherInfoID;
@@ -397,7 +396,10 @@ GeographicalPath* XmlCurveParser::ReadRegion(DOMElement* regionElement)
 		}
 		else if (MatchTagName(currentElement, "Nodes"))
 		{
-			ReadNodes(currentElement, &(geoPath->description->choice.path.offset.choice.xy.choice.nodes));
+			NodeSetXY_t* nodeset_p = (NodeSetXY_t*) calloc(1, sizeof(NodeSetXY));  
+			ReadNodes(currentElement, nodeset_p);
+			geoPath->description->choice.path.offset.choice.xy.choice.nodes = *nodeset_p;
+			free(nodeset_p);
 		}
 	}
 
@@ -439,19 +441,21 @@ Position3D* XmlCurveParser::ReadReferencePoint(DOMElement* referencePointElement
 		{
 			int16_t elevation = atoi(XMLString::transcode(currentElement->getTextContent())) * 10;
 
-#if SAEJ2735_SPEC < 63
+			#if SAEJ2735_SPEC < 2016
 			anchor->elevation = (Elevation_t *)malloc(sizeof(Elevation_t));
 			anchor->elevation->buf = (uint8_t *)calloc(1,2);
 			anchor->elevation->size = 2;
 
 			anchor->elevation->buf[0] = elevation >> 8;
 			anchor->elevation->buf[1] = elevation & 0xFF;
-#elif SAEJ2735_SPEC < 2020
+			
+			#elif SAEJ2735_SPEC < 2020
 			anchor->elevation = (DSRC_Elevation_t *)malloc(sizeof(DSRC_Elevation_t));
-#else
+			#else
 			anchor->elevation = (Common_Elevation_t *)malloc(sizeof(Common_Elevation_t));
-#endif
 			*(anchor->elevation) = elevation;
+			#endif
+
 			if (_debugOutput)
 				cout << "ReferencePoint Elevation: " << elevation << endl;
 		}

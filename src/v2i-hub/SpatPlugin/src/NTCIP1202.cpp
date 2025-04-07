@@ -20,15 +20,15 @@ using namespace std;
 using namespace boost::property_tree;
 using namespace tmx::utils;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 #elif SAEJ2735_SPEC < 2020
-typedef DSRC_MsgCount_t MsgCount_t;
-typedef DSRC_TimeMark_t TimeMark_t;
+using MsgCount_t = DSRC_MsgCount_t;
+using TimeMark_t = DSRC_TimeMark_t;
 #else
-typedef Common_MsgCount_t MsgCount_t;
-typedef SPAT_TimeMark_t TimeMark_t;
+using MsgCount_t = Common_MsgCount_t;
+using TimeMark_t = SPAT_TimeMark_t;
 #endif
-typedef DSecond_t DSecond2_t;
+using DSecond2_t = DSecond_t;
 
 void Ntcip1202::setSignalGroupMappingList(string json)
 {
@@ -214,7 +214,7 @@ void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::strin
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	spat->msgID = tmx::messages::SpatMessage::get_default_messageId();
 #endif
 

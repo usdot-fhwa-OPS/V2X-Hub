@@ -36,10 +36,10 @@
 #include <boost/foreach.hpp>
 
 
-#include "PluginUtil.h"
+#include <PluginUtil.h>
+#include <XmlCurveParser.h>
 
-
-#include "PluginClient.h"
+#include <PluginClient.h>
 
 #include <ApplicationMessage.h>
 #include <ApplicationDataMessage.h>
