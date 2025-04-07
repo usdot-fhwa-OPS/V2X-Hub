@@ -13,7 +13,7 @@ namespace utils {
 
 void BsmConverter::ToDecodedBsmMessage(BasicSafetyMessage_t &bsm, tmx::messages::DecodedBsmMessage &decoded)
 {
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	ToDecodedBsmMessage(bsm.blob1.buf, decoded);
 #else
 	decoded.set_IsLocationValid(false);
@@ -82,7 +82,7 @@ void BsmConverter::ToDecodedBsmMessage(BasicSafetyMessage_t &bsm, tmx::messages:
 
 void BsmConverter::ToDecodedBsmMessage(uint8_t *buf, tmx::messages::DecodedBsmMessage &decoded)
 {
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 	decoded.set_IsLocationValid(false);
 	decoded.set_IsElevationValid(false);
 	decoded.set_IsSpeedValid(false);
@@ -153,7 +153,7 @@ void BsmConverter::ToBasicSafetyMessage(tmx::messages::DecodedBsmMessage &decode
 	uint32_t uint32Temp;
 	int32_t int32Temp2;
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 
 	bsm.msgID = DSRCmsgID_basicSafetyMessage;
 

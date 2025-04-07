@@ -13,7 +13,7 @@
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 TMX_J2735_DECLARE(Bsm, BasicSafetyMessage, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
 #else
 TMX_J2735_DECLARE(Bsm, BasicSafetyMessage, api::basicSafetyMessage, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)

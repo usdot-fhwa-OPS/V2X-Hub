@@ -13,6 +13,9 @@
 #include "../apimessages/IvpMessageType.h"
 #include <stdio.h>
 
+#ifndef SAEJ2735_SPEC
+#define SAEJ2735_SPEC 2016
+#endif
 
 #include <DSRCmsgID.h>
 
@@ -24,34 +27,34 @@ extern "C"
 #endif
 
 // Include this for backwards compability
-#if SAEJ2735_SPEC >= 63
+#if SAEJ2735_SPEC >= 2016
 /* Dependencies */
-typedef enum DSRCmsgID {
-	DSRCmsgID_reserved	= 0,
-	DSRCmsgID_alaCarteMessage	= 1,
-	DSRCmsgID_basicSafetyMessage	= 2,
-	DSRCmsgID_basicSafetyMessageVerbose	= 3,
-	DSRCmsgID_commonSafetyRequest	= 4,
-	DSRCmsgID_emergencyVehicleAlert	= 5,
-	DSRCmsgID_intersectionCollisionAlert	= 6,
-	DSRCmsgID_mapData	= 7,
-	DSRCmsgID_nmeaCorrections	= 8,
-	DSRCmsgID_probeDataManagement	= 9,
-	DSRCmsgID_probeVehicleData	= 10,
-	DSRCmsgID_roadSideAlert	= 11,
-	DSRCmsgID_rtcmCorrections	= 12,
-	DSRCmsgID_signalPhaseAndTimingMessage	= 13,
-	DSRCmsgID_signalRequestMessage	= 14,
-	DSRCmsgID_signalStatusMessage	= 15,
-	DSRCmsgID_travelerInformation	= 16,
-	DSRCmsgID_testmessage00	= 17,
-	DSRCmsgID_testmessage01	= 18,
-	DSRCmsgID_testmessage02	= 19,
-	DSRCmsgID_testmessage03	= 20,
-	DSRCmsgID_testmessage04	= 21,
-	DSRCmsgID_testmessage05	= 22,
-	DSRCmsgID_testMessage06	= 23,
-	DSRCmsgID_testMessage07	= 24
+typedef enum msgID {
+	msgID_reserved	= 0,
+	msgID_alaCarteMessage	= 1,
+	msgID_basicSafetyMessage	= 2,
+	msgID_basicSafetyMessageVerbose	= 3,
+	msgID_commonSafetyRequest	= 4,
+	msgID_emergencyVehicleAlert	= 5,
+	msgID_intersectionCollisionAlert	= 6,
+	msgID_mapData	= 7,
+	msgID_nmeaCorrections	= 8,
+	msgID_probeDataManagement	= 9,
+	msgID_probeVehicleData	= 10,
+	msgID_roadSideAlert	= 11,
+	msgID_rtcmCorrections	= 12,
+	msgID_signalPhaseAndTimingMessage	= 13,
+	msgID_signalRequestMessage	= 14,
+	msgID_signalStatusMessage	= 15,
+	msgID_travelerInformation	= 16,
+	msgID_testmessage00	= 17,
+	msgID_testmessage01	= 18,
+	msgID_testmessage02	= 19,
+	msgID_testmessage03	= 20,
+	msgID_testmessage04	= 21,
+	msgID_testmessage05	= 22,
+	msgID_testMessage06	= 23,
+	msgID_testMessage07	= 24
 	/*
 	 * Enumeration is extensible
 	 */

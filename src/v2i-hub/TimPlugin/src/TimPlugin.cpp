@@ -1,7 +1,7 @@
 #include "TimPlugin.h"
 #include <WGS84Point.h>
 #include "Clock.h"
-#include "XmlCurveParser.h"
+
 #include <tmx/messages/IvpDmsControlMsg.h>
 
 using namespace std;

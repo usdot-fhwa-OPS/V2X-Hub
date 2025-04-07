@@ -14,7 +14,7 @@
 #include <TravelerInformation.h>
 #include <ITIScodesAndText.h>
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
 typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
