@@ -62,16 +62,21 @@ void RtcmPlugin::UpdateConfigSettings() {
 	addr.sin_addr.s_addr = inet_addr(ipaddress.c_str());
 	addr.sin_port = htons(port);
 
-	int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+	int fd = socket(AF_INET, SOCK_STREAM, 0);
 	if (fd > 0) {
-		if(connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0) {
+		if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) == 0) 
+		{
 			PLOG(logDEBUG) << "Established socket to " << ipaddress << ":" << port;
 			_socket = fd;
-		} else {
+		} 
+		else 
+		{
 			PLOG(logERROR) << "Connect failed: " << strerror(errno);
 			_socket = 0;
 		}
-	} else {
+	}
+	else 
+	{
 		PLOG(logERROR) << "Cannot open socket: " << strerror(errno);
 	}
 }
@@ -167,22 +172,31 @@ int RtcmPlugin::Main() {
 
 			if (!_connected) {
 				// Speak NTRIP 2.0 over HTTP 1.1
-				std::stringstream header;
-				header << "GET /" << mount <<" HTTP/1.1\r\n";
-				header << "User-Agent: TMX NTRIP " << this->_name << "/20\r\n";
-				header << "Accept: */*\r\n";
-				header << "Ntrip-Version: Ntrip/2.0\r\n";
-				header << "Ntrip-GGA: " << nmea << "\r\n";
-				header << "Connection: close\r\n";
+				// std::stringstream header;
+				// header << "GET /" << mount <<" HTTP/1.1\r\n";
+				// header << "User-Agent: TMX NTRIP " << this->_name << "/20\r\n";
+				// header << "Accept: */*\r\n";
+				// header << "Ntrip-Version: Ntrip/2.0\r\n";
+				// header << "Ntrip-GGA: " << nmea << "\r\n";
+				// header << "Connection: close\r\n";
 
 				std::string userpass = user + std::string(":") + pass;
 
-				header << "Authorization: Basic "
-					   << Base64::Encode((unsigned char *)userpass.c_str(), userpass.length())
-					   << "\r\n\r\n";
+				// header << "Authorization: Basic "
+				// 	   << Base64::Encode((unsigned char *)userpass.c_str(), userpass.length())
+				// 	   << "\r\n\r\n";
 
-				PLOG(logDEBUG) << "Writing header: \n" << header.str();
-				if (::send(sock, header.str().c_str(), header.str().length(), 0) < 0) {
+				std::string encoded_auth = Base64::Encode((unsigned char *)userpass.c_str(), userpass.length());
+				std::string request = "GET /" + mount + " HTTP/1.1\r\n"
+                          "User-Agent: TMX NTRIP " + this->_name + "/20\r\n"
+                          "Accept: */*\r\n"
+                          "Ntrip-Version: Ntrip/2.0\r\n"
+                          "Ntrip-GGA: " + nmea + "\r\n"
+                          "Authorization: Basic " + encoded_auth + "\r\n"
+                          "Connection: close\r\n\r\n";
+
+				PLOG(logDEBUG) << "Writing header: \n" << request;
+				if (::send(sock, request.c_str(), request.length(), 0) < 0) {
 					PLOG(logDEBUG) << "Unable to write bytes to socket: " << strerror(errno);
 
 					close(sock);

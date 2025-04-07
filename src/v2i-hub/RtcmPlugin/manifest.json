@@ -39,7 +39,7 @@
 		},
 		{
 			"key":"Mountpoint",
-			"default":"ODOT_RTCM23",
+			"default":"SNIP::STREAMS",
 			"description":"NTRIP caster mountpoint"
 		},
 		{
