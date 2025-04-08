@@ -295,8 +295,14 @@ namespace PedestrianPlugin
             std::lock_guard<mutex> lock(_msgLock);
             if (generatePSM_ == true)
             {
+                // Convert Object ID to 4 octet string
+                std::stringstream idstream;
+                idstream << std::hex << id;
+                auto objectTempId = idstream.str();
+                int str_length_diff = 8 - static_cast<int>(objectTempId.length());
+                objectTempId.append(str_length_diff, '0');
                 // Constructing PSM XML to send to BroadcastPedDet function
-                std::string psm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</secMark><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><id>)xml" + idResult + R"xml(</id><position><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>)xml" + std::to_string(speed) + R"xml(</speed><heading>)xml" + std::to_string(alpha) + R"xml(</heading><pathHistory><initialPosition><utcTime><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>)xml";
+                std::string psm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</secMark><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><id>)xml" + objectTempId + R"xml(</id><position><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>)xml" + std::to_string(speed) + R"xml(</speed><heading>)xml" + std::to_string(alpha) + R"xml(</heading><pathHistory><initialPosition><utcTime><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>)xml";
                 PLOG(logDEBUG) << std::endl << psm_xml_str;
                 psmxml = psm_xml_str;
                 msgQueue.push(psmxml);
@@ -338,14 +344,15 @@ namespace PedestrianPlugin
             // Get the current TemporaryID of the infrastructure source
             infraId = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
             std::string infraIdStr = infraId.substr(infraId.find_first_of('_')+1);
+            unsigned int infraIdInt = std::stoi(infraIdStr);
             // Convert the id to 4 octet string
             std::stringstream idstream;
-            idstream << std::hex << infraIdStr;
-            idResult = idstream.str();
-            int str_length_diff = 8 - static_cast<int>(idResult.length());
-            idResult.append(str_length_diff, '0');
+            idstream << std::hex << infraIdInt;
+            auto rsuTempId = idstream.str();
+            int str_length_diff = 8 - static_cast<int>(rsuTempId.length());
+            rsuTempId.append(str_length_diff, '0');
 
-            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + idResult + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + det_obj_xml_str ;
+            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + rsuTempId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + det_obj_xml_str ;
             PLOG(logDEBUG) << std::endl << sdsm_xml_str;
             sdsmxml = sdsm_xml_str;
             msgQueue.push(sdsmxml);
