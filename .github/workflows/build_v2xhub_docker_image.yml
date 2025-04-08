@@ -5,7 +5,6 @@ on:
       - develop
       - master
       - 'release/**'
-      - fix/multiarch-image
     # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
@@ -34,7 +33,6 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          no-cache: true
           provenance: false
           tags: usdotfhwaops/v2xhub:amd64-develop
     
@@ -61,7 +59,6 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          no-cache: true
           provenance: false
           tags: usdotfhwaops/v2xhub:arm64-develop
 
