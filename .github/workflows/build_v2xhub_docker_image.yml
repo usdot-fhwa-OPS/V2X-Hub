@@ -5,41 +5,87 @@ on:
       - develop
       - master
       - 'release/**'
+      - fix/multiarch-image
     # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
+
 jobs:
-  v2xhub-docker:
-    # Applied suggested fix: https://github.com/docker/build-push-action/issues/1309
+  build-amd64:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           submodules: recursive
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: usdotfhwaops/v2xhub
-          tags: |
-            type=schedule
-            type=ref,event=branch
-            type=ref,event=tag
-            type=ref,event=pr
-            # set latest tag for default branch
-            type=raw,value=latest,enable={{is_default_branch}}
-      - name: Build and push
+
+      - name: Build & push AMD64
         uses: docker/build-push-action@v5
         with:
-          push: true
+          context: .
           platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          no-cache: true
+          provenance: false
+          tags: usdotfhwaops/v2xhub:amd64-develop
+    
+  build-arm64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push ARM64
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          no-cache: true
+          provenance: false
+          tags: usdotfhwaops/v2xhub:arm64-develop
+
+  manifest:
+    runs-on: ubuntu-22.04
+    needs: [ build-amd64, build-arm64 ]
+    steps:
+      - name: Log in
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Create final multi-arch
+        run: |
+          AMD64_TAG="usdotfhwaops/v2xhub:amd64-develop"
+          ARM64_TAG="usdotfhwaops/v2xhub:arm64-develop"
+          FINAL_TAG="usdotfhwaops/v2xhub:multiarch-develop"
+
+          docker manifest create "$FINAL_TAG" \
+            "$AMD64_TAG" \
+            "$ARM64_TAG"
+
+          docker manifest annotate "$FINAL_TAG" "$AMD64_TAG" --arch amd64
+          docker manifest annotate "$FINAL_TAG" "$ARM64_TAG" --arch arm64
+
+          docker manifest push "$FINAL_TAG"
