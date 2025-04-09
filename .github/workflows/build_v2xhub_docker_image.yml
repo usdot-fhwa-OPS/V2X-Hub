@@ -72,15 +72,26 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       
-      - name: Replace tag name
-        id: set_tag
-        run: echo "TAG=$(echo ${GITHUB_REF##*/} | sed 's/\//-/g')" >> $GITHUB_ENV
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: usdotfhwaops/v2xhub
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Create final multi-arch
         run: |
           AMD64_TAG="usdotfhwaops/v2xhub:amd64"
           ARM64_TAG="usdotfhwaops/v2xhub:arm64"
-          FINAL_TAG="usdotfhwaops/v2xhub:${{ env.TAG }}"
+          FINAL_TAG=$(echo '${{ steps.meta.outputs.tags }}' | cut -d',' -f1)
+          echo "FINAL_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
           docker manifest create "$FINAL_TAG" \
             "$AMD64_TAG" \
