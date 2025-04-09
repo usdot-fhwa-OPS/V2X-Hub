@@ -1,17 +1,17 @@
 name: Build V2X-Hub Docker Image
+
 on:
   push:
     branches:
       - develop
       - master
       - 'release/**'
-    # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
 
 jobs:
   build-amd64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,9 +33,9 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          provenance: false
-          tags: usdotfhwaops/v2xhub:amd64-develop
-    
+          provenance: false # Disable Buildx provenance metadata to avoid manifest-related errors. Without this, Docker may treat single-arch images as manifest lists, which causes issues when combining individual images with `docker manifest create`
+          tags: usdotfhwaops/v2xhub:amd64
+
   build-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -60,7 +60,7 @@ jobs:
           platforms: linux/arm64
           push: true
           provenance: false
-          tags: usdotfhwaops/v2xhub:arm64-develop
+          tags: usdotfhwaops/v2xhub:arm64
 
   manifest:
     runs-on: ubuntu-22.04
@@ -74,9 +74,11 @@ jobs:
 
       - name: Create final multi-arch
         run: |
-          AMD64_TAG="usdotfhwaops/v2xhub:amd64-develop"
-          ARM64_TAG="usdotfhwaops/v2xhub:arm64-develop"
-          FINAL_TAG="usdotfhwaops/v2xhub:multiarch-develop"
+          # Reference the same dynamic tags from the two build jobs
+          AMD64_TAG="usdotfhwaops/v2xhub:amd64"
+          ARM64_TAG="usdotfhwaops/v2xhub:arm64"
+          # Final multi-arch tag will also reflect the branch/tag name
+          FINAL_TAG="usdotfhwaops/v2xhub:${{ github.ref_name }}"
 
           docker manifest create "$FINAL_TAG" \
             "$AMD64_TAG" \
