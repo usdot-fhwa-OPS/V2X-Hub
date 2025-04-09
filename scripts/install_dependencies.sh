@@ -37,7 +37,8 @@ DEPENDENCIES="build-essential \
     rapidjson-dev \
     librapidxml-dev \
     libprotobuf-c-dev \
-    curl"
+    curl \
+    python3-pip"
 
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \

@@ -14,19 +14,15 @@ namespace tmx::utils::sim{
     }
 
     std::string get_sim_config(const char *config_name, bool required) {
-        if (is_simulation_mode() && config_name) {
-            if ( std::getenv(config_name) != nullptr) {
-                std::string config =  std::getenv(config_name);
-                return config;
+        if ( std::getenv(config_name) != nullptr) {
+            std::string config =  std::getenv(config_name);
+            return config;
+        }
+        else {
+            std::string config_name_str = config_name;
+            if ( required ) {
+                throw TmxException("Required simulation config " + config_name_str + " not set!");
             }
-            else {
-                std::string config_name_str = config_name;
-                if ( required ) {
-                    throw TmxException("Required simulation config " + config_name_str + " not set!");
-                }
-            }
-        } else {
-            throw TmxException("V2X-Hub not in sumulation mode or config param name is null pointer!");
         }
         return "";
     } 

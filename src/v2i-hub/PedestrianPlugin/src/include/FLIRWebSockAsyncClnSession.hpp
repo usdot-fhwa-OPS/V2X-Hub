@@ -22,6 +22,7 @@
 #include <cmath>
 #include <atomic>
 #include "TravelerInformationMessageHelper.hpp"
+#include <simulation/SimulationEnvUtils.h>
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -46,6 +47,8 @@ namespace PedestrianPlugin
         bool generatePSM_;
         bool generateSDSM_;
         bool generateTIM_;
+        double fLIRLat_;
+        double fLIRLon_;
         /***
          * Each websocket is connected to one camera responsible for one region/view at an intersection.
          * This isPedestrainPresent indicator signify whether there is a pedestrain in that region or not.
@@ -91,7 +94,7 @@ namespace PedestrianPlugin
      * @param port port to connect to
      * @param cameraRotation calculated camera rotation
      */
-    void run(char const* host, char const* port, float cameraRotation,const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM);
+    void run(char const* host, char const* port, float cameraRotation,const char* cameraViewName, char const* hostString, bool generatePSM, bool generateSDSM, bool generateTIM, double fLIRLat, double fLIRLon);
     
     /**
      * @brief Lookup the domain name of the IP address from run function.

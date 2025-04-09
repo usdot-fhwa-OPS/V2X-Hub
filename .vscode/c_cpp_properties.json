@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/carma/include"
+                "/opt/carma/include",
+                "/opt/carma/include/stol-j2735-201603-carma"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
