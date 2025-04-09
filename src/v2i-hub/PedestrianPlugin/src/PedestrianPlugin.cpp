@@ -372,7 +372,7 @@ void PedestrianPlugin::BroadcastPedDet(const std::string &msgXML)
 	ss << msgXML;
 
 	container.load<XML>(ss);
-
+	
 	PLOG(logDEBUG2) << "In PedestrianPlugin::BroadcastPedDet: Incoming Message: " << std::endl << msgXML;
 	auto receivedType = parseMessage(msgXML);
 
