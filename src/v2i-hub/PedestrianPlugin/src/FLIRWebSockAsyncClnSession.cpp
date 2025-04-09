@@ -210,7 +210,7 @@ namespace PedestrianPlugin
         std::string objID = "";
         std::string xOffset = ""; // Offset of detected track from FLIR position in m
         std::string yOffset = "";
-        std::string det_obj_xml_str;
+        std::string detObjXmlStr;
 
         // Parse out seconds from datetime string
         std::vector<int> dateTimeArr = timeStringParser(time);
@@ -247,24 +247,24 @@ namespace PedestrianPlugin
             }
 
             
-            // Convert configured lat/lon to J2735 lat/lon format
+            // Convert configured lat/lon in degress to 1/10 microdegrees (J2735 units) 
             int latInt = std::round(fLIRLat_* 10e6);
             lat = std::to_string(latInt);
-            // Convert configured lat/lon to J2735 lat/lon format
+            // Convert configured lat/lon in degress to 1/10 microdegrees (J2735 units) 
             int lonInt = std::round(fLIRLon_* 10e6);
             lon = std::to_string(lonInt);
             
             if (!it.second.get_child("x").data().empty())
             {
+                // Convert x/y offset in m (FLIR) to 1/10 m (J2735)
                 int xOffsetInt = std::round(std::stod(it.second.get_child("x").data())*10);
                 // Convert received lat/lon to J2735 lat/lon format
                 xOffset = std::to_string(xOffsetInt);
             }
             if (!it.second.get_child("y").data().empty())
             {
+                // Convert x/y offset in m (FLIR) to 1/10 m (J2735)
                 int yOffsetInt = std::round(std::stod(it.second.get_child("y").data())*10);
-
-                // Convert received lat/lon to J2735 lat/lon format
                 yOffset = std::to_string(yOffsetInt);
             }
 
@@ -286,7 +286,6 @@ namespace PedestrianPlugin
                 }
             }
 
-            PLOG(logINFO) << "Message count: " << msgCount;
             PLOG(logDEBUG) << "Sent XMLs to BroadcastPedDet: ";  
 
             PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << xOffset << ", " << yOffset <<
@@ -299,8 +298,8 @@ namespace PedestrianPlugin
                 std::stringstream idstream;
                 idstream << std::hex << id;
                 auto objectTempId = idstream.str();
-                int str_length_diff = 8 - static_cast<int>(objectTempId.length());
-                objectTempId.append(str_length_diff, '0');
+                int strLengthDiff = 8 - static_cast<int>(objectTempId.length());
+                objectTempId.append(strLengthDiff, '0');
                 // Constructing PSM XML to send to BroadcastPedDet function
                 std::string psm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</secMark><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><id>)xml" + objectTempId + R"xml(</id><position><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>)xml" + std::to_string(speed) + R"xml(</speed><heading>)xml" + std::to_string(alpha) + R"xml(</heading><pathHistory><initialPosition><utcTime><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></utcTime><long>0</long><lat>0</lat></initialPosition><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>)xml";
                 PLOG(logDEBUG) << std::endl << psm_xml_str;
@@ -311,15 +310,15 @@ namespace PedestrianPlugin
             {
                 // Constructing SDSM XML to send to BroadcastPedDet function
                 // Append each track as a string to a DetectedObjectList
-                std::string det_obj_temp_str = R"xml(<DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>)xml" + objID + 
+                std::string detObjTempStr = R"xml(<DetectedObjectData><detObjCommon><objType><vru/></objType><objTypeCfd>98</objTypeCfd><objectID>)xml" + objID + 
                                                 R"xml(</objectID><measurementTime>0</measurementTime><timeConfidence><time-000-001/></timeConfidence><pos><offsetX>)xml" + xOffset + 
                                                 R"xml(</offsetX><offsetY>)xml" + yOffset + 
                                                 R"xml(</offsetY></pos><posConfidence><pos><a20cm/></pos><elevation><elev-000-20/></elevation></posConfidence><speed>)xml" + std::to_string(speed) + 
                                                 R"xml(</speed><speedConfidence><prec0-1ms/></speedConfidence><heading>)xml" + std::to_string(alpha) + 
                                                 R"xml(</heading><headingConf><prec05deg/></headingConf></detObjCommon></DetectedObjectData>)xml";
-                PLOG(logDEBUG) << std::endl << det_obj_temp_str;
+                PLOG(logDEBUG) << std::endl << detObjTempStr;
 
-                det_obj_xml_str.append(det_obj_temp_str);
+                detObjXmlStr.append(detObjTempStr);
             }
             if (generateTIM_ == true)
             {
@@ -349,15 +348,15 @@ namespace PedestrianPlugin
             std::stringstream idstream;
             idstream << std::hex << infraIdInt;
             auto rsuTempId = idstream.str();
-            int str_length_diff = 8 - static_cast<int>(rsuTempId.length());
-            rsuTempId.append(str_length_diff, '0');
+            int strLengthDiff = 8 - static_cast<int>(rsuTempId.length());
+            rsuTempId.append(strLengthDiff, '0');
 
-            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + rsuTempId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + det_obj_xml_str + R"xml(</objects></SensorDataSharingMessage>)xml";
+            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + rsuTempId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + detObjXmlStr + R"xml(</objects></SensorDataSharingMessage>)xml";
             PLOG(logDEBUG) << std::endl << sdsm_xml_str;
             sdsmxml = sdsm_xml_str;
             msgQueue.push(sdsmxml);
 
-            det_obj_xml_str = "";
+            detObjXmlStr = "";
         }
     }
     catch(const ptree_error &e) {
