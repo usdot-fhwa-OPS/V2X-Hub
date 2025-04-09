@@ -71,14 +71,16 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Replace tag name
+        id: set_tag
+        run: echo "TAG=$(echo ${GITHUB_REF##*/} | sed 's/\//-/g')" >> $GITHUB_ENV
 
       - name: Create final multi-arch
         run: |
-          # Reference the same dynamic tags from the two build jobs
           AMD64_TAG="usdotfhwaops/v2xhub:amd64"
           ARM64_TAG="usdotfhwaops/v2xhub:arm64"
-          # Final multi-arch tag will also reflect the branch/tag name
-          FINAL_TAG="usdotfhwaops/v2xhub:${{ github.ref_name }}"
+          FINAL_TAG="usdotfhwaops/v2xhub:${{ env.TAG }}"
 
           docker manifest create "$FINAL_TAG" \
             "$AMD64_TAG" \
