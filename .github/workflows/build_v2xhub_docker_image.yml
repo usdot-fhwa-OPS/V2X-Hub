@@ -107,7 +107,7 @@ jobs:
 
       - name: Create final multi-arch
         run: |
-          FINAL_TAG=$(echo "${{ steps.meta.outputs.tags }}" | head -n 1 | tr -d '\n')
+          FINAL_TAG="${{ steps.meta.outputs.tags }}"
           echo "FINAL_TAG=$FINAL_TAG" >> $GITHUB_ENV
 
           AMD64_TAG="${FINAL_TAG}-amd64"
