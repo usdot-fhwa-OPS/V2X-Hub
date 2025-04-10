@@ -241,7 +241,9 @@ namespace PedestrianPlugin
                 id = std::stoi(it.second.get_child("iD").data());
                 if (id > 65535)
                 {
-                    throw std::out_of_range("ID out of range");
+                    auto old_id = id;
+                    id = id%65535;
+                    PLOG(logWARNING) << "ID " << old_id << " out of range. Assigning new ID " << id;
                 }
                 objID = std::to_string(id);
             }
