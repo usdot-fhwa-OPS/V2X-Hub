@@ -6,7 +6,6 @@ on:
       - develop
       - master
       - 'release/**'
-      - fix_v2xhub_tags
     tags:
       - '*'
 
