@@ -203,6 +203,8 @@ namespace PedestrianPlugin
         int alpha = 28800; // Default for J2735 unavailable DE_Angle
         std::string lat = "";
         std::string lon = "";
+        std::string fixedLat = "";
+        std::string fixedLon = "";
         int speed = 8191; // Default for unavailable DE_Speed and DE_Velocity
         int id = 0;
         std::string infraId = "";
@@ -248,13 +250,30 @@ namespace PedestrianPlugin
                 objID = std::to_string(id);
             }
 
-            
+            // Parse latitude
+            if (!it.second.get_child("latitude").data().empty())
+            {
+                // Convert received lat/lon to J2735 lat/lon format
+                lat = it.second.get_child("latitude").data();
+                lat.erase(std::remove(lat.begin(), lat.end(), '.'), lat.end());
+                lat.pop_back();
+            }
+
+            // Parse longitude
+            if (!it.second.get_child("longitude").data().empty())
+            {
+                // Convert received lat/lon to J2735 lat/lon format
+                lon = it.second.get_child("longitude").data();
+                lon.erase(std::remove(lon.begin(), lon.end(), '.'), lon.end());
+                lon.pop_back();
+            }
+
             // Convert configured lat/lon in degress to 1/10 microdegrees (J2735 units) 
             int latInt = std::round(fLIRLat_* 10e6);
-            lat = std::to_string(latInt);
+            fixedLat = std::to_string(latInt);
             // Convert configured lat/lon in degress to 1/10 microdegrees (J2735 units) 
             int lonInt = std::round(fLIRLon_* 10e6);
-            lon = std::to_string(lonInt);
+            fixedLon = std::to_string(lonInt);
             
             if (!it.second.get_child("x").data().empty())
             {
@@ -353,7 +372,7 @@ namespace PedestrianPlugin
             int strLengthDiff = 8 - static_cast<int>(rsuTempId.length());
             rsuTempId.append(strLengthDiff, '0');
 
-            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + rsuTempId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + lat + R"xml(</lat><long>)xml" + lon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + detObjXmlStr + R"xml(</objects></SensorDataSharingMessage>)xml";
+            std::string sdsm_xml_str = R"xml(<?xml version="1.0" encoding="UTF-8"?><SensorDataSharingMessage><msgCnt>)xml" + std::to_string(msgCount) + R"xml(</msgCnt><sourceID>)xml" + rsuTempId + R"xml(</sourceID><equipmentType><rsu/></equipmentType><sDSMTimeStamp><year>)xml" + std::to_string(dateTimeArr[0]) + R"xml(</year><month>)xml" + std::to_string(dateTimeArr[1]) + R"xml(</month><day>)xml" + std::to_string(dateTimeArr[2]) + R"xml(</day><hour>)xml" + std::to_string(dateTimeArr[3]) + R"xml(</hour><minute>)xml" + std::to_string(dateTimeArr[4]) + R"xml(</minute><second>)xml" + std::to_string(dateTimeArr[6]) + R"xml(</second></sDSMTimeStamp><refPos><lat>)xml" + fixedLat + R"xml(</lat><long>)xml" + fixedLon + R"xml(</long></refPos><refPosXYConf><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></refPosXYConf><objects>)xml" + detObjXmlStr + R"xml(</objects></SensorDataSharingMessage>)xml";
             PLOG(logDEBUG) << std::endl << sdsm_xml_str;
             sdsmxml = sdsm_xml_str;
             msgQueue.push(sdsmxml);
