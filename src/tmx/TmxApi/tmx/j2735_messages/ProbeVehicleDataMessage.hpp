@@ -12,7 +12,7 @@
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 #include <tmx/messages/TmxJ2735.hpp>
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 TMX_J2735_DECLARE(Pvd, ProbeVehicleData, api::probeVehicleData_D, api::MSGSUBTYPE_PROBEVEHICLEDATA_STRING)
 #else
 TMX_J2735_DECLARE(Pvd, ProbeVehicleData, api::probeVehicleData, api::MSGSUBTYPE_PROBEVEHICLEDATA_STRING)
@@ -26,7 +26,7 @@ TMX_J2735_NAMESPACE_START(j2735)
 template <>
 inline int get_j2735_message_key<tmx::messages::PvdMessage>(std::shared_ptr<ProbeVehicleData> message) {
 	if (message && message->probeID && message->probeID->id) {
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		{
 			TemporaryID_t &id = *message->probeID->id;
 #else

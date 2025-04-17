@@ -12,7 +12,7 @@
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 #include <tmx/messages/TmxJ2735.hpp>
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 TMX_J2735_DECLARE(IntersectionCollision, IntersectionCollision, api::intersectionCollision_D, api::MSGSUBTYPE_INTERSECTIONCOLLISION_STRING)
 #else
 TMX_J2735_DECLARE(IntersectionCollision, IntersectionCollision, api::intersectionCollision, api::MSGSUBTYPE_INTERSECTIONCOLLISION_STRING)

@@ -244,7 +244,7 @@ MapData *ISDToJ2735r41::to_map() {
     allocate(map);
 
     memset(map, 0, sizeof(MapData));
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
     map->msgID = api::mapData;
 #endif
     map->msgIssueRevision = 0;

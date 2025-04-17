@@ -13,7 +13,7 @@ target_link_libraries(${PROJECT_NAME} tmxutils jsoncpp )
 ## Testing ##
 #############
 enable_testing()
-add_library(${PROJECT_NAME}_lib src/ImmediateForwardConfiguration.cpp)
+add_library(${PROJECT_NAME}_lib src/ImmediateForwardConfiguration.cpp src/IMFNTCIP1218Worker.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils jsoncpp)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
