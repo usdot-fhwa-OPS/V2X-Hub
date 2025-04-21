@@ -36,16 +36,19 @@ namespace CARMAStreetsPlugin
         {
             auto intersection = (IntersectionState_t *)calloc(1, sizeof(IntersectionState_t));
             // intersection name
-            auto name = int_json["name"].asString();
-            auto intersection_name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
-            intersection_name->size = name.length();
-            intersection_name->buf = (uint8_t *)calloc(1, name.length());
-            memcpy(intersection_name->buf, name.c_str(), name.length());
+            if (int_json.isMember("name") && int_json["name"].asString().length() != 0)
+            {
+                std::string name = int_json["name"].asString();
+                intersection->name = (DescriptiveName_t *)calloc(1, sizeof(DescriptiveName_t));
+                intersection->name->buf = (uint8_t *)calloc(1, name.length());
+                intersection->name->size = name.length();
+                memcpy(intersection->name->buf, name.c_str(), name.length());
+
+            }
 
             // intersection id
             auto id = int_json["id"].asInt();
             intersection->id.id = id;
-            intersection->name = intersection_name;
 
             // revision
             auto revision = int_json["revision"].asInt();
