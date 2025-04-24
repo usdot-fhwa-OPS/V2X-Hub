@@ -32,7 +32,7 @@ namespace CARMAStreetsPlugin
             Json::Value request;
             if(srm_ptr->sequenceNumber)
             {
-                request["msgCount"] = srm_ptr->sequenceNumber;
+                request["msgCount"] = *srm_ptr->sequenceNumber;
             }            
             if(srm_ptr->timeStamp){
                 request["minuteOfYear"] = srm_ptr->timeStamp;
@@ -93,20 +93,14 @@ namespace CARMAStreetsPlugin
             }            
             request["expectedTimeOfArrival"] = expectedTimeOfArrival;
 
-            /**
-             * The requestor identifies itself using its current speed, heading and location.
-             */
-            std::stringstream ss;
-            ss << srm_ptr->requestor.id.choice.entityID.buf;
-            auto id_len = srm_ptr->requestor.id.choice.entityID.size;
-            unsigned long id_num = 0;
-            for(auto i = 0; i < id_len; i++)
-            {			
-                id_num = (id_num << 8) | srm_ptr->requestor.id.choice.entityID.buf[i];
+            if(srm_ptr->requestor.id.choice.entityID.size == sizeof(int32_t))
+            {
+                request["msgCount"] = srm_ptr->requestor.id.choice.entityID.size;
             }
-            std::stringstream id_fill_ss;
-            id_fill_ss << std::hex << id_num;
-            request["vehicleID"] = id_fill_ss.str();
+            // Vehicle ID as int32_t
+            int32_t value;
+            std::memcpy(&value, srm_ptr->requestor.id.choice.entityID.buf, sizeof(value));
+            request["vehicleID"] = value;
             if( srm_ptr->requestor.position)
             {
                 if(srm_ptr->requestor.position->heading)

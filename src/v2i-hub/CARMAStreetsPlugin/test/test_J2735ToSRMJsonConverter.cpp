@@ -16,11 +16,14 @@ protected:
     {
         _message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
         _message->second = 12;
+        Common_MsgCount_t *msg_count = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+        *msg_count = 1;
+        _message->sequenceNumber = msg_count;
         RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
         VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
         veh_id->present = VehicleID_PR_entityID;
         TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
-        uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+        uint8_t my_bytes_id[4] = {(uint8_t)24, (uint8_t)12, (uint8_t)12, (uint8_t)10};
         entity_id->buf = my_bytes_id;
         entity_id->size = sizeof(my_bytes_id);
         veh_id->choice.entityID = *entity_id;
@@ -121,11 +124,11 @@ namespace unit_test
             std::string expectedSrmStr = "";
             if (i == 0)
             {
-                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":0,\"speed_MeterPerSecond\":500.0,\"vehicleID\":\"10c0c0a\"}}\n";
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":1,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":0,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
             }
             else if (i == 1)
             {
-                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"ApproachID\":1},\"intersectionID\":2333,\"minuteOfYear\":123,\"msOfMinute\":1212,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":1,\"speed_MeterPerSecond\":500.0,\"vehicleID\":\"10c0c0a\"}}\n";
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"ApproachID\":1},\"intersectionID\":2333,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":1,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":1,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
             }
             ASSERT_EQ(expectedSrmStr, message);
             i++;
