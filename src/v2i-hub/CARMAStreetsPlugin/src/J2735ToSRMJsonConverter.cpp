@@ -32,7 +32,11 @@ namespace CARMAStreetsPlugin
             Json::Value request;
             if(srm_ptr->sequenceNumber)
             {
-                request["msgCount"] = *srm_ptr->sequenceNumber;
+                // Vehicle ID as int32_t
+                uint8_t msgCount ;
+                std::memcpy(&msgCount, &srm_ptr->sequenceNumber, sizeof(msgCount));
+
+                request["msgCount"] = msgCount;
             }            
             if(srm_ptr->timeStamp){
                 request["minuteOfYear"] = srm_ptr->timeStamp;
