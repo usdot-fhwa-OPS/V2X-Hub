@@ -33,9 +33,7 @@ namespace CARMAStreetsPlugin
             if(srm_ptr->sequenceNumber)
             {
                 // Vehicle ID as int32_t
-                uint8_t msgCount ;
-                std::memcpy(&msgCount, &srm_ptr->sequenceNumber, sizeof(msgCount));
-
+                uint8_t msgCount  = *srm_ptr->sequenceNumber;
                 request["msgCount"] = msgCount;
             }            
             if(srm_ptr->timeStamp){
@@ -96,11 +94,6 @@ namespace CARMAStreetsPlugin
                 expectedTimeOfArrival["ETA_Duration"] = *srm_ptr->requests->list.array[i]->duration;
             }            
             request["expectedTimeOfArrival"] = expectedTimeOfArrival;
-
-            if(srm_ptr->requestor.id.choice.entityID.size == sizeof(int32_t))
-            {
-                request["msgCount"] = srm_ptr->requestor.id.choice.entityID.size;
-            }
             // Vehicle ID as int32_t
             int32_t value;
             std::memcpy(&value, srm_ptr->requestor.id.choice.entityID.buf, sizeof(value));

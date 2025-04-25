@@ -125,11 +125,11 @@ namespace unit_test
             std::string expectedSrmStr = "";
             if (i == 0)
             {
-                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":4,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":0,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"LaneID\":1},\"intersectionID\":1222,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":123,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":0,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
             }
             else if (i == 1)
             {
-                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"ApproachID\":1},\"intersectionID\":2333,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":4,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":1,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
+                expectedSrmStr = "{\"MsgType\":\"SRM\",\"SignalRequest\":{\"basicVehicleRole\":0,\"expectedTimeOfArrival\":{\"ETA_Duration\":122,\"ETA_Minute\":123,\"ETA_Second\":1212},\"heading_Degree\":123,\"inBoundLane\":{\"ApproachID\":1},\"intersectionID\":2333,\"minuteOfYear\":123,\"msOfMinute\":1212,\"msgCount\":123,\"position\":{\"elevation_Meter\":120,\"latitude_DecimalDegree\":0.37123331427574158,\"longitude_DecimalDegree\":0.80123329162597656},\"priorityRequestType\":1,\"speed_MeterPerSecond\":500.0,\"vehicleID\":168561688}}\n";
             }
             ASSERT_EQ(expectedSrmStr, message);
             i++;
