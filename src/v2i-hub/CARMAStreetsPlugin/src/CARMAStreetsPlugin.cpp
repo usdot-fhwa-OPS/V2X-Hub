@@ -99,6 +99,12 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	boost::thread thread_ssm(&CARMAStreetsPlugin::SubscribeSSMKafkaTopic, this);
 	boost::thread thread_sdsm(&CARMAStreetsPlugin::SubscribeSDSMKafkaTopic, this);
 
+	thread_schpl.join();
+	thread_spat.join();
+	thread_ssm.join();
+	thread_sdsm.join();
+	PLOG(logINFO) << "Kafka consumer threads started";
+
 }
 
 void CARMAStreetsPlugin::OnConfigChanged(const char *key, const char *value) {
