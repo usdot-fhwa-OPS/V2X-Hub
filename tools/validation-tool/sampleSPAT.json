@@ -1,11 +1,180 @@
-{ 
- "name" : "SomeSignalController" ,
- "regionId" : "1",
- "id" : "100",
- "revision" : "20",
- "status" : "0000000000000000",
- "signalGroup": ["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16"],
- "eventState" : ["permissive-Movement-Allowed","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain","stop-And-Remain"],
- "minEndTime":["25752","25452","25252","25552","25752","25752","25762","25752","25882","25752","25752","25752","25572","25752","25752","25752"],
- "maxEndTime":["25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853","25853"]
+{
+    "messageId": 19,
+    "value": {
+        "intersections": [
+            {
+                "name": "West Intersection",
+                "id": {
+                    "id": 9709
+                },
+                "revision": 1,
+                "status": [6, 16],
+                "moy": 495320,
+                "timeStamp": 25292,
+                "states": [
+                    {
+                        "signalGroup": 1,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12252
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 2,
+                        "state-time-speed": [
+                            {
+                                "eventState": "stop-And-Remain",
+                                "timing": {
+                                    "minEndTime": 12311,
+                                    "maxEndTime": 12601
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 22,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12252
+                                }
+                            }
+                        ],
+                        "maneuverAssistList": [
+                            {
+                                "connectionID": 0,
+                                "pedBicycleDetect": true
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 3,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12252
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 4,
+                        "state-time-speed": [
+                            {
+                                "eventState": "stop-And-Remain",
+                                "timing": {
+                                    "minEndTime": 12361,
+                                    "maxEndTime": 12651
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 24,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12361
+                                }
+                            }
+                        ],
+                        "maneuverAssistList": [
+                            {
+                                "connectionID": 0,
+                                "pedBicycleDetect": true
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 5,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12252
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 6,
+                        "state-time-speed": [
+                            {
+                                "eventState": "stop-And-Remain",
+                                "timing": {
+                                    "minEndTime": 12311,
+                                    "maxEndTime": 12601
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 26,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12252
+                                }
+                            }
+                        ],
+                        "maneuverAssistList": [
+                            {
+                                "connectionID": 0,
+                                "pedBicycleDetect": true
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 7,
+                        "state-time-speed": [
+                            {
+                                "eventState": "stop-And-Remain",
+                                "timing": {
+                                    "minEndTime": 12361,
+                                    "maxEndTime": 12651
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 8,
+                        "state-time-speed": [
+                            {
+                                "eventState": "stop-And-Remain",
+                                "timing": {
+                                    "minEndTime": 12361,
+                                    "maxEndTime": 12801
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "signalGroup": 28,
+                        "state-time-speed": [
+                            {
+                                "eventState": "dark",
+                                "timing": {
+                                    "minEndTime": 12361
+                                }
+                            }
+                        ],
+                        "maneuverAssistList": [
+                            {
+                                "connectionID": 0,
+                                "pedBicycleDetect": true
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 }
