@@ -21,7 +21,7 @@ protected:
     {
         _message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
         _message->second = 1;
-        _message->sequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+        _message->sequenceNumber = (MsgCount_t *)calloc(1, sizeof(MsgCount_t));
         *_message->sequenceNumber = 123;
         RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
         VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
