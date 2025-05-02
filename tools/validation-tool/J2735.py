@@ -5,9 +5,13 @@ import pickle
 import logging
 from binascii import hexlify, unhexlify
 
+# Parameters
+version = '2024'
+log_level = logging.ERROR
+
 # Set up logging
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger.setLevel(log_level)
 
 # J2735 Message ID <-> Type mapping
 msgs = {
@@ -50,10 +54,6 @@ ids = {v: k for k, v in msgs.items()}
 
 # Get the message name from the message ID
 def get_msg_name(msg_id):
-    """
-    Get the message name from the message ID.
-
-    """
     try:
         return msgs.get(msg_id)
     except KeyError:
@@ -61,14 +61,10 @@ def get_msg_name(msg_id):
         exit(1)
 # Get the message ID from the message Name
 def get_msg_id(msg_name):
-    """
-    Get the message ID from the message Name.
-
-    """
     try:
         return ids.get(msg_name)
     except KeyError:
-        logger.error(f"Message Name '{msg_name}' is not supported.")
+        logger.error(f"Message Type '{msg_name}' is not supported.")
         exit(1)
 
 
@@ -79,7 +75,7 @@ def get_compiled(version='2020'):
     return loaded
 
 # Load the compiled J2735 module based on the version
-J2735 = get_compiled('2024')
+J2735 = get_compiled(version)
 
 # Monkey patch the encode method to handle bitstring conversion
 original_encode = J2735.encode  # Save the original encode method
@@ -90,9 +86,11 @@ def custom_encode(data, name='MessageFrame'):
         id = data['messageId']
         name = get_msg_name(id)
         msg = data['value']
+        logger.info(f"Encoding message: {name} with ID: {id} from MessageFrame")
     else:
         msg = data
         id = get_msg_id(name)
+        logger.info(f"Encoding message: {name} with ID: {id}")
     
     # Recursive function to preprocess data for bitstring fields
     def preprocess_bitstring(obj):
@@ -133,6 +131,8 @@ def custom_encode(data, name='MessageFrame'):
     encoded_msg = original_encode(name, processed_data)
     # encode message frame
     encoded_frame = original_encode('MessageFrame', {'messageId': id, 'value': encoded_msg})
+    logger.info(f"Successfully encoded message!")
+    logger.debug(f"Encoded data: {hexlify(encoded_frame).decode('utf-8')}")
 
     # Call the original encode method with the processed data
     return hexlify(encoded_frame).decode('utf-8')
@@ -153,9 +153,11 @@ def custom_decode(data, name='MessageFrame'):
         id = decoded_frame['messageId']
         msg = decoded_frame['value']
         name = get_msg_name(id)
+        logger.info(f"Decoding message: {name} with ID: {id} from MessageFrame")
     else:
         id = get_msg_id(name)
         msg = unhexlify(data)
+        logger.info(f"Decoding message: {name} with ID: {id}")
     # Recursive function to reverse bitstring fields
     def reverse_bitstring(obj):
         if isinstance(obj, dict):
@@ -190,6 +192,8 @@ def custom_decode(data, name='MessageFrame'):
     # Call the original decode method
     decoded_data = original_decode(name, msg)
     frame_dict = {'messageId': id, 'value': reverse_bitstring(decoded_data)}
+    logger.info(f"Successfully decoded message!")
+    logger.debug(f"Decoded data: {frame_dict}")
 
     # Reverse the bitstring fields in the decoded data
     return frame_dict
