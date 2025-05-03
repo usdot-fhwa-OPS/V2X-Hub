@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 #include <J2735ToSRMJsonConverter.h>
 #include <cassert>
-#if SAEJ2735_SPEC < 2016
-#elif SAEJ2735_SPEC < 2020
+#if SAEJ2735_SPEC < 2020
 using MsgCount_t = DSRC_MsgCount_t;
 #else
 using MsgCount_t = Common_MsgCount_t;
