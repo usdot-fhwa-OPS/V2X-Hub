@@ -32,7 +32,6 @@ namespace CARMAStreetsPlugin
             Json::Value request;
             if(srm_ptr->sequenceNumber)
             {
-                // Vehicle ID as int32_t
                 uint8_t msgCount  = *srm_ptr->sequenceNumber;
                 request["msgCount"] = msgCount;
             }            
