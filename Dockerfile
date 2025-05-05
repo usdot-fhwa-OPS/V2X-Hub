@@ -1,5 +1,5 @@
 ARG UBUNTU_VERSION=jammy-20230126
-
+ARG J2735_VERSION=2016
 FROM ubuntu:$UBUNTU_VERSION AS dependencies
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -24,7 +24,7 @@ RUN ldconfig
 # build internal components
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
-RUN ./build.sh release
+RUN ./build.sh release --j2735-version="${J2735_VERSION}"
 RUN ldconfig
 
 # run final image

@@ -48,7 +48,7 @@ LIST(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
 LIST(APPEND CMAKE_MODULE_PATH "/opt/carma/cmake")
 
 SET(J2735_LIBRARY_NAME "")
-SET(SAEJ2735_SPEC_VERSION "2020" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
+SET(SAEJ2735_SPEC_VERSION "2016" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
 IF( SAEJ2735_SPEC_VERSION EQUAL "2016")
     SET(J2735_LIBRARY_NAME "::stol-j2735-201603-carma")
     # TODO Update stol-j2735 2016 version to remove 03 suffix which will allow for
