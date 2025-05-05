@@ -34,6 +34,7 @@ DEPENDENCIES="build-essential \
 LIBRARY_DEPENDENCIES=" \
     carma-clock-1 \
     stol-j2735-201603-carma-1 \
+    stol-j2735-2020-carma-1 \
     stol-j2735-2024-carma-1 \
 
 "
