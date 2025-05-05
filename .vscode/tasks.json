@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd src && ./build.sh",
+            "command": "cd src && ./build.sh debug --j2735-version 2016",
             "detail": "Task builds V2X Hub with CMake Debug flags",
             "group": {
                 "kind": "build",

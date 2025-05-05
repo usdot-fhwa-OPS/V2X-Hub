@@ -34,11 +34,10 @@ show_help() {
   echo "  -h, --help            Show this help message and exit"
 }
 
-# Default values
-J2735_VERSION="2016"
 
 # Initialize variables
-BUILD_TYPE="debug"
+BUILD_TYPE=""
+J2735_VERSION=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -58,16 +57,20 @@ while [[ $# -gt 0 ]]; do
       ;;
     --*)
       echo "Unknown option: $1"
+      echo ""
+      show_help
       exit 1
       ;;
-    *)  # Assume positional BUILD_TYPE
+    *)  # Positional argument: BUILD_TYPE
       if [[ -z "$BUILD_TYPE" ]]; then
         BUILD_TYPE="$1"
+        shift
       else
         echo "Error: Unexpected extra positional argument: $1"
+        echo ""
+        show_help
         exit 1
       fi
-      shift
       ;;
   esac
 done
