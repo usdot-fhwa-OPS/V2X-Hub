@@ -1,7 +1,7 @@
 ARG UBUNTU_VERSION=jammy-20230126
-ARG J2735_VERSION=2016
-FROM ubuntu:$UBUNTU_VERSION AS dependencies
 
+FROM ubuntu:$UBUNTU_VERSION AS dependencies
+ARG J2735_VERSION=2016
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
 RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
@@ -24,7 +24,7 @@ RUN ldconfig
 # build internal components
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
-RUN ./build.sh release --j2735-version=$J2735_VERSION
+RUN ./build.sh release --j2735-version $J2735_VERSION
 RUN ldconfig
 
 # run final image

@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
         J2735_VERSION="$2"
         shift 2
       else
-        echo "Error: --j2735-version requires an integer value"
+        echo "Error:Invalid value $2. --j2735-version requires an integer value"
         exit 1
       fi
       ;;
