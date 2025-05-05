@@ -24,7 +24,7 @@ RUN ldconfig
 # build internal components
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
-RUN ./build.sh release --j2735-version="${J2735_VERSION}"
+RUN ./build.sh release --j2735-version=$J2735_VERSION
 RUN ldconfig
 
 # run final image
