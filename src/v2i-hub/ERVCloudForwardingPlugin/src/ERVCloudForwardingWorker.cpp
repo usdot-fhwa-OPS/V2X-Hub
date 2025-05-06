@@ -13,7 +13,6 @@ namespace ERVCloudForwardingPlugin
         {
             return xml_str;
         }
-        #if SAEJ2735_SPEC != 2024
         // If Carma extension does not present, the ERV is not sending the route information, return empty string.
         if (bsmPtr->regional->list.array[0]->regExtValue.present != Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma)
         {
@@ -33,8 +32,6 @@ namespace ERVCloudForwardingPlugin
                      << "<longitude>" << longitude << "</longitude></point>";
         }
         snprintf(xml_str, sizeof(xml_str), "<?xml version=\"1.0\" encoding=\"UTF-8\"?><BSMRequest><id>%s</id><v2xhubPort>%d</v2xhubPort><route>%s</route></BSMRequest>", bsmHex.c_str(), v2xhubPort, route_ss.str().c_str());
-        #endif
-
         return xml_str;
     }
 

@@ -123,7 +123,6 @@ namespace unit_test
          partIICnt->partII_Value.choice.SpecialVehicleExtensions = *specialVEx;
          asn_sequence_add(&bsmPartII->list.array, partIICnt);
          messagePartII->partII = bsmPartII;
-         #if SAEJ2735_SPEC != 2024
          // BSM regional extension
          auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
          auto reg_bsm = (Reg_BasicSafetyMessage *)calloc(1, sizeof(Reg_BasicSafetyMessage));
@@ -169,7 +168,6 @@ namespace unit_test
          reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
          asn_sequence_add(&regional->list.array, reg_bsm);
          messagePartII->regional = regional;
-         #endif
          _bsmMessagePartII = new BsmMessage(messagePartII);
       }
       void TearDown()

@@ -16,7 +16,7 @@
 # script to run tests, generate test-coverage, and store coverage reports in a place
 # easily accessible to sonar. Test names should follow convention run<pluginName>Tests
 
-set -ex
+set -x
 
 COVERAGE_BUILD=0
 if [ "$1" = "coverage" ]; then
