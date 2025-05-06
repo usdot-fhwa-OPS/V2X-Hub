@@ -180,9 +180,11 @@ protected:
 			//enumNames[api::travelerInformation] = api::MSGSUBTYPE_TRAVELERINFORMATION_STRING;
 			enumNames[api::uperFrame_D] = api::MSGSUBTYPE_UPERFRAME_D_STRING;
 		//	msgTypes[api::uperFrame_D] = new msg_type_impl<UperFrameMessage>();
+			#if SAEJ2735_SPEC != 2024
 			enumNames[api::personalMobilityMessage] = api::MSGSUBTYPE_PERSONALMOBILITYMESSAGE_STRING;
 		//	msgTypes[api::personalMobilityMessage] = new msg_type_impl<PmmMessage>();
 			testBytes[api::personalMobilityMessage] = "303a800111830200f58431482362c99e568d5b375b95c39c4b58b2c8cd6e168d5b2d68c9b366ad5a3460c1830000d693a401ad2747fc7e09b3720034";
+			#endif
 		}
 	}
 
@@ -542,7 +544,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	partIICnt->partII_Value.choice.SpecialVehicleExtensions = *specialVEx;
     asn_sequence_add(&bsmPartII->list.array, partIICnt);
 	message->partII = bsmPartII;
-
+	#if SAEJ2735_SPEC != 2024
 	// BSM regional extension
     auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
     auto reg_bsm = (Reg_BasicSafetyMessage_t*) calloc(1, sizeof(Reg_BasicSafetyMessage_t));
@@ -593,7 +595,9 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
 	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
 	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
+	#endif
 }
+
 
 
 TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
