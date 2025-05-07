@@ -69,7 +69,7 @@ using message_types = message_type_list<
 #if SAEJ2735_SPEC < 2016
 		PmmMessage,
 #endif
-#if SAEJ2735_SPEC == 2024
+#if SAEJ2735_SPEC >= 2024
 		RsmMessage,
 #endif
 		PsmMessage,
@@ -197,7 +197,7 @@ public:
 #if SAEJ2735_SPEC < 2016
 			add_allocator_to_maps<PmmMessage>();
 #endif
-#if SAEJ2735_SPEC == 2024
+#if SAEJ2735_SPEC >= 2024
 			add_allocator_to_maps<RsmMessage>();
 #endif
 			add_allocator_to_maps<PvdMessage>();
