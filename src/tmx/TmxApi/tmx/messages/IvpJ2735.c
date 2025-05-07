@@ -38,7 +38,7 @@
 #include <TestMessage03.h>
 #include <TestMessage04.h>
 #include <TestMessage05.h>
-#if SAEJ2735_SPEC == 2024
+#if SAEJ2735_SPEC >= 2024
 #include <RoadSafetyMessage.h>
 #include <RoadWeatherMessage.h>
 #include <ProbeDataConfigMessage.h>
