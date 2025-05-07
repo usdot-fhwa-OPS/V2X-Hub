@@ -88,9 +88,7 @@ enum MsgSubType
 		signalStatusMessage = 30,
 		travelerInformation = 31,
 		personalSafetyMessage = 32,
-		// #if SAEJ2735_SPEC < 2020
 		personalMobilityMessage = 245,
-		// #endif
 		roadSafetyMessage = 33,
 		roadWeatherMessage = 34,
 		probeDataConfigMessage = 35,
