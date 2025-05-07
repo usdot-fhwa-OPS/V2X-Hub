@@ -180,7 +180,7 @@ protected:
 			//enumNames[api::travelerInformation] = api::MSGSUBTYPE_TRAVELERINFORMATION_STRING;
 			enumNames[api::uperFrame_D] = api::MSGSUBTYPE_UPERFRAME_D_STRING;
 		//	msgTypes[api::uperFrame_D] = new msg_type_impl<UperFrameMessage>();
-			#if SAEJ2735_SPEC != 2024
+			#if SAEJ2735_SPEC < 2024
 			enumNames[api::personalMobilityMessage] = api::MSGSUBTYPE_PERSONALMOBILITYMESSAGE_STRING;
 		//	msgTypes[api::personalMobilityMessage] = new msg_type_impl<PmmMessage>();
 			testBytes[api::personalMobilityMessage] = "303a800111830200f58431482362c99e568d5b375b95c39c4b58b2c8cd6e168d5b2d68c9b366ad5a3460c1830000d693a401ad2747fc7e09b3720034";
