@@ -132,7 +132,6 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case msgID_travelerInformation: return "TIM";
 		case msgID_personalSafetyMessage: return "PSM";
 		case msgID_sensorDataSharingMessage: return "SDSM";
-		#if SAEJ2735_SPEC == 2024
 		case msgID_roadSafetyMessage: return "RSM";
 		case msgID_roadWeatherMessage: return "RWM";
 		case msgID_probeDataConfigMessage: return "PDC";
@@ -150,7 +149,6 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case msgID_roadUserChargingConfigMessage: return "RUCCM";
 		case msgID_roadUserChargingReportMessage: return "RUCRM";
 		case msgID_trafficLightStatusMessage: return "TLSM";
-		#endif
 
 		default: break;
 	}
@@ -179,7 +177,6 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 		case msgID_signalStatusMessage: return "DSRC Signal Status Message";
 		case msgID_travelerInformation: return "DSRC Traveler Information Message";
 		case msgID_sensorDataSharingMessage: return "DSRC Sensor Data Sharing Message";
-		#if SAEJ2735_SPEC == 2024
 		case msgID_roadSafetyMessage: return "DSRC Road Safety Message";
 		case msgID_roadWeatherMessage: return "DSRC Road Weather Message";
 		case msgID_probeDataConfigMessage: return "DSRC Probe Data Config Message";
@@ -197,7 +194,6 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 		case msgID_roadUserChargingConfigMessage: return "DSRC Road User Charging Config Message";
 		case msgID_roadUserChargingReportMessage: return "DSRC Road User Charging Report Message";
 		case msgID_trafficLightStatusMessage: return "DSRC Traffic Light Status Message";
-		#endif
 		default: break;
 	}
 
