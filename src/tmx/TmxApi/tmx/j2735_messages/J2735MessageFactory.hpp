@@ -44,7 +44,7 @@
 #include <tmx/j2735_messages/testMessage04.hpp>
 #include <tmx/j2735_messages/testMessage05.hpp>
 #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
-#if SAEJ2735_SPEC == 2024
+#if SAEJ2735_SPEC >= 2024
 #include <tmx/j2735_messages/RoadSafetyMessage.hpp>
 #endif
 
