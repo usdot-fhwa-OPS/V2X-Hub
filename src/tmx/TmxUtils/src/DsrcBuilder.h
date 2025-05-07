@@ -32,9 +32,6 @@ typedef TravelerDataFrame TiDataFrame;
 typedef ITIS_ITIScodesAndText ITIScodesAndText;
 typedef ITIS_ITIScodesAndText__Member ITIScodesAndText__Member;
 typedef ITIS_ITIScodesAndText_t ItisList;
-// typedef ITIS_ITIScodesAndText__Member__item_PR::ITIS_ITIScodesAndText__Member__item_PR_text ITIScodesAndText__Member__item_PR_text;
-// typedef ITIS_ITIScodesAndText__Member__item_PR::ITIS_ITIScodesAndText__Member__item_PR_itis ITIScodesAndText__Member__item_PR_itis;
-
 #else
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIScodesAndText__Member ItisMember;
