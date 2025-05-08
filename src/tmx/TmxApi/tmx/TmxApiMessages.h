@@ -88,7 +88,6 @@ enum MsgSubType
 		signalStatusMessage = 30,
 		travelerInformation = 31,
 		personalSafetyMessage = 32,
-		personalMobilityMessage = 245,
 		roadSafetyMessage = 33,
 		roadWeatherMessage = 34,
 		probeDataConfigMessage = 35,
@@ -107,6 +106,8 @@ enum MsgSubType
 		roadUserChargingConfigMessage = 48,
 		roadUserChargingReportMessage = 49,
 		trafficLightStatusMessage = 50,
+		// Start Test Messages at end of range to allow for new messages added to be 
+		// in ascending order
 		testMessage00 = 240,
 		testMessage01 = 241,
 		testMessage02 = 242,
