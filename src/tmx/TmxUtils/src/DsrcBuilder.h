@@ -17,7 +17,7 @@
 #include <sstream>
 #include <OCTET_STRING.h>
 
-#if SAEJ2735_SPEC == 2024
+#if SAEJ2735_SPEC >= 2024
 #include <ITIS_ITIScodesAndText.h>
 #else
 #include <ITIScodesAndText.h>
@@ -27,7 +27,7 @@
 typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
 typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
-#elif SAEJ2735_SPEC == 2024
+#elif SAEJ2735_SPEC >= 2024
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIS_ITIScodesAndText ITIScodesAndText;
 typedef ITIS_ITIScodesAndText__Member ITIScodesAndText__Member;
