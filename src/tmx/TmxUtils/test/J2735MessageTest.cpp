@@ -22,190 +22,8 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
-class msg_type {
-public:
-	msg_type() {}
-	virtual ~msg_type() {}
 
-	virtual string type_name() = 0;
-	virtual string message_tag() = 0;
-	virtual bool set_message(routeable_message *msg) = 0;
-	virtual bool set_message(string) = 0;
-	virtual int get_default_msgId() = 0;
-	virtual int get_msgId() = 0;
-	virtual byte_stream get_bytes() = 0;
-	virtual string get_payload() = 0;
-};
 
-template <class MsgClass>
-class msg_type_impl: public msg_type {
-public:
-	typedef MsgClass encoded_type;
-	typedef typename MsgClass::message_type message_type;
-
-	msg_type_impl(): msg_type() {}
-	~msg_type_impl() {}
-
-	string type_name()
-	{
-		return type_id_name<MsgClass>();
-	}
-
-	string message_tag()
-	{
-		return MsgClass::get_messageTag();
-	}
-
-	bool set_message(routeable_message *msg)
-	{
-		try
-		{
-			encMsg = dynamic_cast<TmxJ2735EncodedMessage<MsgClass> *>(msg);
-		}
-		catch (exception &ex)
-		{
-			cerr << ex.what() << endl;
-		}
-
-		return encMsg;
-	}
-
-	bool set_message(string msg)
-	{
-		static TmxJ2735EncodedMessage<MsgClass> enc;
-		static string encoding = enc.get_encoding();
-		enc.clear();
-		enc.set_encoding(encoding);
-
-		try
-		{
-			MsgClass dec;
-			dec.set_contents(msg);
-			enc.initialize(dec);
-			encMsg = &enc;
-		}
-		catch (exception &ex)
-		{
-			cerr << ex.what() << endl;
-			encMsg = NULL;
-		}
-
-		return encMsg;
-	}
-
-	int get_default_msgId()
-	{
-		return 0;
-		//return MsgClass::get_default_msgId();
-	}
-
-	int get_msgId()
-	{
-		return encMsg->get_msgId();
-	}
-
-	byte_stream get_bytes()
-	{
-		return encMsg->get_data();
-	}
-
-	string get_payload()
-	{
-		return encMsg->template get_payload<MsgClass>().to_string();
-	}
-private:
-	TmxJ2735EncodedMessage<MsgClass> *encMsg = NULL;
-};
-
-class J2735MessageTest: public testing::Test {
-
-protected:
-	J2735MessageTest() {
-		if (enumNames[api::J2735].length() <= 0) {
-			// Initialize the known names
-			enumNames[api::J2735] = api::MSGSUBTYPE_J2735_STRING;
-
-			enumNames[api::basicSafetyMessage_D] = api::MSGSUBTYPE_BASICSAFETYMESSAGE_D_STRING;
-			msgTypes[api::basicSafetyMessage_D] = new msg_type_impl<BsmMessage>();
-			testBytes[api::basicSafetyMessage_D] = "302b8001028126003ade68b1000017dee47ece7000b00000ffffffff032451407f00000000b000700000000000";
-			//enumNames[api::basicSafetyMessage] = api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING;
-			enumNames[api::basicSafetyMessageVerbose_D] = api::MSGSUBTYPE_BASICSAFETYMESSAGEVERBOSE_D_STRING;
-			msgTypes[api::basicSafetyMessageVerbose_D] = new msg_type_impl<BsmMessage>();
-			enumNames[api::commonSafetyRequest_D] = api::MSGSUBTYPE_COMMONSAFETYREQUEST_D_STRING;
-			msgTypes[api::commonSafetyRequest_D] = new msg_type_impl<CsrMessage>();
-			//enumNames[api::commonSafetyRequest] = api::MSGSUBTYPE_COMMONSAFETYREQUEST_STRING;
-			enumNames[api::emergencyVehicleAlert_D] = api::MSGSUBTYPE_EMERGENCYVEHICLEALERT_D_STRING;
-			msgTypes[api::emergencyVehicleAlert_D] = new msg_type_impl<EvaMessage>();
-			//enumNames[api::emergencyVehicleAlert] = api::MSGSUBTYPE_EMERGENCYVEHICLEALERT_STRING;
-			enumNames[api::intersectionCollision_D] = api::MSGSUBTYPE_INTERSECTIONCOLLISION_D_STRING;
-			msgTypes[api::intersectionCollision_D] = new msg_type_impl<IntersectionCollisionMessage>();
-			//enumNames[api::intersectionCollision] = api::MSGSUBTYPE_INTERSECTIONCOLLISION_STRING;
-			//enumNames[api::mapData_D] = api::MSGSUBTYPE_MAPDATA_D_STRING;
-			enumNames[api::mapData] = api::MSGSUBTYPE_MAPDATA_STRING;
-			msgTypes[api::mapData] = new msg_type_impl<MapDataMessage>();
-			testBytes[api::mapData] = "30819c80011183011284819328048018081098011360f4970e6e86ecc0bc028600a000000000c800468cca454266798e048305100860230018400002001b3db8b730056c35887a90880ad80483801010602a000000000c80158fd46004fd37182a1c4809fa0481051008603b001840000200110a52c056c354b8adb880ad80482001010401100000000001000dffff05da100c40000000000400b7fffbe888";
-			enumNames[api::nmeaCorrections_D] = api::MSGSUBTYPE_NMEACORRECTIONS_D_STRING;
-			msgTypes[api::nmeaCorrections_D] = new msg_type_impl<NmeaMessage>();
-			//enumNames[api::nmeaCorrections] = api::MSGSUBTYPE_NMEACORRECTIONS_STRING;
-			enumNames[api::personalSafetyMessage] = api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING;
-			msgTypes[api::personalSafetyMessage] = new msg_type_impl<PsmMessage>();
-			testBytes[api::personalSafetyMessage] = "30218001118301208419000008000012448217435a4e9006b49d1ff323034310000100";
-			enumNames[api::probeDataManagement_D] = api::MSGSUBTYPE_PROBEDATAMANAGEMENT_D_STRING;
-			msgTypes[api::probeDataManagement_D] = new msg_type_impl<PdmMessage>();
-			//enumNames[api::probeDataManagement] = api::MSGSUBTYPE_PROBEDATAMANAGEMENT_STRING;
-			enumNames[api::probeVehicleData_D] = api::MSGSUBTYPE_PROBEVEHICLEDATA_D_STRING;
-			msgTypes[api::probeVehicleData_D] = new msg_type_impl<PvdMessage>();
-			testBytes[api::probeVehicleData_D] = "302680010a810103a3098101b482012b84016a840106850101a60d300ba00981012d8201b484016a";
-			//enumNames[api::probeVehicleData] = api::MSGSUBTYPE_PROBEVEHICLEDATA_STRING;
-			enumNames[api::roadSideAlert_D] = api::MSGSUBTYPE_ROADSIDEALERT_D_STRING;
-			msgTypes[api::roadSideAlert_D] = new msg_type_impl<RsaMessage>();
-			testBytes[api::roadSideAlert_D] = "302780010b81010082021311a30084008500860100a70ea0008104ce7049b4820417dee95c88008900";
-			//enumNames[api::roadSideAlert] = api::MSGSUBTYPE_ROADSIDEALERT_STRING;
-			enumNames[api::rtcmCorrections_D] = api::MSGSUBTYPE_RTCMCORRECTIONS_D_STRING;
-			msgTypes[api::rtcmCorrections_D] = new msg_type_impl<RtcmMessage>();
-			//enumNames[api::rtcmCorrections] = api::MSGSUBTYPE_RTCMCORRECTIONS_STRING;
-			//enumNames[api::signalPhaseAndTimingMessage_D] = api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_D_STRING;
-			enumNames[api::signalPhaseAndTimingMessage] = api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING;
-			msgTypes[api::signalPhaseAndTimingMessage] = new msg_type_impl<SpatMessage>();
-			testBytes[api::signalPhaseAndTimingMessage] = "30818080011183011384780130201b6bd3420c3bb220a9a79e4c3b32a093bba65e5cf2e3e9a77ee03c48100000b00204343a663a66001021a1d331d33001410c0e49800a086874cc74cc0040454396c396c002022a1cb61cb6001c10c0e49800e08a872d872d800604343a663a66003021a1d331d33000410c0e498002086874cc74ccfd002020602a000000001d0054f3857404e2adefc542027154f886dc04e2827f0008143009000000000748017022f7fff14fd0008127e001008300d000000000e802a03a7ce02715879f419004e2ac4590a00271413f40040618108000000003a40077fffbf5f8a7e0004213ec0081008d4c0010000004944c8804bb2b479f3809760400b50234300040000015a011b804f325d8090027981004d008ccc0010000004fca0f804e3acf990320271c1006cc08d8c00100000050f92d4014529851de80a29040236047d100000000001000e0706fffe11f040000000000400f7fffbf69847b100000000001002dfa86fffe11f84000000000040077fffc09a8";
-			enumNames[api::signalRequestMessage_D] = api::MSGSUBTYPE_SIGNALREQUESTMESSAGE_D_STRING;
-			msgTypes[api::signalRequestMessage_D] = new msg_type_impl<SrmMessage>();
-			//enumNames[api::signalRequestMessage] = api::MSGSUBTYPE_SIGNALREQUESTMESSAGE_STRING;
-			enumNames[api::signalStatusMessage_D] = api::MSGSUBTYPE_SIGNALSTATUSMESSAGE_D_STRING;
-			msgTypes[api::signalStatusMessage_D] = new msg_type_impl<SsmMessage>();
-			//enumNames[api::signalStatusMessage] = api::MSGSUBTYPE_SIGNALSTATUSMESSAGE_STRING;
-			enumNames[api::travelerInformation_D] = api::MSGSUBTYPE_TRAVELERINFORMATION_D_STRING;
-			msgTypes[api::travelerInformation_D] = new msg_type_impl<TimMessage>();
-			testBytes[api::travelerInformation_D] = "3082011f8001108104000037bf830101a482010d30820109800101a102800083022d00840300fde8850105a981cc30318000a22da02ba010800417bab1ea8104c18d80cd820200008102014f820100a31004060000000000000406fff9010c000030318000a22da02ba010800417baa6fa8104c18d80cd820200008102014f820100a3100406000000000000040600000137000030318000a22da02ba010800417ba98cc8104c18d80d6820200008102014f820100a31004060000000000000406ffff0194000030318000a22da02ba010800417ba86f28104c18d80b8820200008102014f820100a31004060000000000000406000301fc0000aa25a0233005a00380011b3008a0068004016ee8003006a00480020a043008a0068004016ee9008500";
-			//enumNames[api::travelerInformation] = api::MSGSUBTYPE_TRAVELERINFORMATION_STRING;
-			enumNames[api::uperFrame_D] = api::MSGSUBTYPE_UPERFRAME_D_STRING;
-		//	msgTypes[api::uperFrame_D] = new msg_type_impl<UperFrameMessage>();
-			#if SAEJ2735_SPEC < 2024
-			enumNames[api::personalMobilityMessage] = api::MSGSUBTYPE_PERSONALMOBILITYMESSAGE_STRING;
-		//	msgTypes[api::personalMobilityMessage] = new msg_type_impl<PmmMessage>();
-			testBytes[api::personalMobilityMessage] = "303a800111830200f58431482362c99e568d5b375b95c39c4b58b2c8cd6e168d5b2d68c9b366ad5a3460c1830000d693a401ad2747fc7e09b3720034";
-			#endif
-		}
-	}
-
-	virtual ~J2735MessageTest() {
-		for (unsigned int i = 0; i < msgTypes.size(); i++)
-			if (msgTypes[i])
-			{
-				delete msgTypes[i];
-				msgTypes[i] = NULL;
-			}
-	}
-
-	J2735MessageFactory factory;
-	static vector<string> enumNames;
-	static vector<msg_type *> msgTypes;
-	static vector<string> testBytes;
-};
-
-vector<string> J2735MessageTest::enumNames(api::J2735_end);
-vector<msg_type *> J2735MessageTest::msgTypes(api::J2735_end);
-vector<string> J2735MessageTest::testBytes(api::J2735_end);
 // Function to convert hex string to byte array
 std::vector<uint8_t> hexStringToByteArray(const std::string& hex) {
 	    std::vector<uint8_t> bytes;
@@ -217,7 +35,7 @@ std::vector<uint8_t> hexStringToByteArray(const std::string& hex) {
 	    return bytes;
 	}
 	
-TEST_F(J2735MessageTest, EncodeMobilityOperation)
+TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
 	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
 
@@ -280,7 +98,7 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 }
 
 
-TEST_F(J2735MessageTest, EncodeMobilityRequest)
+TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
 	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
 	
@@ -371,7 +189,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 }
 
 
-TEST_F(J2735MessageTest, EncodeMobilityResponse)
+TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
 	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
 
@@ -427,7 +245,7 @@ TEST_F(J2735MessageTest, EncodeMobilityResponse)
 }
 
 
-TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
+TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
 	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
 
@@ -490,7 +308,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage)
 
 
 
-TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
+TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 {	
 	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
 	/**
@@ -608,7 +426,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 
 
 
-TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
+TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	string psm="<PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>109</secMark><msgCnt>0</msgCnt><id>115eadf0</id><position><lat>389549376</lat><long>-771491840</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>0</speed><heading>16010</heading><pathHistory><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>";
 	std::stringstream ss;
 	PsmMessage psmmessage;
@@ -622,7 +440,7 @@ TEST_F(J2735MessageTest, EncodePersonalSafetyMessage){
 	ASSERT_EQ(32,  psmENC.get_msgId());
 }
 	
-TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
+TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
 	tsm4Message tsm4msg;
@@ -637,7 +455,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 }
 
 
-TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
+TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
 	string tsm5str="<TestMessage05><body><tcmV01><reqid>30642B129B984162</reqid><reqseq>0</reqseq><msgtot>9</msgtot><msgnum>9</msgnum><id>0034b8d88d084ffdaf23837926031658</id><updated>0</updated><package><label>workzone-laneclosed</label><tcids><Id128b>0034b8d88d084ffdaf23837926031658</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27506547</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27506547</reftime><reflon>-818331529</reflon><reflat>281182119</reflat><refelv>0</refelv><refwidth>424</refwidth><heading>3403</heading><nodes><PathNode><x>0</x><y>0</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-204</x><y>722</y><width>2</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>-2</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-13</x><y>46</y><width>0</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
 	std::stringstream ss;
@@ -661,7 +479,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
 }
 
-TEST_F (J2735MessageTest, EncodeSrm)
+TEST (J2735MessageTest, EncodeSrm)
 {
 	SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
 	message->second = 12;
@@ -759,7 +577,7 @@ TEST_F (J2735MessageTest, EncodeSrm)
 	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
-TEST_F(J2735MessageTest, EncodeTravelerInformation){
+TEST(J2735MessageTest, EncodeTravelerInformation){
 	#if SAEJ2735_SPEC == 2024
 	// TODO Add 2024 TIM message
 	GTEST_SKIP();
@@ -789,7 +607,7 @@ TEST_F(J2735MessageTest, EncodeTravelerInformation){
 // Test Road Safety Message (only included in 2024 version of spec)
 #if SAEJ2735_SPEC >= 2024
 // Test encoding Road Safety Message from XML
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageXML)
+TEST(J2735MessageTest, EncodeRoadSafetyMessageXML)
 {
        // Encode RSM XML
        string rsm="<RoadSafetyMessage> <commonContainer> <eventInfo> <eventID> <operatorID> <fullRdAuthID>1.0.15628.4.1.17.1</fullRdAuthID> </operatorID> <uniqueID>01 0C 0C 0A</uniqueID> </eventID> <eventUpdate>12</eventUpdate> <eventCancellation><false/></eventCancellation> <startDateTime> <year>2024</year> <month>3</month> <day>19</day> <hour>15</hour> <minute>30</minute> <second>45</second> </startDateTime> <eventRecurrence> <EventRecurrence> <monday><true/></monday> <tuesday><true/></tuesday> <wednesday><true/></wednesday> <thursday><true/></thursday> <friday><true/></friday> <saturday><true/></saturday> <sunday><true/></sunday> </EventRecurrence> </eventRecurrence> <causeCode>7</causeCode> <subCauseCode>1793</subCauseCode> <affectedVehicles><all-vehicles/> </affectedVehicles> </eventInfo> <regionInfo> <RegionInfo> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </RegionInfo> </regionInfo> </commonContainer> <content> <dynamicInfoContainer> <priority><critical/></priority> <dmsSignString> <ShortString>Wrong Way Driver</ShortString> </dmsSignString> <applicableRegion> <referencePoint> <lat>389549610</lat> <long>-771493030</long> <elevation>390</elevation> </referencePoint> </applicableRegion> </dynamicInfoContainer> </content> </RoadSafetyMessage>";
@@ -805,7 +623,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageXML)
        EXPECT_EQ(33,  rsmENC.get_msgId());
 }
 // Test encoding Road Safety Message with lane closure content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageLaneClosure) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageLaneClosure) {
 
 	/**
 	* Populate RSM 
@@ -1027,7 +845,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageLaneClosure) {
 	EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 // Test encoding of Road Safety Message with reduced speed zone content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageReduceSpeed) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageReduceSpeed) {
 
 	/**
 	* Populate RSM 
@@ -1313,7 +1131,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageReduceSpeed) {
 	
 }
 // Test encoding of Road Safety Message with reduced speed zone content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageDynamicInfo) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageDynamicInfo) {
 
 	/**
 	* Populate RSM 
@@ -1550,7 +1368,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageDynamicInfo) {
 	EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 // Test encoding of Road Safety Message with incident content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageIncident) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageIncident) {
 
 	/**
 	* Populate RSM 
@@ -1781,7 +1599,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageIncident) {
 	EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 // Test encoding of Road Safety Message with curve content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageCurve) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageCurve) {
 
 	/**
 	* Populate RSM 
@@ -2028,7 +1846,7 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageCurve) {
 	EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 // Test encoding of Road Safety Message with situation content
-TEST_F(J2735MessageTest, EncodeRoadSafetyMessageSituation) {
+TEST(J2735MessageTest, EncodeRoadSafetyMessageSituation) {
 
 	/**
 	* Populate RSM 
@@ -2259,19 +2077,17 @@ TEST_F(J2735MessageTest, EncodeRoadSafetyMessageSituation) {
 	EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
 }
 // Test decoding of Road Safety Message
-TEST_F(J2735MessageTest, DecodeRoadSafetyMessage) {
+TEST(J2735MessageTest, DecodeRoadSafetyMessage) {
 	// Decode any RSM
 	std::string rsmInput = "0021430700e51f418080222020218181431f9fa0e6f7800b400fe0e0e0200000a66e7b951ea6e2ac88c306c1f5f96fdd9d057c3e5044e5a7b65e40299b9ee547a9b8ab2230c0";
 	std::vector<uint8_t> byteArray = hexStringToByteArray(rsmInput);
 	tmx::messages::RsmEncodedMessage decodedMessage;
 	decodedMessage.set_data(byteArray);
-	auto decodedRsmPtr = decodedMessage.decode_j2735_message();
-
-	// Print out the decoded message
-	std::cout << "Decoded RSM: " << decodedRsmPtr << std::endl;
+	auto decodedRsmPtr = decodedMessage.decode_j2735_message().get_j2735_data();
+	xer_fprint(stdout, &asn_DEF_RoadSafetyMessage, decodedRsmPtr.get());
 }
 #endif
-TEST_F(J2735MessageTest, EncodeSDSM)
+TEST(J2735MessageTest, EncodeSDSM)
 {
 	auto message = (SensorDataSharingMessage_t*)calloc(1, sizeof(SensorDataSharingMessage_t));
 	message->msgCnt = 10;
