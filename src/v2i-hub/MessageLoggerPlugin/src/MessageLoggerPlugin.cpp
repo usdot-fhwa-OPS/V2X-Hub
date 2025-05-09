@@ -268,11 +268,22 @@ void MessageLoggerPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_me
 			if (bsm->partII[0].list.count >= BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions ) {
 				try
 				{
+					#if SAEJ2735_SPEC >= 2024
+					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.doNotUse !=NULL){
+						cJSON_AddItemToObject(_BsmMessageContent, "trailerPivot", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.doNotUse->connection.pivotOffset));
+						cJSON_AddItemToObject(_BsmMessageContent, "trailerLength", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.doNotUse->units.list.array[0]->length));
+						cJSON_AddItemToObject(_BsmMessageContent, "trailerHeight", cJSON_CreateNumber(
+							*(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.doNotUse->units.list.array[0]->height)
+						));
+					}
+					#else
 					if(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers !=NULL){
 						cJSON_AddItemToObject(_BsmMessageContent, "trailerPivot", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->connection.pivotOffset));
-						cJSON_AddItemToObject(_BsmMessageContent, "trailreLength", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length));
-						cJSON_AddItemToObject(_BsmMessageContent, "trailerHeight", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height[0]));
+						cJSON_AddItemToObject(_BsmMessageContent, "trailerLength", cJSON_CreateNumber(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->length));
+						cJSON_AddItemToObject(_BsmMessageContent, "trailerHeight", cJSON_CreateNumber(
+							*(bsm->partII[0].list.array[1]->partII_Value.choice.SpecialVehicleExtensions.trailers->units.list.array[0]->height)));
 					}
+					#endif
 					else 
 					{
 						cJSON_AddItemToObject(_BsmMessageContent, "trailerPivot", cJSON_CreateString(""));

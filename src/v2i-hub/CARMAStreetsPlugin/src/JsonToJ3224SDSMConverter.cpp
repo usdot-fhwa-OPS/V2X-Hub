@@ -137,7 +137,11 @@ namespace CARMAStreetsPlugin
                 objectData->detObjCommon.pos.offsetY =  (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_y"].asInt64();
                 // Optional Z offset
                 if ( (*itr)["detected_object_data"]["detected_object_common_data"]["pos"].isMember("offset_z") ) {
+                    #if SAEJ2735_SPEC < 2024
                     auto offset_z = (ObjectDistance_t*) calloc(1, sizeof(ObjectDistance_t));
+                    #else
+                    auto offset_z = (SensorDataSharingMessage_ObjectDistance_t*) calloc(1, sizeof(SensorDataSharingMessage_ObjectDistance_t));
+                    #endif
                     *offset_z = (*itr)["detected_object_data"]["detected_object_common_data"]["pos"]["offset_z"].asInt64();
                     objectData->detObjCommon.pos.offsetZ = offset_z;
                 }

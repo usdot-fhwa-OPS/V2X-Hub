@@ -31,7 +31,38 @@
 #include <SPAT.h>
 #include <SignalStatusMessage.h>
 #include <TravelerInformation.h>
-
+#include <PersonalSafetyMessage.h>
+#include <TestMessage00.h>
+#include <TestMessage01.h>
+#include <TestMessage02.h>
+#include <TestMessage03.h>
+#include <TestMessage04.h>
+#include <TestMessage05.h>
+#if SAEJ2735_SPEC >= 2024
+#include <RoadSafetyMessage.h>
+#include <RoadWeatherMessage.h>
+#include <ProbeDataConfigMessage.h>
+#include <ProbeDataReportMessage.h>
+#include <TollAdvertisementMessage.h>
+#include <TollUsageMessage.h>
+#include <TollUsageAckMessage.h>
+#include <CooperativeControlMessage.h>
+#include <SensorDataSharingMessage.h>
+#include <ManeuverSharingAndCoordinatingMessage.h>
+#include <RoadGeometryAndAttributes.h>
+#include <PersonalSafetyMessage2.h>
+#include <TrafficSignalPhaseAndTiming.h>
+#include <SignalControlAndPrioritizationRequest.h>
+#include <SignalControlAndPrioritizationStatus.h>
+#include <RoadUserChargingConfigMessage.h>
+#include <RoadUserChargingReportMessage.h>
+#include <TrafficLightStatusMessage.h>
+#include <TestMessage06.h>
+#include <TestMessage07.h>
+#include <TestMessage08.h>
+#include <TestMessage09.h>
+#include <TestMessage10.h>
+#endif
 static asn_TYPE_descriptor_t *getTypeDescriptorFromMsgId(e_DSRCmsgID msgId);
 static const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId);
 static e_DSRCmsgID getMsgIdFromMessageSubType(const char *subtype);
@@ -99,6 +130,26 @@ const char *getMessageSubTypeFromMsgId(e_DSRCmsgID msgId)
 		case msgID_signalRequestMessage: return "SRM";
 		case msgID_signalStatusMessage: return "SSM";
 		case msgID_travelerInformation: return "TIM";
+		case msgID_personalSafetyMessage: return "PSM";
+		case msgID_sensorDataSharingMessage: return "SDSM";
+		case msgID_roadSafetyMessage: return "RSM";
+		case msgID_roadWeatherMessage: return "RWM";
+		case msgID_probeDataConfigMessage: return "PDC";
+		case msgID_probeDataReportMessage: return "PDR";
+		case msgID_tollAdvertisementMessage: return "TAM";
+		case msgID_tollUsageMessage: return "TUM";
+		case msgID_tollUsageAckMessage: return "TUMack";
+		case msgID_cooperativeControlMessage: return "CCM";
+		case msgID_maneuverSharingAndCoordinatingMessage: return "MSCM";
+		case msgID_roadGeometryAndAttributes: return "RGA";
+		case msgID_personalSafetyMessage2: return "PSM2";
+		case msgID_trafficSignalPhaseAndTiming: return "TSPaT";
+		case msgID_signalControlAndPrioritizationRequest: return "SCPR";
+		case msgID_signalControlAndPrioritizationStatus: return "SCPS";
+		case msgID_roadUserChargingConfigMessage: return "RUCCM";
+		case msgID_roadUserChargingReportMessage: return "RUCRM";
+		case msgID_trafficLightStatusMessage: return "TLSM";
+
 		default: break;
 	}
 
@@ -125,6 +176,24 @@ const char *getMessageDescriptionFromMsgId(e_DSRCmsgID msgId)
 		case msgID_signalRequestMessage: return "DSRC Signal Request Message";
 		case msgID_signalStatusMessage: return "DSRC Signal Status Message";
 		case msgID_travelerInformation: return "DSRC Traveler Information Message";
+		case msgID_sensorDataSharingMessage: return "DSRC Sensor Data Sharing Message";
+		case msgID_roadSafetyMessage: return "DSRC Road Safety Message";
+		case msgID_roadWeatherMessage: return "DSRC Road Weather Message";
+		case msgID_probeDataConfigMessage: return "DSRC Probe Data Config Message";
+		case msgID_probeDataReportMessage: return "DSRC Probe Data Report Message";
+		case msgID_tollAdvertisementMessage: return "DSRC Toll Advertisement Message";
+		case msgID_tollUsageMessage: return "DSRC Toll Usage Message";
+		case msgID_tollUsageAckMessage: return "DSRC Toll Usage Ack Message";
+		case msgID_cooperativeControlMessage: return "DSRC Cooperative Control Message";
+		case msgID_maneuverSharingAndCoordinatingMessage: return "DSRC Maneuver Sharing And Coordinating Message";
+		case msgID_roadGeometryAndAttributes: return "DSRC Road Geometry And Attributes";
+		case msgID_personalSafetyMessage2: return "DSRC Personal Safety Message2";
+		case msgID_trafficSignalPhaseAndTiming: return "DSRC Traffic Signal Phase And Timing";
+		case msgID_signalControlAndPrioritizationRequest: return "DSRC Signal Control And Prioritization Request";
+		case msgID_signalControlAndPrioritizationStatus: return "DSRC Signal Control And Prioritization Status";
+		case msgID_roadUserChargingConfigMessage: return "DSRC Road User Charging Config Message";
+		case msgID_roadUserChargingReportMessage: return "DSRC Road User Charging Report Message";
+		case msgID_trafficLightStatusMessage: return "DSRC Traffic Light Status Message";
 		default: break;
 	}
 

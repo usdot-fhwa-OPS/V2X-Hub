@@ -44,6 +44,9 @@
 #include <tmx/j2735_messages/testMessage04.hpp>
 #include <tmx/j2735_messages/testMessage05.hpp>
 #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
+#if SAEJ2735_SPEC >= 2024
+#include <tmx/j2735_messages/RoadSafetyMessage.hpp>
+#endif
 
 namespace tmx {
 namespace messages {
@@ -65,6 +68,9 @@ using message_types = message_type_list<
 		PdmMessage,
 #if SAEJ2735_SPEC < 2016
 		PmmMessage,
+#endif
+#if SAEJ2735_SPEC >= 2024
+		RsmMessage,
 #endif
 		PsmMessage,
 		PvdMessage,
@@ -190,6 +196,9 @@ public:
 			add_allocator_to_maps<PdmMessage>();
 #if SAEJ2735_SPEC < 2016
 			add_allocator_to_maps<PmmMessage>();
+#endif
+#if SAEJ2735_SPEC >= 2024
+			add_allocator_to_maps<RsmMessage>();
 #endif
 			add_allocator_to_maps<PvdMessage>();
 			add_allocator_to_maps<PsmMessage>();
