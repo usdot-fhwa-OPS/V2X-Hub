@@ -636,47 +636,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageLaneClosure) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
@@ -858,47 +824,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageReduceSpeed) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
@@ -1144,47 +1076,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageDynamicInfo) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
@@ -1381,47 +1279,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageIncident) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
@@ -1612,47 +1476,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageCurve) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
@@ -1859,47 +1689,13 @@ TEST(J2735MessageTest, EncodeRoadSafetyMessageSituation) {
 	auto eventID = (EventIdentifier_t*) calloc(1, sizeof(EventIdentifier_t));
 	eventID->operatorID.present = RoadAuthorityID_PR_fullRdAuthID;
 
-	// Enter Road Authority OID via buffer
-	std::string oid_text = "1.0.15628.4.1.17.1";
-	std::vector<uint32_t> oid;
-	std::vector<uint8_t> buffer;
-    std::stringstream ss_oid;
-	std::string item;
-	ss_oid<<oid_text;
-
-    while (std::getline(ss_oid, item, '.')) {
-        oid.push_back(static_cast<uint32_t>(std::stoul(item)));
-       }
-
-    // First byte is (first value * 40) + second value for OIDs of the form x.x...
-    if (oid.size() >= 2) {
-        buffer.push_back(static_cast<uint8_t>(oid[0] * 40 + oid[1]));
-    } else {
-        std::cout << "OID must have at least two components";
-    }
-
-    // Encode remaining values with Base 128 encoding
-    for (size_t i = 2; i < oid.size(); ++i) {
-        uint32_t value = oid[i];
-        if (value == 0) {
-            buffer.push_back(0);
-        } else {
-            std::vector<uint8_t> temp;
-            while (value > 0) {
-                temp.push_back((value & 0x7F) | 0x80);  // Take the lower 7 bits, set the MSB
-                value >>= 7;
-            }
-            temp[0] &= 0x7F;  // Clear the MSB of the last byte
-            for (auto it = temp.rbegin(); it != temp.rend(); ++it) {
-                buffer.push_back(*it);
-            }
-        }
-    }
-
-    uint8_t* my_bytes_oid = new uint8_t[buffer.size()];
-    std::copy(buffer.begin(), buffer.end(), my_bytes_oid);
-	eventID->operatorID.choice.fullRdAuthID.buf = my_bytes_oid;
-	eventID->operatorID.choice.fullRdAuthID.size = sizeof(my_bytes_oid);
+	// Road Authority OID
+	uint32_t oid[] = {1,0,15628,4,1,17,1,0};
+	int success = OBJECT_IDENTIFIER_set_arcs(&(eventID->operatorID.choice.fullRdAuthID), oid, sizeof(oid)/sizeof(oid[0]));
+	if (success != 0) {
+		std::cout << "Failed to set OID arcs" << std::endl;
+		GTEST_FAIL();
+	}
 	uint8_t  my_bytes_uid[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	eventID->uniqueID.buf = my_bytes_uid;
 	eventID->uniqueID.size = sizeof(my_bytes_uid);
