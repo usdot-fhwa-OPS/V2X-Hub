@@ -12,7 +12,11 @@
 #define ABBR_SRM 2000
 
 #define IDCHECKLIMIT 60
-
+#if SAEJ2735_SPEC >= 2024
+typedef Common_Longitude_t Longitude_t;
+typedef Common_Latitude_t Latitude_t;
+typedef Common_Elevation_t Elevation_t;
+#endif
 using namespace std;
 using namespace boost::asio;
 using namespace tmx;

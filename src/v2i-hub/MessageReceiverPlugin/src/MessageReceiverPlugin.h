@@ -30,7 +30,6 @@
 #include <BsmConverter.h>
 #include <LocationMessage.h>
 
-
 #include <asn_application.h>
 #include <boost/any.hpp>
 #include <tmx/TmxApiMessages.h>
