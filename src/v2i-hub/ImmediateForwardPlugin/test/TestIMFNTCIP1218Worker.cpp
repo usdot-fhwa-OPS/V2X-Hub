@@ -156,7 +156,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_2.size(), 1);
     EXPECT_EQ(requests_2[0].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
     EXPECT_EQ(requests_2[0].type, 'x');
-    EXPECT_EQ(requests_2[0].value, "FE");
+    EXPECT_EQ(requests_2[0].value, "FFFF");
  
 
 }
