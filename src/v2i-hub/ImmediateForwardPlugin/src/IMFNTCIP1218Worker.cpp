@@ -69,7 +69,7 @@ namespace ImmediateForward {
             snmp_request payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
-                "FE"
+                "FFFF"
             };
             snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
@@ -100,9 +100,6 @@ namespace ImmediateForward {
             // Add message to table with index
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
 
-            // TODO : Yunex controller returns Bad Value SNMP error unless we have separate command to set payload to FE
-            std::vector reqs {payload};
-            client->process_snmp_set_requests(reqs);
             // Increment index
             curIndex++;
         }
