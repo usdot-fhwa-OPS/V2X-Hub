@@ -196,7 +196,7 @@ namespace FLIRCameraDriverPlugin
         try {
             // Declare initial null and J2735 default values if not provided by FLIR.
             int angle = 0;
-            float rawAlpha = 0.0f;
+            float ned_heading = 0.0f;
             int alpha = 28800; // Default for J2735 unavailable DE_Angle
             std::string lat = "";
             std::string lon = "";
@@ -222,13 +222,14 @@ namespace FLIRCameraDriverPlugin
                     // Angle only reported in whole number increments, so int is fine
                     angle = std::stoi(it.second.get_child("angle").data());
                     // Convert camera reference frame angle
-                    rawAlpha = cameraRotation_ - static_cast<float>(angle) - 270.0f;
-                    if (rawAlpha < 0)
+                    // Add camera rotation angle and subtract 90 since FLIR camera interprets camera direction 
+                    // as 90 degrees
+                    ned_heading = static_cast<float>(angle) + cameraRotation_- 90.0f;
+                    if (ned_heading < 0)
                     {
-                        rawAlpha = std::fmod(rawAlpha, 360.0f) + 360.0f;
+                        ned_heading = std::fmod(ned_heading, 360.0f) + 360.0f;
                     }
-                    //divide by 0.0125 for J2735 format
-                    alpha = static_cast<int>(std::round(rawAlpha / 0.0125f));
+                    
                 }
     
                 // Parse ID
@@ -294,9 +295,9 @@ namespace FLIRCameraDriverPlugin
                 std::lock_guard<mutex> lock(_msgLock);
                 tmx::messages::SensorDetectedObject obj;
                 obj.set_timestamp(timestamp);
-                obj.set_objectId(std::stoi(idResult));
+                obj.set_objectId(std::stoi(objID));
                 obj.set_type("PEDESTRIAN");
-                obj.set_sensorId(hostString_);
+                obj.set_sensorId(sensorId);
                 obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
                 //obj.set_timestamp() TODO :Setup method to convert date time to epoch time
                 obj.set_wgs84_position( tmx::messages::WGS84Position(std::stod(lat), std::stod(lon), 0.0));
@@ -342,53 +343,38 @@ namespace FLIRCameraDriverPlugin
         return msgQueue;
     }
 
-    long FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
+    void FLIRWebSockAsyncClnSession::clearMsgQueue()
     {
-        std::string delimiter1 = ".";
-        std::string delimiter2 = "-";
-        std::string delimiter3 = "T";
-        std::string delimiter4 = ":";  
+        std::lock_guard<mutex> lock(_msgLock);
+        msgQueue = std::queue<tmx::messages::SensorDetectedObject>();
+    }
 
-        std::string year = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
-        year.erase(0, std::min(year.find_first_not_of('0'), year.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
+    uint64_t FLIRWebSockAsyncClnSession::timeStringParser(string dateTimeStr) const
+    {
+        std::regex re(R"((\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d+)([+-])(\d{2}):(\d{2}))");
+        std::smatch match;
 
-        std::string month = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
-        month.erase(0, std::min(month.find_first_not_of('0'), month.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter2) + delimiter2.length());
+        if (!std::regex_match(dateTimeStr, match, re)) {
+            throw std::invalid_argument("Invalid datetime format");
+        }
 
-        std::string day = dateTimeStr.substr(0, dateTimeStr.find(delimiter3));
-        day.erase(0, std::min(day.find_first_not_of('0'), day.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter3) + delimiter3.length());
+        std::tm t = {};
+        t.tm_year = std::stoi(match[1]) - 1900;
+        t.tm_mon  = std::stoi(match[2]) - 1;
+        t.tm_mday = std::stoi(match[3]);
+        t.tm_hour = std::stoi(match[4]);
+        t.tm_min  = std::stoi(match[5]);
+        t.tm_sec  = std::stoi(match[6]);
 
-        std::string hour = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
-        hour.erase(0, std::min(hour.find_first_not_of('0'), hour.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
-
-        std::string mins = dateTimeStr.substr(0, dateTimeStr.find(delimiter4));
-        mins.erase(0, std::min(mins.find_first_not_of('0'), mins.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter4) + delimiter4.length());
-
-        std::string sec = dateTimeStr.substr(0, dateTimeStr.find(delimiter1));
-        sec.erase(0, std::min(sec.find_first_not_of('0'), sec.size()-1));
-        dateTimeStr.erase(0, dateTimeStr.find(delimiter1) + delimiter1.length());
-
-        std::string milliseconds = dateTimeStr.substr(0, dateTimeStr.find(delimiter2));
-        milliseconds.erase(0, std::min(milliseconds.find_first_not_of('0'), milliseconds.size()-1));
-  
-        int millisecondsTotal = (std::stoi(sec) * 1000) + std::stoi(milliseconds);    
-        std::tm t{};
-        t.tm_year = std::stoi(year); // Year since 1900
-        t.tm_mon = std::stoi(month);           // Month (0-11, so 4 is May)
-        t.tm_mday = std::stoi(day);          // Day of the month
-        t.tm_hour = std::stoi(hour);          // Hour of the day
-        t.tm_min = std::stoi(mins);           // Minute of the hour
-        t.tm_sec = std::stoi(sec);
+        int milliseconds = std::stoi(match[7]);
+        std::string offset_sign = match[8];
+        int offset_hours = std::stoi(match[9]);
+        int offset_minutes = std::stoi(match[10]);
 
         std::time_t time = std::mktime(&t);
         // Convert to epoch ms
-        long epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::from_time_t(time).time_since_epoch()).count() 
-            + std::chrono::milliseconds(std::stoi(milliseconds)).count();
+        uint64_t epochMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::from_time_t(time).time_since_epoch()).count() 
+            + std::chrono::milliseconds(milliseconds).count();
         
         return epochMs;
     }       

@@ -26,4 +26,4 @@ namespace FLIRCameraDriverPlugin
         return _configs;
     }
 
-} // namespace PedestrainPlugin
+}

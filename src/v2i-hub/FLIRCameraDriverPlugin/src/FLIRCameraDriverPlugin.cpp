@@ -86,6 +86,7 @@ void FLIRCameraDriverPlugin::checkXML()
 					this->BroadcastMessage<tmx::messages::SensorDetectedObject>(message, _name, 0 , IvpMsgFlags_None);
 					currentMsgQueue.pop();
 				}
+				flirSession->clearMsgQueue();
 			}			
 		}
 		// Sleep for 10 milliseconds

@@ -22,6 +22,8 @@
 #include <ctime>
 #include <cmath>
 #include <atomic>
+#include <regex>
+
 
 #include <SensorDetectedObject.h>
 
@@ -138,13 +140,17 @@ namespace FLIRCameraDriverPlugin
      * @return The message queue.
      */
     std::queue<tmx::messages::SensorDetectedObject> getMsgQueue();
+    /**
+     * @brief Clears the message queue
+     */
+    void clearMsgQueue();
 
     /**
      * @brief Parses the datetime string that the camera returns into a vector containing each component
      * @param datetime string from camera 
      * @return Vector with all components 
      */
-    long timeStringParser(std::string dateTimeStr) const;
+    uint64_t timeStringParser(std::string dateTimeStr) const;
 
     /**
      * @brief Handles messages of type "Subscription" received from the FLIR camera
