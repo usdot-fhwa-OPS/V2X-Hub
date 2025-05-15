@@ -195,21 +195,20 @@ namespace FLIRCameraDriverPlugin
     {
         try {
             // Declare initial null and J2735 default values if not provided by FLIR.
-            int angle = 0;
-            float ned_heading = 0.0f;
-            int alpha = 28800; // Default for J2735 unavailable DE_Angle
-            std::string lat = "";
-            std::string lon = "";
-            std::string fixedLat = "";
-            std::string fixedLon = "";
-            int speed = 8191; // Default for unavailable DE_Speed and DE_Velocity
+            double angle = 0;
+            double ned_heading = 0.0;
+            double convertedCameraRotation =  360 - (cameraRotation_);
+
+            double lat = 0.0;
+            double lon = 0.0;
+            double speed = 0.0;
+            double velocityX = 0.0;
+            double velocityY = 0.0;
+            double offsetX = 0.0;
+            double offsetY = 0.0;
+            double correctOffsetX = 0.0;
+            double correctOffsetY = 0.0;
             int id = 0;
-            std::string infraId = "";
-            std::string idResult = "";
-            std::string objID = "";
-            std::string xOffset = ""; // Offset of detected track from FLIR position in m
-            std::string yOffset = "";
-            std::string detObjXmlStr;
     
             // Parse out seconds from datetime string
             long timestamp = timeStringParser(time); 
@@ -219,15 +218,22 @@ namespace FLIRCameraDriverPlugin
                 // Parse angle
                 if (!it.second.get_child("angle").data().empty())
                 {
-                    // Angle only reported in whole number increments, so int is fine
-                    angle = std::stoi(it.second.get_child("angle").data());
+                    // Angle is in degrees in camera coordinates
+                    angle = std::stod(it.second.get_child("angle").data());
                     // Convert camera reference frame angle
-                    // Add camera rotation angle and subtract 90 since FLIR camera interprets camera direction 
-                    // as 90 degrees
-                    ned_heading = static_cast<float>(angle) + cameraRotation_- 90.0f;
-                    if (ned_heading < 0)
+                    // Assume camera rotation is NED (negative from true north)
+                    // Convert to ENU (positive from true east)
+                    // +90 for considering angle from east, subtract 90 for FLIR camera axis rotation.
+                    // Subtract camera rotation from 360 since FLIR camera rotation is in NED and ENU is
+                    // opposite direction
+                    ned_heading = angle + convertedCameraRotation;
+                    if (ned_heading < 0 )
                     {
                         ned_heading = std::fmod(ned_heading, 360.0f) + 360.0f;
+                    }
+                    else if (ned_heading > 360)
+                    {
+                        ned_heading = std::fmod(ned_heading, 360.0f);
                     }
                     
                 }
@@ -242,70 +248,63 @@ namespace FLIRCameraDriverPlugin
                         id = id%65535;
                         PLOG(logWARNING) << "ID " << old_id << " out of range. Assigning new ID " << id;
                     }
-                    objID = std::to_string(id);
                 }
     
                 // Parse latitude
                 if (!it.second.get_child("latitude").data().empty())
                 {
-                    // Convert received lat/lon to J2735 lat/lon format
-                    lat = it.second.get_child("latitude").data();
-                    lat.erase(std::remove(lat.begin(), lat.end(), '.'), lat.end());
-                    lat.pop_back();
+                    // Latitude is in degrees
+                    lat = std::stod(it.second.get_child("latitude").data());
                 }
     
                 // Parse longitude
                 if (!it.second.get_child("longitude").data().empty())
                 {
-                    // Convert received lat/lon to J2735 lat/lon format
-                    lon = it.second.get_child("longitude").data();
-                    lon.erase(std::remove(lon.begin(), lon.end(), '.'), lon.end());
-                    lon.pop_back();
+                    // Longitude is in degrees
+                    lat = std::stod(it.second.get_child("longitude").data());
                 }
                 
                 if (!it.second.get_child("x").data().empty())
                 {
-                    // Convert x/y offset in m (FLIR) to 1/10 m (J2735)
-                    int xOffsetInt = std::round(std::stod(it.second.get_child("x").data())*10);
-                    // Convert received lat/lon to J2735 lat/lon format
-                    xOffset = std::to_string(xOffsetInt);
+                    // Offset in meters camera coordinates
+                    offsetX = std::stod(it.second.get_child("x").data());
+                    
+                    // Calculate ENU x offset using converted camera rotation
+                    correctOffsetX = offsetX * std::cos( convertedCameraRotation* M_PI / 180.0) -
+                        offsetY * std::sin(convertedCameraRotation * M_PI / 180.0);
                 }
                 if (!it.second.get_child("y").data().empty())
                 {
-                    // Convert x/y offset in m (FLIR) to 1/10 m (J2735)
-                    int yOffsetInt = std::round(std::stod(it.second.get_child("y").data())*10);
-                    yOffset = std::to_string(yOffsetInt);
+                    // Offset in meters camera coordinates
+                    int offsetY = std::stod(it.second.get_child("y").data());
+                    // Calculate ENU y offset using converted camera rotation
+                    correctOffsetY = offsetX * std::sin( convertedCameraRotation* M_PI / 180.0) +
+                        offsetY * std::cos(convertedCameraRotation * M_PI / 180.0);
                 }
-    
+
     
                 // Parse speed
                 if (!it.second.get_child("speed").data().empty())
                 {
-                    // Speed from the FLIR camera is reported in m/s
-                    // Convert to units of 0.02 m/s for J2735 Speed and Velocity format
-                    float rawSpeed = std::stof(it.second.get_child("speed").data());
-                    speed = static_cast<int>(std::round(rawSpeed / 0.02f));
+                    // Speed is in m/s
+                    speed = std::stod(it.second.get_child("speed").data());
+                    // Get velocity from speed and angle
+                    velocityX = speed * std::cos(ned_heading * M_PI / 180.0);
+                    velocityY = speed * std::sin(ned_heading * M_PI / 180.0);
                 }                  
     
-    
-    
-                PLOG(logINFO) << "Received FLIR camera data for pedestrian " << idResult << " at location: (" << xOffset << ", " << yOffset <<
-                              "), traveling at speed: " << speed << ", with heading: " << alpha << " degrees";
-    
-                std::lock_guard<mutex> lock(_msgLock);
                 tmx::messages::SensorDetectedObject obj;
                 obj.set_timestamp(timestamp);
-                obj.set_objectId(std::stoi(objID));
+                obj.set_objectId(id);
                 obj.set_type("PEDESTRIAN");
                 obj.set_sensorId(sensorId);
                 obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
-                //obj.set_timestamp() TODO :Setup method to convert date time to epoch time
-                obj.set_wgs84_position( tmx::messages::WGS84Position(std::stod(lat), std::stod(lon), 0.0));
-                obj.set_position(tmx::messages::Position(std::stod(xOffset), std::stod(yOffset), 0.0));
-                // TODO Convert angle to orientation
-                obj.set_orientation(tmx::messages::Orientation(0.0, 0.0, 0.0));
-                // TODO Convert angle and speed to velocity
-                obj.set_velocity(tmx::messages::Velocity(0.0, 0.0, 0.0));
+                obj.set_wgs84_position( tmx::messages::WGS84Position(lat, lon, 0.0));
+                obj.set_position(tmx::messages::Position(correctOffsetX, correctOffsetY, 0.0));
+                // Convert angle to orientation
+                obj.set_orientation(tmx::messages::Orientation(std::cos(ned_heading * M_PI / 180.0), std::sin(ned_heading * M_PI / 180.0), 0.0));
+                // Convert angle and speed to velocity
+                obj.set_velocity(tmx::messages::Velocity(velocityX, velocityY, 0.0));
                 // Average pedestrian size standing is 0.5m x 0.6m (https://www.fhwa.dot.gov/publications/research/safety/pedbike/05085/chapt8.cfm)
                 obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
                 // TODO Convert sensor position accuracy to covariance
@@ -317,6 +316,8 @@ namespace FLIRCameraDriverPlugin
                 // TODO Convert heading accuracy to covariance
                 std::vector<std::vector< tmx::messages::Covariance>> orientationCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
                 obj.set_orientationCovariance(orientationCov);
+                // Checkout lock to modify queue
+                std::lock_guard<mutex> lock(_msgLock);
                 // Add detection to queue
                 msgQueue.push(obj);
             }
