@@ -88,7 +88,6 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     messageConfigs.push_back(messageConfig);
 
     std::vector<snmp_request> requests_1;
-    std::vector<snmp_request> requests_2;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).
         WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
     // Expect these snmpRequests to be called
