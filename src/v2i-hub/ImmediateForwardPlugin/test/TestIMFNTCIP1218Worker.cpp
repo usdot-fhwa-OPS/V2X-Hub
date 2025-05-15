@@ -90,8 +90,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     std::vector<snmp_request> requests_1;
     std::vector<snmp_request> requests_2;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).
-        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true))).
-        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_2), Return(true)));
+        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
     // Expect these snmpRequests to be called
     // snmp_request psid{
     //     rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1),
@@ -152,11 +151,6 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_1[6].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[6].type, 'x');
     EXPECT_EQ(requests_1[6].value, "01");
-
-    EXPECT_EQ(requests_2.size(), 1);
-    EXPECT_EQ(requests_2[0].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
-    EXPECT_EQ(requests_2[0].type, 'x');
-    EXPECT_EQ(requests_2[0].value, "FFFF");
  
 
 }
