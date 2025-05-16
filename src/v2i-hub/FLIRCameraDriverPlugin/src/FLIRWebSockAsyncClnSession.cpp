@@ -297,7 +297,7 @@ namespace FLIRCameraDriverPlugin
                 obj.set_timestamp(timestamp);
                 obj.set_objectId(id);
                 obj.set_type("PEDESTRIAN");
-                obj.set_sensorId(sensorId);
+                obj.set_sensorId(cameraViewName_);
                 obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
                 obj.set_wgs84_position( tmx::messages::WGS84Position(lat, lon, 0.0));
                 obj.set_position(tmx::messages::Position(correctOffsetX, correctOffsetY, 0.0));
@@ -309,12 +309,21 @@ namespace FLIRCameraDriverPlugin
                 obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
                 // TODO Convert sensor position accuracy to covariance
                 std::vector<std::vector< tmx::messages::Covariance>> positionCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
+                positionCov[0][0] = tmx::messages::Covariance(0.5); // x
+                positionCov[1][1] = tmx::messages::Covariance(0.5); // y
+                positionCov[2][2] = tmx::messages::Covariance(0.5); // z
                 obj.set_positionCovariance(positionCov);
                 // TODO Convert sensor speed and heading accuracy to covariance
                 std::vector<std::vector< tmx::messages::Covariance>> velocityCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
+                velocityCov[0][0] = tmx::messages::Covariance(1); // x
+                velocityCov[1][1] = tmx::messages::Covariance(1); // y
+                velocityCov[2][2] = tmx::messages::Covariance(1); // z
                 obj.set_velocityCovariance(velocityCov);
                 // TODO Convert heading accuracy to covariance
                 std::vector<std::vector< tmx::messages::Covariance>> orientationCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
+                orientationCov[0][0] = tmx::messages::Covariance(5); // x
+                orientationCov[1][1] = tmx::messages::Covariance(5); // y
+                orientationCov[2][2] = tmx::messages::Covariance(5); // z
                 obj.set_orientationCovariance(orientationCov);
                 // Checkout lock to modify queue
                 std::lock_guard<mutex> lock(_msgLock);
