@@ -1,4 +1,4 @@
-#include "include/FLIRConfigurations.hpp"
+#include "FLIRConfigurations.hpp"
 
 namespace FLIRCameraDriverPlugin
 {

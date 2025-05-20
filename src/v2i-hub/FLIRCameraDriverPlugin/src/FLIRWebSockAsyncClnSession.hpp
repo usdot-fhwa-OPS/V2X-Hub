@@ -19,13 +19,11 @@
 #include <string>
 #include <algorithm>
 #include <queue>
-#include <ctime>
-#include <cmath>
 #include <atomic>
-#include <regex>
-
 
 #include <SensorDetectedObject.h>
+
+#include "FLIRPedestrianPresenceTrackingProcessor.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -146,13 +144,6 @@ namespace FLIRCameraDriverPlugin
     void clearMsgQueue();
 
     /**
-     * @brief Parses the datetime string that the camera returns into a vector containing each component
-     * @param datetime string from camera 
-     * @return Vector with all components 
-     */
-    uint64_t timeStringParser(std::string dateTimeStr) const;
-
-    /**
      * @brief Handles messages of type "Subscription" received from the FLIR camera
      * @param pr Property tree containing the parsed JSON message
      */
@@ -163,14 +154,6 @@ namespace FLIRCameraDriverPlugin
      * @param pr Property tree containing the parsed JSON message
      */
     void handleDataMessage(const pt::ptree& pr);
-
-    /**
-     * @brief Processes pedestrian presence tracking data, generates appropriate XML messages (PSM, SDSM, TIM), 
-     * and pushes them to a message queue
-     * @param pr Property tree containing the parsed JSON data
-     * @param time Timestamp string associated with received data
-     */
-    void processPedestrianData(const pt::ptree& pr, const std::string& time);
     /**
      * @brief Get the latest status whether a pedestrain exists at a crosswalk
      */
