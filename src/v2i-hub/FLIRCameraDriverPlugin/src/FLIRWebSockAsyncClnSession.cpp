@@ -213,15 +213,6 @@ namespace FLIRCameraDriverPlugin
         msgQueue = std::queue<tmx::messages::SensorDetectedObject>();
     }
 
-    bool FLIRWebSockAsyncClnSession::isPedestrainPresent() const{
-        return isPedestrainPresent_.load();
-    }
-
-    void FLIRWebSockAsyncClnSession::setPedestrainPresence(bool isPresent){
-        PLOG(logDEBUG) << "Set pedestrain presence: " << isPresent << ", region/view: " <<cameraViewName_ << std::endl;
-        isPedestrainPresent_.store(isPresent);
-    }
-
     bool FLIRWebSockAsyncClnSession::isHealthy() const{
         return isHealthy_.load();
     }

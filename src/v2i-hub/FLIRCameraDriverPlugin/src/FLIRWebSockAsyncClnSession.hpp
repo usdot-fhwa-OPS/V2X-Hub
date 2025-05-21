@@ -55,7 +55,6 @@ namespace FLIRCameraDriverPlugin
 
         std::mutex _msgLock;
         int msgCount = 0;
-        std::atomic<int> startYear_;
 
         //Health status of the FLIR camera
         std::atomic<bool> isHealthy_;
@@ -63,8 +62,6 @@ namespace FLIRCameraDriverPlugin
         tmx::utils::WGS84Point wgs84_position;
         // The camera rotation angle in degrees from East
         double cameraRotation_;
-        double positionVariance_ = 0.0;
-        double velocityVariance_ = 0.0;
 
 
 
@@ -154,24 +151,6 @@ namespace FLIRCameraDriverPlugin
      * @param pr Property tree containing the parsed JSON message
      */
     void handleDataMessage(const pt::ptree& pr);
-    /**
-     * @brief Get the latest status whether a pedestrain exists at a crosswalk
-     */
-    bool isPedestrainPresent() const;
-    /**
-     * @brief Update the pedestrain status to indicator whether there is a pedestrain at a crosswalk
-     * @param isPresent latest pedestian status to update
-     */
-    void setPedestrainPresence(bool isPresent);
-
-    /**
-     * @brief Get the minute of the year
-     */
-    int getMoy() const;
-    /**
-     * @brief Get the start year of the current year
-     */
-    int getStartYear() const;
 
     /**
      * @brief Get the health status of the FLIR camera
