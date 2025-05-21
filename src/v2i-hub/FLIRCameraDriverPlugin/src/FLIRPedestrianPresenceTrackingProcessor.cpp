@@ -213,6 +213,7 @@ namespace FLIRCameraDriverPlugin
         if (offset_sign == "-") {
             offset_seconds *= -1;
         }
+        t.tm_gmtoff = offset_seconds;
 
         // Convert to time_t
         auto time_point = std::chrono::system_clock::from_time_t(std::mktime(&t));
