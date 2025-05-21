@@ -43,11 +43,16 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 
 ## Design
+![Alt text](docs/FLIRCameraDriverArchitecture.drawio.png)
 
+Above is a diagram illustrates how the FLIR Camera Driver Plugin is used to create Sensor Data Sharing Messages (SDSM) for Cooperative Perception.
 
 ### Messages
 
 **SensorDetectedObject**: V2X Hub message that contains detection data. Can be used to generate other messages like SDSM.
+
+**SensorDataSharingMessage**: V2X Cooperative Perception message defined in the J3224 standard.
+
 
 ## Functionality Testing
 In the `./scripts/` directory in this plugin we have created a simply python script that mocks the websocket hosted by the FLIR Camera for pedestrian presence tracking. To confirm plugin functionality this script can be used to mock the output of the FLIR Camera
