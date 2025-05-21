@@ -29,9 +29,9 @@ namespace FLIRCameraDriverPlugin{
         //Host HTTP header during the WebSocket handshake
         string apiSubscription;
         //Measured camera rotation from true north (in degrees) used for heading conversion
-        double FLIRCameraRotation;
+        double cameraRotation;
         //A brief name to describe FLIR field of view which defines a region to detect pedestrains in
-        string FLIRCameraViewName;
+        string sensorId;
     };
     
     class FLIRConfigurations{

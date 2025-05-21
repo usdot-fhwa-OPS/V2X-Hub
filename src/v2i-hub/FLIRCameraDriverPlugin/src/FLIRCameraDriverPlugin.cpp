@@ -29,7 +29,7 @@ namespace FLIRCameraDriverPlugin
 		// Create a session and run it
 		auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 		// Launch the asynchronous operation
-		flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.FLIRCameraRotation, config.FLIRCameraViewName.c_str(), config.apiSubscription.c_str());	
+		flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.cameraRotation, config.sensorId.c_str(), config.apiSubscription.c_str());	
 		flirSessions.push_back(flirSession);
 		PLOG(logDEBUG) << "Successfully running the I/O service.";	
 		runningWebSocket = true;
