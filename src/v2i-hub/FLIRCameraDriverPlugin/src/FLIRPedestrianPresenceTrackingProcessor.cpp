@@ -40,6 +40,9 @@ namespace FLIRCameraDriverPlugin
             }
             
         }
+        else {
+            throw FLIRCameraDriverException("angle not found in JSON");
+        }
 
         // Parse ID
         if (!pr.get_child("iD").data().empty()) 
@@ -52,12 +55,18 @@ namespace FLIRCameraDriverPlugin
                 FILE_LOG(tmx::utils::LogLevel::logWARNING) << "ID " << old_id << " out of range. Assigning new ID " << id;
             }
         }
+        else {
+            throw FLIRCameraDriverException("iD not found in JSON");
+        }
 
         // Parse latitude
         if (!pr.get_child("latitude").data().empty())
         {
             // Latitude is in degrees
             lat = std::stod(pr.get_child("latitude").data());
+        } 
+        else {
+            throw FLIRCameraDriverException("latitude not found in JSON");
         }
 
         // Parse longitude
@@ -65,6 +74,9 @@ namespace FLIRCameraDriverPlugin
         {
             // Longitude is in degrees
             lon = std::stod(pr.get_child("longitude").data());
+        }
+        else {
+            throw FLIRCameraDriverException("longitude not found in JSON");
         }
         
         if (!pr.get_child("x").data().empty())
@@ -74,11 +86,17 @@ namespace FLIRCameraDriverPlugin
             
             
         }
+        else {
+            throw FLIRCameraDriverException("x not found in JSON");
+        }
         if (!pr.get_child("y").data().empty())
         {
             // Offset in meters camera coordinates
             offsetY = std::stod(pr.get_child("y").data());
             
+        }
+        else {
+            throw FLIRCameraDriverException("y not found in JSON");
         }
         // Calculate ENU y offset using converted camera rotation
         correctOffsetY = offsetX * std::sin( convertedCameraRotation* M_PI / 180.0) +
@@ -94,6 +112,9 @@ namespace FLIRCameraDriverPlugin
             // Get velocity from speed and angle
             velocityX = speed * std::cos(ned_heading * M_PI / 180.0);
             velocityY = speed * std::sin(ned_heading * M_PI / 180.0);
+        }
+        else {
+            throw FLIRCameraDriverException("speed not found in JSON");
         }                  
 
         tmx::messages::SensorDetectedObject obj;
@@ -150,10 +171,14 @@ namespace FLIRCameraDriverPlugin
         uint64_t timestamp = timeStringParser(pr.get_child("time").data());
         for (const auto& it : pr.get_child("track"))
         {
-            
+            try {
             // Process the pedestrian presence tracking object
-            tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(it.second, timestamp, cameraRotation, cameraViewName);
-            msgQueue.push(obj);
+                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(it.second, timestamp, cameraRotation, cameraViewName);
+                msgQueue.push(obj);
+            } 
+            catch (const FLIRCameraDriverException& e) {
+                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track! Error processing pedestrian presence tracking object: " << e.what();
+            }
             
         }
         return msgQueue;
