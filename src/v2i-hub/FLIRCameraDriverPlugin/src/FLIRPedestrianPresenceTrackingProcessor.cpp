@@ -111,16 +111,33 @@ namespace FLIRCameraDriverPlugin
         obj.set_velocity(tmx::messages::Velocity(velocityX, velocityY, 0.0));
         // Average pedestrian size standing is 0.5m x 0.6m (https://www.fhwa.dot.gov/publications/research/safety/pedbike/05085/chapt8.cfm)
         obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
-        // TODO Convert sensor position accuracy to covariance
+        // FLIR Sensor position accuracy is :
+        // Distance , Accuracy
+        // 10m , +/- 0.010m
+        // 20m , +/- 0.023m
+        // 40m , +/- 0.045m
+        // Line of best fit is 0.0115 * distance - 0.015
+        double posXAccuracy = std::abs(0.0115* std::abs(correctOffsetX) - 0.015);
+        double posYAccuracy = std::abs(0.0115* std::abs(correctOffsetY) - 0.015);
+        // Convert Accuracy to variance
+        // Variance is the square of the standard deviation
+        // Considering normal distribution +/- 2 std deviations is 95% of the data
+        double varianceX =  std::pow(posXAccuracy/2, 2);
+        double varianceY =  std::pow(posYAccuracy/2, 2);
         std::vector<std::vector< tmx::messages::Covariance>> positionCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
-        positionCov[0][0] = tmx::messages::Covariance(0.5); // x
-        positionCov[1][1] = tmx::messages::Covariance(0.5); // y
-        positionCov[2][2] = tmx::messages::Covariance(0.5); // z
+        positionCov[0][0] = tmx::messages::Covariance(varianceX); // x
+        positionCov[1][1] = tmx::messages::Covariance(varianceY); // y
+        positionCov[2][2] = tmx::messages::Covariance(0); // z
         obj.set_positionCovariance(positionCov);
-        // TODO Convert sensor speed and heading accuracy to covariance
+        // FLIR Documentation says speed accuracy is +/- 10% of the speed
+        double speedAccuracy = 0.1 * speed;
+        // Convert Accuracy to variance
+        // Variance is the square of the standard deviation
+        // Considering normal distribution +/- 2 std deviations is 95% of the data
+        double varianceSpeed =  std::pow(speedAccuracy/2, 2);
         std::vector<std::vector< tmx::messages::Covariance>> velocityCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
-        velocityCov[0][0] = tmx::messages::Covariance(1); // x
-        velocityCov[1][1] = tmx::messages::Covariance(1); // y
+        velocityCov[0][0] = tmx::messages::Covariance(varianceSpeed); // x
+        velocityCov[1][1] = tmx::messages::Covariance(varianceSpeed); // y
         velocityCov[2][2] = tmx::messages::Covariance(1); // z
         obj.set_velocityCovariance(velocityCov);
 
