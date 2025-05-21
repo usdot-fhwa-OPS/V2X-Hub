@@ -101,3 +101,43 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
  
     EXPECT_NEAR(obj.get_timestamp(), 1747763255092, 1);
 }
+
+TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrackingObjectsTimestamp)
+{
+    std::string json = R"(
+            {
+            "dataNumber": "203438",
+            "messageType": "Data",
+            "time": "2025-05-20T19:56:43.461-04:00",
+            "track": [
+                {
+                "angle": "52.00000000",
+                "class": "Pedestrian",
+                "iD": "2923009",
+                "latitude": "38.95504334",
+                "longitude": "-77.14948274",
+                "speed": "7.70469952",
+                "x": "0.46391721",
+                "y": "31.70375721"
+                }
+            ],
+            "type": "PedestrianPresenceTracking"
+            }
+        )";
+    std::stringstream ss(json);
+    boost::property_tree::ptree pr;
+    try {
+        boost::property_tree::read_json(ss, pr);
+    } catch(const boost::property_tree::ptree_error &e) {
+        GTEST_FAIL() << "Error converting json to p tree: " << e.what();
+    }
+    double cameraRotation = 90.0;
+    string cameraViewName = "North";
+
+    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName);
+
+    EXPECT_EQ(msgQueue.size(), 1);
+    tmx::messages::SensorDetectedObject obj = msgQueue.front();
+ 
+    EXPECT_NEAR(obj.get_timestamp(), 1747785403461, 1);
+}

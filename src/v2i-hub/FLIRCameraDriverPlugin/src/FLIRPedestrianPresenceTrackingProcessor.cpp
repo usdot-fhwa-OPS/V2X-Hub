@@ -158,7 +158,9 @@ namespace FLIRCameraDriverPlugin
         t.tm_hour = std::stoi(match[4]);
         t.tm_min  = std::stoi(match[5]);
         t.tm_sec  = std::stoi(match[6]);
-
+        // Daylight Saving Time flag. The value is positive if DST is in effect, zero if not and negative if no information is available.
+        // Setting to -1 will allow mktime to determine if DST is in effect.
+        t.tm_isdst = -1;
         int milliseconds = std::stoi(match[7]);
         std::string offset_sign = match[8];
         int offset_hours = std::stoi(match[9]);
@@ -173,7 +175,7 @@ namespace FLIRCameraDriverPlugin
         // Convert to time_t
         auto time_point = std::chrono::system_clock::from_time_t(std::mktime(&t));
         // Add milliseconds to the time_point and subtract UTC offset
-        auto utc_time_point = time_point + std::chrono::milliseconds(milliseconds) - std::chrono::seconds(offset_seconds);
+        auto utc_time_point = time_point + std::chrono::milliseconds(milliseconds);
 
         // Convert to milliseconds since epoch
         return std::chrono::duration_cast<std::chrono::milliseconds>(utc_time_point.time_since_epoch()).count();
