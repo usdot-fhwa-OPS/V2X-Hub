@@ -58,7 +58,7 @@ namespace FLIRCameraDriverPlugin
 		}
 	}
 
-	void FLIRCameraDriverPlugin::sendDetections()
+	__attribute__((noreturn)) void FLIRCameraDriverPlugin::sendDetections()
 	{
 		while (true)
 		{

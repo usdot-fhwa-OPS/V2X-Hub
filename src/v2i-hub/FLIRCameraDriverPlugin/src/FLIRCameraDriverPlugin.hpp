@@ -54,7 +54,7 @@ namespace FLIRCameraDriverPlugin
 			/**
 			 * @brief Loops over Websocket FLIR connections, checks for messages in the queue and sends them on the TMX message bus.
 			 */
-			void sendDetections();
+			__attribute__((noreturn)) void sendDetections();
 			
 		private:
 			
