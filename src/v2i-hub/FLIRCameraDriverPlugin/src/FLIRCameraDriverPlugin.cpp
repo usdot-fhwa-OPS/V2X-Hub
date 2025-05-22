@@ -29,7 +29,7 @@ namespace FLIRCameraDriverPlugin
 		// Create a session and run it
 		auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
 		// Launch the asynchronous operation
-		flirSession->run(config.socketIp.c_str(), config.socketPort.c_str(), config.cameraRotation, config.sensorId.c_str(), config.apiSubscription.c_str());	
+		flirSession->run(config.socketIp, config.socketPort, config.cameraRotation, config.sensorId, config.apiSubscription);	
 		flirSessions.push_back(flirSession);
 		PLOG(logDEBUG) << "Successfully running the I/O service.";	
 		runningWebSocket = true;
@@ -47,7 +47,7 @@ namespace FLIRCameraDriverPlugin
 		{
 			PLOG(logDEBUG) << "Stopping WebSocket session";
 			beast::error_code ec;
-			for(auto& flirSession: flirSessions){
+			for(const auto &flirSession: flirSessions){
 				flirSession->on_close(ec);
 			}        
 			runningWebSocket = false;
@@ -69,7 +69,7 @@ namespace FLIRCameraDriverPlugin
 			else
 			{	
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
-				for(auto &flirSession: flirSessions)
+				for(const auto &flirSession: flirSessions)
 				{
 					// Retrieve the message queue in each session and send each one to be broadcast, then pop.
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
@@ -94,10 +94,7 @@ namespace FLIRCameraDriverPlugin
 
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
-		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);
-
-		
-		
+		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
 
 		if (!runningWebSocket)
 		{
