@@ -1,5 +1,18 @@
-
-
+/**
+ * Copyright (C) 2025 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
 #include "FLIRCameraDriverPlugin.hpp"
 
 using namespace tmx;
@@ -27,9 +40,15 @@ namespace FLIRCameraDriverPlugin
 		net::io_context ioc;
 
 		// Create a session and run it
-		auto flirSession = std::make_shared<FLIRWebSockAsyncClnSession>(ioc);
+		auto flirSession = std::make_shared<FLIRWebsockAsyncClnSession>(
+			ioc, 
+			config.socketIp, 
+			config.socketPort, 
+			config.cameraRotation, 
+			config.sensorId, 
+			config.apiSubscription);
 		// Launch the asynchronous operation
-		flirSession->run(config.socketIp, config.socketPort, config.cameraRotation, config.sensorId, config.apiSubscription);	
+		flirSession->run();	
 		flirSessions.push_back(flirSession);
 		PLOG(logDEBUG) << "Successfully running the I/O service.";	
 		runningWebSocket = true;

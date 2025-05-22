@@ -1,4 +1,19 @@
-#include "FLIRWebSockAsyncClnSession.hpp"
+/**
+ * Copyright (C) 2025 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+#include "FLIRWebsockAsyncClnSession.hpp"
 
 using namespace tmx::utils;
 using namespace std;
@@ -7,32 +22,26 @@ using namespace boost::property_tree;
 namespace FLIRCameraDriverPlugin
 {   
 
-    void FLIRWebSockAsyncClnSession::fail(beast::error_code ec, const std::string& what)
+    void FLIRWebsockAsyncClnSession::fail(beast::error_code ec, const std::string& what)
     {
         isHealthy_.store(false);
         PLOG(logERROR) << what << ": " << ec.message();
     }
 
-    void FLIRWebSockAsyncClnSession::run(const std::string &host, const std::string &port, double cameraRotation, const std::string &cameraViewName, const std::string &hostString)
+    void FLIRWebsockAsyncClnSession::run()
     {
 	    // Save these for later
-        host_ = host;
-        cameraRotation_ = cameraRotation;
-        cameraViewName_ = cameraViewName;
-        hostString_ = hostString;
-
-        PLOG(logDEBUG) << "Host: "<< host <<" ; port: "<< port << " ; host string: "<< hostString;
-
+        PLOG(logDEBUG) << "Starting FLIRWebsockAsyncClnSession at " << host_ << ":" << port_;
         // Look up the domain name
         resolver_.async_resolve(
-            host,
-            port,
+            host_,
+            port_,
             beast::bind_front_handler(
-                &FLIRWebSockAsyncClnSession::on_resolve,
+                &FLIRWebsockAsyncClnSession::on_resolve,
                 shared_from_this()));
     }
 
-    void FLIRWebSockAsyncClnSession::on_resolve(beast::error_code ec, tcp::resolver::results_type results)
+    void FLIRWebsockAsyncClnSession::on_resolve(beast::error_code ec, tcp::resolver::results_type results)
     {
         if(ec)
             return fail(ec, "resolve");
@@ -44,12 +53,12 @@ namespace FLIRCameraDriverPlugin
         beast::get_lowest_layer(ws_).async_connect(
             results,
             beast::bind_front_handler(
-                &FLIRWebSockAsyncClnSession::on_connect,
+                &FLIRWebsockAsyncClnSession::on_connect,
                  shared_from_this()));
      }
 
 
-    void FLIRWebSockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
+    void FLIRWebsockAsyncClnSession::on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep)
     {
         if(ec)
             return fail(ec, "connect");
@@ -76,16 +85,16 @@ namespace FLIRCameraDriverPlugin
         // Host HTTP header during the WebSocket handshake.
         // See https://tools.ietf.org/html/rfc7230#section-5.4
 
-        PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << hostString_;
+        PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << endpoint_;
 
         // Perform the websocket handshake
-        ws_.async_handshake(host_, hostString_,
+        ws_.async_handshake(host_, endpoint_,
             beast::bind_front_handler(
-                &FLIRWebSockAsyncClnSession::on_handshake,
+                &FLIRWebsockAsyncClnSession::on_handshake,
                 shared_from_this()));
     }
 
-    void FLIRWebSockAsyncClnSession::on_handshake(beast::error_code ec)
+    void FLIRWebsockAsyncClnSession::on_handshake(beast::error_code ec)
     {
         if(ec)
             return fail(ec, "handshake");
@@ -94,11 +103,11 @@ namespace FLIRCameraDriverPlugin
         ws_.async_write(
             net::buffer(pedPresenceTrackingReq),
             beast::bind_front_handler(
-                &FLIRWebSockAsyncClnSession::on_write,
+                &FLIRWebsockAsyncClnSession::on_write,
                 shared_from_this()));
     }
 
-    void FLIRWebSockAsyncClnSession::on_write(beast::error_code ec, std::size_t bytes_transferred)
+    void FLIRWebsockAsyncClnSession::on_write(beast::error_code ec, std::size_t bytes_transferred)
     {
         boost::ignore_unused(bytes_transferred);
 
@@ -110,11 +119,11 @@ namespace FLIRCameraDriverPlugin
         ws_.async_read(
             buffer_,
             beast::bind_front_handler(
-                &FLIRWebSockAsyncClnSession::on_read,
+                &FLIRWebsockAsyncClnSession::on_read,
                 shared_from_this()));
     }
 
-    void FLIRWebSockAsyncClnSession::on_read(beast::error_code ec, std::size_t bytes_transferred)
+    void FLIRWebsockAsyncClnSession::on_read(beast::error_code ec, std::size_t bytes_transferred)
     {
         boost::ignore_unused(bytes_transferred);
 
@@ -157,11 +166,11 @@ namespace FLIRCameraDriverPlugin
         ws_.async_read(
         buffer_,
         beast::bind_front_handler(
-            &FLIRWebSockAsyncClnSession::on_read,
+            &FLIRWebsockAsyncClnSession::on_read,
             shared_from_this()));
     }
 
-    void FLIRWebSockAsyncClnSession::handleSubscriptionMessage(const pt::ptree& pr) const
+    void FLIRWebsockAsyncClnSession::handleSubscriptionMessage(const pt::ptree& pr) const
     {
         /* Example FLIR subscription response json:
         Received:  {"messageType": "Subscription", "subscription": {"returnValue": "OK", "type": "Data"}}
@@ -170,7 +179,7 @@ namespace FLIRCameraDriverPlugin
         processSubscriptionMessage(pr);
     }
 
-    void FLIRWebSockAsyncClnSession::handleDataMessage(const pt::ptree& pr)
+    void FLIRWebsockAsyncClnSession::handleDataMessage(const pt::ptree& pr)
     {
         /* Example received pedestrian tracking data:
         {"dataNumber": "473085", "messageType": "Data", "time": "2022-04-20T15:25:51.001-04:00",
@@ -178,7 +187,7 @@ namespace FLIRCameraDriverPlugin
         "longitude": "-77.14920953", "speed": "1.41873741", "x": "0.09458912", "y": "14.80903757"}], "type": "PedestrianPresenceTracking"}
         */
        
-        auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, cameraViewName_);
+        auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, sensorId);
         std::scoped_lock lock{_msgLock};
         while( !newDetections.empty() )
         {
@@ -190,7 +199,7 @@ namespace FLIRCameraDriverPlugin
 
     }
 
-    void FLIRWebSockAsyncClnSession::on_close(beast::error_code ec)
+    void FLIRWebsockAsyncClnSession::on_close(beast::error_code ec)
     {
         if(ec)
             return fail(ec, "close");
@@ -201,19 +210,19 @@ namespace FLIRCameraDriverPlugin
         std::cout << beast::make_printable(buffer_.data()) << std::endl;
     }
 
-    std::queue<tmx::messages::SensorDetectedObject> FLIRWebSockAsyncClnSession::getMsgQueue()
+    std::queue<tmx::messages::SensorDetectedObject> FLIRWebsockAsyncClnSession::getMsgQueue()
     {
         std::scoped_lock lock{_msgLock};
         return msgQueue;
     }
 
-    void FLIRWebSockAsyncClnSession::clearMsgQueue()
+    void FLIRWebsockAsyncClnSession::clearMsgQueue()
     {
         std::scoped_lock lock{_msgLock};
         msgQueue = std::queue<tmx::messages::SensorDetectedObject>();
     }
 
-    bool FLIRWebSockAsyncClnSession::isHealthy() const{
+    bool FLIRWebsockAsyncClnSession::isHealthy() const{
         return isHealthy_.load();
     }
 }
