@@ -213,10 +213,11 @@ namespace FLIRCameraDriverPlugin
         if (offset_sign == "-") {
             offset_seconds *= -1;
         }
+        // Interpret the time as UTC to avoid environment-dependent behavior. Using std::mktime
+        // will consider local time zone of device, which may change behavior.
         std::time_t local_time_t = timegm(&t);
         // Account for timeoffset
         std::time_t utc_time_t = local_time_t - offset_seconds;
- 
         // Convert to time_point
         auto utc_time_point = std::chrono::system_clock::from_time_t(utc_time_t);
         // Add milliseconds to the time_point
