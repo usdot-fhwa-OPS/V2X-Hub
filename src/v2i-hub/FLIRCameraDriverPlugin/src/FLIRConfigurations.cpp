@@ -16,8 +16,8 @@ namespace FLIRCameraDriverPlugin
         istringstream iss(configsStr);
         configsTree.clear();
         pt::read_json(iss, configsTree);
-        for(const auto& treeElement: configsTree){
-            auto config = parseFLIRConfig(treeElement.second);
+        for(const auto& [key, value]: configsTree){
+            auto config = parseFLIRConfig(value);
             _configs.push_back(config);
         }     
     }

@@ -39,13 +39,6 @@ namespace FLIRCameraDriverPlugin
 			 */
 			void UpdateConfigSettings();
 			/**
-			 * @brief Overrides PluginClient OnConfigChanged(const char *key, const char *value) method
-			 * and calls UpdateConfigSettings() on each configuration change.
-			 * @param key string key of the configuration value that has changed.
-			 * @param value new value of the configuration that has changed.
-			 */
-			void OnConfigChanged(const char *key, const char *value) override;
-			/**
 			 * @brief Overrides PluginClient OnStateChange(IvpPluginState state) method.
 			 * @param state new state of the plugin.
 			 */
@@ -67,8 +60,6 @@ namespace FLIRCameraDriverPlugin
 			
 			std::mutex _cfgLock;
 			
-			uint16_t webport;
-			std::string webip; 
 			std::vector<std::shared_ptr<FLIRWebSockAsyncClnSession>> flirSessions;
 			std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 			bool runningWebSocket = false;

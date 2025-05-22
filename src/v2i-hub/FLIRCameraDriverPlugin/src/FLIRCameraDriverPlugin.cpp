@@ -121,11 +121,6 @@ namespace FLIRCameraDriverPlugin
 
 	}
 
-	void FLIRCameraDriverPlugin::OnConfigChanged(const char *key, const char *value)
-	{
-		PluginClientClockAware::OnConfigChanged(key, value);
-	}
-
 	void FLIRCameraDriverPlugin::OnStateChange(IvpPluginState state)
 	{
 		PluginClientClockAware::OnStateChange(state);

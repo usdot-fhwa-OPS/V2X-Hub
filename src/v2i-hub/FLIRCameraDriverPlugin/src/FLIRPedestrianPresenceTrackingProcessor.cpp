@@ -6,7 +6,7 @@ namespace FLIRCameraDriverPlugin
     {
         double angle = 0;
         double ned_heading = 0.0;
-        double convertedCameraRotation =  360 - (cameraRotation);
+        double convertedCameraRotation =  360 - cameraRotation;
 
         double lat = 0.0;
         double lon = 0.0;
@@ -169,11 +169,11 @@ namespace FLIRCameraDriverPlugin
     {
         std::queue<tmx::messages::SensorDetectedObject> msgQueue;
         uint64_t timestamp = timeStringParser(pr.get_child("time").data());
-        for (const auto& it : pr.get_child("track"))
+        for (const auto& [key, value] : pr.get_child("track"))
         {
             try {
             // Process the pedestrian presence tracking object
-                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(it.second, timestamp, cameraRotation, cameraViewName);
+                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation, cameraViewName);
                 msgQueue.push(obj);
             } 
             catch (const FLIRCameraDriverException& e) {

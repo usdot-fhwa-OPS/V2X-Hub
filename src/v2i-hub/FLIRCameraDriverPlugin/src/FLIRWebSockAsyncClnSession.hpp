@@ -49,12 +49,24 @@ namespace FLIRCameraDriverPlugin
          * This isPedestrainPresent indicator signify whether there is a pedestrain in that region or not.
         ***/
         std::atomic<bool> isPedestrainPresent_;
-        std::string pedPresenceTrackingReq = std::string("{\"messageType\":\"Subscription\", \"subscription\":{ \"type\":\"Data\", \"action\":\"Subscribe\", \"inclusions\":[{\"type\":\"PedestrianPresenceTracking\"}]}}");
+        std::string pedPresenceTrackingReq = R"(
+            {
+                "messageType": "Subscription",
+                "subscription": {
+                    "type": "Data",
+                    "action": "Subscribe",
+                    "inclusions": [
+                    {
+                        "type": "PedestrianPresenceTracking"
+                    }
+                    ]
+                }
+                }
+            )";
         std::string cameraViewName_;
         std::queue<tmx::messages::SensorDetectedObject> msgQueue;
 
         std::mutex _msgLock;
-        int msgCount = 0;
 
         //Health status of the FLIR camera
         std::atomic<bool> isHealthy_;

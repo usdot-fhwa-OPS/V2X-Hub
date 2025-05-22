@@ -179,7 +179,7 @@ namespace FLIRCameraDriverPlugin
         */
        
         auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, cameraViewName_);
-        std::lock_guard<mutex> lock(_msgLock);
+        std::scoped_lock lock{_msgLock};
         while( !newDetections.empty() )
         {
             auto obj = newDetections.front();
@@ -203,13 +203,13 @@ namespace FLIRCameraDriverPlugin
 
     std::queue<tmx::messages::SensorDetectedObject> FLIRWebSockAsyncClnSession::getMsgQueue()
     {
-        std::lock_guard<mutex> lock(_msgLock);
+        std::scoped_lock lock{_msgLock};
         return msgQueue;
     }
 
     void FLIRWebSockAsyncClnSession::clearMsgQueue()
     {
-        std::lock_guard<mutex> lock(_msgLock);
+        std::scoped_lock lock{_msgLock};
         msgQueue = std::queue<tmx::messages::SensorDetectedObject>();
     }
 
