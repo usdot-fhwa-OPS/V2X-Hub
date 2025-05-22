@@ -213,12 +213,14 @@ namespace FLIRCameraDriverPlugin
         if (offset_sign == "-") {
             offset_seconds *= -1;
         }
-        t.tm_gmtoff = offset_seconds;
-
-        // Convert to time_t
-        auto time_point = std::chrono::system_clock::from_time_t(std::mktime(&t));
-        // Add milliseconds to the time_point and subtract UTC offset
-        auto utc_time_point = time_point + std::chrono::milliseconds(milliseconds);
+        std::time_t local_time_t = timegm(&t);
+        // Account for timeoffset
+        std::time_t utc_time_t = local_time_t - offset_seconds;
+ 
+        // Convert to time_point
+        auto utc_time_point = std::chrono::system_clock::from_time_t(utc_time_t);
+        // Add milliseconds to the time_point
+        utc_time_point = utc_time_point + std::chrono::milliseconds(milliseconds);
 
         // Convert to milliseconds since epoch
         return std::chrono::duration_cast<std::chrono::milliseconds>(utc_time_point.time_since_epoch()).count();
