@@ -25,14 +25,14 @@ TEST(FLIRConfigurationsTest, parseFLIRConfigs)
                 {
                     "WebSocketHost": "127.0.0.1",
                     "WebSocketPort": "8080",
-                    "HostString": "api/subscription",
+                    "Endpoint": "api/subscription",
                     "CameraRotation": 90.0,
                     "SensorId": "North"
                 },
                 {
                     "WebSocketHost": "127.0.0.1",
                     "WebSocketPort": "8081",
-                    "HostString": "api/subscription",
+                    "Endpoint": "api/subscription",
                     "CameraRotation": 180.0,
                     "SensorId": "South"
                 }

@@ -117,24 +117,23 @@ namespace FLIRCameraDriverPlugin
 
 		if (!runningWebSocket)
 		{
-			PLOG(logDEBUG) << "Starting WebSocket Thread";
 			std::vector<std::thread> socketThreads;
 			for(const auto & config: flirConfigsPtr->getConfigs()){
 				socketThreads.emplace_back(&FLIRCameraDriverPlugin::StartWebSocket, this, config);
+				PLOG(logDEBUG) << "Starting WebSocket session for camera: " << config.sensorId << " at " << config.socketIp << ":" << config.socketPort;
 			}			
-			PLOG(logDEBUG) << "WebSocket thread started!!";
 
-			PLOG(logDEBUG) << "Starting XML thread";
-			//This thread is to check flirsession for any SDSM and PSM messages in the queue and broadcast them.
+			// Starting thread to consume detections from FLIR Camera Web Socket sessions and 
+			// broadcast them to TMX core.
 			std::thread detectionThread(&FLIRCameraDriverPlugin::sendDetections, this);
-			PLOG(logDEBUG) << "XML thread started!!";
-			
+			PLOG(logDEBUG) << "Starting detection thread to send messages to TMX core.";
 
-			// wait for all the socket threads to finish
+			// Detaching all threads to prevent plugin configuration thread from blocking causing 
+			// configuration changes to fail.
 			for(auto &thread: socketThreads){
 				thread.detach();
 			}
-			detectionThread.detach(); // wait for the thread to finish
+			detectionThread.detach(); 
 		}
 	
 
