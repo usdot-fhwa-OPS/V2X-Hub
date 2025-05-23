@@ -31,8 +31,11 @@ namespace tmx::messages{
             pos.Elevation = tree.get<double>("elevation");
             return pos;
         }
+        /// Latitude in degrees
 		double Latitude;
+        /// Longitude in degrees
 		double Longitude;
+        /// Elevation in meters
 		double Elevation;
 	};
 

@@ -19,31 +19,38 @@ namespace FLIRCameraDriverPlugin
 {
     tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& cameraViewName)
     {
+        // 2 dimensional orientation of detection measured by camera
         double angle = 0;
         double ned_heading = 0.0;
+        // Convert camera reference frame angle
+        // Assume camera rotation is NED (negative from true north)
+        // Convert to ENU (positive from true east)
+        // +90 for considering angle from east, subtract 90 for FLIR camera axis rotation.
+        // Subtract camera rotation from 360 since FLIR camera rotation is in NED and ENU is
+        // opposite direction        
         double convertedCameraRotation =  360 - cameraRotation;
-
+        // GPS location of detection measure by camera
         double lat = 0.0;
         double lon = 0.0;
+        // Speed of detection in m/s measures by camera
         double speed = 0.0;
+        // Convert speed and angle and camera rotation into ENU velocity vector
         double velocityX = 0.0;
         double velocityY = 0.0;
+        // Offset of detection in camera coordinates in meters
         double offsetX = 0.0;
         double offsetY = 0.0;
+        // Corrected offset in ENU considering camera rotation
         double correctOffsetX = 0.0;
         double correctOffsetY = 0.0;
+        // ID of detection
         int id = 0;
         // Parse angle
         if (!pr.get_child("angle").data().empty())
         {
             // Angle is in degrees in camera coordinates
             angle = std::stod(pr.get_child("angle").data());
-            // Convert camera reference frame angle
-            // Assume camera rotation is NED (negative from true north)
-            // Convert to ENU (positive from true east)
-            // +90 for considering angle from east, subtract 90 for FLIR camera axis rotation.
-            // Subtract camera rotation from 360 since FLIR camera rotation is in NED and ENU is
-            // opposite direction
+            
             ned_heading = angle + convertedCameraRotation;
             if (ned_heading < 0 )
             {
@@ -97,9 +104,7 @@ namespace FLIRCameraDriverPlugin
         if (!pr.get_child("x").data().empty())
         {
             // Offset in meters camera coordinates
-            offsetX = std::stod(pr.get_child("x").data());
-            
-            
+            offsetX = std::stod(pr.get_child("x").data()); 
         }
         else {
             throw FLIRCameraDriverException("x not found in JSON");
@@ -139,7 +144,7 @@ namespace FLIRCameraDriverPlugin
         obj.set_confidence(1.0);
         obj.set_sensorId(cameraViewName);
         obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
-        obj.set_wgs84_position( tmx::messages::WGS84Position(lat, lon, 0.0));
+        obj.set_wgs84Position( tmx::messages::WGS84Position(lat, lon, 0.0));
         obj.set_position(tmx::messages::Position(correctOffsetX, correctOffsetY, 0.0));
         // Convert angle to orientation
         obj.set_orientation(tmx::messages::Orientation(std::cos(ned_heading * M_PI / 180.0), std::sin(ned_heading * M_PI / 180.0), 0.0));

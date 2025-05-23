@@ -41,7 +41,7 @@ namespace tmx::messages
         // Unique identifier of detected object.
         std_attribute(this->msg, int, objectId, 0, );
         // Optional WGS84 position of the detected object.
-        object_attribute(WGS84Position, wgs84_position);    
+        object_attribute(WGS84Position, wgs84Position);    
         // Cartesian position of object in meters. Assumed to be ENU coordinate frame and relative to projection string.        
         object_attribute(Position, position);
         // Cartesian position covariance associated with the object.    

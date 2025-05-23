@@ -13,14 +13,14 @@ For RSU Immediate Message Forwarding (IMF) functionality forward any generated J
 
 ### CARMA Streets Plugin
 
-The CARMA Streets plugin is required for SDSM generation since this is handled by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service). For this functionality the FLIR Camera Driver Plugin generates Sensor Detected Object messages, which are forwarded to the Sensor Data Sharing service via the CARMA Streets plugin. The Sensor Data Sharing Service then generates SDSMs which are send back to V2X Hub via the CARMA Streets Plugin  and 
+The CARMA Streets plugin is required for SDSM generation since this is handled by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service). For this functionality the FLIR Camera Driver Plugin generates Sensor Detected Object messages, which are forwarded to the Sensor Data Sharing service via the CARMA Streets plugin. The Sensor Data Sharing Service then generates SDSMs which are sent back to V2X Hub via the CARMA Streets Plugin  and broadcast to the RSU via the Immediate Forward Plugin.
 
 
 ## Configuration/Deployment
 
 This plugin has several configuration parameters. Below these are listed out as together with descriptions on how to set them.
 
-**FLIRConfigurations**: JSON String configuration parameter which contains on or more FLIR Camera(s) to connect to.
+**FLIRConfigurations**: JSON string configuration parameters which contains on or more FLIR Camera(s) to connect to.
 
 ```json
 [

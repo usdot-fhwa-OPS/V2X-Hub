@@ -50,9 +50,9 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     EXPECT_EQ(obj.get_type(), "PEDESTRIAN");
     EXPECT_EQ(obj.get_confidence(), 1.0);
     EXPECT_EQ(obj.get_sensorId(), cameraViewName);
-    EXPECT_NEAR(obj.get_wgs84_position().Latitude, 38.95499217, 0.001);
-    EXPECT_NEAR(obj.get_wgs84_position().Longitude, -77.14920953, 0.001);
-    EXPECT_NEAR(obj.get_wgs84_position().Elevation, 0.0, 0.001);
+    EXPECT_NEAR(obj.get_wgs84Position().Latitude, 38.95499217, 0.001);
+    EXPECT_NEAR(obj.get_wgs84Position().Longitude, -77.14920953, 0.001);
+    EXPECT_NEAR(obj.get_wgs84Position().Elevation, 0.0, 0.001);
     EXPECT_NEAR(obj.get_position().x, 14.80903757, 0.001);
     EXPECT_NEAR(obj.get_position().y, -0.09458912, 0.001);
     EXPECT_NEAR(obj.get_position().z, 0.0, 0.001);
