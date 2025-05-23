@@ -27,14 +27,14 @@ This plugin has several configuration parameters. Below these are listed out as 
   {
     "WebSocketHost": "127.0.0.1", // IP Address of FLIR Camera
     "WebSocketPort": "8081", // Websocket port
-    "HostString": "/api/subscriptions", // Webseocket endpoint
+    "Endpoint": "/api/subscriptions", // Webseocket endpoint
     "CameraRotation": 16.13, // Camera heading measure in degrees clockwise from North
     "SensorId": "FLIR_Turner_Parking_Lot" // Sensor Id 
   },
   {
     "WebSocketHost": "127.0.0.1",
     "WebSocketPort": "8082",
-    "HostString": "/api/subscriptions",
+    "Endpoint": "/api/subscriptions",
     "CameraRotation": 11.13,
     "SensorId": "FLIR_Crosswalk"
   }
