@@ -21,7 +21,7 @@ namespace FLIRCameraDriverPlugin
         FLIRConfiguration config;
         config.socketIp = configJson.get<string>("WebSocketHost");
         config.socketPort = configJson.get<string>("WebSocketPort");
-        config.apiSubscription = configJson.get<string>("HostString");
+        config.apiSubscription = configJson.get<string>("Endpoint");
         config.cameraRotation = configJson.get<float>("CameraRotation");
         config.sensorId = configJson.get<string>("SensorId");
         return config;
