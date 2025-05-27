@@ -90,7 +90,7 @@ if ssh -i  $KEY_FILE  $REMOTE_USER@$REMOTE_ADDR "sudo lsof -Pi:$REMOTE_PORT -sTC
     echo "Closed exiting remote port $REMOTE_PORT"
 fi
 
-# open reverse tunnel:  carma-cloud remote port (10001) is forwarded to local host (v2xhub) and port: 22222
+# open reverse tunnel:  carma-cloud remote port (22222) is forwarded to local host (v2xhub) and port: 22222
 echo "Open reverse tunnel..."
 
 # open http tunnel, port-forwarding from  REMOTE_PORT to port 22222 (222222: running in v2xhub)

@@ -38,6 +38,13 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 **listTCM**: Indicator to determine if v2xhub receives a list of TCMs from carma-cloud. Default to true, returning a list of TCM. If false, return one TCM at a time. Indicator value can only be either true or false.
 
+### TCP Tunnel
+
+Currently to connect securely to a remotely hosted CARMA Cloud instance, an additional step is required. The configuration of a TCP tunnel, which creates a secure connection to a carma-cloud instance. The steps to configure this tunnel are :
+
+1) Provision required `.pem` file for secure connection and move it to the `./scripts/` directory
+2) Run `./call.sh` in the `./scripts/` directory.
+
 ## Design
 
 ![Alt text](docs/CARMACloudCommunicationArchitecture.png)
