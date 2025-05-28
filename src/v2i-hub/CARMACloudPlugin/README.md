@@ -57,4 +57,12 @@ The diagram above illustrates roughly how the CARMA Cloud Plugin functions. The 
 **TCM**: This message contains information about traffic controls like speed limits or lane closures and geographic information about the locations they apply to.
 > [!NOTE]
 > **TCM** and **TRC** are CARMA ecosystem protype messages that have been proposed to the SAE standard for inclusion in J2735 V2X Message set.
+
 ## Functionality Testing
+
+To test functionality of CARMA Cloud Plugin without an active vehicle, we have provided a script which can send mock TCRs to V2X Hub. These TCRs should be received by the CARMA Cloud Plugin, forwarded to CARMA Cloud, and if there are any relevant active traffic controls, should result in response TCMs being sent to the CARMA Cloud Plugin. Steps to conduct this test are outlined below:
+1) Deploy V2X Hub and CARMA Cloud
+2) Configure CARMA Cloud Plugin to connect the CARMA Cloud (including setup of any necessary TCP tunnels)
+3) Enable both CARMA Cloud Plugin and Message Receiver Plugin
+4) Run 'python3 tcr_script.py` to send a TCR to the Message Receiver Plugin
+5) Confirm that TCM messages are being received by CARMA Cloud Plugin via the Messages tab in the V2X Hub Admin UI web portal  
