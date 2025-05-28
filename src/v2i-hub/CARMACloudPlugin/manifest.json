@@ -14,16 +14,6 @@
 	],
 	"configuration":[
 		{
-			"key":"Frequency",
-			"default":"1000",
-			"description":"The frequency to send the TIM in milliseconds."
-		},
-		{
-			"key":"Instance",
-			"default":"0",
-			"description":"The instance of this plugin."
-		},
-		{
 			"key":"WebServiceIP",
 			"default":"0.0.0.0",
 			"description":"Server IP address for V2X hub"
