@@ -14,14 +14,7 @@ services:
       - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      # The following 3 volumes are used for C1T. By default the standard "port_drayage.sql" file
-      # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
-      # three files to enable the C1T sql files to be loaded. The container volumes MUST be reset
-      # to allow for this change, which can be done with "docker compose down -v"
-      #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql
+      # - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
       - mysql-datavolume:/var/lib/mysql
 
   php:
@@ -36,7 +29,7 @@ services:
     tty: true
 
   v2xhub:
-    image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
+    image: usdotfhwaops/v2xhub:voices-P-0.0.2
     container_name: v2xhub
     network_mode: host
     restart: always
@@ -56,15 +49,17 @@ services:
       - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
       - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
+      - TENA_HOME=/home/plugin/TENA
+      - LD_LIBRARY_PATH=/home/plugin/TENA/lib
     secrets:
       - mysql_password
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
-  port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
-    container_name: port_drayage_webservice
-    network_mode: host
+  # port_drayage_webservice:
+  #   image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
+  #   container_name: port_drayage_webservice
+  #   network_mode: host
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
