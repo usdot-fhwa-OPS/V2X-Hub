@@ -156,3 +156,51 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
  
     EXPECT_NEAR(obj.get_timestamp(), 1747785403461, 1);
 }
+
+TEST(FLIRPedestrianPresenceTrackingProcessorTest, testDoublePreprocessing) {
+    std::string json = R"(
+        {
+            "angle": "263.00000000",
+            "class": "Pedestrian",
+            "iD": "15968646",
+            "latitude": "38.95499217",
+            "longitude": "-77.14920953",
+            "speed": "0.0000141873741",
+            "x": "0.000009458912",
+            "y": "-0.0000001480903757"
+        }
+    )";
+    std::stringstream ss(json);
+    boost::property_tree::ptree pr;
+    try {
+        boost::property_tree::read_json(ss, pr);
+    } catch(const boost::property_tree::ptree_error &e) {
+        GTEST_FAIL() << "Error converting json to p tree: " << e.what();
+    }
+    uint64_t timestamp = 1234567890;
+    double cameraRotation = 90.0;
+    string cameraViewName = "North";
+
+    tmx::messages::SensorDetectedObject obj = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName);
+
+    EXPECT_EQ(obj.get_timestamp(), timestamp);
+    EXPECT_EQ(obj.get_objectId(), 43641);
+    EXPECT_EQ(obj.get_type(), "PEDESTRIAN");
+    EXPECT_EQ(obj.get_confidence(), 1.0);
+    EXPECT_EQ(obj.get_sensorId(), cameraViewName);
+    EXPECT_NEAR(obj.get_wgs84Position().Latitude, 38.95499217, 0.001);
+    EXPECT_NEAR(obj.get_wgs84Position().Longitude, -77.14920953, 0.001);
+    EXPECT_NEAR(obj.get_wgs84Position().Elevation, 0.0, 0.001);
+    EXPECT_EQ(obj.get_position().x, 0.0);
+    EXPECT_EQ(obj.get_position().y, 0.0);
+    EXPECT_EQ(obj.get_position().z, 0.0);
+    EXPECT_EQ(obj.get_velocity().x, 0.0);
+    EXPECT_EQ(obj.get_velocity().y, 0.0);
+    EXPECT_NEAR(obj.get_velocity().z, 0.0, 0.001);
+    EXPECT_NEAR(obj.get_orientation().x, -0.992546, 0.001);
+    EXPECT_NEAR(obj.get_orientation().y, 0.121869, 0.001);
+    EXPECT_NEAR(obj.get_orientation().z, 0.0, 0.001);
+    EXPECT_NEAR(obj.get_size().width, 0.6, 0.001);
+    EXPECT_NEAR(obj.get_size().length, 0.5, 0.001);
+    EXPECT_NEAR(obj.get_size().height, 0.0, 0.001);
+}

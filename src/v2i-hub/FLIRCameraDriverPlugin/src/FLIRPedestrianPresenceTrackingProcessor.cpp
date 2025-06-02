@@ -145,11 +145,17 @@ namespace FLIRCameraDriverPlugin
         obj.set_sensorId(cameraViewName);
         obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
         obj.set_wgs84Position( tmx::messages::WGS84Position(lat, lon, 0.0));
-        obj.set_position(tmx::messages::Position(correctOffsetX, correctOffsetY, 0.0));
+        obj.set_position(tmx::messages::Position(
+            preprocessDoubles(correctOffsetX), 
+            preprocessDoubles(correctOffsetY)
+            , 0.0));
         // Convert angle to orientation
-        obj.set_orientation(tmx::messages::Orientation(std::cos(ned_heading * M_PI / 180.0), std::sin(ned_heading * M_PI / 180.0), 0.0));
+        obj.set_orientation(tmx::messages::Orientation(
+            preprocessDoubles(std::cos(ned_heading * M_PI / 180.0)),
+            preprocessDoubles(std::sin(ned_heading * M_PI / 180.0))
+            , 0.0));
         // Convert angle and speed to velocity
-        obj.set_velocity(tmx::messages::Velocity(velocityX, velocityY, 0.0));
+        obj.set_velocity(tmx::messages::Velocity(preprocessDoubles(velocityX), preprocessDoubles(velocityY), 0.0));
         // Average pedestrian size standing is 0.5m x 0.6m (https://www.fhwa.dot.gov/publications/research/safety/pedbike/05085/chapt8.cfm)
         obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
         // FLIR Sensor position accuracy is :
@@ -163,8 +169,8 @@ namespace FLIRCameraDriverPlugin
         // Convert Accuracy to variance
         // Variance is the square of the standard deviation
         // Considering normal distribution +/- 2 std deviations is 95% of the data
-        double varianceX =  std::pow(posXAccuracy/2, 2);
-        double varianceY =  std::pow(posYAccuracy/2, 2);
+        double varianceX =  preprocessDoubles(std::pow(posXAccuracy/2, 2));
+        double varianceY =  preprocessDoubles(std::pow(posYAccuracy/2, 2));
         std::vector<std::vector< tmx::messages::Covariance>> positionCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
         positionCov[0][0] = tmx::messages::Covariance(varianceX); // x
         positionCov[1][1] = tmx::messages::Covariance(varianceY); // y
@@ -175,7 +181,7 @@ namespace FLIRCameraDriverPlugin
         // Convert Accuracy to variance
         // Variance is the square of the standard deviation
         // Considering normal distribution +/- 2 std deviations is 95% of the data
-        double varianceSpeed =  std::pow(speedAccuracy/2, 2);
+        double varianceSpeed =  preprocessDoubles(std::pow(speedAccuracy/2, 2));
         std::vector<std::vector< tmx::messages::Covariance>> velocityCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
         velocityCov[0][0] = tmx::messages::Covariance(varianceSpeed); // x
         velocityCov[1][1] = tmx::messages::Covariance(varianceSpeed); // y
@@ -257,5 +263,16 @@ namespace FLIRCameraDriverPlugin
         }
         FILE_LOG(tmx::utils::LogLevel::logWARNING) << "Ped presence data subscription status: " << subscrStatus;
         return false;
+    }
+
+    double preprocessDoubles(double value) {
+        // Preprocess doubles to avoid scientific notation in JSON serailization
+        if (value < 0.001 && value > -0.001) {
+            return 0;;
+        }
+        else  {
+            return value;
+        }
+
     }
 }

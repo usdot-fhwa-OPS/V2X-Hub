@@ -62,4 +62,6 @@ namespace FLIRCameraDriverPlugin
      * @return True if the subscription was successful, false otherwise.
      */
     bool processSubscriptionMessage(const boost::property_tree::ptree& pr);
+
+    double preprocessDoubles( double value );
 }
