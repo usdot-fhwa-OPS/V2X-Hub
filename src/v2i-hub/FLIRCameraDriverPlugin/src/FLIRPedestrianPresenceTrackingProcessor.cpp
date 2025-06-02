@@ -17,7 +17,7 @@
 
 namespace FLIRCameraDriverPlugin
 {
-    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& cameraViewName)
+    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition)
     {
         // 2 dimensional orientation of detection measured by camera
         double angle = 0;
@@ -142,8 +142,10 @@ namespace FLIRCameraDriverPlugin
         obj.set_objectId(id);
         obj.set_type("PEDESTRIAN");
         obj.set_confidence(1.0);
-        obj.set_sensorId(cameraViewName);
-        obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
+        obj.set_sensorId(sensorId);
+        std::ostringstream proj_string;
+        proj_string << "+proj=tmerc +lat_0=" << std::fixed << std::setprecision(10) << sensorRefPosition.Latitude <<" +lon_0=" << std::fixed << std::setprecision(10) << sensorRefPosition.Longitude <<" +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+        obj.set_projString(proj_string.str());
         obj.set_wgs84Position( tmx::messages::WGS84Position(lat, lon, 0.0));
         obj.set_position(tmx::messages::Position(
             roundNearZeroDoubles(correctOffsetX), 
@@ -191,7 +193,7 @@ namespace FLIRCameraDriverPlugin
         return obj;
     }
 
-    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& cameraViewName)
+    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition)
     {
         std::queue<tmx::messages::SensorDetectedObject> msgQueue;
         uint64_t timestamp = timeStringParser(pr.get_child("time").data());
@@ -199,7 +201,7 @@ namespace FLIRCameraDriverPlugin
         {
             try {
             // Process the pedestrian presence tracking object
-                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation, cameraViewName);
+                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation, sensorId, sensorRefPosition);
                 msgQueue.push(obj);
             } 
             catch (const FLIRCameraDriverException& e) {

@@ -14,6 +14,7 @@
  * the License.
  */
 #include <gtest/gtest.h>
+#include <WGS84Point.h>
 #include "FLIRPedestrianPresenceTrackingProcessor.hpp"
 using std::string;
 
@@ -43,13 +44,15 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     double cameraRotation = 90.0;
     string cameraViewName = "North";
 
-    tmx::messages::SensorDetectedObject obj = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName);
+    tmx::messages::SensorDetectedObject obj = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
 
     EXPECT_EQ(obj.get_timestamp(), timestamp);
     EXPECT_EQ(obj.get_objectId(), 43641);
     EXPECT_EQ(obj.get_type(), "PEDESTRIAN");
     EXPECT_EQ(obj.get_confidence(), 1.0);
     EXPECT_EQ(obj.get_sensorId(), cameraViewName);
+    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+    EXPECT_EQ( obj.get_projString(), proj_string);
     EXPECT_NEAR(obj.get_wgs84Position().Latitude, 38.95499217, 0.001);
     EXPECT_NEAR(obj.get_wgs84Position().Longitude, -77.14920953, 0.001);
     EXPECT_NEAR(obj.get_wgs84Position().Elevation, 0.0, 0.001);
@@ -109,12 +112,14 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     double cameraRotation = 90.0;
     string cameraViewName = "North";
 
-    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName);
+    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
 
     EXPECT_EQ(msgQueue.size(), 2);
     tmx::messages::SensorDetectedObject obj = msgQueue.front();
  
     EXPECT_NEAR(obj.get_timestamp(), 1747763255092, 1);
+    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+    EXPECT_EQ( obj.get_projString(), proj_string);
 }
 
 TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrackingObjectsTimestamp)
@@ -149,12 +154,14 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     double cameraRotation = 90.0;
     string cameraViewName = "North";
 
-    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName);
+    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
 
     EXPECT_EQ(msgQueue.size(), 1);
     tmx::messages::SensorDetectedObject obj = msgQueue.front();
  
     EXPECT_NEAR(obj.get_timestamp(), 1747785403461, 1);
+    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+    EXPECT_EQ( obj.get_projString(), proj_string);
 }
 
 TEST(FLIRPedestrianPresenceTrackingProcessorTest, testDoublePreprocessing) {
@@ -181,13 +188,15 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, testDoublePreprocessing) {
     double cameraRotation = 90.0;
     string cameraViewName = "North";
 
-    tmx::messages::SensorDetectedObject obj = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName);
+    tmx::messages::SensorDetectedObject obj = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
 
     EXPECT_EQ(obj.get_timestamp(), timestamp);
     EXPECT_EQ(obj.get_objectId(), 43641);
     EXPECT_EQ(obj.get_type(), "PEDESTRIAN");
     EXPECT_EQ(obj.get_confidence(), 1.0);
     EXPECT_EQ(obj.get_sensorId(), cameraViewName);
+    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+    EXPECT_EQ( obj.get_projString(), proj_string);
     EXPECT_NEAR(obj.get_wgs84Position().Latitude, 38.95499217, 0.001);
     EXPECT_NEAR(obj.get_wgs84Position().Longitude, -77.14920953, 0.001);
     EXPECT_NEAR(obj.get_wgs84Position().Elevation, 0.0, 0.001);

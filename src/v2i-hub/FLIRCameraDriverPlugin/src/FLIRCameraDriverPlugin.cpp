@@ -46,7 +46,8 @@ namespace FLIRCameraDriverPlugin
 			config.socketPort, 
 			config.cameraRotation, 
 			config.sensorId, 
-			config.apiSubscription);
+			config.apiSubscription,
+			config.cameraRefPoint);
 		// Launch the asynchronous operation
 		flirSession->run();	
 		flirSessions.push_back(flirSession);

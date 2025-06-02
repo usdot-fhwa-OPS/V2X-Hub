@@ -27,14 +27,18 @@ TEST(FLIRConfigurationsTest, parseFLIRConfigs)
                     "WebSocketPort": "8080",
                     "Endpoint": "api/subscription",
                     "CameraRotation": 90.0,
-                    "SensorId": "North"
+                    "SensorId": "North",
+                    "CameraLatitude": 38.95499217,
+                    "CameraLongitude": -77.14920953
                 },
                 {
                     "WebSocketHost": "127.0.0.1",
                     "WebSocketPort": "8081",
                     "Endpoint": "api/subscription",
                     "CameraRotation": 180.0,
-                    "SensorId": "South"
+                    "SensorId": "South",
+                    "CameraLatitude": 38.95499217,
+                    "CameraLongitude": -77.14920953
                 }
             ]
     )";
@@ -46,10 +50,14 @@ TEST(FLIRConfigurationsTest, parseFLIRConfigs)
     EXPECT_EQ(configs[0].apiSubscription, "api/subscription");
     EXPECT_EQ(configs[0].cameraRotation, 90.0);
     EXPECT_EQ(configs[0].sensorId, "North");
+    EXPECT_EQ(configs[0].cameraRefPoint.Latitude, 38.95499217);
+    EXPECT_EQ(configs[0].cameraRefPoint.Longitude, -77.14920953);
     EXPECT_EQ(configs[1].socketIp, "127.0.0.1");
     EXPECT_EQ(configs[1].socketPort, "8081");
     EXPECT_EQ(configs[1].apiSubscription, "api/subscription");
     EXPECT_EQ(configs[1].cameraRotation, 180.0);
     EXPECT_EQ(configs[1].sensorId, "South");
+    EXPECT_EQ(configs[1].cameraRefPoint.Latitude, 38.95499217);
+    EXPECT_EQ(configs[1].cameraRefPoint.Longitude, -77.14920953);
 }
 

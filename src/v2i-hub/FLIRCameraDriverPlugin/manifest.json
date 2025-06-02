@@ -15,7 +15,7 @@
 	"configuration":[
 		{
 			"key": "FLIRConfigurations",
-			"default": "[{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8081\",\"Endpoint\": \"/api/subscriptions\",\"CameraRotation\": 16.13, \"SensorId\": \"FLIR_Turner_Parking_Lot\"},{\"WebSocketHost\": \"127.0.0.1\",\"WebSocketPort\": \"8082\",\"Endpoint\": \"/api/subscriptions\",\"CameraRotation\": 11.13, \"SensorId\": \"FLIR_Crosswalk\"}]",
+			"default": "[{\"WebSocketHost\": \"192.168.55.183\",\"WebSocketPort\": \"80\",\"Endpoint\": \"/api/subscriptions\",\"CameraRotation\": 355, \"SensorId\": \"FLIR_Turner_Parking_Lot\", \"CameraLatitude\": 38.95499217, \"CameraLongitude\": -77.14920953}]",
 			"description": "A list of dictionaries containing the configuration for each FLIR camera. Each dictionary should contain the following keys: WebSocketHost, WebSocketPort, Endpoint, CameraRotation, and SensorId."
 		},
 		{

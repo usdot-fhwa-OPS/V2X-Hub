@@ -24,6 +24,8 @@
 #include <regex>
 #include <PluginLog.h>
 #include <SensorDetectedObject.h>
+#include <WGS84Point.h>
+#include <WGS84Position.h>
 #include "FLIRCameraDriverException.hpp"
 
 
@@ -38,7 +40,7 @@ namespace FLIRCameraDriverPlugin
      * @return A SensorDetectedObject message representing the processed object.
      * @throws FLIRCameraDriverException if fails to parse the track object.
      */
-    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& cameraViewName);
+    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition);
     /**
      * @brief Processes an array of pedestrian presence tracking objects from the FLIR camera.
      * @param pr The property tree containing the pedestrian presence tracking objects.
@@ -47,7 +49,7 @@ namespace FLIRCameraDriverPlugin
      * @return A queue of processed SensorDetectedObject messages.
      * @throws FLIRCameraDriverException if fails to parse the tracking objects.
      */
-    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& cameraViewName);
+    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition);
     /**
      * @brief Parses a time string in the format "2022-04-20T15:25:51.001-04:00" and converts it to a epoch timestamp.
      * @param dateTimeStr The time string to parse.

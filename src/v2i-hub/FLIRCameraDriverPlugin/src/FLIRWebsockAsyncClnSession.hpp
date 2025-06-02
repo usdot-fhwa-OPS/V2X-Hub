@@ -23,7 +23,6 @@
 #include <boost/asio/buffers_iterator.hpp>
 #include <PluginLog.h>
 #include <TmxLog.h>
-#include <WGS84Position.h>
 #include <WGS84Point.h>
 #include <cstdlib>
 #include <functional>
@@ -81,7 +80,7 @@ namespace FLIRCameraDriverPlugin
         //Health status of the FLIR camera
         std::atomic<bool> isHealthy_;
         std::string sensorId;
-        tmx::utils::WGS84Point wgs84_position;
+        tmx::utils::WGS84Point sensorRefPoint;
         // The camera rotation angle in degrees from East
         double cameraRotation_;
 
@@ -90,8 +89,8 @@ namespace FLIRCameraDriverPlugin
     public:
 
     // Resolver and socket require an io_context
-    explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint)
-        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint){
+    explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
+        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
             isHealthy_.store(false);
         };
 
