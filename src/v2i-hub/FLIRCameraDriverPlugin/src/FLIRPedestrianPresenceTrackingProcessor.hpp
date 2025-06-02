@@ -62,6 +62,13 @@ namespace FLIRCameraDriverPlugin
      * @return True if the subscription was successful, false otherwise.
      */
     bool processSubscriptionMessage(const boost::property_tree::ptree& pr);
-
-    double preprocessDoubles( double value );
+    /**
+     * @brief Rounds near-zero double values to zero to avoid tmx::message JSON serialization
+     * from converting them to scientific notation. Current threshold is 0.001 >  value >  -0.001.
+     * @param value The double value to round.
+     * @return The rounded value, or the original value if it is not near zero.
+     * @note This is a temporary solution to avoid issues with JSON serialization
+     *       and should be replaced with a more robust solution in the future.
+     */
+    double roundNearZeroDoubles( double value );
 }
