@@ -267,7 +267,7 @@ namespace FLIRCameraDriverPlugin
 
     double roundNearZeroDoubles(double value) {
         // Preprocess doubles to avoid scientific notation in JSON serailization
-        if (value < 0.001 && value > -0.001) {
+        if (std::abs(value) < 0.001) {
             return 0;
         }
         else  {
