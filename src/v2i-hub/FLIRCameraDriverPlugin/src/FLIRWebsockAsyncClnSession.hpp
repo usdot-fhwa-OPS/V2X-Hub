@@ -58,6 +58,10 @@ namespace FLIRCameraDriverPlugin
         beast::flat_buffer buffer_;
         std::string host_;
         std::string port_;
+        // The camera rotation angle in degrees from East
+        double cameraRotation_;
+        std::string sensorId;
+
         std::string endpoint_;
         std::string pedPresenceTrackingReq = R"(
             {
@@ -79,10 +83,9 @@ namespace FLIRCameraDriverPlugin
 
         //Health status of the FLIR camera
         std::atomic<bool> isHealthy_;
-        std::string sensorId;
+        
         tmx::utils::WGS84Point sensorRefPoint;
-        // The camera rotation angle in degrees from East
-        double cameraRotation_;
+
 
 
 
