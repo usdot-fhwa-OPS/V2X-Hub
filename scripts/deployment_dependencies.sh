@@ -8,7 +8,7 @@ set -ex
 
 # add the STOL APT repository
 echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository develop ${DISTRIB_CODENAME}" > /etc/apt/sources.list.d/stol-apt-repository.list
-
+apt-get clean
 apt-get update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
