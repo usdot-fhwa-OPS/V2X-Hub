@@ -187,7 +187,7 @@ namespace FLIRCameraDriverPlugin
         "longitude": "-77.14920953", "speed": "1.41873741", "x": "0.09458912", "y": "14.80903757"}], "type": "PedestrianPresenceTracking"}
         */
        
-        auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, sensorId);
+        auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, sensorId, sensorRefPoint);
         std::scoped_lock lock{_msgLock};
         while( !newDetections.empty() )
         {

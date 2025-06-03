@@ -69,7 +69,9 @@ TEST(FLIRWebsockAsyncClnSessionTest, testHandleDataMessage) {
         "8084", 
         255, 
         "FLIRNorth",
-        "api/subscription"); 
+        "api/subscription",
+        tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0) // Example reference point
+    ); 
 
     flirSession->handleDataMessage(pr);
     EXPECT_EQ(flirSession->getMsgQueue().size(), 2);
@@ -127,7 +129,9 @@ TEST(FLIRWebsockAsyncClnSessionTest, testRun) {
         "8084", 
         255, 
         "FLIRNorth",
-        "api/subscription"); 
+        "api/subscription",
+        tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0) // Example reference point
+    ); 
 
     EXPECT_NO_THROW(flirSession->run());
     

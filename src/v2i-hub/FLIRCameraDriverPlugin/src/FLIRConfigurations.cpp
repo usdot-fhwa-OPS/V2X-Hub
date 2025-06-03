@@ -24,6 +24,8 @@ namespace FLIRCameraDriverPlugin
         config.apiSubscription = configJson.get<string>("Endpoint");
         config.cameraRotation = configJson.get<float>("CameraRotation");
         config.sensorId = configJson.get<string>("SensorId");
+        config.cameraRefPoint.Latitude = configJson.get<double>("CameraLatitude");
+        config.cameraRefPoint.Longitude = configJson.get<double>("CameraLongitude");
         return config;
     }
 

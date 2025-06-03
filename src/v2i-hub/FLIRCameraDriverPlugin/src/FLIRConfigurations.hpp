@@ -23,6 +23,7 @@
 #include <boost/beast/core.hpp>
 #include <iostream>
 #include <regex>
+#include <WGS84Point.h>
 
 
 using std::string;
@@ -47,6 +48,8 @@ namespace FLIRCameraDriverPlugin{
         double cameraRotation;
         //A brief name to describe FLIR field of view which defines a region to detect pedestrains in
         string sensorId;
+
+        tmx::utils::WGS84Point cameraRefPoint; // Camera reference point in WGS84 coordinates
     };
     
     class FLIRConfigurations{

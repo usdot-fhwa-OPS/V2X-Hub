@@ -17,7 +17,7 @@
 
 namespace FLIRCameraDriverPlugin
 {
-    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& cameraViewName)
+    tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition)
     {
         // 2 dimensional orientation of detection measured by camera
         double angle = 0;
@@ -142,14 +142,22 @@ namespace FLIRCameraDriverPlugin
         obj.set_objectId(id);
         obj.set_type("PEDESTRIAN");
         obj.set_confidence(1.0);
-        obj.set_sensorId(cameraViewName);
-        obj.set_projString("+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu");
+        obj.set_sensorId(sensorId);
+        std::ostringstream proj_string;
+        proj_string << "+proj=tmerc +lat_0=" << std::fixed << std::setprecision(10) << sensorRefPosition.Latitude <<" +lon_0=" << std::fixed << std::setprecision(10) << sensorRefPosition.Longitude <<" +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
+        obj.set_projString(proj_string.str());
         obj.set_wgs84Position( tmx::messages::WGS84Position(lat, lon, 0.0));
-        obj.set_position(tmx::messages::Position(correctOffsetX, correctOffsetY, 0.0));
+        obj.set_position(tmx::messages::Position(
+            roundNearZeroDoubles(correctOffsetX), 
+            roundNearZeroDoubles(correctOffsetY)
+            , 0.0));
         // Convert angle to orientation
-        obj.set_orientation(tmx::messages::Orientation(std::cos(ned_heading * M_PI / 180.0), std::sin(ned_heading * M_PI / 180.0), 0.0));
+        obj.set_orientation(tmx::messages::Orientation(
+            roundNearZeroDoubles(std::cos(ned_heading * M_PI / 180.0)),
+            roundNearZeroDoubles(std::sin(ned_heading * M_PI / 180.0))
+            , 0.0));
         // Convert angle and speed to velocity
-        obj.set_velocity(tmx::messages::Velocity(velocityX, velocityY, 0.0));
+        obj.set_velocity(tmx::messages::Velocity(roundNearZeroDoubles(velocityX), roundNearZeroDoubles(velocityY), 0.0));
         // Average pedestrian size standing is 0.5m x 0.6m (https://www.fhwa.dot.gov/publications/research/safety/pedbike/05085/chapt8.cfm)
         obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
         // FLIR Sensor position accuracy is :
@@ -163,8 +171,8 @@ namespace FLIRCameraDriverPlugin
         // Convert Accuracy to variance
         // Variance is the square of the standard deviation
         // Considering normal distribution +/- 2 std deviations is 95% of the data
-        double varianceX =  std::pow(posXAccuracy/2, 2);
-        double varianceY =  std::pow(posYAccuracy/2, 2);
+        double varianceX =  roundNearZeroDoubles(std::pow(posXAccuracy/2, 2));
+        double varianceY =  roundNearZeroDoubles(std::pow(posYAccuracy/2, 2));
         std::vector<std::vector< tmx::messages::Covariance>> positionCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
         positionCov[0][0] = tmx::messages::Covariance(varianceX); // x
         positionCov[1][1] = tmx::messages::Covariance(varianceY); // y
@@ -175,7 +183,7 @@ namespace FLIRCameraDriverPlugin
         // Convert Accuracy to variance
         // Variance is the square of the standard deviation
         // Considering normal distribution +/- 2 std deviations is 95% of the data
-        double varianceSpeed =  std::pow(speedAccuracy/2, 2);
+        double varianceSpeed =  roundNearZeroDoubles(std::pow(speedAccuracy/2, 2));
         std::vector<std::vector< tmx::messages::Covariance>> velocityCov(3, std::vector<tmx::messages::Covariance>(3,tmx::messages::Covariance(0.0) ));
         velocityCov[0][0] = tmx::messages::Covariance(varianceSpeed); // x
         velocityCov[1][1] = tmx::messages::Covariance(varianceSpeed); // y
@@ -185,7 +193,7 @@ namespace FLIRCameraDriverPlugin
         return obj;
     }
 
-    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& cameraViewName)
+    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition)
     {
         std::queue<tmx::messages::SensorDetectedObject> msgQueue;
         uint64_t timestamp = timeStringParser(pr.get_child("time").data());
@@ -193,7 +201,7 @@ namespace FLIRCameraDriverPlugin
         {
             try {
             // Process the pedestrian presence tracking object
-                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation, cameraViewName);
+                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation, sensorId, sensorRefPosition);
                 msgQueue.push(obj);
             } 
             catch (const FLIRCameraDriverException& e) {
@@ -257,5 +265,16 @@ namespace FLIRCameraDriverPlugin
         }
         FILE_LOG(tmx::utils::LogLevel::logWARNING) << "Ped presence data subscription status: " << subscrStatus;
         return false;
+    }
+
+    double roundNearZeroDoubles(double value) {
+        // Preprocess doubles to avoid scientific notation in JSON serailization
+        if (std::abs(value) < 0.001) {
+            return 0;
+        }
+        else  {
+            return value;
+        }
+
     }
 }
