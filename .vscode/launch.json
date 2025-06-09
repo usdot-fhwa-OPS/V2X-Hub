@@ -27,10 +27,9 @@
           "name": "(gdb) Attach",
           "type": "cppdbg",
           "request": "attach",
-          "program": "/var/www/plugins/TenaV2Xplugin/bin/TenaV2Xplugin",
+          "program": "/var/www/plugins/CommandPlugin/bin/CommandPlugin",
           "processId": "${command:pickProcess}",
           "MIMode": "gdb",
-          "preLaunchTask": "apt install gdb",
           "setupCommands": [
               {
                   "description": "Enable pretty-printing for gdb",
