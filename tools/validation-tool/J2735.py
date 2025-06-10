@@ -49,6 +49,11 @@ msgs = {
     49:'RoadUserChargingReportMessage',
     50:'TrafficLightStatusMessage'
 }
+BSM_Part_II_mapping = {
+    0: 'VehicleSafetyExtensions',
+    1: 'SpecialVehicleExtensions',
+    2: 'SupplementalVehicleExtensions'
+}
 # Reverse mapping
 ids = {v: k for k, v in msgs.items()}
 
@@ -85,7 +90,7 @@ def custom_encode(data, name='MessageFrame'):
     if 'messageId' in data:
         id = data['messageId']
         name = get_msg_name(id)
-        msg = data['value']
+        msg = data['value'] if isinstance(data['value'], dict) else data['value'][1]
         logger.info(f"Encoding message: {name} with ID: {id} from MessageFrame")
     else:
         msg = data
@@ -93,10 +98,29 @@ def custom_encode(data, name='MessageFrame'):
         logger.info(f"Encoding message: {name} with ID: {id}")
     
     # Recursive function to preprocess data for bitstring fields
-    def preprocess_bitstring(obj):
+    def preprocess_bitstring(obj, parent_name=None):
+        # Special handling for BSM Part II
+        if parent_name == "partII" and isinstance(obj, list):
+            processed_list = []
+            for entry in obj:
+                if (
+                    isinstance(entry, dict)
+                    and "partII-Id" in entry
+                    and "partII-Value" in entry
+                ):
+                    partii_id = entry["partII-Id"]
+                    partii_type = BSM_Part_II_mapping.get(partii_id)
+                    partii_value = entry["partII-Value"] if isinstance(entry["partII-Value"], dict) else entry["partII-Value"][1]
+                    # If the value is a dict (decoded), encode it using the correct type
+                    if partii_type and isinstance(partii_value, dict):
+                        encoded_value = original_encode(partii_type, preprocess_bitstring(partii_value, partii_type))
+                        entry = entry.copy()
+                        entry["partII-Value"] = encoded_value
+                processed_list.append(preprocess_bitstring(entry))
+            return processed_list
+
         if isinstance(obj, dict):
-            # Recursively process dictionaries
-            return {key: preprocess_bitstring(value) for key, value in obj.items()}
+            return {key: preprocess_bitstring(value, key) for key, value in obj.items()}
         elif isinstance(obj, list):
             if len(obj) == 2 and all(isinstance(i, int) for i in obj):
                 # Convert [value, length] to (bytes, length)
@@ -158,40 +182,58 @@ def custom_decode(data, name='MessageFrame'):
         id = get_msg_id(name)
         msg = unhexlify(data)
         logger.info(f"Decoding message: {name} with ID: {id}")
-    # Recursive function to reverse bitstring fields
-    def reverse_bitstring(obj):
+
+    def reverse_bitstring(obj, parent_name=None):
+        # Special handling for BSM Part II
+        if parent_name == "partII" and isinstance(obj, list):
+            # Each item is a dict with partII-Id and partII-Value
+            decoded_list = []
+            for entry in obj:
+                if (
+                    isinstance(entry, dict)
+                    and "partII-Id" in entry
+                    and "partII-Value" in entry
+                ):
+                    partii_id = entry["partII-Id"]
+                    partii_type = BSM_Part_II_mapping.get(partii_id)
+                    partii_value = entry["partII-Value"]
+                    if partii_type and isinstance(partii_value, bytes):
+                        # Decode the partII-Value using the correct type
+                        decoded_value = original_decode(partii_type, partii_value)
+                        decoded_value = reverse_bitstring(decoded_value, partii_type)
+                        entry["partII-Value"] = [partii_type, decoded_value]
+                decoded_list.append(reverse_bitstring(entry))
+            return decoded_list
+
         if isinstance(obj, dict):
-            # Recursively process dictionaries
-            return {key: reverse_bitstring(value) for key, value in obj.items()}
+            return {
+                key: reverse_bitstring(value, key)
+                for key, value in obj.items()
+            }
         elif isinstance(obj, tuple):
             if len(obj) == 2 and isinstance(obj[0], bytes) and isinstance(obj[1], int):
-                # Convert (bytes, length) to [value, length]
                 byte_value, length = obj
-                binary_representation = bytes_to_binary(byte_value)  # Convert bytes to binary
-                logger.debug(f"Binary representation: {binary_representation[0:length]}")  # Debugging output
-                value = int(binary_representation[0:length], 2)  # Convert bytes back to an integer
+                binary_representation = bytes_to_binary(byte_value)
+                logger.debug(f"Binary representation: {binary_representation[0:length]}")
+                value = int(binary_representation[0:length], 2)
                 logger.debug(f"Value: {value}")
                 return [value, length]
             elif len(obj) == 2 and isinstance(obj[0], str) and isinstance(obj[1], tuple):
-                # Handle nested tuples with bitstring
                 return [obj[0], reverse_bitstring(obj[1])]
             else:
-                # Leave other tuples unchanged
                 return [reverse_bitstring(item) for item in obj]
         elif isinstance(obj, bytes):
-            # Handle octet strings (convert to hexadecimal for readability)
             hex_representation = obj.hex()
             logger.debug(f"Octet string (bytes): {obj}, Hex: {hex_representation}")
-            return hex_representation  # Return as a hexadecimal string
+            return hex_representation
         elif isinstance(obj, list):
-            # Recursively process lists
-            return [reverse_bitstring(item) for item in obj]
+            return [reverse_bitstring(item, parent_name) for item in obj]
         else:
             return obj
 
     # Call the original decode method
     decoded_data = original_decode(name, msg)
-    frame_dict = {'messageId': id, 'value': reverse_bitstring(decoded_data)}
+    frame_dict = {'messageId': id, 'value': [name, reverse_bitstring(decoded_data, name)]}
     logger.info(f"Successfully decoded message!")
     logger.debug(f"Decoded data: {frame_dict}")
 
