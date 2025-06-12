@@ -2,7 +2,8 @@ services:
   v2xhub:
     build: 
       context: ..
-      dockerfile: .devcontainer/Dockerfile.builder
+      dockerfile: ./Dockerfile
+      target: dependencies
     container_name: v2xhub
     network_mode: host
     privileged: true
