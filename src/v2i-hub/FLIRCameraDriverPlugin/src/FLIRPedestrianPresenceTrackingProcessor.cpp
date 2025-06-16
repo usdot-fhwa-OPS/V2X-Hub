@@ -45,11 +45,13 @@ namespace FLIRCameraDriverPlugin
         double correctOffsetY = 0.0;
         // ID of detection
         int id = 0;
+
+        bool heading_present;
         // Parse angle
-        if (!pr.get_child("angle").data().empty())
+        if (pr.get_optional<double>("angle"))
         {
             // Angle is in degrees in camera coordinates
-            angle = std::stod(pr.get_child("angle").data());
+            angle = pr.get_optional<double>("angle").get();
             
             ned_heading = angle + convertedCameraRotation;
             if (ned_heading < 0 )
@@ -60,16 +62,19 @@ namespace FLIRCameraDriverPlugin
             {
                 ned_heading = std::fmod(ned_heading, 360.0f);
             }
+            heading_present = true;
             
         }
         else {
-            throw FLIRCameraDriverException("angle not found in JSON");
+            ned_heading = 0.0; // If angle is not present, assuming 0 degree heading
+            heading_present = false;
+            FILE_LOG(tmx::utils::LogLevel::logWARNING) << "Angle not found in JSON, assuming 0 degree heading";
         }
 
         // Parse ID
-        if (!pr.get_child("iD").data().empty()) 
+        if (pr.get_optional<int>("iD")) 
         {
-            id = std::stoi(pr.get_child("iD").data());
+            id = pr.get_optional<int>("iD").get();
             if (id > 65535)
             {
                 auto old_id = id;
@@ -82,37 +87,37 @@ namespace FLIRCameraDriverPlugin
         }
 
         // Parse latitude
-        if (!pr.get_child("latitude").data().empty())
+        if (pr.get_optional<double>("latitude"))
         {
             // Latitude is in degrees
-            lat = std::stod(pr.get_child("latitude").data());
+            lat = pr.get_optional<double>("latitude").get();
         } 
         else {
             throw FLIRCameraDriverException("latitude not found in JSON");
         }
 
         // Parse longitude
-        if (!pr.get_child("longitude").data().empty())
+        if (pr.get_optional<double>("longitude"))
         {
             // Longitude is in degrees
-            lon = std::stod(pr.get_child("longitude").data());
+            lon = pr.get_optional<double>("longitude").get();
         }
         else {
             throw FLIRCameraDriverException("longitude not found in JSON");
         }
         
-        if (!pr.get_child("x").data().empty())
+        if (pr.get_optional<double>("x"))
         {
             // Offset in meters camera coordinates
-            offsetX = std::stod(pr.get_child("x").data()); 
+            offsetX = pr.get_optional<double>("x").get(); 
         }
         else {
             throw FLIRCameraDriverException("x not found in JSON");
         }
-        if (!pr.get_child("y").data().empty())
+        if (pr.get_optional<double>("y"))
         {
             // Offset in meters camera coordinates
-            offsetY = std::stod(pr.get_child("y").data());
+            offsetY = pr.get_optional<double>("y").get();
             
         }
         else {
@@ -125,10 +130,13 @@ namespace FLIRCameraDriverPlugin
             offsetY * std::sin(convertedCameraRotation * M_PI / 180.0);
 
         // Parse speed
-        if (!pr.get_child("speed").data().empty())
+        if (pr.get_optional<double>("speed"))
         {
             // Speed is in m/s
-            speed = std::stod(pr.get_child("speed").data());
+            speed = pr.get_optional<double>("speed").get();
+            if (speed > 0.0  && !heading_present) {
+                throw FLIRCameraDriverException("Invalid detection: non-zero speed without angle!");
+            }
             // Get velocity from speed and angle
             velocityX = speed * std::cos(ned_heading * M_PI / 180.0);
             velocityY = speed * std::sin(ned_heading * M_PI / 180.0);
