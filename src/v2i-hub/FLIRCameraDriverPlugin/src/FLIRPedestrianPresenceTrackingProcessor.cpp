@@ -134,7 +134,7 @@ namespace FLIRCameraDriverPlugin
         {
             // Speed is in m/s
             speed = pr.get_optional<double>("speed").get();
-            if (speed > 0.0  && !heading_present) {
+            if (speed > 0.001  && !heading_present) {
                 throw FLIRCameraDriverException("Invalid detection: non-zero speed without angle!");
             }
             // Get velocity from speed and angle
