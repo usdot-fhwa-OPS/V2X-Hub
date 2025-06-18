@@ -134,9 +134,7 @@ namespace FLIRCameraDriverPlugin
         {
             // Speed is in m/s
             speed = pr.get_optional<double>("speed").get();
-            if (speed > 0.001  && !heading_present) {
-                throw FLIRCameraDriverException("Invalid detection: non-zero speed without angle!");
-            }
+           
             // Get velocity from speed and angle
             velocityX = speed * std::cos(ned_heading * M_PI / 180.0);
             velocityY = speed * std::sin(ned_heading * M_PI / 180.0);
@@ -164,8 +162,18 @@ namespace FLIRCameraDriverPlugin
             roundNearZeroDoubles(std::cos(ned_heading * M_PI / 180.0)),
             roundNearZeroDoubles(std::sin(ned_heading * M_PI / 180.0))
             , 0.0));
-        // Convert angle and speed to velocity
-        obj.set_velocity(tmx::messages::Velocity(roundNearZeroDoubles(velocityX), roundNearZeroDoubles(velocityY), 0.0));
+        // FLIR Camera will occasionally report detections with no angle and non-zero speed.
+        // In this case, we assume the speed is 0.0 m/s and the angle is 0 degrees since during
+        // testing we have seen this to only happen when objects are stationary.
+        if (speed > 0.001  && !heading_present) {
+            FILE_LOG(tmx::utils::logWARNING) << "Invalid speed for detection " << id << ": Setting speed to 0.0 m/s since angle is not present";
+            obj.set_velocity(tmx::messages::Velocity(0.0, 0.0, 0.0));
+            obj.set_isModified(true);
+        }   
+        else {
+            // Convert angle and speed to velocity
+            obj.set_velocity(tmx::messages::Velocity(roundNearZeroDoubles(velocityX), roundNearZeroDoubles(velocityY), 0.0));
+        }
         // Average pedestrian size standing is 0.5m x 0.6m (https://www.fhwa.dot.gov/publications/research/safety/pedbike/05085/chapt8.cfm)
         obj.set_size(tmx::messages::Size(0.5, 0.6, 0.0));
         // FLIR Sensor position accuracy is :
@@ -213,7 +221,7 @@ namespace FLIRCameraDriverPlugin
                 msgQueue.push(obj);
             } 
             catch (const FLIRCameraDriverException& e) {
-                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track! Error processing pedestrian presence tracking object: " << e.what();
+                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track " << value.get_child("iD").data() <<"! Error processing pedestrian presence tracking object: " << e.what();
             }
             
         }

@@ -71,6 +71,9 @@ namespace FLIRCameraDriverPlugin
 			std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> flirSessions;
 			std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 			bool runningWebSocket = false;
+			uint droppedPedCount = 0;
+			uint modifiedPedCount = 0;
+
 	};
 
 }

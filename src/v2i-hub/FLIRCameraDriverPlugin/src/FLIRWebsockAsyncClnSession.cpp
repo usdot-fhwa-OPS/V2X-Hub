@@ -179,6 +179,27 @@ namespace FLIRCameraDriverPlugin
         processSubscriptionMessage(pr);
     }
 
+    std::queue<tmx::messages::SensorDetectedObject> FLIRWebsockAsyncClnSession::processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr)
+    {
+        std::queue<tmx::messages::SensorDetectedObject> msgQueue;
+        uint64_t timestamp = timeStringParser(pr.get_child("time").data());
+        for (const auto& [key, value] : pr.get_child("track"))
+        {
+            try {
+            // Process the pedestrian presence tracking object
+                tmx::messages::SensorDetectedObject obj = processPedestrianPresenceTrackingObject(value, timestamp, cameraRotation_, sensorId, sensorRefPoint);
+                msgQueue.push(obj);
+            } 
+            catch (const FLIRCameraDriverException& e) {
+                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track " << value.get_child("iD").data() <<"! Error processing pedestrian presence tracking object: " << e.what();
+                // Increment dropped pedestrian count
+                droppedPedCount_.fetch_add(1);
+            }
+            
+        }
+        return msgQueue;
+    }
+
     void FLIRWebsockAsyncClnSession::handleDataMessage(const pt::ptree& pr)
     {
         /* Example received pedestrian tracking data:
@@ -187,7 +208,7 @@ namespace FLIRCameraDriverPlugin
         "longitude": "-77.14920953", "speed": "1.41873741", "x": "0.09458912", "y": "14.80903757"}], "type": "PedestrianPresenceTracking"}
         */
        
-        auto newDetections = processPedestrianPresenceTrackingObjects(pr, cameraRotation_, sensorId, sensorRefPoint);
+        auto newDetections = processPedestrianPresenceTrackingObjects(pr);
         std::scoped_lock lock{_msgLock};
         while( !newDetections.empty() )
         {
@@ -224,5 +245,21 @@ namespace FLIRCameraDriverPlugin
 
     bool FLIRWebsockAsyncClnSession::isHealthy() const{
         return isHealthy_.load();
+    }
+    /**
+     * @brief Get the dropped pedestrian count
+     */
+    unsigned int FLIRWebsockAsyncClnSession::getDroppedPedCount() const {
+        return droppedPedCount_.load();
+    }
+    /**
+     * @brief Clear the dropped pedestrian count
+     */
+    void FLIRWebsockAsyncClnSession::clearDroppedPedCount() {
+        droppedPedCount_.store(0);
+    }
+
+    std::string FLIRWebsockAsyncClnSession::getSensorId() const {
+        return sensorId;
     }
 }

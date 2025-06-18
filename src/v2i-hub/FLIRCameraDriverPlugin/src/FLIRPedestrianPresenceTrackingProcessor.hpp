@@ -42,15 +42,6 @@ namespace FLIRCameraDriverPlugin
      */
     tmx::messages::SensorDetectedObject processPedestrianPresenceTrackingObject(const boost::property_tree::ptree& pr, uint64_t timestamp, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition);
     /**
-     * @brief Processes an array of pedestrian presence tracking objects from the FLIR camera.
-     * @param pr The property tree containing the pedestrian presence tracking objects.
-     * @param cameraRotation The rotation of the camera in degrees clockwise from North (NED).
-     * @param cameraViewName The name of the camera view.
-     * @return A queue of processed SensorDetectedObject messages.
-     * @throws FLIRCameraDriverException if fails to parse the tracking objects.
-     */
-    std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr, double cameraRotation, const std::string& sensorId, const tmx::utils::WGS84Point& sensorRefPosition);
-    /**
      * @brief Parses a time string in the format "2022-04-20T15:25:51.001-04:00" and converts it to a epoch timestamp.
      * @param dateTimeStr The time string to parse.
      * @return The epoch timestamp in milliseconds.

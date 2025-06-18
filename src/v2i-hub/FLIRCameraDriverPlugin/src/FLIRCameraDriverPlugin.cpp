@@ -93,9 +93,18 @@ namespace FLIRCameraDriverPlugin
 				{
 					// Retrieve the message queue in each session and send each one to be broadcast, then pop.
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
+					
+					droppedPedCount += flirSession->getDroppedPedCount();
+					SetStatus<uint>("Dropped Pedestrian Count", droppedPedCount);
+					flirSession->clearDroppedPedCount();
+
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
+						if (message.get_isModified()) {
+							modifiedPedCount++;
+							SetStatus<uint>("Assumed Stationary Pedestrian Count", modifiedPedCount);
+						} 
 						PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << message;
 						this->BroadcastMessage<tmx::messages::SensorDetectedObject>(message, _name, 0 , IvpMsgFlags_None);
 						currentMsgQueue.pop();

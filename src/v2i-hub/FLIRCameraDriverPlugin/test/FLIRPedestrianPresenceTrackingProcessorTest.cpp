@@ -143,103 +143,15 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     uint64_t timestamp = 1234567890;
     double cameraRotation = 355.0;
     string cameraViewName = "FLIRSensor1";
-
-    EXPECT_THROW(FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0)), FLIRCameraDriverPlugin::FLIRCameraDriverException);
-
-}
-
-TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrackingObjects)
-{
-    std::string json = R"(
-                {
-            "dataNumber": "199262",
-            "messageType": "Data",
-            "time": "2025-05-20T13:47:35.092-04:00",
-            "track": [
-                {
-                "angle": "255.00000000",
-                "class": "Pedestrian",
-                "iD": "2910604",
-                "latitude": "38.95504354",
-                "longitude": "-77.14934177",
-                "speed": "1.12053359",
-                "x": "-2.66856720",
-                "y": "19.92332193"
-                },
-                {
-                "angle": "246.00000000",
-                "class": "Pedestrian",
-                "iD": "2910927",
-                "latitude": "38.95503376",
-                "longitude": "-77.14937300",
-                "speed": "4.96141529",
-                "x": "-3.02072971",
-                "y": "22.81371546"
-                }
-            ],
-            "type": "PedestrianPresenceTracking"
-            }
-        )";
-    std::stringstream ss(json);
-    boost::property_tree::ptree pr;
-    try {
-        boost::property_tree::read_json(ss, pr);
-    } catch(const boost::property_tree::ptree_error &e) {
-        GTEST_FAIL() << "Error converting json to p tree: " << e.what();
-    }
-    double cameraRotation = 90.0;
-    string cameraViewName = "North";
-
-    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
-
-    EXPECT_EQ(msgQueue.size(), 2);
-    tmx::messages::SensorDetectedObject obj = msgQueue.front();
- 
-    EXPECT_NEAR(obj.get_timestamp(), 1747763255092, 1);
-    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
-    EXPECT_EQ( obj.get_projString(), proj_string);
-}
-
-TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrackingObjectsTimestamp)
-{
-    std::string json = R"(
-            {
-            "dataNumber": "203438",
-            "messageType": "Data",
-            "time": "2025-05-20T19:56:43.461-04:00",
-            "track": [
-                {
-                "angle": "52.00000000",
-                "class": "Pedestrian",
-                "iD": "2923009",
-                "latitude": "38.95504334",
-                "longitude": "-77.14948274",
-                "speed": "7.70469952",
-                "x": "0.46391721",
-                "y": "31.70375721"
-                }
-            ],
-            "type": "PedestrianPresenceTracking"
-            }
-        )";
-    std::stringstream ss(json);
-    boost::property_tree::ptree pr;
-    try {
-        boost::property_tree::read_json(ss, pr);
-    } catch(const boost::property_tree::ptree_error &e) {
-        GTEST_FAIL() << "Error converting json to p tree: " << e.what();
-    }
-    double cameraRotation = 90.0;
-    string cameraViewName = "North";
-
-    std::queue<tmx::messages::SensorDetectedObject> msgQueue = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObjects(pr, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
-
-    EXPECT_EQ(msgQueue.size(), 1);
-    tmx::messages::SensorDetectedObject obj = msgQueue.front();
- 
-    EXPECT_NEAR(obj.get_timestamp(), 1747785403461, 1);
-    std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
-    EXPECT_EQ( obj.get_projString(), proj_string);
+    // Confirm that when angle is not provided and speed is non-zero, the velocity is set to zero and heading is set to 0 degrees or (1.0, 0.0, 0.0) orientation.
+    auto detection = FLIRCameraDriverPlugin::processPedestrianPresenceTrackingObject(pr, timestamp, cameraRotation, cameraViewName, tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
+    EXPECT_TRUE(detection.get_isModified());
+    EXPECT_EQ(detection.get_velocity().x, 0.0);
+    EXPECT_EQ(detection.get_velocity().y, 0.0);
+    EXPECT_EQ(detection.get_velocity().z, 0.0);
+    EXPECT_EQ(detection.get_orientation().x, 1.0);
+    EXPECT_EQ(detection.get_orientation().y, 0.0);
+    EXPECT_EQ(detection.get_orientation().z, 0.0);
 }
 
 TEST(FLIRPedestrianPresenceTrackingProcessorTest, testDoublePreprocessing) {
