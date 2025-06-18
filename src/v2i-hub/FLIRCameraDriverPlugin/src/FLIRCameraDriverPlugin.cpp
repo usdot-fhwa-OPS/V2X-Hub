@@ -95,22 +95,36 @@ namespace FLIRCameraDriverPlugin
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
 					
 					droppedPedCount += flirSession->getDroppedPedCount();
-					SetStatus<uint>("Dropped Pedestrian Count", droppedPedCount);
 					flirSession->clearDroppedPedCount();
-
+					std::unordered_set<unsigned int> incomingPedestrianIds;
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
-						if (message.get_isModified()) {
-							modifiedPedCount++;
-							SetStatus<uint>("Assumed Stationary Pedestrian Count", modifiedPedCount);
-						} 
+						incomingPedestrianIds.insert(message.get_objectId());
+						// If pedestrian ID is not in current uniquePedestrianIds, it is a new pedestrian detection.
+						// Increment uniquePedCount
+						if ( uniquePedestrianIds.find(message.get_objectId()) == uniquePedestrianIds.end() )
+						{
+							uniquePedCount++;
+						}
+						
 						PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << message;
 						this->BroadcastMessage<tmx::messages::SensorDetectedObject>(message, _name, 0 , IvpMsgFlags_None);
+						if (message.get_isModified()) {
+							modifiedPedCount++;
+						}
+						totalPedCount++; 
 						currentMsgQueue.pop();
 					}
 					flirSession->clearMsgQueue();
-				}			
+					// Set the uniquePedestrianIds to the incomingPedestrianIds
+					uniquePedestrianIds = incomingPedestrianIds;
+				}
+				SetStatus<uint>(Key_DroppedPedestrianCount, droppedPedCount);
+				SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
+				SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
+				SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
+			
 			}
 			// Sleep for 10 milliseconds
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -120,7 +134,16 @@ namespace FLIRCameraDriverPlugin
 
 	void FLIRCameraDriverPlugin::UpdateConfigSettings()
 	{
-
+		PLOG(logINFO) << "Resetting FLIR Camera Driver Status.";
+		// Resetting all status data.
+		droppedPedCount = 0;
+		modifiedPedCount = 0;
+		uniquePedCount = 0;
+		totalPedCount = 0;
+		SetStatus<uint>(Key_DroppedPedestrianCount, droppedPedCount);
+		SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
+		SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
+		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
