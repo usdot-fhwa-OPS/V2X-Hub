@@ -191,7 +191,9 @@ namespace FLIRCameraDriverPlugin
                 msgQueue.push(obj);
             } 
             catch (const FLIRCameraDriverException& e) {
-                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track " << value.get_child("iD").data() <<"! Error processing pedestrian presence tracking object: " << e.what();
+                std::stringstream ss;
+                boost::property_tree::write_json(ss, value);
+                FILE_LOG(tmx::utils::LogLevel::logERROR) << "Skipping track " << ss.str() <<"! Error processing pedestrian presence tracking object: " << e.what();
                 // Increment dropped pedestrian count
                 droppedPedCount_.fetch_add(1);
             }

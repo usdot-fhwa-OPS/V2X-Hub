@@ -82,7 +82,7 @@ namespace FLIRCameraDriverPlugin
 			// Total number of unique pedestrian detections
 			unsigned int uniquePedCount = 0;
 			// Vector to store unique pedestrian IDs
-			std::unordered_set<unsigned int> uniquePedestrianIds;
+			std::unordered_set<int> uniquePedestrianIds;
 			const char* Key_TotalPedestrianCount = "Total Pedestrian Detections";
 			// Total number of pedestrian detections
 			unsigned int totalPedCount = 0;

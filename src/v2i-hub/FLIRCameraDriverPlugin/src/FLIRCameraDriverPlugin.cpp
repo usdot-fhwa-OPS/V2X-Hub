@@ -91,20 +91,28 @@ namespace FLIRCameraDriverPlugin
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
 				for(const auto &flirSession: flirSessions)
 				{
+					// Check for dropped pedestrians and add it to status count
+					if ( flirSession->getDroppedPedCount()> 0) {
+						droppedPedCount += flirSession->getDroppedPedCount();
+						flirSession->clearDroppedPedCount();
+					}
+					// A set used to store incoming pedestrian IDs.This set is used to 
+					// update the uniquePedestrianIds. By comparing incoming ids to previously
+					// incoming ids (uniquePedestrianIds), we can determine if a new pedestrian has been detected.
+					// If a new pedestrian is detected, we increment the uniquePedCount.
+					std::unordered_set<int> incomingPedestrianIds;
 					// Retrieve the message queue in each session and send each one to be broadcast, then pop.
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
-					
-					droppedPedCount += flirSession->getDroppedPedCount();
-					flirSession->clearDroppedPedCount();
-					std::unordered_set<unsigned int> incomingPedestrianIds;
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
+						// Add ID of the detected pedestrian to the incomingPedestrianIds set.
 						incomingPedestrianIds.insert(message.get_objectId());
 						// If pedestrian ID is not in current uniquePedestrianIds, it is a new pedestrian detection.
 						// Increment uniquePedCount
 						if ( uniquePedestrianIds.find(message.get_objectId()) == uniquePedestrianIds.end() )
 						{
+							PLOG(logDEBUG1) << "New pedestrian detected with ID: " << message.get_objectId();
 							uniquePedCount++;
 						}
 						
@@ -118,7 +126,10 @@ namespace FLIRCameraDriverPlugin
 					}
 					flirSession->clearMsgQueue();
 					// Set the uniquePedestrianIds to the incomingPedestrianIds
-					uniquePedestrianIds = incomingPedestrianIds;
+					if (!incomingPedestrianIds.empty()) {
+						uniquePedestrianIds = incomingPedestrianIds;
+					}
+					
 				}
 				SetStatus<uint>(Key_DroppedPedestrianCount, droppedPedCount);
 				SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
