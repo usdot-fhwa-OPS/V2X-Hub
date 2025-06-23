@@ -1,6 +1,42 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.9.0, released Sep 24th, 2025
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.9.0 includes general system improvements to documentation, configuration, deployment process, and local development environment. In addition, this release includes experimental* enhancements to integrate V2X Hub with Multimodal Inteligent Traffic Singal Systems (MMITSS) and USDOT Operation Data Environment (ODE).
+
+Enhancement in this release:  
+
+V2X Hub documentation has been updated. The objective is to ensure that all documentation is current, accurately reflects the latest product capabilities, and is organized for easy accessibility. 
+- Pull Requests: [V2X-Hub PR #644](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/644) 
+
+The ODE plugin needs to be updated to send messages from V2X Hub to the ODE using UDP instead of Kafka. The plugin also needs to be updated to support handling MAP and TIM messages. [Experimental] 
+- Pull Requests: [V2X-Hub PR #656](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/656), [V2X-Hub PR #662](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/662)
+
+CARMA Streets/V2X Hub integration with MMITSS to support Transit Signal Priority and Emergency Vehicle use cases. [Experimental] 
+- Pull Requests: [V2X-Hub PR #688](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/688) , [V2X-Hub PR #708](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/708) 
+
+
+Fixes in this release: 
+
+- GitHub Issue #624: Add New license information directly to V2X Hub GitHub Repository. 
+- Pull Requests: [V2X-Hub PR #636](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/636)
+
+Other Fixes:  
+
+- [V2X-Hub PR #659](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/659): Fixed dev container syntax and set default mode to simulation=false to avoid by default deploying V2X Hub in simulation mode. 
+- [V2X-Hub PR #660](660): Fixed build and coverage scripts to only create build and coverage information when parameter is present. 
+- [V2X-Hub PR #687](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/687): Fixed MAP Plugin not broadcasting MAP in simulation. 
+
+Other Updates:  
+
+- Pull Requests: [V2X-Hub PR #681](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/681): Enhanced update-add-user.sh script to allow selecting "develop" as the branch being used. This allows users to be created when using the develop branch. 
+ 
+*[Experimental]: Functionality labeled as experimental has gone through some official testing but has not gone through explicit verification testing and/or validation. 
+
+ 
 Version 7.8.1, released Sep 11th, 2024
 --------------------------------------------------------
 
