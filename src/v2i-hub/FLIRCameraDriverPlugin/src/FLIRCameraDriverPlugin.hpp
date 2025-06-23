@@ -71,6 +71,24 @@ namespace FLIRCameraDriverPlugin
 			std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> flirSessions;
 			std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 			bool runningWebSocket = false;
+			// Status data and keys
+			const char* Key_DroppedPedestrianCount = "Dropped Pedestrian Detections";
+			// Total number of dropped pedestrian detections
+			uint droppedPedCount = 0;
+			const char* Key_ModifiedPedestrianCount = "Modified Pedestrian Detections (Bad Data: Assumed Stationary)";
+			// Total number of modified pedestrian detections
+			uint modifiedPedCount = 0;
+			const char* Key_UniquePedestrianCount = "Unique Pedestrian Detections";
+			// Total number of unique pedestrian detections
+			unsigned int uniquePedCount = 0;
+			// Vector to store unique pedestrian IDs
+			std::unordered_set<int> uniquePedestrianIds;
+			const char* Key_TotalPedestrianCount = "Total Pedestrian Detections";
+			// Total number of pedestrian detections
+			unsigned int totalPedCount = 0;
+
+
+
 	};
 
 }

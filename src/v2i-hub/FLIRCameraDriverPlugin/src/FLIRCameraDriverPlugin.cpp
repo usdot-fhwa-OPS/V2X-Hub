@@ -91,17 +91,53 @@ namespace FLIRCameraDriverPlugin
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
 				for(const auto &flirSession: flirSessions)
 				{
+					// Check for dropped pedestrians and add it to status count
+					if ( flirSession->getDroppedPedCount()> 0) {
+						droppedPedCount += flirSession->getDroppedPedCount();
+						flirSession->clearDroppedPedCount();
+					}
+					// A set used to store incoming pedestrian IDs.This set is used to 
+					// update the uniquePedestrianIds. By comparing incoming ids to previously
+					// incoming ids (uniquePedestrianIds), we can determine if a new pedestrian has been detected.
+					// If a new pedestrian is detected, we increment the uniquePedCount.
+					std::unordered_set<int> incomingPedestrianIds;
 					// Retrieve the message queue in each session and send each one to be broadcast, then pop.
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
+					// Update total pedestrian detection count.
+					totalPedCount += currentMsgQueue.size();
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
+						// Add ID of the detected pedestrian to the incomingPedestrianIds set.
+						incomingPedestrianIds.insert(message.get_objectId());
+						// If pedestrian ID is not in current uniquePedestrianIds, it is a new pedestrian detection.
+						// Increment uniquePedCount
+						if ( uniquePedestrianIds.find(message.get_objectId()) == uniquePedestrianIds.end() )
+						{
+							PLOG(logDEBUG1) << "New pedestrian detected with ID: " << message.get_objectId();
+							uniquePedCount++;
+						}
+						
 						PLOG(logDEBUG1) << "Sending Simulated SensorDetectedObject Message " << message;
 						this->BroadcastMessage<tmx::messages::SensorDetectedObject>(message, _name, 0 , IvpMsgFlags_None);
+						if (message.get_isModified()) {
+							modifiedPedCount++;
+						}
 						currentMsgQueue.pop();
 					}
+					// Processed clear msg queue
 					flirSession->clearMsgQueue();
-				}			
+					// Set the uniquePedestrianIds to the incomingPedestrianIds
+					if (!incomingPedestrianIds.empty()) {
+						uniquePedestrianIds = incomingPedestrianIds;
+					}
+					
+				}
+				SetStatus<uint>(Key_DroppedPedestrianCount, droppedPedCount);
+				SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
+				SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
+				SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
+			
 			}
 			// Sleep for 10 milliseconds
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -111,7 +147,16 @@ namespace FLIRCameraDriverPlugin
 
 	void FLIRCameraDriverPlugin::UpdateConfigSettings()
 	{
-
+		PLOG(logINFO) << "Resetting FLIR Camera Driver Status.";
+		// Resetting all status data.
+		droppedPedCount = 0;
+		modifiedPedCount = 0;
+		uniquePedCount = 0;
+		totalPedCount = 0;
+		SetStatus<uint>(Key_DroppedPedestrianCount, droppedPedCount);
+		SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
+		SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
+		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		

@@ -8,12 +8,9 @@
 
 namespace CARMAStreetsPlugin
 {
-    class test_JsonToJ3224SDSMConverter : public ::testing::Test
-    {
-    };
 
     // Test for SDSM string json parsing
-    TEST_F(test_JsonToJ3224SDSMConverter, parseJsonString)
+    TEST(test_JsonToJ3224SDSMConverter, parseJsonString)
     {
         // TODO: consider adding functionality for converting to input strings from existing json files
         JsonToJ3224SDSMConverter converter;
@@ -27,8 +24,8 @@ namespace CARMAStreetsPlugin
 
     }
 
- // // Test for SDSM common data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertToSdsm)
+    // Test for SDSM common data
+    TEST(test_JsonToJ3224SDSMConverter, convertToSdsm)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
@@ -141,7 +138,7 @@ namespace CARMAStreetsPlugin
 
 
     // Test for SDSM optional data - vehicle data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_veh)
+    TEST(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_veh)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
@@ -264,7 +261,7 @@ namespace CARMAStreetsPlugin
     }
 
     // Test for SDSM optional data - VRU data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_vru)
+    TEST(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_vru)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
@@ -361,7 +358,7 @@ namespace CARMAStreetsPlugin
     }
 
     // Test for SDSM optional data - obstacle data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_obst)
+    TEST(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_obst)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
@@ -465,7 +462,7 @@ namespace CARMAStreetsPlugin
     }
 
     // Test for SDSM optional data - obstacle data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_sdsm_service_generated)
+    TEST(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_sdsm_service_generated)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(
@@ -549,7 +546,7 @@ namespace CARMAStreetsPlugin
 
 
 // Test for SDSM optional data - obstacle data
-    TEST_F(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_multiple_objects)
+    TEST(test_JsonToJ3224SDSMConverter, convertJsonToSDSM_multiple_objects)
     {
         JsonToJ3224SDSMConverter converter;
         std::string valid_json_str = R"(

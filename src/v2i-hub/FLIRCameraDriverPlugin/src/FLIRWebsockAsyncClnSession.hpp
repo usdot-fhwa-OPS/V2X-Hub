@@ -52,132 +52,153 @@ namespace FLIRCameraDriverPlugin
 {
     // Sends a WebSocket message and prints the response
     class FLIRWebsockAsyncClnSession : public std::enable_shared_from_this<FLIRWebsockAsyncClnSession>
-    {
-        tcp::resolver resolver_;
-        websocket::stream<beast::tcp_stream> ws_;
-        beast::flat_buffer buffer_;
-        std::string host_;
-        std::string port_;
-        // The camera rotation angle in degrees from East
-        double cameraRotation_;
-        std::string sensorId;
+    {   
+        private:
+            tcp::resolver resolver_;
+            websocket::stream<beast::tcp_stream> ws_;
+            beast::flat_buffer buffer_;
+            std::string host_;
+            std::string port_;
+            // The camera rotation angle in degrees from East
+            double cameraRotation_;
+            std::string sensorId;
 
-        std::string endpoint_;
-        std::string pedPresenceTrackingReq = R"(
-            {
-                "messageType": "Subscription",
-                "subscription": {
-                    "type": "Data",
-                    "action": "Subscribe",
-                    "inclusions": [
-                    {
-                        "type": "PedestrianPresenceTracking"
+            std::string endpoint_;
+            std::string pedPresenceTrackingReq = R"(
+                {
+                    "messageType": "Subscription",
+                    "subscription": {
+                        "type": "Data",
+                        "action": "Subscribe",
+                        "inclusions": [
+                        {
+                            "type": "PedestrianPresenceTracking"
+                        }
+                        ]
                     }
-                    ]
-                }
-                }
-            )";
-        std::queue<tmx::messages::SensorDetectedObject> msgQueue;
+                    }
+                )";
+            std::queue<tmx::messages::SensorDetectedObject> msgQueue;
 
-        std::mutex _msgLock;
+            std::mutex _msgLock;
 
-        //Health status of the FLIR camera
-        std::atomic<bool> isHealthy_;
-        
-        tmx::utils::WGS84Point sensorRefPoint;
+            // Health status of the FLIR camera
+            std::atomic<bool> isHealthy_;
+            // Dropped pedestiran Count
+            std::atomic<unsigned int> droppedPedCount_{0};
+            // Reference location for the sensor. All detection positions are expressed in cartesian coordinates relative to this point.
+            tmx::utils::WGS84Point sensorRefPoint;
 
+        public:
 
+            // Resolver and socket require an io_context
+            explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
+                : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
+                    isHealthy_.store(false);
+                };
 
+            /**
+             * @brief Reports a failure with any of the websocket functions below
+             * @param ec the error code for the specific function 
+             * @param what description of the error 
+             */
+            void fail(beast::error_code ec, const std::string& what);       
 
-    public:
+            /**
+             * @brief Start the asynchronous web socket connection to the camera. Each function will call the
+             * function below it.
+             * @param host ip address of camera to connect to
+             * @param port port to connect to
+             * @param cameraRotation calculated camera rotation
+             */
+            void run();
+            
+            /**
+             * @brief Lookup the domain name of the IP address from run function.
+             * @param ec error code containing information describing resolve issue
+             * @param results result of domain name lookup
+             */
+            void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
+            
+            /**
+             * @brief Configures websocket settings and initiates handshake
+             * @param ec error code containing information describing connection issue 
+             */
+            void on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
 
-    // Resolver and socket require an io_context
-    explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
-        : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
-            isHealthy_.store(false);
-        };
+            /**
+             * @brief Performs the websocket handshake and calls write function
+             * @param ec error code containing information describing handshake issue
+             */
+            void on_handshake(beast::error_code ec);
 
-    /**
-     * @brief Reports a failure with any of the websocket functions below
-     * @param ec the error code for the specific function 
-     * @param what description of the error 
-     */
-    void fail(beast::error_code ec, const std::string& what);       
+            /**
+             * @brief Sends the subscription request json to the camera and calls read function for camera response
+             * @param ec error code containing information describing issue with json send
+             * @param bytes_transferred the bytes of the json
+             */
+            void on_write(beast::error_code ec, std::size_t bytes_transferred);
 
-    /**
-     * @brief Start the asynchronous web socket connection to the camera. Each function will call the
-     * function below it.
-     * @param host ip address of camera to connect to
-     * @param port port to connect to
-     * @param cameraRotation calculated camera rotation
-     */
-    void run();
-    
-    /**
-     * @brief Lookup the domain name of the IP address from run function.
-     * @param ec error code containing information describing resolve issue
-     * @param results result of domain name lookup
-     */
-    void on_resolve(beast::error_code ec, tcp::resolver::results_type results);
-    
-    /**
-     * @brief Configures websocket settings and initiates handshake
-     * @param ec error code containing information describing connection issue 
-     */
-    void on_connect(beast::error_code ec, tcp::resolver::results_type::endpoint_type ep);
+            /**
+             * @brief Used to read in all messages from the camera and parse out desired fields
+             * @param ec error code containing information describing issue with reading camera data
+             * @param bytes_transferred the bytes of the received camera data
+             */
+            void on_read(beast::error_code ec, std::size_t bytes_transferred);
+            
+            /**
+             * @brief Closes the websocket connection to the camera
+             * @param ec error code containing information describing issue with closing websocket
+             */
+            void on_close(beast::error_code ec);
 
-    /**
-     * @brief Performs the websocket handshake and calls write function
-     * @param ec error code containing information describing handshake issue
-     */
-    void on_handshake(beast::error_code ec);
+            /**
+             * @brief Get method for queue containing message(s) for all tracked pedestrians. Copies the queue into
+             * a temporary queue and returns temporary queue. Clears the original queue.
+             * @return The message queue.
+             */
+            std::queue<tmx::messages::SensorDetectedObject> getMsgQueue();
+            /**
+             * @brief Clears the message queue
+             */
+            void clearMsgQueue();
 
-    /**
-     * @brief Sends the subscription request json to the camera and calls read function for camera response
-     * @param ec error code containing information describing issue with json send
-     * @param bytes_transferred the bytes of the json
-     */
-    void on_write(beast::error_code ec, std::size_t bytes_transferred);
+            /**
+             * @brief Handles messages of type "Subscription" received from the FLIR camera
+             * @param pr Property tree containing the parsed JSON message
+             */
+            void handleSubscriptionMessage(const pt::ptree& pr) const;
 
-    /**
-     * @brief Used to read in all messages from the camera and parse out desired fields
-     * @param ec error code containing information describing issue with reading camera data
-     * @param bytes_transferred the bytes of the received camera data
-     */
-    void on_read(beast::error_code ec, std::size_t bytes_transferred);
-    
-    /**
-     * @brief Closes the websocket connection to the camera
-     * @param ec error code containing information describing issue with closing websocket
-     */
-    void on_close(beast::error_code ec);
+            /**
+             * @brief Handles messages of type "Data" received from the FLIR camera
+             * @param pr Property tree containing the parsed JSON message
+             */
+            void handleDataMessage(const pt::ptree& pr);
 
-    /**
-     * @brief Get method for queue containing message(s) for all tracked pedestrians. Copies the queue into
-     * a temporary queue and returns temporary queue. Clears the original queue.
-     * @return The message queue.
-     */
-    std::queue<tmx::messages::SensorDetectedObject> getMsgQueue();
-    /**
-     * @brief Clears the message queue
-     */
-    void clearMsgQueue();
+            /**
+             * @brief Processes an array of pedestrian presence tracking objects from the FLIR camera.
+             * @param pr The property tree containing the pedestrian presence tracking objects.
+             * @param cameraRotation The rotation of the camera in degrees clockwise from North (NED).
+             * @param cameraViewName The name of the camera view.
+             * @return A queue of processed SensorDetectedObject messages.
+             * @throws FLIRCameraDriverException if fails to parse the tracking objects.
+             */
+            std::queue<tmx::messages::SensorDetectedObject> processPedestrianPresenceTrackingObjects(const boost::property_tree::ptree& pr);
 
-    /**
-     * @brief Handles messages of type "Subscription" received from the FLIR camera
-     * @param pr Property tree containing the parsed JSON message
-     */
-    void handleSubscriptionMessage(const pt::ptree& pr) const;
+            /**
+             * @brief Get the health status of the FLIR camera
+             */
+            bool isHealthy() const;
 
-    /**
-     * @brief Handles messages of type "Data" received from the FLIR camera
-     * @param pr Property tree containing the parsed JSON message
-     */
-    void handleDataMessage(const pt::ptree& pr);
+            /**
+             * @brief Get the dropped pedestrian count
+             */
+            unsigned int getDroppedPedCount() const;
+            /**
+             * @brief Clear the dropped pedestrian count
+             */
+            void clearDroppedPedCount();
 
-    /**
-     * @brief Get the health status of the FLIR camera
-     */
-    bool isHealthy() const;
+            std::string getSensorId() const;
     };
-};
+}

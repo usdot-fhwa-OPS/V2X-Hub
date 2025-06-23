@@ -30,6 +30,8 @@ namespace tmx::messages
 
         //Flag to indicate whether sensor detected object is simulated.
         std_attribute(this->msg, bool, isSimulated, false,);
+        //Flag to indicate whether sensor detected object is modified by our processing to account for any Sensor bad performance.
+        std_attribute(this->msg, bool, isModified, false,);
         // Classification of detected object.
         std_attribute(this->msg, std::string, type, "",);
         // Confidence of type classification
