@@ -12,7 +12,7 @@ Enhancement in this release:
 V2X Hub documentation has been updated. The objective is to ensure that all documentation is current, accurately reflects the latest product capabilities, and is organized for easy accessibility. 
 - Pull Requests: [V2X-Hub PR #644](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/644) 
 
-The ODE plugin needs to be updated to send messages from V2X Hub to the ODE using UDP instead of Kafka. The plugin also needs to be updated to support handling MAP and TIM messages. [Experimental] 
+Updated ODE Plugin to support TIM and MAP messages and new UDP based ODE communication interface. [Experimental] 
 - Pull Requests: [V2X-Hub PR #656](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/656), [V2X-Hub PR #662](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/662)
 
 CARMA Streets/V2X Hub integration with MMITSS to support Transit Signal Priority and Emergency Vehicle use cases. [Experimental] 
