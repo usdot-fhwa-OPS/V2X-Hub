@@ -121,9 +121,10 @@ namespace FLIRCameraDriverPlugin
 						if (message.get_isModified()) {
 							modifiedPedCount++;
 						}
-						totalPedCount++; 
 						currentMsgQueue.pop();
 					}
+					// Update total pedestrian detection count and clear the message queue.
+					totalPedCount += currentMsgQueue.size();
 					flirSession->clearMsgQueue();
 					// Set the uniquePedestrianIds to the incomingPedestrianIds
 					if (!incomingPedestrianIds.empty()) {
