@@ -103,6 +103,8 @@ namespace FLIRCameraDriverPlugin
 					std::unordered_set<int> incomingPedestrianIds;
 					// Retrieve the message queue in each session and send each one to be broadcast, then pop.
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
+					// Update total pedestrian detection count and clear the message queue.
+					totalPedCount += currentMsgQueue.size();
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
@@ -123,8 +125,6 @@ namespace FLIRCameraDriverPlugin
 						}
 						currentMsgQueue.pop();
 					}
-					// Update total pedestrian detection count and clear the message queue.
-					totalPedCount += currentMsgQueue.size();
 					flirSession->clearMsgQueue();
 					// Set the uniquePedestrianIds to the incomingPedestrianIds
 					if (!incomingPedestrianIds.empty()) {
