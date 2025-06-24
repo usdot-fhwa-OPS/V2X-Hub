@@ -1,27 +1,27 @@
-
-#ifndef SAMPLEBSMPLUGIN_H
-#define SAMPLEBSMPLUGIN_H
+/**
+ * Copyright (C) 2024 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+#pragma once
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-#include <sys/time.h>
 #include <thread>
-#include <time.h>
-#include <tmx/IvpPlugin.h>
-#include <tmx/messages/IvpJ2735.h>
-#include <tmx/tmx.h>
-#include <unistd.h>
+#include <PluginClientClockAware.h>
 
-#include "PluginClient.h"
-#include "PluginUtil.h"
-
-#include <ApplicationDataMessage.h>
-#include <ApplicationMessage.h>
-
-#include <tmx/messages/IvpJ2735.h>
-#include <tmx/messages/auto_message.hpp>
 
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 
@@ -31,7 +31,7 @@ using namespace tmx::messages;
 
 namespace SampleBSMPluginNS
 {
-    class SampleBSMPlugin : public PluginClient
+    class SampleBSMPlugin : public PluginClientClockAware
     {
     public:
         SampleBSMPlugin(std::string name);

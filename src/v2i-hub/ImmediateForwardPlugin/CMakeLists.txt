@@ -1,19 +1,23 @@
-PROJECT ( ImmediateForwardPlugin VERSION 7.6.0 LANGUAGES CXX )
+project( ImmediateForwardPlugin VERSION 7.6.0 LANGUAGES CXX )
+set(CMAKE_CXX_STANDARD 17)
 
-SET (TMX_PLUGIN_NAME "Immediate Forward")
-
-FIND_PACKAGE (XercesC REQUIRED)
+set(TMX_PLUGIN_NAME "Immediate Forward")
+find_package(jsoncpp REQUIRED)
 find_package(CURL REQUIRED)
-
-#SET(CMAKE_BOTAN_SOURCE_DIR {CMAKE_SOURCE_DIR}/../../../ext/botan)
-#include_directories(${CMAKE_BOTAN_SOURCE_DIR}/build/include)
-#add_library( libbotan-2 SHARED IMPORTED )
-#set_target_properties( libbotan-2 PROPERTIES IMPORTED_LOCATION /usr/local/lib/libbotan-2.so )
-
 
 BuildTmxPlugin ()
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} tmxutils jsoncpp )
+#############
+## Testing ##
+#############
+enable_testing()
+add_library(${PROJECT_NAME}_lib src/ImmediateForwardConfiguration.cpp src/IMFNTCIP1218Worker.cpp)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils jsoncpp)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
 
-
-TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${CURL_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${XercesC_LIBRARY} ) #libbotan-2 )
+target_link_libraries(${PROJECT_NAME}_test PUBLIC ${PROJECT_NAME}_lib gtest)

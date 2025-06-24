@@ -61,25 +61,29 @@ namespace tmx::utils {
         hints.ai_socktype = SOCK_DGRAM;
         hints.ai_protocol = IPPROTO_UDP;
 
-        int r(getaddrinfo(address.c_str(), decimalPort, &hints, &_addrInfo));
+        int r  = getaddrinfo(address.c_str(), decimalPort, &hints, &_addrInfo);
         if (r != 0 || _addrInfo == NULL)
         {
-            throw UdpServerRuntimeError(("invalid address or port for UDP socket: \"" + address + ":" + decimalPort + "\"").c_str());
+            FILE_LOG(logERROR) << "Error getaddrinfo: " << strerror(errno) ;
+            throw UdpServerRuntimeError("invalid address or port for UDP socket: \"" + address + ":" + decimalPort + "\"");
         }
 
         _socket = socket(_addrInfo->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
         if (_socket == -1)
         {
+            FILE_LOG(logERROR) << "Error socket: " << strerror(errno) ;
+
             freeaddrinfo(_addrInfo);
-            throw UdpServerRuntimeError(("could not create UDP socket for: \"" + address + ":" + decimalPort + "\"").c_str());
+            throw UdpServerRuntimeError("could not create UDP socket for: \"" + address + ":" + decimalPort + "\"");
         }
 
         r = bind(_socket, _addrInfo->ai_addr, _addrInfo->ai_addrlen);
         if (r != 0)
         {
+            FILE_LOG(logERROR) << "Error bind: " << strerror(errno) ;
             freeaddrinfo(_addrInfo);
             close(_socket);
-            throw UdpServerRuntimeError(("could not bind UDP socket with: \"" + address + ":" + decimalPort + "\"").c_str());
+            throw UdpServerRuntimeError("could not bind UDP socket with: \"" + address + ":" + decimalPort + "\"");
         }
     }
 

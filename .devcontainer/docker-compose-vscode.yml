@@ -8,23 +8,25 @@ services:
     volumes:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
+      - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 1000; do :; done"  
     environment:
-      - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - SIMULATION_MODE=true
-      - SIMULATION_IP=127.0.0.1
-      - SIMULATION_REGISTRATION_PORT=6767
-      - LOCAL_IP=127.0.0.1
-      - TIME_SYNC_TOPIC=time_sync
-      - TIME_SYNC_PORT=7575
-      - SIM_V2X_PORT=5757
-      - SIM_INTERACTION_PORT=7576
-      - V2X_PORT=8686
-      - INFRASTRUCTURE_ID=rsu_<J2735 MAP MESSAGE INTERSECTION ID>
-      - INFRASTRUCTURE_NAME=<RSU_NAME>
-      - SENSOR_JSON_FILE_PATH=/var/www/plugins/MAP/sensors.json
+      MYSQL_PASSWORD: /run/secrets/mysql_password
+      SIMULATION_MODE: "false"
+      # Environment variables only requires in simulation 
+      # SIMULATION_IP: 127.0.0.1
+      # SIMULATION_REGISTRATION_PORT: 6767
+      # TIME_SYNC_TOPIC: time_sync
+      # TIME_SYNC_PORT: 7575
+      # SIM_V2X_PORT: 5757
+      # SIM_INTERACTION_PORT: 7576
+      # V2X_PORT: 8686
+      LOCAL_IP: 127.0.0.1
+      INFRASTRUCTURE_ID: rsu_1234
+      INFRASTRUCTURE_NAME: East
+      SENSOR_JSON_FILE_PATH: /var/www/plugins/MAP/sensors.json
     secrets:
       - mysql_password
 
@@ -33,10 +35,10 @@ services:
     container_name: mysql
     restart: always
     environment:
-      - MYSQL_DATABASE=IVP
-      - MYSQL_USER=IVP
-      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+      MYSQL_DATABASE: IVP
+      MYSQL_USER: IVP
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
     network_mode: host
     secrets:
       - mysql_password

@@ -17,7 +17,7 @@
 
 // Need to include all the types
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 #include <tmx/j2735_messages/BasicSafetyMessageVerbose.hpp>
 #endif
 #include <tmx/j2735_messages/CommonSafetyRequestMessage.hpp>
@@ -25,7 +25,7 @@
 #include <tmx/j2735_messages/IntersectionCollisionMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/NmeaMessage.hpp>
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 #include <tmx/j2735_messages/PersonalMobilityMessage.hpp>
 #endif
 #include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
@@ -54,7 +54,7 @@ struct ENDOFLIST {};
 template <class... T> struct message_type_list {};
 using message_types = message_type_list<
 		BsmMessage,
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		BsmvMessage,
 #endif
 		CsrMessage,
@@ -63,7 +63,7 @@ using message_types = message_type_list<
 		MapDataMessage,
 		NmeaMessage,
 		PdmMessage,
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		PmmMessage,
 #endif
 		PsmMessage,
@@ -179,7 +179,7 @@ public:
 		if (byInt.size() <= 0 || byStr.size() <= 0)
 		{
 			add_allocator_to_maps<BsmMessage>();
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 			add_allocator_to_maps<BsmvMessage>();
 #endif
 			add_allocator_to_maps<CsrMessage>();
@@ -188,7 +188,7 @@ public:
 			add_allocator_to_maps<MapDataMessage>();
 			add_allocator_to_maps<NmeaMessage>();
 			add_allocator_to_maps<PdmMessage>();
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 			add_allocator_to_maps<PmmMessage>();
 #endif
 			add_allocator_to_maps<PvdMessage>();
@@ -206,7 +206,7 @@ public:
 			add_allocator_to_maps<tsm2Message>();
 			add_allocator_to_maps<tsm3Message>();
 			add_allocator_to_maps<SdsmMessage>();
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 			add_allocator_to_maps<UperFrameMessage>();
 #endif
 		}
@@ -417,7 +417,7 @@ private:
 
 		// Always try the default encoding first
 		ASN1_CODEC<MessageFrameMessage> Codec;
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 		tmx::messages::codec::uper<MessageFrameMessage> OtherCodec;
 #else
 		tmx::messages::codec::der<MessageFrameMessage> OtherCodec;

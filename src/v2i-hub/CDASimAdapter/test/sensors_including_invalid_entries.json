@@ -1,0 +1,48 @@
+[
+  {
+    "sensorId": "SomeID",
+    "type": "SemanticLidar",
+    "ref": {
+      "type": "CARTESIAN",
+      "location": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "orientation": {
+        "yaw": 0.0,
+        "pitch": 0.0,
+        "roll": 0.0
+        }
+    }
+  },
+  {
+    "sensorId": "sensor_1",
+    "type": "SemanticLidar",
+    "ref": {
+      "type": "WGS84",
+      "location": {
+        "latitude": 38.9549716548523, 
+        "longitude": -77.14935313519123, 
+        "altitude": 5.5 
+      }
+    }
+  }, 
+  {
+    "sensorId": "SomeID2",
+    "type": "SemanticLidar",
+    "ref": {
+      "type": "CARTESIAN",
+      "location": {
+        "x": 1.0,
+        "y": 2.0,
+        "z": 0.0
+      },
+      "orientation": {
+        "yaw": 23.0,
+        "pitch": 0.0,
+        "roll": 0.0
+        }
+    }
+  }
+]

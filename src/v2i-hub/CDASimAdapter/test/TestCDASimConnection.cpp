@@ -101,20 +101,26 @@ namespace CDASimAdapter {
 
     TEST_F(TestCDASimConnection, read_json_file)
     {        
-        auto sensorJsonV = connection->read_json_file("Invalid_file_path" );
-        ASSERT_TRUE(sensorJsonV.empty());
+        EXPECT_THROW(connection->read_json_file("Invalid_file_path" ), std::invalid_argument);
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
         {
-            sensorJsonV = connection->read_json_file(sensors_file_path );
+            auto sensorJsonV = connection->read_json_file(sensors_file_path );
             ASSERT_FALSE(sensorJsonV.empty());
         }        
     }
 
     TEST_F(TestCDASimConnection, string_to_json)
     {        
-        auto sensorJsonV = connection->string_to_json("Invalid Json");
-        ASSERT_TRUE(sensorJsonV.empty());
+        EXPECT_THROW(connection->string_to_json("Invalid Json"), std::invalid_argument);
+    }
+
+    TEST_F(TestCDASimConnection, read_sensor_configuration_file) {
+        auto sensor_registration = connection->read_sensor_configuration_file("../../CDASimAdapter/test/sensors_including_invalid_entries.json");
+        EXPECT_EQ(2, sensor_registration.size());
+        EXPECT_EQ("SomeID", sensor_registration[0]["sensorId"].asString());
+        EXPECT_EQ("SomeID2", sensor_registration[1]["sensorId"].asString());
+
     }
 }

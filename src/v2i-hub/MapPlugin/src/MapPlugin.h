@@ -45,7 +45,7 @@
 
 namespace MapPlugin {
 
-#if SAEJ2735_SPEC < 63
+#if SAEJ2735_SPEC < 2016
 UPERframe _uperFrameMessage;
 #endif
 

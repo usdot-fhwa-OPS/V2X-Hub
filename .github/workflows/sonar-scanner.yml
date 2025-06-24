@@ -42,8 +42,8 @@ jobs:
         run: |
           mkdir bw-output
           cd src
-          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh
-          ./coverage.sh
+          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh coverage --j2735-version 2016
+          ./test.sh coverage
       - name: Run sonar-scanner
         uses: usdot-fhwa-stol/actions/sonar-scanner@main
         with:

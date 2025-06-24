@@ -13,6 +13,7 @@
 #include <chrono>
 #include <sstream>
 #include <cassert>
+#include <stol-j2735-201603-carma/jer_encoder.h>
 
 using namespace std;
 using namespace battelle::attributes;
@@ -270,12 +271,13 @@ TEST_F(J2735MessageTest, EncodeMobilityOperation)
 TEST_F(J2735MessageTest, EncodeMobilityRequest)
 {	
 	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
-
+	
 	/**
 	 * Populate MobilityHeader 
 	 */
 	
 	char* my_str = (char *) "sender_id";
+	
 	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->header.hostStaticId.buf = my_bytes;
 	message->header.hostStaticId.size = strlen(my_str);
@@ -297,7 +299,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
 	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
 	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
+	for(int i = 0; i< strlen(my_str_1); i++) 
 	{
 		my_bytes_1[i] =  (uint8_t)my_str_1[i];
 	}
@@ -315,7 +317,7 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	my_str = (char *) "carma3/Geofence_Acknowledgement";
 	my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str);
+	message->body.strategy.size = strlen(my_str); 
 
 	message->body.urgency = 1;
 	message->body.planType = 0;
@@ -324,29 +326,30 @@ TEST_F(J2735MessageTest, EncodeMobilityRequest)
 	message->body.location.ecefZ = 1;
 	message->body.location.timestamp.buf = my_bytes_1;
 	message->body.location.timestamp.size = strlen(my_str_1);
-	
-	message->body.expiration.buf = my_bytes_1;
-	message->body.expiration.size = strlen(my_str_1);
-	
-		
+	message->body.expiration = (MobilityTimestamp_t*)malloc(sizeof(MobilityTimestamp_t));
+	message->body.expiration->buf = my_bytes_1;
+	message->body.expiration->size = strlen(my_str_1);
+
 	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
 	offset->offsetX = 1;
 	offset->offsetY = 1;
 	offset->offsetZ = 1;
-	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
-	ASN_SEQUENCE_ADD(&message->body.trajectory.list.array, offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
 
-	message->body.trajectoryStart.ecefX = 1;
-	message->body.trajectoryStart.ecefY = 1;
-	message->body.trajectoryStart.ecefZ = 1;
-	message->body.trajectoryStart.timestamp.buf = my_bytes_1;
-	message->body.trajectoryStart.timestamp.size = strlen(my_str_1);
+	message->body.trajectoryStart = (MobilityLocation*)malloc(sizeof(MobilityLocation));
+	message->body.trajectoryStart->ecefX = 1;
+	message->body.trajectoryStart->ecefY = 1;
+	message->body.trajectoryStart->ecefZ = 1;
+	message->body.trajectoryStart->timestamp.buf = my_bytes_1;
+	message->body.trajectoryStart->timestamp.size = strlen(my_str_1);
 		
 	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
 	tmx::messages::tsm0Message*  _tsm0Message = new tmx::messages::tsm0Message(message);
 	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message->get_j2735_data());
 	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
+
 	free(message);
 	delete my_bytes_1;
 	delete my_str_1;
@@ -565,7 +568,7 @@ TEST_F(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
     message->regional = regional;
 
 	xer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
-
+	jer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
 	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
 	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
@@ -624,7 +627,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlRequest){
 
 TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
-	string tsm5str="<TestMessage05><body><tcmV01><reqid>30642B129B984162</reqid><reqseq>0</reqseq><msgtot>9</msgtot><msgnum>9</msgnum><id>0034b8d88d084ffdaf23837926031658</id><updated>0</updated><package><label>workzone-laneclosed</label><tcids><Id128b>0034b8d88d084ffdaf23837926031658</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27506547</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27506547</reftime><reflon>-818331529</reflon><reflat>281182119</reflat><refelv>0</refelv><refwidth>424</refwidth><heading>3403</heading><nodes><PathNode><x>0</x><y>0</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-204</x><y>722</y><width>2</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>-2</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-13</x><y>46</y><width>0</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	string tsm5str="<TestMessage05><body><tcmV01><reqid>30642B129B984162</reqid><reqseq>0</reqseq><msgtot>9</msgtot><msgnum>9</msgnum><id>0034b8d88d084ffdaf23837926031658</id><updated>0</updated><package><label>workzone-laneclosed</label><tcids><Id128b>0034b8d88d084ffdaf23837926031658</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27506547</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27506547</reftime><reflon>-818331529</reflon><reflat>281182119</reflat><refelv>0</refelv><refwidth>424</refwidth><heading>3403</heading><nodes><PathNode><x>0</x><y>0</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-204</x><y>722</y><width>2</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>-2</width></PathNode><PathNode><x>-203</x><y>721</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-203</x><y>722</y><width>0</width></PathNode><PathNode><x>-13</x><y>46</y><width>0</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
 	std::stringstream ss;
 	tsm5Message tsm5msg;
 	tsm5EncodedMessage tsm5Enc;
@@ -637,7 +640,7 @@ TEST_F(J2735MessageTest, EncodeTrafficControlMessage){
 	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
 
 	//No <refwidth> tag in TCM
-	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><notopen/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
 	ss<<tsm5str;
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());

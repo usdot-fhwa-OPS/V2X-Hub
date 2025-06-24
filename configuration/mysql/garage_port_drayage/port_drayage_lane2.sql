@@ -5,6 +5,8 @@
 -- Server version	7.6.0
 -- Current Database: `PORT_DRAYAGE`
 --
+-- Map: Garage (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/maps/garage.pgm)
+-- Route Graph: Garage Port Drayage V2 (https://github.com/usdot-fhwa-stol/cda1tenth-bringup/blob/develop/graphs/garage_graph_port_drayage_v2.geojson)
 
 CREATE DATABASE /*!32312 IF NOT EXISTS*/ `PORT_DRAYAGE` /*!40100 DEFAULT CHARACTER SET latin1 */;
 
@@ -26,7 +28,7 @@ CREATE TABLE `first_action` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `first_action` WRITE;
-INSERT INTO `first_action` VALUES ('C1T-1','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two');
+INSERT INTO `first_action` VALUES ('RED-TRUCK','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two');
 UNLOCK TABLES;
 
 --
@@ -45,5 +47,5 @@ CREATE TABLE `freight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 
 LOCK TABLES `freight` WRITE;
-INSERT INTO `freight` VALUES ('C1T-1','NULL',-0.45,-0.45,'EXIT_PORT','zero','one'),('C1T-1','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two'),('C1T-1','CARGO_A',-3.45,-1.44,'PICKUP','two','three'),('C1T-1','CARGO_A',-3.45,-3.45,'EXIT_STAGING_AREA','three','four'),('C1T-1','CARGO_A',-3.45,-5.45,'ENTER_PORT','four','five'),('C1T-1','CARGO_A',-1.45,-6.45,'DROPOFF','five','six'),('C1T-1','CARGO_B',2.55,-4.5,'PICKUP','six','seven'),('C1T-1','CARGO_B',0.55,-3.45,'PORT_CHECKPOINT','seven','eight'),('C1T-1','CARGO_B',-0.45,-0.45,'EXIT_PORT','eight','nine');
+INSERT INTO `freight` VALUES ('RED-TRUCK','NULL',-0.45,-0.45,'EXIT_PORT','zero','one'),('RED-TRUCK','NULL',-2.46,0.56,'ENTER_STAGING_AREA','one','two'),('RED-TRUCK','CARGO_A',-3.45,-1.44,'PICKUP','two','three'),('RED-TRUCK','CARGO_A',-3.45,-3.45,'EXIT_STAGING_AREA','three','four'),('RED-TRUCK','CARGO_A',-3.45,-5.45,'ENTER_PORT','four','five'),('RED-TRUCK','CARGO_A',-1.45,-6.45,'DROPOFF','five','six'),('RED-TRUCK','CARGO_B',2.55,-4.5,'PICKUP','six','seven'),('RED-TRUCK','CARGO_B',0.55,-3.45,'PORT_CHECKPOINT','seven','eight'),('RED-TRUCK','CARGO_B',-0.45,-0.45,'EXIT_PORT','eight','nine');
 UNLOCK TABLES;

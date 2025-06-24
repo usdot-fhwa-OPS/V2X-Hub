@@ -29,14 +29,20 @@
  #include <chrono>
  #include <atomic>
  #include <thread>
+ #include <boost/algorithm/string.hpp>
  #include <tmx/messages/IvpJ2735.h>
  #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
  #include <tmx/j2735_messages/SpatMessage.hpp>
+ #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+ #include <tmx/j2735_messages/MapDataMessage.hpp>
  #include <BasicSafetyMessage.h>
  #include <tmx/messages/auto_message.hpp>
  #include <librdkafka/rdkafkacpp.h>
  #include <tmx/json/cJSON.h>
  #include "/usr/local/include/date/date.h"
+ #include "UDPMessageForwarder.h"
+ #include "CommunicationModeHelper.h"
+
  
  using namespace std;
  using namespace tmx;
@@ -68,12 +74,17 @@
 
  	void HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg);
  	void HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg);
+ 	void HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg);
+ 	void HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg);
 
  private:
  	std::atomic<uint64_t> _frequency{0};
  	DATA_MONITOR(_frequency);   // Declares the
 
  	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
+	void sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg);
+	void sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg);
+	void sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
  	uint16_t _scheduleFrequency;
 	uint16_t _freqCounter;
@@ -85,6 +96,14 @@
  	std::string kafkaConnectString;
  	RdKafka::Conf *kafka_conf;
  	RdKafka::Producer *kafka_producer;
+	int _MAPUDPPort;
+	int _TIMUDPPort;
+	int _BSMUDPPort;
+	int _SPATUDPPort;
+	std::string _communicationMode;
+	std::string _udpServerIpAddress;
+	std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
+	std::shared_ptr<CommunicationModeHelper> _communicationModeHelper;
  };
  std::mutex _cfgLock;
 

@@ -26,7 +26,7 @@ namespace RSUHealthMonitor
     {
         for (auto rsuConfig : _rsuConfigListPtr->getConfigs())
         {
-            auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
+            auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authProtocol, rsuConfig.authPassPhrase, rsuConfig.privProtocol, rsuConfig.privPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
             BroadcastRSUStatus(rsuStatusJson, rsuConfig.mibVersion);
         }
     }
@@ -38,7 +38,7 @@ namespace RSUHealthMonitor
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
         GetConfigValue<string>("RSUConfigurationList", _rsuConfigListStr);
-
+        PLOG(logDEBUG) << "RSU Configuration " << _rsuConfigListStr;
         try
         {
             _rsuConfigListPtr->parseRSUs(_rsuConfigListStr);
@@ -60,7 +60,7 @@ namespace RSUHealthMonitor
         UpdateConfigSettings();
     }
 
-    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson, const RSUMibVersion &mibVersion)
+    void RSUHealthMonitorPlugin::BroadcastRSUStatus(const Json::Value &rsuStatusJson, const tmx::utils::rsu::RSU_SPEC &mibVersion)
     {
         // Broadcast the RSU status info when there are RSU responses.
         if (!rsuStatusJson.empty() && _rsuWorker)
