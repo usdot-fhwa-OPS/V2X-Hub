@@ -3,7 +3,7 @@ services:
     build: 
       context: ..
       dockerfile: ./Dockerfile
-      target: dependencies
+      target: build-environment
     container_name: v2xhub
     network_mode: host
     privileged: true
