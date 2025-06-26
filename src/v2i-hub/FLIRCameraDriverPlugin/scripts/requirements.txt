@@ -1,2 +1,4 @@
 websockets==13.1
 aiohttp==3.10.11
+pytz
+dataclasses
