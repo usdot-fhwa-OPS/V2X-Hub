@@ -111,7 +111,7 @@ async def sendMessage(websocket):
     while True:
         tracks= FLIRPedestrianPresenceTracking()
         # Ramdom chance to add a new track
-        if len(message["track"]) < 5 and random.random() > 0.2:
+        if len(tracks.track) < 5 and random.random() > 0.2:
             new_detection = FLIRDetection(
                 x=random.uniform(-5, 5),
                 y=random.uniform(-5, 5),
