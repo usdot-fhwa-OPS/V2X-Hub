@@ -9,7 +9,7 @@ V2X Hub release 7.9.0 includes general system improvements to documentation, con
 
 Enhancement in this release:  
 
-V2X Hub documentation has been updated. The objective is to ensure that all documentation is current, accurately reflects the latest product capabilities, and is organized for easy accessibility. 
+V2X Hub documentation has been updated by adding the V2X Hub Plugin Programming Guide in README.md under src/v2i-hub. The objective is to ensure that all documentation is current, accurately reflects the latest product capabilities, and is organized for easy accessibility.
 - Pull Requests: [V2X-Hub PR #644](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/644) 
 
 Updated ODE Plugin to support TIM and MAP messages and new UDP based ODE communication interface. [Experimental] 
