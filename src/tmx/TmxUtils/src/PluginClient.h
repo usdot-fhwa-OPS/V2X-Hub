@@ -371,8 +371,10 @@ protected:
 	inline const std::chrono::system_clock::time_point & getStartTime() const {
 		return _startTime;
 	}
-
+	void UpdatePssStatus();
 private:
+ 	long getPss() const;
+
 	void SetStartTimeStatus();
 
 	IvpMsgFilter* _msgFilter;
