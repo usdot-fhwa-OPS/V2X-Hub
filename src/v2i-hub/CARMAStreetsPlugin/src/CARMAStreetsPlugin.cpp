@@ -834,6 +834,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		PLOG(logDEBUG) << *_tsm3Message;
 		tsm3EncodedMsg->initialize(*_tsm3Message);
 		free(mobilityOperation);
+		delete _tsm3Message;
 		return true;
 	}
 	catch(const std::runtime_error &e )

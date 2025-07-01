@@ -85,7 +85,7 @@ namespace tmx::utils
              * @return true if successful.
              * @return false if unsuccessful.
              */
-            virtual bool init_topic();
+            virtual bool init_topic( const std::string &topic_name);
              /**
              * @brief Initialize kafka producer.
              * @return true if successful.
@@ -102,7 +102,7 @@ namespace tmx::utils
              * @param msg message to produce.
              * @param topic_name topic to send the message to.
              */
-            virtual void send(const std::string& message, const std::string& topic_name ) const;
+            virtual void send(const std::string& message, const std::string& topic_name );
             /**
              * @brief Is kafka_producer_worker still running?
              * 
