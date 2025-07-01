@@ -9,7 +9,7 @@
 #
 
 CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
 SET (TMX_APPDESCR "Transportation Message eXchange (TMX)" CACHE INTERNAL "Application description")
