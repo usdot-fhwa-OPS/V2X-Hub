@@ -18,7 +18,6 @@ Updated ODE Plugin to support TIM and MAP messages and new UDP based ODE communi
 CARMA Streets/V2X Hub integration with MMITSS to support Transit Signal Priority and Emergency Vehicle use cases. [Experimental] 
 - Pull Requests: [V2X-Hub PR #688](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/688) , [V2X-Hub PR #708](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/708) 
 
-
 Fixes in this release: 
 
 - GitHub Issue #624: Add New license information directly to V2X Hub GitHub Repository. 
@@ -36,6 +35,7 @@ Other Updates: 
  
 *[Experimental]: Functionality labeled as experimental has gone through some official testing but has not gone through explicit verification testing and/or validation. 
 
+Documentation Updates: [Deployment and configuration instructions](https://github.com/usdot-fhwa-OPS/V2X-Hub/blob/master/configuration/README.md)
  
 Version 7.8.1, released Sep 11th, 2024
 --------------------------------------------------------
