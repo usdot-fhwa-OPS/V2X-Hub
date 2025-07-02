@@ -47,7 +47,7 @@ namespace tmx::utils
     {
         if(init_producer())
         {
-            return init_topic();
+            return init_topic(_topics_str);
         }
         return false;
     }
@@ -96,12 +96,12 @@ namespace tmx::utils
         return true;
     }
 
-    bool kafka_producer_worker::init_topic()
+    bool kafka_producer_worker::init_topic( const std::string &topic_name)
     {
         RdKafka::Conf *tconf = RdKafka::Conf::create(RdKafka::Conf::CONF_TOPIC);
         std::string errstr = "";
         // Create topic handle
-        _topic = RdKafka::Topic::create(_producer, _topics_str, tconf, errstr);
+        _topic = RdKafka::Topic::create(_producer, topic_name, tconf, errstr);
         if (!_topic)
         {
             FILE_LOG(logWARNING) <<  "Failed to create producer: " << errstr.c_str();
@@ -180,36 +180,22 @@ namespace tmx::utils
         _producer->poll(0);
     }
 
-    void kafka_producer_worker::send(const std::string& message, const std::string& topic_name ) const
+    void kafka_producer_worker::send(const std::string& message, const std::string& topic_name )
     {
-        bool retry = true;
-        while (retry) 
-        {
-            RdKafka::ErrorCode produce_error = _producer->produce(topic_name, 
-                                                                        RdKafka::Topic::PARTITION_UA,
-                                                                        RdKafka::Producer::RK_MSG_COPY, 
-                                                                        const_cast<char *>(message.c_str()),
-                                                                        message.size(), 
-                                                                        nullptr, 0, 0, nullptr);
+       if (_topic == nullptr || _topic->name() != topic_name)
+       {
+           // If the topic is not initialized or does not match the provided topic name, reinitialize it
+           if (_topic)
+           {
+               delete _topic; // Clean up previous topic
+               _topic = nullptr;
+           }
+           FILE_LOG(logDEBUG) << "Reinitializing topic: " << topic_name << std::endl;
+           init_topic(topic_name);
 
-            if (produce_error == RdKafka::ERR_NO_ERROR) {
-                PLOG(logDEBUG) <<"Queued message:" << message;
-                retry = false;
-            }
-            else 
-            {
-                PLOG(logERROR) <<"Failed to queue message:" << message <<" with error:" << RdKafka::err2str(produce_error);
-                if (produce_error == RdKafka::ERR__QUEUE_FULL) {
-                    PLOG(logERROR) <<"Message queue full...retrying...";
-                    _producer->poll(500);  /* ms */
-                    retry = true;
-                }
-                else {
-                    PLOG(logERROR) <<"Unhandled error in queue_kafka_message:" << RdKafka::err2str(produce_error);
-                    retry = false;
-                }
-            }	
-        }
+       }
+       send(message);
+
     }
 
     void kafka_producer_worker::stop()
