@@ -75,9 +75,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256m
+          memory: 1g
         reservations:
-          memory: 128m
+          memory: 512m
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
