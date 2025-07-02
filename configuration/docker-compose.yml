@@ -43,6 +43,12 @@ services:
     restart: always
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
       - SIMULATION_MODE=${SIMULATION_MODE:-false}
@@ -66,6 +72,12 @@ services:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
     network_mode: host
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+        reservations:
+          memory: 128m
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
