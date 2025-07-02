@@ -478,7 +478,6 @@ int CARMACloudPlugin::StartWebService()
 
 void CARMACloudPlugin::UpdateConfigSettings() {
     std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<uint64_t>("Frequency", _frequency);	
 	GetConfigValue<string>("WebServiceIP",webip);
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<uint16_t>("fetchTime",fetchtime);

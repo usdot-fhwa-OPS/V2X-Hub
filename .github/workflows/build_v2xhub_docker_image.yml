@@ -98,6 +98,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: usdotfhwaops/v2xhub
+          flavor: |
+            latest=false
           tags: |
             type=schedule
             type=ref,event=branch
