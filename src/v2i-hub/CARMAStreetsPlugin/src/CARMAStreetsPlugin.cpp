@@ -834,6 +834,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		PLOG(logDEBUG) << *_tsm3Message;
 		tsm3EncodedMsg->initialize(*_tsm3Message);
 		free(mobilityOperation);
+		delete _tsm3Message;
 		return true;
 	}
 	catch(const std::runtime_error &e )
@@ -844,19 +845,6 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 	}
 }
 
-int CARMAStreetsPlugin::Main() {
-	PLOG(logINFO) << "Starting plugin.";
-
-	uint64_t lastSendTime = 0;
-
-	while (_plugin->state != IvpPluginState_error) {
-
-
-		usleep(100000); //sleep for microseconds set from config.
-	}
-
-	return (EXIT_SUCCESS);
-}
 } /* namespace */
 
 int main(int argc, char *argv[]) {

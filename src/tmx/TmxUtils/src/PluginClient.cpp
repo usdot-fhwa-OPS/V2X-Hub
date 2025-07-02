@@ -15,6 +15,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <thread>
+#include <fstream>
+#include <string>
+#include <regex>
 
 #include "PluginUtil.h"
 #include "PluginUpgrader.h"
@@ -335,6 +338,28 @@ void PluginClient::SetStartTimeStatus()
 	_isStartTimeStatusSet = true;
 }
 
+long PluginClient::getPss() const {
+	 long pss = 0;
+    std::ifstream smaps_file("/proc/self/smaps"); // Open the smaps file for the current process.
+
+    if (smaps_file.is_open()) {
+        std::string line;
+        std::regex pss_regex("^Pss:\\s+(\\d+)"); // Regular expression to find "Pss:" followed by digits.
+        std::smatch match;
+
+        while (std::getline(smaps_file, line)) {
+            if (std::regex_search(line, match, pss_regex)) {
+                // The Pss value is in the second element of the match object.
+                pss += std::stol(match[1].str());
+            }
+        }
+        smaps_file.close();
+    } else {
+        PLOG(logERROR) << "Error opening /proc/self/smaps";
+    }
+    return pss;
+}
+
 void PluginClient::AddMessageFilter(const char *type, const char *subtype, IvpMsgFlags flags)
 {
 	_msgFilter = ivpSubscribe_addFilterEntryWithFlagMask(_msgFilter, type, subtype, flags);
@@ -350,14 +375,19 @@ void PluginClient::SubscribeToMessages()
 	_msgFilter = NULL;
 }
 
+void PluginClient::UpdatePssStatus(){
+		long _pss = getPss();
+		SetStatus("Memory Usage (Proportional Set Size) Kbs", _pss);
+}
+
 int PluginClient::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
 
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
-
+		PLOG(logDEBUG4) << "Sleeping 1 s" << endl;
+		UpdatePssStatus();
 		this_thread::sleep_for(chrono::milliseconds(1000));
 	}
 

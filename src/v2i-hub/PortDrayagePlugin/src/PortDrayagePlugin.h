@@ -114,7 +114,6 @@ public:
 	 * Constructor without paramaters 
 	 */
 	virtual ~PortDrayagePlugin();
-	int Main();
 protected:
 	/**
 	 * Update Configuration

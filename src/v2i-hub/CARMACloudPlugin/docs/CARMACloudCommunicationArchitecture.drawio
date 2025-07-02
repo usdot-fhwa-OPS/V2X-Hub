@@ -1,0 +1,98 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.2 Chrome/134.0.6998.205 Electron/35.3.0 Safari/537.36" version="27.0.2">
+  <diagram name="Page-1" id="69WanFks5-OIxdOi_HBE">
+    <mxGraphModel dx="4360" dy="2372" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-33" value="" style="points=[[0.005,0.09,0],[0.08,0,0],[0.76,0.25,0],[1,0.92,0],[0.91,0.995,0],[0.57,0.995,0],[0.045,0.955,0],[0.005,0.43,0]];verticalLabelPosition=bottom;sketch=0;html=1;verticalAlign=top;aspect=fixed;align=center;pointerEvents=1;shape=mxgraph.cisco19.3g_4g_indicator;fillColor=#005073;strokeColor=none;rotation=0;" vertex="1" parent="1">
+          <mxGeometry x="150" y="380" width="62" height="62" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-1" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;CARMA Cloud&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="890" y="282" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-2" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;V2X Hub&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="370" y="127" width="430" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-6" target="qpsy6RZcfZKkNAbWY0-W-9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="229.5" as="sourcePoint" />
+            <mxPoint x="660" y="229.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-25" value="Text" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="qpsy6RZcfZKkNAbWY0-W-4">
+          <mxGeometry x="-0.2077" y="9" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-26" value="TCR (J2735 Proposed)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="qpsy6RZcfZKkNAbWY0-W-4">
+          <mxGeometry x="-0.1787" y="9" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-6" value="Message Receiver Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="205" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-9" target="qpsy6RZcfZKkNAbWY0-W-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="215" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-8" value="TCR" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="qpsy6RZcfZKkNAbWY0-W-7">
+          <mxGeometry x="0.0333" y="-2" relative="1" as="geometry">
+            <mxPoint y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-9" value="CARMA Cloud Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="670" y="282" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0;exitY=0.75;exitDx=0;exitDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-1" target="qpsy6RZcfZKkNAbWY0-W-9">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="900" y="320" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-11" value="TCM" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="qpsy6RZcfZKkNAbWY0-W-10">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-19" value="Immediate Forward Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="450" y="380" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-9" target="qpsy6RZcfZKkNAbWY0-W-19">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="255" as="sourcePoint" />
+            <mxPoint x="720" y="255" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-21" value="TCM (J2735 Proposed)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rotation=0;" vertex="1" connectable="0" parent="qpsy6RZcfZKkNAbWY0-W-20">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="-23" y="-7" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-22" value="" style="points=[[0.005,0.09,0],[0.08,0,0],[0.76,0.25,0],[1,0.92,0],[0.91,0.995,0],[0.57,0.995,0],[0.045,0.955,0],[0.005,0.43,0]];verticalLabelPosition=bottom;sketch=0;html=1;verticalAlign=top;aspect=fixed;align=center;pointerEvents=1;shape=mxgraph.cisco19.3g_4g_indicator;fillColor=#005073;strokeColor=none;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="180" y="240" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-23" target="qpsy6RZcfZKkNAbWY0-W-6">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="300" />
+              <mxPoint x="395" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="qpsy6RZcfZKkNAbWY0-W-23" target="qpsy6RZcfZKkNAbWY0-W-19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-23" value="Road Side Unit" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="220" y="282" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-32" value="" style="shape=mxgraph.signs.transportation.car_3;html=1;pointerEvents=1;fillColor=#000000;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="70" y="410" width="99" height="38" as="geometry" />
+        </mxCell>
+        <mxCell id="qpsy6RZcfZKkNAbWY0-W-36" value="" style="verticalLabelPosition=bottom;shadow=0;dashed=0;align=center;html=1;verticalAlign=top;strokeWidth=1;shape=mxgraph.mockup.misc.map;" vertex="1" parent="1">
+          <mxGeometry x="1120" y="186" width="250" height="250" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

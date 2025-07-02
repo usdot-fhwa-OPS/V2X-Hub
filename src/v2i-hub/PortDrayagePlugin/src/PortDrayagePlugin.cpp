@@ -472,15 +472,6 @@ void PortDrayagePlugin::OnStateChange(IvpPluginState state) {
 		UpdateConfigSettings();
 	}
 }
-
-
-int PortDrayagePlugin::Main() {
-	uint64_t lastSendTime = 0;
-	while (_plugin->state != IvpPluginState_error) {
-		usleep(100000); //sleep for microseconds set from config.
-	}
-	return (EXIT_SUCCESS);
-}
 }
 
 int main(int argc, char *argv[]) {

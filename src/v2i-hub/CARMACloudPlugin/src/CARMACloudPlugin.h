@@ -96,7 +96,6 @@ class CARMACloudPlugin : public PluginClientClockAware
 public:
 	CARMACloudPlugin(std::string);
 	virtual ~CARMACloudPlugin();
-	int Main();
 	uint16_t webport;
 	std::string webip;
 	uint16_t fetchtime;
@@ -174,7 +173,6 @@ private:
 	pthread_mutex_t _settingsMutex = PTHREAD_MUTEX_INITIALIZER;
 	pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
 	J2735MessageFactory factory;
-	uint64_t _frequency = 0;
 	string carma_cloud_url;
 	string base_hb;
 	string base_req;

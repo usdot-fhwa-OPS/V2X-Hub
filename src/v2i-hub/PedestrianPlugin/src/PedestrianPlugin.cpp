@@ -440,21 +440,6 @@ void PedestrianPlugin::BroadcastPedDet(const std::string &msgXML)
 	}
 }
 
-int PedestrianPlugin::Main()
-{
-	PLOG(logINFO) << "Starting plugin.";
-
-	while (_plugin->state != IvpPluginState_error)
-	{
-		if (_plugin->state == IvpPluginState_registered)
-		{
-			this_thread::sleep_for(chrono::milliseconds(100));
-		}
-	}
-
-	PLOG(logINFO) << "Plugin terminating gracefully.";
-	return EXIT_SUCCESS;
-}
 
 } /* namespace PedestrianPlugin */
 

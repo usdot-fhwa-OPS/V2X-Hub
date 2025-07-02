@@ -42,6 +42,12 @@ services:
     restart: always
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
       - SIMULATION_MODE=${SIMULATION_MODE:-false}
@@ -66,6 +72,12 @@ services:
     container_name: port_drayage_webservice
     network_mode: host
     profiles: ["port_drayage"]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 512m
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt
