@@ -26,7 +26,7 @@ Fixes in this release:
 Other Fixes:  
 
 - [V2X-Hub PR #659](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/659): Fixed dev container syntax and set default mode to simulation=false to avoid by default deploying V2X Hub in simulation mode. 
-- [V2X-Hub PR #660](660): Fixed build and coverage scripts to only create build and coverage information when parameter is present. 
+- [V2X-Hub PR #660](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/660): Fixed build and coverage scripts to only create build and coverage information when parameter is present. 
 - [V2X-Hub PR #687](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/687): Fixed MAP Plugin not broadcasting MAP in simulation. 
 
 Other Updates:  
