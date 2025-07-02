@@ -248,24 +248,6 @@ namespace CDASimAdapter{
             PLOG(logERROR) << "Error occured :" << e.what() <<  std::endl;
         }
     }
-
-
-    int CDASimAdapter::Main() {
-
-
-        PLOG(logINFO) << "Starting plugin " << _name << std::endl;
-
-        while (_plugin->state != IvpPluginState_error) {
-
-            if (IsPluginState(IvpPluginState_registered))
-            {
-
-            }
-        }
-
-	    return EXIT_SUCCESS;
-    }
-
 }
 
 

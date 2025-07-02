@@ -590,21 +590,6 @@ std::string MessageLoggerPlugin::GetCurDateTimeStr()
 	return str;
 }
 
-// Override of main method of the plugin that should not return until the plugin exits.
-// This method does not need to be overridden if the plugin does not want to use the main thread.
-int MessageLoggerPlugin::Main()
-{
-	PLOG(logINFO) << "Starting MessageLoggerplugin...";
-
-	while (_plugin->state != IvpPluginState_error)
-	{
-		PLOG(logDEBUG4) <<"MessageLoggerPlugin: Sleeping 5 minutes";
-		this_thread::sleep_for(chrono::milliseconds(300000));
-	}
-
-	PLOG(logINFO) << "MessageLoggerPlugin terminating gracefully.";
-	return EXIT_SUCCESS;
-}
 
 } /* namespace MessageLoggerPlugin */
 

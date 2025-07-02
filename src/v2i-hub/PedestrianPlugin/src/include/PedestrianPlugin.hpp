@@ -37,10 +37,8 @@
 #include <QSharedPointer>
 #include <QObject>
 
-#ifdef __linux__
 #include <signal.h>
 #include <unistd.h>
-#endif
 #include <qhttpengine/server.h>
 #include <qserverPedestrian/OAIApiRouter.h>
 #include <qserverPedestrian/OAIPSM.h>
@@ -61,7 +59,6 @@ class PedestrianPlugin: public PluginClient
 {
 public:
 	explicit PedestrianPlugin(const std::string &name);
-	int Main() override;
 
 protected:
 	/**

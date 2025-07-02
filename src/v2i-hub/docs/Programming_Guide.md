@@ -560,6 +560,10 @@ template<typename T> bool SetStatus(const char *key, T value)
 
 The `value` parameter can be either a string, integer, double, or Boolean value. The status values are not persisted between executions of the plugin, but it still a good idea to create default values to use when the plugin initializes. The Example Plugin writes out a count of J2735 maps that have been received when the number changes.
 
+The `PluginClient` base class provides two default status values that all extending plugins can inherit. The first is **Start Time**, which displays the local date time the plugin was started and is updated when the plugin changes state. The second is **Memory Usage (Proportional Set Size) Kbs**, which measure the plugins memory usage on a regular interval using the `PluginClient::Main()` function. 
+
+> [!NOTE]
+> If your plugin includes an override for `PluginClient::Main()` to use the main thread for some custom logic, you will have to add calls to `UpdatePssStatus()` into you overriden `YourPlugin::Main()` function to have this functionality. For this reason, it is only advised that you override `PluginClient::Main()` if you need access to the main thread.  
 #### Error Handling
 
 Errors can occur in the plugin, and it is always useful to have information available to help debug a problem that occurs. Aside for logging, any exceptions that occur in the plugin can be handled using the following function:

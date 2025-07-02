@@ -67,7 +67,6 @@ namespace ERVCloudForwardingPlugin
     public:
         explicit ERVCloudForwardingPlugin(const string &);
         ~ERVCloudForwardingPlugin() = default;
-        int Main();
 
     protected:
         void UpdateConfigSettings();

@@ -37,7 +37,6 @@ namespace CDASimAdapter
          */
         explicit CDASimAdapter(const std::string &name);
 
-        int Main() override;
 
     protected:
         /**

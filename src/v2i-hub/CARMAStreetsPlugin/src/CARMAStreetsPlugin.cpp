@@ -844,19 +844,6 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 	}
 }
 
-int CARMAStreetsPlugin::Main() {
-	PLOG(logINFO) << "Starting plugin.";
-
-	uint64_t lastSendTime = 0;
-
-	while (_plugin->state != IvpPluginState_error) {
-
-
-		usleep(100000); //sleep for microseconds set from config.
-	}
-
-	return (EXIT_SUCCESS);
-}
 } /* namespace */
 
 int main(int argc, char *argv[]) {
