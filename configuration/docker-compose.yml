@@ -2,7 +2,6 @@ services:
   db:
     image: mysql:8.0
     container_name: mysql
-    restart: always
     environment:
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
@@ -72,6 +71,7 @@ services:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
     network_mode: host
+    profiles: ["port_drayage"]
     deploy:
       resources:
         limits:

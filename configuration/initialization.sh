@@ -8,6 +8,7 @@ V2XHUB_IP_DEFAULT="127.0.0.1"
 SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
 SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
+COMPOSE_PROFILES=""
 
 echo "Setting up the environment..."
 
@@ -38,7 +39,10 @@ V2XHUB_VERSION=${chosen_version:-$latest_version}
 # Enable Port Drayage functionality
 read -r -p "Enable Port Drayage functionality (TRUE/FALSE, or press Enter to use default as $PORT_DRAYAGE_ENABLED_DEFAULT): " PORT_DRAYAGE_ENABLED
 PORT_DRAYAGE_ENABLED=${PORT_DRAYAGE_ENABLED:-$PORT_DRAYAGE_ENABLED_DEFAULT}
-
+if [[ $PORT_DRAYAGE_ENABLED == "TRUE" ]]; then
+    echo "Activating port_drayage profile."
+    COMPOSE_PROFILES="port_drayage"
+fi
 # Infrastructure id
 read -r -p "Enter Infrastructure id (or press Enter to use default as $INFRASTRUCTURE_ID_DEFAULT): " INFRASTRUCTURE_ID
 INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-$INFRASTRUCTURE_ID_DEFAULT}
@@ -76,6 +80,7 @@ INFRASTRUCTURE_ID=$INFRASTRUCTURE_ID
 INFRASTRUCTURE_NAME=$INFRASTRUCTURE_NAME
 V2XHUB_IP=$V2XHUB_IP
 SIMULATION_MODE=$SIMULATION_MODE
+COMPOSE_PROFILES=$COMPOSE_PROFILES
 EOF
 
     # Adding Simulation IP and Sensor Path if Simulation Mode is TRUE
@@ -90,10 +95,9 @@ fi
 directory=$(pwd)
 mysqlDir="$directory/mysql"
 
-# Update and upgrade commands to update linux OS
-sudo apt update -y && sudo apt upgrade -y
 
 # Install necessary and useful apps
+sudo apt update -y 
 sudo apt-get install chromium-browser -y
 
 # Make passwords for mysql
@@ -138,15 +142,8 @@ echo \
 sudo apt-get update
 sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Check if Port Drayage functionality is enabled
-if [[ $PORT_DRAYAGE_ENABLED == "TRUE" ]]; then
-    sudo docker compose up -d
-elif [[ $PORT_DRAYAGE_ENABLED == "FALSE" ]]; then
-    sudo docker compose up php -d
-else
-    echo "Invalid value for PORT_DRAYAGE_ENABLED. Please provide either TRUE or FALSE."
-    exit 1
-fi
+sudo docker compose up -d
+
 
 # Update permissions for tmx logs created by plugins
 sudo chmod -R 777 ./logs
