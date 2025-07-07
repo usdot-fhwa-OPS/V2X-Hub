@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 echo "Running V2X Hub..."
 # Check for Chromium and install if not already installed.
 REQUIRED_PKG="chromium-browser"
