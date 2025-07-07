@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/bash
 echo "Initializing secrets for V2X Hub..."
 # Save current path
 directory=$(pwd)
