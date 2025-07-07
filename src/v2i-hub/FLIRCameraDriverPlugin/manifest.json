@@ -22,6 +22,11 @@
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"
-        }
+        },
+		{
+			"key": "LogOutput",
+			"default": "flir_camera_driver_plugin.log",
+			"description": "Name of the log file for this plugin. If a relative path is provides, this file will create a directory under /var/log/<PluginName> and add the file here. Not includeing this parameter or setting to (-) will direct log output to stdout. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
+		}
 	]
 }
