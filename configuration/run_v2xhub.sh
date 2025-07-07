@@ -1,8 +1,15 @@
 # #!/bin/bash
 echo "Running V2X Hub..."
-# Install necessary and useful apps
-sudo apt update -y 
-sudo apt-get install chromium-browser -y
+# Check for Chromium and install if not already installed.
+dpkg -s chromium-browser >/dev/null 2>&1
+if [ $? -eq 0 ]; then
+  echo "Chromium is installed!"
+else
+  echo "Chromium is not installed. Installing Chromium ..."
+  sudo apt update -y 
+  sudo apt-get install chromium-browser -y
+fi
+
 sudo docker compose up -d
 
 
