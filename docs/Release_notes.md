@@ -1,7 +1,7 @@
 V2X-Hub Release Notes
 ---------------------------------
 
-Version 7.9.0, released Sep 24th, 2025
+Version 7.9.0, released June 24th, 2025
 --------------------------------------------------------
 
 **Summary:**
