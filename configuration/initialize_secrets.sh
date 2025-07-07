@@ -1,6 +1,7 @@
 # #!/bin/bash
 echo "Initializing secrets for V2X Hub..."
-
+# Save current path
+directory=$(pwd)
 # Make passwords for mysql
 mkdir -p secrets && cd secrets || return # SC2164 - Use return in case cd fails 
 
