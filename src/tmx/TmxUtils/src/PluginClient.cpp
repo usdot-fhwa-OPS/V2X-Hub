@@ -199,6 +199,38 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 		std::transform(lvl.begin(), lvl.end(), lvl.begin(), ::toupper);
 		LogLevel newLvl = FILELog::FromString(lvl);
 		FILELog::ReportingLevel() = newLvl;
+	} else if (strcmp("LogOutput", key) == 0)
+	{
+		std::string logFile(value);
+		FILE *logStream = NULL;
+		if (logFile != "-")
+		{
+			// Check if relative path or absolute path
+			if (logFile[0] != '/') 
+			{
+				// Set absolute path to /var/log/PluginName/logFile
+				std::string logDir = "/var/log/" + _name;
+				if (!boost::filesystem::exists(logDir)) {
+					boost::filesystem::create_directories(logDir);
+				}
+				// Append the log file name to the log directory
+				logFile = logDir + "/" + logFile;
+			}
+			logStream = fopen(logFile.c_str(), "w");
+			if (logStream == NULL) {
+				FILE_LOG(logERROR) << "Could not open log file: " << strerror(errno) << ".  Logging to standard output." << std::endl;
+			}
+		}
+
+		if (logStream == NULL) {
+			Output2FILE::Stream() = stdout;
+		}
+		else {
+			Output2FILE::Enable();
+			Output2FILE::Stream() = logStream;
+			FILE_LOG(logINFO) << "Logging output to: " << logFile;
+		};	
+			
 	}
 	// Handle the keep alive frequency
 	else if (strcmp("KeepAliveFrequency", key) == 0)
