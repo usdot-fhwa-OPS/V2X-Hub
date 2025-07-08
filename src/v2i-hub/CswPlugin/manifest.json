@@ -41,7 +41,7 @@
 		{
 			"key": "LogOutput",
 			"default": "-",
-			"description": "Name of the log file for this plugin. If a relative path is provides, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
+			"description": "Name of the log file for this plugin. If a relative path is provided, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
 		}
 	]
 }
