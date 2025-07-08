@@ -139,7 +139,7 @@ In V2X Hub, both the individuals plugins and V2X Hub core log by default to stdo
 
 ##### Plugin Logging 
 
-V2X Hub plugins have a seperate logging implementation `tmx::utils::PLOG`. This logger does not need to be initialized in the plugin, simply calling the macros will with an appropriate log level will trigger log statements. The `tmx::utils::PluginClient` base class will check **LogLevel** and **LogOutput** configuration parameters to configure the logger.
+V2X Hub plugins have a seperate logging implementation `tmx::utils::PLOG`. This logger does not need to be initialized in the plugin, simply calling the macros with an appropriate log level will trigger log statements. The `tmx::utils::PluginClient` base class will check **LogLevel** and **LogOutput** configuration parameters to configure the logger.
 
 **LogLevel** sets logging level of the Plugin. Below is a hiearchy of available log levels. The default is typically INFO, although the configuration parameter “LogLevel” can be set in the manifest or in the V2X Hub UI.
 
