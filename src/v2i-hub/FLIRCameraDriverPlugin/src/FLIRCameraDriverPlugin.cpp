@@ -85,9 +85,14 @@ namespace FLIRCameraDriverPlugin
 			if (flirSessions.empty())
 			{
 				PLOG(logDEBUG) << "FLIR session not yet initialized: ";
+				SetStatus<uint>(Key_LivePedestrianCount, 0);
+
 			}
 			else
 			{	
+
+				auto livePedCount = 0;
+
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
 				for(const auto &flirSession: flirSessions)
 				{
@@ -105,6 +110,10 @@ namespace FLIRCameraDriverPlugin
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
 					// Update total pedestrian detection count.
 					totalPedCount += currentMsgQueue.size();
+					auto currentTime = getClock()->nowInMilliseconds();
+					if (currentTime - flirSession->getLastDetectionTime() < 1100) {
+						livePedCount += flirSession->getNumLastDetections();
+					}
 					while(!currentMsgQueue.empty())
 					{		
 						auto message = currentMsgQueue.front();
@@ -137,8 +146,9 @@ namespace FLIRCameraDriverPlugin
 				SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
 				SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
 				SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
-			
+				SetStatus<uint>(Key_LivePedestrianCount, livePedCount);
 			}
+			// Update the live pedestrian count status
 			// Sleep for 10 milliseconds
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}

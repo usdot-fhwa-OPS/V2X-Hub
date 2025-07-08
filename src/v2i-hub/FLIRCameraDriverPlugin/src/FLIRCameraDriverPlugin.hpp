@@ -86,6 +86,8 @@ namespace FLIRCameraDriverPlugin
 			const char* Key_TotalPedestrianCount = "Total Pedestrian Detections";
 			// Total number of pedestrian detections
 			unsigned int totalPedCount = 0;
+			// Live number of currently detected pedestrians
+			const char* Key_LivePedestrianCount = "Live number of currently detected pedestrians";
 
 
 

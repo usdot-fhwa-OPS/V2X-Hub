@@ -199,6 +199,10 @@ namespace FLIRCameraDriverPlugin
             }
             
         }
+        // Set the number of last detections
+        numLastDetections_.store(msgQueue.size());
+        // Set the last detection time
+        lastDetectionTime_.store(timestamp);
         return msgQueue;
     }
 
@@ -263,5 +267,13 @@ namespace FLIRCameraDriverPlugin
 
     std::string FLIRWebsockAsyncClnSession::getSensorId() const {
         return sensorId;
+    }
+
+    long long FLIRWebsockAsyncClnSession::getLastDetectionTime() const {
+        return lastDetectionTime_.load();
+    }   
+
+    unsigned int FLIRWebsockAsyncClnSession::getNumLastDetections() const {
+        return numLastDetections_.load();
     }
 }
