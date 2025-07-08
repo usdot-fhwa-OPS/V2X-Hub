@@ -199,7 +199,7 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 		std::transform(lvl.begin(), lvl.end(), lvl.begin(), ::toupper);
 		LogLevel newLvl = FILELog::FromString(lvl);
 		FILELog::ReportingLevel() = newLvl;
-	}else if (strcmp("LogOutput", key) == 0)
+	} else if (strcmp("LogOutput", key) == 0)
 	{
 		std::string logFile(value);
 		FILE *logStream = NULL;
