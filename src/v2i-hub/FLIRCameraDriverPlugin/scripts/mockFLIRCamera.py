@@ -108,10 +108,11 @@ class FLIRPedestrianPresenceTracking:
 
 async def sendMessage(websocket):
     """Send the JSON message to the client periodically."""
+    tracks= FLIRPedestrianPresenceTracking()
+
     while True:
-        tracks= FLIRPedestrianPresenceTracking()
         # Ramdom chance to add a new track
-        if len(tracks.track) < 5 and random.random() > 0.2:
+        if len(tracks.track) < 5 and random.random() < 0.4:
             new_detection = FLIRDetection(
                 x=random.uniform(-5, 5),
                 y=random.uniform(-5, 5),
@@ -124,7 +125,7 @@ async def sendMessage(websocket):
             )
             tracks.track.append(new_detection)
         # Randomly remove a track
-        if len(tracks.track) > 0 and random.random() < 0.1:
+        if len(tracks.track) > 0 and random.random() < 0.3:
             if len(tracks.track) > 1:
                 tracks.track.pop(random.randint(0, len(tracks.track) - 1))
             else:
@@ -135,7 +136,7 @@ async def sendMessage(websocket):
             print("No tracks to send, skipping message")
         else:
             await websocket.send(json.dumps(tracks.to_json()))
-            print(f"Sending: {tracks.to_json()}")
+            print(f"Sending: {len(tracks.track)}")
             await asyncio.sleep(0.1)  # interval to send the message
 
 async def handleClient(websocket, path):

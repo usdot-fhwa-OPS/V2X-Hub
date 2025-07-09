@@ -75,6 +75,8 @@ TEST(FLIRWebsockAsyncClnSessionTest, testHandleDataMessage) {
 
     flirSession->handleDataMessage(pr);
     EXPECT_EQ(flirSession->getMsgQueue().size(), 2);
+    EXPECT_EQ(flirSession->getNumLastDetections(), 2);
+    EXPECT_EQ(flirSession->getLastDetectionTime(), 1747763255092);
     flirSession->clearMsgQueue();
     EXPECT_EQ(flirSession->getMsgQueue().size(), 0);
 } 
@@ -194,7 +196,8 @@ TEST(FLIRWebsockAsyncClnSessionTest, processPedestrianPresenceTrackingObjects)
 
     EXPECT_EQ(msgQueue.size(), 2);
     tmx::messages::SensorDetectedObject obj = msgQueue.front();
- 
+    EXPECT_EQ(flirSession->getNumLastDetections(), 2);
+    EXPECT_EQ(flirSession->getLastDetectionTime(), 1747763255092);
     EXPECT_NEAR(obj.get_timestamp(), 1747763255092, 1);
     std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
     EXPECT_EQ( obj.get_projString(), proj_string);
@@ -245,7 +248,8 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
 
     EXPECT_EQ(msgQueue.size(), 1);
     tmx::messages::SensorDetectedObject obj = msgQueue.front();
- 
+    EXPECT_EQ(flirSession->getNumLastDetections(), 1);
+    EXPECT_EQ(flirSession->getLastDetectionTime(), 1747785403461);
     EXPECT_NEAR(obj.get_timestamp(), 1747785403461, 1);
     std::string proj_string = "+proj=tmerc +lat_0=38.9549921700 +lon_0=-77.1492095300 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +geoidgrids=egm96_15.gtx +vunits=m +no_defs +axis=enu";
     EXPECT_EQ( obj.get_projString(), proj_string);

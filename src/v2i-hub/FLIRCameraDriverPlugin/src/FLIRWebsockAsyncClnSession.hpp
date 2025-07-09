@@ -81,6 +81,8 @@ namespace FLIRCameraDriverPlugin
             std::queue<tmx::messages::SensorDetectedObject> msgQueue;
 
             std::mutex _msgLock;
+            std::atomic<unsigned int> numLastDetections_{0};
+            std::atomic<long long> lastDetectionTime_{0};
 
             // Health status of the FLIR camera
             std::atomic<bool> isHealthy_;
@@ -198,6 +200,18 @@ namespace FLIRCameraDriverPlugin
              * @brief Clear the dropped pedestrian count
              */
             void clearDroppedPedCount();
+
+            /**
+             * @brief Get the last detection time
+             * @return The last detection time in milliseconds since epoch.
+             * 
+             */
+            long long getLastDetectionTime() const;
+            /**
+             * @brief Get the number of last detections
+             * @return The number of last detections.
+             */
+            unsigned int getNumLastDetections() const;
 
             std::string getSensorId() const;
     };
