@@ -200,7 +200,7 @@ namespace FLIRCameraDriverPlugin
             
         }
         // Set the number of last detections
-        numLastDetections_.store(msgQueue.size());
+        numLastDetections_.store(std::static_cast<unsigned int>(msgQueue.size()));
         // Set the last detection time
         lastDetectionTime_.store(timestamp);
         return msgQueue;
