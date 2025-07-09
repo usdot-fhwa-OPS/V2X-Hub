@@ -110,8 +110,11 @@ namespace FLIRCameraDriverPlugin
 					std::queue<tmx::messages::SensorDetectedObject> currentMsgQueue = flirSession->getMsgQueue();
 					// Update total pedestrian detection count.
 					totalPedCount += currentMsgQueue.size();
+					// Check Num Last Detections for each FLIR
+					// If Last detection time greater than FLIR detection reporting interval (100ms) +/- 1 polling interval (10ms see line 155)
+					// detection is no longer "live" and should not be considered.
 					auto currentTime = getClock()->nowInMilliseconds();
-					if (currentTime - flirSession->getLastDetectionTime() < 1100) {
+					if (currentTime - flirSession->getLastDetectionTime() < 110) {
 						livePedCount += flirSession->getNumLastDetections();
 					}
 					while(!currentMsgQueue.empty())
