@@ -11,7 +11,10 @@ SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
 COMPOSE_PROFILES=""
 
 echo "Initializing Docker Environment for V2X Hub..."
-
+# Retrieve available release candidates
+release_candidates=$(git branch -r | grep 'origin/release/' | sed 's|origin/||' | sed 's/release\//release-/g')
+echo "Available Release Candidates (Only intended for use during release-testing):"
+echo "$release_candidates"
 # Repository URL
 repo_url_latest="https://api.github.com/repos/usdot-fhwa-OPS/V2X-Hub/releases/latest"
 
@@ -22,16 +25,14 @@ release_info=$(curl -sSL $repo_url_latest)
 latest_version=$(echo "$release_info" | grep -o '"tag_name": *"[^"]*"' | cut -d '"' -f 4)
 
 # Fetching all tags from Git repository
-tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F/ '{print $3}' | sort -V)
+tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F/ '{ printf "  %s\n", $3 }' | sort -V)
+# Remove curly braces, Properties found, duplicate entries, and tag that starts with v. and show only versions above 7.0
+updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -vE 'Properties_Found|v.*'  | awk '!seen[$0]++ && $1 >= "7.0"')
 
-# Remove curly braces, Properties found, duplicate entries, and show only versions above 7.0
-updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -v '^Properties_Found$' | awk '!seen[$0]++ && $1 >= "7.0"')
 
-# Add develop
-updated_tags+=$'\n'"develop"
 # Displaying all available versions
 echo "Note: V2X-Hub multi architecture deployments only work for the versions 7.0 and above."
-echo "Available versions:"
+echo "Available Release versions:"
 echo "$updated_tags"
 
 # select a version or accept the latest version as default
