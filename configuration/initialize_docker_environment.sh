@@ -26,9 +26,8 @@ latest_version=$(echo "$release_info" | grep -o '"tag_name": *"[^"]*"' | cut -d 
 
 # Fetching all tags from Git repository
 tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F'/' '/refs\/tags\// { printf "  %s\n", $3 }' | sort -V)
-echo ${tags}
 # Remove curly braces, Properties found, duplicate entries, and show only versions above 7.0
-updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -v 'Properties_Found$' | grep -v 'v$' | awk '!seen[$0]++ && $1 >= "7.0"')
+updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -v 'Properties_Found$' | awk '!seen[$0]++ && $1 >= "7.0"')
 
 
 # Displaying all available versions
