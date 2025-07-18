@@ -66,3 +66,6 @@ Please read our [V2X-Hub Code of Conduct](Code_of_Conduct.md) which outlines our
 
 ## Attribution
 The development team would like to acknowledge the people who have made direct contributions to the design and code in this repository. [V2X-Hub Attribution](ATTRIBUTION.txt) 
+
+## Support
+For technical support, please contact the help desk at CAVSupportServices@dot.gov.
