@@ -25,9 +25,9 @@ release_info=$(curl -sSL $repo_url_latest)
 latest_version=$(echo "$release_info" | grep -o '"tag_name": *"[^"]*"' | cut -d '"' -f 4)
 
 # Fetching all tags from Git repository
-tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F'/' '/refs\/tags\// { printf "  %s\n", $3 }' | sort -V)
-# Remove curly braces, Properties found, duplicate entries, and show only versions above 7.0
-updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -v 'Properties_Found$' | awk '!seen[$0]++ && $1 >= "7.0"')
+tags=$(git ls-remote --tags https://github.com/usdot-fhwa-OPS/V2X-Hub.git | awk -F/ '{ printf "  %s\n", $3 }' | sort -V)
+# Remove curly braces, Properties found, duplicate entries, and tag that starts with v. and show only versions above 7.0
+updated_tags=$(echo "$tags" | sed 's/\^{}//;s/^v//' | grep -vE 'Properties_Found|v.*'  | awk '!seen[$0]++ && $1 >= "7.0"')
 
 
 # Displaying all available versions
