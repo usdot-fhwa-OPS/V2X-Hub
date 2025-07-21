@@ -1292,10 +1292,10 @@ int CommandPlugin::Main()
 		//opts |= LWS_SERVER_OPTION_REDIRECT_HTTP_TO_HTTPS;
 		lock_guard<mutex> lock(_configLock);
 		crtPath = _sslPath;
-		crtPath.append("/tmxcmd.crt");
+		crtPath.append("/cert.pem");
 		info.ssl_cert_filepath = crtPath.c_str();
 		keyPath = _sslPath;
-		keyPath.append("/tmxcmd.key");
+		keyPath.append("/cert-key.pem");
 		info.ssl_private_key_filepath = keyPath.c_str();
 		info.ssl_cipher_list = "ECDHE-ECDSA-AES256-GCM-SHA384:"
 					       "ECDHE-RSA-AES256-GCM-SHA384:"

@@ -39,6 +39,9 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
+      - ./ssl:/etc/apache2/ssl:ro
+
+
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
@@ -73,6 +76,7 @@ services:
       - ./MAP:/var/www/plugins/MAP
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
+      - ./ssl:/var/www/plugins/ssl:ro
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice

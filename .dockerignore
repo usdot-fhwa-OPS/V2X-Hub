@@ -5,7 +5,7 @@
 .vscode
 /configuration
 /data
-/docker
+/docker/Dockerfile-php
 /docs
 /examples
 /tests

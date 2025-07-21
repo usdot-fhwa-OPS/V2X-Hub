@@ -16,6 +16,8 @@ services:
       - ./MAP:/var/www/plugins/MAP
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
+      - ./ssl:/var/www/plugins/ssl:ro
+
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 10000; do :; done"  
     environment:
@@ -58,8 +60,13 @@ services:
   php:
     image: usdotfhwaops/php:latest
     container_name: php
-    network_mode: host
     restart: always
+    volumes:
+      - ./ssl:/etc/apache/ssl:ro
+    ports:
+      - "8080:80"
+      - "443:443"
+
   zookeeper:
     image: wurstmeister/zookeeper
     container_name: zookeeper

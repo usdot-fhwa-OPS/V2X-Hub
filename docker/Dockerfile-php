@@ -1,2 +1,5 @@
 FROM php:apache
+RUN a2enmod ssl && a2enmod rewrite
+COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+
 COPY web/ /var/www/html/
