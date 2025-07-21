@@ -58,11 +58,12 @@ services:
       - mysql-datavolume:/var/lib/mysql
 
   php:
-    image: usdotfhwaops/php:latest
+    image: usdotfhwaops/php:develop
     container_name: php
+    network_mode: host
     restart: always
     volumes:
-      - ./ssl:/etc/apache/ssl:ro
+      - ./ssl:/etc/apache2/ssl:ro
     ports:
       - "8080:80"
       - "443:443"

@@ -26,5 +26,22 @@ if docker compose version &>/dev/null; then
 else
    ./install_docker.sh
 fi
+# Check for ssl/cert-key.pem and ssl/cert.pem
+if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
+    echo "SSL certificates not found. Generating new certificates..."
+    mkdir -p ssl
+    cd ssl || exit
+    # Check for mkcert command
+    if command -v mkcert &>/dev/null; then
+        echo "mkcert command found. Generating SSL certificates..."
+    else
+        echo "mkcert command not found. Installing mkcert..."
+        sudo apt-get update && sudo apt-get install -y mkcert
+    fi
+    mkcert -install
+    mkcert localhost 127.0.0.1 ::1
+    echo "SSL certificates generated successfully."
+fi
+
 # Run V2X Hub
 ./run_v2xhub.sh

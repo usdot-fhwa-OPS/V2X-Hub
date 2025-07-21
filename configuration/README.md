@@ -31,14 +31,6 @@ Example: ivp
 ```
 After installation is complete, the script will automatically open a web browser with two tabs.
 
-Navigate to the tab labeled as “Privacy Error” and select the “Advanced” button.
-
-Click on “proceed to 127.0.0.1 (unsafe)”
-
-Note: This page will not do anything when clicking proceed
-
-Close the Privacy Error tab and wait for the initial V2X Hub tab to finish loading
-
 Enter the login credentials you created in step 5b and login.
 
 Installation complete!
@@ -63,13 +55,13 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 ### Access V2X-Hub 
 To access V2X-Hub UI, either chromium or google-chrome browser can be used by running the following commands:
 ```
-chromium-browser --ignore-certificate-errors <v2xhub_ip>
+chromium-browser <v2xhub_ip>
 ```
 or 
 
 ```
-google-chrome --ignore-certificate-errors <v2xhub_ip>
+google-chrome  <v2xhub_ip>
  ```
 
 > [!NOTE]  
-> V2X-Hub Server uses a secure WebSocket connection to communicate with the browser. For this, V2X-Hub Server uses a self-signed certificate instead of one signed by a trusted certificate authority (CA). Most of the browsers do not trust this until explicitly told to do so by navigating to the WebSocket URL (https://<v2xhub_ip>:19760) and accepting the risk. The `--ignore-certificate-errors` option instructs the browser to ignore certificate errors and warnings which removes manual effort of accepting this risk on V2X-Hub deployments. **Using the browser with this option enabled to access the internet or any other application is not advised as it is a security risk**.
+> V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
