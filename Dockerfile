@@ -1,10 +1,10 @@
-ARG UBUNTU_VERSION=jammy-20230126
+ARG UBUNTU_VERSION=jammy
 
 FROM ubuntu:$UBUNTU_VERSION AS build-environment
 ARG J2735_VERSION=2016
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
-RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
+# RUN sed -i 's|http://archive.ubuntu.com|http://us.archive.ubuntu.com|g' /etc/apt/sources.list
 RUN /usr/local/bin/install_dependencies.sh
 
 # build out ext components
