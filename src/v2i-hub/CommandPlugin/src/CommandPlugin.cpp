@@ -1277,8 +1277,7 @@ int CommandPlugin::Main()
 	info.gid = -1;
 	info.uid = -1;
 	info.timeout_secs_ah_idle = 3600;
-	// Avoid environment setting breaking libwebsockets (https://github.com/warmcat/libwebsockets/issues/2449 )
-	info.rlimit_nofile = 2560
+
 	string crtPath = "";
 	string keyPath = "";
 	int opts = 0;
