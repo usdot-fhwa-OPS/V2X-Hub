@@ -46,6 +46,10 @@ services:
     restart: always
     depends_on:
       - db
+    ulimits:
+      nofile:
+        soft: 2560
+        hard: 2560
     deploy:
       resources:
         limits:
