@@ -18,7 +18,7 @@
         },
         {
             "key":"SSLPath",
-            "default":"/var/www/plugins/.ssl",
+            "default":"/var/www/plugins/ssl",
             "description":"The path to the directory containing the SSL key and certificate files."
         },
         {

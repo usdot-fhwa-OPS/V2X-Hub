@@ -54,7 +54,6 @@ ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
 ADD src/tmx/TmxCore/tmxcore.service /usr/sbin/
 RUN ldconfig
 
-RUN /home/V2X-Hub/container/setup.sh
 
 WORKDIR /var/log/tmx
 

@@ -19,6 +19,6 @@ sudo chmod -R 777 ./logs
 source .env
 ./add_v2xhub_user.sh "$V2XHUB_VERSION"
 
-chromium-browser --ignore-certificate-errors localhost > /dev/null 2>&1 &
+chromium-browser localhost > /dev/null 2>&1 &
 
 echo "V2X Hub Deployment Complete."
