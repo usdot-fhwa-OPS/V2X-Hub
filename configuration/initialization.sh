@@ -28,7 +28,16 @@ else
 fi
 # Check for ssl/cert-key.pem and ssl/cert.pem
 if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
-    echo "SSL certificates not found. Generating new certificates..."
+    echo "Incomplete or missing SSL certificates."
+    # Clear certificates if only one exists
+    if [[ -f "ssl/cert-key.pem" ]]; then
+        echo "Only cert-key.pem found. Removing it..."
+        rm -f ssl/cert-key.pem
+    elif [[ -f "ssl/cert.pem" ]]; then
+        echo "Only cert.pem found. Removing it..."
+        rm -f ssl/cert.pem
+    fi
+    echo "Generating new certificates..."
     mkdir -p ssl
     cd ssl || exit
     # Check for mkcert command
@@ -40,7 +49,10 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     fi
     mkcert -install
     mkcert localhost 127.0.0.1 ::1
+    mv *-key.pem cert-key.pem
+    mv localhost+* cert.pem
     echo "SSL certificates generated successfully."
+    cd .. || exit
 fi
 
 # Run V2X Hub
