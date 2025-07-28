@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Initialize Docker Environment for V2X Hub
 ./initialize_docker_environment.sh
