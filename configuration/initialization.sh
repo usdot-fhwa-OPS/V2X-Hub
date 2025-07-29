@@ -52,6 +52,7 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     mkcert localhost 127.0.0.1 ::1
     mv *-key.pem cert-key.pem
     mv localhost+* cert.pem
+    sudo chmod ugo+r *.pem
     echo "SSL certificates generated successfully."
     cd .. || exit
 fi
