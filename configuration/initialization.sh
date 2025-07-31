@@ -50,6 +50,7 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
             sudo apt update
             sudo apt install -y curl
         fi
+        sudo apt install libnss3-tools
         sudo curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
         sudo chmod +x mkcert-v*-linux-amd64
         sudo cp mkcert-v*-linux-amd64 /usr/local/bin/mkcert

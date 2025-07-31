@@ -1,6 +1,5 @@
 #!/bin/bash
-# Fail when any command fails
-#set -e
+set -e
 
 # Check if V2XHUB_VERSION is passed
 if [ -n "$1" ]; then
@@ -15,14 +14,13 @@ echo "Adding V2X-Hub user for version: $V2XHUB_VERSION"
 # Ensure mysql-client is installed
 arch=$(dpkg --print-architecture)
 # TODO: Add a common mysql-client that works for ARM and AMD devices 
-if [ $arch = "amd64" ]; then
+
+if ! command -v mysql &>/dev/null; then
+  if [ $arch = "amd64" ]; then
     REQUIRED_PKG="mysql-client"
-else
+  else
     REQUIRED_PKG="mariadb-client"
-fi
-PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
-echo Checking for $REQUIRED_PKG: $PKG_OK
-if [ "" = "$PKG_OK" ]; then
+  fi  
   echo "No $REQUIRED_PKG found. Installing $REQUIRED_PKG."
   sudo apt-get update
   sudo apt-get --yes install $REQUIRED_PKG
