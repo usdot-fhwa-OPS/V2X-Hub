@@ -11,7 +11,7 @@ cd ~/V2X-Hub/configuration/
 ```
 Run the initialization script:
 ```
-sudo ./initialization.sh
+./initialization.sh
 ```
 Follow the prompts during installation.
 

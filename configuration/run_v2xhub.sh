@@ -1,13 +1,11 @@
 #!/bin/bash
+set -e
 echo "Running V2X Hub..."
-# Check for Chromium and install if not already installed.
-REQUIRED_PKG="chromium-browser"
-PKG_OK=$(dpkg-query -W --showformat='${Status}\n' $REQUIRED_PKG|grep "install ok installed")
-echo Checking for $REQUIRED_PKG: $PKG_OK
-if [ "" = "$PKG_OK" ]; then
-  echo "No $REQUIRED_PKG found. Installing $REQUIRED_PKG."
-  sudo apt-get update
-  sudo apt-get --yes install $REQUIRED_PKG
+
+if ! command -v chromium-browser &>/dev/null; then
+  echo "chromium-browser not found, install chromium-browser"
+  sudo apt update
+  sudo apt install chromium-browser -y
 fi
 # Start V2X Hub
 sudo docker compose up -d

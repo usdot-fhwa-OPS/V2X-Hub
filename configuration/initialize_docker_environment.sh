@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # Default values for the variables
 PORT_DRAYAGE_ENABLED_DEFAULT="FALSE"
 INFRASTRUCTURE_ID_DEFAULT="rsu_1234"
