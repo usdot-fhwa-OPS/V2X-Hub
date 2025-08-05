@@ -20,6 +20,12 @@
 // #include <jer_encoder.h>
 
 namespace JSONMessageLoggerPlugin {
+      using buffer_structure_t = struct buffer_structure
+    {
+        char *buffer;          // buffer array
+        size_t buffer_size;    // this is really where we will write next.
+        size_t allocated_size; // this is the total size of the buffer.
+    };
     class JSONMessageLoggerPlugin : public tmx::utils::TmxMessageManager {
         public:
             JSONMessageLoggerPlugin(const std::string &name);
@@ -33,5 +39,7 @@ namespace JSONMessageLoggerPlugin {
         private:
             std::mutex _configMutex;
     };
+
+    int DynamicBufferAppend(const void *buffer, size_t size, void *app_key);
 
 } /* namespace JSONMessageLoggerPlugin */

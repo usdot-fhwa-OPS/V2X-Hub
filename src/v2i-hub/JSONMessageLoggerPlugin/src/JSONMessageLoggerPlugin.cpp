@@ -47,8 +47,24 @@ namespace JSONMessageLoggerPlugin {
             auto j2735Data = j2735Msg.decode_j2735_message().get_j2735_data();
             // Call JER Print function on message frame
             jer_fprint(stdout, &asn_DEF_MessageFrame, j2735Data.get());
+            /**
+             * Convert J2735 message into XML
+             */
+            std::string *json_buffer;
+            
+            asn_enc_rval_t encode_rval = jer_encode(
+                &asn_DEF_MessageFrame,
+                j2735Data.get(),
+                jer_encoder_flags_e::JER_F_MINIFIED,
+                DynamicBufferAppend,
+                &json_buffer // Pass the buffer to the callback
+               );
+
+            PLOG(tmx::utils::LogLevel::logINFO) << "Encoded J2735 message to JSON: " << json_buffer->c_str();
+            
+            // auto output = string(json_buffer.buffer);
             // asn_fprint(stdout, &asn_DEF_MessageFrame, frame.get_j2735_data().get());
-            free(j2735Data.get());
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MessageFrame, j2735Data.get());
             // auto decoded_msg = tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>::decode_j2735_message();
             // Copy into TmxJ2735EncodedMessage
             // tmx::messages::TmxJ2735EncodedMessageBase *j2735Msg = dynamic_cast<tmx::messages::TmxJ2735EncodedMessageBase *>(&msg);
@@ -66,7 +82,31 @@ namespace JSONMessageLoggerPlugin {
     {
        
     }
+    int DynamicBufferAppend(const void *buffer, size_t size, void *app_key)
+    {
+        auto *xb = static_cast<buffer_structure_t *>(app_key);
 
+        while (xb->buffer_size + size + 1 > xb->allocated_size)
+        {
+            // increase size of buffer.
+            size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
+            auto new_buf = static_cast<char *>(MALLOC(new_size));
+            if (!new_buf)
+                return -1;
+            // move old to new.
+            memcpy(new_buf, xb->buffer, xb->buffer_size);
+
+            FREEMEM(xb->buffer);
+            xb->buffer = new_buf;
+            xb->allocated_size = new_size;
+        }
+
+        memcpy(xb->buffer + xb->buffer_size, buffer, size);
+        xb->buffer_size += size;
+        // null terminate the string.
+        xb->buffer[xb->buffer_size] = '\0';
+        return 0;
+    }
 } // namespace JSONMessageLoggerPlugin
 // The main entry point for this application.
 int main(int argc, char *argv[])

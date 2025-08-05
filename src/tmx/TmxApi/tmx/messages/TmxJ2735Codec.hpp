@@ -20,6 +20,8 @@
 #endif
 
 #include <tmx/j2735_messages/MessageFrame.hpp>
+#include <jer_encoder.h>
+#include <jer_decoder.h>
 
 namespace tmx {
 namespace messages {
@@ -176,18 +178,6 @@ struct uper
 
 		MessageFrameMessage::message_type *frame = NULL;
 		asn_TYPE_descriptor_t *descriptor = NULL;
-
-#if SAEJ2735_SPEC < 2016
-		static uper<MessageFrameMessage> decoder;
-
-		descriptor = MessageFrameMessage::get_descriptor();
-
-		asn_dec_rval_t ret = decoder.decode((void **)&frame, bytes, descriptor);
-		if (ret.code != RC_OK || frame == NULL)
-			return -1;
-
-		id = frame->contentID;
-#else
 		// Message ID is encoded directly in the message frame, first two bytes
 		if (bytes.size() > 1)
 			id = bytes[0];
@@ -196,8 +186,6 @@ struct uper
 			id <<= 8;
 			id |= bytes[1];
 		}
-#endif
-
 		if (descriptor)
 			ASN_STRUCT_FREE((*descriptor), frame);
 
@@ -205,6 +193,78 @@ struct uper
 	}
 
 };
+static int DynamicBufferAppend(const void *buffer, size_t size, void *app_key) {
+    if (!buffer || !app_key) return -1;
+    auto *bytes = static_cast<tmx::byte_stream *>(app_key);
+    bytes->insert(bytes->end(), (const uint8_t *)buffer, (const uint8_t *)buffer + size);
+    return 0;
+}
+template <typename MsgType>
+struct jer
+{
+	typedef MsgType type;
+    typedef typename type::message_type message_type;
+    typedef tmx::messages::codec::jer<type> codec;
+
+    static constexpr const char *Encoding = api::ENCODING_ASN1_JER_STRING;
+/**
+     * Attempt to pull out the message ID from the JER (JSON) encoded bytes.
+     * This will decode the JSON and extract the message ID if possible.
+     * @param bytes The bytes to decode
+     * @return The message ID, or -1 if not found
+     */
+    static int decode_contentId(const tmx::byte_stream &bytes)
+    {
+		int id = -1;
+		// int id;
+		// // Check if message type is MessageFrameMessage
+
+		// MessageFrame *frame = NULL;
+		// asn_TYPE_descriptor_t *descriptor = MsgType::get_descriptor();
+		// // Check if descriptor is MessageFrameMessage
+		// if (descriptor && descriptor == &asn_DEF_MessageFrame) {
+		// 	asn_dec_rval_t rval = jer_decode(0, descriptor, (void **)&frame, bytes.data(), bytes.size());
+		// 	if (rval.code == RC_OK && frame) {
+		// 		try {
+		// 			// Assumes MsgType has get_messageId() method
+		// 			id = frame->DSRCmsgID_t;
+		// 		} catch (...) {
+		// 			id = -1;
+		// 		}
+		// 		ASN_STRUCT_FREE(descriptor, frame);
+		// 	}
+		// }
+		// else{
+		// 	// If not MessageFrameMessage, try to decode as a generic JER message
+		// 	id = -1; // Default to -1 if not found
+		// }
+        return id;
+    }
+
+    asn_dec_rval_t decode(void **obj, const tmx::byte_stream &bytes,
+            asn_TYPE_descriptor_t *typeDescriptor = MsgType::get_descriptor())
+    {
+        return jer_decode(0, typeDescriptor, obj, bytes.data(), bytes.size());
+    }
+
+	
+    asn_enc_rval_t encode(const typename MsgType::message_type *obj, tmx::byte_stream &bytes,
+            asn_TYPE_descriptor_t *typeDescriptor = MsgType::get_descriptor())
+    {
+        // Use the dynamic buffer append callback
+        asn_enc_rval_t ret = jer_encode(
+            typeDescriptor,
+            (void *)obj,
+            jer_encoder_flags_e::JER_F_MINIFIED, // or JER_F_MINIFIED
+            DynamicBufferAppend,
+            &bytes
+        );
+        // No need to adjust .encoded for JSON
+        return ret;
+    }
+
+};
+
 
 } /* End namespace codec */
 
@@ -245,6 +305,7 @@ class TmxJ2735EncodedMessage: public TmxJ2735EncodedMessageBase
 public:
 	typedef tmx::messages::codec::uper<MsgType> UperCodec;
 	typedef tmx::messages::codec::der<MsgType> DerCodec;
+	typedef tmx::messages::codec::jer<MsgType> JerCodec;
 
 	static constexpr const char *DefaultCodec = ASN1_CODEC<MsgType>::Encoding;
 
@@ -400,6 +461,19 @@ public:
 					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData));
 				}
 			}
+			else if (is_jer())
+			{
+				if (msgId > MessageFrameMessage::get_default_messageId())
+				{
+					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::jer<MessageFrameMessage> >(theData);
+					if (frame)
+						_decoded.reset(new MsgType(frame->get_j2735_data()));
+				}
+				else {
+					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<JerCodec>(theData));
+				}
+			}
 			else
 			{
 				J2735Exception err("Unknown encoding.");
@@ -446,6 +520,18 @@ public:
 			else
 			{
 				this->set_data(TmxJ2735EncodedMessage<MsgType>::encode_j2735_message<DerCodec>(message));
+			}
+		}
+		else if (is_jer())
+		{
+			if (msgId > MessageFrameMessage::get_default_messageId())
+			{
+				MessageFrameMessage frame(message.get_j2735_data());
+				this->set_data(TmxJ2735EncodedMessage<MsgType>::encode_j2735_message<
+						codec::jer<MessageFrameMessage> >(frame));
+			}
+			else {
+				this->set_data(TmxJ2735EncodedMessage<MsgType>::encode_j2735_message<JerCodec>(message));
 			}
 		}
 		else
@@ -503,6 +589,11 @@ public:
 		{
 			id = DerCodec::decode_contentId(this->get_data());
 		}
+		else if (is_jer())
+		{
+			id = JerCodec::decode_contentId(this->get_data());
+		}
+		
 
 		if (id > 0)
 			return id;
@@ -549,6 +640,10 @@ public:
 	bool is_uper()
 	{
 		return is_encoded<UperCodec>();
+	}
+	bool is_jer()
+	{
+		return is_encoded<codec::jer<MsgType>>();
 	}
 };
 

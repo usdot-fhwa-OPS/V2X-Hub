@@ -218,6 +218,7 @@ static CONSTEXPR const char *ENCODING_XML_STRING = "xmlstring";
 static CONSTEXPR const char *ENCODING_BYTEARRAY_STRING = "bytearray/hexstring";
 static CONSTEXPR const char *ENCODING_ASN1_BER_STRING = "asn.1-ber/hexstring";
 static CONSTEXPR const char *ENCODING_ASN1_UPER_STRING = "asn.1-uper/hexstring";
+static CONSTEXPR const char *ENCODING_ASN1_JER_STRING = "asn.1-jer/jsonstring";
 			
 enum Status 
 {
