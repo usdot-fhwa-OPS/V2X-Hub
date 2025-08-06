@@ -19,5 +19,5 @@ set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 add_executable(${BINARY} ${TEST_SOURCES})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 target_include_directories(${BINARY} PUBLIC  src/) 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest gtest_main)
 

@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
-#include <MUSTSensorDetection.h>
 #include <chrono>
+#include <MUSTSensorDetection.h>
 
 using namespace MUSTSensorDriverPlugin;
 

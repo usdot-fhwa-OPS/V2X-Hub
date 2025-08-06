@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
-#include <strstream>
-#include "UDPMessageForwarder.h"
+#include <UDPMessageForwarder.h>
 
 namespace ODEForwardPlugin{
     class test_UDPMessageForwarder: public ::testing::Test{
