@@ -1,13 +1,12 @@
 PROJECT ( tmxutils CXX )
-FILE (GLOB_RECURSE HEADERS "src/" "*.h*")
-FILE (GLOB_RECURSE SOURCES  "src/" "*.c*")
+FILE (GLOB_RECURSE HEADERS "src/" "src/*.h*")
+FILE (GLOB_RECURSE SOURCES  "src/" "src/*.c*")
 find_library(NETSNMPAGENT "netsnmpagent")
 find_library(NETSNMPMIBS "netsnmpmibs")
 find_library(NETSNMP "netsnmp")
 
 FIND_PACKAGE (carma-clock)
 FIND_LIBRARY (UUID_LIBRARY uuid)
-
 ADD_LIBRARY (${PROJECT_NAME} STATIC ${SOURCES})
 
 IF (TMX_LIB_DIR)
@@ -24,7 +23,6 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        ${TMXAPI_LIBRARIES} 
                        ${MYSQL_LIBRARIES} 
                        ${MYSQLCPPCONN_LIBRARIES}
-                       ${UUID_LIBRARY}
                        ${UUID_LIBRARY} 
                        ${NETSNMPAGENT} 
                        ${NETSNMPMIBS} 
@@ -32,8 +30,9 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} PUBLIC
                        ${NETSNMP_LIBRARIES} 
                        rdkafka++ 
                        ::carma-clock
-                       gmock
-                       pthread m rt)
+                       pthread
+                       m
+                       rt)
                        
 SET (TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
 
@@ -43,9 +42,9 @@ INSTALL(DIRECTORY src/ DESTINATION include FILES_MATCHING PATTERN "*.h*")
 # EXPORT (TARGETS ${PROJECT_NAME} ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} 
 #        FILE ${CMAKE_SOURCE_DIR}/${TMX_APPNAME}-plugin.cmake)
 
- ################################
-# GTest
 ################################
+#GTest
+###############################
 enable_testing()
 
 #############
@@ -55,8 +54,6 @@ set(BINARY ${PROJECT_NAME}_test)
 
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
 
-set(SOURCES ${TEST_SOURCES}
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 
 add_executable(${BINARY} ${TEST_SOURCES})
 
