@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <strstream>
 #include "UDPMessageForwarder.h"
 
 namespace ODEForwardPlugin{
