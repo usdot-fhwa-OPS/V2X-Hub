@@ -73,7 +73,6 @@ ENDIF()
 #
 # Set up some required platform dependencies, including MySQL
 #
-# SET (CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_SOURCE_DIR}")
 FIND_PACKAGE ( TmxMySQL )
 
 #
