@@ -48,6 +48,7 @@ namespace ImmediateForward
     static constexpr const char *PrivPassPhraseKey = "privacyPassPhrase";
     static constexpr const char *SecurityLevelKey = "securityLevel";
     static constexpr const char *CommunityKey = "community";
+    static constexpr const char *SnmpTimeoutKey = "snmpTimeout";
 
 
 
@@ -77,6 +78,7 @@ namespace ImmediateForward
         std::string user;
         SecurityLevel securityLevel;
         std::string community;
+        std::optional<unsigned int> snmpTimeout; // Optional SNMP timeout
         // Optional depending on security level
         std::optional<std::string> authProtocol;
         std::optional<std::string> privProtocol;

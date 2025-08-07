@@ -81,6 +81,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "user": "rsuRwUser",
                 "securityLevel": "authPriv",
                 "community": "public",
+                "snmpTimeout": 2000000, /* snmp timeout in microseconds */
                 "authProtocol": "SHA-512",
                 "authPassPhrase": "Password",
                 "privacyProtocol": "AES-256",

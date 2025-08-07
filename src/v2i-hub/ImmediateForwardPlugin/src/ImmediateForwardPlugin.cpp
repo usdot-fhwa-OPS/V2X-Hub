@@ -117,7 +117,7 @@ namespace ImmediateForward
 						imfConfig.snmpAuth.value().privProtocol.value(),
 						imfConfig.snmpAuth.value().privPassPhrase.value(),
 						3,
-						1000000
+						imfConfig.snmpAuth.value().snmpTimeout.value_or(1000000) // Defaults to 1000000 microseconds or 1 second.
 					);
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
