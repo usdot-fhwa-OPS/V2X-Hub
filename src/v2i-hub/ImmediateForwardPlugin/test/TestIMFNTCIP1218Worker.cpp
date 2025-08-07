@@ -207,7 +207,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     //     'x',
     //     "01"
     // };
-    initializeImmediateForwardTable(mockClient.get(), messageConfigs, true);
+    initializeImmediateForwardTable(mockClient.get(), messageConfigs, true, "FFEE");
     EXPECT_EQ(requests_1.size(), 7);
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[0].type, 'x');
@@ -217,7 +217,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     EXPECT_EQ(requests_1[1].value, "183");
     EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[2].type, 'x');
-    EXPECT_EQ(requests_1[2].value, "FFFF");
+    EXPECT_EQ(requests_1[2].value, "FFEE");
     EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[3].type, 'i');
     EXPECT_EQ(requests_1[3].value, "1");

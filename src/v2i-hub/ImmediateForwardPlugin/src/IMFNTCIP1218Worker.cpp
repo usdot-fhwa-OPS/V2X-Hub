@@ -69,7 +69,7 @@ namespace ImmediateForward {
             snmp_request payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
-                "FFFF"
+                payloadPlaceholder
             };
             snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
