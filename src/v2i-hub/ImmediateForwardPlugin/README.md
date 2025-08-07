@@ -81,6 +81,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "user": "rsuRwUser",
                 "securityLevel": "authPriv",
                 "community": "public",
+                "snmpTimeout": 2000000, /* snmp timeout in microseconds */
                 "authProtocol": "SHA-512",
                 "authPassPhrase": "Password",
                 "privacyProtocol": "AES-256",
@@ -88,6 +89,7 @@ This plugin has several configuration parameters. Below these are listed out as 
             },
             "txMode": "CONT",
             "signMessages": false,
+            "payloadPlaceholder": "FFFF", /**optional parameter only used for NTCIP 1218 to configure placeholder hex values in IFM table (defaulted : FFFF) */
             "messages": [
             {
                 "tmxType": "SPAT-P",

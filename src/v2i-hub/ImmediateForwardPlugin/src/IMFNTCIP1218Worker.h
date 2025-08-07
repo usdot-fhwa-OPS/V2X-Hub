@@ -44,7 +44,7 @@ namespace ImmediateForward {
      * @param client The SNMP client to use for the operation
      * @param messageConfigs The message configurations to add to the table
      */
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( tmx::utils::snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages = false);
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( tmx::utils::snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages = false, const std::string &payloadPlaceholder = "FFFF");
 
     /**
      * @brief Send an NTCIP 1218 message to the RSU
