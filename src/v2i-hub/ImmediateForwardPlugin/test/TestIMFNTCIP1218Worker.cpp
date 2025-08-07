@@ -189,7 +189,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     // snmp_request payload{
     //     rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1),
     //     'x',
-    //     "FE"
+    //     "FFEE"
     // };
     // snmp_request creatRow{
     //     rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1),
