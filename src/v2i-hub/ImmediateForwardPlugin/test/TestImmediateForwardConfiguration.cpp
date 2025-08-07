@@ -262,7 +262,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(firstMessage.psid, "0x8002");
     EXPECT_EQ(firstMessage.channel, 183);
     EXPECT_FALSE(firstImfConfig.snmpAuth->snmpTimeout.has_value());
-
+    EXPECT_FALSE(firstImfConfig.payloadPlaceholder.has_value());
 }
 
 TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1218withTimeout ) {
@@ -287,6 +287,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
                 "port": 3745,
                 "txMode": "CONT",
                 "signMessages": false,
+                "payloadPlaceholder": "FFFF",
                 "messages": [
                     { "tmxType": "SPAT-P", "sendType": "SPAT", "psid": "0x8002", "channel": 183 },
                     { "tmxType": "MAP-P", "sendType": "MAP", "psid": "0x8002", "channel": 183 }
@@ -328,4 +329,6 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(firstMessage.channel, 183);
     EXPECT_TRUE(firstImfConfig.snmpAuth->snmpTimeout.has_value());
     EXPECT_EQ(firstImfConfig.snmpAuth->snmpTimeout.value(), 2000000); 
+    EXPECT_TRUE(firstImfConfig.payloadPlaceholder.has_value());
+    EXPECT_EQ(firstImfConfig.payloadPlaceholder.value(), "FFFF");
 }

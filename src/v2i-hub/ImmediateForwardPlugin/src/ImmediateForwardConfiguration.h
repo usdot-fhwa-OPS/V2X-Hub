@@ -49,6 +49,7 @@ namespace ImmediateForward
     static constexpr const char *SecurityLevelKey = "securityLevel";
     static constexpr const char *CommunityKey = "community";
     static constexpr const char *SnmpTimeoutKey = "snmpTimeout";
+    static constexpr const char *PayloadPlaceholderKey = "payloadPlaceholder";
 
 
 
@@ -100,6 +101,7 @@ namespace ImmediateForward
         bool signMessage;
         std::optional<bool> enableHsm;
         std::optional<std::string> hsmUrl;
+        std::optional<std::string> payloadPlaceholder; // Optional placeholder for payload
         
     };
     /** 

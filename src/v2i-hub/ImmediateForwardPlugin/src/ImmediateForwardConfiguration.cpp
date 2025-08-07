@@ -41,8 +41,10 @@ namespace ImmediateForward{
         SNMPAuth snmpAuthObj;
         snmpAuthObj.user = snmpAuth[UserKey].asString();
         snmpAuthObj.securityLevel = stringToSecurityLevel(snmpAuth[SecurityLevelKey].asString());
-        snmpAuthObj.community = snmpAuth[CommunityKey].asString(); 
-        snmpAuthObj.snmpTimeout = snmpAuth[SnmpTimeoutKey].asUInt();
+        snmpAuthObj.community = snmpAuth[CommunityKey].asString();
+        if (snmpAuth[SnmpTimeoutKey].isUInt()) {
+            snmpAuthObj.snmpTimeout = snmpAuth[SnmpTimeoutKey].asUInt();
+        }
         if (snmpAuthObj.securityLevel != SecurityLevel::NO_AUTH_NO_PRIV) {
             snmpAuthObj.authProtocol = snmpAuth[AuthProtocolKey].asString();
             snmpAuthObj.authPassPhrase = snmpAuth[AuthPassPhraseKey].asString();
@@ -77,6 +79,10 @@ namespace ImmediateForward{
             }
 
         }
+        if (imfConfig[PayloadPlaceholderKey].isString()) {
+            imfConfiguration.payloadPlaceholder = imfConfig[PayloadPlaceholderKey].asString();
+        }
+    
         const auto &messageConfigs =  imfConfig[MessagesKey];
         if (!messageConfigs.isArray()) {
             throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");

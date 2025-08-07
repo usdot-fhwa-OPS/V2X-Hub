@@ -40,7 +40,7 @@ namespace ImmediateForward {
         }
     }
 
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages) {
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages, const std::string &payloadPlaceholder) {
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         // Immediate Forward Messages Table index starts with 1
         auto curIndex = 1;
