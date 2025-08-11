@@ -1,0 +1,1 @@
+# JSON Message Logger Plugin
