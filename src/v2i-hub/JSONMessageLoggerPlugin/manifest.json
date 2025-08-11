@@ -1,0 +1,27 @@
+{
+    "name": "JSONMessageLoggerPlugin",
+    "description": "Plugin that logs J2735 messages in JSON format",
+    "version": "@PROJECT_VERSION@",
+    "exeLocation": "/bin/JSONMessageLoggerPlugin",
+    "coreIpAddr": "127.0.0.1",
+    "corePort": 24601,
+    "messageTypes": [
+     {     
+        "type": "J2735",
+        "subtype": "*",
+        "description": "J2735 Message"
+        }
+    ],
+    "configuration": [
+        {
+            "key": "LogLevel",
+            "default": "INFO",
+            "description": "The log level for this plugin"
+        },
+        {
+			"key": "LogOutput",
+			"default": "-",
+			"description": "Name of the log file for this plugin. If a relative path is provided, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
+		}
+    ]
+}
