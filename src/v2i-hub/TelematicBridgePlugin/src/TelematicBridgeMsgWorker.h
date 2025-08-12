@@ -7,6 +7,8 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <jer_encoder.h>
+#include <xer_encoder.h>
 
 using namespace tmx::utils;
 using namespace std;
@@ -149,6 +151,32 @@ namespace TelematicBridge
         }
         auto output = string(xml_buffer.buffer);
         FREEMEM(xml_buffer.buffer);
+        return output;
+    }
+
+    /**
+     * @brief Convert the J2735 messageFrame into string in XML format
+     * @param MessageFrame_t J2735 struct
+     * @return string XML formatted J2735 message
+     */
+    string ConvertJ2735FrameToJson(const MessageFrame_t *messageFrame)
+    {
+        /**
+         * Convert J2735 message into XML
+         */
+        buffer_structure_t json_buffer = {nullptr, 0, 0};
+        asn_enc_rval_t encode_rval = jer_encode(
+            &asn_DEF_MessageFrame,
+            messageFrame,
+            jer_encoder_flags_e::JER_F_MINIFIED,
+            DynamicBufferAppend,
+            static_cast<void *>(&json_buffer));
+        if (encode_rval.encoded == -1)
+        {
+            throw TelematicBridgeException("Failed to  convert message with ID (=" + to_string(messageFrame->messageId) + ") to XML ");
+        }
+        auto output = string(json_buffer.buffer);
+        FREEMEM(json_buffer.buffer);
         return output;
     }
 

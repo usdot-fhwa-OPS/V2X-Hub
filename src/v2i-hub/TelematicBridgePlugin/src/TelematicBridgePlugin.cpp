@@ -26,9 +26,10 @@ namespace TelematicBridge
             {
                 auto messageFm = (MessageFrame_t *)calloc(1, sizeof(MessageFrame_t));
                 DecodeJ2735Msg(msg->payload->valuestring, messageFm);
-                string xml_payload_str = ConvertJ2735FrameToXML(messageFm);
+                // string xml_payload_str = ConvertJ2735FrameToXML(messageFm);
+                string json_payload_str = ConvertJ2735FrameToJson(messageFm);
                 ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFm);
-                string json_payload_str = xml2Json(xml_payload_str.c_str());
+
                 json["payload"] = StringToJson(json_payload_str);
             }
 
