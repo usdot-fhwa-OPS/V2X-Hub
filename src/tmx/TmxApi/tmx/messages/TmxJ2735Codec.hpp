@@ -176,18 +176,6 @@ struct uper
 
 		MessageFrameMessage::message_type *frame = NULL;
 		asn_TYPE_descriptor_t *descriptor = NULL;
-
-#if SAEJ2735_SPEC < 2016
-		static uper<MessageFrameMessage> decoder;
-
-		descriptor = MessageFrameMessage::get_descriptor();
-
-		asn_dec_rval_t ret = decoder.decode((void **)&frame, bytes, descriptor);
-		if (ret.code != RC_OK || frame == NULL)
-			return -1;
-
-		id = frame->contentID;
-#else
 		// Message ID is encoded directly in the message frame, first two bytes
 		if (bytes.size() > 1)
 			id = bytes[0];
@@ -196,7 +184,6 @@ struct uper
 			id <<= 8;
 			id |= bytes[1];
 		}
-#endif
 
 		if (descriptor)
 			ASN_STRUCT_FREE((*descriptor), frame);

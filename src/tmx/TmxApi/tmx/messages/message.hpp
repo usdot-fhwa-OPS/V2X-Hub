@@ -261,7 +261,7 @@ public:
 	 * @param type The format name to check
 	 * @return True if this message is of the specified format, false otherwise
 	 */
-	bool is_format(std::string type)
+	bool is_format(std::string type) const
 	{
 		std::transform(type.begin(), type.end(), type.begin(), ::toupper);
 		return (format() == type);
@@ -271,8 +271,8 @@ public:
 	 * Check the format against a specific other type
 	 * @return True if this message is of the specified format, false otherwise
 	 */
-	template <typename OtherFormat>
-	bool is_format()
+	template <typename OtherFormat> 
+	bool is_format() const
 	{
 		return std::is_same<OtherFormat, Format>::value;
 	}

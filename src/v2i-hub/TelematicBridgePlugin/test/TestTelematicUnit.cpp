@@ -6,7 +6,7 @@ using namespace std::chrono;
 
 namespace TelematicBridge
 {
-    class test_TelematicUnit : public ::testing::Test
+    class TestTelematicUnit : public ::testing::Test
     {
     public:
         shared_ptr<TelematicUnit> _telematicUnitPtr = make_shared<TelematicUnit>();
@@ -17,23 +17,23 @@ namespace TelematicBridge
                 "infrastructure"};
     };
 
-    TEST_F(test_TelematicUnit, setUnit)
+    TEST_F(TestTelematicUnit, setUnit)
     {
         ASSERT_NO_THROW(_telematicUnitPtr->setUnit(unit));
         ASSERT_EQ(unit.unitId, _telematicUnitPtr->getUnit().unitId);
     }
 
-    TEST_F(test_TelematicUnit, updateExcludedTopics)
+    TEST_F(TestTelematicUnit, updateExcludedTopics)
     {
         ASSERT_NO_THROW(_telematicUnitPtr->updateExcludedTopics("test_topic"));
     }
 
-    TEST_F(test_TelematicUnit, updateAvailableTopics)
+    TEST_F(TestTelematicUnit, updateAvailableTopics)
     {
         ASSERT_NO_THROW(_telematicUnitPtr->updateAvailableTopics("test_topic"));
     }
 
-    TEST_F(test_TelematicUnit, constructAvailableTopicsReplyString)
+    TEST_F(TestTelematicUnit, constructAvailableTopicsReplyString)
     {
         vector<string> topics = {"test_topic", "excluded_topic"};
         string excluded_topic = "excluded_topic";
@@ -49,7 +49,7 @@ namespace TelematicBridge
         ASSERT_EQ(1, json["topics"].isArray());
     }
 
-    TEST_F(test_TelematicUnit, constructPublishedDataString)
+    TEST_F(TestTelematicUnit, constructPublishedDataString)
     {
         string eventLocation = "location";
         string testingType = "unit_test";
@@ -73,7 +73,7 @@ namespace TelematicBridge
         ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 100);
     }
 
-    TEST_F(test_TelematicUnit, onCheckStatusCallback)
+    TEST_F(TestTelematicUnit, onCheckStatusCallback)
     {
         natsMsg *msg;
         string data = "{\"data\":\"test\"}";
@@ -81,7 +81,7 @@ namespace TelematicBridge
         ASSERT_NO_THROW(TelematicUnit::onCheckStatusCallback(nullptr, nullptr, msg, nullptr));
     }
 
-    TEST_F(test_TelematicUnit, onSelectedTopicsCallback)
+    TEST_F(TestTelematicUnit, onSelectedTopicsCallback)
     {
         natsMsg *msg;
         string data = "{\"topics\":[\"test_topic\"]}";
@@ -90,7 +90,7 @@ namespace TelematicBridge
         ASSERT_TRUE(_telematicUnitPtr->inSelectedTopics("test_topic"));
     }
 
-    TEST_F(test_TelematicUnit, onAvailableTopicsCallback)
+    TEST_F(TestTelematicUnit, onAvailableTopicsCallback)
     {
         natsMsg *msg;
         string data = "{\"data\":\"test\"}";
@@ -98,7 +98,7 @@ namespace TelematicBridge
         ASSERT_NO_THROW(TelematicUnit::onAvailableTopicsCallback(nullptr, nullptr, msg, _telematicUnitPtr.get()));
     }
 
-    TEST_F(test_TelematicUnit, publishMessage)
+    TEST_F(TestTelematicUnit, publishMessage)
     {
         string topicName = "test_topic";
         Json::Value payload;
@@ -106,32 +106,32 @@ namespace TelematicBridge
         ASSERT_THROW(_telematicUnitPtr->publishMessage(topicName, payload), TelematicBridgeException);
     }
 
-    TEST_F(test_TelematicUnit, checkStatusReplier)
+    TEST_F(TestTelematicUnit, checkStatusReplier)
     {
         _telematicUnitPtr->checkStatusReplier();
     }
 
-    TEST_F(test_TelematicUnit, selectedTopicsReplier)
+    TEST_F(TestTelematicUnit, selectedTopicsReplier)
     {
         _telematicUnitPtr->selectedTopicsReplier();
     }
 
-    TEST_F(test_TelematicUnit, availableTopicsReplier)
+    TEST_F(TestTelematicUnit, availableTopicsReplier)
     {
         _telematicUnitPtr->availableTopicsReplier();
     }
 
-    TEST_F(test_TelematicUnit, registerUnitRequestor)
+    TEST_F(TestTelematicUnit, registerUnitRequestor)
     {
         ASSERT_THROW(_telematicUnitPtr->registerUnitRequestor(), TelematicBridgeException);
     }
 
-    TEST_F(test_TelematicUnit, connect)
+    TEST_F(TestTelematicUnit, connect)
     {
         ASSERT_THROW(_telematicUnitPtr->connect("nats://127.0.0.1:4222"), TelematicBridgeException);
     }
 
-    TEST_F(test_TelematicUnit, getters)
+    TEST_F(TestTelematicUnit, getters)
     {
         ASSERT_EQ(0, _telematicUnitPtr->getAvailableTopics().size());
         ASSERT_EQ("", _telematicUnitPtr->getEventLocation());
@@ -140,7 +140,7 @@ namespace TelematicBridge
         ASSERT_EQ("", _telematicUnitPtr->getTestingType());
     }
 
-    TEST_F(test_TelematicUnit, selectedTopics)
+    TEST_F(TestTelematicUnit, selectedTopics)
     {
         string selectedTopic = "test_selected_topics";
         _telematicUnitPtr->addSelectedTopic(selectedTopic);
@@ -148,7 +148,7 @@ namespace TelematicBridge
         _telematicUnitPtr->clearSelectedTopics();
         ASSERT_FALSE(_telematicUnitPtr->inSelectedTopics(selectedTopic));
     }
-    TEST_F(test_TelematicUnit, validateRegisterStatus)
+    TEST_F(TestTelematicUnit, validateRegisterStatus)
     {
         string replyStr = "{\"event_name\":\"Test\",\"location\":\"Local\",\"testing_type\":\"Integration\"}";
         _telematicUnitPtr->validateRegisterStatus(replyStr);
