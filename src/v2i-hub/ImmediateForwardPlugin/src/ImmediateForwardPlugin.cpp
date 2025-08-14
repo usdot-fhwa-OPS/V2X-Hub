@@ -121,7 +121,9 @@ namespace ImmediateForward
 					);
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
-				waitForRSUModeStandby(_snmpClientMap[imfConfig.name].get(), 5 ,5);
+				// This will check RSU Mode for Standby status a maximum of 12 times waiting 5 seconds 
+				// after each time before failing
+				waitForRSUModeStandby(_snmpClientMap[imfConfig.name].get(), 12 ,5);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(
 					_snmpClientMap[imfConfig.name].get(), 
