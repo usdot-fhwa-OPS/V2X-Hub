@@ -38,8 +38,7 @@ namespace TelematicBridge
         // Decode Encode J2735 Message
         auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
         // Convert J2735 data to TmxJ2735Message for JSON serialization
-        tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON> j2735Message =
-            tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
+        auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
         // Serial J2735 message to JSON
         std::string json_payload_str = j2735Message.to_string();
         FILE_LOG(tmx::utils::LogLevel::logDEBUG2) << "J2735 JSON payload: " << json_payload_str;

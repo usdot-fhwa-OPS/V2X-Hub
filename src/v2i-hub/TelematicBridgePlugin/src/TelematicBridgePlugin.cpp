@@ -7,7 +7,7 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
-        // _telematicUnitPtr = make_unique<TelematicUnit>();
+        _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = std::getenv("INFRASTRUCTURE_ID");
         _unitName = std::getenv("INFRASTRUCTURE_NAME");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
