@@ -39,6 +39,12 @@ namespace ImmediateForward {
      * @param client The SNMP client 
      */
     void setRSUMode(tmx::utils::snmp_client* const client, unsigned int mode  );
+
+    /**
+     * @brief Method that returns RSU Mode
+     * @param client tmx::utils::snmp_client
+     */
+    void waitForRSUModeStandby(tmx::utils::snmp_client* const client, unsigned int retry = 1 , unsigned int interval = 1 ) ;
     /**
      * @brief Initialize the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation

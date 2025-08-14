@@ -40,6 +40,23 @@ namespace ImmediateForward {
         }
     }
 
+    void waitForRSUModeStandby(tmx::utils::snmp_client* const client, unsigned int retry, unsigned int interval) {
+        snmp_response_obj obj;
+        obj.type = snmp_response_obj::response_type::INTEGER;
+        do {
+            bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET, obj);
+            if (!operational) {
+                throw tmx::TmxException("Failed to get RSU to operational mode");
+            }
+            retry--;
+            sleep(interval * 1000);
+        }
+        while ( retry >= 0 && obj.val_int != 2);
+        if ( obj.val_int != 2) {
+            throw tmx::TmxException("Failed to set RSU Mode to Standby(2)");
+        } 
+    }
+
     std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages, const std::string &payloadPlaceholder) {
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         // Immediate Forward Messages Table index starts with 1
