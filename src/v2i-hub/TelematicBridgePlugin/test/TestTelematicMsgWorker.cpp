@@ -47,6 +47,6 @@ TEST(TestTelematicMsgWork, stringToJsonValue) {
 }
 
 TEST(TestTelematicMsgWorker, stringToJsonValueException) {
-    std::string jsonString = R"({"key1": "value1", "key2": 2, "key3": true})";
-    EXPECT_THROW(stringToJsonValue(jsonString), TelematicBridgeException);
+    std::string invalidJsonString = R"({"key1": "value1", "key2": 2, "awdasd)";
+    EXPECT_THROW(stringToJsonValue(invalidJsonString), TelematicBridgeException);
 }
