@@ -122,7 +122,7 @@ namespace ImmediateForward
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
-				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messageConfigs);
+				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messageConfigs, imfConfig.signMessage);
 				// Set to operational mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 3);
 

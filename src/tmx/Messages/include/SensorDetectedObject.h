@@ -6,6 +6,8 @@
 #include "Covariance.h"
 #include "Velocity.h"
 #include "Size.h"
+#include "WGS84Position.h"
+#include "Orientation.h"
 
 namespace tmx::messages
 {
@@ -28,6 +30,8 @@ namespace tmx::messages
 
         //Flag to indicate whether sensor detected object is simulated.
         std_attribute(this->msg, bool, isSimulated, false,);
+        //Flag to indicate whether sensor detected object is modified by our processing to account for any Sensor bad performance.
+        std_attribute(this->msg, bool, isModified, false,);
         // Classification of detected object.
         std_attribute(this->msg, std::string, type, "",);
         // Confidence of type classification
@@ -38,10 +42,17 @@ namespace tmx::messages
         std_attribute(this->msg, std::string, projString, "", );
         // Unique identifier of detected object.
         std_attribute(this->msg, int, objectId, 0, );
+        // Optional WGS84 position of the detected object.
+        object_attribute(WGS84Position, wgs84Position);    
+        // Cartesian position of object in meters. Assumed to be ENU coordinate frame and relative to projection string.        
+        object_attribute(Position, position);
+        // Cartesian position covariance associated with the object.    
+        two_dimension_array_attribute(Covariance, positionCovariance); 
+        // Cartesian orientation of object. Assumed to be ENU coordinate frame.
+        object_attribute(Orientation, orientation);
+        //Covariance associated with the orientation.
+        two_dimension_array_attribute(Covariance, orientationCovariance);
 
-                
-        object_attribute(Position, position);    
-        two_dimension_array_attribute(Covariance, positionCovariance);       
         //Linear velocity in meter per second
         object_attribute(Velocity, velocity);
         //Covariance associated with linear velocity.
@@ -53,7 +64,8 @@ namespace tmx::messages
 
         // Epoch time in milliseconds.
         // long timestamp = 0;
-        std_attribute(this->msg, long, timestamp, 0, );            
+        std_attribute(this->msg, long, timestamp, 0, );
+        // Size of the detected object in meters            
         object_attribute(Size, size);
         
     };

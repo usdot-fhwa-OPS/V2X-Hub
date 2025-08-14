@@ -18,6 +18,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
+
 #pragma GCC diagnostic pop
 #include <tmx/apimessages/TmxEventLog.hpp>
 #include <tmx/messages/routeable_message.hpp>
@@ -371,8 +373,23 @@ protected:
 	inline const std::chrono::system_clock::time_point & getStartTime() const {
 		return _startTime;
 	}
-
+	/**
+	 * Update the PSS (Proportional Set Size) status.
+	 * This is the memory usage of the plugin in Kbs.
+	 * This function should be called periodically, such as in the PluginClient::Main() function.
+	 * It is called automatically by the PluginClient::Main() function, but if you override
+	 * the Main() function, you will need to call this function manually to keep the PSS status updated.
+	 * @see PluginClient::Main()
+	 */
+	void UpdatePssStatus();
 private:
+	/**
+	 * Helper function to get the PSS (Proportional Set Size) of the plugin.
+	 * This is the memory usage of the plugin in Kbs.
+	 * @return The PSS of the plugin in Kbs.
+	 */
+ 	long getPss() const;
+
 	void SetStartTimeStatus();
 
 	IvpMsgFilter* _msgFilter;

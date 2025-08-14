@@ -88,10 +88,8 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     messageConfigs.push_back(messageConfig);
 
     std::vector<snmp_request> requests_1;
-    std::vector<snmp_request> requests_2;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).
-        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true))).
-        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_2), Return(true)));
+        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
     // Expect these snmpRequests to be called
     // snmp_request psid{
     //     rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1),
@@ -139,7 +137,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_1[1].value, "183");
     EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[2].type, 'x');
-    EXPECT_EQ(requests_1[2].value, "FE");
+    EXPECT_EQ(requests_1[2].value, "FFFF");
     EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[3].type, 'i');
     EXPECT_EQ(requests_1[3].value, "1");
@@ -151,12 +149,87 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_1[5].value, "6");
     EXPECT_EQ(requests_1[6].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[6].type, 'x');
-    EXPECT_EQ(requests_1[6].value, "01");
+    EXPECT_EQ(requests_1[6].value, "00");
+ 
 
-    EXPECT_EQ(requests_2.size(), 1);
-    EXPECT_EQ(requests_2[0].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
-    EXPECT_EQ(requests_2[0].type, 'x');
-    EXPECT_EQ(requests_2[0].value, "FE");
+}
+
+TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
+    // Test the initializeImmediateForwardTable function
+    // Create a mock SNMP client
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    // Call the function
+    std::vector<MessageConfig> messageConfigs;
+    MessageConfig messageConfig;
+    messageConfig.tmxType = "SPAT-P";
+    messageConfig.sendType = "SPAT";
+    messageConfig.psid = "0x8002";
+    messageConfig.channel = 183;
+    messageConfigs.push_back(messageConfig);
+
+    std::vector<snmp_request> requests_1;
+    EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).
+        WillOnce(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
+    // Expect these snmpRequests to be called
+    // snmp_request psid{
+    //     rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1),
+    //     'x',
+    //     "8002"
+    // };
+    // snmp_request channel{
+    //     rsu::mib::ntcip1218::rsuIFMTxChannelOid + "." + std::to_string(1),
+    //     'i',
+    //     "183"
+    // };
+    // snmp_request enable{
+    //     rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1),
+    //     'i',
+    //     "1"
+    // };
+    // snmp_request payload{
+    //     rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1),
+    //     'x',
+    //     "FE"
+    // };
+    // snmp_request creatRow{
+    //     rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1),
+    //     'i',
+    //     "4"
+    // };
+    // snmp_request priority{
+    //     rsu::mib::ntcip1218::rsuIFMPriorityOid + "." + std::to_string(1),
+    //     'i',
+    //     "6"
+    // };
+
+    // snmp_request options{
+    //     rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1),
+    //     'x',
+    //     "01"
+    // };
+    initializeImmediateForwardTable(mockClient.get(), messageConfigs, true);
+    EXPECT_EQ(requests_1.size(), 7);
+    EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[0].type, 'x');
+    EXPECT_EQ(requests_1[0].value, "8002");
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMTxChannelOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[1].type, 'i');
+    EXPECT_EQ(requests_1[1].value, "183");
+    EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[2].type, 'x');
+    EXPECT_EQ(requests_1[2].value, "FFFF");
+    EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[3].type, 'i');
+    EXPECT_EQ(requests_1[3].value, "1");
+    EXPECT_EQ(requests_1[4].oid, rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[4].type, 'i');
+    EXPECT_EQ(requests_1[4].value, "4");
+    EXPECT_EQ(requests_1[5].oid, rsu::mib::ntcip1218::rsuIFMPriorityOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[5].type, 'i');
+    EXPECT_EQ(requests_1[5].value, "6");
+    EXPECT_EQ(requests_1[6].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1));
+    EXPECT_EQ(requests_1[6].type, 'x');
+    EXPECT_EQ(requests_1[6].value, "80");
  
 
 }

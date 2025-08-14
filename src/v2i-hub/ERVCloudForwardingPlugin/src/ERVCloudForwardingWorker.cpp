@@ -13,7 +13,6 @@ namespace ERVCloudForwardingPlugin
         {
             return xml_str;
         }
-
         // If Carma extension does not present, the ERV is not sending the route information, return empty string.
         if (bsmPtr->regional->list.array[0]->regExtValue.present != Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma)
         {

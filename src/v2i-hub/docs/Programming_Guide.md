@@ -135,13 +135,26 @@ The _state_ parameter is an enum value that specifies the new state of the plugi
 
 #### Logging
 
-Logging is done by the V2X Hub core to tmxcore.log using API commands. Logging level can be setup by using the following code:
+In V2X Hub, both the individuals plugins and V2X Hub core log by default to stdout. V2X Hub core is also configured by default to log to a `/var/logs/tmx/tmxcore.log`. V2X Hub uses the `dhlogging::Logger` based on the `boost::log` library.
 
-```cpp
-FILELog::ReportingLevel() = FILELog::FromString(“DEBUG”);
-```
+##### Plugin Logging 
 
-This sets logging level to debug. Other levels of logging include: ERROR, WARNING, and INFO. The default is typically INFO, although the configuration parameter “LogLevel” can be set in the manifest to change that.
+V2X Hub plugins have a seperate logging implementation `tmx::utils::PLOG`. This logger does not need to be initialized in the plugin, simply calling the macros with an appropriate log level will trigger log statements. The `tmx::utils::PluginClient` base class will check **LogLevel** and **LogOutput** configuration parameters to configure the logger.
+
+**LogLevel** sets logging level of the Plugin. Below is a hiearchy of available log levels. The default is typically INFO, although the configuration parameter “LogLevel” can be set in the manifest or in the V2X Hub UI.
+
+| Level    | String Configuration value |
+| -------- | ------- |
+| logERROR  | ERROR    |
+| logWARNING | WARN    |
+| logINFO    | INFO    |
+| logDEBUG    | DEBUG    |
+| logDEBUG1    | DEBUG1    |
+| logDEBUG2   | DEBUG2    |
+| logDEBUG3   | DEBUG3    |
+| logDEBUG4   | DEBUG4    |
+
+
 
 Once logging level has been set, logging can be done by using the following:
 
@@ -151,7 +164,11 @@ PLOG(logINFO) << “My Message”;
 PLOG(logDEBUG) << ”My message: “ << intVariable;
 ```
 
-The levels of logging are logINFO, logDEBUG, logWARNING, and logERROR. There are also more detailed logDEBUG_N_ where _N_ can be 1-4, but those are mostly reserved for frequently repeated debugging messages that are typically not needed to be seen.
+**LogOutput** configuration parameter is used to configure file logging. The value of **LogOutput** is the intended name of the log file for this plugin. If a relative path is provided, this file will create a directory under `/var/log/<PluginName>` and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior.
+
+> [!WARNING]
+> File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size so it is not intended for permanent use during deployment.
+
 
 #### Message Handling
 
@@ -560,6 +577,10 @@ template<typename T> bool SetStatus(const char *key, T value)
 
 The `value` parameter can be either a string, integer, double, or Boolean value. The status values are not persisted between executions of the plugin, but it still a good idea to create default values to use when the plugin initializes. The Example Plugin writes out a count of J2735 maps that have been received when the number changes.
 
+The `PluginClient` base class provides two default status values that all extending plugins can inherit. The first is **Start Time**, which displays the local date time the plugin was started and is updated when the plugin changes state. The second is **Memory Usage (Proportional Set Size) Kbs**, which measure the plugins memory usage on a regular interval using the `PluginClient::Main()` function. 
+
+> [!NOTE]
+> If your plugin includes an override for `PluginClient::Main()` to use the main thread for some custom logic, you will have to add calls to `UpdatePssStatus()` into you overriden `YourPlugin::Main()` function to have this functionality. For this reason, it is only advised that you override `PluginClient::Main()` if you need access to the main thread.  
 #### Error Handling
 
 Errors can occur in the plugin, and it is always useful to have information available to help debug a problem that occurs. Aside for logging, any exceptions that occur in the plugin can be handled using the following function:

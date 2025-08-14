@@ -32,6 +32,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: usdotfhwaops/v2xhub
+          flavor: |
+            latest=false
           tags: |
             type=ref,event=branch
             type=ref,event=tag
@@ -68,6 +70,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: usdotfhwaops/v2xhub
+          flavor: |
+            latest=false
           tags: |
             type=ref,event=branch
             type=ref,event=tag

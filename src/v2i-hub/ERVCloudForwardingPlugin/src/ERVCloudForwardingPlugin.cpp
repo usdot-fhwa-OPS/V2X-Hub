@@ -226,19 +226,6 @@ namespace ERVCloudForwardingPlugin
         }
     }
 
-    int ERVCloudForwardingPlugin::Main()
-    {
-        PLOG(logINFO) << "Starting ERVCloudForwardingPlugin.";
-        while (_plugin->state != IvpPluginState_error)
-        {
-
-            if (IsPluginState(IvpPluginState_registered))
-            {
-                this_thread::sleep_for(chrono::milliseconds(5000));
-            }
-        }
-        return EXIT_SUCCESS;
-    }
 }
 
 int main(int argc, char *argv[])

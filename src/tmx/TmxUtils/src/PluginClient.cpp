@@ -15,6 +15,9 @@
 #include <sstream>
 #include <stdexcept>
 #include <thread>
+#include <fstream>
+#include <string>
+#include <regex>
 
 #include "PluginUtil.h"
 #include "PluginUpgrader.h"
@@ -196,6 +199,38 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 		std::transform(lvl.begin(), lvl.end(), lvl.begin(), ::toupper);
 		LogLevel newLvl = FILELog::FromString(lvl);
 		FILELog::ReportingLevel() = newLvl;
+	} else if (strcmp("LogOutput", key) == 0)
+	{
+		std::string logFile(value);
+		FILE *logStream = NULL;
+		if (logFile != "-")
+		{
+			// Check if relative path or absolute path
+			if (logFile[0] != '/') 
+			{
+				// Set absolute path to /var/log/PluginName/logFile
+				std::string logDir = "/var/log/" + _name;
+				if (!boost::filesystem::exists(logDir)) {
+					boost::filesystem::create_directories(logDir);
+				}
+				// Append the log file name to the log directory
+				logFile = logDir + "/" + logFile;
+			}
+			logStream = fopen(logFile.c_str(), "w");
+			if (logStream == NULL) {
+				FILE_LOG(logERROR) << "Could not open log file: " << strerror(errno) << ".  Logging to standard output." << std::endl;
+			}
+		}
+
+		if (logStream == NULL) {
+			Output2FILE::Stream() = stdout;
+		}
+		else {
+			Output2FILE::Enable();
+			Output2FILE::Stream() = logStream;
+			FILE_LOG(logINFO) << "Logging output to: " << logFile;
+		};	
+			
 	}
 	// Handle the keep alive frequency
 	else if (strcmp("KeepAliveFrequency", key) == 0)
@@ -335,6 +370,28 @@ void PluginClient::SetStartTimeStatus()
 	_isStartTimeStatusSet = true;
 }
 
+long PluginClient::getPss() const {
+	 long pss = 0;
+    std::ifstream smaps_file("/proc/self/smaps"); // Open the smaps file for the current process.
+
+    if (smaps_file.is_open()) {
+        std::string line;
+        std::regex pss_regex("^Pss:\\s+(\\d+)"); // Regular expression to find "Pss:" followed by digits.
+        std::smatch match;
+
+        while (std::getline(smaps_file, line)) {
+            if (std::regex_search(line, match, pss_regex)) {
+                // The Pss value is in the second element of the match object.
+                pss += std::stol(match[1].str());
+            }
+        }
+        smaps_file.close();
+    } else {
+        PLOG(logERROR) << "Error opening /proc/self/smaps";
+    }
+    return pss;
+}
+
 void PluginClient::AddMessageFilter(const char *type, const char *subtype, IvpMsgFlags flags)
 {
 	_msgFilter = ivpSubscribe_addFilterEntryWithFlagMask(_msgFilter, type, subtype, flags);
@@ -350,14 +407,19 @@ void PluginClient::SubscribeToMessages()
 	_msgFilter = NULL;
 }
 
+void PluginClient::UpdatePssStatus(){
+		long _pss = getPss();
+		SetStatus("Memory Usage (Proportional Set Size) Kbs", _pss);
+}
+
 int PluginClient::Main()
 {
 	PLOG(logINFO) << "Starting plugin.";
 
 	while (_plugin->state != IvpPluginState_error)
 	{
-		PLOG(logDEBUG4) << "Sleeping 1 ms" << endl;
-
+		PLOG(logDEBUG4) << "Sleeping 1 s" << endl;
+		UpdatePssStatus();
 		this_thread::sleep_for(chrono::milliseconds(1000));
 	}
 

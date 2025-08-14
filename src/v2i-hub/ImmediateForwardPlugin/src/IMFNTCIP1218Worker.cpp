@@ -40,7 +40,7 @@ namespace ImmediateForward {
         }
     }
 
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs){
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages) {
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         // Immediate Forward Messages Table index starts with 1
         auto curIndex = 1;
@@ -69,7 +69,7 @@ namespace ImmediateForward {
             snmp_request payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
-                "FE"
+                "FFFF"
             };
             snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
@@ -86,12 +86,23 @@ namespace ImmediateForward {
                 'i',
                 "6"
             };
-
-            snmp_request options{
-                rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(curIndex),
-                'x',
-                "01"
-            };
+            // Yunex value for signed messages
+            // binary 10000000 to hexidecimal 80 ( see rsuIFMOptionsOid for bit values )
+            snmp_request options;
+            if (signMessages ) {
+                options = {
+                    rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(curIndex),
+                    'x',
+                    "80"
+                };
+            }
+            else {
+                options = {
+                    rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(curIndex),
+                    'x',
+                    "00"
+                };
+            }
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
             bool success = client->process_snmp_set_requests(requests);
             if ( !success) {
@@ -100,9 +111,6 @@ namespace ImmediateForward {
             // Add message to table with index
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
 
-            // TODO : Yunex controller returns Bad Value SNMP error unless we have separate command to set payload to FE
-            std::vector reqs {payload};
-            client->process_snmp_set_requests(reqs);
             // Increment index
             curIndex++;
         }

@@ -1,0 +1,97 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/27.0.2 Chrome/134.0.6998.205 Electron/35.3.0 Safari/537.36" version="27.0.2">
+  <diagram name="Page-1" id="VK_Beq-fD555AZCGXO-F">
+    <mxGraphModel dx="1770" dy="791" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-25" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;CARMA Streets&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="870" y="120" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-24" value="&lt;font style=&quot;font-size: 18px;&quot;&gt;V2X Hub&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="400" y="120" width="400" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-6" value="" style="verticalLabelPosition=bottom;verticalAlign=top;html=1;shape=mxgraph.basic.cone2;dx=0.5;dy=0.9;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="-9" y="242.5" width="150" height="227.5" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="540" y="229.5" as="sourcePoint" />
+            <mxPoint x="660" y="229.5" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-10" value="SensorDetectedObj" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-9">
+          <mxGeometry x="-0.0167" relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-1" value="FLIR Camera Driver Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="200" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkRe8SthHH8m0C5SdLM_-2" target="pkRe8SthHH8m0C5SdLM_-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-12" value="SensorDetectObj" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-11">
+          <mxGeometry x="0.0333" y="-2" relative="1" as="geometry">
+            <mxPoint y="-17" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-2" value="CARMA Streets Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="200" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkRe8SthHH8m0C5SdLM_-3" target="pkRe8SthHH8m0C5SdLM_-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-14" value="SDSM (J3224)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-13">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="6" y="16" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-3" value="Sensor Data Sharing Service" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="900" y="200" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkRe8SthHH8m0C5SdLM_-4" target="pkRe8SthHH8m0C5SdLM_-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-8" value="Websocket Pedestrian Presence Tracking Data" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-7">
+          <mxGeometry x="-0.0041" relative="1" as="geometry">
+            <mxPoint y="-20" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-4" value="" style="sketch=0;pointerEvents=1;shadow=0;dashed=0;html=1;strokeColor=none;fillColor=#505050;labelPosition=center;verticalLabelPosition=bottom;verticalAlign=top;outlineConnect=0;align=center;shape=mxgraph.office.devices.video_camera;rotation=90;" vertex="1" parent="1">
+          <mxGeometry x="40" y="217.5" width="52" height="25" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-5" value="" style="shape=mxgraph.signs.safety.pedestrian_crossing;html=1;pointerEvents=1;fillColor=#000000;strokeColor=none;verticalLabelPosition=bottom;verticalAlign=top;align=center;" vertex="1" parent="1">
+          <mxGeometry x="20" y="350" width="98" height="98" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkRe8SthHH8m0C5SdLM_-15" target="pkRe8SthHH8m0C5SdLM_-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-23" value="SDSM (J3224)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-22">
+          <mxGeometry x="-0.2167" y="-1" relative="1" as="geometry">
+            <mxPoint x="-13" y="-10" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-15" value="Immediate Forward Plugin" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="660" y="380" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkRe8SthHH8m0C5SdLM_-2" target="pkRe8SthHH8m0C5SdLM_-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="840" y="255" as="sourcePoint" />
+            <mxPoint x="720" y="255" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-17" value="SDSM (J3224)" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rotation=90;" vertex="1" connectable="0" parent="pkRe8SthHH8m0C5SdLM_-16">
+          <mxGeometry x="0.1" y="-1" relative="1" as="geometry">
+            <mxPoint x="21" y="-6" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-20" value="" style="points=[[0.005,0.09,0],[0.08,0,0],[0.76,0.25,0],[1,0.92,0],[0.91,0.995,0],[0.57,0.995,0],[0.045,0.955,0],[0.005,0.43,0]];verticalLabelPosition=bottom;sketch=0;html=1;verticalAlign=top;aspect=fixed;align=center;pointerEvents=1;shape=mxgraph.cisco19.3g_4g_indicator;fillColor=#005073;strokeColor=none;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="160" y="342" width="60" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="pkRe8SthHH8m0C5SdLM_-21" value="Road Side Unit" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="380" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -96,7 +96,6 @@ class CARMACloudPlugin : public PluginClientClockAware
 public:
 	CARMACloudPlugin(std::string);
 	virtual ~CARMACloudPlugin();
-	int Main();
 	uint16_t webport;
 	std::string webip;
 	uint16_t fetchtime;

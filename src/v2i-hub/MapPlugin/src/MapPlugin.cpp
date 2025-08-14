@@ -219,12 +219,13 @@ namespace MapPlugin {
 		// Check for and remove MessageFrame
 		if (fileContent.size() >= 4 && fileContent.substr(0, 4) == map_messageID)
 		{
-			// Check if message is hex size > 255, remove appropriate header
+			// If message is hex size > 127 (string > 254), set and remove appropriate header
+			// Per IEEE 1609.2-2020 section 8.1.3
 			std::string tempFrame = fileContent;
 			std::string newFrame = fileContent;
 			tempFrame.erase(0, 6);
 			PLOG(logDEBUG4) << "Checking size of: " << tempFrame;
-			auto headerSize = (tempFrame.size() > 510) ? 8 : 6;
+			auto headerSize = (tempFrame.size() > 254) ? 8 : 6;
 			newFrame.erase(0, headerSize);
 			
 			PLOG(logDEBUG4) << "Payload without MessageFrame: " << newFrame;

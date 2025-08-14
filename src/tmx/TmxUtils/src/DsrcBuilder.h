@@ -12,12 +12,26 @@
 #include <stdexcept>
 
 #include <TravelerInformation.h>
+#include "Clock.h"
+#include <string>
+#include <sstream>
+#include <OCTET_STRING.h>
+
+#if SAEJ2735_SPEC >= 2024
+#include <ITIS_ITIScodesAndText.h>
+#else
 #include <ITIScodesAndText.h>
+#endif
 
 #if SAEJ2735_SPEC < 2016
 typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
 typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
 typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
+#elif SAEJ2735_SPEC >= 2024
+typedef TravelerDataFrame TiDataFrame;
+typedef ITIS_ITIScodesAndText ITIScodesAndText;
+typedef ITIS_ITIScodesAndText__Member ITIScodesAndText__Member;
+typedef ITIS_ITIScodesAndText_t ItisList;
 #else
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIScodesAndText__Member ItisMember;

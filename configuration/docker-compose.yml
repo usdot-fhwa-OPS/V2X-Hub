@@ -2,7 +2,6 @@ services:
   db:
     image: mysql:8.0
     container_name: mysql
-    restart: always
     environment:
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
@@ -15,6 +14,8 @@ services:
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro 
       # The following 5 files are used for CDA1Tenth. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
       # three files to enable the CDA1Tenth sql files to be loaded.
@@ -35,7 +36,9 @@ services:
       - v2xhub
     stdin_open: true
     tty: true
-
+    volumes:
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
@@ -43,6 +46,12 @@ services:
     restart: always
     depends_on:
       - db
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
       - SIMULATION_MODE=${SIMULATION_MODE:-false}
@@ -62,10 +71,22 @@ services:
     volumes:
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro 
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
     network_mode: host
+    profiles: ["port_drayage"]
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 512m
+    volumes:
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro 
 secrets:
     mysql_password:
         file: ./secrets/mysql_password.txt

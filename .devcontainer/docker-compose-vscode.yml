@@ -2,16 +2,22 @@ services:
   v2xhub:
     build: 
       context: ..
-      dockerfile: .devcontainer/Dockerfile.builder
+      dockerfile: ./Dockerfile
+      target: build-environment
     container_name: v2xhub
     network_mode: host
+    privileged: true
+    cap_add:
+      - SYS_PTRACE
     volumes:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
       - ./logs:/var/log/tmx
       - ./MAP:/var/www/plugins/MAP
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     # Overrides default command so things don't shut down after the process ends.
-    command: /bin/sh -c "while sleep 1000; do :; done"  
+    command: /bin/sh -c "while sleep 10000; do :; done"  
     environment:
       MYSQL_PASSWORD: /run/secrets/mysql_password
       SIMULATION_MODE: "false"

@@ -67,12 +67,6 @@ public:
 	 */
 	explicit MessageLoggerPlugin(const std::string &name);
 
-	/**
-	 * @brief Main method for running the plugin.
-	 * @param argc number of arguments
-	 * @param argv array of arguments
-	 */
-	int Main() override;
 
 protected:
 	void UpdateConfigSettings();

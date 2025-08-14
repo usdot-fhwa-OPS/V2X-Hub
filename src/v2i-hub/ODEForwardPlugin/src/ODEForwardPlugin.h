@@ -64,7 +64,6 @@
  public:
  	ODEForwardPlugin(std::string);
  	virtual ~ODEForwardPlugin();
- 	int Main();
  protected:
  	void UpdateConfigSettings();
 
