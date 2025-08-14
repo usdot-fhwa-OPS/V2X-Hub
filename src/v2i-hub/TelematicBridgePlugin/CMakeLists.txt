@@ -8,7 +8,10 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils jsoncpp nats)
 ####################################################
 ##################  Testing  #######################
 ####################################################
-add_library(${PROJECT_NAME}_lib src/TelematicUnit.cpp)
+add_library(${PROJECT_NAME}_lib 
+    src/TelematicUnit.cpp
+    src/TelematicBridgeMsgWorker.cpp
+    )
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC  tmxutils jsoncpp nats)
 enable_testing()
 include_directories(${PROJECT_SOURCE_DIR}/src)

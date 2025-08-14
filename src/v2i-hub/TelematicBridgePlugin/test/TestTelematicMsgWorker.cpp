@@ -45,3 +45,8 @@ TEST(TestTelematicMsgWork, stringToJsonValue) {
     EXPECT_EQ(jsonValue["key2"].asInt(), 2);
     EXPECT_EQ(jsonValue["key3"].asBool(), true);
 }
+
+TEST(TestTelematicMsgWorker, stringToJsonValueException) {
+    std::string jsonString = R"({"key1": "value1", "key2": 2, "key3": true})";
+    EXPECT_THROW(stringToJsonValue(jsonString), TelematicBridgeException);
+}

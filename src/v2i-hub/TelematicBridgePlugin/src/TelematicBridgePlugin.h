@@ -14,6 +14,8 @@ namespace TelematicBridge
     class TelematicBridgePlugin : public tmx::utils::TmxMessageManager
     {
     private:
+    	const char* Key_SkippedMessages = "Messages Skipped";
+        unsigned int _skippedMessages = 0;
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
         static CONSTEXPR const char *UNIT_TYPE_INFRASTRUCTURE = "Infrastructure";
         std::unique_ptr<TelematicUnit> _telematicUnitPtr;
