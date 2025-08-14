@@ -5,7 +5,7 @@
 using namespace TelematicBridge;
 using namespace std;
 
-TEST(TestTelematicMsgWorker, IvpMessageToJson)
+TEST(TestTelematicMsgWorker, routeableMessageToJsonValue)
 {
     tmx::messages::TimeSyncMessage timeSyncMsg( 12345, 1622547800 );
     tmx::routeable_message msg;
@@ -19,10 +19,10 @@ TEST(TestTelematicMsgWorker, IvpMessageToJson)
     msg.set_dsrcPsid(1234);
     msg.set_payload(timeSyncMsg); // Simulating a payload string
 
-    Json::Value json = IvpMessageToJson(msg);
+    Json::Value json = routeableMessageToJsonValue(msg);
 
-    EXPECT_EQ(json["type"].asString(), "J2735");
-    EXPECT_EQ(json["subType"].asString(), "SignalStatusMessage");
+    EXPECT_EQ(json["type"].asString(), "Application");
+    EXPECT_EQ(json["subType"].asString(), "TimeSync");
     EXPECT_EQ(json["source"].asString(), "TestSource");
     EXPECT_EQ(json["sourceId"].asString(), "12345");
     EXPECT_EQ(json["flags"].asInt(), IvpMsgFlags_RouteDSRC);
@@ -32,7 +32,16 @@ TEST(TestTelematicMsgWorker, IvpMessageToJson)
     EXPECT_EQ(json["encoding"].asString(), "json");
     EXPECT_EQ(json["payload"].asString(), "{\"timestep\":\"12345\",\"seq\":\"1622547800\"}");
 }
-TEST(TestTelematicMsgWorker, IvpMessageToJsonJ2735EncodedMsg) {
+TEST(TestTelematicMsgWorker, routeableMessageToJsonValueJ2735EncodedMsg) {
     // Generate a TmxRouteableMessage with J2735 encoded data
     
+}
+
+TEST(TestTelematicMsgWork, stringToJsonValue) {
+    std::string jsonString = R"({"key1": "value1", "key2": 2, "key3": true})";
+    Json::Value jsonValue = stringToJsonValue(jsonString);
+    
+    EXPECT_EQ(jsonValue["key1"].asString(), "value1");
+    EXPECT_EQ(jsonValue["key2"].asInt(), 2);
+    EXPECT_EQ(jsonValue["key3"].asBool(), true);
 }

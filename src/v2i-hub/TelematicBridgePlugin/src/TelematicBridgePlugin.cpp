@@ -19,32 +19,14 @@ namespace TelematicBridge
     {
         TmxMessageManager::OnMessageReceived(msg);
         // Convert IVP message to JSON CPP Value
-        Json::Value json = IvpMessageToJson(msg);
+        Json::Value json = routeableMessageToJsonValue(msg);
         // Overwrite HEX String payload with JER encode JSON payload for J2735 Messages
         if (PluginClient::IsJ2735Message(msg))
         {
             // Convert routeable message to J2735 encoded message
-            tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
-            // Decode Encode J2735 Message
-            auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
-            tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON> j2735Message =
-                tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
-            // Convert J2735 message to JSON
-            std::string json_payload_str = j2735Message.to_string();
-            // Create a Json::CharReaderBuilder and Json::CharReader to parse the string
-            Json::CharReaderBuilder builder;
-            Json::Value parsedParam;
-            std::string errs;
-            std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-
-            // Parse the JSON string
-            if (reader->parse(json_payload_str.data(), json_payload_str.data() + json_payload_str.size(), &parsedParam, &errs)) {
-                json["payload"] = parsedParam;
-            } else {
-                PLOG(tmx::utils::LogLevel::logERROR) << "Failed to parse JSON string: " << json_payload_str << " with errors " << errs;
-            }
-            // Free the J2735 data structure
-            ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
+            std::string json_payload_str = j2735MessageToJson(msg);
+            // Update the JSON payload
+            json["payload"] = stringToJsonValue(json_payload_str);
         }
        
         stringstream topic;

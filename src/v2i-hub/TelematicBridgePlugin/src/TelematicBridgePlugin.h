@@ -2,8 +2,7 @@
 #define _TelematicBRIDGEPLUGIN_H_
 
 #include <TmxMessageManager.h>
-#include <tmx/messages/TmxJ2735.hpp>
-#include <tmx/messages/TmxJ2735Codec.hpp>
+
 
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
