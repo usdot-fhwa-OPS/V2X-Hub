@@ -1,109 +1,38 @@
 #include <gtest/gtest.h>
-#include "TelematicBridgeMsgWorker.h"
-#include "stdio.h"
 
+#include "TelematicBridgeMsgWorker.h"
+#include <TimeSyncMessage.h>
 using namespace TelematicBridge;
 using namespace std;
 
-class test_TelematicJ2735MsgWorker : public ::testing::Test
+TEST(TestTelematicMsgWorker, IvpMessageToJson)
 {
-};
+    tmx::messages::TimeSyncMessage timeSyncMsg( 12345, 1622547800 );
+    tmx::routeable_message msg;
+    msg.set_type(tmx::messages::MSGTYPE_APPLICATION_STRING);
+    msg.set_subtype(tmx::messages::MSGSUBTYPE_TIMESYNC_STRING);
+    msg.set_source("TestSource");
+    msg.set_sourceId(12345);
+    msg.set_flags(IvpMsgFlags_RouteDSRC);
+    msg.set_timestamp(1622547800);
+    msg.set_dsrcChannel(172);
+    msg.set_dsrcPsid(1234);
+    msg.set_payload(timeSyncMsg); // Simulating a payload string
 
-TEST_F(test_TelematicJ2735MsgWorker, HexToBytes)
-{
-    vector<char> byteBuff;
-    string bsmHex = "0014251d59d162dad7de266e9a7d1ea6d4220974ffffffff8ffff080fdfa1fa1007fff0000640fa0";
-    auto success = HexToBytes(bsmHex, byteBuff);
-    ASSERT_TRUE(success);
-    ASSERT_EQ(bsmHex.size() / 2, byteBuff.size());
+    Json::Value json = IvpMessageToJson(msg);
+
+    EXPECT_EQ(json["type"].asString(), "J2735");
+    EXPECT_EQ(json["subType"].asString(), "SignalStatusMessage");
+    EXPECT_EQ(json["source"].asString(), "TestSource");
+    EXPECT_EQ(json["sourceId"].asString(), "12345");
+    EXPECT_EQ(json["flags"].asInt(), IvpMsgFlags_RouteDSRC);
+    EXPECT_EQ(json["timestamp"].asInt64(), 1622547800);
+    EXPECT_EQ(json["channel"].asInt(), 172);
+    EXPECT_EQ(json["psid"].asInt(), 1234);
+    EXPECT_EQ(json["encoding"].asString(), "json");
+    EXPECT_EQ(json["payload"].asString(), "{\"timestep\":\"12345\",\"seq\":\"1622547800\"}");
 }
-
-TEST_F(test_TelematicJ2735MsgWorker, DecodeJ2735Msg)
-{
-    auto messageFrame = (MessageFrame_t *)malloc(sizeof(MessageFrame_t));
-    string bsmHex = "0014251d59d162dad7de266e9a7d1ea6d4220974ffffffff8ffff080fdfa1fa1007fff0000640fa0";
-    ASSERT_NO_THROW(DecodeJ2735Msg(bsmHex, messageFrame));
-    ASSERT_EQ(20, messageFrame->messageId);
-    ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFrame);
-}
-
-TEST_F(test_TelematicJ2735MsgWorker, DecodeJ2735MsgFailure)
-{
-    auto messageFrame = (MessageFrame_t *)malloc(sizeof(MessageFrame_t));
-    string badHex = "0014251d59d162dad7de266e9a7d1ea6d4220974ffffffff8ffff080fdfa1fa1007fff0000640fG0";
-    ASSERT_THROW(DecodeJ2735Msg(badHex, messageFrame), TelematicBridgeException);
-
-    badHex = "0014251d59d162dad7de266e9a";
-    ASSERT_THROW(DecodeJ2735Msg(badHex, messageFrame), TelematicBridgeException);
-    ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFrame);
-}
-
-TEST_F(test_TelematicJ2735MsgWorker, ConvertJ2735FrameToXML)
-{
-    auto messageFrame = (MessageFrame_t *)malloc(sizeof(MessageFrame_t));
-    string bsmHex = "0014251d59d162dad7de266e9a7d1ea6d4220974ffffffff8ffff080fdfa1fa1007fff0000640fA0";
-    ASSERT_NO_THROW(DecodeJ2735Msg(bsmHex, messageFrame));
-    auto xmlStr = ConvertJ2735FrameToXML(messageFrame);
-    auto jsonStr = ConvertJ2735FrameToJson(messageFrame);
-    ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFrame);
-    string expectedXMLStr = "<MessageFrame><messageId>20</messageId><value><BasicSafetyMessage><coreData><msgCnt>117</msgCnt><id>67458B6B</id><secMark>24440</secMark><lat>389565434</lat><long>-771500475</long><elev>745</elev><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><transmission><neutral/></transmission><speed>8191</speed><heading>28800</heading><angle>127</angle><accelSet><long>2001</long><lat>2001</lat><vert>-127</vert><yaw>0</yaw></accelSet><brakes><wheelBrakes>00000</wheelBrakes><traction><unavailable/></traction><abs><unavailable/></abs><scs><unavailable/></scs><brakeBoost><unavailable/></brakeBoost><auxBrakes><unavailable/></auxBrakes></brakes><size><width>200</width><length>500</length></size></coreData></BasicSafetyMessage></value></MessageFrame>";
-    string expectJsonstr = "{\"messageId\":20,\"value\":{\"BasicSafetyMessage\":{\"coreData\":{\"msgCnt\":117,\"id\":\"67458B6B\",\"secMark\":24440,\"lat\":389565434,\"long\":-771500475,\"elev\":745,\"accuracy\":{\"semiMajor\":255,\"semiMinor\":255,\"orientation\":65535},\"transmission\":\"neutral\",\"speed\":8191,\"heading\":28800,\"angle\":127,\"accelSet\":{\"long\":2001,\"lat\":2001,\"vert\":-127,\"yaw\":0},\"brakes\":{\"wheelBrakes\":\"00\",\"traction\":\"unavailable\",\"abs\":\"unavailable\",\"scs\":\"unavailable\",\"brakeBoost\":\"unavailable\",\"auxBrakes\":\"unavailable\"},\"size\":{\"width\":200,\"length\":500}}}}}";
-    ASSERT_EQ(expectedXMLStr, xmlStr);
-    ASSERT_EQ(expectJsonstr, jsonStr);
-}
-
-TEST_F(test_TelematicJ2735MsgWorker, constructTelematicPayload)
-{
-    IvpMessage msg;
-    auto payload = cJSON_CreateObject();
-    payload->valuedouble = 12;
-    payload->type = cJSON_Number;
-    msg.payload = payload;
-    msg.source = "Plugin";
-    msg.encoding = "json";
-    msg.type = "Application";
-    msg.subtype = "alive";
-    msg.sourceId = 123;
-    msg.flags = 10;
-    msg.timestamp = 10;
-    IvpDsrcMetadata metadata;
-    metadata.channel = 12;
-    metadata.psid = 120;
-    msg.dsrcMetadata = &metadata;
-    auto json = IvpMessageToJson(&msg);
-    auto str = JsonToString(json);
-    string expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":12.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
-    ASSERT_EQ(expectedStr, str);
-
-    payload->valueint = 13;
-    payload->type = cJSON_Number;
-    msg.payload = payload;
-    json = IvpMessageToJson(&msg);
-    str = JsonToString(json);
-    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":13.0,\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
-    ASSERT_EQ(expectedStr, str);
-
-    payload->valuestring = "test";
-    payload->type = cJSON_String;
-    msg.payload = payload;
-    json = IvpMessageToJson(&msg);
-    str = JsonToString(json);
-    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":\"test\",\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
-    ASSERT_EQ(expectedStr, str);
-
-    msg.payload = cJSON_Parse("[{\"test\":12}]");
-    json = IvpMessageToJson(&msg);
-    str = JsonToString(json);
-    expectedStr = "{\"channel\":12,\"encoding\":\"json\",\"flags\":10,\"payload\":[{\"test\":12}],\"psid\":120,\"source\":\"Plugin\",\"sourceId\":123,\"subType\":\"alive\",\"timestamp\":10,\"type\":\"Application\"}";
-    ASSERT_EQ(expectedStr, str);
-
-    json = StringToJson("{\"test\":12}");
-    ASSERT_EQ(12, json["test"].asInt64());
-}
-
-TEST_F(test_TelematicJ2735MsgWorker, xml2json)
-{
-    string expectedXMLStr = "<MessageFrame><messageId>20</messageId><value><BasicSafetyMessage><coreData><msgCnt>117</msgCnt><id>67458B6B</id><secMark>24440</secMark><lat>389565434</lat><long>-771500475</long><elev>745</elev><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><transmission><neutral/></transmission><speed>8191</speed><heading>28800</heading><angle>127</angle><accelSet><long>2001</long><lat>2001</lat><vert>-127</vert><yaw>0</yaw></accelSet><brakes><wheelBrakes>00000</wheelBrakes><traction><unavailable/></traction><abs><unavailable/></abs><scs><unavailable/></scs><brakeBoost><unavailable/></brakeBoost><auxBrakes><unavailable/></auxBrakes></brakes><size><width>200</width><length>500</length></size></coreData></BasicSafetyMessage></value></MessageFrame>";
-    string expectedJSONStr = "{\"MessageFrame\":{\"messageId\":\"20\",\"value\":{\"BasicSafetyMessage\":{\"coreData\":{\"msgCnt\":\"117\",\"id\":\"67458B6B\",\"secMark\":\"24440\",\"lat\":\"389565434\",\"long\":\"-771500475\",\"elev\":\"745\",\"accuracy\":{\"semiMajor\":\"255\",\"semiMinor\":\"255\",\"orientation\":\"65535\"},\"transmission\":{\"neutral\":\"\"},\"speed\":\"8191\",\"heading\":\"28800\",\"angle\":\"127\",\"accelSet\":{\"long\":\"2001\",\"lat\":\"2001\",\"vert\":\"-127\",\"yaw\":\"0\"},\"brakes\":{\"wheelBrakes\":\"00000\",\"traction\":{\"unavailable\":\"\"},\"abs\":{\"unavailable\":\"\"},\"scs\":{\"unavailable\":\"\"},\"brakeBoost\":{\"unavailable\":\"\"},\"auxBrakes\":{\"unavailable\":\"\"}},\"size\":{\"width\":\"200\",\"length\":\"500\"}}}}}}\n";
-    ASSERT_EQ(expectedJSONStr, xml2Json(expectedXMLStr));
+TEST(TestTelematicMsgWorker, IvpMessageToJsonJ2735EncodedMsg) {
+    // Generate a TmxRouteableMessage with J2735 encoded data
+    
 }

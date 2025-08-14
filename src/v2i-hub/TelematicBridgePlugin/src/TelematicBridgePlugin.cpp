@@ -5,43 +5,57 @@ using namespace std;
 
 namespace TelematicBridge
 {
-    TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : PluginClient(name)
+    TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
-        _telematicUnitPtr = make_unique<TelematicUnit>();
+        // _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = std::getenv("INFRASTRUCTURE_ID");
         _unitName = std::getenv("INFRASTRUCTURE_NAME");
-        UpdateConfigSettings();
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
     }
 
-    void TelematicBridgePlugin::OnMessageReceived(IvpMessage *msg)
+    void TelematicBridgePlugin::OnMessageReceived(tmx::routeable_message &msg)
     {
-        if (msg && msg->type)
+        TmxMessageManager::OnMessageReceived(msg);
+        // Convert IVP message to JSON CPP Value
+        Json::Value json = IvpMessageToJson(msg);
+        // Overwrite HEX String payload with JER encode JSON payload for J2735 Messages
+        if (PluginClient::IsJ2735Message(msg))
         {
-            auto json = IvpMessageToJson(msg);
-            // Process J2735 message payload hex string
-            if (strcasecmp(msg->type, Telematic_MSGTYPE_J2735_STRING) == 0)
-            {
-                auto messageFm = (MessageFrame_t *)calloc(1, sizeof(MessageFrame_t));
-                DecodeJ2735Msg(msg->payload->valuestring, messageFm);
-                // string xml_payload_str = ConvertJ2735FrameToXML(messageFm);
-                string json_payload_str = ConvertJ2735FrameToJson(messageFm);
-                ASN_STRUCT_FREE(asn_DEF_MessageFrame, messageFm);
+            // Convert routeable message to J2735 encoded message
+            tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
+            // Decode Encode J2735 Message
+            auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
+            tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON> j2735Message =
+                tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
+            // Convert J2735 message to JSON
+            std::string json_payload_str = j2735Message.to_string();
+            // Create a Json::CharReaderBuilder and Json::CharReader to parse the string
+            Json::CharReaderBuilder builder;
+            Json::Value parsedParam;
+            std::string errs;
+            std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
 
-                json["payload"] = StringToJson(json_payload_str);
+            // Parse the JSON string
+            if (reader->parse(json_payload_str.data(), json_payload_str.data() + json_payload_str.size(), &parsedParam, &errs)) {
+                json["payload"] = parsedParam;
+            } else {
+                PLOG(tmx::utils::LogLevel::logERROR) << "Failed to parse JSON string: " << json_payload_str << " with errors " << errs;
             }
-
-            stringstream topic;
-            topic << (msg->type ? msg->type : "") << "_" << (msg->subtype ? msg->subtype : "") << "_" << (msg->source ? msg->source : "");
-            auto topicStr = topic.str();
-            _telematicUnitPtr->updateAvailableTopics(topicStr);
-            if (_telematicUnitPtr->inSelectedTopics(topicStr))
-            {
-                _telematicUnitPtr->publishMessage(topicStr, json);
-            }
+            // Free the J2735 data structure
+            ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
         }
+       
+        stringstream topic;
+        topic << (msg.get_type()) << "_" << (msg.get_subtype()) << "_" << (msg.get_source());
+        auto topicStr = topic.str();
+        _telematicUnitPtr->updateAvailableTopics(topicStr);
+        if (_telematicUnitPtr->inSelectedTopics(topicStr))
+        {
+            _telematicUnitPtr->publishMessage(topicStr, json);
+        }
+        
     }
 
     void TelematicBridgePlugin::UpdateConfigSettings()
@@ -59,7 +73,7 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::OnStateChange(IvpPluginState state)
     {
-        PluginClient::OnStateChange(state);
+        TmxMessageManager::OnStateChange(state);
         if (state == IvpPluginState_registered)
         {
             UpdateConfigSettings();
@@ -72,7 +86,7 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::OnConfigChanged(const char *key, const char *value)
     {
-        PluginClient::OnConfigChanged(key, value);
+        TmxMessageManager::OnConfigChanged(key, value);
         UpdateConfigSettings();
     }
 }

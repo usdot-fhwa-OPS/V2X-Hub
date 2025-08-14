@@ -1133,10 +1133,10 @@ Identifies the action code for the dynamic message sign to use.
 The J2735 message types were directly generated from the ASN.1 specification using the open-source asn1c compiler. This compiler creates C-style structures that follow the rules of the specification. Those structures are not easily wrapped in a V2X Hub message, and may require special handling, thus this templated C++ class is available to use in development. Even though the structure varies from type to type, the generalized class provides some ubiquitous operations that require no knowledge of the actual type, in particular memory management for the underlying structure to avoid memory leaks.
 
 ```cpp
-template <typename DataType> class TmxJ2735Message: public tmx::xml_message
+template <typename DataType> class TmxJ2735Message: public tmx::tmx_message
 ```
 
-The class template parameter _DataType_ is expected to be the generated J2735 C-style structures, and the class extends a V2X Hub message type that is XML based. Therefore, these messages can be dumped out in XML form by serializing to an I/O stream, which simply calls to_string().
+The class template parameter _DataType_ is expected to be the generated J2735 C-style structures, and the class extends a V2X Hub message type that is XML/JSON based. Therefore, these messages can be dumped out in XML/JSON form by serializing to an I/O stream, which simply calls to_string().
 
 ```cpp
 TmxJ2735Message(DataType *data = 0)
@@ -1237,10 +1237,10 @@ void encode_j2735_message(MsgType &message)
 Set the contents of the payload by encoding the `message` to a byte stream.
 
 ```cpp
-xml_message get_payload()
+tmx_message get_payload()
 ```
 
-Return the payload, which is effectively the same call as `decode_j2735_message()`, but it also pre-sets the XML container of the message.
+Return the payload, which is effectively the same call as `decode_j2735_message()`, but it also pre-sets the XML or JSON container of the message.
 
 ```cpp
 int get_msgId()

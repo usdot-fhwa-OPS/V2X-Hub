@@ -1,7 +1,10 @@
 #ifndef _TelematicBRIDGEPLUGIN_H_
 #define _TelematicBRIDGEPLUGIN_H_
 
-#include "PluginClient.h"
+#include <TmxMessageManager.h>
+#include <tmx/messages/TmxJ2735.hpp>
+#include <tmx/messages/TmxJ2735Codec.hpp>
+
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
 #include <simulation/SimulationEnvUtils.h>
@@ -9,7 +12,7 @@
 
 namespace TelematicBridge
 {
-    class TelematicBridgePlugin : public tmx::utils::PluginClient
+    class TelematicBridgePlugin : public tmx::utils::TmxMessageManager
     {
     private:
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
@@ -20,7 +23,7 @@ namespace TelematicBridge
         std::string _natsURL;
         std::string _excludedMessages;
         std::mutex _configMutex;
-        void OnMessageReceived(IvpMessage *msg);
+        void OnMessageReceived(tmx::routeable_message &msg) override;
 
     public:
         explicit TelematicBridgePlugin(const std::string &name);
