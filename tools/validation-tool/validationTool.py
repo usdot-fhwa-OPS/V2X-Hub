@@ -18,7 +18,7 @@ from threading import Thread
 
 from paramiko import SSHClient
 from scp import SCPClient
-import J2735 
+from J2735 import J2735
 from appJar import gui
 from datetime import date
 import collections
@@ -206,9 +206,12 @@ class TCPRecvHandle(socketserver.BaseRequestHandler):
 
         self.msg = self.data.decode("utf-8","ignore")
 
-        asnobj =  J2735.DSRC.MessageFrame
-        asnobj.from_uper(unhexlify(self.msg))
-        parsed = asnobj.to_json()  
+        # asnobj =  J2735.DSRC.MessageFrame
+        # asnobj.from_uper(unhexlify(self.msg))
+        # parsed = asnobj.to_json()  
+        # parsed = J2735.decode('MessageFrame',unhexlify(self.msg))
+        parsed = J2735.decode(self.msg)
+
         certify()
 
 
