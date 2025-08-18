@@ -49,9 +49,9 @@ namespace ImmediateForward {
                 throw tmx::TmxException("Failed to get RSU to operational mode");
             }
             retry--;
-            sleep(interval * 1000);
+            sleep(interval);
         }
-        while ( retry >= 0 && obj.val_int != 2);
+        while ( retry > 0 && obj.val_int != 2);
         if ( obj.val_int != 2) {
             throw tmx::TmxException("Failed to set RSU Mode to Standby(2)");
         } 
