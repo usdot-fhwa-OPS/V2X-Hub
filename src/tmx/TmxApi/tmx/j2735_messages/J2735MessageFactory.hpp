@@ -426,11 +426,7 @@ private:
 
 		// Always try the default encoding first
 		ASN1_CODEC<MessageFrameMessage> Codec;
-#if SAEJ2735_SPEC < 2016
-		tmx::messages::codec::uper<MessageFrameMessage> OtherCodec;
-#else
 		tmx::messages::codec::der<MessageFrameMessage> OtherCodec;
-#endif
 
 		int id = Codec.decode_contentId(bytes);
 

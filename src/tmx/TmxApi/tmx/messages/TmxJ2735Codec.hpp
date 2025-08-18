@@ -13,11 +13,7 @@
 
 #define TMX_J2735_MAX_DATA_SIZE 4000
 
-#if SAEJ2735_SPEC < 2016
-#define ASN1_CODEC tmx::messages::codec::der
-#else
 #define ASN1_CODEC tmx::messages::codec::uper
-#endif
 
 #include <tmx/j2735_messages/MessageFrame.hpp>
 
