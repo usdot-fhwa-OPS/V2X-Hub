@@ -361,8 +361,10 @@ public:
 				{
 					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::uper<MessageFrameMessage> >(theData);
-					if (frame)
+					if (frame) {
 						_decoded.reset(new MsgType(frame->get_j2735_data()));
+					}
+					free(frame);
 				}
 				else
 				{
@@ -375,8 +377,11 @@ public:
 				{
 					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::der<MessageFrameMessage> >(theData);
-					if (frame)
+					if (frame) {
 						_decoded.reset(new MsgType(frame->get_j2735_data()));
+					}
+					free(frame);
+
 				}
 				else
 				{
