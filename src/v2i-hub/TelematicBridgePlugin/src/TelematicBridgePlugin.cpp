@@ -17,14 +17,11 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::OnMessageReceived(tmx::routeable_message &msg)
     {   
-        PLOG(logWARNING) << "Received routeable message: " << msg.to_string();
         auto hasError = false;
         TmxMessageManager::OnMessageReceived(msg);
         // Convert IVP message to JSON CPP Value
         Json::Value json = routeableMessageToJsonValue(msg);
-        PLOG(logWARNING) << "Converted JSON " << json.toStyledString();
         // Overwrite HEX String payload with JER encode JSON payload for J2735 Messages
-
         if (PluginClient::IsJ2735Message(msg))
         {
             // Convert routeable message to J2735 encoded message
