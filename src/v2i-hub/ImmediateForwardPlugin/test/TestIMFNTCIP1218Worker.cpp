@@ -280,12 +280,13 @@ TEST(TestIMFNTCIP1218Worker, waitForRSUModeStandbyRetry) {
     // Call the function
     snmp_response_obj obj;
     obj.type = snmp_response_obj::response_type::INTEGER;
-    obj.val_int = 3; // ACTIVE mode
+    obj.val_int = 3; // Operate mode
     EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET , _) ).Times(5).WillRepeatedly(testing::DoAll(
         testing::SetArgReferee<2>(obj),
         Return(true)));
     // Get time now
     auto start = std::chrono::steady_clock::now();
+    // Expect function to call snmpget 5 times on RSUMode, all will return 3(operate mode), and then throw an exception
     EXPECT_THROW(waitForRSUModeStandby(mockClient.get(), 5, 1), tmx::TmxException);
     // Check that it took at least 5*1 seconds
     auto end = std::chrono::steady_clock::now();
