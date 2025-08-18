@@ -19,7 +19,7 @@
         {
             "label": "build with coverage",
             "type": "shell",
-            "command": "cd src && ./build.sh coverage",
+            "command": "cd src && ./build.sh coverage --j2735-version 2024",
             "detail": "Task builds V2X Hub with CMake unit test converage flags",
             "group": {
                 "kind": "build",

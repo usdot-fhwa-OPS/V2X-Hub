@@ -59,7 +59,7 @@ IF (NOT TMXAPI_NO_STATIC)
     INSTALL (TARGETS ${PROJECT_NAME}Static EXPORT ${TMX_APPNAME} ARCHIVE 
              DESTINATION lib COMPONENT lib${PROJECT_NAME})
     
-    SET (TMXAPI_LIBRARIES ${PROJECT_NAME}Static PARENT_SCOPE)
+    SET (TMXAPI_LIBRARIES ${PROJECT_NAME}Static)
 ENDIF (NOT TMXAPI_NO_STATIC) 
 
 # Always prefer to link against shared object, so it is ok to overwrite variables here
@@ -86,9 +86,9 @@ IF (NOT TMXAPI_NO_SHARED)
 	     ARCHIVE DESTINATION lib
 	     LIBRARY DESTINATION lib COMPONENT lib${PROJECT_NAME})
     
-    SET (TMXAPI_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
+    SET (TMXAPI_LIBRARIES ${PROJECT_NAME})
 ENDIF (NOT TMXAPI_NO_SHARED)
-
+SET (TMXAPI_LIBRARIES ${TMXAPI_LIBRARIES} PARENT_SCOPE)
 INSTALL (DIRECTORY tmx 
          DESTINATION include COMPONENT lib${PROJECT_NAME}
          FILES_MATCHING PATTERN "*.h*" PATTERN ".*" EXCLUDE)
@@ -97,4 +97,13 @@ IF (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/treerepair.xml")
 	INSTALL (FILES "${CMAKE_CURRENT_SOURCE_DIR}/treerepair.xml"
 		DESTINATION share/xml/misc COMPONENT lib${PROJECT_NAME})
 ENDIF ()
-		 
+
+################################
+#GTest
+###############################
+enable_testing()
+set(BINARY ${PROJECT_NAME}_test)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+add_executable(${BINARY} ${TEST_SOURCES})
+add_test(NAME ${BINARY} COMMAND ${BINARY})
+target_link_libraries(${BINARY} PUBLIC ${TMXAPI_LIBRARIES} gtest gtest_main)
