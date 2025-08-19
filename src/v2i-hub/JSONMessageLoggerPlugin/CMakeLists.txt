@@ -10,16 +10,3 @@ target_link_libraries(JSONMessageLoggerPlugin PUBLIC Boost::log
     tmxutils 
     ::carma-clock )
 
-
-####################################################
-##################  Testing  #######################
-####################################################
-# add_library(${PROJECT_NAME}_lib src/TelematicUnit.cpp)
-# target_link_libraries(${PROJECT_NAME}_lib PUBLIC  tmxutils)
-# enable_testing()
-# include_directories(${PROJECT_SOURCE_DIR}/src)
-# file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
-# add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
-# add_test(NAME ${PROJECT_NAME}_test COMMAND ${PROJECT_NAME}_test)
-
-# target_link_libraries(${PROJECT_NAME}_test PUBLIC gtest)
