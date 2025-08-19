@@ -6,7 +6,5 @@ set (TMX_PLUGIN_NAME "JSON Message Logger")
 find_package(carma-clock REQUIRED)
 BuildTmxPlugin()
 
-target_link_libraries(JSONMessageLoggerPlugin PUBLIC Boost::log
-    tmxutils 
-    ::carma-clock )
+target_link_libraries(JSONMessageLoggerPlugin PUBLIC Boost::log tmxutils )
 
