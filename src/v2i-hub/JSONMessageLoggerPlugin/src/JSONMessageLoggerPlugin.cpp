@@ -1,0 +1,115 @@
+/**
+ * Copyright (C) 2025 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+#include "JSONMessageLoggerPlugin.hpp"
+
+namespace JSONMessageLoggerPlugin {
+    JSONMessageLoggerPlugin::JSONMessageLoggerPlugin(const std::string &name) : tmx::utils::TmxMessageManager(name), rxLogger(boost::log::keywords::channel = "rx"), // Initialize rx_logger with channel "rx"
+          txLogger(boost::log::keywords::channel = "tx")  // Initialize tx_logger with channel "tx"
+    {
+        AddMessageFilter("*", "*", IvpMsgFlags_None);
+        AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
+        SubscribeToMessages();
+        initLogging();
+
+    }
+
+    void JSONMessageLoggerPlugin::initLogging()
+    {
+         // Common attributes (timestamp, etc.)
+        boost::log::add_common_attributes();
+
+        // RX Logger
+        boost::log::add_file_log
+        (
+            boost::log::keywords::file_name = "/var/log/tmx/j2735Rx_%Y-%m-%d.log",
+            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
+            boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
+            boost::log::keywords::filter = a_channel == "rx" // Filter for "rx" channel messages
+        );
+
+        // TX Logger
+        boost::log::add_file_log
+        (
+            boost::log::keywords::file_name = "/var/log/tmx/j2735Tx_%Y-%m-%d.log",
+            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
+            boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
+            boost::log::keywords::filter = a_channel == "tx" // Filter for "tx" channel messages
+        );
+    }
+
+    void JSONMessageLoggerPlugin::OnStateChange(IvpPluginState state)
+    {
+        tmx::utils::TmxMessageManager::OnStateChange(state);
+		if (state == IvpPluginState_registered) {
+			UpdateConfigSettings();
+		}
+    }
+
+    void JSONMessageLoggerPlugin::OnConfigChanged(const char *key, const char *value)
+    {
+        tmx::utils::TmxMessageManager::OnConfigChanged(key, value);
+
+		UpdateConfigSettings();
+    }
+    void JSONMessageLoggerPlugin::OnMessageReceived(tmx::routeable_message &msg)
+    {
+        tmx::utils::TmxMessageManager::OnMessageReceived(msg);
+        // Cast routeable message as J2735 Message
+        if (tmx::utils::PluginClient::IsJ2735Message(msg)) {
+            // Convert routeable message to J2735 encoded message
+            tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
+                msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
+            // Decode Encode J2735 Message
+            auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
+            // Convert J2735 data to TmxJ2735Message for JSON serialization
+            auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
+            // Serial J2735 message to JSON
+            std::string json_payload_str = j2735Message.to_string();
+            // Free the J2735 data structure
+            PLOG(tmx::utils::logINFO) << json_payload_str;
+            try {
+                if ( msg.get_flags() & IvpMsgFlags_RouteDSRC ) {
+                    BOOST_LOG_SEV(txLogger, boost::log::trivial::info) << json_payload_str;
+                }
+                else {
+                    BOOST_LOG_SEV(rxLogger, boost::log::trivial::info) << json_payload_str;
+                }
+            }
+            catch (const std::exception &e) {
+                PLOG(tmx::utils::logERROR) << "Error logging message: " << e.what();
+            }
+
+            ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
+           
+        }
+        
+
+        
+    }
+
+    void JSONMessageLoggerPlugin::UpdateConfigSettings()
+    {
+       
+    }
+    
+} // namespace JSONMessageLoggerPlugin
+// The main entry point for this application.
+int main(int argc, char *argv[])
+{
+	return tmx::utils::run_plugin<JSONMessageLoggerPlugin::JSONMessageLoggerPlugin>("JSON Message Logger Plugin", argc, argv);
+}
