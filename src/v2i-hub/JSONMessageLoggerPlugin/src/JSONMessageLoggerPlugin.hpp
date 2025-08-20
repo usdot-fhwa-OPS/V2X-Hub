@@ -32,10 +32,10 @@ namespace JSONMessageLoggerPlugin {
 
     class JSONMessageLoggerPlugin : public tmx::utils::TmxMessageManager {
         public:
-            JSONMessageLoggerPlugin(const std::string &name);
+            explicit JSONMessageLoggerPlugin(const std::string &name);
             void OnStateChange(IvpPluginState state) override;
             void OnConfigChanged(const char *key, const char *value) override;
-            void OnMessageReceived(tmx::routeable_message &msg) override;
+            void OnMessageReceived(IvpMessage *msg) override;
             void initLogging();
 
         protected:

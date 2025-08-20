@@ -24,14 +24,14 @@ namespace TelematicBridge
         std::string _natsURL;
         std::string _excludedMessages;
         std::mutex _configMutex;
-        void OnMessageReceived(tmx::routeable_message &msg) override;
 
     public:
         explicit TelematicBridgePlugin(const std::string &name);
         void OnConfigChanged(const char *key, const char *value) override;
         void OnStateChange(IvpPluginState state) override;
         void UpdateConfigSettings();
-        ~TelematicBridgePlugin() override = default;
+        void OnMessageReceived(IvpMessage *msg) override;
+
     };
 
 } // namespace TelematicBridge

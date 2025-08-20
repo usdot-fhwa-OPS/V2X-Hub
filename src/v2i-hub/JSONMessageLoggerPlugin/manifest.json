@@ -8,7 +8,12 @@
     "messageTypes": [
      {     
         "type": "J2735",
-        "subtype": "*",
+        "subtype": "BSM",
+        "description": "J2735 Message"
+        },
+        {     
+        "type": "J2735",
+        "subtype": "MAP",
         "description": "J2735 Message"
         }
     ],

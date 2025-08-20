@@ -15,17 +15,17 @@ namespace TelematicBridge
         SubscribeToMessages();
     }
 
-    void TelematicBridgePlugin::OnMessageReceived(tmx::routeable_message &msg)
+    void TelematicBridgePlugin::OnMessageReceived(IvpMessage *msg)
     {   
         auto hasError = false;
-        TmxMessageManager::OnMessageReceived(msg);
+        tmx::routeable_message routeMsg(msg);
         // Convert IVP message to JSON CPP Value
-        Json::Value json = routeableMessageToJsonValue(msg);
+        Json::Value json = routeableMessageToJsonValue(routeMsg);
         // Overwrite HEX String payload with JER encode JSON payload for J2735 Messages
-        if (PluginClient::IsJ2735Message(msg))
+        if (PluginClient::IsJ2735Message(routeMsg))
         {
             // Convert routeable message to J2735 encoded message
-            std::string json_payload_str = j2735MessageToJson(msg);
+            std::string json_payload_str = j2735MessageToJson(routeMsg);
             // Update the JSON payload
             try {
                 json["payload"] = stringToJsonValue(json_payload_str);
@@ -38,7 +38,7 @@ namespace TelematicBridge
         }
         if (!hasError) {
             stringstream topic;
-            topic << (msg.get_type()) << "_" << (msg.get_subtype()) << "_" << (msg.get_source());
+            topic << (routeMsg.get_type()) << "_" << (routeMsg.get_subtype()) << "_" << (routeMsg.get_source());
             auto topicStr = topic.str();
             _telematicUnitPtr->updateAvailableTopics(topicStr);
             if (_telematicUnitPtr->inSelectedTopics(topicStr))
