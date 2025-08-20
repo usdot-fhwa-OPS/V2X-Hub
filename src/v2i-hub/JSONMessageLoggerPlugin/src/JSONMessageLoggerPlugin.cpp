@@ -67,6 +67,7 @@ namespace JSONMessageLoggerPlugin {
     }
     void JSONMessageLoggerPlugin::OnMessageReceived(IvpMessage *msg)
     {
+        PluginClient::TmxMessageManager(msg);
         tmx::routeable_message routeMsg(msg);
         // Cast routeable message as J2735 Message
         if (tmx::utils::PluginClient::IsJ2735Message(routeMsg)) {
@@ -83,7 +84,7 @@ namespace JSONMessageLoggerPlugin {
                 ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
 
                 // Free the J2735 data structure
-                PLOG(tmx::utils::logDEBUG) << json_payload_str;
+                PLOG(tmx::utils::logDEBUG1) << json_payload_str;
            
                 if ( routeMsg.get_flags() & IvpMsgFlags_RouteDSRC ) {
                     BOOST_LOG_SEV(txLogger, boost::log::trivial::info) << json_payload_str;
