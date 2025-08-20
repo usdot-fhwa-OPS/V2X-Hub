@@ -27,6 +27,21 @@
 			"key": "LogOutput",
 			"default": "-",
 			"description": "Name of the log file for this plugin. If a relative path is provided, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
-		}
+		},
+        {
+            "key": "MaxFileSize",
+            "default": "10",
+            "description": "Maximum size of the log file in bytes before it is rotated in MB"
+        },
+        {
+            "key": "MaxFiles",
+            "default": "5",
+            "description": "Maximum number of log files to keep before deleting the oldest"
+        },
+        {
+            "key": "LogDir",
+            "default": "/var/log/tmx/",
+            "description": "Directory where log files will be stored"
+        }
     ]
 }

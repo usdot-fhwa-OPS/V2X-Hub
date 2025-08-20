@@ -16,17 +16,15 @@
 #include "JSONMessageLoggerPlugin.hpp"
 
 namespace JSONMessageLoggerPlugin {
-    JSONMessageLoggerPlugin::JSONMessageLoggerPlugin(const std::string &name) : tmx::utils::TmxMessageManager(name), rxLogger(boost::log::keywords::channel = "rx"), // Initialize rx_logger with channel "rx"
-          txLogger(boost::log::keywords::channel = "tx")  // Initialize tx_logger with channel "tx"
+    JSONMessageLoggerPlugin::JSONMessageLoggerPlugin(const std::string &name) : tmx::utils::TmxMessageManager(name)
     {
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
-        initLogging();
 
     }
 
-    void JSONMessageLoggerPlugin::initLogging()
+    void JSONMessageLoggerPlugin::initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir)
     {
          // Common attributes (timestamp, etc.)
         boost::log::add_common_attributes();
@@ -34,22 +32,27 @@ namespace JSONMessageLoggerPlugin {
         // RX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = "/var/log/tmx/j2735Rx_%Y-%m-%d.log",
-            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            boost::log::keywords::file_name = logDir + "j2735Rx_%Y-%m-%d.log",
+            boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = a_channel == "rx" // Filter for "rx" channel messages
+            boost::log::keywords::filter = a_channel == "rx", // Filter for "rx" channel messages
+            boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
 
         // TX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = "/var/log/tmx/j2735Tx_%Y-%m-%d.log",
-            boost::log::keywords::rotation_size = 10 * 1024 * 1024,
+            boost::log::keywords::file_name = logDir+"j2735Tx_%Y-%m-%d.log",
+            boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = a_channel == "tx" // Filter for "tx" channel messages
+            boost::log::keywords::filter = a_channel == "tx", // Filter for "tx" channel messages
+            boost::log::keywords::max_files = maxFiles // Set maximum number of log files
+
         );
+        rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
+        txLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> (boost::log::keywords::channel = "tx");
     }
 
     void JSONMessageLoggerPlugin::OnStateChange(IvpPluginState state)
@@ -67,7 +70,7 @@ namespace JSONMessageLoggerPlugin {
     }
     void JSONMessageLoggerPlugin::OnMessageReceived(IvpMessage *msg)
     {
-        PluginClient::TmxMessageManager(msg);
+        tmx::utils::TmxMessageManager::OnMessageReceived(msg);
         tmx::routeable_message routeMsg(msg);
         // Cast routeable message as J2735 Message
         if (tmx::utils::PluginClient::IsJ2735Message(routeMsg)) {
@@ -104,7 +107,13 @@ namespace JSONMessageLoggerPlugin {
 
     void JSONMessageLoggerPlugin::UpdateConfigSettings()
     {
-       
+        unsigned int maxFileSize = 0;
+        unsigned int maxFiles = 0;
+        std::string logDir;
+        GetConfigValue<unsigned int>("MaxFileSize",maxFileSize, &_configMutex);
+        GetConfigValue<unsigned int>("MaxFiles",maxFiles, &_configMutex);
+        GetConfigValue<std::string>("LogDir", logDir, &_configMutex);
+        initLogging(maxFileSize, maxFiles, logDir);
     }
     
 } // namespace JSONMessageLoggerPlugin
