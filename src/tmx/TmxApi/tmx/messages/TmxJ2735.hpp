@@ -251,45 +251,22 @@ protected:
 	std::shared_ptr<message_type> _j2735_data;
 private:
 
-	using buffer_structure_t = struct buffer_structure
+
+	static int writeToStringStream(const void *buffer, size_t size, void *app_key)
     {
-        char *buffer;          // buffer array
-        size_t buffer_size;    // this is really where we will write next.
-        size_t allocated_size; // this is the total size of the buffer.
-    };
-
-	static int DynamicBufferAppend(const void *buffer, size_t size, void *app_key)
-    {
-        auto *xb = static_cast<buffer_structure_t *>(app_key);
-
-        while (xb->buffer_size + size + 1 > xb->allocated_size)
-        {
-            // increase size of buffer.
-            size_t new_size = 2 * (xb->allocated_size ? xb->allocated_size : 64);
-            auto new_buf = static_cast<char *>(MALLOC(new_size));
-            if (!new_buf)
-                return -1;
-            // move old to new.
-            memcpy(new_buf, xb->buffer, xb->buffer_size);
-
-            FREEMEM(xb->buffer);
-            xb->buffer = new_buf;
-            xb->allocated_size = new_size;
-        }
-
-        memcpy(xb->buffer + xb->buffer_size, buffer, size);
-        xb->buffer_size += size;
-        // null terminate the string.
-        xb->buffer[xb->buffer_size] = '\0';
-        return 0;
+		// Cast app_key as stringstream
+		std::stringstream *ss = static_cast<std::stringstream *>(app_key);
+		if (!ss || !ss->good()) {
+			return -1;
+		}
+		ss->write(static_cast<const char *>(buffer), size);
+		return 0;
     }
 
 	template <typename T = message_type>
 	std::string as_string(const T &data, asn_type *descr = get_descriptor()) const
-	{
-		buffer_structure_t string_buffer = {nullptr, 0, 0};
-        
-        
+	{        
+        std::stringstream ss;
 		
 		if (tmx_message<Format>::is_format("XML"))
 		{
@@ -297,8 +274,8 @@ private:
 				descr,
 				&data,
 				xer_encoder_flags_e::XER_F_CANONICAL,
-				DynamicBufferAppend,
-				static_cast<void *>(&string_buffer));
+				writeToStringStream,
+				static_cast<void *>(&ss));
 			if (encode_rval.encoded == -1)
 			{
 				BOOST_THROW_EXCEPTION(J2735Exception("Unable to stream XML contents in memory: Unknown error"))	;		
@@ -311,8 +288,8 @@ private:
 				descr,
 				&data,
 				jer_encoder_flags_e::JER_F_MINIFIED,
-				DynamicBufferAppend,
-				static_cast<void *>(&string_buffer));
+				writeToStringStream,
+				static_cast<void *>(&ss));
 			if (encode_rval.encoded == -1)
 			{
 				BOOST_THROW_EXCEPTION(J2735Exception("Unable to stream JSON contents in memory: Unknown error"));
@@ -320,11 +297,10 @@ private:
 		}
 		else
 		{
-			FREEMEM(string_buffer.buffer);
 			BOOST_THROW_EXCEPTION(J2735Exception("Unsupported format for J2735 message: " + tmx::tmx_message<Format>::format()));
 		}
 		
-		auto output = std::string(string_buffer.buffer);
+		auto output = ss.str();
         return output;
 	}
 };
