@@ -125,6 +125,7 @@ namespace SpatPlugin {
 					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
 					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
 					BroadcastMessage(*rMsg);
+					ASN_STRUCT_FREE(asn_DEF_SPAT, _spatMessage.get_j2735_data().get());
 				}
 			}
 			catch (const UdpServerRuntimeError &e) {
