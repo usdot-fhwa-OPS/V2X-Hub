@@ -78,7 +78,7 @@ namespace TelematicBridge
         natsMsg *msg;
         string data = "{\"data\":\"test\"}";
         natsMsg_Create(&msg, "test_subject", "Test_reply", data.c_str(), data.size());
-        ASSERT_NO_THROW(TelematicUnit::onCheckStatusCallback(nullptr, nullptr, msg, nullptr));
+        TelematicUnit::onCheckStatusCallback(nullptr, nullptr, msg, nullptr);
     }
 
     TEST_F(TestTelematicUnit, onSelectedTopicsCallback)

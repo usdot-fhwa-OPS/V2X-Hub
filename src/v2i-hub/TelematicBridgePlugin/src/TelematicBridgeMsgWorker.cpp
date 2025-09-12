@@ -43,7 +43,7 @@ namespace TelematicBridge
         std::string json_payload_str = j2735Message.to_string();
         FILE_LOG(tmx::utils::LogLevel::logDEBUG2) << "J2735 JSON payload: " << json_payload_str;
         // Free the J2735 data structure
-        ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
+        // ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
         return json_payload_str;
     }
     /**

@@ -308,6 +308,8 @@ namespace TelematicBridge
 
     TelematicUnit::~TelematicUnit()
     {
+        // Close connection and wait for all nats spawned threads to exit with 10 second timeout
+        nats_CloseAndWait(10);
         natsSubscription_Destroy(_subAvailableTopic);
         natsSubscription_Destroy(_subSelectedTopic);
         natsSubscription_Destroy(_subCheckStatus);
