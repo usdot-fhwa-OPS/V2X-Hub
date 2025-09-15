@@ -20,7 +20,7 @@ namespace TelematicBridge
         json["channel"] = msg.get_dsrcChannel();
         json["psid"] = msg.get_dsrcPsid();
         json["encoding"] = msg.get_encoding();
-        json["payload"] = msg.get_payload_str();
+        json["payload"] = stringToJsonValue(msg.get_payload_str());
         return json;
     }
     /**
