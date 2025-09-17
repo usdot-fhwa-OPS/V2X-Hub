@@ -33,7 +33,7 @@ TEST(TestTelematicMsgWorker, routeableMessageToJsonValue)
     EXPECT_EQ(json["channel"].asInt(), 172);
     EXPECT_EQ(json["psid"].asInt(), 1234);
     EXPECT_EQ(json["encoding"].asString(), "json");
-    EXPECT_EQ(json["payload"].asString(), "{\"timestep\":\"12345\",\"seq\":\"1622547800\"}");
+    EXPECT_EQ(jsonValueToString(json["payload"]), "{\"seq\":\"1622547800\",\"timestep\":\"12345\"}");
 }
 TEST(TestTelematicMsgWorker, routeableMessageToJsonValueJ2735EncodedMsg) {
     // Create an EncodedMapDataMessage
@@ -83,7 +83,22 @@ TEST(TestTelematicMsgWork, stringToJsonValue) {
     EXPECT_EQ(jsonValue["key3"].asBool(), true);
 }
 
+TEST(TestTelematicMsgWork, jsonValueToString) {
+    std::string expectedJsonStr = R"({"key1":"value1","key2":2,"key3":true})";
+    Json::Value json;
+    json["key1"] = "value1";
+    json["key2"] = 2;
+    json["key3"] = true;
+    EXPECT_EQ(jsonValueToString(json), expectedJsonStr);
+}
+
 TEST(TestTelematicMsgWorker, stringToJsonValueException) {
     std::string invalidJsonString = R"({"key1": "value1", "key2": 2, "awdasd)";
     EXPECT_THROW(stringToJsonValue(invalidJsonString), TelematicBridgeException);
+}
+
+TEST(TestTelematicMsgWorker, trim) {
+    std::string stringWithSpaces = "\r\n\t test \t\n\r";
+    std::string expectedStr = "test";
+    EXPECT_EQ(expectedStr, trim(stringWithSpaces));
 }

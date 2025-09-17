@@ -9,7 +9,7 @@
 
 namespace TelematicBridge
 {
-    
+
     /**
      * @brief Create Json::Value from a rtmx::routeable_message
      * @param msg tmx::routeable_message
@@ -31,4 +31,19 @@ namespace TelematicBridge
      * @throws
      */
     Json::Value stringToJsonValue(const std::string &str);
+
+    /**
+     * @brief Convert a Json::Value to a JSON string.
+     * @param json The Json::Value to convert
+     * @return JSON string containing the parsed JSON data
+     * @throws
+     */
+    std::string jsonValueToString(const Json::Value& json);
+
+    /**
+     * @brief Trim leading and ending spaces from a given string.
+     * @param str string value to be trimmed.
+     * @return Trimmed string value.
+     */
+    std::string trim(std::string str);
 } // TelematicBridge

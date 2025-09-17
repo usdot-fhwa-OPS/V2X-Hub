@@ -19,8 +19,13 @@ namespace TelematicBridge
         json["timestamp"] = msg.get_timestamp();
         json["channel"] = msg.get_dsrcChannel();
         json["psid"] = msg.get_dsrcPsid();
-        json["encoding"] = msg.get_encoding();
-        json["payload"] = stringToJsonValue(msg.get_payload_str());
+        std::string encoding = msg.get_encoding();
+        json["encoding"] = encoding;
+        if(encoding == tmx::messages::api::ENCODING_JSON_STRING){
+            json["payload"] = stringToJsonValue(msg.get_payload_str());
+        }else{
+            json["payload"] = msg.get_payload_str();
+        }
         return json;
     }
     /**
@@ -66,5 +71,21 @@ namespace TelematicBridge
             throw TelematicBridgeException("Failed to parse JSON string: " + str + " with errors: " + errs);
         }
         return json;
+    }
+
+    std::string jsonValueToString(const Json::Value& json){
+        Json::FastWriter writer;
+        std::string jsonString = writer.write(json);
+        return trim(jsonString);
+    }
+
+    std::string trim(std::string str){
+        str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }));
+        str.erase(std::find_if(str.rbegin(), str.rend(), [](unsigned char ch) {
+            return !std::isspace(ch);
+        }).base(), str.end());
+        return str;
     }
 } // TelematicBridge
