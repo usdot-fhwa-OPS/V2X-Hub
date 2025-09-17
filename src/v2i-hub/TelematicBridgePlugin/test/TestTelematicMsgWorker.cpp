@@ -5,6 +5,7 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/messages/byte_stream.hpp>
+#include <SensorDetectedObject.h>
 using namespace TelematicBridge;
 using namespace std;
 
@@ -33,8 +34,72 @@ TEST(TestTelematicMsgWorker, routeableMessageToJsonValue)
     EXPECT_EQ(json["channel"].asInt(), 172);
     EXPECT_EQ(json["psid"].asInt(), 1234);
     EXPECT_EQ(json["encoding"].asString(), "json");
-    EXPECT_EQ(json["payload"].asString(), "{\"timestep\":\"12345\",\"seq\":\"1622547800\"}");
+    EXPECT_EQ(jsonValueToString(json["payload"]), "{\"seq\":\"1622547800\",\"timestep\":\"12345\"}");
 }
+
+TEST(TestTelematicMsgWorker, routeableMessageToJsonValue_SensorDetectedObject)
+{
+    tmx::messages::SensorDetectedObject sensorMsg;
+    sensorMsg.set_objectId(1);
+    sensorMsg.set_type("Vehicle");
+    sensorMsg.set_confidence(0.95);
+    sensorMsg.set_sensorId("Sensor123");
+    sensorMsg.set_position(tmx::messages::Position(100.0, 200.0, 0.0));
+    sensorMsg.set_velocity(tmx::messages::Velocity(50.0, 0.0, 0.0));
+    sensorMsg.set_angularVelocity(tmx::messages::Velocity(0.0, 0.0, 0.1));
+    sensorMsg.set_orientation(tmx::messages::Orientation(90.0, 0.0, 0.0));
+    sensorMsg.set_projString("EPSG:4326");
+    sensorMsg.set_isSimulated(false);
+    sensorMsg.set_isModified(false);
+    sensorMsg.set_timestamp(1622547800);
+    sensorMsg.set_size(tmx::messages::Size(4.5, 2.0, 1.5));
+    std::vector<tmx::messages::Covariance> covs { 
+        tmx::messages::Covariance(12), 
+        tmx::messages::Covariance(11),
+        tmx::messages::Covariance(13), 
+        tmx::messages::Covariance(14),
+        tmx::messages::Covariance(15)
+    };
+    int covarianceSize = 3;
+    std::vector<std::vector<tmx::messages::Covariance>> covs2d;
+    for(int i=0; i<covarianceSize; i++){
+        covs2d.push_back(covs);
+    }
+    sensorMsg.set_positionCovariance(covs2d);
+    sensorMsg.set_velocityCovariance(covs2d);
+    sensorMsg.set_orientationCovariance(covs2d);
+    sensorMsg.set_wgs84Position(tmx::messages::WGS84Position(37.7749, -122.4194, 10.0));
+
+    tmx::routeable_message msg;
+    msg.set_type(tmx::messages::MSGTYPE_APPLICATION_STRING);
+    msg.set_subtype(tmx::messages::MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING);
+    msg.set_source("SensorSource");
+    msg.set_sourceId(67890);
+    msg.set_flags(IvpMsgFlags_RouteDSRC);
+    msg.set_timestamp(1622547900);
+    msg.set_dsrcChannel(180);
+    msg.set_dsrcPsid(5678);
+    msg.set_payload(sensorMsg); 
+
+    Json::Value json = routeableMessageToJsonValue(msg);
+
+    EXPECT_EQ(json["type"].asString(), tmx::messages::MSGTYPE_APPLICATION_STRING);
+    EXPECT_EQ(json["subType"].asString(), tmx::messages::MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING);
+    EXPECT_EQ(json["source"].asString(), "SensorSource");
+    EXPECT_EQ(json["sourceId"].asInt(), 67890);
+    EXPECT_EQ(json["flags"].asInt(), IvpMsgFlags_RouteDSRC);
+    EXPECT_EQ(json["timestamp"].asInt64(), 1622547900);
+    EXPECT_EQ(json["channel"].asInt(), 180);
+    EXPECT_EQ(json["psid"].asInt(), 5678);
+    EXPECT_EQ(json["encoding"].asString(), "json");
+    EXPECT_TRUE(json["payload"].isObject());
+    EXPECT_EQ(json["payload"]["angularVelocity"]["x"].asString(), "0");
+    EXPECT_EQ(json["payload"]["wgs84Position"]["latitude"].asString(), "37.774900000000002");
+    EXPECT_EQ(json["payload"]["wgs84Position"]["longitude"].asString(), "-122.4194");
+    EXPECT_EQ(json["payload"]["wgs84Position"]["elevation"].asString(), "10");
+    EXPECT_EQ(jsonValueToString(json["payload"]), "{\"angularVelocity\":{\"x\":\"0\",\"y\":\"0\",\"z\":\"0.10000000000000001\"},\"confidence\":\"0.94999999999999996\",\"isModified\":\"0\",\"isSimulated\":\"0\",\"objectId\":\"1\",\"orientation\":{\"x\":\"90\",\"y\":\"0\",\"z\":\"0\"},\"orientationCovariance\":[[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"]],\"position\":{\"x\":\"100\",\"y\":\"200\",\"z\":\"0\"},\"positionCovariance\":[[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"]],\"projString\":\"EPSG:4326\",\"sensorId\":\"Sensor123\",\"size\":{\"height\":\"1.5\",\"length\":\"4.5\",\"width\":\"2\"},\"timestamp\":\"1622547800\",\"type\":\"Vehicle\",\"velocity\":{\"x\":\"50\",\"y\":\"0\",\"z\":\"0\"},\"velocityCovariance\":[[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"],[\"12\",\"11\",\"13\",\"14\",\"15\"]],\"wgs84Position\":{\"elevation\":\"10\",\"latitude\":\"37.774900000000002\",\"longitude\":\"-122.4194\"}}");
+}
+
 TEST(TestTelematicMsgWorker, routeableMessageToJsonValueJ2735EncodedMsg) {
     // Create an EncodedMapDataMessage
     tmx::messages::MapDataEncodedMessage mapDataMsg;
@@ -83,7 +148,22 @@ TEST(TestTelematicMsgWork, stringToJsonValue) {
     EXPECT_EQ(jsonValue["key3"].asBool(), true);
 }
 
+TEST(TestTelematicMsgWork, jsonValueToString) {
+    std::string expectedJsonStr = R"({"key1":"value1","key2":2,"key3":true})";
+    Json::Value json;
+    json["key1"] = "value1";
+    json["key2"] = 2;
+    json["key3"] = true;
+    EXPECT_EQ(jsonValueToString(json), expectedJsonStr);
+}
+
 TEST(TestTelematicMsgWorker, stringToJsonValueException) {
     std::string invalidJsonString = R"({"key1": "value1", "key2": 2, "awdasd)";
     EXPECT_THROW(stringToJsonValue(invalidJsonString), TelematicBridgeException);
+}
+
+TEST(TestTelematicMsgWorker, trim) {
+    std::string stringWithSpaces = "\r\n\t test \t\n\r";
+    std::string expectedStr = "test";
+    EXPECT_EQ(expectedStr, trim(stringWithSpaces));
 }
