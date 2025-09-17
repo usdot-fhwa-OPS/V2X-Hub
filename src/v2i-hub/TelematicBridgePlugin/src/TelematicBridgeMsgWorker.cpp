@@ -21,7 +21,7 @@ namespace TelematicBridge
         json["psid"] = msg.get_dsrcPsid();
         std::string encoding = msg.get_encoding();
         json["encoding"] = encoding;
-        if(encoding == tmx::messages::api::ENCODING_JSON_STRING){
+        if(strncasecmp(encoding.c_str(), tmx::messages::api::ENCODING_JSON_STRING, 4) == 0){
             json["payload"] = stringToJsonValue(msg.get_payload_str());
         }else{
             json["payload"] = msg.get_payload_str();
