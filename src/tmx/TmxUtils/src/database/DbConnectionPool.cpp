@@ -62,7 +62,7 @@ DbConnection DbConnectionPool::Connection(string connectionUrl, string username,
 
 	// Make sure we are not at the maximum
 	if (i >= pool.max_size()) {
-		throw sql::SQLException("Connection Pool size limit reached");
+		BOOST_THROW_EXCEPTION(sql::SQLException("Connection Pool size limit reached"));
 	}
 
 	// Add a new instance to the pool

@@ -22,11 +22,11 @@ namespace ImmediateForward{
         Json::Value root;
         bool parsingSuccessful = reader.parse(config, root);
         if (!parsingSuccessful) {
-            throw tmx::TmxException("Error parsing Immediate Forward Configuration: " + 
-                reader.getFormattedErrorMessages() );
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward Configuration: " +
+                reader.getFormattedErrorMessages() ));
         }
         if (!root.isArray()) {
-            throw tmx::TmxException("Error parsing Immediate Forward Configuration: Root element is not an array!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward Configuration: Root element is not an array!"));
         }
         for (const auto &element : root) {
             config_obj.push_back(parseImfConfiguration(element));
@@ -36,7 +36,7 @@ namespace ImmediateForward{
 
     SNMPAuth parseSNMPAuth(const Json::Value &snmpAuth){
         if (!snmpAuth.isObject()) {
-            throw tmx::TmxException("Error parsing Immediate Forward configuration: SNMPAuth is not an object!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward configuration: SNMPAuth is not an object!"));
         }
         SNMPAuth snmpAuthObj;
         snmpAuthObj.user = snmpAuth[UserKey].asString();
@@ -53,13 +53,13 @@ namespace ImmediateForward{
                 snmpAuthObj.privPassPhrase = snmpAuth[PrivPassPhraseKey].asString();
             }
         }
-        return snmpAuthObj; 
+        return snmpAuthObj;
     }
 
 
     ImfConfiguration parseImfConfiguration(const Json::Value &imfConfig){
         if (!imfConfig.isObject()) {
-            throw tmx::TmxException("Error parsing Immediate Forward configuration: ImfConfig is not an object!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward configuration: ImfConfig is not an object!"));
         }
         ImfConfiguration imfConfiguration;
         imfConfiguration.name = imfConfig[NameKey].asString();
@@ -82,10 +82,10 @@ namespace ImmediateForward{
         if (imfConfig[PayloadPlaceholderKey].isString()) {
             imfConfiguration.payloadPlaceholder = imfConfig[PayloadPlaceholderKey].asString();
         }
-    
+
         const auto &messageConfigs =  imfConfig[MessagesKey];
         if (!messageConfigs.isArray()) {
-            throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward configuration: Messages is not an array!"));
         }
         for (const auto &element : messageConfigs) {
             imfConfiguration.messageConfigs.push_back(parseMessage(element));
@@ -95,7 +95,7 @@ namespace ImmediateForward{
 
     MessageConfig parseMessage( const Json::Value &message) {
         if (!message.isObject()) {
-            throw tmx::TmxException("Error parsing Immediate Forward configuration: Messages element is not an object!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Error parsing Immediate Forward configuration: Messages element is not an object!"));
         }
         MessageConfig msg;
         msg.tmxType = message[TmxTypeKey].asString();
@@ -117,15 +117,15 @@ namespace ImmediateForward{
                     return name;
                 }
         }
-        throw tmx::TmxException("TxMode is not supported!");    
+        BOOST_THROW_EXCEPTION(tmx::TmxException("TxMode is not supported!"));
     }
 
     TxMode stringToTxMode(const std::string &mode) {
         try {
             return stringToTxModeMap.at(mode);
-        } 
+        }
         catch (const std::out_of_range& ) {
-            throw tmx::TmxException("TxMode " + mode + " is not supported!");    
+            BOOST_THROW_EXCEPTION(tmx::TmxException("TxMode " + mode + " is not supported!"));
         }
     }
 
@@ -135,7 +135,7 @@ namespace ImmediateForward{
                     return name;
                 }
         }
-        throw tmx::TmxException("SecurityLevel is not supported!");    
+        BOOST_THROW_EXCEPTION(tmx::TmxException("SecurityLevel is not supported!"));
     }
 
     SecurityLevel stringToSecurityLevel(const std::string &level) {
@@ -143,7 +143,7 @@ namespace ImmediateForward{
             return stringToSecurityLevelMap.at(level);
         }
         catch (const std::out_of_range& ) {
-            throw tmx::TmxException("SecurityLevel " + level + " is not supported!");    
+            BOOST_THROW_EXCEPTION(tmx::TmxException("SecurityLevel " + level + " is not supported!"));
         }
     }
 

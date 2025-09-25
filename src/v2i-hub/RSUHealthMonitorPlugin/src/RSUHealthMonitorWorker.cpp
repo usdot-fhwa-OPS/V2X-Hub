@@ -166,12 +166,12 @@ namespace RSUHealthMonitor
             } else if (_securityLevel == "authNoPriv"){
                 _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, "", "", SNMP_VERSION_3, timeout);
 
-            } 
+            }
             else if ( _securityLevel == "authPriv") {
                 _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, SNMP_VERSION_3, timeout);
             }
             else {
-                throw runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\".");
+                BOOST_THROW_EXCEPTION(runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\"."));
             }
             Json::Value rsuStatuJson;
             // Sending RSU SNMP call for each field as each field has its own OID.

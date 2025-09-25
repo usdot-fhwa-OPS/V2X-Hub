@@ -63,14 +63,14 @@ namespace SpatPlugin {
                 signalControllerConnection->spatPacketReceiver = mockUdpServer;
             }
 
-            std::vector<char> read_binary_file(std::string name) 
+            std::vector<char> read_binary_file(std::string name)
             {
                 std::ifstream file(name.c_str(), std::ios::binary);
                 std::vector<char> buf;
 
-                if (!file.good()) 
+                if (!file.good())
                 {
-                    throw runtime_error("Could not open file " + name);
+                    BOOST_THROW_EXCEPTION(runtime_error("Could not open file " + name));
                 }
 
                 file.unsetf(std::ios::skipws);
@@ -358,7 +358,7 @@ namespace SpatPlugin {
             Payload=00136b4457f20180000000208457f2c7c20b0010434162bc650001022a0b0be328000c10d058af194000808682c578ca00050434162bc650003022a0b0be328001c10d058af194001008682c578ca000904341617c650005021a0b15e328002c10d0585f194001808682c578ca00
         )";
         EXPECT_CALL(*mockUdpServer, stringTimedReceive(1000)).WillOnce(testing::DoAll(Return(uper_hex)));
-        
+
         /**
          * <SPAT>
                 <timeStamp>284658</timeStamp>
@@ -524,7 +524,7 @@ namespace SpatPlugin {
             </SPAT>
         */
         auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-		signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr);  
+		signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr);
         auto spat = spatEncoded_ptr->decode_j2735_message().get_j2735_data();
         EXPECT_EQ(284658L, *spat->timeStamp);
         EXPECT_EQ(0, spat->intersections.list.array[0]->id.id);
@@ -609,6 +609,6 @@ namespace SpatPlugin {
         EXPECT_CALL(*mockUdpServer, stringTimedReceive(1000)).WillOnce(testing::DoAll(Return(without_paylod)));
 
         auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-		EXPECT_THROW(signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr), tmx::TmxException);  
+		EXPECT_THROW(signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr), tmx::TmxException);
     }
 }

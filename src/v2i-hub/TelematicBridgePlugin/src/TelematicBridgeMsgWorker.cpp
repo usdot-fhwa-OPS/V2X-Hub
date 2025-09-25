@@ -2,7 +2,7 @@
 
 namespace TelematicBridge
 {
-    
+
     /**
      * @brief Create Json::Value from a rtmx::routeable_message
      * @param msg tmx::routeable_message
@@ -33,12 +33,12 @@ namespace TelematicBridge
      * stol-j2735 library JER encoding functionality.
      * @note: This function assumes the input routeable_message is a J2735 encoded message.
      * @param msg tmx::routeable_message
-     * @return JSON string of the J2735 message payload 
+     * @return JSON string of the J2735 message payload
      */
     std::string j2735MessageToJson(tmx::routeable_message &msg)
     {
         // Convert routeable message to J2735 encoded message
-        tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
+        tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg =
             msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
         // Decode Encode J2735 Message
         auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
@@ -68,7 +68,7 @@ namespace TelematicBridge
         if (reader->parse(str.data(), str.data() + str.size(), &parsedParam, &errs)) {
             json = parsedParam;
         } else {
-            throw TelematicBridgeException("Failed to parse JSON string: " + str + " with errors: " + errs);
+            BOOST_THROW_EXCEPTION(TelematicBridgeException("Failed to parse JSON string: " + str + " with errors: " + errs));
         }
         return json;
     }

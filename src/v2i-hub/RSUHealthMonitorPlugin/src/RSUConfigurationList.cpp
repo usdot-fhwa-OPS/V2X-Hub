@@ -3,7 +3,7 @@
 
 namespace RSUHealthMonitor
 {
-    
+
     Json::Value RSUConfigurationList::parseJson(const std::string &rsuConfigsStr) const
     {
         JSONCPP_STRING err;
@@ -15,7 +15,7 @@ namespace RSUHealthMonitor
         {
             std::stringstream ss;
             ss << "Parse RSUs raw string error: " << err;
-            throw RSUConfigurationException(ss.str().c_str());
+            BOOST_THROW_EXCEPTION(RSUConfigurationException(ss.str().c_str()));
         }
         return root;
     }
@@ -28,7 +28,7 @@ namespace RSUHealthMonitor
         auto rsuArray = json[RSUSKey];
         if (!rsuArray.isArray())
         {
-            throw RSUConfigurationException("RSUConfigurationList: Missing RSUS array.");
+            BOOST_THROW_EXCEPTION(RSUConfigurationException("RSUConfigurationList: Missing RSUS array."));
         }
         for (auto i = 0; i != rsuArray.size(); i++)
         {
@@ -40,7 +40,7 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU IP [" + std::string(RSUIpKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                BOOST_THROW_EXCEPTION(RSUConfigurationException(errMsg));
             }
 
             if (rsuArray[i].isMember(SNMPPortKey))
@@ -52,7 +52,7 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: SNMP port [" + std::string(SNMPPortKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                BOOST_THROW_EXCEPTION(RSUConfigurationException(errMsg));
             }
 
             if (rsuArray[i].isMember(AuthProtocolKey))
@@ -62,30 +62,30 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Authentication protocol [" + std::string(AuthProtocolKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                BOOST_THROW_EXCEPTION(RSUConfigurationException(errMsg));
             }
 
             if (rsuArray[i].isMember(PrivProtocolKey))
             {
                 config.privProtocol = rsuArray[i][PrivProtocolKey].asString();
             }
-        
+
             if (rsuArray[i].isMember(AuthPassPhraseKey))
             {
                 config.authPassPhrase = rsuArray[i][AuthPassPhraseKey].asString();
             }
-            
+
             if (rsuArray[i].isMember(PrivPassPhraseKey))
             {
                 config.privPassPhrase = rsuArray[i][PrivPassPhraseKey].asString();
             }
-        
+
 
             if (rsuArray[i].isMember(UserKey))
             {
                 config.user = rsuArray[i][UserKey].asString();
             }
-        
+
             if (rsuArray[i].isMember(RSUMIBVersionKey))
             {
                 auto rsuMIBVersionStr = rsuArray[i][RSUMIBVersionKey].asString();
@@ -94,7 +94,7 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU MIB version [" + std::string(RSUMIBVersionKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                BOOST_THROW_EXCEPTION(RSUConfigurationException(errMsg));
             }
 
             if (rsuArray[i].isMember(SecurityLevelKey))
@@ -104,7 +104,7 @@ namespace RSUHealthMonitor
             else
             {
                 auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: RSU Security Level [" + std::string(SecurityLevelKey) + "] is required.";
-                throw RSUConfigurationException(errMsg);
+                BOOST_THROW_EXCEPTION(RSUConfigurationException(errMsg));
             }
             tempConfigs.push_back(config);
         }
@@ -121,7 +121,7 @@ namespace RSUHealthMonitor
 
     std::ostream &operator<<(std::ostream &os, const tmx::utils::rsu::RSU_SPEC &mib)
     {
-        
+
         return os << tmx::utils::rsu::rsuSpecToString(mib);
     }
 

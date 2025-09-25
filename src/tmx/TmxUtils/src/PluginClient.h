@@ -427,7 +427,7 @@ private:
 			if (fn)
 				(instance->*fn)(msg, routeableMsg);
 			else
-				throw PluginException("Missing handler for " + get_messageType());
+				BOOST_THROW_EXCEPTION(PluginException("Missing handler for " + get_messageType()));
 		}
 	private:
 		PluginType *instance;

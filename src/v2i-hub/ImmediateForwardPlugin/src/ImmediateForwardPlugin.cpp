@@ -81,7 +81,7 @@ namespace ImmediateForward
 	void ImmediateForwardPlugin::UpdateConfigSettings()
 	{
 		PLOG(logDEBUG) << "Updating configuration settings.";
-		
+
 		// Update the configuration setting for all UDP clients.
 		// This includes creation/update of _udpClientList and _imfConfigs
 		_imfConfigs.clear();
@@ -107,9 +107,9 @@ namespace ImmediateForward
 			}
 			else if ( imfConfig.spec == tmx::utils::rsu::RSU_SPEC::NTCIP_1218) {
 				_snmpClientMap[imfConfig.name] = std::make_unique<tmx::utils::snmp_client>(
-						imfConfig.address, 
-						imfConfig.port, 
-						imfConfig.snmpAuth.value().community, 
+						imfConfig.address,
+						imfConfig.port,
+						imfConfig.snmpAuth.value().community,
 						imfConfig.snmpAuth.value().user,
 						securityLevelToString(imfConfig.snmpAuth.value().securityLevel),
 						imfConfig.snmpAuth.value().authProtocol.value(),
@@ -121,13 +121,13 @@ namespace ImmediateForward
 					);
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
-				// This will check RSU Mode for Standby status a maximum of 12 times waiting 5 seconds 
+				// This will check RSU Mode for Standby status a maximum of 12 times waiting 5 seconds
 				// after each time before failing
 				waitForRSUModeStandby(_snmpClientMap[imfConfig.name].get(), 12 ,5);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
 				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(
-					_snmpClientMap[imfConfig.name].get(), 
-					imfConfig.messageConfigs, 
+					_snmpClientMap[imfConfig.name].get(),
+					imfConfig.messageConfigs,
 					imfConfig.signMessage,
 					imfConfig.payloadPlaceholder.value_or("FFFF") );
 				// Set to operational mode
@@ -212,7 +212,7 @@ namespace ImmediateForward
 							FILE* pipe= popen(cmd,"r");
 
 							if (pipe == NULL )
-								throw std::runtime_error("popen() failed!");
+								BOOST_THROW_EXCEPTION(std::runtime_error("popen() failed!"));
 							try{
 								while (fgets(buffer, sizeof(buffer),pipe) != NULL)
 								{

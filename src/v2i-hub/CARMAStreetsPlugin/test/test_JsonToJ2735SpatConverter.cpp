@@ -147,7 +147,7 @@ namespace CARMAStreetsPlugin
     /**
      * @brief Unit test to ensure encodeSpat will throw and exception attempting to encode timing
      * data that exceeds max value of 36111 (see 2020 ASN1 documentation for TimeMark).
-     * 
+     *
      */
     TEST_F(test_JsonToJ2735SpatConverter, time_mark_over_max_value) {
         std::string spat_json_string = "{\"time_stamp\":387178,\"name\":\"\",\"intersections\":[{\"name\":\"East Intersection\",\"id\":9945,\"revision\":1,\"status\":0,\"moy\":387178,\"time_stamp\":32248,\"states\":["
@@ -164,10 +164,10 @@ namespace CARMAStreetsPlugin
         JsonToJ2735SpatConverter converter;
         converter.convertJson2Spat(spat_json, spat_ptr.get());
         tmx::messages::SpatEncodedMessage encodedSpat;
-       
+
         ASSERT_THROW( converter.encodeSpat(spat_ptr, encodedSpat), tmx::TmxException );
-        
-        
+
+
 
     }
 

@@ -47,8 +47,8 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("MobilityOperationTopic", _transmitMobilityOperationTopic);
 	GetConfigValue<string>("MobilityPathTopic", _transmitMobilityPathTopic);
  	GetConfigValue<string>("MapTopic", _transmitMAPTopic);
-	GetConfigValue<string>("SRMTopic", _transmitSRMTopic); 
-	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
+	GetConfigValue<string>("SRMTopic", _transmitSRMTopic);
+	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic);
 	GetConfigValue<string>("SdsmSubscribeTopic", _subscribeToSdsmTopic);
 	GetConfigValue<string>("SdsmTransmitTopic", _transmitSDSMTopic);
 	 // Populate strategies config
@@ -67,7 +67,7 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 {
  	std::string kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
-	std::string error_string;	
+	std::string error_string;
 	kafkaConnectString = _kafkaBrokerIp + ':' + _kafkaBrokerPort;
 	kafka_client client;
 
@@ -75,8 +75,8 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	_kafka_producer_ptr = client.create_producer(kafkaConnectString);
 	if(!_kafka_producer_ptr->init_producer())
 	{
-		throw TmxException("Failed to create Kafka producer.");
-		
+		BOOST_THROW_EXCEPTION(TmxException("Failed to create Kafka producer."));
+
 	}
 
 	//Consumers
@@ -86,12 +86,12 @@ void CARMAStreetsPlugin::InitKafkaConsumerProducers()
 	_sdsm_kafka_consumer_ptr = client.create_consumer(kafkaConnectString, _subscribeToSdsmTopic,this->_name);
 	if(!_scheduing_plan_kafka_consumer_ptr || !_spat_kafka_consumer_ptr || !_ssm_kafka_consumer_ptr || !_sdsm_kafka_consumer_ptr)
 	{
-		throw TmxException("Failed to create Kafka consumers.");
+		BOOST_THROW_EXCEPTION(TmxException("Failed to create Kafka consumers."));
 	}
 	PLOG(logDEBUG) <<"Kafka consumers created";
 	if(!_spat_kafka_consumer_ptr->init()  || !_scheduing_plan_kafka_consumer_ptr->init() || !_ssm_kafka_consumer_ptr->init() || !_sdsm_kafka_consumer_ptr->init())
 	{
-		throw TmxException("Kafka consumers init() failed!");
+		BOOST_THROW_EXCEPTION(TmxException("Kafka consumers init() failed!"));
 	}
 	// TODO: Replace with tmxutil ThreadTimer or some other more appropriate Thread wrapper.
 	boost::thread thread_schpl(&CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic, this);
@@ -117,7 +117,7 @@ void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &m
 	if ( isSimulationMode()) {
 		// TODO: This is a temporary fix for tmx message container property tree
 		// serializing all attributes as strings. This issue needs to be fixed but
-		// is currently out of scope. TMX Messages should be correctly serialize to 
+		// is currently out of scope. TMX Messages should be correctly serialize to
 		// and from json. This temporary fix simply using regex to look for numeric,
 		// null, and bool values and removes the quotations around them.
 		boost::regex exp("\"(null|true|false|[0-9]+(\\.[0-9]+)?)\"");
@@ -129,7 +129,7 @@ void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &m
 	}
 }
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {
-	try 
+	try
 	{
 		auto mobilityOperation = msg.get_j2735_data();
 		PLOG(logDEBUG) << "Body OperationParams : " << mobilityOperation->body.operationParams.buf << "\n"
@@ -137,15 +137,15 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 					  <<"Queueing kafka message:topic:" << _transmitMobilityOperationTopic;
 
 		std::stringstream strat;
-		std::stringstream payload; 
- 
-		ptree pr; 
+		std::stringstream payload;
+
+		ptree pr;
 		strat << mobilityOperation->body.strategy.buf;
 		payload << mobilityOperation->body.operationParams.buf;
 		std::string strategy_params;
 		std::string strategy = strat.str();
 		// TODO: Filter vehicle mobility operation messages based on Mobility Header host id == intersection id
-		if ( std::find( _strategies.begin(), _strategies.end(), strategy) != _strategies.end() ) 
+		if ( std::find( _strategies.begin(), _strategies.end(), strategy) != _strategies.end() )
 		{
 			strategy_params = payload.str();
 			Json::Value mobilityOperationJsonRoot;
@@ -172,11 +172,11 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 			std::stringstream timestamp;
 			timestamp << mobilityOperation->header.timestamp.buf;
 			metadata["timestamp"] = timestamp.str();
-			
+
 			mobilityOperationJsonRoot["strategy"] 			= strategy;
 			mobilityOperationJsonRoot["strategy_params"] 	= strategy_params;
-			mobilityOperationJsonRoot["metadata"] 			= metadata; 
-			const std::string message 						= Json::writeString(builder, mobilityOperationJsonRoot);			
+			mobilityOperationJsonRoot["metadata"] 			= metadata;
+			const std::string message 						= Json::writeString(builder, mobilityOperationJsonRoot);
 			PLOG(logDEBUG) <<"MobilityOperation message:" << message <<std::endl;
 			produce_kafka_msg(message, _transmitMobilityOperationTopic);
 		}
@@ -186,13 +186,13 @@ void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routea
 		SetStatus<uint>(Key_MobilityOperationMessageSkipped, ++_mobilityOperationMessageSkipped);
 
 	}
-	
+
 
 }
 
-void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg ) 
+void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_message &routeableMsg )
 {
-	try 
+	try
 	{
 		auto mobilityPathMsg = msg.get_j2735_data();
 
@@ -227,7 +227,7 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		std::stringstream location_ecefX;
 		location_ecefX << mobilityPathMsg->body.location.ecefX;
 		location["ecefX"] = std::stoi(location_ecefX.str());
-		
+
 		std::stringstream location_ecefY;
 		location_ecefY << mobilityPathMsg->body.location.ecefY;
 		location["ecefY"] = std::stoi(location_ecefY.str());
@@ -260,13 +260,13 @@ void CARMAStreetsPlugin::HandleMobilityPathMessage(tsm2Message &msg, routeable_m
 		}
 
 		trajectory["location"] 		= location;
-		mobilityPathJsonRoot["metadata"] 		= metadata; 
+		mobilityPathJsonRoot["metadata"] 		= metadata;
 		mobilityPathJsonRoot["trajectory"]		= trajectory;
 		const std::string json_message 			= Json::writeString(builder, mobilityPathJsonRoot);
 		PLOG(logDEBUG) <<"MobilityPath Json message:" << json_message;
 		produce_kafka_msg(json_message, _transmitMobilityPathTopic);
 	}
-	catch (TmxException &ex) 
+	catch (TmxException &ex)
 	{
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
 		SetStatus<uint>(Key_MobilityPathMessageSkipped, ++_mobilityPathMessageSkipped);
@@ -286,26 +286,26 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
 		return;
 	}
-	
+
 	if(srmJsonV.empty())
 	{
 		PLOG(logERROR) << "SRM message content is empty." << std::endl;
 		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
-		
+
 	}else{
 		for (auto srmJson : srmJsonV)
         {
 			Json::StreamWriterBuilder builder;
 			const std::string srmJsonStr = Json::writeString(builder, srmJson);
 			PLOG(logINFO) << "SRM Json message: " << srmJsonStr << std::endl;
-			produce_kafka_msg(srmJsonStr, _transmitSRMTopic);           
-        }		
-	}	
+			produce_kafka_msg(srmJsonStr, _transmitSRMTopic);
+        }
+	}
 }
 
 void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_message &routeableMsg)
 {
-	try 
+	try
 	{
 		auto bsm = msg.get_j2735_data();
 
@@ -349,19 +349,19 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		auto id_len = bsm->coreData.id.size;
 		unsigned long id_num = 0;
 		for(auto i = 0; i < id_len; i++)
-		{			
+		{
 			 id_num = (id_num << 8) | bsm->coreData.id.buf[i];
 		}
 		std::stringstream id_fill_ss;
 		id_fill_ss << std::setfill('0') << std::setw(8) <<std::hex << id_num;
 		coreData["id"]  = id_fill_ss.str();
-		
+
 		Json::Value accuracy;
 
 		std::stringstream orientation;
 		orientation << bsm->coreData.accuracy.orientation;
 		accuracy["orientation"] = orientation.str();
-		
+
 		std::stringstream semiMajor;
 		semiMajor << bsm->coreData.accuracy.semiMajor;
 		accuracy["semi_major"] = semiMajor.str();
@@ -427,7 +427,7 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		// e.g. shift the binary right until it equals to 1 (0b00000001) to determine the location of the non-zero bit
 		for (int i = 0; i < 4; i ++)
 		{
-			if ((int)binary == 1) 
+			if ((int)binary == 1)
 			{
 				brakes["wheel_brakes"] = brake_applied_status_type;
 				break;
@@ -442,11 +442,11 @@ void CARMAStreetsPlugin::HandleBasicSafetyMessage(BsmMessage &msg, routeable_mes
 		coreData["accel_set"]		= accel_set;
 		coreData["brakes"]			= brakes;
 		coreData["accuracy"] 		= accuracy;
-		coreData["size"] 			= size;		
-		bsmJsonRoot["core_data"]  	= coreData; 
+		coreData["size"] 			= size;
+		bsmJsonRoot["core_data"]  	= coreData;
 		const std::string message 	= Json::writeString(builder, bsmJsonRoot);
 		produce_kafka_msg(message, _transmitBSMTopic);
-		
+
 	}
 	catch (TmxException &ex) {
 		PLOG(logERROR) << "Failed to decode message : " << ex.what();
@@ -465,12 +465,12 @@ void CARMAStreetsPlugin::HandleMapMessage(MapDataMessage &msg, routeable_message
 	jsonConverter.convertJ2735MAPToMapJSON(mapMsgPtr, mapJson);
 	PLOG(logDEBUG) << "mapJson: " << mapJson << std::endl;
 	const std::string message 	= Json::writeString(builder, mapJson);
-	produce_kafka_msg(message, _transmitMAPTopic);	
+	produce_kafka_msg(message, _transmitMAPTopic);
 }
 
 void CARMAStreetsPlugin::HandleSDSMMessage(SdsmMessage &msg, routeable_message &routeableMsg)
 {
-	std::shared_ptr<SensorDataSharingMessage> sdsmMsgPtr = msg.get_j2735_data(); 
+	std::shared_ptr<SensorDataSharingMessage> sdsmMsgPtr = msg.get_j2735_data();
 	PLOG(logDEBUG) << "Detected object count: " << sdsmMsgPtr->objects.list.count << std::endl;
 	Json::Value sdsmJson;
 	Json::StreamWriterBuilder builder;
@@ -478,7 +478,7 @@ void CARMAStreetsPlugin::HandleSDSMMessage(SdsmMessage &msg, routeable_message &
 	jsonConverter.convertJ3224ToSDSMJSON(sdsmMsgPtr, sdsmJson);
 	PLOG(logDEBUG) << "sdsmJson: " << sdsmJson << std::endl;
 	const std::string message 	= Json::writeString(builder, sdsmJson);
-	produce_kafka_msg(message, _transmitSDSMTopic);	
+	produce_kafka_msg(message, _transmitSDSMTopic);
 }
 
 void CARMAStreetsPlugin::produce_kafka_msg(const string& message, const string& topic_name) const
@@ -496,14 +496,14 @@ void CARMAStreetsPlugin::OnStateChange(IvpPluginState state) {
 }
 
 void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
-{	
+{
 	// TODO: Update methods to represent consuming a single message from Kafka topic
 	if(_subscribeToSchedulingPlanTopic.length() > 0)
 	{
 		PLOG(logDEBUG) << "SubscribeSchedulingPlanKafkaTopics:" <<_subscribeToSchedulingPlanTopic << std::endl;
 		_scheduing_plan_kafka_consumer_ptr->subscribe();
 
-		while (_scheduing_plan_kafka_consumer_ptr->is_running()) 
+		while (_scheduing_plan_kafka_consumer_ptr->is_running())
 		{
 			std::string payload_str = _scheduing_plan_kafka_consumer_ptr->consume(500);
 			if(payload_str.length() > 0)
@@ -513,7 +513,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 				Json::Reader payload_reader;
 				bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
 				if( !parse_sucessful )
-				{	
+				{
 					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
 					SetStatus<uint>(Key_ScheduleMessageSkipped, ++_scheduleMessageSkipped);
 					continue;
@@ -521,7 +521,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 
 				Json::Value metadata = payload_root["metadata"];
 				Json::Value payload_json_array = payload_root["payload"];
-				
+
 				for ( int index = 0; index < payload_json_array.size(); ++index )
 				{
 					PLOG(logDEBUG) << payload_json_array[index] << std::endl;
@@ -547,7 +547,7 @@ void CARMAStreetsPlugin::SubscribeSchedulingPlanKafkaTopic()
 						PLOG(logDEBUG) << "tsm3EncodedMsgs: " << tsm3EncodedMsgs;
 						BroadcastMessage(static_cast<routeable_message &>( tsm3EncodedMsgs ));
 					}
-				}			
+				}
 			}
 		}
 
@@ -560,9 +560,9 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 	{
 		PLOG(logDEBUG) << "SubscribeSpatKafkaTopics:" <<_subscribeToSpatTopic << std::endl;
 		_spat_kafka_consumer_ptr->subscribe();
-		//Initialize Json to J2735 Spat convertor		
+		//Initialize Json to J2735 Spat convertor
 		JsonToJ2735SpatConverter spat_convertor;
-		while (_spat_kafka_consumer_ptr->is_running()) 
+		while (_spat_kafka_consumer_ptr->is_running())
 		{
 			std::string payload_str = _spat_kafka_consumer_ptr->consume(500);
 			if(payload_str.length() > 0)
@@ -572,7 +572,7 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 				Json::Reader payload_reader;
 				bool parse_sucessful = payload_reader.parse(payload_str, payload_root);
 				if( !parse_sucessful )
-				{	
+				{
 					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
 					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
 					continue;
@@ -585,24 +585,24 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 				{
 					spat_convertor.encodeSpat(spat_ptr, spatEncodedMsg);
 				}
-				catch (TmxException &ex) 
+				catch (TmxException &ex)
 				{
 					// Skip messages that fail to encode.
-					PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
+					PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: "
 						<< ex.what() << std::endl;
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
 
 					continue;
 				}
-				
+
 				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 				PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
 
 				//Broadcast the encoded SPAT message
 				spatEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				spatEncodedMsg.addDsrcMetadata(0x8002);
-				BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));		
+				BroadcastMessage(static_cast<routeable_message &>(spatEncodedMsg));
 			}
 		}
 	}
@@ -614,18 +614,18 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 	{
 		PLOG(logDEBUG) << "SubscribeSSMKafkaTopics:" <<_subscribeToSsmTopic << std::endl;
 		_ssm_kafka_consumer_ptr->subscribe();
-		//Initialize Json to J2735 SSM convertor 
+		//Initialize Json to J2735 SSM convertor
 		JsonToJ2735SSMConverter ssm_convertor;
-		while (_ssm_kafka_consumer_ptr->is_running()) 
+		while (_ssm_kafka_consumer_ptr->is_running())
 		{
-			std::string payload_str = _ssm_kafka_consumer_ptr->consume(500);			
+			std::string payload_str = _ssm_kafka_consumer_ptr->consume(500);
 			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
 				Json::Value ssmDoc;
 				auto parse_sucessful = ssm_convertor.parseJsonString(payload_str, ssmDoc);
 				if( !parse_sucessful )
-				{	
+				{
 					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
 					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 					continue;
@@ -638,23 +638,23 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 				{
 					ssm_convertor.encodeSSM(ssm_ptr, ssmEncodedMsg);
 				}
-				catch (TmxException &ex) 
+				catch (TmxException &ex)
 				{
 					// Skip messages that fail to encode.
-					PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
+					PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: "
 						<< ex.what() << std::endl;
 					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 					continue;
 				}
-				
+
 				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 				PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
 
 				//Broadcast the encoded SSM message
 				ssmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				ssmEncodedMsg.addDsrcMetadata(0x8002);
-				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));		
+				BroadcastMessage(static_cast<routeable_message &>(ssmEncodedMsg));
 			}
 		}
 	}
@@ -667,18 +667,18 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 	{
 		PLOG(logDEBUG) << "SubscribeSDSMKafkaTopics:" <<_subscribeToSdsmTopic << std::endl;
 		_sdsm_kafka_consumer_ptr->subscribe();
-		//Initialize Json to J3224 SDSM convertor 
+		//Initialize Json to J3224 SDSM convertor
 		JsonToJ3224SDSMConverter sdsm_convertor;
-		while (_sdsm_kafka_consumer_ptr->is_running()) 
+		while (_sdsm_kafka_consumer_ptr->is_running())
 		{
-			std::string payload_str = _sdsm_kafka_consumer_ptr->consume(500);			
+			std::string payload_str = _sdsm_kafka_consumer_ptr->consume(500);
 			if(payload_str.length() > 0)
 			{
 				PLOG(logDEBUG) << "consumed message payload: " << payload_str <<std::endl;
 				Json::Value sdsmDoc;
 				auto parse_sucessful = sdsm_convertor.parseJsonString(payload_str, sdsmDoc);
 				if( !parse_sucessful )
-				{	
+				{
 					PLOG(logERROR) << "Error parsing payload: " << payload_str << std::endl;
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
 					continue;
@@ -697,13 +697,13 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
 					continue;
 				}
-				
+
 				PLOG(logDEBUG) << "sdsmEncodedMsg: "  << sdsmEncodedMsg;
 				//Broadcast the encoded SDSM message
 				sdsmEncodedMsg.set_flags(IvpMsgFlags_RouteDSRC);
 				sdsmEncodedMsg.addDsrcMetadata(tmx::messages::api::msgPSID::sensorDataSharingMessage_PSID);
 				BroadcastMessage(static_cast<routeable_message &>(sdsmEncodedMsg));
-		
+
 			}
 		}
 	}
@@ -714,7 +714,7 @@ void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(SensorDetectedObje
 {
 	// TODO: This is a temporary fix for tmx message container property tree
 	// serializing all attributes as strings. This issue needs to be fixed but
-	// is currently out of scope. TMX Messages should be correctly serialize to 
+	// is currently out of scope. TMX Messages should be correctly serialize to
 	// and from json. This temporary fix simply using regex to look for numeric,
 	// null, and bool values and removes the quotations around them.
 	PLOG(logDEBUG) <<  "Receive sensor detected message in JSON format:  " << msg.to_string() <<std::endl;
@@ -727,7 +727,7 @@ void CARMAStreetsPlugin::HandleSimulatedSensorDetectedMessage(SensorDetectedObje
 bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Json::Value metadata, Json::Value payload_json )
 {
 	try
-	{			
+	{
 		std::lock_guard<std::mutex> lock(data_lock);
 		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
 		std::string sender_id 			 = _intersectionId;
@@ -735,19 +735,19 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		std::string sender_bsm_id_str 	 = "00000000";
 		std::string plan_id_str 		 = "00000000-0000-0000-0000-000000000000";
 		std::string strategy_str 		 = metadata != Json::nullValue && metadata.isMember("intersection_type")? metadata["intersection_type"].asString(): "UNSET";
-		
+
 		std::string strategy_params_str  = "null";
 		if( payload_json != Json::nullValue && !payload_json.empty())
 		{
-			strategy_params_str = (payload_json.isMember("st") ? "st:" + std::to_string(payload_json["st"].asUInt64()) + "," : "") + 
+			strategy_params_str = (payload_json.isMember("st") ? "st:" + std::to_string(payload_json["st"].asUInt64()) + "," : "") +
 											  (payload_json.isMember("et") ? "et:" + std::to_string(payload_json["et"].asUInt64())+ ","  : "") +
-											  (payload_json.isMember("dt") ?  "dt:" + std::to_string(payload_json["dt"].asUInt64())+ ","  : "") + 
+											  (payload_json.isMember("dt") ?  "dt:" + std::to_string(payload_json["dt"].asUInt64())+ ","  : "") +
 											  (payload_json.isMember("dp") ? "dp:" + std::to_string(payload_json["dp"].asUInt64())+ ","  : "") +
 											  (payload_json.isMember("access") ?  "access:" + std::to_string(payload_json["access"].asUInt64()) : "");
 		}
-		
-		
-		std::string timestamp_str 		= (metadata.isMember("timestamp") ? std::to_string(metadata["timestamp"].asUInt64()) : "0"); 
+
+
+		std::string timestamp_str 		= (metadata.isMember("timestamp") ? std::to_string(metadata["timestamp"].asUInt64()) : "0");
 
 		//content host id
 		size_t string_size = sender_id.size();
@@ -794,7 +794,7 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 
 		//get timestamp and convert to char array;
 		string_size = timestamp_str.size();
-		size_t timestamp_size = 19; 
+		size_t timestamp_size = 19;
 		uint8_t string_content_timestamp[timestamp_size];
 		size_t offset = timestamp_size-string_size;
 		if(offset > 0)
@@ -817,11 +817,11 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 			string_content_strategy[i] = strategy[i];
 		}
 		mobilityOperation->body.strategy.buf = string_content_strategy;
-		mobilityOperation->body.strategy.size = string_size;        
+		mobilityOperation->body.strategy.size = string_size;
 
 		//convert parameters string to char array
 		std::string strategy_params = strategy_params_str;
-		string_size = strategy_params.size();       
+		string_size = strategy_params.size();
 		uint8_t string_content_params[string_size];
 		for(size_t i=0; i < string_size; i++)
 		{

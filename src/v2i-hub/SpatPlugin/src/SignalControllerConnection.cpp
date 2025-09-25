@@ -22,10 +22,10 @@ namespace SpatPlugin {
     };
     bool SignalControllerConnection::initializeSignalControllerConnection(bool enable_spat) const {
         // TODO : Update to more generic TSC Initialization process that simply follows NTCIP 1202 version guidelines. Also
-        // set intersection ID in J2735_HEX SPAT Mode. The HEX payload should include a intersection ID.  
+        // set intersection ID in J2735_HEX SPAT Mode. The HEX payload should include a intersection ID.
         bool status = true;
         if (enable_spat)
-        {   
+        {
             // For binary SPAT a value of 2 enables original SPAT binary broadcast on the TSC and a value of 6 enables original SPAT plugin additional Pedestrian Information.
             // NOTE: Pedestrian information is untested.
             tmx::utils::snmp_response_obj enable_spat_resp;
@@ -33,7 +33,7 @@ namespace SpatPlugin {
             enable_spat_resp.type = tmx::utils::snmp_response_obj::response_type::INTEGER;
             status = status && scSNMPClient->process_snmp_request(NTCIP1202V2::ENABLE_SPAT_OID, tmx::utils::request_type::SET, enable_spat_resp);
         }
-    
+
         return status;
     };
 
@@ -43,7 +43,7 @@ namespace SpatPlugin {
         auto numBytes = spatPacketReceiver->TimedReceive(buf, SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
         if (numBytes > 0)
         {
-            // Convert Binary  buffer to SPAT pointer 
+            // Convert Binary  buffer to SPAT pointer
             Ntcip1202 ntcip1202;
             ntcip1202.setSignalGroupMappingList(this->signalGroupMapping);
             ntcip1202.copyBytesIntoNtcip1202(buf, numBytes);
@@ -54,10 +54,10 @@ namespace SpatPlugin {
             }
         }
         else {
-            throw tmx::utils::UdpServerRuntimeError("UDP Server error occured or socket time out.");
+            BOOST_THROW_EXCEPTION(tmx::utils::UdpServerRuntimeError("UDP Server error occured or socket time out."));
         }
     }
-    
+
     void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const {
         FILE_LOG(tmx::utils::logDEBUG1) << "Receiving J2725 HEX SPAT ..." << std::endl;
         auto payload = spatPacketReceiver->stringTimedReceive( UDP_SERVER_TIMEOUT_MS );
@@ -80,7 +80,7 @@ namespace SpatPlugin {
             }
         }
         else {
-            throw tmx::TmxException("Could not find UPER Payload in received SPAT UDP Packet!");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Could not find UPER Payload in received SPAT UDP Packet!"));
         }
     }
 

@@ -65,7 +65,7 @@ namespace tmx::utils {
         if (r != 0 || _addrInfo == NULL)
         {
             FILE_LOG(logERROR) << "Error getaddrinfo: " << strerror(errno) ;
-            throw UdpServerRuntimeError("invalid address or port for UDP socket: \"" + address + ":" + decimalPort + "\"");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("invalid address or port for UDP socket: \"" + address + ":" + decimalPort + "\""));
         }
 
         _socket = socket(_addrInfo->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
@@ -74,7 +74,7 @@ namespace tmx::utils {
             FILE_LOG(logERROR) << "Error socket: " << strerror(errno) ;
 
             freeaddrinfo(_addrInfo);
-            throw UdpServerRuntimeError("could not create UDP socket for: \"" + address + ":" + decimalPort + "\"");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("could not create UDP socket for: \"" + address + ":" + decimalPort + "\""));
         }
 
         r = bind(_socket, _addrInfo->ai_addr, _addrInfo->ai_addrlen);
@@ -83,7 +83,7 @@ namespace tmx::utils {
             FILE_LOG(logERROR) << "Error bind: " << strerror(errno) ;
             freeaddrinfo(_addrInfo);
             close(_socket);
-            throw UdpServerRuntimeError("could not bind UDP socket with: \"" + address + ":" + decimalPort + "\"");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("could not bind UDP socket with: \"" + address + ":" + decimalPort + "\""));
         }
     }
 
@@ -212,10 +212,10 @@ namespace tmx::utils {
             return ret;
         }
         else if ( num_of_bytes == 0 ) {
-            throw UdpServerRuntimeError("Received empty message!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Received empty message!"));
         }
         else {
-            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Listen timed out after 5 ms!"));
         }
         return "";
     }

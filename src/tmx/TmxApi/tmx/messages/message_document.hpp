@@ -24,7 +24,7 @@ public:
 		if (!result)
 		{
 			std::string err(result.description());
-			throw std::runtime_error("Unable to parse " + message.to_string() + ": " + err);
+			BOOST_THROW_EXCEPTION(std::runtime_error("Unable to parse " + message.to_string() + ": " + err));
 		}
 	}
 

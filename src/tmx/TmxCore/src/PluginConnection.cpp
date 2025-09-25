@@ -468,7 +468,7 @@ void PluginConnection::processConfigMessage(IvpMessage *msg)
 	catch (DbException &e)
 	{
 		LOG_FATAL("<Plugin System> MySQL: Unable to add global plugin configuration parameter to database [" << e.what() << "]");
-		throw PluginException("Unable to add global plugin configuration parameter [" + string(e.what()) + "]");
+		BOOST_THROW_EXCEPTION(PluginException("Unable to add global plugin configuration parameter [" + string(e.what()) + "]"));
 	}
 }
 

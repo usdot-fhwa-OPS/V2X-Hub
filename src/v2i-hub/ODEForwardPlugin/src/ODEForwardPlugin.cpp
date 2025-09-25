@@ -20,7 +20,7 @@
 
  namespace ODEForwardPlugin
  {
-			
+
  /**
   * Construct a new ODEForwardPlugin with the given name.
   *
@@ -78,15 +78,15 @@
 	GetConfigValue<string>("UDPServerIpAddress", _udpServerIpAddress);
 	GetConfigValue<string>("CommunicationMode", _communicationMode);
 	//Update communication mode
-	_communicationModeHelper->setMode(_communicationMode);	
+	_communicationModeHelper->setMode(_communicationMode);
 
 	//Throw an error if the communication mode is neither KAFKA not UDP
 	if(_communicationModeHelper->getCurrentMode() == CommunicationMode::UNSUPPORTED){
 		PLOG(logERROR) << "Unsuppported communication mode: " << _communicationMode;
-		throw TmxException("Unsuppported communication mode: " +_communicationMode);
+		BOOST_THROW_EXCEPTION(TmxException("Unsuppported communication mode: " +_communicationMode));
 	}
 	PLOG(logINFO) << "Communication Mode: " << _communicationMode;
-	
+
 	if(_communicationModeHelper->getCurrentMode()==CommunicationMode::UDP){
 		//Create UDP clients for different messages
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
@@ -111,13 +111,13 @@
 			} else {
 				PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka config options set successfully";
 			}
-			
+
 			kafka_producer = RdKafka::Producer::create(kafka_conf, error_string);
 			if (!kafka_producer) {
 				PLOG(logERROR) <<"ODEForwardPlugin: Creating kafka producer failed with error:" << error_string;
 				PLOG(logERROR) <<"ODEForwardPlugin: Exiting with exit code 1";
 				exit(1);
-			} 			
+			}
 			PLOG(logDEBUG) <<"ODEForwardPlugin: Kafka producer created";
 		}
 	}
@@ -213,7 +213,7 @@ void ODEForwardPlugin::sendBsmKafkaMessage(BsmMessage &msg, routeable_message &r
         if(_freqCounter++%_scheduleFrequency == 0) {
 			QueueKafkaMessage(kafka_producer, _BSMkafkaTopic, teststring);
 		}
-		
+
 		delete [] teststring;
 }
 
@@ -234,8 +234,8 @@ void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessag
         if(_freqCounter++%_scheduleFrequency == 0) {
 			QueueKafkaMessage(kafka_producer, _SPaTkafkaTopic, spatstring);
 		}
-		
-		delete [] spatstring;	
+
+		delete [] spatstring;
  }
 
  void ODEForwardPlugin::QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message)

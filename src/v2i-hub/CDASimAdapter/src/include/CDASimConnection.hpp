@@ -13,18 +13,18 @@
 
 namespace CDASimAdapter {
 
-    
+
     /**
      * @brief Object to hold UdpServers and UdpClients to facilitate V2X-Hub connection
      * with CDASim (CARMA-Simulation). This includes setting up servers and clients to foward
-     * V2X messages, listen for time sync messages from CDASim, and attempt Infrastructure 
+     * V2X messages, listen for time sync messages from CDASim, and attempt Infrastructure
      * registration with CDA Sim.
-     * 
+     *
      */
     class CDASimConnection {
         public:
             /**
-             * @brief Constructor. 
+             * @brief Constructor.
              * @param simulation_ip IP address of CARMA Simulation.
              * @param infrastructure_id Id of this infrastructure
              * @param simulation_registration_port Port on CARMA Simulation which handles infrastructure registration.
@@ -33,8 +33,8 @@ namespace CDASimAdapter {
              * @param v2x_port Port on which connecction listens for incoming v2x messages.
              * @param location Simulationed location of infrastructure.
              */
-            explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
-                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
+            explicit CDASimConnection( const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
+                                const uint sim_v2x_port, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port,
                                 const tmx::utils::Point &location, const std::string &sensor_json_file_path = "");
              /**
              * @brief Method to forward v2x message to CARMA Simulation
@@ -71,7 +71,7 @@ namespace CDASimAdapter {
              * @return string of message.
              */
             std::string consume_hex_server_message( const std::shared_ptr<tmx::utils::UdpServer> _server) const;
-            
+
             /**
              * @brief Method to consume incoming time sychronization message.
              * @return TimeSyncMessage.
@@ -84,9 +84,9 @@ namespace CDASimAdapter {
              */
             tmx::messages::SensorDetectedObject consume_sensor_detected_object_message() const;
             /**
-             * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if 
+             * @brief Perform handshake with CARMA-Simulation. Will return true on successful handshakes and false if
              * unsuccessful. As part of the handshake should set simulation_v2x_port for forwarding v2x messages to simulation,
-             * initialize UDP Servers and Clients for message forwarding, and set connected property. 
+             * initialize UDP Servers and Clients for message forwarding, and set connected property.
              * @param simulation_ip address of CARMA-Simulation instance.
              * @param simulation_registration_port infrastructure registration port of CARMA-Simulation instance.
              * @param local_ip address of infrastructure software (V2X-Hub).
@@ -96,9 +96,9 @@ namespace CDASimAdapter {
              * @return true if handshake successful and false if handshake unsuccessful.
              */
             bool carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
-                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port, 
+                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,  const uint v2x_port,
                                 const tmx::utils::Point &location);
-            
+
             /**
              * @brief Method to setup UDP Servers and Clients after handshake to facilate message forwarding.
              * @param simulation_ip address of CARMA-Simulation instance.
@@ -108,7 +108,7 @@ namespace CDASimAdapter {
              * @param simulation_v2x_port port on which CARMA-Simulation is listening for incoming v2x messages.
              * @return true if setup is successful and false otherwise.
              */
-            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, 
+            bool setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,
                                 const uint v2x_port, const uint simulation_v2x_port);
             /**
              * @brief Method to attempt to establish connection between CARMA-Simulation and infrastucture. Returns true if succesful
@@ -124,18 +124,18 @@ namespace CDASimAdapter {
 
         private:
             /**
-             * @brief helper method to generate JSON used for handshake connection with CARMA-Simulation instance. 
+             * @brief helper method to generate JSON used for handshake connection with CARMA-Simulation instance.
              * @param local_ip address of infrastructure software (V2X-Hub).
              * @param time_sync_port port assigned to listening for time sychronization messages from CARMA-Simulation.
              * @param v2x_port port assigned to listening for v2x messages from CARMA-Simulation.
              * @param location simulated location of infrastructure hardware.
              * @return true if handshake successful and false if handshake unsuccessful.
              */
-            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
-                                const tmx::utils::Point &location) const; 
-            
+            std::string get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port,
+                                const tmx::utils::Point &location) const;
+
             /**
-             * @brief Helper method to read JSON file and return resulting Json::Value. 
+             * @brief Helper method to read JSON file and return resulting Json::Value.
              * @param file_path A string of file path in the host machine to the JSON file.
              * @return A Json::Value object.
              * @throw std::invalid_argument exception if no file is found or file is not readable for provided path.
@@ -183,7 +183,7 @@ namespace CDASimAdapter {
             FRIEND_TEST(TestCDASimConnection, read_sensor_configuration_file);
 
 
-            
+
     };
 
 }

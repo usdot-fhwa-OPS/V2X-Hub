@@ -8,9 +8,9 @@ namespace ODEForwardPlugin
             auto messageBytes = hexToBytes(message);
             _udpClientsMap.at(messageType)->Send(messageBytes);
         }catch(const std::out_of_range& ex){
-            throw TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what()));
+            BOOST_THROW_EXCEPTION(TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what())));
         }catch(const std::invalid_argument& ex){
-            throw TmxException("Invalid hex string. Error message: " + std::string(ex.what()));
+            BOOST_THROW_EXCEPTION(TmxException("Invalid hex string. Error message: " + std::string(ex.what())));
         }
     }
 
@@ -35,7 +35,7 @@ namespace ODEForwardPlugin
         try{
             return _udpClientsMap.at(messageType);
         }catch(const std::out_of_range& ex){
-            throw TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what()));
+            BOOST_THROW_EXCEPTION(TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what())));
         }
     }
 

@@ -45,7 +45,7 @@ HistoryManager::HistoryManager(MessageRouter *messageRouter) : Plugin(messageRou
 		this->registerPlugin(info);
 	} catch (PluginException &e) {
 		LOG_FATAL(e.what());
-		throw e;
+		BOOST_THROW_EXCEPTION(e);
 	}
 
 	this->mPurgeThread = boost::thread(&HistoryManager::purgeThreadEntry, this);

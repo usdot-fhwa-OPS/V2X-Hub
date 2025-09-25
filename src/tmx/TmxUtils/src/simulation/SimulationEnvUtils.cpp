@@ -22,12 +22,12 @@ namespace tmx::utils::sim{
             else {
                 std::string config_name_str = config_name;
                 if ( required ) {
-                    throw TmxException("Required simulation config " + config_name_str + " not set!");
+                    BOOST_THROW_EXCEPTION(TmxException("Required simulation config " + config_name_str + " not set!"));
                 }
             }
         } else {
-            throw TmxException("V2X-Hub not in sumulation mode or config param name is null pointer!");
+            BOOST_THROW_EXCEPTION(TmxException("V2X-Hub not in sumulation mode or config param name is null pointer!"));
         }
         return "";
-    } 
+    }
 }

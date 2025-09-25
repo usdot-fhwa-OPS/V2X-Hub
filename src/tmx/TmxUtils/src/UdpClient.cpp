@@ -60,14 +60,14 @@ UdpClient::UdpClient(const std::string& address, int port)
 	int r(getaddrinfo(address.c_str(), decimalPort, &hints, &_addrInfo));
 	if (r != 0 || _addrInfo == NULL)
 	{
-		throw UdpClientRuntimeError(("invalid address or port: \"" + address + ":" + decimalPort + "\"").c_str());
+		BOOST_THROW_EXCEPTION(UdpClientRuntimeError(("invalid address or port: \"" + address + ":" + decimalPort + "\"").c_str()));
 	}
 
 	_socket = socket(_addrInfo->ai_family, SOCK_DGRAM | SOCK_CLOEXEC, IPPROTO_UDP);
 	if (_socket == -1)
 	{
 		freeaddrinfo(_addrInfo);
-		throw UdpClientRuntimeError(("could not create UDP socket for: \"" + address + ":" + decimalPort + "\"").c_str());
+		BOOST_THROW_EXCEPTION(UdpClientRuntimeError(("could not create UDP socket for: \"" + address + ":" + decimalPort + "\"").c_str()));
 	}
 }
 

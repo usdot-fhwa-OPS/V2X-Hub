@@ -48,7 +48,7 @@ void ThreadTimer::ChangeFrequency(uint id, std::chrono::milliseconds frequency)
 	if (id >= _periodicTicks.size())
 	{
 		PLOG(logERROR) << "ChangeFrequency: Invalid ID.";
-		throw tmx::TmxException("ChangeFrequency: Invalid ID");
+		BOOST_THROW_EXCEPTION(tmx::TmxException("ChangeFrequency: Invalid ID"));
 	}
 
 	_periodicTicks[id].Frequency = frequency;
@@ -61,7 +61,7 @@ void ThreadTimer::TriggerNow(uint id)
 	if (id >= _periodicTicks.size())
 	{
 		PLOG(logERROR) << "ChangeFrequency: Invalid ID.";
-		throw tmx::TmxException("ChangeFrequency: Invalid ID");
+		BOOST_THROW_EXCEPTION(tmx::TmxException("ChangeFrequency: Invalid ID"));
 	}
 	_periodicTicks[id].LastTickTime = steady_clock::now() - _periodicTicks[id].Frequency;
 

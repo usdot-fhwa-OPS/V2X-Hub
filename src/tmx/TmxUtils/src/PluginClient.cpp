@@ -400,7 +400,7 @@ void PluginClient::AddMessageFilter(const char *type, const char *subtype, IvpMs
 void PluginClient::SubscribeToMessages()
 {
 	if (_msgFilter == NULL)
-		throw PluginException("Error subscribing to messages.  No message filters were added.");
+		BOOST_THROW_EXCEPTION(PluginException("Error subscribing to messages.  No message filters were added."));
 
 	ivp_subscribe(_plugin, _msgFilter);
 	ivpSubscribe_destroyFilter(_msgFilter);
@@ -450,8 +450,8 @@ bool PluginClient::invoke_handler(string messageType, string messageSubType,
 
 void PluginClient::handleMessage(message &msg, routeable_message &src)
 {
-	throw PluginException(this->_name + " received unhandled message of Type=" +
-			src.get_type() + ", SubType=" + src.get_subtype());
+	BOOST_THROW_EXCEPTION(PluginException(this->_name + " received unhandled message of Type=" +
+			src.get_type() + ", SubType=" + src.get_subtype()));
 }
 
 std::string PluginClient::NewGuid()

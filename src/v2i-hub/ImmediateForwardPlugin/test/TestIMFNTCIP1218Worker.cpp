@@ -38,7 +38,7 @@ TEST(TestIMFNTCIP1218Worker, testClearImmediateForwardTable) {
         WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(true))).
         WillOnce(testing::DoAll(testing::SetArgReferee<2>(deleteRowRep),Return(false)));
 
-    
+
     clearImmediateForwardTable(mockClient.get());
 
 }
@@ -55,7 +55,7 @@ TEST(TestIMFNTCIP1218Worker, testSetRSUMode) {
     EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET , obj) ).Times(1).WillRepeatedly(testing::DoAll(
         testing::SetArgReferee<2>(obj),
         Return(true)));
-    
+
     setRSUMode(mockClient.get(), 2);
 }
 
@@ -70,7 +70,7 @@ TEST(TestIMFNTCIP1218Worker, testSetRSUModeFail) {
     EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET , obj) ).Times(1).WillRepeatedly(testing::DoAll(
         testing::SetArgReferee<2>(obj),
         Return(false)));
-    
+
     EXPECT_THROW(setRSUMode(mockClient.get(), 2), tmx::TmxException);
 }
 
@@ -150,7 +150,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_1[6].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[6].type, 'x');
     EXPECT_EQ(requests_1[6].value, "00");
- 
+
 
 }
 
@@ -230,7 +230,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     EXPECT_EQ(requests_1[6].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[6].type, 'x');
     EXPECT_EQ(requests_1[6].value, "80");
- 
+
 
 }
 
@@ -244,7 +244,7 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
 
     std::vector<snmp_request> requests_1;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
-    
+
     sendNTCIP1218ImfMessage(mockClient.get(), message, index);
     // Happening inside the sendNTCIP1218ImfMessage function
     // snmp_request payload {
@@ -269,7 +269,7 @@ TEST(TestIMFNTCIP1218Worker, waitForRSUModeStandby) {
     EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET , _) ).Times(1).WillRepeatedly(testing::DoAll(
         testing::SetArgReferee<2>(obj),
         Return(true)));
-    
+
     EXPECT_NO_THROW(waitForRSUModeStandby(mockClient.get(), 1, 1));
 }
 

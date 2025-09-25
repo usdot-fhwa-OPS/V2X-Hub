@@ -52,7 +52,7 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 		this->registerPlugin(info);
 	} catch (PluginException &e) {
 		LOG_FATAL(e.what());
-		throw e;
+		BOOST_THROW_EXCEPTION(e);
 	}
 
 	// Register for all messages.

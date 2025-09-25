@@ -16,7 +16,7 @@ namespace TelematicBridge
         }
         else
         {
-            throw TelematicBridgeException(natsStatus_GetText(s));
+            BOOST_THROW_EXCEPTION(TelematicBridgeException(natsStatus_GetText(s)));
         }
     }
 
@@ -44,7 +44,7 @@ namespace TelematicBridge
             }
             else
             {
-                throw TelematicBridgeException(natsStatus_GetText(s));
+                BOOST_THROW_EXCEPTION(TelematicBridgeException(natsStatus_GetText(s)));
             }
             sleep(1);
         }
@@ -116,7 +116,7 @@ namespace TelematicBridge
         }
         else
         {
-            throw TelematicBridgeException(natsStatus_GetText(s));
+            BOOST_THROW_EXCEPTION(TelematicBridgeException(natsStatus_GetText(s)));
         }
     }
 
@@ -204,7 +204,7 @@ namespace TelematicBridge
         bool parsingSuccessful = reader.parse(jsonStr, root);
         if (!parsingSuccessful)
         {
-            throw TelematicBridgeException("Error parsing the reply message");
+            BOOST_THROW_EXCEPTION(TelematicBridgeException("Error parsing the reply message"));
         }
         return root;
     }

@@ -278,7 +278,7 @@ private:
 				static_cast<void *>(&ss));
 			if (encode_rval.encoded == -1)
 			{
-				BOOST_THROW_EXCEPTION(J2735Exception("Unable to stream XML contents in memory: Unknown error"))	;		
+				BOOST_THROW_EXCEPTION(J2735Exception("Unable to stream XML contents in memory: Unknown error"));		
 			}
 			
 		}

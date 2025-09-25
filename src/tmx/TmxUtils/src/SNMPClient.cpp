@@ -80,7 +80,7 @@ namespace tmx::utils
                                                                             session.securityAuthKey,
                                                                             &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
             {
-                throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
+                BOOST_THROW_EXCEPTION(snmp_client_exception("Error generating Ku from authentication pass phrase."));
             }
         }
         // Defining and generating privacy config
@@ -116,7 +116,7 @@ namespace tmx::utils
                 privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
             }
             else if (securityLevel == "authPriv" ) {
-                throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
+                BOOST_THROW_EXCEPTION(snmp_client_exception("Invalid privacy protocol " + privProtocol + " !"));
             }
             // Passphrase used for privacy
             auto privPhrase_len = privPassPhrase.length();
@@ -131,7 +131,7 @@ namespace tmx::utils
                                                                                 session.securityPrivKey,
                                                                                 &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
             {
-                throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
+                BOOST_THROW_EXCEPTION(snmp_client_exception("Error generating Ku from privacy pass phrase."));
             }
         }
         session.timeout = timeout_;
@@ -143,7 +143,7 @@ namespace tmx::utils
         {
             PLOG(logERROR) << "Failed to establish session with target device";
             snmp_sess_perror("snmpget", &session);
-            throw snmp_client_exception("Failed to establish session with target device");
+            BOOST_THROW_EXCEPTION(snmp_client_exception("Failed to establish session with target device"));
         }
         else
         {
@@ -180,7 +180,7 @@ namespace tmx::utils
         }
         if (failures > 0) {
             snmp_close(ss);
-            throw snmp_client_exception("Encountered " + std::to_string(failures) + " failures while creating PDU");
+            BOOST_THROW_EXCEPTION(snmp_client_exception("Encountered " + std::to_string(failures) + " failures while creating PDU"));
         }
         int status = snmp_synch_response(ss, pdu, &response);
         PLOG(logDEBUG) << request_log; 

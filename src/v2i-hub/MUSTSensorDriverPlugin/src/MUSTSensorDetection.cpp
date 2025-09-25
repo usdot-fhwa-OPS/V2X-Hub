@@ -2,7 +2,7 @@
 
 namespace MUSTSensorDriverPlugin {
 
-    
+
     MUSTSensorDetection csvToDetection(const std::string &csv ) {
         MUSTSensorDetection detection;
         std::vector<std::string> csv_values;
@@ -14,7 +14,7 @@ namespace MUSTSensorDriverPlugin {
         }
         if (csv_values.size() != 9 ){
             FILE_LOG(tmx::utils::logERROR) << "Data " << csv << " does not match expected csv data format : \'class,x,y,heading,speed,size,confidence,trackId,timestamp\'" << std::endl;
-            throw tmx::TmxException("Failed to parse CSV MUST Detection data");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Failed to parse CSV MUST Detection data"));
         }
         // Read out CSV information
         detection.cl = fromStringToDetectionClassification(csv_values.at(0));
@@ -49,7 +49,7 @@ namespace MUSTSensorDriverPlugin {
         velocityCov[0][0] = tmx::messages::Covariance(velocityVariance);
         velocityCov[1][1] = tmx::messages::Covariance(velocityVariance);
         detectedObject.set_velocityCovariance(velocityCov);
-        
+
         detectedObject.set_sensorId(std::string(sensorId));
         detectedObject.set_projString(std::string(projString));
 
@@ -57,7 +57,7 @@ namespace MUSTSensorDriverPlugin {
     }
     DetectionClassification fromStringToDetectionClassification(const std::string &str) noexcept {
         try {
-            
+
             return stringToDetectionClassificationMap.at(str);
         }
         catch( const std::out_of_range &e ) {
@@ -74,14 +74,14 @@ namespace MUSTSensorDriverPlugin {
                 return rtn;
             }
        }
-       throw tmx::TmxException("DetectionClassification type is not registered in stringToDetectionClassificationMap!");
+       BOOST_THROW_EXCEPTION(tmx::TmxException("DetectionClassification type is not registered in stringToDetectionClassificationMap!"));
     }
 
 
 
     DetectionSize fromStringToDetectionSize(const std::string &str) noexcept {
         try {
-            
+
             return stringToDetectionSizeMap.at(str);
         }
         catch( const std::out_of_range &e) {

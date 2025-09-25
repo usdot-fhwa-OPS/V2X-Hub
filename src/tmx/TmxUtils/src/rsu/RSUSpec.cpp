@@ -6,7 +6,7 @@ namespace tmx::utils::rsu {
             return stringToRSUSpecMap.at(spec);
         }
         catch (const std::out_of_range& ) {
-            throw tmx::TmxException("RSU Specification " + spec + " is not supported!"); 
+            BOOST_THROW_EXCEPTION(tmx::TmxException("RSU Specification " + spec + " is not supported!"));
 
         }
     }
@@ -17,6 +17,6 @@ namespace tmx::utils::rsu {
                     return name;
                 }
         }
-        throw tmx::TmxException("RSU Specification is not supported!"); 
+        BOOST_THROW_EXCEPTION(tmx::TmxException("RSU Specification is not supported!")); 
     }
 }

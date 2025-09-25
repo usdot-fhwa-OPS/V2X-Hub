@@ -27,7 +27,7 @@ namespace ImmediateForward {
 
             }
         }
-        
+
     }
 
     void setRSUMode(tmx::utils::snmp_client* const client, unsigned int mode) {
@@ -36,7 +36,7 @@ namespace ImmediateForward {
         obj.val_int = mode;
         bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::SET, obj);
         if (!operational) {
-            throw tmx::TmxException("Failed to set RSU to operational mode");
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Failed to set RSU to operational mode"));
         }
     }
 
@@ -46,15 +46,15 @@ namespace ImmediateForward {
         do {
             bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET, obj);
             if (!operational) {
-                throw tmx::TmxException("Failed to get RSU to operational mode");
+                BOOST_THROW_EXCEPTION(tmx::TmxException("Failed to get RSU to operational mode"));
             }
             retry--;
             sleep(interval);
         }
         while ( retry > 0 && obj.val_int != 2);
         if ( obj.val_int != 2) {
-            throw tmx::TmxException("Failed to set RSU Mode to Standby(2)");
-        } 
+            BOOST_THROW_EXCEPTION(tmx::TmxException("Failed to set RSU Mode to Standby(2)"));
+        }
     }
 
     std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages, const std::string &payloadPlaceholder) {
@@ -67,10 +67,10 @@ namespace ImmediateForward {
             //create new row entry
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
             std::vector<snmp_request> requests;
-           
+
             size_t pos = message.psid.find("x");
             if (pos == std::string::npos) {
-                throw tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>");
+                BOOST_THROW_EXCEPTION(tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>"));
             }
             std::string messagePsidwithoutPrefix = message.psid.substr(pos+1);
             snmp_request psid{
@@ -123,7 +123,7 @@ namespace ImmediateForward {
             requests.assign({psid, channel,payload, enable, creatRow, priority, options});
             bool success = client->process_snmp_set_requests(requests);
             if ( !success) {
-                throw tmx::TmxException("Failed to create IMF row " + std::to_string(curIndex));
+                BOOST_THROW_EXCEPTION(tmx::TmxException("Failed to create IMF row " + std::to_string(curIndex)));
             }
             // Add message to table with index
             tmxMessageTypeToIMFTableIndex[message.sendType] = curIndex;
@@ -132,12 +132,12 @@ namespace ImmediateForward {
             curIndex++;
         }
 
-        
+
         return tmxMessageTypeToIMFTableIndex;
     }
 
     void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index){
-        
+
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
             'x',

@@ -61,7 +61,7 @@ void Plugin::registerPlugin(RegistrationInformation info)
 	if (info.pluginInfo.name.empty())
 	{
 		LOG_ERROR("EMPTY NAME: A plugin attempted to register with an empty name field");
-		throw PluginException("Plugin's name field is empty");
+		BOOST_THROW_EXCEPTION(PluginException("Plugin's name field is empty"));
 	}
 
 	bool isUniqueName = false;
@@ -75,7 +75,7 @@ void Plugin::registerPlugin(RegistrationInformation info)
 	if (!isUniqueName)
 	{
 		LOG_ERROR("<" << info.pluginInfo.name << "> DUPLICATE NAME: A plugin attempted to register with a name identical to an active plugin.");
-		throw PluginException("Another plugin is registered with the same name.");
+		BOOST_THROW_EXCEPTION(PluginException("Another plugin is registered with the same name."));
 	}
 
 	std::map<string, PluginConfigurationParameterEntry> configMap;
@@ -97,7 +97,7 @@ void Plugin::registerPlugin(RegistrationInformation info)
 
 	} catch (DbException &e) {
 		LOG_FATAL("<" << info.pluginInfo.name << "> MySQL: Unable to register plugin with database [" << e.what() << "]");
-		throw PluginException("Unable to register plugin with database [" + string(e.what()) + "]");
+		BOOST_THROW_EXCEPTION(PluginException("Unable to register plugin with database [" + string(e.what()) + "]"));
 	}
 
 	//TODO:...
@@ -122,7 +122,7 @@ void Plugin::subscribeForMessages(const std::vector<MessageFilterEntry> &filter)
 	{
 		string what = "Unable to subscribe for messages, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	MessageRouterClient::subscribeForMessages(filter);
@@ -135,7 +135,7 @@ void Plugin::setPluginStatus(std::string status)
 	{
 		string what = "Unable to set plugin status, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	LOG_INFO("<" << this->mInfo.pluginInfo.name << "> Setting plugin status: " << status);
@@ -145,7 +145,7 @@ void Plugin::setPluginStatus(std::string status)
 		context.setPluginStatus(this->mInfo.pluginInfo.id, status);
 	} catch (DbException &e) {
 		LOG_ERROR("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to set plugin status [" << e.what() << "]");
-		throw PluginException("Error setting plugin status [" + string(e.what()) + "]");
+		BOOST_THROW_EXCEPTION(PluginException("Error setting plugin status [" + string(e.what()) + "]"));
 	}
 }
 
@@ -155,7 +155,7 @@ void Plugin::setStatusItems(std::map<std::string, std::string> statusItems)
 	{
 		string what = "Unable to set plugin status items, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	vector<PluginStatusItem> dbEntries;
@@ -173,7 +173,7 @@ void Plugin::setStatusItems(std::map<std::string, std::string> statusItems)
 		context.setPluginStatusItems(this->mInfo.pluginInfo.id, dbEntries);
 	} catch (DbException &e) {
 		LOG_WARN("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to status entries [" << e.what() << "]");
-		throw PluginException("Error setting status entries [" + string(e.what()) + "]");
+		BOOST_THROW_EXCEPTION(PluginException("Error setting status entries [" + string(e.what()) + "]"));
 	}
 }
 
@@ -183,7 +183,7 @@ void Plugin::removeStatusItems(std::vector<std::string> itemKeys)
 	{
 		string what = "Unable to remove plugin status items, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	try {
@@ -191,7 +191,7 @@ void Plugin::removeStatusItems(std::vector<std::string> itemKeys)
 		context.removePluginStatusItems(this->mInfo.pluginInfo.id, itemKeys);
 	} catch (DbException &e) {
 		LOG_WARN("<" << this->mInfo.pluginInfo.name << "> MySQL: Unable to remove status items [" << e.what() << "]");
-		throw PluginException("Error setting status entries [" + string(e.what()) + "]");
+		BOOST_THROW_EXCEPTION(PluginException("Error setting status entries [" + string(e.what()) + "]"));
 	}
 }
 
@@ -201,7 +201,7 @@ void Plugin::addEventLogEntry(LogLevel level, std::string description)
 	{
 		string what = "Unable to add Event Log entry, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	dhlogging::Logger::addEventLogEntry(this->mInfo.pluginInfo.name, description, level);
@@ -215,7 +215,7 @@ void Plugin::sendMessageToRouter(IvpMessage *msg)
 	{
 		string what = "Unable to send message, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	if(msg->source)
@@ -238,7 +238,7 @@ std::string Plugin::getConfigValue(std::string key)
 	{
 		string what = "Unable to get configuration value, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	pthread_mutex_lock(&this->mConfigValueLock);
@@ -247,7 +247,7 @@ std::string Plugin::getConfigValue(std::string key)
 	pthread_mutex_unlock(&this->mConfigValueLock);
 
 	if(!itemIsValid)
-		throw UnknownConfigurationKeyException("Unknown configuration key '" + key + "'");
+		BOOST_THROW_EXCEPTION(UnknownConfigurationKeyException("Unknown configuration key '" + key + "'"));
 
 	return item->second.value;
 }
@@ -259,7 +259,7 @@ std::map<std::string, PluginConfigurationParameterEntry> Plugin::getAllConfigVal
 	{
 		string what = "Unable to get configuration value, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	pthread_mutex_lock(&this->mConfigValueLock);
@@ -275,7 +275,7 @@ void Plugin::setConfigValue(std::string key, std::string value)
 	{
 		string what = "Unable to set configuration value, plugin is not registered";
 		LOG_WARN("<" << string(this->mRegistered ? this->mInfo.pluginInfo.name : "Unknown") << "> " << what);
-		throw PluginNotRegisteredException(what);
+		BOOST_THROW_EXCEPTION(PluginNotRegisteredException(what));
 	}
 
 	pthread_mutex_lock(&this->mConfigValueLock);
@@ -284,7 +284,7 @@ void Plugin::setConfigValue(std::string key, std::string value)
 	pthread_mutex_unlock(&this->mConfigValueLock);
 
 	if(!itemIsValid)
-		throw UnknownConfigurationKeyException("Unknown configuration key '" + key + "'");
+		BOOST_THROW_EXCEPTION(UnknownConfigurationKeyException("Unknown configuration key '" + key + "'"));
 
 	PluginConfigurationParameterEntry newEntry = item->second;
 	newEntry.value = value;

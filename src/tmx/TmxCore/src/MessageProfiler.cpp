@@ -43,7 +43,7 @@ MessageProfiler::MessageProfiler(MessageRouter *messageRouter) : Plugin(messageR
 	catch (PluginException &e)
 	{
 		LOG_FATAL(e.what());
-		throw e;
+		BOOST_THROW_EXCEPTION(e);
 	}
 
 	// Register for all messages.

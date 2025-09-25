@@ -8,7 +8,7 @@ namespace MapPlugin {
 		AddMessageFilter(IVPMSG_TYPE_SIGCONT, "ACT", IvpMsgFlags_None);
 		SubscribeToMessages();
 		errThrottle.set_Frequency(std::chrono::minutes(30));
-		
+
 	}
 
 	void MapPlugin::UpdateConfigSettings() {
@@ -132,8 +132,8 @@ namespace MapPlugin {
 
 		std::unique_ptr<tmx::messages::MapDataEncodedMessage> msg;
 		int activeAction = -1;
-		
-		
+
+
 
 		while (_plugin->state != IvpPluginState_error) {
 			if (_isMapFileNew) {
@@ -227,7 +227,7 @@ namespace MapPlugin {
 			PLOG(logDEBUG4) << "Checking size of: " << tempFrame;
 			auto headerSize = (tempFrame.size() > 254) ? 8 : 6;
 			newFrame.erase(0, headerSize);
-			
+
 			PLOG(logDEBUG4) << "Payload without MessageFrame: " << newFrame;
 			return newFrame;
 		}
@@ -246,7 +246,7 @@ namespace MapPlugin {
 			if (!in)
 			{
 				PLOG(logERROR) << "Failed to open file: " << fn.c_str();
-				throw std::ios_base::failure("Failed to open file: " + fn);
+				BOOST_THROW_EXCEPTION(std::ios_base::failure("Failed to open file: " + fn));
 			}
 			else
 			{
@@ -292,7 +292,7 @@ namespace MapPlugin {
 							inType = "TXT";
 						else if (fn.substr(fn.size() - 4) == ".xml")
 							inType = "XML";
-						else 
+						else
 							PLOG(logWARNING) << "Incorrect MapFile extension entered!";
 
 						if (inType == "ISD")

@@ -3,17 +3,17 @@
 
 using namespace tmx::utils;
 
-namespace CDASimAdapter{ 
+namespace CDASimAdapter{
     CDASimConnection::CDASimConnection(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, const uint sim_v2x_port,
-                                                        const std::string &local_ip,  const uint time_sync_port,const uint simulated_interaction_port, const uint v2x_port, 
-                                                        const Point &location, const std::string &sensor_json_file_path ) : 
+                                                        const std::string &local_ip,  const uint time_sync_port,const uint simulated_interaction_port, const uint v2x_port,
+                                                        const Point &location, const std::string &sensor_json_file_path ) :
                                                         _simulation_ip(simulation_ip), _infrastructure_id(infrastructure_id), _simulation_registration_port(simulation_registration_port),
                                                         _simulation_v2x_port(sim_v2x_port), _local_ip(local_ip), _time_sync_port(time_sync_port), _simulated_interaction_port(simulated_interaction_port),_v2x_port(v2x_port),
                                                         _location(location) ,_sensor_json_file_path(sensor_json_file_path)  {
-        PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;                                                     
-    } 
+        PLOG(logDEBUG) << "CARMA-Simulation connection initialized." << std::endl;
+    }
 
- 
+
 
     bool CDASimConnection::is_connected() const {
         return _connected;
@@ -34,13 +34,13 @@ namespace CDASimAdapter{
     }
 
 
-    std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
+    std::string CDASimConnection::get_handshake_json(const std::string &infrastructure_id, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port,
                                 const tmx::utils::Point &location) const
 
     {
-        Json::Value message;   
+        Json::Value message;
         std::string message_str = "";
-        
+
         message["rxMessageIpAddress"] = local_ip;
         message["infrastructureId"] = infrastructure_id;
         message["rxMessagePort"] = v2x_port;
@@ -59,7 +59,7 @@ namespace CDASimAdapter{
                 message["sensors"] = sensors_json_v;
             }
             catch(const std::invalid_argument &e) {
-                PLOG(tmx::utils::logWARNING) << "Error occured reading sensor configuration file: " << e.what() 
+                PLOG(tmx::utils::logWARNING) << "Error occured reading sensor configuration file: " << e.what()
                     << std::endl << "Not sending any Sensor Registration information with CDASim Infrastructure Registration!";
             }
         }
@@ -71,15 +71,15 @@ namespace CDASimAdapter{
         return message_str;
     }
 
-    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port, 
-                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port, 
-                                const tmx::utils::Point &location) 
+    bool CDASimConnection::carma_simulation_handshake(const std::string &simulation_ip, const std::string &infrastructure_id, const uint simulation_registration_port,
+                                const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, const uint v2x_port,
+                                const tmx::utils::Point &location)
     {
-        // Create JSON message with the content 
+        // Create JSON message with the content
         std::string payload = "";
-    
+
         payload = get_handshake_json(infrastructure_id, local_ip, time_sync_port, simulated_interaction_port, v2x_port, location);
-    
+
         try
         {
             carma_simulation_registration_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_registration_port);
@@ -94,24 +94,24 @@ namespace CDASimAdapter{
         return true;
     }
 
-    bool CDASimConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port, 
+    bool CDASimConnection::setup_udp_connection(const std::string &simulation_ip, const std::string &local_ip,  const uint time_sync_port, const uint simulated_interaction_port,
                                 const uint v2x_port, const uint simulation_v2x_port) {
         try {
-            // Iniitialize CARMA Simulation UDP Server and Client to foward V2X messages between CARMA simulation 
+            // Iniitialize CARMA Simulation UDP Server and Client to foward V2X messages between CARMA simulation
             // and CARMA Simulation Infrastructure Adapter.
             carma_simulation_listener = std::make_shared<UdpServer>( local_ip, v2x_port );
 
             carma_simulation_publisher = std::make_shared<UdpClient>( simulation_ip, simulation_v2x_port);
-            // Initialize V2X-Hub UDP Server and Client to foward V2X messages between CARMA Simulation Infrastructure 
+            // Initialize V2X-Hub UDP Server and Client to foward V2X messages between CARMA Simulation Infrastructure
             // Adapter and V2X-Hub.
             // TODO: Using TMX Utils get immediate forward port
             immediate_forward_listener = std::make_shared<UdpServer>( local_ip, 5678);
             // TODO: Using TMX Utils get message receiver port
             message_receiver_publisher = std::make_shared<UdpClient>( local_ip, 8765);
             // Initialize UDP Server for listening for incoming CARMA-Simulation time synchronization.
-            PLOG(logDEBUG) << "Creating UDPServer for Time Sync Messages: " << local_ip << ":" << std::to_string(time_sync_port) << "\n" 
-                            << "Creating UDPServer for Simulated External Object detection: " << local_ip << ":" << std::to_string(simulated_interaction_port) << "\n" 
-                            << "Creating UDPServer for CDA V2X message forwarding: " << local_ip << ":" << std::to_string(v2x_port) << "\n" 
+            PLOG(logDEBUG) << "Creating UDPServer for Time Sync Messages: " << local_ip << ":" << std::to_string(time_sync_port) << "\n"
+                            << "Creating UDPServer for Simulated External Object detection: " << local_ip << ":" << std::to_string(simulated_interaction_port) << "\n"
+                            << "Creating UDPServer for CDA V2X message forwarding: " << local_ip << ":" << std::to_string(v2x_port) << "\n"
                             << "Creating UDPClient for CDA V2X message forwarding:  " << simulation_ip << ":" << std::to_string(simulation_v2x_port) << "\n"
                             << "Creating UDPServer for Immediate Forward " << local_ip << ":" << std::to_string(5678) << "\n"
                             << "Creating UDPClient for Message Receiver " << local_ip << ":" << std::to_string(8765) << std::endl;
@@ -138,7 +138,7 @@ namespace CDASimAdapter{
             msg.set_contents( str_msg );
         }
         else {
-            throw UdpServerRuntimeError("Time Sync UDP Server is not initialized");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Time Sync UDP Server is not initialized"));
         }
         return msg;
 
@@ -155,7 +155,7 @@ namespace CDASimAdapter{
         }
         else
         {
-            throw UdpServerRuntimeError("Simulated External Object UDP Server is not initialized.");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Simulated External Object UDP Server is not initialized."));
         }
         return externalObj;
     }
@@ -174,10 +174,10 @@ namespace CDASimAdapter{
             return ret;
         }
         else if ( num_of_bytes == 0 ) {
-            throw UdpServerRuntimeError("Received empty message!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Received empty message!"));
         }
         else {
-            throw UdpServerRuntimeError("Listen timed out after 5 ms!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Listen timed out after 5 ms!"));
         }
         return "";
     }
@@ -189,7 +189,7 @@ namespace CDASimAdapter{
             return msg;
         }
         else {
-            throw UdpServerRuntimeError("CARMA Simulation UDP Server is not initialized!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("CARMA Simulation UDP Server is not initialized!"));
         }
         return "";
 
@@ -201,7 +201,7 @@ namespace CDASimAdapter{
             return msg;
         }
         else {
-            throw UdpServerRuntimeError("Immediate Forward UDP Server is not initialized!");
+            BOOST_THROW_EXCEPTION(UdpServerRuntimeError("Immediate Forward UDP Server is not initialized!"));
         }
         return "";
 
@@ -211,12 +211,12 @@ namespace CDASimAdapter{
 
     void CDASimConnection::forward_message( const std::string &msg, const std::shared_ptr<UdpClient> _client ) const {
         if ( !msg.empty() && _client) {
-            PLOG(logDEBUG) << "Sending UDP msg " << msg << " to host " << _client->GetAddress() 
+            PLOG(logDEBUG) << "Sending UDP msg " << msg << " to host " << _client->GetAddress()
                 << ":" << _client->GetPort() << "." << std::endl;
             int ret =_client->Send(msg);
             if ( ret < 0) {
-                throw UdpClientRuntimeError(("Failed to send message " + msg + " to " + _client->GetAddress() + 
-                            ":" + std::to_string(_client->GetPort()) + " with error code : " + std::to_string(errno)).c_str());
+                BOOST_THROW_EXCEPTION(UdpClientRuntimeError(("Failed to send message " + msg + " to " + _client->GetAddress() +
+                            ":" + std::to_string(_client->GetPort()) + " with error code : " + std::to_string(errno)).c_str()));
             }
         }
         else if ( msg.empty() ) {
@@ -241,7 +241,7 @@ namespace CDASimAdapter{
         in_strm.open(file_path, std::ifstream::binary);
         if(!in_strm.is_open())
         {
-            throw std::invalid_argument("File cannot be opened. File path: " + file_path);
+            BOOST_THROW_EXCEPTION(std::invalid_argument("File cannot be opened. File path: " + file_path));
         }
         std::string line;
         std::stringstream ss;
@@ -261,7 +261,7 @@ namespace CDASimAdapter{
         JSONCPP_STRING err;
         if(!reader->parse(json_str.c_str(), json_str.c_str() + json_str.length(), &json_v, &err))
         {
-            throw std::invalid_argument("Error parsing JSON from string: " + json_str);
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Error parsing JSON from string: " + json_str));
         }
         return json_v;
     }
@@ -274,17 +274,17 @@ namespace CDASimAdapter{
             "ref": {
                 "type": "CARTESIAN",
                 "location": {
-                    "x": 1.0, 
-                    "y": 2.0, 
-                    "z": -3.2 
+                    "x": 1.0,
+                    "y": 2.0,
+                    "z": -3.2
                 },
-                "orientation": { 
+                "orientation": {
                     "yaw": 0.0,
                     "pitch": 0.0,
                     "roll": 0.0
                     }
             }
-        } 
+        }
         ] */
         auto sensor_configuration = read_json_file(file_path);
         Json::Value sensors_registration;
@@ -306,9 +306,9 @@ namespace CDASimAdapter{
             "sensorId": "SomeID",
             "type": "SemanticLidar",
             "location": {
-                "x": 1.0, 
-                "y": 2.0, 
-                "z": -3.2 
+                "x": 1.0,
+                "y": 2.0,
+                "z": -3.2
                 },
                 "orientation": {
                 "yaw": 0.0,
