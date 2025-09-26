@@ -156,7 +156,11 @@ void PluginMonitor::procSetupBeforeExec(boost::process::executor &e)
 
 	setgroups(groupSize, groups);
 
-	setuid(PluginMonitor::sPluginUid);
+	const int rc = setuid(PluginMonitor::sPluginUid);
+	if (rc != 0)
+	{
+		BOOST_THROW_EXCEPTION(std::runtime_error("setuid(" + std::to_string(PluginMonitor::sPluginUid) + "): " + strerror(errno)));
+	}
 }
 
 void PluginMonitor::monitorThreadEntry()
