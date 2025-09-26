@@ -113,7 +113,7 @@ bool TmxControl::start(pluginlist &plugins, ...)
 			PLOG(logDEBUG1) << "Changing directory to " << dir;
 			if (chdir(dir.c_str()) < 0)
 			{
-				cerr << strerror(errno) << endl;
+				cerr << "chdir(" << dir.c_str() << ")" << strerror(errno) << endl;
 				continue;
 			}
 

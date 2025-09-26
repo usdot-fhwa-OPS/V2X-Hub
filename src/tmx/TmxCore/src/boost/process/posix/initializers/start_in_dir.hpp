@@ -24,7 +24,10 @@ public:
     template <class PosixExecutor>
     void on_exec_setup(PosixExecutor&) const
     {
-        ::chdir(s_.c_str());
+        if (::chdir(s_.c_str()) != 0)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("chdir(" + s_ + "): " + strerror(errno)));
+        }
     }
 
 private:

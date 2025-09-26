@@ -8,6 +8,7 @@
 #include "TmxControl.h"
 
 #include <boost/filesystem.hpp>
+#include <boost/throw_exception.hpp>
 #include <libgen.h>
 #include <System.h>
 #include <sys/stat.h>
@@ -99,7 +100,10 @@ bool TmxControl::plugin_install() {
 		// A .deb is just an ar archive with the tar file inside it
 		boost::filesystem::path canonicalPath = boost::filesystem::canonical(file, cwd);
 
-		chdir(temp.c_str());
+		if (chdir(temp.c_str()) != 0)
+		{
+			BOOST_THROW_EXCEPTION(std::runtime_error(std::string("chdir(") + temp.c_str() + "): " + strerror(errno)));
+		}
 		PLOG(logDEBUG) << "Writing in " << temp;
 
 		cmd = "ar -x ";
@@ -134,7 +138,10 @@ bool TmxControl::plugin_install() {
 			return false;
 		}
 
-		chdir("/");
+		if (chdir("/") != 0)
+		{
+			BOOST_THROW_EXCEPTION(std::runtime_error(std::string("chdir(/): ") + strerror(errno)));
+		}
 
 		// Path in the Debian archive is relative from /.
 		// Therefore, do not use the -C option
@@ -189,7 +196,10 @@ bool TmxControl::plugin_install() {
 	PLOG(logDEBUG) << "Installing files with " << cmd;
 	System::ExecCommand(cmd.c_str());
 
-	chdir(cwd.c_str());
+	if (chdir(cwd.c_str()) != 0)
+	{
+		BOOST_THROW_EXCEPTION(std::runtime_error(std::string("chdir(") + cwd.c_str() + "): " + strerror(errno)));
+	}
 
 	if (!temp.empty()) {
 		// Remove the temp file
