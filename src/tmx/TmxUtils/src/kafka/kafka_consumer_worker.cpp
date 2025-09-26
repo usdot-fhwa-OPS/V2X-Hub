@@ -212,11 +212,15 @@ namespace tmx::utils
         }
         eof_cnt = 0; /* FIXME: Won't work with COOPERATIVE */
 
-        if (error) {
+        if (error)
+        {
             FILE_LOG(logWARNING) << "Incremental assign failed: " << error->str() << std::endl;
             delete error;
-        } else if (ret_err)
-            FILE_LOG(logWARNING) << "Assign failed: " << error->str() << std::endl ;
+        }
+        else if (ret_err)
+        {
+            FILE_LOG(logWARNING) << "Assign failed!" << std::endl;
+        }
     }
 
     void consumer_event_cb::event_cb (RdKafka::Event &event) {
