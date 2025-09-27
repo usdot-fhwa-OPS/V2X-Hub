@@ -55,7 +55,7 @@
 #define USER_ADD_QUERY "\
 	INSERT INTO IVP.user \
 	(username, password, accessLevel ) \
-	SELECT DISTINCT ?, ?, ? \
+	SELECT DISTINCT ?, SHA2(?,256), ? \
 	FROM DUAL \
 	WHERE NOT EXISTS ( \
 	SELECT username FROM IVP.user \
