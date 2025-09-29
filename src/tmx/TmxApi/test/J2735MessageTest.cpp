@@ -28,64 +28,49 @@ namespace unit_test {
 	
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
+	// Using calloc is safe because unlike malloc it initializes all bytes to zero
+	// malloc will leave garbage values in the memory block
+	TestMessage03 *message_1 = (TestMessage03*) calloc(1,sizeof(TestMessage03));
+	std::string sender_id = "sender_id";
+	message_1->header.hostStaticId.buf=NULL;
+	bool create_octet_failed = OCTET_STRING_fromString(&(message_1->header.hostStaticId), sender_id.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	/**
-	 * Populate MobilityHeader 
-	 */
-	
-	char* my_str = (char *) "sender_id";
-	uint8_t * my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	message_1->header.targetStaticId.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->header.targetStaticId), sender_id.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string host_bsm_id = "bsm_idXX";
+	message_1->header.hostBSMId.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->header.hostBSMId), host_bsm_id.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string plan_id = "00000000-0000-0000-0000-000000000000";
+	message_1->header.planId.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->header.planId), plan_id.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
+	unsigned long timestamp_ll = 1758058664149615743;
 	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	message_1->header.timestamp.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->header.timestamp), timestamp_str.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	/**
-	 * Populate MobilityOperation Body 
-	 */
-	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.operationParams.buf = my_bytes;
-	message->body.operationParams.size = strlen(my_str);
+	std::string operation_params = "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	message_1->body.operationParams.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->body.operationParams), operation_params.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	my_str = (char *) "carma3/Geofence_Acknowledgement";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str);
+	std::string strategy = "carma3/Geofence_Acknowledgement";
+	message_1->body.strategy.buf=NULL;
+	create_octet_failed = OCTET_STRING_fromString(&(message_1->body.strategy), strategy.c_str());
+	ASSERT_FALSE(create_octet_failed);
 
-	tmx::messages::tsm3EncodedMessage tsm3EncodeMessage;
-	tmx::messages::tsm3Message*  _tsm3Message = new tmx::messages::tsm3Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm3Message->get_j2735_data());
-	tsm3EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage03>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-		
-	free(message);
-	delete my_bytes_1;
-	delete my_str_1;
-	free(frame_msg.get_j2735_data().get());	
-	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
+	TmxJ2735Message<TestMessage03, tmx::JSON> j2735Message(message_1);
+	auto jerEncodedMessage = j2735Message.to_string();
+	std::string correctJson = "{\"header\":{\"hostStaticId\":\"sender_id\",\"targetStaticId\":\"sender_id\",\"hostBSMId\":\"bsm_idXX\",\"planId\":\"00000000-0000-0000-0000-000000000000\",\"timestamp\":\"1758058664149615743\"},\"body\":{\"strategy\":\"carma3\\/Geofence_Acknowledgement\",\"operationParams\":\"traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text\"}}\n";
+	EXPECT_EQ(correctJson,jerEncodedMessage );
+	
 }
 
 
@@ -166,8 +151,8 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	message->body.trajectoryStart->timestamp.size = strlen(my_str_1);
 		
 	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
-	tmx::messages::tsm0Message*  _tsm0Message = new tmx::messages::tsm0Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message->get_j2735_data());
+	tmx::messages::tsm0Message  _tsm0Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message.get_j2735_data());
 	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
 
@@ -175,7 +160,6 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	delete my_bytes_1;
 	delete my_str_1;
 	free(offset);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
@@ -224,14 +208,13 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	message->body.urgency = 1;
 
 	tmx::messages::tsm1EncodedMessage tsm1EncodeMessage;
-	tmx::messages::tsm1Message*  _tsm1Message = new tmx::messages::tsm1Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message->get_j2735_data());
+	tmx::messages::tsm1Message  _tsm1Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message.get_j2735_data());
 	tsm1EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage01>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
 	free(message);
 	delete my_bytes_1;
 	delete my_str_1;
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
 
@@ -286,12 +269,11 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	message->coreData.size.width = 300;
 
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
-	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	tmx::messages::BsmMessage  _bsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage.get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
 	free(message);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
 	//Decode the encoded BSM
 	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
@@ -391,11 +373,10 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	jer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
 	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
-	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	tmx::messages::BsmMessage  _bsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage.get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
 	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
 	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
@@ -562,7 +543,6 @@ TEST (J2735MessageTest, EncodeSrm)
 	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
 	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
@@ -644,7 +624,6 @@ TEST(J2735MessageTest, EncodeSDSM)
 	tmx::messages::MessageFrameMessage frame_msg(_sdsmMessage->get_j2735_data());
 	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SdsmMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
 	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
 	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
