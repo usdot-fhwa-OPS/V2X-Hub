@@ -102,7 +102,7 @@ namespace SpatPlugin {
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {
         auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
-        auto spat = std::make_shared<SPAT>();
+        auto spat = (SPAT*)calloc(1, sizeof(SPAT));
 		signalControllerConnection->receiveBinarySPAT(spat, 1721238398773);
         /**
          * <SPAT>
@@ -335,11 +335,15 @@ namespace SpatPlugin {
         EXPECT_EQ(12, spat->intersections.list.array[0]->states.list.array[11]->signalGroup);
         EXPECT_EQ(3, spat->intersections.list.array[0]->states.list.array[11]->state_time_speed.list.array[0]->eventState);
         EXPECT_EQ(28027, spat->intersections.list.array[0]->states.list.array[11]->state_time_speed.list.array[0]->timing->minEndTime);
+        // Free the allocated memory for the SPAT structure
+        ASN_STRUCT_FREE(asn_DEF_SPAT, spat);
     }
     TEST_F(TestSignalControllerConnection, receiveBinarySPATException) {
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll( Return(0)));
-        auto spat = std::make_shared<SPAT>();
+        auto spat = (SPAT*)calloc(1, sizeof(SPAT));
 		EXPECT_THROW(signalControllerConnection->receiveBinarySPAT(spat, 1721238398773), tmx::utils::UdpServerRuntimeError);
+        // Free the allocated memory for the SPAT structure
+        ASN_STRUCT_FREE(asn_DEF_SPAT, spat);
     }
 
     TEST_F(TestSignalControllerConnection, receiveUPERSPAT) {

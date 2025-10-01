@@ -116,15 +116,23 @@ namespace SpatPlugin {
 					if ( spatMode != "BINARY"){
 						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
 					}
-					auto spat_ptr = std::make_shared<SPAT>();
+					auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
 					PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
-					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
-					tmx::messages::SpatMessage _spatMessage(spat_ptr);
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-					spatEncoded_ptr->initialize(_spatMessage,"", 0U, IvpMsgFlags_RouteDSRC);
+					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+					
+					tmx::messages::SpatMessage _spatMessage(*spat_ptr);
+					MessageFrameMessage frame(_spatMessage.get_j2735_data());
+					spatEncoded_ptr->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
 					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
 					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
-					BroadcastMessage(*rMsg);
+					BroadcastMessage(_spatMessage);
+					// Recursively free SPAT struct 
+					ASN_STRUCT_FREE(asn_DEF_SPAT, spat_ptr);
+					// TODO fix MessageFrameMessage destructor to properly free internal SPAT pointer
+					free(frame.get_j2735_data().get());
+
+				
 				}
 			}
 			catch (const UdpServerRuntimeError &e) {
