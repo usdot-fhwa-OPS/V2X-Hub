@@ -125,6 +125,7 @@ namespace SpatPlugin {
 					MessageFrameMessage frame(_spatMessage.get_j2735_data());
 					spatEncoded_ptr->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
 					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
 					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
 					BroadcastMessage(*rMsg);
 					// Recursively free SPAT struct 
