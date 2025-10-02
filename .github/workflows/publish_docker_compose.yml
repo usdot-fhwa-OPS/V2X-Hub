@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: usdotfhwaops/v2xhub
+          images: usdotfhwaops/v2xhub-application
           flavor: |
             latest=false
           tags: |
@@ -41,4 +41,4 @@ jobs:
       - name: publish docker compose
         run: |
           cd configuration/
-          docker compose publish --with-env --yes usdotfhwaops/v2xhub-application:${{ steps.meta.outputs.tags }}
+          docker compose publish --with-env --yes ${{ steps.meta.outputs.tags }}
