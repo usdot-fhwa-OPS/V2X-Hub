@@ -19,17 +19,17 @@ jobs:
           submodules: recursive
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3.11.1
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3.6.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v5.8.0
         with:
           images: usdotfhwaops/v2xhub
           flavor: |
@@ -40,4 +40,4 @@ jobs:
       - name: publish docker compose
         run: |
           cd configuration/
-          docker compose publish --with-env --yes usdotfhwaops/v2xhub:${{ steps.meta.outputs.tags }}
+          docker compose publish --with-env --yes usdotfhwaops/v2xhub-application:${{ steps.meta.outputs.tags }}
