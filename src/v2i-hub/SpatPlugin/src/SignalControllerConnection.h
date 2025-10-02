@@ -94,7 +94,7 @@ namespace SpatPlugin {
              * @param spat an empty SPaT pointer to which the SPAT data will be written.
              * @param timeMs current time in ms from epoch to use for message timestamp.
              */
-            void receiveBinarySPAT( SPAT *spat, uint64_t timeMs) const;
+            void receiveBinarySPAT( SPAT * const spat, uint64_t timeMs) const;
             /**
              * @brief Method to receive SPaT data in UPER Hex format from TSC.
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.

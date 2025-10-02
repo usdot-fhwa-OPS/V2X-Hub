@@ -37,7 +37,7 @@ namespace SpatPlugin {
         return status;
     };
 
-    void SignalControllerConnection::receiveBinarySPAT(SPAT *spat, uint64_t timeMs ) const {
+    void SignalControllerConnection::receiveBinarySPAT(SPAT * const spat, uint64_t timeMs ) const {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
         char buf[SPAT_BINARY_BUFFER_SIZE];
         auto numBytes = spatPacketReceiver->TimedReceive(buf, SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
