@@ -10,7 +10,7 @@ on:
       - '*'
 
 jobs:
-  build-amd64:
+  publish-docker-compose:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -40,4 +40,4 @@ jobs:
       - name: publish docker compose
         run: |
           cd configuration/
-          docker compose publish usdotfhwaops/v2xhub:${{ steps.meta.outputs.tags }}
+          docker compose publish --with-env --yes usdotfhwaops/v2xhub:${{ steps.meta.outputs.tags }}
