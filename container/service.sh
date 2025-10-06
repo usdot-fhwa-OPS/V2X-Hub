@@ -17,8 +17,12 @@ then
     echo "Enabling CDASim Adapter for Simulation Integration!"
     tmxctl --plugin CDASimAdapter --enable
 fi
-# Add V2XHub admin user (Will not add if user already exists)
-tmxctl --user-add --username "$V2XHUB_USERNAME" --password "$V2XHUB_PASSWORD" --access-level 3
+# If V2XHUB_USER and V2XHUB_PASSWORD are set, create the user
+if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
+    echo "Creating V2X Hub Admin User: $V2XHUB_USERNAME"
+    # Add V2XHub admin user (Will not add if user already exists)
+    tmxctl --user-add --username "$V2XHUB_USERNAME" --password "$V2XHUB_PASSWORD" --access-level 3
+fi
 #
 tmxcore
 
