@@ -9,7 +9,6 @@ SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
 SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
 COMPOSE_PROFILES=""
-MYSQL_PASSWORD_DEFAULT="changeme"
 echo "Initializing Docker Environment for V2X Hub..."
 # Retrieve available release candidates
 release_candidates=$(git branch -r | grep 'origin/release/' | sed 's|origin/||' | sed 's/release\//release-/g')
@@ -73,7 +72,7 @@ if [[ $SIMULATION_MODE == "TRUE" ]]; then
     SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-$SENSOR_JSON_FILE_PATH_DEFAULT}
 fi
 # MySQL (IVP) User Password
-read -r -p "MYSQL PASSWORD (TRUE/FALSE, or press Enter to use default as $MYSQL_PASSWORD_DEFAULT): " MYSQL_PASSWORD
+read -r -s -p "MYSQL PASSWORD (TRUE/FALSE, or press Enter to use default as $MYSQL_PASSWORD_DEFAULT): " MYSQL_PASSWORD
 MYSQL_PASSWORD=${MYSQL_PASSWORD:-$MYSQL_PASSWORD_DEFAULT}
 # V2X Hub Username
 read -r -p "V2X Hub Admin Username (or press Enter to use default as v2xadmin): " V2XHUB_USERNAME

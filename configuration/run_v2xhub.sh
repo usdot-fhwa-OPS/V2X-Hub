@@ -13,9 +13,6 @@ sudo docker compose up -d
 # Update permissions for tmx logs created by plugins
 sudo chmod -R 777 ./logs
 
-# Create V2X Hub user
-source .env
-./add_v2xhub_user.sh "$V2XHUB_VERSION"
 
 chromium-browser localhost > /dev/null 2>&1 &
 
