@@ -23,6 +23,6 @@ if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
     # Add V2XHub admin user (Will not add if user already exists)
     tmxctl --user-add --username "$V2XHUB_USERNAME" --password "$V2XHUB_PASSWORD" --access-level 3
 fi
-#
+# Start Tmx Core
 tmxcore
 
