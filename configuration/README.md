@@ -50,6 +50,8 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
 * **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub.
 * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
+* **V2XHUB_USER** – V2X Hub Administrator Username to create on startup
+* **V2XHUB_USER** – V2X Hub Administrator Password to create on startup
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
 ### Access V2X-Hub 
