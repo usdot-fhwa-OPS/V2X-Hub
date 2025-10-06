@@ -6,11 +6,10 @@ services:
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     network_mode: host
     secrets:
       - mysql_password
-      - mysql_root_password
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
@@ -73,6 +72,8 @@ services:
       - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
       - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
+      - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
+      - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
     secrets:
       - mysql_password
     volumes:
@@ -97,9 +98,7 @@ services:
       - /etc/timezone:/etc/timezone:ro 
 secrets:
     mysql_password:
-        file: ./secrets/mysql_password.txt
-    mysql_root_password:
-        file: ./secrets/mysql_root_password.txt
+        environment: MYSQL_PASSWORD
 
 volumes:
   mysql-datavolume:
