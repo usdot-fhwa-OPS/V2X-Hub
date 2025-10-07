@@ -73,18 +73,24 @@ if [[ $SIMULATION_MODE == "TRUE" ]]; then
 fi
 # MySQL (IVP) User Password
 read -r -s -p "MYSQL PASSWORD (password for configuration database): " MYSQL_PASSWORD
-MYSQL_PASSWORD=${MYSQL_PASSWORD}
+echo
 # V2X Hub Username
 read -r -p "V2X Hub Admin Username (or press Enter to use default as v2xadmin): " V2XHUB_USERNAME
 V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
+echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol."
+
 # V2X Hub Password
 read -r -s -p "V2X Hub Admin Password (input will be hidden): " V2XHUB_PASSWORD
-if [ $PASS_LENGTH -ge 8 ] && echo $V2XHUB_PASSWORD | grep -q [a-z] && echo $V2XHUB_PASSWORD | grep -q [A-Z] && echo $V2XHUB_PASSWORD | grep -q [0-9] && ( echo $V2XHUB_PASSWORD | grep -q [\$\!\.\+_\*@\#\^%\?~] || echo $V2XHUB_PASSWORD | grep -q [-] ); then
+# Get length of the password
+PASS_LENGTH=$(echo "$PASS" | wc -c)
+# Validate password complexity
+if [ $PASS_LENGTH -ge 8 ] && echo "$V2XHUB_PASSWORD" | grep -q "[a-z]" && echo "$V2XHUB_PASSWORD" | grep -q "[A-Z]" && echo "$V2XHUB_PASSWORD" | grep -q "[0-9]" && ( echo "$V2XHUB_PASSWORD" | grep -q "[\$\!\.\+_\*@\#\^%\?~]" || echo "$V2XHUB_PASSWORD" | grep -q "[-]" ); then
     echo
-    read -s -p "Confirm password: " CONF_PASS
-    while [ $CONF_PASS != $V2XHUB_PASSWORD ]; do
+    # Confirm password
+    read -r -s -p "Confirm password: " CONF_PASS
+    while [ "$CONF_PASS" != "$V2XHUB_PASSWORD" ]; do
         echo
-        read -s -p "Passwords do not match. Please re-enter password: " CONF_PASS
+        read -r -s -p "Passwords do not match. Please re-enter password: " CONF_PASS
     done
     echo "VALID PASSWORD"
 else
