@@ -1,0 +1,20 @@
+[req]
+distinguished_name = req_distinguished_name
+req_extensions = v3_req
+prompt = no
+
+[req_distinguished_name]
+C = US
+ST = Virginia
+L = Saxton Transportation Operation Laboratory
+O = FHWA
+
+[v3_req]
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost
+IP.1 = 127.0.0.1
+IP.2 = ${ENV::LOCAL_IP}
