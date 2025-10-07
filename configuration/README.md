@@ -15,7 +15,7 @@ Run the initialization script:
 ```
 Follow the prompts during installation.
 
-You will be prompted to create a mysql_password and mysql_root_password. You may make the passwords whatever you like, but you will need to remember them.
+You will be prompted to create a mysql_password. This is the password to the MySQL configuration database for the `IVP` user. Please create a unique and secure password and remember it
 ```
 Example: ivp
 ```
@@ -25,19 +25,18 @@ Username: v2xadmin
 
 Password: V2xHub#321
 ```
-You will then need to enter the mysql_password you created in step 5a:
-```
-Example: ivp
-```
+
 After installation is complete, the script will automatically open a web browser with two tabs.
 
-Enter the login credentials you created in step 5b and login.
+Enter the login credentials you created in the steps above and login.
 
 Installation complete!
 
 ### Simulation Setup
 
 To support execution in a simulated environment, V2X-Hub is in the process of integrating with CDASim, a Co-Simulation tool built as an extension of Eclipse Mosiac. This extension will incorporate integration with several other platforms including CARMA-Platform and CARLA. The setup for this simply requires setting environment variables for the V2X-Hub docker compose deployment. These can be set via the `initialization.sh` script and can be manually edited after.
+
+### Docker Environment Vaeriables
 
 * **V2XHUB_VERSION** – Version of V2X-Hub to deloy ( Docker Tag/ GitHub Tag )
 * **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
@@ -67,3 +66,5 @@ google-chrome  <v2xhub_ip>
 
 > [!NOTE]  
 > V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
+> [!NOTE]  
+> VIf no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`)
