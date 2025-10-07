@@ -3,7 +3,7 @@ set -ex
 # These directories should already exist due to docker volumes
 mkdir -p /var/www/plugins/MAP /var/www/plugins/ssl
 # Check if certs already exist
-if [ -f /var/www/plugins/ssl/cert.pem ] && [ -f /var/www/plugins/ssl/key.pem ]; then
+if [ -f /var/www/plugins/ssl/cert.pem ] && [ -f /var/www/plugins/ssl/cert-key.pem ]; then
     echo "Certificates already exist, skipping generation"
     exit 0
 else
