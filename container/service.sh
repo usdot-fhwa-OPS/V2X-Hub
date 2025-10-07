@@ -8,7 +8,8 @@ for plugin in /usr/local/plugins/*.zip; do
     echo "Installing plugin $plugin"
     tmxctl --plugin-install "$plugin"
 done
-
+# Generate self-signed certificates if they do not already exist
+generate_certificates.sh
 # command plugin must always be enabled
 tmxctl --plugin CommandPlugin --enable
 # If in simulation mode, enable SimulationAdapter
