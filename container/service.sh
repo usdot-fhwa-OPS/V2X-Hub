@@ -7,7 +7,7 @@ for plugin in /usr/local/plugins/*.zip; do
     echo "Installing plugin $plugin"
     tmxctl --plugin-install "$plugin"
 done
-cd container/
+cd /home/V2X-Hub/container/
 # Generate self-signed certificates if they do not already exist
 ./generate_certificates.sh
 # command plugin must always be enabled
