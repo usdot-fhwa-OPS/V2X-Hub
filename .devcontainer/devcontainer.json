@@ -6,7 +6,7 @@
 	"name": "V2X Hub Docker Compose Dev",
 
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
-	"dockerComposeFile": "docker-compose-vscode.yml",
+	"dockerComposeFile": ["../configuration/docker-compose.yml","docker-compose-vscode.yml",],
 
 	// The 'service' property is the name of the service for the container that VS Code should
 	// use. Update this value and .devcontainer/docker-compose.yml to the real service name.
