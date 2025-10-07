@@ -67,4 +67,4 @@ google-chrome  <v2xhub_ip>
 > [!NOTE]  
 > V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
 > [!NOTE]  
-> VIf no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`)
+> If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`)
