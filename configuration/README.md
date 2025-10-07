@@ -23,7 +23,7 @@ You will also be prompted to create a V2X Hub username and password. You may mak
 ```
 Username: v2xadmin
 
-Password: V2xHub#321
+Password: Changeme123!
 ```
 
 After installation is complete, the script will automatically open a web browser with two tabs.
@@ -50,7 +50,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub.
 * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
 * **V2XHUB_USER** – V2X Hub Administrator Username to create on startup
-* **V2XHUB_USER** – V2X Hub Administrator Password to create on startup
+* **V2XHUB_PASSWORD** – V2X Hub Administrator Password to create on startup
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
 ### Access V2X-Hub 
@@ -67,4 +67,4 @@ google-chrome  <v2xhub_ip>
 > [!NOTE]  
 > V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
 > [!NOTE]  
-> If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`)
+> If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`). These certificates need to be explicitly trusted by the browser. To do this simply navigate to `https://<v2xhub-ip>` and accept the warning. After this you should be redirected to the login page.
