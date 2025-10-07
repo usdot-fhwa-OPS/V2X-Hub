@@ -81,7 +81,7 @@ services:
       - ./MAP:/var/www/plugins/MAP
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
-      - ./ssl:/var/www/plugins/ssl:ro
+      - ./ssl:/var/www/plugins/ssl:rw
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
