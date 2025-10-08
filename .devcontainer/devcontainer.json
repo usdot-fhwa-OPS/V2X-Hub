@@ -34,7 +34,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "container/database.sh && container/library.sh && ldconfig",
+	"postCreateCommand": "/workspace/scripts/initialize_dev_environment.sh",
 	
 	"shutdownAction": "stopCompose"
 
