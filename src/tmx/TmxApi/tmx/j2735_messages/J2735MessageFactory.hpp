@@ -221,7 +221,13 @@ public:
 		}
 	}
 
-	~J2735MessageFactory()	{ }
+	~J2735MessageFactory()	{
+		// Clean up the allocators 
+		for (auto &pair : byInt) {
+			if (pair.second)
+				delete pair.second;
+		}
+	}
 
 	/**
 	 * Return the last event that occurred.  This can be used to report on the

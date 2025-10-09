@@ -26,6 +26,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
 #include <string>
+#include "MessageLogger.hpp"
 
 namespace JSONMessageLoggerPlugin {
     BOOST_LOG_ATTRIBUTE_KEYWORD(a_channel, "Channel", std::string) // Declare a_channel as a Boost.Log attribute keyword
