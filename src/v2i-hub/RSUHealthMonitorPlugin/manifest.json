@@ -20,7 +20,7 @@
         {
             "key":"Interval",
             "default":"1",
-            "description": "Sending RSU SNMP GET request at every configured interval. Default every 1 second. Unit of measure: second."
+            "description": "The interval on which to poll RSU status in seconds.(Default: 1 second)"
         },
         {
             "key":"RSUConfigurationList",
