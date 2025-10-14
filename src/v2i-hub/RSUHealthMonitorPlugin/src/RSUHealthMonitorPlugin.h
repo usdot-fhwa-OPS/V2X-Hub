@@ -29,6 +29,7 @@ namespace RSUHealthMonitor
         const long SEC_TO_MICRO = 1000000;
         const long SEC_TO_MILLI = 1000;
         // prefix for RSU connection status key
+        // Supported status are "CONNECTED" and "DISCONNECTED"
         const std::string _keyRSUConnectedPrefix = "RSU at ";
         // vector of RSU connection status keys for all configured RSUs to clear previous status when config changes
         std::vector<std::string> _rsuConnectedStatusKeys;

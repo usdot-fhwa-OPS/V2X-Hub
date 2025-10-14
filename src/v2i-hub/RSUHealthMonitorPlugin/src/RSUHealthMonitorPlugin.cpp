@@ -18,21 +18,21 @@ namespace RSUHealthMonitor
     {
         for (auto rsuConfig : _rsuConfigListPtr->getConfigs())
         {   
-            std::string status_key =  _keyRSUConnectedPrefix +rsuConfig.rsuIp;
-            if (std::find(_rsuConnectedStatusKeys.begin(), _rsuConnectedStatusKeys.end(), status_key) == _rsuConnectedStatusKeys.end())
+            std::string statusKey =  _keyRSUConnectedPrefix +rsuConfig.rsuIp;
+            if (std::find(_rsuConnectedStatusKeys.begin(), _rsuConnectedStatusKeys.end(), statusKey) == _rsuConnectedStatusKeys.end())
             {
-                _rsuConnectedStatusKeys.push_back(status_key);
+                _rsuConnectedStatusKeys.push_back(statusKey);
             }
             try {
                 auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authProtocol, rsuConfig.authPassPhrase, rsuConfig.privProtocol, rsuConfig.privPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
                 BroadcastRSUStatus(rsuStatusJson, rsuConfig.mibVersion);
-                SetStatus<std::string>(status_key.c_str(), "CONNECTED");
+                SetStatus<std::string>(statusKey.c_str(), "CONNECTED");
 
             }
             catch (const std::exception &ex)
             {
                 PLOG(logERROR) << "Failed to CONNECT to at RSU IP: " << rsuConfig.rsuIp << " due to error: " << ex.what();
-                SetStatus<std::string>(status_key.c_str(), "DISCONNECTED");
+                SetStatus<std::string>(statusKey.c_str(), "DISCONNECTED");
                 // Create TmxEventLogMessage for RSU disconnection
                 tmx::messages::TmxEventLogMessage eventLogMsg;
                 eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
@@ -45,7 +45,7 @@ namespace RSUHealthMonitor
 
     void RSUHealthMonitorPlugin::UpdateConfigSettings()
     {
-        // Clear previous plugin status
+        // Clear previous plugin status in database
         PLOG(logDEBUG) << "Clearing previous Plugin status.";
         for (auto &rsuConnectStatusKey : _rsuConnectedStatusKeys)
         {
