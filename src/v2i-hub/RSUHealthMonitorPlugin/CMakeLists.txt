@@ -1,8 +1,6 @@
 PROJECT(RSUHealthMonitorPlugin VERSION 7.10.0 LANGUAGES CXX)
-
+set(CMAKE_CXX_STANDARD 17)
 set(TMX_PLUGIN_NAME "RSU Health Monitor")
-
-find_library(libasn1c .)
 
 BuildTmxPlugin()
 

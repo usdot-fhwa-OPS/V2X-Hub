@@ -153,57 +153,50 @@ namespace RSUHealthMonitor
         auto rsuStatusConfigTbl = GetRSUStatusConfig(mibVersion);
         if (rsuStatusConfigTbl.size() == 0)
         {
-            PLOG(logERROR) << "RSU status update call failed due to the RSU status config table is empty!";
-            return Json::nullValue;
+            throw runtime_error("RSU status update call failed due to the RSU status config table is empty for selected MIB " + tmx::utils::rsu::rsuSpecToString(mibVersion) + "!");
         }
-        try
+       
+        PLOG(logINFO) << "SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", Auth protocol: " << _authProtocol << ", Auth pass phrase: " << _authPassPhrase << ", Priv protocol: " << _privProtocol << ", Priv pass phrase: " << _privPassPhrase << ", security level: " << _securityLevel;
+        std::unique_ptr<snmp_client> _snmpClientPtr;
+        if ( _securityLevel.empty() ) {
+            _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", "", _securityLevel, "", "", "", "", SNMP_VERSION_3, timeout);
+
+        } else if (_securityLevel == "authNoPriv"){
+            _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, "", "", SNMP_VERSION_3, timeout);
+
+        } 
+        else if ( _securityLevel == "authPriv") {
+            _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, SNMP_VERSION_3, timeout);
+        }
+        else {
+            throw runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\".");
+        }
+        Json::Value rsuStatuJson;
+        // Sending RSU SNMP call for each field as each field has its own OID.
+        for (const auto &config : rsuStatusConfigTbl)
         {
-            PLOG(logINFO) << "SNMP client: RSU IP: " << _rsuIp << ", RSU port: " << _snmpPort << ", User: " << _securityUser << ", Auth protocol: " << _authProtocol << ", Auth pass phrase: " << _authPassPhrase << ", Priv protocol: " << _privProtocol << ", Priv pass phrase: " << _privPassPhrase << ", security level: " << _securityLevel;
-            std::unique_ptr<snmp_client> _snmpClientPtr;
-            if ( _securityLevel.empty() ) {
-                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", "", _securityLevel, "", "", "", "", SNMP_VERSION_3, timeout);
-
-            } else if (_securityLevel == "authNoPriv"){
-                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, "", "", SNMP_VERSION_3, timeout);
-
-            } 
-            else if ( _securityLevel == "authPriv") {
-                _snmpClientPtr = std::make_unique<snmp_client>(_rsuIp, _snmpPort, "public", _securityUser, _securityLevel, _authProtocol, _authPassPhrase, _privProtocol, _privPassPhrase, SNMP_VERSION_3, timeout);
-            }
-            else {
-                throw runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\".");
-            }
-            Json::Value rsuStatuJson;
-            // Sending RSU SNMP call for each field as each field has its own OID.
-            for (const auto &config : rsuStatusConfigTbl)
+            PLOG(logINFO) << "SNMP RSU status call for field:" << config.field << ", OID: " << config.oid;
+            snmp_response_obj responseVal;
+            if (_snmpClientPtr)
             {
-                PLOG(logINFO) << "SNMP RSU status call for field:" << config.field << ", OID: " << config.oid;
-                snmp_response_obj responseVal;
-                if (_snmpClientPtr)
+                auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
+                if (!success && config.required)
                 {
-                    auto success = _snmpClientPtr->process_snmp_request(config.oid, request_type::GET, responseVal);
-                    if (!success && config.required)
+                    throw runtime_error("SNMP session stopped as the required field: " + config.field + " failed!");
+                   
+                }
+                else if (success)
+                {
+                    auto json = populateJson(config.field, responseVal);
+                    for(const auto &key: json.getMemberNames())
                     {
-                        PLOG(logERROR) << "SNMP session stopped as the required field: " << config.field << " failed! Return empty RSU status!";
-                        return Json::nullValue;
-                    }
-                    else if (success)
-                    {
-                        auto json = populateJson(config.field, responseVal);
-                        for(const auto &key: json.getMemberNames())
-                        {
-                            rsuStatuJson[key] = json[key];
-                        }
+                        rsuStatuJson[key] = json[key];
                     }
                 }
             }
-            return rsuStatuJson;
         }
-        catch (tmx::utils::snmp_client_exception &ex)
-        {
-            PLOG(logERROR) << ex.what();
-            return Json::nullValue;
-        }
+        return rsuStatuJson;
+        
     }
 
     Json::Value RSUHealthMonitorWorker::populateJson(const string &field, const snmp_response_obj &response) const
