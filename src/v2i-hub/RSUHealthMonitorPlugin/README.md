@@ -49,11 +49,43 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 ## Design
 
-The diagram below illustrates roughly how the RSU Health Monitoring Plugin functions. 
+The diagrams below illustrates roughly how the RSU Health Monitoring Plugin functions. The first highlights communicationa and the second is a sequence diagram describing interactions.
+![alt text](docs/RSUHealthMonitoringPluginDiagram.png)
+
+![alt text](docs/RSUHealthMonitoringPluginSequenceDiagram.png) 
 
 ### Messages
 
 **RSUStatus**: This message contains status information obtained from SNMP OIDs polled on the RSU.
+
+```json
+{
+  "header": {
+    "type": "Application",
+    "subtype": "RSUStatus",
+    "encoding": "json",
+    "timestamp": "1699556405583",
+    "flags": "0",
+    "source": "RSUHealthMonitor"
+  },
+  "payload": {
+    "rsuFirmwareVersion": "mk6c-19.Release.130837-RSU1609-t",
+    "rsuGpsOutputStringLatitude": "38.953074999999998",
+    "rsuGpsOutputStringLongitude": "-77.143073330000007",
+    "rsuID": "RSU 4.1",
+    "rsuIFMDsrcMsgId": "0",
+    "rsuIFMEnable": "0",
+    "rsuIFMIndex": "0",
+    "rsuIFMPsid": "0",
+    "rsuIFMStatus": "0",
+    "rsuIFMTxChannel": "0",
+    "rsuIFMTxMode": "0",
+    "rsuManufacturer": "Cohda Wireless",
+    "rsuMibVersion": "rsuMIB 4.1 rev201812060000Z",
+    "rsuMode": "4"
+  }
+}
+```
 
 
 
