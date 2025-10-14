@@ -82,7 +82,7 @@ echo "Password must be 8-12 charcters, and contain at least one of each of the f
 # V2X Hub Password
 read -r -s -p "V2X Hub Admin Password (input will be hidden): " V2XHUB_PASSWORD
 # Get length of the password
-PASS_LENGTH=$(echo "$PASS" | wc -c)
+PASS_LENGTH=$(echo "$V2XHUB_PASSWORD" | wc -c)
 # Validate password complexity
 if [ $PASS_LENGTH -ge 8 ] && echo "$V2XHUB_PASSWORD" | grep -q "[a-z]" && echo "$V2XHUB_PASSWORD" | grep -q "[A-Z]" && echo "$V2XHUB_PASSWORD" | grep -q "[0-9]" && ( echo "$V2XHUB_PASSWORD" | grep -q "[\$\!\.\+_\*@\#\^%\?~]" || echo "$V2XHUB_PASSWORD" | grep -q "[-]" ); then
     echo
