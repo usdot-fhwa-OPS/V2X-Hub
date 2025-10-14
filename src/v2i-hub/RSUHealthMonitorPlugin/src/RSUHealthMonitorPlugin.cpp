@@ -47,7 +47,7 @@ namespace RSUHealthMonitor
     {
         // Clear previous plugin status in database
         PLOG(logDEBUG) << "Clearing previous Plugin status.";
-        for (auto &rsuConnectStatusKey : _rsuConnectedStatusKeys)
+        for (const auto &rsuConnectStatusKey : _rsuConnectedStatusKeys)
         {
             RemoveStatus(rsuConnectStatusKey.c_str());
         }
