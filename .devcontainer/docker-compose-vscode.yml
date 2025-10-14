@@ -5,6 +5,13 @@ services:
       dockerfile: ./Dockerfile
       target: build-environment
     privileged: true
+    # Building source code is memory intensive so we increase the memory limit.
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+        reservations:
+          memory: 2g
     cap_add:
       - SYS_PTRACE
     volumes:
