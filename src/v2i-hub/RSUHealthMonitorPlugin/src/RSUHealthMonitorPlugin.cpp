@@ -26,13 +26,13 @@ namespace RSUHealthMonitor
             try {
                 auto rsuStatusJson = _rsuWorker->getRSUStatus(rsuConfig.mibVersion, rsuConfig.rsuIp, rsuConfig.snmpPort, rsuConfig.user, rsuConfig.authProtocol, rsuConfig.authPassPhrase, rsuConfig.privProtocol, rsuConfig.privPassPhrase, rsuConfig.securityLevel, SEC_TO_MICRO);
                 BroadcastRSUStatus(rsuStatusJson, rsuConfig.mibVersion);
-                SetStatus<std::string>(statusKey.c_str(), "CONNECTED");
+                SetStatus<std::string>(statusKey.c_str(), CONNECTED);
 
             }
             catch (const std::exception &ex)
             {
                 PLOG(logERROR) << "Failed to CONNECT to at RSU IP: " << rsuConfig.rsuIp << " due to error: " << ex.what();
-                SetStatus<std::string>(statusKey.c_str(), "DISCONNECTED");
+                SetStatus<std::string>(statusKey.c_str(), DISCONNECTED);
                 // Create TmxEventLogMessage for RSU disconnection
                 tmx::messages::TmxEventLogMessage eventLogMsg;
                 eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
