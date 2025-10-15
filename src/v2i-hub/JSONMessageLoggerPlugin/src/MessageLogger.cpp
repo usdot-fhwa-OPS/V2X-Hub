@@ -11,7 +11,6 @@ namespace JSONMessageLoggerPlugin{
         auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
         // Serial J2735 message to JSON
         std::string json_payload_str = j2735Message.to_string();
-        // ASN_STRUCT_FREE(asn_DEF_MessageFrame, j2735Data.get());
 
         return json_payload_str;
        
