@@ -362,13 +362,8 @@ public:
 					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::uper<MessageFrameMessage> >(theData));
 					if (_frame) {
-						
-						// _decoded.reset(new MsgType(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-						// 	codec::uper<MessageFrameMessage> >(theData)->get_j2735_data()));
-											_decoded.reset(new MsgType(_frame->get_j2735_data()));
-
+						_decoded.reset(new MsgType(_frame->get_j2735_data()));
 					}
-
 				}
 				else
 				{
@@ -379,10 +374,10 @@ public:
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{
-					std::unique_ptr<MessageFrameMessage> frame(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::der<MessageFrameMessage> >(theData));
-					if (frame) {
-						_decoded.reset(new MsgType(frame->get_j2735_data()));
+					if (_frame) {
+						_decoded.reset(new MsgType(_frame->get_j2735_data()));
 					}
 				}
 				else
