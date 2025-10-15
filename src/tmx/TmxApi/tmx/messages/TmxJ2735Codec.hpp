@@ -518,6 +518,7 @@ public:
 	}
 private:
 	std::unique_ptr<MsgType> _decoded;
+	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for decoding/encoding purposes (see decode_j2735_message() method)
 	std::unique_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()
