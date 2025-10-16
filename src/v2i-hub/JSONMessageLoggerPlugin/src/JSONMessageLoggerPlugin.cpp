@@ -39,7 +39,7 @@ namespace JSONMessageLoggerPlugin {
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "rx",
+            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "rx", // Filter for "rx" channel messages
             boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
@@ -51,7 +51,7 @@ namespace JSONMessageLoggerPlugin {
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "tx",
+            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "tx", // Filter for "tx" channel messages
             boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
