@@ -5,6 +5,15 @@ services:
       dockerfile: ./Dockerfile
       target: build-environment
     privileged: true
+    env_file:
+      - ../.devcontainer/devcontainer.env
+    # Building source code is memory intensive so we increase the memory limit.
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+        reservations:
+          memory: 2g
     cap_add:
       - SYS_PTRACE
     volumes:
@@ -12,7 +21,7 @@ services:
       - ..:/workspace:cached
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 10000; do :; done"  
-
   db:
-    volumes:
-      - ../.devcontainer/mysql_add_dev_user.sql:/docker-entrypoint-initdb.d/mysql_add_dev_user.sql
+    env_file:
+      - ../.devcontainer/devcontainer.env
+
