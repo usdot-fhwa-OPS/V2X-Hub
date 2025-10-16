@@ -5,8 +5,6 @@ services:
       dockerfile: ./Dockerfile
       target: build-environment
     privileged: true
-    env_file:
-      - ../.devcontainer/devcontainer.env
     # Building source code is memory intensive so we increase the memory limit.
     deploy:
       resources:
@@ -21,7 +19,4 @@ services:
       - ..:/workspace:cached
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 10000; do :; done"  
-  db:
-    env_file:
-      - ../.devcontainer/devcontainer.env
 
