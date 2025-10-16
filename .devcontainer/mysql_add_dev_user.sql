@@ -1,1 +1,0 @@
-INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('user', SHA2('user', 256), 3);
