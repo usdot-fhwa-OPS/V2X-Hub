@@ -14,7 +14,7 @@
  * the License.
  */
 #pragma once
-
+#include <filesystem>
 #include <TmxMessageManager.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/messages/TmxJ2735Codec.hpp>
@@ -25,6 +25,8 @@
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
+#include <boost/log/utility/setup/console.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
 #include <string>
 
 namespace JSONMessageLoggerPlugin {
@@ -37,7 +39,7 @@ namespace JSONMessageLoggerPlugin {
             void OnConfigChanged(const char *key, const char *value) override;
             void OnMessageReceived(IvpMessage *msg) override;
             void initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir);
-
+            bool createdLogDirectory(std::string &logDir) const;
         protected:
             void UpdateConfigSettings();
 

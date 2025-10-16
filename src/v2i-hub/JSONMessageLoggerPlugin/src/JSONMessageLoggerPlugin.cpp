@@ -29,30 +29,46 @@ namespace JSONMessageLoggerPlugin {
          // Common attributes (timestamp, etc.)
         boost::log::add_common_attributes();
 
+        std::string dir = logDir;
+        if(!createdLogDirectory(dir)) return;    
+
         // RX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir + "j2735Rx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = dir + "j2735Rx_%Y-%m-%d.log",
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = a_channel == "rx", // Filter for "rx" channel messages
+            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "rx",
+            boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
 
         // TX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir+"j2735Tx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = dir + "j2735Tx_%Y-%m-%d.log",
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = a_channel == "tx", // Filter for "tx" channel messages
+            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "tx",
+            boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
-
         );
-        rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
-        txLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> (boost::log::keywords::channel = "tx");
+
+        try{
+            rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
+            BOOST_LOG_SEV(rxLogger, boost::log::trivial::info) << "Initialized RX Logger.";
+        }catch(const std::exception &e){
+            PLOG(tmx::utils::logERROR) << "Exception initializing RX Logger: " << e.what();
+        }
+
+        try{
+            txLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> (boost::log::keywords::channel = "tx");
+            BOOST_LOG_SEV(txLogger, boost::log::trivial::info) << "Initialized TX Logger.";
+        }catch(const std::exception &e){
+            PLOG(tmx::utils::logERROR) << "Exception initializing TX Logger: " << e.what();
+        }
     }
 
     void JSONMessageLoggerPlugin::OnStateChange(IvpPluginState state)
@@ -114,6 +130,27 @@ namespace JSONMessageLoggerPlugin {
         GetConfigValue<unsigned int>("MaxFiles",maxFiles, &_configMutex);
         GetConfigValue<std::string>("LogDir", logDir, &_configMutex);
         initLogging(maxFileSize, maxFiles, logDir);
+    }
+
+    bool JSONMessageLoggerPlugin::createdLogDirectory(std::string &dir) const {
+        if(dir.empty()) {
+            PLOG(tmx::utils::logERROR) << "Log directory path is empty.";
+            return false;
+        }
+        // Ensure directory exists and has a trailing slash
+        if (!dir.empty() && dir.back() != '/') dir.push_back('/');
+        std::error_code ec;
+        auto created = std::filesystem::create_directories(dir, ec);
+        if (ec) {
+            PLOG(tmx::utils::logERROR) << "Failed to create log dir '" << dir << "': " << ec.message();
+            return false;
+        }
+        if (created) {
+            PLOG(tmx::utils::logINFO) << "Created log dir '" << dir << "'";
+        }else{
+            PLOG(tmx::utils::logDEBUG1) << "Log dir '" << dir << "' already exists";
+        }
+        return true;
     }
     
 } // namespace JSONMessageLoggerPlugin
