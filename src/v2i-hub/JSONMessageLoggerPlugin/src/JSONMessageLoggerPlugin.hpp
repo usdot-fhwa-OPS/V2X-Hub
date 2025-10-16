@@ -46,6 +46,9 @@ namespace JSONMessageLoggerPlugin {
             std::mutex _configMutex;
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> rxLogger;
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> txLogger;
+            unsigned long _skippedMessages = 0;
+            const char* _keySkippedMessages = "Skipped Messages";
+
 
     };
 

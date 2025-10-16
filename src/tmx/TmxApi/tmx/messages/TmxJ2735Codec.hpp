@@ -361,9 +361,7 @@ public:
 				{	
 					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::uper<MessageFrameMessage> >(theData));
-					if (_frame) {
-						_decoded.reset(new MsgType(_frame->get_j2735_data()));
-					}
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));	
 				}
 				else
 				{
@@ -376,9 +374,7 @@ public:
 				{
 					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::der<MessageFrameMessage> >(theData));
-					if (_frame) {
-						_decoded.reset(new MsgType(_frame->get_j2735_data()));
-					}
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));
 				}
 				else
 				{
@@ -518,7 +514,10 @@ public:
 	}
 private:
 	std::unique_ptr<MsgType> _decoded;
-	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for decoding/encoding purposes (see decode_j2735_message() method)
+	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for 
+	// decoding/encoding purposes (see decode_j2735_message() method)
+	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer
+	// Never delete this pointer directly will result in a memory leak
 	std::unique_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()

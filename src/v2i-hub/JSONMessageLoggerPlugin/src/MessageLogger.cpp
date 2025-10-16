@@ -19,15 +19,7 @@ namespace JSONMessageLoggerPlugin{
 
     void logRouteableMessage( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
         std::string json_payload_str;
-        try{
-            json_payload_str = routeableMessageToJsonString(msg);
-        }
-        catch (const boost::exception &e) {
-            FILE_LOG(tmx::utils::logERROR) << "Boost exception while logging message: " << boost::diagnostic_information(e);
-        }
-        catch (const std::exception &e) {
-            FILE_LOG(tmx::utils::logERROR) << "Exception while logging message: " << e.what();
-        }
+        json_payload_str = routeableMessageToJsonString(msg);
         if ( !json_payload_str.empty() ) {
             if ( msg.get_flags() & IvpMsgFlags_RouteDSRC ) {
                 BOOST_LOG_SEV(logger, boost::log::trivial::info) << json_payload_str;
@@ -35,6 +27,9 @@ namespace JSONMessageLoggerPlugin{
             else {
                 BOOST_LOG_SEV(logger, boost::log::trivial::info) << json_payload_str;
             }
+        }
+        else {
+            throw tmx::TmxException("Conversion of msg " + msg.to_string() + " to JSON resulted in empty string failed!");
         }
     }
 }

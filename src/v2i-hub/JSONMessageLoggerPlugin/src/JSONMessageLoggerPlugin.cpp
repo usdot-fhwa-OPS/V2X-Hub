@@ -75,14 +75,26 @@ namespace JSONMessageLoggerPlugin {
         PLOG(tmx::utils::logDEBUG1) << "Routable Message " << routeMsg.to_string();
         // Cast routeable message as J2735 Message
         if (tmx::utils::PluginClient::IsJ2735Message(routeMsg)) {
-            if (routeMsg.get_flags() & IvpMsgFlags_RouteDSRC) {
-                PLOG(tmx::utils::logDEBUG1) << "Logging TX J2735 Message";
-                logRouteableMessage(routeMsg, txLogger);
+            try {
+                if (routeMsg.get_flags() & IvpMsgFlags_RouteDSRC) {
+                    PLOG(tmx::utils::logDEBUG1) << "Logging TX J2735 Message";
+                    logRouteableMessage(routeMsg, txLogger);
 
+                }
+                else {
+                    PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
+                    logRouteableMessage(routeMsg, rxLogger);
+                }
             }
-            else {
-                PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
-                logRouteableMessage(routeMsg, rxLogger);
+            catch (const boost::exception &e) {
+                std::string errorMessage = "Boost exception while logging message: " + boost::diagnostic_information(e);
+                FILE_LOG(tmx::utils::logERROR) << errorMessage;
+                tmx::messages::TmxEventLogMessage eventLogMsg;
+                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+                eventLogMsg.set_description(errorMessage);
+                BroadcastMessage(eventLogMsg, JSONMessageLoggerPlugin::GetName());
+                _skippedMessages++;
+                SetStatus<unsigned long>(_keySkippedMessages, _skippedMessages);
             }
         }  
     }
