@@ -4,7 +4,8 @@
 	// Docker Compose syntax from https://github.com/devcontainers/templates/blob/main/src/docker-existing-docker-compose/.devcontainer/devcontainer.json
 	// and https://github.com/microsoft/vscode-dev-containers/blob/main/container-templates/docker-compose/.devcontainer/devcontainer.json
 	"name": "V2X Hub Docker Compose Dev",
-
+	// Check for .env file in configuration directory. Copy devcontainer.env if none exists
+	"initializeCommand" : ".devcontainer/check_for_env.sh",
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	"dockerComposeFile": ["../configuration/docker-compose.yml","docker-compose-vscode.yml",],
 
@@ -34,7 +35,7 @@
 	// "forwardPorts": [],
 
 	// Uncomment the next line to run commands after the container is created - for example installing curl.
-	"postCreateCommand": "/workspace/scripts/initialize_dev_environment.sh",
+	"postCreateCommand": "/workspace/.devcontainer/initialize_dev_environment.sh",
 	
 	"shutdownAction": "stopCompose"
 
