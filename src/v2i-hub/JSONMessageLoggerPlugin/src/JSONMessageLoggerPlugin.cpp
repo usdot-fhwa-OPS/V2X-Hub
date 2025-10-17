@@ -59,14 +59,19 @@ namespace JSONMessageLoggerPlugin {
         try{
             rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
             BOOST_LOG_SEV(rxLogger, boost::log::trivial::info) << "Initialized RX Logger.";
-        }catch(const std::exception &e){
+        }catch(const boost::exception &e){
+            PLOG(tmx::utils::logERROR) << "Boost exception initializing RX Logger: " << boost::diagnostic_information(e);
+        }
+        catch(const std::runtime_error &e){
             PLOG(tmx::utils::logERROR) << "Exception initializing RX Logger: " << e.what();
         }
 
         try{
             txLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> (boost::log::keywords::channel = "tx");
             BOOST_LOG_SEV(txLogger, boost::log::trivial::info) << "Initialized TX Logger.";
-        }catch(const std::exception &e){
+        }catch(const boost::exception &e){
+            PLOG(tmx::utils::logERROR) << "Boost exception initializing TX Logger: " << boost::diagnostic_information(e);
+        }catch(const std::runtime_error &e){
             PLOG(tmx::utils::logERROR) << "Exception initializing TX Logger: " << e.what();
         }
     }
