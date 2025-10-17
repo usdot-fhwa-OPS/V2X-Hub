@@ -10,23 +10,18 @@ namespace JSONMessageLoggerPlugin{
         // Convert J2735 data to TmxJ2735Message for JSON serialization
         auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
         // Serial J2735 message to JSON
-        std::string json_payload_str = j2735Message.to_string();
+        std::string jsonPayloadStr = j2735Message.to_string();
 
-        return json_payload_str;
+        return jsonPayloadStr;
        
          
     }
 
     void logRouteableMessage( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
-        std::string json_payload_str;
-        json_payload_str = routeableMessageToJsonString(msg);
-        if ( !json_payload_str.empty() ) {
-            if ( msg.get_flags() & IvpMsgFlags_RouteDSRC ) {
-                BOOST_LOG_SEV(logger, boost::log::trivial::info) << json_payload_str;
-            }
-            else {
-                BOOST_LOG_SEV(logger, boost::log::trivial::info) << json_payload_str;
-            }
+        std::string jsonPayloadStr;
+        jsonPayloadStr = routeableMessageToJsonString(msg);
+        if ( !jsonPayloadStr.empty() ) {
+            BOOST_LOG_SEV(logger, boost::log::trivial::info) << jsonPayloadStr;
         }
         else {
             throw tmx::TmxException("Conversion of msg " + msg.to_string() + " to JSON resulted in empty string failed!");
