@@ -77,7 +77,7 @@ services:
     secrets:
       - mysql_password
     volumes:
-      - ./logs:/var/log/tmx
+      - ./logs:/var/log/tmx:rw
       - ./MAP:/var/www/plugins/MAP
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
