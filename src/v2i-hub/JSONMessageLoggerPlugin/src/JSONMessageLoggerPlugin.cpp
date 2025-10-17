@@ -29,13 +29,10 @@ namespace JSONMessageLoggerPlugin {
          // Common attributes (timestamp, etc.)
         boost::log::add_common_attributes();
 
-        std::string dir = logDir;
-        if(!createdLogDirectory(dir)) return;    
-
         // RX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = dir + "j2735Rx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = logDir + "j2735Rx_%Y-%m-%d.log",
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
@@ -47,7 +44,7 @@ namespace JSONMessageLoggerPlugin {
         // TX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = dir + "j2735Tx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = logDir + "j2735Tx_%Y-%m-%d.log",
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
@@ -91,7 +88,6 @@ namespace JSONMessageLoggerPlugin {
     }
     void JSONMessageLoggerPlugin::OnMessageReceived(IvpMessage *msg)
     {
-        tmx::utils::TmxMessageManager::OnMessageReceived(msg);
         tmx::routeable_message routeMsg(msg);
         // Cast routeable message as J2735 Message
         if (tmx::utils::PluginClient::IsJ2735Message(routeMsg)) {
@@ -137,26 +133,6 @@ namespace JSONMessageLoggerPlugin {
         initLogging(maxFileSize, maxFiles, logDir);
     }
 
-    bool JSONMessageLoggerPlugin::createdLogDirectory(std::string &dir) const {
-        if(dir.empty()) {
-            PLOG(tmx::utils::logERROR) << "Log directory path is empty.";
-            return false;
-        }
-        // Ensure directory exists and has a trailing slash
-        if (!dir.empty() && dir.back() != '/') dir.push_back('/');
-        std::error_code ec;
-        auto created = std::filesystem::create_directories(dir, ec);
-        if (ec) {
-            PLOG(tmx::utils::logERROR) << "Failed to create log dir '" << dir << "': " << ec.message();
-            return false;
-        }
-        if (created) {
-            PLOG(tmx::utils::logINFO) << "Created log dir '" << dir << "'";
-        }else{
-            PLOG(tmx::utils::logDEBUG1) << "Log dir '" << dir << "' already exists";
-        }
-        return true;
-    }
     
 } // namespace JSONMessageLoggerPlugin
 // The main entry point for this application.
