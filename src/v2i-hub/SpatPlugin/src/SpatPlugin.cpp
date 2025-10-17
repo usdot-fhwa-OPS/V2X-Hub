@@ -102,8 +102,7 @@ namespace SpatPlugin {
 		if (this->scConnection ) {
 			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
 			try {
-				
-				if (spatMode == "J2735_HEX") {
+				if (spatMode == MODE_J2735_SPAT) {
 					PLOG(logDEBUG) << "Starting HEX SPaT Receiver ...";
 					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 					scConnection->receiveUPERSPAT(spatEncoded_ptr);
@@ -113,7 +112,7 @@ namespace SpatPlugin {
 					BroadcastMessage(*rMsg);	
 				}
 				else {
-					if ( spatMode != "BINARY"){
+					if ( spatMode != MODE_TSCBM){
 						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
 					}
 					auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
@@ -134,6 +133,19 @@ namespace SpatPlugin {
 					free(frame.get_j2735_data().get()); 
 
 				
+				}
+				// Measure interval between SPAT messages
+				if ( lastSpatTimeMs != 0 ) {
+					uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+					uint64_t intervalMs = currentTimeMs - lastSpatTimeMs;
+					if ( intervalMs > maxSpatIntervalMs ) {
+						maxSpatIntervalMs = intervalMs;
+						SetStatus<int>("Max SPaT Interval (ms)", maxSpatIntervalMs);
+					}
+					lastSpatTimeMs = currentTimeMs;
+				}
+				else {
+					lastSpatTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 				}
 			}
 			catch (const UdpServerRuntimeError &e) {

@@ -83,6 +83,10 @@ namespace SpatPlugin {
 			 * have been skipped due to errors.
 			 */
 			const char* keySkippedMessages = "Skipped Messages";
+
+			static inline const std::string MODE_J2735_SPAT = "SPAT";
+
+			static inline const std::string MODE_TSCBM = "TSCBM";
 			/**
 			 * @brief Count of received packets from the TSC that have been skipped due to
 			 * errors.
@@ -92,6 +96,10 @@ namespace SpatPlugin {
 			 * @brief Bool flag for TSC connection status.
 			 */
 			bool isConnected = false;
+
+			uint64_t lastSpatTimeMs = 0;
+
+			int maxSpatIntervalMs = 0;
 			/**
 			 * @brief Method to receive and process TSC broadcast SPaT data.
 			 */
