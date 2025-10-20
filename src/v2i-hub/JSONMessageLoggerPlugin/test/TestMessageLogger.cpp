@@ -18,6 +18,7 @@ namespace sinks = boost::log::sinks;
 namespace src = boost::log::sources;
 namespace expr = boost::log::expressions;
 
+
 namespace JSONMessageLoggerPlugin {
     class TestMessageLoggerFixture : public ::testing::Test {
         public:
@@ -29,7 +30,6 @@ namespace JSONMessageLoggerPlugin {
             // Create a text stream backend
             boost::shared_ptr<sinks::text_ostream_backend> backend =
                 boost::make_shared<sinks::text_ostream_backend>();
-
             // Add the ostringstream to the backend
             // Note: boost::shared_ptr is used to manage the stream lifetime,
             // and boost::null_deleter is used if you don't want the backend to delete the stream.
@@ -39,7 +39,6 @@ namespace JSONMessageLoggerPlugin {
             // Create a sink front-end and attach the backend
             typedef sinks::synchronous_sink<sinks::text_ostream_backend> ostream_sink;
             boost::shared_ptr<ostream_sink> sink(new ostream_sink(backend));
-
             // Register the sink with the logging core
             logging::core::get()->add_sink(sink);
 
@@ -50,6 +49,12 @@ namespace JSONMessageLoggerPlugin {
 
         void TearDown() override {
             // Cleanup code if needed
+            boost::shared_ptr<logging::core> core = logging::core::get();
+
+            core->flush();
+            core->remove_all_sinks();
+
+
         }
     };
 
@@ -77,6 +82,7 @@ namespace JSONMessageLoggerPlugin {
 
         // Call function under test
         EXPECT_THROW(routeableMessageToJsonString(*rMsg), boost::wrapexcept<tmx::J2735Exception>);
+
     }
 
     TEST_F(TestMessageLoggerFixture, logRouteableMessage) {

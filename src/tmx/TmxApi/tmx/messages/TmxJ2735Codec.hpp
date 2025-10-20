@@ -302,6 +302,7 @@ public:
 					std::string(j2735::get_messageTag< typename type::traits_type >()) + " from bytes.");
 			err << codecerr_info{DecType::Encoding};
 			err << errmsg_info{"Failed after " + std::to_string(rval.consumed) + " bytes."};
+			ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
 			BOOST_THROW_EXCEPTION(err);
 		}
 	}
@@ -386,7 +387,6 @@ public:
 				J2735Exception err("Unknown encoding.");
 				err << codecerr_info{this->get_encoding()};
 				BOOST_THROW_EXCEPTION(err);
-				throw;	// Just to suppress the warning for non-return value
 			}
 		}
 
