@@ -126,8 +126,8 @@ struct message_allocator_impl: public message_allocator
 class J2735MessageFactory
 {
 private:
-	using int_map = std::map<int, message_allocator *>;
-	using str_map = std::map<std::string, message_allocator *>;
+	using int_map = std::map<int, std::shared_ptr<message_allocator>>;
+	using str_map = std::map<std::string, std::shared_ptr<message_allocator>>;
 
 	int_map &byInt;
 	str_map &byStr;
@@ -156,7 +156,7 @@ private:
 	template <class Msg>
 	inline void add_allocator_to_maps()
 	{
-		message_allocator_impl<Msg> *alloc = new message_allocator_impl<Msg>();
+		std::shared_ptr<message_allocator_impl<Msg>> alloc = std::make_shared<message_allocator_impl<Msg>>();
 		byInt[alloc->getMessageID()] = alloc;
 		byStr[alloc->getMessageType()] = alloc;
 	}
@@ -221,7 +221,7 @@ public:
 		}
 	}
 
-	~J2735MessageFactory()	{ }
+	~J2735MessageFactory()	{}
 
 	/**
 	 * Return the last event that occurred.  This can be used to report on the

@@ -26,6 +26,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
 #include <string>
+#include "MessageLogger.hpp"
 
 namespace JSONMessageLoggerPlugin {
     BOOST_LOG_ATTRIBUTE_KEYWORD(a_channel, "Channel", std::string) // Declare a_channel as a Boost.Log attribute keyword
@@ -43,8 +44,17 @@ namespace JSONMessageLoggerPlugin {
 
         private:
             std::mutex _configMutex;
+            /**
+             * Logger to record received J2735 messages in JSON format.
+             */
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> rxLogger;
+            /**
+             * Logger to record transmitted J2735 messages in JSON format.
+             */
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> txLogger;
+            unsigned long _skippedMessages = 0;
+            const char* _keySkippedMessages = "Skipped Messages";
+
 
     };
 
