@@ -44,13 +44,20 @@ if [ $PASS_LENGTH -ge 8 ] && echo $PASS | grep -q [a-z] && echo $PASS | grep -q 
     done
     echo "VALID PASSWORD"
     echo "Enter MYSQL ROOT PASSWORD: "
-    # Check if V2XHUB_VERSION is >= 7.5.0
-    if [[ "$(echo "$V2XHUB_VERSION 7.5.0" | awk '{print ($1 >= $2)}')" -eq 1 ]]; then
-        mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
+    # Check if V2XHUB_VERSION is valid
+    if [[ "$V2XHUB_VERSION" =~ ^[0-9.]+$ ]]; then
+        if dpkg --compare-versions "$V2XHUB_VERSION" ge 7.5.0; then
+            # For V2X-Hub versions >= 7.5.0, store SHA-256 hashed password.
+            mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
+        else
+            # Legacy behavior for older versions (< 7.5.0): store plain text password.
+            mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
+        fi
     elif [[ "$(echo "$V2XHUB_VERSION develop" | awk '{print ($1 == $2)}')" -eq 1 ]]; then
         mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', SHA2('$PASS', 256), 3)"
     else
-        mysql -uroot -p --silent -h127.0.0.1 -e "INSERT INTO IVP.user (IVP.user.username, IVP.user.password, IVP.user.accessLevel) VALUES('$USER', '$PASS', 3)"
+        echo "Invalid V2X-Hub version format. Please use a format like '7.5.0' or 'develop'."
+        exit 1
     fi
     echo "V2X Hub user successfully added"
 else
