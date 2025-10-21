@@ -1,7 +1,7 @@
 ARG UBUNTU_VERSION=jammy
 
 FROM ubuntu:$UBUNTU_VERSION AS build-environment
-ARG J2735_VERSION=2016
+ARG J2735_VERSION=2024
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
 RUN /usr/local/bin/install_dependencies.sh
