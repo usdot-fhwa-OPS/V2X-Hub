@@ -36,7 +36,7 @@ namespace JSONMessageLoggerPlugin {
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "rx", // Filter for "rx" channel messages
+            boost::log::keywords::filter = a_channel == "rx", // Filter for "rx" channel messages
             boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
@@ -48,7 +48,7 @@ namespace JSONMessageLoggerPlugin {
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
-            boost::log::keywords::filter = boost::log::expressions::attr<std::string>("Channel") == "tx", // Filter for "tx" channel messages
+            boost::log::keywords::filter = a_channel == "tx", // Filter for "tx" channel messages
             boost::log::keywords::auto_flush = true,
             boost::log::keywords::max_files = maxFiles // Set maximum number of log files
         );
@@ -57,20 +57,33 @@ namespace JSONMessageLoggerPlugin {
             rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
             BOOST_LOG_SEV(rxLogger, boost::log::trivial::info) << "Initialized RX Logger.";
         }catch(const boost::exception &e){
-            PLOG(tmx::utils::logERROR) << "Boost exception initializing RX Logger: " << boost::diagnostic_information(e);
-        }
-        catch(const std::runtime_error &e){
-            PLOG(tmx::utils::logERROR) << "Exception initializing RX Logger: " << e.what();
+            auto errorMsg = "Boost exception initializing RX Logger: " + boost::diagnostic_information(e);
+            PLOG(tmx::utils::logERROR) << errorMsg;
+            BroadcastEventLog(errorMsg);
+        } catch(const std::runtime_error &e){
+            auto errorMsg = "Failed to initialize RX Logger due to error: " + std::string(e.what());
+            PLOG(tmx::utils::logERROR) << errorMsg;
+            BroadcastEventLog(errorMsg);
         }
 
         try{
             txLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> (boost::log::keywords::channel = "tx");
             BOOST_LOG_SEV(txLogger, boost::log::trivial::info) << "Initialized TX Logger.";
         }catch(const boost::exception &e){
-            PLOG(tmx::utils::logERROR) << "Boost exception initializing TX Logger: " << boost::diagnostic_information(e);
-        }catch(const std::runtime_error &e){
-            PLOG(tmx::utils::logERROR) << "Exception initializing TX Logger: " << e.what();
+            auto errorMsg = "Boost exception initializing TX Logger: " + boost::diagnostic_information(e);
+            PLOG(tmx::utils::logERROR) << errorMsg;
+            BroadcastEventLog(errorMsg);
+        } catch(const std::runtime_error &e){
+            auto errorMsg = "Failed to initialize TX Logger due to error: " + std::string(e.what());
+            PLOG(tmx::utils::logERROR) << errorMsg;
+            BroadcastEventLog(errorMsg);
         }
+    }
+    void JSONMessageLoggerPlugin::BroadcastEventLog(const std::string &messageContent){
+        tmx::messages::TmxEventLogMessage eventLogMsg;
+        eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+        eventLogMsg.set_description(messageContent);
+        BroadcastMessage(eventLogMsg, JSONMessageLoggerPlugin::GetName());
     }
 
     void JSONMessageLoggerPlugin::OnStateChange(IvpPluginState state)

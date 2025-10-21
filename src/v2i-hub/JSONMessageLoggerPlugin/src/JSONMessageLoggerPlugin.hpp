@@ -36,6 +36,7 @@ namespace JSONMessageLoggerPlugin {
             void OnConfigChanged(const char *key, const char *value) override;
             void OnMessageReceived(IvpMessage *msg) override;
             void initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir);
+            void BroadcastEventLog(const std::string &messageContent);
         protected:
             void UpdateConfigSettings();
 
