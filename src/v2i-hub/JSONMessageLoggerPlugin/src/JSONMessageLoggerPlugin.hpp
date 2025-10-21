@@ -36,9 +36,10 @@ namespace JSONMessageLoggerPlugin {
             explicit JSONMessageLoggerPlugin(const std::string &name);
             void OnStateChange(IvpPluginState state) override;
             void OnConfigChanged(const char *key, const char *value) override;
-            void OnMessageReceived(IvpMessage *msg) override;
+            void OnMessageReceived(tmx::routeable_message &msg) override;
             void initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir);
-
+            // Define desctructor
+            ~JSONMessageLoggerPlugin();
         protected:
             void UpdateConfigSettings();
 
