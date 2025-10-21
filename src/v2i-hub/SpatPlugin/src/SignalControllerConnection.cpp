@@ -50,7 +50,7 @@ namespace SpatPlugin {
             ntcip1202.ToJ2735SPAT(spat,timeMs, intersectionName, intersectionId);
             if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
             {
-                xer_fprint(stdout, &asn_DEF_SPAT, spat);
+                asn_fprint(stdout, &asn_DEF_SPAT, spat);
             }
         }
         else {
@@ -76,7 +76,7 @@ namespace SpatPlugin {
             spatEncoded_ptr.reset(dynamic_cast<tmx::messages::SpatEncodedMessage*>(myFactory.NewMessage(bytes)));
             if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
             {
-                xer_fprint(stdout, &asn_DEF_SPAT, spatEncoded_ptr->decode_j2735_message().get_j2735_data().get());
+                asn_fprint(stdout, &asn_DEF_SPAT, spatEncoded_ptr->decode_j2735_message().get_j2735_data().get());
             }
         }
         else {

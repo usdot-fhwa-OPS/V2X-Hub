@@ -104,6 +104,13 @@ namespace SpatPlugin {
 			 * @brief Method to receive and process TSC broadcast SPaT data.
 			 */
 			void processSpat();
+			/**
+			 * @brief Method to measure interval between received SPaT messages. This 
+			 * method will measure the time interval in ms between SPAT messages and
+			 * maintain the maximum interval observed. If the interval exceeds 300 ms a
+			 * warning event log message will be created.
+			 */
+			void measureSpatInterval();
 	};
 } /* namespace SpatPlugin */
 

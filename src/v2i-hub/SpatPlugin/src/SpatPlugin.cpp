@@ -134,19 +134,8 @@ namespace SpatPlugin {
 
 				
 				}
-				// Measure interval between SPAT messages
-				if ( lastSpatTimeMs != 0 ) {
-					uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-					uint64_t intervalMs = currentTimeMs - lastSpatTimeMs;
-					if ( intervalMs > maxSpatIntervalMs ) {
-						maxSpatIntervalMs = intervalMs;
-						SetStatus<int>("Max SPaT Interval (ms)", maxSpatIntervalMs);
-					}
-					lastSpatTimeMs = currentTimeMs;
-				}
-				else {
-					lastSpatTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-				}
+				measureSpatInterval();
+				
 			}
 			catch (const UdpServerRuntimeError &e) {
 				PLOG(tmx::utils::logWARNING) << "Encountered UDP Server Runtime Error" << e.what() << " attempting to process SPAT." << std::endl
@@ -159,6 +148,33 @@ namespace SpatPlugin {
 				SetStatus<uint>(keySkippedMessages, skippedMessages);
 			}
 			
+		}
+	}
+
+	void SpatPlugin::measureSpatInterval() {
+		// Measure interval between SPAT messages
+		if ( lastSpatTimeMs != 0 ) {
+			uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+			uint64_t intervalMs = currentTimeMs - lastSpatTimeMs;
+			if ( intervalMs > maxSpatIntervalMs ) {
+				maxSpatIntervalMs = intervalMs;
+				SetStatus<int>("Max SPaT Interval (ms)", maxSpatIntervalMs);
+				if ( intervalMs > 300 ) {
+					// Create TmxEventLogMessage to indicate SPaT interval violates CTI 4501 spec 3.3.2.1.3 "TSC Infrastructure SPaT Information Message Transmission Failure Threshold"
+					// A TSC infrastructure shall not exceed 0.3 seconds between transmissions of SPaT information message
+					tmx::messages::TmxEventLogMessage eventLogMsg;
+					std::string description = "SPaT Message Interval Exceeded CTI 4501 Specification of 300ms. Current Interval: " + std::to_string(intervalMs) + " ms.";
+					eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+					eventLogMsg.set_description(description);
+					BroadcastMessage(eventLogMsg, SpatPlugin::SpatPlugin::GetName());
+					SetStatus(keyConnectionStatus, "UNSTABLE: SPaT Interval Exceeded 300 ms");
+
+				}
+			}
+			lastSpatTimeMs = currentTimeMs;
+		}
+		else {
+			lastSpatTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 		}
 	}
 	void SpatPlugin::OnConfigChanged(const char *key, const char *value) {
