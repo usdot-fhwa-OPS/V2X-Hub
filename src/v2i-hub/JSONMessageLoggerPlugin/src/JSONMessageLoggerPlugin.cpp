@@ -23,6 +23,12 @@ namespace JSONMessageLoggerPlugin {
         SubscribeToMessages();
 
     }
+    JSONMessageLoggerPlugin::~JSONMessageLoggerPlugin()
+    {
+         // Cleanup code if needed
+        boost::log::core::get()->flush();
+        boost::log::core::get()->remove_all_sinks();
+    }
 
     void JSONMessageLoggerPlugin::initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir)
     {
@@ -57,6 +63,7 @@ namespace JSONMessageLoggerPlugin {
 
     void JSONMessageLoggerPlugin::OnStateChange(IvpPluginState state)
     {
+        // Tmx Message Manager OnStateChange will call Start() when entering the registered state
         tmx::utils::TmxMessageManager::OnStateChange(state);
 		if (state == IvpPluginState_registered) {
 			UpdateConfigSettings();
@@ -65,25 +72,24 @@ namespace JSONMessageLoggerPlugin {
 
     void JSONMessageLoggerPlugin::OnConfigChanged(const char *key, const char *value)
     {
+        // Tmx Message Manager OnConfigChanged will call Start() if TmxMessageManager related configs like NUMBER_WORKER_THREADS_CFG are changed
         tmx::utils::TmxMessageManager::OnConfigChanged(key, value);
 		UpdateConfigSettings();
     }
-    void JSONMessageLoggerPlugin::OnMessageReceived(IvpMessage *msg)
+    void JSONMessageLoggerPlugin::OnMessageReceived(tmx::routeable_message &msg)
     {
-        tmx::utils::TmxMessageManager::OnMessageReceived(msg);
-        tmx::routeable_message routeMsg(msg);
-        PLOG(tmx::utils::logDEBUG1) << "Routable Message " << routeMsg.to_string();
+        PLOG(tmx::utils::logDEBUG1) << "Routable Message " << msg.to_string();
         // Cast routeable message as J2735 Message
-        if (tmx::utils::PluginClient::IsJ2735Message(routeMsg)) {
+        if (tmx::utils::PluginClient::IsJ2735Message(msg)) {
             try {
-                if (routeMsg.get_flags() & IvpMsgFlags_RouteDSRC) {
+                if (msg.get_flags() & IvpMsgFlags_RouteDSRC) {
                     PLOG(tmx::utils::logDEBUG1) << "Logging TX J2735 Message";
-                    logRouteableMessage(routeMsg, txLogger);
+                    logRouteableMessage(msg, txLogger);
 
                 }
                 else {
                     PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
-                    logRouteableMessage(routeMsg, rxLogger);
+                    logRouteableMessage(msg, rxLogger);
                 }
             }
             catch (const boost::exception &e) {
@@ -114,5 +120,5 @@ namespace JSONMessageLoggerPlugin {
 // The main entry point for this application.
 int main(int argc, char *argv[])
 {
-	return tmx::utils::run_plugin<JSONMessageLoggerPlugin::JSONMessageLoggerPlugin>("JSON Message Logger Plugin", argc, argv);
+	return tmx::utils::run_plugin<JSONMessageLoggerPlugin::JSONMessageLoggerPlugin>("JSON Message Logger", argc, argv);
 }
