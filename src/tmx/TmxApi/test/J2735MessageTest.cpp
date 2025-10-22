@@ -569,15 +569,157 @@ TEST (J2735MessageTest, EncodeSrm)
 }
 
 TEST(J2735MessageTest, EncodeTravelerInformation){
-	#if SAEJ2735_SPEC == 2024
-	// TODO Add 2024 TIM message
-	GTEST_SKIP();
-	#endif
-	//Advisory
-	#if SAEJ2735_SPEC < 2020
-	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
-	#else
+	#if SAEJ2735_SPEC >= 2024
+	//2024 TIM message
+	string timStr = R"(
+	<TravelerInformation>
+		<msgCnt>1</msgCnt>
+		<packetID>0000000000087FAA72</packetID>
+		<dataFrames>
+			<TravelerDataFrame>
+			<doNotUse1>0</doNotUse1>
+			<frameType>
+				<roadSignage/>
+			</frameType>
+			<msgId>
+				<roadSignID>
+				<position>
+					<lat>281185423</lat>
+					<long>-818311882</long>
+					<elevation>220</elevation>
+				</position>
+				<viewAngle>1100000000000001</viewAngle>
+				<mutcdCode>
+					<maintenance/>
+				</mutcdCode>
+				</roadSignID>
+			</msgId>
+			<startYear>2025</startYear>
+			<startTime>181181</startTime>
+			<durationTime>5760</durationTime>
+			<priority>5</priority>
+			<doNotUse2>0</doNotUse2>
+			<regions>
+				<GeographicalPath>
+				<anchor>
+					<lat>281185423</lat>
+					<long>-818311882</long>
+					<elevation>220</elevation>
+				</anchor>
+				<laneWidth>366</laneWidth>
+				<directionality>
+					<forward/>
+				</directionality>
+				<closedPath>
+					<true/>
+				</closedPath>
+				<direction>1100000000000001</direction>
+				<description>
+					<path>
+					<offset>
+						<xy>
+						<nodes>
+							<NodeXY>
+							<delta>
+								<node-XY3>
+								<x>277</x>
+								<y>-1815</y>
+								</node-XY3>
+							</delta>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY2>
+								<x>20</x>
+								<y>885</y>
+								</node-XY2>
+							</delta>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY4>
+								<x>-296</x>
+								<y>2261</y>
+								</node-XY4>
+							</delta>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY3>
+								<x>-527</x>
+								<y>1756</y>
+								</node-XY3>
+							</delta>
+							<attributes>
+								<dElevation>-10</dElevation>
+							</attributes>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY1>
+								<x>-408</x>
+								<y>-66</y>
+								</node-XY1>
+							</delta>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY3>
+								<x>527</x>
+								<y>-1652</y>
+								</node-XY3>
+							</delta>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY2>
+								<x>26</x>
+								<y>-826</y>
+								</node-XY2>
+							</delta>
+							<attributes>
+								<dElevation>10</dElevation>
+							</attributes>
+							</NodeXY>
+							<NodeXY>
+							<delta>
+								<node-XY3>
+								<x>329</x>
+								<y>-1186</y>
+								</node-XY3>
+							</delta>
+							</NodeXY>
+						</nodes>
+						</xy>
+					</offset>
+					</path>
+				</description>
+				</GeographicalPath>
+			</regions>
+			<doNotUse3>0</doNotUse3>
+			<doNotUse4>0</doNotUse4>
+			<content>
+				<workZone>
+				<SEQUENCE>
+					<item>
+					<itis>769</itis>
+					</item>
+				</SEQUENCE>
+				</workZone>
+			</content>
+			</TravelerDataFrame>
+		</dataFrames>
+	</TravelerInformation>
+	)";
+	string expectedHex = "001f582010000000000087faa72080b28cceeb1e7506be6a21b980026fd25877a5a028007e5199dd63cea0d7cd443700b73c0010030a4543a43053ba8ddb18d552f8f6e013ec01a1be15078c6260d0c60282852926bc0010018080";	
+	#elif SAEJ2735_SPEC == 2020
+	// 2020 TIM message
 	string timStr="<TravelerInformation><msgCnt>1</msgCnt><packetID>00000000000F9E1D8D</packetID><dataFrames><TravelerDataFrame><notUsed>0</notUsed><frameType><unknown/></frameType><msgId><roadSignID><position><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></position><viewAngle>0000000000000000</viewAngle><mutcdCode><none/></mutcdCode></roadSignID></msgId><startYear>2023</startYear><startTime>394574</startTime><durationTime>32000</durationTime><priority>5</priority><notUsed1>0</notUsed1><regions><GeographicalPath><anchor><lat>389549153</lat><long>-771488965</long><elevation>400</elevation></anchor><laneWidth>366</laneWidth><directionality><forward/></directionality><closedPath><false/></closedPath><direction>0000000000000000</direction><description><path><offset><xy><nodes><NodeXY><delta><node-LatLon><lon>-771489394</lon><lat>389549194</lat></node-LatLon></delta><attributes><dElevation>-10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771487215</lon><lat>389548996</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY><NodeXY><delta><node-LatLon><lon>-771485210</lon><lat>389548981</lat></node-LatLon></delta><attributes><dElevation>10</dElevation></attributes></NodeXY></nodes></xy></offset></path></description></GeographicalPath></regions><notUsed2>0</notUsed2><notUsed3>0</notUsed3><content><speedLimit><SEQUENCE><item><itis>27</itis></item></SEQUENCE><SEQUENCE><item><text>Curve Ahead</text></item></SEQUENCE><SEQUENCE><item><itis>2564</itis></item></SEQUENCE><SEQUENCE><item><text>25</text></item></SEQUENCE><SEQUENCE><item><itis>8720</itis></item></SEQUENCE></speedLimit></content></TravelerDataFrame></dataFrames></TravelerInformation>";
+	string expectedHex = "001f6820100000000000f9e1d8d0803299b9eac27a9baa74232000000fcec0a9df4028007e53373d584f53754e846400b720000000b8f5374e3666e7ac5013ece3d4ddc1099b9e988050538f5378f9666e7a5a814140034000dea1f5e5db2a083a32e1c80a048b26a22100";
+	#else
+	// 2016 TIM message
+	string timStr="<TravelerInformation><msgCnt>1</msgCnt><timeStamp>115549</timeStamp><packetID>000000000023667BAC</packetID><dataFrames><TravelerDataFrame><sspTimRights>0</sspTimRights><frameType><advisory/></frameType><msgId><roadSignID><position><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></position><viewAngle>1111111111111111</viewAngle><mutcdCode><warning/></mutcdCode></roadSignID></msgId><startTime>115549</startTime><duratonTime>1</duratonTime><priority>7</priority><sspLocationRights>0</sspLocationRights><regions><GeographicalPath><anchor><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></anchor><directionality><both/></directionality><closedPath><true/></closedPath><description><geometry><direction>1111111111111111</direction><circle><center><lat>389549775</lat><long>-771491835</long><elevation>390</elevation></center><radius>74</radius><units><meter/></units></circle></geometry></description></GeographicalPath></regions><sspMsgRights1>0</sspMsgRights1><sspMsgRights2>0</sspMsgRights2><content><advisory><SEQUENCE><item><itis>7186</itis></item></SEQUENCE><SEQUENCE><item><text>curve</text></item></SEQUENCE><SEQUENCE><item><itis>13569</itis></item></SEQUENCE></advisory></content><url>987654321</url></TravelerDataFrame></dataFrames></TravelerInformation>";
+	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
 	#endif
 	std::stringstream ss;
 	TimMessage timMsg;
@@ -587,13 +729,15 @@ TEST(J2735MessageTest, EncodeTravelerInformation){
 	container.load<XML>(ss);
 	timMsg.set_contents(container.get_storage().get_tree());
 	timEnc.encode_j2735_message(timMsg);
-	ASSERT_EQ(31,  timEnc.get_msgId());	
-	#if SAEJ2735_SPEC < 2020
-	string expectedHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
+	EXPECT_EQ(31,  timEnc.get_msgId());
+	// 2024 version and up
+	#if SAEJ2735_SPEC >= 2024
+	// 2020 version
+	#elif SAEJ2735_SPEC == 2020
+	// 2016 version
 	#else
-	string expectedHex = "001f6820100000000000f9e1d8d0803299b9eac27a9baa74232000000fcec0a9df4028007e53373d584f53754e846400b720000000b8f5374e3666e7ac5013ece3d4ddc1099b9e988050538f5378f9666e7a5a814140034000dea1f5e5db2a083a32e1c80a048b26a22100";
 	#endif
-	ASSERT_EQ(expectedHex, timEnc.get_payload_str());			
+	EXPECT_EQ(expectedHex, timEnc.get_payload_str());			
 }
 
 TEST(J2735MessageTest, EncodeSDSM)
