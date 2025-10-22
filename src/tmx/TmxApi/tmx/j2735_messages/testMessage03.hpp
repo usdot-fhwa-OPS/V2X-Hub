@@ -22,12 +22,6 @@ TMX_J2735_NAMESPACE_START(j2735)
 
 template <>
 inline int get_j2735_message_key<tmx::messages::tsm3Message>(std::shared_ptr<TestMessage03> message) {
-	// if (message && message->coreData.id.buf) {
-	// 	tmx::byte_stream bytes(fmax(message->coreData.id.size, sizeof(int)));
-	// 	::memcpy(bytes.data(), message->coreData.id.buf, bytes.size());
-	// 	return *((int *)bytes.data());
-	// }
-
 	return 1;
 }
 
