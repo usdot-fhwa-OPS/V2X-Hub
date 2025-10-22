@@ -302,6 +302,7 @@ public:
 					std::string(j2735::get_messageTag< typename type::traits_type >()) + " from bytes.");
 			err << codecerr_info{DecType::Encoding};
 			err << errmsg_info{"Failed after " + std::to_string(rval.consumed) + " bytes."};
+			ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
 			BOOST_THROW_EXCEPTION(err);
 		}
 	}
@@ -358,11 +359,10 @@ public:
 			else if (is_uper())
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
-				{
-					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::uper<MessageFrameMessage> >(theData);
-					if (frame)
-						_decoded.reset(new MsgType(frame->get_j2735_data()));
+				{	
+					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::uper<MessageFrameMessage> >(theData));
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));	
 				}
 				else
 				{
@@ -373,10 +373,9 @@ public:
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{
-					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::der<MessageFrameMessage> >(theData);
-					if (frame)
-						_decoded.reset(new MsgType(frame->get_j2735_data()));
+					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::der<MessageFrameMessage> >(theData));
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));
 				}
 				else
 				{
@@ -388,7 +387,6 @@ public:
 				J2735Exception err("Unknown encoding.");
 				err << codecerr_info{this->get_encoding()};
 				BOOST_THROW_EXCEPTION(err);
-				throw;	// Just to suppress the warning for non-return value
 			}
 		}
 
@@ -516,7 +514,11 @@ public:
 	}
 private:
 	std::unique_ptr<MsgType> _decoded;
-
+	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for 
+	// decoding/encoding purposes (see decode_j2735_message() method)
+	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer
+	// Never delete this pointer directly will result in a memory leak
+	std::unique_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()
 	{

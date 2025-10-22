@@ -25,6 +25,7 @@
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
 #include <string>
+#include "MessageLogger.hpp"
 
 namespace JSONMessageLoggerPlugin {
     BOOST_LOG_ATTRIBUTE_KEYWORD(a_channel, "Channel", std::string) // Declare a_channel as a Boost.Log attribute keyword
@@ -34,16 +35,27 @@ namespace JSONMessageLoggerPlugin {
             explicit JSONMessageLoggerPlugin(const std::string &name);
             void OnStateChange(IvpPluginState state) override;
             void OnConfigChanged(const char *key, const char *value) override;
-            void OnMessageReceived(IvpMessage *msg) override;
+            void OnMessageReceived(tmx::routeable_message &msg) override;
             void initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir);
             void BroadcastEventLog(const std::string &messageContent);
+            // Define desctructor
+            ~JSONMessageLoggerPlugin();
         protected:
             void UpdateConfigSettings();
 
         private:
             std::mutex _configMutex;
+            /**
+             * Logger to record received J2735 messages in JSON format.
+             */
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> rxLogger;
+            /**
+             * Logger to record transmitted J2735 messages in JSON format.
+             */
             boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string> txLogger;
+            unsigned long _skippedMessages = 0;
+            const char* _keySkippedMessages = "Skipped Messages";
+
 
     };
 
