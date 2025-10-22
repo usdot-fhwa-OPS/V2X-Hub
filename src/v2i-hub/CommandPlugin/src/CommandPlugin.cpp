@@ -271,7 +271,9 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 						return 1;
 					}
 				}
-				toFile.append("/");
+				if (toFile.back() != '/') {
+					toFile.append("/");
+				}
 				toFile.append(_uploadRequests[pss->filename].destinationFileName);
 				try
 				{
