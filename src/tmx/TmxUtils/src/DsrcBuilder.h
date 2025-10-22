@@ -23,11 +23,7 @@
 #include <ITIScodesAndText.h>
 #endif
 
-#if SAEJ2735_SPEC < 2016
-typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
-typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
-typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
-#elif SAEJ2735_SPEC >= 2024
+#if SAEJ2735_SPEC >= 2024
 typedef TravelerDataFrame TiDataFrame;
 typedef ITIS_ITIScodesAndText ITIScodesAndText;
 typedef ITIS_ITIScodesAndText__Member ITIScodesAndText__Member;

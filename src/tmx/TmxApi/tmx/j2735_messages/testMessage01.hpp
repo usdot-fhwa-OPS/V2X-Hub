@@ -13,7 +13,6 @@
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 
-#if SAEJ2735_SPEC >= 2016
 // TMX_J2735_DECLARE(tsm6, TestMessage06, api::basicSafetyMessage_D, api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING)
 // #else
 TMX_J2735_DECLARE(tsm1, TestMessage01, api::testMessage01, api::MSGSUBTYPE_TESTMESSAGE01_STRING)
@@ -38,7 +37,6 @@ TMX_J2735_NAMESPACE_END(j2735)
 TMX_J2735_NAMESPACE_END(messages)
 TMX_J2735_NAMESPACE_END(tmx)
 
-#endif
 
 
 #endif /* TMX_J2735_MESSAGES_TESTMESSAGE05_HPP_ */

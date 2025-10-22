@@ -28,7 +28,7 @@ show_help() {
   echo "  BUILD_TYPE            The build type (e.g., debug, release, coverage)"
   echo ""
   echo "Required options:"
-  echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2025)"
+  echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
   echo ""
   echo "Optional flags:"
   echo "  -h, --help            Show this help message and exit"

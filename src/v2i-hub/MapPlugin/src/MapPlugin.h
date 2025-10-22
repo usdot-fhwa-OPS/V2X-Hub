@@ -53,9 +53,7 @@
 
 namespace MapPlugin {
 
-#if SAEJ2735_SPEC < 2016
-UPERframe _uperFrameMessage;
-#endif
+
 
 class MapFile: public tmx::message {
 public:

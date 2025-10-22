@@ -20,8 +20,7 @@ using namespace std;
 using namespace boost::property_tree;
 using namespace tmx::utils;
 
-#if SAEJ2735_SPEC < 2016
-#elif SAEJ2735_SPEC < 2020
+#if SAEJ2735_SPEC < 2020
 using MsgCount_t = DSRC_MsgCount_t;
 using TimeMark_t = DSRC_TimeMark_t;
 #else
@@ -213,10 +212,6 @@ void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::strin
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
-
-#if SAEJ2735_SPEC < 2016
-	spat->msgID = tmx::messages::SpatMessage::get_default_messageId();
-#endif
 
 	IntersectionState *intersection = (IntersectionState *)calloc(1, sizeof(IntersectionState));
 

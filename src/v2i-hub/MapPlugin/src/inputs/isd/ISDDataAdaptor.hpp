@@ -12,17 +12,12 @@
 #include <MinuteOfTheYear.h>
 #include <bitset>
 
-#if SAEJ2735_SPEC < 2016
-#define NO_NODE NodeList2_PR_NOTHING
-#define DEFINED_NODE NodeList2_PR_nodes
-#define COMPUTED_NODE NodeList2_PR_computed
-#define ENUM_NAME(X) NodeOffsetPoint_PR_node_ ## X
-#else
+
 #define NO_NODE NodeListXY_PR_NOTHING
 #define DEFINED_NODE NodeListXY_PR_nodes
 #define COMPUTED_NODE NodeListXY_PR_computed
 #define ENUM_NAME(X) NodeOffsetPointXY_PR_node_ ## X
-#endif
+
 #if SAEJ2735_SPEC < 2020
 using  Elevation2_t = DSRC_Elevation_t;
 #else
@@ -179,9 +174,7 @@ private:
  	ro_attribute(this->msg, reference_point_attribute<descriptiveIntersctionName>, std::string, descriptiveIntersctionName, get_, "");
     ro_attribute(this->msg, reference_point_attribute<layerID>, LayerID_t, layerID, get_, 0);
     ro_attribute(this->msg, reference_point_attribute<intersectionID>, IntersectionID_t, intersectionID, get_, 0);
-	#if SAEJ2735_SPEC < 2016
-    ro_attribute(this->msg, reference_point_attribute<msgCount>, MsgCount_t, msgCount, get_, 0);
-	#elif SAEJ2735_SPEC < 2020
+	#if SAEJ2735_SPEC < 2020
     ro_attribute(this->msg, reference_point_attribute<msgCount>, DSRC_MsgCount_t, msgCount, get_, 0);
 	#else
 	ro_attribute(this->msg, reference_point_attribute<msgCount>, Common_MsgCount_t, msgCount, get_, 0);
