@@ -539,57 +539,6 @@ public:
 
 typedef TmxJ2735EncodedMessage<MessageFrameMessage> MessageFrameEncodedMessage;
 
-#if SAEJ2735_SPEC < 2016
-namespace j2735 {
-
-// Decode and encode for UPER frame
-template <typename T>
-T *UperFrameDecode(const typename MessageFrameMessage::message_type *ptr)
-{
-	if (ptr && ptr->contentID == get_default_messageId< SaeJ2735Traits<T> >())
-	{
-		tmx::messages::codec::uper< TmxJ2735Message<T> > uperDecoder;
-		tmx::byte_stream uperFrameBytes(ptr->msgBlob.size);
-		memcpy(uperFrameBytes.data(), ptr->msgBlob.buf, ptr->msgBlob.size);
-		T *obj = 0;
-		asn_dec_rval_t udRet = uperDecoder.decode((void **)obj, uperFrameBytes);
-		if (udRet.code == RC_OK && obj)
-			return obj;
-	}
-
-	return 0;
-}
-
-template <typename T>
-typename MessageFrameMessage::message_type *UperFrameEncode(const T *ptr)
-{
-	if (ptr)
-	{
-		tmx::messages::codec::uper< TmxJ2735Message<T> > uperEncoder;
-		tmx::byte_stream uperFrameBytes(TMX_J2735_MAX_DATA_SIZE);
-		asn_enc_rval_t ueRet = uperEncoder.encode(ptr, uperFrameBytes);
-		if (ueRet.encoded > 0)
-		{
-			typename MessageFrameMessage::message_type *uperFrame =
-					(typename MessageFrameMessage::message_type *)
-						calloc(1, sizeof(typename MessageFrameMessage::message_type));
-
-			uperFrameBytes.resize(ueRet.encoded);
-
-			uperFrame->msgID = get_default_messageId< MessageFrameTraits >();
-			uperFrame->contentID = get_default_messageId< SaeJ2735Traits<T> >();
-			uperFrame->msgBlob.buf = (uint8_t *) calloc(ueRet.encoded, sizeof(uint8_t));
-			uperFrame->msgBlob.size = (int)ueRet.encoded;
-			::memcpy(uperFrame->msgBlob.buf, uperFrameBytes.data(), ueRet.encoded);
-			return uperFrame;
-		}
-	}
-
-	return 0;
-}
-
-} /* End namespace j2735 */
-#endif
 
 } /* End namespace messages */
 } /* End namespace tmx */

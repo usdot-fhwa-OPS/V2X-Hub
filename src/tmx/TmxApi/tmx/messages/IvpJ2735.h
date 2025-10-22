@@ -13,10 +13,6 @@
 #include "../apimessages/IvpMessageType.h"
 #include <stdio.h>
 
-#ifndef SAEJ2735_SPEC
-#define SAEJ2735_SPEC 2016
-#endif
-
 #include <DSRCmsgID.h>
 
 #define IVPMSG_TYPE_J2735 "J2735"
@@ -27,7 +23,6 @@ extern "C"
 #endif
 
 // Include this for backwards compability
-#if SAEJ2735_SPEC >= 2016
 /* Dependencies */
 typedef enum msgID {
 	msgID_reserved	= 0,
@@ -89,7 +84,6 @@ typedef enum msgID {
 	 */
 } e_DSRCmsgID;
 
-#endif
 
 typedef struct {
 	void *msgStructure;

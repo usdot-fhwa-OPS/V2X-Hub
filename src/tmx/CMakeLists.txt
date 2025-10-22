@@ -43,12 +43,12 @@ LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 #
 # Add the generated SAE J2735 library and an interface that contains the build properties
 #
-# New Option to set to just SAEJ2735 Version revision number. Defaults to 2016 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
+# New Option to set to just SAEJ2735 Version revision number. Defaults to 2024 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
 LIST(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
 LIST(APPEND CMAKE_MODULE_PATH "/opt/carma/cmake")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
 SET(J2735_LIBRARY_NAME "")
-SET(SAEJ2735_SPEC_VERSION "2016" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
+SET(SAEJ2735_SPEC_VERSION "2024" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
 IF( SAEJ2735_SPEC_VERSION EQUAL "2016")
     SET(J2735_LIBRARY_NAME "::stol-j2735-201603-carma")
     # TODO Update stol-j2735 2016 version to remove 03 suffix which will allow for

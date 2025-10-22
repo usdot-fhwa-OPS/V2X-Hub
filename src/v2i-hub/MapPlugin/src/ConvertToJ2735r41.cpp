@@ -432,9 +432,6 @@ int ConvertToJ2735r41::convertMap(map *mapMessage) {
 	memset(MapJ2735, 0, sizeof(MapData));
 
 	// TODO: Map-P Not defined from ASN.1 using literal instead
-#if SAEJ2735_SPEC < 2016
-	MapJ2735->msgID = tmx::messages::MapDataMessage::get_default_messageId(); // Map-P
-#endif
 	std::cout << std::endl << "R41 XML:" << std::endl;
 	xer_fprint(stdout, &asn_DEF_MapData, MapJ2735);
 
