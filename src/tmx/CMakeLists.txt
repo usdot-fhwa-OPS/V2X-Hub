@@ -43,7 +43,7 @@ LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
 #
 # Add the generated SAE J2735 library and an interface that contains the build properties
 #
-# New Option to set to just SAEJ2735 Version revision number. Defaults to 2014 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
+# New Option to set to just SAEJ2735 Version revision number. Defaults to 2024 or call cmake -Bbuild -DSAEJ2735_SPEC_VERSION=<rnumber>
 LIST(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
 LIST(APPEND CMAKE_MODULE_PATH "/opt/carma/cmake")
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
