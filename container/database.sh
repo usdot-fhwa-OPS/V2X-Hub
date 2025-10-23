@@ -12,5 +12,5 @@ chown plugin:adm /var/log/tmx
 chmod 777 /var/log/tmx
 
 mkdir -p /var/www/plugins
-chown plugin:adm /var/www /var/www/plugins
+chown plugin:adm -R /var/www /var/www/plugins
 chmod 755 /var/www/plugins

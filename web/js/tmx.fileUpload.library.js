@@ -216,7 +216,7 @@ $(document).ready(function () {
                 var type = $(".activeFileOption").attr("data-type");
                 uploadFileType = type;
                 if (type == "map") {
-                    destPath = "/var/www/plugins/MapPlugin/";
+                    destPath = "/var/www/plugins/MAP/";
                 } else if (type == "other") {
                     var usrPath = $("#fileDestPathInput").val();
                     if (usrPath.length > 0) {
