@@ -102,7 +102,14 @@ namespace SpatPlugin {
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.
              */
             void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const;
-
+            /**
+             * @brief Static function to calculate interval between two spat messages given the ms epoch timestamps
+             * of each.
+             * @param lastSpatMessage epoch ms timestamp of the last spat message
+             * @param currentSpatMessage epoch ms of the current receved spat message. Should be larger than lastSpatMessage
+             * @returns interval in ms
+             * @throws TmxException if interval exceeds maximum allowable value from CTI 4501 of 300 ms
+             */
             static uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
 
 
