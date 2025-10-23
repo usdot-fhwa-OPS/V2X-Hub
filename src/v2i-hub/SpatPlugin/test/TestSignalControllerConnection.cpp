@@ -618,13 +618,13 @@ namespace SpatPlugin {
     }
 
     TEST(TestSignalController, testCalculateSPaTInterval){
-        EXPECT_EQ(100, calculateSPaTInterval(1761251266515, 1761251266615));
-        EXPECT_EQ(0, calculateSPaTInterval(1761251266515, 1761251266515));
-        EXPECT_EQ(300, calculateSPaTInterval(1761251266515, 1761251266815));
+        EXPECT_EQ(100, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266615));
+        EXPECT_EQ(0, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266515));
+        EXPECT_EQ(300, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266815));
 
     }
 
     TEST(TestSignalController, testCalculateSPaTIntervalException) {
-        EXPECT_THROW(calculateSPaTInterval(1761251266515, 1761251266816), tmx::TmxException);
+        EXPECT_THROW(SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266816), tmx::TmxException);
     }
 }

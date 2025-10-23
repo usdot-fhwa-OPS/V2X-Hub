@@ -74,13 +74,13 @@ namespace SpatPlugin {
 			// to define an OID and value to set or none at all
 			auto connected = scConnection->initializeSignalControllerConnection(false);
 			if  ( connected ) {
-				SetStatus(keyConnectionStatus, "IDLE");
+				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_IDLE);
 				try {
 					spatReceiverThread->AddPeriodicTick([this]()
 							{
 								this->processTSCPacket();
 								if (!this->isConnected) {
-									SetStatus(keyConnectionStatus, "CONNECTED");
+									SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_HEALTHY);
 									this->isConnected = true;
 								}
 							}, // end of lambda expression
@@ -174,11 +174,11 @@ namespace SpatPlugin {
 		if ( lastSpatTimeMs != 0 ) {
 			uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 			try {
-				uint64_t intervalMs = calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
+				uint64_t intervalMs = SignalControllerConnection::calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
 				if ( intervalMs > maxSpatIntervalMs ) {
 					maxSpatIntervalMs = intervalMs;
 					if ( intervalMs > 300 ) {
-						SetStatus<uint>("Max SPaT Interval (ms)", intervalMs);
+						SetStatus<uint>(keySpatMaxInterval, intervalMs);
 					}
 				}
 			}
@@ -186,7 +186,7 @@ namespace SpatPlugin {
 				tmx::messages::TmxEventLogMessage msg(e);
 				BroadcastMessage(msg);
 				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_UNHEALTHY);
-				SetStatus<uint>("Max SPaT Interval (ms)(all values above allowable range 300 will apear as 301)", 301);
+				SetStatus<uint>(keySpatMaxInterval, 301);
 
 			}
 			lastSpatTimeMs = currentTimeMs;

@@ -65,6 +65,8 @@ namespace SpatPlugin {
 
             const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
 
+            const static unsigned int SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+
             friend class TestSignalControllerConnection;
 
         public:
@@ -101,7 +103,9 @@ namespace SpatPlugin {
              */
             void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const;
 
+            static uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
+
+
     };
 
-    uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
 }

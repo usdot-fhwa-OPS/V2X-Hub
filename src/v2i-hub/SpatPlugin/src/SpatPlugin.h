@@ -103,6 +103,10 @@ namespace SpatPlugin {
 			 */
 			const char* keySkippedMessages = "Skipped Messages";
 			/**
+			 * @brief Key for keeping track of the maximum recorded interval between two sequential SPaT messages.
+			 */
+			const char* keySpatMaxInterval = "Max SPaT Interval (ms)(all values above allowable range 300 will apear as 301)";
+			/**
 			 * @brief Count of received packets from the TSC that have been skipped due to
 			 * errors.
 			 */
