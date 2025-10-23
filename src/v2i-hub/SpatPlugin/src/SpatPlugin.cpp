@@ -167,6 +167,8 @@ namespace SpatPlugin {
 		BroadcastMessage(*rMsg);
 		// Recursively free SPAT struct 
 		ASN_STRUCT_FREE(asn_DEF_SPAT, spat_ptr);
+		// TODO fix MessageFrameMessage destructor to properly free internal SPAT pointer
+		free(frame.get_j2735_data().get());
 	}
 
 	void SpatPlugin::measureSpatInterval() {
@@ -177,16 +179,16 @@ namespace SpatPlugin {
 				uint64_t intervalMs = SignalControllerConnection::calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
 				if ( intervalMs > maxSpatIntervalMs ) {
 					maxSpatIntervalMs = intervalMs;
-					if ( intervalMs > 300 ) {
-						SetStatus<uint>(keySpatMaxInterval, intervalMs);
-					}
+					SetStatus<uint>(keySpatMaxInterval, intervalMs);
+					
 				}
 			}
 			catch(const TmxException &e) {
 				tmx::messages::TmxEventLogMessage msg(e);
 				BroadcastMessage(msg);
 				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_UNHEALTHY);
-				SetStatus<uint>(keySpatMaxInterval, 301);
+				maxSpatIntervalMs= 301;
+				SetStatus<uint>(keySpatMaxInterval, maxSpatIntervalMs);
 
 			}
 			lastSpatTimeMs = currentTimeMs;

@@ -90,7 +90,8 @@ namespace SpatPlugin {
 			uint64_t intervalMs = currentSpatMessage - lastSpatMessage;
             if ( intervalMs > SPAT_INTERVAL_MAX_THRESHOLD_MS ) {
                 throw tmx::TmxException("Interval " + std::to_string(intervalMs) +
-                     "between received SPAT information from TSC exceeded CTI 4501 maximum described limit of "+ std::to_string(SPAT_INTERVAL_MAX_THRESHOLD_MS) +" ms");
+                     " ms between received SPAT information from TSC exceeded CTI 4501 maximum described limit of " 
+                     + std::to_string(SPAT_INTERVAL_MAX_THRESHOLD_MS) +" ms");
             }
 			return intervalMs;
 		}
