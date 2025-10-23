@@ -5,6 +5,7 @@ find_package(carma-clock REQUIRED)
 BuildTmxPlugin()
 target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock)
 add_library(${PROJECT_NAME}_lib src/NTCIP1202.cpp
+                                src/SpatMode.cpp
                                 src/SignalControllerConnection.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils ::carma-clock )
 #############

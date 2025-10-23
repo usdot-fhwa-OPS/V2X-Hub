@@ -25,15 +25,16 @@ public:
 		set_description(info);
 	}
 
-	TmxEventLogMessage(std::exception &ex, std::string info = "", bool fatal = true): message()
+	TmxEventLogMessage(const std::exception &ex, const std::string &info = "", bool fatal = true): message()
 	{
 		if (fatal)
 			set_level(IvpLogLevel_error);
 		else
 			set_level(IvpLogLevel_warn);
 
-		info += ex.what();
-		set_description(info);
+		std::string descript = info;
+		descript += ex.what();
+		set_description(descript);
 	}
 
 	static constexpr const char *MessageType = IVPMSG_TYPE_APIRESV_EVENTLOG;

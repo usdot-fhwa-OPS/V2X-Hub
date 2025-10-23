@@ -84,4 +84,19 @@ namespace SpatPlugin {
         }
     }
 
+    uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage) {
+        // Measure interval between SPAT messages
+		if ( lastSpatMessage != 0 ) {
+			uint64_t intervalMs = currentSpatMessage - lastSpatMessage;
+            if ( intervalMs > 300 ) {
+                throw tmx::TmxException("Interval " + std::to_string(intervalMs) +
+                     "between received SPAT information from TSC exceeded CTI 4501 maximum described limit of 300 ms");
+            }
+			return intervalMs;
+		}
+		else {
+			return currentSpatMessage;
+		}
+    }
+
 }

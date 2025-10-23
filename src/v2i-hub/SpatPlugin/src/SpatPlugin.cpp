@@ -54,8 +54,16 @@ namespace SpatPlugin {
 
 			GetConfigValue<std::string>("Intersection_Name", intersection_name,&data_lock);
 			GetConfigValue<unsigned int>("Intersection_Id", intersection_id, &data_lock);
-			GetConfigValue<std::string>("SPAT_Mode", spatMode, &data_lock);
-			
+			std::string spat_string;
+			GetConfigValue<std::string>("SPAT_Mode", spat_string, &data_lock);
+			spatMode = spat_mode_from_string(spat_string);
+			if (spatMode == SPAT_MODE::UNKNOWN) {
+				tmx::messages::TmxEventLogMessage eventLogMsg;
+				std::string description = "Unknown configured SPAT format" + spat_string + ". Accepted values are SPAT and TSCBM";
+				eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+				eventLogMsg.set_description(description);
+				BroadcastMessage(eventLogMsg);
+			}
 			if (scConnection) {
 				scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
 			}
@@ -70,7 +78,7 @@ namespace SpatPlugin {
 				try {
 					spatReceiverThread->AddPeriodicTick([this]()
 							{
-								this->processSpat();
+								this->processTSCPacket();
 								if (!this->isConnected) {
 									SetStatus(keyConnectionStatus, "CONNECTED");
 									this->isConnected = true;
@@ -84,55 +92,36 @@ namespace SpatPlugin {
 				catch (const TmxException &e) {
 					PLOG(tmx::utils::logERROR) << "Encountered error " << e.what() << " during SPAT Processing." << std::endl
 											   << e.GetBacktrace();
-					SetStatus(keyConnectionStatus, "DISCONNECTED"); 
+					SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_DISONNECTED); 
 					this->isConnected = false;
 
 				}
 			}
 			else {
 				PLOG(tmx::utils::logERROR) << "Traffic Signal Controller at " << signal_controller_ip << ":" << signal_controller_snmp_port << " failed!";
-				SetStatus(keyConnectionStatus, "DISCONNECTED");
+				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_DISONNECTED);
 				this->isConnected = false;
 
 			}
 		}
 	}
 
-	void SpatPlugin::processSpat() {
+	void SpatPlugin::processTSCPacket() {
 		if (this->scConnection ) {
 			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
 			try {
-				if (spatMode == MODE_J2735_SPAT) {
-					PLOG(logDEBUG) << "Starting HEX SPaT Receiver ...";
-					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-					scConnection->receiveUPERSPAT(spatEncoded_ptr);
-					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
-					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-					auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
-					BroadcastMessage(*rMsg);	
-				}
-				else {
-					if ( spatMode != MODE_TSCBM){
-						PLOG(tmx::utils::logWARNING) << spatMode << " is an unsupport SPAT MODE. Defaulting to BINARY. Supported options are BINARY and J2735_HEX";
-					}
-					auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
-					PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
-					auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-					scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+				switch (spatMode)
+				{
+				case SPAT_MODE::SPAT:
+					processSpat();
+					break;
+				case SPAT_MODE::TSCBM:
+					processTSCBM();
+					break;		
+				default:
+					PLOG(tmx::utils::logWARNING) << "Configured SPAT_MODE is unknown. Attempting to process SPAT as TSCBM. Update configuration value to valid values SPAT or TSCBM!";
+					processTSCBM();					
 					
-					tmx::messages::SpatMessage _spatMessage(*spat_ptr);
-					MessageFrameMessage frame(_spatMessage.get_j2735_data());
-					spatEncoded_ptr->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-					spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-					spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
-					auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
-					BroadcastMessage(*rMsg);
-					// Recursively free SPAT struct 
-					ASN_STRUCT_FREE(asn_DEF_SPAT, spat_ptr);
-					// TODO fix MessageFrameMessage destructor to properly free internal SPAT pointer
-					free(frame.get_j2735_data().get()); 
-
-				
 				}
 				measureSpatInterval();
 				
@@ -140,6 +129,9 @@ namespace SpatPlugin {
 			catch (const UdpServerRuntimeError &e) {
 				PLOG(tmx::utils::logWARNING) << "Encountered UDP Server Runtime Error" << e.what() << " attempting to process SPAT." << std::endl
 										   << e.GetBacktrace();
+				TmxEventLogMessage msg(e, "SPAT Plugin Traffic Signal Controller UNHEALTHY", true);
+				BroadcastMessage(msg);
+				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_UNHEALTHY);
 			}
 			catch (const tmx::TmxException &e) {
 				PLOG(tmx::utils::logERROR) << "Encountered Tmx Exception " << e.what() << " attempting to process SPAT." << std::endl
@@ -151,25 +143,51 @@ namespace SpatPlugin {
 		}
 	}
 
+	void SpatPlugin::processSpat() {
+		PLOG(logDEBUG) << "Attempting to process packet as SPAT ...";
+		auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+		scConnection->receiveUPERSPAT(spatEncoded_ptr);
+		spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
+		spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+		auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
+		BroadcastMessage(*rMsg);
+	}
+
+	void SpatPlugin::processTSCBM() {
+		PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
+		auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
+		auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+		scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+		tmx::messages::SpatMessage _spatMessage(*spat_ptr);
+		MessageFrameMessage frame(_spatMessage.get_j2735_data());
+		spatEncoded_ptr->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
+		spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+		spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
+		auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
+		BroadcastMessage(*rMsg);
+		// Recursively free SPAT struct 
+		ASN_STRUCT_FREE(asn_DEF_SPAT, spat_ptr);
+	}
+
 	void SpatPlugin::measureSpatInterval() {
 		// Measure interval between SPAT messages
 		if ( lastSpatTimeMs != 0 ) {
 			uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-			uint64_t intervalMs = currentTimeMs - lastSpatTimeMs;
-			if ( intervalMs > maxSpatIntervalMs ) {
-				maxSpatIntervalMs = intervalMs;
-				SetStatus<int>("Max SPaT Interval (ms)", maxSpatIntervalMs);
-				if ( intervalMs > 300 ) {
-					// Create TmxEventLogMessage to indicate SPaT interval violates CTI 4501 spec 3.3.2.1.3 "TSC Infrastructure SPaT Information Message Transmission Failure Threshold"
-					// A TSC infrastructure shall not exceed 0.3 seconds between transmissions of SPaT information message
-					tmx::messages::TmxEventLogMessage eventLogMsg;
-					std::string description = "SPaT Message Interval Exceeded CTI 4501 Specification of 300ms. Current Interval: " + std::to_string(intervalMs) + " ms.";
-					eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
-					eventLogMsg.set_description(description);
-					BroadcastMessage(eventLogMsg, SpatPlugin::SpatPlugin::GetName());
-					SetStatus(keyConnectionStatus, "UNSTABLE: SPaT Interval Exceeded 300 ms");
-
+			try {
+				uint64_t intervalMs = calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
+				if ( intervalMs > maxSpatIntervalMs ) {
+					maxSpatIntervalMs = intervalMs;
+					if ( intervalMs > 300 ) {
+						SetStatus<uint>("Max SPaT Interval (ms)", intervalMs);
+					}
 				}
+			}
+			catch(const TmxException &e) {
+				tmx::messages::TmxEventLogMessage msg(e);
+				BroadcastMessage(msg);
+				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_UNHEALTHY);
+				SetStatus<uint>("Max SPaT Interval (ms)(all values above allowable range 300 will apear as 301)", 301);
+
 			}
 			lastSpatTimeMs = currentTimeMs;
 		}

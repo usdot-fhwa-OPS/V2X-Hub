@@ -100,5 +100,8 @@ namespace SpatPlugin {
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.
              */
             void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const;
+
     };
+
+    uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
 }

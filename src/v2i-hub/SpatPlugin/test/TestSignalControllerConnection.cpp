@@ -20,6 +20,7 @@
 #include <MockUdpServer.h>
 #include <tmx/messages/J2735Exception.hpp>
 #include <NTCIP1202OIDs.h>
+#include <tmx/TmxException.hpp>
 
 using testing::_;
 using testing::Action;
@@ -614,5 +615,16 @@ namespace SpatPlugin {
 
         auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 		EXPECT_THROW(signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr), tmx::TmxException);  
+    }
+
+    TEST(TestSignalController, testCalculateSPaTInterval){
+        EXPECT_EQ(100, calculateSPaTInterval(1761251266515, 1761251266615));
+        EXPECT_EQ(0, calculateSPaTInterval(1761251266515, 1761251266515));
+        EXPECT_EQ(300, calculateSPaTInterval(1761251266515, 1761251266815));
+
+    }
+
+    TEST(TestSignalController, testCalculateSPaTIntervalException) {
+        EXPECT_THROW(calculateSPaTInterval(1761251266515, 1761251266816), tmx::TmxException);
     }
 }
