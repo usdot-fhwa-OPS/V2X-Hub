@@ -627,4 +627,17 @@ namespace SpatPlugin {
     TEST(TestSignalController, testCalculateSPaTIntervalException) {
         EXPECT_THROW(SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266816), tmx::TmxException);
     }
+
+    TEST_F(TestSignalControllerConnection, testUpdateIntersectionStatus) {
+        uint16_t statusIntersection = 1;
+	    IntersectionStatusObject_t status;
+        status.size = 2 * sizeof(uint8_t);
+        status.bits_unused = 0;
+        status.buf[1] = statusIntersection;
+        status.buf[0] = (statusIntersection >> 8); 
+        signalControllerConnection->updateIntersectionStatus(status);
+        auto map = signalControllerConnection->getIntersectionStatus();
+
+        EXPECT_TRUE(map.find("Failure Mode")->second);
+    }
 }

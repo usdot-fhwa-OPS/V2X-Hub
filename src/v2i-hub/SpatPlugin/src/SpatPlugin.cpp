@@ -162,14 +162,14 @@ namespace SpatPlugin {
 	void SpatPlugin::processTSCBM() {
 		PLOG(logDEBUG) << "Attempting to process package as TSCBM...";
 		auto spatPtr = (SPAT*)calloc(1, sizeof(SPAT));
-		tmx::messages::SpatEncodedMessage spatEncoded_ptr;
+		tmx::messages::SpatEncodedMessage spatEncoded;
 		scConnection->receiveBinarySPAT(spatPtr, PluginClientClockAware::getClock()->nowInMilliseconds());
 		// SpatMessage and SpatEncodeMsg assume responsibilty for SPAT pointers (see constructor documentation for TmxJ2735Message and TmxJ2735EncodedMessage)
 		tmx::messages::SpatMessage spatMessage(spatPtr);
-		spatEncoded_ptr.initialize(spatMessage);
-		spatEncoded_ptr.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-		spatEncoded_ptr.set_flags(IvpMsgFlags_RouteDSRC);
-		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded_ptr);
+		spatEncoded.initialize(spatMessage);
+		spatEncoded.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+		spatEncoded.set_flags(IvpMsgFlags_RouteDSRC);
+		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded);
 		BroadcastMessage(*rMsg);
 
 	}
