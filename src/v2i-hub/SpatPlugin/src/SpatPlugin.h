@@ -122,7 +122,7 @@ namespace SpatPlugin {
 			/**
 			 * Largest interval between two SPaT messages received by plugin
 			 */
-			int maxSpatIntervalMs = 0;
+			uint maxSpatIntervalMs = 0;
 			/**
 			 * @brief Helper method used by processTSCPacket to process packet assuming it is in SPAT format
 			 */

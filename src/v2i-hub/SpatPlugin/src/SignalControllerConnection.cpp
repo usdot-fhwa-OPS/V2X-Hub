@@ -93,10 +93,10 @@ namespace SpatPlugin {
                      " ms between received SPAT information from TSC exceeded CTI 4501 maximum described limit of " 
                      + std::to_string(SPAT_INTERVAL_MAX_THRESHOLD_MS) +" ms");
             }
-			return intervalMs;
+			return static_cast<uint>(intervalMs);
 		}
 		else {
-			return currentSpatMessage;
+			return static_cast<uint>(currentSpatMessage);
 		}
     }
 

@@ -176,7 +176,7 @@ namespace SpatPlugin {
 		if ( lastSpatTimeMs != 0 ) {
 			uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 			try {
-				uint64_t intervalMs = SignalControllerConnection::calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
+				uint intervalMs = SignalControllerConnection::calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
 				if ( intervalMs > maxSpatIntervalMs ) {
 					maxSpatIntervalMs = intervalMs;
 					SetStatus<uint>(keySpatMaxInterval, intervalMs);
