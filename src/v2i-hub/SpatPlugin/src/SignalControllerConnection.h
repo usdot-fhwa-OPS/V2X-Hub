@@ -67,7 +67,6 @@ namespace SpatPlugin {
 
             const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
 
-            const static unsigned int SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
 
             std::map<std::string, bool> intersectionStatus = {
                 {"Manual Control Is Enabled", false},
@@ -133,6 +132,9 @@ namespace SpatPlugin {
             void updateIntersectionStatus(const IntersectionStatusObject_t &status);
 
             std::map<std::string, bool> getIntersectionStatus() const;
+
+            const static unsigned int SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+
     };
 
 }

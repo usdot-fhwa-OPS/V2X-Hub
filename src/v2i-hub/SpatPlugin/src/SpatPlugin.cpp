@@ -80,7 +80,9 @@ namespace SpatPlugin {
 							{
 								this->processTSCPacket();
 								if (!this->isConnected) {
-									SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_HEALTHY);
+									if ( maxSpatIntervalMs < SignalControllerConnection::SPAT_INTERVAL_MAX_THRESHOLD_MS) {
+										SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_HEALTHY);
+									}
 									this->isConnected = true;
 								}
 							}, // end of lambda expression
@@ -149,22 +151,22 @@ namespace SpatPlugin {
 
 	void SpatPlugin::processSpat() {
 		PLOG(logDEBUG) << "Attempting to process packet as SPAT ...";
-		auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
-		scConnection->receiveUPERSPAT(spatEncoded_ptr);
-		spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
-		spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-		auto rMsg = dynamic_cast<routeable_message *>(spatEncoded_ptr.get());
+		auto spatEncodedPtr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+		scConnection->receiveUPERSPAT(spatEncodedPtr);
+		spatEncodedPtr->set_flags(IvpMsgFlags_RouteDSRC);
+		spatEncodedPtr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+		auto rMsg = dynamic_cast<routeable_message *>(spatEncodedPtr.get());
 		BroadcastMessage(*rMsg);
 	}
 
 	void SpatPlugin::processTSCBM() {
 		PLOG(logDEBUG) << "Attempting to process package as TSCBM...";
-		auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
+		auto spatPtr = (SPAT*)calloc(1, sizeof(SPAT));
 		tmx::messages::SpatEncodedMessage spatEncoded_ptr;
-		scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
+		scConnection->receiveBinarySPAT(spatPtr, PluginClientClockAware::getClock()->nowInMilliseconds());
 		// SpatMessage and SpatEncodeMsg assume responsibilty for SPAT pointers (see constructor documentation for TmxJ2735Message and TmxJ2735EncodedMessage)
-		tmx::messages::SpatMessage _spatMessage(spat_ptr);
-		spatEncoded_ptr.initialize(_spatMessage);
+		tmx::messages::SpatMessage spatMessage(spatPtr);
+		spatEncoded_ptr.initialize(spatMessage);
 		spatEncoded_ptr.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
 		spatEncoded_ptr.set_flags(IvpMsgFlags_RouteDSRC);
 		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded_ptr);
@@ -181,7 +183,7 @@ namespace SpatPlugin {
 				uint intervalMs = SignalControllerConnection::calculateSPaTInterval(lastSpatTimeMs, currentTimeMs);
 				if ( intervalMs > maxSpatIntervalMs ) {
 					maxSpatIntervalMs = intervalMs;
-					SetStatus<uint>(keySpatMaxInterval, intervalMs);
+					SetStatus<uint>(keySpatMaxInterval, maxSpatIntervalMs);
 					
 				}
 			}
@@ -189,7 +191,7 @@ namespace SpatPlugin {
 				tmx::messages::TmxEventLogMessage msg(e);
 				BroadcastMessage(msg);
 				SetStatus<std::string>(keyConnectionStatus, CONNECTION_STATUS_UNHEALTHY);
-				maxSpatIntervalMs= 301;
+				maxSpatIntervalMs= SignalControllerConnection::SPAT_INTERVAL_MAX_THRESHOLD_MS + 1;
 				SetStatus<uint>(keySpatMaxInterval, maxSpatIntervalMs);
 
 			}
