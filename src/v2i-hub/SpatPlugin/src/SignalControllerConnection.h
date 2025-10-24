@@ -23,6 +23,8 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/TmxException.hpp>
 #include <gtest/gtest_prod.h>  
+#include <map>
+#include <bitset>
 
 #include "NTCIP1202.h"
 #include "NTCIP1202OIDs.h"
@@ -67,6 +69,22 @@ namespace SpatPlugin {
 
             const static unsigned int SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
 
+            std::map<std::string, bool> intersectionStatus = {
+                {"Manual Control Is Enabled", false},
+                {"Stop Time Is Activated", false},
+                {"Failure Flash", false},
+                {"Preemption Is Active", false},
+                {"Signal Priority Is Active", false},
+                {"Fixed Time Operation", false},
+                {"Traffic Dependent Operation", false},
+                {"Standby Operation", false},
+                {"Failure Mode", false},
+                {"Off", false},
+                {"Recent MAP Message Update", false},
+                {"Recent Change in MAP Assigned Lane Ids Used", false},
+                {"No Valid MAP No Available At This Time", false},
+                {"No Valid SPAT is Available At This Time", false},
+            };
             friend class TestSignalControllerConnection;
 
         public:
@@ -96,12 +114,12 @@ namespace SpatPlugin {
              * @param spat an empty SPaT pointer to which the SPAT data will be written.
              * @param timeMs current time in ms from epoch to use for message timestamp.
              */
-            void receiveBinarySPAT( SPAT * const spat, uint64_t timeMs) const;
+            void receiveBinarySPAT( SPAT * const spat, uint64_t timeMs);
             /**
              * @brief Method to receive SPaT data in UPER Hex format from TSC.
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.
              */
-            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const;
+            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr);
             /**
              * @brief Static function to calculate interval between two spat messages given the ms epoch timestamps
              * of each.
@@ -112,7 +130,9 @@ namespace SpatPlugin {
              */
             static uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
 
+            void updateIntersectionStatus(const IntersectionStatusObject_t &status);
 
+            std::map<std::string, bool> getIntersectionStatus() const;
     };
 
 }

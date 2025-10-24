@@ -108,7 +108,7 @@ namespace SpatPlugin {
 
 	void SpatPlugin::processTSCPacket() {
 		if (this->scConnection ) {
-			PLOG(tmx::utils::logDEBUG)  << "Processing SPAT ... " << std::endl;
+			PLOG(tmx::utils::logDEBUG)  << "Processing TSC Packet ... " << std::endl;
 			try {
 				switch (spatMode)
 				{
@@ -124,6 +124,10 @@ namespace SpatPlugin {
 					
 				}
 				measureSpatInterval();
+				auto status = this->scConnection->getIntersectionStatus();
+				for (const auto & [key, value]: status) {
+					SetStatus<bool>(key.c_str(), value);
+				}
 				
 			}
 			catch (const UdpServerRuntimeError &e) {
@@ -154,22 +158,20 @@ namespace SpatPlugin {
 	}
 
 	void SpatPlugin::processTSCBM() {
-		PLOG(logDEBUG) << "Starting BINARY SPaT Receiver ...";
+		PLOG(logDEBUG) << "Attempting to process package as TSCBM...";
 		auto spat_ptr = (SPAT*)calloc(1, sizeof(SPAT));
-		auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
+		tmx::messages::SpatEncodedMessage spatEncoded_ptr;
 		scConnection->receiveBinarySPAT(spat_ptr, PluginClientClockAware::getClock()->nowInMilliseconds());
-		tmx::messages::SpatMessage _spatMessage(*spat_ptr);
-		MessageFrameMessage frame(_spatMessage.get_j2735_data());
-		spatEncoded_ptr->set_data(TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-		spatEncoded_ptr->addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
-		spatEncoded_ptr->set_flags(IvpMsgFlags_RouteDSRC);
-		auto rMsg = dynamic_cast<routeable_message*>(spatEncoded_ptr.get());
+		// SpatMessage and SpatEncodeMsg assume responsibilty for SPAT pointers (see constructor documentation for TmxJ2735Message and TmxJ2735EncodedMessage)
+		tmx::messages::SpatMessage _spatMessage(spat_ptr);
+		spatEncoded_ptr.initialize(_spatMessage);
+		spatEncoded_ptr.addDsrcMetadata(tmx::messages::api::msgPSID::signalPhaseAndTimingMessage_PSID);
+		spatEncoded_ptr.set_flags(IvpMsgFlags_RouteDSRC);
+		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded_ptr);
 		BroadcastMessage(*rMsg);
-		// Recursively free SPAT struct 
-		ASN_STRUCT_FREE(asn_DEF_SPAT, spat_ptr);
-		// TODO fix MessageFrameMessage destructor to properly free internal SPAT pointer
-		free(frame.get_j2735_data().get());
+
 	}
+	
 
 	void SpatPlugin::measureSpatInterval() {
 		// Measure interval between SPAT messages

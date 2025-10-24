@@ -37,7 +37,7 @@ namespace SpatPlugin {
         return status;
     };
 
-    void SignalControllerConnection::receiveBinarySPAT(SPAT * const spat, uint64_t timeMs ) const {
+    void SignalControllerConnection::receiveBinarySPAT(SPAT * const spat, uint64_t timeMs ) {
         FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
         char buf[SPAT_BINARY_BUFFER_SIZE];
         auto numBytes = spatPacketReceiver->TimedReceive(buf, SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
@@ -48,6 +48,8 @@ namespace SpatPlugin {
             ntcip1202.setSignalGroupMappingList(this->signalGroupMapping);
             ntcip1202.copyBytesIntoNtcip1202(buf, numBytes);
             ntcip1202.ToJ2735SPAT(spat,timeMs, intersectionName, intersectionId);
+            // Update status map with intersection status information
+            updateIntersectionStatus(spat->intersections.list.array[0]->status);
             if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
             {
                 asn_fprint(stdout, &asn_DEF_SPAT, spat);
@@ -58,7 +60,7 @@ namespace SpatPlugin {
         }
     }
     
-    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const {
+    void SignalControllerConnection::receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) {
         FILE_LOG(tmx::utils::logDEBUG1) << "Receiving J2725 HEX SPAT ..." << std::endl;
         auto payload = spatPacketReceiver->stringTimedReceive( UDP_SERVER_TIMEOUT_MS );
         auto index = payload.find("Payload=");
@@ -74,6 +76,8 @@ namespace SpatPlugin {
             // Read SpateEncodedMessage from bytes
             tmx::messages::J2735MessageFactory myFactory;
             spatEncoded_ptr.reset(dynamic_cast<tmx::messages::SpatEncodedMessage*>(myFactory.NewMessage(bytes)));
+            // Update status map with intersection status information
+            updateIntersectionStatus(spatEncoded_ptr->decode_j2735_message().get_j2735_data()->intersections.list.array[0]->status);
             if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)
             {
                 asn_fprint(stdout, &asn_DEF_SPAT, spatEncoded_ptr->decode_j2735_message().get_j2735_data().get());
@@ -98,6 +102,28 @@ namespace SpatPlugin {
 		else {
 			return static_cast<uint>(currentSpatMessage);
 		}
+    }
+
+    void SignalControllerConnection::updateIntersectionStatus(const IntersectionStatusObject_t &status) {
+        uint16_t statusVal = static_cast<uint16_t>(status.buf[0]) | (static_cast<uint16_t>(status.buf[1]) << 8);
+        std::bitset<16> bitSet(statusVal);
+        intersectionStatus["Manual Control Is Enabled"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_manualControlIsEnabled];
+        intersectionStatus["Stop Time Is Activated"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_stopTimeIsActivated];
+        intersectionStatus["Failure Flash"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_failureFlash];
+        intersectionStatus["Preemption Is Active"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_preemptIsActive];
+        intersectionStatus["Signal Priority Is Active"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_signalPriorityIsActive];
+        intersectionStatus["Fixed Time Operation"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_fixedTimeOperation];
+        intersectionStatus["Traffic Dependent Operation"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_trafficDependentOperation];
+        intersectionStatus["Standby Operation"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_standbyOperation];
+        intersectionStatus["Failure Mode"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_failureMode];
+        intersectionStatus["Off"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_off];
+        intersectionStatus["Recent MAP Message Update"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_recentMAPmessageUpdate];
+        intersectionStatus["Recent Change in MAP Assigned Lane Ids Used"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_recentChangeInMAPassignedLanesIDsUsed];
+        intersectionStatus["No Valid SPAT is Available At This Time"] = bitSet[IntersectionStatusObject::IntersectionStatusObject_noValidSPATisAvailableAtThisTime];
+    }
+
+    std::map<std::string, bool> SignalControllerConnection::getIntersectionStatus() const{
+        return intersectionStatus;
     }
 
 }
