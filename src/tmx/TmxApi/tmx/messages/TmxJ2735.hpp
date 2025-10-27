@@ -121,7 +121,7 @@ public:
 	template <typename OtherMsgType>
 	TmxJ2735Message(const std::shared_ptr<OtherMsgType> &other):
 		tmx::tmx_message<Format>(),
-		_j2735_data(j2735::j2735_cast<message_type>(other.get()), [](message_type *p) { free(p);}) { }
+		_j2735_data(j2735::j2735_cast<message_type>(other.get()), [](message_type *p) { }) { }
 
 	template <typename OtherFormat>
 	TmxJ2735Message(const TmxJ2735Message<OtherFormat> &other, message_converter *converter = 0):
