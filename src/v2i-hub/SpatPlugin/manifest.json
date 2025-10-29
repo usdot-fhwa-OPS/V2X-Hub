@@ -55,8 +55,8 @@
 		},
 		{
 			"key":"SPAT_Mode",
-			"default":"BINARY",
-			"description":"The format of received SPAT from Traffic Signal Controller (TSC). Acceptance values are BINARY and J2735_HEX."
+			"default":"TSCBM",
+			"description":"The format of received Signal Phase and Timing information from Traffic Signal Controller (TSC). Acceptance values are TSCBM (Traffic Signal Controller Broadcast Message) and SPAT (J2735 UPER Encode SPAT message)."
 		},
 		{
 			"key":"LogLevel",

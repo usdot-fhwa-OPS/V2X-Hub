@@ -33,7 +33,6 @@ public:
 	 * amongst the entire process space.
 	 */
 	DbConnectionPool();
-
 	/**
 	 * Get a connection from the pool.
 	 *

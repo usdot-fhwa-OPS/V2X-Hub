@@ -37,9 +37,9 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 **TSC_SNMP_Community**: The SNMP Community used for sending SNMP NTCIP 1202 communication to Traffic Signal Controller (TSC). Please refer TSC vendor documentation for SNMP Community.
 
-**SPAT_Mode**: The format of received SPAT from Traffic Signal Controller (TSC). Acceptance values are BINARY and J2735_HEX.
+**SPAT_Mode**: The format of received Signal Phase and Timing information from Traffic Signal Controller (TSC). Acceptance values are TSCBM (Traffic Signal Controller Broadcast Message) and SPAT (J2735 UPER Encode SPAT message).
 > [!NOTE]
-> **J2735_HEX** is a new added SPAT format. If your TSC is able to send UPER SPAT directly to an RSU, this is the format in which it is being sent. Below is a screen shot of J2735_HEX SPaT via TCP Dump
+> **SPAT** is a new added SPAT format. If your TSC is able to send UPER SPAT directly to an RSU, this is the format in which it is being sent. Below is a screen shot of SPAT via TCP Dump
 ![Alt text](docs/hex_tcpdump.png)
 
 ## Design

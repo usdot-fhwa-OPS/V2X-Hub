@@ -20,6 +20,7 @@
 #include <MockUdpServer.h>
 #include <tmx/messages/J2735Exception.hpp>
 #include <NTCIP1202OIDs.h>
+#include <tmx/TmxException.hpp>
 
 using testing::_;
 using testing::Action;
@@ -614,5 +615,29 @@ namespace SpatPlugin {
 
         auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 		EXPECT_THROW(signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr), tmx::TmxException);  
+    }
+
+    TEST(TestSignalController, testCalculateSPaTInterval){
+        EXPECT_EQ(100, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266615));
+        EXPECT_EQ(0, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266515));
+        EXPECT_EQ(300, SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266815));
+
+    }
+
+    TEST(TestSignalController, testCalculateSPaTIntervalException) {
+        EXPECT_THROW(SignalControllerConnection::calculateSPaTInterval(1761251266515, 1761251266816), tmx::TmxException);
+    }
+
+    TEST_F(TestSignalControllerConnection, testUpdateIntersectionStatus) {
+        uint16_t statusIntersection = 1;
+	    IntersectionStatusObject_t status;
+        status.size = 2 * sizeof(uint8_t);
+        status.bits_unused = 0;
+        status.buf[1] = statusIntersection;
+        status.buf[0] = (statusIntersection >> 8); 
+        signalControllerConnection->updateIntersectionStatus(status);
+        auto map = signalControllerConnection->getIntersectionStatus();
+
+        EXPECT_TRUE(map.find("Failure Mode")->second);
     }
 }
