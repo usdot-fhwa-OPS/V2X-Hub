@@ -58,6 +58,7 @@ RUN ldconfig
 
 
 WORKDIR /var/log/tmx
+USER plugin
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
