@@ -38,16 +38,19 @@ WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
 RUN ./library.sh
 RUN ldconfig
-
+# Built Plugins
 COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
+# Headers
 COPY --from=dependencies /usr/local/include/ /usr/local/include/
+# Built Libraries for V2X Hub (tmx services) and ext/ (snmp, etc)
 COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
+# Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
 COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
-COPY --from=dependencies /usr/lib/ /usr/lib/
-COPY --from=dependencies /usr/bin/ /usr/bin/
+# CMake config iles
 COPY --from=dependencies /usr/local/share/ /usr/local/share/
 COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
 COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+# Installed STOL debian packages like (stol-j2735, timesync, etc)
 COPY --from=dependencies /opt/ /opt/
 ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
 ADD src/tmx/TmxCore/tmxcore.service /usr/sbin/
