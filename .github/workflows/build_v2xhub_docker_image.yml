@@ -121,6 +121,6 @@ jobs:
           AMD64_TAG="${FINAL_TAG}-amd64"
           ARM64_TAG="${FINAL_TAG}-arm64"
 
-          docker buildx imagetools create "$FINAL_TAG" \
+          docker buildx imagetools create --tag "$FINAL_TAG" \
             "$AMD64_TAG" \
             "$ARM64_TAG"
