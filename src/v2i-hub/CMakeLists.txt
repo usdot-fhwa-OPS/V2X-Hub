@@ -127,17 +127,34 @@ ENDIF ()
 
 FILE (GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
 
-FOREACH (Plugin ${PluginBuilds})
-    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin} DIRECTORY)
+# Default option to build all plugins
+OPTION(BUILD_ALL_PLUGINS "Build all available plugins" ON)
+# Get list of available plugins
+FILE(GLOB PLUGIN_DIRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+FOREACH(PLUGIN ${PLUGIN_DIRS})
+    GET_FILENAME_COMPONENT(PLUGIN_DIR ${PLUGIN} DIRECTORY)
+    IF(NOT "${PLUGIN_DIR}" STREQUAL "")
+        GET_FILENAME_COMPONENT(PLUGIN_NAME ${PLUGIN_DIR} NAME)
+        # Create an option for each plugin
+        OPTION(BUILD_PLUGIN_${PLUGIN_NAME} "Build ${PLUGIN_NAME} plugin" ${BUILD_ALL_PLUGINS})
+    ENDIF()
+ENDFOREACH()
+FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+FOREACH(Plugin ${PluginBuilds})
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
     
-    # Do not include the base source directory, or else it might recurse forever
-    IF ("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
-        CONTINUE ()
-    ENDIF ()
+    # Do not include the base source directory
+    IF("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
+        CONTINUE()
+    ENDIF()
     
-    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin_Dir} NAME)
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
     
-    IF (NOT SKIP_${Plugin_Dir})
-        ADD_SUBDIRECTORY (${Plugin_Dir})
-    ENDIF ()
-ENDFOREACH ()
+    # Check if plugin should be built based on user option
+    IF(NOT SKIP_${Plugin_Dir} AND (BUILD_ALL_PLUGINS OR BUILD_PLUGIN_${Plugin_Dir}))
+        MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
+        ADD_SUBDIRECTORY(${Plugin_Dir})
+    ELSE()
+        MESSAGE(STATUS "Skipping plugin: ${Plugin_Dir}")
+    ENDIF()
+ENDFOREACH()
