@@ -1,4 +1,4 @@
-project( SpatPlugin VERSION 7.10.0 LANGUAGES CXX )
+project( SpatPlugin VERSION 7.11.0 LANGUAGES CXX )
 set(TMX_PLUGIN_NAME "SPAT")
 set(CMAKE_CXX_STANDARD 17)
 find_package(carma-clock REQUIRED)
