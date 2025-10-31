@@ -26,7 +26,7 @@ services:
       - mysql-datavolume:/var/lib/mysql
 
   php:
-    image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
+    image: usdotfhwaops/php:test
     container_name: php
     network_mode: host
     restart: always
@@ -71,14 +71,14 @@ services:
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
       - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
-      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
+      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/MAP/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
     secrets:
       - mysql_password
     volumes:
       - ./logs:/var/log/tmx
-      - ./MAP:/var/www/plugins/MAP
+      - ./MAP:/var/www/download/MAP
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
       - ./ssl:/var/www/plugins/ssl:rw
