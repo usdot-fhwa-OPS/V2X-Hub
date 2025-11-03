@@ -181,7 +181,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 		}
 		catch (const boost::exception & ex)
 		{
-			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create download folder";
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create download folder" << outdir << ": " << boost::diagnostic_information(ex);
 			_uploadRequests[pss->filename].message = "Failed to create download folder";
 			return 1;
 		}
