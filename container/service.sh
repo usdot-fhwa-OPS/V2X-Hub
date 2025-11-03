@@ -3,6 +3,7 @@ wait-for-it.sh 127.0.0.1:3306
 
 # Add stol apt repository libraries to path for tmxcore
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/carma/lib/
+ldconfig
 for plugin in /usr/local/plugins/*.zip; do
     echo "Installing plugin $plugin"
     tmxctl --plugin-install "$plugin"

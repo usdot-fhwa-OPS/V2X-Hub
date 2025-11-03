@@ -5,7 +5,8 @@ if [ $? -ne 0 ]; then
 	adduser --system --disabled-login --disabled-password --gecos --no-create-home plugin
 fi
 
-usermod -a -G dialout plugin
+usermod -a -G adm plugin
+
 
 mkdir -p /var/log/tmx
 chown plugin:adm /var/log/tmx

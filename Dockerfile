@@ -26,7 +26,6 @@ WORKDIR /home/V2X-Hub/src/
 FROM build-environment AS dependencies
 RUN ./build.sh release --j2735-version $J2735_VERSION
 RUN ldconfig
-
 # run final image
 FROM ubuntu:$UBUNTU_VERSION AS v2xhub
 ENV DEBIAN_FRONTEND=noninteractive
@@ -38,28 +37,26 @@ WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
 RUN ./library.sh
 RUN ldconfig
+
+
 # Built Plugins
 COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
 # Headers
-COPY --from=dependencies /usr/local/include/ /usr/local/include/
+COPY --from=dependencies  /usr/local/include/ /usr/local/include/
 # Built Libraries for V2X Hub (tmx services) and ext/ (snmp, etc)
-COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies  /usr/local/lib/ /usr/local/lib/
 # Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
 COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
-# CMake config iles
-COPY --from=dependencies /usr/local/share/ /usr/local/share/
-COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
-COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+# CMake config files
+COPY --from=dependencies  /usr/local/share/ /usr/local/share/
 # Installed STOL debian packages like (stol-j2735, timesync, etc)
-COPY --from=dependencies /opt/ /opt/
+COPY --from=dependencies  /opt/ /opt/
 ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
 ADD src/tmx/TmxCore/tmxcore.service /usr/sbin/
 RUN ldconfig
 
-
 WORKDIR /var/log/tmx
 USER plugin
-
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.name="V2X-Hub-Deployment"
