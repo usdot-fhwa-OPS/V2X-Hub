@@ -181,8 +181,16 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 			return 1;
 		}
 		FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: file name = " << pss->filename;
-		outdir.append("/");
-		outdir.append(pss->filename);
+		if (!outdir.empty() && outdir.back() != '/'){
+			outdir.append("/");
+			outdir.append(pss->filename);
+		}
+		else if (outdir.empty()){
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
+			_uploadRequests[pss->filename].message = "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
+			return 1;
+		}
+		
 #if !defined(LWS_WITH_ESP32)
 		pss->fd = (lws_filefd_type)(long long)open(outdir.c_str(),
 				O_CREAT | O_TRUNC | O_RDWR, 0600);
@@ -254,7 +262,7 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 					fromFile.append("/");
 				}		
 				fromFile.append(pss->filename);
-				if (_uploadRequests[pss->filename].destinationPath == "")
+				if (_uploadRequests[pss->filename].destinationPath.empty() )
 				{
 					toFile = outdir;
 				}
