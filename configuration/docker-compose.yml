@@ -26,7 +26,7 @@ services:
       - mysql-datavolume:/var/lib/mysql
 
   php:
-    image: usdotfhwaops/php:test
+    image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
     network_mode: host
     restart: always
