@@ -168,27 +168,27 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 			return 1;
 		}
 		FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: Found request";
+		if (outdir.empty()){
+			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
+			_uploadRequests[pss->filename].message = "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
+			return 1;
+		}
 		try
-		{
+		{	
 			FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: outpath = " << outpath.c_str();
 			if (!boost::filesystem::exists(outpath))
 				boost::filesystem::create_directory(outpath);
 		}
-		catch (exception & ex)
+		catch (const boost::exception & ex)
 		{
 			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create download folder";
 			_uploadRequests[pss->filename].message = "Failed to create download folder";
 			return 1;
 		}
 		FILE_LOG(logDEBUG) << "CommandPlugin::FileUploadCB: file name = " << pss->filename;
-		if (!outdir.empty() && outdir.back() != '/'){
+		if ( outdir.back() != '/'){
 			outdir.append("/");
 			outdir.append(pss->filename);
-		}
-		else if (outdir.empty()){
-			FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
-			_uploadRequests[pss->filename].message = "CommandPlugin::FileUploadCB: Failed to create destination folder - Command Plugin download path is empty!";
-			return 1;
 		}
 		
 #if !defined(LWS_WITH_ESP32)
@@ -275,9 +275,9 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 						if (!boost::filesystem::exists(toFile))
 							boost::filesystem::create_directory(toFile);
 					}
-					catch (const exception & ex)
+					catch (const boost::exception & ex)
 					{
-						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder";
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to create destination folder : " << toFile << ": " << boost::diagnostic_information(ex);
 						_uploadRequests[pss->filename].message = "Failed to create destination folder";
 						return 1;
 					}
@@ -290,17 +290,17 @@ int CommandPlugin::FileUploadCB(void *data, const char *name, const char *filena
 				{
 					boost::filesystem::copy_file (fromFile, toFile, copy_option::overwrite_if_exists);
 				}
-				catch (const exception & ex)
+				catch (const boost::exception & ex)
 				{
-					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder: " << toFile << ": " << ex.what();
+					FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to copy file to destination folder: " << toFile << ": " << boost::diagnostic_information(ex);
 					_uploadRequests[pss->filename].message = "Failed to copy file to destination folder.";
 					try
 					{
 						boost::filesystem::remove(fromFile);
 					}
-					catch (const exception & ex2)
+					catch (const boost::exception & ex2)
 					{
-						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file: " << fromFile << ": " << ex2.what();
+						FILE_LOG(logERROR) << "CommandPlugin::FileUploadCB: Failed to delete download file: " << fromFile << ": " << boost::diagnostic_information(ex2);
 						_uploadRequests[pss->filename].message.append(" Failed to delete download file.");
 					}
 					return 1;
