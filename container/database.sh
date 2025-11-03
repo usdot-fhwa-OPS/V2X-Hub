@@ -14,3 +14,7 @@ chmod 777 /var/log/tmx
 mkdir -p /var/www/plugins
 chown plugin:adm /var/www /var/www/plugins
 chmod 755 /var/www/plugins
+
+mkdir -p /var/www/download
+chown plugin:adm /var/www/download
+chmod 755 /var/www/download
