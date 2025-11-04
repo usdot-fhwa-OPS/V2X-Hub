@@ -9,6 +9,8 @@ SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
 SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
 COMPOSE_PROFILES=""
+PLUGIN_INPUT="All"
+
 echo "Initializing Docker Environment for V2X Hub..."
 # Retrieve available release candidates
 release_candidates=$(git branch -r | grep 'origin/release/' | sed 's|origin/||' | sed 's/release\//release-/g')
@@ -45,6 +47,11 @@ if [[ $PORT_DRAYAGE_ENABLED == "TRUE" ]]; then
     echo "Activating port_drayage profile."
     COMPOSE_PROFILES="port_drayage"
 fi
+
+# Plugin Configuration
+read -r -p "Enter Plugins (or press Enter to use default as $PLUGIN_INPUT): " PLUGINS
+PLUGIN_INPUT=${PLUGIN_INPUT:-$PLUGIN_INPUT}
+
 # Infrastructure id
 read -r -p "Enter Infrastructure id (or press Enter to use default as $INFRASTRUCTURE_ID_DEFAULT): " INFRASTRUCTURE_ID
 INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-$INFRASTRUCTURE_ID_DEFAULT}

@@ -150,7 +150,7 @@ fi
 
 # Process plugin input
 cmake_flags=""
-if [ "$PLUGIN_INPUT" = "all" ]; then
+if [ "$PLUGIN_INPUT" = "All"  ]; then
   cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=ON"
 else
   cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=OFF"
