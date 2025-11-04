@@ -58,7 +58,9 @@ RUN ldconfig
 
 
 WORKDIR /var/log/tmx
-USER plugin
+# TODO: create a non-root user to run the services. Currently 
+# PluginMonitor needs user with root permissions
+# USER plugin
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
