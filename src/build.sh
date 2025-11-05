@@ -39,7 +39,6 @@ show_help() {
 # Initialize variables
 BUILD_TYPE=""
 J2735_VERSION=""
-PLUGIN_INPUT=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -58,7 +57,7 @@ while [[ $# -gt 0 ]]; do
         PLUGIN_INPUT="$2"
         shift 2
       else
-        echo "Error: --plugins requires a string value (e.g., 'all' or 'MapPlugin SpatPlugin')"
+        echo "Error: --plugins requires a string value (e.g., 'All' or 'MapPlugin SpatPlugin')"
         exit 1
       fi
       ;;
@@ -166,12 +165,6 @@ fi
 
 # Run CMake with the new flags
 cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" ${cmake_flags} .
-cmake --build build -j "${numCPU}"
-cmake --install build
-popd
-
-pushd v2i-hub
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" .
 cmake --build build -j "${numCPU}"
 cmake --install build
 popd

@@ -9,7 +9,7 @@ SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
 SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
 COMPOSE_PROFILES=""
-PLUGIN_INPUT="All"
+PLUGIN_INPUT_DEFAULT="All"
 
 echo "Initializing Docker Environment for V2X Hub..."
 # Retrieve available release candidates
@@ -40,6 +40,10 @@ echo "$updated_tags"
 read -r -p "Enter V2X-Hub Version (choose from the above, or press Enter to use the latest version $latest_version): " chosen_version
 V2XHUB_VERSION=${chosen_version:-$latest_version}
 
+# Plugins to build
+read -r -p "Enter plugins to build (space-separated) or press Enter for default (All): " V2X_BUILD_PLUGINS
+PLUGIN_INPUT=${V2X_BUILD_PLUGINS:-PLUGIN_INPUT_DEFAULT}
+
 # Enable Port Drayage functionality
 read -r -p "Enable Port Drayage functionality (TRUE/FALSE, or press Enter to use default as $PORT_DRAYAGE_ENABLED_DEFAULT): " PORT_DRAYAGE_ENABLED
 PORT_DRAYAGE_ENABLED=${PORT_DRAYAGE_ENABLED:-$PORT_DRAYAGE_ENABLED_DEFAULT}
@@ -47,10 +51,6 @@ if [[ $PORT_DRAYAGE_ENABLED == "TRUE" ]]; then
     echo "Activating port_drayage profile."
     COMPOSE_PROFILES="port_drayage"
 fi
-
-# Plugin Configuration
-read -r -p "Enter Plugins (or press Enter to use default as $PLUGIN_INPUT): " PLUGINS
-PLUGIN_INPUT=${PLUGIN_INPUT:-$PLUGIN_INPUT}
 
 # Infrastructure id
 read -r -p "Enter Infrastructure id (or press Enter to use default as $INFRASTRUCTURE_ID_DEFAULT): " INFRASTRUCTURE_ID
@@ -120,6 +120,7 @@ SENSOR_JSON_FILE_PATH="$SENSOR_JSON_FILE_PATH"
 MYSQL_PASSWORD="$MYSQL_PASSWORD"
 V2XHUB_USERNAME="$V2XHUB_USERNAME"
 V2XHUB_PASSWORD="$V2XHUB_PASSWORD"
+PLUGIN_INPUT=${PLUGIN_INPUT}
 EOF
 
     # Adding Simulation IP and Sensor Path if Simulation Mode is TRUE

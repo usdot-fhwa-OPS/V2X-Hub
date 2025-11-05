@@ -140,6 +140,7 @@ FOREACH(PLUGIN ${PLUGIN_DIRS})
     ENDIF()
 ENDFOREACH()
 FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+MESSAGE(STATUS "Skipping plugins ${SKIP_PLUGINS}")
 FOREACH(Plugin ${PluginBuilds})
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
     
@@ -151,7 +152,7 @@ FOREACH(Plugin ${PluginBuilds})
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
     
     # Check if plugin should be built based on user option
-    IF(NOT SKIP_${Plugin_Dir} AND (BUILD_ALL_PLUGINS OR BUILD_PLUGIN_${Plugin_Dir}))
+    IF(NOT SKIP_${Plugin_Dir} )
         MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()

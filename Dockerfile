@@ -1,6 +1,8 @@
 ARG UBUNTU_VERSION=jammy
 
 FROM ubuntu:$UBUNTU_VERSION AS build-environment
+ARG PLUGIN_INPUT
+ENV PLUGIN_INPUT=${PLUGIN_INPUT}
 ARG J2735_VERSION=2024
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
@@ -21,10 +23,11 @@ RUN ./library.sh
 RUN ldconfig
 
 # build internal components
+
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
 FROM build-environment AS dependencies
-RUN ./build.sh release --j2735-version $J2735_VERSION
+RUN ./build.sh release --j2735-version $J2735_VERSION --plugins "${PLUGIN_INPUT}"
 RUN ldconfig
 
 # run final image
