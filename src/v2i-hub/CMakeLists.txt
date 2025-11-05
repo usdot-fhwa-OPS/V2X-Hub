@@ -159,7 +159,7 @@ FOREACH(Plugin ${PluginBuilds})
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
     
     # Check if plugin should be built based on user option and skip flag
-    IF(BUILD_PLUGIN_${Plugin_Dir} AND NOT SKIP_${Plugin_Dir})
+    IF(NOT SKIP_${Plugin_Dir} AND (BUILD_ALL_PLUGINS OR BUILD_PLUGIN_${Plugin_Dir}))
         MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()
