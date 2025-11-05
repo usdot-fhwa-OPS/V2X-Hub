@@ -125,22 +125,13 @@ IF (NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv71")
 	SET (SKIP_LearInterfacePlugin ON)
 ENDIF ()
 
-FILE (GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
-
 # Default option to build all plugins
 OPTION(BUILD_ALL_PLUGINS "Build all available plugins" ON)
-# Get list of available plugins
-FILE(GLOB PLUGIN_DIRS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
-FOREACH(PLUGIN ${PLUGIN_DIRS})
-    GET_FILENAME_COMPONENT(PLUGIN_DIR ${PLUGIN} DIRECTORY)
-    IF(NOT "${PLUGIN_DIR}" STREQUAL "")
-        GET_FILENAME_COMPONENT(PLUGIN_NAME ${PLUGIN_DIR} NAME)
-        # Create an option for each plugin
-        OPTION(BUILD_PLUGIN_${PLUGIN_NAME} "Build ${PLUGIN_NAME} plugin" ${BUILD_ALL_PLUGINS})
-    ENDIF()
-ENDFOREACH()
+
+# Get list of available plugins and create options
 FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
-MESSAGE(STATUS "Skipping plugins ${SKIP_PLUGINS}")
+SET(SKIP_PLUGINS "")  # Initialize empty list for skipped plugins
+
 FOREACH(Plugin ${PluginBuilds})
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
     
@@ -151,11 +142,28 @@ FOREACH(Plugin ${PluginBuilds})
     
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
     
-    # Check if plugin should be built based on user option
-    IF(NOT SKIP_${Plugin_Dir} )
+    # Create an option for each plugin (default to BUILD_ALL_PLUGINS)
+    OPTION(BUILD_PLUGIN_${Plugin_Dir} "Build ${Plugin_Dir} plugin" ${BUILD_ALL_PLUGINS})
+ENDFOREACH()
+
+# Now process the plugins
+MESSAGE(STATUS "Skipping plugins:")  # Will list below
+FOREACH(Plugin ${PluginBuilds})
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
+    
+    # Do not include the base source directory
+    IF("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
+        CONTINUE()
+    ENDIF()
+    
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
+    
+    # Check if plugin should be built based on user option and skip flag
+    IF(BUILD_PLUGIN_${Plugin_Dir} AND NOT SKIP_${Plugin_Dir})
         MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()
         MESSAGE(STATUS "Skipping plugin: ${Plugin_Dir}")
+        LIST(APPEND SKIP_PLUGINS ${Plugin_Dir})  # Track for summary if needed
     ENDIF()
 ENDFOREACH()

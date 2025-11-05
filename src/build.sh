@@ -143,13 +143,13 @@ if [[ -z "$PLUGIN_INPUT" ]]; then
   done
   echo ""
   echo "Enter plugins to build (space-separated, case-sensitive), or 'all' to build everything."
-  echo "Example: 'MapPlugin SpatPlugin' or 'all'"
+  echo "Example: 'MapPlugin SpatPlugin' or 'all' (no quotes needed)"
   read -p "> " PLUGIN_INPUT
 fi
 
 # Process plugin input
 cmake_flags=""
-if [ "$PLUGIN_INPUT" = "All"  ]; then
+if [[ "${PLUGIN_INPUT,,}" = "all" ]]; then  # Case-insensitive check (converts to lowercase)
   cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=ON"
 else
   cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=OFF"
