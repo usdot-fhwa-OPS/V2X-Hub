@@ -23,12 +23,12 @@ numCPU=$(nproc)
 show_help() {
   echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--plugins 'list or all']"
   echo ""
-  echo "Optional positional argument:"
+  echo "Required positional arguments:"
   echo "  BUILD_TYPE            The build type (e.g., debug, release, coverage)"
   echo ""
-  echo "Optional options:"
+  echo "Required options:"
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
-  echo "  --plugins STRING      Specify plugins to build (space-separated, case-sensitive) or 'all' (non-interactive mode)"
+  echo "  --plugins STRING      Specify plugins to build (space-separated, case-sensitive) or 'All' (non-interactive mode)"
   echo ""
   echo "Optional flags:"
   echo "  -h, --help            Show this help message and exit"
@@ -67,6 +67,7 @@ while [[ $# -gt 0 ]]; do
       ;;
     --*)
       echo "Unknown option: $1"
+      echo ""
       show_help
       exit 1
       ;;
@@ -76,6 +77,7 @@ while [[ $# -gt 0 ]]; do
         shift
       else
         echo "Error: Unexpected extra positional argument: $1"
+        echo ""
         show_help
         exit 1
       fi
@@ -90,7 +92,7 @@ if [[ -z "$BUILD_TYPE" ]]; then
 fi
 
 if [[ -z "$J2735_VERSION" ]]; then
-  echo "Enter J2735 version (e.g., 2016, 2020, 2024):"
+  echo "Enter --j2735-version (e.g., 2016, 2020, 2024):"
   read -p "> " J2735_VERSION
 fi
 
@@ -102,15 +104,19 @@ fi
 # Set CPP CMake flags and capitalize build type for CMake
 if [ "$BUILD_TYPE" = "release" ]; then
     BUILD_TYPE="Release"
+    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
     CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
 elif [ "$BUILD_TYPE" = "debug" ]; then
     BUILD_TYPE="Debug"
+    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
     CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
 elif [ "$BUILD_TYPE" = "coverage" ]; then
+    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
+    # deprecation warnings
     CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
     BUILD_TYPE="Debug"
 else 
-    echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported: release, coverage, debug."
+    echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE: release, coverage, debug."
     exit 1
 fi
 

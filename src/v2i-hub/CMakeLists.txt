@@ -169,6 +169,6 @@ FOREACH(Plugin ${PluginBuilds})
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()
         MESSAGE(STATUS "Skipping plugin: ${Plugin_Dir}")
-        LIST(APPEND SKIP_PLUGINS ${Plugin_Dir})  # Track for summary if needed
+        LIST(APPEND SKIP_PLUGINS ${Plugin_Dir})
     ENDIF()
 ENDFOREACH()
