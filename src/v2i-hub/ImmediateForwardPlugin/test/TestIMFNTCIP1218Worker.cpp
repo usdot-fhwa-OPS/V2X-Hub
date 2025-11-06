@@ -256,9 +256,9 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[0].type, 'x');
     EXPECT_EQ(requests_1[0].value, message);
-    XPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[1].type, 'i');
-    EXPECT_EQ(requests_1[1].value, 1);
+    EXPECT_EQ(requests_1[1].value, "1");
 }
 
 TEST(TestIMFNTCIP1218Worker, waitForRSUModeStandby) {
