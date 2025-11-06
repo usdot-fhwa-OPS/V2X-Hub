@@ -157,6 +157,11 @@ FOREACH(Plugin ${PluginBuilds})
     ENDIF()
     
     GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
+
+    #Always build CommandPlugin to connect to web UI
+    IF("${Plugin_Dir}" STREQUAL "CommandPlugin")
+        MESSAGE(STATUS "Building required plugin: ${Plugin_Dir}")
+        ADD_SUBDIRECTORY(${Plugin_Dir})
     
     # Check if plugin should be built based on user option and skip flag
     IF(NOT SKIP_${Plugin_Dir} AND (BUILD_ALL_PLUGINS OR BUILD_PLUGIN_${Plugin_Dir}))
