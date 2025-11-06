@@ -38,16 +38,17 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
-      - ./ssl:/etc/apache2/ssl:ro
+      - ssl-certs-volume:/etc/apache2/ssl:ro
 
 
   v2xhub:
-    image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
+    image: usdotfhwaops/v2xhub:test
     container_name: v2xhub
     network_mode: host
     restart: always
     depends_on:
       - db
+    user: "plugin:adm"
     ulimits:
       nofile:
         soft: 2560
@@ -77,11 +78,11 @@ services:
     secrets:
       - mysql_password
     volumes:
-      - ./logs:/var/log/tmx
-      - ./download:/var/www/download/:rw
+      - v2xhub-logs-volume:/var/log/tmx:rw
+      - v2xhub-download-volume:/var/www/download/:rw
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
-      - ./ssl:/var/www/plugins/ssl:rw
+      - ssl-certs-volume:/var/www/plugins/ssl:rw
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
@@ -102,3 +103,6 @@ secrets:
 
 volumes:
   mysql-datavolume:
+  ssl-certs-volume:
+  v2xhub-download-volume:
+  v2xhub-logs-volume:
