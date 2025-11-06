@@ -88,10 +88,11 @@ namespace ImmediateForward {
                 'x',
                 payloadPlaceholder
             };
+            // Set enable to false for placeholder payload while rsuMode is standby to prevent transmission and Xmit errors
             snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
                 'i',
-                "1"
+                "0"
             };
             snmp_request creatRow{
                 rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(curIndex),
@@ -143,7 +144,13 @@ namespace ImmediateForward {
             'x',
             message
         };
-        std::vector reqs {payload};
+        // Enable the message for transmission
+        snmp_request enable{
+                rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index),
+                'i',
+                "1"
+        };
+        std::vector reqs {payload, enable};
         client->process_snmp_set_requests(reqs);
     }
 
