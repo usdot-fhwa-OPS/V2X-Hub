@@ -5,16 +5,8 @@ if [ $? -ne 0 ]; then
 	adduser --system --disabled-login --disabled-password --gecos --no-create-home plugin
 fi
 
-usermod -a -G dialout plugin
+usermod -a -G dialout,adm,www-data plugin
 
-mkdir -p /var/log/tmx
-chown plugin:adm /var/log/tmx
-chmod 777 /var/log/tmx
-
-mkdir -p /var/www/plugins
-chown plugin:adm /var/www /var/www/plugins
-chmod 755 /var/www/plugins
-
-mkdir -p /var/www/download
-chown plugin:adm /var/www/download
-chmod 755 /var/www/download
+mkdir -p /var/www/download /var/www/plugins/ssl /var/log/tmx
+chown plugin:adm -R /var/www/ /var/log/tmx
+chmod 755 -R /var/www/

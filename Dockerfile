@@ -15,15 +15,14 @@ ADD container/wait-for-it.sh /usr/local/bin/
 ADD container/service.sh /usr/local/bin/
 
 COPY ./container /home/V2X-Hub/container
-WORKDIR /home/V2X-Hub/container/
-RUN ./database.sh
-RUN ./library.sh
-RUN ldconfig
 
 # build internal components
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
 FROM build-environment AS dependencies
+RUN /home/V2X-Hub/container/database.sh
+RUN /home/V2X-Hub/container/library.sh
+RUN ldconfig
 RUN ./build.sh release --j2735-version $J2735_VERSION
 RUN ldconfig
 
@@ -33,23 +32,22 @@ ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/deployment_dependencies.sh /usr/local/bin/
 RUN /usr/local/bin/deployment_dependencies.sh
 
-COPY ./container /home/V2X-Hub/container/
+COPY --chown=plugin:adm ./container /home/V2X-Hub/container/
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh
 RUN ./library.sh
 RUN ldconfig
 # Built Plugins
-COPY --from=dependencies /usr/local/plugins/ /usr/local/plugins/
+COPY --from=dependencies --chown=plugin:adm /usr/local/plugins/ /usr/local/plugins/
 # Headers
-COPY --from=dependencies /usr/local/include/ /usr/local/include/
+COPY --from=dependencies  --chown=plugin:adm /usr/local/include/ /usr/local/include/
 # Built Libraries for V2X Hub (tmx services) and ext/ (snmp, etc)
-COPY --from=dependencies /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm /usr/local/lib/ /usr/local/lib/
 # Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
-COPY --from=dependencies /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies  --chown=plugin:adm /usr/local/bin/ /usr/local/bin/
 # CMake config iles
-COPY --from=dependencies /usr/local/share/ /usr/local/share/
-COPY --from=dependencies /var/www/plugins/ /var/www/plugins/
-COPY --from=dependencies /var/log/tmx/ /var/log/tmx/
+COPY --from=dependencies --chown=plugin:adm /usr/local/share/ /usr/local/share/
+COPY --from=dependencies --chown=plugin:adm /var/www/plugins/ /var/www/plugins/
 # Installed STOL debian packages like (stol-j2735, timesync, etc)
 COPY --from=dependencies /opt/ /opt/
 ADD src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
@@ -60,7 +58,7 @@ RUN ldconfig
 WORKDIR /var/log/tmx
 # TODO: create a non-root user to run the services. Currently 
 # PluginMonitor needs user with root permissions
-# USER plugin
+USER plugin
 
 # Set metadata labels
 LABEL org.label-schema.schema-version="1.0"
