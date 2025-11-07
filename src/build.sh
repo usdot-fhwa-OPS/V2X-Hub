@@ -86,28 +86,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Interactive prompts if values are missing
-if [[ -z "$BUILD_TYPE" ]]; then
-  echo "Enter build type (debug, release, coverage):"
-  read -p "> " BUILD_TYPE
-fi
-
-if [[ -z "$J2735_VERSION" ]]; then
-  echo "Enter --j2735-version (e.g., 2016, 2020, 2024):"
-  read -p "> " J2735_VERSION
-fi
-
-if ! [[ "$J2735_VERSION" =~ ^[0-9]+$ ]]; then
-  echo "Error: J2735 version must be an integer."
-  exit 1
-fi
-
-# Interactive prompt for SKIP_PLUGINS if missing (and interactive terminal)
-if [[ -z "$SKIP_PLUGINS" && -t 0 ]]; then
-  echo "Enter plugins to skip (space-separated, case-sensitive) or press Enter for none (build all):"
-  read -p "> " SKIP_PLUGINS
-fi
-
 # Output results
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"

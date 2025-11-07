@@ -125,23 +125,8 @@ IF (NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv71")
     SET (SKIP_LearInterfacePlugin ON)
 ENDIF ()
 
-# Get list of available plugins and create options (default each to ON)
+# Get list of available plugins
 FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
-SET(SKIP_PLUGINS "")  # Initialize empty list for skipped plugins
-
-FOREACH(Plugin ${PluginBuilds})
-    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
-    
-    # Do not include the base source directory
-    IF("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
-        CONTINUE()
-    ENDIF()
-    
-    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
-    
-    # Create an option for each plugin (default to ON)
-    OPTION(BUILD_PLUGIN_${Plugin_Dir} "Build ${Plugin_Dir} plugin" ON)
-ENDFOREACH()
 
 # Now process the plugins
 MESSAGE(STATUS "Skipping plugins:")  # Will list below
@@ -160,7 +145,7 @@ FOREACH(Plugin ${PluginBuilds})
         MESSAGE(STATUS "Building required plugin: ${Plugin_Dir}")
         ADD_SUBDIRECTORY(${Plugin_Dir})
     # Check if plugin should be built based on user option and skip flag
-    ELSEIF(NOT SKIP_${Plugin_Dir} AND BUILD_PLUGIN_${Plugin_Dir})
+    ELSEIF(NOT SKIP_${Plugin_Dir})
         MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()
