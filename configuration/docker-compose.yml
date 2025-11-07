@@ -42,10 +42,6 @@ services:
 
 
   v2xhub:
-    build:
-      context: ..
-      args:
-        PLUGIN_INPUT: ${PLUGIN_INPUT}
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
     network_mode: host
@@ -78,7 +74,6 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
-      - PLUGIN_INPUT=${PLUGIN_INPUT}
     secrets:
       - mysql_password
     volumes:
