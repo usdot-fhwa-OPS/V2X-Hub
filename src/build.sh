@@ -54,7 +54,7 @@ while [[ $# -gt 0 ]]; do
       fi
       ;;
     --skip-plugins)
-      if [[ -n "$2" && "$2" != --* ]]; then
+      if [[ $# -gt 1 ]]; then
         SKIP_PLUGINS="$2"
         shift 2
       else
