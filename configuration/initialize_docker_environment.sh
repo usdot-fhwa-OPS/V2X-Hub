@@ -7,7 +7,7 @@ INFRASTRUCTURE_NAME_DEFAULT="East Intersection"
 V2XHUB_IP_DEFAULT="127.0.0.1"
 SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
-SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
+SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
 COMPOSE_PROFILES=""
 
 echo "Initializing Docker Environment for V2X Hub..."

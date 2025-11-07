@@ -71,12 +71,7 @@ PluginMonitor::PluginMonitor(MessageRouter *messageRouter) : Plugin(messageRoute
 	struct passwd pwd;
 	struct passwd *pwdResult = nullptr;
 	std::array<char, 1024> dataBuf;
-	if (getuid() != 0)
-	{
-		this->setPluginStatus("ERROR: Not running as root");
-		this->addEventLogEntry(LogLevel_Fatal, "Error starting: Not running as root");
-	}
-	else if (getpwnam_r(PLUGIN_USER, &pwd, dataBuf.data(), dataBuf.size(), &pwdResult))
+	if (getpwnam_r(PLUGIN_USER, &pwd, dataBuf.data(), dataBuf.size(), &pwdResult))
 	{
 		this->setPluginStatus("ERROR: User '" PLUGIN_USER "' doesn't exist");
 		this->addEventLogEntry(LogLevel_Fatal, "Error starting: User '" PLUGIN_USER "' doesn't exist");

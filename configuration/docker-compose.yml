@@ -38,7 +38,7 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
-      - ./ssl:/etc/apache2/ssl:ro
+      - ssl-certs-volume:/etc/apache2/ssl:ro
 
 
   v2xhub:
@@ -71,17 +71,17 @@ services:
       - V2X_PORT=8686
       - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
       - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
-      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/plugins/MAP/sensors.json}
+      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
     secrets:
       - mysql_password
     volumes:
-      - ./logs:/var/log/tmx
-      - ./MAP:/var/www/plugins/MAP
+      - v2xhub-logs-volume:/var/log/tmx:rw
+      - v2xhub-download-volume:/var/www/download/:rw
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
-      - ./ssl:/var/www/plugins/ssl:rw
+      - ssl-certs-volume:/var/www/plugins/ssl:rw
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
@@ -102,3 +102,30 @@ secrets:
 
 volumes:
   mysql-datavolume:
+  ssl-certs-volume:
+    # To access/set SSL certifications on host machine setup local mapping to ssl directory.
+    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # docker compose to prevent permission issues
+    # driver: local
+    # driver_opts:
+    #   type: 'none'
+    #   o: 'bind'
+    #   device: '/home/dev/V2X-Hub/configuration/ssl' # Specify the absolute path on your host
+  v2xhub-download-volume:
+    # To access V2X Hub uploaded files on host machine setup local mapping to download directory.
+    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # docker compose to prevent permission issues
+    # driver: local
+    # driver_opts:
+    #   type: 'none'
+    #   o: 'bind'
+    #   device: '/home/dev/V2X-Hub/configuration/download' # Specify the absolute path on your host
+  v2xhub-logs-volume:
+    # To access log files on host machine setup local mapping to logs directory.
+    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # docker compose to prevent permission issues
+    # driver: local
+    # driver_opts:
+    #   type: 'none'
+    #   o: 'bind'
+    #   device: '/home/dev/V2X-Hub/configuration/logs' # Specify the absolute path on your host

@@ -5,6 +5,7 @@ on:
       - develop
       - master
       - 'release/**'
+      - 'feature/**'
       # Build all tags not containing a / (https://stackoverflow.com/questions/61891328/trigger-github-action-only-on-new-tags  )
     tags:
       - '*'
@@ -39,6 +40,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          provenance: mode=max
+          sbom: true
           platforms: linux/amd64,linux/arm64
           file: ./docker/Dockerfile-php
           tags: ${{ steps.meta.outputs.tags }}

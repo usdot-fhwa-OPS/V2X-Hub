@@ -20,7 +20,7 @@
 		},
 		{
 			"key":"MapFile",
-			"default":"/var/www/plugins/MAP/IVP_GF_TIM.xml",
+			"default":"/var/www/download/TIM/IVP_GF_TIM.xml",
 			"description":""
 		},
 		{
