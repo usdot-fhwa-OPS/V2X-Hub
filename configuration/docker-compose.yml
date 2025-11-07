@@ -42,13 +42,12 @@ services:
 
 
   v2xhub:
-    image: usdotfhwaops/v2xhub:test
+    image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
     network_mode: host
     restart: always
     depends_on:
       - db
-    user: "plugin:adm"
     ulimits:
       nofile:
         soft: 2560
