@@ -28,7 +28,7 @@ show_help() {
   echo ""
   echo "Required options:"
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
-  echo "  --plugins STRING      Specify plugins to build (space-separated, case-sensitive) or 'All' (non-interactive mode)"
+  echo "  --plugins STRING      Specify plugins to build (space-separated, case-sensitive) or 'All' to build all plugins"
   echo ""
   echo "Optional flags:"
   echo "  -h, --help            Show this help message and exit"
@@ -101,25 +101,6 @@ if ! [[ "$J2735_VERSION" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
-# Set CPP CMake flags and capitalize build type for CMake
-if [ "$BUILD_TYPE" = "release" ]; then
-    BUILD_TYPE="Release"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-elif [ "$BUILD_TYPE" = "debug" ]; then
-    BUILD_TYPE="Debug"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-elif [ "$BUILD_TYPE" = "coverage" ]; then
-    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
-    # deprecation warnings
-    CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-    BUILD_TYPE="Debug"
-else 
-    echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE: release, coverage, debug."
-    exit 1
-fi
-
 # Output results
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
@@ -141,24 +122,16 @@ for f in */CMakeLists.txt; do
   fi
 done
 
-# Plugin selection: Use --plugins arg if provided, else prompt
-if [[ -z "$PLUGIN_INPUT" ]]; then
-  echo "Available plugins:"
-  for p in "${plugin_dirs[@]}"; do
-    echo "  - $p"
-  done
-  echo ""
-  echo "Enter plugins to build (space-separated, case-sensitive), or 'all' to build everything."
-  echo "Example: 'MapPlugin SpatPlugin' or 'all' (no quotes needed)"
-  read -p "> " PLUGIN_INPUT
-fi
-
 # Process plugin input
 cmake_flags=""
 if [[ "${PLUGIN_INPUT,,}" = "all" ]]; then  # Case-insensitive check (converts to lowercase)
-  cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=ON"
+  echo "Building all plugins (using CMake defaults)"
+  # Do nothing — individual options default to ON in CMake
 else
-  cmake_flags="$cmake_flags -DBUILD_ALL_PLUGINS=OFF"
+  # Set all to OFF, then enable selected
+  for dir in "${plugin_dirs[@]}"; do
+    cmake_flags="$cmake_flags -DBUILD_PLUGIN_${dir}=OFF"
+  done
   IFS=' ' read -r -a selected_plugins <<< "$PLUGIN_INPUT"
   for plugin in "${selected_plugins[@]}"; do
     if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
