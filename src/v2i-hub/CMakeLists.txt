@@ -127,6 +127,7 @@ ENDIF ()
 
 # Get list of available plugins
 FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+SET(LOG_SKIP_PLUGINS = "")
 
 # Now process the plugins
 MESSAGE(STATUS "Skipping plugins:")  # Will list below
@@ -150,6 +151,6 @@ FOREACH(Plugin ${PluginBuilds})
         ADD_SUBDIRECTORY(${Plugin_Dir})
     ELSE()
         MESSAGE(STATUS "Skipping plugin: ${Plugin_Dir}")
-        LIST(APPEND SKIP_PLUGINS ${Plugin_Dir})
+        LIST(APPEND LOG_SKIP_PLUGINS ${Plugin_Dir})
     ENDIF()
 ENDFOREACH()

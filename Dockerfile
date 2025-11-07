@@ -26,6 +26,9 @@ RUN ldconfig
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
 FROM build-environment AS dependencies
+RUN /home/V2X-Hub/container/database.sh
+RUN /home/V2X-Hub/container/library.sh
+RUN ldconfig
 RUN ./build.sh release --j2735-version $J2735_VERSION --skip-plugins "${SKIP_PLUGINS}"
 RUN ldconfig
 
