@@ -6,6 +6,7 @@ on:
       - develop
       - master
       - 'release/**'
+      - 'feature/**'
     tags:
       - '*'
 
@@ -44,7 +45,8 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          provenance: false # Disable Buildx provenance metadata to avoid manifest-related errors. Without this, Docker may treat single-arch images as manifest lists, which causes issues when combining individual images with `docker manifest create`
+          sbom: true
+          provenance: true #Disable Buildx provenance metadata to avoid manifest-related errors. Without this, Docker may treat single-arch images as manifest lists, which causes issues when combining individual images with `docker manifest create`
           tags: ${{ steps.meta.outputs.tags }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -82,7 +84,8 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          provenance: false
+          sbom: true
+          provenance: true
           tags: ${{ steps.meta.outputs.tags }}-arm64
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -118,11 +121,6 @@ jobs:
           AMD64_TAG="${FINAL_TAG}-amd64"
           ARM64_TAG="${FINAL_TAG}-arm64"
 
-          docker manifest create "$FINAL_TAG" \
+          docker buildx imagetools create --tag "$FINAL_TAG" \
             "$AMD64_TAG" \
             "$ARM64_TAG"
-
-          docker manifest annotate "$FINAL_TAG" "$AMD64_TAG" --arch amd64
-          docker manifest annotate "$FINAL_TAG" "$ARM64_TAG" --arch arm64
-
-          docker manifest push "$FINAL_TAG"
