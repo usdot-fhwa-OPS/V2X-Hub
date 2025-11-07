@@ -58,8 +58,8 @@ while [[ $# -gt 0 ]]; do
         SKIP_PLUGINS="$2"
         shift 2
       else
-        echo "Error: --skip-plugins requires a string value (e.g., 'MapPlugin SpatPlugin')"
-        exit 1
+        SKIP_PLUGINS=""
+        shift 1
       fi
       ;;
     -h|--help)
