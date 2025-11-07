@@ -9,8 +9,6 @@ SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
 SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
 COMPOSE_PROFILES=""
-PLUGIN_INPUT_DEFAULT="All"
-V2XHUB_BUILD_MODE_DEFAULT="pull"
 
 echo "Initializing Docker Environment for V2X Hub..."
 # Retrieve available release candidates
@@ -40,19 +38,6 @@ echo "$updated_tags"
 # select a version or accept the latest version as default
 read -r -p "Enter V2X-Hub Version (choose from the above, or press Enter to use the latest version $latest_version): " chosen_version
 V2XHUB_VERSION=${chosen_version:-$latest_version}
-
-# Build mode choice
-read -r -p "Build V2X-Hub locally (allows plugin selection) or pull prebuilt image? (build/pull, or press Enter for default: $V2XHUB_BUILD_MODE_DEFAULT): " V2XHUB_BUILD_MODE
-V2XHUB_BUILD_MODE=${V2XHUB_BUILD_MODE:-$V2XHUB_BUILD_MODE_DEFAULT}
-
-# Plugins to build (only if building locally)
-if [[ "${V2XHUB_BUILD_MODE,,}" = "build" ]]; then
-  read -r -p "Enter plugins to build (space-separated) or press Enter for default (All): " V2X_BUILD_PLUGINS
-  PLUGIN_INPUT=${V2X_BUILD_PLUGINS:-$PLUGIN_INPUT_DEFAULT}
-else
-  PLUGIN_INPUT=""  # Ignored for pull mode
-  echo "Using prebuilt image — all plugins will be included (no custom selection)."
-fi
 
 # Enable Port Drayage functionality
 read -r -p "Enable Port Drayage functionality (TRUE/FALSE, or press Enter to use default as $PORT_DRAYAGE_ENABLED_DEFAULT): " PORT_DRAYAGE_ENABLED
@@ -130,8 +115,6 @@ SENSOR_JSON_FILE_PATH="$SENSOR_JSON_FILE_PATH"
 MYSQL_PASSWORD="$MYSQL_PASSWORD"
 V2XHUB_USERNAME="$V2XHUB_USERNAME"
 V2XHUB_PASSWORD="$V2XHUB_PASSWORD"
-PLUGIN_INPUT=${PLUGIN_INPUT} 
-V2XHUB_BUILD_MODE=${V2XHUB_BUILD_MODE}
 EOF
 
     # Adding Simulation IP and Sensor Path if Simulation Mode is TRUE

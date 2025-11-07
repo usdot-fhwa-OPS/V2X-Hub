@@ -62,16 +62,5 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     cd .. || exit
 fi
 
-# Load .env to get V2XHUB_BUILD_MODE and PLUGIN_INPUT
-set -o allexport
-source .env
-set +o allexport
-
-# If build mode, manually build the image with PLUGIN_INPUT
-if [[ "${V2XHUB_BUILD_MODE,,}" = "build" ]]; then
-  echo "Building V2X-Hub image locally with selected plugins..."
-  docker build --build-arg PLUGIN_INPUT="${PLUGIN_INPUT}" -t usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop} ..
-fi
-
 # Run V2X Hub
 ./run_v2xhub.sh

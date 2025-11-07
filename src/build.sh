@@ -21,16 +21,16 @@ set -e
 numCPU=$(nproc)
 
 show_help() {
-  echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--plugins 'list or all']"
+  echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list']"
   echo ""
   echo "Required positional arguments:"
   echo "  BUILD_TYPE            The build type (e.g., debug, release, coverage)"
   echo ""
   echo "Required options:"
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
-  echo "  --plugins STRING      Specify plugins to build (space-separated, case-sensitive) or 'All' to build all plugins"
   echo ""
-  echo "Optional flags:"
+  echo "Optional options:"
+  echo "  --skip-plugins STRING Space-separated list of plugins to skip (case-sensitive, default empty = build all)"
   echo "  -h, --help            Show this help message and exit"
   echo ""
   echo "If arguments are not provided, the script will prompt interactively."
@@ -39,6 +39,7 @@ show_help() {
 # Initialize variables
 BUILD_TYPE=""
 J2735_VERSION=""
+SKIP_PLUGINS=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -52,12 +53,12 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       ;;
-    --plugins)
+    --skip-plugins)
       if [[ -n "$2" && "$2" != --* ]]; then
-        PLUGIN_INPUT="$2"
+        SKIP_PLUGINS="$2"
         shift 2
       else
-        echo "Error: --plugins requires a string value (e.g., 'All' or 'MapPlugin SpatPlugin')"
+        echo "Error: --skip-plugins requires a string value (e.g., 'MapPlugin SpatPlugin')"
         exit 1
       fi
       ;;
@@ -101,6 +102,12 @@ if ! [[ "$J2735_VERSION" =~ ^[0-9]+$ ]]; then
   exit 1
 fi
 
+# Interactive prompt for SKIP_PLUGINS if missing (and interactive terminal)
+if [[ -z "$SKIP_PLUGINS" && -t 0 ]]; then
+  echo "Enter plugins to skip (space-separated, case-sensitive) or press Enter for none (build all):"
+  read -p "> " SKIP_PLUGINS
+fi
+
 # Output results
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
@@ -122,24 +129,20 @@ for f in */CMakeLists.txt; do
   fi
 done
 
-# Process plugin input
+# Process skip plugins input
 cmake_flags=""
-if [[ "${PLUGIN_INPUT,,}" = "all" ]]; then  # Case-insensitive check (converts to lowercase)
-  echo "Building all plugins (using CMake defaults)"
-  # Do nothing — individual options default to ON in CMake
-else
-  # Set all to OFF, then enable selected
-  for dir in "${plugin_dirs[@]}"; do
-    cmake_flags="$cmake_flags -DBUILD_PLUGIN_${dir}=OFF"
-  done
-  IFS=' ' read -r -a selected_plugins <<< "$PLUGIN_INPUT"
-  for plugin in "${selected_plugins[@]}"; do
+if [[ -n "$SKIP_PLUGINS" ]]; then
+  IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
+  for plugin in "${skipped_plugins[@]}"; do
     if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
-      cmake_flags="$cmake_flags -DBUILD_PLUGIN_${plugin}=ON"
+      cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
     else
-      echo "Warning: Invalid plugin '$plugin' - skipping."
+      echo "Warning: Invalid plugin to skip '$plugin' - ignoring."
     fi
   done
+  echo "Skipping specified plugins: ${skipped_plugins[*]}"
+else
+  echo "No plugins skipped (building all)"
 fi
 
 # Run CMake with the new flags
