@@ -17,7 +17,7 @@ Required options:
   --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)
 
 Optional options:
-  --skip-plugins STRING Space-separated list of plugins to skip (case-sensitive, default empty = build all)
+  --skip-plugins STRING Space-separated list of plugin directory names to skip (case-sensitive, default empty = build all)
   -h, --help            Show this help message and exit
 
 If arguments are not provided, the script will prompt interactively.

@@ -30,7 +30,7 @@ show_help() {
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
   echo ""
   echo "Optional options:"
-  echo "  --skip-plugins STRING Space-separated list of plugins to skip (case-sensitive, default empty = build all)"
+  echo "  --skip-plugins STRING Space-separated list of plugin directory names to skip  (case-sensitive, default empty = build all)"
   echo "  -h, --help            Show this help message and exit"
   echo ""
   echo "If arguments are not provided, the script will prompt interactively."
