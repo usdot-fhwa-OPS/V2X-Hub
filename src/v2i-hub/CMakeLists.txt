@@ -122,22 +122,35 @@ MACRO (BuildTmxPlugin)
 ENDMACRO (BuildTmxPlugin)
 
 IF (NOT ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "armv71")
-	SET (SKIP_LearInterfacePlugin ON)
+    SET (SKIP_LearInterfacePlugin ON)
 ENDIF ()
 
-FILE (GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+# Get list of available plugins
+FILE(GLOB PluginBuilds "${CMAKE_CURRENT_SOURCE_DIR}/*/CMakeLists.txt")
+SET(LOG_SKIP_PLUGINS = "")
 
-FOREACH (Plugin ${PluginBuilds})
-    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin} DIRECTORY)
+# Now process the plugins
+FOREACH(Plugin ${PluginBuilds})
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin} DIRECTORY)
     
-    # Do not include the base source directory, or else it might recurse forever
-    IF ("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
-        CONTINUE ()
-    ENDIF ()
+    # Do not include the base source directory
+    IF("${Plugin_Dir}" STREQUAL "${CMAKE_SOURCE_DIR}")
+        CONTINUE()
+    ENDIF()
     
-    GET_FILENAME_COMPONENT (Plugin_Dir ${Plugin_Dir} NAME)
-    
-    IF (NOT SKIP_${Plugin_Dir})
-        ADD_SUBDIRECTORY (${Plugin_Dir})
-    ENDIF ()
-ENDFOREACH ()
+    GET_FILENAME_COMPONENT(Plugin_Dir ${Plugin_Dir} NAME)
+
+    # Always build CommandPlugin to connect to web UI
+    IF("${Plugin_Dir}" STREQUAL "CommandPlugin")
+        MESSAGE(STATUS "Building required plugin: ${Plugin_Dir}")
+        ADD_SUBDIRECTORY(${Plugin_Dir})
+    # Check if plugin should be built based on user option and skip flag
+    ELSEIF(NOT SKIP_${Plugin_Dir})
+        MESSAGE(STATUS "Building plugin: ${Plugin_Dir}")
+        ADD_SUBDIRECTORY(${Plugin_Dir})
+    ELSE()
+        MESSAGE(STATUS "Skipping plugin: ${Plugin_Dir}")
+        LIST(APPEND LOG_SKIP_PLUGINS ${Plugin_Dir})
+    ENDIF()
+ENDFOREACH()
+MESSAGE(STATUS "Skipped Plugins ${LOG_SKIP_PLUGINS}") 

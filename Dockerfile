@@ -1,6 +1,7 @@
 ARG UBUNTU_VERSION=jammy
 
 FROM ubuntu:$UBUNTU_VERSION AS build-environment
+ARG SKIP_PLUGINS=""
 ARG J2735_VERSION=2024
 ENV DEBIAN_FRONTEND=noninteractive
 ADD scripts/install_dependencies.sh /usr/local/bin/
@@ -17,13 +18,14 @@ ADD container/service.sh /usr/local/bin/
 COPY ./container /home/V2X-Hub/container
 
 # build internal components
+
 COPY ./src /home/V2X-Hub/src/
 WORKDIR /home/V2X-Hub/src/
 FROM build-environment AS dependencies
 RUN /home/V2X-Hub/container/database.sh
 RUN /home/V2X-Hub/container/library.sh
 RUN ldconfig
-RUN ./build.sh release --j2735-version $J2735_VERSION
+RUN ./build.sh release --j2735-version $J2735_VERSION --skip-plugins "${SKIP_PLUGINS}"
 RUN ldconfig
 
 # run final image

@@ -20,9 +20,8 @@ set -e
 
 numCPU=$(nproc)
 
-
 show_help() {
-  echo "Usage: $0 <BUILD_TYPE> --j2735-version <version>"
+  echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list']"
   echo ""
   echo "Required positional arguments:"
   echo "  BUILD_TYPE            The build type (e.g., debug, release, coverage)"
@@ -30,14 +29,17 @@ show_help() {
   echo "Required options:"
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
   echo ""
-  echo "Optional flags:"
+  echo "Optional options:"
+  echo "  --skip-plugins STRING Space-separated list of plugin directory names to skip  (case-sensitive, default empty = build all)"
   echo "  -h, --help            Show this help message and exit"
+  echo ""
+  echo "If arguments are not provided, the script will prompt interactively."
 }
-
 
 # Initialize variables
 BUILD_TYPE=""
 J2735_VERSION=""
+SKIP_PLUGINS=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -47,8 +49,17 @@ while [[ $# -gt 0 ]]; do
         J2735_VERSION="$2"
         shift 2
       else
-        echo "Error:Invalid value $2. --j2735-version requires an integer value"
+        echo "Error: --j2735-version requires an integer value"
         exit 1
+      fi
+      ;;
+    --skip-plugins)
+      if [[ $# -gt 1 ]]; then
+        SKIP_PLUGINS="$2"
+        shift 2
+      else
+        SKIP_PLUGINS=""
+        shift 1
       fi
       ;;
     -h|--help)
@@ -75,31 +86,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-
-if ! [[ "$J2735_VERSION" =~ ^[0-9]+$ ]]; then
-  echo "Error: --j2735-version must be an integer."
-  exit 1
-fi
-
-# Set CPP CMake flags and capitalize build type for CMake
-if [ "$BUILD_TYPE" = "release" ]; then
-    BUILD_TYPE="Release"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-elif [ "$BUILD_TYPE" = "debug" ]; then
-    BUILD_TYPE="Debug"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-elif [ "$BUILD_TYPE" = "coverage" ]; then
-    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
-    # deprecation warnings
-    CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
-    BUILD_TYPE="Debug"
-else 
-    echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE : release, coverage, debug."
-    exit 1
-fi
-
 # Output results
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
@@ -111,7 +97,34 @@ cmake --install build
 popd
 
 pushd v2i-hub
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" .
+
+# Dynamically list plugin directories (those with CMakeLists.txt, excluding main dir)
+plugin_dirs=()
+for f in */CMakeLists.txt; do
+  dir=$(dirname "$f")
+  if [ "$dir" != "." ] && [ "$dir" != "build" ]; then
+    plugin_dirs+=("$dir")
+  fi
+done
+
+# Process skip plugins input
+cmake_flags=""
+if [[ -n "$SKIP_PLUGINS" ]]; then
+  IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
+  for plugin in "${skipped_plugins[@]}"; do
+    if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
+      cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
+    else
+      echo "Warning: Invalid plugin to skip '$plugin' - ignoring."
+    fi
+  done
+  echo "Skipping specified plugins: ${skipped_plugins[*]}"
+else
+  echo "No plugins skipped (building all)"
+fi
+
+# Run CMake with the new flags
+cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" ${cmake_flags} .
 cmake --build build -j "${numCPU}"
 cmake --install build
 popd
