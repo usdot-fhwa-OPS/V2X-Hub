@@ -1,13 +1,8 @@
-#include "TimPlugin.h"
-#include <WGS84Point.h>
-#include "Clock.h"
-
-#include <tmx/messages/IvpDmsControlMsg.h>
+#include "TimPlugin.hpp"
 
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
-using namespace xercesc;
 using namespace boost::property_tree;
 
 namespace TimPlugin {
@@ -48,10 +43,7 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	PLOG(logDEBUG) << "Received from webservice: " << ss.str() << std::endl;
 	try { 
 		lock_guard<mutex> lock(_cfgLock);
-		tmx::message_container_type container;
-		container.load<XML>(ss);		
-		_timMsgPtr = std::make_shared<TimMessage>();
-		_timMsgPtr->set_contents(container.get_storage().get_tree());
+		_timMsgPtr = readTimXml(ss.str());
 		_isTimUpdated = true;
 		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
@@ -116,8 +108,8 @@ void TimPlugin::UpdateConfigSettings() {
 	GetConfigValue<uint64_t>("Frequency", _frequency);
 	
 	if (GetConfigValue<string>("MapFile", _mapFile)) {
-		if ( boost::filesystem::exists( _mapFile ) ){
-            _isMapFileNew = true;
+		if ( std::filesystem::exists( _mapFile ) ){
+            _isTimFileNew = true;
 			PLOG(logINFO) << "Loading MapFile " << _mapFile << "." << std::endl;
         }
 		else {
@@ -151,111 +143,6 @@ void TimPlugin::OnStateChange(IvpPluginState state) {
 	}
 }
 
-bool TimPlugin::TimDuration(std::shared_ptr<TimMessage> TimMsg)
-{
-	PLOG(logINFO)<<"TimPlugin:: Reached in TimDuration upcon receiving TIM message.";
-	lock_guard<mutex> lock(_cfgLock);
-	auto timPtr = TimMsg->get_j2735_data();
-	//startTime unit of minute
-	auto startTime = timPtr->dataFrames.list.array[0]->startTime;
-	if(startTime >= 527040)
-	{
-		PLOG(logERROR) << "Invalid startTime." << std::endl;
-		return false;
-	}
-	//Duration is unit of minute
-	#if SAEJ2735_SPEC < 2020
-	auto duration = timPtr->dataFrames.list.array[0]->duratonTime;
-	#else 
-	auto duration = timPtr->dataFrames.list.array[0]->durationTime; 
-	#endif
-	bool isPersist = false;
-	if(duration >= 32000)
-	{
-		PLOG(logERROR) << "Duration = 32000, ignore stop time." << std::endl;
-		isPersist = true;
-	}
-
-	//Get year start UTC in seconds
-	auto t = time(nullptr);
-	struct tm* timeInfo = gmtime(&t);
-	ostringstream currentYearStartOS;
-	currentYearStartOS << (timeInfo->tm_year+1900) <<"-01-01T00:00:00.000Z";
-	struct tm currentYearStartTimeInfo;
-	istringstream currentYearStartIS(currentYearStartOS.str());
-	currentYearStartIS >> get_time( &currentYearStartTimeInfo, "%Y-%m-%dT%H:%M:%S%Z" );
-	currentYearStartTimeInfo.tm_isdst = 0; //Day light saving flag
-	PLOG(logINFO) << "Year Start : " << (currentYearStartTimeInfo.tm_mon + 1) << "-" << currentYearStartTimeInfo.tm_mday << "-" 
-		<< (currentYearStartTimeInfo.tm_year + 1900) << " " << currentYearStartTimeInfo.tm_hour << ":" << currentYearStartTimeInfo.tm_min << ":" 
-		<< currentYearStartTimeInfo.tm_sec << " DST:"  << currentYearStartTimeInfo.tm_isdst << std::endl;
-	time_t secondsYearStart = mktime( &currentYearStartTimeInfo );
-	
-	//Start Time in seconds
-	time_t secondsStart = secondsYearStart + startTime * 60;
-	//Stop Time in seconds
-	time_t secondsStop = secondsStart + duration * 60;
-
-	// Current UTC Time in seconds;
-	auto secondsCurrent = time(nullptr);
-
-	//Comparing current time with start and end time 
-	PLOG(logINFO) << "Year Start(s): " << secondsYearStart << " Broadcast Start(s):" << secondsStart << " Broadcast Stop(s): " << secondsStop << 
-		" Current(s):" << secondsCurrent << " Elpased minutes since year start(min):" << ((secondsCurrent-secondsYearStart)/60.0)<< std::endl;
-	if ( secondsStart <= secondsCurrent && (secondsCurrent <= secondsStop || isPersist)) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool TimPlugin::LoadTim(TravelerInformation *tim, const char *mapFile)
-{
-	memset(tim, 0, sizeof(TravelerInformation));
-	// J2735 packet header.
-	//tim->msgID = DSRCmsgID_travelerInformation;
-
-	DsrcBuilder::SetPacketId(tim);
-	// Data Frame (1 of 1).
-	XmlCurveParser curveParser;
-
-	// Read the curve file, which creates and populates the data frame of the TIM.
-	if (!curveParser.ReadCurveFile(mapFile, tim))
-		return false;
-
-	_speedLimit = curveParser.SpeedLimit;
-
-	PluginUtil::SetStatus<unsigned int>(_plugin, "Speed Limit", _speedLimit);
-
-	return true;
-}
-
-bool TimPlugin::LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile)
-{
-	std::ifstream in = std::ifstream(mapFile, ios_base::in);
-	if(in && in.is_open())
-	{
-		try
-		{
-			std::stringstream ss;
-			ss << in.rdbuf();
-			in.close();
-
-			tmx::message_container_type container;
-			container.load<XML>(ss);
-			TimMsg->set_contents(container.get_storage().get_tree());
-			PLOG(logINFO) << "Loaded MapFile and updated TIM." << std::endl;
-			return true;
-		}
-		catch(const std::exception& e)
-		{
-			PLOG(logERROR)<<"Cannot read file " << mapFile<<std::endl;
-		}		
-	}else{
-		PLOG(logERROR)<<"Cannot find file " << mapFile<<std::endl;
-	}
-	return false;
-}
-
 int TimPlugin::Main() {
 	FILE_LOG(logINFO) << "TimPlugin:: Starting plugin.\n";
 
@@ -264,21 +151,16 @@ int TimPlugin::Main() {
 		{
 
 			// Load the TIM from the map file if it is new.
-			if (_isMapFileNew)
+			if (_isTimFileNew)
 			{				
 				lock_guard<mutex> lock(_cfgLock);	
-				PLOG(logINFO)<<"TimPlugin:: isMAPfileNEW  "<<_isMapFileNew<<endl;
+				PLOG(logINFO)<<"Reading new TIM file ...";
 				//reset map update indicator
-				_isMapFileNew = false;
+				_isTimFileNew = false;
 				//Update the TIM message with XML from map file
-				_timMsgPtr = std::make_shared<TimMessage>();
-				_isTimLoaded = LoadTim(_timMsgPtr, _mapFile.c_str());
-				if(!_isTimLoaded)
-				{
-					_timMsgPtr = nullptr;
-				}
+				_timMsgPtr = readTimFile( _mapFile);
 			}	
-			while (_timMsgPtr && TimDuration(_timMsgPtr)) 
+			while (_timMsgPtr && isTimActive(_timMsgPtr)) 
 			{ 
 				lock_guard<mutex> lock(_cfgLock);
 				uint64_t sendFrequency = _frequency;	
@@ -312,6 +194,8 @@ int TimPlugin::Main() {
 
 	return (EXIT_SUCCESS);
 }
+
+	
 
 
 } /* namespace */
