@@ -86,6 +86,31 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+
+if ! [[ "$J2735_VERSION" =~ ^[0-9]+$ ]]; then
+  echo "Error: --j2735-version must be an integer."
+  exit 1
+fi
+
+# Set CPP CMake flags and capitalize build type for CMake
+if [ "$BUILD_TYPE" = "release" ]; then
+    BUILD_TYPE="Release"
+    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+elif [ "$BUILD_TYPE" = "debug" ]; then
+    BUILD_TYPE="Debug"
+    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+elif [ "$BUILD_TYPE" = "coverage" ]; then
+    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
+    # deprecation warnings
+    CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+    BUILD_TYPE="Debug"
+else 
+    echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE : release, coverage, debug."
+    exit 1
+fi
+
 # Output results
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
