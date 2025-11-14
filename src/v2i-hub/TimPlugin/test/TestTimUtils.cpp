@@ -4,8 +4,25 @@
 
 namespace TimPlugin {
 
-    TEST(TestTimUtils, isTimActive ) {
-        
+    TEST(TestTimUtils, isTimActiveFalse ) {
+        // Test expired TIM 
+        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        EXPECT_FALSE(isTimActive(tim));
+        // Start time 2025 May 14 5:36 PM (UTC)
+        // Duration is 5760 miutes -> 4 days
+
+    }
+
+      TEST(TestTimUtils, isTimActiveTrue ) {
+        // Test expired TIM 
+        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto timPtr = tim->get_j2735_data();
+        // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
+        timPtr->dataFrames.list.array[0]->durationTime = 32000;
+        EXPECT_TRUE(isTimActive(tim));
+        // Start time 2025 May 14 5:36 PM (UTC)
+        // Duration is 32000 miutes -> indefinite
+
     }
 
     TEST(TestTimUtils, isTimActiveInvalid) {

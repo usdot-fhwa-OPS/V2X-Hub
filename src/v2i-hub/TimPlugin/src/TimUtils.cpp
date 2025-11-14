@@ -22,7 +22,7 @@ namespace TimPlugin {
 		#endif
 		
 		// Get current UTC Time
-		time_t curTimeUTC;
+		time_t curTimeUTC =  std::time(nullptr);
 		// Convert start time to t_time
 		time_t startTimeUTC = convertTimTime(startYear, startTime);
 		time_t stopTimeUTC =  startTimeUTC + (60*duration);
@@ -32,18 +32,23 @@ namespace TimPlugin {
 	}
 	bool isTimActive(const time_t &timStartTime, const time_t &timStopTime, const time_t &currentTime, const long timDuration) {
 		bool isPersist = false;
-		if(timDuration >= 32000)
+		if(timDuration == 32000)
 		{
 			FILE_LOG(logWARNING) << "TIM duration set to maximum 32000 minutes, indicating TIM is intended for indefinite broadcast.";
 			isPersist = true;
 		}
-		if (timDuration >= 32000) {
+		else if (timDuration > 32000) {
 			throw TmxException("TIM duration exceeded maximum of 32000 minutes : " + std::to_string(timDuration)  + " minutes!");
 		}
-		if ( isPersist)  {
+		FILE_LOG(logDEBUG) << "TIM Start time : " << ctime(&timStartTime) << ",TIM Stop Tim : " << ctime(&timStopTime) << ",Current Time : " << ctime(&currentTime);
+		if ( !isPersist)  {
+			// Start time has passed
+			// End time has not yet passed
+			
 			return timStartTime <= currentTime && currentTime <= timStopTime ;
 		} 
 		else {
+			// Start time has passed
 			return timStartTime <= currentTime;
 		}
 		
