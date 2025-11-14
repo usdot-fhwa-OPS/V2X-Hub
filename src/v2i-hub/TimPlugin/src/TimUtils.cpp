@@ -56,7 +56,7 @@ namespace TimPlugin {
 	time_t convertTimTime(long year, long minuteOfYear ) {
 		// Create tm for start of year
 		struct tm tm_utc = {0};
-		tm_utc.tm_year = year - 1900; // Years since 1900
+		tm_utc.tm_year = static_cast<int>(year) - 1900; // Years since 1900
 		tm_utc.tm_yday = 0;
 		tm_utc.tm_mon = 0;          
 		tm_utc.tm_mday = 1;
@@ -69,7 +69,7 @@ namespace TimPlugin {
 		// Add minuteOfYear to utc_time
 
 		utc_time= utc_time+ minuteOfYear*60;
-		FILE_LOG(logDEBUG1) << "Converted TIM Time " << std::to_string((long)utc_time);
+		FILE_LOG(logDEBUG1) << "Converted TIM Time " << std::to_string(utc_time);
 		return utc_time; // Convert minute of the year to seconds
 	}
 
@@ -90,7 +90,11 @@ namespace TimPlugin {
 
 	std::shared_ptr<tmx::messages::TimMessage> readTimFile(const std::string &filePath) {
 		if ( std::filesystem::exists(filePath) )  {
-			auto in = std::ifstream(filePath);
+			std::filesystem::path path (filePath);
+			if (!path.has_extension() || path.extension() != ".xml") {
+				FILE_LOG(logWARNING) << "File " << filePath << " has an invalid file extension (supported extensions : .xml)!";
+			}
+			auto in = std::ifstream(path);
 			if(in && in.is_open())
 			{
 				std::stringstream ss;

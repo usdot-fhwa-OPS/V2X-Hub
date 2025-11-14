@@ -235,6 +235,11 @@ namespace TimPlugin {
         EXPECT_EQ(181181, timPtr->dataFrames.list.array[0]->startTime);
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
+        // Attempt to read from file that does not exist
+        EXPECT_THROW(readTimFile("../../TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
+
+        // Attempt to read from file that has the incorrect file extension
+        EXPECT_NO_THROW(readTimFile("../../TimPlugin/test/test_files/tim_2024.bad_ext"));
     }
 }
 
