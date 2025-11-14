@@ -68,16 +68,15 @@ namespace TimPlugin {
 	class TimPlugin: public tmx::utils::PluginClient {
 		public:
 			explicit TimPlugin(const std::string &name);
-			int Main();
+			int Main() override ;
 
 		protected:
 
 			void UpdateConfigSettings();
 
 			// Virtual method overrides.
-			void OnConfigChanged(const char *key, const char *value);
-			//void OnMessageReceived(IvpMessage *msg);
-			void OnStateChange(IvpPluginState state);
+			void OnConfigChanged(const char *key, const char *value) override;
+			void OnStateChange(IvpPluginState state) override;
 
 			/**
 			 * @brief Calculate tim duration based on the J2735 TIM message startTime and Duration
