@@ -100,7 +100,7 @@ if [ "$BUILD_TYPE" = "release" ]; then
 elif [ "$BUILD_TYPE" = "debug" ]; then
     BUILD_TYPE="Debug"
     # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -fno-omit-frame-pointer -O1 -g"
 elif [ "$BUILD_TYPE" = "coverage" ]; then
     # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
     # deprecation warnings

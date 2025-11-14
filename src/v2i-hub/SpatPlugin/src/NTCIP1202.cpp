@@ -56,8 +56,19 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 
 void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 {
+	 if (!buff || numBytes <= 0)
+	 {
+		throw tmx:: TmxException("Received SPaT payload is empty or null");
+	 }
 
-	std::memcpy(&ntcip1202Data, buff, numBytes);
+	 const auto structSize = static_cast<int>(sizeof(ntcip1202Data));
+
+	 if (numBytes > structSize)
+	 {
+		throw tmx:: TmxException("Received SPaT payload is larger than the TSCBM size");
+	 }
+	 std::memset(&ntcip1202Data, 0, sizeof(ntcip1202Data));
+	 std::memcpy(&ntcip1202Data, buff, numBytes);
 
 	unsigned char * vptr = (unsigned char *)&(ntcip1202Data);
 
