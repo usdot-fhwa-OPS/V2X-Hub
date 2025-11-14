@@ -160,7 +160,6 @@ int TimPlugin::Main() {
 			while (_timMsgPtr && isTimActive(_timMsgPtr)) 
 			{ 
 				std::scoped_lock lock{_timFileLock};
-				uint64_t _interval = _interval;	
 
 				if(_isTimUpdated){
 					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<< _isTimUpdated<<endl;
@@ -179,9 +178,6 @@ int TimPlugin::Main() {
 					routeable_message *rMsg = dynamic_cast<routeable_message *>(&timEncMsg);
 					if (rMsg) BroadcastMessage(*rMsg);						
 				}
-
-				//Make sure interval configuration is positive, otherwise set to default 1000 milliseconds
-				_interval = _interval > 0 ? _interval: 1000;
 				//Sleep _interval for every attempt to broadcast TIM
 				this_thread::sleep_for(chrono::milliseconds(_interval));
 			}
