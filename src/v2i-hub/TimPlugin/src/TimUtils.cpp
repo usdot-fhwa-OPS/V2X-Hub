@@ -40,11 +40,10 @@ namespace TimPlugin {
 		else if (timDuration > 32000) {
 			throw TmxException("TIM duration exceeded maximum of 32000 minutes : " + std::to_string(timDuration)  + " minutes!");
 		}
-		FILE_LOG(logDEBUG) << "TIM Start time : " << ctime(&timStartTime) << ",TIM Stop Tim : " << ctime(&timStopTime) << ",Current Time : " << ctime(&currentTime);
+		FILE_LOG(logDEBUG) << "TIM Start time : " << std::to_string((long)timStartTime) << "TIM Stop Time : " << std::to_string((long)timStopTime) << "Current Time : " << std::to_string((long)currentTime);
 		if ( !isPersist)  {
 			// Start time has passed
 			// End time has not yet passed
-			
 			return timStartTime <= currentTime && currentTime <= timStopTime ;
 		} 
 		else {
@@ -58,8 +57,9 @@ namespace TimPlugin {
 		// Create tm for start of year
 		struct tm tm_utc = {0};
 		tm_utc.tm_year = year - 1900; // Years since 1900
+		tm_utc.tm_yday = 0;
 		tm_utc.tm_mon = 0;          
-		tm_utc.tm_mday = 0;
+		tm_utc.tm_mday = 1;
 		tm_utc.tm_hour = 0;
 		tm_utc.tm_min = 0;
 		tm_utc.tm_sec = 0;
@@ -67,7 +67,10 @@ namespace TimPlugin {
 		// Convert to time T assuming tm is UTC time
 		time_t utc_time = timegm(&tm_utc);
 		// Add minuteOfYear to utc_time
-		return utc_time + minuteOfYear*60; // Convert minute of the year to seconds
+
+		utc_time= utc_time+ minuteOfYear*60;
+		FILE_LOG(logDEBUG1) << "Converted TIM Time " << std::to_string((long)utc_time);
+		return utc_time; // Convert minute of the year to seconds
 	}
 
 	std::shared_ptr<tmx::messages::TimMessage> readTimXml(const std::string &timXml) {

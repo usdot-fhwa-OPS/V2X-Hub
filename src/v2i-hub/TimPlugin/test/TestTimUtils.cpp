@@ -13,8 +13,8 @@ namespace TimPlugin {
 
     }
 
-      TEST(TestTimUtils, isTimActiveTrue ) {
-        // Test expired TIM 
+      TEST(TestTimUtils, isTimActivePersistTrue ) {
+        // Test Persist TIM 
         auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
         auto timPtr = tim->get_j2735_data();
         // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
@@ -25,15 +25,44 @@ namespace TimPlugin {
 
     }
 
-    TEST(TestTimUtils, isTimActiveInvalid) {
+    TEST(TestTimUtils, isTimActiveEdgeCases) {
+        // Test TIM when start time == current time 
+        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto timPtr = tim->get_j2735_data();
+        // Set start time to current time 
+        // 1) Get current time 
+        time_t curTimeUTC =  std::time(nullptr);
+        // Convert to utc tm struct
+        auto tmUtc = gmtime(&curTimeUTC); 
+        std::cout << asctime(tmUtc);
+        // 2) Get minute of the year
+        auto minuteOfYear = tmUtc->tm_yday * 24 * 60 +
+                            tmUtc->tm_hour * 60 +
+                            tmUtc->tm_min;
+        // 3) Get current year
+        long int* year =new long int ( tmUtc->tm_year + 1900);
+        timPtr->dataFrames.list.array[0]->startYear = year;
+        timPtr->dataFrames.list.array[0]->startTime = minuteOfYear;
+        EXPECT_TRUE(isTimActive(tim));
 
+        // What if start time is 2 minutes after current time
+        timPtr->dataFrames.list.array[0]->startTime = minuteOfYear + 2;
+        EXPECT_FALSE(isTimActive(tim));
+
+        // What if start time is current time - duration + 1 (to account for seconds of current minute)
+        timPtr->dataFrames.list.array[0]->startTime = minuteOfYear - 5760 + 1;
+        EXPECT_TRUE(isTimActive(tim));
+
+        // What if start time is current time - duration -2
+        timPtr->dataFrames.list.array[0]->startTime = minuteOfYear - 5760 - 2;
+        EXPECT_FALSE(isTimActive(tim));
     }
 
     TEST(TestTimUtils, convertTimTime) {
         // Convert start year and minuteOfTheYear to correct time 
         auto year = 2025;
         auto moy = 445437;
-        // Corresponds to November 5 2025 7:57 AM (UTC)
+        // Corresponds to November 6 2025 7:57 AM (UTC)
 
         time_t convertedTime = convertTimTime(2025, moy);
         // Convert to UTC tm 
@@ -41,7 +70,7 @@ namespace TimPlugin {
 
         EXPECT_EQ(2025-1900, tmConvertedTime->tm_year);
         EXPECT_EQ(10, tmConvertedTime->tm_mon);
-        EXPECT_EQ(5, tmConvertedTime->tm_mday);
+        EXPECT_EQ(6, tmConvertedTime->tm_mday);
         EXPECT_EQ(7, tmConvertedTime->tm_hour);
         EXPECT_EQ(57, tmConvertedTime->tm_min);
 
