@@ -54,14 +54,6 @@
 #include <TimUtils.hpp>
 
 
-
-
-
-
-
-
-
-
 namespace TimPlugin {
 
 
