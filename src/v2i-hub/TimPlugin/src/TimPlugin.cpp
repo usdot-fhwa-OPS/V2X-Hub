@@ -39,7 +39,7 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	ss << _cloudUpdate;
 	PLOG(logDEBUG) << "Received from webservice: " << ss.str() << std::endl;
 	try { 
-		std::scoped_lock lock{_cfgLock};
+		std::scoped_lock lock{_timFileLock};
 		_timMsgPtr = readTimXml(ss.str());
 		_isTimUpdated = true;
 		writeResponse(QHttpEngine::Socket::Created, socket);
@@ -102,15 +102,15 @@ void TimPlugin::UpdateConfigSettings() {
 
 	std::scoped_lock lock{_cfgLock};
 	
-	GetConfigValue<uint64_t>("Frequency", _frequency);
+	GetConfigValue<uint64_t>("Interval", _interval);
 	
-	if (GetConfigValue<string>("MapFile", _mapFile)) {
-		if ( std::filesystem::exists( _mapFile ) ){
+	if (GetConfigValue<string>("TimFile", _timFile)) {
+		if ( std::filesystem::exists( _timFile ) ){
             _isTimFileNew = true;
-			PLOG(logINFO) << "Loading MapFile " << _mapFile << "." << std::endl;
+			PLOG(logINFO) << "Loading TIM File " << _timFile << "." << std::endl;
         }
 		else {
-			PLOG(logWARNING) << "MapFile " << _mapFile << " does not exist!" << std::endl;
+			PLOG(logWARNING) << "TIM file " << _timFile << " does not exist!" << std::endl;
 		}
 
 	}
@@ -150,17 +150,17 @@ int TimPlugin::Main() {
 			// Load the TIM from the map file if it is new.
 			if (_isTimFileNew)
 			{				
-				std::scoped_lock lock{_cfgLock};
+				std::scoped_lock lock{_timFileLock};
 				PLOG(logINFO)<<"Reading new TIM file ...";
 				//reset map update indicator
 				_isTimFileNew = false;
 				//Update the TIM message with XML from map file
-				_timMsgPtr = readTimFile( _mapFile);
+				_timMsgPtr = readTimFile( _timFile);
 			}	
 			while (_timMsgPtr && isTimActive(_timMsgPtr)) 
 			{ 
-				std::scoped_lock lock{_cfgLock};
-				uint64_t sendFrequency = _frequency;	
+				std::scoped_lock lock{_timFileLock};
+				uint64_t _interval = _interval;	
 
 				if(_isTimUpdated){
 					PLOG(logINFO) <<"TimPlugin:: _isTimUpdated via Post request: "<< _isTimUpdated<<endl;
@@ -180,10 +180,10 @@ int TimPlugin::Main() {
 					if (rMsg) BroadcastMessage(*rMsg);						
 				}
 
-				//Make sure send frequency configuration is positive, otherwise set to default 1000 milliseconds
-				sendFrequency = sendFrequency > 0 ? sendFrequency: 1000;
-				//Sleep sendFrequency for every attempt to broadcast TIM
-				this_thread::sleep_for(chrono::milliseconds(sendFrequency));
+				//Make sure interval configuration is positive, otherwise set to default 1000 milliseconds
+				_interval = _interval > 0 ? _interval: 1000;
+				//Sleep _interval for every attempt to broadcast TIM
+				this_thread::sleep_for(chrono::milliseconds(_interval));
 			}
 		}
 		this_thread::sleep_for(chrono::milliseconds(500));

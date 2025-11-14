@@ -90,23 +90,18 @@ namespace TimPlugin {
 			pthread_mutex_t _settingsMutex = PTHREAD_MUTEX_INITIALIZER;
 			pthread_mutex_t _timMutex = PTHREAD_MUTEX_INITIALIZER;
 
-			uint64_t _frequency = 0;
+			uint64_t _interval = 0;
 
-			std::string _timupdate; 
 			uint16_t webport;
 			std::string webip; 
 
 			std::shared_ptr<tmx::messages::TimMessage> _timMsgPtr;
 
-			mutex _mapFileLock;
-			string _mapFile;
-			std::ofstream tmpTIM;
+			std::mutex _timFileLock;
+			std::string _timFile;
 			std::atomic<bool> _isTimFileNew{false};
 			//Post request to update TIM
 			std::atomic<bool> _isTimUpdated{false};
-			bool _isTimLoaded = false;
-			unsigned int _speedLimit = 0;
-			int _lastMsgIdSent = -1;
 			std::mutex _cfgLock;
 
 
