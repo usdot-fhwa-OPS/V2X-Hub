@@ -8,7 +8,7 @@ namespace TimPlugin {
 		auto timPtr = TimMsg->get_j2735_data();
 		// Start time as minute of the year
 		auto startTime = timPtr->dataFrames.list.array[0]->startTime;
-		unsigned int startYear = *(timPtr->dataFrames.list.array[0]->startYear);
+		long startYear = *(timPtr->dataFrames.list.array[0]->startYear);
 		if(startTime >= 527040)
 		{
 			FILE_LOG(logERROR) << "Invalid startTime." << std::endl;
@@ -40,7 +40,7 @@ namespace TimPlugin {
 		else if (timDuration > 32000) {
 			throw TmxException("TIM duration exceeded maximum of 32000 minutes : " + std::to_string(timDuration)  + " minutes!");
 		}
-		FILE_LOG(logDEBUG) << "TIM Start time : " << std::to_string((long)timStartTime) << "TIM Stop Time : " << std::to_string((long)timStopTime) << "Current Time : " << std::to_string((long)currentTime);
+		FILE_LOG(logDEBUG) << "TIM Start time : " << std::to_string(timStartTime) << "TIM Stop Time : " << std::to_string(timStopTime) << "Current Time : " << std::to_string(currentTime);
 		if ( !isPersist)  {
 			// Start time has passed
 			// End time has not yet passed
@@ -53,7 +53,7 @@ namespace TimPlugin {
 		
 	}
 
-	time_t convertTimTime(unsigned int year, long minuteOfYear ) {
+	time_t convertTimTime(long year, long minuteOfYear ) {
 		// Create tm for start of year
 		struct tm tm_utc = {0};
 		tm_utc.tm_year = year - 1900; // Years since 1900
@@ -77,20 +77,20 @@ namespace TimPlugin {
 		std::stringstream ss(timXml);
 		tmx::message_container_type container;
 		container.load<XML>(ss);
+		// Make shared pointer with custom delete to free underlying C struct after use.
 		std::shared_ptr<TimMessage> timPtr(new TimMessage(), [](TimMessage *p)
 		{
 			if (p->get_j2735_data()) {
 				ASN_STRUCT_FREE(asn_DEF_TravelerInformation, p->get_j2735_data().get());
 			}
 		});		
-		// auto timPtr = std::make_shared<TimMessage>( [](message_type *p) { });
 		timPtr->set_contents(container.get_storage().get_tree());
 		return timPtr;
 	}
 
 	std::shared_ptr<tmx::messages::TimMessage> readTimFile(const std::string &filePath) {
 		if ( std::filesystem::exists(filePath) )  {
-			std::ifstream in = std::ifstream(filePath);
+			auto in = std::ifstream(filePath);
 			if(in && in.is_open())
 			{
 				std::stringstream ss;

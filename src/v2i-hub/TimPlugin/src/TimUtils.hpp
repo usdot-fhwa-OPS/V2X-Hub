@@ -11,7 +11,7 @@
 namespace TimPlugin{
     bool isTimActive(const std::shared_ptr<tmx::messages::TimMessage> &TimMsg);
 	bool isTimActive(const time_t &timStartTime, const time_t &timStopTime, const time_t &currentTime, const long timDuration) ; 
-	time_t convertTimTime(unsigned int year, long minuteOfYear );
+	time_t convertTimTime(long year, long minuteOfYear );
 
 	std::shared_ptr<tmx::messages::TimMessage> readTimFile(const std::string &filePath);
 
