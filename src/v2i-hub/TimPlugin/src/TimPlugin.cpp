@@ -11,14 +11,11 @@ namespace TimPlugin {
  *
  * @param name The name to give the plugin for identification purposes
  */
-TimPlugin::TimPlugin(string name) :
+TimPlugin::TimPlugin(const string &name) :
 		PluginClient(name) {
 					
 }
 
-TimPlugin::~TimPlugin() {
-
-}
 
 void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 {
@@ -42,12 +39,12 @@ void TimPlugin::TimRequestHandler(QHttpEngine::Socket *socket)
 	ss << _cloudUpdate;
 	PLOG(logDEBUG) << "Received from webservice: " << ss.str() << std::endl;
 	try { 
-		lock_guard<mutex> lock(_cfgLock);
+		std::scoped_lock lock{_cfgLock};
 		_timMsgPtr = readTimXml(ss.str());
 		_isTimUpdated = true;
 		writeResponse(QHttpEngine::Socket::Created, socket);
 	}
-	catch (TmxException &ex) {
+	catch (const TmxException &ex) {
 		PLOG(logERROR) << "Failed to encode message : " << ex.what();
 		writeResponse(QHttpEngine::Socket::BadRequest, socket);
 	}
@@ -103,7 +100,7 @@ int TimPlugin::StartWebService()
 
 void TimPlugin::UpdateConfigSettings() {
 
-	lock_guard<mutex> lock(_cfgLock);
+	std::scoped_lock lock{_cfgLock};
 	
 	GetConfigValue<uint64_t>("Frequency", _frequency);
 	
@@ -153,7 +150,7 @@ int TimPlugin::Main() {
 			// Load the TIM from the map file if it is new.
 			if (_isTimFileNew)
 			{				
-				lock_guard<mutex> lock(_cfgLock);	
+				std::scoped_lock lock{_cfgLock};
 				PLOG(logINFO)<<"Reading new TIM file ...";
 				//reset map update indicator
 				_isTimFileNew = false;
@@ -162,7 +159,7 @@ int TimPlugin::Main() {
 			}	
 			while (_timMsgPtr && isTimActive(_timMsgPtr)) 
 			{ 
-				lock_guard<mutex> lock(_cfgLock);
+				std::scoped_lock lock{_cfgLock};
 				uint64_t sendFrequency = _frequency;	
 
 				if(_isTimUpdated){

@@ -57,11 +57,6 @@
 
 
 
-using namespace std;
-
-using namespace tmx;
-using namespace tmx::utils;
-using namespace tmx::messages;
 
 
 
@@ -70,10 +65,9 @@ using namespace tmx::messages;
 namespace TimPlugin {
 
 
-	class TimPlugin: public PluginClient {
+	class TimPlugin: public tmx::utils::PluginClient {
 		public:
-			TimPlugin(std::string);
-			virtual ~TimPlugin();
+			explicit TimPlugin(const std::string &name);
 			int Main();
 
 		protected:
@@ -88,17 +82,16 @@ namespace TimPlugin {
 			/**
 			 * @brief Calculate tim duration based on the J2735 TIM message startTime and Duration
 			 */
-			bool TimDuration(std::shared_ptr<TimMessage> TimMsg);
+			bool TimDuration(std::shared_ptr<tmx::messages::TimMessage> TimMsg);
 			/**
 			 * @brief Read map file and populate TIM message
 			 * @param TimMsg A shared pointer to the TIM object to be updated
 			 * @param mapFile File path that has the standard J2735 TIM message in XML format
 			*/
-			bool LoadTim(std::shared_ptr<TimMessage> TimMsg, const char *mapFile);
+			bool LoadTim(std::shared_ptr<tmx::messages::TimMessage> TimMsg, const char *mapFile);
 			int  StartWebService();
 			void TimRequestHandler(QHttpEngine::Socket *socket);
 			void writeResponse(int responseCode , QHttpEngine::Socket *socket);
-			//void BroadCastTIM();
 
 
 		private:
@@ -112,14 +105,14 @@ namespace TimPlugin {
 			uint16_t webport;
 			std::string webip; 
 
-			std::shared_ptr<TimMessage> _timMsgPtr;
+			std::shared_ptr<tmx::messages::TimMessage> _timMsgPtr;
 
 			mutex _mapFileLock;
 			string _mapFile;
 			std::ofstream tmpTIM;
-			atomic<bool> _isTimFileNew{false};
+			std::atomic<bool> _isTimFileNew{false};
 			//Post request to update TIM
-			atomic<bool> _isTimUpdated{false};
+			std::atomic<bool> _isTimUpdated{false};
 			bool _isTimLoaded = false;
 			unsigned int _speedLimit = 0;
 			int _lastMsgIdSent = -1;
