@@ -367,7 +367,7 @@ public:
 		for (size_t i = 0; i < mgr.numDataWords(); i++) {
 			data_type val = mgr.getData(i);
 			char buf[13];
-			sprintf(buf, "0x%08x", val);
+			snprintf(buf, sizeof(buf), "0x%08x", val);
 			children.push_back(std::make_pair("", message_tree_type(std::string(buf))));
 		}
 
