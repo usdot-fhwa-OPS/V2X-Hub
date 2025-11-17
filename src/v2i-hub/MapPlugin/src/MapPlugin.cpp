@@ -295,14 +295,7 @@ namespace MapPlugin {
 						else 
 							PLOG(logWARNING) << "Incorrect MapFile extension entered!";
 
-						if (inType == "ISD")
-						{
-							ISDToJ2735r41 converter(fn);
-							mapFile.set_Bytes(converter.to_encoded_message().get_payload_str());
-
-							PLOG(logINFO) << fn << " ISD file encoded as " << mapFile.get_Bytes();
-						}
-						else if (inType == "TXT")
+						if (inType == "TXT")
 						{
 							std::string payload = checkMapContent(fn);
 							byte_stream bytes;
@@ -339,40 +332,9 @@ namespace MapPlugin {
 
 								PLOG(logINFO) << fn << " XML file encoded as: " << mapFile.get_Bytes();
 							}
-							else
-							{
-								ConvertToJ2735r41 mapConverter;
-								XmlMapParser mapParser;
-								map theMap;
-
-								if (mapParser.ReadGidFile(fn, &theMap))
-								{
-									mapConverter.convertMap(&theMap);
-
-									PLOG(logDEBUG) << "Encoded Bytes:" << mapConverter.encodedByteCount;
-
-									if (mapConverter.encodedByteCount > 0)
-									{
-										byte_stream bytes(mapConverter.encodedByteCount);
-										memcpy(bytes.data(), mapConverter.encoded, mapConverter.encodedByteCount);
-
-										auto *mapEnc = factory.NewMessage(bytes);
-										if (!mapEnc)
-											return false;
-
-										mapFile.set_Bytes(mapEnc->get_payload_str());
-
-										PLOG(logINFO) << fn << " input file encoded as: " << mapEnc->get_payload_str();
-									}
-									else
-									{
-										return false;
-									}
-								}
-							}
 						}
 					}
-					catch (exception &ex)
+					catch (const exception &ex)
 					{
 						PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << ": " << ex.what();
 						return false;

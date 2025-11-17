@@ -38,16 +38,10 @@
 #include <tmx/messages/IvpSignalControllerStatus.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include "XmlMapParser.h"
-#include "ConvertToJ2735r41.h"
-#include "inputs/isd/ISDToJ2735r41.h"
 
 #define USE_STD_CHRONO
 #include <FrequencyThrottle.h>
 #include <PluginClientClockAware.h>
-
-#include "utils/common.h"
-#include "utils/map.h"
 
 #include <MapSupport.h>
 
