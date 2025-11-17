@@ -28,7 +28,7 @@ DEPENDENCIES="build-essential \
     uuid-dev \
     zip \
     zlib1g \
-    libprotobuf-c-dev \  # Dependency for TelematicsBridgePlugin
+    libprotobuf-c-dev \
     curl"
 
 # STOL library dependencies
