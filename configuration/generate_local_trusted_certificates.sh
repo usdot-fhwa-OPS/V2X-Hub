@@ -1,3 +1,6 @@
+
+#!/bin/bash
+set -e
 # Check for ssl/cert-key.pem and ssl/cert.pem
 if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     echo "Incomplete or missing SSL certificates."
