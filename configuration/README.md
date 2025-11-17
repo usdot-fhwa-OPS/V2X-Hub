@@ -70,5 +70,5 @@ google-chrome  <v2xhub_ip>
 > [!NOTE]  
 > If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`). These certificates need to be explicitly trusted by the browser. To do this simply navigate to `https://<v2xhub-ip>` and accept the warning. After this you should be redirected to the login page.
 
-> [!WARN]  
+> [!WARNING]  
 > To use generated trusted certificates the `docker-compose.yml` file needs to be modified to map the local ssl directory to the ssl docker compose volume. See the comment in the `ssl` docker compose defined volume for instructions for modifications
