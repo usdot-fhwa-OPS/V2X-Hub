@@ -28,6 +28,7 @@ DEPENDENCIES="build-essential \
     uuid-dev \
     zip \
     zlib1g \
+    libprotobuf-c-dev \
     curl"
 
 # STOL library dependencies
