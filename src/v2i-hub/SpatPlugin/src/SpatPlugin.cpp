@@ -143,6 +143,8 @@ namespace SpatPlugin {
 				PLOG(tmx::utils::logERROR) << "Encountered Tmx Exception " << e.what() << " attempting to process SPAT." << std::endl
 										   << e.GetBacktrace();
 				skippedMessages++;
+				TmxEventLogMessage msg(e, "SPAT Plugin received invalid payload: ", false);
+				BroadcastMessage(msg);
 				SetStatus<uint>(keySkippedMessages, skippedMessages);
 			}
 			
