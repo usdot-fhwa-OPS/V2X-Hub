@@ -25,7 +25,14 @@ if docker compose version &>/dev/null; then
 else
    ./install_docker.sh
 fi
-./generate_local_trusted_certificates.sh
+read -p "Would you like to generated local browser trusted certificates? (Y/N): " user_choice
+# Convert the input to lowercase for case-insensitive comparison
+user_choice_lower=$(echo "$user_choice" | tr '[:upper:]' '[:lower:]')
+# Conditionally execute logic based on user input
+if [[ "$user_choice_lower" == "y" ]]; then
+    echo "Using locally trusted browser certificates requires setting up ssl_datavolume to map to local directory. Please see docker-compose.yml volume section for instruction!"
+    ./generate_local_trusted_certificates.sh
+fi
 
 # Run V2X Hub
 ./run_v2xhub.sh
