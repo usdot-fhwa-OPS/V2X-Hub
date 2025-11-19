@@ -137,7 +137,7 @@ public:
 
 	/// Broadcast a given message to TMX core.  The message is routed verbatim.
 	/// @param routeableMsg The TMX routeable message to send
-	void BroadcastMessage(const tmx::routeable_message &routeableMsg)
+	virtual void BroadcastMessage(const tmx::routeable_message &routeableMsg)
 	{
 		PLOG(logDEBUG2) << "Sending: " << routeableMsg;
 		BroadcastMessage(routeableMsg.get_message());
