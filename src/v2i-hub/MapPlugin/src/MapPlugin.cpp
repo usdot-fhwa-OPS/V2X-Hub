@@ -145,8 +145,8 @@ namespace MapPlugin {
 					
 				}
 				catch( const TmxException &e ) {
-					tmx::messages::TmxEventLogMessage msg(e, "Failed to load Map Files", true);
-					BroadcastMessage(msg);
+					tmx::messages::TmxEventLogMessage errorMsg(e, "Failed to load Map Files", true);
+					BroadcastMessage(errorMsg);
 
 				}
 				SetStatus<bool>(_keyMapFileStatus, mapFilesOk);
