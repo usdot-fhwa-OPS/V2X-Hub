@@ -103,6 +103,8 @@ private:
 	std::atomic<int> _mapAction {-1};
 	std::atomic<bool> _isMapFileNew {false};
 	std::atomic<bool> _cohdaR63 {false};
+	/** Status key for if Map File loaded successfully */
+	const char* _keyMapFileStatus = "Map File Loaded";
 
 	std::mutex data_lock;
 	std::map<int, MapFile> _mapFiles;

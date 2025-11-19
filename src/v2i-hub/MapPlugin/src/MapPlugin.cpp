@@ -139,8 +139,17 @@ namespace MapPlugin {
 			if (_isMapFileNew) {
 				msg.reset();
 				activeAction = -1;
+				mapFilesOk = false;
+				try {
+					mapFilesOk = LoadMapFiles();
+					
+				}
+				catch( const TmxException &e ) {
+					tmx::messages::TmxEventLogMessage msg(e, "Failed to load Map Files", true);
+					BroadcastMessage(msg);
 
-				mapFilesOk = LoadMapFiles();
+				}
+				SetStatus<bool>(_keyMapFileStatus, mapFilesOk);
 				_isMapFileNew = false;
 			}
 
@@ -286,14 +295,12 @@ namespace MapPlugin {
 					{
 						std::string fn = mapFile.get_FilePath();
 
-						if (fn.substr(fn.size() - 5) == ".json")
-							inType = "ISD";
-						else if (fn.substr(fn.size() - 4) == ".txt")
+						if (fn.substr(fn.size() - 4) == ".txt")
 							inType = "TXT";
 						else if (fn.substr(fn.size() - 4) == ".xml")
 							inType = "XML";
 						else 
-							PLOG(logWARNING) << "Incorrect MapFile extension entered!";
+							throw TmxException(fn + " has unsupported  MapFile extension. Please use MAP file with supported .txt (uper) or .xml (xer) file extensiton (encoding).");
 
 						if (inType == "TXT")
 						{
@@ -336,8 +343,7 @@ namespace MapPlugin {
 					}
 					catch (const exception &ex)
 					{
-						PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << ": " << ex.what();
-						return false;
+						throw TmxException("Unable to convert " + mapFile.get_FilePath() + ": " + ex.what());
 					}
 				}
 			}
