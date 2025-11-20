@@ -6,28 +6,13 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd src && ./build.sh debug --j2735-version 2024",
+            "command": "cd src && ./build.sh ${input:pickBuildType} --j2735-version ${input:pickJ2735Version}",
             "detail": "Task builds V2X Hub with CMake Debug flags",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "problemMatcher": [
-                "$gcc"
-            ]
-        },
-        {
-            "label": "build with coverage",
-            "type": "shell",
-            "command": "cd src && ./build.sh coverage --j2735-version 2024",
-            "detail": "Task builds V2X Hub with CMake unit test converage flags",
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "problemMatcher": [
-                "$gcc"
-            ]
+            "problemMatcher": []
         },
         {
             "label": "clean",
@@ -43,28 +28,48 @@
             "type": "shell",
             "command": "ldconfig && container/service.sh",
             "detail": "Task runs V2X Hub application by executing container/service.sh script",
-            "group": {
-                "kind": "build"
-            }
+            
         },
         {
             "label": "test",
             "type": "shell",
             "command": "cd src && ./test.sh",
             "detail": "Task runs all test executables for V2X Hub by executing test.sh script",
-            "group": {
-                "kind": "test"
-            }
+            "group": "test"
         },
         {
             "label": "test with coverage",
             "type": "shell",
             "command": "cd src && ./install_coverage_dependencies.sh && ./test.sh coverage",
             "detail": "Task runs all test executables and generates line coverage metrics for V2X Hub by executing test.sh script",
-            "group": {
-                "kind": "test"
-            }
+            "group": "test"
         }
 
+    ],
+    "inputs": [
+        {
+            "id": "pickBuildType",
+            "type": "pickString",
+            "default": "debug",
+            "options": [
+                    "release",
+                    "debug",
+                    "coverage"
+            ],
+            "description": "Select a built type."
+            
+        },
+        {
+            "id": "pickJ2735Version",
+            "type": "pickString",
+            "default": "2024",
+            "options": [
+                    "2024",
+                    "2020",
+                    "2016"
+            ],
+            "description": "Select J2735 Version to compile against"
+            
+        }
     ]
 }
