@@ -1,0 +1,2 @@
+# Documentation Archive
+This directory contains documentation that is currently out of date but may still have useful information. As we replace relevant documentation we will remove the archived documentation.
