@@ -11,7 +11,10 @@ namespace JSONMessageLoggerPlugin{
         auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
         // Serial J2735 message to JSON
         std::string jsonPayloadStr = j2735Message.to_string();
-        return jsonPayloadStr;
+        // Get timestamp
+        auto current_time = std::chrono::system_clock::now();
+        std::string timestamp = tmx::utils::Clock::ToUtcPreciseTimeString(current_time);
+        return timestamp + ": " + jsonPayloadStr;
     }
 
     void logRouteableMessage( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
