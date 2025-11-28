@@ -45,7 +45,7 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh coverage --j2735-version 2024 --skip-plugins ""
           ./test.sh coverage
       - name: Run sonar-scanner
-        uses: usdot-fhwa-stol/actions/sonar-scanner@main
+        uses: usdot-fhwa-stol/actions/sonar-scanner@fix-sonar-deprecated-action
         with:
           sonar-token: ${{ secrets.SONAR_TOKEN }}
           working-dir: ${{ github.workspace }}
