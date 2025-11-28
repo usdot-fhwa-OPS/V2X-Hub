@@ -15,7 +15,7 @@ namespace JSONMessageLoggerPlugin{
         // Get timestamp
         uint64_t timestamp_ms = message.get_timestamp();
 
-        return  std::to_string(timestamp_ms) + ": "+ jsonPayloadStr;
+        return  std::to_string(timestamp_ms) + " : "+ jsonPayloadStr;
     }
 
     void logRouteableMessage( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
