@@ -27,8 +27,8 @@ jobs:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
           submodules: recursive
-      - name:  Install sonar-scanner and build-wrapper
-        uses: sonarsource/sonarcloud-github-c-cpp@v2
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run install_dependencies.sh script
         run: |
           scripts/install_dependencies.sh
