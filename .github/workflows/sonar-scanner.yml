@@ -48,4 +48,4 @@ jobs:
         uses: usdot-fhwa-stol/actions/sonar-scanner@fix-sonar-deprecated-action
         with:
           sonar-token: ${{ secrets.SONAR_TOKEN }}
-          working-dir: ${{ github.workspace }}
+          working-dir: ${{ env.GITHUB_WORKSPACE }}
