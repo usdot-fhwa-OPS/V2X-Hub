@@ -31,6 +31,8 @@ jobs:
         uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run install_dependencies.sh script
         run: |
+          echo "The GitHub workspace path is: ${{ github.workspace }}"
+          echo "The GitHub workspace env is $GITHUB_WORKSPACE"
           scripts/install_dependencies.sh
       - name: Build Ext Components
         run: |
