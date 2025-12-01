@@ -33,7 +33,7 @@ jobs:
       - name: Run install_dependencies.sh script
         run: |
           echo "CLONED_REPO_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-          echo "The CLONED_REPO_PATH is ${{ env.CLONED_REPO_PATH }}"
+          ls -la $GITHUB_WORKSPACE
           scripts/install_dependencies.sh
       - name: Build Ext Components
         run: |
