@@ -33,6 +33,8 @@ jobs:
         run: |
           echo "The GitHub workspace path is: ${{ github.workspace }}"
           echo "The GitHub workspace env is $GITHUB_WORKSPACE"
+          ls -la  "${{ github.workspace }}"
+          ls -la "$GITHUB_WORKSPACE"
           scripts/install_dependencies.sh
       - name: Build Ext Components
         run: |
@@ -50,4 +52,4 @@ jobs:
         uses: usdot-fhwa-stol/actions/sonar-scanner@fix-sonar-deprecated-action
         with:
           sonar-token: ${{ secrets.SONAR_TOKEN }}
-          working-dir: ${{ env.GITHUB_WORKSPACE }}
+          working-dir: $GITHUB_WORKSPACE
