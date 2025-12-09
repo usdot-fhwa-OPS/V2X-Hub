@@ -103,6 +103,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
+          cd src/
           build.sh coverage --j2735-version 2024 --skip-plugins ""
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
