@@ -66,7 +66,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-
+    - name: Install Dependencies
+      shell: bash
+      run: |
+          scripts/install_dependencies.sh
+          cd ext/
+          ./build.sh
+          ../container/library.sh
+          ldconfig
     # Add any setup steps before running the `github/codeql-action/init` action.
     # This includes steps like installing compilers or runtimes (`actions/setup-node`
     # or others). This is typically only required for manual builds.
@@ -96,12 +103,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-          scripts/install_dependencies.sh
-          cd ext/
-          ./build.sh
-          ../container/library.sh
-          ldconfig
-          build.sh coverage --j2735-version 2024 --skip-plugins "
+          build.sh coverage --j2735-version 2024 --skip-plugins ""
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4
       with:
