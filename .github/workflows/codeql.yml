@@ -96,7 +96,7 @@ jobs:
       if: matrix.build-mode == 'manual'
       shell: bash
       run: |
-          scripts/install_dependencies.sh
+          sudo scripts/install_dependencies.sh
           cd ext/
           ./build.sh
           ../container/library.sh
