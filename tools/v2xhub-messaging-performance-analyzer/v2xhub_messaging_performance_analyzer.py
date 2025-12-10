@@ -19,7 +19,7 @@ def read_log_files(input_dir):
     """
     Reads input log files from RSU/V2X Hub in input_dir and returns
     two dataframes: v2xhub_tx_logs and rsu_tx_logs.
-    
+
     :param input_dir: Description
     """
     rsu_tx_logs = None
@@ -83,7 +83,7 @@ def calculate_messsage_performance(tx_log, rx_log):
             rx_log = rx_log.drop(rx_row.index[0])
             if rx_timestamp - tx_timestamp > 100:
                 logging.debug(
-                    'High latency deteected. Potential mismatch at index Tx %d and Rx %d: Tx Timestamp %d, Rx Timestamp %d, Latency %d ms', 
+                    'High latency deteected. Potential mismatch at index Tx %d and Rx %d: Tx Timestamp %d, Rx Timestamp %d, Latency %d ms',
                     index, rx_row.index[0], tx_timestamp, rx_timestamp, rx_timestamp - tx_timestamp)
         else:
             message_drop.append( (tx_timestamp, tx_message))
@@ -166,13 +166,13 @@ def main():
         description='Analyze V2X messaging performance from log files.'
     )
     parser.add_argument(
-        '--input_dir', 
+        '--input_dir',
         type=str,
         help='Directory containing RSU and V2X Hub log files'
     )
     parser.add_argument(
-        '--debug', 
-        action='store_true', 
+        '--debug',
+        action='store_true',
         help='Enable debug logging'
     )
     args = parser.parse_args()
@@ -186,6 +186,9 @@ def main():
     if not os.path.isdir(input_dir):
         print(f"Input directory {input_dir} does not exist.")
         return
+    # Create data and plots directories if not exist
+    os.makedirs('./data', exist_ok=True)
+    os.makedirs('./plots', exist_ok=True)
     v2xhub_tx_logs, rsu_tx_logs = read_log_files(input_dir)
     # Debug log first 5 rows of each dataframe
     logging.debug('V2X Hub TX Logs:\n%s', v2xhub_tx_logs.head())
@@ -197,9 +200,6 @@ def main():
     if not message_drop_df.empty:
         logging.info('Message Drop detected for %d messages.', len(message_drop_df))
         plot_message_drop(message_drop_df, './plots')
-
-    
-    # Calculate message drop, latency, and throughput
 
 if __name__ == "__main__":
     main()
