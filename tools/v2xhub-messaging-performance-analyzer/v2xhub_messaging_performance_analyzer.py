@@ -149,7 +149,7 @@ def plot_message_drop(message_drop_df, output_dir):
     fig, ax = plt.subplots(figsize=(10, 6))
     # Convert Tx Timestamp to datetime for better x-axis representation
     message_drop_df['Tx DateTime'] = pd.to_datetime(message_drop_df['Tx Timestamp'], unit='ms')
-    markers = ['o', '^', 's', 'D', '*']    # Convert Tx Timestamp to datetime for better x-axis representation
+    markers = ['o', '^', 's', 'D', '*'] 
     marker_index = 0
     for message_id in message_drop_df['Message Type'].unique():
         subset = message_drop_df[message_drop_df['Message Type'] == message_id]
@@ -184,7 +184,7 @@ def plot_throughput(tx_log, source , output_dir):
     plt.title( source + ' Throughput Over Time')
     plt.xlabel('Time')
     plt.ylabel('Messages per Second')
-    # Include y marks for 1-11 
+    # Include y marks for 0-12 
     plt.yticks(range(0, 12))
     plt.legend()
     plt.grid(True)
