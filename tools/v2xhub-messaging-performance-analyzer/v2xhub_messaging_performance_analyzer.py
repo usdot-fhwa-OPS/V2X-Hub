@@ -190,12 +190,6 @@ def plot_throughput(tx_log, source , output_dir):
     plt.grid(True)
     plt.savefig(os.path.join(output_dir, f'{source.lower()}_throughput.png'))
     plt.close()
-   
-    # Resample to 1 second intervals and count messages
-    # tx_throughput = tx_log.resample('1s', on='DateTime').size()
-    # rx_throughput = rx_log.resample('1s', on='DateTime').size()
-    # plt.plot(tx_throughput.index, tx_throughput.values, label='V2X Hub Throughput', color='blue')
-    # plt.plot(rx_throughput.index, rx_throughput.values, label='RSU Throughput', color='green')
     
 def main():
     """
