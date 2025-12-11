@@ -9,9 +9,10 @@ import os
 import re
 import argparse
 import logging
+import json
+
 import pandas as pd
 import matplotlib.pyplot as plt
-
 
 # Define main function which reads in input_dir using argparse
 
@@ -30,7 +31,7 @@ def read_log_files(input_dir):
         if filename.startswith('j2735') and "Tx" in filename and filename.endswith('.log'):
             logging.debug('Reading V2X Hub log file: %s', filename)
             v2xhub_tx_logs = read_log_to_dataframe(os.path.join(input_dir, filename))
-        elif  'tx' in filename and filename.endswith('.log'):
+        elif 'tx' in filename and filename.endswith('.log'):
             logging.debug('Reading RSU log file: %s', filename)
             rsu_tx_logs = read_log_to_dataframe(os.path.join(input_dir, filename))
     return v2xhub_tx_logs, rsu_tx_logs
@@ -47,15 +48,30 @@ def read_log_to_dataframe(log_file):
         engine='python',
         names= ['Timestamp', 'Raw JSON String']
     )
+
     # Regex to replace any boolean, null, or numeric values surrounded by quotes with unquoted
     # values
     data['Cleaned JSON String'] = data['Raw JSON String'].apply(
         lambda x: re.sub(r'\"(-?[0-9]+(\\.[0-9]+)?|null|true|false)\"', r'\1', x))
+    # Create Column for message id
+    # Message Id to name map
+    message_id_to_name = {
+        "18": "MAP",
+        "19": "SPAT",
+        # Add more mappings as needed
+    }
+    data['Message Type'] = data['Raw JSON String'].apply(
+        lambda x: 
+            message_id_to_name.get(
+                # Convert messageId to string if necessary
+                str(json.loads(x).get('messageId'))
+            )
+        )
     # Add this debug code before the DataFrame creation
     data.to_csv(
         "data/" + os.path.basename(log_file) + ".csv",
         index=False,
-        columns=['Timestamp', 'Cleaned JSON String']
+        columns=['Timestamp', 'Message Type', 'Cleaned JSON String']
     )
     return data
 
@@ -74,39 +90,48 @@ def calculate_messsage_performance(tx_log, rx_log):
     for index, tx_row in tx_log.iterrows():
         tx_timestamp = tx_row['Timestamp']
         tx_message = tx_row['Cleaned JSON String']
-        # Find matching message in rx_log
+        tx_message_id = tx_row['Message Type']
+        
+        # Find matching message in rx_log in next 20 messages
+
         rx_row = rx_log[rx_log['Cleaned JSON String'] == tx_message]
         if not rx_row.empty:
             rx_timestamp = rx_row.iloc[0]['Timestamp']
-            latency.append( (tx_timestamp, rx_timestamp - tx_timestamp))
-            # Remove the matched row to avoid duplicate matches
-            rx_log = rx_log.drop(rx_row.index[0])
-            if rx_timestamp - tx_timestamp > 100:
-                logging.debug(
-                    'High latency deteected. Potential mismatch at index Tx %d and Rx %d: Tx Timestamp %d, Rx Timestamp %d, Latency %d ms',
-                    index, rx_row.index[0], tx_timestamp, rx_timestamp, rx_timestamp - tx_timestamp)
+            
+            if rx_timestamp - tx_timestamp > 200:
+                message_drop.append( (tx_timestamp, tx_message_id, tx_message))
+            else:
+                latency.append( (tx_timestamp, tx_message_id, rx_timestamp - tx_timestamp))
+                # Remove the matched row to avoid duplicate matches
+                rx_log = rx_log.drop(rx_row.index[0])   
         else:
-            message_drop.append( (tx_timestamp, tx_message))
-    latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Latency (ms)'])
+            message_drop.append( (tx_timestamp, tx_message_id, tx_message))
+    latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Message Type', 'Latency (ms)'])
     if len(message_drop) > 1:
-        message_drop_df = pd.DataFrame(message_drop, columns=['Tx Timestamp', 'Message'])
+        message_drop_df = pd.DataFrame(message_drop, columns=['Tx Timestamp', 'Message Type', 'Message'])
     else:
-        message_drop_df = pd.DataFrame(columns=['Tx Timestamp', 'Message'])
+        message_drop_df = pd.DataFrame(columns=['Tx Timestamp', 'Message Type', 'Message'])
     return message_drop_df, latency_df
 
 def plot_latency(latency_df, output_dir):
     """
-    Plots latency over time and saves to output_dir
+    Plots latency for each message id over time and saves to output_dir
 
     :param latency_df: Description
     :param output_dir: Description
     """
     plt.set_loglevel('warning')
-    plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     # Convert Tx Timestamp to datetime for better x-axis representation
     latency_df['Tx DateTime'] = pd.to_datetime(latency_df['Tx Timestamp'], unit='ms')
-    plt.scatter(latency_df['Tx DateTime'], latency_df['Latency (ms)'], marker='o')
-    plt.title('Message Latency Over Time')
+    markers = ['o', '^', 's', 'D', '*']
+    marker_index = 0
+    for message_id in latency_df['Message Type'].unique():
+        subset = latency_df[latency_df['Message Type'] == message_id]
+        ax.scatter(subset['Tx DateTime'], subset['Latency (ms)'], label=f'Message Type {message_id}', marker=markers[marker_index])
+        marker_index = (marker_index + 1) % len(markers)
+    plt.legend()
+    plt.title('Message  Latency Over Time')
     plt.xlabel('Time')
     plt.ylabel('Latency (ms)')
     plt.grid(True)
@@ -115,16 +140,22 @@ def plot_latency(latency_df, output_dir):
 
 def plot_message_drop(message_drop_df, output_dir):
     """
-    Plots message drop over time and saves to output_dir
+    Plots message drop for each message id over time and saves to output_dir
 
     :param message_drop_df: Description
     :param output_dir: Description
     """
     plt.set_loglevel('warning')
-    plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(10, 6))
     # Convert Tx Timestamp to datetime for better x-axis representation
     message_drop_df['Tx DateTime'] = pd.to_datetime(message_drop_df['Tx Timestamp'], unit='ms')
-    plt.scatter(message_drop_df['Tx DateTime'], [1]*len(message_drop_df), marker='x', color='red')
+    markers = ['o', '^', 's', 'D', '*']    # Convert Tx Timestamp to datetime for better x-axis representation
+    marker_index = 0
+    for message_id in message_drop_df['Message Type'].unique():
+        subset = message_drop_df[message_drop_df['Message Type'] == message_id]
+        ax.scatter(subset['Tx DateTime'], [1]*len(subset), label=f'Message Type {message_id}', marker=markers[marker_index])
+        marker_index = (marker_index + 1) % len(markers)
+    plt.legend()
     plt.title('Message Drops Over Time')
     plt.xlabel('Time')
     plt.yticks([])
@@ -132,30 +163,40 @@ def plot_message_drop(message_drop_df, output_dir):
     plt.savefig(os.path.join(output_dir, 'message_drops.png'))
     plt.close()
 
-def plot_throughput(tx_log, rx_log, output_dir):
+def plot_throughput(tx_log, source , output_dir):
     """
-    Plot V2X Hub and RSU throughput over time and saves to output_dir
+    Plot V2X Hub and RSU throughput for each message type over time and saves to output_dir
     :param tx_log: Description
     :param rx_log: Description
     :param output_dir: Description
     """
     plt.set_loglevel('warning')
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))     #
     # Convert Timestamp to datetime for better x-axis representation
     tx_log['DateTime'] = pd.to_datetime(tx_log['Timestamp'], unit='ms')
-    rx_log['DateTime'] = pd.to_datetime(rx_log['Timestamp'], unit='ms')
-    # Resample to 1 second intervals and count messages
-    tx_throughput = tx_log.resample('1s', on='DateTime').size()
-    rx_throughput = rx_log.resample('1s', on='DateTime').size()
-    plt.plot(tx_throughput.index, tx_throughput.values, label='V2X Hub Throughput', color='blue')
-    plt.plot(rx_throughput.index, rx_throughput.values, label='RSU Throughput', color='green')
-    plt.title('Throughput Over Time')
+    markers = ['o', '^', 's', 'D', '*']
+    marker_index = 0
+    for message_id in tx_log['Message Type'].unique():
+        subset_tx = tx_log[tx_log['Message Type'] == message_id]
+        subset_tx_throughput = subset_tx.resample('1s', on='DateTime').size()
+        plt.scatter(subset_tx_throughput.index, subset_tx_throughput.values, label= message_id + ' Throughput' , marker=markers[marker_index])
+        marker_index = (marker_index + 1) % len(markers)
+    plt.title( source + ' Throughput Over Time')
     plt.xlabel('Time')
     plt.ylabel('Messages per Second')
+    # Include y marks for 1-11 
+    plt.yticks(range(0, 12))
     plt.legend()
     plt.grid(True)
-    plt.savefig(os.path.join(output_dir, 'throughput.png'))
+    plt.savefig(os.path.join(output_dir, f'{source.lower()}_throughput.png'))
     plt.close()
+   
+    # Resample to 1 second intervals and count messages
+    # tx_throughput = tx_log.resample('1s', on='DateTime').size()
+    # rx_throughput = rx_log.resample('1s', on='DateTime').size()
+    # plt.plot(tx_throughput.index, tx_throughput.values, label='V2X Hub Throughput', color='blue')
+    # plt.plot(rx_throughput.index, rx_throughput.values, label='RSU Throughput', color='green')
+    
 def main():
     """
     Reads files from input_directory, calculates messaging performance metricss
@@ -196,7 +237,8 @@ def main():
     message_drop_df, latency_df = calculate_messsage_performance(v2xhub_tx_logs, rsu_tx_logs)
     logging.debug('Message Latency for first 5 messages:\n%s', latency_df.head())
     plot_latency(latency_df, './plots')
-    plot_throughput(v2xhub_tx_logs, rsu_tx_logs, './plots')
+    plot_throughput(v2xhub_tx_logs, 'V2X Hub', './plots')
+    plot_throughput(rsu_tx_logs, 'RSU', './plots')
     if not message_drop_df.empty:
         logging.info('Message Drop detected for %d messages.', len(message_drop_df))
         plot_message_drop(message_drop_df, './plots')
