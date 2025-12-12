@@ -193,7 +193,7 @@ def plot_throughput(tx_log, source , output_dir):
     
 def main():
     """
-    Reads files from input_directory, calculates messaging performance metricss
+    Reads files from input_directory, calculates messaging performance metrics
     and generates plots saved to ./plots directory.
     """
 
