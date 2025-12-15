@@ -191,7 +191,9 @@ namespace tmx::utils
             success = true;
             for (auto vars = response->variables; vars;
                      vars = vars->next_variable) {
-                print_variable(vars->name, vars->name_length, vars);
+                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG) {
+                    print_variable(vars->name, vars->name_length, vars);
+                }
             }
             
         } 
