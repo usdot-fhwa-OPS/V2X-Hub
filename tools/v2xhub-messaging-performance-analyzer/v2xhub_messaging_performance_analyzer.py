@@ -58,6 +58,7 @@ def read_log_to_dataframe(log_file):
     message_id_to_name = {
         "18": "MAP",
         "19": "SPAT",
+        "31": "TIM",
         # Add more mappings as needed
     }
     data['Message Type'] = data['Raw JSON String'].apply(
@@ -92,9 +93,9 @@ def calculate_messsage_performance(tx_log, rx_log):
         tx_message = tx_row['Cleaned JSON String']
         tx_message_id = tx_row['Message Type']
         
-        # Find matching message in rx_log in next 20 messages
-
-        rx_row = rx_log[rx_log['Cleaned JSON String'] == tx_message]
+        # Find matching message in rx_log
+        # make case insensitive to avoid capitalization differences in OCTET STRING encoding between ASN1C and pycrate
+        rx_row = rx_log[rx_log['Cleaned JSON String'].str.lower() == tx_message.lower()]
         if not rx_row.empty:
             rx_timestamp = rx_row.iloc[0]['Timestamp']
             
