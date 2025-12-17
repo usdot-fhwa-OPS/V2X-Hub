@@ -38,8 +38,8 @@ namespace SpatPlugin {
     };
 
     void SignalControllerConnection::receiveBinarySPAT( SPAT * const spat, const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock) {
-        std::vector<char> buf(246);
-        auto numBytes = spatPacketReceiver->TimedReceive(buf.data(), 246, 1);
+        std::vector<char> buf(SPAT_BINARY_BUFFER_SIZE);
+        auto numBytes = spatPacketReceiver->TimedReceive(buf.data(), SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
         if (numBytes > 0)
         {
             // Convert Binary  buffer to SPAT pointer 

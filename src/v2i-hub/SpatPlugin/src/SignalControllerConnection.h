@@ -65,7 +65,7 @@ namespace SpatPlugin {
              */
             unsigned int intersectionId;
 
-            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 1000;
+            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 245;
 
             const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
 
