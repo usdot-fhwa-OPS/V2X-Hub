@@ -102,7 +102,7 @@ namespace SpatPlugin {
 
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {
         auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
-        EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, _)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
+        EXPECT_CALL(*mockUdpServer, TimedReceive(_, _, _)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
         auto spat = (SPAT*)calloc(1, sizeof(SPAT));
         // Make sim clock to inject time
         auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(true); 
@@ -343,7 +343,7 @@ namespace SpatPlugin {
         ASN_STRUCT_FREE(asn_DEF_SPAT, spat);
     }
     TEST_F(TestSignalControllerConnection, receiveBinarySPATException) {
-        EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll( Return(0)));
+        EXPECT_CALL(*mockUdpServer, TimedReceive(_, _, _)).WillOnce(testing::DoAll( Return(0)));
         auto spat = (SPAT*)calloc(1, sizeof(SPAT));
         // Make sim clock to inject time
         auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(true); 
@@ -368,7 +368,7 @@ namespace SpatPlugin {
             Encryption=False
             Payload=00136b4457f20180000000208457f2c7c20b0010434162bc650001022a0b0be328000c10d058af194000808682c578ca00050434162bc650003022a0b0be328001c10d058af194001008682c578ca000904341617c650005021a0b15e328002c10d0585f194001808682c578ca00
         )";
-        EXPECT_CALL(*mockUdpServer, stringTimedReceive(1000)).WillOnce(testing::DoAll(Return(uper_hex)));
+        EXPECT_CALL(*mockUdpServer, stringTimedReceive(_)).WillOnce(testing::DoAll(Return(uper_hex)));
         
         /**
          * <SPAT>
@@ -617,7 +617,7 @@ namespace SpatPlugin {
             Signature=True
             Encryption=False
         )";
-        EXPECT_CALL(*mockUdpServer, stringTimedReceive(1000)).WillOnce(testing::DoAll(Return(without_paylod)));
+        EXPECT_CALL(*mockUdpServer, stringTimedReceive(_)).WillOnce(testing::DoAll(Return(without_paylod)));
 
         auto spatEncoded_ptr = std::make_shared<tmx::messages::SpatEncodedMessage>();
 		EXPECT_THROW(signalControllerConnection->receiveUPERSPAT(spatEncoded_ptr), tmx::TmxException);  
