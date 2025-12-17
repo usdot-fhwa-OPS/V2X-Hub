@@ -37,17 +37,16 @@ namespace SpatPlugin {
         return status;
     };
 
-    void SignalControllerConnection::receiveBinarySPAT(SPAT * const spat, uint64_t timeMs ) {
-        FILE_LOG(tmx::utils::logDEBUG) << "Receiving binary SPAT ..." << std::endl;
-        char buf[SPAT_BINARY_BUFFER_SIZE];
-        auto numBytes = spatPacketReceiver->TimedReceive(buf, SPAT_BINARY_BUFFER_SIZE, UDP_SERVER_TIMEOUT_MS);
+    void SignalControllerConnection::receiveBinarySPAT( SPAT * const spat, const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock) {
+        std::vector<char> buf(246);
+        auto numBytes = spatPacketReceiver->TimedReceive(buf.data(), 246, 1);
         if (numBytes > 0)
         {
             // Convert Binary  buffer to SPAT pointer 
             Ntcip1202 ntcip1202;
             ntcip1202.setSignalGroupMappingList(this->signalGroupMapping);
-            ntcip1202.copyBytesIntoNtcip1202(buf, numBytes);
-            ntcip1202.ToJ2735SPAT(spat,timeMs, intersectionName, intersectionId);
+            ntcip1202.copyBytesIntoNtcip1202(buf.data(), numBytes);
+            ntcip1202.ToJ2735SPAT(spat,clock->nowInMilliseconds(), intersectionName, intersectionId);
             // Update status map with intersection status information
             updateIntersectionStatus(spat->intersections.list.array[0]->status);
             if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG)

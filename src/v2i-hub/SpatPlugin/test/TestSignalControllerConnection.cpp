@@ -102,9 +102,12 @@ namespace SpatPlugin {
 
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {
         auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
-        EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
+        EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, _)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
         auto spat = (SPAT*)calloc(1, sizeof(SPAT));
-		signalControllerConnection->receiveBinarySPAT(spat, 1721238398773);
+        // Make sim clock to inject time
+        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(true); 
+        clock->update(1721238398773);
+		signalControllerConnection->receiveBinarySPAT(spat, clock);
         /**
          * <SPAT>
                 <intersections>
@@ -342,7 +345,10 @@ namespace SpatPlugin {
     TEST_F(TestSignalControllerConnection, receiveBinarySPATException) {
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, 1000, 1000)).WillOnce(testing::DoAll( Return(0)));
         auto spat = (SPAT*)calloc(1, sizeof(SPAT));
-		EXPECT_THROW(signalControllerConnection->receiveBinarySPAT(spat, 1721238398773), tmx::utils::UdpServerRuntimeError);
+        // Make sim clock to inject time
+        auto clock = std::make_shared<fwha_stol::lib::time::CarmaClock>(true); 
+        clock->update(1721238398773);
+		EXPECT_THROW(signalControllerConnection->receiveBinarySPAT(spat, clock), tmx::utils::UdpServerRuntimeError);
         // Free the allocated memory for the SPAT structure
         ASN_STRUCT_FREE(asn_DEF_SPAT, spat);
     }
@@ -630,14 +636,16 @@ namespace SpatPlugin {
 
     TEST_F(TestSignalControllerConnection, testUpdateIntersectionStatus) {
         uint16_t statusIntersection = 1;
-	    IntersectionStatusObject_t status;
-        status.size = 2 * sizeof(uint8_t);
-        status.bits_unused = 0;
+        IntersectionStatusObject_t status;
+        status.size = 2;
+        status.buf = (uint8_t*)calloc(2, sizeof(uint8_t));
         status.buf[1] = statusIntersection;
         status.buf[0] = (statusIntersection >> 8); 
         signalControllerConnection->updateIntersectionStatus(status);
         auto map = signalControllerConnection->getIntersectionStatus();
 
         EXPECT_TRUE(map.find("Failure Mode")->second);
+        // Cleanup
+        free(status.buf);
     }
 }

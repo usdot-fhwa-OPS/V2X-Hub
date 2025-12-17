@@ -25,6 +25,8 @@
 #include <gtest/gtest_prod.h>  
 #include <map>
 #include <bitset>
+#include <carma-clock/carma_clock.h>
+
 
 #include "NTCIP1202.h"
 #include "NTCIP1202OIDs.h"
@@ -113,7 +115,7 @@ namespace SpatPlugin {
              * @param spat an empty SPaT pointer to which the SPAT data will be written.
              * @param timeMs current time in ms from epoch to use for message timestamp.
              */
-            void receiveBinarySPAT( SPAT * const spat, uint64_t timeMs);
+            void receiveBinarySPAT( SPAT * const spat, const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock);
             /**
              * @brief Method to receive SPaT data in UPER Hex format from TSC.
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.
