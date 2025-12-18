@@ -25,6 +25,8 @@
 #include <gtest/gtest_prod.h>  
 #include <map>
 #include <bitset>
+#include <carma-clock/carma_clock.h>
+
 
 #include "NTCIP1202.h"
 #include "NTCIP1202OIDs.h"
@@ -62,8 +64,11 @@ namespace SpatPlugin {
              * @brief Numeric identifier for intersection in SPaT messages.
              */
             unsigned int intersectionId;
-
-            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 1000;
+            /**
+             * @brief TSCBM described in V2I Hub ICD is 245 bytes
+             * @link https://usdot-carma.atlassian.net/wiki/spaces/V2XH/pages/1508311057/V2X+Hub+Project+Documentation?preview=/1508311057/1508311072/3.2%20V2X%20Hub%20Interface%20Control%20Document%20(ICD).docx 
+             */
+            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 245;
 
             const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
 
@@ -113,7 +118,7 @@ namespace SpatPlugin {
              * @param spat an empty SPaT pointer to which the SPAT data will be written.
              * @param timeMs current time in ms from epoch to use for message timestamp.
              */
-            void receiveBinarySPAT( SPAT * const spat, uint64_t timeMs);
+            void receiveBinarySPAT( SPAT * const spat, const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock);
             /**
              * @brief Method to receive SPaT data in UPER Hex format from TSC.
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.

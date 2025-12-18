@@ -29,7 +29,7 @@ using TimeMark_t = SPAT_TimeMark_t;
 #endif
 using DSecond2_t = DSecond_t;
 
-void Ntcip1202::setSignalGroupMappingList(string json)
+void Ntcip1202::setSignalGroupMappingList(const string &json)
 {
 	std::stringstream ss;
 	ss<<json;
@@ -43,7 +43,7 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 		int phaseNumber = value.get<int>("Phase", 0);
 		string typeName = value.get<string>("Type");
 
-		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
+		PLOG(logDEBUG3) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
 
 		SignalGroupMapping sgm;
 		sgm.PhaseId = phaseNumber;
@@ -84,8 +84,9 @@ void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 
 	//for (int i=0; i<numBytes; i++) { printf("%02x ", vptr[i]); }
 	//printf("\n\n");
-
-	printDebug();
+    if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG4) {
+		printDebug();
+	}
 }
 
 uint16_t Ntcip1202::getVehicleMinTime(int phaseNumber)
