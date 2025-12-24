@@ -261,7 +261,7 @@ void RegisterSignals(string pluginName)
 
 	sigact.sa_sigaction = HandleSignal;
 	sigact.sa_flags = SA_RESTART | SA_SIGINFO;
-
+	sigemptyset(&sigact.sa_mask);
 	// Set up all the signal handlers
 	for (int i : _signals)
 	{

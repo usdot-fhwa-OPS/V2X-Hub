@@ -40,7 +40,24 @@ namespace ImmediateForward {
         }
     }
 
-    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages) {
+    void waitForRSUModeStandby(tmx::utils::snmp_client* const client, unsigned int retry, unsigned int interval) {
+        snmp_response_obj obj;
+        obj.type = snmp_response_obj::response_type::INTEGER;
+        do {
+            bool operational = client->process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET, obj);
+            if (!operational) {
+                throw tmx::TmxException("Failed to get RSU to operational mode");
+            }
+            retry--;
+            sleep(interval);
+        }
+        while ( retry > 0 && obj.val_int != 2);
+        if ( obj.val_int != 2) {
+            throw tmx::TmxException("Failed to set RSU Mode to Standby(2)");
+        } 
+    }
+
+    std::unordered_map<std::string, unsigned int> initializeImmediateForwardTable( snmp_client* const client, const std::vector<MessageConfig> &messageConfigs, bool signMessages, const std::string &payloadPlaceholder) {
         std::unordered_map<std::string, unsigned int> tmxMessageTypeToIMFTableIndex;
         // Immediate Forward Messages Table index starts with 1
         auto curIndex = 1;
@@ -69,12 +86,13 @@ namespace ImmediateForward {
             snmp_request payload{
                 rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(curIndex),
                 'x',
-                "FFFF"
+                payloadPlaceholder
             };
+            // Set enable to false for placeholder payload while rsuMode is standby to prevent transmission and Xmit errors
             snmp_request enable{
                 rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(curIndex),
                 'i',
-                "1"
+                "0"
             };
             snmp_request creatRow{
                 rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(curIndex),
@@ -126,7 +144,13 @@ namespace ImmediateForward {
             'x',
             message
         };
-        std::vector reqs {payload};
+        // Enable the message for transmission
+        snmp_request enable{
+                rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index),
+                'i',
+                "1"
+        };
+        std::vector reqs {payload, enable};
         client->process_snmp_set_requests(reqs);
     }
 

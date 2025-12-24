@@ -11,16 +11,10 @@
 
 //#include <asn_j2735/AlaCarte.h>
 #include <BasicSafetyMessage.h>
-#if SAEJ2735_SPEC < 2016
-#include <BasicSafetyMessageVerbose.h>
-#include <NMEA-Corrections.h>
-#include <RTCM-Corrections.h>
-#include <SignalRequestMsg.h>
-#else
+
 #include <NMEAcorrections.h>
 #include <RTCMcorrections.h>
 #include <SignalRequestMessage.h>
-#endif
 #include <CommonSafetyRequest.h>
 #include <EmergencyVehicleAlert.h>
 #include <IntersectionCollision.h>
@@ -73,35 +67,18 @@ asn_TYPE_descriptor_t *getTypeDescriptorFromMsgId(e_DSRCmsgID msgId)
 	{
 //		case DSRCmsgID_alaCarteMessage: return &asn_DEF_AlaCarte;
 		case msgID_basicSafetyMessage: return &asn_DEF_BasicSafetyMessage;
-#if SAEJ2735_SPEC < 2016
-		case msgID_basicSafetyMessageVerbose: return &asn_DEF_BasicSafetyMessageVerbose;
-#endif
+
 		case msgID_commonSafetyRequest: return &asn_DEF_CommonSafetyRequest;
 		case msgID_emergencyVehicleAlert: return &asn_DEF_EmergencyVehicleAlert;
 		case msgID_intersectionCollisionAlert: return &asn_DEF_IntersectionCollision;
 		case msgID_mapData: return &asn_DEF_MapData;
-		case msgID_nmeaCorrections:
-#if SAEJ2735_SPEC < 2016
-			return &asn_DEF_NMEA_Corrections;
-#else
-			return &asn_DEF_NMEAcorrections;
-#endif
+		case msgID_nmeaCorrections:return &asn_DEF_NMEAcorrections;
 		case msgID_probeDataManagement: return &asn_DEF_ProbeDataManagement;
 		case msgID_probeVehicleData: return &asn_DEF_ProbeVehicleData;
 		case msgID_roadSideAlert: return &asn_DEF_RoadSideAlert;
-		case msgID_rtcmCorrections:
-#if SAEJ2735_SPEC < 2016
-			return &asn_DEF_RTCM_Corrections;
-#else
-			return &asn_DEF_RTCMcorrections;
-#endif
+		case msgID_rtcmCorrections:return &asn_DEF_RTCMcorrections;
 		case msgID_signalPhaseAndTimingMessage: return &asn_DEF_SPAT;
-		case msgID_signalRequestMessage:
-#if SAEJ2735_SPEC < 2016
-			return &asn_DEF_SignalRequestMsg;
-#else
-			return &asn_DEF_SignalRequestMessage;
-#endif
+		case msgID_signalRequestMessage:return &asn_DEF_SignalRequestMessage;
 		case msgID_signalStatusMessage: return &asn_DEF_SignalStatusMessage;
 		case msgID_travelerInformation: return &asn_DEF_TravelerInformation;
 		default: break;

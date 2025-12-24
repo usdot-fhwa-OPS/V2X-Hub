@@ -21,24 +21,20 @@
 #include <ITIS_ITIScodesAndText.h>
 #else
 #include <ITIScodesAndText.h>
+#include <NodeListXY.h>
+#include <Count.h>
 #endif
 
-#if SAEJ2735_SPEC < 2016
-typedef TravelerInformation::TravelerInformation__dataFrames::TravelerInformation__dataFrames__List::TravelerInformation__dataFrames__Member TiDataFrame;
-typedef ITIScodesAndText::ITIScodesAndText__List::ITIScodesAndText__Member ItisMember;
-typedef ITIScodesAndText::ITIScodesAndText__List ItisList;
-#elif SAEJ2735_SPEC >= 2024
-typedef TravelerDataFrame TiDataFrame;
-typedef ITIS_ITIScodesAndText ITIScodesAndText;
-typedef ITIS_ITIScodesAndText__Member ITIScodesAndText__Member;
-typedef ITIS_ITIScodesAndText_t ItisList;
+#if SAEJ2735_SPEC >= 2024
+using TiDataFrame =TravelerDataFrame;
+using ITIScodesAndText=ITIS_ITIScodesAndText;
+using ITIScodesAndText__Member=ITIS_ITIScodesAndText__Member;
+using ItisList=ITIS_ITIScodesAndText_t;
 #else
-typedef TravelerDataFrame TiDataFrame;
-typedef ITIScodesAndText__Member ItisMember;
-typedef ITIScodesAndText ItisList;
-#include <NodeListXY.h>
-typedef NodeListXY NodeList_t;
-#include <Count.h>
+using TiDataFrame=TravelerDataFrame;
+using ItisMember=ITIScodesAndText__Member;
+using ItisList=ITIScodesAndText;
+using NodeList_t=NodeListXY;
 #endif
 
 class DsrcBuilder

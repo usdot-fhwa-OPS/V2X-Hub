@@ -23,6 +23,10 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/TmxException.hpp>
 #include <gtest/gtest_prod.h>  
+#include <map>
+#include <bitset>
+#include <carma-clock/carma_clock.h>
+
 
 #include "NTCIP1202.h"
 #include "NTCIP1202OIDs.h"
@@ -60,11 +64,31 @@ namespace SpatPlugin {
              * @brief Numeric identifier for intersection in SPaT messages.
              */
             unsigned int intersectionId;
-
-            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 1000;
+            /**
+             * @brief TSCBM described in V2I Hub ICD is 245 bytes
+             * @link https://usdot-carma.atlassian.net/wiki/spaces/V2XH/pages/1508311057/V2X+Hub+Project+Documentation?preview=/1508311057/1508311072/3.2%20V2X%20Hub%20Interface%20Control%20Document%20(ICD).docx 
+             */
+            const static unsigned int SPAT_BINARY_BUFFER_SIZE = 245;
 
             const static unsigned int UDP_SERVER_TIMEOUT_MS = 1000;
 
+
+            std::map<std::string, bool> intersectionStatus = {
+                {"Manual Control Is Enabled", false},
+                {"Stop Time Is Activated", false},
+                {"Failure Flash", false},
+                {"Preemption Is Active", false},
+                {"Signal Priority Is Active", false},
+                {"Fixed Time Operation", false},
+                {"Traffic Dependent Operation", false},
+                {"Standby Operation", false},
+                {"Failure Mode", false},
+                {"Off", false},
+                {"Recent MAP Message Update", false},
+                {"Recent Change in MAP Assigned Lane Ids Used", false},
+                {"No Valid MAP No Available At This Time", false},
+                {"No Valid SPAT is Available At This Time", false},
+            };
             friend class TestSignalControllerConnection;
 
         public:
@@ -94,11 +118,28 @@ namespace SpatPlugin {
              * @param spat an empty SPaT pointer to which the SPAT data will be written.
              * @param timeMs current time in ms from epoch to use for message timestamp.
              */
-            void receiveBinarySPAT(const std::shared_ptr<SPAT> &spat, uint64_t timeMs) const;
+            void receiveBinarySPAT( SPAT * const spat, const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock);
             /**
              * @brief Method to receive SPaT data in UPER Hex format from TSC.
              * @param spatEncoded_ptr Empty SpatEncodedMessage to which the UPER encoded SPaT data will be written.
              */
-            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr) const;
+            void receiveUPERSPAT(std::shared_ptr<tmx::messages::SpatEncodedMessage> &spatEncoded_ptr);
+            /**
+             * @brief Static function to calculate interval between two spat messages given the ms epoch timestamps
+             * of each.
+             * @param lastSpatMessage epoch ms timestamp of the last spat message
+             * @param currentSpatMessage epoch ms of the current receved spat message. Should be larger than lastSpatMessage
+             * @returns interval in ms
+             * @throws TmxException if interval exceeds maximum allowable value from CTI 4501 of 300 ms
+             */
+            static uint calculateSPaTInterval(uint64_t lastSpatMessage, uint64_t currentSpatMessage);
+
+            void updateIntersectionStatus(const IntersectionStatusObject_t &status);
+
+            std::map<std::string, bool> getIntersectionStatus() const;
+
+            const static unsigned int SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+
     };
+
 }

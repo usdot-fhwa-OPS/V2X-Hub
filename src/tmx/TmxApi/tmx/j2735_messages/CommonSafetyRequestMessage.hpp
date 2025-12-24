@@ -12,11 +12,7 @@
 #include <tmx/j2735_messages/J2735MessageTemplate.hpp>
 #include <tmx/messages/TmxJ2735.hpp>
 
-#if SAEJ2735_SPEC < 2016
-TMX_J2735_DECLARE(Csr, CommonSafetyRequest, api::commonSafetyRequest_D, api::MSGSUBTYPE_COMMONSAFETYREQUEST_STRING)
-#else
 TMX_J2735_DECLARE(Csr, CommonSafetyRequest, api::commonSafetyRequest, api::MSGSUBTYPE_COMMONSAFETYREQUEST_STRING)
-#endif
 
 // Specialize the unique key function
 TMX_J2735_NAMESPACE_START(tmx)

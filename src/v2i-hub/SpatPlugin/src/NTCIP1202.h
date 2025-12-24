@@ -84,7 +84,7 @@ struct SignalGroupMapping
 class Ntcip1202
 {
 	public:
-		void setSignalGroupMappingList(string json);
+		void setSignalGroupMappingList(const string &json);
 
 		void copyBytesIntoNtcip1202(char* buff, int numBytes);
 		bool getPhaseRedStatus(int phaseNumber);

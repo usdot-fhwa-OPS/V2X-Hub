@@ -1,4 +1,4 @@
-PROJECT(ERVCloudForwardingPlugin VERSION 7.10.0 LANGUAGES CXX)
+PROJECT(ERVCloudForwardingPlugin VERSION 7.11.0 LANGUAGES CXX)
 
 SET(TMX_PLUGIN_NAME "ERVCloudForwarding")
 add_compile_options(-fPIC)
@@ -37,4 +37,4 @@ file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
 set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 add_executable(${BINARY} ${TEST_SOURCES})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest gtest_main)

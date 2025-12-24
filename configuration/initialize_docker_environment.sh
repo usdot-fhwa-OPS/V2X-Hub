@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -e
 # Default values for the variables
 PORT_DRAYAGE_ENABLED_DEFAULT="FALSE"
 INFRASTRUCTURE_ID_DEFAULT="rsu_1234"
@@ -7,7 +7,7 @@ INFRASTRUCTURE_NAME_DEFAULT="East Intersection"
 V2XHUB_IP_DEFAULT="127.0.0.1"
 SIMULATION_MODE_DEFAULT="FALSE"
 SIMULATION_IP_DEFAULT="127.0.0.1"
-SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/plugins/MAP/sensors.json"
+SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
 COMPOSE_PROFILES=""
 
 echo "Initializing Docker Environment for V2X Hub..."
@@ -46,6 +46,7 @@ if [[ $PORT_DRAYAGE_ENABLED == "TRUE" ]]; then
     echo "Activating port_drayage profile."
     COMPOSE_PROFILES="port_drayage"
 fi
+
 # Infrastructure id
 read -r -p "Enter Infrastructure id (or press Enter to use default as $INFRASTRUCTURE_ID_DEFAULT): " INFRASTRUCTURE_ID
 INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-$INFRASTRUCTURE_ID_DEFAULT}
@@ -72,7 +73,33 @@ if [[ $SIMULATION_MODE == "TRUE" ]]; then
     read -r -p "Enter Sensor Configuration File Path (or press Enter to use default as $SENSOR_JSON_FILE_PATH_DEFAULT): " SENSOR_JSON_FILE_PATH
     SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-$SENSOR_JSON_FILE_PATH_DEFAULT}
 fi
+# MySQL (IVP) User Password
+read -r -s -p "MYSQL PASSWORD (password for configuration database): " MYSQL_PASSWORD
+echo
+# V2X Hub Username
+read -r -p "V2X Hub Admin Username (or press Enter to use default as v2xadmin): " V2XHUB_USERNAME
+V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
+echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol."
 
+# V2X Hub Password
+read -r -s -p "V2X Hub Admin Password (input will be hidden): " V2XHUB_PASSWORD
+# Get length of the password
+PASS_LENGTH=$(echo "$V2XHUB_PASSWORD" | wc -c)
+# Validate password complexity
+if [ $PASS_LENGTH -ge 8 ] && echo "$V2XHUB_PASSWORD" | grep -q "[a-z]" && echo "$V2XHUB_PASSWORD" | grep -q "[A-Z]" && echo "$V2XHUB_PASSWORD" | grep -q "[0-9]" && ( echo "$V2XHUB_PASSWORD" | grep -q "[\$\!\.\+_\*@\#\^%\?~]" || echo "$V2XHUB_PASSWORD" | grep -q "[-]" ); then
+    echo
+    # Confirm password
+    read -r -s -p "Confirm password: " CONF_PASS
+    while [ "$CONF_PASS" != "$V2XHUB_PASSWORD" ]; do
+        echo
+        read -r -s -p "Passwords do not match. Please re-enter password: " CONF_PASS
+    done
+    echo "VALID PASSWORD"
+else
+    echo "INVALID PASSWORD"
+    echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol"
+    exit 1
+fi
 echo "WARNING: This will overwrite the existing .env file if it exists."
 read -r -p "Are you sure you want to continue? (Y/N): " overwrite_confirm
 if [[ "$overwrite_confirm" =~ [yY](es)* ]]; then
@@ -85,6 +112,9 @@ V2XHUB_IP="$V2XHUB_IP"
 SIMULATION_MODE=$SIMULATION_MODE
 COMPOSE_PROFILES="$COMPOSE_PROFILES"
 SENSOR_JSON_FILE_PATH="$SENSOR_JSON_FILE_PATH"
+MYSQL_PASSWORD="$MYSQL_PASSWORD"
+V2XHUB_USERNAME="$V2XHUB_USERNAME"
+V2XHUB_PASSWORD="$V2XHUB_PASSWORD"
 EOF
 
     # Adding Simulation IP and Sensor Path if Simulation Mode is TRUE

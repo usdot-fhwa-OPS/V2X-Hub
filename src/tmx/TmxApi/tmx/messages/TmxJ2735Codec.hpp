@@ -13,11 +13,7 @@
 
 #define TMX_J2735_MAX_DATA_SIZE 4000
 
-#if SAEJ2735_SPEC < 2016
-#define ASN1_CODEC tmx::messages::codec::der
-#else
 #define ASN1_CODEC tmx::messages::codec::uper
-#endif
 
 #include <tmx/j2735_messages/MessageFrame.hpp>
 
@@ -176,18 +172,6 @@ struct uper
 
 		MessageFrameMessage::message_type *frame = NULL;
 		asn_TYPE_descriptor_t *descriptor = NULL;
-
-#if SAEJ2735_SPEC < 2016
-		static uper<MessageFrameMessage> decoder;
-
-		descriptor = MessageFrameMessage::get_descriptor();
-
-		asn_dec_rval_t ret = decoder.decode((void **)&frame, bytes, descriptor);
-		if (ret.code != RC_OK || frame == NULL)
-			return -1;
-
-		id = frame->contentID;
-#else
 		// Message ID is encoded directly in the message frame, first two bytes
 		if (bytes.size() > 1)
 			id = bytes[0];
@@ -196,7 +180,6 @@ struct uper
 			id <<= 8;
 			id |= bytes[1];
 		}
-#endif
 
 		if (descriptor)
 			ASN_STRUCT_FREE((*descriptor), frame);
@@ -319,6 +302,7 @@ public:
 					std::string(j2735::get_messageTag< typename type::traits_type >()) + " from bytes.");
 			err << codecerr_info{DecType::Encoding};
 			err << errmsg_info{"Failed after " + std::to_string(rval.consumed) + " bytes."};
+			ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
 			BOOST_THROW_EXCEPTION(err);
 		}
 	}
@@ -375,11 +359,10 @@ public:
 			else if (is_uper())
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
-				{
-					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::uper<MessageFrameMessage> >(theData);
-					if (frame)
-						_decoded.reset(new MsgType(frame->get_j2735_data()));
+				{	
+					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::uper<MessageFrameMessage> >(theData));
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));	
 				}
 				else
 				{
@@ -390,10 +373,9 @@ public:
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{
-					MessageFrameMessage *frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::der<MessageFrameMessage> >(theData);
-					if (frame)
-						_decoded.reset(new MsgType(frame->get_j2735_data()));
+					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::der<MessageFrameMessage> >(theData));
+					_decoded.reset(new MsgType(_frame->get_j2735_data()));
 				}
 				else
 				{
@@ -405,7 +387,6 @@ public:
 				J2735Exception err("Unknown encoding.");
 				err << codecerr_info{this->get_encoding()};
 				BOOST_THROW_EXCEPTION(err);
-				throw;	// Just to suppress the warning for non-return value
 			}
 		}
 
@@ -533,7 +514,11 @@ public:
 	}
 private:
 	std::unique_ptr<MsgType> _decoded;
-
+	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for 
+	// decoding/encoding purposes (see decode_j2735_message() method)
+	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer
+	// Never delete this pointer directly will result in a memory leak
+	std::unique_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()
 	{
@@ -554,57 +539,6 @@ public:
 
 typedef TmxJ2735EncodedMessage<MessageFrameMessage> MessageFrameEncodedMessage;
 
-#if SAEJ2735_SPEC < 2016
-namespace j2735 {
-
-// Decode and encode for UPER frame
-template <typename T>
-T *UperFrameDecode(const typename MessageFrameMessage::message_type *ptr)
-{
-	if (ptr && ptr->contentID == get_default_messageId< SaeJ2735Traits<T> >())
-	{
-		tmx::messages::codec::uper< TmxJ2735Message<T> > uperDecoder;
-		tmx::byte_stream uperFrameBytes(ptr->msgBlob.size);
-		memcpy(uperFrameBytes.data(), ptr->msgBlob.buf, ptr->msgBlob.size);
-		T *obj = 0;
-		asn_dec_rval_t udRet = uperDecoder.decode((void **)obj, uperFrameBytes);
-		if (udRet.code == RC_OK && obj)
-			return obj;
-	}
-
-	return 0;
-}
-
-template <typename T>
-typename MessageFrameMessage::message_type *UperFrameEncode(const T *ptr)
-{
-	if (ptr)
-	{
-		tmx::messages::codec::uper< TmxJ2735Message<T> > uperEncoder;
-		tmx::byte_stream uperFrameBytes(TMX_J2735_MAX_DATA_SIZE);
-		asn_enc_rval_t ueRet = uperEncoder.encode(ptr, uperFrameBytes);
-		if (ueRet.encoded > 0)
-		{
-			typename MessageFrameMessage::message_type *uperFrame =
-					(typename MessageFrameMessage::message_type *)
-						calloc(1, sizeof(typename MessageFrameMessage::message_type));
-
-			uperFrameBytes.resize(ueRet.encoded);
-
-			uperFrame->msgID = get_default_messageId< MessageFrameTraits >();
-			uperFrame->contentID = get_default_messageId< SaeJ2735Traits<T> >();
-			uperFrame->msgBlob.buf = (uint8_t *) calloc(ueRet.encoded, sizeof(uint8_t));
-			uperFrame->msgBlob.size = (int)ueRet.encoded;
-			::memcpy(uperFrame->msgBlob.buf, uperFrameBytes.data(), ueRet.encoded);
-			return uperFrame;
-		}
-	}
-
-	return 0;
-}
-
-} /* End namespace j2735 */
-#endif
 
 } /* End namespace messages */
 } /* End namespace tmx */

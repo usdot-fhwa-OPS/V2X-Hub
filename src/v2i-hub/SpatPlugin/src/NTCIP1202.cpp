@@ -20,8 +20,7 @@ using namespace std;
 using namespace boost::property_tree;
 using namespace tmx::utils;
 
-#if SAEJ2735_SPEC < 2016
-#elif SAEJ2735_SPEC < 2020
+#if SAEJ2735_SPEC < 2020
 using MsgCount_t = DSRC_MsgCount_t;
 using TimeMark_t = DSRC_TimeMark_t;
 #else
@@ -30,7 +29,7 @@ using TimeMark_t = SPAT_TimeMark_t;
 #endif
 using DSecond2_t = DSecond_t;
 
-void Ntcip1202::setSignalGroupMappingList(string json)
+void Ntcip1202::setSignalGroupMappingList(const string &json)
 {
 	std::stringstream ss;
 	ss<<json;
@@ -44,7 +43,7 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 		int phaseNumber = value.get<int>("Phase", 0);
 		string typeName = value.get<string>("Type");
 
-		PLOG(logDEBUG) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
+		PLOG(logDEBUG3) <<"signalGroupId: "<<signalGroupId<<" phaseNumber: "<< phaseNumber <<" typeName: "<< typeName << endl;
 
 		SignalGroupMapping sgm;
 		sgm.PhaseId = phaseNumber;
@@ -57,7 +56,18 @@ void Ntcip1202::setSignalGroupMappingList(string json)
 
 void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 {
+	if (!buff || numBytes <= 0)
+	{
+	throw tmx:: TmxException("Received SPaT payload is empty or null");
+	}
 
+	const auto structSize = static_cast<int>(sizeof(ntcip1202Data));
+
+	if (numBytes > structSize)
+	{
+	throw tmx:: TmxException("Received SPaT payload is larger than the TSCBM size");
+	}
+	std::memset(&ntcip1202Data, 0, sizeof(ntcip1202Data));
 	std::memcpy(&ntcip1202Data, buff, numBytes);
 
 	unsigned char * vptr = (unsigned char *)&(ntcip1202Data);
@@ -74,8 +84,9 @@ void Ntcip1202::copyBytesIntoNtcip1202(char* buff, int numBytes)
 
 	//for (int i=0; i<numBytes; i++) { printf("%02x ", vptr[i]); }
 	//printf("\n\n");
-
-	printDebug();
+    if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG4) {
+		printDebug();
+	}
 }
 
 uint16_t Ntcip1202::getVehicleMinTime(int phaseNumber)
@@ -213,10 +224,6 @@ void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::strin
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
 
 	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
-
-#if SAEJ2735_SPEC < 2016
-	spat->msgID = tmx::messages::SpatMessage::get_default_messageId();
-#endif
 
 	IntersectionState *intersection = (IntersectionState *)calloc(1, sizeof(IntersectionState));
 

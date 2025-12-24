@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "CommunicationModeHelper.h"
+#include <CommunicationModeHelper.h>
 
 namespace ODEForwardPlugin{
     class test_CommunicationModeHelper: public ::testing::Test{

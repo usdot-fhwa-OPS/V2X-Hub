@@ -55,7 +55,7 @@
 #define USER_ADD_QUERY "\
 	INSERT INTO IVP.user \
 	(username, password, accessLevel ) \
-	SELECT DISTINCT ?, ?, ? \
+	SELECT ?, SHA2(?, 256), ? \
 	FROM DUAL \
 	WHERE NOT EXISTS ( \
 	SELECT username FROM IVP.user \
@@ -755,7 +755,7 @@ bool TmxControl::user_update()
 	{
 		string query = USER_UPDATE_QUERY;
 		if (havePassword)
-			query += "  password = ?";
+			query += "  password = SHA2(?, 256)";
 		if (haveAccess)
 		{
 			if (havePassword)

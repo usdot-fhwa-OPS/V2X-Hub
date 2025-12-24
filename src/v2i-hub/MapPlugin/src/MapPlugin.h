@@ -38,24 +38,16 @@
 #include <tmx/messages/IvpSignalControllerStatus.h>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
-#include "XmlMapParser.h"
-#include "ConvertToJ2735r41.h"
-#include "inputs/isd/ISDToJ2735r41.h"
 
 #define USE_STD_CHRONO
 #include <FrequencyThrottle.h>
 #include <PluginClientClockAware.h>
 
-#include "utils/common.h"
-#include "utils/map.h"
-
 #include <MapSupport.h>
 
 namespace MapPlugin {
 
-#if SAEJ2735_SPEC < 2016
-UPERframe _uperFrameMessage;
-#endif
+
 
 class MapFile: public tmx::message {
 public:
@@ -111,6 +103,8 @@ private:
 	std::atomic<int> _mapAction {-1};
 	std::atomic<bool> _isMapFileNew {false};
 	std::atomic<bool> _cohdaR63 {false};
+	/** Status key for if Map File loaded successfully */
+	const char* _keyMapFileStatus = "Map File Loaded";
 
 	std::mutex data_lock;
 	std::map<int, MapFile> _mapFiles;

@@ -17,17 +17,12 @@
 
 // Need to include all the types
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
-#if SAEJ2735_SPEC < 2016
-#include <tmx/j2735_messages/BasicSafetyMessageVerbose.hpp>
-#endif
+
 #include <tmx/j2735_messages/CommonSafetyRequestMessage.hpp>
 #include <tmx/j2735_messages/EmergencyVehicleAlertMessage.hpp>
 #include <tmx/j2735_messages/IntersectionCollisionMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/NmeaMessage.hpp>
-#if SAEJ2735_SPEC < 2016
-#include <tmx/j2735_messages/PersonalMobilityMessage.hpp>
-#endif
 #include <tmx/j2735_messages/PersonalSafetyMessage.hpp>
 #include <tmx/j2735_messages/ProbeDataManagementMessage.hpp>
 #include <tmx/j2735_messages/ProbeVehicleDataMessage.hpp>
@@ -57,18 +52,12 @@ struct ENDOFLIST {};
 template <class... T> struct message_type_list {};
 using message_types = message_type_list<
 		BsmMessage,
-#if SAEJ2735_SPEC < 2016
-		BsmvMessage,
-#endif
 		CsrMessage,
 		EvaMessage,
 		IntersectionCollisionMessage,
 		MapDataMessage,
 		NmeaMessage,
 		PdmMessage,
-#if SAEJ2735_SPEC < 2016
-		PmmMessage,
-#endif
 #if SAEJ2735_SPEC >= 2024
 		RsmMessage,
 #endif
@@ -126,8 +115,8 @@ struct message_allocator_impl: public message_allocator
 class J2735MessageFactory
 {
 private:
-	using int_map = std::map<int, message_allocator *>;
-	using str_map = std::map<std::string, message_allocator *>;
+	using int_map = std::map<int, std::shared_ptr<message_allocator>>;
+	using str_map = std::map<std::string, std::shared_ptr<message_allocator>>;
 
 	int_map &byInt;
 	str_map &byStr;
@@ -156,7 +145,7 @@ private:
 	template <class Msg>
 	inline void add_allocator_to_maps()
 	{
-		message_allocator_impl<Msg> *alloc = new message_allocator_impl<Msg>();
+		std::shared_ptr<message_allocator_impl<Msg>> alloc = std::make_shared<message_allocator_impl<Msg>>();
 		byInt[alloc->getMessageID()] = alloc;
 		byStr[alloc->getMessageType()] = alloc;
 	}
@@ -185,18 +174,12 @@ public:
 		if (byInt.size() <= 0 || byStr.size() <= 0)
 		{
 			add_allocator_to_maps<BsmMessage>();
-#if SAEJ2735_SPEC < 2016
-			add_allocator_to_maps<BsmvMessage>();
-#endif
 			add_allocator_to_maps<CsrMessage>();
 			add_allocator_to_maps<EvaMessage>();
 			add_allocator_to_maps<IntersectionCollisionMessage>();
 			add_allocator_to_maps<MapDataMessage>();
 			add_allocator_to_maps<NmeaMessage>();
 			add_allocator_to_maps<PdmMessage>();
-#if SAEJ2735_SPEC < 2016
-			add_allocator_to_maps<PmmMessage>();
-#endif
 #if SAEJ2735_SPEC >= 2024
 			add_allocator_to_maps<RsmMessage>();
 #endif
@@ -215,13 +198,10 @@ public:
 			add_allocator_to_maps<tsm2Message>();
 			add_allocator_to_maps<tsm3Message>();
 			add_allocator_to_maps<SdsmMessage>();
-#if SAEJ2735_SPEC < 2016
-			add_allocator_to_maps<UperFrameMessage>();
-#endif
 		}
 	}
 
-	~J2735MessageFactory()	{ }
+	~J2735MessageFactory()	{}
 
 	/**
 	 * Return the last event that occurred.  This can be used to report on the
@@ -426,11 +406,7 @@ private:
 
 		// Always try the default encoding first
 		ASN1_CODEC<MessageFrameMessage> Codec;
-#if SAEJ2735_SPEC < 2016
-		tmx::messages::codec::uper<MessageFrameMessage> OtherCodec;
-#else
 		tmx::messages::codec::der<MessageFrameMessage> OtherCodec;
-#endif
 
 		int id = Codec.decode_contentId(bytes);
 

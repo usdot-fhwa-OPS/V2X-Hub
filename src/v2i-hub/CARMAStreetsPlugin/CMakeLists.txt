@@ -1,4 +1,4 @@
-PROJECT ( CARMAStreetsPlugin VERSION 7.10.0 LANGUAGES CXX )
+PROJECT ( CARMAStreetsPlugin VERSION 7.11.0 LANGUAGES CXX )
 
 BuildTmxPlugin ( )
 
@@ -15,10 +15,11 @@ target_link_libraries(${PROJECT_NAME}_lib PUBLIC ${TMXAPI_LIBRARIES}
                                         ${MYSQL_LIBRARIES} 
                                         ${MYSQLCPPCONN_LIBRARIES}
                                         tmxutils
+                                        jsoncpp
                                         ${UUID_LIBRARY})
 set(BINARY ${PROJECT_NAME}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
 set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 add_executable(${BINARY} ${TEST_SOURCES})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest jsoncpp)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest gtest_main)

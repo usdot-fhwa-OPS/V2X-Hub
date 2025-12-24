@@ -9,6 +9,7 @@ on:
 name: Sonar Workflow
 jobs:
   sonarcloud:
+    
     runs-on: ubuntu-latest
     container:
       image: ubuntu:jammy-20230126
@@ -22,15 +23,17 @@ jobs:
           export DEBIAN_FRONTEND=noninteractive
           apt-get install -y curl zip git gcovr
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
           submodules: recursive
-      - name:  Install sonar-scanner and build-wrapper
-        uses: sonarsource/sonarcloud-github-c-cpp@v2
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run install_dependencies.sh script
         run: |
+          echo "CLONED_REPO_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+          ls -la $GITHUB_WORKSPACE
           scripts/install_dependencies.sh
       - name: Build Ext Components
         run: |
@@ -42,10 +45,10 @@ jobs:
         run: |
           mkdir bw-output
           cd src
-          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh coverage --j2735-version 2016
+          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh coverage --j2735-version 2024 --skip-plugins ""
           ./test.sh coverage
       - name: Run sonar-scanner
         uses: usdot-fhwa-stol/actions/sonar-scanner@main
         with:
           sonar-token: ${{ secrets.SONAR_TOKEN }}
-          working-dir: ${{ github.workspace }}
+          working-dir: ${{ env.CLONED_REPO_PATH }}

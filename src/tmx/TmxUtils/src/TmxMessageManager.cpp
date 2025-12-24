@@ -289,7 +289,7 @@ void TmxMessageManager::IncomingMessage(const IvpMessage *msg, byte_t groupId, b
 	in.mgr = this;
 	in.message = copy;
 	in.type = type_IvpMessage;
-	in.encoding = strdup(msg->encoding);
+	in.encoding = msg->encoding ? strdup(msg->encoding) : nullptr;
 
 	PLOG(logDEBUG4) << "Assigning " << msg->type << "/" << msg->subtype <<
 			" message from " << msg->source << " as " << (int)groupId << ":" << (int)uniqId;

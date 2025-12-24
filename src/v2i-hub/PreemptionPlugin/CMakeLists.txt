@@ -1,4 +1,4 @@
-PROJECT ( PreemptionPlugin VERSION 7.10.0 LANGUAGES CXX )
+PROJECT ( PreemptionPlugin VERSION 7.11.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Preemption")
 
@@ -18,10 +18,9 @@ include_directories(${GTEST_INCLUDE_DIRS})
 
 set(runPreemptionTests_sources
                 test/PreemptionTest.cpp 
-                test/Main.cpp
 )
 
 # Link runPreemptionTests with what we want to test and the GTest and pthread library
 add_executable(runPreemptionTests ${runPreemptionTests_sources})
 
-target_link_libraries(runPreemptionTests ${GTEST_LIBRARIES} pthread)
+target_link_libraries(runPreemptionTests gtest gtest_main pthread)

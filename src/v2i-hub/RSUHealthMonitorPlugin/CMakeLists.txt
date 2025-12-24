@@ -1,8 +1,6 @@
-PROJECT(RSUHealthMonitorPlugin VERSION 7.10.0 LANGUAGES CXX)
-
+PROJECT(RSUHealthMonitorPlugin VERSION 7.11.0 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
 set(TMX_PLUGIN_NAME "RSU Health Monitor")
-
-find_library(libasn1c .)
 
 BuildTmxPlugin()
 
@@ -23,4 +21,4 @@ file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
 set(SOURCES ${TEST_SOURCES} WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/test)
 add_executable(${BINARY} ${TEST_SOURCES})
 add_test(NAME ${BINARY} COMMAND ${BINARY})
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest)
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib gtest gtest_main)

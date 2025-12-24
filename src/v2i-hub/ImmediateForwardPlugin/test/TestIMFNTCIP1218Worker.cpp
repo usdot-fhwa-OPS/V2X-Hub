@@ -104,7 +104,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     // snmp_request enable{
     //     rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1),
     //     'i',
-    //     "1"
+    //     "0"
     // };
     // snmp_request payload{
     //     rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1),
@@ -140,7 +140,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTable) {
     EXPECT_EQ(requests_1[2].value, "FFFF");
     EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[3].type, 'i');
-    EXPECT_EQ(requests_1[3].value, "1");
+    EXPECT_EQ(requests_1[3].value, "0");
     EXPECT_EQ(requests_1[4].oid, rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[4].type, 'i');
     EXPECT_EQ(requests_1[4].value, "4");
@@ -184,12 +184,12 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     // snmp_request enable{
     //     rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1),
     //     'i',
-    //     "1"
+    //     "0"
     // };
     // snmp_request payload{
     //     rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1),
     //     'x',
-    //     "FE"
+    //     "FFEE"
     // };
     // snmp_request creatRow{
     //     rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1),
@@ -207,7 +207,7 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     //     'x',
     //     "01"
     // };
-    initializeImmediateForwardTable(mockClient.get(), messageConfigs, true);
+    initializeImmediateForwardTable(mockClient.get(), messageConfigs, true, "FFEE");
     EXPECT_EQ(requests_1.size(), 7);
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[0].type, 'x');
@@ -217,10 +217,10 @@ TEST(TestIMFNTCIP1218Worker, testInitializeImmediateForwardTableSigned) {
     EXPECT_EQ(requests_1[1].value, "183");
     EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[2].type, 'x');
-    EXPECT_EQ(requests_1[2].value, "FFFF");
+    EXPECT_EQ(requests_1[2].value, "FFEE");
     EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[3].type, 'i');
-    EXPECT_EQ(requests_1[3].value, "1");
+    EXPECT_EQ(requests_1[3].value, "0");
     EXPECT_EQ(requests_1[4].oid, rsu::mib::ntcip1218::rsuIFMStatusOid + "." + std::to_string(1));
     EXPECT_EQ(requests_1[4].type, 'i');
     EXPECT_EQ(requests_1[4].value, "4");
@@ -252,8 +252,47 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
     //     'x',
     //     message
     // }
-    EXPECT_EQ(requests_1.size(), 1);
+    EXPECT_EQ(requests_1.size(), 2);
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[0].type, 'x');
     EXPECT_EQ(requests_1[0].value, message);
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[1].type, 'i');
+    EXPECT_EQ(requests_1[1].value, "1");
+}
+
+TEST(TestIMFNTCIP1218Worker, waitForRSUModeStandby) {
+    // Test the waitForRSUModeStandby function
+    // Create a mock SNMP client
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    // Call the function
+    snmp_response_obj obj;
+    obj.type = snmp_response_obj::response_type::INTEGER;
+    obj.val_int = 2; // Standby mode
+    EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET , _) ).Times(1).WillRepeatedly(testing::DoAll(
+        testing::SetArgReferee<2>(obj),
+        Return(true)));
+    
+    EXPECT_NO_THROW(waitForRSUModeStandby(mockClient.get(), 1, 1));
+}
+
+TEST(TestIMFNTCIP1218Worker, waitForRSUModeStandbyRetry) {
+    // Test the waitForRSUModeStandby function
+    // Create a mock SNMP client
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    // Call the function
+    snmp_response_obj obj;
+    obj.type = snmp_response_obj::response_type::INTEGER;
+    obj.val_int = 3; // Operate mode
+    EXPECT_CALL( *mockClient, process_snmp_request(rsu::mib::ntcip1218::rsuModeOid, request_type::GET , _) ).Times(5).WillRepeatedly(testing::DoAll(
+        testing::SetArgReferee<2>(obj),
+        Return(true)));
+    // Get time now
+    auto start = std::chrono::steady_clock::now();
+    // Expect function to call snmpget 5 times on RSUMode, all will return 3(operate mode), and then throw an exception
+    EXPECT_THROW(waitForRSUModeStandby(mockClient.get(), 5, 1), tmx::TmxException);
+    // Check that it took at least 5*1 seconds
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+    EXPECT_NEAR(duration.count(), 5, 1);
 }

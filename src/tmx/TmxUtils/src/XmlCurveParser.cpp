@@ -206,10 +206,7 @@ void XmlCurveParser::ReadRoot(DOMElement* root, TravelerInformation *tim)
 
 	SpeedLimit = speedLimit;
 
-#if SAEJ2735_SPEC < 2016
-	tim->dataFrameCount = (Count_t *)calloc(1, sizeof(Count_t));
-	*tim->dataFrameCount = tim->dataFrames.list.count;
-#endif
+
 
 	// Add Frame Part III (content) for each frame.
 	for (int i = 0; i < tim->dataFrames.list.count; i++)
@@ -272,13 +269,10 @@ TiDataFrame* XmlCurveParser::ReadRegions(DOMElement* regionsElement)
 
 	frame->frameType = TravelerInfoType_advisory;
 
-#if SAEJ2735_SPEC < 2016
-	frame->msgId.present = msgId_PR_furtherInfoID;
-#else
+
 	frame->msgId.present = TravelerDataFrame__msgId_PR_furtherInfoID;
 	std::string tempString = "00";
-	 OCTET_STRING_fromString(&(frame->msgId.choice.furtherInfoID), tempString.c_str());
-#endif
+	OCTET_STRING_fromString(&(frame->msgId.choice.furtherInfoID), tempString.c_str());
 
 	// TODO: Does this need set?
 	//frame->msgId.choice.furtherInfoID =
@@ -441,15 +435,7 @@ Position3D* XmlCurveParser::ReadReferencePoint(DOMElement* referencePointElement
 		{
 			int16_t elevation = atoi(XMLString::transcode(currentElement->getTextContent())) * 10;
 
-			#if SAEJ2735_SPEC < 2016
-			anchor->elevation = (Elevation_t *)malloc(sizeof(Elevation_t));
-			anchor->elevation->buf = (uint8_t *)calloc(1,2);
-			anchor->elevation->size = 2;
-
-			anchor->elevation->buf[0] = elevation >> 8;
-			anchor->elevation->buf[1] = elevation & 0xFF;
-			
-			#elif SAEJ2735_SPEC < 2020
+			#if SAEJ2735_SPEC < 2020
 			anchor->elevation = (DSRC_Elevation_t *)malloc(sizeof(DSRC_Elevation_t));
 			#else
 			anchor->elevation = (Common_Elevation_t *)malloc(sizeof(Common_Elevation_t));

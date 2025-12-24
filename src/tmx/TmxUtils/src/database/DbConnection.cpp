@@ -28,8 +28,8 @@ DbConnection::DbConnection() {
 }
 
 DbConnection::~DbConnection() {
-	//if (_connection && !_connection->isClosed())
-	//	_connection->close();
+	if (_connection && !_connection->isClosed())
+		_connection->close();
 }
 
 DbConnection::DbConnection(string connectionUrl, string username, string password, string db) {

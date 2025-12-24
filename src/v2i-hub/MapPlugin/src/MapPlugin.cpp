@@ -139,8 +139,17 @@ namespace MapPlugin {
 			if (_isMapFileNew) {
 				msg.reset();
 				activeAction = -1;
+				mapFilesOk = false;
+				try {
+					mapFilesOk = LoadMapFiles();
+					
+				}
+				catch( const TmxException &e ) {
+					tmx::messages::TmxEventLogMessage errorMsg(e, "Failed to load Map Files", true);
+					BroadcastMessage(errorMsg);
 
-				mapFilesOk = LoadMapFiles();
+				}
+				SetStatus<bool>(_keyMapFileStatus, mapFilesOk);
 				_isMapFileNew = false;
 			}
 
@@ -286,23 +295,14 @@ namespace MapPlugin {
 					{
 						std::string fn = mapFile.get_FilePath();
 
-						if (fn.substr(fn.size() - 5) == ".json")
-							inType = "ISD";
-						else if (fn.substr(fn.size() - 4) == ".txt")
+						if (fn.substr(fn.size() - 4) == ".txt")
 							inType = "TXT";
 						else if (fn.substr(fn.size() - 4) == ".xml")
 							inType = "XML";
 						else 
-							PLOG(logWARNING) << "Incorrect MapFile extension entered!";
+							throw TmxException(fn + " has unsupported  MapFile extension. Please use MAP file with supported .txt (uper) or .xml (xer) file extensiton (encoding).");
 
-						if (inType == "ISD")
-						{
-							ISDToJ2735r41 converter(fn);
-							mapFile.set_Bytes(converter.to_encoded_message().get_payload_str());
-
-							PLOG(logINFO) << fn << " ISD file encoded as " << mapFile.get_Bytes();
-						}
-						else if (inType == "TXT")
+						if (inType == "TXT")
 						{
 							std::string payload = checkMapContent(fn);
 							byte_stream bytes;
@@ -339,43 +339,11 @@ namespace MapPlugin {
 
 								PLOG(logINFO) << fn << " XML file encoded as: " << mapFile.get_Bytes();
 							}
-							else
-							{
-								ConvertToJ2735r41 mapConverter;
-								XmlMapParser mapParser;
-								map theMap;
-
-								if (mapParser.ReadGidFile(fn, &theMap))
-								{
-									mapConverter.convertMap(&theMap);
-
-									PLOG(logDEBUG) << "Encoded Bytes:" << mapConverter.encodedByteCount;
-
-									if (mapConverter.encodedByteCount > 0)
-									{
-										byte_stream bytes(mapConverter.encodedByteCount);
-										memcpy(bytes.data(), mapConverter.encoded, mapConverter.encodedByteCount);
-
-										auto *mapEnc = factory.NewMessage(bytes);
-										if (!mapEnc)
-											return false;
-
-										mapFile.set_Bytes(mapEnc->get_payload_str());
-
-										PLOG(logINFO) << fn << " input file encoded as: " << mapEnc->get_payload_str();
-									}
-									else
-									{
-										return false;
-									}
-								}
-							}
 						}
 					}
-					catch (exception &ex)
+					catch (const exception &ex)
 					{
-						PLOG(logERROR) << "Unable to convert " << mapFile.get_FilePath() << ": " << ex.what();
-						return false;
+						throw TmxException("Unable to convert " + mapFile.get_FilePath() + ": " + ex.what());
 					}
 				}
 			}

@@ -1,8 +1,11 @@
-PROJECT ( TimPlugin VERSION 7.10.0 LANGUAGES CXX )
+project( TimPlugin VERSION 7.11.0 LANGUAGES CXX )
 
-SET (TMX_PLUGIN_NAME "TIM")
+set(TMX_PLUGIN_NAME "TIM")
+# Required for QT libraries
 add_compile_options(-fPIC)
-FIND_PACKAGE (XercesC REQUIRED)
+set(CMAKE_CXX_STANDARD 17)
+
+find_package(XercesC REQUIRED)
 
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets REQUIRED)
@@ -10,27 +13,24 @@ find_package(Qt5Network REQUIRED)
 
 find_package(qserverPedestrian REQUIRED)
 
-include_directories(${Qt5Widgets_INCLUDE_DIRS}) 
+BuildTmxPlugin()
 
-include_directories(${EXTERNAL_INSTALL_LOCATION}/include)
-link_directories(${EXTERNAL_INSTALL_LOCATION}/lib)
+target_include_directories( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
 
-find_library(libasn1c .)
+target_link_libraries( ${PROJECT_NAME} PUBLIC tmxutils ${XercesC_LIBRARY} ${QHttpEngine_LIBRARY} Qt5Widgets Qt5Core Qt5Network ssl crypto qhttpengine qserverPedestrian) 
 
-include_directories(
-    ${Qt5Core_INCLUDE_DIRS}
-    ${Qt5Network_INCLUDE_DIRS}
-)
+####################################################
+##################  Testing  #######################
+####################################################
 
+add_library(${PROJECT_NAME}_lib 
+    src/TimUtils.cpp
+    )
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC  tmxutils )
+enable_testing()
+include_directories(${PROJECT_SOURCE_DIR}/src)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+add_executable(${PROJECT_NAME}_test ${TEST_SOURCES})
+target_link_libraries(${PROJECT_NAME}_test PRIVATE gtest gtest_main ${PROJECT_NAME}_lib)
 
-BuildTmxPlugin ()
-
-
-
-TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC ${XercesC_INCLUDE_DIRS} ${NETSNMP_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS} ${Qt5Network_INCLUDE_DIRS})
-
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} PUBLIC tmxutils ${XercesC_LIBRARY} ${NETSNMP_LIBRARIES} ${QHttpEngine_LIBRARY} Qt5Widgets Qt5Core Qt5Network ssl crypto qhttpengine qserverPedestrian) 
-
-
-link_directories(${CMAKE_PREFIX_PATH}/lib)
 

@@ -38,20 +38,7 @@ routeable_message::get_payload<TMX_J2735_ADD_NAMESPACE(messages, NM ## Message)>
 	return encMsg.get_payload<TMX_J2735_ADD_NAMESPACE(messages, NM ## Message)>(); \
 }
 
-#if SAEJ2735_SPEC < 2016
-#define TMX_J2735_MESSAGE_FRAME_FROM(T) \
-template <> \
-inline T *_j2735_cast< SaeJ2735Traits<T>, MessageFrameTraits>\
-	(const typename MessageFrameTraits::message_type *ptr) \
-{ return tmx::messages::j2735::UperFrameDecode<T>(ptr); }
-
-#define TMX_J2735_MESSAGE_FRAME_TO(T) \
-template <> \
-inline typename MessageFrameTraits::message_type *\
-	_j2735_cast< MessageFrameTraits, SaeJ2735Traits<T> >(const T *ptr) \
-{ return tmx::messages::j2735::UperFrameEncode<T>(ptr); }
-
-#elif SAEJ2735_SPEC < 2020
+#if SAEJ2735_SPEC < 2020
 #define TMX_J2735_MESSAGE_FRAME_FROM(T) \
 template <> \
 inline T *_j2735_cast< SaeJ2735Traits<T>, MessageFrameTraits>\

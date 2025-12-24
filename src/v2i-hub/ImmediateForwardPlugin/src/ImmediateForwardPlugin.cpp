@@ -117,12 +117,19 @@ namespace ImmediateForward
 						imfConfig.snmpAuth.value().privProtocol.value(),
 						imfConfig.snmpAuth.value().privPassPhrase.value(),
 						3,
-						1000000
+						imfConfig.snmpAuth.value().snmpTimeout.value_or(1000000) // Defaults to 1000000 microseconds or 1 second.
 					);
 				// Set to standby mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 2);
+				// This will check RSU Mode for Standby status a maximum of 12 times waiting 5 seconds 
+				// after each time before failing
+				waitForRSUModeStandby(_snmpClientMap[imfConfig.name].get(), 12 ,5);
 				clearImmediateForwardTable(_snmpClientMap[imfConfig.name].get());
-				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(_snmpClientMap[imfConfig.name].get(), imfConfig.messageConfigs, imfConfig.signMessage);
+				_imfNtcipMessageTypeIndex[imfConfig.name] = initializeImmediateForwardTable(
+					_snmpClientMap[imfConfig.name].get(), 
+					imfConfig.messageConfigs, 
+					imfConfig.signMessage,
+					imfConfig.payloadPlaceholder.value_or("FFFF") );
 				// Set to operational mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 3);
 
