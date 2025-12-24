@@ -110,7 +110,7 @@ volumes:
     # driver_opts:
     #   type: 'none'
     #   o: 'bind'
-    #   device: '/home/dev/V2X-Hub/configuration/ssl' # Specify the absolute path on your host
+    #   device: './ssl' # Specify the absolute path on your host
   v2xhub-download-volume:
     # To access V2X Hub uploaded files on host machine setup local mapping to download directory.
     # NOTE: Ensure directory exists and has non-root privileges before running 
@@ -119,7 +119,7 @@ volumes:
     # driver_opts:
     #   type: 'none'
     #   o: 'bind'
-    #   device: '/home/dev/V2X-Hub/configuration/download' # Specify the absolute path on your host
+    #   device: './download' # Specify the absolute path on your host
   v2xhub-logs-volume:
     # To access log files on host machine setup local mapping to logs directory.
     # NOTE: Ensure directory exists and has non-root privileges before running 
@@ -128,4 +128,4 @@ volumes:
     # driver_opts:
     #   type: 'none'
     #   o: 'bind'
-    #   device: '/home/dev/V2X-Hub/configuration/logs' # Specify the absolute path on your host
+    #   device: './logs' # Specify the absolute path on your host

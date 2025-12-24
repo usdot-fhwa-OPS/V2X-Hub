@@ -9,9 +9,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4g
+          memory: 16g
         reservations:
-          memory: 2g
+          memory: 8g
     cap_add:
       - SYS_PTRACE
     volumes:

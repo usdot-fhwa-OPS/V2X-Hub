@@ -14,12 +14,12 @@
 	],
 	"configuration":[
 		{
-			"key":"Frequency",
+			"key":"Interval",
 			"default":"1000",
 			"description":"The frequency to send the TIM in milliseconds."
 		},
 		{
-			"key":"MapFile",
+			"key":"TimFile",
 			"default":"/var/www/download/TIM/IVP_GF_TIM.xml",
 			"description":""
 		},

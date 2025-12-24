@@ -95,12 +95,18 @@ fi
 # Set CPP CMake flags and capitalize build type for CMake
 if [ "$BUILD_TYPE" = "release" ]; then
     BUILD_TYPE="Release"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+    # -DBOOST_BIND_GLOBAL_PLACEHOLDERS : Flag to enable global placeholders for boost::bind and avoid deprecation warnings
+    # -O3 : Flag to enable optimization levels for release builds (https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html)
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -O3 "
 elif [ "$BUILD_TYPE" = "debug" ]; then
     BUILD_TYPE="Debug"
-    # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+    # -DBOOST_BIND_GLOBAL_PLACEHOLDERS : Flag to enable global placeholders for boost::bind and avoid deprecation warnings
+    # -fsanitize=address : Instruments code at compile time to detect memory access errors
+    # -Og : Enables all -O1 optimizations except those known to greatly interfere with debugging (https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html)
+    # -g : Includes debugging symbols in output binary for use with debugger.
+    # -Wall : Enables all the warnings about bad C++ practices (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
+    # -Wextra : Enables extra warnings flags that are not enabled by -Wall (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra "
 elif [ "$BUILD_TYPE" = "coverage" ]; then
     # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
     # deprecation warnings

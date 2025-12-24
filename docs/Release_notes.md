@@ -1,6 +1,38 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.10.0, released Aug 24th, 2025
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.10.0 includes introduction of the new FLIR Camera Driver Plugin, which is the hardware interface to consume pedestrian detection data from the TrafiSense2 FLIR camera. Using CARMA Streets Sensor Data Sharing Service, these can then be converted to Sensor Data Sharing Messages (J3224) and broadcast to nearby ITS actors for Cooperative Perception. This release also includes enhancements to the NTCIP 1218 IFM interface for RSUs
+
+Enhancement in this release:  
+
+CDAD-130: Enable infrastructure to consume TrafiSense 2 FLIR Camera Pedestrian Detection data and consumes generated Sensor Data Sharing Messages (J3224) for Cooperative Perception. 
+- Pull Requests: [V2X-Hub PR #723](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/723), [V2X-Hub PR #727](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/727), [V2X-Hub PR #728](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/728), [V2X-Hub PR #738](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/738), [V2X-Hub PR #734](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/734), [V2X-Hub PR #730](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/730), [V2X-Hub PR #744](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/744), [V2X-Hub PR #742](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/742), [V2X-Hub PR #722](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/722), [V2X-Hub PR #712](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/712), [V2X-Hub PR #718](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/718) 
+
+VH-1405: Implement NTCIP 1218 IFM Standard for RSU Message Forwarding  
+- Pull Requests: [V2X-Hub PR #710](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/710), [V2X-Hub PR #713](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/713) , [V2X-Hub PR #715](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/715)  
+
+VOI-18: Add configuration for gdb debugger for V2X Hub plugins in dev container setup. 
+- Pull Requests: [V2X-Hub PR #719](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/719)
+
+Other Fixes:  
+- [V2X-Hub PR #714](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/714): This update fixes the MAP plugin message frame parser to correctly check the payload size and trim the appropriate number of bytes to get the MAP payload.  
+- [V2X-Hub PR #729](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/729): Fix CARMA Streets Plugin Memory Leak in Kafka Client by adding periodic calls to poll as documented in librdkafka. 
+- [V2X-Hub PR #736](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/736): Fix plugin file logging for V2X Hub plugins. 
+- [V2X-Hub PR #740](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/740): Fix CI Docker Multi-Architecture build for Tags 
+
+Other Updates:  
+- [V2X-Hub PR #717](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/717): Add Workflow for External Issues Notification. 
+- [V2X-Hub PR #720](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/720): Dev Container uses Dependency Stage from docker file. 
+- [V2X-Hub PR #726](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/726): Add build-environment Docker stage to use as dev container. 
+- [V2X-Hub PR #732](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/732): Use docker compose profile for Port Drayage functionality. 
+- [V2X-Hub PR #733](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/733): Update docker-compose.yml. 
+- [V2X-Hub PR #737](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/737): Sync Release notes updates. 
+- [V2X-Hub PR #741](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/741): Update v2xhub version on release notes. 
+
 Version 7.9.0, released June 24th, 2025
 --------------------------------------------------------
 
