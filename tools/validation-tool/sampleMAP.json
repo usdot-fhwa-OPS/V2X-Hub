@@ -1,2048 +1,1375 @@
 {
-   "messageId": 18,
-   "value": {
-    "intersections": [
-     {
-      "id": {
-       "id": 156
-      },
-      "laneSet": [
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 25,
-           "maneuver": "8000"
+  "messageId": 18,
+  "value": {
+      "msgIssueRevision": 9,
+      "layerType": "intersectionData",
+      "layerID": 1,
+      "intersections": [
+        {
+          "id": {
+            "id": 9709
           },
-          "signalGroup": 2
-         },
-         {
-          "connectingLane": {
-           "lane": 29,
-           "maneuver": "2000"
+          "revision": 9,
+          "refPoint": {
+            "lat": 389549984,
+            "long": -771493367,
+            "elevation": 390
           },
-          "signalGroup": 2
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 1,
-        "maneuvers": "a000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4012,
-             "y": 365
+          "laneWidth": 366,
+          "speedLimits": [
+            {
+              "type": "vehicleMaxSpeed",
+              "speed": 559
+            },
+            {
+              "type": "unknown",
+              "speed": 0
             }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5541,
-             "y": 7249
+          ],
+          "laneSet": [
+            {
+              "laneID": 1,
+              "name": "NB Egress",
+              "egressApproach": 1,
+              "laneAttributes": {
+                "directionalUse": [
+                  1,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                2048,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 771,
+                        "y": 1190
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY4",
+                      {
+                        "x": 1762,
+                        "y": 4080
+                      }
+                    ],
+                    "attributes": {
+                      "dElevation": -20
+                    }
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 2,
+              "name": "SB Ingress",
+              "ingressApproach": 2,
+              "laneAttributes": {
+                "directionalUse": [
+                  2,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                3584,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 487,
+                        "y": 1420
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dWidth": -60
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY4",
+                      {
+                        "x": 1790,
+                        "y": 3942
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dElevation": -10
+                    }
+                  }
+                ]
+              ],
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 5,
+                    "maneuver": [
+                      2048,
+                      12
+                    ]
+                  },
+                  "signalGroup": 8,
+                  "connectionID": 1
+                },
+                {
+                  "connectingLane": {
+                    "lane": 3,
+                    "maneuver": [
+                      512,
+                      12
+                    ]
+                  },
+                  "signalGroup": 8,
+                  "connectionID": 2
+                },
+                {
+                  "connectingLane": {
+                    "lane": 7,
+                    "maneuver": [
+                      1024,
+                      12
+                    ]
+                  },
+                  "remoteIntersection": {
+                    "id": 9945
+                  },
+                  "signalGroup": 8,
+                  "connectionID": 3
+                }
+              ]
+            },
+            {
+              "laneID": 3,
+              "name": "WB Egress",
+              "egressApproach": 3,
+              "laneAttributes": {
+                "directionalUse": [
+                  1,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                2048,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1426,
+                        "y": 599
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1138,
+                        "y": 468
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1418,
+                        "y": 544
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1151,
+                        "y": 602
+                      }
+                    ]
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 4,
+              "name": "EB Ingress",
+              "ingressApproach": 4,
+              "laneAttributes": {
+                "directionalUse": [
+                  2,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                3584,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1716,
+                        "y": 349
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -40
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -1011,
+                        "y": 405
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -930,
+                        "y": 382
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -837,
+                        "y": 370
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -814,
+                        "y": 428
+                      }
+                    ]
+                  }
+                ]
+              ],
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 7,
+                    "maneuver": [
+                      2048,
+                      12
+                    ]
+                  },
+                  "remoteIntersection": {
+                    "id": 9945
+                  },
+                  "signalGroup": 6,
+                  "connectionID": 4
+                },
+                {
+                  "connectingLane": {
+                    "lane": 5,
+                    "maneuver": [
+                      512,
+                      12
+                    ]
+                  },
+                  "signalGroup": 6,
+                  "connectionID": 5
+                },
+                {
+                  "connectingLane": {
+                    "lane": 1,
+                    "maneuver": [
+                      1024,
+                      12
+                    ]
+                  },
+                  "signalGroup": 6,
+                  "connectionID": 6
+                }
+              ]
+            },
+            {
+              "laneID": 5,
+              "name": "SB Egress",
+              "egressApproach": 5,
+              "laneAttributes": {
+                "directionalUse": [
+                  1,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                2048,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -839,
+                        "y": -958
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": 120,
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -621,
+                        "y": -1067
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -264,
+                        "y": -450
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -232,
+                        "y": -463
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -134,
+                        "y": -370
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -20,
+                        "y": -395
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 87,
+                        "y": -475
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 122,
+                        "y": -382
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 355,
+                        "y": -457
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 337,
+                        "y": -260
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 407,
+                        "y": -179
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 843,
+                        "y": -255
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1075,
+                        "y": -272
+                      }
+                    ],
+                    "attributes": {
+                      "dElevation": -10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 814,
+                        "y": -203
+                      }
+                    ]
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 6,
+              "name": "NB Ingress",
+              "ingressApproach": 6,
+              "laneAttributes": {
+                "directionalUse": [
+                  2,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                3584,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -516,
+                        "y": -1334
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": 110,
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -465,
+                        "y": -857
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -267,
+                        "y": -428
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -273,
+                        "y": -504
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -169,
+                        "y": -353
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": -76,
+                        "y": -353
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 41,
+                        "y": -376
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 145,
+                        "y": -347
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 238,
+                        "y": -318
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY1",
+                      {
+                        "x": 384,
+                        "y": -266
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 721,
+                        "y": -301
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY4",
+                      {
+                        "x": 2232,
+                        "y": -538
+                      }
+                    ],
+                    "attributes": {
+                      "dElevation": -10
+                    }
+                  }
+                ]
+              ],
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 1,
+                    "maneuver": [
+                      2048,
+                      12
+                    ]
+                  },
+                  "signalGroup": 4,
+                  "connectionID": 7
+                },
+                {
+                  "connectingLane": {
+                    "lane": 3,
+                    "maneuver": [
+                      1024,
+                      12
+                    ]
+                  },
+                  "signalGroup": 4,
+                  "connectionID": 8
+                },
+                {
+                  "connectingLane": {
+                    "lane": 7,
+                    "maneuver": [
+                      512,
+                      12
+                    ]
+                  },
+                  "remoteIntersection": {
+                    "id": 9945
+                  },
+                  "signalGroup": 4,
+                  "connectionID": 9
+                }
+              ]
+            },
+            {
+              "laneID": 7,
+              "name": "EB Egress",
+              "egressApproach": 7,
+              "laneAttributes": {
+                "directionalUse": [
+                  1,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                2048,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1363,
+                        "y": -460
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -60
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1259,
+                        "y": -243
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1174,
+                        "y": -185
+                      }
+                    ],
+                    "attributes": {
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1407,
+                        "y": -139
+                      }
+                    ]
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1383,
+                        "y": -58
+                      }
+                    ],
+                    "attributes": {
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1337,
+                        "y": 23
+                      }
+                    ]
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 8,
+              "name": "WB Ingress",
+              "ingressApproach": 8,
+              "laneAttributes": {
+                "directionalUse": [
+                  2,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "vehicle",
+                  [
+                    0,
+                    8
+                  ]
+                ]
+              },
+              "maneuvers": [
+                3584,
+                12
+              ],
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1637,
+                        "y": -217
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dWidth": -50
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1044,
+                        "y": -174
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1197,
+                        "y": -162
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1360,
+                        "y": -139
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1209,
+                        "y": -69
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1581,
+                        "y": 23
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1267,
+                        "y": 81
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1298,
+                        "y": 122
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ],
+                      "dElevation": -10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 947,
+                        "y": 156
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 982,
+                        "y": 197
+                      }
+                    ],
+                    "attributes": {
+                      "data": [
+                        [
+                          "speedLimits",
+                          [
+                            {
+                              "type": "unknown",
+                              "speed": 0
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  }
+                ]
+              ],
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 3,
+                    "maneuver": [
+                      2048,
+                      12
+                    ]
+                  },
+                  "signalGroup": 2,
+                  "connectionID": 10
+                },
+                {
+                  "connectingLane": {
+                    "lane": 5,
+                    "maneuver": [
+                      1024,
+                      12
+                    ]
+                  },
+                  "signalGroup": 2,
+                  "connectionID": 11
+                },
+                {
+                  "connectingLane": {
+                    "lane": 1,
+                    "maneuver": [
+                      512,
+                      12
+                    ]
+                  },
+                  "signalGroup": 2,
+                  "connectionID": 12
+                }
+              ]
+            },
+            {
+              "laneID": 9,
+              "name": "N Crosswalk",
+              "laneAttributes": {
+                "directionalUse": [
+                  0,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "crosswalk",
+                  [
+                    0,
+                    16
+                  ]
+                ]
+              },
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 884,
+                        "y": 992
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -697,
+                        "y": 185
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 10,
+              "name": "E Crosswalk",
+              "laneAttributes": {
+                "directionalUse": [
+                  0,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "crosswalk",
+                  [
+                    0,
+                    16
+                  ]
+                ]
+              },
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1197,
+                        "y": 720
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": -227,
+                        "y": -631
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -50
+                    }
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 11,
+              "name": "S Crosswalk",
+              "laneAttributes": {
+                "directionalUse": [
+                  0,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "crosswalk",
+                  [
+                    0,
+                    16
+                  ]
+                ]
+              },
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": -1063,
+                        "y": -669
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30,
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 947,
+                        "y": -405
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30
+                    }
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 12,
+              "laneAttributes": {
+                "directionalUse": [
+                  0,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "crosswalk",
+                  [
+                    0,
+                    16
+                  ]
+                ]
+              },
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY3",
+                      {
+                        "x": 1157,
+                        "y": -617
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 157,
+                        "y": 683
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30
+                    }
+                  }
+                ]
+              ]
+            },
+            {
+              "laneID": 18,
+              "name": "Midblock Crosswalk",
+              "laneAttributes": {
+                "directionalUse": [
+                  0,
+                  2
+                ],
+                "sharedWith": [
+                  0,
+                  10
+                ],
+                "laneType": [
+                  "crosswalk",
+                  [
+                    0,
+                    16
+                  ]
+                ]
+              },
+              "nodeList": [
+                "nodes",
+                [
+                  {
+                    "delta": [
+                      "node-XY4",
+                      {
+                        "x": 4069,
+                        "y": -1103
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30,
+                      "dElevation": 10
+                    }
+                  },
+                  {
+                    "delta": [
+                      "node-XY2",
+                      {
+                        "x": 52,
+                        "y": 689
+                      }
+                    ],
+                    "attributes": {
+                      "dWidth": -30,
+                      "dElevation": -10
+                    }
+                  }
+                ]
+              ]
             }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4379,
-             "y": 5828
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3590,
-             "y": 4729
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5012,
-             "y": 6994
-            }
-           }
-          }
-         ]
+          ]
         }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 24,
-           "maneuver": "8000"
-          },
-          "signalGroup": 2
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 2,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3718,
-             "y": 587
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5567,
-             "y": 7238
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4310,
-             "y": 5884
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3512,
-             "y": 4751
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5133,
-             "y": 6972
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 23,
-           "maneuver": "8000"
-          },
-          "signalGroup": 2
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 3,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3492,
-             "y": 787
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5498,
-             "y": 7271
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4336,
-             "y": 5850
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3503,
-             "y": 4707
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5125,
-             "y": 7038
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 22,
-           "maneuver": "8000"
-          },
-          "signalGroup": 2
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 4,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3171,
-             "y": 1009
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5576,
-             "y": 7283
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4284,
-             "y": 5873
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3434,
-             "y": 4685
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5229,
-             "y": 7094
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 16,
-           "maneuver": "4000"
-          },
-          "signalGroup": 5
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 5,
-        "maneuvers": "4000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2868,
-             "y": 1213
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3301,
-             "y": 4352
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1442,
-             "y": 1934
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1593,
-             "y": 2096
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1651,
-             "y": 2177
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 15,
-           "maneuver": "4000"
-          },
-          "signalGroup": 5
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 6,
-        "maneuvers": "4000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2545,
-             "y": 1428
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3369,
-             "y": 4288
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1465,
-             "y": 1980
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1570,
-             "y": 2108
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 7,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1237,
-             "y": 3995
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4396,
-             "y": 5873
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5480,
-             "y": 7172
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3425,
-             "y": 4441
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4674,
-             "y": 5584
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 8,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -873,
-             "y": 4184
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4448,
-             "y": 5862
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5524,
-             "y": 7194
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3416,
-             "y": 4496
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4656,
-             "y": 5573
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 9,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -622,
-             "y": 4450
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4483,
-             "y": 5839
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5454,
-             "y": 7127
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3416,
-             "y": 4507
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4665,
-             "y": 5595
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 10,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -379,
-             "y": 4650
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4414,
-             "y": 5806
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5506,
-             "y": 7183
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3408,
-             "y": 4463
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4596,
-             "y": 5562
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1804,
-             "y": 2032
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 10,
-           "maneuver": "2000"
-          },
-          "signalGroup": 4
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 11,
-        "maneuvers": "2000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2396,
-             "y": 3185
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1292,
-             "y": 455
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1552,
-             "y": 444
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1596,
-             "y": 266
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2853,
-             "y": 255
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 29,
-           "maneuver": "8000"
-          },
-          "signalGroup": 4
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 12,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2561,
-             "y": 2852
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1292,
-             "y": 466
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1439,
-             "y": 389
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1587,
-             "y": 278
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2862,
-             "y": 244
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8489,
-             "y": 566
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8455,
-             "y": 577
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 6616,
-             "y": 466
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 23,
-           "maneuver": "4080"
-          },
-          "signalGroup": 4
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 13,
-        "maneuvers": "4080",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2743,
-             "y": 2519
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1249,
-             "y": 444
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1517,
-             "y": 422
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1596,
-             "y": 289
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2688,
-             "y": 189
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8455,
-             "y": 588
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8515,
-             "y": 555
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 6529,
-             "y": 466
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 22,
-           "maneuver": "4080"
-          },
-          "signalGroup": 4
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 14,
-        "maneuvers": "4080",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2916,
-             "y": 2219
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1587,
-             "y": 511
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1231,
-             "y": 344
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1457,
-             "y": 233
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2523,
-             "y": 222
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1925,
-             "y": 67
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 15,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3272,
-             "y": 1753
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1994,
-             "y": 611
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2463,
-             "y": 400
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 7336,
-             "y": 533
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8377,
-             "y": 555
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 9989,
-             "y": 733
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 16,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3506,
-             "y": 1342
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1873,
-             "y": 688
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2385,
-             "y": 389
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 7327,
-             "y": 511
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 8333,
-             "y": 577
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 10007,
-             "y": 699
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 16,
-           "maneuver": "2000"
-          },
-          "signalGroup": 6
-         },
-         {
-          "connectingLane": {
-           "lane": 10,
-           "maneuver": "8000"
-          },
-          "signalGroup": 6
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 17,
-        "maneuvers": "a000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3202,
-             "y": -235
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4292,
-             "y": -6339
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5238,
-             "y": -6827
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5177,
-             "y": -6794
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3668,
-             "y": -4840
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 9,
-           "maneuver": "8000"
-          },
-          "signalGroup": 6
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 18,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2925,
-             "y": -534
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4353,
-             "y": -6272
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5151,
-             "y": -6838
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5168,
-             "y": -6739
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3711,
-             "y": -4862
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 8,
-           "maneuver": "8000"
-          },
-          "signalGroup": 6
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 19,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2699,
-             "y": -790
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4318,
-             "y": -6250
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5177,
-             "y": -6783
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5142,
-             "y": -6827
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3694,
-             "y": -4818
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 7,
-           "maneuver": "8000"
-          },
-          "signalGroup": 6
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 20,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2448,
-             "y": -1012
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4301,
-             "y": -6261
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5133,
-             "y": -6805
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5246,
-             "y": -6772
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3599,
-             "y": -4840
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 29,
-           "maneuver": "4000"
-          },
-          "signalGroup": 1
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 21,
-        "maneuvers": "4000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2023,
-             "y": -1411
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4431,
-             "y": -6183
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4310,
-             "y": -5662
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 22,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 731,
-             "y": -3509
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4657,
-             "y": -5551
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4535,
-             "y": -5906
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5819,
-             "y": -7749
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3772,
-             "y": -4907
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 23,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 445,
-             "y": -3820
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4657,
-             "y": -5517
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4457,
-             "y": -5850
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5966,
-             "y": -7771
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3711,
-             "y": -4885
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 24,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 167,
-             "y": -4020
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4657,
-             "y": -5562
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4483,
-             "y": -5817
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5957,
-             "y": -7760
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3685,
-             "y": -4885
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 25,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -93,
-             "y": -4298
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4683,
-             "y": -5495
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4440,
-             "y": -5873
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 5923,
-             "y": -7727
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3711,
-             "y": -4851
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 25,
-           "maneuver": "2000"
-          },
-          "signalGroup": 3
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 26,
-        "maneuvers": "2000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2911,
-             "y": -2355
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2662,
-             "y": -1721
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1491,
-             "y": -944
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 15,
-           "maneuver": "8000"
-          },
-          "signalGroup": 3
-         },
-         {
-          "connectingLane": {
-           "lane": 8,
-           "maneuver": "4080"
-          },
-          "signalGroup": 3
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 27,
-        "maneuvers": "4080",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3171,
-             "y": -2055
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2489,
-             "y": -1754
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1552,
-             "y": -866
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -564,
-             "y": -533
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2194,
-             "y": -999
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -8463,
-             "y": -2853
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2411,
-             "y": -888
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -5923,
-             "y": -2542
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4405,
-             "y": -2176
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 7,
-           "maneuver": "4080"
-          },
-          "signalGroup": 3
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "80",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 28,
-        "maneuvers": "4080",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3431,
-             "y": -1855
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2428,
-             "y": -1665
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1431,
-             "y": -844
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "laneAttributes": {
-         "directionalUse": "40",
-         "laneType": {
-          "vehicle": "00"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 29,
-        "maneuvers": "0000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3813,
-             "y": -1556
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2289,
-             "y": -1654
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -1387,
-             "y": -810
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2758,
-             "y": -1310
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -8437,
-             "y": -2842
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2419,
-             "y": -933
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -6165,
-             "y": -2587
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4362,
-             "y": -2220
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 0,
-           "maneuver": "8000"
-          },
-          "signalGroup": 18
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "c0",
-         "laneType": {
-          "crosswalk": "0000"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 30,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3871,
-             "y": -872
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1744,
-             "y": -1784
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 0,
-           "maneuver": "8000"
-          },
-          "signalGroup": 20
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "c0",
-         "laneType": {
-          "crosswalk": "0000"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 31,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -4022,
-             "y": -108
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 4803,
-             "y": 3822
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 0,
-           "maneuver": "8000"
-          },
-          "signalGroup": 22
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "c0",
-         "laneType": {
-          "crosswalk": "0000"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 32,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 2084,
-             "y": 3401
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 1651,
-             "y": -2826
-            }
-           }
-          }
-         ]
-        }
-       },
-       {
-        "connectsTo": [
-         {
-          "connectingLane": {
-           "lane": 0,
-           "maneuver": "8000"
-          },
-          "signalGroup": 19
-         }
-        ],
-        "laneAttributes": {
-         "directionalUse": "c0",
-         "laneType": {
-          "crosswalk": "0000"
-         },
-         "sharedWith": "0000"
-        },
-        "laneID": 33,
-        "maneuvers": "8000",
-        "nodeList": {
-         "nodes": [
-          {
-           "delta": {
-            "node-XY6": {
-             "x": 3630,
-             "y": 460
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -2233,
-             "y": -2258
-            }
-           }
-          },
-          {
-           "delta": {
-            "node-XY6": {
-             "x": -3338,
-             "y": -938
-            }
-           }
-          }
-         ]
-        }
-       }
-      ],
-      "laneWidth": 366,
-      "refPoint": {
-       "lat": 389284111,
-       "long": -772410713
-      },
-      "revision": 3
-     }
-    ],
-    "msgIssueRevision": 3
-   }
-  }
-  
+      ]
+    }
+}
