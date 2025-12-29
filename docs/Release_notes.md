@@ -1,6 +1,98 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.11.0, released Dec 24th, 2025
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.11.0 introduces secure NTCIP 1218 Immediate Message Forward support for RSU connections, expands SPAT/TIM/MAP and Message Logger/JSON logging plugin capabilities with full J2735/JER and proper JSON handling, adds HTTPS access and new SPAT/intersection status reporting in the UI, and delivers targeted security, stability, and deployment improvements across the platform, containers, and shared ASN.1/time libraries. 
+
+## **Changes to Key Existing Repositories**
+
+### **V2x-Hub**
+
+**Enhancements** 
+- Added build parameter to skip selected plugins: Docker file and build script parameter allows user to compile V2X-Hub with only selected plugins  
+  - Pull Requests: [V2X-Hub PR #796](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/796), [V2X-Hub PR #799](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/799)
+- Support of NTCIP 1218 IFM, J2735 2024 Support. 
+  - Pull Requests: [V2X-Hub PR #786](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/786), [V2X-Hub PR #797](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/797), [V2X-Hub PR #776](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/776), [V2X-Hub PR #775](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/775), [V2X-Hub PR #803](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/803), [V2X-Hub PR #754](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/754), [V2X-Hub PR #752](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/752) 
+- Updated Message Logger Plugin with JER encoding functionality. Message Logger plugin now supports all J2735 message types. 
+  
+**Other Fixes**  
+
+- Fix SPAT Plugin Memory Leak 
+  - Pull Requests: [V2X-Hub PR #773](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/773), [V2X-Hub PR #771](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/771) 
+- Address ARPA-I discovered vulnerability issues. 
+  - Pull Requests: [V2X-Hub PR #802](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/802) 
+- TIM Plugin is set to incorrect Time zone for start time of message: Tried broadcasting TIM message, with accurate UTC time, lead to no message and no error. Most likely due to the message start time not matching what V2x is expecting. 
+  - Pull Requests: [V2X-Hub PR #800](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/800) 
+- MAP File Upload Privileges Causing V2X UI Crash: When uploading a MAP file required privilege changes and resulted in the V2X UI crashing or logging out. The MAP UPER file permissions were incorrect (“rw” only). 
+  - Pull Requests: [V2X-Hub PR #798](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/798) 
+- SPAT Descriptions Not Updated for SPAT vs TSCBM Mode: SPAT Plugin description sections not updated to reflect change in verbiage from SPAT MODE = BINARY 
+  - Pull Requests:  [V2X-Hub PR #795](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/795) 
+- JSON Message Logger Memory Leak. 
+  - Pull Requests: [V2X-Hub PR #781](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/781) , [V2X-Hub PR #785](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/785) 
+- JSONMessageLoggerPlugin Version Incorrectly shows 7.6.0 version, when it should be 7.10.0. 
+  - Pull Requests: [V2X-Hub PR #782](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/782) 
+- RSU Health Monitor Error Logs: The RSU Health Monitoring plugin returned error messages about invalid Frequency IDs on both NTCIP and RSU 4.1 devices. 
+  - Pull Requests: [V2X-Hub PR #778](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/778) 
+- [V2X-Hub PR #808](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/808): Fix Dev Container Memory Limits and Update Build Task Selection. 
+- [V2X-Hub PR #804](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/804): Update deployment_dependencies.sh 
+- [V2X-Hub PR #790](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/790): Fix Docker Scope reported Missing Information. 
+- [V2X-Hub PR #788](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/788): Remove Duplicate and Unused Conversion Functions. 
+- [V2X-Hub PR #779](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/779): Fix Initialization Script and Increase Memory for Dev Container Builds. 
+- [V2X-Hub PR #762](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/762): This fix converts the SensorDetectedObject JSON payload from a raw string into a proper JSON object so the Telematic tool can correctly parse and store each field.  
+Note: This is only to fix the Json encoding message type. 
+- [V2X-Hub PR #751](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/751): Fix CMake Linking for gtest. 
+- Issue #739: V2X Hub UI Never Loads (Command Plugin Fails to Start) 
+  - Pull Requests: [V2X-Hub PR #747](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/747) 
+- Issues #766, #768, #767: Build and Exception Handling Improvements: 
+  - Use BOOST_THROW_EXCEPTION instead of throw 
+  - Fix build warnings 
+  - Fix file modes 
+  
+  - Pull Requests: [V2X-Hub PR #764](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/764) , [V2X-Hub PR #769](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/769) 
+
+**Other Updates** 
+
+- Added V2X Hub Plugin Status for max SPAT interval and intersection status 
+  - Pull Requests: [V2X-Hub PR #784](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/784) 
+- Added HTTPS for V2X Hub UI Access to improve Security. 
+  - Pull Requests: [V2X-Hub PR #748](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/748), [V2X-Hub PR #745](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/745), [V2X-Hub PR #805](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/805): 
+- Added GitHub action to publish docker compose OCI artifact. 
+  - Pull Requests: [V2X-Hub PR #772](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/772) 
+- Helpdesk-61: External Support: Cohda NTCIP 1218 IFM 
+  - Pull Requests: [V2X-Hub PR #752](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/752), [V2X-Hub PR #753](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/753) 
+- [V2X-Hub PR #777](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/777): Added Script to Initialize Dev Container Environment and Install Tools. 
+- [V2X-Hub PR #807](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/807): Reorganized Documentation and Archive Out-of-Date Content. 
+- [V2X-Hub PR #746](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/746): Updated Base Ubuntu Tag to Jammy. 
+- [V2X-Hub PR #774](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/774): Removed Manual Configuration steps to get V2X Hub deployable with only a DB configuration state (localhost.sql file) and a docker environment variable state (.env file).  
+This update: 
+  - Replaces secret files with Docker environment secrets 
+  - Uses deployment Docker Compose for dev container 
+  - Adds Docker env to create admin user 
+  - Fixes add_user and update_user queries 
+  - Adds script to generate certificates if none exist 
+
+### **Carma-time-lib**
+
+**Enhancements** 
+
+- Consolidate ASN1 C Code for STOL Tools: Update tools to use common library for ANS1 UPER encoding/decoding. Replace duplicate manually generated libraries with. 
+  - Pull Requests: [carma-time-lib PR #32](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/32), [carma-time-lib PR #31](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/31)
+- Integrate MMITSS software suite into CDASim. This mainly focuses on setting up functionality for MMITSS to be able to synchronize its time with CDASim time. 
+  -  Pull Requests: [carma-time-lib PR #24](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/24), [carma-time-lib PR #25](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/25), [carma-time-lib PR #33](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/33) 
+- [Carma-time-lib #30](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/30): Added CMake Options to Skip Building and Running Unit Tests.  
+
+**Other Fixes:** 
+
+- [Carma-time-lib #28](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/28): Removed Debian python and pybind11 Dependencies. 
+
+**Other Updates:**  
+
+- [Carma-time-lib #35](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/35):  Included Noble builds and limits parallel builds to avoid apt repository consistency problems. 
+- [Carma-time-lib #27](https://github.com/usdot-fhwa-stol/carma-time-lib/pull/27):  Added documentation for installation and python module. 
+
 Version 7.10.0, released Aug 24th, 2025
 --------------------------------------------------------
 
