@@ -13,10 +13,24 @@ namespace TelematicBridge
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
+
+        // Timer to broadcast RSU Health Config
+        _rsuHealthConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
+        if ( !_started ) {
+            // Send RSU Config message to TMX core periodically at configurable interval.
+            _timerThId = _rsuHealthConfigTimer->AddPeriodicTick([this]()
+                                                        {
+                            this->BroadcastRSUHealthConfigMessage();
+                            PLOG(logINFO) << "Updating RSU Health Configuration at interval (second): " << rsuConfigUpdateIntervalInMillisec; },
+                                                        std::chrono::milliseconds(rsuConfigUpdateIntervalInMillisec));
+            PLOG(logDEBUG1) << "RSU Health Monitor timer thread ID: " << _timerThId;
+            _rsuHealthConfigTimer->Start();
+            _started = true;
+        }
     }
 
     void TelematicBridgePlugin::OnMessageReceived(IvpMessage *msg)
-    {   
+    {
         auto hasError = false;
         tmx::routeable_message routeMsg(msg);
         // Convert IVP message to JSON CPP Value
@@ -46,7 +60,7 @@ namespace TelematicBridge
                 _telematicUnitPtr->publishMessage(topicStr, json);
             }
         }
-        
+
     }
 
     void TelematicBridgePlugin::UpdateConfigSettings()
@@ -79,6 +93,31 @@ namespace TelematicBridge
     {
         TmxMessageManager::OnConfigChanged(key, value);
         UpdateConfigSettings();
+    }
+
+
+    void TelematicBridgePlugin::BroadcastRSUHealthConfigMessage()
+    {
+        Json::Value rsuHealthConfigJsonArray = _telematicUnitPtr->getRSUHealthConfigJson();
+
+        if(!rsuHealthConfigJsonArray.empty())
+        {
+            Json::Value message;
+            message["RSUConfigs"] = rsuHealthConfigJsonArray;
+            message["timestamp"] = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+
+            tmx::routeable_message sendRsuHealthconfigMsg;
+            if(jsonValueToRouteableMessage(rsuHealthConfigJsonArray, sendRsuHealthconfigMsg))
+            {
+                BroadcastMessage(sendRsuHealthconfigMsg, TelematicBridgePlugin::GetName());
+            }
+            else{
+                PLOG(logERROR) <<"Error converting rsu health config to TMX message";
+            }
+
+        }
+
     }
 }
 

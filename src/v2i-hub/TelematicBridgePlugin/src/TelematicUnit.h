@@ -7,52 +7,66 @@
 #include "PluginLog.h"
 #include "ThreadTimer.h"
 #include "TelematicBridgeException.h"
+#include "RSUConfigWorker.h"
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
 
-
 namespace TelematicBridge
 {
+
     using unit_st = struct unit
     {
         std::string unitId;   // Unique identifier for each unit
         std::string unitName; // Descriptive name for each unit
         std::string unitType; // Unit categorized base on unit type: platform or infrastructure
+        int16_t maxConnections;   // Number of maximum RSUs supported by plugin
+        int16_t pluginHeartBeatInterval; // Configurable intervval at which the plugin heartbeat should be monitored
+        int16_t rsuStatusMonitorInterval; // Confiigurable interval at which the RSU status should be monitored
+
+        std::vector<rsu_st> registeredRsuList; //List of configurations for connected RSUs
     };
 
     class TelematicUnit
     {
     private:
-        std::mutex _unitMutex;
+        std::mutex _unitMutex_;
         std::mutex _availableTopicsMutex;
         std::mutex _excludedTopicsMutex;
-        unit_st _unit;                                                        // Global variable to store the unit information
-        std::vector<std::string> _availableTopics;                                      // Global variable to store available topics
-        std::string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
-        std::vector<std::string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
+        unit_st _unit;
+        std::vector<std::string> _availableTopics;
+        std::string _excludedTopics;
+        std::vector<std::string> _selectedTopics;
+
         static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
         static CONSTEXPR const char *CHECK_STATUS = ".check_status";          // NATS subject to pub/sub checking unit status
+        static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config"; // NATS subject to pub/sub connected RSU units
+
         natsConnection *_conn = nullptr;                                      // Global NATS connection object
         natsSubscription *_subAvailableTopic = nullptr;                       // Global NATS subscription object
         natsSubscription *_subSelectedTopic = nullptr;                        // Global NATS subscription object
         natsSubscription *_subCheckStatus = nullptr;                          // Global NATS subscription object
-        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
-        std::string _eventName;                                                    // Testing event the unit is assigned to
-        std::string _eventLocation;                                                // Testing event location
-        std::string _testingType;                                                  // Testing type
-        static CONSTEXPR const char *LOCATION_KEY = "location";                   // location key used to find location value from JSON
-        static CONSTEXPR const char *TESTING_TYPE_KEY = "testing_type";           // testing_type key used to find testing_type value from JSON
-        static CONSTEXPR const char *EVENT_NAME_KEY = "event_name";               // event_name key used to find event_name value from JSON
-        static CONSTEXPR const char *UNIT_ID_KEY = "unit_id";                     // unit_id key used to find unit_id value from JSON
-        static CONSTEXPR const char *UNIT_NAME_KEY = "unit_name";                 // unit_name key used to find unit_name value from JSON
-        static CONSTEXPR const char *UNIT_TYPE_KEY = "unit_type";                 // unit_type key used to find unit_type value from JSON
-        static CONSTEXPR const char *TOPIC_NAME_KEY = "topic_name";               // topic_name key used to find topic_name value from JSON
-        static CONSTEXPR const char *TIMESTAMP_KEY = "timestamp";                 // timestamp key used to find timestamp value from JSON
-        static CONSTEXPR const char *PAYLOAD_KEY = "payload";                     // payload key used to find payload value from JSON
-        static CONSTEXPR const char *TOPICS_KEY = "topics";                       // topics key used to find topics value from JSON
-        static CONSTEXPR const char *NAME_KEY = "name";                           // topics key used to find topics value from JSON
+        natsSubscription *_subRegisteredRSUStatus = nullptr;                       // Global NATS subscription object for publishing and subscribing to list of connected RSUs
+
+        int64_t TIME_OUT = 10000;                                              // NATS Connection time out in  milliseconds
+        std::string _eventName;                                                // Testing event the unit is assigned to
+        std::string _eventLocation;                                            // Testing event location
+        std::string _testingType;                                              // Testing type
+
+        static CONSTEXPR const char *LOCATION_KEY = "location";                 // location key used to find location value from JSON
+        static CONSTEXPR const char *TESTING_TYPE_KEY = "testing_type";         // testing_type key used to find testing_type value from JSON
+        static CONSTEXPR const char *EVENT_NAME_KEY = "event_name";             // event_name key used to find event_name value from JSON
+        static CONSTEXPR const char *UNIT_ID_KEY = "unit_id";                   // unit_id key used to find unit_id value from JSON
+        static CONSTEXPR const char *UNIT_NAME_KEY = "unit_name";               // unit_name key used to find unit_name value from JSON
+        static CONSTEXPR const char *UNIT_TYPE_KEY = "unit_type";               // unit_type key used to find unit_type value from JSON
+        static CONSTEXPR const char *TOPIC_NAME_KEY = "topic_name";             // topic_name key used to find topic_name value from JSON
+        static CONSTEXPR const char *TIMESTAMP_KEY = "timestamp";               // timestamp key used to find timestamp value from JSON
+        static CONSTEXPR const char *PAYLOAD_KEY = "payload";                   // payload key used to find payload value from JSON
+        static CONSTEXPR const char *TOPICS_KEY = "topics";                     // topics key used to find topics value from JSON
+        static CONSTEXPR const char *RSU_CONFIG_KEY = "RSU_CONFIGS";            // rsu_config key is used to find rsu configuration from JSON
+        static CONSTEXPR const char *UNIT_KEY = "UNIT";
+        static CONSTEXPR const char *NAME_KEY = "name";                         // topics key used to find topics value from JSON
         static const int MILLI_TO_MICRO = 1000;
         static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
 
@@ -60,7 +74,8 @@ namespace TelematicBridge
         /**
          *@brief Construct telematic unit
          */
-        explicit TelematicUnit() = default;
+        explicit TelematicUnit();
+
         /**
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
@@ -92,6 +107,10 @@ namespace TelematicBridge
          * Publish unit status upon receiving a request.
          */
         void checkStatusReplier();
+
+        void rsuConfigReplier();
+
+        Json::Value getRSUHealthConfigJson();
 
         /**
          * @brief A function to publish message stream into NATS server
@@ -172,6 +191,9 @@ namespace TelematicBridge
          */
         std::string getTestingType() const;
 
+        void getRSUConfig(std::vector<rsu_st>);
+
+
         /**
          * @brief Add new selected topic into the selected topics list
          */
@@ -210,7 +232,11 @@ namespace TelematicBridge
          */
         static void onCheckStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
 
+        static void onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
+
         ~TelematicUnit();
     };
 
-} // namespace TelematicBridge
+
+
+}

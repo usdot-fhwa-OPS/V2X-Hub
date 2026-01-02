@@ -6,6 +6,17 @@ using namespace std::chrono;
 
 namespace TelematicBridge
 {
+    TelematicUnit::TelematicUnit()
+    {
+        const char* rsuConfigPath = std::getenv("RSU_CONFIG_PATH");
+        if (rsuConfigPath != nullptr) {
+            if (!loadRSUConfigFromFile(rsuConfigPath, _unit.registeredRsuList))
+            {
+                PLOG(logERROR)<<"Could not load RSU Configuration from file.";
+            }
+        }
+    }
+
     void TelematicUnit::connect(const string &natsURL)
     {
         auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
@@ -52,6 +63,7 @@ namespace TelematicBridge
         if (isRegistered)
         {
             // Provide below services when the unit is registered
+            rsuConfigReplier();
             availableTopicsReplier();
             selectedTopicsReplier();
             checkStatusReplier();
@@ -68,8 +80,30 @@ namespace TelematicBridge
             _eventName = root[EVENT_NAME_KEY].asString();
             return true;
         }
-        PLOG(logERROR) << "Failed to register unit as event information (locatoin, testing type and event name) does not exist.";
+        PLOG(logERROR) << "Failed to register unit as event information (location, testing type and event name) does not exist.";
         return false;
+    }
+
+    void TelematicUnit::rsuConfigReplier()
+    {
+
+        // Publish list of initially loaded RSUs to telematics RSU Management service
+        publishMessage(REGISTERD_RSU_CONFIG, getRSUHealthConfigJson());
+
+        // Create a subscriber to the rsu config from RSU Management service
+        if (!_subRegisteredRSUStatus)
+        {
+            PLOG(logDEBUG2) << "Inside rsu config status replier";
+            stringstream topic;
+            topic << _unit.unitId << REGISTERD_RSU_CONFIG;
+            natsConnection_Subscribe(&_subRegisteredRSUStatus, _conn, topic.str().c_str(), onRSUConfigStatusCallback, this);
+        }
+
+    }
+
+    Json::Value TelematicUnit::getRSUHealthConfigJson()
+    {
+        return rsuVectorToJsonArray(_unit.registeredRsuList);
     }
 
     void TelematicUnit::availableTopicsReplier()
@@ -180,6 +214,57 @@ namespace TelematicBridge
         }
     }
 
+
+    void TelematicUnit::onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
+    {
+        // Update list of registered RSUs on receiving a message
+        if (natsMsg_GetReply(msg) != nullptr)
+        {
+            auto msgStr = natsMsg_GetData(msg);
+            auto root = parseJson(msgStr);
+
+            auto obj = (TelematicUnit *)object;
+
+            if (object && root.isMember(UNIT_KEY) && root[UNIT_KEY].isArray())
+            {
+
+                Json::Value unitArray = root[UNIT_KEY];
+
+                auto unitID = unitArray.get("UnitID", "").asString();
+                if (unitID != obj->_unit.unitId)
+                {
+                    //Ignore messages not implied for this unit
+                    PLOG(logWARNING) <<  "Ignoring RSU Configuration message for unit: " << unitID << " received in unit: "<< obj->_unit.unitId;
+                    return;
+                }
+            }
+
+            if (object && root.isMember("RSUConfigs") && root["RSUConfigs"].isArray())
+            {
+                Json::Value rsuConfigsArray = root["RSUConfigs"];
+
+                PLOG(logDEBUG) << "Processing " << rsuConfigsArray.size() << " RSU configs";
+
+                // Iterate through RSUConfig and update list of RSUs registered to unit
+                for (const auto& rsuConfig : rsuConfigsArray)
+                {
+                    if(!processRSUConfig(rsuConfig, obj->_unit.maxConnections, obj->_unit.registeredRsuList))
+                    {
+                        PLOG(logERROR) << "Error processing incoming RSU Config, ignoring.";
+                    }
+                }
+            }
+
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), "OK");
+            if (s == NATS_OK)
+            {
+                PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
+            }
+            natsMsg_Destroy(msg);
+        }
+    }
+
+
     string TelematicUnit::constructPublishedDataString(const unit_st &unit, const string &eventLocation, const string &testingType, const string &eventName, const string &topicName, const Json::Value &payload) const
     {
         Json::Value message;
@@ -262,7 +347,7 @@ namespace TelematicBridge
 
     void TelematicUnit::setUnit(const unit_st &unit)
     {
-        lock_guard<mutex> lock(_unitMutex);
+        lock_guard<mutex> lock(_unitMutex_);
         _unit = unit;
     }
 

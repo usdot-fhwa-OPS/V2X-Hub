@@ -9,7 +9,7 @@
  *
  * @author Greg Baumgardner
  */
- 
+
 
 #ifndef INCLUDE_MESSAGETYPES_H_
 #define INCLUDE_MESSAGETYPES_H_
@@ -26,14 +26,14 @@
 #endif
 #endif
 
-		
-	
+
+
 namespace tmx {
-		
+
 namespace messages {
-			
-			
-enum MsgType 
+
+
+enum MsgType
 {
 		System = 0,
 		Application = 1,
@@ -44,8 +44,8 @@ enum MsgType
 		Pmm = 6,
 		Radio = 7
 };
-		
-		
+
+
 static CONSTEXPR const char *MSGTYPE_SYSTEM_STRING = "System";
 static CONSTEXPR const char *MSGTYPE_APPLICATION_STRING = "Application";
 static CONSTEXPR const char *MSGTYPE_DECODED_STRING = "Decoded";
@@ -54,8 +54,8 @@ static CONSTEXPR const char *MSGTYPE_VEHICLE_STRING = "Vehicle";
 static CONSTEXPR const char *MSGTYPE_PEDESTRIAN_STRING = "Pedestrian";
 static CONSTEXPR const char *MSGTYPE_PMM_STRING = "Pmm";
 static CONSTEXPR const char *MSGTYPE_RADIO_STRING = "Radio";
-			
-enum MsgSubType 
+
+enum MsgSubType
 {
 		Basic = 0,
 		Data = 1,
@@ -73,8 +73,8 @@ enum MsgSubType
 		Outgoing = 13,
 		Shutdown = 14
 };
-		
-		
+
+
 static CONSTEXPR const char *MSGSUBTYPE_BASIC_STRING = "Basic";
 static CONSTEXPR const char *MSGSUBTYPE_DATA_STRING = "Data";
 static CONSTEXPR const char *MSGSUBTYPE_STATECHANGE_STRING = "StateChange";
@@ -93,11 +93,11 @@ static CONSTEXPR const char *MSGSUBTYPE_SHUTDOWN_STRING = "Shutdown";
 static CONSTEXPR const char *MSGSUBTYPE_TIMESYNC_STRING = "TimeSync";
 static CONSTEXPR const char *MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING = "SensorDetectedObject";
 static CONSTEXPR const char *MSGSUBTYPE_RSU_STATUS_STRING = "RSUStatus";
-		
+static CONSTEXPR const char *MSGSUBTYPE_RSU_HEALTH_CONFIG_STRING = "RSUHealthConfig";
+
 } /* End namespace messages */
-	
+
 } /* End namespace tmx */
 
-		
+
 #endif /* INCLUDE_MESSAGETYPES_H_ */
-	

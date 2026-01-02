@@ -1,12 +1,12 @@
 #!/bin/bash
 #  Copyright (C) 2018-2020 LEIDOS.
-# 
+#
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
 #  the License at
-# 
+#
 #  http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 #  Unless required by applicable law or agreed to in writing, software
 #  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 #  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -62,6 +62,15 @@ while [[ $# -gt 0 ]]; do
         shift 1
       fi
       ;;
+      --build-plugins)
+      if [[ $# -gt 1 ]]; then
+        BUILD_PLUGINS="$2"
+        shift 2
+      else
+        BUILD_PLUGINS=""
+        shift 1
+      fi
+      ;;
     -h|--help)
       show_help
       exit 0
@@ -102,11 +111,11 @@ elif [ "$BUILD_TYPE" = "debug" ]; then
     # Flag to enable global placeholders for boost::bind and avoid deprecation warnings
     CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS"
 elif [ "$BUILD_TYPE" = "coverage" ]; then
-    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
+    # Coverage flags plus flag to enable global placeholders for boost::bind and avoid
     # deprecation warnings
     CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
     BUILD_TYPE="Debug"
-else 
+else
     echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE : release, coverage, debug."
     exit 1
 fi
@@ -134,7 +143,29 @@ done
 
 # Process skip plugins input
 cmake_flags=""
-if [[ -n "$SKIP_PLUGINS" ]]; then
+if [[ -n "$BUILD_PLUGINS" && -n "$SKIP_PLUGINS" ]]; then
+  echo "Error: Cannot specify both BUILD_PLUGINS and SKIP_PLUGINS"
+  exit 1
+elif [[ -n "$BUILD_PLUGINS" ]]; then
+  IFS=' ' read -r -a build_plugins <<< "$BUILD_PLUGINS"
+
+  # Validate all specified plugins exist
+  for plugin in "${build_plugins[@]}"; do
+    if [[ ! " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
+      echo "Error: Invalid plugin to build '$plugin'"
+      exit 1
+    fi
+  done
+
+  # Skip all plugins NOT in the build list
+  for plugin in "${plugin_dirs[@]}"; do
+    if [[ ! " ${build_plugins[*]} " =~ " ${plugin} " ]]; then
+      cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
+    fi
+  done
+
+  echo "Building only specified plugins: ${build_plugins[*]}"
+elif [[ -n "$SKIP_PLUGINS" ]]; then
   IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
   for plugin in "${skipped_plugins[@]}"; do
     if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then

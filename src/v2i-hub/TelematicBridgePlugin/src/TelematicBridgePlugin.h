@@ -6,6 +6,7 @@
 
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
+#include "RSUConfigWorker.h"
 #include <simulation/SimulationEnvUtils.h>
 
 
@@ -23,6 +24,14 @@ namespace TelematicBridge
         std::string _unitName;
         std::string _natsURL;
         std::string _excludedMessages;
+        std::string _maxConnections;
+        int16_t _pluginHeartBeatInterval;
+        int16_t _rsuStatusMonitorInterval;
+        unique_ptr<tmx::utils::ThreadTimer> _rsuHealthConfigTimer;
+        bool _started = false;
+        int16_t rsuConfigUpdateIntervalInMillisec = 100;
+        uint _timerThId;
+        // rsu Configs
         std::mutex _configMutex;
 
     public:
@@ -31,6 +40,7 @@ namespace TelematicBridge
         void OnStateChange(IvpPluginState state) override;
         void UpdateConfigSettings();
         void OnMessageReceived(IvpMessage *msg) override;
+        void BroadcastRSUHealthConfigMessage();
 
     };
 
