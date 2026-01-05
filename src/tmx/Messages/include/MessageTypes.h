@@ -93,7 +93,7 @@ static CONSTEXPR const char *MSGSUBTYPE_SHUTDOWN_STRING = "Shutdown";
 static CONSTEXPR const char *MSGSUBTYPE_TIMESYNC_STRING = "TimeSync";
 static CONSTEXPR const char *MSGSUBTYPE_SENSOR_DETECTED_OBJECT_STRING = "SensorDetectedObject";
 static CONSTEXPR const char *MSGSUBTYPE_RSU_STATUS_STRING = "RSUStatus";
-static CONSTEXPR const char *MSGSUBTYPE_RSU_HEALTH_CONFIG_STRING = "RSUHealthConfig";
+static CONSTEXPR const char *MSGSUBTYPE_RSU_REGISTRATION_CONFIG_STRING = "RSURegistrationConfig";
 
 } /* End namespace messages */
 
