@@ -214,7 +214,6 @@ namespace TelematicBridge
         for (const auto& config : rsuConfigList) {
             jsonArray.append(rsuConfigToJsonValue(config));
         }
-
         return jsonArray;
     }
 

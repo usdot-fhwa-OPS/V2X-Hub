@@ -29,13 +29,10 @@ namespace TelematicBridge
             sleep(1);
         }
 
-
-        if (s == NATS_OK)
-        {
+        if (s == NATS_OK){
             registerUnitRequestor();
         }
-        else
-        {
+        else{
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
 

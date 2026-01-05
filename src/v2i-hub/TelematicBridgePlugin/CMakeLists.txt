@@ -11,6 +11,7 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils jsoncpp nats)
 add_library(${PROJECT_NAME}_lib
     src/TelematicUnit.cpp
     src/TelematicBridgeMsgWorker.cpp
+    src/TelematicRsuUnit.cpp
     src/RSUConfigWorker.cpp
     )
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC  tmxutils jsoncpp nats)

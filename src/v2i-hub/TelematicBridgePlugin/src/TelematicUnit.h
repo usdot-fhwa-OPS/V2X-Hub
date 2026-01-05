@@ -74,7 +74,7 @@ namespace TelematicBridge
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        void registerUnitRequestor();
+        virtual void registerUnitRequestor();
 
         /**
          * @brief A NATS replier to subscribe to NATS server and receive available topics request.

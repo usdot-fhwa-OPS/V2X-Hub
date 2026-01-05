@@ -7,16 +7,15 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
-        _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = std::getenv("INFRASTRUCTURE_ID");
         _unitName = std::getenv("INFRASTRUCTURE_NAME");
-        _natsURL = std::getenv("NATS_URL");
         _isTRU = std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
 
         if (_isTRU){
+            _natsURL = std::getenv("NATS_URL");
             _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
             _telematicRsuUnitPtr->connect(_natsURL);
             // If using Telematic RSU Unit create timer to broadcast RSU Health Config
@@ -32,6 +31,9 @@ namespace TelematicBridge
                 _rsuRegistrationConfigTimer->Start();
                 _started = true;
             }
+        }
+        else{
+            _telematicUnitPtr = make_unique<TelematicUnit>();
         }
     }
 

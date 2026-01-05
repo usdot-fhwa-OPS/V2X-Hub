@@ -33,14 +33,17 @@ namespace TelematicBridge
     class TelematicRsuUnit: public TelematicUnit
     {
     private:
+        // The TRU (Telematic RSU) unit configuration. Contains unit settings, registered RSU list, and timestamp
         truUnit _truUnit;
-
+        // NATS subscription for RSU configuration status updates. Used to receive RSU configuration changes from the management service
         natsSubscription *_subRegisteredRSUStatus = nullptr;
 
+        //Maximum number of connection attempts to NATS server before failing
         static const int CONNECTION_MAX_ATTEMPTS = 30;
 
         //Unit topic names
-        static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config"; // NATS subject to pub/sub connected RSU units
+        // NATS subject suffix for RSU registration configuration. Full topic format: {unitId}.register.rsu.config ; Used to publish/subscribe RSU registration data
+        static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config";
 
         //Unit json keys
         static CONSTEXPR const char *UNIT_KEY = "unit";
@@ -69,33 +72,42 @@ namespace TelematicBridge
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        void registerUnitRequestor();
-
-
-        void rsuConfigReplier();
-
-        Json::Value getRSURegistrationConfigJson();
-
-
-        void publishMessage(const std::string &topic, const Json::Value &payload);
-
+        void registerUnitRequestor() override;
 
         /**
-         * @brief construct available topic response
-         * @param truUnit struct that contains unit related information
-         * @param vector of available topics
-         * @param string Excluded topics separated by commas
+         * @brief Set up RSU configuration replier to handle RSU config updates via NATS
+         * Publishes initial RSU configuration and subscribes to receive config updates
          */
-        static std::string constructAvailableTopicsReplyString(const truUnit &unit, const std::string &eventLocation, const std::string &testingType, const std::string &eventName, const std::vector<std::string> &availableTopicList, const std::string &excludedTopics);
+        void rsuConfigReplier();
 
+        /**
+         * @brief Publish the RSU registration message containing unit and RSU configurations
+         * @param topic The NATS topic to publish the registration message to
+         * @throws TelematicBridgeException if publish fails
+         */
         void publishRSURegistrationMessage(const std::string &topic);
 
-
+        /**
+         * @brief Construct a JSON string containing RSU registration data
+         * Includes unit configuration, registered RSU list, and timestamp
+         * @return std::string JSON formatted RSU registration data
+        */
         std::string constructRSURegistrationDataString();
 
+        /**
+         * @brief NATS callback handler for RSU configuration status updates
+         * Processes incoming RSU configuration changes and updates the registered RSU list
+         * @param nc NATS connection pointer
+         * @param sub NATS subscription pointer
+         * @param msg NATS message containing RSU configuration updates
+         * @param object Pointer to TelematicRsuUnit instance
+         */
         static void onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
 
-
+        /**
+         * @brief Destructor for TelematicRsuUnit
+         * Cleans up NATS subscriptions and connections
+        */
         ~TelematicRsuUnit();
     };
 
