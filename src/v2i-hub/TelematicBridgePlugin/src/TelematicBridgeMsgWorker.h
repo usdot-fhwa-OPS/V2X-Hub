@@ -5,7 +5,7 @@
 #include <PluginLog.h>
 #include "TelematicBridgeException.h"
 #include "jsoncpp/json/json.h"
-#include "RSUHealthConfigMessage.h"
+#include <RSURegistrationConfigMessage.h>
 
 
 namespace TelematicBridge
@@ -23,7 +23,7 @@ namespace TelematicBridge
      * @param msg tmx::routeable_message
      * @return JSON value
      */
-    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::routeable_message& msg);
+    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::messages::RSURegistrationConfigMessage& msg);
     /**
      * @brief Servialize a J2735 routeable message into JSON using
      * stol-j2735 library JER encoding functionality.

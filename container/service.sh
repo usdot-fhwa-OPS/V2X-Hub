@@ -11,8 +11,16 @@ done
 /home/V2X-Hub/container/generate_certificates.sh
 # command plugin must always be enabled
 tmxctl --plugin CommandPlugin --enable
+# Enable required plugins for TelematicRSU Unit
+if [ "${IS_TRU^^}" = "TRUE" ]
+then
+    echo "Enabling MessageReceiver RSUHealthMonitor TelematicsBridgePlugin for RSU data streaming!"
+    tmxctl --plugin MessageReceiver --enable
+    tmxctl --plugin RSUHealthMonitor --enable
+    tmxctl --plugin TelematicsBridgePlugin --enable
+fi
 # If in simulation mode, enable SimulationAdapter
-if [ "${SIMULATION_MODE^^}" = "TRUE" ] 
+if [ "${SIMULATION_MODE^^}" = "TRUE" ]
 then
     echo "Enabling CDASim Adapter for Simulation Integration!"
     tmxctl --plugin CDASimAdapter --enable
@@ -25,4 +33,3 @@ if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
 fi
 # Start Tmx Core
 tmxcore
-

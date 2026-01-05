@@ -15,7 +15,7 @@ namespace tmx::messages{
             void SetUp() override {
                 //Set Telematic Unit members
                 TelematicUnit telematicUnit("Unit007", 10, 10, 10, 10);
-                tmxRSURegistrationConfigPtr->set_telematicUnit(telematicUnit);
+                tmxRSURegistrationConfigPtr->set_unit(telematicUnit);
 
                 std::string action = "add";
                 RSUConfig rsuConfig1("add", "new",
@@ -30,7 +30,7 @@ namespace tmx::messages{
 
                 RSUConfigList rsuConfigList(rsuConfigs);
 
-                tmxRSURegistrationConfigPtr->set_rsuConfigList(rsuConfigList);
+                tmxRSURegistrationConfigPtr->set_rsuConfigs(rsuConfigList);
 
                 tmxRSURegistrationConfigPtr->set_timestamp(1234567890000);
             }
@@ -50,9 +50,9 @@ namespace tmx::messages{
         boost::property_tree::read_json(ss, tree);
 
         // Verify telematic unit
-        EXPECT_EQ(tree.get<std::string>("telematicUnit.unitId"), "Unit007");
-        EXPECT_EQ(tree.get<int>("telematicUnit.maxConnections"), 10);
-        EXPECT_EQ(tree.get<int>("telematicUnit.bridgePluginHeartbeatInterval"),10);
+        EXPECT_EQ(tree.get<std::string>("unit.unitId"), "Unit007");
+        EXPECT_EQ(tree.get<int>("unit.maxConnections"), 10);
+        EXPECT_EQ(tree.get<int>("unit.bridgePluginHeartbeatInterval"),10);
 
         EXPECT_EQ(tree.get<int64_t>("timestamp"),1234567890000);
 
@@ -60,12 +60,12 @@ namespace tmx::messages{
     }
 
     TEST_F(RSURegistrationConfigMessageTest, getters) {
-        TelematicUnit unit = tmxRSURegistrationConfigPtr->get_telematicUnit();
+        TelematicUnit unit = tmxRSURegistrationConfigPtr->get_unit();
         EXPECT_EQ(unit.unitId, "Unit007");
         EXPECT_EQ(unit.maxConnections, 10);
         EXPECT_EQ(unit.bridgePluginHeartbeatInterval, 10);
 
-        RSUConfigList configList = tmxRSURegistrationConfigPtr->get_rsuConfigList();
+        RSUConfigList configList = tmxRSURegistrationConfigPtr->get_rsuConfigs();
         EXPECT_EQ(configList.rsuConfigs.size(), 2);
 
         int64_t timestamp = tmxRSURegistrationConfigPtr->get_timestamp();

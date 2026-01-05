@@ -24,10 +24,10 @@ class RSURegistrationConfigMessage : public tmx::message
 		static constexpr const char* MessageSubType = MSGSUBTYPE_RSU_REGISTRATION_CONFIG_STRING;
 
 		//Telematic unit identifier
-		object_attribute(TelematicUnit, telematicUnit);
+		object_attribute(TelematicUnit, unit);
 
 		//List of Registered RSUs
-		object_attribute(RSUConfigList, rsuConfigList);
+		object_attribute(RSUConfigList, rsuConfigs);
 
 		// Epoch time in milliseconds
 		std_attribute(this->msg, int64_t, timestamp, 0,);

@@ -10,22 +10,28 @@ namespace TelematicBridge
         _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = std::getenv("INFRASTRUCTURE_ID");
         _unitName = std::getenv("INFRASTRUCTURE_NAME");
+        _natsURL = std::getenv("NATS_URL");
+        _isTRU = std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
 
-        // Timer to broadcast RSU Health Config
-        _rsuHealthConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
-        if ( !_started ) {
-            // Send RSU Config message to TMX core periodically at configurable interval.
-            _timerThId = _rsuHealthConfigTimer->AddPeriodicTick([this]()
-                                                        {
-                            this->BroadcastRSUHealthConfigMessage();
-                            PLOG(logINFO) << "Updating RSU Health Configuration at interval (second): " << rsuConfigUpdateIntervalInMillisec; },
-                                                        std::chrono::milliseconds(rsuConfigUpdateIntervalInMillisec));
-            PLOG(logDEBUG1) << "RSU Health Monitor timer thread ID: " << _timerThId;
-            _rsuHealthConfigTimer->Start();
-            _started = true;
+        if (_isTRU){
+            _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
+            _telematicRsuUnitPtr->connect(_natsURL);
+            // If using Telematic RSU Unit create timer to broadcast RSU Health Config
+            _rsuRegistrationConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
+            if ( !_started ) {
+                // Send RSU Config message to TMX core periodically at configurable interval.
+                _timerThId = _rsuRegistrationConfigTimer->AddPeriodicTick([this]()
+                            {
+                                this->BroadcastRSURegistrationConfigMessage();
+                                PLOG(logINFO) << "Updating RSU Health Configuration at interval (second): " << rsuConfigUpdateIntervalInMillisec; },
+                                                            std::chrono::milliseconds(rsuConfigUpdateIntervalInMillisec));
+                PLOG(logDEBUG1) << "RSU Health Monitor timer thread ID: " << _timerThId;
+                _rsuRegistrationConfigTimer->Start();
+                _started = true;
+            }
         }
     }
 
@@ -96,21 +102,17 @@ namespace TelematicBridge
     }
 
 
-    void TelematicBridgePlugin::BroadcastRSUHealthConfigMessage()
+    void TelematicBridgePlugin::BroadcastRSURegistrationConfigMessage()
     {
-        Json::Value rsuHealthConfigJsonArray = _telematicUnitPtr->getRSUHealthConfigJson();
+        Json::Value rsuRegistrationConfigJsonArray = _telematicRsuUnitPtr->constructRSURegistrationDataString();
 
-        if(!rsuHealthConfigJsonArray.empty())
+        if(!rsuRegistrationConfigJsonArray.empty())
         {
-            Json::Value message;
-            message["RSUConfigs"] = rsuHealthConfigJsonArray;
-            message["timestamp"] = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()).count();
 
-            tmx::routeable_message sendRsuHealthconfigMsg;
-            if(jsonValueToRouteableMessage(rsuHealthConfigJsonArray, sendRsuHealthconfigMsg))
+            tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
+            if(jsonValueToRouteableMessage(rsuRegistrationConfigJsonArray, sendRsuRegistrationConfigMsg))
             {
-                BroadcastMessage(sendRsuHealthconfigMsg, TelematicBridgePlugin::GetName());
+                BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
             }
             else{
                 PLOG(logERROR) <<"Error converting rsu health config to TMX message";

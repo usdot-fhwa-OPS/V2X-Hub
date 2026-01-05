@@ -30,17 +30,17 @@ namespace TelematicBridge
     }
 
     /**
-     * @brief Convert a JSON::Value to a TMX routeable message
+     * @brief Convert a JSON::Value to a TMX RSURegistrationConfigMessage message
      * @param json The JSON::Value to convert
-     * @param msg Reference to routeable_message to populate
+     * @param msg Reference to routeable RSURegistrationConfigMessage to populate
      * @return bool true if successful, false otherwise
      */
-    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::routeable_message& msg)
+    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::messages::RSURegistrationConfigMessage& msg)
     {
         try{
             Json::FastWriter fasterWirter;
             std::string json_str = fasterWirter.write(json);
-            tmx::messages::RSUHealthConfigMessage rsuHealthConfigMsg;
+            tmx::messages::RSURegistrationConfigMessage rsuRegistrationConfigMsg;
             msg.set_contents(json_str);
         } catch (const std::exception& e){
             return false;
