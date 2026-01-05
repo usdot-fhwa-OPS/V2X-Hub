@@ -6,6 +6,8 @@
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/messages/byte_stream.hpp>
 #include <SensorDetectedObject.h>
+#include <jsoncpp/json/json.h>
+
 using namespace TelematicBridge;
 using namespace std;
 
@@ -53,10 +55,10 @@ TEST(TestTelematicMsgWorker, routeableMessageToJsonValue_SensorDetectedObject)
     sensorMsg.set_isModified(false);
     sensorMsg.set_timestamp(1622547800);
     sensorMsg.set_size(tmx::messages::Size(4.5, 2.0, 1.5));
-    std::vector<tmx::messages::Covariance> covs { 
-        tmx::messages::Covariance(12), 
+    std::vector<tmx::messages::Covariance> covs {
+        tmx::messages::Covariance(12),
         tmx::messages::Covariance(11),
-        tmx::messages::Covariance(13), 
+        tmx::messages::Covariance(13),
         tmx::messages::Covariance(14),
         tmx::messages::Covariance(15)
     };
@@ -79,7 +81,7 @@ TEST(TestTelematicMsgWorker, routeableMessageToJsonValue_SensorDetectedObject)
     msg.set_timestamp(1622547900);
     msg.set_dsrcChannel(180);
     msg.set_dsrcPsid(5678);
-    msg.set_payload(sensorMsg); 
+    msg.set_payload(sensorMsg);
 
     Json::Value json = routeableMessageToJsonValue(msg);
 
@@ -142,7 +144,7 @@ TEST(TestTelematicMsgWorker, j2735MessageToJson) {
 TEST(TestTelematicMsgWork, stringToJsonValue) {
     std::string jsonString = R"({"key1": "value1", "key2": 2, "key3": true})";
     Json::Value jsonValue = stringToJsonValue(jsonString);
-    
+
     EXPECT_EQ(jsonValue["key1"].asString(), "value1");
     EXPECT_EQ(jsonValue["key2"].asInt(), 2);
     EXPECT_EQ(jsonValue["key3"].asBool(), true);
@@ -166,4 +168,20 @@ TEST(TestTelematicMsgWorker, trim) {
     std::string stringWithSpaces = "\r\n\t test \t\n\r";
     std::string expectedStr = "test";
     EXPECT_EQ(expectedStr, trim(stringWithSpaces));
+}
+
+TEST(testTelematicMsgWOrker, jsonValuetoRouteableMessage)
+{
+    Json::Value json;
+    json["unit"]["unitId"] = "Unit123";
+    json["unit"]["maxConnections"] = 10;
+    json["rsuConfigs"] = Json::arrayValue;
+    json["timestamp"] = 1234567890;
+
+    tmx::messages::RSURegistrationConfigMessage msg;
+
+    bool result = jsonValueToRouteableMessage(json, msg);
+
+    ASSERT_TRUE(result);
+    ASSERT_FALSE(msg.to_string().empty());
 }

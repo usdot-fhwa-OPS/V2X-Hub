@@ -109,9 +109,9 @@ namespace TelematicBridge
 
         rsuList = {};
         rsuConfigJson = "";
-        // result = processRSUConfig(rsuConfigJson, maxConnections, rsuList);
-        // ASSERT_FALSE(result);
-        // ASSERT_TRUE(rsuList.empty());
+        result = processRSUConfig(rsuConfigJson, maxConnections, rsuList);
+        ASSERT_FALSE(result);
+        ASSERT_TRUE(rsuList.empty());
 
         Json::Value rsuConfigJson2;
         rsuConfigJson2["rsu"]["IP"] = "192.168.1.10";
@@ -235,6 +235,35 @@ namespace TelematicBridge
         ASSERT_EQ(result.size(), 1);
         ASSERT_EQ(result[0]["rsu"]["IP"].asString(), "192.168.1.10");
         ASSERT_EQ(result[0]["action"].asString(), "add");
+    }
+
+    TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileInvalidJSON)
+    {
+        string testPath = "/tmp/test_rsu_config_invalid.json";
+        createTestConfigFile(testPath, "{invalid json}");
+
+        vector<rsuConfig> rsuList;
+        bool result = loadRSUConfigListFromFile(testPath, rsuList);
+
+        ASSERT_FALSE(result);
+        ASSERT_TRUE(rsuList.empty());
+
+        removeTestFile(testPath);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileSuccess)
+    {
+        string testPath = "/tmp/test_rsu_config_load.json";
+        createTestConfigFile(testPath, getValidRSUConfigFileContent());
+
+        vector<rsuConfig> rsuList;
+        bool result = loadRSUConfigListFromFile(testPath, rsuList);
+
+        ASSERT_TRUE(result);
+        ASSERT_EQ(rsuList.size(), 1);
+        ASSERT_EQ(rsuList[0].rsu.ip, "192.168.1.10");
+
+        removeTestFile(testPath);
     }
 
 
