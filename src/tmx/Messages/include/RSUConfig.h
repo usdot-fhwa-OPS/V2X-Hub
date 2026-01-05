@@ -6,7 +6,7 @@
 namespace tmx::messages{
     struct RSUConfig
     {
-        RSUConfig(): action(""), event(""), rsu(RSUEndpoint("127.0.0.1","161")), snmp(RSUSnmpConfig()) {}
+        RSUConfig(): action(""), event(""), rsu(RSUEndpoint("127.0.0.1",161)), snmp(RSUSnmpConfig()) {}
 
         RSUConfig(const std::string& action,const std::string& event,const RSUEndpoint& rsuEndpoint,const RSUSnmpConfig& snmpConfig):
                 action(action), event(event), rsu(rsuEndpoint), snmp(snmpConfig) {}

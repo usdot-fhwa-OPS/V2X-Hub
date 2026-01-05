@@ -19,11 +19,11 @@ namespace tmx::messages{
 
                 std::string action = "add";
                 RSUConfig rsuConfig1("add", "new",
-                     RSUEndpoint("127.0.0.1", "161"),
+                     RSUEndpoint("127.0.0.1", 161),
                      RSUSnmpConfig());
 
                 RSUConfig rsuConfig2("update", "modified",
-                            RSUEndpoint("192.168.0.1", "161"),
+                            RSUEndpoint("192.168.0.1", 161),
                             RSUSnmpConfig());
 
                 std::vector<RSUConfig> rsuConfigs = {rsuConfig1, rsuConfig2};
@@ -73,7 +73,7 @@ namespace tmx::messages{
     }
 
     TEST_F(RSURegistrationConfigMessageTest, rsu_endpoint_serialization){
-        RSUEndpoint endpoint("10.0.0.1", "161");
+        RSUEndpoint endpoint("10.0.0.1", 161);
         RSUSnmpConfig snmpConfig;
         RSUConfig original("add", "registered", endpoint, snmpConfig);
 

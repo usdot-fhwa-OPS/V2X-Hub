@@ -20,7 +20,7 @@ namespace TelematicBridge
     struct rsuEndpoint
     {
         std::string ip="127.0.0.1";
-        std::string port="8080";
+        int port=8080;
     };
 
     struct rsuConfig

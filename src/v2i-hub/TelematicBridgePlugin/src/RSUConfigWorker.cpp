@@ -20,9 +20,10 @@ namespace TelematicBridge
 
     bool processRSUConfig(const Json::Value& rsuConfigJson, int16_t& maxConnections, std::vector<rsuConfig>& rsuRegisteredList)
     {
-        if(rsuConfigJson.isMember("rsu") && rsuConfigJson["rsu"].isObject())
+
+        try
         {
-            try
+            if(rsuConfigJson.isMember("rsu") && rsuConfigJson["rsu"].isObject())
             {
                 validateRequiredKeys(rsuConfigJson, REQUIRED_RSU_CONFIG_KEYS);
 
@@ -76,14 +77,12 @@ namespace TelematicBridge
                 PLOG(logDEBUG) << "Added RSU "<< config.rsu.ip << " to registered list";
                 return true;
             }
-            catch(const std::exception& e)
-            {
-                //Catch error for RSU configuration without crashing
-                PLOG(logERROR)<<"Failed to process RSU config: "<< e.what();
-                return false;
-            }
-
+        } catch(const std::exception& e){
+            //Catch error for RSU configuration without crashing
+            PLOG(logERROR)<<"Failed to process RSU config: "<< e.what();
+            return false;
         }
+
     }
 
 
@@ -134,7 +133,7 @@ namespace TelematicBridge
 
             // Extract RSU fields
             config.rsu.ip = rsuEndpoint["IP"].asString();
-            config.rsu.port = rsuEndpoint.get("Port", "8080").asString();
+            config.rsu.port = rsuEndpoint.get("Port", 8080).asInt();
 
 
             // Extract SNMP fields
