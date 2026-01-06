@@ -47,12 +47,12 @@ namespace TelematicBridge
 
         //Unit json keys
         static CONSTEXPR const char *UNIT_KEY = "unit";
-        static CONSTEXPR const char *UNIT_ID_KEY = "unitId";
-        static CONSTEXPR const char *MAX_CONNECTIONS_KEY = "maxConnections";
-        static CONSTEXPR const char *PLUGIN_HEARTBEAT_INTERVAL_KEY = "bridgePluginHeartbeatInterval";
-        static CONSTEXPR const char *HEALTHMONITOR_HEARTBEAT_INTERVAL_KEY = "healthMonitorPluginHeartbeatInterval";
-        static CONSTEXPR const char *RSU_STATUS_MONITOR_INTERVAL_KEY = "rsuStatusMonitorInterval";
-        static CONSTEXPR const char *RSU_CONFIGS_KEY = "rsuConfigs";
+        static CONSTEXPR const char *UNIT_ID_KEY = "unitid";
+        static CONSTEXPR const char *MAX_CONNECTIONS_KEY = "maxconnections";
+        static CONSTEXPR const char *PLUGIN_HEARTBEAT_INTERVAL_KEY = "bridgepluginheartbeatinterval";
+        static CONSTEXPR const char *HEALTHMONITOR_HEARTBEAT_INTERVAL_KEY = "healthmonitorpluginheartbeatinterval";
+        static CONSTEXPR const char *RSU_STATUS_MONITOR_INTERVAL_KEY = "rsustatusmonitorinterval";
+        static CONSTEXPR const char *RSU_CONFIGS_KEY = "rsuconfigs";
 
 
     public:

@@ -125,7 +125,7 @@ namespace TelematicBridge
             if (object && root.isMember(UNIT_ID_KEY) && root[UNIT_ID_KEY].isArray())
             {
 
-                Json::Value unitArray = root[UNIT_ID_KEY];
+                Json::Value unitArray = convertKeysToLowerCase(root[UNIT_ID_KEY]);
 
                 auto unitID = unitArray.get(UNIT_ID_KEY, "").asString();
                 if (unitID != obj->_truUnit.unit.unitId)

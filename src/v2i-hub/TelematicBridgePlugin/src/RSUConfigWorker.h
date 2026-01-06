@@ -31,22 +31,40 @@ namespace TelematicBridge
         snmpConfig snmp;
     };
 
+    static CONSTEXPR const char *RSUCONFIG_KEY = "rsuconfigs";                   // location key used to find location value from JSON
+    static CONSTEXPR const char *RSU_KEY = "rsu";
+    static CONSTEXPR const char *IP_KEY = "ip";           // testing_type key used to find testing_type value from JSON
+    static CONSTEXPR const char *PORT_KEY = "port";               // event_name key used to find event_name value from JSON
+    static CONSTEXPR const char *ACTION_KEY = "action";                     // unit_id key used to find unit_id value from JSON
+    static CONSTEXPR const char *EVENT_KEY = "event";                 // unit_name key used to find unit_name value from JSON
+    static CONSTEXPR const char *SNMP_KEY = "snmp";
+    static CONSTEXPR const char *USER_KEY = "user";
+    static CONSTEXPR const char *PRIVACY_PROTOCOL_KEY = "privacyprotocol";                 // unit_type key used to find unit_type value from JSON
+    static CONSTEXPR const char *AUTH_PROTOCOL_KEY = "authprotocol";               // topic_name key used to find topic_name value from JSON
+    static CONSTEXPR const char *AUTH_PASS_PHRASE_KEY = "authpassphrase";                 // timestamp key used to find timestamp value from JSON
+    static CONSTEXPR const char *PRIVACY_PASS_PHRASE_KEY = "privacypassphrase";
+    static CONSTEXPR const char *RSU_MIB_VERSION_KEY = "rsumibversion";                     // payload key used to find payload value from JSON
+    static CONSTEXPR const char *SECURITY_LEVEL_KEY = "securitylevel";                       // topics key used to find topics value from JSON
 
     // Constants
     static constexpr int RSU_STATUS_MONITOR_INTERVAL_IN_HZ = 10;
     // Required keys for RSUConfig
     const std::vector<std::string> REQUIRED_RSU_CONFIG_KEYS = {"action", "event", "rsu","snmp"};
     // Required keys for RSUendpoint
-    const std::vector<std::string> REQUIRED_RSU_KEYS = {"IP","Port"};
+    const std::vector<std::string> REQUIRED_RSU_KEYS = {"ip","port"};
     // Required keys for SNMP config
     const std::vector<std::string> REQUIRED_SNMP_KEYS = {
-        "PrivacyProtocol",
-        "AuthProtocol",
-        "AuthPassPhrase",
-        "PrivacyPassPhrase",
-        "RSUMIBVersion",
-        "SecurityLevel"
+        USER_KEY,
+        PRIVACY_PROTOCOL_KEY,
+        AUTH_PROTOCOL_KEY,
+        AUTH_PASS_PHRASE_KEY,
+        PRIVACY_PASS_PHRASE_KEY,
+        RSU_MIB_VERSION_KEY,
+        SECURITY_LEVEL_KEY
     };
+
+
+
 
     /**
      * @brief Process a single RSU configuration item.
@@ -101,5 +119,7 @@ namespace TelematicBridge
      */
     Json::Value rsuConfigListToJsonArray(const std::vector<rsuConfig>& rsus);
 
+    std::string toLower(std::string s);
+    Json::Value convertKeysToLowerCase(const Json::Value& input);
 
 }

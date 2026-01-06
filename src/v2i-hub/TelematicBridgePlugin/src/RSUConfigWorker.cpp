@@ -23,19 +23,19 @@ namespace TelematicBridge
 
         try
         {
-            if(rsuConfigJson.isMember("rsu") && rsuConfigJson["rsu"].isObject())
+            if(rsuConfigJson.isMember(RSU_KEY) && rsuConfigJson[RSU_KEY].isObject())
             {
                 validateRequiredKeys(rsuConfigJson, REQUIRED_RSU_CONFIG_KEYS);
 
                 rsuConfig config;
-                config.action = rsuConfigJson["action"].asString();
-                config.event = rsuConfigJson["event"].asString();
+                config.action = rsuConfigJson[ACTION_KEY].asString();
+                config.event = rsuConfigJson[EVENT_KEY].asString();
 
-                Json::Value rsu = rsuConfigJson["rsu"];
+                Json::Value rsu = rsuConfigJson[RSU_KEY];
                 validateRequiredKeys(rsu, REQUIRED_RSU_KEYS);
 
-                config.rsu.ip = rsu.get("IP", "").asString();
-                config.rsu.port = rsu.get("Port", 161).asInt();
+                config.rsu.ip = rsu.get(IP_KEY, "").asString();
+                config.rsu.port = rsu.get(PORT_KEY, 161).asInt();
 
                 PLOG(logINFO)<<"Added RSU:"<< config.rsu.ip<<":"<< config.rsu.port;
 
@@ -56,21 +56,21 @@ namespace TelematicBridge
                 }
 
                 // Log error if RSU is defined without snmp configuration
-                if(!rsuConfigJson.isMember("snmp") || !rsuConfigJson["snmp"].isObject()){
+                if(!rsuConfigJson.isMember(SNMP_KEY) || !rsuConfigJson[SNMP_KEY].isObject()){
                     PLOG(logERROR) << "Missing or invalid snmp object for RSU with IP "<< config.rsu.ip << " , ignoring request to register.";
                     return false;
                 }
 
-                Json::Value snmp = rsuConfigJson["snmp"];
+                Json::Value snmp = rsuConfigJson[SNMP_KEY];
                 validateRequiredKeys(snmp, REQUIRED_SNMP_KEYS);
 
-                config.snmp.userKey = snmp.get("User", "").asString();
-                config.snmp.privProtocol = snmp.get("PrivacyProtocol","").asString();
-                config.snmp.authProtocolKey = snmp.get("AuthProtocol","").asString();
-                config.snmp.authPassPhraseKey = snmp.get("AuthPassPhrase","").asString();
-                config.snmp.privPassPhrase = snmp.get("PrivacyPassPhrase","").asString();
-                config.snmp.rsuMIBVersionKey = snmp.get("RSUMIBVersion","").asString();
-                config.snmp.securityLevelKey = snmp.get("SecurityLevel","").asString();
+                config.snmp.userKey = snmp.get(USER_KEY, "").asString();
+                config.snmp.privProtocol = snmp.get(PRIVACY_PROTOCOL_KEY,"").asString();
+                config.snmp.authProtocolKey = snmp.get(AUTH_PROTOCOL_KEY,"").asString();
+                config.snmp.authPassPhraseKey = snmp.get(AUTH_PASS_PHRASE_KEY,"").asString();
+                config.snmp.privPassPhrase = snmp.get(PRIVACY_PASS_PHRASE_KEY,"").asString();
+                config.snmp.rsuMIBVersionKey = snmp.get(RSU_MIB_VERSION_KEY,"").asString();
+                config.snmp.securityLevelKey = snmp.get(SECURITY_LEVEL_KEY,"").asString();
 
                 //Add configured RSU to list
                 rsuRegisteredList.push_back(config);
@@ -89,27 +89,27 @@ namespace TelematicBridge
     Json::Value rsuConfigToJsonValue(const rsuConfig& config) {
         Json::Value json;
 
-        json["action"] = config.action;
-        json["event"] = config.event;
+        json[ACTION_KEY] = config.action;
+        json[EVENT_KEY] = config.event;
 
         // Create RSU endpoint object
         Json::Value rsuEndpoint;
-        rsuEndpoint["IP"] = config.rsu.ip;
-        rsuEndpoint["Port"] = config.rsu.port;
+        rsuEndpoint[IP_KEY] = config.rsu.ip;
+        rsuEndpoint[PORT_KEY] = config.rsu.port;
 
         // Create SNMP config object
         Json::Value snmpConfig;
-        snmpConfig["User"] = config.snmp.userKey;
-        snmpConfig["PrivacyProtocol"] = config.snmp.privProtocol;
-        snmpConfig["AuthProtocol"] = config.snmp.authProtocolKey;
-        snmpConfig["AuthPassPhrase"] = config.snmp.authPassPhraseKey;
-        snmpConfig["PrivacyPassPhrase"] = config.snmp.privPassPhrase;
-        snmpConfig["RSUMIBVersion"] = config.snmp.rsuMIBVersionKey;
-        snmpConfig["SecurityLevel"] = config.snmp.securityLevelKey;
+        snmpConfig[USER_KEY] = config.snmp.userKey;
+        snmpConfig[PRIVACY_PROTOCOL_KEY] = config.snmp.privProtocol;
+        snmpConfig[AUTH_PROTOCOL_KEY] = config.snmp.authProtocolKey;
+        snmpConfig[AUTH_PASS_PHRASE_KEY] = config.snmp.authPassPhraseKey;
+        snmpConfig[PRIVACY_PASS_PHRASE_KEY] = config.snmp.privPassPhrase;
+        snmpConfig[RSU_MIB_VERSION_KEY] = config.snmp.rsuMIBVersionKey;
+        snmpConfig[SECURITY_LEVEL_KEY] = config.snmp.securityLevelKey;
 
         // Add nested objects to main json
-        json["rsu"] = rsuEndpoint;
-        json["snmp"] = snmpConfig;
+        json[RSU_KEY] = rsuEndpoint;
+        json[SNMP_KEY] = snmpConfig;
 
         return json;
     }
@@ -118,35 +118,35 @@ namespace TelematicBridge
     bool jsonValueToRsuConfig(const Json::Value& json, rsuConfig& config) {
         try {
             // Validate top-level structure
-            if (!json.isMember("rsu") || !json["rsu"].isObject()) {
+            if (!json.isMember(RSU_KEY) || !json[RSU_KEY].isObject()) {
                 PLOG(logERROR) << "Missing or invalid 'rsu' Endpoint object";
                 return false;
             }
 
-            if (!json.isMember("snmp") || !json["snmp"].isObject()) {
+            if (!json.isMember(SNMP_KEY) || !json[SNMP_KEY].isObject()) {
                 PLOG(logERROR) << "Missing or invalid rsu 'snmp' object";
                 return false;
             }
 
-            Json::Value rsuEndpoint = json["rsu"];
-            Json::Value snmpConfig = json["snmp"];
+            Json::Value rsuEndpoint = json[RSU_KEY];
+            Json::Value snmpConfig = json[SNMP_KEY];
 
             // Extract RSU fields
-            config.rsu.ip = rsuEndpoint["IP"].asString();
-            config.rsu.port = rsuEndpoint.get("Port", 8080).asInt();
+            config.rsu.ip = rsuEndpoint[IP_KEY].asString();
+            config.rsu.port = rsuEndpoint.get(PORT_KEY, 8080).asInt();
 
 
             // Extract SNMP fields
-            config.snmp.userKey = snmpConfig["User"].asString();
-            config.snmp.privProtocol = snmpConfig["PrivacyProtocol"].asString();
-            config.snmp.authProtocolKey = snmpConfig["AuthProtocol"].asString();
-            config.snmp.authPassPhraseKey = snmpConfig["AuthPassPhrase"].asString();
-            config.snmp.privPassPhrase = snmpConfig["PrivacyPassPhrase"].asString();
-            config.snmp.rsuMIBVersionKey = snmpConfig["RSUMIBVersion"].asString();
-            config.snmp.securityLevelKey = snmpConfig["SecurityLevel"].asString();
+            config.snmp.userKey = snmpConfig[USER_KEY].asString();
+            config.snmp.privProtocol = snmpConfig[PRIVACY_PROTOCOL_KEY].asString();
+            config.snmp.authProtocolKey = snmpConfig[AUTH_PROTOCOL_KEY].asString();
+            config.snmp.authPassPhraseKey = snmpConfig[AUTH_PASS_PHRASE_KEY].asString();
+            config.snmp.privPassPhrase = snmpConfig[PRIVACY_PASS_PHRASE_KEY].asString();
+            config.snmp.rsuMIBVersionKey = snmpConfig[RSU_MIB_VERSION_KEY].asString();
+            config.snmp.securityLevelKey = snmpConfig[SECURITY_LEVEL_KEY].asString();
 
-            config.event = json.get("event", "").asString();
-            config.action = json.get("action","").asString();
+            config.event = json.get(EVENT_KEY, "").asString();
+            config.action = json.get(ACTION_KEY,"").asString();
 
             return true;
 
@@ -196,8 +196,10 @@ namespace TelematicBridge
                 return false;
             }
 
-            if (root.isMember("RSUConfigs") && root["RSUConfigs"].isArray()) {
-                return rsuConfigMessageToVector(root["RSUConfigs"], rsuConfigList);
+            auto rootLowerCase = convertKeysToLowerCase(root);
+
+            if (rootLowerCase.isMember("rsuconfigs") && rootLowerCase["rsuconfigs"].isArray()) {
+                return rsuConfigMessageToVector(rootLowerCase["rsuconfigs"], rsuConfigList);
             }
         } catch (...)
         {
@@ -214,6 +216,36 @@ namespace TelematicBridge
             jsonArray.append(rsuConfigToJsonValue(config));
         }
         return jsonArray;
+    }
+
+    std::string toLower(std::string s) {
+    std::string lower_s = s;
+    std::transform(lower_s.begin(), lower_s.end(), lower_s.begin(),
+                   [](unsigned char c){ return std::tolower(c); });
+    return lower_s;
+    }
+
+    // Recursive function to convert all keys in a Json::Value to lowercase
+    Json::Value convertKeysToLowerCase(const Json::Value& input) {
+        Json::Value output;
+
+        if (input.isObject()) {
+            for (Json::ValueConstIterator it = input.begin(); it != input.end(); ++it) {
+                std::string originalKey = it.name();
+                std::string lowerKey = toLower(originalKey);
+                // Recursively process nested values
+                output[lowerKey] = convertKeysToLowerCase(*it);
+            }
+        } else if (input.isArray()) {
+            // If it's an array, iterate through elements and recursively process them
+            for (const auto& item : input) {
+                output.append(convertKeysToLowerCase(item));
+            }
+        } else {
+            // For primitive types (string, int, bool, etc.), just copy the value
+            output = input;
+        }
+        return output;
     }
 
 

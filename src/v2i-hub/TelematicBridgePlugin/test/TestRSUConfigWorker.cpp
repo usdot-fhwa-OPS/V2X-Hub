@@ -36,24 +36,24 @@ namespace TelematicBridge
         Json::Value createValidRSUConfigJson(const string& ip = "192.168.1.10", const string& port = "161")
         {
             Json::Value config;
-            config["action"] = "add";
-            config["event"] = "startup";
-            config["rsu"]["IP"] = ip;
-            config["rsu"]["Port"] = std::stoi(port);
-            config["snmp"]["User"] = "admin";
-            config["snmp"]["PrivacyProtocol"] = "AES";
-            config["snmp"]["AuthProtocol"] = "SHA";
-            config["snmp"]["AuthPassPhrase"] = "pass123";
-            config["snmp"]["PrivacyPassPhrase"] = "priv123";
-            config["snmp"]["RSUMIBVersion"] = "4.1";
-            config["snmp"]["SecurityLevel"] = "authPriv";
+            config[ACTION_KEY] = "add";
+            config[EVENT_KEY] = "startup";
+            config[RSU_KEY][IP_KEY] = ip;
+            config[RSU_KEY][PORT_KEY] = std::stoi(port);
+            config[SNMP_KEY][USER_KEY] = "admin";
+            config[SNMP_KEY][PRIVACY_PROTOCOL_KEY] = "AES";
+            config[SNMP_KEY][AUTH_PROTOCOL_KEY] = "SHA";
+            config[SNMP_KEY][AUTH_PASS_PHRASE_KEY] = "pass123";
+            config[SNMP_KEY][PRIVACY_PASS_PHRASE_KEY] = "priv123";
+            config[SNMP_KEY][RSU_MIB_VERSION_KEY] = "4.1";
+            config[SNMP_KEY][SECURITY_LEVEL_KEY] = "authPriv";
             return config;
         }
 
         string getValidRSUConfigFileContent()
         {
             return R"({
-                "RSUConfigs": [
+                "rsuConfigs": [
                     {
                         "action": "add",
                         "event": "startup",
@@ -114,8 +114,8 @@ namespace TelematicBridge
         ASSERT_TRUE(rsuList.empty());
 
         Json::Value rsuConfigJson2;
-        rsuConfigJson2["rsu"]["IP"] = "192.168.1.10";
-        rsuConfigJson2["rsu"]["Port"] = 161;
+        rsuConfigJson2[RSU_KEY][IP_KEY] = "192.168.1.10";
+        rsuConfigJson2[RSU_KEY][PORT_KEY] = 161;
         result = processRSUConfig(rsuConfigJson2, maxConnections, rsuList);
         ASSERT_FALSE(result);
         ASSERT_TRUE(rsuList.empty());
@@ -138,29 +138,29 @@ namespace TelematicBridge
 
         Json::Value result = rsuConfigToJsonValue(config);
 
-        ASSERT_EQ(result["action"].asString(), "add");
-        ASSERT_EQ(result["event"].asString(), "startup");
-        ASSERT_EQ(result["rsu"]["IP"].asString(), "192.168.1.10");
-        ASSERT_EQ(result["rsu"]["Port"].asString(), "161");
-        ASSERT_EQ(result["snmp"]["User"].asString(), "admin");
-        ASSERT_EQ(result["snmp"]["PrivacyProtocol"].asString(), "AES");
-        ASSERT_EQ(result["snmp"]["AuthProtocol"].asString(), "SHA");
+        ASSERT_EQ(result[ACTION_KEY].asString(), "add");
+        ASSERT_EQ(result[EVENT_KEY].asString(), "startup");
+        ASSERT_EQ(result[RSU_KEY][IP_KEY].asString(), "192.168.1.10");
+        ASSERT_EQ(result[RSU_KEY][PORT_KEY].asString(), "161");
+        ASSERT_EQ(result[SNMP_KEY][USER_KEY].asString(), "admin");
+        ASSERT_EQ(result[SNMP_KEY][PRIVACY_PROTOCOL_KEY].asString(), "AES");
+        ASSERT_EQ(result[SNMP_KEY][AUTH_PROTOCOL_KEY].asString(), "SHA");
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigSuccess)
     {
         Json::Value json;
-        json["action"] = "add";
-        json["event"] = "startup";
-        json["rsu"]["IP"] = "192.168.1.10";
-        json["rsu"]["Port"] = 161;
-        json["snmp"]["User"] = "admin";
-        json["snmp"]["PrivacyProtocol"] = "AES";
-        json["snmp"]["AuthProtocol"] = "SHA";
-        json["snmp"]["AuthPassPhrase"] = "pass123";
-        json["snmp"]["PrivacyPassPhrase"] = "priv123";
-        json["snmp"]["RSUMIBVersion"] = "4.1";
-        json["snmp"]["SecurityLevel"] = "authPriv";
+        json[ACTION_KEY] = "add";
+        json[EVENT_KEY] = "startup";
+        json[RSU_KEY][IP_KEY] = "192.168.1.10";
+        json[RSU_KEY][PORT_KEY] = 161;
+        json[SNMP_KEY][USER_KEY] = "admin";
+        json[SNMP_KEY][PRIVACY_PROTOCOL_KEY] = "AES";
+        json[SNMP_KEY][AUTH_PROTOCOL_KEY] = "SHA";
+        json[SNMP_KEY][AUTH_PASS_PHRASE_KEY] = "pass123";
+        json[SNMP_KEY][PRIVACY_PASS_PHRASE_KEY] = "priv123";
+        json[SNMP_KEY][RSU_MIB_VERSION_KEY] = "4.1";
+        json[SNMP_KEY][SECURITY_LEVEL_KEY] = "authPriv";
 
         rsuConfig config;
         bool result = jsonValueToRsuConfig(json, config);
@@ -173,9 +173,9 @@ namespace TelematicBridge
         ASSERT_EQ(config.snmp.userKey, "admin");
 
         Json::Value json2;
-        json2["action"] = "add";
-        json2["event"] = "startup";
-        json2["snmp"]["User"] = "admin";
+        json2[ACTION_KEY] = "add";
+        json2[EVENT_KEY] = "startup";
+        json2[SNMP_KEY][USER_KEY] = "admin";
         rsuConfig config2;
         result = jsonValueToRsuConfig(json2, config2);
         ASSERT_FALSE(result);
@@ -186,21 +186,21 @@ namespace TelematicBridge
         Json::Value jsonArray(Json::arrayValue);
 
         Json::Value config1;
-        config1["action"] = "add";
-        config1["event"] = "startup";
-        config1["rsu"]["IP"] = "192.168.1.10";
-        config1["rsu"]["Port"] = 161;
-        config1["snmp"]["User"] = "admin1";
-        config1["snmp"]["PrivacyProtocol"] = "AES";
-        config1["snmp"]["AuthProtocol"] = "SHA";
-        config1["snmp"]["AuthPassPhrase"] = "pass1";
-        config1["snmp"]["PrivacyPassPhrase"] = "priv1";
-        config1["snmp"]["RSUMIBVersion"] = "4.1";
-        config1["snmp"]["SecurityLevel"] = "authPriv";
+        config1[ACTION_KEY] = "add";
+        config1[EVENT_KEY] = "startup";
+        config1[RSU_KEY][IP_KEY] = "192.168.1.10";
+        config1[RSU_KEY][PORT_KEY] = 161;
+        config1[SNMP_KEY][USER_KEY] = "admin1";
+        config1[SNMP_KEY][PRIVACY_PROTOCOL_KEY] = "AES";
+        config1[SNMP_KEY][AUTH_PROTOCOL_KEY] = "SHA";
+        config1[SNMP_KEY][AUTH_PASS_PHRASE_KEY] = "pass1";
+        config1[SNMP_KEY][PRIVACY_PASS_PHRASE_KEY] = "priv1";
+        config1[SNMP_KEY][RSU_MIB_VERSION_KEY] = "4.1";
+        config1[SNMP_KEY][SECURITY_LEVEL_KEY] = "authPriv";
         jsonArray.append(config1);
 
         Json::Value config2(config1);
-        config2["rsu"]["IP"] = "192.168.1.11";
+        config2[RSU_KEY][IP_KEY] = "192.168.1.11";
         jsonArray.append(config2);
 
         vector<rsuConfig> rsuList;
@@ -233,8 +233,8 @@ namespace TelematicBridge
 
         ASSERT_TRUE(result.isArray());
         ASSERT_EQ(result.size(), 1);
-        ASSERT_EQ(result[0]["rsu"]["IP"].asString(), "192.168.1.10");
-        ASSERT_EQ(result[0]["action"].asString(), "add");
+        ASSERT_EQ(result[0][RSU_KEY][IP_KEY].asString(), "192.168.1.10");
+        ASSERT_EQ(result[0][ACTION_KEY].asString(), "add");
     }
 
     TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileInvalidJSON)

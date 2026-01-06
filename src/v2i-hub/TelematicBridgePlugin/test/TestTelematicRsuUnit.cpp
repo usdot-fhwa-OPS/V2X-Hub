@@ -64,7 +64,7 @@ namespace TelematicBridge
 
         // Verify top-level structure
         ASSERT_TRUE(root.isMember("unit"));
-        ASSERT_TRUE(root.isMember("rsuConfigs"));
+        ASSERT_TRUE(root.isMember("rsuconfigs"));
         ASSERT_TRUE(root.isMember("timestamp"));
     }
 
@@ -82,11 +82,11 @@ namespace TelematicBridge
 
         // Verify unit object structure
         ASSERT_TRUE(root["unit"].isObject());
-        ASSERT_TRUE(root["unit"].isMember("unitId"));
-        ASSERT_TRUE(root["unit"].isMember("maxConnections"));
-        ASSERT_TRUE(root["unit"].isMember("bridgePluginHeartbeatInterval"));
-        ASSERT_TRUE(root["unit"].isMember("healthMonitorPluginHeartbeatInterval"));
-        ASSERT_TRUE(root["unit"].isMember("rsuStatusMonitorInterval"));
+        ASSERT_TRUE(root["unit"].isMember("unitid"));
+        ASSERT_TRUE(root["unit"].isMember("maxconnections"));
+        ASSERT_TRUE(root["unit"].isMember("bridgepluginheartbeatinterval"));
+        ASSERT_TRUE(root["unit"].isMember("healthmonitorpluginheartbeatinterval"));
+        ASSERT_TRUE(root["unit"].isMember("rsustatusmonitorinterval"));
     }
 
     TEST_F(TestTelematicRsuUnit, TestConstructRSURegistrationDataStringThreadSafety)
@@ -134,7 +134,7 @@ namespace TelematicBridge
         Json::parseFromStream(builder, jsonStream, &root, &errs);
 
         // Check all required top-level keys
-        vector<string> requiredTopKeys = {"unit", "rsuConfigs", "timestamp"};
+        vector<string> requiredTopKeys = {"unit", "rsuconfigs", "timestamp"};
         for (const auto& key : requiredTopKeys)
         {
             ASSERT_TRUE(root.isMember(key));
@@ -142,11 +142,11 @@ namespace TelematicBridge
 
         // Check all required unit keys
         vector<string> requiredUnitKeys = {
-            "unitId",
-            "maxConnections",
-            "bridgePluginHeartbeatInterval",
-            "healthMonitorPluginHeartbeatInterval",
-            "rsuStatusMonitorInterval"
+            "unitid",
+            "maxconnections",
+            "bridgepluginheartbeatinterval",
+            "healthmonitorpluginheartbeatinterval",
+            "rsustatusmonitorinterval"
         };
         for (const auto& key : requiredUnitKeys)
         {
