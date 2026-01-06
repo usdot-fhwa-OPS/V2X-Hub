@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+cd "$ROOT_DIR"
+
+PROJECT="v2xhub_it"
+BASE_COMPOSE="configuration/docker-compose.yml"
+OVERRIDE_COMPOSE="tests/integration/env/docker-compose.it.override.yml"
+ENV_FILE="configuration/.env"
+
+dc() {
+  docker compose -p "$PROJECT" \
+    -f "$BASE_COMPOSE" \
+    -f "$OVERRIDE_COMPOSE" \
+    --env-file "$ENV_FILE" "$@"
+}
+
+PLUGINS="${V2XHUB_IT_PLUGINS:-}"
+if [[ -z "$PLUGINS" || "$PLUGINS" == "ALL" ]]; then
+  echo "[seed] V2XHUB_IT_PLUGINS is empty or ALL -> skipping plugin selection"
+  exit 0
+fi
+
+read_env() {
+  local key="$1"
+  local val
+  val="$(grep -E "^${key}=" "$ENV_FILE" | head -n1 | cut -d= -f2- | tr -d '\r')"
+  val="${val%\"}"; val="${val#\"}"
+  val="${val%\'}"; val="${val#\'}"
+  echo "$val"
+}
+
+MYSQL_DATABASE="$(read_env MYSQL_DATABASE)"; MYSQL_DATABASE="${MYSQL_DATABASE:-IVP}"
+MYSQL_USER="$(read_env MYSQL_USER)"; MYSQL_USER="${MYSQL_USER:-IVP}"
+MYSQL_PASSWORD="$(read_env MYSQL_PASSWORD)"
+
+if [[ -z "$MYSQL_PASSWORD" ]]; then
+  echo "[seed] ERROR: MYSQL_PASSWORD is empty in $ENV_FILE"
+  exit 1
+fi
+
+mysql_exec() {
+  local sql="$1"
+  dc exec -T -e MYSQL_PWD="$MYSQL_PASSWORD" db \
+    mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -e "$sql"
+}
+
+mysql_scalar() {
+  local sql="$1"
+  dc exec -T -e MYSQL_PWD="$MYSQL_PASSWORD" db \
+    mysql -u"$MYSQL_USER" "$MYSQL_DATABASE" -N -B -e "$sql" 2>/dev/null | tr -d '\r' || true
+}
+
+echo "[seed] Waiting for DB..."
+for _ in {1..120}; do
+  if mysql_exec "SELECT 1;" >/dev/null 2>&1; then
+    break
+  fi
+  sleep 1
+done
+
+echo "[seed] Waiting for plugin table to be populated..."
+for _ in {1..180}; do
+  c="$(mysql_scalar "SELECT COUNT(*) FROM plugin;")"
+  [[ "${c:-0}" =~ ^[0-9]+$ ]] && [[ "${c:-0}" -gt 0 ]] && break
+  sleep 1
+done
+
+echo "[seed] Waiting for installedPlugin table to be populated..."
+for _ in {1..180}; do
+  c="$(mysql_scalar "SELECT COUNT(*) FROM installedPlugin;")"
+  [[ "${c:-0}" =~ ^[0-9]+$ ]] && [[ "${c:-0}" -gt 0 ]] && break
+  sleep 1
+done
+
+echo "[seed] Disabling all plugins..."
+mysql_exec "UPDATE installedPlugin SET enabled=0;"
+
+echo "[seed] Enabling only: $PLUGINS"
+IFS=',' read -ra ARR <<< "$PLUGINS"
+for tok in "${ARR[@]}"; do
+  tok="$(echo "$tok" | xargs)"
+  [[ -z "$tok" ]] && continue
+  mysql_exec "
+    UPDATE installedPlugin ip
+    JOIN plugin p ON p.id = ip.pluginId
+    SET ip.enabled=1
+    WHERE LOWER(p.name) LIKE LOWER('%${tok}%');
+  "
+done
+
+echo "[seed] Enabled plugins now:"
+mysql_exec "
+  SELECT p.name, ip.enabled
+  FROM installedPlugin ip
+  JOIN plugin p ON p.id = ip.pluginId
+  WHERE ip.enabled=1
+  ORDER BY p.name;
+"
+
+echo "[seed] Restarting v2xhub to apply enabled set..."
+dc restart v2xhub >/dev/null
+
+echo "[seed] Done"

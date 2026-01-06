@@ -1,0 +1,54 @@
+# tests/integration/env/docker-compose.it.override.yml
+#
+# Integration-test override for V2X-Hub deployment compose.
+# - Keeps configuration/docker-compose.yml as the source of truth
+# - Adds OPTIONAL runtime deps via profiles (start only when requested)
+
+services:
+  php:
+    command: >
+      bash -lc '
+        echo "[php] waiting for SSL certs...";
+        while [ ! -s /etc/apache2/ssl/cert.pem ] || [ ! -s /etc/apache2/ssl/cert-key.pem ]; do
+          sleep 1;
+        done
+        echo "[php] certs found, starting apache";
+
+        # Load apache env vars (this defines APACHE_RUN_DIR, etc.)
+        if [ -f /etc/apache2/envvars ]; then
+          . /etc/apache2/envvars
+        fi
+
+        # Make sure run dirs exist
+        mkdir -p "${APACHE_RUN_DIR:-/var/run/apache2}" /var/lock/apache2
+
+        # Start apache the normal way
+        if command -v apache2-foreground >/dev/null 2>&1; then
+          exec apache2-foreground
+        else
+          exec apache2 -D FOREGROUND
+        fi
+      '
+
+  # ------------------------------------------------------------
+  # Optional runtime dependencies (start only if profile enabled)
+  # ------------------------------------------------------------
+
+  # Example: Kafka for simulation mode (only starts when profile "kafka" is enabled)
+  kafka:
+    image: bitnami/kafka:latest
+    profiles: ["kafka"]
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+  # Example: Debug container (only starts when profile "debug" is enabled)
+  netshoot:
+    image: nicolaka/netshoot:latest
+    profiles: ["debug"]
+    command: ["sleep", "infinity"]
