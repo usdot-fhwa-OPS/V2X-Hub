@@ -2,20 +2,20 @@
 #include <tmx/messages/message.hpp>
 
 namespace tmx::messages{
-    struct TelematicUnit
+    struct TelematicRSUUnit
     {
-        TelematicUnit(): unitId("Unit001"){}
+        TelematicRSUUnit() {}
 
-        TelematicUnit(std::string unitId, int16_t maxConnections):
+        TelematicRSUUnit(std::string unitId, int16_t maxConnections):
             unitId(unitId), maxConnections(maxConnections), bridgePluginHeartbeatInterval(10),
             healthMonitorPluginHeartbeatInterval(10), rsuStatusMonitorInterval(10) {}
 
-        TelematicUnit (std::string unitId, int16_t maxConnections, int16_t pluginHeartbeatInterval,
+        TelematicRSUUnit (std::string unitId, int16_t maxConnections, int16_t pluginHeartbeatInterval,
                 int16_t healthMonitorInterval, int16_t rsuStatusInterval): unitId(unitId), maxConnections(maxConnections),
                 bridgePluginHeartbeatInterval(pluginHeartbeatInterval), healthMonitorPluginHeartbeatInterval(healthMonitorInterval),
                 rsuStatusMonitorInterval(rsuStatusInterval) {}
 
-        static message_tree_type to_tree(const TelematicUnit& unit)
+        static message_tree_type to_tree(const TelematicRSUUnit& unit)
         {
             message_tree_type tree;
             tree.put("unitId",unit.unitId);
@@ -27,9 +27,9 @@ namespace tmx::messages{
             return tree;
         }
 
-        static TelematicUnit from_tree(const message_tree_type& tree)
+        static TelematicRSUUnit from_tree(const message_tree_type& tree)
         {
-            TelematicUnit unit;
+            TelematicRSUUnit unit;
             unit.unitId = tree.get<std::string>("unitId");
             unit.maxConnections = tree.get<int16_t>("maxConnections");
             unit.bridgePluginHeartbeatInterval = tree.get<int16_t>("bridgePluginHeartbeatInterval");

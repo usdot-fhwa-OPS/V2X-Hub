@@ -43,6 +43,7 @@ namespace TelematicBridge
             tmx::messages::RSURegistrationConfigMessage rsuRegistrationConfigMsg;
             msg.set_contents(json_str);
         } catch (const std::exception& e){
+            FILE_LOG(tmx::utils::LogLevel::logDEBUG2) << "Failed to set RSURegistrationConfigMessag with error" << e.what();
             return false;
         }
         return true;

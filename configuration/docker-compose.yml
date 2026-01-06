@@ -1,29 +1,4 @@
 services:
-  db:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      - MYSQL_DATABASE=IVP
-      - MYSQL_USER=IVP
-      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    network_mode: host
-    secrets:
-      - mysql_password
-    volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-      # The following 5 files are used for CDA1Tenth. By default the standard "port_drayage.sql" file
-      # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following
-      # three files to enable the CDA1Tenth sql files to be loaded.
-      #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
-      - mysql-datavolume:/var/lib/mysql
 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
@@ -66,12 +41,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ssl-certs-volume:/var/www/plugins/ssl:rw
-secrets:
-    mysql_password:
-        environment: MYSQL_PASSWORD
 
 volumes:
-  mysql-datavolume:
   ssl-certs-volume:
     # To access/set SSL certifications on host machine setup local mapping to ssl directory.
     # NOTE: Ensure directory exists and has non-root privileges before running

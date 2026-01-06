@@ -3,7 +3,7 @@
 
 #include <tmx/messages/message.hpp>
 #include "MessageTypes.h"
-#include "TelematicUnit.h"
+#include "TelematicRSUUnit.h"
 #include "RSUConfigList.h"
 
 
@@ -24,7 +24,7 @@ class RSURegistrationConfigMessage : public tmx::message
 		static constexpr const char* MessageSubType = MSGSUBTYPE_RSU_REGISTRATION_CONFIG_STRING;
 
 		//Telematic unit identifier
-		object_attribute(TelematicUnit, unit);
+		object_attribute(TelematicRSUUnit, unit);
 
 		//List of Registered RSUs
 		object_attribute(RSUConfigList, rsuConfigs);

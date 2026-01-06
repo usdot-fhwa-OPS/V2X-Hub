@@ -5,7 +5,7 @@ namespace tmx::messages{
     class RSURegistrationConfigMessageTest : public testing::Test{
         protected:
             std::shared_ptr<RSURegistrationConfigMessage> tmxRSURegistrationConfigPtr;
-            std::shared_ptr<TelematicUnit> tmxTelematicUnitPtr;
+            std::shared_ptr<TelematicRSUUnit> tmxTelematicRSUUnitPtr;
 
             RSURegistrationConfigMessageTest(){
                 tmxRSURegistrationConfigPtr = std::make_shared<RSURegistrationConfigMessage>();
@@ -14,8 +14,8 @@ namespace tmx::messages{
 
             void SetUp() override {
                 //Set Telematic Unit members
-                TelematicUnit telematicUnit("Unit007", 10, 10, 10, 10);
-                tmxRSURegistrationConfigPtr->set_unit(telematicUnit);
+                TelematicRSUUnit TelematicRSUUnit("Unit007", 10, 10, 10, 10);
+                tmxRSURegistrationConfigPtr->set_unit(TelematicRSUUnit);
 
                 std::string action = "add";
                 RSUConfig rsuConfig1("add", "new",
@@ -60,7 +60,7 @@ namespace tmx::messages{
     }
 
     TEST_F(RSURegistrationConfigMessageTest, getters) {
-        TelematicUnit unit = tmxRSURegistrationConfigPtr->get_unit();
+        TelematicRSUUnit unit = tmxRSURegistrationConfigPtr->get_unit();
         EXPECT_EQ(unit.unitId, "Unit007");
         EXPECT_EQ(unit.maxConnections, 10);
         EXPECT_EQ(unit.bridgePluginHeartbeatInterval, 10);

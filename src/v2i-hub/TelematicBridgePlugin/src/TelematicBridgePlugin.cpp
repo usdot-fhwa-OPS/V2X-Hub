@@ -62,10 +62,12 @@ namespace TelematicBridge
             stringstream topic;
             topic << (routeMsg.get_type()) << "_" << (routeMsg.get_subtype()) << "_" << (routeMsg.get_source());
             auto topicStr = topic.str();
-            _telematicUnitPtr->updateAvailableTopics(topicStr);
-            if (_telematicUnitPtr->inSelectedTopics(topicStr))
-            {
-                _telematicUnitPtr->publishMessage(topicStr, json);
+            if (_telematicUnitPtr){
+                _telematicUnitPtr->updateAvailableTopics(topicStr);
+                if (_telematicUnitPtr->inSelectedTopics(topicStr))
+                {
+                    _telematicUnitPtr->publishMessage(topicStr, json);
+                }
             }
         }
 

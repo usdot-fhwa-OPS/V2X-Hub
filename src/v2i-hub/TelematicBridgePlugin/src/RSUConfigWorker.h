@@ -8,19 +8,19 @@ namespace TelematicBridge
 {
     struct snmpConfig
     {
-        std::string privProtocol = "PrivacyProtocol";
-        std::string securityLevelKey="SecurityLevel";
-        std::string authProtocolKey="AuthProtocol";
-        std::string authPassPhraseKey="AuthPassPhrase";
-        std::string userKey="User";
-        std::string privPassPhrase="PrivacyPassPhrase";
-        std::string rsuMIBVersionKey="RSUMIBVersion";
+        std::string privProtocol;
+        std::string securityLevelKey;
+        std::string authProtocolKey;
+        std::string authPassPhraseKey;
+        std::string userKey;
+        std::string privPassPhrase;
+        std::string rsuMIBVersionKey;
     };
 
     struct rsuEndpoint
     {
-        std::string ip="127.0.0.1";
-        int port=8080;
+        std::string ip;
+        int port;
     };
 
     struct rsuConfig

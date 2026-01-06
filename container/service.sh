@@ -9,22 +9,13 @@ for plugin in /usr/local/plugins/*.zip; do
 done
 # Generate self-signed certificates if they do not already exist
 /home/V2X-Hub/container/generate_certificates.sh
-# command plugin must always be enabled
-tmxctl --plugin CommandPlugin --enable
+
 # Enable required plugins for TelematicRSU Unit
-if [ "${IS_TRU^^}" = "TRUE" ]
-then
-    echo "Enabling MessageReceiver RSUHealthMonitor TelematicsBridgePlugin for RSU data streaming!"
-    tmxctl --plugin MessageReceiver --enable
-    tmxctl --plugin RSUHealthMonitor --enable
-    tmxctl --plugin TelematicsBridgePlugin --enable
-fi
-# If in simulation mode, enable SimulationAdapter
-if [ "${SIMULATION_MODE^^}" = "TRUE" ]
-then
-    echo "Enabling CDASim Adapter for Simulation Integration!"
-    tmxctl --plugin CDASimAdapter --enable
-fi
+echo "Enabling MessageReceiver RSUHealthMonitor TelematicsBridgePlugin for RSU data streaming!"
+tmxctl --plugin MessageReceiver --enable
+tmxctl --plugin RSUHealthMonitor --enable
+tmxctl --plugin TelematicsBridgePlugin --enable
+
 # If V2XHUB_USER and V2XHUB_PASSWORD are set, create the user
 if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
     echo "Creating V2X Hub Admin User: $V2XHUB_USERNAME"
