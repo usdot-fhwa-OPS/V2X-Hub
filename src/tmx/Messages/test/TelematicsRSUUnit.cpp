@@ -57,6 +57,13 @@ namespace tmx::messages{
         EXPECT_EQ(tree.get<int64_t>("timestamp"),1234567890000);
 
         std::cout << "JSON Output:\n" << jsonStr << std::endl;
+
+        // Test setting content for message
+        std::shared_ptr<RSURegistrationConfigMessage> tmxRSURegistrationConfigPtr2 = std::make_shared<RSURegistrationConfigMessage>();
+        tmxRSURegistrationConfigPtr2->set_contents(jsonStr);
+        std::string jsonStr2 = tmxRSURegistrationConfigPtr2->to_string();
+
+        EXPECT_EQ(jsonStr, jsonStr2);
     }
 
     TEST_F(RSURegistrationConfigMessageTest, getters) {
