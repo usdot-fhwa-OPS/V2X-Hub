@@ -34,7 +34,7 @@ services:
   # Optional runtime dependencies (start only if profile enabled)
   # ------------------------------------------------------------
 
-  # Example: Kafka for simulation mode (only starts when profile "kafka" is enabled)
+  # Example: Kafka only starts when profile "kafka" is enabled)
   kafka:
     image: bitnami/kafka:latest
     profiles: ["kafka"]
@@ -46,9 +46,3 @@ services:
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - ALLOW_PLAINTEXT_LISTENER=yes
-
-  # Example: Debug container (only starts when profile "debug" is enabled)
-  netshoot:
-    image: nicolaka/netshoot:latest
-    profiles: ["debug"]
-    command: ["sleep", "infinity"]

@@ -1,10 +1,12 @@
 # V2X-Hub Integration Test Environment
 
 This folder provides a repeatable **integration test environment** for V2X-Hub using Docker Compose.
-It is meant to be used both:
+
+It is meant to be used:
 - locally (developer machine)
 - in CI later
-- environment only (start/stop + optional plugin selection).
+- environment only (start/stop + optional plugin selection)
+
 ---
 
 ## What this gives you
@@ -12,59 +14,58 @@ It is meant to be used both:
 - One command to start the V2X-Hub stack for integration testing
 - One command to stop/cleanup the stack
 - Enable selected plugins (ex: MAP + SPAT) via a separate script.
-- Optional extra containers using V2XHUB_IT_PROFILES
-- log viewing helpers
+- Optional extra containers using Compose profiles (example: kafka). They’re usually runtime dependency containers that V2X-Hub might need for certain plugin test cases.
 
 ---
 
 ## Files
 
-### `env/run_v2xhub_integration.sh`
+### `env/.env.it`
+Dedicated env file for integration testing. This file is used by:
+- the run/stop/plugin-selection scripts (via `source`)
+- `docker compose` (via `--env-file`)
+
+Key settings:
+- `V2XHUB_IT_PLUGINS=MAP,SPAT` → enable only these plugins (optional)
+- `COMPOSE_PROFILES=kafka` → start optional profile services (optional)
+
+### `env/run.sh`
 Starts the integration stack using:
 - `configuration/docker-compose.yml` (base)
 - `tests/integration/env/docker-compose.it.override.yml` (integration override)
 
 Then:
-- Waits until UI is reachable (https://127.0.0.1/admin/admin.html)
-- runs `apply_integration_seed.sh` if present (plugin selection)
-Inputs (env vars):
-- V2XHUB_IT_PLUGINS="MAP,SPAT" → enable only these plugins (optional)
-- V2XHUB_IT_PROFILES="debug" → start optional profile services (optional)
+- waits until UI is reachable: `https://127.0.0.1/admin/admin.html`
+- runs `plugin_selection.sh` if present (to enable only requested plugins)
 
-### `env/stop_v2xhub_integration.sh`
+### `env/stop.sh`
 Stops containers and removes volumes for a clean slate.
 
-### `env/apply_integration_seed.sh`
+### `env/plugin_selection.sh`
 Optional seed step to enable only requested plugins.
-Controlled by:
-- `V2XHUB_IT_PLUGINS="MAP,SPAT"`
 
 Behavior:
-- Waits for DB tables to exist/populate
-- Disables all plugins
-- Enables only the requested plugin names
-- Restarts v2xhub so the enabled set is applied
-Notes:
-- Plugin names must match what exists in the DB (example: MAP, SPAT)
-- This is meant to support future automated tests where we want the environment deterministic.
+- waits for DB + plugin tables to be populated
+- verifies requested plugin tokens exist
+- disables all plugins
+- enables only requested plugins
+- restarts `v2xhub` so the enabled set is applied
 
-If empty or `ALL`, it skips.
+If `V2XHUB_IT_PLUGINS` is empty or `ALL`, it skips.
 
 ### `env/docker-compose.it.override.yml`
 Integration override file.
 Keeps base compose as source of truth and adds integration-specific tweaks.
-Also contains optional services controlled by profiles (example: debug container).
-
-### `env/logs.sh`
-Convenience script to tail logs:
-- all services, or one service only
+Also contains optional services controlled by profiles (example: kafka, debug container).
 
 ---
 
 ## Prereqs
 
 - Docker
-- Docker Compose v2 (`docker compose`)
+- Docker Compose v2
+  - Verify: `docker compose version`
+  - Recommended: v2.20+ (any v2 should work)
 - curl
 
 ---
@@ -72,11 +73,5 @@ Convenience script to tail logs:
 ## Quick start (local)
 
 ### Start the environment
-Enable MAP + SPAT for this run:
-
 ```bash
-V2XHUB_IT_PLUGINS="MAP,SPAT" ./tests/integration/env/run_v2xhub_integration.sh
-```
-### Stop + cleanup
-```bash
-./tests/integration/env/stop_v2xhub_integration.sh
+./tests/integration/env/run.sh

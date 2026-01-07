@@ -4,10 +4,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$ROOT_DIR"
 
-PROJECT="v2xhub_it"
-BASE_COMPOSE="configuration/docker-compose.yml"
-OVERRIDE_COMPOSE="tests/integration/env/docker-compose.it.override.yml"
-ENV_FILE="configuration/.env"
+IT_ENV="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env.it"
+if [[ -f "$IT_ENV" ]]; then
+  source "$IT_ENV"
+fi
 
 dc() {
   docker compose -p "$PROJECT" \
@@ -72,6 +72,26 @@ for _ in {1..180}; do
   c="$(mysql_scalar "SELECT COUNT(*) FROM installedPlugin;")"
   [[ "${c:-0}" =~ ^[0-9]+$ ]] && [[ "${c:-0}" -gt 0 ]] && break
   sleep 1
+done
+
+echo "[seed] Checking requested plugins exist..."
+IFS=',' read -ra ARR <<< "$PLUGINS"
+for tok in "${ARR[@]}"; do
+  tok="$(echo "$tok" | xargs)"
+  [[ -z "$tok" ]] && continue
+  tok_esc="$(printf "%s" "$tok" | sed "s/'/''/g")"
+  ok="$(mysql_scalar "
+    SELECT EXISTS(
+      SELECT 1
+      FROM installedPlugin ip
+      JOIN plugin p ON p.id = ip.pluginId
+      WHERE LOWER(p.name) LIKE LOWER('%${tok_esc}%')
+    );
+  ")"
+  if [[ "${ok:-0}" != "1" ]]; then
+    echo "[seed] ERROR: plugin token not found in installedPlugin: $tok"
+    exit 1
+  fi
 done
 
 echo "[seed] Disabling all plugins..."

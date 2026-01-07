@@ -4,14 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 cd "$ROOT_DIR"
 
-PROJECT="v2xhub_it"
-BASE_COMPOSE="configuration/docker-compose.yml"
-OVERRIDE_COMPOSE="tests/integration/env/docker-compose.it.override.yml"
-ENV_FILE="configuration/.env"
+IT_ENV="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env.it"
+if [[ -f "$IT_ENV" ]]; then
+  source "$IT_ENV"
+fi
 
-# Optional compose profiles (comma-separated). Example:
-#   V2XHUB_IT_PROFILES="kafka,debug"
-export COMPOSE_PROFILES="${V2XHUB_IT_PROFILES:-}"
 
 dc() {
   docker compose -p "$PROJECT" \
@@ -45,13 +42,13 @@ if ! curl -kfsS "$READY_URL" >/dev/null 2>&1; then
 fi
 
 # Plugin selection (Step 4) — run if script exists
-SEED_SCRIPT="$ROOT_DIR/tests/integration/env/apply_integration_seed.sh"
+SEED_SCRIPT="$ROOT_DIR/tests/integration/env/plugin_selection.sh"
 echo ""
 if [[ -f "$SEED_SCRIPT" ]]; then
   echo "[integration] Applying plugin selection (V2XHUB_IT_PLUGINS=${V2XHUB_IT_PLUGINS:-<none>})"
   bash "$SEED_SCRIPT"
 else
-  echo "[integration] apply_integration_seed.sh not found (ok)"
+  echo "[integration] plugin_selection.sh not found (ok)"
 fi
 
 echo ""
