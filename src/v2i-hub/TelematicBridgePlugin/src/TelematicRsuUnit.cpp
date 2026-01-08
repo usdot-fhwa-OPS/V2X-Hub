@@ -91,22 +91,6 @@ namespace TelematicBridge
 
     }
 
-
-    void TelematicRsuUnit::publishRSURegistrationMessage(const std::string &topic)
-    {
-        // Pass current stored configuration information
-        auto jsonStr = constructRSURegistrationDataString();
-        auto s = natsConnection_PublishString(_conn, topic.c_str(), jsonStr.c_str());
-        if (s == NATS_OK)
-        {
-            PLOG(logINFO) << "Topic: " << topic << ". Published: " << jsonStr;
-        }
-        else
-        {
-            throw TelematicBridgeException(natsStatus_GetText(s));
-        }
-    }
-
     bool TelematicRsuUnit::updateRSUStatus(const Json::Value& jsonVal)
     {
         if (jsonVal.isMember(UNIT_ID_KEY) && jsonVal[UNIT_ID_KEY].isArray())
@@ -157,23 +141,24 @@ namespace TelematicBridge
             auto root = parseJson(msgStr);
 
             auto obj = (TelematicRsuUnit *)object;
-
+            bool isRegistrationSuccessful = true;
             if(!obj->updateRSUStatus(root))
             {
                 PLOG(logERROR) << "Error processing incoming RSU Config, ignoring update.";
+                isRegistrationSuccessful = false;
             }
             //Respond with the latest registration configuration information
-            auto latestRSUConfig = obj->constructRSURegistrationDataString();
+            auto latestRSUConfig = obj->constructRSURegistrationDataString(isRegistrationSuccessful);
             auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), latestRSUConfig.c_str());
             if (s == NATS_OK)
             {
-                PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
+                PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: "<< latestRSUConfig;
             }
             natsMsg_Destroy(msg);
         }
     }
 
-    std::string TelematicRsuUnit::constructRSURegistrationDataString()
+    std::string TelematicRsuUnit::constructRSURegistrationDataString(bool isRegistrationSuccessful)
     {
         lock_guard<mutex> lock(_unitMutex);
 
@@ -188,6 +173,13 @@ namespace TelematicBridge
         message[RSU_CONFIGS_KEY] = rsuConfigListToJsonArray(_truUnit.registeredRsuList);
         message[TIMESTAMP_KEY] = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
+        if(isRegistrationSuccessful){
+            message[STATUS_KEY]="success";
+        }
+        else{
+            message[STATUS_KEY]="failed";
+        }
+
 
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);

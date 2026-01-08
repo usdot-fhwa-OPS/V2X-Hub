@@ -53,6 +53,7 @@ namespace TelematicBridge
         static CONSTEXPR const char *HEALTHMONITOR_HEARTBEAT_INTERVAL_KEY = "healthmonitorpluginheartbeatinterval";
         static CONSTEXPR const char *RSU_STATUS_MONITOR_INTERVAL_KEY = "rsustatusmonitorinterval";
         static CONSTEXPR const char *RSU_CONFIGS_KEY = "rsuconfigs";
+        static CONSTEXPR const char *STATUS_KEY = "status";
 
 
     public:
@@ -96,18 +97,11 @@ namespace TelematicBridge
         bool updateRSUStatus(const Json::Value& jsonVal);
 
         /**
-         * @brief Publish the RSU registration message containing unit and RSU configurations
-         * @param topic The NATS topic to publish the registration message to
-         * @throws TelematicBridgeException if publish fails
-         */
-        void publishRSURegistrationMessage(const std::string &topic);
-
-        /**
          * @brief Construct a JSON string containing RSU registration data
          * Includes unit configuration, registered RSU list, and timestamp
          * @return std::string JSON formatted RSU registration data
         */
-        std::string constructRSURegistrationDataString();
+        std::string constructRSURegistrationDataString(bool isRegistrationSuccessful=true);
 
         /**
          * @brief NATS callback handler for RSU configuration status updates

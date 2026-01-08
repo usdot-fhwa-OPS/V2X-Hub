@@ -21,6 +21,19 @@ namespace TelematicBridge
             unsetenv("RSU_CONFIG_PATH");
         }
 
+        void createTestConfigFile(const string &path, const string &content)
+        {
+            ofstream file(path);
+            file << content;
+            file.close();
+        }
+
+        // Helper to clean up test files
+        void removeTestFile(const string &path)
+        {
+            remove(path.c_str());
+        }
+
         string getValidRSUConfigFileContent()
         {
             return R"({
@@ -180,12 +193,16 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, TestUpdateRSUStatus)
     {
+        string testPath = "/tmp/test_rsu_config_invalid.json";
+        setenv("RSU_CONFIG_PATH", testPath.c_str(),1);
+        createTestConfigFile(testPath, "{invalid json}");
         unit = make_shared<TelematicRsuUnit>();
 
         Json::Value updateMessage;
 
         // Add RSU config with all required fields
         Json::Value rsuConfig;
+        rsuConfig["unit"] = "unit";
         rsuConfig["action"] = "add";
         rsuConfig["event"] = "update";
         rsuConfig["rsu"]["IP"] = "192.168.1.20";
