@@ -23,15 +23,15 @@ namespace TelematicBridge
     class TelematicUnit
     {
     private:
-        unit_st _unit;                                                      // Global variable to store the unit information
+        unit_st _unit;                                                      // Variable to store the unit information
     protected:
         std::mutex _unitMutex;
         std::mutex _availableTopicsMutex;
         std::mutex _excludedTopicsMutex;
 
-        std::vector<std::string> _availableTopics;                                      // Global variable to store available topics
-        std::string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
-        std::vector<std::string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
+        std::vector<std::string> _availableTopics;                                      // Variable to store available topics
+        std::string _excludedTopics;                                               // Variable to store topics that are excluded by the users
+        std::vector<std::string> _selectedTopics;                                       // Variable to store selected topics confirmed by users
         static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream

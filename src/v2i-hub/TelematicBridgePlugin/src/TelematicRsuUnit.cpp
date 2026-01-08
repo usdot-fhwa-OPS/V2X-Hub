@@ -49,8 +49,8 @@ namespace TelematicBridge
             attemptsCount++;
             PLOG(logDEBUG2) << "Inside register unit requestor";
             natsMsg *reply = nullptr;
-            string payload = "{\"unit_id\":\"" + _truUnit.unit.unitId + "\"}";
-            auto s = natsConnection_RequestString(&reply, _conn, REGISTER_UNIT_TOPIC, payload.c_str(), TIME_OUT);
+            string payload = constructRSURegistrationDataString();
+            auto s = natsConnection_RequestString(&reply, _conn, REGISTERD_RSU_CONFIG, payload.c_str(), TIME_OUT);
             if (s == NATS_OK)
             {
                 auto replyStr = natsMsg_GetData(reply);
@@ -79,13 +79,10 @@ namespace TelematicBridge
 
     void TelematicRsuUnit::rsuConfigReplier()
     {
-        std::string rsuConfigTopic = _truUnit.unit.unitId + REGISTERD_RSU_CONFIG;
-        // Publish list of initially loaded RSUs to telematics RSU Management service
-        publishRSURegistrationMessage(rsuConfigTopic);
-
         // Create a subscriber to the rsu config from RSU Management service
         if (!_subRegisteredRSUStatus)
         {
+            std::string rsuConfigTopic = "unit." + _truUnit.unit.unitId + REGISTERD_RSU_CONFIG;
             PLOG(logDEBUG2) << "Inside rsu config status replier";
             stringstream topic;
             topic << rsuConfigTopic;
@@ -156,8 +153,9 @@ namespace TelematicBridge
             {
                 obj->_truUnit.timestamp = root[TIMESTAMP_KEY].asInt();
             }
-
-            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), "OK");
+            //Respond with the latest registration configuration information
+            auto latestRSUConfig = obj->constructRSURegistrationDataString();
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), latestRSUConfig.c_str());
             if (s == NATS_OK)
             {
                 PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: OK";
