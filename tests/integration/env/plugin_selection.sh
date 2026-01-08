@@ -8,13 +8,17 @@ IT_ENV="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env.it"
 if [[ -f "$IT_ENV" ]]; then
   source "$IT_ENV"
 fi
+ENV_FILE="$IT_ENV"
 
 dc() {
-  docker compose -p "$PROJECT" \
-    -f "$BASE_COMPOSE" \
-    -f "$OVERRIDE_COMPOSE" \
+  local proj_dir="$ROOT_DIR/$(dirname "$BASE_COMPOSE")"
+  docker compose --project-directory "$proj_dir" \
+    -p "$PROJECT" \
+    -f "$ROOT_DIR/$BASE_COMPOSE" \
+    -f "$ROOT_DIR/$OVERRIDE_COMPOSE" \
     --env-file "$ENV_FILE" "$@"
 }
+
 
 PLUGINS="${V2XHUB_IT_PLUGINS:-}"
 if [[ -z "$PLUGINS" || "$PLUGINS" == "ALL" ]]; then
@@ -53,12 +57,21 @@ mysql_scalar() {
 }
 
 echo "[seed] Waiting for DB..."
+ready=0
 for _ in {1..120}; do
   if mysql_exec "SELECT 1;" >/dev/null 2>&1; then
+    ready=1
     break
   fi
   sleep 1
 done
+
+if [[ "$ready" != "1" ]]; then
+  echo "[seed] ERROR: DB never became ready."
+  echo "[seed] Last mysql logs:"
+  dc logs --tail=80 db || true
+  exit 1
+fi
 
 echo "[seed] Waiting for plugin table to be populated..."
 for _ in {1..180}; do

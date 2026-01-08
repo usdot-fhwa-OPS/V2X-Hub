@@ -9,11 +9,14 @@ if [[ -f "$IT_ENV" ]]; then
   source "$IT_ENV"
 fi
 
+ENV_FILE="$IT_ENV"
 
 dc() {
-  docker compose -p "$PROJECT" \
-    -f "$BASE_COMPOSE" \
-    -f "$OVERRIDE_COMPOSE" \
+  local proj_dir="$ROOT_DIR/$(dirname "$BASE_COMPOSE")"
+  docker compose --project-directory "$proj_dir" \
+    -p "$PROJECT" \
+    -f "$ROOT_DIR/$BASE_COMPOSE" \
+    -f "$ROOT_DIR/$OVERRIDE_COMPOSE" \
     --env-file "$ENV_FILE" "$@"
 }
 
