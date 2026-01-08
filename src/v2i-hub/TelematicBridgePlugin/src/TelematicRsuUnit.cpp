@@ -107,6 +107,45 @@ namespace TelematicBridge
         }
     }
 
+    bool TelematicRsuUnit::updateRSUStatus(const Json::Value& jsonVal)
+    {
+        if (jsonVal.isMember(UNIT_ID_KEY) && jsonVal[UNIT_ID_KEY].isArray())
+            {
+
+                Json::Value unitArray = convertKeysToLowerCase(jsonVal[UNIT_ID_KEY]);
+
+                auto unitID = unitArray.get(UNIT_ID_KEY, "").asString();
+                if (unitID != _truUnit.unit.unitId)
+                {
+                    //Ignore messages not implied for this unit
+                    PLOG(logWARNING) <<  "Ignoring RSU Configuration message for unit: " << unitID << " received in unit: "<< _truUnit.unit.unitId;
+                    return false;
+                }
+            }
+
+            if (jsonVal.isMember(RSU_CONFIGS_KEY) && jsonVal[RSU_CONFIGS_KEY].isArray())
+            {
+                Json::Value rsuConfigsArray = jsonVal[RSU_CONFIGS_KEY];
+
+                PLOG(logDEBUG) << "Processing " << rsuConfigsArray.size() << " RSU configs";
+
+                // Iterate through RSUConfig and update list of RSUs registered to unit
+                for (const auto& rsuConfig : rsuConfigsArray)
+                {
+                    if(!processRSUConfig(rsuConfig, _truUnit.unit.maxConnections, _truUnit.registeredRsuList))
+                    {
+                        PLOG(logERROR) << "Error processing incoming RSU Config, ignoring.";
+                        return false;
+                    }
+                }
+            }
+
+            if (jsonVal.isMember("timestamp"))
+            {
+                _truUnit.timestamp = jsonVal[TIMESTAMP_KEY].asInt();
+            }
+            return true;
+    }
 
 
     void TelematicRsuUnit::onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
@@ -119,39 +158,9 @@ namespace TelematicBridge
 
             auto obj = (TelematicRsuUnit *)object;
 
-            if (object && root.isMember(UNIT_ID_KEY) && root[UNIT_ID_KEY].isArray())
+            if(!obj->updateRSUStatus(root))
             {
-
-                Json::Value unitArray = convertKeysToLowerCase(root[UNIT_ID_KEY]);
-
-                auto unitID = unitArray.get(UNIT_ID_KEY, "").asString();
-                if (unitID != obj->_truUnit.unit.unitId)
-                {
-                    //Ignore messages not implied for this unit
-                    PLOG(logWARNING) <<  "Ignoring RSU Configuration message for unit: " << unitID << " received in unit: "<< obj->_truUnit.unit.unitId;
-                    return;
-                }
-            }
-
-            if (object && root.isMember(RSU_CONFIGS_KEY) && root[RSU_CONFIGS_KEY].isArray())
-            {
-                Json::Value rsuConfigsArray = root[RSU_CONFIGS_KEY];
-
-                PLOG(logDEBUG) << "Processing " << rsuConfigsArray.size() << " RSU configs";
-
-                // Iterate through RSUConfig and update list of RSUs registered to unit
-                for (const auto& rsuConfig : rsuConfigsArray)
-                {
-                    if(!processRSUConfig(rsuConfig, obj->_truUnit.unit.maxConnections, obj->_truUnit.registeredRsuList))
-                    {
-                        PLOG(logERROR) << "Error processing incoming RSU Config, ignoring.";
-                    }
-                }
-            }
-
-            if (object && root.isMember("timestamp"))
-            {
-                obj->_truUnit.timestamp = root[TIMESTAMP_KEY].asInt();
+                PLOG(logERROR) << "Error processing incoming RSU Config, ignoring update.";
             }
             //Respond with the latest registration configuration information
             auto latestRSUConfig = obj->constructRSURegistrationDataString();

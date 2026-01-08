@@ -119,6 +119,10 @@ namespace TelematicBridge
         result = processRSUConfig(rsuConfigJson2, maxConnections, rsuList);
         ASSERT_FALSE(result);
         ASSERT_TRUE(rsuList.empty());
+
+        //Test Already registered
+        rsuConfigJson = createValidRSUConfigJson();
+        result = processRSUConfig(rsuConfigJson, maxConnections, rsuList);
     }
 
     TEST_F(TestRSUConfigWorker, TestRsuConfigToJsonValueComplete)
@@ -178,6 +182,15 @@ namespace TelematicBridge
         json2[SNMP_KEY][USER_KEY] = "admin";
         rsuConfig config2;
         result = jsonValueToRsuConfig(json2, config2);
+        ASSERT_FALSE(result);
+
+        Json::Value json3;
+        json3[ACTION_KEY] = "add";
+        json3[EVENT_KEY] = "startup";
+        json3[RSU_KEY][IP_KEY] = "192.168.1.10";
+        json3[RSU_KEY][PORT_KEY] = 161;
+        rsuConfig config3;
+        result = jsonValueToRsuConfig(json2, config3);
         ASSERT_FALSE(result);
     }
 

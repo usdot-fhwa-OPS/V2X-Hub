@@ -81,6 +81,21 @@ namespace TelematicBridge
         void rsuConfigReplier();
 
         /**
+         * @brief Update RSU status from incoming configuration message
+         *
+         * Processes an incoming RSU configuration message by:
+         * 1. Validating the message is intended for this unit by checking unit ID
+         * 2. Processing any RSU configurations in the message
+         * 3. Updating the unit's timestamp if present in the message
+         *
+         * @param jsonVal JSON value containing RSU configuration update message.
+         *
+         * @return bool true if message was successfully processed or if message is valid but empty,
+         *              false if message is for different unit or if RSU config processing fails
+         */
+        bool updateRSUStatus(const Json::Value& jsonVal);
+
+        /**
          * @brief Publish the RSU registration message containing unit and RSU configurations
          * @param topic The NATS topic to publish the registration message to
          * @throws TelematicBridgeException if publish fails

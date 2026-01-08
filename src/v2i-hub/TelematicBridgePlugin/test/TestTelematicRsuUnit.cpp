@@ -24,6 +24,13 @@ namespace TelematicBridge
         string getValidRSUConfigFileContent()
         {
             return R"({
+                "Unit": {
+			    "UnitID": "Unit002",
+                "MaxConnections": 10,
+                "BridgePluginHeartbeatInterval": 10,
+                "HealthMonitorPluginHeartbeatInterval": 10,
+                "RSUStatusMonitorInterval": 10,
+		        },
                 "RSUConfigs": [
                     {
                         "action": "add",
@@ -42,7 +49,8 @@ namespace TelematicBridge
                             "SecurityLevel": "authPriv"
                         }
                     }
-                ]
+                ],
+                "timestamp": 12345678,
             })";
         }
     };
@@ -168,5 +176,36 @@ namespace TelematicBridge
         istringstream jsonStream(jsonStr);
         string errs;
         ASSERT_TRUE(Json::parseFromStream(builder, jsonStream, &root, &errs));
+    }
+
+    TEST_F(TestTelematicRsuUnit, TestUpdateRSUStatus)
+    {
+        unit = make_shared<TelematicRsuUnit>();
+
+        Json::Value updateMessage;
+
+        // Add RSU config with all required fields
+        Json::Value rsuConfig;
+        rsuConfig["action"] = "add";
+        rsuConfig["event"] = "update";
+        rsuConfig["rsu"]["IP"] = "192.168.1.20";
+        rsuConfig["rsu"]["Port"] = 161;
+        rsuConfig["snmp"]["User"] = "testuser";
+        rsuConfig["snmp"]["PrivacyProtocol"] = "AES";
+        rsuConfig["snmp"]["AuthProtocol"] = "SHA";
+        rsuConfig["snmp"]["AuthPassPhrase"] = "testpass123";
+        rsuConfig["snmp"]["PrivacyPassPhrase"] = "testpriv123";
+        rsuConfig["snmp"]["RSUMIBVersion"] = "4.1";
+        rsuConfig["snmp"]["SecurityLevel"] = "authPriv";
+
+        // Use correct key names expected by updateRSUStatus
+        updateMessage["rsuConfigs"].append(rsuConfig);  // Note: "rsuConfigs" not "rsuconfigs"
+        updateMessage["timestamp"] = 1234567890;
+
+        // Call updateRSUStatus
+        bool result = unit->updateRSUStatus(updateMessage);
+
+        // Verify it returns true
+        ASSERT_TRUE(result);
     }
 }
