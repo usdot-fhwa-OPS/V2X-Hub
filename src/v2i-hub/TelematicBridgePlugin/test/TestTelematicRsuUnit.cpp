@@ -38,12 +38,12 @@ namespace TelematicBridge
         {
             return R"({
                 "Unit": {
-			    "UnitID": "Unit002",
-                "MaxConnections": 10,
-                "BridgePluginHeartbeatInterval": 10,
-                "HealthMonitorPluginHeartbeatInterval": 10,
-                "RSUStatusMonitorInterval": 10,
-		        },
+                    "UnitID": "Unit002",
+                    "MaxConnections": 10,
+                    "BridgePluginHeartbeatInterval": 10,
+                    "HealthMonitorPluginHeartbeatInterval": 10,
+                    "RSUStatusMonitorInterval": 10
+                },
                 "RSUConfigs": [
                     {
                         "action": "add",
@@ -63,7 +63,7 @@ namespace TelematicBridge
                         }
                     }
                 ],
-                "timestamp": 12345678,
+                "timestamp": 12345678
             })";
         }
     };
@@ -192,37 +192,84 @@ namespace TelematicBridge
     }
 
     TEST_F(TestTelematicRsuUnit, TestUpdateRSUStatus)
-    {
-        string testPath = "/tmp/test_rsu_config_invalid.json";
-        setenv("RSU_CONFIG_PATH", testPath.c_str(),1);
-        createTestConfigFile(testPath, "{invalid json}");
-        unit = make_shared<TelematicRsuUnit>();
+{
+    unit = make_shared<TelematicRsuUnit>();
 
-        Json::Value updateMessage;
+    // Create JSON object
+    Json::Value updateMessage;
 
-        // Add RSU config with all required fields
-        Json::Value rsuConfig;
-        rsuConfig["unit"] = "unit";
-        rsuConfig["action"] = "add";
-        rsuConfig["event"] = "update";
-        rsuConfig["rsu"]["IP"] = "192.168.1.20";
-        rsuConfig["rsu"]["Port"] = 161;
-        rsuConfig["snmp"]["User"] = "testuser";
-        rsuConfig["snmp"]["PrivacyProtocol"] = "AES";
-        rsuConfig["snmp"]["AuthProtocol"] = "SHA";
-        rsuConfig["snmp"]["AuthPassPhrase"] = "testpass123";
-        rsuConfig["snmp"]["PrivacyPassPhrase"] = "testpriv123";
-        rsuConfig["snmp"]["RSUMIBVersion"] = "4.1";
-        rsuConfig["snmp"]["SecurityLevel"] = "authPriv";
+    // Add unit object
+    Json::Value updateUnit;
+    updateUnit["unitid"] = "Unit002";
+    updateUnit["maxConnections"] = 10;
+    updateUnit["bridgepluginheartbeatinterval"] = 100;
+    updateUnit["healthmonitorpluginheartbeatinterval"] = 100;
+    updateUnit["rsustatusmonitorinterval"] = 100;
+    updateMessage["unit"] = updateUnit;
 
-        // Use correct key names expected by updateRSUStatus
-        updateMessage["rsuConfigs"].append(rsuConfig);  // Note: "rsuConfigs" not "rsuconfigs"
-        updateMessage["timestamp"] = 1234567890;
+    // Add RSU config with all required fields
+    Json::Value rsuConfig;
+    rsuConfig["action"] = "add";
+    rsuConfig["event"] = "update";
 
-        // Call updateRSUStatus
-        bool result = unit->updateRSUStatus(updateMessage);
+    Json::Value rsu;
+    rsu["IP"] = "192.168.1.20";
+    rsu["Port"] = 161;
+    rsuConfig["rsu"] = rsu;
 
-        // Verify it returns true
-        ASSERT_TRUE(result);
-    }
+    Json::Value snmp;
+    snmp["User"] = "testuser";
+    snmp["PrivacyProtocol"] = "AES";
+    snmp["AuthProtocol"] = "SHA";
+    snmp["AuthPassPhrase"] = "testpass123";
+    snmp["PrivacyPassPhrase"] = "testpriv123";
+    snmp["RSUMIBVersion"] = "4.1";
+    snmp["SecurityLevel"] = "authPriv";
+    rsuConfig["snmp"] = snmp;
+
+    updateMessage["rsuConfigs"].append(rsuConfig);
+    updateMessage["timestamp"] = 1234567890;
+
+    bool result = unit->updateRSUStatus(updateMessage);
+    ASSERT_TRUE(result);
+
+    // Second call with same RSU should fail (duplicate) since its already registered
+    result = unit->updateRSUStatus(updateMessage);
+    ASSERT_FALSE(result);
+}
+
+TEST_F(TestTelematicRsuUnit, TestConstructRSUConfigResponseDataStringSuccess)
+{
+    string testPath = "/tmp/test_rsu_config_load.json";
+    setenv("RSU_CONFIG_PATH", testPath.c_str(), 1);
+    createTestConfigFile(testPath, getValidRSUConfigFileContent());
+    unit = make_shared<TelematicRsuUnit>();
+
+    // Call with success = true
+    string jsonStr = unit->constructRSUConfigResponseDataString(true);
+
+    // Parse JSON
+    Json::Value root;
+    Json::CharReaderBuilder builder;
+    istringstream jsonStream(jsonStr);
+    string errs;
+    ASSERT_TRUE(Json::parseFromStream(builder, jsonStream, &root, &errs));
+
+    // Verify required keys exist
+    ASSERT_TRUE(root.isMember("unit"));
+    ASSERT_TRUE(root.isMember("rsuconfigs"));
+    ASSERT_TRUE(root.isMember("status"));
+    ASSERT_TRUE(root.isMember("timestamp"));
+
+    // Verify status is "success"
+    ASSERT_EQ(root["status"].asString(), "success");
+    // Verify unit has unitId
+    ASSERT_TRUE(root["unit"].isMember("unitid"));
+    // Verify rsuConfig is an array
+    ASSERT_TRUE(root["rsuconfigs"].isArray());
+
+    unsetenv("RSU_CONFIG_PATH");
+    removeTestFile(testPath);
+}
+
 }

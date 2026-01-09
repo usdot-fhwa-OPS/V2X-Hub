@@ -93,11 +93,10 @@ namespace TelematicBridge
 
     bool TelematicRsuUnit::updateRSUStatus(const Json::Value& jsonVal)
     {
-        if (jsonVal.isMember(UNIT_ID_KEY) && jsonVal[UNIT_ID_KEY].isArray())
-            {
-
-                Json::Value unitArray = convertKeysToLowerCase(jsonVal[UNIT_ID_KEY]);
-
+        Json::Value unitArray = convertKeysToLowerCase(jsonVal);
+        if (unitArray.isMember(UNIT_KEY) && unitArray[UNIT_KEY].isArray())
+        {
+            if (unitArray.isMember(UNIT_ID_KEY)){
                 auto unitID = unitArray.get(UNIT_ID_KEY, "").asString();
                 if (unitID != _truUnit.unit.unitId)
                 {
@@ -106,29 +105,28 @@ namespace TelematicBridge
                     return false;
                 }
             }
+        }
 
-            if (jsonVal.isMember(RSU_CONFIGS_KEY) && jsonVal[RSU_CONFIGS_KEY].isArray())
+        if (unitArray.isMember(RSU_CONFIGS_KEY) && unitArray[RSU_CONFIGS_KEY].isArray())
+        {
+            Json::Value rsuConfigsArray = unitArray[RSU_CONFIGS_KEY];
+            PLOG(logDEBUG) << "Processing " << rsuConfigsArray.size() << " RSU configs";
+            // Iterate through RSUConfig and update list of RSUs registered to unit
+            for (const auto& rsuConfig : rsuConfigsArray)
             {
-                Json::Value rsuConfigsArray = jsonVal[RSU_CONFIGS_KEY];
-
-                PLOG(logDEBUG) << "Processing " << rsuConfigsArray.size() << " RSU configs";
-
-                // Iterate through RSUConfig and update list of RSUs registered to unit
-                for (const auto& rsuConfig : rsuConfigsArray)
+                if(!processRSUConfig(rsuConfig, _truUnit.unit.maxConnections, _truUnit.registeredRsuList))
                 {
-                    if(!processRSUConfig(rsuConfig, _truUnit.unit.maxConnections, _truUnit.registeredRsuList))
-                    {
-                        PLOG(logERROR) << "Error processing incoming RSU Config, ignoring.";
-                        return false;
-                    }
+                    PLOG(logERROR) << "Error processing incoming RSU Config, ignoring.";
+                    return false;
                 }
             }
+        }
 
-            if (jsonVal.isMember("timestamp"))
-            {
-                _truUnit.timestamp = jsonVal[TIMESTAMP_KEY].asInt();
-            }
-            return true;
+        if (unitArray.isMember("timestamp"))
+        {
+            _truUnit.timestamp = unitArray[TIMESTAMP_KEY].asInt();
+        }
+        return true;
     }
 
 
@@ -148,7 +146,7 @@ namespace TelematicBridge
                 isRegistrationSuccessful = false;
             }
             //Respond with the latest registration configuration information
-            auto latestRSUConfig = obj->constructRSURegistrationDataString(isRegistrationSuccessful);
+            auto latestRSUConfig = obj->constructRSUConfigResponseDataString(isRegistrationSuccessful);
             auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), latestRSUConfig.c_str());
             if (s == NATS_OK)
             {
@@ -158,7 +156,40 @@ namespace TelematicBridge
         }
     }
 
-    std::string TelematicRsuUnit::constructRSURegistrationDataString(bool isRegistrationSuccessful)
+    std::string TelematicRsuUnit::constructRSUConfigResponseDataString(bool isRegistrationSuccessful)
+    {
+        Json::Value message;
+        Json::Value unitObject;
+        unitObject[UNIT_ID_KEY] = _truUnit.unit.unitId;
+
+        Json::Value rsuConfigJsonArray(Json::arrayValue);
+        for (auto rsuConfig : _truUnit.registeredRsuList){
+            Json::Value rsuConfigResponseobject;
+            rsuConfigResponseobject[EVENT_KEY] = rsuConfig.event;
+            Json::Value rsu;
+            rsu[IP_KEY] = rsuConfig.rsu.ip;
+            rsu[PORT_KEY] = rsuConfig.rsu.port;
+            rsuConfigResponseobject[RSU_KEY] = rsu;
+
+            rsuConfigJsonArray.append(rsuConfigResponseobject);
+        }
+        message[UNIT_KEY] = unitObject;
+        message[RSU_CONFIGS_KEY] = rsuConfigJsonArray;
+        if(isRegistrationSuccessful){
+            message[STATUS_KEY]="success";
+        }
+        else{
+            message[STATUS_KEY]="failed";
+        }
+        message[TIMESTAMP_KEY] = _truUnit.timestamp;
+
+        Json::FastWriter fasterWirter;
+        string jsonStr = fasterWirter.write(message);
+        return jsonStr;
+
+    }
+
+    std::string TelematicRsuUnit::constructRSURegistrationDataString()
     {
         lock_guard<mutex> lock(_unitMutex);
 
@@ -173,13 +204,6 @@ namespace TelematicBridge
         message[RSU_CONFIGS_KEY] = rsuConfigListToJsonArray(_truUnit.registeredRsuList);
         message[TIMESTAMP_KEY] = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::system_clock::now().time_since_epoch()).count();
-        if(isRegistrationSuccessful){
-            message[STATUS_KEY]="success";
-        }
-        else{
-            message[STATUS_KEY]="failed";
-        }
-
 
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);

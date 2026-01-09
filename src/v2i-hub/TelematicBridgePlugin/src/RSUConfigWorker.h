@@ -31,7 +31,6 @@ namespace TelematicBridge
         snmpConfig snmp;
     };
 
-    static CONSTEXPR const char *RSUCONFIG_KEY = "rsuconfigs";                   // location key used to find location value from JSON
     static CONSTEXPR const char *RSU_KEY = "rsu";
     static CONSTEXPR const char *IP_KEY = "ip";           // testing_type key used to find testing_type value from JSON
     static CONSTEXPR const char *PORT_KEY = "port";               // event_name key used to find event_name value from JSON

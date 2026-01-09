@@ -17,7 +17,7 @@ namespace TelematicBridge
     struct unitConfig
     {
         std::string unitId;   // Unique identifier for each unit
-        int16_t maxConnections;   // Number of maximum RSUs supported by plugin
+        int16_t maxConnections=5;   // Number of maximum RSUs supported by plugin
         int16_t pluginHeartBeatInterval; // Configurable interval at which the plugin heartbeat should be monitored
         int16_t healthMonitorPluginHeartbeatInterval; // Configurable interval at which the RSU Health Monitor heartbeat should be monitored
         int16_t rsuStatusMonitorInterval; // Configurable interval at which the RSU status should be monitored
@@ -101,7 +101,24 @@ namespace TelematicBridge
          * Includes unit configuration, registered RSU list, and timestamp
          * @return std::string JSON formatted RSU registration data
         */
-        std::string constructRSURegistrationDataString(bool isRegistrationSuccessful=true);
+        std::string constructRSURegistrationDataString();
+
+        /**
+         * @brief Construct a JSON response string for RSU configuration registration status
+         *
+         * Creates a JSON response message containing the unit information, list of registered
+         * RSU configurations, registration status, and timestamp.
+         *
+         * @param isRegistrationSuccessful Boolean indicating if RSU registration was successful
+         * @return std::string JSON-formatted response string with structure:
+         *         {
+         *           "unit": { "unitId": "..." },
+         *           "rsuConfig": [ { "eventName": "...", "rsu": { "IP": "...", "Port": ... } }, ... ],
+         *           "status": "success" | "failed",
+         *           "timestamp": <timestamp>
+         *         }
+         */
+        std::string constructRSUConfigResponseDataString(bool isRegistrationSuccessful);
 
         /**
          * @brief NATS callback handler for RSU configuration status updates
