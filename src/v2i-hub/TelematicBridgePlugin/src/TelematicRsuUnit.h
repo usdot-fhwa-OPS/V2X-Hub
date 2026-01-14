@@ -14,27 +14,10 @@
 
 namespace TelematicBridge
 {
-    struct unitConfig
-    {
-        std::string unitId;   // Unique identifier for each unit
-        int16_t maxConnections=5;   // Number of maximum RSUs supported by plugin
-        int16_t pluginHeartBeatInterval; // Configurable interval at which the plugin heartbeat should be monitored
-        int16_t healthMonitorPluginHeartbeatInterval; // Configurable interval at which the RSU Health Monitor heartbeat should be monitored
-        int16_t rsuStatusMonitorInterval; // Configurable interval at which the RSU status should be monitored
-    };
-
-    struct truUnit
-    {
-        unitConfig unit;
-        std::vector<rsuConfig> registeredRsuList; //List of configurations for connected RSUs
-        int64_t timestamp;
-    };
 
     class TelematicRsuUnit: public TelematicUnit
     {
     private:
-        // The TRU (Telematic RSU) unit configuration. Contains unit settings, registered RSU list, and timestamp
-        truUnit _truUnit;
         // NATS subscription for RSU configuration status updates. Used to receive RSU configuration changes from the management service
         natsSubscription *_subRegisteredRSUStatus = nullptr;
 
@@ -45,15 +28,7 @@ namespace TelematicBridge
         // NATS subject suffix for RSU registration configuration. Full topic format: {unitId}.register.rsu.config ; Used to publish/subscribe RSU registration data
         static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config";
 
-        //Unit json keys
-        static CONSTEXPR const char *UNIT_KEY = "unit";
-        static CONSTEXPR const char *UNIT_ID_KEY = "unitid";
-        static CONSTEXPR const char *MAX_CONNECTIONS_KEY = "maxconnections";
-        static CONSTEXPR const char *PLUGIN_HEARTBEAT_INTERVAL_KEY = "bridgepluginheartbeatinterval";
-        static CONSTEXPR const char *HEALTHMONITOR_HEARTBEAT_INTERVAL_KEY = "healthmonitorpluginheartbeatinterval";
-        static CONSTEXPR const char *RSU_STATUS_MONITOR_INTERVAL_KEY = "rsustatusmonitorinterval";
-        static CONSTEXPR const char *RSU_CONFIGS_KEY = "rsuconfigs";
-        static CONSTEXPR const char *STATUS_KEY = "status";
+        std::unique_ptr<truConfigWorker> _truConfigWorkerptr;
 
 
     public:

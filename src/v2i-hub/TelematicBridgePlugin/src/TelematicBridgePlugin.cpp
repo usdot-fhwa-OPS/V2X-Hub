@@ -15,6 +15,7 @@ namespace TelematicBridge
         SubscribeToMessages();
 
         if (_isTRU){
+
             _natsURL = std::getenv("NATS_URL");
             _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
             _telematicRsuUnitPtr->connect(_natsURL);
