@@ -101,22 +101,6 @@ namespace TelematicBridge
             TRU_SECURITY_LEVEL_KEY
         };
 
-        //Helper utility functions
-        /**
-         * @brief Convert action enum to string representation
-         *
-         * @param ac Action enum value to convert
-         * @return const char* String representation of the action.
-         */
-        constexpr const char* actionToString(action ac);
-
-        /**
-         * @brief Convert string to action enum
-         *
-         * @param str String representation of action ("add", "delete", etc.)
-         * @return action Corresponding action enum value.
-         */
-        action stringToAction(const std::string& str);
 
         /**
          * @brief Validate that a JSON object contains all required keys
@@ -323,6 +307,22 @@ namespace TelematicBridge
          *         }
          */
         Json::Value getTRUConfigResponse(bool isRegistrationSuccessful);
+
+        /**
+         * @brief Convert action enum to string representation
+         *
+         * @param ac Action enum value to convert
+         * @return String representation of the action.
+         */
+        std::string actionToString(action ac);
+
+        /**
+         * @brief Convert string to action enum
+         *
+         * @param str String representation of action ("add", "delete", etc.)
+         * @return action Corresponding action enum value.
+         */
+        action stringToAction(const std::string& str);
 
         /**
          * @brief Get the current unit ID

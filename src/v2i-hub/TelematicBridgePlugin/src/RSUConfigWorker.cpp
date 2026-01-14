@@ -9,7 +9,7 @@ namespace TelematicBridge
         return action::unknown;
     }
 
-    constexpr const char* truConfigWorker::actionToString(action ac){
+    std::string truConfigWorker::actionToString(action ac){
         switch (ac){
             case action::add :
                 return "add";

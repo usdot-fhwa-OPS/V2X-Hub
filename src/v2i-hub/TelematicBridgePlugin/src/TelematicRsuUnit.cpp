@@ -28,6 +28,7 @@ namespace TelematicBridge
             auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
             PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);
             sleep(1);
+            attempt_counts++;
         }
 
         if (s == NATS_OK){

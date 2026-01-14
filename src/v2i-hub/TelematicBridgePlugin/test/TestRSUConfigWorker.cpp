@@ -227,6 +227,9 @@ namespace TelematicBridge
 
     TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileSuccess)
     {
+        string fakePath = "";
+        ASSERT_FALSE(worker->loadRSUConfigListFromFile(fakePath));
+
         string testPath = "/tmp/test_tru_config.json";
         createTestConfigFile(testPath, getValidCompleteConfigFileContent());
 
@@ -350,24 +353,17 @@ namespace TelematicBridge
         ASSERT_FALSE(result);
     }
 
+    TEST_F(TestRSUConfigWorker, TestActionToString){
+        ASSERT_EQ(worker->actionToString(action::add), "add");
+        ASSERT_EQ(worker->actionToString(action::remove), "delete");
+        ASSERT_EQ(worker->actionToString(action::update), "update");
+        ASSERT_EQ(worker->actionToString(action::unknown), "unknown");
+    }
+
     // ==================== rsuConfigToJsonValue Tests ====================
 
     TEST_F(TestRSUConfigWorker, TestRsuConfigToJsonValue)
     {
-        // Create an rsuConfig struct
-        rsuConfig config;
-        config.actionType = action::add;
-        config.event = "test_event";
-        config.rsu.ip = "192.168.1.100";
-        config.rsu.port = 8080;
-        config.snmp.userKey = "testuser";
-        config.snmp.privProtocol = "AES256";
-        config.snmp.authProtocolKey = "SHA256";
-        config.snmp.authPassPhraseKey = "authpass";
-        config.snmp.privPassPhrase = "privpass";
-        config.snmp.rsuMIBVersionKey = "5.0";
-        config.snmp.securityLevelKey = "authPriv";
-
         Json::Value configJson = createValidRsuConfigJson();
         configJson["rsu"]["ip"] = "192.168.1.100";
         configJson["event"] = "test_event";
@@ -600,6 +596,9 @@ namespace TelematicBridge
         updatedConfig.snmp.userKey = "newuser";
 
         result = worker->processUpdateAction(updatedConfig);
+        ASSERT_TRUE(result);
+
+        result = worker->processDeleteAction(updatedConfig);
         ASSERT_TRUE(result);
     }
 
