@@ -63,7 +63,7 @@ namespace TelematicBridge
         static CONSTEXPR const char *TRU_MAX_CONNECTIONS_KEY = "maxConnections";
         static CONSTEXPR const char *TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY = "pluginHeartbeatInterval";
         static CONSTEXPR const char *TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY = "healthMonitorPluginHeartbeatInterval";
-        static CONSTEXPR const char  *TRU_RSU_STATUS_MONITOR_INTERVAL_KEY = "rsuStatusMonitorINterval";
+        static CONSTEXPR const char  *TRU_RSU_STATUS_MONITOR_INTERVAL_KEY = "rsuStatusMonitorInterval";
 
         //RSU configs static keys
         static CONSTEXPR const char *TRU_RSU_KEY = "rsu";                                       // RSU key to find rsu endpoint configurations from JSON
@@ -101,47 +101,6 @@ namespace TelematicBridge
             TRU_SECURITY_LEVEL_KEY
         };
 
-
-        /**
-         * @brief Validate that a JSON object contains all required keys
-         *
-         * Checks that the provided JSON object contains all keys specified in the
-         * requiredKeys vector. Throws an exception if any required key is missing.
-         *
-         * @param json JSON object to validate
-         * @param requiredKeys Vector of required key names
-         * @throws std::runtime_error if any required key is missing, with message
-         *         "Missing required key<keyname>"
-         */
-        void validateRequiredKeys(const Json::Value& json, const std::vector<std::string>& requiredKeys);
-
-
-        /**
-         * @brief Convert all registered RSU configs to a JSON array
-         *
-         * Iterates through the internal registration map and converts each RSU
-         * configuration to a JSON object, returning them as a JSON array.
-         *
-         * @return Json::Value JSON array containing all registered RSU configurations,
-         *         empty array if no RSUs registered
-         */
-        Json::Value getRsuConfigListAsJsonArray();
-
-        /**
-         * @brief Get unit configuration as a JSON object
-         *
-         * Creates a JSON object containing the current unit configuration parameters
-         *
-         * @return Json::Value JSON object with structure:
-         *         {
-         *           "unitID": "...",
-         *           "maxConnections": ...,
-         *           "pluginHeartbeatInterval": ...,
-         *           "healthMonitorPluginHeartbeatInterval": ...,
-         *           "rsuStatusMonitorINterval": ...
-         *         }
-         */
-        Json::Value getUnitConfigAsJsonArray();
 
         public:
         /**
@@ -329,6 +288,45 @@ namespace TelematicBridge
          * @return std::string The unit ID string, empty if not set
          */
         std::string getUnitId();
+
+        /**
+         * @brief Validate that a JSON object contains all required keys
+         *
+         * Checks that the provided JSON object contains all keys specified in the
+         * requiredKeys vector. Throws an exception if any required key is missing.
+         *
+         * @param json JSON object to validate
+         * @param requiredKeys Vector of required key names
+         * @throws std::runtime_error if any required key is missing, with message
+         *         "Missing required key<keyname>"
+         */
+        void validateRequiredKeys(const Json::Value& json, const std::vector<std::string>& requiredKeys);
+
+
+        /**
+         * @brief Convert all registered RSU configs to a JSON array
+         *
+         * Iterates through the internal registration map and converts each RSU
+         * configuration to a JSON object, returning them as a JSON array.
+         *
+         * @return Json::Value JSON array containing all registered RSU configurations,
+         *         empty array if no RSUs registered
+         */
+        Json::Value getRsuConfigListAsJsonArray();
+
+        /**
+         * @brief Get unit configuration as a JSON object
+         * Creates a JSON object containing the current unit configuration parameters
+         * @return Json::Value JSON object with structure:
+         *         {
+         *           "unitID": "...",
+         *           "maxConnections": ...,
+         *           "pluginHeartbeatInterval": ...,
+         *           "healthMonitorPluginHeartbeatInterval": ...,
+         *           "rsuStatusMonitorINterval": ...
+         *         }
+         */
+        Json::Value getUnitConfigAsJsonArray();
     };
 
 }

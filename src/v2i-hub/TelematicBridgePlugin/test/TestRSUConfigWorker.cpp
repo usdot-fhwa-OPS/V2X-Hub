@@ -514,38 +514,29 @@ namespace TelematicBridge
         bool result = worker->setJsonArrayToUnitConfig(notArray);
         ASSERT_FALSE(result);
 
-        Json::Value unitConfigArray(Json::arrayValue);
+        Json::Value unitConfigArray;
 
-        Json::Value item1;
-        item1["unitID"] = "TestUnit";
-        unitConfigArray.append(item1);
+        Json::Value unitConfiguration;
+        unitConfiguration["unitID"] = "TestUnit";
+        unitConfiguration["name"] = "UnitName";
+        unitConfiguration["maxConnections"] = 15;
+        unitConfiguration["pluginHeartbeatInterval"] = 30;
+        unitConfiguration["healthMonitorPluginHeartbeatInterval"] = 60;
+        unitConfiguration["rsuStatusMonitorInterval"] = 120;
+        unitConfiguration["unknownKey"] = "ignored";
+        unitConfigArray.append(unitConfiguration);
 
-        Json::Value item2;
-        item2["name"] = "UnitName";
-        unitConfigArray.append(item2);
 
-        Json::Value item3;
-        item3["maxConnections"] = 15;
-        unitConfigArray.append(item3);
-
-        Json::Value item4;
-        item4["pluginHeartbeatInterval"] = 30;
-        unitConfigArray.append(item4);
-
-        Json::Value item5;
-        item5["healthMonitorPluginHeartbeatInterval"] = 60;
-        unitConfigArray.append(item5);
-
-        Json::Value item6;
-        item6["rsuStatusMonitorINterval"] = 120;
-        unitConfigArray.append(item6);
-
-        Json::Value item7;
-        item7["unknownKey"] = "ignored";
-        unitConfigArray.append(item7);
 
         result = worker->setJsonArrayToUnitConfig(unitConfigArray);
         ASSERT_TRUE(result);
+
+        auto jsonConfig = worker->getUnitConfigAsJsonArray();
+        ASSERT_EQ(jsonConfig["unitID"].asString(),"TestUnit");
+        ASSERT_EQ(jsonConfig["name"].asString(), "UnitName");
+        ASSERT_EQ(jsonConfig["maxConnections"].asInt(), 15);
+        ASSERT_EQ(jsonConfig["rsuStatusMonitorInterval"].asInt(), 120);
+
     }
 
 
@@ -588,6 +579,8 @@ namespace TelematicBridge
 
         bool result = worker->processUpdateAction(config);
         ASSERT_TRUE(result);  // Adds new RSU since not registered
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
 
         // First add RSU
         Json::Value addMsg;
@@ -607,7 +600,13 @@ namespace TelematicBridge
         result = worker->processUpdateAction(updatedConfig);
         ASSERT_TRUE(result);
 
+        truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 2);
+
+
         result = worker->processDeleteAction(updatedConfig);
+        truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
         ASSERT_TRUE(result);
     }
 

@@ -120,23 +120,20 @@ namespace TelematicBridge
             if(item.isMember(TRU_UNIT_ID_KEY)){
                 _unitId = item[TRU_UNIT_ID_KEY].asString();
             }
-            else if(item.isMember(TRU_UNIT_NAME_KEY)){
+            if(item.isMember(TRU_UNIT_NAME_KEY)){
                 _unitName = item[TRU_UNIT_NAME_KEY].asString();
             }
-            else if (item.isMember(TRU_MAX_CONNECTIONS_KEY)){
+            if (item.isMember(TRU_MAX_CONNECTIONS_KEY)){
                 _maxConnections = item[TRU_MAX_CONNECTIONS_KEY].asInt();
             }
-            else if (item.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+            if (item.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
                 _pluginHeartBeatInterval = item[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
             }
-            else if (item.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+            if (item.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
                 _healthMonitorPluginHeartbeatInterval = item[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
             }
-            else if (item.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
+            if (item.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
                 _rsuStatusMonitorInterval = item[TRU_RSU_STATUS_MONITOR_INTERVAL_KEY].asInt();
-            }
-            else{
-                continue; //Ignore other metadata included in message
             }
         }
         return true;
@@ -376,6 +373,7 @@ namespace TelematicBridge
     Json::Value truConfigWorker::getUnitConfigAsJsonArray() {
         Json::Value unitObject;
         unitObject[TRU_UNIT_ID_KEY] = _unitId;
+        unitObject[TRU_UNIT_NAME_KEY] = _unitName;
         unitObject[TRU_MAX_CONNECTIONS_KEY] = _maxConnections;
         unitObject[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY] = _pluginHeartBeatInterval;
         unitObject[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY] = _healthMonitorPluginHeartbeatInterval;

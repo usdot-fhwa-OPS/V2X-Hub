@@ -21,14 +21,14 @@ namespace TelematicBridge
     void TelematicRsuUnit::connect(const string &natsURL)
     {
         bool isConnected = false;
-        int attempt_counts = 0;
+        int attemptsCount = 0;
         natsStatus s;
-        while ((s != NATS_OK) && attempt_counts < CONNECTION_MAX_ATTEMPTS)
+        while ((s != NATS_OK) && attemptsCount < CONNECTION_MAX_ATTEMPTS)
         {
+            attemptsCount++;
             auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
             PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);
             sleep(1);
-            attempt_counts++;
         }
 
         if (s == NATS_OK){
