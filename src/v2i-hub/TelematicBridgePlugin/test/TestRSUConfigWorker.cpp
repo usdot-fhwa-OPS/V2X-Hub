@@ -323,6 +323,9 @@ namespace TelematicBridge
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingTimestamp)
     {
+        string testPath = "/tmp/test_tru_config_mismatch.json";
+        createTestConfigFile(testPath, getValidCompleteConfigFileContent());
+        worker->loadRSUConfigListFromFile(testPath);
         Json::Value updateMessage;
         Json::Value unitConfig;
         unitConfig["unitID"] = "Unit001";
@@ -358,6 +361,8 @@ namespace TelematicBridge
         ASSERT_EQ(worker->actionToString(action::remove), "delete");
         ASSERT_EQ(worker->actionToString(action::update), "update");
         ASSERT_EQ(worker->actionToString(action::unknown), "unknown");
+        action ac;
+        ASSERT_EQ(worker->actionToString(ac), "unspecified");
     }
 
     // ==================== rsuConfigToJsonValue Tests ====================
@@ -558,6 +563,10 @@ namespace TelematicBridge
 
     TEST_F(TestRSUConfigWorker, TestProcessRSUConfigMissingRsuObject)
     {
+        string testPath = "/tmp/test_tru_config_mismatch.json";
+        createTestConfigFile(testPath, getValidCompleteConfigFileContent());
+        worker->loadRSUConfigListFromFile(testPath);
+
         Json::Value config;
         config["action"] = "add";
         config["event"] = "test";

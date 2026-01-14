@@ -276,7 +276,7 @@ namespace TelematicBridge
     }
 
     bool truConfigWorker::processUpdateAction(rsuConfig config){
-        try{
+
         if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
             PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, attempting to add.";
             processAddAction(config);
@@ -285,10 +285,7 @@ namespace TelematicBridge
             _truRegistrationMap[config.rsu.ip] = config;
         }
         return true;
-        }catch(...){
-            PLOG(logERROR)<<"Could not update configuration for RSU "<< config.rsu.ip;
-            return false;
-        }
+
     }
 
     bool truConfigWorker::processDeleteAction(rsuConfig config){

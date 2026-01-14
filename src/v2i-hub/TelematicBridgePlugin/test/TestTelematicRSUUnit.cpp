@@ -1,15 +1,3 @@
-#ifdef TESTING
-extern "C" {
-
-
-    natsStatus natsConnection_ConnectTo(natsConnection **nc, const char *url) {
-        static int calls = 0;
-        *nc = (natsConnection*)0x1;
-        return (calls++ == 0) ? NATS_OK : NATS_TIMEOUT;
-    }
-}
-#endif
-
 #include <gtest/gtest.h>
 #include "TelematicRsuUnit.h"
 #include <fstream>
