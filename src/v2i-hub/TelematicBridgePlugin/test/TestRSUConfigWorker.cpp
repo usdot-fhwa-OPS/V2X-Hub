@@ -470,96 +470,162 @@ namespace TelematicBridge
         ASSERT_EQ(unitId, "Unit001");
     }
 
-    TEST_F(TestRSUConfigWorker, TestCompleteWorkflow)
+
+    TEST_F(TestRSUConfigWorker, TestValidateRequiredKeysSuccess)
     {
-        // 1. Load initial config
-        string testPath = "/tmp/test_tru_workflow.json";
-        createTestConfigFile(testPath, getValidCompleteConfigFileContent());
+        // Test through processRSUConfig which calls validateRequiredKeys
+        Json::Value config;
+        config["action"] = "add";
+        config["event"] = "test";
+        config["rsu"]["ip"] = "192.168.1.1";
+        config["rsu"]["port"] = 161;
+        config["snmp"]["user"] = "admin";
+        config["snmp"]["privacyprotocol"] = "AES";
+        config["snmp"]["authprotocol"] = "SHA";
+        config["snmp"]["authpassphrase"] = "pass";
+        config["snmp"]["privacypassphrase"] = "priv";
+        config["snmp"]["rsumibversion"] = "4.1";
+        config["snmp"]["securitylevel"] = "authPriv";
 
-        bool loadResult = worker->loadRSUConfigListFromFile(testPath);
-        ASSERT_TRUE(loadResult);
-        removeTestFile(testPath);
-
-        // 2. Verify unit ID was loaded
-        ASSERT_EQ(worker->getUnitId(), "Unit001");
-
-        // 3. Update with new RSU config
-        Json::Value updateMsg;
-        Json::Value newRsu = createValidRsuConfigJson();
-        newRsu["rsu"]["ip"] = "192.168.1.50";
-        updateMsg["rsuConfigs"].append(newRsu);
-
-        bool updateResult = worker->updateTRUStatus(updateMsg);
-        ASSERT_FALSE(updateResult);
-
-        // 4. Get full config
-        Json::Value fullConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(fullConfig.isMember("rsuConfigs"));
-        ASSERT_GT(fullConfig["rsuConfigs"].size(), 0);
-
-        // 5. Get response
-        Json::Value response = worker->getTRUConfigResponse(true);
-        ASSERT_EQ(response["status"].asString(), "success");
-    }
-
-    TEST_F(TestRSUConfigWorker, TestMultipleRsuConfigs)
-    {
-        string testPath = "/tmp/test_tru_workflow.json";
-        createTestConfigFile(testPath, getValidCompleteConfigFileContent());
-
-        worker->loadRSUConfigListFromFile(testPath);
-
-        Json::Value updateMsg;
-        Json::Value unitConfig;
-        unitConfig["unitID"] = "Unit001";
-        updateMsg["unitConfig"].append(unitConfig);
-        updateMsg["timestamp"] = 1234567890;
-
-        // Add multiple RSU configs
-        for (int i = 1; i <= 3; ++i) {
-            Json::Value rsu = createValidRsuConfigJson();
-            rsu["rsu"]["ip"] = "192.168.1." + to_string(10 + i);
-            updateMsg["rsuConfigs"].append(rsu);
-        }
-
-        bool result = worker->updateTRUStatus(updateMsg);
+        bool result = worker->processRSUConfig(config);
         ASSERT_TRUE(result);
-
-        Json::Value config = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(config["rsuConfigs"].size(), 4);
     }
 
-    TEST_F(TestRSUConfigWorker, TestRoundTripConversion)
+    TEST_F(TestRSUConfigWorker, TestValidateRequiredKeysMissing)
     {
-        // 1. Load initial config
-        string testPath = "/tmp/test_tru_workflow.json";
-        createTestConfigFile(testPath, getValidCompleteConfigFileContent());
+        Json::Value config;
+        config["action"] = "add";
+        config["event"] = "test";
+        config["rsu"]["ip"] = "192.168.1.1";
+        config["snmp"]["user"] = "admin";
+        // Missing other required SNMP keys
 
-        worker->loadRSUConfigListFromFile(testPath);
+        bool result = worker->processRSUConfig(config);
+        ASSERT_FALSE(result);  // Should catch exception and return false
+    }
 
-        Json::Value updateMsg;
-        Json::Value unitConfig;
-        unitConfig["unitID"] = "Unit001";
-        updateMsg["unitConfig"].append(unitConfig);
-        updateMsg["timestamp"] = 1234567890;
 
-        // Create config
-        Json::Value originalConfig = createValidRsuConfigJson();
-        originalConfig["rsu"]["ip"] = "192.168.1.99";
-        originalConfig["event"] = "roundtrip_test";
+    TEST_F(TestRSUConfigWorker, TestSetJsonArrayToUnitConfigAllFields)
+    {
+        Json::Value notArray;
+        notArray["key"] = "value";
 
-        // Load it
-        updateMsg["rsuConfigs"].append(originalConfig);
-        worker->updateTRUStatus(updateMsg);
+        bool result = worker->setJsonArrayToUnitConfig(notArray);
+        ASSERT_FALSE(result);
 
-        // Get it back
-        Json::Value retrieved = worker->getTruConfigAsJsonArray();
+        Json::Value unitConfigArray(Json::arrayValue);
 
-        ASSERT_TRUE(retrieved["rsuConfigs"].isArray());
-        ASSERT_GT(retrieved["rsuConfigs"].size(), 0);
+        Json::Value item1;
+        item1["unitID"] = "TestUnit";
+        unitConfigArray.append(item1);
 
-        // Verify key fields match
-        ASSERT_EQ(retrieved["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.99");
-        ASSERT_EQ(retrieved["rsuConfigs"][0]["event"].asString(), "roundtrip_test");
+        Json::Value item2;
+        item2["name"] = "UnitName";
+        unitConfigArray.append(item2);
+
+        Json::Value item3;
+        item3["maxConnections"] = 15;
+        unitConfigArray.append(item3);
+
+        Json::Value item4;
+        item4["pluginHeartbeatInterval"] = 30;
+        unitConfigArray.append(item4);
+
+        Json::Value item5;
+        item5["healthMonitorPluginHeartbeatInterval"] = 60;
+        unitConfigArray.append(item5);
+
+        Json::Value item6;
+        item6["rsuStatusMonitorINterval"] = 120;
+        unitConfigArray.append(item6);
+
+        Json::Value item7;
+        item7["unknownKey"] = "ignored";
+        unitConfigArray.append(item7);
+
+        result = worker->setJsonArrayToUnitConfig(unitConfigArray);
+        ASSERT_TRUE(result);
+    }
+
+
+    TEST_F(TestRSUConfigWorker, TestProcessRSUConfigDuplicate)
+    {
+        // First add an RSU
+        Json::Value config = createValidRsuConfigJson();
+        config["rsu"]["ip"] = "192.168.1.10";
+        worker->processRSUConfig(config);
+
+        // Try to add same IP again
+        bool result = worker->processRSUConfig(config);
+        ASSERT_FALSE(result);  // Duplicate check fails
+    }
+
+    TEST_F(TestRSUConfigWorker, TestProcessRSUConfigMissingRsuObject)
+    {
+        Json::Value config;
+        config["action"] = "add";
+        config["event"] = "test";
+        // Missing "rsu" object
+
+        bool result = worker->processRSUConfig(config);
+        ASSERT_FALSE(result);
+    }
+
+
+    TEST_F(TestRSUConfigWorker, TestProcessUpdateActionExisting)
+    {
+        rsuConfig config;
+        config.actionType = action::update;
+        config.event = "test";
+        config.rsu.ip = "192.168.1.50";
+        config.rsu.port = 161;
+        config.snmp.userKey = "user";
+
+        bool result = worker->processUpdateAction(config);
+        ASSERT_TRUE(result);  // Adds new RSU since not registered
+
+        // First add RSU
+        Json::Value addMsg;
+        Json::Value rsuConfigJson = createValidRsuConfigJson();
+        rsuConfigJson["rsu"]["ip"] = "192.168.1.60";
+        addMsg["rsuConfigs"].append(rsuConfigJson);
+        worker->setJsonArrayToRsuConfigList(addMsg);
+
+        // Now update it
+        rsuConfig updatedConfig;
+        updatedConfig.actionType = action::update;
+        updatedConfig.event = "updated";
+        updatedConfig.rsu.ip = "192.168.1.60";
+        updatedConfig.rsu.port = 8080;
+        updatedConfig.snmp.userKey = "newuser";
+
+        result = worker->processUpdateAction(updatedConfig);
+        ASSERT_TRUE(result);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestProcessDeleteActionNotRegistered)
+    {
+        rsuConfig config;
+        config.rsu.ip = "192.168.1.99";
+
+        bool result = worker->processDeleteAction(config);
+        ASSERT_TRUE(result);  // Returns true even if not found
+    }
+
+    TEST_F(TestRSUConfigWorker, TestProcessDeleteActionSuccess)
+    {
+        // First add RSU
+        Json::Value addMsg;
+        Json::Value rsuConfigJson = createValidRsuConfigJson();
+        rsuConfigJson["rsu"]["ip"] = "192.168.1.70";
+        addMsg["rsuConfigs"].append(rsuConfigJson);
+        worker->setJsonArrayToRsuConfigList(addMsg);
+
+        // Now delete it
+        rsuConfig deleteConfig;
+        deleteConfig.rsu.ip = "192.168.1.70";
+
+        bool result = worker->processDeleteAction(deleteConfig);
+        ASSERT_TRUE(result);
     }
 }

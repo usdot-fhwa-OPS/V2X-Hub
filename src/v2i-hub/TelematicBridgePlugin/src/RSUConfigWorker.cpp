@@ -139,6 +139,7 @@ namespace TelematicBridge
                 continue; //Ignore other metadata included in message
             }
         }
+        return true;
     }
 
     bool truConfigWorker::setJsonArrayToRsuConfigList(const Json::Value& message){
@@ -231,7 +232,7 @@ namespace TelematicBridge
                 PLOG(logINFO)<<"Added RSU:"<< config.rsu.ip<<":"<< config.rsu.port;
 
                 // Check if RSU is already registered
-                if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
+                if(_truRegistrationMap.find(config.rsu.ip) != _truRegistrationMap.end()){
                     PLOG(logDEBUG) << "RSU "<< config.rsu.ip << " already registered.";
                     return false;
                 }
@@ -246,14 +247,17 @@ namespace TelematicBridge
                 config.snmp.rsuMIBVersionKey = snmp.get(TRU_RSU_MIB_VERSION_KEY,"").asString();
                 config.snmp.securityLevelKey = snmp.get(TRU_SECURITY_LEVEL_KEY,"").asString();
 
-
-                return true;
+                processAddAction(config);
+            }
+            else{
+                return false;
             }
         }catch(const std::exception& e){
             //Catch error for RSU configuration without crashing
             PLOG(logERROR)<<"Failed to process RSU config: "<< e.what();
             return false;
         }
+        return true;
     }
 
     bool truConfigWorker::processAddAction(rsuConfig config)

@@ -47,7 +47,6 @@ namespace TelematicBridge
     class truConfigWorker{
 
         private:
-        int test;
         std::string _unitId;   // Unique identifier for each unit
         std::string _unitName;
         int16_t _maxConnections=5;   // Number of maximum RSUs supported by plugin
@@ -103,76 +102,232 @@ namespace TelematicBridge
         };
 
         //Helper utility functions
+        /**
+         * @brief Convert action enum to string representation
+         *
+         * @param ac Action enum value to convert
+         * @return const char* String representation of the action.
+         */
         constexpr const char* actionToString(action ac);
+
+        /**
+         * @brief Convert string to action enum
+         *
+         * @param str String representation of action ("add", "delete", etc.)
+         * @return action Corresponding action enum value.
+         */
         action stringToAction(const std::string& str);
+
+        /**
+         * @brief Validate that a JSON object contains all required keys
+         *
+         * Checks that the provided JSON object contains all keys specified in the
+         * requiredKeys vector. Throws an exception if any required key is missing.
+         *
+         * @param json JSON object to validate
+         * @param requiredKeys Vector of required key names
+         * @throws std::runtime_error if any required key is missing, with message
+         *         "Missing required key<keyname>"
+         */
         void validateRequiredKeys(const Json::Value& json, const std::vector<std::string>& requiredKeys);
 
-        bool setJsonArrayToUnitConfig(const Json::Value& message);
 
         /**
-         * @brief Convert RSUConfigs from a message to vector of rsuConfig
-         * @param message The JSON::Value containing "RSUConfigs" array
-         * @param rsus Reference to vector to populate
-         * @return bool true if successful, false otherwise
-         */
-        bool setJsonArrayToRsuConfigList(const Json::Value& message);
-
-
-        /**
-         * @brief Process a single RSU configuration item.
-         * @param rsuConfigItem JSON object containing RSU configuration
-         */
-        bool processRSUConfig(const Json::Value& rsuConfigJson);
-
-        bool processAddAction(rsuConfig config);
-
-        bool processUpdateAction(rsuConfig config);
-
-        bool processDeleteAction(rsuConfig config);
-
-
-
-        /**
-         * @brief Convert a vector of rsuConfig structures to JSON array
-         * @param rsus Vector of rsuConfig structures
-         * @return Json::Value containing array of RSU configurations
+         * @brief Convert all registered RSU configs to a JSON array
+         *
+         * Iterates through the internal registration map and converts each RSU
+         * configuration to a JSON object, returning them as a JSON array.
+         *
+         * @return Json::Value JSON array containing all registered RSU configurations,
+         *         empty array if no RSUs registered
          */
         Json::Value getRsuConfigListAsJsonArray();
 
+        /**
+         * @brief Get unit configuration as a JSON object
+         *
+         * Creates a JSON object containing the current unit configuration parameters
+         *
+         * @return Json::Value JSON object with structure:
+         *         {
+         *           "unitID": "...",
+         *           "maxConnections": ...,
+         *           "pluginHeartbeatInterval": ...,
+         *           "healthMonitorPluginHeartbeatInterval": ...,
+         *           "rsuStatusMonitorINterval": ...
+         *         }
+         */
         Json::Value getUnitConfigAsJsonArray();
 
         public:
+        /**
+         * @brief Default constructor for truConfigWorker
+         *
+         */
         truConfigWorker() = default;
 
         /**
-         * @brief Convert an rsuConfig structure to JSON::Value
-         * @param rsu The rsuConfig structure to convert
-         * @return Json::Value containing the RSU configuration
+         * @brief Process and validate a single RSU configuration JSON object
+         *
+         * Validates the RSU configuration has all required keys, checks for duplicates,
+         * and populates an rsuConfig struct.
+         *
+         * @param rsuConfigJson JSON object containing complete RSU configuration
+         * @return bool true if RSU config is valid and not a duplicate, false if
+         *         validation fails or RSU already registered
+         */
+        bool processRSUConfig(const Json::Value& rsuConfigJson);
+
+        /**
+         * @brief Parse unit configuration from JSON array and update internal state
+         *
+         * Extracts unit configuration parameters from a JSON array and updates the
+         * corresponding member variables (_unitId, _unitName, _maxConnections, etc.).
+         *
+         * @param message JSON array containing unit configuration items. Each item
+         *                should be an object with unit configuration fields.
+         * @return bool true if input is a valid array, false if not an array
+         */
+        bool setJsonArrayToUnitConfig(const Json::Value& message);
+
+        /**
+         * @brief Convert RSU configs from JSON array to internal registration map
+         *
+         * Processes a JSON array of RSU configurations, converting each to an rsuConfig
+         * struct and adding it to the internal registration map.
+         *
+         * @param message JSON array containing RSU configuration objects
+         * @return bool true if all configs parsed successfully, false if input is not.
+         */
+        bool setJsonArrayToRsuConfigList(const Json::Value& message);
+
+        /**
+         * @brief Convert an rsuConfig structure to a JSON object
+         *
+         * Creates a JSON representation of an RSU configuration.
+         *
+         * @param config rsuConfig structure to convert
+         * @return Json::Value JSON object with structure:
+         *         {
+         *           "action": "...",
+         *           "event": "...",
+         *           "rsu": { "ip": "...", "port": ... },
+         *           "snmp": { "user": "...", ... }
+         *         }
          */
         Json::Value rsuConfigToJsonValue(const rsuConfig& rsu);
 
         /**
-         * @brief Convert a JSON::Value to an rsuConfig structure
-         * @param json The JSON::Value containing RSU configuration
-         * @param rsu Reference to rsuConfig structure to populate
-         * @return bool true if successful, false otherwise
+         * @brief Convert a JSON object to an rsuConfig structure
+         *
+         * Parses a JSON object containing RSU configuration data and populates an
+         * internal rsuConfig struct.
+         *
+         * @param json JSON object containing RSU configuration with structure:
+         *             {
+         *               "event": "...",
+         *               "action": "add|delete|update" (optional, defaults to add),
+         *               "rsu": { "ip": "...", "port": ... },
+         *               "snmp": { ... }
+         *             }
+         * @param config Reference to rsuConfig struct to populate
+         * @return bool true if conversion successful, false if required fields missing
+         *         or objects invalid
          */
         bool jsonValueToRsuConfig(const Json::Value& json, rsuConfig& rsu);
 
         /**
-         * @brief Load RSU configurations from a JSON file
+         * @brief Load TRU configuration from a JSON file
+         *
+         * Reads and parses a JSON configuration file containing unit configuration,
+         * RSU configurations, and timestamp. Updates internal state with the loaded
+         * configuration.
+         *
          * @param configPath Path to the JSON configuration file
-         * @param rsus Reference to vector to populate with RSU configs
-         * @return bool true if successful, false otherwise
+         * @return bool true if file loaded and parsed successfully, false if file not
+         *         found, JSON parsing fails, or exception occurs
          */
         bool loadRSUConfigListFromFile(const std::string& configPath);
 
+        /**
+         * @brief Update TRU status from incoming JSON message
+         * Processes an update message containing unit configuration, RSU configurations,
+         * and timestamp.
+         * @param jsonVal JSON object containing update message with structure:
+         *                {
+         *                  "unitConfig": [ { "unitID": "..." }, ... ],
+         *                  "rsuConfigs": [ { ... }, ... ],
+         *                  "timestamp": ...
+         *                }
+         * @return bool true if update successful.
+         */
         bool updateTRUStatus(const Json::Value& jsonVal);
 
+        /**
+         * @brief Get complete TRU configuration as JSON object
+         * Creates a comprehensive JSON representation of the current TRU state.
+         * @return Json::Value JSON object with structure:
+         *         {
+         *           "unitConfig": { ... },
+         *           "rsuConfigs": [ { ... }, ... ],
+         *           "timestamp": <current_time_in_milliseconds>
+         *         }
+         */
         Json::Value getTruConfigAsJsonArray();
 
+        /**
+         * @brief Add an RSU configuration to the registration map
+         *
+         * Adds the provided RSU configuration to the internal registration map if the
+         * maximum connection limit has not been reached. The RSU is indexed by its IP
+         * address in the map.
+         *
+         * @param config RSU configuration to add
+         * @return bool true if RSU was successfully added, false if maximum connections
+         *         limit reached (map size >= _maxConnections)
+         */
+        bool processAddAction(rsuConfig config);
+
+        /**
+         * @brief Update an existing RSU configuration or add if not present
+         *
+         * Updates the RSU configuration in the registration map if it exists (matched
+         * by IP address).
+         *
+         * @param config RSU configuration to update or add
+         * @return bool true if update or add successful, false on exception
+         */
+        bool processUpdateAction(rsuConfig config);
+
+        /**
+         * @brief Remove an RSU configuration from the registration map
+         *
+         * Removes the RSU configuration from the registration map based on IP address.
+         *
+         * @param config RSU configuration to delete (only IP address is used for lookup)
+         * @return bool true if deletion successful or RSU not found, false on exception
+         */
+        bool processDeleteAction(rsuConfig config);
+
+        /**
+         * @brief Get TRU configuration response with registration status
+         * Creates a response message containing unit ID, simplified RSU list (IP and port
+         * only), registration status, and timestamp.
+         * @param isRegistrationSuccessful Boolean indicating registration outcome
+         * @return Json::Value JSON object with structure:
+         *         {
+         *           "unitConfig": [ { "unitID": "..." } ],
+         *           "rsuConfigs": [ { "ip": "...", "port": ... }, ... ],
+         *           "status": "success" | "failed",
+         *           "timestamp": <current_time_in_milliseconds>
+         *         }
+         */
         Json::Value getTRUConfigResponse(bool isRegistrationSuccessful);
 
+        /**
+         * @brief Get the current unit ID
+         * @return std::string The unit ID string, empty if not set
+         */
         std::string getUnitId();
     };
 
