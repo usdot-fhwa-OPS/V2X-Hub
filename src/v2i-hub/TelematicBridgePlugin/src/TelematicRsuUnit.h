@@ -106,6 +106,13 @@ namespace TelematicBridge
         static void onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
 
         /**
+         * @brief Process incoming config update and generate response
+         * @param incomingConfig JSON configuration from server
+         * @return std::pair<bool, std::string> Success status and response JSON string
+         */
+        std::pair<bool, std::string> processConfigUpdateAndGenerateResponse(const Json::Value& incomingConfig);
+
+        /**
          * @brief Destructor for TelematicRsuUnit
          * Cleans up NATS subscriptions and connections
         */

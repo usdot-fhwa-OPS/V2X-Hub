@@ -23,6 +23,7 @@ namespace TelematicBridge
         bool isConnected = false;
         int attemptsCount = 0;
         natsStatus s;
+        try{
         while ((s != NATS_OK) && attemptsCount < CONNECTION_MAX_ATTEMPTS)
         {
             attemptsCount++;
@@ -36,6 +37,9 @@ namespace TelematicBridge
         }
         else{
             throw TelematicBridgeException(natsStatus_GetText(s));
+        }
+        }catch(...){
+            throw TelematicBridgeException("Could not connect to NATS server");
         }
 
     }
@@ -106,28 +110,34 @@ namespace TelematicBridge
 
     void TelematicRsuUnit::onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
     {
-        // Update list of registered RSUs on receiving a message
         if (natsMsg_GetReply(msg) != nullptr)
         {
             auto msgStr = natsMsg_GetData(msg);
             auto root = parseJson(msgStr);
-
             auto obj = (TelematicRsuUnit *)object;
-            bool isRegistrationSuccessful = true;
-            if(!obj->updateRSUStatus(root))
-            {
-                PLOG(logERROR) << "Error processing incoming RSU Config, ignoring update.";
-                isRegistrationSuccessful = false;
-            }
-            //Respond with the latest registration configuration information
-            auto latestRSUConfig = obj->constructRSUConfigResponseDataString(isRegistrationSuccessful);
-            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), latestRSUConfig.c_str());
+
+            auto [isSuccessful, response] = obj->processConfigUpdateAndGenerateResponse(root);
+
+            auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), response.c_str());
             if (s == NATS_OK)
             {
-                PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg) << ". Replied: "<< latestRSUConfig;
+                PLOG(logDEBUG3) << "Received RSU status msg: " << natsMsg_GetSubject(msg)
+                            << " " << natsMsg_GetData(msg) << ". Replied: "<< response;
             }
             natsMsg_Destroy(msg);
         }
+    }
+
+    std::pair<bool, std::string> TelematicRsuUnit::processConfigUpdateAndGenerateResponse(const Json::Value& incomingConfig)
+    {
+        bool isSuccessful = updateRSUStatus(incomingConfig);
+
+        if (!isSuccessful) {
+            PLOG(logERROR) << "Error processing incoming RSU Config, ignoring update.";
+        }
+
+        std::string response = constructRSUConfigResponseDataString(isSuccessful);
+        return {isSuccessful, response};
     }
 
     std::string TelematicRsuUnit::constructRSUConfigResponseDataString(bool isRegistrationSuccessful)

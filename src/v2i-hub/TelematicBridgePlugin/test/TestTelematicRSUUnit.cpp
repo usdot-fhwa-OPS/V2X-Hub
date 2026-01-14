@@ -170,6 +170,47 @@ namespace TelematicBridge
         unit = make_shared<TelematicRsuUnit>();
         unit.reset();
     }
+
+    TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateSuccess)
+    {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
+        unit = make_shared<TelematicRsuUnit>();
+
+        auto [success, response] = unit->processConfigUpdateAndGenerateResponse(getUpdateMsg());
+
+        ASSERT_TRUE(success);
+        ASSERT_FALSE(response.empty());
+
+        Json::Value root;
+        Json::CharReaderBuilder builder;
+        istringstream stream(response);
+        string errs;
+        Json::parseFromStream(builder, stream, &root, &errs);
+        ASSERT_EQ(root["status"].asString(), "success");
+
+        unsetenv("RSU_CONFIG_PATH");
+    }
+
+    TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateFailure)
+    {
+        unit = make_shared<TelematicRsuUnit>();
+
+        Json::Value badMsg;
+        badMsg["timestamp"] = 1;
+
+        auto [success, response] = unit->processConfigUpdateAndGenerateResponse(badMsg);
+
+        ASSERT_FALSE(success);
+        ASSERT_FALSE(response.empty());
+
+        Json::Value root;
+        Json::CharReaderBuilder builder;
+        istringstream stream(response);
+        string errs;
+        Json::parseFromStream(builder, stream, &root, &errs);
+        ASSERT_EQ(root["status"].asString(), "failed");
+    }
 }
 
 int main(int argc, char **argv)
