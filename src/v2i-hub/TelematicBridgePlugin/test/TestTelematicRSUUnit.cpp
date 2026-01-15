@@ -104,6 +104,8 @@ namespace TelematicBridge
         unit = make_shared<TelematicRsuUnit>();
         ASSERT_TRUE(unit->updateRSUStatus(getUpdateMsg()));
         unsetenv("RSU_CONFIG_PATH");
+
+        ASSERT_EQ(unit->getRsuConfigTopic(), "unit.Unit001.register.rsu.config");
     }
 
     TEST_F(TestTelematicRsuUnit, UpdateRSUStatusFail)

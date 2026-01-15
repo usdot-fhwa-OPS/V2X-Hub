@@ -23,7 +23,7 @@ namespace TelematicBridge
         bool isConnected = false;
         int attemptsCount = 0;
         natsStatus s;
-        try{
+
         while ((s != NATS_OK) && attemptsCount < CONNECTION_MAX_ATTEMPTS)
         {
             attemptsCount++;
@@ -38,10 +38,6 @@ namespace TelematicBridge
         else{
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
-        }catch(...){
-            throw TelematicBridgeException("Could not connect to NATS server");
-        }
-
     }
 
     void TelematicRsuUnit::registerUnitRequestor()
@@ -53,19 +49,15 @@ namespace TelematicBridge
         while (!isRegistered && attemptsCount < REGISTRATION_MAX_ATTEMPTS)
         {
             attemptsCount++;
-            PLOG(logDEBUG2) << "Inside register unit requestor";
             natsMsg *reply = nullptr;
-            string payload = constructRSURegistrationDataString();
-            auto s = natsConnection_RequestString(&reply, _conn, REGISTERD_RSU_CONFIG, payload.c_str(), TIME_OUT);
+
+            auto s = natsConnection_RequestString(&reply, _conn, REGISTERD_RSU_CONFIG, constructRSURegistrationDataString().c_str(), TIME_OUT);
             if (s == NATS_OK)
             {
                 auto replyStr = natsMsg_GetData(reply);
                 PLOG(logINFO) << "Received registered reply: " << replyStr;
                 //Unit is registered when the server responds with OK
-                if (replyStr == "ok"){
-                    isRegistered = true;
-                }
-
+                isRegistered = (replyStr == "ok");
                 natsMsg_Destroy(reply);
             }
             else
@@ -90,13 +82,14 @@ namespace TelematicBridge
         // Create a subscriber to the rsu config from RSU Management service
         if (!_subRegisteredRSUStatus)
         {
-            std::string rsuConfigTopic = "unit." + _truConfigWorkerptr->getUnitId() + REGISTERD_RSU_CONFIG;
-            PLOG(logDEBUG2) << "Inside rsu config status replier";
-            stringstream topic;
-            topic << rsuConfigTopic;
-            natsConnection_Subscribe(&_subRegisteredRSUStatus, _conn, topic.str().c_str(), onRSUConfigStatusCallback, this);
+            natsConnection_Subscribe(&_subRegisteredRSUStatus, _conn, getRsuConfigTopic().c_str(), onRSUConfigStatusCallback, this);
         }
 
+    }
+
+    std::string TelematicRsuUnit::getRsuConfigTopic()
+    {
+        return "unit." + _truConfigWorkerptr->getUnitId() + REGISTERD_RSU_CONFIG;
     }
 
     bool TelematicRsuUnit::updateRSUStatus(const Json::Value& jsonVal)

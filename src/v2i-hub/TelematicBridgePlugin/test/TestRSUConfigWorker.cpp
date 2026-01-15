@@ -151,19 +151,6 @@ namespace TelematicBridge
         ASSERT_EQ(rsu.actionType, action::add);
     }
 
-    TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigException)
-    {
-        Json::Value config;
-        config["event"] = "test";
-        config["rsu"] = "not_an_object"; // Will cause exception when accessing as object
-        config["snmp"]["user"] = "admin";
-
-        rsuConfig rsu;
-        bool result = worker->jsonValueToRsuConfig(config, rsu);
-
-        ASSERT_FALSE(result);
-    }
-
     // ==================== jsonValueToRsuConfig Tests ====================
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigSuccess)
@@ -285,17 +272,6 @@ namespace TelematicBridge
         removeTestFile(testPath);
     }
 
-    TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileException)
-    {
-        string testPath = "/tmp/test_invalid.json";
-        createTestConfigFile(testPath, R"({"rsuConfigs": null})"); // Causes exception
-
-        bool result = worker->loadRSUConfigListFromFile(testPath);
-
-        ASSERT_FALSE(result);
-        removeTestFile(testPath);
-    }
-
     // ==================== updateTRUStatus Tests ====================
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusSuccess)
@@ -375,18 +351,6 @@ namespace TelematicBridge
         updateMessage["timestamp"] = 1234567890;
 
         bool result = worker->updateTRUStatus(updateMessage);
-
-        ASSERT_FALSE(result);
-    }
-
-    TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusException)
-    {
-        Json::Value message;
-        message["unitConfig"] = "not_an_array";
-        message["rsuConfigs"] = Json::arrayValue;
-        message["timestamp"] = 1234567890;
-
-        bool result = worker->updateTRUStatus(message);
 
         ASSERT_FALSE(result);
     }

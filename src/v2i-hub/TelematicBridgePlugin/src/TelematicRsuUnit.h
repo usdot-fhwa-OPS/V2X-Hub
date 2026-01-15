@@ -113,6 +113,12 @@ namespace TelematicBridge
         std::pair<bool, std::string> processConfigUpdateAndGenerateResponse(const Json::Value& incomingConfig);
 
         /**
+         * @brief Get Topic string for RSU Configuration subscription
+         * @return std::string for rsu configuration topic.
+         */
+        std::string getRsuConfigTopic();
+
+        /**
          * @brief Destructor for TelematicRsuUnit
          * Cleans up NATS subscriptions and connections
         */
