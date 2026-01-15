@@ -4,7 +4,7 @@
 namespace tmx::messages{
     struct TelematicRSUUnit
     {
-        TelematicRSUUnit() {}
+        TelematicRSUUnit() = default;
 
         TelematicRSUUnit(std::string unitId, int16_t maxConnections):
             unitId(unitId), maxConnections(maxConnections), bridgePluginHeartbeatInterval(10),

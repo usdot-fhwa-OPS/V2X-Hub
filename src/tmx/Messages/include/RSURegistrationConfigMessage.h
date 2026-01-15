@@ -15,7 +15,7 @@ class RSURegistrationConfigMessage : public tmx::message
 	public:
 		RSURegistrationConfigMessage()=default;
 		explicit RSURegistrationConfigMessage(const tmx::message_container_type &contents);
-		~RSURegistrationConfigMessage() override{};
+		~RSURegistrationConfigMessage()=default;
 
 		/// Message type for routing this message through TMX core.
 		static constexpr const char* MessageType = MSGTYPE_APPLICATION_STRING;

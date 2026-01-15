@@ -25,7 +25,6 @@ namespace TelematicBridge
     private:
         unit_st _unit;                                                      // Variable to store the unit information
     protected:
-        std::mutex _unitMutex;
         std::mutex _availableTopicsMutex;
         std::mutex _excludedTopicsMutex;
 
@@ -36,11 +35,9 @@ namespace TelematicBridge
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
         static CONSTEXPR const char *CHECK_STATUS = ".check_status";          // NATS subject to pub/sub checking unit status
-        natsConnection *_conn = nullptr;                                      // Global NATS connection object
         natsSubscription *_subAvailableTopic = nullptr;                       // Global NATS subscription object
         natsSubscription *_subSelectedTopic = nullptr;                        // Global NATS subscription object
         natsSubscription *_subCheckStatus = nullptr;                          // Global NATS subscription object
-        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
         std::string _eventName;                                                    // Testing event the unit is assigned to
         std::string _eventLocation;                                                // Testing event location
         std::string _testingType;                                                  // Testing type
@@ -56,9 +53,13 @@ namespace TelematicBridge
         static CONSTEXPR const char *TOPICS_KEY = "topics";                       // topics key used to find topics value from JSON
         static CONSTEXPR const char *NAME_KEY = "name";                           // topics key used to find topics value from JSON
         static const int MILLI_TO_MICRO = 1000;
-        static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
+
 
     public:
+        std::mutex _unitMutex;
+        natsConnection *_conn = nullptr;                                      // Global NATS connection object
+        static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
+        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
         /**
          *@brief Construct telematic unit
          */

@@ -5,8 +5,8 @@
 namespace tmx::messages{
     struct RSUConfigList
     {
-        RSUConfigList() {}
-        RSUConfigList(std::vector<RSUConfig>& rsuConfigs) : rsuConfigs(rsuConfigs) {}
+        RSUConfigList()=default;
+        explicit RSUConfigList(std::vector<RSUConfig>& rsuConfigs) : rsuConfigs(rsuConfigs) {}
 
         static message_tree_type to_tree(const RSUConfigList& rsuConfigList){
             message_tree_type tree;
