@@ -1,45 +1,4 @@
 services:
-  db:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      - MYSQL_DATABASE=IVP
-      - MYSQL_USER=IVP
-      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    network_mode: host
-    secrets:
-      - mysql_password
-    volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
-      # The following 5 files are used for CDA1Tenth. By default the standard "port_drayage.sql" file
-      # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
-      # three files to enable the CDA1Tenth sql files to be loaded.
-      #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
-      - mysql-datavolume:/var/lib/mysql
-
-  php:
-    image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
-    container_name: php
-    network_mode: host
-    restart: always
-    depends_on:
-      - db
-      - v2xhub
-    stdin_open: true
-    tty: true
-    volumes:
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
-      - ssl-certs-volume:/etc/apache2/ssl:ro
-
 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
@@ -79,32 +38,14 @@ services:
     volumes:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
       - ssl-certs-volume:/var/www/plugins/ssl:rw
-  port_drayage_webservice:
-    image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
-    container_name: port_drayage_webservice
-    network_mode: host
-    profiles: ["port_drayage"]
-    deploy:
-      resources:
-        limits:
-          memory: 1g
-        reservations:
-          memory: 512m
-    volumes:
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
-secrets:
-    mysql_password:
-        environment: MYSQL_PASSWORD
 
 volumes:
-  mysql-datavolume:
   ssl-certs-volume:
     # To access/set SSL certifications on host machine setup local mapping to ssl directory.
-    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # NOTE: Ensure directory exists and has non-root privileges before running
     # docker compose to prevent permission issues
     # driver: local
     # driver_opts:
@@ -113,7 +54,7 @@ volumes:
     #   device: './ssl' # Specify the absolute path on your host
   v2xhub-download-volume:
     # To access V2X Hub uploaded files on host machine setup local mapping to download directory.
-    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # NOTE: Ensure directory exists and has non-root privileges before running
     # docker compose to prevent permission issues
     # driver: local
     # driver_opts:
@@ -122,7 +63,7 @@ volumes:
     #   device: './download' # Specify the absolute path on your host
   v2xhub-logs-volume:
     # To access log files on host machine setup local mapping to logs directory.
-    # NOTE: Ensure directory exists and has non-root privileges before running 
+    # NOTE: Ensure directory exists and has non-root privileges before running
     # docker compose to prevent permission issues
     # driver: local
     # driver_opts:

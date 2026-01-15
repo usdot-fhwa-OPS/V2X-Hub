@@ -24,11 +24,11 @@ namespace TelematicBridge
     {
         // Reset registration status
         bool isRegistered = false;
-        int attempts_count = 0;
+        int attemptsCount = 0;
 
-        while (!isRegistered && attempts_count < REGISTRATION_MAX_ATTEMPTS)
+        while (!isRegistered && attemptsCount < REGISTRATION_MAX_ATTEMPTS)
         {
-            attempts_count++;
+            attemptsCount++;
             PLOG(logDEBUG2) << "Inside register unit requestor";
             natsMsg *reply = nullptr;
             string payload = "{\"unit_id\":\"" + _unit.unitId + "\"}";

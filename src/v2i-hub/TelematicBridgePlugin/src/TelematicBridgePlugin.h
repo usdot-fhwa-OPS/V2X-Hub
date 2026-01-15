@@ -6,6 +6,8 @@
 
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
+#include "TelematicRsuUnit.h"
+#include "RSUConfigWorker.h"
 #include <simulation/SimulationEnvUtils.h>
 
 
@@ -19,10 +21,19 @@ namespace TelematicBridge
         static CONSTEXPR const char *Telematic_MSGTYPE_J2735_STRING = "J2735";
         static CONSTEXPR const char *UNIT_TYPE_INFRASTRUCTURE = "Infrastructure";
         std::unique_ptr<TelematicUnit> _telematicUnitPtr;
+        std::unique_ptr<TelematicRsuUnit> _telematicRsuUnitPtr;
         std::string _unitId;
         std::string _unitName;
         std::string _natsURL;
         std::string _excludedMessages;
+        std::string _maxConnections;
+        int16_t _pluginHeartBeatInterval;
+        int16_t _rsuStatusMonitorInterval;
+        unique_ptr<tmx::utils::ThreadTimer> _rsuRegistrationConfigTimer;
+        bool _started = false;
+        int16_t rsuConfigUpdateIntervalInMillisec = 100;
+        uint _timerThId;
+        bool _isTRU = false;
         std::mutex _configMutex;
 
     public:
@@ -31,6 +42,7 @@ namespace TelematicBridge
         void OnStateChange(IvpPluginState state) override;
         void UpdateConfigSettings();
         void OnMessageReceived(IvpMessage *msg) override;
+        void BroadcastRSURegistrationConfigMessage();
 
     };
 

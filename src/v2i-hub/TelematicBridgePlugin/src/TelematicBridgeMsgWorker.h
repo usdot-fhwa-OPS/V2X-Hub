@@ -5,6 +5,7 @@
 #include <PluginLog.h>
 #include "TelematicBridgeException.h"
 #include "jsoncpp/json/json.h"
+#include <RSURegistrationConfigMessage.h>
 
 
 namespace TelematicBridge
@@ -16,12 +17,19 @@ namespace TelematicBridge
      * @return JSON value
      */
     Json::Value routeableMessageToJsonValue(tmx::routeable_message &msg);
+
+    /**
+     * @brief Create Json::Value from a rtmx::routeable_message
+     * @param msg tmx::routeable_message
+     * @return JSON value
+     */
+    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::messages::RSURegistrationConfigMessage& msg);
     /**
      * @brief Servialize a J2735 routeable message into JSON using
      * stol-j2735 library JER encoding functionality.
      * @note: This function assumes the input routeable_message is a J2735 encoded message.
      * @param msg tmx::routeable_message
-     * @return JSON string of the J2735 message payload 
+     * @return JSON string of the J2735 message payload
      */
     std::string j2735MessageToJson(tmx::routeable_message &msg);
     /**

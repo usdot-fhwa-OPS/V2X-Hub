@@ -2,7 +2,7 @@
 
 namespace TelematicBridge
 {
-    
+
     /**
      * @brief Create Json::Value from a rtmx::routeable_message
      * @param msg tmx::routeable_message
@@ -28,17 +28,38 @@ namespace TelematicBridge
         }
         return json;
     }
+
+    /**
+     * @brief Convert a JSON::Value to a TMX RSURegistrationConfigMessage message
+     * @param json The JSON::Value to convert
+     * @param msg Reference to routeable RSURegistrationConfigMessage to populate
+     * @return bool true if successful, false otherwise
+     */
+    bool jsonValueToRouteableMessage(const Json::Value& json, tmx::messages::RSURegistrationConfigMessage& msg)
+    {
+        try{
+            Json::FastWriter fasterWirter;
+            std::string json_str = fasterWirter.write(json);
+            tmx::messages::RSURegistrationConfigMessage rsuRegistrationConfigMsg;
+            msg.set_contents(json_str);
+        } catch (const std::exception& e){
+            FILE_LOG(tmx::utils::LogLevel::logDEBUG2) << "Failed to set RSURegistrationConfigMessag with error" << e.what();
+            return false;
+        }
+        return true;
+    }
+
     /**
      * @brief Servialize a J2735 routeable message into JSON using
      * stol-j2735 library JER encoding functionality.
      * @note: This function assumes the input routeable_message is a J2735 encoded message.
      * @param msg tmx::routeable_message
-     * @return JSON string of the J2735 message payload 
+     * @return JSON string of the J2735 message payload
      */
     std::string j2735MessageToJson(tmx::routeable_message &msg)
     {
         // Convert routeable message to J2735 encoded message
-        tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
+        tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg =
             msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
         // Decode Encode J2735 Message
         auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();

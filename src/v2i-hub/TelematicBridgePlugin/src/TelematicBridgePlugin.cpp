@@ -7,16 +7,39 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
-        _telematicUnitPtr = make_unique<TelematicUnit>();
         _unitId = std::getenv("INFRASTRUCTURE_ID");
         _unitName = std::getenv("INFRASTRUCTURE_NAME");
+        _isTRU = std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
+
+        if (_isTRU){
+
+            _natsURL = std::getenv("NATS_URL");
+            _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
+            _telematicRsuUnitPtr->connect(_natsURL);
+            // If using Telematic RSU Unit create timer to broadcast RSU Health Config
+            _rsuRegistrationConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
+            if ( !_started ) {
+                // Send RSU Config message to TMX core periodically at configurable interval.
+                _timerThId = _rsuRegistrationConfigTimer->AddPeriodicTick([this]()
+                            {
+                                this->BroadcastRSURegistrationConfigMessage();
+                                PLOG(logINFO) << "Updating RSU Health Configuration at interval (second): " << rsuConfigUpdateIntervalInMillisec; },
+                                                            std::chrono::milliseconds(rsuConfigUpdateIntervalInMillisec));
+                PLOG(logDEBUG1) << "RSU Health Monitor timer thread ID: " << _timerThId;
+                _rsuRegistrationConfigTimer->Start();
+                _started = true;
+            }
+        }
+        else{
+            _telematicUnitPtr = make_unique<TelematicUnit>();
+        }
     }
 
     void TelematicBridgePlugin::OnMessageReceived(IvpMessage *msg)
-    {   
+    {
         auto hasError = false;
         tmx::routeable_message routeMsg(msg);
         // Convert IVP message to JSON CPP Value
@@ -40,13 +63,15 @@ namespace TelematicBridge
             stringstream topic;
             topic << (routeMsg.get_type()) << "_" << (routeMsg.get_subtype()) << "_" << (routeMsg.get_source());
             auto topicStr = topic.str();
-            _telematicUnitPtr->updateAvailableTopics(topicStr);
-            if (_telematicUnitPtr->inSelectedTopics(topicStr))
-            {
-                _telematicUnitPtr->publishMessage(topicStr, json);
+            if (_telematicUnitPtr){
+                _telematicUnitPtr->updateAvailableTopics(topicStr);
+                if (_telematicUnitPtr->inSelectedTopics(topicStr))
+                {
+                    _telematicUnitPtr->publishMessage(topicStr, json);
+                }
             }
         }
-        
+
     }
 
     void TelematicBridgePlugin::UpdateConfigSettings()
@@ -79,6 +104,27 @@ namespace TelematicBridge
     {
         TmxMessageManager::OnConfigChanged(key, value);
         UpdateConfigSettings();
+    }
+
+
+    void TelematicBridgePlugin::BroadcastRSURegistrationConfigMessage()
+    {
+        Json::Value rsuRegistrationConfigJsonArray = _telematicRsuUnitPtr->constructRSURegistrationDataString();
+
+        if(!rsuRegistrationConfigJsonArray.empty())
+        {
+
+            tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
+            if(jsonValueToRouteableMessage(rsuRegistrationConfigJsonArray, sendRsuRegistrationConfigMsg))
+            {
+                BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
+            }
+            else{
+                PLOG(logERROR) <<"Error converting rsu health config to TMX message";
+            }
+
+        }
+
     }
 }
 

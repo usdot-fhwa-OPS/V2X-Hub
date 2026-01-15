@@ -23,22 +23,21 @@ namespace TelematicBridge
     class TelematicUnit
     {
     private:
-        std::mutex _unitMutex;
+        unit_st _unit;                                                      // Variable to store the unit information
+    protected:
         std::mutex _availableTopicsMutex;
         std::mutex _excludedTopicsMutex;
-        unit_st _unit;                                                        // Global variable to store the unit information
-        std::vector<std::string> _availableTopics;                                      // Global variable to store available topics
-        std::string _excludedTopics;                                               // Global variable to store topics that are excluded by the users
-        std::vector<std::string> _selectedTopics;                                       // Global variable to store selected topics confirmed by users
+
+        std::vector<std::string> _availableTopics;                                      // Variable to store available topics
+        std::string _excludedTopics;                                               // Variable to store topics that are excluded by the users
+        std::vector<std::string> _selectedTopics;                                       // Variable to store selected topics confirmed by users
         static CONSTEXPR const char *AVAILABLE_TOPICS = ".available_topics";  // NATS subject to pub/sub available topics
         static CONSTEXPR const char *REGISTER_UNIT_TOPIC = "*.register_unit"; // NATS subject to pub/sub registering unit
         static CONSTEXPR const char *PUBLISH_TOPICS = ".publish_topics";      // NATS subject to publish data stream
         static CONSTEXPR const char *CHECK_STATUS = ".check_status";          // NATS subject to pub/sub checking unit status
-        natsConnection *_conn = nullptr;                                      // Global NATS connection object
         natsSubscription *_subAvailableTopic = nullptr;                       // Global NATS subscription object
         natsSubscription *_subSelectedTopic = nullptr;                        // Global NATS subscription object
         natsSubscription *_subCheckStatus = nullptr;                          // Global NATS subscription object
-        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
         std::string _eventName;                                                    // Testing event the unit is assigned to
         std::string _eventLocation;                                                // Testing event location
         std::string _testingType;                                                  // Testing type
@@ -54,9 +53,13 @@ namespace TelematicBridge
         static CONSTEXPR const char *TOPICS_KEY = "topics";                       // topics key used to find topics value from JSON
         static CONSTEXPR const char *NAME_KEY = "name";                           // topics key used to find topics value from JSON
         static const int MILLI_TO_MICRO = 1000;
-        static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
+
 
     public:
+        std::mutex _unitMutex;
+        natsConnection *_conn = nullptr;                                      // Global NATS connection object
+        static const int REGISTRATION_MAX_ATTEMPTS = 30;                          //The maximum numbers of attempts allowed to register this unit with server
+        int64_t TIME_OUT = 10000;                                             // NATS Connection time out in  milliseconds
         /**
          *@brief Construct telematic unit
          */
@@ -65,14 +68,14 @@ namespace TelematicBridge
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
          */
-        void connect(const std::string &natsURL);
+        virtual void connect(const std::string &natsURL);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        void registerUnitRequestor();
+        virtual void registerUnitRequestor();
 
         /**
          * @brief A NATS replier to subscribe to NATS server and receive available topics request.
