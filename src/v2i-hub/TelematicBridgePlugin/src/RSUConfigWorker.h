@@ -4,6 +4,7 @@
 #include "PluginLog.h"
 #include <jsoncpp/json/json.h>
 #include <unordered_map>
+#include "TelematicBridgeException.h"
 
 
 namespace TelematicBridge
@@ -273,7 +274,7 @@ namespace TelematicBridge
          * @param ac Action enum value to convert
          * @return String representation of the action.
          */
-        std::string actionToString(action ac);
+        std::string actionToString(action ac) const;
 
         /**
          * @brief Convert string to action enum

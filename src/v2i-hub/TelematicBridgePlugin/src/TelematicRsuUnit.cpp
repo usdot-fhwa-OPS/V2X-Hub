@@ -22,7 +22,7 @@ namespace TelematicBridge
     {
         bool isConnected = false;
         int attemptsCount = 0;
-        natsStatus s;
+        natsStatus s = NATS_NO_SERVER;
 
         while ((s != NATS_OK) && attemptsCount < CONNECTION_MAX_ATTEMPTS)
         {

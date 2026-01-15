@@ -9,7 +9,7 @@ namespace TelematicBridge
         return action::unknown;
     }
 
-    std::string truConfigWorker::actionToString(action ac){
+    std::string truConfigWorker::actionToString(action ac) const{
         switch (ac){
             case action::add :
                 return "add";
@@ -30,7 +30,7 @@ namespace TelematicBridge
         {
             if (!json.isMember(key)) {
                 std::string error = "Missing required key" + key;
-                throw std::runtime_error(error);
+                throw TelematicBridgeException(error);
             }
         }
     }
@@ -65,6 +65,7 @@ namespace TelematicBridge
             PLOG(logERROR) << "Could not load config from from file, RSU configuration needs to be defined on the UI.";
             return false;
         }
+        return true;
     }
 
     bool truConfigWorker::updateTRUStatus(const Json::Value& jsonVal){
