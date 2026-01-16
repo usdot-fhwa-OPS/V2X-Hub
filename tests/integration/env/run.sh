@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+"""
+# Start the V2X-Hub Docker Compose stack for integration testing.
+# Waits for the UI to be reachable and then applies optional plugin selection.
+"""
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
