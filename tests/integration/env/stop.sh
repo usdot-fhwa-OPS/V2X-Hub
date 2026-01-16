@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+"""
+# Stop the V2X-Hub Docker Compose stack for integration testing.
+"""
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"

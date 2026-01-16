@@ -52,16 +52,18 @@ Example: MAP plugin reads from:
 
 ```bash
 python3 tests/integration/injectors/inject_file.py \
-  --payload tests/integration/inputs/MAP/mapupermsg.txt \
+  --payload tests/integration/inputs/MAP/MAP_9709_UPER.txt \
   --service v2xhub \
   --dest /var/www/download/MAP/MAP_9709_UPER.txt \
-  --restart
+  --toggle-plugin MAP
+
 ```
 
 Notes:
 
 - --dest must match the file path shown in the plugin configuration.
 - --restart is used when the plugin loads the file only at startup.
+- --delay is the interval (seconds) between repeats. Example: `--repeat 20 --delay 0.1` sends 20 packets ~10 Hz.
 
 ### UDP-based injection (example: SPAT)
 
@@ -84,7 +86,7 @@ MessageReceiver listens on UDP port 26789 in the plugin configuration.
 
 ```bash
 python3 tests/integration/injectors/inject_udp.py \
-  --payload tests/integration/inputs/MessageReceiver/sample_bsm.bin \
+  --payload tests/integration/inputs/MessageReceiver/sample.bin \
   --port 26789 \
   --repeat 20 \
   --delay 0.1

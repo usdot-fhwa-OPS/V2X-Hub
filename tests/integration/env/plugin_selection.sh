@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+"""
+# Enable a selected set of plugins for the integration environment by updating the DB.
+# This is used to keep the environment focused on only the plugins needed for a test run.
+"""
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
