@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <mutex>
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
 #include <rsu/RSUSpec.h>
@@ -10,15 +11,18 @@
 namespace RSUHealthMonitor
 {
     static constexpr const char *RSUSKey = "RSUS";
-    static constexpr const char *RSUIpKey = "RSUIp";
-    static constexpr const char *SNMPPortKey = "SNMPPort";
-    static constexpr const char *UserKey = "User";
-    static constexpr const char *AuthProtocolKey = "AuthProtocol";
-    static constexpr const char *PrivProtocolKey = "PrivacyProtocol";
-    static constexpr const char *AuthPassPhraseKey = "AuthPassPhrase";
-    static constexpr const char *PrivPassPhraseKey = "PrivacyPassPhrase";
-    static constexpr const char *RSUMIBVersionKey = "RSUMIBVersion";
-    static constexpr const char *SecurityLevelKey = "SecurityLevel";
+    static constexpr const char *EventKey = "event";
+    static constexpr const char *RSUKey = "rsu";
+    static constexpr const char *RSUIpKey = "ip";
+    static constexpr const char *SNMPPortKey = "port";
+    static constexpr const char *SNMPKey = "snmp";
+    static constexpr const char *UserKey = "user";
+    static constexpr const char *AuthProtocolKey = "authProtocol";
+    static constexpr const char *PrivProtocolKey = "privacyProtocol";
+    static constexpr const char *AuthPassPhraseKey = "authPassPhrase";
+    static constexpr const char *PrivPassPhraseKey = "privacyPassPhrase";
+    static constexpr const char *RSUMIBVersionKey = "rsuMibVersion";
+    static constexpr const char *SecurityLevelKey = "securityLevel";
 
   
 
@@ -33,6 +37,7 @@ namespace RSUHealthMonitor
         std::string privPassPhrase;
         std::string securityLevel;
         tmx::utils::rsu::RSU_SPEC mibVersion;
+        std::string event;
         friend std::ostream &operator<<(std::ostream &os, const RSUConfiguration &config);
     };
 
@@ -40,6 +45,8 @@ namespace RSUHealthMonitor
     {
     private:
         std::vector<RSUConfiguration> configs;
+        mutable std::mutex _configMutex;
+        
         /***
          * @brief Parse JSON string and return the corresponding JSON value.
          * @param rsuConfigsStr  A JSON string includes all RSUs related configrations.
@@ -55,6 +62,18 @@ namespace RSUHealthMonitor
          * @param rsuConfigsStr A JSON string includes all RSUs related configrations.
          */
         void parseRSUs(const std::string &rsuConfigsStr);
+        
+        /**
+         * @brief Add a single RSU configuration to the list
+         * @param config RSUConfiguration to add
+         */
+        void addConfig(const RSUConfiguration &config);
+        
+        /**
+         * @brief Clear all RSU configurations
+         */
+        void clearConfigs();
+        
         /**
          * @brief Get a list of RSUConfiguration struct.
          */

@@ -5,6 +5,7 @@
 #include <jsoncpp/json/json.h>
 #include <RSUStatusMessage.h>
 #include <rsu/RSUSpec.h>
+#include <RSURegistrationConfigMessage.h>
 
 #include "RSUHealthMonitorWorker.h"
 #include "RSUConfigurationList.h"
@@ -41,6 +42,12 @@ namespace RSUHealthMonitor
          * @param rsuStatusJson RSU status in JSON format
          */
         void BroadcastRSUStatus(const Json::Value &rsuStatusJson, const tmx::utils::rsu::RSU_SPEC &mibVersion);
+
+        /**
+         * @brief Handle RSURegistrationConfigMessage to update configurations
+         * @param msg RSURegistrationConfigMessage containing updated RSU configurations
+         */
+        void OnRSURegistrationConfigMessage(const tmx::messages::RSURegistrationConfigMessage &msg);
 
     public:
         explicit RSUHealthMonitorPlugin(const std::string &name);

@@ -395,4 +395,16 @@ namespace TelematicBridge
     std::string truConfigWorker::getUnitId(){
         return _unitId;
     }
+    
+    std::vector<rsuConfig> truConfigWorker::getRegisteredRSUs() const
+    {
+        std::vector<rsuConfig> rsus;
+        rsus.reserve(_truRegistrationMap.size());
+        
+        for (const auto& configPair : _truRegistrationMap) {
+            rsus.push_back(configPair.second);
+        }
+        
+        return rsus;
+    }
 }
