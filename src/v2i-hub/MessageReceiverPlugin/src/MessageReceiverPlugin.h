@@ -80,9 +80,6 @@ private:
 	uint _skippedSignVerifyErrorResponse;
 	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
 
-
-	
-
 };
 
 } /* namespace MessageReceiver */

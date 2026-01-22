@@ -28,8 +28,13 @@ namespace RSUHealthMonitor
         auto rsuArray = json[RSUSKey];
         if (!rsuArray.isArray())
         {
-            throw RSUConfigurationException("RSUConfigurationList: Missing RSUS array.");
+            throw RSUConfigurationException("RSUConfigurationList: Missing rsuConfigs array.");
         }
+
+        if(rsuArray.empty()){
+            return;
+        }
+        
         for (auto i = 0; i != rsuArray.size(); i++)
         {
             // Parse optional event field

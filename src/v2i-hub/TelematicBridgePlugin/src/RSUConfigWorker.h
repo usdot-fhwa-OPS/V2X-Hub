@@ -59,10 +59,10 @@ namespace TelematicBridge
 
         //Unit Configs Key static keys
         static CONSTEXPR const char *TRU_UNIT_CONFIG_KEY = "unitConfig";
-        static CONSTEXPR const char *TRU_UNIT_ID_KEY = "unitID";
+        static CONSTEXPR const char *TRU_UNIT_ID_KEY = "unitId";
         static CONSTEXPR const char *TRU_UNIT_NAME_KEY = "name";
         static CONSTEXPR const char *TRU_MAX_CONNECTIONS_KEY = "maxConnections";
-        static CONSTEXPR const char *TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY = "pluginHeartbeatInterval";
+        static CONSTEXPR const char *TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY = "bridgePluginHeartbeatInterval";
         static CONSTEXPR const char *TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY = "healthMonitorPluginHeartbeatInterval";
         static CONSTEXPR const char  *TRU_RSU_STATUS_MONITOR_INTERVAL_KEY = "rsuStatusMonitorInterval";
 
@@ -75,12 +75,12 @@ namespace TelematicBridge
         static CONSTEXPR const char *TRU_EVENT_KEY = "event";                                   // event key used to find rsu event value from JSON
         static CONSTEXPR const char *TRU_SNMP_KEY = "snmp";                                     // snmp key used to find rsu snmp configuration from JSON
         static CONSTEXPR const char *TRU_USER_KEY = "user";
-        static CONSTEXPR const char *TRU_PRIVACY_PROTOCOL_KEY = "privacyprotocol";
-        static CONSTEXPR const char *TRU_AUTH_PROTOCOL_KEY = "authprotocol";
-        static CONSTEXPR const char *TRU_AUTH_PASS_PHRASE_KEY = "authpassphrase";
-        static CONSTEXPR const char *TRU_PRIVACY_PASS_PHRASE_KEY = "privacypassphrase";
-        static CONSTEXPR const char *TRU_RSU_MIB_VERSION_KEY = "rsumibversion";
-        static CONSTEXPR const char *TRU_SECURITY_LEVEL_KEY = "securitylevel";
+        static CONSTEXPR const char *TRU_PRIVACY_PROTOCOL_KEY = "privacyProtocol";
+        static CONSTEXPR const char *TRU_AUTH_PROTOCOL_KEY = "authProtocol";
+        static CONSTEXPR const char *TRU_AUTH_PASS_PHRASE_KEY = "authPassPhrase";
+        static CONSTEXPR const char *TRU_PRIVACY_PASS_PHRASE_KEY = "privacyPassPhrase";
+        static CONSTEXPR const char *TRU_RSU_MIB_VERSION_KEY = "rsuMibVersion";
+        static CONSTEXPR const char *TRU_SECURITY_LEVEL_KEY = "securityLevel";
 
         static CONSTEXPR const char *TRU_TIMESTAMP_KEY = "timestamp";
 
@@ -199,7 +199,7 @@ namespace TelematicBridge
          * and timestamp.
          * @param jsonVal JSON object containing update message with structure:
          *                {
-         *                  "unitConfig": [ { "unitID": "..." }, ... ],
+         *                  "unitConfig": [ { "unitId": "..." }, ... ],
          *                  "rsuConfigs": [ { ... }, ... ],
          *                  "timestamp": ...
          *                }
@@ -260,7 +260,7 @@ namespace TelematicBridge
          * @param isRegistrationSuccessful Boolean indicating registration outcome
          * @return Json::Value JSON object with structure:
          *         {
-         *           "unitConfig": [ { "unitID": "..." } ],
+         *           "unitConfig": [ { "unitId": "..." } ],
          *           "rsuConfigs": [ { "ip": "...", "port": ... }, ... ],
          *           "status": "success" | "failed",
          *           "timestamp": <current_time_in_milliseconds>
@@ -320,9 +320,9 @@ namespace TelematicBridge
          * Creates a JSON object containing the current unit configuration parameters
          * @return Json::Value JSON object with structure:
          *         {
-         *           "unitID": "...",
+         *           "unitId": "...",
          *           "maxConnections": ...,
-         *           "pluginHeartbeatInterval": ...,
+         *           "bridgePluginHeartbeatInterval": ...,
          *           "healthMonitorPluginHeartbeatInterval": ...,
          *           "rsuStatusMonitorINterval": ...
          *         }
@@ -334,6 +334,14 @@ namespace TelematicBridge
          * @return std::vector<rsuConfig> Vector of all registered RSU configurations
          */
         std::vector<rsuConfig> getRegisteredRSUs() const;
+
+        /**
+         * @brief Get event name for a specific RSU by IP and port
+         * @param rsuIp RSU IP address
+         * @param rsuPort RSU port number
+         * @return std::string Event name if RSU found, empty string otherwise
+         */
+        std::string getEventByRsu(const std::string &rsuIp, int rsuPort) const;
     };
 
 }

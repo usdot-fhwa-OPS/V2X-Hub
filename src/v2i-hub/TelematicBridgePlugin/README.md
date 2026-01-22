@@ -106,14 +106,14 @@ IS_TRU=true                          # Enable TRU mode
 INFRASTRUCTURE_ID=Unit001            # Unit identifier
 INFRASTRUCTURE_NAME=EastIntersection # Unit name
 NATS_URL=nats://localhost:4222      # NATS server URL
-RSU_CONFIG_PATH=/config/rsu.json    # RSU configuration file path
+RSU_CONFIG_PATH=/workspace/rsu.json    # RSU configuration file path
 ```
 
 ### RSU Configuration File
 ```json
 {
   "unitConfig": [{
-    "unitID": "Unit001",
+    "unitId": "Unit001",
     "maxConnections": 10
   }],
   "rsuConfigs": [{
@@ -125,12 +125,12 @@ RSU_CONFIG_PATH=/config/rsu.json    # RSU configuration file path
     },
     "snmp": {
       "user": "admin",
-      "privacyprotocol": "AES",
-      "authprotocol": "SHA",
-      "authpassphrase": "pass123",
-      "privacypassphrase": "priv123",
-      "rsumibversion": "4.1",
-      "securitylevel": "authPriv"
+      "privacyProtocol": "AES",
+      "authProtocol": "SHA",
+      "authPassPhrase": "pass123",
+      "privacyPassPhrase": "priv123",
+      "rsuMibVersion": "NTCIP1218",
+      "securityLevel": "authPriv"
     }
   }],
   "timestamp": 1234567890
@@ -146,7 +146,7 @@ RSU_CONFIG_PATH=/config/rsu.json    # RSU configuration file path
 ```json
 {
   "unitConfig": [{
-    "unitID": "Unit001",
+    "unitId": "Unit001",
     "maxConnections": 10,
     "bridgePluginHeartbeatInterval": 30,
     "healthMonitorPluginHeartbeatInterval": 60,
@@ -165,7 +165,7 @@ RSU_CONFIG_PATH=/config/rsu.json    # RSU configuration file path
 ##### Response
 ```json
 {
-  "unitConfig": [{"unitID": "Unit001"}],
+  "unitConfig": [{"unitId": "Unit001"}],
   "rsuConfigs": [
     {"ip": "192.168.1.10", "port": 161}
   ],

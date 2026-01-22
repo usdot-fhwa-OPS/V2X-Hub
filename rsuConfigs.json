@@ -1,0 +1,24 @@
+{
+  "unitConfig": [{
+    "unitId": "Unit001",
+    "maxConnections": 10
+  }],
+  "rsuConfigs": [{
+    "action": "add",
+    "event": "startup",
+    "rsu": {
+      "ip": "127.0.0.1",
+      "port": 1610
+    },
+    "snmp": {
+      "user": "authOnlyUser",
+      "privacyProtocol": "AES-256",
+      "authProtocol": "SHA-512",
+      "authPassPhrase": "dummy123",
+      "privacyPassPhrase": "dummy123",
+      "rsuMibVersion": "NTCIP1218",
+      "securityLevel": "authPriv"
+    }
+  }],
+  "timestamp": 1234567890
+}

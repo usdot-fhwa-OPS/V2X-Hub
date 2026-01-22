@@ -10,7 +10,7 @@
 
 namespace RSUHealthMonitor
 {
-    static constexpr const char *RSUSKey = "RSUS";
+    static constexpr const char *RSUSKey = "rsuConfigs";
     static constexpr const char *EventKey = "event";
     static constexpr const char *RSUKey = "rsu";
     static constexpr const char *RSUIpKey = "ip";

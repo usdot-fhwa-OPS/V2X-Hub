@@ -24,7 +24,7 @@ class RSURegistrationConfigMessage : public tmx::message
 		static constexpr const char* MessageSubType = MSGSUBTYPE_RSU_REGISTRATION_CONFIG_STRING;
 
 		//Telematic unit identifier
-		object_attribute(TelematicRSUUnit, unit);
+		object_attribute(TelematicRSUUnit, unitConfig);
 
 		//List of Registered RSUs
 		object_attribute(RSUConfigList, rsuConfigs);

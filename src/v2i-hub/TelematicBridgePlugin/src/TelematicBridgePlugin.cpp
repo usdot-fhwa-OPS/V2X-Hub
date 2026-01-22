@@ -9,41 +9,62 @@ namespace TelematicBridge
 {
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
-        _unitId = std::getenv("INFRASTRUCTURE_ID");
-        _unitName = std::getenv("INFRASTRUCTURE_NAME");
-        _isTRU = std::getenv("IS_TRU");
+        // Safely get environment variables with null checks
+        const char* infraId = std::getenv("INFRASTRUCTURE_ID");
+        const char* infraName = std::getenv("INFRASTRUCTURE_NAME");
+        const char* natsUrl = std::getenv("NATS_URL");
+        
+        _unitId = infraId ? infraId : "";
+        _unitName = infraName ? infraName : "";
+        _isTRU = true;
+        //std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
+        PLOG(logINFO) << "TelematicBridgePlugin initialized with Unit ID: " << _unitId << ", Unit Name: " << _unitName;
 
         if (_isTRU){
 
-            _natsURL = std::getenv("NATS_URL");
+            _natsURL = natsUrl ? natsUrl : "nats://localhost:4222";
             _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
-            _telematicRsuUnitPtr->connect(_natsURL);
+            try
+            {
+                _telematicRsuUnitPtr->connect(_natsURL);
+            }
+            catch (const TelematicBridgeException &e)
+            {
+                PLOG(tmx::utils::LogLevel::logERROR) << "TelematicBridge encountered unhandled exception during initialization: " << e.what();
+                // Continue initialization but mark as error - timers will still run for retry
+            }
             // If using Telematic RSU Unit create timer to broadcast RSU Health Config
-            _rsuRegistrationConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
-            if ( !_started ) {
+            if ( !_startedRegistrationTh ) {
+                _rsuRegistrationConfigTimer = std::make_unique<tmx::utils::ThreadTimer>();
                 // Send RSU Config message to TMX core periodically at configurable interval.
                 _timerThId = _rsuRegistrationConfigTimer->AddPeriodicTick([this]()
                             {
                                 this->BroadcastRSURegistrationConfigMessage();
-                                PLOG(logINFO) << "Updating RSU Health Configuration at interval (second): " << rsuConfigUpdateIntervalInMillisec; },
+                                PLOG(logDEBUG) << "Updating RSUHealthMonitorPlugin Configuration at interval (milliseconds): " << rsuConfigUpdateIntervalInMillisec; },
                                                             std::chrono::milliseconds(rsuConfigUpdateIntervalInMillisec));
-                PLOG(logDEBUG1) << "RSU Health Monitor timer thread ID: " << _timerThId;
+                PLOG(logINFO) << "RSU Health Monitor timer thread ID: " << _timerThId;
                 _rsuRegistrationConfigTimer->Start();
-                _started = true;
+                _startedRegistrationTh = true;
             }
 
-            // Create timer to publish TRU health status to NATS
-            _healthStatusTimer = std::make_unique<tmx::utils::ThreadTimer>();
-            _healthStatusTimerThId = _healthStatusTimer->AddPeriodicTick([this]()
-                        {
-                            this->PublishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX, _truHealthStatusTracker.getSnapshot().toJson());
-                            PLOG(logDEBUG1) << "Publishing TRU health status at interval (ms): " << _pluginHeartBeatInterval; },
-                                                        std::chrono::milliseconds(_pluginHeartBeatInterval));
-            PLOG(logDEBUG1) << "Health status monitor timer thread ID: " << _healthStatusTimerThId;
-            _healthStatusTimer->Start();
+            if(!_startedHealthMonitorTh){
+                // Create timer to publish TRU health status to NATS
+                _healthStatusTimer = std::make_unique<tmx::utils::ThreadTimer>();
+                _healthStatusTimerThId = _healthStatusTimer->AddPeriodicTick([this]()
+                            {
+                                if (_telematicRsuUnitPtr)
+                                {
+                                    _telematicRsuUnitPtr->PublishPluginHealthStatus();
+                                }
+                                PLOG(logINFO) << "Publishing TRU health status at interval (seconds): " << _pluginHeartBeatInterval; },
+                                                            std::chrono::seconds(_pluginHeartBeatInterval));
+                PLOG(logINFO) << "Health status monitor timer thread ID: " << _healthStatusTimerThId;
+                _healthStatusTimer->Start();
+                _startedHealthMonitorTh = true;
+            }
         }
         else{
             _telematicUnitPtr = make_unique<TelematicUnit>();
@@ -83,11 +104,23 @@ namespace TelematicBridge
             stringstream topic;
             topic << (routeMsg.get_type()) << "_" << (routeMsg.get_subtype()) << "_" << (routeMsg.get_source());
             auto topicStr = topic.str();
-            if (_telematicUnitPtr){
-                _telematicUnitPtr->updateAvailableTopics(topicStr);
-                if (_telematicUnitPtr->inSelectedTopics(topicStr))
+            if(_telematicRsuUnitPtr){
+                // Extract RSU IP and port from DSRC metadata (populated by TmxMessageManager)
+                std::string rsuIp = routeMsg.get_dsrcRsuIp();
+                int rsuPort = routeMsg.get_dsrcRsuPort();
+                
+                // Only process if we have valid RSU information
+                if (!rsuIp.empty() && rsuPort > 0)
                 {
-                    _telematicUnitPtr->publishMessage(topicStr, json);
+                    _telematicRsuUnitPtr->updateRsuAvailableTopics(rsuIp, rsuPort, topicStr);
+                    if (_telematicRsuUnitPtr->inRsuSelectedTopics(rsuIp, rsuPort, topicStr))
+                    {
+                        _telematicRsuUnitPtr->publishRsuDataStream(rsuIp, rsuPort, topicStr, json);
+                    }
+                }
+                else
+                {
+                    PLOG(logDEBUG) << "Message does not contain RSU DSRC metadata (dsrcRsuIp/dsrcRsuPort), skipping RSU-specific routing";
                 }
             }
         }
@@ -99,7 +132,7 @@ namespace TelematicBridge
         lock_guard<mutex> lock(_configMutex);
         GetConfigValue<string>("NATSUrl", _natsURL);
         GetConfigValue<string>("MessageExclusionList", _excludedMessages);
-        GetConfigValue<int16_t>("PluginHeartBeatInterval", _pluginHeartBeatInterval);
+        GetConfigValue<int16_t>("bridgePluginHeartbeatInterval", _pluginHeartBeatInterval);
         unit_st unit = {_unitId, _unitName, UNIT_TYPE_INFRASTRUCTURE};
         if (_telematicUnitPtr)
         {
@@ -116,7 +149,16 @@ namespace TelematicBridge
             UpdateConfigSettings();
             if (_telematicUnitPtr)
             {
-                _telematicUnitPtr->connect(_natsURL);
+                try
+                {
+                    _telematicUnitPtr->connect(_natsURL);
+                }
+                catch (const TelematicBridgeException &e)
+                {
+                    FILE_LOG(tmx::utils::LogLevel::logERROR) << "TelematicBridge encountered unhandled exception: " << e.what();
+                    UpdateUnitHealthStatus("error");
+                    return;
+                }
             }
             // Update unit health status to registered and running
             UpdateUnitHealthStatus("running");
@@ -134,19 +176,19 @@ namespace TelematicBridge
     }
 
 
-    void TelematicBridgePlugin::ProcessRSUStatusMessage(const tmx::routeable_message &routeMsg)
+    void TelematicBridgePlugin::ProcessRSUStatusMessage(tmx::routeable_message &routeMsg)
     {
         try
         {
-            // Parse RSU status message
-            tmx::messages::RSUStatusMessage rsuStatusMsg;
-            rsuStatusMsg.set_contents(routeMsg.get_payload());
+            // Parse RSU status message - get the payload as a message
+            auto payloadMsg = routeMsg.get_payload_str();
+            PLOG(logINFO) << "Processing RSU Status Message payload: " << payloadMsg;
             
             // Parse JSON content
             Json::CharReaderBuilder reader;
             Json::Value rsuStatusJson;
             std::string errs;
-            std::istringstream s(rsuStatusMsg.get_contents());
+            std::istringstream s(payloadMsg);
             
             if (Json::parseFromStream(reader, s, &rsuStatusJson, &errs))
             {
@@ -154,19 +196,22 @@ namespace TelematicBridge
                 if (rsuStatusJson.isMember("rsuIpAddress") && rsuStatusJson.isMember("rsuSnmpPort"))
                 {
                     std::string rsuIp = rsuStatusJson["rsuIpAddress"].asString();
-                    int rsuPort = rsuStatusJson["rsuSnmpPort"].asInt();
+                    
+                    // Handle rsuSnmpPort as either string or int
+                    int rsuPort = std::stoi(rsuStatusJson["rsuSnmpPort"].asString());                    
+                    
                     std::string event = rsuStatusJson.isMember("event") ? 
-                                      rsuStatusJson["event"].asString() : "";
+                                      rsuStatusJson["event"].asString() : "";                    
                     
-                    // Create RSU ID in format "IP:port"
+                                      // Create RSU ID in format "IP:port"
                     std::string rsuId = rsuIp + ":" + std::to_string(rsuPort);
-                    
+
                     // Determine health status from rsuChanStatus field
                     std::string healthStatus = rsuStatusJson.isMember("rsuChanStatus") ? 
                                               rsuStatusJson["rsuChanStatus"].asString() : "unknown";
                     
                     // Create RSUHealthStatusMessage
-                    ::TelematicBridgePlugin::RSUHealthStatusMessage rsuHealthStatus(
+                    RSUHealthStatusMessage rsuHealthStatus(
                         rsuIp, 
                         rsuPort, 
                         healthStatus, 
@@ -174,11 +219,13 @@ namespace TelematicBridge
                     );
                     
                     // Update the TRU health status tracker
-                    _truHealthStatusTracker.updateRsuStatus(rsuId, rsuHealthStatus);
-                    
-                    PLOG(logINFO) << "Updated RSU health status for " << rsuId 
-                                  << " with status: " << healthStatus;
-                    PublishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX, _truHealthStatusTracker.getSnapshot().toJson());
+                    if (_telematicRsuUnitPtr)
+                    {
+                        _telematicRsuUnitPtr->updateRsuHealthStatus(rsuId, rsuHealthStatus);
+                        PLOG(logINFO) << "Updated RSU health status for " << rsuId 
+                                      << " with status: " << healthStatus;
+                        _telematicRsuUnitPtr->PublishRSUHealthStatus();
+                    }
                 }
             }
             else
@@ -192,34 +239,6 @@ namespace TelematicBridge
         }
     }
 
-    void TelematicBridgePlugin::PublishHealthStatusToNATS(const std::string &topicSuffix, const Json::Value &healthData)
-    {
-        try
-        {
-            if (!_telematicRsuUnitPtr)
-            {
-                PLOG(logWARNING) << "TelematicRsuUnit not available for health status publishing";
-                return;
-            }
-
-            // Get TRU health status snapshot
-            auto truHealthStatus = _truHealthStatusTracker.getSnapshot();
-            Json::Value healthJson = truHealthStatus.toJson();
-
-            // Construct NATS topic: unit.<unit_id>.<topicSuffix>
-            std::string topic = "unit." + (_unitId.empty() ? "unknown" : _unitId) + "." + topicSuffix;
-
-            // Publish to NATS using TelematicRsuUnit's publishMessage
-            _telematicRsuUnitPtr->publishMessage(topic, healthData);
-            
-            PLOG(logDEBUG1) << "Published health status to topic: " << topic;
-        }
-        catch (const std::exception &e)
-        {
-            FILE_LOG(tmx::utils::LogLevel::logERROR) << "Error publishing health status: " << e.what();
-        }
-    }
-
     void TelematicBridgePlugin::UpdateUnitHealthStatus(const std::string &status)
     {
         try
@@ -230,17 +249,19 @@ namespace TelematicBridge
                 now.time_since_epoch()).count();
             
             // Create UnitHealthStatusMessage
-            ::TelematicBridgePlugin::UnitHealthStatusMessage unitStatus;
+            UnitHealthStatusMessage unitStatus;
             unitStatus.setUnitId(_unitId.empty() ? "unknown" : _unitId);
             unitStatus.setBridgePluginStatus(status);
             unitStatus.setLastCommunicationTimestamp(timestamp);
             
             // Update the TRU health status tracker
-            _truHealthStatusTracker.updateUnitStatus(unitStatus);
-            
-            PLOG(logINFO) << "Updated unit health status: unitId=" << unitStatus.getUnitId()
-                          << ", status=" << status
-                          << ", timestamp=" << timestamp;
+            if (_telematicRsuUnitPtr)
+            {
+                _telematicRsuUnitPtr->updateUnitHealthStatus(unitStatus);
+                PLOG(logINFO) << "Updated unit health status: unitId=" << unitStatus.getUnitId()
+                              << ", status=" << status
+                              << ", timestamp=" << timestamp;
+            }
         }
         catch (const std::exception &e)
         {
@@ -250,31 +271,40 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::BroadcastRSURegistrationConfigMessage()
     {
-        Json::Value rsuRegistrationConfigJsonArray = _telematicRsuUnitPtr->constructRSURegistrationDataString();
-
-        if(!rsuRegistrationConfigJsonArray.empty())
+        try
         {
+            std::string rsuRegistrationConfigJsonStr = _telematicRsuUnitPtr->constructRSURegistrationDataString();
 
-            tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
-            if(jsonValueToRouteableMessage(rsuRegistrationConfigJsonArray, sendRsuRegistrationConfigMsg))
+            if(!rsuRegistrationConfigJsonStr.empty())
             {
-                BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
+                // Parse the JSON string to Json::Value
+                Json::CharReaderBuilder reader;
+                Json::Value rsuRegistrationConfigJsonArray;
+                std::string errs;
+                std::istringstream s(rsuRegistrationConfigJsonStr);
+                
+                if (Json::parseFromStream(reader, s, &rsuRegistrationConfigJsonArray, &errs))
+                {
+                    tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
+                    if(jsonValueToRouteableMessage(rsuRegistrationConfigJsonArray, sendRsuRegistrationConfigMsg))
+                    {
+                        BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
+                    }
+                    else{
+                        PLOG(logERROR) <<"Error converting rsu health config to TMX message";
+                    }
+                }
+                else
+                {
+                    PLOG(logERROR) << "Error parsing RSU registration config JSON: " << errs;
+                }
             }
-            else{
-                PLOG(logERROR) <<"Error converting rsu health config to TMX message";
-            }
-
         }
-
-    }
-    
-    void TelematicBridgePlugin::updateRsuTopics(const std::string &rsuIp, int rsuPort, const std::string &topic)
-    {
-        if (_telematicRsuUnitPtr)
+        catch (const std::exception &e)
         {
-            std::string rsuId = rsuIp + ":" + std::to_string(rsuPort);
-            _telematicRsuUnitPtr->updateRsuTopics(rsuId, topic);
+            PLOG(logERROR) << "Error broadcasting RSU registration config message: " << e.what();
         }
+
     }
 }
 

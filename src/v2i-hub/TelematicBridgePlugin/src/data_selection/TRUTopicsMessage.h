@@ -142,11 +142,11 @@ namespace TelematicBridge
                             TopicMessage topic;
                             if (topicJson.isMember("name") && topicJson["name"].isString())
                             {
-                                topic.name = topicJson["name"].asString();
+                                topic.setName(topicJson["name"].asString());
                             }
                             if (topicJson.isMember("selected") && topicJson["selected"].isBool())
                             {
-                                topic.selected = topicJson["selected"].asBool();
+                                topic.setSelected(topicJson["selected"].asBool());
                             }
                             topics.push_back(topic);
                         }
@@ -191,6 +191,16 @@ namespace TelematicBridge
         bool isValid() const
         {
             return !_unitId.empty();
+        }
+
+        /**
+         * @brief Convert TRUTopicsMessage to JSON string
+         * @return std::string JSON string representation
+         */
+        std::string toString() const
+        {
+            Json::FastWriter writer;
+            return writer.write(toJson());
         }
     };
 

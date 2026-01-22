@@ -39,7 +39,7 @@
             "description":"The SNMP port for sending message or command."
         },
 		{
-            "key":"AuthPassPhrase",
+            "key":"authPassPhrase",
             "default":"dummy",
             "description":"SNMP v3 authentication passphrase"
         },

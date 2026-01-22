@@ -41,6 +41,7 @@ namespace TelematicBridge
             Json::FastWriter fasterWirter;
             std::string json_str = fasterWirter.write(json);
             tmx::messages::RSURegistrationConfigMessage rsuRegistrationConfigMsg;
+            // FILE_LOG(tmx::utils::LogLevel::logINFO) << "Constructed RSURegistrationConfigMessage JSON: " << json_str;
             msg.set_contents(json_str);
         } catch (const std::exception& e){
             FILE_LOG(tmx::utils::LogLevel::logDEBUG2) << "Failed to set RSURegistrationConfigMessag with error" << e.what();

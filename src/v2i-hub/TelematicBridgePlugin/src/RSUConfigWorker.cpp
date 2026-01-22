@@ -118,24 +118,12 @@ namespace TelematicBridge
         }
 
         for (auto item : message){
-            if(item.isMember(TRU_UNIT_ID_KEY)){
-                _unitId = item[TRU_UNIT_ID_KEY].asString();
-            }
-            if(item.isMember(TRU_UNIT_NAME_KEY)){
-                _unitName = item[TRU_UNIT_NAME_KEY].asString();
-            }
-            if (item.isMember(TRU_MAX_CONNECTIONS_KEY)){
-                _maxConnections = item[TRU_MAX_CONNECTIONS_KEY].asInt();
-            }
-            if (item.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
-                _pluginHeartBeatInterval = item[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
-            }
-            if (item.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
-                _healthMonitorPluginHeartbeatInterval = item[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
-            }
-            if (item.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
-                _rsuStatusMonitorInterval = item[TRU_RSU_STATUS_MONITOR_INTERVAL_KEY].asInt();
-            }
+            _unitId = item.get(TRU_UNIT_ID_KEY, "").asString();
+            _unitName = item.get(TRU_UNIT_NAME_KEY, "").asString();
+            _maxConnections = item.get(TRU_MAX_CONNECTIONS_KEY, 5).asInt();
+            _pluginHeartBeatInterval = item.get(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY, 1).asInt();
+            _healthMonitorPluginHeartbeatInterval = item.get(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY, 1).asInt();
+            _rsuStatusMonitorInterval = item.get(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY, 1).asInt();
         }
         return true;
     }
@@ -406,5 +394,22 @@ namespace TelematicBridge
         }
         
         return rsus;
+    }
+
+    std::string truConfigWorker::getEventByRsu(const std::string &rsuIp, int rsuPort) const
+    {
+        // Search for matching RSU by IP and port in the registration map
+        for (const auto& pair : _truRegistrationMap)
+        {
+            const auto& rsuConfig = pair.second;
+            if (rsuConfig.rsu.ip == rsuIp && rsuConfig.rsu.port == rsuPort)
+            {
+                return rsuConfig.event;
+            }
+        }
+        
+        // Return empty string if RSU not found
+        PLOG(logDEBUG3) << "Event not found for RSU: " << rsuIp << ":" << rsuPort;
+        return "";
     }
 }

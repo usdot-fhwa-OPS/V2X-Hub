@@ -46,8 +46,9 @@ namespace RSUHealthMonitor
         /**
          * @brief Handle RSURegistrationConfigMessage to update configurations
          * @param msg RSURegistrationConfigMessage containing updated RSU configurations
+         * @param routeableMsg Routeable message wrapper
          */
-        void OnRSURegistrationConfigMessage(const tmx::messages::RSURegistrationConfigMessage &msg);
+        void OnRSURegistrationConfigMessage(tmx::messages::RSURegistrationConfigMessage &msg, routeable_message &routeableMsg);
 
     public:
         explicit RSUHealthMonitorPlugin(const std::string &name);

@@ -9,7 +9,7 @@
     "configuration": [
         {
             "key": "LogLevel",
-            "default": "INFO",
+            "default": "DEBUG",
             "description": "The log level for this plugin"
         },
         {
@@ -24,7 +24,7 @@
         },
         {
             "key":"RSUConfigurationList",
-            "default":"{ \"RSUS\": [ { \"event\": \"test event\", \"rsu\": { \"ip\": \"192.168.55.20\", \"port\": 161 }, \"snmp\": { \"user\": \"authOnlyUser\", \"authProtocol\": \"SHA-512\", \"authPassPhrase\": \"dummy123\", \"privacyProtocol\": \"AES-256\", \"privacyPassPhrase\": \"dummy123\", \"rsuMibVersion\": \"NTCIP1218\", \"securityLevel\": \"authPriv\" } } ] }",
+            "default":"{ \"rsuConfigs\": [] }",
             "description":"Configurations of the RSUs the V2X hub is connected to. Nested structure with 'event' (optional), 'rsu' (containing 'ip' and 'port'), and 'snmp' (containing user, authProtocol, authPassPhrase, privacyProtocol, privacyPassPhrase, rsuMibVersion, securityLevel)."
         }
     ]

@@ -34,19 +34,19 @@ namespace TelematicBridge
         string getValidConfig()
         {
             return R"({
-                "unitConfig": [{"unitID": "Unit001"}],
+                "unitConfig": [{"unitId": "Unit001"}],
                 "rsuConfigs": [{
                     "action": "add",
                     "event": "startup",
                     "rsu": {"ip": "192.168.1.10", "port": 161},
                     "snmp": {
                         "user": "admin",
-                        "privacyprotocol": "AES",
-                        "authprotocol": "SHA",
-                        "authpassphrase": "pass",
-                        "privacypassphrase": "priv",
-                        "rsumibversion": "4.1",
-                        "securitylevel": "authPriv"
+                        "privacyProtocol": "AES",
+                        "authProtocol": "SHA",
+                        "authPassPhrase": "pass",
+                        "privacyPassPhrase": "priv",
+                        "rsuMibVersion": "4.1",
+                        "securityLevel": "authPriv"
                     }
                 }],
                 "timestamp": 1234567890
@@ -56,18 +56,18 @@ namespace TelematicBridge
         Json::Value getUpdateMsg()
         {
             Json::Value msg;
-            msg["unitConfig"][0]["unitID"] = "Unit001";
+            msg["unitConfig"][0]["unitId"] = "Unit001";
             msg["rsuConfigs"][0]["action"] = "add";
             msg["rsuConfigs"][0]["event"] = "update";
             msg["rsuConfigs"][0]["rsu"]["ip"] = "192.168.1.20";
             msg["rsuConfigs"][0]["rsu"]["port"] = 161;
             msg["rsuConfigs"][0]["snmp"]["user"] = "admin";
-            msg["rsuConfigs"][0]["snmp"]["privacyprotocol"] = "AES";
-            msg["rsuConfigs"][0]["snmp"]["authprotocol"] = "SHA";
-            msg["rsuConfigs"][0]["snmp"]["authpassphrase"] = "pass";
-            msg["rsuConfigs"][0]["snmp"]["privacypassphrase"] = "priv";
-            msg["rsuConfigs"][0]["snmp"]["rsumibversion"] = "4.1";
-            msg["rsuConfigs"][0]["snmp"]["securitylevel"] = "authPriv";
+            msg["rsuConfigs"][0]["snmp"]["privacyProtocol"] = "AES";
+            msg["rsuConfigs"][0]["snmp"]["authProtocol"] = "SHA";
+            msg["rsuConfigs"][0]["snmp"]["authPassPhrase"] = "pass";
+            msg["rsuConfigs"][0]["snmp"]["privacyPassPhrase"] = "priv";
+            msg["rsuConfigs"][0]["snmp"]["rsuMibVersion"] = "4.1";
+            msg["rsuConfigs"][0]["snmp"]["securityLevel"] = "authPriv";
             msg["timestamp"] = 1234567890;
             return msg;
         }

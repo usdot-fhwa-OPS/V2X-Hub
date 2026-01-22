@@ -1,11 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <chrono>
 #include <jsoncpp/json/json.h>
 #include "UnitHealthStatusMessage.h"
 #include "RSUHealthStatusMessage.h"
 
-namespace TelematicBridgePlugin
+namespace TelematicBridge
 {
     /**
      * @class TRUHealthStatusMessage
@@ -21,7 +22,7 @@ namespace TelematicBridgePlugin
     class TRUHealthStatusMessage
     {
     private:
-        std::vector<RSUHealthMonitor::RSUHealthStatusMessage> rsuHealthStatus;  ///< Collection of RSU health statuses
+        std::vector<RSUHealthStatusMessage> rsuHealthStatus;  ///< Collection of RSU health statuses
         UnitHealthStatusMessage unitHealthStatus;                                ///< Unit health status
 
     public:
@@ -35,7 +36,7 @@ namespace TelematicBridgePlugin
          * @param rsuHealthStatus Vector of RSU health status messages
          * @param unitHealthStatus Unit health status message
          */
-        TRUHealthStatusMessage(const std::vector<RSUHealthMonitor::RSUHealthStatusMessage> &rsuHealthStatus,
+        TRUHealthStatusMessage(const std::vector<RSUHealthStatusMessage> &rsuHealthStatus,
                               const UnitHealthStatusMessage &unitHealthStatus)
             : rsuHealthStatus(rsuHealthStatus), unitHealthStatus(unitHealthStatus) {}
 
@@ -49,7 +50,7 @@ namespace TelematicBridgePlugin
          * @brief Get the RSU health status list
          * @return Vector of RSU health status messages
          */
-        const std::vector<RSUHealthMonitor::RSUHealthStatusMessage>& getRsuHealthStatus() const
+        const std::vector<RSUHealthStatusMessage>& getRsuHealthStatus() const
         {
             return rsuHealthStatus;
         }
@@ -68,7 +69,7 @@ namespace TelematicBridgePlugin
          * @brief Set the RSU health status list
          * @param status Vector of RSU health status messages
          */
-        void setRsuHealthStatus(const std::vector<RSUHealthMonitor::RSUHealthStatusMessage> &status)
+        void setRsuHealthStatus(const std::vector<RSUHealthStatusMessage> &status)
         {
             rsuHealthStatus = status;
         }
@@ -77,7 +78,7 @@ namespace TelematicBridgePlugin
          * @brief Add an RSU health status message
          * @param status RSU health status message to add
          */
-        void addRsuHealthStatus(const RSUHealthMonitor::RSUHealthStatusMessage &status)
+        void addRsuHealthStatus(const RSUHealthStatusMessage &status)
         {
             rsuHealthStatus.push_back(status);
         }
@@ -135,7 +136,7 @@ namespace TelematicBridgePlugin
             {
                 for (const auto &rsuJson : json["rsuConfigs"])
                 {
-                    msg.rsuHealthStatus.push_back(RSUHealthMonitor::RSUHealthStatusMessage::fromJson(rsuJson));
+                    msg.rsuHealthStatus.push_back(RSUHealthStatusMessage::fromJson(rsuJson));
                 }
             }
             
@@ -149,23 +150,31 @@ namespace TelematicBridgePlugin
         }
 
         /**
-         * @brief Get string representation of the message
-         * @return String representation
+         * @brief Get string representation of the message as JSON
+         * @return JSON string representation
          */
         std::string toString() const
         {
-            std::string result = "TRUHealthStatusMessage{" +
-                               std::string("rsuConfigs=[");
+            Json::Value json;
             
-            for (size_t i = 0; i < rsuHealthStatus.size(); ++i)
+            // Convert unit health status
+            json["unitConfig"] = unitHealthStatus.toJson();
+            
+            // Convert RSU health status list
+            Json::Value rsuConfigsJson(Json::arrayValue);
+            for (const auto &rsuStatus : rsuHealthStatus)
             {
-                result += rsuHealthStatus[i].toJson().toStyledString();
-                if (i < rsuHealthStatus.size() - 1)
-                    result += ", ";
+                rsuConfigsJson.append(rsuStatus.toJson());
             }
+            json["rsuConfigs"] = rsuConfigsJson;
             
-            result += "], unitConfig=" + unitHealthStatus.toString() + "}";
-            return result;
+            // Add top-level timestamp (current time in milliseconds since epoch)
+            json["timestamp"] = std::to_string(getCurrentTimestamp());
+            
+            // Convert to string with minimal formatting
+            Json::StreamWriterBuilder builder;
+            builder["indentation"] = "  ";
+            return Json::writeString(builder, json);
         }
 
         /**
@@ -175,6 +184,11 @@ namespace TelematicBridgePlugin
         size_t getRsuHealthStatusCount() const
         {
             return rsuHealthStatus.size();
+        }
+
+        int64_t getCurrentTimestamp() const
+        {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         }
 
         /**

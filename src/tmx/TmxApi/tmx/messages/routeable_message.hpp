@@ -404,6 +404,8 @@ private:
 	rw_attribute(this->msg, ivp_header_attribute<flags>, unsigned int, flags, get_, 0, set_, )
 	rw_attribute(this->msg, ivp_header_attribute<dsrcChannel>, int, dsrcChannel, get_, -1, set_, )
 	rw_attribute(this->msg, ivp_header_attribute<dsrcPsid>, int, dsrcPsid, get_, -1, set_, )
+	rw_attribute(this->msg, ivp_str_header_attribute<dsrcRsuIp>, std::string, dsrcRsuIp, get_, "", set_, )
+	rw_attribute(this->msg, ivp_header_attribute<dsrcRsuPort>, int, dsrcRsuPort, get_, 0, set_, )
 
 public:
 	// Some other helpful routines

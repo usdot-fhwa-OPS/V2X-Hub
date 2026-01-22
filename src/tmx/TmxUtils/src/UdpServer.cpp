@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <errno.h>
+#include <arpa/inet.h>
 
 namespace tmx::utils {
 
@@ -195,6 +196,48 @@ namespace tmx::utils {
         {
             // The socket has data.
             return ::recv(_socket, msg, maxSize, 0);
+        }
+
+        // The socket has no data.
+        errno = EAGAIN;
+        return -1;
+    }
+
+    int UdpServer::TimedReceiveWithSender(char *msg, size_t maxSize, int maxWait_ms, std::string &senderIp, int &senderPort)
+    {
+        fd_set s;
+        FD_ZERO(&s);
+        FD_SET(_socket, &s);
+        struct timeval timeout;
+        timeout.tv_sec = maxWait_ms / 1000;
+        timeout.tv_usec = (maxWait_ms % 1000) * 1000;
+
+        int retval = select(_socket + 1, &s, &s, &s, &timeout);
+        if (retval == -1)
+        {
+            // select() set errno accordingly
+            return -1;
+        }
+        if (retval > 0)
+        {
+            // The socket has data - use recvfrom to get sender info
+            struct sockaddr_in sender_addr;
+            socklen_t sender_len = sizeof(sender_addr);
+            int bytes_received = ::recvfrom(_socket, msg, maxSize, 0, 
+                                           (struct sockaddr*)&sender_addr, &sender_len);
+            
+            if (bytes_received > 0)
+            {
+                // Extract sender IP address
+                char ip_str[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &(sender_addr.sin_addr), ip_str, INET_ADDRSTRLEN);
+                senderIp = std::string(ip_str);
+                
+                // Extract sender port
+                senderPort = ntohs(sender_addr.sin_port);
+            }
+            
+            return bytes_received;
         }
 
         // The socket has no data.

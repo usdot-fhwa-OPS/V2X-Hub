@@ -3,7 +3,7 @@
 #include <string>
 #include <jsoncpp/json/json.h>
 
-namespace TelematicBridgePlugin
+namespace TelematicBridge
 {
     /**
      * @class RSUHealthStatusMessage
@@ -19,7 +19,18 @@ namespace TelematicBridgePlugin
         int port;                ///< SNMP port of the RSU
         std::string status;      ///< Health status of the RSU
         std::string event;       ///< Event description or information
-        std::string rsu_id;      ///< Unique RSU identifier (IP:port)
+        std::string rsuId;      ///< Unique RSU identifier (IP:port)
+
+        /**
+         * @brief Generate RSU ID from IP and port
+         * @param ip IP address
+         * @param port Port number
+         * @return RSU ID in format "ip:port"
+         */
+        static std::string generateRsuId(const std::string &ip, int port)
+        {
+            return ip + ":" + std::to_string(port);
+        }
 
         /**
          * @brief Default constructor
@@ -39,7 +50,7 @@ namespace TelematicBridgePlugin
             : ip(ip), port(port), status(status), event(event)
         {
             // Generate rsu_id as combination of IP and port
-            rsu_id = ip + ":" + std::to_string(port);
+            rsuId = generateRsuId(ip, port);
         }
 
         /**
@@ -53,7 +64,7 @@ namespace TelematicBridgePlugin
             json["port"] = port;
             json["status"] = status;
             json["event"] = event;
-            json["rsu_id"] = rsu_id;
+            json["rsuId"] = rsuId;
             return json;
         }
 
@@ -69,9 +80,33 @@ namespace TelematicBridgePlugin
             if (json.isMember("port")) msg.port = json["port"].asInt();
             if (json.isMember("status")) msg.status = json["status"].asString();
             if (json.isMember("event")) msg.event = json["event"].asString();
-            if (json.isMember("rsu_id")) msg.rsu_id = json["rsu_id"].asString();
+            if (json.isMember("rsuId")) msg.rsuId = json["rsuId"].asString();
             return msg;
+        }
+
+        /**
+         * @brief Equality operator
+         * @param other Other message to compare
+         * @return True if messages are equal
+         */
+        bool operator==(const RSUHealthStatusMessage &other) const
+        {
+            return ip == other.ip &&
+                   port == other.port &&
+                   status == other.status &&
+                   event == other.event &&
+                   rsuId == other.rsuId;
+        }
+
+        /**
+         * @brief Inequality operator
+         * @param other Other message to compare
+         * @return True if messages are not equal
+         */
+        bool operator!=(const RSUHealthStatusMessage &other) const
+        {
+            return !(*this == other);
         }
     };
 
-} // namespace RSUHealthMonitor
+} // namespace TelematicBridge

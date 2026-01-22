@@ -120,6 +120,27 @@ namespace TelematicBridge
         }
     }
 
+    void TelematicUnit::publishToNats(const std::string &natsTopic, const std::string &message){
+        try
+        {
+            auto s = natsConnection_PublishString(_conn, natsTopic.c_str(), message.c_str());
+            if (s == NATS_OK)
+            {
+                PLOG(logINFO) << "Topic: " << natsTopic << ". Published: " << message;
+            }
+            else
+            {
+                throw TelematicBridgeException(natsStatus_GetText(s));
+            }
+            
+            PLOG(logDEBUG3) << "Published message to NATS topic: " << natsTopic;
+        }
+        catch (const std::exception &e)
+        {
+            PLOG(logERROR) << "Error publishing message to NATS topic: " << e.what();
+        }
+    }
+
     void TelematicUnit::onAvailableTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
     {
         PLOG(logDEBUG3) << "Received available topics: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);

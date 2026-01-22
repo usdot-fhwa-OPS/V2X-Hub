@@ -100,7 +100,13 @@ namespace TelematicBridge
          * @brief A function to publish message stream into NATS server
          */
         void publishMessage(const std::string &topic, const Json::Value &payload);
-
+        
+        /**
+         * @brief Publish message to NATS topic
+                 * @param natsTopic NATS topic string
+                 * @param message Message string to publish
+         */
+        void publishToNats(const std::string &natsTopic, const std::string &message);
         /**
          * @brief A function to parse a JSON string and create a JSON object.
          * @param string input json string

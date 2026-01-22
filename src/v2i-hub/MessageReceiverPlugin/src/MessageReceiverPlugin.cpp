@@ -7,7 +7,6 @@
 
 #include "MessageReceiverPlugin.h"
 
-
 #define ABBR_BSM 1000
 #define ABBR_SRM 2000
 
@@ -423,7 +422,9 @@ int MessageReceiverPlugin::Main()
 
 		try
 		{
-			int len = server ? server->TimedReceive((char *)incoming.data(), incoming.size(), 5) : 0;
+			std::string senderIp;
+			int senderPort = 0;
+			int len = server ? server->TimedReceiveWithSender((char *)incoming.data(), incoming.size(), 5, senderIp, senderPort) : 0;
 
 			if (len > 0)
 			{
@@ -588,15 +589,17 @@ int MessageReceiverPlugin::Main()
 					}
 				}
 
-				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? nullptr : enc.c_str(), 0, 0, time);
-				
-			}
-			else if (len < 0)
-			{
-				if (errno != EAGAIN && errThrottle.Monitor(errno))
-				{
-					PLOG(logERROR) << "Could not receive from socket: " << strerror(errno);
-				}
+				// Hash sender IP and port to generate groupId and uniqId for thread assignment
+				// This ensures messages from same RSU go to same thread for ordering
+				std::hash<std::string> hasher;
+				size_t ipHash = hasher(senderIp);
+				uint8_t groupId = static_cast<uint8_t>((ipHash >> 8) & 0xFF);
+				uint8_t uniqId = static_cast<uint8_t>((ipHash ^ senderPort) & 0xFF);
+
+				// Call IncomingMessage with RSU IP and port - DSRC metadata will be populated automatically
+				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? nullptr : enc.c_str(), 
+									  groupId, uniqId, time, 
+									  senderIp.empty() ? nullptr : senderIp.c_str(), senderPort);
 			}
 		}
 		catch (exception &ex)
