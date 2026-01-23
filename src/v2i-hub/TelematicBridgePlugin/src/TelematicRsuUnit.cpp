@@ -11,11 +11,13 @@ namespace TelematicBridge
     {
         const char* rsuConfigPath = std::getenv("RSU_CONFIG_PATH");
         _truConfigWorkerptr = std::make_unique<truConfigWorker>();
+        _truHealthStatusTracker = std::make_shared<TRUHealthStatusTracker>();
+        _dataSelectionTracker = std::make_shared<DataSelectionTracker>();
         if (rsuConfigPath != nullptr) {
             PLOG(logINFO) << "Loading RSU configuration from: " << rsuConfigPath;
             if (!_truConfigWorkerptr->loadRSUConfigListFromFile(rsuConfigPath))
             {
-                PLOG(logERROR)<<"Could not load RSU Configuration from file: " << rsuConfigPath;
+                throw std::runtime_error("Could not load RSU Configuration from file: " + std::string(rsuConfigPath));
             }
             else
             {
@@ -24,7 +26,7 @@ namespace TelematicBridge
         }
         else
         {
-            PLOG(logWARNING) << "RSU_CONFIG_PATH environment variable not set. No RSU configuration loaded.";
+            throw std::runtime_error("RSU_CONFIG_PATH environment variable not set. No RSU configuration loaded.");
         }
     }
 
@@ -85,13 +87,9 @@ namespace TelematicBridge
         if (isRegistered)
         {
             PLOG(logINFO) << "RSU Unit successfully registered with RSU Management Service.";
-            // Provide below services when the unit is registered
             rsuConfigReplier();
             rsuAvailableTopicsReplier();
             rsuSelectedTopicsReplier();
-            // availableTopicsReplier();
-            // selectedTopicsReplier();
-            // checkStatusReplier();
         }
         return isRegistered;
     }
@@ -119,7 +117,6 @@ namespace TelematicBridge
         }
         return true;
     }
-
 
     void TelematicRsuUnit::onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
     {
@@ -191,46 +188,22 @@ namespace TelematicBridge
             PLOG(logDEBUG2) << "Inside RSU selected topics replier";
             stringstream topic;
             topic << "unit." << _truConfigWorkerptr->getUnitId() << RSU_SELECTED_TOPICS;
-            natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topic.str().c_str(), onRsuSelectedTopicsCallback, this);
+            natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topic.str().c_str(), onRsuSelectedTopicsCallback, _dataSelectionTracker.get());
         }
-    }
-
-
-    void TelematicRsuUnit::updateRsuAvailableTopics(const std::string &rsuIp, const std::string &topic)
-    {
-        // Use only RSU IP as the key (port is ignored)
-        lock_guard<mutex> lock(_rsuAvailableTopicsMutex);
-        _rsuAvailableTopicsMap[rsuIp].insert(topic);
-        
-        PLOG(logDEBUG3) << "Updated available topic for RSU " << rsuIp << ": " << topic;
-    }
-
-    bool TelematicRsuUnit::inRsuSelectedTopics(const std::string &rsuIp, const std::string &topic) 
-    {
-        // Use only RSU IP as the key (port is ignored)
-        lock_guard<mutex> lock(_rsuSelectedTopicsMutex);
-        
-        // Check if this specific RSU has the topic selected
-        auto it = _rsuSelectedTopicsMap.find(rsuIp);
-        if (it != _rsuSelectedTopicsMap.end())
-        {
-            return it->second.find(topic) != it->second.end();
-        }
-        
-        return false;
     }
 
     void TelematicRsuUnit::publishRsuDataStream(const std::string &rsuIp, int rsuPort, const std::string &topic, const Json::Value &message)
     {
         // Construct topic: unit.<unit_id>.stream.rsu.<rsu_ip>.<topic_name>
-        string unitId = _truConfigWorkerptr->getUnitId();        
-        boost::replace_all(rsuIp, ".", "_"); 
-        string natsTopic = "unit." + unitId + ".stream.rsu." + rsuIp + "." + topic;        
+        string unitId = _truConfigWorkerptr->getUnitId(); 
+        string rsuIpTmp = rsuIp;       
+        boost::replace_all(rsuIpTmp, ".", "_"); 
+        string natsTopic = "unit." + unitId + ".stream.rsu." + rsuIpTmp + "." + topic;        
         auto jsonStr = constructPublishedRsuDataStream(unitId, rsuIp, rsuPort, topic, message);
         publishToNats(natsTopic, jsonStr);
     }    
 
-    std::string TelematicRsuUnit::constructPublishedRsuDataStream(const std::string &unitId,                                                      const std::string &rsuIp, int rsuPort,
+    std::string TelematicRsuUnit::constructPublishedRsuDataStream(const std::string &unitId, const std::string &rsuIp, int rsuPort,
                                                                    const std::string &topicName, const Json::Value &payload) const
     {
         // Get event name for this RSU from config worker
@@ -267,42 +240,7 @@ namespace TelematicBridge
 
     std::string TelematicRsuUnit::constructRsuAvailableTopicsReplyString()
     {
-        lock_guard<mutex> lock(_rsuAvailableTopicsMutex);
-        
-        // Create TRUTopicsMessage
-        TRUTopicsMessage truTopicsMsg;
-        truTopicsMsg.setUnitId(_truConfigWorkerptr->getUnitId());
-        truTopicsMsg.setCurrentTimestamp();
-        
-        // Get all registered RSUs from the config worker
-        auto registeredRsus = _truConfigWorkerptr->getRegisteredRSUs();
-        
-        for (const auto& rsuConfig : registeredRsus)
-        {
-            // Use only RSU IP as the key (port is ignored)
-            string rsuIp = rsuConfig.rsu.ip;
-            
-            // Create RSUTopicsMessage
-            RSUTopicsMessage rsuTopicsMsg;
-            rsuTopicsMsg.setRsuEndpoint(rsuConfig.rsu);
-            
-            // Build topics list for this RSU
-            std::vector<TopicMessage> topics;
-            
-            auto it = _rsuAvailableTopicsMap.find(rsuIp);
-            if (it != _rsuAvailableTopicsMap.end())
-            {
-                for (const auto& topicName : it->second)
-                {
-                    topics.emplace_back(topicName, false);
-                }
-            }
-            
-            rsuTopicsMsg.setTopics(topics);
-            truTopicsMsg.addRsuTopic(rsuTopicsMsg);
-        }
-
-        return truTopicsMsg.toString();
+        return _dataSelectionTracker->latestAvailableTopicsMessageToJsonString();
     }
 
     void TelematicRsuUnit::onRsuAvailableTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
@@ -334,88 +272,14 @@ namespace TelematicBridge
         // Send reply
         if (object && natsMsg_GetReply(msg) != nullptr)
         {
-            auto obj = (TelematicRsuUnit *)object;
+            auto obj = (DataSelectionTracker *)object;
             auto msgStr = natsMsg_GetData(msg);
             
             try
             {
-                // Parse incoming TRUTopicsMessage
-                Json::CharReaderBuilder reader;
-                Json::Value root;
-                std::string errs;
-                std::istringstream s(msgStr);
-                
-                if (Json::parseFromStream(reader, s, &root, &errs))
-                {
-                    auto incomingMsg = TRUTopicsMessage::fromJson(root);
-                    
-                    // Clear old selected topics for all RSUs
-                    {
-                        lock_guard<mutex> lock(obj->_rsuSelectedTopicsMutex);
-                        obj->_rsuSelectedTopicsMap.clear();
-                    }
-                    
-                    // Process selected topics from the incoming message
-                    for (const auto& rsuTopicsMsg : incomingMsg.getRsuTopics())
-                    {
-                        const auto& endpoint = rsuTopicsMsg.getRsuEndpoint();
-                        // Use only RSU IP as the key (port is ignored)
-                        string rsuIp = endpoint.ip;
-                        
-                        lock_guard<mutex> lock(obj->_rsuSelectedTopicsMutex);
-                        for (const auto& topic : rsuTopicsMsg.getTopics())
-                        {
-                            if (topic.isSelected())
-                            {
-                                obj->_rsuSelectedTopicsMap[rsuIp].insert(topic.getName());
-                            }
-                        }
-                    }
-                    
-                    // Build response with selected set to true
-                    TRUTopicsMessage responseMsg;
-                    responseMsg.setUnitId(obj->_truConfigWorkerptr->getUnitId());
-                    responseMsg.setCurrentTimestamp();
-                    
-                    // Construct response with selected topics marked as true
-                    for (const auto& rsuTopicsMsg : incomingMsg.getRsuTopics())
-                    {
-                        RSUTopicsMessage rsuResponse;
-                        rsuResponse.setRsuEndpoint(rsuTopicsMsg.getRsuEndpoint());
-                        
-                        std::vector<TopicMessage> responseTopics;
-                        for (const auto& topic : rsuTopicsMsg.getTopics())
-                        {
-                            // Set selected to true in response for topics that were in the request
-                            TopicMessage responseTopic;
-                            responseTopic.setName(topic.getName());
-                            responseTopic.setSelected(true);
-                            responseTopics.push_back(responseTopic);
-                        }
-                        rsuResponse.setTopics(responseTopics);
-                        responseMsg.addRsuTopic(rsuResponse);
-                    }
-                    
-                    // Send response
-                    Json::FastWriter writer;
-                    string reply = writer.write(responseMsg.toJson());
-                    auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
-                    
-                    if (s == NATS_OK)
-                    {
-                        PLOG(logDEBUG3) << "RSU selected topics replied: " << reply;
-                    }
-                    else
-                    {
-                        PLOG(logERROR) << "Failed to reply RSU selected topics: " << natsStatus_GetText(s);
-                    }
-                }
-                else
-                {
-                    PLOG(logERROR) << "Failed to parse RSU selected topics JSON: " << errs;
-                    string errorReply = "Error: Invalid JSON format";
-                    natsConnection_PublishString(nc, natsMsg_GetReply(msg), errorReply.c_str());
-                }
+                auto reply = obj->constructRsuSelectedTopicsReplyString(msgStr);
+                auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
+               
             }
             catch (const std::exception &e)
             {
@@ -428,9 +292,25 @@ namespace TelematicBridge
         }
     }
 
+    std::string TelematicRsuUnit::constructRsuSelectedTopicsReplyString(const std::string &msgStr){
+        _dataSelectionTracker->updateLatestSelectedTopics(msgStr.c_str());
+        return _dataSelectionTracker->latestSelectedTopicsMessageToJsonString();
+    }
+
+    void TelematicRsuUnit::processRsuDataStream(const std::string &rsuIp, const std::string &topic, const Json::Value &json)
+    {
+        auto rsuPort = _truConfigWorkerptr->getRsuPortByIp(rsuIp);
+        auto unitId = _truConfigWorkerptr->getUnitId();        
+        _dataSelectionTracker->updateRsuAvailableTopics(rsuIp, rsuPort, topic, unitId);
+        if (_dataSelectionTracker->inRsuSelectedTopics(rsuIp, topic))
+        {
+            publishRsuDataStream(rsuIp,  rsuPort, topic, json);
+        }
+    }
+
     void TelematicRsuUnit::updateRsuHealthStatus(const RSUHealthStatusMessage &status)
     {
-        _truHealthStatusTracker.updateRsuStatus(status);
+        _truHealthStatusTracker->updateRsuStatus(status);
     }
 
     void TelematicRsuUnit::updateUnitHealthStatus(const std::string &status)
@@ -439,7 +319,7 @@ namespace TelematicBridge
         auto now = std::chrono::system_clock::now();
         auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();            
         auto unitStatus = HealthStatusMessageMapper::toUnitHealthStatusMessage(_truConfigWorkerptr->getUnitId(), status, timestamp);            
-        _truHealthStatusTracker.updateUnitStatus(unitStatus);
+        _truHealthStatusTracker->updateUnitStatus(unitStatus);
     }
 
     void TelematicRsuUnit::PublishHealthStatusToNATS(const std::string &topicSuffix)
@@ -447,7 +327,7 @@ namespace TelematicBridge
         try
         {
             // Get TRU health status snapshot
-            auto truHealthStatus = _truHealthStatusTracker.getSnapshot();
+            auto truHealthStatus = _truHealthStatusTracker->getSnapshot();
             auto health = truHealthStatus.toString();
 
             // Construct NATS topic: unit.<unit_id>.<topicSuffix>
@@ -462,32 +342,6 @@ namespace TelematicBridge
         catch (const std::exception &e)
         {
             PLOG(logERROR) << "Error publishing health status: " << e.what();
-        }
-    }
-
-    void TelematicRsuUnit::PublishRSUHealthStatus()
-    {
-        try
-        {
-            PublishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX);
-            PLOG(logDEBUG2) << "Published RSU health status";
-        }
-        catch (const std::exception &e)
-        {
-            PLOG(logERROR) << "Error publishing RSU health status: " << e.what();
-        }
-    }
-
-    void TelematicRsuUnit::PublishPluginHealthStatus()
-    {
-        try
-        {
-            PublishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX);
-            PLOG(logDEBUG2) << "Published plugin health status";
-        }
-        catch (const std::exception &e)
-        {
-            PLOG(logERROR) << "Error publishing plugin health status: " << e.what();
         }
     }
 

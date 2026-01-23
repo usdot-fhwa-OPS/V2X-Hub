@@ -412,4 +412,18 @@ namespace TelematicBridge
         PLOG(logDEBUG3) << "Event not found for RSU: " << rsuIp << ":" << rsuPort;
         return "";
     }
+
+    int truConfigWorker::getRsuPortByIp(const std::string &rsuIp) const
+    {
+        auto it = _truRegistrationMap.find(rsuIp);
+        if (it != _truRegistrationMap.end())
+        {
+            return it->second.rsu.port;
+        }
+        else
+        {
+            PLOG(logDEBUG3) << "RSU port not found for IP: " << rsuIp;
+            return 0; // Return 0 or an appropriate default value if RSU not found
+        }
+    }
 }

@@ -290,6 +290,8 @@ namespace TelematicBridge
          */
         std::string getUnitId();
 
+        int getRsuPortByIp(const std::string &rsuIp) const;
+
         /**
          * @brief Get the plugin heartbeat interval
          * @return int The heartbeat interval in seconds

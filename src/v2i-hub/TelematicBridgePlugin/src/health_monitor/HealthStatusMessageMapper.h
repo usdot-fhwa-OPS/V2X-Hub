@@ -62,7 +62,7 @@ namespace TelematicBridge
             UnitHealthStatusMessage unitStatus;
             unitStatus.setUnitId(unitId.empty() ? "unknown" : unitId);
             unitStatus.setBridgePluginStatus(status);
-            unitStatus.setLastCommunicationTimestamp(timestamp);
+            unitStatus.setLastUpdatedTimestamp(timestamp);
             return unitStatus;
         }
     };

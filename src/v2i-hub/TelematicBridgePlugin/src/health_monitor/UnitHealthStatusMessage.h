@@ -15,33 +15,33 @@ namespace TelematicBridge
      * JSON Properties:
      *  - unitId: Unique identifier for the unit
      *  - bridgePluginStatus: Status of the bridge plugin for this unit
-     *  - lastCommunicationTimestamp: Timestamp of the last communication with the unit
+     *  - LastUpdatedTimestamp: Timestamp of the last status update of the unit
      */
     class UnitHealthStatusMessage
     {
     private:
         std::string unitId;                    ///< Unique identifier for the unit
         std::string bridgePluginStatus;        ///< Status of the bridge plugin for this unit
-        long lastCommunicationTimestamp;       ///< Timestamp of the last communication with the unit
+        long LastUpdatedTimestamp;       ///< Timestamp of the last status update of the unit
 
     public:
         /**
          * @brief Default constructor
          */
-        UnitHealthStatusMessage() : lastCommunicationTimestamp(0) {}
+        UnitHealthStatusMessage() : LastUpdatedTimestamp(0) {}
 
         /**
          * @brief Constructor with parameters
          * @param unitId Unique identifier for the unit
          * @param bridgePluginStatus Status of the bridge plugin
-         * @param lastCommunicationTimestamp Last communication timestamp
+         * @param LastUpdatedTimestamp Last status change timestamp
          */
         UnitHealthStatusMessage(const std::string &unitId, 
                                const std::string &bridgePluginStatus,
-                               long lastCommunicationTimestamp)
+                               long LastUpdatedTimestamp)
             : unitId(unitId), 
               bridgePluginStatus(bridgePluginStatus),
-              lastCommunicationTimestamp(lastCommunicationTimestamp) {}
+              LastUpdatedTimestamp(LastUpdatedTimestamp) {}
 
         /**
          * @brief Destructor
@@ -65,7 +65,7 @@ namespace TelematicBridge
          * @brief Get the last communication timestamp
          * @return Last communication timestamp in milliseconds
          */
-        long getLastCommunicationTimestamp() const { return lastCommunicationTimestamp; }
+        long getLastUpdatedTimestamp() const { return LastUpdatedTimestamp; }
 
         // Setters
         /**
@@ -84,7 +84,7 @@ namespace TelematicBridge
          * @brief Set the last communication timestamp
          * @param timestamp Timestamp to set
          */
-        void setLastCommunicationTimestamp(long timestamp) { lastCommunicationTimestamp = timestamp; }
+        void setLastUpdatedTimestamp(long timestamp) { LastUpdatedTimestamp = timestamp; }
 
         /**
          * @brief Convert to JSON representation
@@ -95,7 +95,7 @@ namespace TelematicBridge
             Json::Value json;
             json["unitId"] = unitId;
             json["bridgePluginStatus"] = bridgePluginStatus;
-            json["lastCommunicationTimestamp"] = lastCommunicationTimestamp;
+            json["lastUpdatedTimestamp"] = LastUpdatedTimestamp;
             return json;
         }
 
@@ -111,8 +111,8 @@ namespace TelematicBridge
                 msg.unitId = json["unitId"].asString();
             if (json.isMember("bridgePluginStatus")) 
                 msg.bridgePluginStatus = json["bridgePluginStatus"].asString();
-            if (json.isMember("lastCommunicationTimestamp")) 
-                msg.lastCommunicationTimestamp = json["lastCommunicationTimestamp"].asInt64();
+            if (json.isMember("lastUpdatedTimestamp")) 
+                msg.LastUpdatedTimestamp = json["lastUpdatedTimestamp"].asInt64();
             return msg;
         }
 
@@ -125,7 +125,7 @@ namespace TelematicBridge
             return "UnitHealthStatusMessage{" +
                    std::string("unitId='") + unitId + "'" +
                    ", bridgePluginStatus='" + bridgePluginStatus + "'" +
-                   ", lastCommunicationTimestamp=" + std::to_string(lastCommunicationTimestamp) +
+                   ", LastUpdatedTimestamp=" + std::to_string(LastUpdatedTimestamp) +
                    "}";
         }
 
@@ -138,7 +138,7 @@ namespace TelematicBridge
         {
             return unitId == other.unitId &&
                    bridgePluginStatus == other.bridgePluginStatus &&
-                   lastCommunicationTimestamp == other.lastCommunicationTimestamp;
+                   LastUpdatedTimestamp == other.LastUpdatedTimestamp;
         }
 
         /**

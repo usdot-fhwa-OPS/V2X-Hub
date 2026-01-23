@@ -17,6 +17,7 @@
 #include "health_monitor/RSUHealthStatusMessage.h"
 #include "health_monitor/HealthStatusMessageMapper.h"
 #include "data_selection/TRUTopicsMessage.h"
+#include "data_selection/DataSelectionTracker.h"
 #include <boost/algorithm/string/replace.hpp>
 
 namespace TelematicBridge
@@ -55,16 +56,10 @@ namespace TelematicBridge
 
         std::unique_ptr<truConfigWorker> _truConfigWorkerptr;
         
-        // Map to track available topics per RSU (key: "ip:port", value: set of topics)
-        std::unordered_map<std::string, std::unordered_set<std::string>> _rsuAvailableTopicsMap;
-        std::mutex _rsuAvailableTopicsMutex;
-        
-        // Map to track selected topics per RSU (key: "ip:port", value: set of selected topic names)
-        std::unordered_map<std::string, std::unordered_set<std::string>> _rsuSelectedTopicsMap;
-        std::mutex _rsuSelectedTopicsMutex;
-
         // TRU health status tracker for monitoring TRU and RSU health
-        TRUHealthStatusTracker _truHealthStatusTracker;
+        std::shared_ptr<TRUHealthStatusTracker> _truHealthStatusTracker;
+
+        std::shared_ptr<DataSelectionTracker> _dataSelectionTracker;
 
 
     public:
@@ -105,22 +100,6 @@ namespace TelematicBridge
         void rsuSelectedTopicsReplier();
         
         /**
-         * @brief Update available topics for a specific RSU
-         * Adds the topic to the available topics list for the specified RSU
-         * @param rsuIp RSU IP address
-         * @param topic Topic name to add to the RSU's available topics
-         */
-        void updateRsuAvailableTopics(const std::string &rsuIp, const std::string &topic);
-        
-        /**
-         * @brief Check if a topic is selected for a specific RSU
-         * @param rsuIp RSU IP address
-         * @param topic Topic name to check
-         * @return true if the topic is selected for the specified RSU, false otherwise
-         */
-        bool inRsuSelectedTopics(const std::string &rsuIp, const std::string &topic);
-        
-        /**
          * @brief Publish message to RSU-specific NATS topic
          * Publishes the message to topic format: unit.<unit_id>.stream.rsu.<rsu_ip>.<topic_name>
          * @param rsuIp RSU IP address
@@ -130,7 +109,14 @@ namespace TelematicBridge
          */
         void publishRsuDataStream(const std::string &rsuIp, int rsuPort, const std::string &topic, const Json::Value &message);
 
-        
+        /**
+         * @brief Process incoming RSU data stream
+         * Updates available topics and publishes data if topic is selected
+         * @param rsuIp RSU IP address
+         * @param topic Topic name
+         * @param json JSON message payload
+         */
+        void processRsuDataStream(const std::string &rsuIp, const std::string &topic, const Json::Value &json);
         /**
          * @brief Construct published RSU data string with metadata and payload
          * Creates a JSON message with metadata section containing unit info, RSU endpoint, topic, and timestamp,
@@ -160,6 +146,8 @@ namespace TelematicBridge
          *         }
          */
         std::string constructRsuAvailableTopicsReplyString();
+
+        std::string constructRsuSelectedTopicsReplyString(const std::string &msgStr);
 
         /**
          * @brief Update RSU status from incoming configuration message
@@ -273,13 +261,17 @@ namespace TelematicBridge
          * @brief Publish RSU health status to NATS
          * Publishes the current TRU health status snapshot to the RSU health status topic
          */
-        void PublishRSUHealthStatus();
+        void PublishRSUHealthStatus(){
+            PublishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX);
+        }
 
         /**
          * @brief Publish plugin health status to NATS
          * Publishes the current TRU health status snapshot to the plugin health status topic
          */
-        void PublishPluginHealthStatus();
+        void PublishPluginHealthStatus(){
+            PublishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX);
+        }
 
         /**
          * @brief Destructor for TelematicRsuUnit

@@ -114,11 +114,7 @@ namespace TelematicBridge
                 // Only process if we have valid RSU information (port check removed - only IP matters)
                 if (!rsuIp.empty())
                 {
-                    _telematicRsuUnitPtr->updateRsuAvailableTopics(rsuIp, topicStr);
-                    if (_telematicRsuUnitPtr->inRsuSelectedTopics(rsuIp, topicStr))
-                    {
-                        _telematicRsuUnitPtr->publishRsuDataStream(rsuIp, rsuPort, topicStr, json);
-                    }
+                    _telematicRsuUnitPtr->processRsuDataStream(rsuIp, topicStr, json);
                 }
                 else
                 {
