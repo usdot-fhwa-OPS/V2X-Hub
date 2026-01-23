@@ -28,7 +28,6 @@
             "type": "shell",
             "command": "ldconfig && container/service.sh",
             "detail": "Task runs V2X Hub application by executing container/service.sh script",
-            "problemMatcher": []
         },
         {
             "label": "test",
