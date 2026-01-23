@@ -133,6 +133,14 @@ namespace TelematicBridge
             return rsuId;
         }
 
+        std::string getIp() const { 
+            return ip; 
+        }
+        
+        int getPort() const { 
+            return port; 
+        }
+
         std::string getStatus() const { 
             return statusToLabel(status); 
         }

@@ -30,10 +30,7 @@ namespace TelematicBridge
                     int rsuPort = std::stoi(rsuStatusJson["rsuSnmpPort"].asString());                    
                     
                     std::string event = rsuStatusJson.isMember("event") ? 
-                                      rsuStatusJson["event"].asString() : "";                    
-                    
-                                      // Create RSU ID in format "IP:port"
-                    std::string rsuId = rsuIp + ":" + std::to_string(rsuPort);
+                                      rsuStatusJson["event"].asString() : "";   
 
                     // Determine health status from rsuMode field
                     std::string healthStatus = rsuStatusJson.isMember("rsuMode") ? 

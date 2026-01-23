@@ -34,27 +34,6 @@ namespace TelematicBridge
         TRUTopicsMessage _latestSelectedTopicsMessage;
         TRUTopicsMessage _latestAvailableTopicsMessage;
 
-        void setSelectedToTrueInMessage(TRUTopicsMessage &message)
-        {            
-            // Construct response with selected topics marked as true
-            for (const auto& rsuTopicsMsg : message.getRsuTopics())
-            {
-                RSUTopicsMessage rsuResponse;
-                rsuResponse.setRsuEndpoint(rsuTopicsMsg.getRsuEndpoint());
-                
-                std::vector<TopicMessage> responseTopics;
-                for (const auto& topic : rsuTopicsMsg.getTopics())
-                {
-                    // Set selected to true in response for topics that were in the request
-                    TopicMessage responseTopic;
-                    responseTopic.setName(topic.getName());
-                    responseTopic.setSelected(true);
-                    responseTopics.push_back(responseTopic);
-                }
-                rsuResponse.setTopics(responseTopics);
-            }
-        }
-
     public:
         DataSelectionTracker() = default;
         ~DataSelectionTracker()=default;
@@ -131,7 +110,6 @@ namespace TelematicBridge
                     // Use only RSU IP as the key (port is ignored)
                     std::string rsuIp = endpoint.ip;
                     
-                    std::lock_guard<std::mutex> lock(_rsuSelectedTopicsMutex);
                     for (const auto& topic : rsuTopicsMsg.getTopics())
                     {
                         if (topic.isSelected())
@@ -142,7 +120,6 @@ namespace TelematicBridge
                 }
 
                 incomingMsg.setCurrentTimestamp();
-                setSelectedToTrueInMessage(incomingMsg);
                 _latestSelectedTopicsMessage = incomingMsg;
             }
             else

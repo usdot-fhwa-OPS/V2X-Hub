@@ -219,22 +219,22 @@ Examples:
     
     parser.add_argument(
         '--rsu-ip',
-        required=True,
-        help='RSU IP address (required). This is the key used for topic selection.'
+        default='127.0.0.1',
+        help='RSU IP address (default: 127.0.0.1). This is the key used for topic selection.'
     )
     
     parser.add_argument(
         '--rsu-port',
         type=int,
-        default=0,
-        help='RSU port number (optional, default: 0). Note: System only uses RSU IP for matching.'
+        default=1610,
+        help='RSU port number (optional, default: 1610). Note: System only uses RSU IP for matching.'
     )
     
     parser.add_argument(
         '--topics',
         nargs='+',
-        required=True,
-        help='List of topic names to select (space-separated, required)'
+        default=['J2735_BSM_MessageReceiver'],
+        help='List of topic names to select (space-separated, default: J2735_BSM_MessageReceiver)'
     )
     
     parser.add_argument(

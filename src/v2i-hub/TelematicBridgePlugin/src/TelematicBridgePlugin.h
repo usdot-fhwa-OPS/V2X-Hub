@@ -46,7 +46,7 @@ namespace TelematicBridge
          * @brief Process RSU Status Message and update TRU health status tracker
          * @param routeMsg The routeable message containing RSU status
          */
-        void ProcessRSUStatusMessage(tmx::routeable_message &routeMsg);
+        RSUHealthStatusMessage ProcessRSUStatusMessage(tmx::routeable_message &routeMsg);
 
         void RegisterTRU();
 

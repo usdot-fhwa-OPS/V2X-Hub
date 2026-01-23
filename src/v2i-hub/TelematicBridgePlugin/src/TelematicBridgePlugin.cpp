@@ -75,7 +75,6 @@ namespace TelematicBridge
     {
         auto hasError = false;        
         std::string rsuIp = (msg && msg->rsuIp) ? msg->rsuIp : "";
-        int rsuPort = msg ? msg->rsuPort : 0;
         
         tmx::routeable_message routeMsg(msg);
         
@@ -83,7 +82,8 @@ namespace TelematicBridge
         if (routeMsg.get_type() == tmx::messages::RSUStatusMessage::MessageType && 
             routeMsg.get_subtype() == tmx::messages::RSUStatusMessage::MessageSubType)
         {
-            ProcessRSUStatusMessage(routeMsg);
+            auto rsuHealthStatus = ProcessRSUStatusMessage(routeMsg);
+            rsuIp = rsuHealthStatus.getIp();
         }
         
         // Convert IVP message to JSON CPP Value
@@ -174,7 +174,7 @@ namespace TelematicBridge
     }
 
 
-    void TelematicBridgePlugin::ProcessRSUStatusMessage(tmx::routeable_message &routeMsg)
+    RSUHealthStatusMessage TelematicBridgePlugin::ProcessRSUStatusMessage(tmx::routeable_message &routeMsg)
     {
         try
         {
@@ -184,11 +184,12 @@ namespace TelematicBridge
                 _telematicRsuUnitPtr->updateRsuHealthStatus(rsuHealthStatus);
                 PLOG(logINFO) << "Updated health status for RSU: " << rsuHealthStatus.toString();
                 _telematicRsuUnitPtr->PublishRSUHealthStatus();
+                return rsuHealthStatus;
             }
         }        
         catch (const std::exception &e)
         {
-            FILE_LOG(tmx::utils::LogLevel::logERROR) << "Error processing RSU status message: " << e.what();
+            throw std::runtime_error("Error processing RSU status message: " + std::string(e.what()));
         }
     }
 

@@ -59,8 +59,9 @@ namespace TelematicBridge
             attemptsCount++;
             natsMsg *reply = nullptr;
             auto natsTopic = "unit." + _truConfigWorkerptr->getUnitId() + REGISTERD_RSU_CONFIG;
+            auto payload = constructRSURegistrationDataString();
 
-            auto s = natsConnection_RequestString(&reply, _conn, natsTopic.c_str(), constructRSURegistrationDataString().c_str(), TIME_OUT);
+            auto s = natsConnection_RequestString(&reply, _conn, natsTopic.c_str(), payload.c_str(), TIME_OUT);
             if (s == NATS_OK)
             {
                 auto replyStr = natsMsg_GetData(reply);
@@ -173,7 +174,8 @@ namespace TelematicBridge
             PLOG(logDEBUG2) << "Inside RSU available topics replier";
             stringstream topic;
             topic << "unit." << _truConfigWorkerptr->getUnitId() << RSU_AVAILABLE_TOPICS;
-            natsConnection_Subscribe(&_subRsuAvailableTopics, _conn, topic.str().c_str(), onRsuAvailableTopicsCallback, this);
+            std::string topicStr = topic.str();
+            natsConnection_Subscribe(&_subRsuAvailableTopics, _conn, topicStr.c_str(), onRsuAvailableTopicsCallback, this);
         }
     }
 
@@ -184,7 +186,54 @@ namespace TelematicBridge
             PLOG(logDEBUG2) << "Inside RSU selected topics replier";
             stringstream topic;
             topic << "unit." << _truConfigWorkerptr->getUnitId() << RSU_SELECTED_TOPICS;
-            natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topic.str().c_str(), onRsuSelectedTopicsCallback, _dataSelectionTracker.get());
+            std::string topicStr = topic.str();
+            PLOG(logINFO) << "Subscribing to RSU selected topics on: " << topicStr;
+            natsStatus s = natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topicStr.c_str(), onRsuSelectedTopicsCallback, this);
+            if (s == NATS_OK)
+            {
+                PLOG(logINFO) << "Successfully subscribed to RSU selected topics";
+                // Flush to ensure subscription is processed by server
+                s = natsConnection_Flush(_conn);
+                if (s == NATS_OK)
+                {
+                    PLOG(logINFO) << "NATS connection flushed successfully after subscription";
+                }
+                else
+                {
+                    PLOG(logERROR) << "Failed to flush NATS connection: " << natsStatus_GetText(s);
+                }
+                
+                // Verify subscription is valid
+                if (_subRsuSelectedTopics != nullptr && natsSubscription_IsValid(_subRsuSelectedTopics))
+                {
+                    PLOG(logINFO) << "RSU selected topics subscription is valid and active";
+                    
+                    // Test: Send a self-test message to verify callback works
+                    std::string testPayload = "{\"test\":\"self-test message\"}";
+                    natsStatus testStatus = natsConnection_PublishString(_conn, topicStr.c_str(), testPayload.c_str());
+                    if (testStatus == NATS_OK)
+                    {
+                        PLOG(logINFO) << "Published self-test message to verify subscription";
+                        natsConnection_Flush(_conn);
+                    }
+                    else
+                    {
+                        PLOG(logERROR) << "Failed to publish self-test message: " << natsStatus_GetText(testStatus);
+                    }
+                }
+                else
+                {
+                    PLOG(logERROR) << "RSU selected topics subscription is INVALID!";
+                }
+            }
+            else
+            {
+                PLOG(logERROR) << "Failed to subscribe to RSU selected topics: " << natsStatus_GetText(s);
+            }
+        }
+        else
+        {
+            PLOG(logDEBUG2) << "RSU selected topics subscription already exists";
         }
     }
 
@@ -263,19 +312,38 @@ namespace TelematicBridge
 
     void TelematicRsuUnit::onRsuSelectedTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
     {
-        PLOG(logDEBUG3) << "Received RSU selected topics: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);
+        PLOG(logINFO) << "========== onRsuSelectedTopicsCallback INVOKED ==========";
+        PLOG(logINFO) << "Received RSU selected topics request";
+        PLOG(logINFO) << "  Subject: " << (natsMsg_GetSubject(msg) ? natsMsg_GetSubject(msg) : "NULL");
+        PLOG(logINFO) << "  Data: " << (natsMsg_GetData(msg) ? natsMsg_GetData(msg) : "NULL");
+        PLOG(logINFO) << "  Reply subject: " << (natsMsg_GetReply(msg) ? natsMsg_GetReply(msg) : "NULL");
+        PLOG(logINFO) << "Received RSU selected topics: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);
+        
+        PLOG(logINFO) << "Checking conditions - object: " << (object ? "NOT NULL" : "NULL") 
+                      << ", reply subject: " << (natsMsg_GetReply(msg) ? "NOT NULL" : "NULL");
         
         // Send reply
         if (object && natsMsg_GetReply(msg) != nullptr)
         {
-            auto obj = (DataSelectionTracker *)object;
+            PLOG(logINFO) << "Inside reply block - about to process message";
+            auto obj = (TelematicRsuUnit *)object;
             auto msgStr = natsMsg_GetData(msg);
+            
+            PLOG(logINFO) << "About to call constructRsuSelectedTopicsReplyString with: " << msgStr;
             
             try
             {
                 auto reply = obj->constructRsuSelectedTopicsReplyString(msgStr);
+                PLOG(logINFO) << "Sending reply: " << reply;
                 auto s = natsConnection_PublishString(nc, natsMsg_GetReply(msg), reply.c_str());
-               
+                if (s == NATS_OK)
+                {
+                    PLOG(logINFO) << "Successfully sent RSU selected topics reply";
+                }
+                else
+                {
+                    PLOG(logERROR) << "Failed to send RSU selected topics reply: " << natsStatus_GetText(s);
+                }
             }
             catch (const std::exception &e)
             {
@@ -286,6 +354,13 @@ namespace TelematicBridge
             
             natsMsg_Destroy(msg);
         }
+        else
+        {
+            PLOG(logERROR) << "Cannot send reply - object or reply subject is NULL!";
+            natsMsg_Destroy(msg);
+        }
+        
+        PLOG(logINFO) << "========== onRsuSelectedTopicsCallback COMPLETED ==========";
     }
 
     std::string TelematicRsuUnit::constructRsuSelectedTopicsReplyString(const std::string &msgStr){
