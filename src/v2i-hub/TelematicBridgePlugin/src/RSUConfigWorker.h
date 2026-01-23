@@ -339,12 +339,6 @@ namespace TelematicBridge
          *         }
          */
         Json::Value getUnitConfigAsJsonArray();
-        
-        /**
-         * @brief Get all registered RSU configurations
-         * @return std::vector<rsuConfig> Vector of all registered RSU configurations
-         */
-        std::vector<rsuConfig> getRegisteredRSUs() const;
 
         /**
          * @brief Get event name for a specific RSU by IP and port

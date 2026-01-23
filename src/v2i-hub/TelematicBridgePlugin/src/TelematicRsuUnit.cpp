@@ -19,10 +19,6 @@ namespace TelematicBridge
             {
                 throw std::runtime_error("Could not load RSU Configuration from file: " + std::string(rsuConfigPath));
             }
-            else
-            {
-                PLOG(logINFO) << "Successfully loaded RSU configuration. RSU count: " << _truConfigWorkerptr->getRegisteredRSUs().size();
-            }
         }
         else
         {

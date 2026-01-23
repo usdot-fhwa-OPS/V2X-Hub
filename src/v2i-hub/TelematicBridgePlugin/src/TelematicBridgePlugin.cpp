@@ -10,11 +10,9 @@ namespace TelematicBridge
     TelematicBridgePlugin::TelematicBridgePlugin(const string &name) : TmxMessageManager(name)
     {
         // Safely get environment variables with null checks
-        const char* infraId = std::getenv("INFRASTRUCTURE_ID");
-        const char* infraName = std::getenv("INFRASTRUCTURE_NAME");
+        _unitId = std::getenv("INFRASTRUCTURE_ID");
+        _unitName = std::getenv("INFRASTRUCTURE_NAME");
         
-        _unitId = infraId ? infraId : "";
-        _unitName = infraName ? infraName : "";
         _isTRU = true;
         //std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);

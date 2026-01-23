@@ -384,18 +384,6 @@ namespace TelematicBridge
         return _unitId;
     }
     
-    std::vector<rsuConfig> truConfigWorker::getRegisteredRSUs() const
-    {
-        std::vector<rsuConfig> rsus;
-        rsus.reserve(_truRegistrationMap.size());
-        
-        for (const auto& configPair : _truRegistrationMap) {
-            rsus.push_back(configPair.second);
-        }
-        
-        return rsus;
-    }
-
     std::string truConfigWorker::getEventByRsu(const std::string &rsuIp, int rsuPort) const
     {
         // Search for matching RSU by IP and port in the registration map
