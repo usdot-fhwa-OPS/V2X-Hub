@@ -316,6 +316,12 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	// Make sure the timestamp matches the incoming source message
 
 	sendMsg->set_timestamp(msg.get_timestamp());
+	
+	// Copy DSRC RSU metadata from incoming message if available
+	if (!msg.get_rsuIp().empty())
+		sendMsg->set_rsuIp(msg.get_rsuIp());
+	if (msg.get_rsuPort() > 0)
+		sendMsg->set_rsuPort(msg.get_rsuPort());
 
 	// Keep a count of each type of message received
 	string name(sendMsg->get_subtype());
@@ -349,6 +355,7 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 			
 			sendMsg->set_flags(IvpMsgFlags_None);
 		}
+		PLOG(logDEBUG) << "Sending message: " << *sendMsg;
 		this->OutgoingMessage(*sendMsg);
 	}
 }
@@ -432,6 +439,9 @@ int MessageReceiverPlugin::Main()
 
 				totalBytes += len;
 				int txlen=0; 
+				
+				// Log sender information for debugging
+				PLOG(logDEBUG1) << "Received " << len << " bytes from " << (senderIp.empty() ? "unknown" : senderIp) << ":" << senderPort;
 				
 				// @SONAR_STOP@
 				// if verification enabled, access HSM

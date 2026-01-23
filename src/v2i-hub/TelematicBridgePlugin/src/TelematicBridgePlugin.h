@@ -9,6 +9,8 @@
 #include "TelematicRsuUnit.h"
 #include "RSUConfigWorker.h"
 #include <simulation/SimulationEnvUtils.h>
+#include "health_monitor/HealthStatusMessageMapper.h"
+#include "health_monitor/TRUHealthStatusTracker.h"
 
 
 namespace TelematicBridge
@@ -37,6 +39,7 @@ namespace TelematicBridge
         uint _timerThId;
         uint _healthStatusTimerThId;  ///< Thread ID for health status timer
         bool _isTRU = false;
+        bool _isTRURegistered = false;
         std::mutex _configMutex;
 
         /**
@@ -44,6 +47,8 @@ namespace TelematicBridge
          * @param routeMsg The routeable message containing RSU status
          */
         void ProcessRSUStatusMessage(tmx::routeable_message &routeMsg);
+
+        void registerTRU();
 
         /**
          * @brief Update unit health status in TRU tracker

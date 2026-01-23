@@ -179,11 +179,6 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 			}
 			break;
 		}
-
-		free(msg.encoding);
-		msg.encoding = NULL;
-		free(msg.rsuIp);
-		msg.rsuIp = NULL;
 	}
 
 	// Invoke the handler
@@ -191,17 +186,23 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 		if (msg.timestamp > 0)
 			routeableMsg->set_timestamp(msg.timestamp);
 
-		// Set DSRC RSU metadata if available
+		// Set DSRC RSU metadata if available (must be done before freeing)
 		if (msg.rsuIp && msg.rsuIp[0] != '\0')
-			routeableMsg->set_dsrcRsuIp(msg.rsuIp);
+			routeableMsg->set_rsuIp(msg.rsuIp);
 		if (msg.rsuPort > 0)
-			routeableMsg->set_dsrcRsuPort(msg.rsuPort);
+			routeableMsg->set_rsuPort(msg.rsuPort);
 
 		if (msg.mgr)
 			msg.mgr->OnMessageReceived(*routeableMsg);
 
 		delete routeableMsg;
 	}
+
+	// Free allocated memory after using it
+	free(msg.encoding);
+	msg.encoding = NULL;
+	free(msg.rsuIp);
+	msg.rsuIp = NULL;
 
 	// After other messages are sent out, then push a message to clean up for this thread assignment
 	rawOutgoingMessage out;

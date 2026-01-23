@@ -53,6 +53,18 @@ namespace TelematicBridge
             rsuId = generateRsuId(ip, port);
         }
 
+        static std::string statusToLabel (const std::string &status)
+        {
+            if (status == "1")
+                return "other";
+            else if (status == "2")
+                return "standby";
+            else if (status == "3")
+                return "operate";
+            else
+                return "unknown";
+        }
+
         /**
          * @brief Convert to JSON representation
          * @return JSON::Value object representing the message
@@ -60,11 +72,15 @@ namespace TelematicBridge
         Json::Value toJson() const
         {
             Json::Value json;
-            json["ip"] = ip;
-            json["port"] = port;
-            json["status"] = status;
+            
+            // Create nested RSU object
+            Json::Value rsuObject;
+            rsuObject["ip"] = ip;
+            rsuObject["port"] = port;
+                        
+            json["rsu"] = rsuObject;
+            json["status"] = statusToLabel(status);
             json["event"] = event;
-            json["rsuId"] = rsuId;
             return json;
         }
 
@@ -76,11 +92,18 @@ namespace TelematicBridge
         static RSUHealthStatusMessage fromJson(const Json::Value &json)
         {
             RSUHealthStatusMessage msg;
-            if (json.isMember("ip")) msg.ip = json["ip"].asString();
-            if (json.isMember("port")) msg.port = json["port"].asInt();
+            
+            // Parse from nested RSU object
+            if (json.isMember("rsu") && json["rsu"].isObject())
+            {
+                const Json::Value &rsuObject = json["rsu"];
+                if (rsuObject.isMember("ip")) msg.ip = rsuObject["ip"].asString();
+                if (rsuObject.isMember("port")) msg.port = rsuObject["port"].asInt();
+                if (rsuObject.isMember("rsuId")) msg.rsuId = rsuObject["rsuId"].asString();
+            }
+            
             if (json.isMember("status")) msg.status = json["status"].asString();
             if (json.isMember("event")) msg.event = json["event"].asString();
-            if (json.isMember("rsuId")) msg.rsuId = json["rsuId"].asString();
             return msg;
         }
 
@@ -107,6 +130,10 @@ namespace TelematicBridge
         {
             return !(*this == other);
         }
+
+        std::string getRsuId() const { return rsuId; }
+
+        std::string getStatus() const { return statusToLabel(status); }
     };
 
 } // namespace TelematicBridge

@@ -6,7 +6,7 @@ using namespace std::chrono;
 
 namespace TelematicBridge
 {
-    void TelematicUnit::connect(const string &natsURL)
+    bool TelematicUnit::connect(const string &natsURL)
     {
         auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
         PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);
@@ -18,9 +18,10 @@ namespace TelematicBridge
         {
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
+        return s == NATS_OK;
     }
 
-    void TelematicUnit::registerUnitRequestor()
+    bool TelematicUnit::registerUnitRequestor()
     {
         // Reset registration status
         bool isRegistered = false;

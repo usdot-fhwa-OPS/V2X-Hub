@@ -73,14 +73,14 @@ namespace TelematicBridge
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
          */
-        void connect(const std::string &natsURL) override;
+        bool connect(const std::string &natsURL) override;
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        void registerRsuUnitRequestor();
+        bool registerRsuUnitRequestor();
 
         /**
          * @brief Set up RSU configuration replier to handle RSU config updates via NATS
@@ -255,9 +255,16 @@ namespace TelematicBridge
          * @brief Update unit health status in TRU tracker
          * @param status The unit health status message
          */
-        void updateUnitHealthStatus(const UnitHealthStatusMessage &status)
+        void updateUnitHealthStatus(const std::string &unitId, const std::string &status)
         {
-            _truHealthStatusTracker.updateUnitStatus(status);
+             // Get current timestamp in milliseconds
+            auto now = std::chrono::system_clock::now();
+            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()).count();
+            
+            auto unitStatus = HealthStatusMessageMapper::toUnitHealthStatusMessage(unitId, status);
+            
+            _truHealthStatusTracker.updateUnitStatus(unitStatus);
         }
 
         /**

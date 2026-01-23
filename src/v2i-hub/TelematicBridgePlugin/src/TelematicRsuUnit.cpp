@@ -28,7 +28,7 @@ namespace TelematicBridge
         }
     }
 
-    void TelematicRsuUnit::connect(const string &natsURL)
+    bool TelematicRsuUnit::connect(const string &natsURL)
     {
         bool isConnected = false;
         int attemptsCount = 0;
@@ -43,14 +43,14 @@ namespace TelematicBridge
         }
 
         if (s == NATS_OK){
-            registerRsuUnitRequestor();
+           return registerRsuUnitRequestor();
         }
         else{
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
     }
 
-    void TelematicRsuUnit::registerRsuUnitRequestor()
+    bool TelematicRsuUnit::registerRsuUnitRequestor()
     {
         // Reset registration status
         bool isRegistered = false;
@@ -84,6 +84,7 @@ namespace TelematicBridge
 
         if (isRegistered)
         {
+            PLOG(logINFO) << "RSU Unit successfully registered with RSU Management Service.";
             // Provide below services when the unit is registered
             rsuConfigReplier();
             rsuAvailableTopicsReplier();
@@ -92,6 +93,7 @@ namespace TelematicBridge
             // selectedTopicsReplier();
             // checkStatusReplier();
         }
+        return isRegistered;
     }
 
     void TelematicRsuUnit::rsuConfigReplier()
@@ -99,6 +101,7 @@ namespace TelematicBridge
         // Create a subscriber to the rsu config from RSU Management service
         if (!_subRegisteredRSUStatus)
         {
+            PLOG(logDEBUG2) << "Inside RSU Configuration replier";
             natsConnection_Subscribe(&_subRegisteredRSUStatus, _conn, getRsuConfigTopic().c_str(), onRSUConfigStatusCallback, this);
         }
 

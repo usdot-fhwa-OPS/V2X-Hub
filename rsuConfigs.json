@@ -1,7 +1,8 @@
 {
   "unitConfig": [{
     "unitId": "Unit001",
-    "maxConnections": 10
+    "maxConnections": 10,
+    "rsuStatusMonitorInterval": 10
   }],
   "rsuConfigs": [{
     "action": "add",

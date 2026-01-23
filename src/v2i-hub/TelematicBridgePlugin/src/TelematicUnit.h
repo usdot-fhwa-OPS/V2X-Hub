@@ -68,14 +68,14 @@ namespace TelematicBridge
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
          */
-        virtual void connect(const std::string &natsURL);
+        virtual bool connect(const std::string &natsURL);
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        virtual void registerUnitRequestor();
+        virtual bool registerUnitRequestor();
 
         /**
          * @brief A NATS replier to subscribe to NATS server and receive available topics request.
