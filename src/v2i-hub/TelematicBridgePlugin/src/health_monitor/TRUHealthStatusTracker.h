@@ -45,10 +45,9 @@ namespace TelematicBridge
 
         /**
          * @brief Update an RSU health status by RSU ID (IP:port)
-         * @param rsuId The RSU identifier in format "IP:port"
          * @param status The RSU health status message
          */
-        void updateRsuStatus(const std::string &rsuId, const RSUHealthStatusMessage &status)
+        void updateRsuStatus( const RSUHealthStatusMessage &status)
         {
             std::lock_guard<std::mutex> lock(_statusMutex);
             
@@ -59,7 +58,7 @@ namespace TelematicBridge
             bool found = false;
             for (auto& rsuStatus : rsuStatuses)
             {
-                if (rsuStatus.rsuId == rsuId)
+                if (rsuStatus.getRsuId() == status.getRsuId())
                 {
                     rsuStatus = status;
                     found = true;

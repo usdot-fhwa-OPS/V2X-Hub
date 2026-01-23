@@ -48,7 +48,7 @@ namespace TelematicBridge
          */
         void ProcessRSUStatusMessage(tmx::routeable_message &routeMsg);
 
-        void registerTRU();
+        void RegisterTRU();
 
         /**
          * @brief Update unit health status in TRU tracker

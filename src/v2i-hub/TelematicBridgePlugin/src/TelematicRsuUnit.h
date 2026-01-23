@@ -14,6 +14,10 @@
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
 #include "health_monitor/TRUHealthStatusTracker.h"
+#include "health_monitor/RSUHealthStatusMessage.h"
+#include "health_monitor/HealthStatusMessageMapper.h"
+#include "data_selection/TRUTopicsMessage.h"
+#include <boost/algorithm/string/replace.hpp>
 
 namespace TelematicBridge
 {
@@ -104,19 +108,17 @@ namespace TelematicBridge
          * @brief Update available topics for a specific RSU
          * Adds the topic to the available topics list for the specified RSU
          * @param rsuIp RSU IP address
-         * @param rsuPort RSU port number
          * @param topic Topic name to add to the RSU's available topics
          */
-        void updateRsuAvailableTopics(const std::string &rsuIp, int rsuPort, const std::string &topic);
+        void updateRsuAvailableTopics(const std::string &rsuIp, const std::string &topic);
         
         /**
          * @brief Check if a topic is selected for a specific RSU
          * @param rsuIp RSU IP address
-         * @param rsuPort RSU port number
          * @param topic Topic name to check
          * @return true if the topic is selected for the specified RSU, false otherwise
          */
-        bool inRsuSelectedTopics(const std::string &rsuIp, int rsuPort, const std::string &topic);
+        bool inRsuSelectedTopics(const std::string &rsuIp, const std::string &topic);
         
         /**
          * @brief Publish message to RSU-specific NATS topic
@@ -243,36 +245,30 @@ namespace TelematicBridge
 
         /**
          * @brief Update an RSU health status in the TRU tracker
-         * @param rsuId The RSU identifier in format "IP:port"
          * @param status The RSU health status message
          */
-        void updateRsuHealthStatus(const std::string &rsuId, const RSUHealthStatusMessage &status)
-        {
-            _truHealthStatusTracker.updateRsuStatus(rsuId, status);
-        }
+        void updateRsuHealthStatus(const RSUHealthStatusMessage &status);
 
         /**
          * @brief Update unit health status in TRU tracker
          * @param status The unit health status message
          */
-        void updateUnitHealthStatus(const std::string &unitId, const std::string &status)
-        {
-             // Get current timestamp in milliseconds
-            auto now = std::chrono::system_clock::now();
-            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                now.time_since_epoch()).count();
-            
-            auto unitStatus = HealthStatusMessageMapper::toUnitHealthStatusMessage(unitId, status);
-            
-            _truHealthStatusTracker.updateUnitStatus(unitStatus);
-        }
+        void updateUnitHealthStatus(const std::string &status);
 
         /**
          * @brief Helper method to publish health status data to NATS
          * @param topicSuffix The suffix to append to "unit.<unit_id>."
          */
         void PublishHealthStatusToNATS(const std::string &topicSuffix);
-
+        
+        /**
+         * @brief Get plugin heartbeat interval from configuration
+         * @return int Heartbeat interval in seconds
+         */
+        int getPluginHeartBeatInterval() const
+        {
+            return _truConfigWorkerptr->getPluginHeartBeatInterval();
+        }
         /**
          * @brief Publish RSU health status to NATS
          * Publishes the current TRU health status snapshot to the RSU health status topic

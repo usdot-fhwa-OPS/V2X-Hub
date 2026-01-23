@@ -31,12 +31,7 @@ namespace TelematicBridge
         {
             return ip + ":" + std::to_string(port);
         }
-
-        /**
-         * @brief Default constructor
-         */
-        RSUHealthStatusMessage() : port(0) {}
-
+        
         /**
          * @brief Constructor with parameters
          * @param ip IP address
@@ -91,19 +86,22 @@ namespace TelematicBridge
          */
         static RSUHealthStatusMessage fromJson(const Json::Value &json)
         {
-            RSUHealthStatusMessage msg;
-            
+            std::string ip;
+            int port = 0;
+            std::string status;
+            std::string event;
             // Parse from nested RSU object
             if (json.isMember("rsu") && json["rsu"].isObject())
             {
                 const Json::Value &rsuObject = json["rsu"];
-                if (rsuObject.isMember("ip")) msg.ip = rsuObject["ip"].asString();
-                if (rsuObject.isMember("port")) msg.port = rsuObject["port"].asInt();
-                if (rsuObject.isMember("rsuId")) msg.rsuId = rsuObject["rsuId"].asString();
+                if (rsuObject.isMember("ip")) ip = rsuObject["ip"].asString();
+                if (rsuObject.isMember("port")) port = rsuObject["port"].asInt();
             }
             
-            if (json.isMember("status")) msg.status = json["status"].asString();
-            if (json.isMember("event")) msg.event = json["event"].asString();
+            if (json.isMember("status")) status = json["status"].asString();
+            if (json.isMember("event")) event = json["event"].asString();
+
+            RSUHealthStatusMessage msg(ip, port, status, event );
             return msg;
         }
 
@@ -131,9 +129,20 @@ namespace TelematicBridge
             return !(*this == other);
         }
 
-        std::string getRsuId() const { return rsuId; }
+        std::string getRsuId() const { 
+            return rsuId;
+        }
 
-        std::string getStatus() const { return statusToLabel(status); }
+        std::string getStatus() const { 
+            return statusToLabel(status); 
+        }
+
+        std::string toString() const
+        {
+            Json::Value json = toJson();
+            Json::FastWriter writer;
+            return writer.write(json);
+        }
     };
 
 } // namespace TelematicBridge

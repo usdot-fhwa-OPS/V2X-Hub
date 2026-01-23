@@ -1,3 +1,4 @@
+#pragma once
 #include "RSUHealthStatusMessage.h"
 #include "UnitHealthStatusMessage.h"
 #include <tmx/messages/routeable_message.hpp>
@@ -57,7 +58,6 @@ namespace TelematicBridge
 
         static UnitHealthStatusMessage toUnitHealthStatusMessage(const std::string& unitId, const std::string& status, int64_t timestamp)
         {
-
             // Create UnitHealthStatusMessage
             UnitHealthStatusMessage unitStatus;
             unitStatus.setUnitId(unitId.empty() ? "unknown" : unitId);

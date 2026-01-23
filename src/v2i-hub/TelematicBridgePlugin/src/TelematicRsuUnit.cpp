@@ -196,26 +196,22 @@ namespace TelematicBridge
     }
 
 
-    void TelematicRsuUnit::updateRsuAvailableTopics(const std::string &rsuIp, int rsuPort, const std::string &topic)
+    void TelematicRsuUnit::updateRsuAvailableTopics(const std::string &rsuIp, const std::string &topic)
     {
-        // Construct RSU ID from IP and port
-        string rsuId = rsuIp + ":" + to_string(rsuPort);
-        
+        // Use only RSU IP as the key (port is ignored)
         lock_guard<mutex> lock(_rsuAvailableTopicsMutex);
-        _rsuAvailableTopicsMap[rsuId].insert(topic);
+        _rsuAvailableTopicsMap[rsuIp].insert(topic);
         
-        PLOG(logDEBUG3) << "Updated available topic for RSU " << rsuId << ": " << topic;
+        PLOG(logDEBUG3) << "Updated available topic for RSU " << rsuIp << ": " << topic;
     }
 
-    bool TelematicRsuUnit::inRsuSelectedTopics(const std::string &rsuIp, int rsuPort, const std::string &topic) 
+    bool TelematicRsuUnit::inRsuSelectedTopics(const std::string &rsuIp, const std::string &topic) 
     {
-        // Construct RSU ID from IP and port
-        string rsuId = rsuIp + ":" + to_string(rsuPort);
-        
+        // Use only RSU IP as the key (port is ignored)
         lock_guard<mutex> lock(_rsuSelectedTopicsMutex);
         
         // Check if this specific RSU has the topic selected
-        auto it = _rsuSelectedTopicsMap.find(rsuId);
+        auto it = _rsuSelectedTopicsMap.find(rsuIp);
         if (it != _rsuSelectedTopicsMap.end())
         {
             return it->second.find(topic) != it->second.end();
@@ -226,14 +222,13 @@ namespace TelematicBridge
 
     void TelematicRsuUnit::publishRsuDataStream(const std::string &rsuIp, int rsuPort, const std::string &topic, const Json::Value &message)
     {
-        string unitId = _truConfigWorkerptr->getUnitId();        
         // Construct topic: unit.<unit_id>.stream.rsu.<rsu_ip>.<topic_name>
+        string unitId = _truConfigWorkerptr->getUnitId();        
+        boost::replace_all(rsuIp, ".", "_"); 
         string natsTopic = "unit." + unitId + ".stream.rsu." + rsuIp + "." + topic;        
         auto jsonStr = constructPublishedRsuDataStream(unitId, rsuIp, rsuPort, topic, message);
         publishToNats(natsTopic, jsonStr);
-    }
-
-    
+    }    
 
     std::string TelematicRsuUnit::constructPublishedRsuDataStream(const std::string &unitId,                                                      const std::string &rsuIp, int rsuPort,
                                                                    const std::string &topicName, const Json::Value &payload) const
@@ -284,8 +279,8 @@ namespace TelematicBridge
         
         for (const auto& rsuConfig : registeredRsus)
         {
-            // Create RSU ID as "ip:port"
-            string rsuId = rsuConfig.rsu.ip + ":" + to_string(rsuConfig.rsu.port);
+            // Use only RSU IP as the key (port is ignored)
+            string rsuIp = rsuConfig.rsu.ip;
             
             // Create RSUTopicsMessage
             RSUTopicsMessage rsuTopicsMsg;
@@ -294,7 +289,7 @@ namespace TelematicBridge
             // Build topics list for this RSU
             std::vector<TopicMessage> topics;
             
-            auto it = _rsuAvailableTopicsMap.find(rsuId);
+            auto it = _rsuAvailableTopicsMap.find(rsuIp);
             if (it != _rsuAvailableTopicsMap.end())
             {
                 for (const auto& topicName : it->second)
@@ -352,7 +347,7 @@ namespace TelematicBridge
                 
                 if (Json::parseFromStream(reader, s, &root, &errs))
                 {
-                    TRUTopicsMessage incomingMsg = TRUTopicsMessage::fromJson(root);
+                    auto incomingMsg = TRUTopicsMessage::fromJson(root);
                     
                     // Clear old selected topics for all RSUs
                     {
@@ -364,14 +359,15 @@ namespace TelematicBridge
                     for (const auto& rsuTopicsMsg : incomingMsg.getRsuTopics())
                     {
                         const auto& endpoint = rsuTopicsMsg.getRsuEndpoint();
-                        string rsuId = endpoint.ip + ":" + to_string(endpoint.port);
+                        // Use only RSU IP as the key (port is ignored)
+                        string rsuIp = endpoint.ip;
                         
                         lock_guard<mutex> lock(obj->_rsuSelectedTopicsMutex);
                         for (const auto& topic : rsuTopicsMsg.getTopics())
                         {
                             if (topic.isSelected())
                             {
-                                obj->_rsuSelectedTopicsMap[rsuId].insert(topic.getName());
+                                obj->_rsuSelectedTopicsMap[rsuIp].insert(topic.getName());
                             }
                         }
                     }
@@ -432,6 +428,19 @@ namespace TelematicBridge
         }
     }
 
+    void TelematicRsuUnit::updateRsuHealthStatus(const RSUHealthStatusMessage &status)
+    {
+        _truHealthStatusTracker.updateRsuStatus(status);
+    }
+
+    void TelematicRsuUnit::updateUnitHealthStatus(const std::string &status)
+    {
+        // Get current timestamp in milliseconds
+        auto now = std::chrono::system_clock::now();
+        auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();            
+        auto unitStatus = HealthStatusMessageMapper::toUnitHealthStatusMessage(_truConfigWorkerptr->getUnitId(), status, timestamp);            
+        _truHealthStatusTracker.updateUnitStatus(unitStatus);
+    }
 
     void TelematicRsuUnit::PublishHealthStatusToNATS(const std::string &topicSuffix)
     {

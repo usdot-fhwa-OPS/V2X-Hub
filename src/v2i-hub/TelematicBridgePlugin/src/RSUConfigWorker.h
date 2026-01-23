@@ -291,6 +291,15 @@ namespace TelematicBridge
         std::string getUnitId();
 
         /**
+         * @brief Get the plugin heartbeat interval
+         * @return int The heartbeat interval in seconds
+         */
+        int getPluginHeartBeatInterval() const
+        {
+            return _pluginHeartBeatInterval;
+        }
+
+        /**
          * @brief Validate that a JSON object contains all required keys
          *
          * Checks that the provided JSON object contains all keys specified in the

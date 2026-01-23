@@ -5,6 +5,10 @@ Send NATS Request to Query Available Topics
 This script sends a NATS request to query available topics from a specific RSU unit
 in the V2X Hub TelematicBridge plugin and prints the response.
 
+Note: The system groups topics by RSU IP address. Port numbers shown in responses
+are from the registration configuration and are included for reference but are not
+used as part of the topic matching key.
+
 Usage:
     python3 send_nats_request_available_topics.py [options]
 
@@ -26,7 +30,7 @@ async def send_nats_request(nats_url, unit_id, timeout=5.0):
     
     Args:
         nats_url: NATS server URL
-        unit_id: Unit ID to query (e.g., "rsu_1234")
+        unit_id: Unit ID to query (e.g., "Unit001")
         timeout: Request timeout in seconds
     
     Returns:
@@ -137,14 +141,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Query unit rsu_1234 on local NATS server
+  # Query unit Unit001 on local NATS server
   python3 send_nats_request_available_topics.py
   
   # Query specific unit with custom timeout
   python3 send_nats_request_available_topics.py --unit-id my_unit --timeout 10
   
   # Connect to remote NATS server
-  python3 send_nats_request_available_topics.py --nats-url nats://192.168.1.100:4222 --unit-id rsu_1234
+  python3 send_nats_request_available_topics.py --nats-url nats://192.168.1.100:4222 --unit-id Unit001
         """
     )
     
@@ -156,8 +160,8 @@ Examples:
     
     parser.add_argument(
         '--unit-id',
-        default='rsu_1234',
-        help='Unit ID to query (default: rsu_1234)'
+        default='Unit001',
+        help='Unit ID to query (default: Unit001)'
     )
     
     parser.add_argument(
