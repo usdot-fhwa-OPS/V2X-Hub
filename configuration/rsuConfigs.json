@@ -2,7 +2,7 @@
   "unitConfig": [{
     "unitId": "Unit001",
     "maxConnections": 10,
-    "rsuStatusMonitorInterval": 10,
+    "rsuStatusMonitorInterval": 2,
     "bridgePluginHeartbeatInterval": 5
   }],
   "rsuConfigs": [{

@@ -71,7 +71,7 @@ namespace TelematicBridge
          * @param topic Topic name to check
          * @return true if the topic is selected for the specified RSU, false otherwise
          */
-        bool inRsuSelectedTopics(const std::string &rsuIp, const std::string &topic) 
+        bool inRsuSelectedTopics(const std::string &rsuIp, const std::string &topicName) 
         {
             // Use only RSU IP as the key (port is ignored)
             std::lock_guard<std::mutex> lock(_rsuSelectedTopicsMutex);
@@ -80,7 +80,7 @@ namespace TelematicBridge
             auto it = _rsuSelectedTopicsMap.find(rsuIp);
             if (it != _rsuSelectedTopicsMap.end())
             {
-                return it->second.find(topic) != it->second.end();
+                return it->second.find(topicName) != it->second.end();
             }
             
             return false;

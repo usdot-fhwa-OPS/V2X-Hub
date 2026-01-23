@@ -136,6 +136,10 @@ namespace TelematicBridge
         std::string getIp() const { 
             return ip; 
         }
+
+        std::string getEvent() const { 
+            return event; 
+        }
         
         int getPort() const { 
             return port; 

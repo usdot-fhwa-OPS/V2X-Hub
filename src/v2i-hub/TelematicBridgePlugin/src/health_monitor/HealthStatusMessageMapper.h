@@ -1,4 +1,5 @@
 #pragma once
+
 #include "RSUHealthStatusMessage.h"
 #include "UnitHealthStatusMessage.h"
 #include <tmx/messages/routeable_message.hpp>

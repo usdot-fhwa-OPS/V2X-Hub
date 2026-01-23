@@ -187,53 +187,7 @@ namespace TelematicBridge
             stringstream topic;
             topic << "unit." << _truConfigWorkerptr->getUnitId() << RSU_SELECTED_TOPICS;
             std::string topicStr = topic.str();
-            PLOG(logINFO) << "Subscribing to RSU selected topics on: " << topicStr;
-            natsStatus s = natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topicStr.c_str(), onRsuSelectedTopicsCallback, this);
-            if (s == NATS_OK)
-            {
-                PLOG(logINFO) << "Successfully subscribed to RSU selected topics";
-                // Flush to ensure subscription is processed by server
-                s = natsConnection_Flush(_conn);
-                if (s == NATS_OK)
-                {
-                    PLOG(logINFO) << "NATS connection flushed successfully after subscription";
-                }
-                else
-                {
-                    PLOG(logERROR) << "Failed to flush NATS connection: " << natsStatus_GetText(s);
-                }
-                
-                // Verify subscription is valid
-                if (_subRsuSelectedTopics != nullptr && natsSubscription_IsValid(_subRsuSelectedTopics))
-                {
-                    PLOG(logINFO) << "RSU selected topics subscription is valid and active";
-                    
-                    // Test: Send a self-test message to verify callback works
-                    std::string testPayload = "{\"test\":\"self-test message\"}";
-                    natsStatus testStatus = natsConnection_PublishString(_conn, topicStr.c_str(), testPayload.c_str());
-                    if (testStatus == NATS_OK)
-                    {
-                        PLOG(logINFO) << "Published self-test message to verify subscription";
-                        natsConnection_Flush(_conn);
-                    }
-                    else
-                    {
-                        PLOG(logERROR) << "Failed to publish self-test message: " << natsStatus_GetText(testStatus);
-                    }
-                }
-                else
-                {
-                    PLOG(logERROR) << "RSU selected topics subscription is INVALID!";
-                }
-            }
-            else
-            {
-                PLOG(logERROR) << "Failed to subscribe to RSU selected topics: " << natsStatus_GetText(s);
-            }
-        }
-        else
-        {
-            PLOG(logDEBUG2) << "RSU selected topics subscription already exists";
+            natsConnection_Subscribe(&_subRsuSelectedTopics, _conn, topicStr.c_str(), onRsuSelectedTopicsCallback, this);
         }
     }
 
@@ -267,8 +221,8 @@ namespace TelematicBridge
         rsu["port"] = rsuPort;
         metadata["rsu"] = rsu;
         
-        // Add timestamp (in microseconds)
-        metadata["timestamp"] = std::to_string(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count());
+        // Add timestamp (in milliseconds)
+        metadata["timestamp"] = std::to_string(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
         
         // Add event name
         metadata["event"] = eventName;
