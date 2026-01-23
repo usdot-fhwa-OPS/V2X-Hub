@@ -11,19 +11,18 @@ namespace TelematicBridge
     {
         // Safely get environment variables with null checks
         _unitId = std::getenv("INFRASTRUCTURE_ID");
-        _unitName = std::getenv("INFRASTRUCTURE_NAME");
+        _unitName = std::getenv("INFRASTRUCTURE_NAME");        
+        const char* isTruEnv = std::getenv("IS_TRU");
+        _isTRU = (isTruEnv != nullptr && (std::string(isTruEnv) == "true" || std::string(isTruEnv) == "TRUE"));
         
-        _isTRU = true;
-        //std::getenv("IS_TRU");
         AddMessageFilter("*", "*", IvpMsgFlags_None);
         AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
         SubscribeToMessages();
+        
         if(_isTRU){
-            PLOG(logINFO) << "TelematicBridgePlugin operating as Telematic RSU Unit (TRU)";   
             _telematicRsuUnitPtr = std::make_unique<TelematicRsuUnit>();
         }
         else{
-            PLOG(logINFO) << "TelematicBridgePlugin operating as standard Telematic Unit";   
             _telematicUnitPtr = make_unique<TelematicUnit>();
         }
     }
@@ -33,7 +32,8 @@ namespace TelematicBridge
         const char* natsUrl = std::getenv("NATS_URL");
         if (_isTRU && !_isTRURegistered && _telematicRsuUnitPtr)
         {
-            _natsURL = natsUrl ? natsUrl : "nats://localhost:4222";
+            _natsURL = natsUrl ? std::string(natsUrl) : "nats://localhost:4222";
+            PLOG(logINFO) << "Registering Telematic RSU Unit (TRU) through NATS server at: " << _natsURL;
             try
             {
                _isTRURegistered = _telematicRsuUnitPtr->connect(_natsURL);
@@ -182,7 +182,7 @@ namespace TelematicBridge
             if (_telematicRsuUnitPtr)
             {
                 _telematicRsuUnitPtr->updateRsuHealthStatus(rsuHealthStatus);
-                PLOG(logINFO) << "Updated health status for RSU: " << rsuHealthStatus.toString();
+                PLOG(logINFO) << "ProcessRSUStatusMessage: " << rsuHealthStatus.toString();
                 _telematicRsuUnitPtr->PublishRSUHealthStatus();
                 return rsuHealthStatus;
             }

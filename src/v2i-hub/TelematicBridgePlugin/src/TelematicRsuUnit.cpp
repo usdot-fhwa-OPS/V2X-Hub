@@ -15,7 +15,7 @@ namespace TelematicBridge
         _dataSelectionTracker = std::make_shared<DataSelectionTracker>();
         if (rsuConfigPath != nullptr) {
             PLOG(logINFO) << "Loading RSU configuration from: " << rsuConfigPath;
-            if (!_truConfigWorkerptr->loadRSUConfigListFromFile(rsuConfigPath))
+            if (!_truConfigWorkerptr->loadRSUConfigListFromFile(std::string(rsuConfigPath)))
             {
                 throw std::runtime_error("Could not load RSU Configuration from file: " + std::string(rsuConfigPath));
             }
