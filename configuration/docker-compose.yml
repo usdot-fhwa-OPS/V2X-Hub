@@ -1,20 +1,20 @@
 services:
-  db:
-    image: mysql:8.0
-    container_name: mysql
-    environment:
-      - MYSQL_DATABASE=IVP
-      - MYSQL_USER=IVP
-      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    network_mode: host
-    secrets:
-      - mysql_password
-    volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
+  # db:
+  #   image: mysql:8.0
+  #   container_name: mysql
+  #   environment:
+  #     - MYSQL_DATABASE=IVP
+  #     - MYSQL_USER=IVP
+  #     - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
+  #     - MYSQL_RANDOM_ROOT_PASSWORD=yes
+  #   network_mode: host
+  #   secrets:
+  #     - mysql_password
+  #   volumes:
+  #     - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+  #     - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+  #     - /etc/localtime:/etc/localtime:ro 
+  #     - /etc/timezone:/etc/timezone:ro 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
@@ -59,9 +59,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ssl-certs-volume:/var/www/plugins/ssl:rw
-secrets:
-  mysql_password:
-    environment: MYSQL_PASSWORD
+# secrets:
+#   mysql_password:
+#     environment: MYSQL_PASSWORD
 
 volumes:
   ssl-certs-volume:
