@@ -140,6 +140,27 @@ TEST(TestTRUTopicsMessage, FromJson)
     ASSERT_EQ(1, topics.size());
     EXPECT_EQ("Application_BSM_MessageReceiver", topics[0].getName());
     EXPECT_TRUE(topics[0].isSelected());
+
+
+    jsonStr = R"({
+        "rsuTopics": [{
+            "rsuEndpoint": {
+                "ip": "192.168.1.1",
+                "port": 161
+            },
+            "topics": [{
+                "name": "Application_BSM_MessageReceiver",
+                "selected": true
+            }]
+        }],
+        "timestamp": 1769192434866,
+        "unitId": "Unit001"
+    })";
+
+    std::istringstream ss(jsonStr);
+    ASSERT_TRUE(Json::parseFromStream(reader, ss, &root, &errs));    
+    msg = TRUTopicsMessage::fromJson(root);
+    EXPECT_EQ(1769192434866, msg.getTimestamp());
 }
 
 TEST(TestTRUTopicsMessage, SetCurrentTimestamp)

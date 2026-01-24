@@ -23,7 +23,7 @@ protected:
 
 TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus)
 {
-    RSUHealthStatusMessage rsuStatus("192.168.1.1", 161, "operate", "startup");
+    RSUHealthStatusMessage rsuStatus("192.168.1.1", 161, "2", "startup");
     
     tracker->updateRsuStatus(rsuStatus);
     
@@ -35,9 +35,9 @@ TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus)
 
 TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus_MultipleRSUs)
 {
-    RSUHealthStatusMessage rsu1("192.168.1.1", 161, "operate", "startup");
-    RSUHealthStatusMessage rsu2("192.168.1.2", 161, "operate", "startup");
-    RSUHealthStatusMessage rsu3("192.168.1.3", 1610, "standby", "update");
+    RSUHealthStatusMessage rsu1("192.168.1.1", 161, "2", "startup");
+    RSUHealthStatusMessage rsu2("192.168.1.2", 161, "2", "startup");
+    RSUHealthStatusMessage rsu3("192.168.1.3", 1610, "3", "update");
     
     tracker->updateRsuStatus(rsu1);
     tracker->updateRsuStatus(rsu2);
@@ -50,18 +50,18 @@ TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus_MultipleRSUs)
 
 TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus_UpdateExisting)
 {
-    RSUHealthStatusMessage rsuInitial("192.168.1.1", 161, "operate", "startup");
+    RSUHealthStatusMessage rsuInitial("192.168.1.1", 161, "2", "startup");
     tracker->updateRsuStatus(rsuInitial);
     
     // Update the same RSU with different status
-    RSUHealthStatusMessage rsuUpdated("192.168.1.1", 161, "standby", "maintenance");
+    RSUHealthStatusMessage rsuUpdated("192.168.1.1", 161, "3", "maintenance");
     tracker->updateRsuStatus(rsuUpdated);
     
     auto snapshot = tracker->getSnapshot();
     
     // Should still have only one RSU (updated, not added)
     ASSERT_EQ(1, snapshot.getRsuHealthStatus().size());
-    EXPECT_EQ("standby", snapshot.getRsuHealthStatus()[0].getStatus());
+    EXPECT_EQ("operate", snapshot.getRsuHealthStatus()[0].getStatus());
     EXPECT_EQ("maintenance", snapshot.getRsuHealthStatus()[0].toJson()["event"].asString());
 }
 
@@ -85,7 +85,7 @@ TEST_F(TestTRUHealthStatusTracker, UpdateUnitStatus)
 TEST_F(TestTRUHealthStatusTracker, GetSnapshot_ThreadSafety)
 {
     // Add some data
-    RSUHealthStatusMessage rsu("192.168.1.1", 161, "operate", "startup");
+    RSUHealthStatusMessage rsu("192.168.1.1", 161, "2", "startup");
     tracker->updateRsuStatus(rsu);
     
     UnitHealthStatusMessage unit;
@@ -104,7 +104,7 @@ TEST_F(TestTRUHealthStatusTracker, GetSnapshot_ThreadSafety)
 
 TEST_F(TestTRUHealthStatusTracker, ToString)
 {
-    RSUHealthStatusMessage rsu("192.168.1.1", 161, "operate", "startup");
+    RSUHealthStatusMessage rsu("192.168.1.1", 161, "2", "startup");
     tracker->updateRsuStatus(rsu);
     
     UnitHealthStatusMessage unit;

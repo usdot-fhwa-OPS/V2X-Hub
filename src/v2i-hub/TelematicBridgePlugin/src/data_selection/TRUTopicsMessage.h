@@ -122,6 +122,15 @@ namespace TelematicBridge
             {
                 message.setUnitId(json["unitId"].asString());
             }
+
+            //Parse Timestamp
+            if (json.isMember("timestamp") && json["timestamp"].isNumeric())
+            {
+                message.setTimestamp(json["timestamp"].asInt64());
+            }
+            else if (json.isMember("timestamp") && json["timestamp"].isString()){
+                message.setTimestamp(std::stoll( json["timestamp"].asString()));
+            }
             
             // Parse RSU topics array
             if (json.isMember("rsuTopics") && json["rsuTopics"].isArray())

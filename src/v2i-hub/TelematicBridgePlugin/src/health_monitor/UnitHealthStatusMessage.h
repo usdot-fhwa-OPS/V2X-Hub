@@ -117,16 +117,13 @@ namespace TelematicBridge
         }
 
         /**
-         * @brief Get string representation of the message
-         * @return String representation
+         * @brief Get string representation of the message as JSON
+         * @return JSON string representation
          */
         std::string toString() const
         {
-            return "UnitHealthStatusMessage{" +
-                   std::string("unitId='") + unitId + "'" +
-                   ", bridgePluginStatus='" + bridgePluginStatus + "'" +
-                   ", LastUpdatedTimestamp=" + std::to_string(LastUpdatedTimestamp) +
-                   "}";
+            Json::FastWriter writer;
+            return writer.write(toJson());
         }
 
         /**

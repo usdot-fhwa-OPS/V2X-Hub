@@ -23,30 +23,36 @@ namespace TelematicBridge
             if (Json::parseFromStream(reader, s, &rsuStatusJson, &errs))
             {
                 // Extract RSU information from JSON
-                if (rsuStatusJson.isMember("rsuIpAddress") && rsuStatusJson.isMember("rsuSnmpPort"))
+                if (!rsuStatusJson.isMember("rsuIpAddress"))
                 {
-                    std::string rsuIp = rsuStatusJson["rsuIpAddress"].asString();
-                    
-                    // Handle rsuSnmpPort as either string or int
-                    int rsuPort = std::stoi(rsuStatusJson["rsuSnmpPort"].asString());                    
-                    
-                    std::string event = rsuStatusJson.isMember("event") ? 
-                                      rsuStatusJson["event"].asString() : "";   
-
-                    // Determine health status from rsuMode field
-                    std::string healthStatus = rsuStatusJson.isMember("rsuMode") ? 
-                                              rsuStatusJson["rsuMode"].asString() : "0";
-                    
-                    // Create RSUHealthStatusMessage
-                    RSUHealthStatusMessage rsuHealthStatus(
-                        rsuIp, 
-                        rsuPort, 
-                        healthStatus, 
-                        event
-                    );
-                    
-                    return rsuHealthStatus;
+                    throw std::runtime_error("Missing required field: rsuIpAddress");
                 }
+                if (!rsuStatusJson.isMember("rsuSnmpPort"))
+                {
+                    throw std::runtime_error("Missing required field: rsuSnmpPort");
+                }
+                
+                std::string rsuIp = rsuStatusJson["rsuIpAddress"].asString();
+                
+                // Handle rsuSnmpPort as either string or int
+                int rsuPort = std::stoi(rsuStatusJson["rsuSnmpPort"].asString());                    
+                
+                std::string event = rsuStatusJson.isMember("event") ? 
+                                  rsuStatusJson["event"].asString() : "";   
+
+                // Determine health status from rsuMode field
+                std::string healthStatus = rsuStatusJson.isMember("rsuMode") ? 
+                                          rsuStatusJson["rsuMode"].asString() : "0";
+                
+                // Create RSUHealthStatusMessage
+                RSUHealthStatusMessage rsuHealthStatus(
+                    rsuIp, 
+                    rsuPort, 
+                    healthStatus, 
+                    event
+                );
+                
+                return rsuHealthStatus;
             }
             else
             {

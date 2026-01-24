@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include "health_monitor/HealthStatusMessageMapper.h"
 #include <tmx/messages/routeable_message.hpp>
+#include <tmx/IvpMessage.h>
+#include <tmx/json/cJSON.h>
 #include <jsoncpp/json/json.h>
 
 using namespace TelematicBridge;
@@ -14,17 +16,23 @@ protected:
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_ValidInput)
 {
-    // Create a mock routeable message with RSU status data
-    std::string rsuStatusPayload = R"({
-        "rsuIpAddress": "192.168.1.1",
-        "rsuSnmpPort": "161",
-        "event": "startup",
-        "rsuMode": "4",
-        "rsuID": "RSU-001"
-    })";
+    // Create IvpMessage with JSON payload
+    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","rsuSnmpPort":"161","event":"startup","rsuMode":"3","rsuID":"RSU-001"})";
     
-    tmx::routeable_message msg;
-    msg.set_payload(rsuStatusPayload);
+    // Parse JSON string to cJSON object
+    cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
+    
+    // Create IvpMessage with parsed JSON payload
+    IvpMessage *ivpMsg = ivpMsg_create(
+        nullptr,
+        nullptr,
+        IVP_ENCODING_JSON,
+        IvpMsgFlags_None,
+        payloadJson
+    );
+    
+    // Construct routeable_message from IvpMessage (same as production code)
+    tmx::routeable_message msg(ivpMsg);
     
     // Convert to RSUHealthStatusMessage
     auto rsuHealthStatus = HealthStatusMessageMapper::toRsuHealthStatusMessage(msg);
@@ -32,67 +40,102 @@ TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_ValidInput)
     // Verify
     EXPECT_EQ("192.168.1.1", rsuHealthStatus.getIp());
     EXPECT_EQ(161, rsuHealthStatus.getPort());
-    EXPECT_EQ("4", rsuHealthStatus.getStatus());
+    EXPECT_EQ("operate", rsuHealthStatus.getStatus()); // "3" converts to "operate"
     EXPECT_EQ("startup", rsuHealthStatus.getEvent());
+    
+    // Cleanup
+    ivpMsg_destroy(ivpMsg);
 }
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_MissingRsuIp)
 {
-    std::string rsuStatusPayload = R"({
-        "rsuSnmpPort": "161",
-        "event": "startup",
-        "rsuMode": "4"
-    })";
+    std::string rsuStatusPayload = R"({"rsuSnmpPort":"161","event":"startup","rsuMode":"4"})";
     
-    tmx::routeable_message msg;
-    msg.set_payload(rsuStatusPayload);
+    cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
+    
+    IvpMessage *ivpMsg = ivpMsg_create(
+        nullptr,
+        nullptr,
+        IVP_ENCODING_JSON,
+        IvpMsgFlags_None,
+        payloadJson
+    );
+    
+    tmx::routeable_message msg(ivpMsg);
     
     // Should throw because rsuIpAddress is missing
     EXPECT_THROW(HealthStatusMessageMapper::toRsuHealthStatusMessage(msg), std::runtime_error);
+    
+    ivpMsg_destroy(ivpMsg);
 }
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_MissingPort)
 {
-    std::string rsuStatusPayload = R"({
-        "rsuIpAddress": "192.168.1.1",
-        "event": "startup",
-        "rsuMode": "4"
-    })";
+    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","event":"startup","rsuMode":"4"})";
     
-    tmx::routeable_message msg;
-    msg.set_payload(rsuStatusPayload);
+    cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
+    
+    IvpMessage *ivpMsg = ivpMsg_create(
+        nullptr,
+        nullptr,
+        IVP_ENCODING_JSON,
+        IvpMsgFlags_None,
+        payloadJson
+    );
+    
+    tmx::routeable_message msg(ivpMsg);
     
     // Should throw because rsuSnmpPort is missing
     EXPECT_THROW(HealthStatusMessageMapper::toRsuHealthStatusMessage(msg), std::runtime_error);
+    
+    ivpMsg_destroy(ivpMsg);
 }
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_DefaultValues)
 {
-    // Test with minimal required fields
-    std::string rsuStatusPayload = R"({
-        "rsuIpAddress": "192.168.1.1",
-        "rsuSnmpPort": "161"
-    })";
+    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","rsuSnmpPort":"161"})";
     
-    tmx::routeable_message msg;
-    msg.set_payload(rsuStatusPayload);
+    cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
+    
+    IvpMessage *ivpMsg = ivpMsg_create(
+        nullptr,
+        nullptr,
+        IVP_ENCODING_JSON,
+        IvpMsgFlags_None,
+        payloadJson
+    );
+    
+    tmx::routeable_message msg(ivpMsg);
     
     auto rsuHealthStatus = HealthStatusMessageMapper::toRsuHealthStatusMessage(msg);
     
     EXPECT_EQ("192.168.1.1", rsuHealthStatus.getIp());
     EXPECT_EQ(161, rsuHealthStatus.getPort());
-    EXPECT_EQ("0", rsuHealthStatus.getStatus()); // Default when rsuMode missing
+    EXPECT_EQ("unknown", rsuHealthStatus.getStatus()); // "0" (default) converts to "unknown"
     EXPECT_EQ("", rsuHealthStatus.getEvent());    // Default when event missing
+    
+    ivpMsg_destroy(ivpMsg);
 }
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_InvalidJson)
 {
     std::string invalidPayload = "{ invalid json }";
     
-    tmx::routeable_message msg;
-    msg.set_payload(invalidPayload);
+    cJSON *payloadJson = cJSON_Parse(invalidPayload.c_str());
+    
+    IvpMessage *ivpMsg = ivpMsg_create(
+        nullptr,
+        nullptr,
+        IVP_ENCODING_JSON,
+        IvpMsgFlags_None,
+        payloadJson
+    );
+    
+    tmx::routeable_message msg(ivpMsg);
     
     EXPECT_THROW(HealthStatusMessageMapper::toRsuHealthStatusMessage(msg), std::runtime_error);
+    
+    ivpMsg_destroy(ivpMsg);
 }
 
 TEST_F(TestHealthStatusMessageMapper, ToUnitHealthStatusMessage)

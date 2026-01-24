@@ -33,6 +33,11 @@ namespace TelematicBridge
         }
         
         /**
+         * @brief Default constructor
+         */
+        RSUHealthStatusMessage() : port(0) {}
+        
+        /**
          * @brief Constructor with parameters
          * @param ip IP address
          * @param port SNMP port
@@ -147,6 +152,24 @@ namespace TelematicBridge
 
         std::string getStatus() const { 
             return statusToLabel(status); 
+        }
+
+        void setIp(const std::string &newIp) {
+            ip = newIp;
+            rsuId = generateRsuId(ip, port);
+        }
+
+        void setPort(int newPort) {
+            port = newPort;
+            rsuId = generateRsuId(ip, port);
+        }
+
+        void setStatus(const std::string &newStatus) {
+            status = newStatus;
+        }
+
+        void setEvent(const std::string &newEvent) {
+            event = newEvent;
         }
 
         std::string toString() const

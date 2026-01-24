@@ -30,10 +30,10 @@ namespace TelematicBridge
 
     enum class action
     {
+        unknown,
         add,
         remove,
-        update,
-        unknown
+        update
     };
 
     struct rsuConfig

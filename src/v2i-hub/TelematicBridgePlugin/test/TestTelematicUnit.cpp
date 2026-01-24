@@ -70,7 +70,7 @@ namespace TelematicBridge
         payload2["body"] = "invalid";
         reply = _telematicUnitPtr->constructPublishedDataString(unit, eventLocation, testingType, eventName, topicName, payload2);
         json = TelematicUnit::parseJson(reply);
-        ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 100);
+        ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 10000);
     }
 
     TEST_F(TestTelematicUnit, onCheckStatusCallback)

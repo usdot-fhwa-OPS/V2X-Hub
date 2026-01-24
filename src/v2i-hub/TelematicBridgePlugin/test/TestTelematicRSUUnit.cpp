@@ -34,7 +34,7 @@ namespace TelematicBridge
         string getValidConfig()
         {
             return R"({
-                "unitConfig": [{"unitId": "Unit001"}],
+                "unitConfig": {"unitId": "Unit001"},
                 "rsuConfigs": [{
                     "action": "add",
                     "event": "startup",
@@ -56,7 +56,10 @@ namespace TelematicBridge
         Json::Value getUpdateMsg()
         {
             Json::Value msg;
-            msg["unitConfig"][0]["unitId"] = "Unit001";
+            Json::Value unitConfig;
+            unitConfig["unitId"] = "Unit001";
+            msg["unitConfig"] = unitConfig;
+            
             msg["rsuConfigs"][0]["action"] = "add";
             msg["rsuConfigs"][0]["event"] = "update";
             msg["rsuConfigs"][0]["rsu"]["ip"] = "192.168.1.20";
@@ -75,8 +78,9 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, ConstructorNoConfig)
     {
-        unit = make_shared<TelematicRsuUnit>();
-        ASSERT_NE(unit, nullptr);
+        EXPECT_THROW({
+            unit = make_shared<TelematicRsuUnit>();
+        }, runtime_error);
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructorWithValidConfig)
@@ -92,8 +96,9 @@ namespace TelematicBridge
     {
         createFile("/tmp/test_config.json", "{bad}");
         setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
-        unit = make_shared<TelematicRsuUnit>();
-        ASSERT_NE(unit, nullptr);
+        EXPECT_THROW({
+            unit = make_shared<TelematicRsuUnit>();
+        }, runtime_error);
         unsetenv("RSU_CONFIG_PATH");
     }
 
@@ -110,14 +115,19 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, UpdateRSUStatusFail)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         Json::Value bad;
         bad["timestamp"] = 1;
         ASSERT_FALSE(unit->updateRSUStatus(bad));
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructRegistrationString)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSURegistrationDataString();
         ASSERT_FALSE(json.empty());
@@ -126,10 +136,13 @@ namespace TelematicBridge
         istringstream stream(json);
         string errs;
         ASSERT_TRUE(Json::parseFromStream(builder, stream, &root, &errs));
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructResponseSuccess)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSUConfigResponseDataString(true);
         Json::Value root;
@@ -138,10 +151,13 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "success");
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructResponseFail)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSUConfigResponseDataString(false);
         Json::Value root;
@@ -150,10 +166,13 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "failed");
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ThreadSafety)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         vector<thread> threads;
         vector<string> results(5);
@@ -165,12 +184,16 @@ namespace TelematicBridge
             t.join();
         for (const auto &r : results)
             ASSERT_FALSE(r.empty());
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, Destructor)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         unit.reset();
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateSuccess)
@@ -196,6 +219,8 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateFailure)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
 
         Json::Value badMsg;
@@ -212,5 +237,6 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "failed");
+        unsetenv("RSU_CONFIG_PATH");
     }
 }

@@ -19,8 +19,6 @@ namespace TelematicBridge
                 return "update";
             case action::unknown:
                 return "unknown";
-            default:
-                return "unspecified";
         }
     }
 
@@ -51,8 +49,27 @@ namespace TelematicBridge
                 PLOG(logERROR) << "Failed to parse config file: " << errs;
                 return false;
             }
-            if(root.isMember(TRU_UNIT_CONFIG_KEY) && root[TRU_UNIT_CONFIG_KEY].isArray()){
-                setJsonArrayToUnitConfig(root[TRU_UNIT_CONFIG_KEY]);
+            if(root.isMember(TRU_UNIT_CONFIG_KEY) && root[TRU_UNIT_CONFIG_KEY].isObject()){
+                // Handle object format: extract unitId and other properties
+                Json::Value unitConfig = root[TRU_UNIT_CONFIG_KEY];
+                if(unitConfig.isMember(TRU_UNIT_ID_KEY)){
+                    _unitId = unitConfig[TRU_UNIT_ID_KEY].asString();
+                }
+                if(unitConfig.isMember(TRU_UNIT_NAME_KEY)){
+                    _unitName = unitConfig[TRU_UNIT_NAME_KEY].asString();
+                }
+                if(unitConfig.isMember(TRU_MAX_CONNECTIONS_KEY)){
+                    _maxConnections = unitConfig[TRU_MAX_CONNECTIONS_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+                    _pluginHeartBeatInterval = unitConfig[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+                    _healthMonitorPluginHeartbeatInterval = unitConfig[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
+                    _rsuStatusMonitorInterval = unitConfig[TRU_RSU_STATUS_MONITOR_INTERVAL_KEY].asInt();
+                }
             }
             if (root.isMember(TRU_RSU_CONFIGS_KEY) && root[TRU_RSU_CONFIGS_KEY].isArray()) {
                 setJsonArrayToRsuConfigList(root[TRU_RSU_CONFIGS_KEY]);
@@ -70,17 +87,15 @@ namespace TelematicBridge
 
     bool truConfigWorker::updateTRUStatus(const Json::Value& jsonVal){
         try{
-            if(jsonVal.isMember(TRU_UNIT_CONFIG_KEY) && jsonVal[TRU_UNIT_CONFIG_KEY].isArray()){
-                for (auto item : jsonVal[TRU_UNIT_CONFIG_KEY]){
-                    if (item.isMember(TRU_UNIT_ID_KEY)){
-                        auto incomingUnitId = item[TRU_UNIT_ID_KEY].asString();
-                        if(incomingUnitId!= _unitId){
-                            PLOG(logERROR) << "Incoming Unit ID"<< incomingUnitId <<"does not match assigned ID"<< _unitId <<", ignoring request.";
-                            return false;
-                        }
-                        else{
-                            continue;
-                        }
+            if (jsonVal.isMember(TRU_UNIT_CONFIG_KEY) && jsonVal[TRU_UNIT_CONFIG_KEY].isObject()) {
+                // Handle object format: extract unitId and validate
+                Json::Value unitConfig = jsonVal[TRU_UNIT_CONFIG_KEY];
+                if(unitConfig.isMember(TRU_UNIT_ID_KEY)){
+                    std::string incomingUnitId = unitConfig[TRU_UNIT_ID_KEY].asString();
+                    // Validate that the incoming unitId matches the configured unitId
+                    if (!_unitId.empty() && incomingUnitId != _unitId) {
+                        PLOG(logERROR) << "Incoming Unit ID" << incomingUnitId << "does not match assigned ID" << _unitId;
+                        return false;
                     }
                 }
             }
@@ -335,7 +350,7 @@ namespace TelematicBridge
 
         Json::Value unitObject;
         unitObject[TRU_UNIT_ID_KEY] = _unitId;
-        message[TRU_UNIT_CONFIG_KEY].append(unitObject);
+        message[TRU_UNIT_CONFIG_KEY] = unitObject;
 
         Json::Value rsuConfigList;
         for (const auto& configPair : _truRegistrationMap) {

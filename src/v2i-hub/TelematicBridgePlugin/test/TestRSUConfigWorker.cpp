@@ -67,16 +67,15 @@ namespace TelematicBridge
         string getValidCompleteConfigFileContent()
         {
             return R"({
-                "unitConfig": [
+                "unitConfig": 
                     {
                         "unitId": "Unit001",
                         "name": "TestUnit",
                         "maxConnections": 2,
                         "bridgePluginHeartbeatInterval": 30,
                         "healthMonitorPluginHeartbeatInterval": 60,
-                        "rsuStatusMonitorINterval": 120
-                    }
-                ],
+                        "rsuStatusMonitorInterval": 120
+                    },
                 "rsuConfigs": [
                     {
                         "action": "add",
@@ -286,7 +285,7 @@ namespace TelematicBridge
         Json::Value updateMessage;
         Json::Value unitConfig;
         unitConfig["unitId"] = "Unit001";
-        updateMessage["unitConfig"].append(unitConfig);
+        updateMessage["unitConfig"] = unitConfig;
 
         Json::Value rsuConfig = createValidRsuConfigJson();
         updateMessage["rsuConfigs"].append(rsuConfig);
@@ -311,7 +310,7 @@ namespace TelematicBridge
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingRsuConfigs)
     {
         Json::Value message;
-        message["unitConfig"][0]["unitId"] = "Unit001";
+        message["unitConfig"]["unitId"] = "Unit001";
         message["timestamp"] = 1234567890;
         // Missing rsuConfigs
 
@@ -328,7 +327,7 @@ namespace TelematicBridge
         Json::Value updateMessage;
         Json::Value unitConfig;
         unitConfig["unitId"] = "Unit001";
-        updateMessage["unitConfig"].append(unitConfig);
+        updateMessage["unitConfig"] = unitConfig;
         updateMessage["rsuConfigs"].append(createValidRsuConfigJson());
 
         bool result = worker->updateTRUStatus(updateMessage);
@@ -346,7 +345,7 @@ namespace TelematicBridge
         Json::Value updateMessage;
         Json::Value unitConfig;
         unitConfig["unitId"] = "WrongUnit";  // Doesn't match Unit001
-        updateMessage["unitConfig"].append(unitConfig);
+        updateMessage["unitConfig"] = unitConfig;
         updateMessage["rsuConfigs"].append(createValidRsuConfigJson());
         updateMessage["timestamp"] = 1234567890;
 
@@ -361,7 +360,7 @@ namespace TelematicBridge
         ASSERT_EQ(worker->actionToString(action::update), "update");
         ASSERT_EQ(worker->actionToString(action::unknown), "unknown");
         action ac;
-        ASSERT_EQ(worker->actionToString(ac), "unspecified");
+        ASSERT_EQ(worker->actionToString(ac), "unknown");
     }
 
     // ==================== rsuConfigToJsonValue Tests ====================
@@ -439,9 +438,8 @@ namespace TelematicBridge
 
         Json::Value result = worker->getTRUConfigResponse(true);
 
-        ASSERT_TRUE(result["unitConfig"].isArray());
-        ASSERT_GT(result["unitConfig"].size(), 0);
-        ASSERT_TRUE(result["unitConfig"][0].isMember("unitId"));
+        ASSERT_TRUE(result["unitConfig"].isObject());
+        ASSERT_TRUE(result["unitConfig"].isMember("unitId"));
 
         ASSERT_TRUE(result["rsuConfigs"].isArray());
         if (result["rsuConfigs"].size() > 0) {
