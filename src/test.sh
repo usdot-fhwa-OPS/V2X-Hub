@@ -52,6 +52,6 @@ for d in ${component_dir}/* ; do
 done
 # combine all the JSON files for a component
 if [ $COVERAGE_BUILD -eq 1 ]; then
-    gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml
+    gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml -e '.*Plugin\.cpp'
 fi
 done

@@ -65,6 +65,28 @@ namespace TelematicBridge
             payload["count"] = 123;
             return payload;
         }
+
+        Json::Value getValidConfigUpdate()
+        {
+            Json::Value msg;
+            Json::Value unitConfig;
+            unitConfig["unitId"] = "Unit001";
+            msg["unitConfig"] = unitConfig;
+            
+            msg["rsuConfigs"][0]["action"] = "add";
+            msg["rsuConfigs"][0]["event"] = "update";
+            msg["rsuConfigs"][0]["rsu"]["ip"] = "192.168.1.20";
+            msg["rsuConfigs"][0]["rsu"]["port"] = 161;
+            msg["rsuConfigs"][0]["snmp"]["user"] = "admin";
+            msg["rsuConfigs"][0]["snmp"]["privacyProtocol"] = "AES";
+            msg["rsuConfigs"][0]["snmp"]["authProtocol"] = "SHA";
+            msg["rsuConfigs"][0]["snmp"]["authPassPhrase"] = "pass";
+            msg["rsuConfigs"][0]["snmp"]["privacyPassPhrase"] = "priv";
+            msg["rsuConfigs"][0]["snmp"]["rsuMibVersion"] = "4.1";
+            msg["rsuConfigs"][0]["snmp"]["securityLevel"] = "authPriv";
+            msg["timestamp"] = 1234567890;
+            return msg;
+        }
     };
 
     // Tests for constructPublishedRsuDataStream
@@ -537,6 +559,262 @@ namespace TelematicBridge
                 "bsm",
                 payload
             );
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuAvailableTopicsCallback_ValidRequest)
+    {
+        // First add some topics
+        Json::Value testPayload;
+        testPayload["test"] = "data";
+        unit->processRsuDataStream("192.168.1.10", "bsm", testPayload);
+        unit->processRsuDataStream("192.168.1.10", "map", testPayload);
+
+        // Create a NATS message with reply subject
+        natsMsg *msg;
+        string data = "{\"request\":\"available_topics\"}";
+        natsMsg_Create(&msg, "unit.Unit001.rsu.available.topics", "reply_subject", data.c_str(), data.size());
+        
+        // Call the callback directly
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuAvailableTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuAvailableTopicsCallback_NullObject)
+    {
+        natsMsg *msg;
+        string data = "{\"request\":\"available_topics\"}";
+        natsMsg_Create(&msg, "test_subject", "reply_subject", data.c_str(), data.size());
+        
+        // Should handle null object gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuAvailableTopicsCallback(nullptr, nullptr, msg, nullptr);
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuAvailableTopicsCallback_NoReplySubject)
+    {
+        natsMsg *msg;
+        string data = "{\"request\":\"available_topics\"}";
+        natsMsg_Create(&msg, "test_subject", nullptr, data.c_str(), data.size());
+        
+        // Should handle missing reply subject gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuAvailableTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_ValidMessage)
+    {
+        string selectedTopicsMsg = R"({
+            "unitId": "Unit001",
+            "rsuTopics": [
+                {
+                    "rsu": {"ip": "192.168.1.10", "port": 161},
+                    "topics": [{"name": "bsm", "selected": true}]
+                }
+            ],
+            "timestamp": "1234567890000"
+        })";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "unit.Unit001.rsu.selected.topics", "reply_subject", 
+                      selectedTopicsMsg.c_str(), selectedTopicsMsg.size());
+        
+        // Call the callback directly
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_InvalidJSON)
+    {
+        string invalidMsg = "{ invalid json }";
+        
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", invalidMsg.c_str(), invalidMsg.size());
+        
+        // Should handle invalid JSON gracefully with error reply
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_NullObject)
+    {
+        string selectedTopicsMsg = R"({
+            "unitId": "Unit001",
+            "rsuTopics": [],
+            "timestamp": "1234567890000"
+        })";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", 
+                      selectedTopicsMsg.c_str(), selectedTopicsMsg.size());
+        
+        // Should handle null object gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, nullptr);
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_NoReplySubject)
+    {
+        string selectedTopicsMsg = R"({
+            "unitId": "Unit001",
+            "rsuTopics": [],
+            "timestamp": "1234567890000"
+        })";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", nullptr, selectedTopicsMsg.c_str(), selectedTopicsMsg.size());
+        
+        // Should handle missing reply subject gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_EmptyTopics)
+    {
+        string selectedTopicsMsg = R"({
+            "unitId": "Unit001",
+            "rsuTopics": [],
+            "timestamp": "1234567890000"
+        })";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", 
+                      selectedTopicsMsg.c_str(), selectedTopicsMsg.size());
+        
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRsuSelectedTopicsCallback_MultipleRSUs)
+    {
+        string selectedTopicsMsg = R"({
+            "unitId": "Unit001",
+            "rsuTopics": [
+                {
+                    "rsu": {"ip": "192.168.1.10", "port": 161},
+                    "topics": [{"name": "bsm", "selected": true}]
+                },
+                {
+                    "rsu": {"ip": "192.168.1.11", "port": 161},
+                    "topics": [{"name": "map", "selected": true}]
+                }
+            ],
+            "timestamp": "1234567890000"
+        })";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", 
+                      selectedTopicsMsg.c_str(), selectedTopicsMsg.size());
+        
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRsuSelectedTopicsCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_ValidUpdate)
+    {
+        Json::Value configUpdate = getValidConfigUpdate();
+        Json::FastWriter writer;
+        string configStr = writer.write(configUpdate);
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "unit.Unit001.register.rsu.config", "reply_subject", 
+                      configStr.c_str(), configStr.size());
+        
+        // Call the callback directly
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_InvalidUpdate)
+    {
+        // Invalid unitId should cause update to fail
+        Json::Value configUpdate = getValidConfigUpdate();
+        configUpdate["unitConfig"]["unitId"] = "WrongUnit";
+        Json::FastWriter writer;
+        string configStr = writer.write(configUpdate);
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "unit.Unit001.register.rsu.config", "reply_subject", 
+                      configStr.c_str(), configStr.size());
+        
+        // Should handle failed update gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_NoReplySubject)
+    {
+        Json::Value configUpdate = getValidConfigUpdate();
+        Json::FastWriter writer;
+        string configStr = writer.write(configUpdate);
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "unit.Unit001.register.rsu.config", nullptr, 
+                      configStr.c_str(), configStr.size());
+        
+        // Should not process message without reply subject
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_InvalidJSON)
+    {
+        string invalidJson = "{ invalid json }";
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", 
+                      invalidJson.c_str(), invalidJson.size());
+        
+        // Should handle invalid JSON gracefully
+        ASSERT_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
+        }, TelematicBridge::TelematicBridgeException);
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_EmptyConfig)
+    {
+        Json::Value emptyConfig;
+        emptyConfig["unitConfig"]["unitId"] = "Unit001";
+        emptyConfig["timestamp"] = 1234567890;
+        Json::FastWriter writer;
+        string configStr = writer.write(emptyConfig);
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "unit.Unit001.register.rsu.config", "reply_subject", 
+                      configStr.c_str(), configStr.size());
+        
+        // Should handle empty config (no rsuConfigs)
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, onRSUConfigStatusCallback_MissingUnitId)
+    {
+        Json::Value configUpdate = getValidConfigUpdate();
+        configUpdate.removeMember("unitConfig");
+        Json::FastWriter writer;
+        string configStr = writer.write(configUpdate);
+
+        natsMsg *msg;
+        natsMsg_Create(&msg, "test_subject", "reply_subject", 
+                      configStr.c_str(), configStr.size());
+        
+        // Should handle missing unitConfig gracefully
+        ASSERT_NO_THROW({
+            TelematicRsuUnit::onRSUConfigStatusCallback(nullptr, nullptr, msg, unit.get());
         });
     }
 }
