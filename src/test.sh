@@ -42,7 +42,7 @@ for d in ${component_dir}/* ; do
             pushd $(dirname ${top_dir})
             if [ $COVERAGE_BUILD -eq 1 ]; then
             # generated at the project root
-                gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -e '.*/[a-zA-Z]+Plugin\.cpp' -r .
+                gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -e '.*Plugin\.cpp$' -r .
             fi
             popd
         else
@@ -52,6 +52,6 @@ for d in ${component_dir}/* ; do
 done
 # combine all the JSON files for a component
 if [ $COVERAGE_BUILD -eq 1 ]; then
-    gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml -e '.*/[a-zA-Z]+Plugin\.cpp'
+    gcovr --add-tracefile "${component_dir}/*-coverage.json" --sonarqube ${component_dir}/coverage.xml -e '.*Plugin\.cpp$'
 fi
 done
