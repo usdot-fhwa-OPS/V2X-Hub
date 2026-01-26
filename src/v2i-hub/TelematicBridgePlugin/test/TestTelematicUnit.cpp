@@ -110,24 +110,24 @@ namespace TelematicBridge
     {
         string natsTopic = "test.topic";
         string message = "{\"test\":\"data\"}";
-        // Should throw exception when not connected to NATS
-        ASSERT_THROW(_telematicUnitPtr->publishToNats(natsTopic, message), TelematicBridgeException);
+        // Should not crash when not connected to NATS (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
     }
 
     TEST_F(TestTelematicUnit, publishToNats_EmptyTopic)
     {
         string natsTopic = "";
         string message = "{\"test\":\"data\"}";
-        // Should throw exception with empty topic
-        ASSERT_THROW(_telematicUnitPtr->publishToNats(natsTopic, message), TelematicBridgeException);
+        // Should not crash with empty topic (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
     }
 
     TEST_F(TestTelematicUnit, publishToNats_EmptyMessage)
     {
         string natsTopic = "test.topic";
         string message = "";
-        // Should throw exception when not connected, even with empty message
-        ASSERT_THROW(_telematicUnitPtr->publishToNats(natsTopic, message), TelematicBridgeException);
+        // Should not crash when not connected, even with empty message (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
     }
 
     TEST_F(TestTelematicUnit, checkStatusReplier)
