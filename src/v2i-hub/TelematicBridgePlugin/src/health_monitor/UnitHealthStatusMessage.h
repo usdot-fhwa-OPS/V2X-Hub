@@ -2,6 +2,7 @@
 
 #include <string>
 #include <jsoncpp/json/json.h>
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -93,9 +94,9 @@ namespace TelematicBridge
         Json::Value toJson() const
         {
             Json::Value json;
-            json["unitId"] = unitId;
-            json["bridgePluginStatus"] = bridgePluginStatus;
-            json["lastUpdatedTimestamp"] = LastUpdatedTimestamp;
+            json[TelematicJsonKeys::UNIT_ID] = unitId;
+            json[TelematicJsonKeys::BRIDGE_PLUGIN_STATUS] = bridgePluginStatus;
+            json[TelematicJsonKeys::LAST_UPDATED_TIMESTAMP] = LastUpdatedTimestamp;
             return json;
         }
 
@@ -107,12 +108,12 @@ namespace TelematicBridge
         static UnitHealthStatusMessage fromJson(const Json::Value &json)
         {
             UnitHealthStatusMessage msg;
-            if (json.isMember("unitId")) 
-                msg.unitId = json["unitId"].asString();
-            if (json.isMember("bridgePluginStatus")) 
-                msg.bridgePluginStatus = json["bridgePluginStatus"].asString();
-            if (json.isMember("lastUpdatedTimestamp")) 
-                msg.LastUpdatedTimestamp = json["lastUpdatedTimestamp"].asInt64();
+            if (json.isMember(TelematicJsonKeys::UNIT_ID)) 
+                msg.unitId = json[TelematicJsonKeys::UNIT_ID].asString();
+            if (json.isMember(TelematicJsonKeys::BRIDGE_PLUGIN_STATUS)) 
+                msg.bridgePluginStatus = json[TelematicJsonKeys::BRIDGE_PLUGIN_STATUS].asString();
+            if (json.isMember(TelematicJsonKeys::LAST_UPDATED_TIMESTAMP)) 
+                msg.LastUpdatedTimestamp = json[TelematicJsonKeys::LAST_UPDATED_TIMESTAMP].asInt64();
             return msg;
         }
 

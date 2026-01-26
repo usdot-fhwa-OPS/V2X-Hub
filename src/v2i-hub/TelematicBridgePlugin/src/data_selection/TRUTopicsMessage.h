@@ -4,6 +4,7 @@
 #include <chrono>
 #include <jsoncpp/json/json.h>
 #include "RSUTopicsMessage.h"
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -93,7 +94,7 @@ namespace TelematicBridge
         {
             Json::Value json;
             
-            json["unitId"] = _unitId;
+            json[TelematicJsonKeys::UNIT_ID] = _unitId;
             
             // Convert RSU topics to JSON array
             Json::Value rsuTopicsArray(Json::arrayValue);
@@ -101,9 +102,9 @@ namespace TelematicBridge
             {
                 rsuTopicsArray.append(rsuTopic.toJson());
             }
-            json["rsuTopics"] = rsuTopicsArray;
+            json[TelematicJsonKeys::RSU_TOPICS] = rsuTopicsArray;
             
-            json["timestamp"] = static_cast<Json::Int64>(_timestamp);
+            json[TelematicJsonKeys::TIMESTAMP] = static_cast<Json::Int64>(_timestamp);
             
             return json;
         }
@@ -118,44 +119,44 @@ namespace TelematicBridge
             TRUTopicsMessage message;
             
             // Parse unit ID
-            if (json.isMember("unitId") && json["unitId"].isString())
+            if (json.isMember(TelematicJsonKeys::UNIT_ID) && json[TelematicJsonKeys::UNIT_ID].isString())
             {
-                message.setUnitId(json["unitId"].asString());
+                message.setUnitId(json[TelematicJsonKeys::UNIT_ID].asString());
             }
 
             //Parse Timestamp
-            if (json.isMember("timestamp") && json["timestamp"].isNumeric())
+            if (json.isMember(TelematicJsonKeys::TIMESTAMP) && json[TelematicJsonKeys::TIMESTAMP].isNumeric())
             {
-                message.setTimestamp(json["timestamp"].asInt64());
+                message.setTimestamp(json[TelematicJsonKeys::TIMESTAMP].asInt64());
             }
-            else if (json.isMember("timestamp") && json["timestamp"].isString()){
-                message.setTimestamp(std::stoll( json["timestamp"].asString()));
+            else if (json.isMember(TelematicJsonKeys::TIMESTAMP) && json[TelematicJsonKeys::TIMESTAMP].isString()){
+                message.setTimestamp(std::stoll( json[TelematicJsonKeys::TIMESTAMP].asString()));
             }
             
             // Parse RSU topics array
-            if (json.isMember("rsuTopics") && json["rsuTopics"].isArray())
+            if (json.isMember(TelematicJsonKeys::RSU_TOPICS) && json[TelematicJsonKeys::RSU_TOPICS].isArray())
             {
-                const Json::Value& rsuTopicsArray = json["rsuTopics"];
+                const Json::Value& rsuTopicsArray = json[TelematicJsonKeys::RSU_TOPICS];
                 for (const auto& rsuTopicJson : rsuTopicsArray)
                 {
                     // Parse each RSUTopicsMessage
                     RSUTopicsMessage rsuTopic;
                     
                     // Parse topics array
-                    if (rsuTopicJson.isMember("topics") && rsuTopicJson["topics"].isArray())
+                    if (rsuTopicJson.isMember(TelematicJsonKeys::TOPICS) && rsuTopicJson[TelematicJsonKeys::TOPICS].isArray())
                     {
-                        const Json::Value& topicsArray = rsuTopicJson["topics"];
+                        const Json::Value& topicsArray = rsuTopicJson[TelematicJsonKeys::TOPICS];
                         std::vector<TopicMessage> topics;
                         for (const auto& topicJson : topicsArray)
                         {
                             TopicMessage topic;
-                            if (topicJson.isMember("name") && topicJson["name"].isString())
+                            if (topicJson.isMember(TelematicJsonKeys::TOPIC_NAME) && topicJson[TelematicJsonKeys::TOPIC_NAME].isString())
                             {
-                                topic.setName(topicJson["name"].asString());
+                                topic.setName(topicJson[TelematicJsonKeys::TOPIC_NAME].asString());
                             }
-                            if (topicJson.isMember("selected") && topicJson["selected"].isBool())
+                            if (topicJson.isMember(TelematicJsonKeys::TOPIC_SELECTED) && topicJson[TelematicJsonKeys::TOPIC_SELECTED].isBool())
                             {
-                                topic.setSelected(topicJson["selected"].asBool());
+                                topic.setSelected(topicJson[TelematicJsonKeys::TOPIC_SELECTED].asBool());
                             }
                             topics.push_back(topic);
                         }
@@ -163,18 +164,18 @@ namespace TelematicBridge
                     }
                     
                     // Parse RSU endpoint
-                    if (rsuTopicJson.isMember("rsu") && rsuTopicJson["rsu"].isObject())
+                    if (rsuTopicJson.isMember(TelematicJsonKeys::RSU) && rsuTopicJson[TelematicJsonKeys::RSU].isObject())
                     {
-                        const Json::Value& rsuEndpointJson = rsuTopicJson["rsu"];
+                        const Json::Value& rsuEndpointJson = rsuTopicJson[TelematicJsonKeys::RSU];
                         rsuEndpoint endpoint;
                         
-                        if (rsuEndpointJson.isMember("ip") && rsuEndpointJson["ip"].isString())
+                        if (rsuEndpointJson.isMember(TelematicJsonKeys::RSU_IP) && rsuEndpointJson[TelematicJsonKeys::RSU_IP].isString())
                         {
-                            endpoint.ip = rsuEndpointJson["ip"].asString();
+                            endpoint.ip = rsuEndpointJson[TelematicJsonKeys::RSU_IP].asString();
                         }
-                        if (rsuEndpointJson.isMember("port") && rsuEndpointJson["port"].isInt())
+                        if (rsuEndpointJson.isMember(TelematicJsonKeys::RSU_PORT) && rsuEndpointJson[TelematicJsonKeys::RSU_PORT].isInt())
                         {
-                            endpoint.port = rsuEndpointJson["port"].asInt();
+                            endpoint.port = rsuEndpointJson[TelematicJsonKeys::RSU_PORT].asInt();
                         }
                         
                         rsuTopic.setRsuEndpoint(endpoint);
@@ -185,9 +186,9 @@ namespace TelematicBridge
             }
             
             // Parse timestamp
-            if (json.isMember("timestamp") && json["timestamp"].isInt64())
+            if (json.isMember(TelematicJsonKeys::TIMESTAMP) && json[TelematicJsonKeys::TIMESTAMP].isInt64())
             {
-                message.setTimestamp(json["timestamp"].asInt64());
+                message.setTimestamp(json[TelematicJsonKeys::TIMESTAMP].asInt64());
             }
             
             return message;

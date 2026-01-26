@@ -2,6 +2,7 @@
 
 #include "RSUHealthStatusMessage.h"
 #include "UnitHealthStatusMessage.h"
+#include "../TelematicJsonKeys.h"
 #include <tmx/messages/routeable_message.hpp>
 #include <jsoncpp/json/json.h>
 #include <sstream>
@@ -23,26 +24,26 @@ namespace TelematicBridge
             if (Json::parseFromStream(reader, s, &rsuStatusJson, &errs))
             {
                 // Extract RSU information from JSON
-                if (!rsuStatusJson.isMember("rsuIpAddress"))
+                if (!rsuStatusJson.isMember(TelematicJsonKeys::RSU_IP_ADDRESS))
                 {
                     throw std::runtime_error("Missing required field: rsuIpAddress");
                 }
-                if (!rsuStatusJson.isMember("rsuSnmpPort"))
+                if (!rsuStatusJson.isMember(TelematicJsonKeys::RSU_SNMP_PORT))
                 {
                     throw std::runtime_error("Missing required field: rsuSnmpPort");
                 }
                 
-                std::string rsuIp = rsuStatusJson["rsuIpAddress"].asString();
+                std::string rsuIp = rsuStatusJson[TelematicJsonKeys::RSU_IP_ADDRESS].asString();
                 
                 // Handle rsuSnmpPort as either string or int
-                int rsuPort = std::stoi(rsuStatusJson["rsuSnmpPort"].asString());                    
+                int rsuPort = std::stoi(rsuStatusJson[TelematicJsonKeys::RSU_SNMP_PORT].asString());                    
                 
-                std::string event = rsuStatusJson.isMember("event") ? 
-                                  rsuStatusJson["event"].asString() : "";   
+                std::string event = rsuStatusJson.isMember(TelematicJsonKeys::EVENT) ? 
+                                  rsuStatusJson[TelematicJsonKeys::EVENT].asString() : "";   
 
                 // Determine health status from rsuMode field
-                std::string healthStatus = rsuStatusJson.isMember("rsuMode") ? 
-                                          rsuStatusJson["rsuMode"].asString() : "0";
+                std::string healthStatus = rsuStatusJson.isMember(TelematicJsonKeys::RSU_MODE) ? 
+                                          rsuStatusJson[TelematicJsonKeys::RSU_MODE].asString() : "0";
                 
                 // Create RSUHealthStatusMessage
                 RSUHealthStatusMessage rsuHealthStatus(

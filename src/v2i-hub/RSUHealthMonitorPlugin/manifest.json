@@ -9,7 +9,7 @@
     "configuration": [
         {
             "key": "LogLevel",
-            "default": "DEBUG",
+            "default": "INFO",
             "description": "The log level for this plugin"
         },
         {

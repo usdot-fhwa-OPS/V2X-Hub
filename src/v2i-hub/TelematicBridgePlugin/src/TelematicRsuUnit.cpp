@@ -1,5 +1,6 @@
 #include "TelematicRsuUnit.h"
 #include "data_selection/TRUTopicsMessage.h"
+#include "TelematicJsonKeys.h"
 
 using namespace std;
 using namespace tmx::utils;
@@ -216,25 +217,25 @@ namespace TelematicBridge
         
         // Construct metadata section
         Json::Value metadata;
-        metadata["unitId"] = unitId;
-        metadata["topicName"] = topicName;
+        metadata[TelematicJsonKeys::UNIT_ID] = unitId;
+        metadata[TelematicJsonKeys::TOPIC_NAME_METADATA] = topicName;
         
         // Add RSU endpoint
         Json::Value rsu;
-        rsu["ip"] = rsuIp;
-        rsu["port"] = rsuPort;
-        metadata["rsu"] = rsu;
+        rsu[TelematicJsonKeys::RSU_IP] = rsuIp;
+        rsu[TelematicJsonKeys::RSU_PORT] = rsuPort;
+        metadata[TelematicJsonKeys::RSU] = rsu;
         
         // Add timestamp (in milliseconds)
-        metadata["timestamp"] = std::to_string(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
+        metadata[TelematicJsonKeys::TIMESTAMP] = std::to_string(duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count());
         
         // Add event name
-        metadata["event"] = eventName;
+        metadata[TelematicJsonKeys::EVENT] = eventName;
         
         // Add metadata and payload to message
-        message["metadata"] = metadata;
+        message[TelematicJsonKeys::METADATA] = metadata;
         if(payload.isObject() || payload.isArray()){
-            message["payload"] = payload;
+            message[TelematicJsonKeys::PAYLOAD] = payload;
         }
         
         // Convert to string

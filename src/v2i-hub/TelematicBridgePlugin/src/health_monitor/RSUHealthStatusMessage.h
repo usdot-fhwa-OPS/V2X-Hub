@@ -2,6 +2,7 @@
 
 #include <string>
 #include <jsoncpp/json/json.h>
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -75,12 +76,12 @@ namespace TelematicBridge
             
             // Create nested RSU object
             Json::Value rsuObject;
-            rsuObject["ip"] = ip;
-            rsuObject["port"] = port;
+            rsuObject[TelematicJsonKeys::RSU_IP] = ip;
+            rsuObject[TelematicJsonKeys::RSU_PORT] = port;
                         
-            json["rsu"] = rsuObject;
-            json["status"] = statusToLabel(status);
-            json["event"] = event;
+            json[TelematicJsonKeys::RSU] = rsuObject;
+            json[TelematicJsonKeys::STATUS] = statusToLabel(status);
+            json[TelematicJsonKeys::EVENT] = event;
             return json;
         }
 
@@ -96,15 +97,15 @@ namespace TelematicBridge
             std::string status;
             std::string event;
             // Parse from nested RSU object
-            if (json.isMember("rsu") && json["rsu"].isObject())
+            if (json.isMember(TelematicJsonKeys::RSU) && json[TelematicJsonKeys::RSU].isObject())
             {
-                const Json::Value &rsuObject = json["rsu"];
-                if (rsuObject.isMember("ip")) ip = rsuObject["ip"].asString();
-                if (rsuObject.isMember("port")) port = rsuObject["port"].asInt();
+                const Json::Value &rsuObject = json[TelematicJsonKeys::RSU];
+                if (rsuObject.isMember(TelematicJsonKeys::RSU_IP)) ip = rsuObject[TelematicJsonKeys::RSU_IP].asString();
+                if (rsuObject.isMember(TelematicJsonKeys::RSU_PORT)) port = rsuObject[TelematicJsonKeys::RSU_PORT].asInt();
             }
             
-            if (json.isMember("status")) status = json["status"].asString();
-            if (json.isMember("event")) event = json["event"].asString();
+            if (json.isMember(TelematicJsonKeys::STATUS)) status = json[TelematicJsonKeys::STATUS].asString();
+            if (json.isMember(TelematicJsonKeys::EVENT)) event = json[TelematicJsonKeys::EVENT].asString();
 
             RSUHealthStatusMessage msg(ip, port, status, event );
             return msg;

@@ -4,6 +4,7 @@
 #include <jsoncpp/json/json.h>
 #include "RSUConfigWorker.h"
 #include "TopicMessage.h"
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -70,13 +71,13 @@ namespace TelematicBridge
             {
                 topicsArray.append(topic.toJson());
             }
-            json["topics"] = topicsArray;
+            json[TelematicJsonKeys::TOPICS] = topicsArray;
             
             // Convert RSU endpoint to JSON
             Json::Value rsuJson;
-            rsuJson["ip"] = _rsuEndpoint.ip;
-            rsuJson["port"] = _rsuEndpoint.port;
-            json["rsu"] = rsuJson;
+            rsuJson[TelematicJsonKeys::RSU_IP] = _rsuEndpoint.ip;
+            rsuJson[TelematicJsonKeys::RSU_PORT] = _rsuEndpoint.port;
+            json[TelematicJsonKeys::RSU] = rsuJson;
             
             return json;
         }

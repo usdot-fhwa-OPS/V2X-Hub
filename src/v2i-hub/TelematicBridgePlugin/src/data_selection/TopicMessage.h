@@ -1,5 +1,6 @@
 #include <string>
 #include <jsoncpp/json/json.h>
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -24,8 +25,8 @@ namespace TelematicBridge
         Json::Value toJson() const
         {
             Json::Value json;
-            json["name"] = name;
-            json["selected"] = selected;
+            json[TelematicJsonKeys::TOPIC_NAME] = name;
+            json[TelematicJsonKeys::TOPIC_SELECTED] = selected;
             return json;
         }
 

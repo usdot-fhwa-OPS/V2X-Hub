@@ -5,6 +5,7 @@
 #include <jsoncpp/json/json.h>
 #include "UnitHealthStatusMessage.h"
 #include "RSUHealthStatusMessage.h"
+#include "../TelematicJsonKeys.h"
 
 namespace TelematicBridge
 {
@@ -114,10 +115,10 @@ namespace TelematicBridge
             {
                 rsuConfigsJson.append(rsuStatus.toJson());
             }
-            json["rsuConfigs"] = rsuConfigsJson;
+            json[TelematicJsonKeys::RSU_CONFIGS] = rsuConfigsJson;
             
             // Convert unit health status
-            json["unitConfig"] = unitHealthStatus.toJson();
+            json[TelematicJsonKeys::UNIT_CONFIG] = unitHealthStatus.toJson();
             
             return json;
         }
@@ -132,18 +133,18 @@ namespace TelematicBridge
             TRUHealthStatusMessage msg;
             
             // Parse RSU health status list
-            if (json.isMember("rsuConfigs") && json["rsuConfigs"].isArray())
+            if (json.isMember(TelematicJsonKeys::RSU_CONFIGS) && json[TelematicJsonKeys::RSU_CONFIGS].isArray())
             {
-                for (const auto &rsuJson : json["rsuConfigs"])
+                for (const auto &rsuJson : json[TelematicJsonKeys::RSU_CONFIGS])
                 {
                     msg.rsuHealthStatus.push_back(RSUHealthStatusMessage::fromJson(rsuJson));
                 }
             }
             
             // Parse unit health status
-            if (json.isMember("unitConfig"))
+            if (json.isMember(TelematicJsonKeys::UNIT_CONFIG))
             {
-                msg.unitHealthStatus = UnitHealthStatusMessage::fromJson(json["unitConfig"]);
+                msg.unitHealthStatus = UnitHealthStatusMessage::fromJson(json[TelematicJsonKeys::UNIT_CONFIG]);
             }
             
             return msg;
@@ -158,7 +159,7 @@ namespace TelematicBridge
             Json::Value json;
             
             // Convert unit health status
-            json["unitConfig"] = unitHealthStatus.toJson();
+            json[TelematicJsonKeys::UNIT_CONFIG] = unitHealthStatus.toJson();
             
             // Convert RSU health status list
             Json::Value rsuConfigsJson(Json::arrayValue);
@@ -166,10 +167,10 @@ namespace TelematicBridge
             {
                 rsuConfigsJson.append(rsuStatus.toJson());
             }
-            json["rsuConfigs"] = rsuConfigsJson;
+            json[TelematicJsonKeys::RSU_CONFIGS] = rsuConfigsJson;
             
             // Add top-level timestamp (current time in milliseconds since epoch)
-            json["timestamp"] = std::to_string(getCurrentTimestamp());
+            json[TelematicJsonKeys::TIMESTAMP] = std::to_string(getCurrentTimestamp());
             
             // Convert to string with minimal formatting
             Json::StreamWriterBuilder builder;
