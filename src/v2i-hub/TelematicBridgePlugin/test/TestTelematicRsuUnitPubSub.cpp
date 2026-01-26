@@ -510,4 +510,33 @@ namespace TelematicBridge
             ASSERT_FALSE(topics.empty());
         });
     }
+
+    TEST_F(TestTelematicRsuUnitPubSub, RsuSelectedTopicsReplier_WithoutConnection)
+    {
+        ASSERT_NO_THROW({
+            unit->rsuSelectedTopicsReplier();
+        });
+    }
+
+
+    TEST_F(TestTelematicRsuUnitPubSub, RsuAvailableTopicsReplier_WithoutConnection)
+    {
+        ASSERT_NO_THROW({
+            unit->rsuAvailableTopicsReplier();
+        });
+    }
+
+    TEST_F(TestTelematicRsuUnitPubSub, publishRsuDataStream_WithoutConnection)
+    {
+        Json::Value payload = createMessagePayload();
+        
+        ASSERT_NO_THROW({
+            unit->publishRsuDataStream(
+                "127.0.0.1",
+                161,
+                "bsm",
+                payload
+            );
+        });
+    }
 }

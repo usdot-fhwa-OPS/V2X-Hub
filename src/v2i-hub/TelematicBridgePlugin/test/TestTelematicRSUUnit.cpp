@@ -239,4 +239,42 @@ namespace TelematicBridge
         ASSERT_EQ(root["status"].asString(), "failed");
         unsetenv("RSU_CONFIG_PATH");
     }
+
+    TEST_F(TestTelematicRsuUnit, Connect_UnreachableServer)
+    {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
+        unit = make_shared<TelematicRsuUnit>();
+
+        // Test with unreachable NATS server (non-existent host)
+        EXPECT_THROW({
+            unit->connect("nats://nonexistent.server:4222");
+        }, TelematicBridgeException);
+
+        unsetenv("RSU_CONFIG_PATH");
+    }
+
+    TEST_F(TestTelematicRsuUnit, Connect_RetriesOnFailure)
+    {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
+        unit = make_shared<TelematicRsuUnit>();
+
+        // This test verifies that connect() attempts multiple retries
+        // By timing the execution, we can infer retry attempts occurred
+        auto start = std::chrono::steady_clock::now();
+        
+        EXPECT_THROW({
+            unit->connect("nats://127.0.0.1:9998");
+        }, TelematicBridgeException);
+        
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+        
+        // Should take at least a few seconds due to retries (assuming 3+ attempts with 1 sec sleep)
+        // This confirms the retry mechanism is working
+        EXPECT_GE(duration, 2); // At least 2 seconds for multiple retry attempts
+
+        unsetenv("RSU_CONFIG_PATH");
+    }
 }

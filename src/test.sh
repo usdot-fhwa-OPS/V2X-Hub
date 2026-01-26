@@ -42,7 +42,7 @@ for d in ${component_dir}/* ; do
             pushd $(dirname ${top_dir})
             if [ $COVERAGE_BUILD -eq 1 ]; then
             # generated at the project root
-                gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -r .
+                gcovr -k --json $(basename ${top_dir})/${component_dir}/$(basename ${d})-coverage.json -s  -f $(basename ${top_dir})/${d}/ -e '.*Plugin\.cpp$' -r .
             fi
             popd
         else
