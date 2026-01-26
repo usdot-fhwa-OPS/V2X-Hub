@@ -238,6 +238,8 @@ namespace TelematicBridge
 
         // Verify loaded config
         string unitId = worker->getUnitId();
+        int pluginHeartBeatInterval = worker->getPluginHeartBeatInterval();
+        ASSERT_EQ(pluginHeartBeatInterval, 30);
         ASSERT_EQ(unitId, "Unit001");
     }
 
@@ -630,5 +632,11 @@ namespace TelematicBridge
 
         bool result = worker->processDeleteAction(deleteConfig);
         ASSERT_TRUE(result);
+    }
+
+    TEST_F(TestRSUConfigWorker, getPluginHeartBeatInterval)
+    {
+        int interval = worker->getPluginHeartBeatInterval();
+        ASSERT_EQ(interval, 10); // Default value
     }
 }

@@ -51,9 +51,9 @@ namespace TelematicBridge
         std::string _unitId;   // Unique identifier for each unit
         std::string _unitName;
         int16_t _maxConnections=5;   // Number of maximum RSUs supported by plugin
-        int16_t _pluginHeartBeatInterval; // Configurable interval at which the plugin heartbeat should be monitored
-        int16_t _healthMonitorPluginHeartbeatInterval; // Configurable interval at which the RSU Health Monitor heartbeat should be monitored
-        int16_t _rsuStatusMonitorInterval; // Configurable interval at which the RSU status should be monitored
+        int16_t _pluginHeartBeatInterval = 10; // Configurable interval at which the plugin heartbeat should be monitored
+        int16_t _healthMonitorPluginHeartbeatInterval = 10; // Configurable interval at which the RSU Health Monitor heartbeat should be monitored
+        int16_t _rsuStatusMonitorInterval = 10; // Configurable interval at which the RSU status should be monitored
         std::unordered_map<std::string, rsuConfig> _truRegistrationMap;
         int64_t _lastUpdateTimestamp;
 
