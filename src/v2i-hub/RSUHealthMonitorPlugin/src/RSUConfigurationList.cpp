@@ -64,9 +64,12 @@ namespace RSUHealthMonitor
 
                 if (rsuObj.isMember(SNMPPortKey))
                 {
-                    auto port = static_cast<uint16_t>(rsuObj[SNMPPortKey].asUInt());
-                    auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Invalid SNMP port number.";
-                    port != 0 ? config.snmpPort = port : throw RSUConfigurationException(errMsg);
+                    try{
+                        config.snmpPort = static_cast<uint16_t>(rsuObj[SNMPPortKey].asUInt());
+                    }catch(Json::LogicError & e){
+                        auto errMsg = "RSUConfigurationList [" + std::to_string(i + 1) + "]: Invalid SNMP port number.";
+                        throw RSUConfigurationException(errMsg);                        
+                    }
                 }
                 else
                 {
