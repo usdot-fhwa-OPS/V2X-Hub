@@ -120,10 +120,6 @@ namespace RSUHealthMonitor
 
     void RSUHealthMonitorPlugin::OnRSURegistrationConfigMessage(tmx::messages::RSURegistrationConfigMessage &msg, routeable_message &routeableMsg)
     {
-        PLOG(logINFO) << "Received RSURegistrationConfigMessage: " << msg.to_string();
-        
-        lock_guard<mutex> lock(_configMutex);
-        
         // Update the monitor interval from the message
         uint16_t newInterval = msg.get_unitConfig().rsuStatusMonitorInterval;
         if (newInterval > 0 && newInterval != _interval)
@@ -133,50 +129,12 @@ namespace RSUHealthMonitor
             
             if (started && _rsuStatusTimer)
             {
-                PLOG(logINFO) << "Updating Health Monitor timer frequency for thread ID: " << _timerThId;
                 _rsuStatusTimer->ChangeFrequency(_timerThId, std::chrono::milliseconds(_interval * SEC_TO_MILLI));
             }
-        }
+        }        
+        _rsuConfigListPtr->parseRSUs(msg);
+        PLOG(logINFO) << "Successfully updated RSU configurations. Total RSUs: " << _rsuConfigListPtr->getConfigs().size();
         
-        // Clear previous plugin status in database
-        PLOG(logDEBUG) << "Clearing previous RSU connection statuses.";
-        for (const auto &rsuConnectStatusKey : _rsuConnectedStatusKeys)
-        {
-            RemoveStatus(rsuConnectStatusKey.c_str());
-        }
-        _rsuConnectedStatusKeys.clear();
-        
-        // Purge existing configuration and replace with new RSU configs from message
-        PLOG(logINFO) << "Updating RSU configurations from RSURegistrationConfigMessage";
-        _rsuConfigListPtr->clearConfigs();
-        
-        try
-        {
-            // Convert TMX RSU configs to internal RSUConfiguration format
-            for (const auto &rsuConfig : msg.get_rsuConfigs().rsuConfigs)
-            {
-                RSUConfiguration config;
-                config.rsuIp = rsuConfig.rsu.ip;
-                config.snmpPort = rsuConfig.rsu.port;
-                config.user = rsuConfig.snmp.user;
-                config.authProtocol = rsuConfig.snmp.authProtocol;
-                config.privProtocol = rsuConfig.snmp.privacyProtocol;
-                config.authPassPhrase = rsuConfig.snmp.authPassPhrase;
-                config.privPassPhrase = rsuConfig.snmp.privacyPassPhrase;
-                config.securityLevel = rsuConfig.snmp.securityLevel;
-                config.mibVersion = tmx::utils::rsu::stringToRSUSpec(rsuConfig.snmp.rsuMIBVersion);
-                config.event = rsuConfig.event;
-                
-                _rsuConfigListPtr->addConfig(config);
-                PLOG(logDEBUG) << "Added RSU config: " << config.rsuIp << ":" << config.snmpPort;
-            }
-            
-            PLOG(logINFO) << "Successfully updated RSU configurations. Total RSUs: " << _rsuConfigListPtr->getConfigs().size();
-        }
-        catch (const std::exception &ex)
-        {
-            PLOG(logERROR) << "Error processing RSU configurations from message: " << ex.what();
-        }
     }
 
 } // namespace RSUHealthMonitor

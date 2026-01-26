@@ -173,6 +173,34 @@ namespace RSUHealthMonitor
         configs.assign(tempConfigs.begin(), tempConfigs.end());
     }
 
+    void RSUConfigurationList::parseRSUs(tmx::messages::RSURegistrationConfigMessage &msg)
+    {
+        clearConfigs();
+        try
+        {
+            // Convert TMX RSU configs to internal RSUConfiguration format
+            for (const auto &rsuConfig : msg.get_rsuConfigs().rsuConfigs)
+            {
+                RSUConfiguration config;
+                config.rsuIp = rsuConfig.rsu.ip;
+                config.snmpPort = rsuConfig.rsu.port;
+                config.user = rsuConfig.snmp.user;
+                config.authProtocol = rsuConfig.snmp.authProtocol;
+                config.privProtocol = rsuConfig.snmp.privacyProtocol;
+                config.authPassPhrase = rsuConfig.snmp.authPassPhrase;
+                config.privPassPhrase = rsuConfig.snmp.privacyPassPhrase;
+                config.securityLevel = rsuConfig.snmp.securityLevel;
+                config.mibVersion = tmx::utils::rsu::stringToRSUSpec(rsuConfig.snmp.rsuMIBVersion);
+                config.event = rsuConfig.event;                
+                addConfig(config);
+            }            
+        }
+        catch (const std::exception &ex)
+        {
+            throw RSUConfigurationException("Error processing RSU configurations from message: " + std::string(ex.what()));
+        }
+    }
+
 
     std::vector<RSUConfiguration> RSUConfigurationList::getConfigs() const
     {

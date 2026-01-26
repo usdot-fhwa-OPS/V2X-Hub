@@ -57,7 +57,7 @@ namespace TelematicBridge
          * @return Json::Value JSON representation with structure:
          *         {
          *           "topics": [{"name": "...", "selected": true/false}, ...],
-         *           "rsuEndpoint": {"ip": "...", "port": ...}
+         *           "rsu": {"ip": "...", "port": ...}
          *         }
          */
         Json::Value toJson() const
@@ -76,7 +76,7 @@ namespace TelematicBridge
             Json::Value rsuJson;
             rsuJson["ip"] = _rsuEndpoint.ip;
             rsuJson["port"] = _rsuEndpoint.port;
-            json["rsuEndpoint"] = rsuJson;
+            json["rsu"] = rsuJson;
             
             return json;
         }

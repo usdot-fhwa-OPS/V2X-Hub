@@ -7,6 +7,7 @@
 #include <boost/algorithm/string.hpp>
 #include <rsu/RSUSpec.h>
 #include "RSUConfigurationException.h"
+#include <RSURegistrationConfigMessage.h>
 
 namespace RSUHealthMonitor
 {
@@ -62,6 +63,11 @@ namespace RSUHealthMonitor
          * @param rsuConfigsStr A JSON string includes all RSUs related configrations.
          */
         void parseRSUs(const std::string &rsuConfigsStr);
+        /**
+         * @brief Parse RSUs configrations from RSURegistrationConfigMessage, and update the memeber of list of RSUConfiguration struct.
+         * @param msg RSURegistrationConfigMessage that includes all RSUs related configrations.
+         */
+        void parseRSUs(tmx::messages::RSURegistrationConfigMessage &msg);
         
         /**
          * @brief Add a single RSU configuration to the list

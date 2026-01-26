@@ -5,7 +5,6 @@
 #include <jsoncpp/json/json.h>
 #include <RSUStatusMessage.h>
 #include <rsu/RSUSpec.h>
-#include <RSURegistrationConfigMessage.h>
 
 #include "RSUHealthMonitorWorker.h"
 #include "RSUConfigurationList.h"

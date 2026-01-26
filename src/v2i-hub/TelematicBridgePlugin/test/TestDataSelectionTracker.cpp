@@ -45,9 +45,9 @@ TEST_F(TestDataSelectionTracker, UpdateRsuAvailableTopics)
     
     // Verify RSU endpoint
     auto rsuTopic = root["rsuTopics"][0];
-    ASSERT_TRUE(rsuTopic.isMember("rsuEndpoint"));
-    EXPECT_EQ("192.168.1.1", rsuTopic["rsuEndpoint"]["ip"].asString());
-    EXPECT_EQ(161, rsuTopic["rsuEndpoint"]["port"].asInt());
+    ASSERT_TRUE(rsuTopic.isMember("rsu"));
+    EXPECT_EQ("192.168.1.1", rsuTopic["rsu"]["ip"].asString());
+    EXPECT_EQ(161, rsuTopic["rsu"]["port"].asInt());
 }
 
 TEST_F(TestDataSelectionTracker, InRsuSelectedTopics)
@@ -58,7 +58,7 @@ TEST_F(TestDataSelectionTracker, InRsuSelectedTopics)
     // Update selected topics
     const char* selectedTopicsJson = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },
@@ -83,7 +83,7 @@ TEST_F(TestDataSelectionTracker, UpdateLatestSelectedTopics_MultipleRSUs)
     const char* selectedTopicsJson = R"({
         "rsuTopics": [
             {
-                "rsuEndpoint": {
+                "rsu": {
                     "ip": "192.168.1.1",
                     "port": 161
                 },
@@ -93,7 +93,7 @@ TEST_F(TestDataSelectionTracker, UpdateLatestSelectedTopics_MultipleRSUs)
                 }]
             },
             {
-                "rsuEndpoint": {
+                "rsu": {
                     "ip": "192.168.1.2",
                     "port": 161
                 },
@@ -122,7 +122,7 @@ TEST_F(TestDataSelectionTracker, UpdateLatestSelectedTopics_ClearsPreviousSelect
     // Select initial topics
     const char* initialJson = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },
@@ -141,7 +141,7 @@ TEST_F(TestDataSelectionTracker, UpdateLatestSelectedTopics_ClearsPreviousSelect
     // Update with new selection (should clear old ones)
     const char* updatedJson = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },
@@ -172,7 +172,7 @@ TEST_F(TestDataSelectionTracker, LatestSelectedTopicsMessageToJsonString)
 {
     const char* selectedTopicsJson = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },

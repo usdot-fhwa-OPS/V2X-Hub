@@ -83,7 +83,7 @@ namespace TelematicBridge
          *           "rsuTopics": [
          *             {
          *               "topics": [{"name": "...", "selected": true/false}, ...],
-         *               "rsuEndpoint": {"ip": "...", "port": ...}
+         *               "rsu": {"ip": "...", "port": ...}
          *             }
          *           ],
          *           "timestamp": 1234567890
@@ -163,9 +163,9 @@ namespace TelematicBridge
                     }
                     
                     // Parse RSU endpoint
-                    if (rsuTopicJson.isMember("rsuEndpoint") && rsuTopicJson["rsuEndpoint"].isObject())
+                    if (rsuTopicJson.isMember("rsu") && rsuTopicJson["rsu"].isObject())
                     {
-                        const Json::Value& rsuEndpointJson = rsuTopicJson["rsuEndpoint"];
+                        const Json::Value& rsuEndpointJson = rsuTopicJson["rsu"];
                         rsuEndpoint endpoint;
                         
                         if (rsuEndpointJson.isMember("ip") && rsuEndpointJson["ip"].isString())

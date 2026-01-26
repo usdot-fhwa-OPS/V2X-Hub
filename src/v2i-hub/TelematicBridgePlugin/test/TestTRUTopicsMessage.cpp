@@ -93,8 +93,8 @@ TEST(TestTRUTopicsMessage, ToString)
     ASSERT_EQ(1, root["rsuTopics"].size());
     
     auto rsuTopic = root["rsuTopics"][0];
-    EXPECT_EQ("192.168.1.1", rsuTopic["rsuEndpoint"]["ip"].asString());
-    EXPECT_EQ(161, rsuTopic["rsuEndpoint"]["port"].asInt());
+    EXPECT_EQ("192.168.1.1", rsuTopic["rsu"]["ip"].asString());
+    EXPECT_EQ(161, rsuTopic["rsu"]["port"].asInt());
     
     ASSERT_TRUE(rsuTopic["topics"].isArray());
     ASSERT_EQ(1, rsuTopic["topics"].size());
@@ -106,7 +106,7 @@ TEST(TestTRUTopicsMessage, FromJson)
 {
     const char* jsonStr = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },
@@ -144,7 +144,7 @@ TEST(TestTRUTopicsMessage, FromJson)
 
     jsonStr = R"({
         "rsuTopics": [{
-            "rsuEndpoint": {
+            "rsu": {
                 "ip": "192.168.1.1",
                 "port": 161
             },

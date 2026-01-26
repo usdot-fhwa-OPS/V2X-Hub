@@ -159,12 +159,16 @@ namespace TelematicBridge
 
     std::string TelematicRsuUnit::constructRSURegistrationDataString()
     {
-        lock_guard<mutex> lock(_unitMutex);
-
-        Json::Value message = _truConfigWorkerptr->getTruConfigAsJsonArray();
+        Json::Value message = constructRSURegistrationJson();
         Json::FastWriter fasterWirter;
         string jsonStr = fasterWirter.write(message);
         return jsonStr;
+    }
+
+    Json::Value TelematicRsuUnit::constructRSURegistrationJson()
+    {
+        Json::Value message = _truConfigWorkerptr->getTruConfigAsJsonArray();
+        return message;
     }
 
     void TelematicRsuUnit::rsuAvailableTopicsReplier()
@@ -229,7 +233,9 @@ namespace TelematicBridge
         
         // Add metadata and payload to message
         message["metadata"] = metadata;
-        message["payload"] = payload;
+        if(payload.isObject() || payload.isArray()){
+            message["payload"] = payload;
+        }
         
         // Convert to string
         Json::FastWriter writer;
@@ -266,20 +272,14 @@ namespace TelematicBridge
 
     void TelematicRsuUnit::onRsuSelectedTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object)
     {
-        PLOG(logINFO) << "========== onRsuSelectedTopicsCallback INVOKED ==========";
         PLOG(logINFO) << "Received RSU selected topics request";
         PLOG(logINFO) << "  Subject: " << (natsMsg_GetSubject(msg) ? natsMsg_GetSubject(msg) : "NULL");
         PLOG(logINFO) << "  Data: " << (natsMsg_GetData(msg) ? natsMsg_GetData(msg) : "NULL");
         PLOG(logINFO) << "  Reply subject: " << (natsMsg_GetReply(msg) ? natsMsg_GetReply(msg) : "NULL");
         PLOG(logINFO) << "Received RSU selected topics: " << natsMsg_GetSubject(msg) << " " << natsMsg_GetData(msg);
-        
-        PLOG(logINFO) << "Checking conditions - object: " << (object ? "NOT NULL" : "NULL") 
-                      << ", reply subject: " << (natsMsg_GetReply(msg) ? "NOT NULL" : "NULL");
-        
-        // Send reply
+
         if (object && natsMsg_GetReply(msg) != nullptr)
         {
-            PLOG(logINFO) << "Inside reply block - about to process message";
             auto obj = (TelematicRsuUnit *)object;
             auto msgStr = natsMsg_GetData(msg);
             
@@ -313,8 +313,6 @@ namespace TelematicBridge
             PLOG(logERROR) << "Cannot send reply - object or reply subject is NULL!";
             natsMsg_Destroy(msg);
         }
-        
-        PLOG(logINFO) << "========== onRsuSelectedTopicsCallback COMPLETED ==========";
     }
 
     std::string TelematicRsuUnit::constructRsuSelectedTopicsReplyString(const std::string &msgStr){
@@ -347,7 +345,7 @@ namespace TelematicBridge
         _truHealthStatusTracker->updateUnitStatus(unitStatus);
     }
 
-    void TelematicRsuUnit::PublishHealthStatusToNATS(const std::string &topicSuffix)
+    void TelematicRsuUnit::publishHealthStatusToNATS(const std::string &topicSuffix)
     {
         try
         {

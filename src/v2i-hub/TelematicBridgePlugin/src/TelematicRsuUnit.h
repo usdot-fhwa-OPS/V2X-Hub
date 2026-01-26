@@ -170,6 +170,12 @@ namespace TelematicBridge
          * @return std::string JSON formatted RSU registration data
         */
         std::string constructRSURegistrationDataString();
+        /**
+         * @brief Construct a JSON object containing RSU registration data
+         * Includes unit configuration, registered RSU list, and timestamp
+         * @return Json 
+         **/
+        Json::Value constructRSURegistrationJson();
 
         /**
          * @brief Construct a JSON response string for RSU configuration registration status
@@ -247,7 +253,7 @@ namespace TelematicBridge
          * @brief Helper method to publish health status data to NATS
          * @param topicSuffix The suffix to append to "unit.<unit_id>."
          */
-        void PublishHealthStatusToNATS(const std::string &topicSuffix);
+        void publishHealthStatusToNATS(const std::string &topicSuffix);
         
         /**
          * @brief Get plugin heartbeat interval from configuration
@@ -261,16 +267,16 @@ namespace TelematicBridge
          * @brief Publish RSU health status to NATS
          * Publishes the current TRU health status snapshot to the RSU health status topic
          */
-        void PublishRSUHealthStatus(){
-            PublishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX);
+        void publishRSUHealthStatus(){
+            publishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX);
         }
 
         /**
          * @brief Publish plugin health status to NATS
          * Publishes the current TRU health status snapshot to the plugin health status topic
          */
-        void PublishPluginHealthStatus(){
-            PublishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX);
+        void publishPluginHealthStatus(){
+            publishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX);
         }
 
         /**

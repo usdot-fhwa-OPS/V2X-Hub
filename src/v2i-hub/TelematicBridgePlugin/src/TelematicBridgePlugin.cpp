@@ -50,7 +50,7 @@ namespace TelematicBridge
                 _healthStatusTimer = std::make_unique<tmx::utils::ThreadTimer>();
                 _healthStatusTimerThId = _healthStatusTimer->AddPeriodicTick([this]()
                             {
-                                    _telematicRsuUnitPtr->PublishPluginHealthStatus();
+                                    _telematicRsuUnitPtr->publishPluginHealthStatus();
                             }, std::chrono::seconds(_telematicRsuUnitPtr->getPluginHeartBeatInterval()));
                 _healthStatusTimer->Start();
                 _startedHealthMonitorTh = true;
@@ -183,7 +183,7 @@ namespace TelematicBridge
             {
                 _telematicRsuUnitPtr->updateRsuHealthStatus(rsuHealthStatus);
                 PLOG(logINFO) << "ProcessRSUStatusMessage: " << rsuHealthStatus.toString();
-                _telematicRsuUnitPtr->PublishRSUHealthStatus();
+                _telematicRsuUnitPtr->publishRSUHealthStatus();
                 return rsuHealthStatus;
             }
         }        
@@ -197,31 +197,13 @@ namespace TelematicBridge
     {
         try
         {
-            std::string rsuRegistrationConfigJsonStr = _telematicRsuUnitPtr->constructRSURegistrationDataString();
-
-            if(!rsuRegistrationConfigJsonStr.empty())
+            tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
+            if(jsonValueToRouteableMessage(_telematicRsuUnitPtr->constructRSURegistrationJson(), sendRsuRegistrationConfigMsg))
             {
-                // Parse the JSON string to Json::Value
-                Json::CharReaderBuilder reader;
-                Json::Value rsuRegistrationConfigJsonArray;
-                std::string errs;
-                std::istringstream s(rsuRegistrationConfigJsonStr);
-                
-                if (Json::parseFromStream(reader, s, &rsuRegistrationConfigJsonArray, &errs))
-                {
-                    tmx::messages::RSURegistrationConfigMessage sendRsuRegistrationConfigMsg;
-                    if(jsonValueToRouteableMessage(rsuRegistrationConfigJsonArray, sendRsuRegistrationConfigMsg))
-                    {
-                        BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
-                    }
-                    else{
-                        PLOG(logERROR) <<"Error converting rsu health config to TMX message";
-                    }
-                }
-                else
-                {
-                    PLOG(logERROR) << "Error parsing RSU registration config JSON: " << errs;
-                }
+                BroadcastMessage<tmx::messages::RSURegistrationConfigMessage>(sendRsuRegistrationConfigMsg, TelematicBridgePlugin::GetName());
+            }
+            else{
+                PLOG(logERROR) <<"Error converting rsu health config to TMX message";
             }
         }
         catch (const std::exception &e)
