@@ -31,7 +31,9 @@ typedef struct IvpMessage {
 	unsigned int sourceId;
 	char *encoding;
 	uint64_t timestamp;
-	IvpMsgFlags flags;
+	unsigned int flags;
+	char *rsuIp;
+	int rsuPort;
 	IvpDsrcMetadata *dsrcMetadata;
 	cJSON *payload;
 } IvpMessage;

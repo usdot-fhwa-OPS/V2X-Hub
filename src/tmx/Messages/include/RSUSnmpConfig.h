@@ -20,7 +20,7 @@ namespace tmx::messages{
             tree.put("authPassPhrase", snmpConfig.authPassPhrase);
             tree.put("user", snmpConfig.user);
             tree.put("privacyPassPhrase", snmpConfig.privacyPassPhrase);
-            tree.put("rsuMIBVersion", snmpConfig.rsuMIBVersion);
+            tree.put("rsuMibVersion", snmpConfig.rsuMIBVersion);
 
             return tree;
         }
@@ -33,7 +33,7 @@ namespace tmx::messages{
             snmpConfig.authPassPhrase = tree.get<std::string>("authPassPhrase");
             snmpConfig.user = tree.get<std::string>("user");
             snmpConfig.privacyPassPhrase = tree.get<std::string>("privacyPassPhrase");
-            snmpConfig.rsuMIBVersion = tree.get<std::string>("rsuMIBVersion");
+            snmpConfig.rsuMIBVersion = tree.get<std::string>("rsuMibVersion");
 
             return snmpConfig;
         }

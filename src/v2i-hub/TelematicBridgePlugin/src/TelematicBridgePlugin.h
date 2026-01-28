@@ -9,6 +9,8 @@
 #include "TelematicRsuUnit.h"
 #include "RSUConfigWorker.h"
 #include <simulation/SimulationEnvUtils.h>
+#include "health_monitor/HealthStatusMessageMapper.h"
+#include "health_monitor/TRUHealthStatusTracker.h"
 
 
 namespace TelematicBridge
@@ -27,14 +29,32 @@ namespace TelematicBridge
         std::string _natsURL;
         std::string _excludedMessages;
         std::string _maxConnections;
-        int16_t _pluginHeartBeatInterval;
-        int16_t _rsuStatusMonitorInterval;
+        int16_t _pluginHeartBeatInterval; //Unit of second
+        int16_t _rsuStatusMonitorInterval; //Unit of second
         unique_ptr<tmx::utils::ThreadTimer> _rsuRegistrationConfigTimer;
-        bool _started = false;
-        int16_t rsuConfigUpdateIntervalInMillisec = 100;
+        unique_ptr<tmx::utils::ThreadTimer> _healthStatusTimer;  ///< Timer for periodic health status publishing
+        bool _startedRegistrationTh = false;
+        bool _startedHealthMonitorTh = false;
+        int16_t rsuConfigUpdateIntervalInMillisec = 1000;
         uint _timerThId;
+        uint _healthStatusTimerThId;  ///< Thread ID for health status timer
         bool _isTRU = false;
+        bool _isTRURegistered = false;
         std::mutex _configMutex;
+
+        /**
+         * @brief Process RSU Status Message and update TRU health status tracker
+         * @param routeMsg The routeable message containing RSU status
+         */
+        RSUHealthStatusMessage ProcessRSUStatusMessage(tmx::routeable_message &routeMsg);
+
+        void RegisterTRU();
+
+        /**
+         * @brief Update unit health status in TRU tracker
+         * @param status The status string (e.g., "running", "error")
+         */
+        void UpdateUnitHealthStatus(const std::string &status);
 
     public:
         explicit TelematicBridgePlugin(const std::string &name);
@@ -42,8 +62,7 @@ namespace TelematicBridge
         void OnStateChange(IvpPluginState state) override;
         void UpdateConfigSettings();
         void OnMessageReceived(IvpMessage *msg) override;
-        void BroadcastRSURegistrationConfigMessage();
-
+        void BroadcastRSURegistrationConfigMessage();        
     };
 
 } // namespace TelematicBridge

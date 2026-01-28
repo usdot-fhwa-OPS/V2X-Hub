@@ -30,17 +30,17 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 ```json
 {
-  "RSUS": [
+  "rsuConfigs": [
     {
-      "RSUIp": "192.168.55.20", // IP of RSU
+      "RSUIp": "127.0.0.1", // IP of RSU
       "SNMPPort": "161",    // SNMP port for RSU
-      "SecurityLevel": "authPriv",  // SNMP security level
-      "AuthProtocol": "SHA-512",    // SNMP Authentication Protocol
-      "AuthPassPhrase": "dummy123", // SNMP Authentication Pass Phrase
-      "PrivacyProtocol": "AES-256", // SNMP Privacy Protocol
-      "PrivacyPassPhrase": "dummy123", // SNMP Privacy Pass Phrase
+      "securityLevel": "authPriv",  // SNMP security level
+      "authProtocol": "SHA-512",    // SNMP Authentication Protocol
+      "authPassPhrase": "dummy123", // SNMP Authentication Pass Phrase
+      "privacyProtocol": "AES-256", // SNMP Privacy Protocol
+      "privacyPassPhrase": "dummy123", // SNMP Privacy Pass Phrase
       "User": "authOnlyUser", // SNMP user
-      "RSUMIBVersion": "NTCIP1218" // RSU spec / MIB Version (Currently support NTCIP1218 and RSU4.1)
+      "rsuMibVersion": "NTCIP1218" // RSU spec / MIB Version (Currently support NTCIP1218 and RSU4.1)
     }
   ]
 }

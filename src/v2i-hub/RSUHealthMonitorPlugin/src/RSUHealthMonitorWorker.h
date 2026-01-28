@@ -82,9 +82,10 @@ namespace RSUHealthMonitor
          * @param _privProtocol The privacy protocol (DES|AES|AES-192|AES-256).
          * @param _privPassPhrase The privacy protocol pass phrase.
          * @param _securityLevel security level: authPriv or authNoPriv.
+         * @param _event Event description associated with this RSU.
          * @param timeout Session time out.
          */
-        Json::Value getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const std::string &_rsuIp, uint16_t &_snmpPort, const std::string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const std::string &_securityLevel, long timeout);
+        Json::Value getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const std::string &_rsuIp, uint16_t &_snmpPort, const std::string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const std::string &_securityLevel, const std::string &_event, long timeout);
 
         /***
          *@brief Convert the JSON message into TMX message

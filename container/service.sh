@@ -7,20 +7,29 @@ for plugin in /usr/local/plugins/*.zip; do
     echo "Installing plugin $plugin"
     tmxctl --plugin-install "$plugin"
 done
-# Generate self-signed certificates if they do not already exist
-/home/V2X-Hub/container/generate_certificates.sh
+
+echo "TelematicBridge Configuration:"
+echo "  RSU_CONFIG_PATH: $RSU_CONFIG_PATH"
+echo "  NATS_URL: $NATS_URL"
+echo "  IS_TRU: $IS_TRU"
+
+# Start Tmx Core in background
+echo "Starting TMX Core..."
+tmxcore &
+TMXCORE_PID=$!
+
+# Wait for tmxcore to be ready
+echo "Waiting for TMX Core to initialize..."
+sleep 5
 
 # Enable required plugins for TelematicRSU Unit
-echo "Enabling MessageReceiver RSUHealthMonitor TelematicsBridgePlugin for RSU data streaming!"
+echo "Configuring plugins for RSU data streaming..."
+
+# Now enable the required plugins
+echo "Enabling MessageReceiver RSUHealthMonitor TelematicBridge..."
 tmxctl --plugin MessageReceiver --enable
 tmxctl --plugin RSUHealthMonitor --enable
-tmxctl --plugin TelematicsBridgePlugin --enable
+tmxctl --plugin TelematicBridge --enable
 
-# If V2XHUB_USER and V2XHUB_PASSWORD are set, create the user
-if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
-    echo "Creating V2X Hub Admin User: $V2XHUB_USERNAME"
-    # Add V2XHub admin user (Will not add if user already exists)
-    tmxctl --user-add --username "$V2XHUB_USERNAME" --password "$V2XHUB_PASSWORD" --access-level 3
-fi
-# Start Tmx Core
-tmxcore
+# Wait for tmxcore process
+wait $TMXCORE_PID

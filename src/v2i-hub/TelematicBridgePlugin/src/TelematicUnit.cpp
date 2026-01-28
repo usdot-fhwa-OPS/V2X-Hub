@@ -6,7 +6,7 @@ using namespace std::chrono;
 
 namespace TelematicBridge
 {
-    void TelematicUnit::connect(const string &natsURL)
+    bool TelematicUnit::connect(const string &natsURL)
     {
         auto s = natsConnection_ConnectTo(&_conn, natsURL.c_str());
         PLOG(logINFO) << "NATS connection returned: " << natsStatus_GetText(s);
@@ -18,9 +18,10 @@ namespace TelematicBridge
         {
             throw TelematicBridgeException(natsStatus_GetText(s));
         }
+        return s == NATS_OK;
     }
 
-    void TelematicUnit::registerUnitRequestor()
+    bool TelematicUnit::registerUnitRequestor()
     {
         // Reset registration status
         bool isRegistered = false;
@@ -117,6 +118,27 @@ namespace TelematicBridge
         else
         {
             throw TelematicBridgeException(natsStatus_GetText(s));
+        }
+    }
+
+    void TelematicUnit::publishToNats(const std::string &natsTopic, const std::string &message){
+        try
+        {
+            auto s = natsConnection_PublishString(_conn, natsTopic.c_str(), message.c_str());
+            if (s == NATS_OK)
+            {
+                PLOG(logINFO) << "Topic: " << natsTopic << ". Published: " << message;
+            }
+            else
+            {
+                throw TelematicBridgeException(natsStatus_GetText(s));
+            }
+            
+            PLOG(logDEBUG3) << "Published message to NATS topic: " << natsTopic;
+        }
+        catch (const std::exception &e)
+        {
+            PLOG(logERROR) << "Error publishing message to NATS topic: " << e.what();
         }
     }
 

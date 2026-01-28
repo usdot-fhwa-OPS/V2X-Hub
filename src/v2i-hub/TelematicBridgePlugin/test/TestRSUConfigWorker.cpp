@@ -52,12 +52,12 @@ namespace TelematicBridge
 
             Json::Value snmp;
             snmp["user"] = "admin";
-            snmp["privacyprotocol"] = "AES";
-            snmp["authprotocol"] = "SHA";
-            snmp["authpassphrase"] = "pass123";
-            snmp["privacypassphrase"] = "priv123";
-            snmp["rsumibversion"] = "4.1";
-            snmp["securitylevel"] = "authPriv";
+            snmp["privacyProtocol"] = "AES";
+            snmp["authProtocol"] = "SHA";
+            snmp["authPassPhrase"] = "pass123";
+            snmp["privacyPassPhrase"] = "priv123";
+            snmp["rsuMibVersion"] = "4.1";
+            snmp["securityLevel"] = "authPriv";
             config["snmp"] = snmp;
 
             return config;
@@ -67,16 +67,15 @@ namespace TelematicBridge
         string getValidCompleteConfigFileContent()
         {
             return R"({
-                "unitConfig": [
+                "unitConfig": 
                     {
-                        "unitID": "Unit001",
+                        "unitId": "Unit001",
                         "name": "TestUnit",
                         "maxConnections": 2,
-                        "pluginHeartbeatInterval": 30,
+                        "bridgePluginHeartbeatInterval": 30,
                         "healthMonitorPluginHeartbeatInterval": 60,
-                        "rsuStatusMonitorINterval": 120
-                    }
-                ],
+                        "rsuStatusMonitorInterval": 120
+                    },
                 "rsuConfigs": [
                     {
                         "action": "add",
@@ -87,12 +86,12 @@ namespace TelematicBridge
                         },
                         "snmp": {
                             "user": "admin",
-                            "privacyprotocol": "AES",
-                            "authprotocol": "SHA",
-                            "authpassphrase": "pass123",
-                            "privacypassphrase": "priv123",
-                            "rsumibversion": "4.1",
-                            "securitylevel": "authPriv"
+                            "privacyProtocol": "AES",
+                            "authProtocol": "SHA",
+                            "authPassPhrase": "pass123",
+                            "privacyPassPhrase": "priv123",
+                            "rsuMibVersion": "4.1",
+                            "securityLevel": "authPriv"
                         }
                     }
                 ],
@@ -239,6 +238,8 @@ namespace TelematicBridge
 
         // Verify loaded config
         string unitId = worker->getUnitId();
+        int pluginHeartBeatInterval = worker->getPluginHeartBeatInterval();
+        ASSERT_EQ(pluginHeartBeatInterval, 30);
         ASSERT_EQ(unitId, "Unit001");
     }
 
@@ -285,8 +286,8 @@ namespace TelematicBridge
         // Create complete valid message
         Json::Value updateMessage;
         Json::Value unitConfig;
-        unitConfig["unitID"] = "Unit001";
-        updateMessage["unitConfig"].append(unitConfig);
+        unitConfig["unitId"] = "Unit001";
+        updateMessage["unitConfig"] = unitConfig;
 
         Json::Value rsuConfig = createValidRsuConfigJson();
         updateMessage["rsuConfigs"].append(rsuConfig);
@@ -311,7 +312,7 @@ namespace TelematicBridge
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingRsuConfigs)
     {
         Json::Value message;
-        message["unitConfig"][0]["unitID"] = "Unit001";
+        message["unitConfig"]["unitId"] = "Unit001";
         message["timestamp"] = 1234567890;
         // Missing rsuConfigs
 
@@ -327,8 +328,8 @@ namespace TelematicBridge
         worker->loadRSUConfigListFromFile(testPath);
         Json::Value updateMessage;
         Json::Value unitConfig;
-        unitConfig["unitID"] = "Unit001";
-        updateMessage["unitConfig"].append(unitConfig);
+        unitConfig["unitId"] = "Unit001";
+        updateMessage["unitConfig"] = unitConfig;
         updateMessage["rsuConfigs"].append(createValidRsuConfigJson());
 
         bool result = worker->updateTRUStatus(updateMessage);
@@ -345,8 +346,8 @@ namespace TelematicBridge
 
         Json::Value updateMessage;
         Json::Value unitConfig;
-        unitConfig["unitID"] = "WrongUnit";  // Doesn't match Unit001
-        updateMessage["unitConfig"].append(unitConfig);
+        unitConfig["unitId"] = "WrongUnit";  // Doesn't match Unit001
+        updateMessage["unitConfig"] = unitConfig;
         updateMessage["rsuConfigs"].append(createValidRsuConfigJson());
         updateMessage["timestamp"] = 1234567890;
 
@@ -361,7 +362,7 @@ namespace TelematicBridge
         ASSERT_EQ(worker->actionToString(action::update), "update");
         ASSERT_EQ(worker->actionToString(action::unknown), "unknown");
         action ac;
-        ASSERT_EQ(worker->actionToString(ac), "unspecified");
+        ASSERT_EQ(worker->actionToString(ac), "unknown");
     }
 
     // ==================== rsuConfigToJsonValue Tests ====================
@@ -439,9 +440,8 @@ namespace TelematicBridge
 
         Json::Value result = worker->getTRUConfigResponse(true);
 
-        ASSERT_TRUE(result["unitConfig"].isArray());
-        ASSERT_GT(result["unitConfig"].size(), 0);
-        ASSERT_TRUE(result["unitConfig"][0].isMember("unitID"));
+        ASSERT_TRUE(result["unitConfig"].isObject());
+        ASSERT_TRUE(result["unitConfig"].isMember("unitId"));
 
         ASSERT_TRUE(result["rsuConfigs"].isArray());
         if (result["rsuConfigs"].size() > 0) {
@@ -480,12 +480,12 @@ namespace TelematicBridge
         config["rsu"]["ip"] = "192.168.1.1";
         config["rsu"]["port"] = 161;
         config["snmp"]["user"] = "admin";
-        config["snmp"]["privacyprotocol"] = "AES";
-        config["snmp"]["authprotocol"] = "SHA";
-        config["snmp"]["authpassphrase"] = "pass";
-        config["snmp"]["privacypassphrase"] = "priv";
-        config["snmp"]["rsumibversion"] = "4.1";
-        config["snmp"]["securitylevel"] = "authPriv";
+        config["snmp"]["privacyProtocol"] = "AES";
+        config["snmp"]["authProtocol"] = "SHA";
+        config["snmp"]["authPassPhrase"] = "pass";
+        config["snmp"]["privacyPassPhrase"] = "priv";
+        config["snmp"]["rsuMibVersion"] = "4.1";
+        config["snmp"]["securityLevel"] = "authPriv";
 
         bool result = worker->processRSUConfig(config);
         ASSERT_TRUE(result);
@@ -516,10 +516,10 @@ namespace TelematicBridge
         Json::Value unitConfigArray;
 
         Json::Value unitConfiguration;
-        unitConfiguration["unitID"] = "TestUnit";
+        unitConfiguration["unitId"] = "TestUnit";
         unitConfiguration["name"] = "UnitName";
         unitConfiguration["maxConnections"] = 1;
-        unitConfiguration["pluginHeartbeatInterval"] = 30;
+        unitConfiguration["bridgePluginHeartbeatInterval"] = 30;
         unitConfiguration["healthMonitorPluginHeartbeatInterval"] = 60;
         unitConfiguration["rsuStatusMonitorInterval"] = 120;
         unitConfiguration["unknownKey"] = "ignored";
@@ -531,7 +531,7 @@ namespace TelematicBridge
         ASSERT_TRUE(result);
 
         auto jsonConfig = worker->getUnitConfigAsJsonArray();
-        ASSERT_EQ(jsonConfig["unitID"].asString(),"TestUnit");
+        ASSERT_EQ(jsonConfig["unitId"].asString(),"TestUnit");
         ASSERT_EQ(jsonConfig["name"].asString(), "UnitName");
         ASSERT_EQ(jsonConfig["maxConnections"].asInt(), 1);
         ASSERT_EQ(jsonConfig["rsuStatusMonitorInterval"].asInt(), 120);
@@ -632,5 +632,11 @@ namespace TelematicBridge
 
         bool result = worker->processDeleteAction(deleteConfig);
         ASSERT_TRUE(result);
+    }
+
+    TEST_F(TestRSUConfigWorker, getPluginHeartBeatInterval)
+    {
+        int interval = worker->getPluginHeartBeatInterval();
+        ASSERT_EQ(interval, 10); // Default value
     }
 }

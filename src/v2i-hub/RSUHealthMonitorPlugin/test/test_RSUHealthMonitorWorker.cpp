@@ -53,11 +53,11 @@ namespace RSUHealthMonitor
     TEST_F(test_RSUHealthMonitorWorker, getRSUStatus)
     {
         uint16_t port = 161;
-        EXPECT_THROW(_rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "testtesttest", "AES-256", "test1234", "authPriv", 1000), std::runtime_error);
+        EXPECT_THROW(_rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "testtesttest", "AES-256", "test1234", "authPriv", "test event", 1000), std::runtime_error);
 
-        EXPECT_THROW(_rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000), std::runtime_error);
+        EXPECT_THROW(_rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", "test event", 1000), std::runtime_error);
 
-        EXPECT_THROW( _rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", 1000), std::runtime_error);
+        EXPECT_THROW( _rsuWorker->getRSUStatus(tmx::utils::rsu::RSU_SPEC::NTCIP_1218, "127.0.0.1", port, "testUser", "SHA-512", "test1234", "AES-256", "test1234", "authPriv", "test event", 1000), std::runtime_error);
 
     }
 

@@ -21,6 +21,8 @@
 #define IVPMSG_HFIELD_SOURCEID "sourceId"
 #define IVPMSG_HFIELD_ENCODING "encoding"
 #define IVPMSG_HFIELD_FLAGS "flags"
+#define IVPMSG_HFIELD_RSUIP "rsuIp"
+#define IVPMSG_HFIELD_RSUPORT "rsuPort"
 #define IVPMSG_HFIELD_DSRCMETADATA "dsrcMetadata"
 #define IVPMSG_HFIELD_DSRCMETADATA_CHANNEL "channel"
 #define IVPMSG_HFIELD_DSRCMETADATA_PSID "psid"
@@ -96,6 +98,8 @@ IvpMessage *ivpMsg_parse(char *jsonmsg)
 				cJSONxtra_tryGetStr(header, IVPMSG_HFIELD_ENCODING, &results->encoding);
 				cJSONxtra_tryGetInt64(header, IVPMSG_HFIELD_TIMESTAMP, &results->timestamp);
 				cJSONxtra_tryGetUnsignedInt(header, IVPMSG_HFIELD_FLAGS, &results->flags);
+				cJSONxtra_tryGetStr(header, IVPMSG_HFIELD_RSUIP, &results->rsuIp);
+				cJSONxtra_tryGetInt(header, IVPMSG_HFIELD_RSUPORT, &results->rsuPort);
 
 				cJSON *dsrcMetadata = cJSON_GetObjectItem(header, IVPMSG_HFIELD_DSRCMETADATA);
 				if (dsrcMetadata != NULL)
@@ -190,6 +194,8 @@ char *ivpMsg_createJsonString(IvpMessage *msg, IvpMsg_FormatOptions options)
 			if (msg->encoding != NULL) cJSON_AddStringToObject(header, IVPMSG_HFIELD_ENCODING, msg->encoding);
 			cJSON_AddNumberToObject(header, IVPMSG_HFIELD_TIMESTAMP, msg->timestamp);
 			cJSON_AddNumberToObject(header, IVPMSG_HFIELD_FLAGS, msg->flags);
+			if (msg->rsuIp != NULL) cJSON_AddStringToObject(header, IVPMSG_HFIELD_RSUIP, msg->rsuIp);
+			if (msg->rsuPort != 0) cJSON_AddNumberToObject(header, IVPMSG_HFIELD_RSUPORT, msg->rsuPort);
 			if (msg->dsrcMetadata != NULL)
 			{
 				cJSON *dsrcMetadata = cJSON_CreateObject();

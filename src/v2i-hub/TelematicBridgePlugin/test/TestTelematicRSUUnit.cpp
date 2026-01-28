@@ -34,19 +34,19 @@ namespace TelematicBridge
         string getValidConfig()
         {
             return R"({
-                "unitConfig": [{"unitID": "Unit001"}],
+                "unitConfig": {"unitId": "Unit001"},
                 "rsuConfigs": [{
                     "action": "add",
                     "event": "startup",
                     "rsu": {"ip": "192.168.1.10", "port": 161},
                     "snmp": {
                         "user": "admin",
-                        "privacyprotocol": "AES",
-                        "authprotocol": "SHA",
-                        "authpassphrase": "pass",
-                        "privacypassphrase": "priv",
-                        "rsumibversion": "4.1",
-                        "securitylevel": "authPriv"
+                        "privacyProtocol": "AES",
+                        "authProtocol": "SHA",
+                        "authPassPhrase": "pass",
+                        "privacyPassPhrase": "priv",
+                        "rsuMibVersion": "4.1",
+                        "securityLevel": "authPriv"
                     }
                 }],
                 "timestamp": 1234567890
@@ -56,18 +56,21 @@ namespace TelematicBridge
         Json::Value getUpdateMsg()
         {
             Json::Value msg;
-            msg["unitConfig"][0]["unitID"] = "Unit001";
+            Json::Value unitConfig;
+            unitConfig["unitId"] = "Unit001";
+            msg["unitConfig"] = unitConfig;
+            
             msg["rsuConfigs"][0]["action"] = "add";
             msg["rsuConfigs"][0]["event"] = "update";
             msg["rsuConfigs"][0]["rsu"]["ip"] = "192.168.1.20";
             msg["rsuConfigs"][0]["rsu"]["port"] = 161;
             msg["rsuConfigs"][0]["snmp"]["user"] = "admin";
-            msg["rsuConfigs"][0]["snmp"]["privacyprotocol"] = "AES";
-            msg["rsuConfigs"][0]["snmp"]["authprotocol"] = "SHA";
-            msg["rsuConfigs"][0]["snmp"]["authpassphrase"] = "pass";
-            msg["rsuConfigs"][0]["snmp"]["privacypassphrase"] = "priv";
-            msg["rsuConfigs"][0]["snmp"]["rsumibversion"] = "4.1";
-            msg["rsuConfigs"][0]["snmp"]["securitylevel"] = "authPriv";
+            msg["rsuConfigs"][0]["snmp"]["privacyProtocol"] = "AES";
+            msg["rsuConfigs"][0]["snmp"]["authProtocol"] = "SHA";
+            msg["rsuConfigs"][0]["snmp"]["authPassPhrase"] = "pass";
+            msg["rsuConfigs"][0]["snmp"]["privacyPassPhrase"] = "priv";
+            msg["rsuConfigs"][0]["snmp"]["rsuMibVersion"] = "4.1";
+            msg["rsuConfigs"][0]["snmp"]["securityLevel"] = "authPriv";
             msg["timestamp"] = 1234567890;
             return msg;
         }
@@ -75,8 +78,9 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, ConstructorNoConfig)
     {
-        unit = make_shared<TelematicRsuUnit>();
-        ASSERT_NE(unit, nullptr);
+        EXPECT_THROW({
+            unit = make_shared<TelematicRsuUnit>();
+        }, runtime_error);
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructorWithValidConfig)
@@ -92,8 +96,9 @@ namespace TelematicBridge
     {
         createFile("/tmp/test_config.json", "{bad}");
         setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
-        unit = make_shared<TelematicRsuUnit>();
-        ASSERT_NE(unit, nullptr);
+        EXPECT_THROW({
+            unit = make_shared<TelematicRsuUnit>();
+        }, runtime_error);
         unsetenv("RSU_CONFIG_PATH");
     }
 
@@ -110,14 +115,19 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, UpdateRSUStatusFail)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         Json::Value bad;
         bad["timestamp"] = 1;
         ASSERT_FALSE(unit->updateRSUStatus(bad));
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructRegistrationString)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSURegistrationDataString();
         ASSERT_FALSE(json.empty());
@@ -126,10 +136,13 @@ namespace TelematicBridge
         istringstream stream(json);
         string errs;
         ASSERT_TRUE(Json::parseFromStream(builder, stream, &root, &errs));
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructResponseSuccess)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSUConfigResponseDataString(true);
         Json::Value root;
@@ -138,10 +151,13 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "success");
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ConstructResponseFail)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         string json = unit->constructRSUConfigResponseDataString(false);
         Json::Value root;
@@ -150,10 +166,13 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "failed");
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ThreadSafety)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         vector<thread> threads;
         vector<string> results(5);
@@ -165,12 +184,16 @@ namespace TelematicBridge
             t.join();
         for (const auto &r : results)
             ASSERT_FALSE(r.empty());
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, Destructor)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
         unit.reset();
+        unsetenv("RSU_CONFIG_PATH");
     }
 
     TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateSuccess)
@@ -196,6 +219,8 @@ namespace TelematicBridge
 
     TEST_F(TestTelematicRsuUnit, ProcessConfigUpdateFailure)
     {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
         unit = make_shared<TelematicRsuUnit>();
 
         Json::Value badMsg;
@@ -212,5 +237,44 @@ namespace TelematicBridge
         string errs;
         Json::parseFromStream(builder, stream, &root, &errs);
         ASSERT_EQ(root["status"].asString(), "failed");
+        unsetenv("RSU_CONFIG_PATH");
+    }
+
+    TEST_F(TestTelematicRsuUnit, Connect_UnreachableServer)
+    {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
+        unit = make_shared<TelematicRsuUnit>();
+
+        // Test with unreachable NATS server (non-existent host)
+        EXPECT_THROW({
+            unit->connect("nats://nonexistent.server:4222");
+        }, TelematicBridgeException);
+
+        unsetenv("RSU_CONFIG_PATH");
+    }
+
+    TEST_F(TestTelematicRsuUnit, Connect_RetriesOnFailure)
+    {
+        createFile("/tmp/test_config.json", getValidConfig());
+        setenv("RSU_CONFIG_PATH", "/tmp/test_config.json", 1);
+        unit = make_shared<TelematicRsuUnit>();
+
+        // This test verifies that connect() attempts multiple retries
+        // By timing the execution, we can infer retry attempts occurred
+        auto start = std::chrono::steady_clock::now();
+        
+        EXPECT_THROW({
+            unit->connect("nats://127.0.0.1:9998");
+        }, TelematicBridgeException);
+        
+        auto end = std::chrono::steady_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start).count();
+        
+        // Should take at least a few seconds due to retries (assuming 3+ attempts with 1 sec sleep)
+        // This confirms the retry mechanism is working
+        EXPECT_GE(duration, 2); // At least 2 seconds for multiple retry attempts
+
+        unsetenv("RSU_CONFIG_PATH");
     }
 }

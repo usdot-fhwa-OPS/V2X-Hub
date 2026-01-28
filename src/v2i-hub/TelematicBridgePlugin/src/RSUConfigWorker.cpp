@@ -19,8 +19,6 @@ namespace TelematicBridge
                 return "update";
             case action::unknown:
                 return "unknown";
-            default:
-                return "unspecified";
         }
     }
 
@@ -51,8 +49,27 @@ namespace TelematicBridge
                 PLOG(logERROR) << "Failed to parse config file: " << errs;
                 return false;
             }
-            if(root.isMember(TRU_UNIT_CONFIG_KEY) && root[TRU_UNIT_CONFIG_KEY].isArray()){
-                setJsonArrayToUnitConfig(root[TRU_UNIT_CONFIG_KEY]);
+            if(root.isMember(TRU_UNIT_CONFIG_KEY) && root[TRU_UNIT_CONFIG_KEY].isObject()){
+                // Handle object format: extract unitId and other properties
+                Json::Value unitConfig = root[TRU_UNIT_CONFIG_KEY];
+                if(unitConfig.isMember(TRU_UNIT_ID_KEY)){
+                    _unitId = unitConfig[TRU_UNIT_ID_KEY].asString();
+                }
+                if(unitConfig.isMember(TRU_UNIT_NAME_KEY)){
+                    _unitName = unitConfig[TRU_UNIT_NAME_KEY].asString();
+                }
+                if(unitConfig.isMember(TRU_MAX_CONNECTIONS_KEY)){
+                    _maxConnections = unitConfig[TRU_MAX_CONNECTIONS_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+                    _pluginHeartBeatInterval = unitConfig[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
+                    _healthMonitorPluginHeartbeatInterval = unitConfig[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
+                }
+                if(unitConfig.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
+                    _rsuStatusMonitorInterval = unitConfig[TRU_RSU_STATUS_MONITOR_INTERVAL_KEY].asInt();
+                }
             }
             if (root.isMember(TRU_RSU_CONFIGS_KEY) && root[TRU_RSU_CONFIGS_KEY].isArray()) {
                 setJsonArrayToRsuConfigList(root[TRU_RSU_CONFIGS_KEY]);
@@ -70,17 +87,15 @@ namespace TelematicBridge
 
     bool truConfigWorker::updateTRUStatus(const Json::Value& jsonVal){
         try{
-            if(jsonVal.isMember(TRU_UNIT_CONFIG_KEY) && jsonVal[TRU_UNIT_CONFIG_KEY].isArray()){
-                for (auto item : jsonVal[TRU_UNIT_CONFIG_KEY]){
-                    if (item.isMember(TRU_UNIT_ID_KEY)){
-                        auto incomingUnitId = item[TRU_UNIT_ID_KEY].asString();
-                        if(incomingUnitId!= _unitId){
-                            PLOG(logERROR) << "Incoming Unit ID"<< incomingUnitId <<"does not match assigned ID"<< _unitId <<", ignoring request.";
-                            return false;
-                        }
-                        else{
-                            continue;
-                        }
+            if (jsonVal.isMember(TRU_UNIT_CONFIG_KEY) && jsonVal[TRU_UNIT_CONFIG_KEY].isObject()) {
+                // Handle object format: extract unitId and validate
+                Json::Value unitConfig = jsonVal[TRU_UNIT_CONFIG_KEY];
+                if(unitConfig.isMember(TRU_UNIT_ID_KEY)){
+                    std::string incomingUnitId = unitConfig[TRU_UNIT_ID_KEY].asString();
+                    // Validate that the incoming unitId matches the configured unitId
+                    if (!_unitId.empty() && incomingUnitId != _unitId) {
+                        PLOG(logERROR) << "Incoming Unit ID" << incomingUnitId << "does not match assigned ID" << _unitId;
+                        return false;
                     }
                 }
             }
@@ -118,24 +133,12 @@ namespace TelematicBridge
         }
 
         for (auto item : message){
-            if(item.isMember(TRU_UNIT_ID_KEY)){
-                _unitId = item[TRU_UNIT_ID_KEY].asString();
-            }
-            if(item.isMember(TRU_UNIT_NAME_KEY)){
-                _unitName = item[TRU_UNIT_NAME_KEY].asString();
-            }
-            if (item.isMember(TRU_MAX_CONNECTIONS_KEY)){
-                _maxConnections = item[TRU_MAX_CONNECTIONS_KEY].asInt();
-            }
-            if (item.isMember(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
-                _pluginHeartBeatInterval = item[TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
-            }
-            if (item.isMember(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY)){
-                _healthMonitorPluginHeartbeatInterval = item[TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY].asInt();
-            }
-            if (item.isMember(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY)){
-                _rsuStatusMonitorInterval = item[TRU_RSU_STATUS_MONITOR_INTERVAL_KEY].asInt();
-            }
+            _unitId = item.get(TRU_UNIT_ID_KEY, "").asString();
+            _unitName = item.get(TRU_UNIT_NAME_KEY, "").asString();
+            _maxConnections = item.get(TRU_MAX_CONNECTIONS_KEY, 5).asInt();
+            _pluginHeartBeatInterval = item.get(TRU_PLUGIN_HEARTBEAT_INTERVAL_KEY, 1).asInt();
+            _healthMonitorPluginHeartbeatInterval = item.get(TRU_HEALTH_MONITOR_PLUGIN_HEARTBEAT_INTERVAL_KEY, 1).asInt();
+            _rsuStatusMonitorInterval = item.get(TRU_RSU_STATUS_MONITOR_INTERVAL_KEY, 1).asInt();
         }
         return true;
     }
@@ -347,7 +350,7 @@ namespace TelematicBridge
 
         Json::Value unitObject;
         unitObject[TRU_UNIT_ID_KEY] = _unitId;
-        message[TRU_UNIT_CONFIG_KEY].append(unitObject);
+        message[TRU_UNIT_CONFIG_KEY] = unitObject;
 
         Json::Value rsuConfigList;
         for (const auto& configPair : _truRegistrationMap) {
@@ -394,5 +397,36 @@ namespace TelematicBridge
 
     std::string truConfigWorker::getUnitId(){
         return _unitId;
+    }
+    
+    std::string truConfigWorker::getEventByRsu(const std::string &rsuIp, int rsuPort) const
+    {
+        // Search for matching RSU by IP and port in the registration map
+        for (const auto& pair : _truRegistrationMap)
+        {
+            const auto& rsuConfig = pair.second;
+            if (rsuConfig.rsu.ip == rsuIp && rsuConfig.rsu.port == rsuPort)
+            {
+                return rsuConfig.event;
+            }
+        }
+        
+        // Return empty string if RSU not found
+        PLOG(logDEBUG3) << "Event not found for RSU: " << rsuIp << ":" << rsuPort;
+        return "";
+    }
+
+    int truConfigWorker::getRsuPortByIp(const std::string &rsuIp) const
+    {
+        auto it = _truRegistrationMap.find(rsuIp);
+        if (it != _truRegistrationMap.end())
+        {
+            return it->second.rsu.port;
+        }
+        else
+        {
+            PLOG(logDEBUG3) << "RSU port not found for IP: " << rsuIp;
+            return 0; // Return 0 or an appropriate default value if RSU not found
+        }
     }
 }

@@ -42,6 +42,13 @@ namespace RSUHealthMonitor
          */
         void BroadcastRSUStatus(const Json::Value &rsuStatusJson, const tmx::utils::rsu::RSU_SPEC &mibVersion);
 
+        /**
+         * @brief Handle RSURegistrationConfigMessage to update configurations
+         * @param msg RSURegistrationConfigMessage containing updated RSU configurations
+         * @param routeableMsg Routeable message wrapper
+         */
+        void OnRSURegistrationConfigMessage(tmx::messages::RSURegistrationConfigMessage &msg, routeable_message &routeableMsg);
+
     public:
         explicit RSUHealthMonitorPlugin(const std::string &name);
         void UpdateConfigSettings();

@@ -36,6 +36,17 @@ public:
 
 	virtual int Receive(char *msg, size_t maxSize);
 	virtual int TimedReceive(char *msg, size_t maxSize, int maxWait_ms);
+	
+	/**
+	 * @brief Timed receive with sender information
+	 * @param msg Buffer to store received message
+	 * @param maxSize Maximum size of buffer
+	 * @param maxWait_ms Maximum wait time in milliseconds
+	 * @param senderIp Output parameter for sender IP address
+	 * @param senderPort Output parameter for sender port
+	 * @return Number of bytes received, or -1 on error
+	 */
+	virtual int TimedReceiveWithSender(char *msg, size_t maxSize, int maxWait_ms, std::string &senderIp, int &senderPort);
 
 	virtual std::string stringTimedReceive(int maxWait_ms=5);
 

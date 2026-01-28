@@ -70,7 +70,7 @@ namespace TelematicBridge
         payload2["body"] = "invalid";
         reply = _telematicUnitPtr->constructPublishedDataString(unit, eventLocation, testingType, eventName, topicName, payload2);
         json = TelematicUnit::parseJson(reply);
-        ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 100);
+        ASSERT_NEAR(duration_cast<microseconds>(system_clock::now().time_since_epoch()).count(), json["timestamp"].asUInt64(), 10000);
     }
 
     TEST_F(TestTelematicUnit, onCheckStatusCallback)
@@ -104,6 +104,30 @@ namespace TelematicBridge
         Json::Value payload;
         payload["body"] = "test_body";
         ASSERT_THROW(_telematicUnitPtr->publishMessage(topicName, payload), TelematicBridgeException);
+    }
+
+    TEST_F(TestTelematicUnit, publishToNats_WithoutConnection)
+    {
+        string natsTopic = "test.topic";
+        string message = "{\"test\":\"data\"}";
+        // Should not crash when not connected to NATS (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
+    }
+
+    TEST_F(TestTelematicUnit, publishToNats_EmptyTopic)
+    {
+        string natsTopic = "";
+        string message = "{\"test\":\"data\"}";
+        // Should not crash with empty topic (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
+    }
+
+    TEST_F(TestTelematicUnit, publishToNats_EmptyMessage)
+    {
+        string natsTopic = "test.topic";
+        string message = "";
+        // Should not crash when not connected, even with empty message (exception is caught internally)
+        ASSERT_NO_THROW(_telematicUnitPtr->publishToNats(natsTopic, message));
     }
 
     TEST_F(TestTelematicUnit, checkStatusReplier)

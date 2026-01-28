@@ -15,14 +15,14 @@ namespace tmx::messages{
             void SetUp() override {
                 //Set Telematic Unit members
                 TelematicRSUUnit TelematicRSUUnit("Unit007", 10, 10, 10, 10);
-                tmxRSURegistrationConfigPtr->set_unit(TelematicRSUUnit);
+                tmxRSURegistrationConfigPtr->set_unitConfig(TelematicRSUUnit);
 
                 std::string action = "add";
-                RSUConfig rsuConfig1("add", "new",
+                RSUConfig rsuConfig1("add", "new", "operational",
                      RSUEndpoint("127.0.0.1", 161),
                      RSUSnmpConfig());
 
-                RSUConfig rsuConfig2("update", "modified",
+                RSUConfig rsuConfig2("update", "modified", "operational",
                             RSUEndpoint("192.168.0.1", 161),
                             RSUSnmpConfig());
 
@@ -50,9 +50,9 @@ namespace tmx::messages{
         boost::property_tree::read_json(ss, tree);
 
         // Verify telematic unit
-        EXPECT_EQ(tree.get<std::string>("unit.unitId"), "Unit007");
-        EXPECT_EQ(tree.get<int>("unit.maxConnections"), 10);
-        EXPECT_EQ(tree.get<int>("unit.bridgePluginHeartbeatInterval"),10);
+        EXPECT_EQ(tree.get<std::string>("unitConfig.unitId"), "Unit007");
+        EXPECT_EQ(tree.get<int>("unitConfig.maxConnections"), 10);
+        EXPECT_EQ(tree.get<int>("unitConfig.bridgePluginHeartbeatInterval"),10);
 
         EXPECT_EQ(tree.get<int64_t>("timestamp"),1234567890000);
 
@@ -67,7 +67,7 @@ namespace tmx::messages{
     }
 
     TEST_F(RSURegistrationConfigMessageTest, getters) {
-        TelematicRSUUnit unit = tmxRSURegistrationConfigPtr->get_unit();
+        TelematicRSUUnit unit = tmxRSURegistrationConfigPtr->get_unitConfig();
         EXPECT_EQ(unit.unitId, "Unit007");
         EXPECT_EQ(unit.maxConnections, 10);
         EXPECT_EQ(unit.bridgePluginHeartbeatInterval, 10);
@@ -82,13 +82,14 @@ namespace tmx::messages{
     TEST_F(RSURegistrationConfigMessageTest, rsu_endpoint_serialization){
         RSUEndpoint endpoint("10.0.0.1", 161);
         RSUSnmpConfig snmpConfig;
-        RSUConfig original("add", "registered", endpoint, snmpConfig);
+        RSUConfig original("add", "registered", "operational", endpoint, snmpConfig);
 
         auto tree = RSUConfig::to_tree(original);
         RSUConfig reconstructed = RSUConfig::from_tree(tree);
 
         EXPECT_EQ(original.action, reconstructed.action);
         EXPECT_EQ(original.event, reconstructed.event);
+        EXPECT_EQ(original.status, reconstructed.status);
         EXPECT_EQ(original.rsu.ip, reconstructed.rsu.ip);
         EXPECT_EQ(original.rsu.port, reconstructed.rsu.port);
     }

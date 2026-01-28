@@ -81,6 +81,24 @@ public:
 						 tmx::byte_t groupId = 0, tmx::byte_t uniqId = 0, uint64_t timestamp = 0);
 
 	/**
+	 * Handle an incoming message as a byte stream with RSU source information.  The purpose of the identifiers is to guarantee that
+	 * all active messages from the same source will be assigned to the same thread to ensure correct ordering.
+	 * If that is not critical for the application, then assign both identifiers to 0.
+	 *
+	 * @param bytes - The bytes of the message.  These could be encoded or decoded bytes.
+	 * @param size - The number of bytes passed in.
+	 * @param encoding - The encoding of the bytes, or null for a non-encoded string
+	 * @param groupId - A one-byte group identifier for the source
+	 * @param uniqId - A one-byte unique identifier for the source in the group
+	 * @param timestamp - The timestamp of the message, if not the current time.
+	 * @param rsuIp - The IP address of the RSU that sent this message
+	 * @param rsuPort - The port number of the RSU that sent this message
+	 */
+	void IncomingMessage(const tmx::byte_t *bytes, size_t size, const char *encoding,
+						 tmx::byte_t groupId, tmx::byte_t uniqId, uint64_t timestamp,
+						 const char *rsuIp, int rsuPort);
+
+	/**
 	 * Handle an incoming message as a byte stream.  The purpose of the identifiers is to guarantee that
 	 * all active messages from the same source will be assigned to the same thread to ensure correct ordering.
 	 * If that is not critical for the application, then assign both identifiers to 0.

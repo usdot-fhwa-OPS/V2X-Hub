@@ -32,6 +32,8 @@ struct rawIncomingMessage {
 	void *message;
 	incomingMessageType type;
 	char *encoding;
+	char *rsuIp;
+	int rsuPort;
 };
 
 struct rawOutgoingMessage {
@@ -177,9 +179,6 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 			}
 			break;
 		}
-
-		free(msg.encoding);
-		msg.encoding = NULL;
 	}
 
 	// Invoke the handler
@@ -187,11 +186,23 @@ void RxThread::doWork(rawIncomingMessage &msg) {
 		if (msg.timestamp > 0)
 			routeableMsg->set_timestamp(msg.timestamp);
 
+		// Set DSRC RSU metadata if available (must be done before freeing)
+		if (msg.rsuIp && msg.rsuIp[0] != '\0')
+			routeableMsg->set_rsuIp(msg.rsuIp);
+		if (msg.rsuPort > 0)
+			routeableMsg->set_rsuPort(msg.rsuPort);
+
 		if (msg.mgr)
 			msg.mgr->OnMessageReceived(*routeableMsg);
 
 		delete routeableMsg;
 	}
+
+	// Free allocated memory after using it
+	free(msg.encoding);
+	msg.encoding = NULL;
+	free(msg.rsuIp);
+	msg.rsuIp = NULL;
 
 	// After other messages are sent out, then push a message to clean up for this thread assignment
 	rawOutgoingMessage out;
@@ -290,6 +301,8 @@ void TmxMessageManager::IncomingMessage(const IvpMessage *msg, byte_t groupId, b
 	in.message = copy;
 	in.type = type_IvpMessage;
 	in.encoding = msg->encoding ? strdup(msg->encoding) : nullptr;
+	in.rsuIp = nullptr;
+	in.rsuPort = 0;
 
 	PLOG(logDEBUG4) << "Assigning " << msg->type << "/" << msg->subtype <<
 			" message from " << msg->source << " as " << (int)groupId << ":" << (int)uniqId;
@@ -317,8 +330,36 @@ void TmxMessageManager::IncomingMessage(const tmx::byte_t *bytes, size_t size, c
 	in.message = copy;
 	in.type = type_RawBytes;
 	in.encoding = encoding ? strdup(encoding) : NULL;
+	in.rsuIp = nullptr;
+	in.rsuPort = 0;
 
 	PLOG(logDEBUG4) << "Assigning message bytes " << *copy << " as " << (int)groupId << ":" << (int)uniqId;
+	workerThreads.assign(groupId, uniqId, in);
+}
+
+void TmxMessageManager::IncomingMessage(const tmx::byte_t *bytes, size_t size, const char *encoding,
+										byte_t groupId, byte_t uniqId, uint64_t timestamp,
+										const char *rsuIp, int rsuPort) {
+	if (!bytes)
+		return;
+
+	// Need a copy of the bytes
+	byte_stream *copy = new tmx::byte_stream(size);
+	memcpy(copy->data(), bytes, size);
+
+	rawIncomingMessage in;
+	in.groupId = groupId;
+	in.uniqId = uniqId;
+	in.timestamp = timestamp;
+	in.mgr = this;
+	in.message = copy;
+	in.type = type_RawBytes;
+	in.encoding = encoding ? strdup(encoding) : NULL;
+	in.rsuIp = (rsuIp && rsuIp[0] != '\0') ? strdup(rsuIp) : nullptr;
+	in.rsuPort = rsuPort;
+
+	PLOG(logDEBUG4) << "Assigning message bytes " << *copy << " from RSU " << (rsuIp ? rsuIp : "unknown") 
+					<< ":" << rsuPort << " as " << (int)groupId << ":" << (int)uniqId;
 	workerThreads.assign(groupId, uniqId, in);
 }
 

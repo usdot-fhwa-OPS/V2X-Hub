@@ -1,5 +1,20 @@
 services:
-
+  # db:
+  #   image: mysql:8.0
+  #   container_name: mysql
+  #   environment:
+  #     - MYSQL_DATABASE=IVP
+  #     - MYSQL_USER=IVP
+  #     - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
+  #     - MYSQL_RANDOM_ROOT_PASSWORD=yes
+  #   network_mode: host
+  #   secrets:
+  #     - mysql_password
+  #   volumes:
+  #     - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
+  #     - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+  #     - /etc/localtime:/etc/localtime:ro 
+  #     - /etc/timezone:/etc/timezone:ro 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
@@ -33,6 +48,9 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
+      - IS_TRU=TRUE                                                  # Enable TRU mode
+      - NATS_URL=nats://localhost:4222                              # NATS server URL
+      - RSU_CONFIG_PATH=rsuConfigs.json 
     secrets:
       - mysql_password
     volumes:
@@ -41,6 +59,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
       - ssl-certs-volume:/var/www/plugins/ssl:rw
+# secrets:
+#   mysql_password:
+#     environment: MYSQL_PASSWORD
 
 volumes:
   ssl-certs-volume:

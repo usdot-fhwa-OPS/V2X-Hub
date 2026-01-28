@@ -148,7 +148,7 @@ namespace RSUHealthMonitor
         return result;
     }
 
-    Json::Value RSUHealthMonitorWorker::getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, long timeout)
+    Json::Value RSUHealthMonitorWorker::getRSUStatus(const tmx::utils::rsu::RSU_SPEC &mibVersion, const string &_rsuIp, uint16_t &_snmpPort, const string &_securityUser, const std::string &_authProtocol, const std::string &_authPassPhrase, const std::string &_privProtocol, const std::string &_privPassPhrase,const string &_securityLevel, const string &_event, long timeout)
     {
         auto rsuStatusConfigTbl = GetRSUStatusConfig(mibVersion);
         if (rsuStatusConfigTbl.size() == 0)
@@ -172,6 +172,12 @@ namespace RSUHealthMonitor
             throw runtime_error("Invalid security level of " + _securityLevel + ". Support security levels are \"\",\"authNoPriv\", and \"authPriv\".");
         }
         Json::Value rsuStatuJson;
+        //Add RSU IP address to the JSON status
+        rsuStatuJson["rsuIpAddress"] = _rsuIp;
+        //Add RSU port to the JSON status
+        rsuStatuJson["rsuSnmpPort"] = _snmpPort;
+        //Add event to the JSON status
+        rsuStatuJson["event"] = _event;
         // Sending RSU SNMP call for each field as each field has its own OID.
         for (const auto &config : rsuStatusConfigTbl)
         {

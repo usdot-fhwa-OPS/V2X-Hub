@@ -293,6 +293,8 @@ public:
 		_encoding.bind(ivpMsg->encoding);
 		_timestamp.bind(ivpMsg->timestamp);
 		_flags.bind(ivpMsg->flags);
+		_rsuIp.bind(ivpMsg->rsuIp);
+		_rsuPort.bind(ivpMsg->rsuPort);
 
 		// Note that the DSRC metadata is optional, so only bind when set
 		if (ivpMsg->dsrcMetadata)
@@ -402,6 +404,8 @@ private:
 	rw_attribute(this->msg, ivp_str_header_attribute<encoding>, std::string, encoding, get_, "", set_, )
 	rw_attribute(this->msg, ivp_header_attribute<timestamp>, uint64_t, timestamp, get_, 0, set_, )
 	rw_attribute(this->msg, ivp_header_attribute<flags>, unsigned int, flags, get_, 0, set_, )
+	rw_attribute(this->msg, ivp_str_header_attribute<rsuIp>, std::string, rsuIp, get_, "", set_, )
+	rw_attribute(this->msg, ivp_header_attribute<rsuPort>, int, rsuPort, get_, 0, set_, )
 	rw_attribute(this->msg, ivp_header_attribute<dsrcChannel>, int, dsrcChannel, get_, -1, set_, )
 	rw_attribute(this->msg, ivp_header_attribute<dsrcPsid>, int, dsrcPsid, get_, -1, set_, )
 
@@ -484,6 +488,8 @@ private:
 		this->get_encoding();
 		this->get_timestamp();
 		this->get_flags();
+		this->get_rsuIp();
+		this->get_rsuPort();
 	}
 };
 

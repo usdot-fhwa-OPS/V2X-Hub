@@ -2,6 +2,8 @@
 #include <nats/nats.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <atomic>
 #include <mutex>
 #include "PluginLog.h"
@@ -11,6 +13,12 @@
 #include "TelematicUnit.h"
 #include <jsoncpp/json/json.h>
 #include <boost/algorithm/string.hpp>
+#include "health_monitor/TRUHealthStatusTracker.h"
+#include "health_monitor/RSUHealthStatusMessage.h"
+#include "health_monitor/HealthStatusMessageMapper.h"
+#include "data_selection/TRUTopicsMessage.h"
+#include "data_selection/DataSelectionTracker.h"
+#include <boost/algorithm/string/replace.hpp>
 
 namespace TelematicBridge
 {
@@ -20,6 +28,12 @@ namespace TelematicBridge
     private:
         // NATS subscription for RSU configuration status updates. Used to receive RSU configuration changes from the management service
         natsSubscription *_subRegisteredRSUStatus = nullptr;
+        
+        // NATS subscription for RSU available topics requests
+        natsSubscription *_subRsuAvailableTopics = nullptr;
+        
+        // NATS subscription for RSU selected topics updates
+        natsSubscription *_subRsuSelectedTopics = nullptr;
 
         //Maximum number of connection attempts to NATS server before failing
         static const int CONNECTION_MAX_ATTEMPTS = 30;
@@ -27,8 +41,25 @@ namespace TelematicBridge
         //Unit topic names
         // NATS subject suffix for RSU registration configuration. Full topic format: {unitId}.register.rsu.config ; Used to publish/subscribe RSU registration data
         static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config";
+        
+        // NATS subject suffix for plugin health status monitoring. Full topic format: unit.<unit_id>.monitor.plugin.health_status
+        static CONSTEXPR const char *HEALTH_STATUS_TOPIC_SUFFIX = "monitor.plugin.health_status";
+        
+        // NATS subject suffix for RSU health status monitoring. Full topic format: unit.<unit_id>.monitor.rsu.health_status
+        static CONSTEXPR const char *RSU_HEALTH_STATUS_TOPIC_SUFFIX = "monitor.rsu.health_status";
+        
+        // NATS subject suffix for RSU available topics. Full topic format: unit.<unit_id>.topic.rsu.available_topics
+        static CONSTEXPR const char *RSU_AVAILABLE_TOPICS = ".topic.rsu.available_topics";
+        
+        // NATS subject suffix for RSU selected topics. Full topic format: unit.<unit_id>.topic.rsu.selected_topics
+        static CONSTEXPR const char *RSU_SELECTED_TOPICS = ".topic.rsu.selected_topics";
 
         std::unique_ptr<truConfigWorker> _truConfigWorkerptr;
+        
+        // TRU health status tracker for monitoring TRU and RSU health
+        std::shared_ptr<TRUHealthStatusTracker> _truHealthStatusTracker;
+
+        std::shared_ptr<DataSelectionTracker> _dataSelectionTracker;
 
 
     public:
@@ -41,20 +72,82 @@ namespace TelematicBridge
          * @brief A function for telematic unit to connect to NATS server. Throw exception is connection failed.         *
          * @param string string NATS server URL
          */
-        void connect(const std::string &natsURL) override;
+        bool connect(const std::string &natsURL) override;
 
         /**
          * @brief A NATS requestor for telematic unit to send register request to NATS server.
          * If receives a response, it will update the isRegistered flag to indicate the unit is registered.
          * If no response after the specified time out (unit of second) period, it considered register failed.
          * */
-        void registerUnitRequestor() override;
+        bool registerRsuUnitRequestor();
 
         /**
          * @brief Set up RSU configuration replier to handle RSU config updates via NATS
          * Publishes initial RSU configuration and subscribes to receive config updates
          */
         void rsuConfigReplier();
+        
+        /**
+         * @brief A NATS replier to subscribe and receive RSU available topics request.
+         * Publishes list of available topics grouped by RSU after receiving/processing the request.
+         */
+        void rsuAvailableTopicsReplier();
+        
+        /**
+         * @brief A NATS replier to subscribe and receive RSU selected topics updates.
+         * Processes the selected topics and updates the internal state, then responds with confirmation.
+         */
+        void rsuSelectedTopicsReplier();
+        
+        /**
+         * @brief Publish message to RSU-specific NATS topic
+         * Publishes the message to topic format: unit.<unit_id>.stream.rsu.<rsu_ip>.<topic_name>
+         * @param rsuIp RSU IP address
+         * @param rsuPort RSU port number
+         * @param topic Topic name
+         * @param message JSON message to publish
+         */
+        void publishRsuDataStream(const std::string &rsuIp, int rsuPort, const std::string &topic, const Json::Value &message);
+
+        /**
+         * @brief Process incoming RSU data stream
+         * Updates available topics and publishes data if topic is selected
+         * @param rsuIp RSU IP address
+         * @param topic Topic name
+         * @param json JSON message payload
+         */
+        void processRsuDataStream(const std::string &rsuIp, const std::string &topic, const Json::Value &json);
+        /**
+         * @brief Construct published RSU data string with metadata and payload
+         * Creates a JSON message with metadata section containing unit info, RSU endpoint, topic, and timestamp,
+         * and a payload section containing the actual message data
+         * @param unitId Unit identifier
+         * @param rsuIp RSU IP address
+         * @param rsuPort RSU port number
+         * @param topicName Topic name
+         * @param payload Message payload
+         * @return JSON formatted string
+         */
+        std::string constructPublishedRsuDataStream(const std::string &unitId,                                                      const std::string &rsuIp, int rsuPort,
+                                                     const std::string &topicName, const Json::Value &payload) const;
+        
+        /**
+         * @brief Construct JSON response for RSU available topics request
+         * @return std::string JSON formatted string with structure:
+         *         {
+         *           "unitId": "unit_id",
+         *           "rsuTopics": [
+         *             {
+         *               "topics": [{"name": "bsm", "selected": false}, ...],
+         *               "rsu": {"ip": "192.168.1.11", "port": 502}
+         *             }
+         *           ],
+         *           "timestamp": "1765343631000"
+         *         }
+         */
+        std::string constructRsuAvailableTopicsReplyString();
+
+        std::string constructRsuSelectedTopicsReplyString(const std::string &msgStr);
 
         /**
          * @brief Update RSU status from incoming configuration message
@@ -77,6 +170,12 @@ namespace TelematicBridge
          * @return std::string JSON formatted RSU registration data
         */
         std::string constructRSURegistrationDataString();
+        /**
+         * @brief Construct a JSON object containing RSU registration data
+         * Includes unit configuration, registered RSU list, and timestamp
+         * @return Json 
+         **/
+        Json::Value constructRSURegistrationJson();
 
         /**
          * @brief Construct a JSON response string for RSU configuration registration status
@@ -104,6 +203,26 @@ namespace TelematicBridge
          * @param object Pointer to TelematicRsuUnit instance
          */
         static void onRSUConfigStatusCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
+        
+        /**
+         * @brief NATS callback handler for RSU available topics requests
+         * Processes incoming requests for RSU available topics and sends reply with topics grouped by RSU
+         * @param nc NATS connection pointer
+         * @param sub NATS subscription pointer
+         * @param msg NATS message containing the request
+         * @param object Pointer to TelematicRsuUnit instance
+         */
+        static void onRsuAvailableTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
+        
+        /**
+         * @brief NATS callback handler for RSU selected topics updates
+         * Processes incoming selected topics updates and sends confirmation reply
+         * @param nc NATS connection pointer
+         * @param sub NATS subscription pointer
+         * @param msg NATS message containing the selected topics
+         * @param object Pointer to TelematicRsuUnit instance
+         */
+        static void onRsuSelectedTopicsCallback(natsConnection *nc, natsSubscription *sub, natsMsg *msg, void *object);
 
         /**
          * @brief Process incoming config update and generate response
@@ -117,6 +236,48 @@ namespace TelematicBridge
          * @return std::string for rsu configuration topic.
          */
         std::string getRsuConfigTopic();
+
+        /**
+         * @brief Update an RSU health status in the TRU tracker
+         * @param status The RSU health status message
+         */
+        void updateRsuHealthStatus(const RSUHealthStatusMessage &status);
+
+        /**
+         * @brief Update unit health status in TRU tracker
+         * @param status The unit health status message
+         */
+        void updateUnitHealthStatus(const std::string &status);
+
+        /**
+         * @brief Helper method to publish health status data to NATS
+         * @param topicSuffix The suffix to append to "unit.<unit_id>."
+         */
+        void publishHealthStatusToNATS(const std::string &topicSuffix);
+        
+        /**
+         * @brief Get plugin heartbeat interval from configuration
+         * @return int Heartbeat interval in seconds
+         */
+        int getPluginHeartBeatInterval() const
+        {
+            return _truConfigWorkerptr->getPluginHeartBeatInterval();
+        }
+        /**
+         * @brief Publish RSU health status to NATS
+         * Publishes the current TRU health status snapshot to the RSU health status topic
+         */
+        void publishRSUHealthStatus(){
+            publishHealthStatusToNATS(RSU_HEALTH_STATUS_TOPIC_SUFFIX);
+        }
+
+        /**
+         * @brief Publish plugin health status to NATS
+         * Publishes the current TRU health status snapshot to the plugin health status topic
+         */
+        void publishPluginHealthStatus(){
+            publishHealthStatusToNATS(HEALTH_STATUS_TOPIC_SUFFIX);
+        }
 
         /**
          * @brief Destructor for TelematicRsuUnit
