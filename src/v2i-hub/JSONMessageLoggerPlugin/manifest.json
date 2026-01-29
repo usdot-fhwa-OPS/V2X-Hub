@@ -36,7 +36,7 @@
         {
             "key": "MaxFiles",
             "default": "5",
-            "description": "Maximum number of log files to keep before deleting the oldest. This should keep roughly 5 days of V2X data or 3.5 GBs"
+            "description": "Maximum number of log files to keep before deleting the oldest. This does not include the active log file so 5 here will be 5 old log files plus the currently active log file until file size roll over limit is hit. This should keep roughly 5 days of V2X data or 3.5 GBs"
         },
         {
             "key": "LogDir",
