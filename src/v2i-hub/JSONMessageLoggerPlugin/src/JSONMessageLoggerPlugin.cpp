@@ -32,29 +32,35 @@ namespace JSONMessageLoggerPlugin {
 
     void JSONMessageLoggerPlugin::initLogging(unsigned int maxFileSize, unsigned int maxFiles, const std::string &logDir)
     {
+        PLOG(tmx::utils::logDEBUG) << "Initializing JSON Message Logger with MaxFileSize: " 
+            << maxFileSize << " MB, MaxFiles: " << maxFiles << ", LogDir: " << logDir;
          // Common attributes (timestamp, etc.)
         boost::log::add_common_attributes();
 
         // RX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir + "j2735Rx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = logDir+"j2735Rx_%Y-%m-%d_%H-%M-%S.%N.log",
+            boost::log::keywords::target = logDir,
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
             boost::log::keywords::filter = a_channel == "rx", // Filter for "rx" channel messages
-            boost::log::keywords::max_files = maxFiles // Set maximum number of log files
+            boost::log::keywords::max_files = maxFiles, // Set maximum number of log files
+            boost::log::keywords::auto_flush = true
         );
 
         // TX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir+"j2735Tx_%Y-%m-%d.log",
+            boost::log::keywords::file_name = logDir+"j2735Tx_%Y-%m-%d_%H-%M-%S.%N.log",
+            boost::log::keywords::target = logDir,
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
             boost::log::keywords::format = boost::log::expressions::stream << boost::log::expressions::smessage,
             boost::log::keywords::filter = a_channel == "tx", // Filter for "tx" channel messages
-            boost::log::keywords::max_files = maxFiles // Set maximum number of log files
+            boost::log::keywords::max_files = maxFiles, // Set maximum number of log files
+            boost::log::keywords::auto_flush = true
 
         );
         rxLogger = boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>(boost::log::keywords::channel = "rx");
