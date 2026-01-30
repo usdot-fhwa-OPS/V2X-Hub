@@ -30,17 +30,17 @@
 		},
         {
             "key": "MaxFileSize",
-            "default": "10",
-            "description": "Maximum size of the log file in bytes before it is rotated in MB"
+            "default": "700",
+            "description": "Maximum size of the log file in bytes before it is rotated in MB. 1 day of SPAT, MAP, and TIM data is approximately 500 MB."
         },
         {
             "key": "MaxFiles",
             "default": "5",
-            "description": "Maximum number of log files to keep before deleting the oldest"
+            "description": "Maximum number of log files to keep before deleting the oldest. This does not include the active log file so 5 here will be 5 old log files plus the currently active log file until file size roll over limit is hit. This should keep roughly 5 days of V2X data or 3.5 GBs"
         },
         {
             "key": "LogDir",
-            "default": "/var/log/tmx/",
+            "default": "/var/log/tmx/json/",
             "description": "Directory where log files will be stored"
         }
     ]
