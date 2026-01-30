@@ -1,4 +1,3 @@
-
 #!/bin/bash
 set -e
 # Check for ssl/cert-key.pem and ssl/cert.pem
@@ -15,19 +14,50 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     echo "Generating new certificates..."
     mkdir -p ssl
     cd ssl || exit
-    # Check for mkcert command
+    
+    # Detect system architecture
+    ARCH=$(uname -m)
+    case ${ARCH} in
+        x86_64)
+            MKCERT_ARCH="amd64"
+            ;;
+        aarch64)
+            MKCERT_ARCH="arm64"
+            ;;
+        *)
+            echo "Unsupported architecture: ${ARCH}"
+            exit 1
+            ;;
+    esac
+    echo "Detected architecture: ${ARCH} (mkcert for linux/${MKCERT_ARCH})"
+    
+    # Check if mkcert exists
+    MKCERT_NEEDS_INSTALL=false
     if command -v mkcert &>/dev/null; then
-        echo "mkcert command found. Generating SSL certificates..."
+        echo "mkcert command found. Verifying functionality..."
+        if ! mkcert -version &>/dev/null; then
+            echo "mkcert exists but cannot execute (wrong architecture?). Reinstalling..."
+            sudo rm -f /usr/local/bin/mkcert
+            MKCERT_NEEDS_INSTALL=true
+        else
+            echo "mkcert is working correctly."
+        fi
     else
         echo "mkcert command not found. Installing mkcert..."
-        if ! command -v curl &>/dev/null;  then
+        MKCERT_NEEDS_INSTALL=true
+    fi
+    
+    # Install mkcert if needed
+    if [ "$MKCERT_NEEDS_INSTALL" = true ]; then
+        if ! command -v curl &>/dev/null; then
             sudo apt update
             sudo apt install -y curl
         fi
-        sudo apt install libnss3-tools
-        sudo curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
-        sudo chmod +x mkcert-v*-linux-amd64
-        sudo cp mkcert-v*-linux-amd64 /usr/local/bin/mkcert
+        sudo apt install -y libnss3-tools
+        sudo curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/${MKCERT_ARCH}"
+        sudo chmod +x mkcert-v*-linux-${MKCERT_ARCH}
+        sudo cp mkcert-v*-linux-${MKCERT_ARCH} /usr/local/bin/mkcert
+        echo "mkcert installed successfully for ${MKCERT_ARCH}."
     fi
     mkcert -install
     mkcert localhost 127.0.0.1 ::1
