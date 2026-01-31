@@ -5,7 +5,6 @@ on:
     branches:
       - develop
       - master
-      - test/telematics-message-log
       - 'release/**'
       - 'feature/**'
     tags:
