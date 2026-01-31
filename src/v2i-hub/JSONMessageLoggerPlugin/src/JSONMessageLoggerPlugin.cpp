@@ -94,7 +94,7 @@ namespace JSONMessageLoggerPlugin {
                     PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
 
                     _bsmCount++;
-					PLOG(logWARNING) << "Received BSM Message count: "<< _bsmCount;
+					PLOG(tmx::utils::logWARNING) << "Received BSM Message count: "<< _bsmCount;
 
                     logRouteableMessage(msg, rxLogger);
                 }
