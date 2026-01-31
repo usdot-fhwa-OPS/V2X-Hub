@@ -75,6 +75,7 @@ namespace JSONMessageLoggerPlugin {
         // Tmx Message Manager OnConfigChanged will call Start() if TmxMessageManager related configs like NUMBER_WORKER_THREADS_CFG are changed
         tmx::utils::TmxMessageManager::OnConfigChanged(key, value);
         // Reset BSM Count on config update
+        PLOG(tmx::utils::logWARNING) << "Message count before resetting JsonMessageLogger: "<< _bsmCount;
         _bsmCount = 0;
 
 		UpdateConfigSettings();
@@ -94,7 +95,7 @@ namespace JSONMessageLoggerPlugin {
                     PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
 
                     _bsmCount++;
-					PLOG(tmx::utils::logWARNING) << "Received BSM Message count: "<< _bsmCount;
+					PLOG(tmx::utils::logINFO) << "Received BSM Message count JsonMessageLogger: "<< _bsmCount;
 
                     logRouteableMessage(msg, rxLogger);
                 }

@@ -258,7 +258,9 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 										ntohl(*((uint32_t*)&(bytes.data()[24]))),
 										ntohl(*((uint32_t*)&(bytes.data()[28]))),
 										decodedBsm);
-
+								//Print decoded BSM
+								_bsmCount++;
+								PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
 
 								if (simLoc) {
 									LocationMessage loc(::to_string(decodedBsm.get_TemporaryId()),
@@ -340,8 +342,6 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	if (fwd)
 	{
 		PLOG(logDEBUG) << "Routing " << name << " message.";
-		_bsmCount++;
-		PLOG(logWARNING) << "Received BSM Message count: "<< _bsmCount;
 
 		if (routeDsrc)
 		{
@@ -387,6 +387,7 @@ void MessageReceiverPlugin::OnConfigChanged(const char *key, const char *value)
 	if (_plugin->state == IvpPluginState_registered)
 		UpdateConfigSettings();
 	// Reset bsm Count on config update
+	PLOG(tmx::utils::logWARNING) << "Message count before resetting MessageReceiver: "<< _bsmCount;
 	_bsmCount = 0;
 }
 
