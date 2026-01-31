@@ -198,6 +198,10 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		{
 			try
 			{
+				//Print decoded BSM
+				_bsmCount++;
+				PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
+
 				// Check for an abbreviated message
 				byte_stream bytesFull = msg.get_payload_bytes();
 				byte_stream bytes;
@@ -258,9 +262,6 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 										ntohl(*((uint32_t*)&(bytes.data()[24]))),
 										ntohl(*((uint32_t*)&(bytes.data()[28]))),
 										decodedBsm);
-								//Print decoded BSM
-								_bsmCount++;
-								PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
 
 								if (simLoc) {
 									LocationMessage loc(::to_string(decodedBsm.get_TemporaryId()),
