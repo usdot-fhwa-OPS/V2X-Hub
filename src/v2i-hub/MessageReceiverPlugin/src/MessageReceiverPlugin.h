@@ -40,7 +40,7 @@
 
 #define UDP "UDP"
 
-//using namespace Botan; 
+//using namespace Botan;
 namespace MessageReceiver {
 
 class MessageReceiverPlugin: public tmx::utils::TmxMessageManager {
@@ -70,18 +70,19 @@ private:
 	std::atomic<bool> simSRM { true };
 	std::atomic<bool> simLoc { true };
 	unsigned int verState;
-	std::string url; 
+	std::string url;
 	std::string baseurl;
 	std::vector<string> messageid;
-	std::string messageidstr; 
+	std::string messageidstr;
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
 	uint _skippedSignVerifyErrorResponse;
 	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
 
+	unsigned int _bsmCount = 0;
 
-	
+
 
 };
 

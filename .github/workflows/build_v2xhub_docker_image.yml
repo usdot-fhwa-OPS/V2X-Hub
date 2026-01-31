@@ -5,6 +5,7 @@ on:
     branches:
       - develop
       - master
+      - test/telematics-message-log
       - 'release/**'
       - 'feature/**'
     tags:
@@ -98,7 +99,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
+
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

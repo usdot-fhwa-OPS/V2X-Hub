@@ -56,6 +56,8 @@ namespace JSONMessageLoggerPlugin {
             unsigned long _skippedMessages = 0;
             const char* _keySkippedMessages = "Skipped Messages";
 
+            unsigned int _bsmCount = 0;
+
 
     };
 

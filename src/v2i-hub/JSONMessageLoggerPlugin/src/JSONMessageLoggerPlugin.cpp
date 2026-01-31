@@ -74,6 +74,9 @@ namespace JSONMessageLoggerPlugin {
     {
         // Tmx Message Manager OnConfigChanged will call Start() if TmxMessageManager related configs like NUMBER_WORKER_THREADS_CFG are changed
         tmx::utils::TmxMessageManager::OnConfigChanged(key, value);
+        // Reset BSM Count on config update
+        _bsmCount = 0;
+
 		UpdateConfigSettings();
     }
     void JSONMessageLoggerPlugin::OnMessageReceived(tmx::routeable_message &msg)
@@ -89,6 +92,10 @@ namespace JSONMessageLoggerPlugin {
                 }
                 else {
                     PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
+
+                    _bsmCount++;
+					PLOG(logWARNING) << "Received BSM Message count: "<< _bsmCount;
+
                     logRouteableMessage(msg, rxLogger);
                 }
             }
@@ -102,7 +109,7 @@ namespace JSONMessageLoggerPlugin {
                 _skippedMessages++;
                 SetStatus<unsigned long>(_keySkippedMessages, _skippedMessages);
             }
-        }  
+        }
     }
 
     void JSONMessageLoggerPlugin::UpdateConfigSettings()
@@ -115,7 +122,7 @@ namespace JSONMessageLoggerPlugin {
         GetConfigValue<std::string>("LogDir", logDir, &_configMutex);
         initLogging(maxFileSize, maxFiles, logDir);
     }
-    
+
 } // namespace JSONMessageLoggerPlugin
 // The main entry point for this application.
 int main(int argc, char *argv[])
