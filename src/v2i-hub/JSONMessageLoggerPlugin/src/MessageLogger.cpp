@@ -60,7 +60,7 @@ namespace JSONMessageLoggerPlugin{
             throw tmx::TmxException("Conversion of msg " + msg.to_string() + " to JSON resulted in empty string failed!");
         }
 
-        if (isBSM(jsonPayloadStr)){
+        if (isBSM(msg.to_string())){
             return true;
         }
         return false;
