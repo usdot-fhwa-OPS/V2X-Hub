@@ -50,7 +50,7 @@ namespace JSONMessageLoggerPlugin{
             && root["header"].get("subtype", "").asString() == "BSM";
     }
 
-    void logRouteableMessage2( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
+    bool logRouteableMessage2( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger ) {
         std::string jsonPayloadStr;
         jsonPayloadStr = routeableMessageToJsonString(msg);
         if ( !jsonPayloadStr.empty() ) {
