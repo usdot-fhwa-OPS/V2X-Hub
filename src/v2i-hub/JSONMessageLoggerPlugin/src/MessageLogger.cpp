@@ -64,4 +64,5 @@ namespace JSONMessageLoggerPlugin{
             return true;
         }
         return false;
+    }
 }
