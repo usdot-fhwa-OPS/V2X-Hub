@@ -315,15 +315,16 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	}
 
 
-	//Print decoded BSM
-	_bsmCount++;
-	PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
 	// Make sure the timestamp matches the incoming source message
 
 	sendMsg->set_timestamp(msg.get_timestamp());
 
 	// Keep a count of each type of message received
 	string name(sendMsg->get_subtype());
+	if(name == "BSM"){
+		_bsmCount++;
+		PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
+	}
 	if (!IsJ2735Message(*sendMsg))
 	{
 		// If not a J2735 message, save the type also
