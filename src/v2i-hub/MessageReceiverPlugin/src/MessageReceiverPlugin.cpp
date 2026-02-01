@@ -198,9 +198,6 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		{
 			try
 			{
-				//Print decoded BSM
-				_bsmCount++;
-				PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
 
 				// Check for an abbreviated message
 				byte_stream bytesFull = msg.get_payload_bytes();
@@ -318,6 +315,9 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 	}
 
 
+	//Print decoded BSM
+	_bsmCount++;
+	PLOG(logINFO) << "Received BSM Message count MessageReceiver: "<< _bsmCount;
 	// Make sure the timestamp matches the incoming source message
 
 	sendMsg->set_timestamp(msg.get_timestamp());
