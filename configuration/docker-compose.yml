@@ -24,6 +24,17 @@ services:
       #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
       #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
       - mysql-datavolume:/var/lib/mysql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h 127.0.0.1 -u\"$MYSQL_USER\" -p\"$(cat \"$MYSQL_PASSWORD_FILE\")\" || exit 1"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
 
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
@@ -39,6 +50,13 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/etc/apache2/ssl:ro
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -E -q 'apache2|httpd' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
 
 
   v2xhub:
@@ -82,6 +100,13 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/var/www/plugins/ssl:rw
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q tmx || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
