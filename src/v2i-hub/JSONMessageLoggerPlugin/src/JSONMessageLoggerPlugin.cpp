@@ -94,10 +94,11 @@ namespace JSONMessageLoggerPlugin {
                 else {
                     PLOG(tmx::utils::logDEBUG1) << "Logging RX J2735 Message";
 
-                    _bsmCount++;
-					PLOG(tmx::utils::logINFO) << "Received BSM Message count JsonMessageLogger: "<< _bsmCount;
-
-                    logRouteableMessage(msg, rxLogger);
+                    // logRouteableMessage(msg, rxLogger);
+                    if (logRouteableMessage2(msg, rxLogger)){
+                        _bsmCount++;
+					    PLOG(tmx::utils::logINFO) << "Received BSM Message count JsonMessageLogger: "<< _bsmCount;
+                    }
                 }
             }
             catch (const boost::exception &e) {

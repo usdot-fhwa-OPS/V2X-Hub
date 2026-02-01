@@ -10,9 +10,12 @@
 #include <boost/log/sources/severity_channel_logger.hpp> // For severity channel logger
 #include <string>
 #include <PluginLog.h>
+#include "jsoncpp/json/json.h"
 
 
 namespace JSONMessageLoggerPlugin {
     void logRouteableMessage( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger );
+    bool logRouteableMessage2( tmx::routeable_message & msg, boost::log::sources::severity_channel_logger< boost::log::trivial::severity_level , std::string>& logger );
+    bool isBSM(const std::string& jsonText);
     std::string routeableMessageToJsonString(tmx::routeable_message& msg);
 }
