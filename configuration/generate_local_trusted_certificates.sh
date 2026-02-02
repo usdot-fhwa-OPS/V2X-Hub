@@ -36,7 +36,7 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
     if command -v mkcert &>/dev/null; then
         echo "mkcert command found. Verifying functionality..."
         if ! mkcert -version &>/dev/null; then
-            echo "mkcert exists but cannot execute (wrong architecture?). Reinstalling..."
+            echo "mkcert exists but cannot execute. Reinstalling..."
             sudo rm -f /usr/local/bin/mkcert
             MKCERT_NEEDS_INSTALL=true
         else
@@ -57,6 +57,8 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
         sudo curl -JLO "https://dl.filippo.io/mkcert/latest?for=linux/${MKCERT_ARCH}"
         sudo chmod +x mkcert-v*-linux-${MKCERT_ARCH}
         sudo cp mkcert-v*-linux-${MKCERT_ARCH} /usr/local/bin/mkcert
+        # Delete download after install
+        sudo rm mkcert-v*-linux-${MKCERT_ARCH}
         echo "mkcert installed successfully for ${MKCERT_ARCH}."
     fi
     mkcert -install
