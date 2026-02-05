@@ -106,7 +106,8 @@ elif [ "$BUILD_TYPE" = "debug" ]; then
     # -g : Includes debugging symbols in output binary for use with debugger.
     # -Wall : Enables all the warnings about bad C++ practices (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
     # -Wextra : Enables extra warnings flags that are not enabled by -Wall (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra "
+    # -DCMAKE_EXPORT_COMPILE_COMMANDS=ON : Generates compile_commands.json file for use with tools like sonar cloud, clang-tidy and language servers
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "
 elif [ "$BUILD_TYPE" = "coverage" ]; then
     # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
     # deprecation warnings
@@ -121,41 +122,40 @@ fi
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
 
-pushd tmx
 cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" .
 cmake --build build -j "${numCPU}"
 cmake --install build
-popd
 
-pushd v2i-hub
 
-# Dynamically list plugin directories (those with CMakeLists.txt, excluding main dir)
-plugin_dirs=()
-for f in */CMakeLists.txt; do
-  dir=$(dirname "$f")
-  if [ "$dir" != "." ] && [ "$dir" != "build" ]; then
-    plugin_dirs+=("$dir")
-  fi
-done
+# pushd v2i-hub
 
-# Process skip plugins input
-cmake_flags=""
-if [[ -n "$SKIP_PLUGINS" ]]; then
-  IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
-  for plugin in "${skipped_plugins[@]}"; do
-    if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
-      cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
-    else
-      echo "Warning: Invalid plugin to skip '$plugin' - ignoring."
-    fi
-  done
-  echo "Skipping specified plugins: ${skipped_plugins[*]}"
-else
-  echo "No plugins skipped (building all)"
-fi
+# # Dynamically list plugin directories (those with CMakeLists.txt, excluding main dir)
+# plugin_dirs=()
+# for f in */CMakeLists.txt; do
+#   dir=$(dirname "$f")
+#   if [ "$dir" != "." ] && [ "$dir" != "build" ]; then
+#     plugin_dirs+=("$dir")
+#   fi
+# done
 
-# Run CMake with the new flags
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" ${cmake_flags} .
-cmake --build build -j "${numCPU}"
-cmake --install build
-popd
+# # Process skip plugins input
+# cmake_flags=""
+# if [[ -n "$SKIP_PLUGINS" ]]; then
+#   IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
+#   for plugin in "${skipped_plugins[@]}"; do
+#     if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
+#       cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
+#     else
+#       echo "Warning: Invalid plugin to skip '$plugin' - ignoring."
+#     fi
+#   done
+#   echo "Skipping specified plugins: ${skipped_plugins[*]}"
+# else
+#   echo "No plugins skipped (building all)"
+# fi
+
+# # Run CMake with the new flags
+# cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DqserverPedestrian_DIR=/usr/local/share/qserverPedestrian/cmake -Dv2xhubWebAPI_DIR=/usr/local/share/v2xhubWebAPI/cmake/ -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" ${cmake_flags}  .
+# cmake --build build -j "${numCPU}"
+# cmake --install build
+# popd
