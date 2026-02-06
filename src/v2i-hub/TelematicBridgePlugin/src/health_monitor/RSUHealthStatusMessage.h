@@ -56,6 +56,23 @@ namespace TelematicBridge
 
         static std::string statusToLabel (const std::string &status)
         {
+            /**
+             * @brief TODO: Need to provide status for RSU mode with different MIB versions
+             * MIB Versions:
+             *  RSU41:
+                    rsuMode OBJECT-TYPE
+                        SYNTAX INTEGER {
+                        standby (2),
+                        operate (4),
+                        off (16)
+                NTCIP1218:
+                    rsuMode OBJECT-TYPE
+                        SYNTAX INTEGER {
+                        other (1),
+                        standby (2),
+                        operate (3),
+                        fault (4)
+             */
             if (status == "1")
                 return "other";
             else if (status == "2")
