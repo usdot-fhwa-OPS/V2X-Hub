@@ -44,19 +44,22 @@ namespace TelematicBridge
             _rsuAvailableTopicsMap[rsuIp].insert(topic);     
             _latestAvailableTopicsMessage.setCurrentTimestamp();
             _latestAvailableTopicsMessage.setUnitId(unitId);
-            RSUTopicsMessage rsuTopicsMsg;
-            rsuTopicsMsg.setRsuEndpoint({rsuIp, rsuPort});
-            std::vector<TopicMessage> topics;
-            auto it = _rsuAvailableTopicsMap.find(rsuIp);
-            if (it != _rsuAvailableTopicsMap.end())
+            
+            // Rebuild the entire message from the map to avoid duplicates
+            std::vector<RSUTopicsMessage> allRsuTopics;
+            for (const auto& [ip, topicSet] : _rsuAvailableTopicsMap)
             {
-                for (const auto& topicName : it->second)
+                RSUTopicsMessage rsuTopicsMsg;
+                rsuTopicsMsg.setRsuEndpoint({ip, rsuPort});
+                std::vector<TopicMessage> topics;
+                for (const auto& topicName : topicSet)
                 {
                     topics.emplace_back(topicName, false);
                 }
+                rsuTopicsMsg.setTopics(topics);
+                allRsuTopics.push_back(rsuTopicsMsg);
             }
-            rsuTopicsMsg.setTopics(topics);
-            _latestAvailableTopicsMessage.addRsuTopic(rsuTopicsMsg);
+            _latestAvailableTopicsMessage.setRsuTopics(allRsuTopics);
         }
 
         std::string latestAvailableTopicsMessageToJsonString()

@@ -62,8 +62,10 @@ namespace TelematicBridge
                 return "standby";
             else if (status == "3")
                 return "operate";
+            else if (status == "4")
+                return "fault";
             else
-                return "unknown";
+                return "other"; // Default to "other" for unknown status values
         }
 
         /**

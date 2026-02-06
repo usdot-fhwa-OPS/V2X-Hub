@@ -59,7 +59,7 @@ namespace TelematicBridge
         {
             attemptsCount++;
             natsMsg *reply = nullptr;
-            auto natsTopic = "unit." + _truConfigWorkerptr->getUnitId() + REGISTERD_RSU_CONFIG;
+            auto natsTopic = "unit." + _truConfigWorkerptr->getUnitId() + REGISTERD_RSU_AUTO_CONFIG;
             auto payload = constructRSURegistrationDataString();
 
             auto s = natsConnection_RequestString(&reply, _conn, natsTopic.c_str(), payload.c_str(), TIME_OUT);
@@ -73,7 +73,7 @@ namespace TelematicBridge
             }
             else
             {
-                PLOG(logERROR) << "RSU registration request failed (attempt " << attemptsCount << "/" << REGISTRATION_MAX_ATTEMPTS << "): " << natsStatus_GetText(s);
+                PLOG(logERROR) << "RSU registration request to topic " << natsTopic << " failed (attempt " << attemptsCount << "/" << REGISTRATION_MAX_ATTEMPTS << "): " << natsStatus_GetText(s);
                 if (attemptsCount >= REGISTRATION_MAX_ATTEMPTS)
                 {
                     throw TelematicBridgeException(natsStatus_GetText(s));
