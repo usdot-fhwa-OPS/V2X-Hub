@@ -54,37 +54,6 @@ namespace TelematicBridge
             rsuId = generateRsuId(ip, port);
         }
 
-        static std::string statusToLabel (const std::string &status)
-        {
-            /**
-             * @brief TODO: Need to provide status for RSU mode with different MIB versions
-             * MIB Versions:
-             *  RSU41:
-                    rsuMode OBJECT-TYPE
-                        SYNTAX INTEGER {
-                        standby (2),
-                        operate (4),
-                        off (16)
-                NTCIP1218:
-                    rsuMode OBJECT-TYPE
-                        SYNTAX INTEGER {
-                        other (1),
-                        standby (2),
-                        operate (3),
-                        fault (4)
-             */
-            if (status == "1")
-                return "other";
-            else if (status == "2")
-                return "standby";
-            else if (status == "3")
-                return "operate";
-            else if (status == "4")
-                return "fault";
-            else
-                return "other"; // Default to "other" for unknown status values
-        }
-
         /**
          * @brief Convert to JSON representation
          * @return JSON::Value object representing the message
@@ -99,7 +68,7 @@ namespace TelematicBridge
             rsuObject[TelematicJsonKeys::RSU_PORT] = port;
                         
             json[TelematicJsonKeys::RSU] = rsuObject;
-            json[TelematicJsonKeys::STATUS] = statusToLabel(status);
+            json[TelematicJsonKeys::STATUS] = status;
             json[TelematicJsonKeys::EVENT] = event;
             return json;
         }
@@ -171,7 +140,7 @@ namespace TelematicBridge
         }
 
         std::string getStatus() const { 
-            return statusToLabel(status); 
+            return status;
         }
 
         void setIp(const std::string &newIp) {

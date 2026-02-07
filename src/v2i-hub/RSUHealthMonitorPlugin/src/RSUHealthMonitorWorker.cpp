@@ -196,7 +196,11 @@ namespace RSUHealthMonitor
                     auto json = populateJson(config.field, responseVal);
                     for(const auto &key: json.getMemberNames())
                     {
-                        rsuStatuJson[key] = json[key];
+                        if(boost::iequals(key, "rsuMode")){
+                            rsuStatuJson[key] = (mibVersion  == tmx::utils::rsu::RSU_SPEC::NTCIP_1218 ? NTCIP1218RsuModeToString(json[key].asString()) : RSU41RsuModeToString(json[key].asString()));
+                        }else{
+                            rsuStatuJson[key] = json[key];
+                        }                        
                     }
                 }
             }

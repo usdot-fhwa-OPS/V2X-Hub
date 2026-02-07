@@ -107,4 +107,32 @@ namespace RSUHealthMonitor
         EXPECT_EQ(1, _rsuWorker->getJsonKeys(json).size());
     }
 
+    TEST_F(test_RSUHealthMonitorWorker, getJsonKeys)
+    {
+        Json::Value json;
+        json["rsuID"] = "RSU4.1";
+        json["rsuMode"] = 4;
+        vector<string> keys = _rsuWorker->getJsonKeys(json);
+        EXPECT_EQ(2, keys.size());
+        EXPECT_TRUE(find(keys.begin(), keys.end(), "rsuID") != keys.end());
+        EXPECT_TRUE(find(keys.begin(), keys.end(), "rsuMode") != keys.end());
+    }
+
+    TEST_F(test_RSUHealthMonitorWorker, NTCIP1218RsuModeToString)
+    {
+        EXPECT_EQ("other", _rsuWorker->NTCIP1218RsuModeToString("1"));
+        EXPECT_EQ("standby", _rsuWorker->NTCIP1218RsuModeToString("2"));
+        EXPECT_EQ("operate", _rsuWorker->NTCIP1218RsuModeToString("3"));
+        EXPECT_EQ("fault", _rsuWorker->NTCIP1218RsuModeToString("4"));
+        EXPECT_EQ("other", _rsuWorker->NTCIP1218RsuModeToString("5"));
+    }
+
+    TEST_F(test_RSUHealthMonitorWorker, RSU41RsuModeToString)
+    {
+        EXPECT_EQ("standby", _rsuWorker->RSU41RsuModeToString("2"));
+        EXPECT_EQ("operate", _rsuWorker->RSU41RsuModeToString("4"));
+        EXPECT_EQ("off", _rsuWorker->RSU41RsuModeToString("16"));
+        EXPECT_EQ("off", _rsuWorker->RSU41RsuModeToString("5"));
+    }
+
 }
