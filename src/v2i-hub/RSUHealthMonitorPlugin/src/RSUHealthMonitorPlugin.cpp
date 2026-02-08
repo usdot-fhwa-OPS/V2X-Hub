@@ -94,6 +94,16 @@ namespace RSUHealthMonitor
         }
     }
 
+    void RSUHealthMonitorPlugin::OnStateChange(IvpPluginState state)
+    {
+        PluginClient::OnStateChange(state);
+        if (state == IvpPluginState_registered)
+        {
+            // When the plugin is registered, update the config settings.
+            UpdateConfigSettings();
+        }
+    }
+
     void RSUHealthMonitorPlugin::OnConfigChanged(const char *key, const char *value)
     {
         PluginClient::OnConfigChanged(key, value);
