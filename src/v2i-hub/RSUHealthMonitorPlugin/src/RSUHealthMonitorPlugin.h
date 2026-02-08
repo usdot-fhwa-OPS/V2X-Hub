@@ -53,7 +53,6 @@ namespace RSUHealthMonitor
         explicit RSUHealthMonitorPlugin(const std::string &name);
         void UpdateConfigSettings();
         void OnConfigChanged(const char *key, const char *value) override;
-        void OnStateChange(IvpPluginState state) override;
         void monitorRSUs();
     };
 

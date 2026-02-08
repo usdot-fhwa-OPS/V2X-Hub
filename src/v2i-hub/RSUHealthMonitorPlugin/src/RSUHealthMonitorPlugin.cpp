@@ -16,6 +16,7 @@ namespace RSUHealthMonitor
         AddMessageFilter<tmx::messages::RSURegistrationConfigMessage>(this, &RSUHealthMonitorPlugin::OnRSURegistrationConfigMessage);
         
         SubscribeToMessages();
+        UpdateConfigSettings();
     }
 
     void RSUHealthMonitorPlugin::monitorRSUs()
@@ -91,16 +92,6 @@ namespace RSUHealthMonitor
         catch (const tmx::TmxException &ex)
         {
             PLOG(logERROR) << ex.what();
-        }
-    }
-
-    void RSUHealthMonitorPlugin::OnStateChange(IvpPluginState state)
-    {
-        PluginClient::OnStateChange(state);
-        if (state == IvpPluginState_registered)
-        {
-            // When the plugin is registered, update the config settings.
-            UpdateConfigSettings();
         }
     }
 
