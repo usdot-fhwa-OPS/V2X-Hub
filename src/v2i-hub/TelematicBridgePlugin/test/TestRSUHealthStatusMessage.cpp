@@ -12,7 +12,7 @@ protected:
 
 TEST(TestRSUHealthStatusMessage, Constructor)
 {
-    RSUHealthStatusMessage msg("192.168.1.1", 161, "1", "startup");
+    RSUHealthStatusMessage msg("192.168.1.1", 161, "other", "startup");
     
     EXPECT_EQ("192.168.1.1", msg.getIp());
     EXPECT_EQ(161, msg.getPort());
@@ -21,7 +21,7 @@ TEST(TestRSUHealthStatusMessage, Constructor)
 
 TEST(TestRSUHealthStatusMessage, ToString)
 {
-    RSUHealthStatusMessage msg("192.168.1.1", 161, "2", "startup");
+    RSUHealthStatusMessage msg("192.168.1.1", 161, "standby", "startup");
     
     std::string jsonStr = msg.toString();
     
@@ -41,9 +41,9 @@ TEST(TestRSUHealthStatusMessage, ToString)
 
 TEST(TestRSUHealthStatusMessage, EqualityOperator)
 {
-    RSUHealthStatusMessage msg1("192.168.1.1", 161, "2", "startup");
-    RSUHealthStatusMessage msg2("192.168.1.1", 161, "2", "startup");
-    RSUHealthStatusMessage msg3("192.168.1.2", 161, "2", "startup");
+    RSUHealthStatusMessage msg1("192.168.1.1", 161, "standby", "startup");
+    RSUHealthStatusMessage msg2("192.168.1.1", 161, "standby", "startup");
+    RSUHealthStatusMessage msg3("192.168.1.2", 161, "standby", "startup");
     
     EXPECT_TRUE(msg1 == msg2);
     EXPECT_FALSE(msg1 == msg3);
@@ -51,15 +51,15 @@ TEST(TestRSUHealthStatusMessage, EqualityOperator)
 
 TEST(TestRSUHealthStatusMessage, GetRsuId)
 {
-    RSUHealthStatusMessage msg("192.168.1.1", 161, "2", "startup");
+    RSUHealthStatusMessage msg("192.168.1.1", 161, "standby", "startup");
     
     EXPECT_EQ("192.168.1.1:161", msg.getRsuId());
 }
 
 TEST(TestRSUHealthStatusMessage, DifferentPorts)
 {
-    RSUHealthStatusMessage msg1("192.168.1.1", 161, "2", "startup");
-    RSUHealthStatusMessage msg2("192.168.1.1", 1610, "3", "startup");
+    RSUHealthStatusMessage msg1("192.168.1.1", 161, "standby", "startup");
+    RSUHealthStatusMessage msg2("192.168.1.1", 1610, "operate", "startup");
     
     EXPECT_NE(msg1.getRsuId(), msg2.getRsuId());
     EXPECT_FALSE(msg1 == msg2);
