@@ -1,6 +1,6 @@
 {
   "unitConfig": {
-    "unitId": "Unit006",
+    "unitId": "Unit001",
     "maxConnections": 10,
     "name": "Local Telematic RSU Unit",
     "rsuStatusMonitorInterval": 2,
