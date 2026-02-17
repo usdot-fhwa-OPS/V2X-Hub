@@ -7,7 +7,8 @@ services:
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    network_mode: host
+    networks:
+      - v2xhub_internal
     secrets:
       - mysql_password
     volumes:
@@ -24,11 +25,17 @@ services:
       #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
       #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
       - mysql-datavolume:/var/lib/mysql
+    # No ports exposed - database is only accessible internally
 
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
-    network_mode: host
+    networks:
+      - v2xhub_internal  # For database access
+      - v2xhub_external  # For web UI access
+    ports:
+      - "${WEB_HTTP_PORT:-80}:80"    # HTTP (redirects to HTTPS)
+      - "${WEB_HTTPS_PORT:-443}:443" # HTTPS Web UI
     restart: always
     depends_on:
       - db
@@ -40,11 +47,14 @@ services:
       - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/etc/apache2/ssl:ro
 
-
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
-    network_mode: host
+    networks:
+      - v2xhub_internal  # For database access
+      - v2xhub_external  # For V2X communication
+    ports:
+      - "${V2X_PORT:-8686}:8686"  # V2X Messages - always exposed
     restart: always
     depends_on:
       - db
@@ -60,15 +70,16 @@ services:
           memory: 1g
     environment:
       - MYSQL_PASSWORD=/run/secrets/mysql_password
+      - MYSQL_HOST=db  # Use service name for internal database connection
       - SIMULATION_MODE=${SIMULATION_MODE:-false}
       - SIMULATION_IP=${SIMULATION_IP:-127.0.0.1}
-      - SIMULATION_REGISTRATION_PORT=6767
-      - LOCAL_IP=${V2XHUB_IP:-127.0.0.1}
+      - SIMULATION_REGISTRATION_PORT=${SIMULATION_REGISTRATION_PORT:-6767}
+      - LOCAL_IP=${V2XHUB_IP:-0.0.0.0}  # Listen on all interfaces within container
       - TIME_SYNC_TOPIC=time_sync
-      - TIME_SYNC_PORT=7575
-      - SIM_V2X_PORT=5757
-      - SIM_INTERACTION_PORT=7576
-      - V2X_PORT=8686
+      - TIME_SYNC_PORT=${TIME_SYNC_PORT:-7575}
+      - SIM_V2X_PORT=${SIM_V2X_PORT:-5757}
+      - SIM_INTERACTION_PORT=${SIM_INTERACTION_PORT:-7576}
+      - V2X_PORT=${V2X_PORT:-8686}
       - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
       - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
@@ -82,10 +93,68 @@ services:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/var/www/plugins/ssl:rw
+
+  # V2X-Hub with simulation ports exposed - only when simulation profile is active
+  v2xhub_with_simulation:
+    image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
+    container_name: v2xhub_with_simulation
+    profiles: ["simulation"]
+    networks:
+      - v2xhub_internal  # For database access
+      - v2xhub_external  # For V2X communication
+    ports:
+      - "${V2X_PORT:-8686}:8686"                      # V2X Messages - always exposed
+      - "${SIMULATION_REGISTRATION_PORT:-6767}:6767"  # Simulation Registration
+      - "${TIME_SYNC_PORT:-7575}:7575"                # Time Sync
+      - "${SIM_V2X_PORT:-5757}:5757"                  # Sim V2X Messages
+      - "${SIM_INTERACTION_PORT:-7576}:7576"          # Sim Interaction
+    restart: always
+    depends_on:
+      - db
+    ulimits:
+      nofile:
+        soft: 2560
+        hard: 2560
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
+    environment:
+      - MYSQL_PASSWORD=/run/secrets/mysql_password
+      - MYSQL_HOST=db  # Use service name for internal database connection
+      - SIMULATION_MODE=true  # Force simulation mode when this service is used
+      - SIMULATION_IP=${SIMULATION_IP:-127.0.0.1}
+      - SIMULATION_REGISTRATION_PORT=${SIMULATION_REGISTRATION_PORT:-6767}
+      - LOCAL_IP=${V2XHUB_IP:-0.0.0.0}  # Listen on all interfaces within container
+      - TIME_SYNC_TOPIC=time_sync
+      - TIME_SYNC_PORT=${TIME_SYNC_PORT:-7575}
+      - SIM_V2X_PORT=${SIM_V2X_PORT:-5757}
+      - SIM_INTERACTION_PORT=${SIM_INTERACTION_PORT:-7576}
+      - V2X_PORT=${V2X_PORT:-8686}
+      - INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-rsu_1234}
+      - INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-East Intersection}
+      - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
+      - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
+      - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
+    secrets:
+      - mysql_password
+    volumes:
+      - v2xhub-logs-volume:/var/log/tmx:rw
+      - v2xhub-download-volume:/var/www/download/:rw
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro 
+      - ssl-certs-volume:/var/www/plugins/ssl:rw
+
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
-    network_mode: host
+    networks:
+      - v2xhub_internal  # For database access
+      - v2xhub_external  # For API access
+    ports:
+      - "${PORT_DRAYAGE_PORT:-8090}:8080"  # Spring Boot REST API
     profiles: ["port_drayage"]
     deploy:
       resources:
@@ -96,9 +165,23 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
+
 secrets:
     mysql_password:
         environment: MYSQL_PASSWORD
+
+networks:
+  v2xhub_internal:
+    driver: bridge
+    internal: true  # No external internet access - only inter-service communication
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+  v2xhub_external:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
 
 volumes:
   mysql-datavolume:

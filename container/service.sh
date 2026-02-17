@@ -1,5 +1,6 @@
 #!/bin/bash
-wait-for-it.sh 127.0.0.1:3306
+# Wait for database to be ready using service name instead of localhost
+wait-for-it.sh db:3306
 
 # Add stol apt repository libraries to path for tmxcore
 export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/carma/lib/
@@ -25,4 +26,3 @@ if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
 fi
 # Start Tmx Core
 tmxcore
-

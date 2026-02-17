@@ -1,14 +1,42 @@
 ## Introduction
-This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures.
+This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures with enhanced network security.
 
 > [!NOTE]
 > Separate deployment files/configurations are no longer necessary for arm64 and x86 deployments.
+
+> [!IMPORTANT]
+> **Network Security Enhancement**: V2X-Hub now uses isolated Docker networks for improved security. The database is completely isolated from external access, and only necessary ports are exposed. See [NETWORK_SECURITY.md](NETWORK_SECURITY.md) for detailed information.
 
 ### Deployment Instructions
 Once downloaded, navigate to the configuration directory:
 ```
 cd ~/V2X-Hub/configuration/
 ```
+
+#### Secure Network Deployment (Recommended)
+For enhanced security with isolated networks:
+
+**Standard deployment (no simulation ports exposed):**
+```
+docker compose up -d
+```
+
+**With simulation mode (exposes simulation ports):**
+```
+docker compose --profile simulation up -d
+```
+
+**With port drayage service:**
+```
+docker compose --profile port_drayage up -d
+```
+
+**With both simulation and port drayage:**
+```
+docker compose --profile simulation --profile port_drayage up -d
+```
+
+#### Traditional Deployment
 Run the initialization script:
 ```
 ./initialization.sh
