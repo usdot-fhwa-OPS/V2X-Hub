@@ -17,7 +17,7 @@ protected:
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_ValidInput)
 {
     // Create IvpMessage with JSON payload
-    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","rsuSnmpPort":"161","event":"startup","rsuMode":"3","rsuID":"RSU-001"})";
+    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","rsuSnmpPort":"161","event":"startup","rsuMode":"operate","rsuID":"RSU-001"})";
     
     // Parse JSON string to cJSON object
     cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
@@ -49,7 +49,7 @@ TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_ValidInput)
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_MissingRsuIp)
 {
-    std::string rsuStatusPayload = R"({"rsuSnmpPort":"161","event":"startup","rsuMode":"4"})";
+    std::string rsuStatusPayload = R"({"rsuSnmpPort":"161","event":"startup","rsuMode":"fault"})";
     
     cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
     
@@ -71,7 +71,7 @@ TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_MissingRsuIp)
 
 TEST_F(TestHealthStatusMessageMapper, ToRsuHealthStatusMessage_MissingPort)
 {
-    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","event":"startup","rsuMode":"4"})";
+    std::string rsuStatusPayload = R"({"rsuIpAddress":"192.168.1.1","event":"startup","rsuMode":"fault"})";
     
     cJSON *payloadJson = cJSON_Parse(rsuStatusPayload.c_str());
     

@@ -2,6 +2,7 @@
   "unitConfig": {
     "unitId": "Unit001",
     "maxConnections": 10,
+    "name": "Local Telematic RSU Unit",
     "rsuStatusMonitorInterval": 2,
     "bridgePluginHeartbeatInterval": 5
   },

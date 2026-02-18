@@ -16,6 +16,7 @@ namespace RSUHealthMonitor
         AddMessageFilter<tmx::messages::RSURegistrationConfigMessage>(this, &RSUHealthMonitorPlugin::OnRSURegistrationConfigMessage);
         
         SubscribeToMessages();
+        UpdateConfigSettings();
     }
 
     void RSUHealthMonitorPlugin::monitorRSUs()

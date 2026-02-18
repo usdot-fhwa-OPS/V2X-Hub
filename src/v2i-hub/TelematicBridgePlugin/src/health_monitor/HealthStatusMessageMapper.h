@@ -41,9 +41,9 @@ namespace TelematicBridge
                 std::string event = rsuStatusJson.isMember(TelematicJsonKeys::EVENT) ? 
                                   rsuStatusJson[TelematicJsonKeys::EVENT].asString() : "";   
 
-                // Determine health status from rsuMode field
+                // Get health status from rsuMode field (already human-readable)
                 std::string healthStatus = rsuStatusJson.isMember(TelematicJsonKeys::RSU_MODE) ? 
-                                          rsuStatusJson[TelematicJsonKeys::RSU_MODE].asString() : "0";
+                                          rsuStatusJson[TelematicJsonKeys::RSU_MODE].asString() : "unknown";
                 
                 // Create RSUHealthStatusMessage
                 RSUHealthStatusMessage rsuHealthStatus(

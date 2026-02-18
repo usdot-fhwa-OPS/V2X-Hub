@@ -41,6 +41,8 @@ namespace TelematicBridge
         //Unit topic names
         // NATS subject suffix for RSU registration configuration. Full topic format: {unitId}.register.rsu.config ; Used to publish/subscribe RSU registration data
         static CONSTEXPR const char *REGISTERD_RSU_CONFIG = ".register.rsu.config";
+
+        static CONSTEXPR const char *REGISTERD_RSU_AUTO_CONFIG = ".register.rsu.autoconfig";
         
         // NATS subject suffix for plugin health status monitoring. Full topic format: unit.<unit_id>.monitor.plugin.health_status
         static CONSTEXPR const char *HEALTH_STATUS_TOPIC_SUFFIX = "monitor.plugin.health_status";

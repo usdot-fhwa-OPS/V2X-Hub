@@ -114,5 +114,51 @@ namespace RSUHealthMonitor
 
         // Delete copy constructor
         RSUHealthMonitorWorker(RSUHealthMonitorWorker &worker) = delete;
+
+        /**
+         * @brief Provide status for RSU mode with version NTCIP1218
+         * MIB Version:
+            NTCIP1218:
+                rsuMode OBJECT-TYPE
+                    SYNTAX INTEGER {
+                    other (1),
+                    standby (2),
+                    operate (3),
+                    fault (4)
+        */
+        std::string NTCIP1218RsuModeToString(const std::string& mode) const {
+            
+            if (mode == "1")
+                return "other";
+            else if (mode == "2")
+                return "standby";
+            else if (mode == "3")
+                return "operate";
+            else if (mode == "4")
+                return "fault";
+            else
+                return "other"; // Default to "other" for unknown status values
+        }
+        
+        /**
+         * @brief Provide status for RSU mode with version RSU41
+         * MIB Version:
+         *  RSU41:
+                rsuMode OBJECT-TYPE
+                    SYNTAX INTEGER {
+                    standby (2),
+                    operate (4),
+                    off (16)
+        */
+        std::string RSU41RsuModeToString(const std::string& mode) const {
+            if (mode == "2")
+                return "standby";
+            else if (mode == "4")
+                return "operate";
+            else if (mode == "16")
+                return "off";
+            else
+                return "off"; // Default to "off" for unknown status values
+        }
     };
 } // namespace RSUHealthMonitor

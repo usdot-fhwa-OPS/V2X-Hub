@@ -54,18 +54,6 @@ namespace TelematicBridge
             rsuId = generateRsuId(ip, port);
         }
 
-        static std::string statusToLabel (const std::string &status)
-        {
-            if (status == "1")
-                return "other";
-            else if (status == "2")
-                return "standby";
-            else if (status == "3")
-                return "operate";
-            else
-                return "unknown";
-        }
-
         /**
          * @brief Convert to JSON representation
          * @return JSON::Value object representing the message
@@ -80,7 +68,7 @@ namespace TelematicBridge
             rsuObject[TelematicJsonKeys::RSU_PORT] = port;
                         
             json[TelematicJsonKeys::RSU] = rsuObject;
-            json[TelematicJsonKeys::STATUS] = statusToLabel(status);
+            json[TelematicJsonKeys::STATUS] = status;
             json[TelematicJsonKeys::EVENT] = event;
             return json;
         }
@@ -152,7 +140,7 @@ namespace TelematicBridge
         }
 
         std::string getStatus() const { 
-            return statusToLabel(status); 
+            return status;
         }
 
         void setIp(const std::string &newIp) {
