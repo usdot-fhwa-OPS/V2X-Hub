@@ -1,9 +1,13 @@
 // Connection specifics
-// 	devices: 	Must be 1 dimentional arra with "TEST" only
-// 	op: 		Address of Websocket Server to connect
-// 	port: 		Port on which to connect to the Web Socket
+// 	ip: 		Hostname for WebSocket connection (now uses current page hostname)
+// 	port: 		Port for WebSocket connection (now uses current page port)
+// 	path: 		Path for WebSocket proxy (routes through Apache to v2xhub container)
 // 	led: 		id of the element that contains the status indicator. 
 var connections = 	[
-				{ip:"127.0.0.1", port:"19760", led:"Logo"}
+				{
+					ip: window.location.hostname,
+					port: window.location.port || (window.location.protocol === 'https:' ? '443' : '80'),
+					path: "/v2xhub-ws",
+					led: "Logo"
+				}
 			];
-

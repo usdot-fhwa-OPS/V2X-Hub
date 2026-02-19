@@ -42,6 +42,9 @@ services:
       - v2xhub
     stdin_open: true
     tty: true
+    environment:
+      - V2XHUB_WS_HOST=${V2XHUB_WS_HOST:-v2xhub}
+      - V2XHUB_WS_PORT=${COMMAND_WS_PORT:-19760}
     volumes:
       - /etc/localtime:/etc/localtime:ro 
       - /etc/timezone:/etc/timezone:ro 
@@ -85,6 +88,7 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
+      - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
     volumes:
@@ -138,6 +142,7 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
+      - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
     volumes:

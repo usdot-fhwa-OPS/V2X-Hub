@@ -148,10 +148,11 @@ function initializeCookieElements()
 * @param {string} led - Name of HTML DOM element to show connections status
 * @returns {Object} New socket connection
 **/
-function createSocketObject(ip, port, led) {
+function createSocketObject(ip, port, led, path) {
 	var socketObject = new Object();
 	socketObject.ip = ip;
 	socketObject.port = port;
+	socketObject.path = path || null;
 	socketObject.connected = false;
 	socketObject.connecting = false;
 	socketObject.led = led;
@@ -1407,10 +1408,17 @@ function connectInitial()
             
         }
         $(".ipInput").val(tempIP);
-		socketObj = createSocketObject(tempIP, tempConnection.port, tempConnection.led);
-        //if (useSSL)
-        socketObj.url = "wss://" + tempIP + ':' + socketObj.port + "/";
-        //else socketObj.url = "ws://" + tempIP + ':' + socketObj.port + "/";
+		socketObj = createSocketObject(tempIP, tempConnection.port, tempConnection.led, tempConnection.path);
+
+        // Construct WebSocket URL - use proxy path if available, otherwise direct connection
+        if (tempConnection.path) {
+            // Use proxy path through Apache
+            socketObj.url = "wss://" + tempIP + tempConnection.path;
+        } else {
+            // Direct connection (fallback)
+            socketObj.url = "wss://" + tempIP + ':' + socketObj.port + "/";
+        }
+
 		connect(socketObj.url);
 	}
 
@@ -1645,11 +1653,15 @@ function changeIPAddress()
         savePreviousIPCookie();
     }
     
+    // Construct WebSocket URL - use proxy path if available, otherwise direct connection
+    if (socketObj.path) {
+        // Use proxy path through Apache
+        socketObj.url = "wss://" + socketObj.ip + socketObj.path;
+    } else {
+        // Direct connection (fallback)
+        socketObj.url = "wss://" + socketObj.ip + ':' + socketObj.port + "/";
+    }
     
-    //if (useSSL)
-    socketObj.url = "wss://" + socketObj.ip + ':' + socketObj.port + "/";
-    //else
-    //socketObj.url = "ws://" + socketObj.ip + ':' + socketObj.port + "/";
     socketObj.connected = false;
     socketObj.connecting = false;
     updateConnected(socketObj.url, false);

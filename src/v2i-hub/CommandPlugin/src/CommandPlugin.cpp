@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstdlib>
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
@@ -1285,7 +1286,19 @@ int CommandPlugin::Main()
 	lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
 
-	info.port = 19760;
+	// Get WebSocket port from environment variable, default to 19760
+	const char* wsPortEnv = std::getenv("COMMAND_WS_PORT");
+	int wsPort = 19760; // Default port
+	if (wsPortEnv != nullptr) {
+		try {
+			wsPort = std::stoi(wsPortEnv);
+			PLOG(logINFO) << "Using WebSocket port from environment: " << wsPort;
+		} catch (const std::exception& e) {
+			PLOG(logWARNING) << "Invalid COMMAND_WS_PORT value, using default: 19760";
+		}
+	}
+
+	info.port = wsPort;
 	info.protocols = protocols;
 	info.gid = -1;
 	info.uid = -1;
