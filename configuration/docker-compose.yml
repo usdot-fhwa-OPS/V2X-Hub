@@ -64,7 +64,6 @@ services:
       - v2xhub_external  # For V2X communication
     ports:
       - "${V2X_PORT:-8686}:8686"  # V2X Messages - always exposed
-      - "${COMMAND_WS_PORT:-19760}:19760" # WebSocket for CommandPlugin/Admin UI
     restart: always
     depends_on:
       db:
@@ -157,7 +156,6 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
-      - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
     healthcheck:
