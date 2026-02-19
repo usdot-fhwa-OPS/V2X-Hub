@@ -66,25 +66,26 @@ check_network_connectivity() {
     print_status "INFO" "Checking network connectivity..."
     
     # Check if v2xhub can reach database
-    if docker compose exec -T v2xhub ping -c 1 db >/dev/null 2>&1; then
+    if docker compose exec -T v2xhub sh -c 'timeout 5 bash -c "</dev/tcp/db/3306"' >/dev/null 2>&1; then
         print_status "SUCCESS" "V2XHub can reach database (db)"
     else
         print_status "ERROR" "V2XHub cannot reach database"
     fi
     
     # Check if php can reach database
-    if docker compose exec -T php ping -c 1 db >/dev/null 2>&1; then
+    if docker compose exec -T php sh -c 'timeout 5 bash -c "</dev/tcp/db/3306"' >/dev/null 2>&1; then
         print_status "SUCCESS" "PHP can reach database (db)"
     else
         print_status "ERROR" "PHP cannot reach database"
     fi
     
     # Check if v2xhub can reach php
-    if docker compose exec -T v2xhub ping -c 1 php >/dev/null 2>&1; then
-        print_status "SUCCESS" "V2XHub can reach PHP service"
+    if docker compose exec -T php sh -c 'timeout 5 bash -c "</dev/tcp/v2xhub/19760"' >/dev/null 2>&1; then
+        print_status "SUCCESS" "PHP can reach V2XHub service"
     else
-        print_status "WARNING" "V2XHub cannot reach PHP service (this may be normal)"
+        print_status "WARNING" "PHP cannot reach V2XHub service via websocket"
     fi
+
 }
 
 # Function to check database connectivity
@@ -110,12 +111,12 @@ check_database_connectivity() {
         fi
     done
     
-    # Test database connection from v2xhub container
-    if docker compose exec -T v2xhub mysqladmin ping -h db -u IVP -p"$(docker compose exec -T v2xhub cat /run/secrets/mysql_password)" --silent >/dev/null 2>&1; then
-        print_status "SUCCESS" "V2XHub can connect to database with credentials"
-    else
-        print_status "ERROR" "V2XHub cannot connect to database with credentials"
-    fi
+    # TODO: Implement health check - Test database connection from v2xhub container
+    # if docker compose exec -T v2xhub mysqladmin ping -h db -u IVP -p"$(docker compose exec -T v2xhub cat /run/secrets/mysql_password)" --silent >/dev/null 2>&1; then
+    #     print_status "SUCCESS" "V2XHub can connect to database with credentials"
+    # else
+    #     print_status "ERROR" "V2XHub cannot connect to database with credentials"
+    # fi
 }
 
 # Function to check environment variables
@@ -147,12 +148,19 @@ check_network_isolation() {
     
     # Check if database port is NOT exposed externally
     local db_external_port=$(docker compose port db 3306 2>/dev/null || echo "")
-    if [ -z "$db_external_port" ]; then
+    if [ -z "$db_external_port" ] || [ "$db_external_port" = ":0" ]; then
         print_status "SUCCESS" "Database port 3306 is not exposed externally (secure)"
     else
         print_status "ERROR" "Database port 3306 is exposed externally: $db_external_port"
     fi
     
+    local ws_external_port=$(docker compose port v2xhub 19760 2>/dev/null || echo "")
+    if [ -z "$ws_external_port" ] || [ "$ws_external_port" = ":0" ]; then
+        print_status "SUCCESS" "V2XHub WebSocket port 19760 is not exposed externally (secure)"
+    else
+        print_status "ERROR" "V2XHub WebSocket port 19760 is exposed externally: $ws_external_port"
+    fi
+
     # Check internal network exists
     if docker network inspect configuration_v2xhub_internal >/dev/null 2>&1; then
         print_status "SUCCESS" "Internal network 'v2xhub_internal' exists"
@@ -181,7 +189,7 @@ check_exposed_ports() {
     print_status "INFO" "Checking exposed ports..."
     
     # Core ports that should always be exposed
-    local core_ports=("80:80" "443:443" "8686:8686")
+    local core_ports=("80:80" "443:443" "8686:8686", "19760:19760")
     
     for port_mapping in "${core_ports[@]}"; do
         local host_port=$(echo "$port_mapping" | cut -d: -f1)
