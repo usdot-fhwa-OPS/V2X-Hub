@@ -88,6 +88,48 @@ check_network_connectivity() {
 
 }
 
+# Function to check WebSocket reverse proxy configuration
+check_websocket_proxy() {
+    print_status "INFO" "Checking WebSocket reverse proxy configuration..."
+
+    # Check if Apache configuration file exists and contains WebSocket proxy settings
+    if docker compose exec -T php test -f /etc/apache2/sites-available/000-default.conf >/dev/null 2>&1; then
+        print_status "SUCCESS" "Apache configuration file exists"
+
+        # Check for WebSocket proxy configuration
+        if docker compose exec -T php grep -q "ProxyPass.*v2xhub-ws.*ws://" /etc/apache2/sites-available/000-default.conf 2>/dev/null; then
+            print_status "SUCCESS" "WebSocket reverse proxy configuration found in Apache"
+        else
+            print_status "ERROR" "WebSocket reverse proxy configuration not found in Apache"
+        fi
+
+        # Check for proxy modules
+        if docker compose exec -T php apache2ctl -M 2>/dev/null | grep -q "proxy_module\|proxy_wstunnel_module" >/dev/null 2>&1; then
+            print_status "SUCCESS" "Apache proxy modules are loaded"
+        else
+            print_status "WARNING" "Apache proxy modules may not be loaded (check proxy_module and proxy_wstunnel_module)"
+        fi
+    else
+        print_status "ERROR" "Apache configuration file not found"
+    fi
+
+    # Check if WebSocket environment variables are set in PHP container
+    local ws_host=$(docker compose exec -T php printenv "V2XHUB_WS_HOST" 2>/dev/null || echo "")
+    local ws_port=$(docker compose exec -T php printenv "V2XHUB_WS_PORT" 2>/dev/null || echo "")
+
+    if [ -n "$ws_host" ]; then
+        print_status "SUCCESS" "V2XHUB_WS_HOST is set to: $ws_host"
+    else
+        print_status "ERROR" "V2XHUB_WS_HOST environment variable not set in PHP container"
+    fi
+
+    if [ -n "$ws_port" ]; then
+        print_status "SUCCESS" "V2XHUB_WS_PORT is set to: $ws_port"
+    else
+        print_status "ERROR" "V2XHUB_WS_PORT environment variable not set in PHP container"
+    fi
+}
+
 # Function to check database connectivity
 check_database_connectivity() {
     print_status "INFO" "Checking database connectivity..."
@@ -153,7 +195,7 @@ check_network_isolation() {
     else
         print_status "ERROR" "Database port 3306 is exposed externally: $db_external_port"
     fi
-    
+
     local ws_external_port=$(docker compose port v2xhub 19760 2>/dev/null || echo "")
     if [ -z "$ws_external_port" ] || [ "$ws_external_port" = ":0" ]; then
         print_status "SUCCESS" "V2XHub WebSocket port 19760 is not exposed externally (secure)"
@@ -188,26 +230,55 @@ check_network_isolation() {
 check_exposed_ports() {
     print_status "INFO" "Checking exposed ports..."
     
-    # Core ports that should always be exposed
-    local core_ports=("80:80" "443:443" "8686:8686", "19760:19760")
+    # Core ports that should always be exposed - check via Docker port mapping
+    local core_services_ports=("php:80" "php:443" "v2xhub:8686")
     
-    for port_mapping in "${core_ports[@]}"; do
-        local host_port=$(echo "$port_mapping" | cut -d: -f1)
-        local container_port=$(echo "$port_mapping" | cut -d: -f2)
+    for service_port in "${core_services_ports[@]}"; do
+        local service=$(echo "$service_port" | cut -d: -f1)
+        local port=$(echo "$service_port" | cut -d: -f2)
         
-        if netstat -tuln 2>/dev/null | grep -q ":$host_port "; then
-            print_status "SUCCESS" "Core port $host_port is exposed"
+        # Check if Docker has mapped this port
+        local mapped_port=$(docker compose port "$service" "$port" 2>/dev/null || echo "")
+        if [ -n "$mapped_port" ] && [ "$mapped_port" != ":0" ]; then
+            print_status "SUCCESS" "Core port $port is exposed via $service service ($mapped_port)"
         else
-            print_status "WARNING" "Core port $host_port is not exposed (check if services are running)"
+            # Fallback to netstat check for host-bound ports
+            if netstat -tuln 2>/dev/null | grep -q ":$port "; then
+                print_status "SUCCESS" "Core port $port is exposed (host-bound)"
+            else
+                print_status "WARNING" "Core port $port is not exposed (check if $service service is running)"
+            fi
         fi
     done
     
-    # Check for profile-specific ports
+    # Check that WebSocket port 19760 is NOT exposed externally (should be internal only)
+    local ws_mapped_port=$(docker compose port v2xhub 19760 2>/dev/null || echo "")
+    if [ -n "$ws_mapped_port" ] && [ "$ws_mapped_port" != ":0" ]; then
+        print_status "ERROR" "WebSocket port 19760 is exposed externally via Docker ($ws_mapped_port) - security risk"
+    elif netstat -tuln 2>/dev/null | grep -q ":19760 "; then
+        print_status "ERROR" "WebSocket port 19760 is exposed externally (security risk - should be internal only)"
+    else
+        print_status "SUCCESS" "WebSocket port 19760 is not exposed externally (secure - handled via reverse proxy)"
+    fi
+
+    # Check for profile-specific ports using both Docker port mapping and netstat
     local profile_ports=("26789" "22222" "44444" "6767" "7575" "5757" "7576" "8090")
     local exposed_profile_ports=()
     
     for port in "${profile_ports[@]}"; do
-        if netstat -tuln 2>/dev/null | grep -q ":$port "; then
+        # Check if any service has this port mapped
+        local port_found=false
+        for service in $(docker compose ps --services 2>/dev/null || echo ""); do
+            local mapped=$(docker compose port "$service" "$port" 2>/dev/null || echo "")
+            if [ -n "$mapped" ] && [ "$mapped" != ":0" ]; then
+                exposed_profile_ports+=("$port")
+                port_found=true
+                break
+            fi
+        done
+
+        # Fallback to netstat if not found via Docker
+        if [ "$port_found" = false ] && netstat -tuln 2>/dev/null | grep -q ":$port "; then
             exposed_profile_ports+=("$port")
         fi
     done
@@ -256,9 +327,15 @@ display_summary() {
     echo "  • User: IVP"
     echo "  • Password: Managed via Docker secrets"
     echo
+    print_status "INFO" "WebSocket Configuration:"
+    echo "  • WebSocket service: v2xhub:19760 (internal only)"
+    echo "  • External access: Apache reverse proxy (/v2xhub-ws)"
+    echo "  • No direct external WebSocket port exposure"
+    echo
     print_status "INFO" "Security Features:"
     echo "  • Database isolated on internal network"
     echo "  • No direct external database access"
+    echo "  • WebSocket connections via secure reverse proxy"
     echo "  • Service-to-service communication via Docker DNS"
     echo "  • Profile-based port exposure"
 }
@@ -272,6 +349,7 @@ main() {
     check_docker_compose
     check_service_status
     check_network_connectivity
+    check_websocket_proxy
     check_database_connectivity
     check_environment_variables
     check_network_isolation
