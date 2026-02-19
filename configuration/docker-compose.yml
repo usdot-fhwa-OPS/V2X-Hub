@@ -72,8 +72,11 @@ services:
         reservations:
           memory: 1g
     environment:
+      - MYSQL_HOST=${MYSQL_HOST:-db}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-IVP}
+      - MYSQL_USER=${MYSQL_USER:-IVP}
       - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - MYSQL_HOST=db  # Use service name for internal database connection
       - SIMULATION_MODE=${SIMULATION_MODE:-false}
       - SIMULATION_IP=${SIMULATION_IP:-127.0.0.1}
       - SIMULATION_REGISTRATION_PORT=${SIMULATION_REGISTRATION_PORT:-6767}
@@ -91,6 +94,12 @@ services:
       - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     volumes:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
@@ -126,8 +135,11 @@ services:
         reservations:
           memory: 1g
     environment:
+      - MYSQL_HOST=${MYSQL_HOST:-db}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-IVP}
+      - MYSQL_USER=${MYSQL_USER:-IVP}
       - MYSQL_PASSWORD=/run/secrets/mysql_password
-      - MYSQL_HOST=db  # Use service name for internal database connection
       - SIMULATION_MODE=true  # Force simulation mode when this service is used
       - SIMULATION_IP=${SIMULATION_IP:-127.0.0.1}
       - SIMULATION_REGISTRATION_PORT=${SIMULATION_REGISTRATION_PORT:-6767}
@@ -145,6 +157,12 @@ services:
       - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     volumes:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw

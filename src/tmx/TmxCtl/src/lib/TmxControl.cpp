@@ -6,6 +6,7 @@
  */
 
 #include "TmxControl.h"
+#include <database/DbConnectionConfig.h>
 
 #include <grp.h>
 #include <functional>
@@ -211,10 +212,21 @@ int TmxControl::Main()
 	for (size_t p = 0; p < plugins.size(); p++)
 		std::transform(plugins[p].begin(), plugins[p].end(), plugins[p].begin(), convert);
 
-	string url = "tcp://";
-	url += (*_opts)["host"].as<string>();
-	url += ':';
-	url += (*_opts)["port"].as<string>();
+	// Use configuration helper for database connection, but allow command line override
+	auto& config = DbConnectionConfig::getInstance();
+	string url;
+
+	// Check if host/port were provided via command line, otherwise use environment config
+	if (_opts->count("host") && (*_opts)["host"].as<string>() != config.getHost()) {
+		// Command line override
+		url = "tcp://";
+		url += (*_opts)["host"].as<string>();
+		url += ':';
+		url += (*_opts)["port"].as<string>();
+	} else {
+		// Use environment configuration
+		url = config.getConnectionUrl();
+	}
 
 	_pool.SetConnectionUrl(url);
 
@@ -373,5 +385,3 @@ tmx::message_container_type* TmxControl::GetOutput()
 
 
 } /* namespace tmxctl */
-
-

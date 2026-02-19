@@ -17,6 +17,7 @@
 #include "database/PluginContext.h"
 #include "database/ConfigContext.h"
 #include "database/MessageContext.h"
+#include "database/DbConnectionConfig.h"
 
 #include "tmx/tmx.h"
 #include "tmx/messages/IvpJ2735.h"
@@ -127,38 +128,13 @@ void addSystemDefinedMessageTypes()
 } 
 
 
-std::string GetPwd(){
-	// NOTE this is duplicated in DbConnectionPool.cpp but no good way to reuse for now
-	// env should probably be named MYSQL_PASSWORD_FILE but is left for legacy
-	const char* EnvVar = "MYSQL_PASSWORD";
-	const char* pwdFile;
-	std::string PwdStr;
-	pwdFile = std::getenv(EnvVar);
-
-	if (pwdFile == nullptr) {
-		LOG_ERROR("Unable to get MYSQL_PASSWORD)");
-	} else{
-		std::ifstream t(pwdFile);
-		if (t) {
-			std::getline( t, PwdStr);
-			if (PwdStr.length() == 0) {
-				LOG_ERROR("Empty pwd file: " << pwdFile);
-			}
-		} else {
-			LOG_ERROR("Unable to read pwd file: " << pwdFile);
-		}
-	}
-	return PwdStr;
-}
-
 int main()
 {
-
-	std::string env_p = GetPwd();
-	DbContext::ConnectionInformation.url = "127.0.0.1";
-	DbContext::ConnectionInformation.username = "IVP";
-	DbContext::ConnectionInformation.password = env_p;
-	DbContext::ConnectionInformation.db = "IVP";
+	// Initialize database connection configurations
+	DbContext::ConnectionInformation.url = dbConfig.getHost();
+	DbContext::ConnectionInformation.username = dbConfig.getUser();
+	DbContext::ConnectionInformation.password = dbConfig.getPassword();
+	DbContext::ConnectionInformation.db = dbConfig.getDatabase();
 
 	oldsig_int = signal(SIGINT, sig);
 	oldsig_kill = signal(SIGKILL, sig);
@@ -207,4 +183,3 @@ int main()
 
 	return 0;
 }
-

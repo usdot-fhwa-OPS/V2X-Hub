@@ -1,0 +1,95 @@
+# V2X-Hub Docker Compose Profiles Configuration
+# This file documents the available Docker Compose profiles for V2X-Hub deployment
+# Use these profiles to expose only the ports needed for your specific use case
+
+# Profile: v2x-essential
+# Description: Essential V2X functionality with radio message reception
+# Exposed Ports: 80, 443, 8686, 26789
+# Usage: docker compose --profile v2x-essential up -d
+services:
+  v2xhub_essential:
+    extends:
+      service: v2xhub
+    profiles: ["v2x-essential"]
+    ports:
+      - "${V2X_PORT:-8686}:8686"                    # V2X Messages - always exposed
+      - "${MESSAGE_RECEIVER_PORT:-26789}:26789"     # MessageReceiverPlugin
+
+# Profile: carma-cloud
+# Description: CARMA Cloud integration for traffic control messages
+# Exposed Ports: 22222 (in addition to core ports)
+# Usage: docker compose --profile v2x-essential --profile carma-cloud up -d
+  v2xhub_carma_cloud:
+    extends:
+      service: v2xhub
+    profiles: ["carma-cloud"]
+    ports:
+      - "${V2X_PORT:-8686}:8686"                    # V2X Messages - always exposed
+      - "${CARMA_CLOUD_PORT:-22222}:22222"          # CARMACloudPlugin
+
+# Profile: erv-cloud
+# Description: Emergency Vehicle Cloud forwarding integration
+# Exposed Ports: 44444 (in addition to core ports)
+# Usage: docker compose --profile v2x-essential --profile erv-cloud up -d
+  v2xhub_erv_cloud:
+    extends:
+      service: v2xhub
+    profiles: ["erv-cloud"]
+    ports:
+      - "${V2X_PORT:-8686}:8686"                    # V2X Messages - always exposed
+      - "${ERV_CLOUD_PORT:-44444}:44444"            # ERVCloudForwardingPlugin
+
+# Profile: simulation
+# Description: Development and testing with CDASim integration
+# Exposed Ports: 6767, 7575, 5757, 7576 (in addition to core ports)
+# Usage: docker compose --profile v2x-essential --profile simulation up -d
+# Note: This profile uses the existing v2xhub_with_simulation service
+
+# Profile: port_drayage
+# Description: Port drayage operations REST API
+# Exposed Ports: 8090
+# Usage: docker compose --profile port_drayage up -d
+# Note: This profile uses the existing port_drayage_webservice service
+
+# Environment Variables for Plugin Ports
+# Add these to your .env file to customize plugin ports:
+#
+# MESSAGE_RECEIVER_PORT=26789    # MessageReceiverPlugin (v2x-essential profile)
+# CARMA_CLOUD_PORT=22222         # CARMACloudPlugin (carma-cloud profile)
+# ERV_CLOUD_PORT=44444           # ERVCloudForwardingPlugin (erv-cloud profile)
+# SIMULATION_REGISTRATION_PORT=6767  # CDASimAdapter Registration (simulation profile)
+# TIME_SYNC_PORT=7575            # CDASimAdapter Time Sync (simulation profile)
+# SIM_V2X_PORT=5757              # CDASimAdapter V2X Messages (simulation profile)
+# SIM_INTERACTION_PORT=7576      # CDASimAdapter Interaction (simulation profile)
+# PORT_DRAYAGE_PORT=8090         # Port Drayage REST API (port_drayage profile)
+
+# Security Warning:
+# When using Docker port mappings, ports remain open at the OS level even when
+# plugins are disabled in the V2X-Hub UI. Only expose ports for plugins you
+# actively use by selecting appropriate Docker Compose profiles.
+
+# Common Deployment Scenarios:
+
+# 1. Minimal Secure Deployment (Core Only)
+# docker compose up -d
+# Exposed Ports: 80, 443, 8686
+
+# 2. Essential V2X Deployment (Recommended)
+# docker compose --profile v2x-essential up -d
+# Exposed Ports: 80, 443, 8686, 26789
+
+# 3. CARMA Cloud Integration
+# docker compose --profile v2x-essential --profile carma-cloud up -d
+# Exposed Ports: 80, 443, 8686, 26789, 22222
+
+# 4. Emergency Vehicle Integration
+# docker compose --profile v2x-essential --profile erv-cloud up -d
+# Exposed Ports: 80, 443, 8686, 26789, 44444
+
+# 5. Development/Simulation Environment
+# docker compose --profile v2x-essential --profile simulation up -d
+# Exposed Ports: 80, 443, 8686, 26789, 6767, 7575, 5757, 7576
+
+# 6. Full Integration Deployment
+# docker compose --profile v2x-essential --profile carma-cloud --profile erv-cloud --profile port_drayage up -d
+# Exposed Ports: 80, 443, 8686, 26789, 22222, 44444, 8090

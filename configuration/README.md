@@ -7,6 +7,32 @@ This directory contains deployment and configuration instructions for deploying 
 > [!IMPORTANT]
 > **Network Security Enhancement**: V2X-Hub now uses isolated Docker networks for improved security. The database is completely isolated from external access, and only necessary ports are exposed. See [NETWORK_SECURITY.md](NETWORK_SECURITY.md) for detailed information.
 
+## Database Configuration
+
+V2X-Hub uses a secure network architecture with the following database configuration:
+
+- **Database Host**: `db` (Docker service name for internal communication)
+- **Database Port**: `3306` (accessible only within internal network)
+- **Database Name**: `IVP`
+- **Database User**: `IVP`
+- **Password Management**: Secured via Docker secrets
+
+The database is completely isolated on the `v2xhub_internal` network and cannot be accessed directly from external networks, providing enhanced security.
+
+### Environment Variables
+
+The following environment variables control database connectivity:
+
+```bash
+MYSQL_HOST=db              # Database hostname (Docker service name)
+MYSQL_PORT=3306           # Database port (internal only)
+MYSQL_DATABASE=IVP        # Database name
+MYSQL_USER=IVP            # Database username
+MYSQL_PASSWORD            # Managed via Docker secrets
+```
+
+These variables are automatically configured in the Docker Compose deployment.
+
 ### Deployment Instructions
 Once downloaded, navigate to the configuration directory:
 ```
@@ -100,3 +126,74 @@ google-chrome  <v2xhub_ip>
 
 > [!WARNING]  
 > To use generated trusted certificates the `docker-compose.yml` file needs to be modified to map the local ssl directory to the ssl docker compose volume. See the comment in the `ssl` docker compose defined volume for instructions for modifications
+
+## Network Validation and Troubleshooting
+
+### Validate Network Configuration
+
+Use the network validation script to verify your deployment:
+
+```bash
+./validate_network.sh
+```
+
+This script checks:
+- Docker Compose service status
+- Network connectivity between services
+- Database connectivity and credentials
+- Environment variable configuration
+- Network isolation and security
+- Exposed ports and health checks
+
+### Profile-Based Deployment
+
+V2X-Hub supports profile-based deployment to expose only the ports needed for your specific use case. See [docker-compose.profiles.yml](docker-compose.profiles.yml) for detailed configuration options.
+
+**Available Profiles:**
+- `v2x-essential`: Essential V2X functionality (port 26789)
+- `carma-cloud`: CARMA Cloud integration (port 22222)
+- `erv-cloud`: Emergency Vehicle Cloud forwarding (port 44444)
+- `simulation`: Development/testing with CDASim (ports 6767, 7575, 5757, 7576)
+- `port_drayage`: Port drayage operations (port 8090)
+
+### Common Troubleshooting
+
+**Database Connection Issues:**
+```bash
+# Check if database is accessible from v2xhub container
+docker compose exec v2xhub ping db
+
+# Check database logs
+docker compose logs db
+
+# Verify environment variables
+docker compose exec v2xhub printenv | grep MYSQL
+```
+
+**Network Connectivity Issues:**
+```bash
+# Inspect networks
+docker network ls
+docker network inspect configuration_v2xhub_internal
+docker network inspect configuration_v2xhub_external
+
+# Check service network assignments
+docker compose exec v2xhub ip route
+```
+
+**Port Binding Conflicts:**
+```bash
+# Check if ports are already in use
+netstat -tulpn | grep :80
+netstat -tulpn | grep :443
+netstat -tulpn | grep :8686
+```
+
+**Service Health Checks:**
+```bash
+# Check service status
+docker compose ps
+
+# Check container health
+docker compose exec v2xhub mysqladmin ping -h db -u IVP -p"$(docker compose exec v2xhub cat /run/secrets/mysql_password)"
+```
