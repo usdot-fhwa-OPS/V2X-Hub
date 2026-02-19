@@ -131,7 +131,8 @@ void addSystemDefinedMessageTypes()
 int main()
 {
 	// Initialize database connection configurations
-	DbContext::ConnectionInformation.url = dbConfig.getHost();
+	auto& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+	DbContext::ConnectionInformation.url = dbConfig.getConnectionUrl();
 	DbContext::ConnectionInformation.username = dbConfig.getUser();
 	DbContext::ConnectionInformation.password = dbConfig.getPassword();
 	DbContext::ConnectionInformation.db = dbConfig.getDatabase();

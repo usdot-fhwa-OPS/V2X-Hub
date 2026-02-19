@@ -11,6 +11,12 @@ services:
       - v2xhub_internal
     secrets:
       - mysql_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
@@ -60,7 +66,8 @@ services:
       - "${V2X_PORT:-8686}:8686"  # V2X Messages - always exposed
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ulimits:
       nofile:
         soft: 2560
@@ -94,12 +101,6 @@ services:
       - COMMAND_WS_PORT=${COMMAND_WS_PORT:-19760}  # WebSocket port for CommandPlugin
     secrets:
       - mysql_password
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
     volumes:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
