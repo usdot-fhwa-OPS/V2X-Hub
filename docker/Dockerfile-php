@@ -1,5 +1,12 @@
 FROM php:apache
-RUN a2enmod ssl && a2enmod rewrite
+
+# Enable required Apache modules
+RUN a2enmod ssl \
+    && a2enmod rewrite \
+    && a2enmod proxy \
+    && a2enmod proxy_http \
+    && a2enmod proxy_wstunnel
+
 COPY docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
 COPY web/ /var/www/html/

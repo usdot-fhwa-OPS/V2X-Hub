@@ -196,13 +196,23 @@ check_network_isolation() {
         print_status "ERROR" "Database port 3306 is exposed externally: $db_external_port"
     fi
 
-    local ws_external_port=$(docker compose port v2xhub 19760 2>/dev/null || echo "")
-    if [ -z "$ws_external_port" ] || [ "$ws_external_port" = ":0" ]; then
+    # local ws_external_port=$(docker compose port v2xhub 19760 2>/dev/null || echo "")
+    # if [ -z "$ws_external_port" ]; then
+    #     print_status "SUCCESS" "V2XHub WebSocket port 19760 is not exposed externally (secure)"
+    # else
+    #     print_status "ERROR" "V2XHub WebSocket port 19760 is exposed externally: $ws_external_port"
+    # fi
+
+    local ws_external_port=$(docker compose port v2xhub 19760 2>/dev/null)
+    # docker compose can print a "no port ..." message; treat that as empty
+    if echo "$ws_external_port" | grep -qE '^no port [0-9]+/tcp'; then
+    ws_external_port=""
+    fi
+    if [ -z "$ws_external_port" ]; then
         print_status "SUCCESS" "V2XHub WebSocket port 19760 is not exposed externally (secure)"
     else
         print_status "ERROR" "V2XHub WebSocket port 19760 is exposed externally: $ws_external_port"
     fi
-
     # Check internal network exists
     if docker network inspect configuration_v2xhub_internal >/dev/null 2>&1; then
         print_status "SUCCESS" "Internal network 'v2xhub_internal' exists"
