@@ -61,6 +61,43 @@ services:
     networks:
       - v2xhub_internal  # For database access
       - v2xhub_external  # For V2X communication
+    ports:
+      # Core ports (always needed)
+      - "${V2X_PORT:-8686}:8686"              # V2X Messages
+      - "${COMMAND_WS_PORT:-19760}:19760"     # CommandPlugin WebSocket
+
+      # Group 1: SNMP and specialized protocols (161, 2101)
+      - "161:161/udp"                         # ERVCloudForwarding SNMP
+      - "2095-2105:2095-2105"                 # RtcmPlugin NTRIP (2101 ±5)
+
+      # Group 2: Low ports (3000-3306)
+      - "2995-3010:2995-3010"                 # MessageReceiver HSMurl (3000 ±10)
+      - "3300-3310:3300-3310"                 # PortDrayage Database (3306 ±5)
+
+      # Group 3: Mid-range ports (4545, 4xxxx series for ODE)
+      - "4540-4550:4540-4550"                 # MUSTSensorDriver (4545 ±5)
+      - "44900-44930:44900-44930/udp"         # ODE SPAT UDP (44910 ±20)
+      - "44910-44940:44910-44940/udp"         # ODE MAP UDP (44920 ±20)
+      - "46790-46810:46790-46810/udp"         # ODE BSM UDP (46800 ±10)
+      - "47890-47910:47890-47910/udp"         # ODE TIM UDP (47900 ±10)
+
+      # Group 4: Simulation ports (5050, 5757, 6053, 6767, 7575, 7576)
+      - "5045-5055:5045-5055"                 # SpatPlugin TSC_SNMP (5050 ±5)
+      - "5750-5760:5750-5760"                 # Simulation V2X (5757 ±5)
+      - "6048-6058:6048-6058/udp"             # SpatPlugin Local UDP (6053 ±5)
+      - "6760-6770:6760-6770"                 # Simulation Registration (6767 ±5)
+      - "7570-7580:7570-7580"                 # Time Sync (7575 ±5)
+
+      # Group 5: Web service ports (8xxx, 9xxx)
+      - "8075-8095:8075-8095"                 # FLIR WebSocket (8081-8082), Port Drayage (8090)
+      - "8985-9010:8985-9010"                 # Pedestrian/DMS (9000), DMS Sign Sim (9090)
+      - "9085-9095:9085-9095"                 # ODE Kafka (9092 ±3)
+
+      # Group 6: High ports for cloud services
+      - "22215-22225:22215-22225"             # CARMACloud WebService (22222 ±3)
+      - "26780-26800:26780-26800"             # MessageReceiver (26789 ±10)
+      - "33325-33340:33325-33340"             # CARMACloud Port (33333 ±7)
+      - "44435-44450:44435-44450"             # ERVCloud WebService (44444 ±6)
     restart: always
     depends_on:
       db:
