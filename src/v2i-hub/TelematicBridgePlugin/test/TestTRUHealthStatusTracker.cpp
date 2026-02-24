@@ -54,14 +54,14 @@ TEST_F(TestTRUHealthStatusTracker, UpdateRsuStatus_UpdateExisting)
     tracker->updateRsuStatus(rsuInitial);
     
     // Update the same RSU with different status
-    RSUHealthStatusMessage rsuUpdated("192.168.1.1", 161, "maintenance", "maintenance");
+    RSUHealthStatusMessage rsuUpdated("192.168.1.1", 161, "fault", "maintenance");
     tracker->updateRsuStatus(rsuUpdated);
     
     auto snapshot = tracker->getSnapshot();
     
     // Should still have only one RSU (updated, not added)
     ASSERT_EQ(1, snapshot.getRsuHealthStatus().size());
-    EXPECT_EQ("operate", snapshot.getRsuHealthStatus()[0].getStatus());
+    EXPECT_EQ("fault", snapshot.getRsuHealthStatus()[0].getStatus());
     EXPECT_EQ("maintenance", snapshot.getRsuHealthStatus()[0].toJson()["event"].asString());
 }
 
