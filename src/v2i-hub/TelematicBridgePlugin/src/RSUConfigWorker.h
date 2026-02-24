@@ -5,6 +5,7 @@
 #include <jsoncpp/json/json.h>
 #include <unordered_map>
 #include "TelematicBridgeException.h"
+#include <mutex>
 
 
 namespace TelematicBridge
@@ -55,6 +56,7 @@ namespace TelematicBridge
         int16_t _healthMonitorPluginHeartbeatInterval = 10; // Configurable interval at which the RSU Health Monitor heartbeat should be monitored
         int16_t _rsuStatusMonitorInterval = 10; // Configurable interval at which the RSU status should be monitored
         std::unordered_map<std::string, rsuConfig> _truRegistrationMap;
+        mutable std::mutex _configMutex; // Mutex to protect access to configuration data
         int64_t _lastUpdateTimestamp;
 
         //Unit Configs Key static keys

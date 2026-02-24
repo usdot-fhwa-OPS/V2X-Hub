@@ -4,8 +4,9 @@ using namespace tmx::utils;
 namespace TelematicBridge
 {
     action truConfigWorker::stringToAction(const std::string& str) {
-        if (str == "add") return action::add;
-        if (str == "delete") return action::remove;
+        if (str == "add" || str == "create") return action::add;
+        else if (str == "remove" || str == "delete") return action::remove;
+        else if (str == "update") return action::update;
         return action::unknown;
     }
 
@@ -87,6 +88,7 @@ namespace TelematicBridge
 
     bool truConfigWorker::updateTRUStatus(const Json::Value& jsonVal){
         try{
+            PLOG(logDEBUG) << "Updating TRU configuration from JSON: " << jsonVal.toStyledString();
             if (jsonVal.isMember(TRU_UNIT_CONFIG_KEY) && jsonVal[TRU_UNIT_CONFIG_KEY].isObject()) {
                 // Handle object format: extract unitId and validate
                 Json::Value unitConfig = jsonVal[TRU_UNIT_CONFIG_KEY];
@@ -94,7 +96,7 @@ namespace TelematicBridge
                     std::string incomingUnitId = unitConfig[TRU_UNIT_ID_KEY].asString();
                     // Validate that the incoming unitId matches the configured unitId
                     if (!_unitId.empty() && incomingUnitId != _unitId) {
-                        PLOG(logERROR) << "Incoming Unit ID" << incomingUnitId << "does not match assigned ID" << _unitId;
+                        PLOG(logERROR) << "Incoming Unit ID " << incomingUnitId << " does not match assigned ID " << _unitId;
                         return false;
                     }
                 }
@@ -103,7 +105,7 @@ namespace TelematicBridge
                 PLOG(logERROR) << "Missing Unit Configuration in message ";
                 return false;
             }
-
+            PLOG(logINFO) << "Updating RSU configurations for TRU Unit ID: " << _unitId;
             if (jsonVal.isMember(TRU_RSU_CONFIGS_KEY) && jsonVal[TRU_RSU_CONFIGS_KEY].isArray()) {
                 setJsonArrayToRsuConfigList(jsonVal[TRU_RSU_CONFIGS_KEY]);
             }
@@ -112,15 +114,16 @@ namespace TelematicBridge
                 return false;
             }
             if(jsonVal.isMember(TRU_TIMESTAMP_KEY)){
-                _lastUpdateTimestamp = jsonVal[TRU_TIMESTAMP_KEY].asInt();
+                _lastUpdateTimestamp = jsonVal[TRU_TIMESTAMP_KEY].asInt64();
             }
             else{
                 PLOG(logERROR) << "Missing timestamp in message ";
                 return false;
             }
-        }catch (...)
+        }
+        catch (std::exception& e)
         {
-            PLOG(logERROR) << "Could not update TRU configuration from request.";
+            PLOG(logERROR) << "Could not update TRU configuration from request: " << e.what();
             return false;
         }
         return true;
@@ -153,11 +156,25 @@ namespace TelematicBridge
         for (Json::ArrayIndex i = 0; i < message.size(); ++i) {
             rsuConfig config;
             if (jsonValueToRsuConfig(message[i], config)) {
-                processAddAction(config);
+                PLOG(logINFO) << "Processing RSU config with action: " << actionToString(config.actionType) << " for RSU IP: " << config.rsu.ip;
+                switch(config.actionType){
+                    case action::add:
+                        processAddAction(config);
+                        break;
+                    case action::update:
+                        processUpdateAction(config);
+                        break;
+                    case action::remove:
+                        processDeleteAction(config);
+                        break;
+                    default:
+                        PLOG(logWARNING) << "Unknown action type for RSU config at index " << i << ", skipping.";
+                }
             } else {
                 PLOG(logERROR) << "Failed to parse RSU config at index " << i;
                 success = false;
             }
+            PLOG(logINFO) << "Successfully processed RSU config at index " << i << " with action: " << actionToString(config.actionType);
         }
         return success;
     }
@@ -184,7 +201,7 @@ namespace TelematicBridge
                 return false;
             }
 
-            if (!json.isMember(TRU_SNMP_KEY) || !json[TRU_SNMP_KEY].isObject()) {
+            if (config.actionType != action::remove && (!json.isMember(TRU_SNMP_KEY) || !json[TRU_SNMP_KEY].isObject())) {
                 PLOG(logERROR) << "Missing or invalid rsu 'snmp' object";
                 return false;
             }
@@ -233,6 +250,7 @@ namespace TelematicBridge
                 PLOG(logINFO)<<"Added RSU:"<< config.rsu.ip<<":"<< config.rsu.port;
 
                 // Check if RSU is already registered
+                std::lock_guard<std::mutex> lock(_configMutex);
                 if(_truRegistrationMap.find(config.rsu.ip) != _truRegistrationMap.end()){
                     PLOG(logDEBUG) << "RSU "<< config.rsu.ip << " already registered.";
                     return false;
@@ -263,6 +281,8 @@ namespace TelematicBridge
 
     bool truConfigWorker::processAddAction(rsuConfig config)
     {
+        std::lock_guard<std::mutex> lock(_configMutex);
+        PLOG(logINFO) << "Adding RSU configuration for RSU IP: " << config.rsu.ip;
         // Log error if max number of connections has been reached
         if(_truRegistrationMap.size() >= _maxConnections)
         {
@@ -277,12 +297,14 @@ namespace TelematicBridge
     }
 
     bool truConfigWorker::processUpdateAction(rsuConfig config){
-
+        std::lock_guard<std::mutex> lock(_configMutex);
+        PLOG(logINFO) << "Updating RSU configuration for RSU IP: " << config.rsu.ip;
         if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
             PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, attempting to add.";
             processAddAction(config);
         }
         else{
+            PLOG(logINFO) << "Updated RSU configuration for RSU IP: " << config.rsu.ip;
             _truRegistrationMap[config.rsu.ip] = config;
         }
         return true;
@@ -291,6 +313,8 @@ namespace TelematicBridge
 
     bool truConfigWorker::processDeleteAction(rsuConfig config){
         try{
+            PLOG(logINFO) << "Deleting RSU configuration for RSU IP: " << config.rsu.ip;
+            std::lock_guard<std::mutex> lock(_configMutex);
             if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
                 PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registering, ignoring request to delete.";
             }
@@ -353,6 +377,7 @@ namespace TelematicBridge
         message[TRU_UNIT_CONFIG_KEY] = unitObject;
 
         Json::Value rsuConfigList;
+        std::lock_guard<std::mutex> lock(_configMutex); 
         for (const auto& configPair : _truRegistrationMap) {
             Json::Value rsuConfig;
             rsuConfig[TRU_IP_KEY] = configPair.second.rsu.ip;
@@ -388,7 +413,7 @@ namespace TelematicBridge
 
     Json::Value truConfigWorker::getRsuConfigListAsJsonArray() {
         Json::Value jsonArray(Json::arrayValue);
-
+        std::lock_guard<std::mutex> lock(_configMutex);
         for (const auto& configPair : _truRegistrationMap) {
             jsonArray.append(rsuConfigToJsonValue(configPair.second));
         }
@@ -401,6 +426,7 @@ namespace TelematicBridge
     
     std::string truConfigWorker::getEventByRsu(const std::string &rsuIp, int rsuPort) const
     {
+        std::lock_guard<std::mutex> lock(_configMutex);
         // Search for matching RSU by IP and port in the registration map
         for (const auto& pair : _truRegistrationMap)
         {
@@ -418,6 +444,7 @@ namespace TelematicBridge
 
     int truConfigWorker::getRsuPortByIp(const std::string &rsuIp) const
     {
+        std::lock_guard<std::mutex> lock(_configMutex);
         auto it = _truRegistrationMap.find(rsuIp);
         if (it != _truRegistrationMap.end())
         {
