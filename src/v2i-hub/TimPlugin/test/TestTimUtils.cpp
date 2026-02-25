@@ -7,9 +7,9 @@ namespace TimPlugin {
     TEST(TestTimUtils, isTimActiveFalse ) {
         // Test expired TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
 
         EXPECT_FALSE(isTimActive(tim));
@@ -21,9 +21,9 @@ namespace TimPlugin {
       TEST(TestTimUtils, isTimActivePersistTrue ) {
         // Test Persist TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
