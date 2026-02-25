@@ -7,9 +7,9 @@ namespace TimPlugin {
     TEST(TestTimUtils, isTimActiveFalse ) {
         // Test expired TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2016.xml");
 #endif
 
         EXPECT_FALSE(isTimActive(tim));
@@ -21,9 +21,9 @@ namespace TimPlugin {
       TEST(TestTimUtils, isTimActivePersistTrue ) {
         // Test Persist TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
@@ -37,9 +37,9 @@ namespace TimPlugin {
     TEST(TestTimUtils, isTimActiveEdgeCases) {
         // Test TIM when start time == current time 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         // Set start time to current time 
@@ -385,9 +385,9 @@ namespace TimPlugin {
 
     TEST(TestTimUtils, readTimFile) {
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         EXPECT_EQ(2025, *(timPtr->dataFrames.list.array[0]->startYear));
@@ -395,13 +395,13 @@ namespace TimPlugin {
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
         // Attempt to read from file that does not exist
-        EXPECT_THROW(readTimFile("../../TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
+        EXPECT_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
 
         // Attempt to read from file that has the incorrect file extension
 #if SAEJ2735_SPEC >= 2024
-        EXPECT_NO_THROW(readTimFile("../../TimPlugin/test/test_files/tim_2024.bad_ext"));
+        EXPECT_NO_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.bad_ext"));
 #else
-        EXPECT_NO_THROW(readTimFile("../../TimPlugin/test/test_files/tim_2016.bad_ext"));
+        EXPECT_NO_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.bad_ext"));
 #endif
     }
 }

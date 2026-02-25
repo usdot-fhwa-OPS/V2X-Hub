@@ -522,10 +522,11 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 	CURL *req;
 	CURLcode res;
 	string urlfull = local_url+local_base;	
-	// Added this comment and added new lines
+	// Added this comment and added new line
+
 	req = curl_easy_init();
 	
-	// Some sort of comment 
+	// Some sort of comment a
 	if(req) {
 		curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
 		curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);

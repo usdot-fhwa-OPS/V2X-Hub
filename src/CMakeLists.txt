@@ -1,9 +1,74 @@
-CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
-project(V2XHub VERSION 7.11.1 LANGUAGES C CXX)
-set(CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.10.2)
+project(V2X-Hub VERSION 7.11.1 LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 17)
+# Set CMake module path to find stol-apt packages 
+list(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")
+list(APPEND CMAKE_MODULE_PATH "/opt/carma/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}")
+
+find_package(carma-clock REQUIRED)
+
+set(J2735_LIBRARY_NAME "")
+set(SAEJ2735_SPEC_VERSION "2024" CACHE STRING "Option to set version of the SAE J2735 specification to link as ASN_J2735_LIBRARIES.")
+IF( SAEJ2735_SPEC_VERSION EQUAL "2016")
+    set(J2735_LIBRARY_NAME "::stol-j2735-201603-carma")
+    # TODO Update stol-j2735 2016 version to remove 03 suffix which will allow for
+    # removal of SAJ2735_SPEC_FULL_VERSION variable
+    set(SAEJ2735_SPEC_FULL_VERSION "201603")
+
+    find_package(stol-j2735-201603-carma REQUIRED)
+ELSEIF( SAEJ2735_SPEC_VERSION EQUAL "2020")
+    set(J2735_LIBRARY_NAME "::stol-j2735-2020-carma")
+    set(SAEJ2735_SPEC_FULL_VERSION "2020")
+
+    find_package(stol-j2735-2020-carma REQUIRED)
+ELSEIF( SAEJ2735_SPEC_VERSION EQUAL "2024")
+    set(J2735_LIBRARY_NAME "::stol-j2735-2024-carma")
+    set(SAEJ2735_SPEC_FULL_VERSION "2024")
+
+    find_package(stol-j2735-2024-carma REQUIRED)
+ELSE()
+    message(FATAL_ERROR "Invalid SAEJ2735_SPEC_VERSION: ${SAEJ2735_SPEC_VERSION}")
+ENDIF()
+
+
+# Global values
+SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
+SET (TMX_APPDESCR "V2I Hub" CACHE INTERNAL "Application description")
+
+
+# Global values
+IF (TMX_VERBOSE)
+    SET(CMAKE_VERBOSE_MAKEFILE ON CACHE INTERNAL "C Project setting")
+    SET(CMAKE_USE_RELATIVE_PATHS ON CACHE INTERNAL "C Project setting")
+ENDIF (TMX_VERBOSE)
+
+ENABLE_LANGUAGE ( C )
+ENABLE_LANGUAGE ( CXX )
+
+INCLUDE (CheckCCompilerFlag)
+CHECK_C_COMPILER_FLAG ("-fPIC" CMAKE_C_FLAG_FPIC_SUPPORTED)
+
+IF (NOT TMX_BIN_DIR)
+    SET (TMX_BIN_DIR "${CMAKE_BINARY_DIR}/bin")
+ENDIF (NOT TMX_BIN_DIR)
+
+IF (NOT TMX_LIB_DIR)
+    SET (TMX_LIB_DIR "${CMAKE_BINARY_DIR}/lib")
+ENDIF (NOT TMX_LIB_DIR)
+
+IF (TMX_CROSSCOMPILING)
+    MESSAGE (STATUS "Cross-compiling for ${CMAKE_SYSTEM} on ${CMAKE_SYSTEM_PROCESSOR}")
+ENDIF (TMX_CROSSCOMPILING)
+
+LINK_DIRECTORIES (${PROJECT_NAME} "${TMX_LIB_DIR}")
+
+GET_FILENAME_COMPONENT (BUILD_SUB_DIR "${CMAKE_BINARY_DIR}" NAME)
+
+IF (TMX_DIR AND EXISTS "${TMX_DIR}")
+    SET (tmx-plugin_DIR ${TMX_DIR})
+ENDIF ()
 
 add_subdirectory(tmx)
 add_subdirectory(v2i-hub)
-add_dependencies(v2i-hub tmx)
 
-add_custom_target(build_all DEPENDS tmx v2i-hub)

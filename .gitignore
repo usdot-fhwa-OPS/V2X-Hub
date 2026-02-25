@@ -1,6 +1,7 @@
 # build directories
 src/tmx/build
 src/v2i-hub/build
+src/build
 
 # manually created directories
 secrets/

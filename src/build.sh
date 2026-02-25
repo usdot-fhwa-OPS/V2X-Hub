@@ -107,7 +107,7 @@ elif [ "$BUILD_TYPE" = "debug" ]; then
     # -Wall : Enables all the warnings about bad C++ practices (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
     # -Wextra : Enables extra warnings flags that are not enabled by -Wall (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
     # -DCMAKE_EXPORT_COMPILE_COMMANDS=ON : Generates compile_commands.json file for use with tools like sonar cloud, clang-tidy and language servers
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra"
 elif [ "$BUILD_TYPE" = "coverage" ]; then
     # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
     # deprecation warnings
@@ -122,7 +122,7 @@ fi
 echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
 
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" .
+cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
 cmake --build build -j "${numCPU}"
 cmake --install build
 
