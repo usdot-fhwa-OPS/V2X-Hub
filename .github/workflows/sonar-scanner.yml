@@ -45,7 +45,8 @@ jobs:
           ./build.sh coverage --j2735-version 2024 --skip-plugins ""
           ./test.sh coverage
       - name: Run sonar-scanner
-        uses: usdot-fhwa-stol/actions/sonar-scanner@main
+        uses: usdot-fhwa-stol/actions/sonar-scanner@fix-v2xhub
         with:
           sonar-token: ${{ secrets.SONAR_TOKEN }}
           working-dir: ${{ env.CLONED_REPO_PATH }}
+          sonar-properties-path: sonar-project.properties
