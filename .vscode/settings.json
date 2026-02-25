@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "atomic": "cpp",
+        "istream": "cpp",
+        "streambuf": "cpp"
+    },
+    "sonarlint.connectedMode.project": {
+        "connectionId": "SonarCloud Connection",
+        "projectKey": "usdot-fhwa-ops_V2X-Hub"
+    },
+    "sonarlint.pathToNodeExecutable": "/root/.nvm/versions/node/v22.22.0/bin/node",
+    "sonarlint.pathToCompileCommands": "/workspace/src/build/compile_commands.json"
+}
