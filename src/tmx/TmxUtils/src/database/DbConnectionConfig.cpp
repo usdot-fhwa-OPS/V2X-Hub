@@ -55,8 +55,9 @@ void DbConnectionConfig::loadFromEnvironment() {
 
 std::string DbConnectionConfig::getEnvVar(const char* envVar, const std::string& defaultValue) const {
     const char* value = std::getenv(envVar);
-    if (value != nullptr && strlen(value) > 0) {
-        return std::string(value);
+    if (value != nullptr) {
+        std::string_view sv(value);
+        if (!sv.empty()) return std::string(sv);
     }
     return defaultValue;
 }
