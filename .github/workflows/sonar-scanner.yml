@@ -41,9 +41,8 @@ jobs:
           ldconfig
       - name: Run Tests & Generate Gcovr Reports
         run: |
-          mkdir bw-output
           cd src
-          build.sh coverage --j2735-version 2024 --skip-plugins ""
+          ./build.sh coverage --j2735-version 2024 --skip-plugins ""
           ./test.sh coverage
       - name: Run sonar-scanner
         uses: usdot-fhwa-stol/actions/sonar-scanner@main
