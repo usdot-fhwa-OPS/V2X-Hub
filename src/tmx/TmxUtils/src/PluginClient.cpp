@@ -23,6 +23,7 @@
 #include "PluginUpgrader.h"
 #include "Uuid.h"
 #include "database/DbConnectionPool.h"
+#include "database/DbConnectionConfig.h"
 #include "version.h"
 
 #define BT_BUFFER_SIZE 100
@@ -32,6 +33,13 @@ using namespace tmx;
 
 namespace tmx {
 namespace utils {
+
+// Helper function to get database connection using configuration
+static DbConnection getConfiguredConnection(DbConnectionPool& pool) {
+	auto& config = DbConnectionConfig::getInstance();
+	std::string pwd = pool.GetPwd();
+	return pool.Connection(config.getConnectionUrl(), config.getUser(), pwd, config.getDatabase());
+}
 
 // Define static instance members.
 std::map<IvpPlugin*, PluginClient*> PluginClient::_instanceMap;
@@ -82,9 +90,7 @@ PluginClient::PluginClient(std::string name) :
 	try {
 		PLOG(logDEBUG) << "Calling DB upgrader";
 		DbConnectionPool pool;
-		std::string pwd = pool.GetPwd();
-		// "tcp://127.0.0.1:3306","IVP", pwd, "IVP"
-		DbConnection conn = pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(pool);
 
 		PluginUpgrader::UpgradeDatabase(&conn, IVPUTILS_VERSION);
 	} catch (runtime_error &ex) {
