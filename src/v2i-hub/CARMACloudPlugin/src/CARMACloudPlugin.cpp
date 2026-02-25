@@ -522,16 +522,11 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 	CURL *req;
 	CURLcode res;
 	string urlfull = local_url+local_base;	
-	// Added this comment and added new line
-
 	req = curl_easy_init();
-	
-	// Some sort of comment a
 	if(req) {
 		curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
-		curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
-		if(local_method.compare("POST")==0)
+		if(strcmp(local_method.c_str(),"POST")==0)
 		{
 			curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
 			curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
