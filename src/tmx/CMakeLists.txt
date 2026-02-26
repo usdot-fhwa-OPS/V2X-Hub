@@ -9,10 +9,15 @@
 #
 
 CMAKE_MINIMUM_REQUIRED (VERSION 3.10.2)
+PROJECT(tmx)
 set(CMAKE_CXX_STANDARD 17)
 # Global values
 SET (TMX_APPNAME tmx CACHE INTERNAL "Application name")
 SET (TMX_APPDESCR "Transportation Message eXchange (TMX)" CACHE INTERNAL "Application description")
+
+# Enable testing
+option(BUILD_TESTING "Build the testing tree." ON)
+include(CTest)
 
 IF (TMX_VERBOSE)
     SET(CMAKE_VERBOSE_MAKEFILE ON CACHE INTERNAL "C Project setting")
@@ -101,4 +106,3 @@ ENDIF ()
 
 INSTALL (EXPORT ${TMX_APPNAME} DESTINATION share/${TMX_APPNAME}
 			FILE ${TMX_APPNAME}-plugin-config.cmake)
-

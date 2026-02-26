@@ -1,5 +1,8 @@
 PROJECT ( tmxctl CXX )
 
+# Find required packages for testing
+find_package(Boost REQUIRED COMPONENTS program_options regex system)
+
 SET (LIBRARY_NAME ${PROJECT_NAME}Static)
 
 FILE (GLOB_RECURSE LIB_SOURCES "src/lib/*.c*")
@@ -29,7 +32,39 @@ INSTALL (TARGETS ${LIBRARY_NAME} EXPORT ${TMX_APPNAME}
 INSTALL (FILES ${HEADERS} 
          DESTINATION include COMPONENT ${PROJECT_NAME})
 
-# Add test subdirectory if testing is enabled
+################################
+#GTest
+###############################
+enable_testing()
+
+#############
+## Testing ##
+#############
 if(BUILD_TESTING)
-    add_subdirectory(test)
+    set(BINARY ${PROJECT_NAME}_test)
+
+    file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+
+    add_executable(${BINARY} ${TEST_SOURCES})
+
+    add_test(NAME ${BINARY} COMMAND ${BINARY})
+
+    target_link_libraries(${BINARY} PUBLIC
+        ${LIBRARY_NAME}
+        ${TMXUTILS_LIBRARIES}
+        ${Boost_LIBRARIES}
+        gtest
+        gmock
+        pthread
+    )
+
+    # Set C++ standard for test executable
+    set_property(TARGET ${BINARY} PROPERTY CXX_STANDARD 14)
+    set_property(TARGET ${BINARY} PROPERTY CXX_STANDARD_REQUIRED ON)
+
+    # Include directories for test
+    target_include_directories(${BINARY} PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
+        ${Boost_INCLUDE_DIRS}
+    )
 endif()
