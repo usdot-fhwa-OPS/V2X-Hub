@@ -29,3 +29,7 @@ INSTALL (TARGETS ${LIBRARY_NAME} EXPORT ${TMX_APPNAME}
 INSTALL (FILES ${HEADERS} 
          DESTINATION include COMPONENT ${PROJECT_NAME})
 
+# Add test subdirectory if testing is enabled
+if(BUILD_TESTING)
+    add_subdirectory(test)
+endif()
