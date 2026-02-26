@@ -434,3 +434,445 @@ TEST_F(DbConnectionConfigTest, SingletonThreadSafety) {
         EXPECT_EQ(instances[0], instances[i]) << "Thread " << i << " got different singleton instance";
     }
 }
+
+/**
+ * Test environment variables with special characters
+ */
+TEST_F(DbConnectionConfigTest, SpecialCharactersInEnvironmentVariables) {
+    // Test with special characters that might appear in real configurations
+    hostGuard_->set("db-server.example.com");
+    portGuard_->set("3306");
+    databaseGuard_->set("test_db-2024");
+    userGuard_->set("user_name-123");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ("db-server.example.com", config.getHost());
+    EXPECT_EQ("3306", config.getPort());
+    EXPECT_EQ("test_db-2024", config.getDatabase());
+    EXPECT_EQ("user_name-123", config.getUser());
+    EXPECT_EQ("tcp://db-server.example.com:3306", config.getConnectionUrl());
+}
+
+/**
+ * Test environment variables with Unicode characters
+ */
+TEST_F(DbConnectionConfigTest, UnicodeCharactersInEnvironmentVariables) {
+    // Test with Unicode characters
+    hostGuard_->set("测试服务器.example.com");
+    databaseGuard_->set("数据库");
+    userGuard_->set("用户名");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ("测试服务器.example.com", config.getHost());
+    EXPECT_EQ("数据库", config.getDatabase());
+    EXPECT_EQ("用户名", config.getUser());
+}
+
+/**
+ * Test very long environment variable values
+ */
+TEST_F(DbConnectionConfigTest, VeryLongEnvironmentVariables) {
+    // Create very long strings to test boundary conditions
+    std::string longHost(1000, 'a');
+    longHost += ".example.com";
+    std::string longDatabase(500, 'b');
+    std::string longUser(300, 'c');
+
+    hostGuard_->set(longHost);
+    databaseGuard_->set(longDatabase);
+    userGuard_->set(longUser);
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ(longHost, config.getHost());
+    EXPECT_EQ(longDatabase, config.getDatabase());
+    EXPECT_EQ(longUser, config.getUser());
+
+    // Verify connection URL is properly formatted even with long host
+    std::string expectedUrl = "tcp://" + longHost + ":3306";
+    EXPECT_EQ(expectedUrl, config.getConnectionUrl());
+}
+
+/**
+ * Test environment variables with whitespace
+ */
+TEST_F(DbConnectionConfigTest, WhitespaceInEnvironmentVariables) {
+    // Test with leading/trailing whitespace (should be preserved)
+    hostGuard_->set("  spaced-host.com  ");
+    portGuard_->set("  3307  ");
+    databaseGuard_->set("  SpacedDB  ");
+    userGuard_->set("  SpacedUser  ");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Environment variables should preserve whitespace as-is
+    EXPECT_EQ("  spaced-host.com  ", config.getHost());
+    EXPECT_EQ("  3307  ", config.getPort());
+    EXPECT_EQ("  SpacedDB  ", config.getDatabase());
+    EXPECT_EQ("  SpacedUser  ", config.getUser());
+}
+
+/**
+ * Test password file with whitespace content
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileWithWhitespace) {
+    // Test password with leading/trailing whitespace
+    std::string passwordWithSpaces = "  password_with_spaces  ";
+    TempFileGuard tempFile(passwordWithSpaces);
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should preserve whitespace in password
+    EXPECT_EQ(passwordWithSpaces, config.getPassword());
+}
+
+/**
+ * Test password file with only whitespace
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileOnlyWhitespace) {
+    // Test file containing only whitespace
+    TempFileGuard tempFile("   \t\n   ");
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should return the whitespace as-is (first line)
+    EXPECT_EQ("   \t", config.getPassword());
+}
+
+/**
+ * Test password file with special characters
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileSpecialCharacters) {
+    // Test password with special characters
+    std::string specialPassword = "p@ssw0rd!#$%^&*()_+-={}[]|\\:;\"'<>?,./~`";
+    TempFileGuard tempFile(specialPassword);
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ(specialPassword, config.getPassword());
+}
+
+/**
+ * Test password file with Unicode characters
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileUnicodeCharacters) {
+    // Test password with Unicode characters
+    std::string unicodePassword = "密码123пароль";
+    TempFileGuard tempFile(unicodePassword);
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ(unicodePassword, config.getPassword());
+}
+
+/**
+ * Test very long password
+ */
+TEST_F(DbConnectionConfigTest, VeryLongPassword) {
+    // Test with very long password
+    std::string longPassword(10000, 'x');
+    TempFileGuard tempFile(longPassword);
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ(longPassword, config.getPassword());
+}
+
+/**
+ * Test password file with no read permissions
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileNoReadPermissions) {
+    // Create temporary file with content
+    TempFileGuard tempFile("secret_password");
+
+    // Remove read permissions
+    chmod(tempFile.getPath().c_str(), 0000);
+
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should return empty string when file is not readable
+    EXPECT_EQ("", config.getPassword());
+
+    // Restore permissions for cleanup
+    chmod(tempFile.getPath().c_str(), 0644);
+}
+
+/**
+ * Test concurrent password file reading
+ */
+TEST_F(DbConnectionConfigTest, ConcurrentPasswordFileReading) {
+    // Create password file
+    TempFileGuard tempFile("concurrent_password");
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+
+    const int numThreads = 10;
+    const int numIterations = 50;
+    std::vector<std::thread> threads;
+    std::vector<std::vector<std::string>> results(numThreads);
+
+    // Launch multiple threads that concurrently read password
+    for (int i = 0; i < numThreads; ++i) {
+        threads.emplace_back([&, i]() {
+            DbConnectionConfig& config = DbConnectionConfig::getInstance();
+            results[i].reserve(numIterations);
+
+            for (int j = 0; j < numIterations; ++j) {
+                results[i].push_back(config.getPassword());
+                std::this_thread::sleep_for(std::chrono::microseconds(1));
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    // Verify all threads got consistent results
+    for (int i = 0; i < numThreads; ++i) {
+        for (int j = 0; j < numIterations; ++j) {
+            EXPECT_EQ("concurrent_password", results[i][j])
+                << "Thread " << i << " iteration " << j << " got inconsistent password";
+        }
+    }
+}
+
+/**
+ * Test password file modification during reading
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileModificationDuringReading) {
+    // Create initial password file
+    TempFileGuard tempFile("initial_password");
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Verify initial password
+    EXPECT_EQ("initial_password", config.getPassword());
+
+    // Modify the file content
+    tempFile.writeContent("modified_password");
+
+    // Reading should still work (may get old or new content depending on timing)
+    std::string password = config.getPassword();
+    EXPECT_TRUE(password == "initial_password" || password == "modified_password");
+
+    // After reload, should get new content
+    config.reloadConfiguration();
+    EXPECT_EQ("modified_password", config.getPassword());
+}
+
+/**
+ * Test connection URL with IPv6 addresses
+ */
+TEST_F(DbConnectionConfigTest, ConnectionUrlIPv6) {
+    // Test with IPv6 address
+    hostGuard_->set("::1");
+    portGuard_->set("3306");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ("tcp://::1:3306", config.getConnectionUrl());
+}
+
+/**
+ * Test connection URL with port edge cases
+ */
+TEST_F(DbConnectionConfigTest, ConnectionUrlPortEdgeCases) {
+    // Test with minimum port number
+    hostGuard_->set("localhost");
+    portGuard_->set("1");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    EXPECT_EQ("tcp://localhost:1", config.getConnectionUrl());
+
+    // Test with maximum port number
+    portGuard_->set("65535");
+    config.reloadConfiguration();
+
+    EXPECT_EQ("tcp://localhost:65535", config.getConnectionUrl());
+}
+
+/**
+ * Test multiple rapid reloads
+ */
+TEST_F(DbConnectionConfigTest, MultipleRapidReloads) {
+    hostGuard_->set("rapid-reload-host");
+    portGuard_->set("7777");
+
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Perform many rapid reloads
+    for (int i = 0; i < 100; ++i) {
+        config.reloadConfiguration();
+
+        // Verify configuration is still consistent
+        EXPECT_EQ("rapid-reload-host", config.getHost());
+        EXPECT_EQ("7777", config.getPort());
+        EXPECT_EQ("tcp://rapid-reload-host:7777", config.getConnectionUrl());
+    }
+}
+
+/**
+ * Test configuration consistency during concurrent operations
+ */
+TEST_F(DbConnectionConfigTest, ConfigurationConsistencyDuringConcurrentOperations) {
+    hostGuard_->set("consistency-test-host");
+    portGuard_->set("8888");
+    databaseGuard_->set("ConsistencyDB");
+    userGuard_->set("ConsistencyUser");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+
+    const int numThreads = 8;
+    const int numIterations = 200;
+    std::vector<std::thread> threads;
+    std::atomic<bool> allConsistent{true};
+
+    // Launch threads that perform mixed operations
+    for (int i = 0; i < numThreads; ++i) {
+        threads.emplace_back([&, i]() {
+            DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+            for (int j = 0; j < numIterations; ++j) {
+                // Get all values in one "transaction"
+                std::string host = config.getHost();
+                std::string port = config.getPort();
+                std::string database = config.getDatabase();
+                std::string user = config.getUser();
+                std::string url = config.getConnectionUrl();
+
+                // Verify internal consistency
+                std::string expectedUrl = "tcp://" + host + ":" + port;
+                if (url != expectedUrl) {
+                    allConsistent = false;
+                    break;
+                }
+
+                // Verify values are from the expected set
+                if (host != "consistency-test-host" ||
+                    port != "8888" ||
+                    database != "ConsistencyDB" ||
+                    user != "ConsistencyUser") {
+                    allConsistent = false;
+                    break;
+                }
+
+                // Occasionally trigger reload from some threads
+                if (i % 2 == 0 && j % 50 == 0) {
+                    config.reloadConfiguration();
+                }
+
+                std::this_thread::sleep_for(std::chrono::microseconds(1));
+            }
+        });
+    }
+
+    // Wait for all threads to complete
+    for (auto& thread : threads) {
+        thread.join();
+    }
+
+    EXPECT_TRUE(allConsistent.load()) << "Configuration was inconsistent during concurrent operations";
+}
+
+/**
+ * Test default constants accessibility
+ */
+TEST_F(DbConnectionConfigTest, DefaultConstants) {
+    // Test that default constants are accessible and have expected values
+    EXPECT_EQ("127.0.0.1", DbConnectionConfig::DEFAULT_HOST);
+    EXPECT_EQ("3306", DbConnectionConfig::DEFAULT_PORT);
+    EXPECT_EQ("IVP", DbConnectionConfig::DEFAULT_DATABASE);
+    EXPECT_EQ("IVP", DbConnectionConfig::DEFAULT_USER);
+}
+
+/**
+ * Test environment variable precedence over defaults
+ */
+TEST_F(DbConnectionConfigTest, EnvironmentVariablePrecedence) {
+    // Set some variables but not others
+    hostGuard_->set("custom-host");
+    // Leave port unset to test default
+    databaseGuard_->set("CustomDB");
+    // Leave user unset to test default
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should use custom values where set, defaults where not set
+    EXPECT_EQ("custom-host", config.getHost());
+    EXPECT_EQ("3306", config.getPort()); // Default
+    EXPECT_EQ("CustomDB", config.getDatabase());
+    EXPECT_EQ("IVP", config.getUser()); // Default
+}
+
+/**
+ * Test password file with binary content
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileBinaryContent) {
+    // Create file with binary content (including null bytes)
+    std::string binaryPassword = "password\0with\0nulls";
+    TempFileGuard tempFile;
+
+    // Write binary content directly
+    std::ofstream file(tempFile.getPath(), std::ios::binary);
+    file.write(binaryPassword.c_str(), binaryPassword.length());
+    file.close();
+
+    passwordGuard_->set(tempFile.getPath());
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should read until first null byte or newline
+    std::string result = config.getPassword();
+    EXPECT_EQ("password", result);
+}
+
+/**
+ * Test repeated getInstance calls performance
+ */
+TEST_F(DbConnectionConfigTest, RepeatedGetInstancePerformance) {
+    // This test ensures getInstance() is efficient for repeated calls
+    const int numCalls = 10000;
+    auto start = std::chrono::high_resolution_clock::now();
+
+    DbConnectionConfig* lastInstance = nullptr;
+    for (int i = 0; i < numCalls; ++i) {
+        DbConnectionConfig& instance = DbConnectionConfig::getInstance();
+        lastInstance = &instance;
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    // Should complete quickly (less than 100ms for 10k calls)
+    EXPECT_LT(duration.count(), 100000);
+    EXPECT_NE(nullptr, lastInstance);
+}
