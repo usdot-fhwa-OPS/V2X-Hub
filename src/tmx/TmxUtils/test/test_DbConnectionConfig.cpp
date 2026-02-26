@@ -70,13 +70,12 @@ public:
         }
         
         filePath_ = std::string(tempTemplate);
-        
-        // Write content if provided
-        if (!content.empty()) {
-            write(fd, content.c_str(), content.length());
-        }
-        
         close(fd);
+        
+        // Write content if provided using safer file stream operations
+        if (!content.empty()) {
+            writeContent(content);
+        }
     }
     
     ~TempFileGuard() {
@@ -876,4 +875,52 @@ TEST_F(DbConnectionConfigTest, RepeatedGetInstancePerformance) {
     // Should complete quickly (less than 100ms for 10k calls)
     EXPECT_LT(duration.count(), 100000);
     EXPECT_NE(nullptr, lastInstance);
+}
+
+/**
+ * Test getEnvVar method with null environment variable
+ */
+TEST_F(DbConnectionConfigTest, GetEnvVarWithNullValue) {
+    // Ensure a specific environment variable is not set
+    const char* testVarName = "DBCONFIG_TEST_NULL_VAR_12345";
+    unsetenv(testVarName);
+
+    // This should trigger the nullptr check in getEnvVar (lines 51-52)
+    hostGuard_->unset();
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should return default value when environment variable is null
+    EXPECT_EQ("127.0.0.1", config.getHost());
+}
+
+/**
+ * Test getEnvVar method with empty string environment variable
+ */
+TEST_F(DbConnectionConfigTest, GetEnvVarWithEmptyStringValue) {
+    // Set environment variable to empty string to test line 54 specifically
+    // This tests the case where value != nullptr but sv.empty() is true
+    hostGuard_->set("");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should return default value when environment variable is empty string (line 54 coverage)
+    EXPECT_EQ("127.0.0.1", config.getHost());
+}
+
+/**
+ * Test getEnvVar method with whitespace-only environment variable
+ */
+TEST_F(DbConnectionConfigTest, GetEnvVarWithWhitespaceOnlyValue) {
+    // Set environment variable to whitespace-only string
+    // This tests the case where value != nullptr and !sv.empty() is true (returns the whitespace)
+    hostGuard_->set("   ");
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Should return the whitespace value (not default) since whitespace is not empty
+    EXPECT_EQ("   ", config.getHost());
 }
