@@ -53,18 +53,11 @@ if(BUILD_TESTING)
         ${LIBRARY_NAME}
         ${TMXUTILS_LIBRARIES}
         ${Boost_LIBRARIES}
+        ${TMXAPI_LIBRARIES}
+        ${ASN_J2735_LIBRARIES}
         gtest
+        gtest_main
         gmock
         pthread
-    )
-
-    # Set C++ standard for test executable
-    set_property(TARGET ${BINARY} PROPERTY CXX_STANDARD 14)
-    set_property(TARGET ${BINARY} PROPERTY CXX_STANDARD_REQUIRED ON)
-
-    # Include directories for test
-    target_include_directories(${BINARY} PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/lib
-        ${Boost_INCLUDE_DIRS}
     )
 endif()

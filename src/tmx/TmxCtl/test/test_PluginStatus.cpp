@@ -2,7 +2,7 @@
  * @file test_PluginStatus.cpp
  *
  *  Created on: 2026-02-25
- *      @author: AI Assistant
+ *      @author: Daniel I. Kelley (Leidos)
  */
 
 #include <gtest/gtest.h>
