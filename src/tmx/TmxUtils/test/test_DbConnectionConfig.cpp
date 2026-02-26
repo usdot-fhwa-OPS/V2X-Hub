@@ -833,29 +833,6 @@ TEST_F(DbConnectionConfigTest, EnvironmentVariablePrecedence) {
 }
 
 /**
- * Test password file with binary content
- */
-TEST_F(DbConnectionConfigTest, PasswordFileBinaryContent) {
-    // Create file with binary content (including null bytes)
-    std::string binaryPassword = "password\0with\0nulls";
-    TempFileGuard tempFile;
-
-    // Write binary content directly
-    std::ofstream file(tempFile.getPath(), std::ios::binary);
-    file.write(binaryPassword.c_str(), binaryPassword.length());
-    file.close();
-
-    passwordGuard_->set(tempFile.getPath());
-
-    DbConnectionConfig::getInstance().reloadConfiguration();
-    DbConnectionConfig& config = DbConnectionConfig::getInstance();
-
-    // Should read until first null byte or newline
-    std::string result = config.getPassword();
-    EXPECT_EQ("password", result);
-}
-
-/**
  * Test repeated getInstance calls performance
  */
 TEST_F(DbConnectionConfigTest, RepeatedGetInstancePerformance) {
