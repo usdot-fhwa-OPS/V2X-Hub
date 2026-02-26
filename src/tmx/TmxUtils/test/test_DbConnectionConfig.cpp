@@ -802,14 +802,23 @@ TEST_F(DbConnectionConfigTest, ConfigurationConsistencyDuringConcurrentOperation
 }
 
 /**
- * Test default constants accessibility
+ * Test default values behavior (indirect test of default constants)
  */
-TEST_F(DbConnectionConfigTest, DefaultConstants) {
-    // Test that default constants are accessible and have expected values
-    EXPECT_EQ("127.0.0.1", DbConnectionConfig::DEFAULT_HOST);
-    EXPECT_EQ("3306", DbConnectionConfig::DEFAULT_PORT);
-    EXPECT_EQ("IVP", DbConnectionConfig::DEFAULT_DATABASE);
-    EXPECT_EQ("IVP", DbConnectionConfig::DEFAULT_USER);
+TEST_F(DbConnectionConfigTest, DefaultValuesBehavior) {
+    // Ensure all environment variables are unset
+    hostGuard_->unset();
+    portGuard_->unset();
+    databaseGuard_->unset();
+    userGuard_->unset();
+
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+
+    // Test that default values are used when environment variables are not set
+    EXPECT_EQ("127.0.0.1", config.getHost());
+    EXPECT_EQ("3306", config.getPort());
+    EXPECT_EQ("IVP", config.getDatabase());
+    EXPECT_EQ("IVP", config.getUser());
 }
 
 /**
