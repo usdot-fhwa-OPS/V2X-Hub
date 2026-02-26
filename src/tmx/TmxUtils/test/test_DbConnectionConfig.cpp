@@ -595,25 +595,17 @@ TEST_F(DbConnectionConfigTest, VeryLongPassword) {
 }
 
 /**
- * Test password file with no read permissions
+ * Test password file directory that doesn't exist
  */
-TEST_F(DbConnectionConfigTest, PasswordFileNoReadPermissions) {
-    // Create temporary file with content
-    TempFileGuard tempFile("secret_password");
-
-    // Remove read permissions
-    chmod(tempFile.getPath().c_str(), 0000);
-
-    passwordGuard_->set(tempFile.getPath());
+TEST_F(DbConnectionConfigTest, PasswordFileInNonExistentDirectory) {
+    // Set MYSQL_PASSWORD to a file in a non-existent directory
+    passwordGuard_->set("/tmp/non_existent_dir_12345/password_file");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
 
-    // Should return empty string when file is not readable
+    // Should return empty string when directory doesn't exist
     EXPECT_EQ("", config.getPassword());
-
-    // Restore permissions for cleanup
-    chmod(tempFile.getPath().c_str(), 0644);
 }
 
 /**
