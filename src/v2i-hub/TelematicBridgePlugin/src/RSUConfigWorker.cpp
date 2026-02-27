@@ -250,10 +250,12 @@ namespace TelematicBridge
                 PLOG(logINFO)<<"Added RSU:"<< config.rsu.ip<<":"<< config.rsu.port;
 
                 // Check if RSU is already registered
-                std::lock_guard<std::mutex> lock(_configMutex);
-                if(_truRegistrationMap.find(config.rsu.ip) != _truRegistrationMap.end()){
-                    PLOG(logDEBUG) << "RSU "<< config.rsu.ip << " already registered.";
-                    return false;
+                {
+                    std::lock_guard<std::mutex> lock(_configMutex);
+                    if(_truRegistrationMap.find(config.rsu.ip) != _truRegistrationMap.end()){
+                        PLOG(logDEBUG) << "RSU "<< config.rsu.ip << " already registered.";
+                        return false;
+                    }
                 }
 
                 Json::Value snmp = rsuConfigJson[TRU_SNMP_KEY];
@@ -300,8 +302,8 @@ namespace TelematicBridge
         std::lock_guard<std::mutex> lock(_configMutex);
         PLOG(logINFO) << "Updating RSU configuration for RSU IP: " << config.rsu.ip;
         if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
-            PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, attempting to add.";
-            processAddAction(config);
+            PLOG(logERROR) << "RSU " << config.rsu.ip << " currently not registered, ignoring request to update.";
+            return false;
         }
         else{
             PLOG(logINFO) << "Updated RSU configuration for RSU IP: " << config.rsu.ip;
@@ -316,7 +318,8 @@ namespace TelematicBridge
             PLOG(logINFO) << "Deleting RSU configuration for RSU IP: " << config.rsu.ip;
             std::lock_guard<std::mutex> lock(_configMutex);
             if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
-                PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registering, ignoring request to delete.";
+                PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, ignoring request to delete.";
+                return false;
             }
             else{
                 _truRegistrationMap.erase(config.rsu.ip);
