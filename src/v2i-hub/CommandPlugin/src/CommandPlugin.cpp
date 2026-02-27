@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstdlib>
+#include "database/DbConnectionConfig.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
@@ -29,8 +31,6 @@ const char * CommandPlugin::_httpParamNames[4] = {
 std::atomic<uint64_t> CommandPlugin::_eventRowLimit{500};
 string CommandPlugin::_downloadPath = "/var/www/download";
 mutex CommandPlugin::_configLock;
-string CommandPlugin::_databaseAddress = "127.0.0.1";
-string CommandPlugin::_databasePort = "3306";
 uint64_t CommandPlugin::_updateIntervalMS = 1000;
 uint64_t CommandPlugin::_heartbeatIntervalMS = 30000;
 uint64_t CommandPlugin::_lastPluginsUpdateTimeMS = 0;
@@ -85,8 +85,9 @@ std::map<string, CommandPlugin::UploadData> CommandPlugin::_uploadRequests;
  */
 CommandPlugin::CommandPlugin(string name) : PluginClient(name)
 {
-	//set tmxcontrol connection url
-	_tmxControl.SetConnectionUrl(string("tcp://" + _databaseAddress + ":" + _databasePort));
+	//set tmxcontrol connection url using DnConnectionconfig
+	auto& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+	_tmxControl.SetConnectionUrl(dbConfig.getConnectionUrl());
 	_tmxControl.DisablePermissionCheck();
 
 	// Add a message filter and handler for each message this plugin wants to receive.
@@ -1285,7 +1286,19 @@ int CommandPlugin::Main()
 	lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
 
-	info.port = 19760;
+	// Get WebSocket port from environment variable, default to 19760
+	const char* wsPortEnv = std::getenv("COMMAND_WS_PORT");
+	int wsPort = 19760; // Default port
+	if (wsPortEnv != nullptr) {
+		try {
+			wsPort = std::stoi(wsPortEnv);
+			PLOG(logINFO) << "Using WebSocket port from environment: " << wsPort;
+		} catch (const std::exception& e) {
+			PLOG(logWARNING) << "Invalid COMMAND_WS_PORT value, using default: 19760";
+		}
+	}
+
+	info.port = wsPort;
 	info.protocols = protocols;
 	info.gid = -1;
 	info.uid = -1;
