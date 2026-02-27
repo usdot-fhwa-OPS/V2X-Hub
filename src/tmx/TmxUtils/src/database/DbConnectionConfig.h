@@ -8,6 +8,12 @@
 #ifndef SRC_DATABASE_DBCONNECTIONCONFIG_H_
 #define SRC_DATABASE_DBCONNECTIONCONFIG_H_
 
+#include "../PluginLog.h"
+
+#include <cstdlib>
+#include <fstream>
+#include <sstream>
+#include <iostream>
 #include <string>
 #include <mutex>
 

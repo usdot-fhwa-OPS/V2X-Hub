@@ -6,12 +6,7 @@
  */
 
 #include "DbConnectionConfig.h"
-#include "../Logger.h"
 
-#include <cstdlib>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 
 namespace tmx {
 namespace utils {
@@ -45,10 +40,10 @@ void DbConnectionConfig::loadFromEnvironment() {
         passwordFile = std::string(pwdFileEnv);
     } else {
         passwordFile = "";
-        LOG_TO_STREAM(logWARNING, std::cerr) << "MYSQL_PASSWORD environment variable not set" << std::endl;
+        FILE_LOG(logWARNING) << "MYSQL_PASSWORD environment variable not set" << std::endl;
     }
     
-    LOG_TO_STREAM(logDEBUG, std::cout) << "Database configuration loaded - Host: " << host 
+    FILE_LOG(logDEBUG) << "Database configuration loaded - Host: " << host 
                    << ", Port: " << port 
                    << ", Database: " << database 
                    << ", User: " << user << std::endl;
@@ -94,13 +89,13 @@ std::string DbConnectionConfig::getPassword() const {
     std::lock_guard<std::mutex> lock(configMutex);
     
     if (passwordFile.empty()) {
-        LOG_TO_STREAM(logERROR, std::cerr) << "MYSQL_PASSWORD environment variable not set" << std::endl;
+        FILE_LOG(logERROR) << "MYSQL_PASSWORD environment variable not set" << std::endl;
         return "";
     }
     
     std::ifstream file(passwordFile);
     if (!file.is_open()) {
-        LOG_TO_STREAM(logERROR, std::cerr) << "Unable to read password file: " << passwordFile << std::endl;
+        FILE_LOG(logERROR) << "Unable to read password file: " << passwordFile << std::endl;
         return "";
     }
     
@@ -108,7 +103,7 @@ std::string DbConnectionConfig::getPassword() const {
     std::getline(file, password);
     
     if (password.empty()) {
-        LOG_TO_STREAM(logERROR, std::cerr) << "Empty password file: " << passwordFile << std::endl;
+        FILE_LOG(logERROR) << "Empty password file: " << passwordFile << std::endl;
         return "";
     }
     
@@ -116,7 +111,7 @@ std::string DbConnectionConfig::getPassword() const {
 }
 
 void DbConnectionConfig::reloadConfiguration() {
-    LOG_TO_STREAM(logINFO, std::cout) << "Reloading database configuration from environment variables" << std::endl;
+    FILE_LOG(logINFO) << "Reloading database configuration from environment variables" << std::endl;
     loadFromEnvironment();
 }
 
