@@ -138,6 +138,42 @@ namespace TelematicBridge
         ASSERT_EQ(rsu.actionType, action::unknown);
     }
 
+    TEST_F(TestRSUConfigWorker, TestStringToActionCreate)
+    {
+        Json::Value config = createValidRsuConfigJson();
+        config["action"] = "create";
+
+        rsuConfig rsu;
+        bool result = worker->jsonValueToRsuConfig(config, rsu);
+
+        ASSERT_TRUE(result);
+        ASSERT_EQ(rsu.actionType, action::add);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestStringToActionRemove)
+    {
+        Json::Value config = createValidRsuConfigJson();
+        config["action"] = "remove";
+
+        rsuConfig rsu;
+        bool result = worker->jsonValueToRsuConfig(config, rsu);
+
+        ASSERT_TRUE(result);
+        ASSERT_EQ(rsu.actionType, action::remove);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestStringToActionUpdate)
+    {
+        Json::Value config = createValidRsuConfigJson();
+        config["action"] = "update";
+
+        rsuConfig rsu;
+        bool result = worker->jsonValueToRsuConfig(config, rsu);
+
+        ASSERT_TRUE(result);
+        ASSERT_EQ(rsu.actionType, action::update);
+    }
+
     TEST_F(TestRSUConfigWorker, TestActionDefaultsToAdd)
     {
         Json::Value config = createValidRsuConfigJson();
@@ -149,8 +185,6 @@ namespace TelematicBridge
         ASSERT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::add);
     }
-
-    // ==================== jsonValueToRsuConfig Tests ====================
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigSuccess)
     {
@@ -640,9 +674,185 @@ namespace TelematicBridge
         ASSERT_TRUE(result);
     }
 
+    TEST_F(TestRSUConfigWorker, TestProcessAddActionSuccess)
+    {
+        rsuConfig config;
+        config.actionType = action::add;
+        config.event = "test";
+        config.rsu.ip = "192.168.1.80";
+        config.rsu.port = 161;
+        config.snmp.userKey = "user";
+
+        bool result = worker->processAddAction(config);
+        ASSERT_TRUE(result);
+
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
+        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.80");
+    }
+
+    TEST_F(TestRSUConfigWorker, TestProcessAddActionMaxConnectionsReached)
+    {
+        // Set max connections to 2 by loading a config file
+        string testPath = "/tmp/test_max_connections.json";
+        string configContent = R"({
+            "unitConfig": {
+                "unitId": "TestUnit",
+                "maxConnections": 2
+            },
+            "rsuConfigs": [],
+            "timestamp": 1234567890
+        })";
+        createTestConfigFile(testPath, configContent);
+        worker->loadRSUConfigListFromFile(testPath);
+        removeTestFile(testPath);
+
+        // Add first RSU
+        rsuConfig config1;
+        config1.actionType = action::add;
+        config1.event = "test1";
+        config1.rsu.ip = "192.168.1.81";
+        config1.rsu.port = 161;
+        config1.snmp.userKey = "user1";
+
+        bool result = worker->processAddAction(config1);
+        ASSERT_TRUE(result);
+
+        // Add second RSU
+        rsuConfig config2;
+        config2.actionType = action::add;
+        config2.event = "test2";
+        config2.rsu.ip = "192.168.1.82";
+        config2.rsu.port = 161;
+        config2.snmp.userKey = "user2";
+
+        result = worker->processAddAction(config2);
+        ASSERT_TRUE(result);
+
+        rsuConfig config3;
+        config3.actionType = action::add;
+        config3.event = "test3";
+        config3.rsu.ip = "192.168.1.83";
+        config3.rsu.port = 161;
+        config3.snmp.userKey = "user3";
+
+        result = worker->processAddAction(config3);
+        ASSERT_FALSE(result);  
+
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 2);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestProcessUpdateActionMaxConnectionsReached)
+    {
+        // Set max connections to 1
+        string testPath = "/tmp/test_update_max_connections.json";
+        string configContent = R"({
+            "unitConfig": {
+                "unitId": "TestUnit",
+                "maxConnections": 1
+            },
+            "rsuConfigs": [],
+            "timestamp": 1234567890
+        })";
+        createTestConfigFile(testPath, configContent);
+        worker->loadRSUConfigListFromFile(testPath);
+        removeTestFile(testPath);
+
+        // Add first RSU
+        rsuConfig config1;
+        config1.actionType = action::add;
+        config1.event = "test1";
+        config1.rsu.ip = "192.168.1.91";
+        config1.rsu.port = 161;
+        config1.snmp.userKey = "user1";
+
+        bool result = worker->processAddAction(config1);
+        ASSERT_TRUE(result);
+
+        rsuConfig config2;
+        config2.actionType = action::update;
+        config2.event = "test2";
+        config2.rsu.ip = "192.168.1.92";
+        config2.rsu.port = 161;
+        config2.snmp.userKey = "user2";
+
+        result = worker->processUpdateAction(config2);
+        ASSERT_FALSE(result); 
+
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
+        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.91");
+    }
+
     TEST_F(TestRSUConfigWorker, getPluginHeartBeatInterval)
     {
         int interval = worker->getPluginHeartBeatInterval();
         ASSERT_EQ(interval, 10); // Default value
+    }
+
+    TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListWithUnknownAction)
+    {
+        // Test that unknown action type triggers the default case in switch statement
+        Json::Value message;
+        Json::Value rsuConfigJson = createValidRsuConfigJson();
+        rsuConfigJson["action"] = "invalid_action";  // This will result in action::unknown
+        message.append(rsuConfigJson);
+
+        bool result = worker->setJsonArrayToRsuConfigList(message);
+        ASSERT_TRUE(result);  // Should still return true, but RSU not added due to unknown action
+
+        // Verify that the RSU was not added (unknown action skips processing)
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 0);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListWithInvalidJson)
+    {
+        // Test the failure path when jsonValueToRsuConfig returns false
+        Json::Value message;
+        Json::Value invalidConfig;
+        invalidConfig["action"] = "add";
+        // Missing required fields like "event", "rsu", "snmp" to make jsonValueToRsuConfig fail
+        message.append(invalidConfig);
+
+        bool result = worker->setJsonArrayToRsuConfigList(message);
+        ASSERT_FALSE(result);  // Should return false due to parse failure
+
+        // Verify no RSU was added
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 0);
+    }
+
+    TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListMultipleActionsIncludingUnknown)
+    {
+        // Test processing multiple configs including one with unknown action
+        Json::Value message;
+        
+        // Valid add action
+        Json::Value addConfig = createValidRsuConfigJson();
+        addConfig["action"] = "add";
+        addConfig["rsu"]["ip"] = "192.168.1.100";
+        message.append(addConfig);
+        
+        // Unknown action
+        Json::Value unknownConfig = createValidRsuConfigJson();
+        unknownConfig["action"] = "unknown_action";
+        unknownConfig["rsu"]["ip"] = "192.168.1.101";
+        message.append(unknownConfig);
+        
+        // Valid update action (will fail since not registered, but still valid)
+        Json::Value updateConfig = createValidRsuConfigJson();
+        updateConfig["action"] = "update";
+        updateConfig["rsu"]["ip"] = "192.168.1.102";
+        message.append(updateConfig);
+
+        bool result = worker->setJsonArrayToRsuConfigList(message);
+        ASSERT_TRUE(result);  // Overall should succeed
+
+        // Only the add action should have been processed
+        auto truConfig = worker->getTruConfigAsJsonArray();
+        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
+        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.100");
     }
 }
