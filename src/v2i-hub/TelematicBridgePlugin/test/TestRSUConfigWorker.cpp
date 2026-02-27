@@ -569,6 +569,7 @@ namespace TelematicBridge
 
     TEST_F(TestRSUConfigWorker, TestProcessUpdateActionExisting)
     {
+        // Test updating a non-registered RSU returns false
         rsuConfig config;
         config.actionType = action::update;
         config.event = "test";
@@ -577,9 +578,9 @@ namespace TelematicBridge
         config.snmp.userKey = "user";
 
         bool result = worker->processUpdateAction(config);
-        ASSERT_TRUE(result);  // Adds new RSU since not registered
+        ASSERT_FALSE(result);  // Returns false since RSU not registered
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 0);
 
         // First add RSU
         Json::Value addMsg;
@@ -588,6 +589,7 @@ namespace TelematicBridge
         addMsg["rsuConfigs"].append(rsuConfigJson);
         worker->setJsonArrayToRsuConfigList(addMsg);
 
+        // Now update the existing RSU
         rsuConfig updatedConfig;
         updatedConfig.actionType = action::update;
         updatedConfig.event = "updated";
@@ -599,12 +601,16 @@ namespace TelematicBridge
         ASSERT_TRUE(result);
 
         truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 2);
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
 
+        // Verify the update was applied
+        ASSERT_EQ(truConfig["rsuConfigs"][0]["event"].asString(), "updated");
+        ASSERT_EQ(truConfig["rsuConfigs"][0]["snmp"]["user"].asString(), "newuser");
 
+        // Clean up by deleting
         result = worker->processDeleteAction(updatedConfig);
         truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
+        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 0);
         ASSERT_TRUE(result);
     }
 
@@ -614,7 +620,7 @@ namespace TelematicBridge
         config.rsu.ip = "192.168.1.99";
 
         bool result = worker->processDeleteAction(config);
-        ASSERT_TRUE(result);  // Returns true even if not found
+        ASSERT_FALSE(result);  // Returns false when RSU not found
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessDeleteActionSuccess)
