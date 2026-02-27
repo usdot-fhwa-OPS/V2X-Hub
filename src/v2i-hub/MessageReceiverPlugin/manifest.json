@@ -24,11 +24,6 @@
 			"description":"Comma separated list of SAE J2735 message ID values."
 		},
 		{
-			"key":"IP",
-			"default":"127.0.0.1",
-			"description":"IP address for the incoming message network connection."
-		},
-		{
 			"key":"Port",
 			"default":"26789",
 			"description":"Port for the incoming message network connection."
@@ -41,7 +36,7 @@
 		{
 			"key":"EnableSimulatedBSM",
 			"default":"true",
-			"description":"Accept and route incoming BSM messages from a V2X Hub simulator." 
+			"description":"Accept and route incoming BSM messages from a V2X Hub simulator."
 		},
 		{
 			"key":"EnableSimulatedSRM",
@@ -57,7 +52,7 @@
 			"key":"EnableVerification",
 			"default":"0",
 			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
-		},		
+		},
 		{
 			"key":"HSMurl",
 			"default": "http://<SoftHSM IP>:3000/v1/scms/",
