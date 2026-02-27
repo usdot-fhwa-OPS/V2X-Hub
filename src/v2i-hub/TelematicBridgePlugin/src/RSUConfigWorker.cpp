@@ -121,7 +121,7 @@ namespace TelematicBridge
                 return false;
             }
         }
-        catch (std::exception& e)
+        catch (const std::exception& e)
         {
             PLOG(logERROR) << "Could not update TRU configuration from request: " << e.what();
             return false;

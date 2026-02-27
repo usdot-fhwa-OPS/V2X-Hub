@@ -110,7 +110,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::add);
     }
 
@@ -122,7 +122,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::remove);
     }
 
@@ -134,7 +134,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::unknown);
     }
 
@@ -146,7 +146,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::add);
     }
 
@@ -158,7 +158,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::remove);
     }
 
@@ -170,7 +170,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::update);
     }
 
@@ -182,7 +182,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.actionType, action::add);
     }
 
@@ -193,7 +193,7 @@ namespace TelematicBridge
 
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.event, "startup");
         ASSERT_EQ(rsu.rsu.ip, "192.168.1.10");
         ASSERT_EQ(rsu.rsu.port, 161);
@@ -208,7 +208,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigMissingRsuObject)
@@ -219,7 +219,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigMissingSnmpObject)
@@ -230,7 +230,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigDefaultPort)
@@ -241,7 +241,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
         ASSERT_EQ(rsu.rsu.port, 8080);  // Default port
     }
 
@@ -253,7 +253,7 @@ namespace TelematicBridge
         rsuConfig rsu;
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     // ==================== loadRSUConfigListFromFile Tests ====================
@@ -261,14 +261,14 @@ namespace TelematicBridge
     TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileSuccess)
     {
         string fakePath = "";
-        ASSERT_FALSE(worker->loadRSUConfigListFromFile(fakePath));
+        EXPECT_FALSE(worker->loadRSUConfigListFromFile(fakePath));
 
         string testPath = "/tmp/test_tru_config.json";
         createTestConfigFile(testPath, getValidCompleteConfigFileContent());
 
         bool result = worker->loadRSUConfigListFromFile(testPath);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         // Verify loaded config
         string unitId = worker->getUnitId();
@@ -281,7 +281,7 @@ namespace TelematicBridge
     {
         bool result = worker->loadRSUConfigListFromFile("/nonexistent/path.json");
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileInvalidJson)
@@ -291,7 +291,7 @@ namespace TelematicBridge
 
         bool result = worker->loadRSUConfigListFromFile(testPath);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
 
         removeTestFile(testPath);
     }
@@ -329,7 +329,7 @@ namespace TelematicBridge
 
         bool result = worker->updateTRUStatus(updateMessage);
 
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingUnitConfig)
@@ -340,7 +340,7 @@ namespace TelematicBridge
 
         bool result = worker->updateTRUStatus(updateMessage);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingRsuConfigs)
@@ -352,7 +352,7 @@ namespace TelematicBridge
 
         bool result = worker->updateTRUStatus(message);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMissingTimestamp)
@@ -368,7 +368,7 @@ namespace TelematicBridge
 
         bool result = worker->updateTRUStatus(updateMessage);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestUpdateTRUStatusMismatchedUnitId)
@@ -387,7 +387,7 @@ namespace TelematicBridge
 
         bool result = worker->updateTRUStatus(updateMessage);
 
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestActionToString){
@@ -414,9 +414,9 @@ namespace TelematicBridge
 
         Json::Value output = worker->getTruConfigAsJsonArray();
 
-        ASSERT_TRUE(output.isMember("rsuConfigs"));
-        ASSERT_TRUE(output["rsuConfigs"].isArray());
-        ASSERT_TRUE(output["rsuConfigs"].empty());
+        EXPECT_TRUE(output.isMember("rsuConfigs"));
+        EXPECT_TRUE(output["rsuConfigs"].isArray());
+        EXPECT_TRUE(output["rsuConfigs"].empty());
     }
 
     // ==================== getTruConfigAsJsonArray Tests ====================
@@ -425,9 +425,9 @@ namespace TelematicBridge
     {
         Json::Value result = worker->getTruConfigAsJsonArray();
 
-        ASSERT_TRUE(result.isMember("unitConfig"));
-        ASSERT_TRUE(result.isMember("rsuConfigs"));
-        ASSERT_TRUE(result.isMember("timestamp"));
+        EXPECT_TRUE(result.isMember("unitConfig"));
+        EXPECT_TRUE(result.isMember("rsuConfigs"));
+        EXPECT_TRUE(result.isMember("timestamp"));
     }
 
     TEST_F(TestRSUConfigWorker, TestGetTruConfigAsJsonArrayWithLoadedData)
@@ -439,7 +439,7 @@ namespace TelematicBridge
 
         Json::Value result = worker->getTruConfigAsJsonArray();
 
-        ASSERT_TRUE(result["rsuConfigs"].isArray());
+        EXPECT_TRUE(result["rsuConfigs"].isArray());
         ASSERT_GT(result["rsuConfigs"].size(), 0);
         ASSERT_EQ(result["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.10");
     }
@@ -450,10 +450,10 @@ namespace TelematicBridge
     {
         Json::Value result = worker->getTRUConfigResponse(true);
 
-        ASSERT_TRUE(result.isMember("unitConfig"));
-        ASSERT_TRUE(result.isMember("rsuConfigs"));
-        ASSERT_TRUE(result.isMember("status"));
-        ASSERT_TRUE(result.isMember("timestamp"));
+        EXPECT_TRUE(result.isMember("unitConfig"));
+        EXPECT_TRUE(result.isMember("rsuConfigs"));
+        EXPECT_TRUE(result.isMember("status"));
+        EXPECT_TRUE(result.isMember("timestamp"));
         ASSERT_EQ(result["status"].asString(), "success");
     }
 
@@ -461,7 +461,7 @@ namespace TelematicBridge
     {
         Json::Value result = worker->getTRUConfigResponse(false);
 
-        ASSERT_TRUE(result.isMember("status"));
+        EXPECT_TRUE(result.isMember("status"));
         ASSERT_EQ(result["status"].asString(), "failed");
     }
 
@@ -474,13 +474,13 @@ namespace TelematicBridge
 
         Json::Value result = worker->getTRUConfigResponse(true);
 
-        ASSERT_TRUE(result["unitConfig"].isObject());
-        ASSERT_TRUE(result["unitConfig"].isMember("unitId"));
+        EXPECT_TRUE(result["unitConfig"].isObject());
+        EXPECT_TRUE(result["unitConfig"].isMember("unitId"));
 
-        ASSERT_TRUE(result["rsuConfigs"].isArray());
+        EXPECT_TRUE(result["rsuConfigs"].isArray());
         if (result["rsuConfigs"].size() > 0) {
-            ASSERT_TRUE(result["rsuConfigs"][0].isMember("ip"));
-            ASSERT_TRUE(result["rsuConfigs"][0].isMember("port"));
+            EXPECT_TRUE(result["rsuConfigs"][0].isMember("ip"));
+            EXPECT_TRUE(result["rsuConfigs"][0].isMember("port"));
         }
     }
 
@@ -490,7 +490,7 @@ namespace TelematicBridge
     {
         string unitId = worker->getUnitId();
         // Default should be empty
-        ASSERT_TRUE(unitId.empty());
+        EXPECT_TRUE(unitId.empty());
     }
 
     TEST_F(TestRSUConfigWorker, TestGetUnitIdAfterLoad)
@@ -522,7 +522,7 @@ namespace TelematicBridge
         config["snmp"]["securityLevel"] = "authPriv";
 
         bool result = worker->processRSUConfig(config);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestValidateRequiredKeysMissing)
@@ -535,7 +535,7 @@ namespace TelematicBridge
         // Missing other required SNMP keys
 
         bool result = worker->processRSUConfig(config);
-        ASSERT_FALSE(result);  // Should catch exception and return false
+        EXPECT_FALSE(result);  // Should catch exception and return false
     }
 
 
@@ -545,7 +545,7 @@ namespace TelematicBridge
         notArray["key"] = "value";
 
         bool result = worker->setJsonArrayToUnitConfig(notArray);
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
 
         Json::Value unitConfigArray;
 
@@ -562,7 +562,7 @@ namespace TelematicBridge
 
 
         result = worker->setJsonArrayToUnitConfig(unitConfigArray);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         auto jsonConfig = worker->getUnitConfigAsJsonArray();
         ASSERT_EQ(jsonConfig["unitId"].asString(),"TestUnit");
@@ -582,7 +582,7 @@ namespace TelematicBridge
 
         // Try to add same IP again
         bool result = worker->processRSUConfig(config);
-        ASSERT_FALSE(result);  // Duplicate check fails
+        EXPECT_FALSE(result);  // Duplicate check fails
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessRSUConfigMissingRsuObject)
@@ -597,7 +597,7 @@ namespace TelematicBridge
         // Missing "rsu" object
 
         bool result = worker->processRSUConfig(config);
-        ASSERT_FALSE(result);
+        EXPECT_FALSE(result);
     }
 
 
@@ -612,9 +612,9 @@ namespace TelematicBridge
         config.snmp.userKey = "user";
 
         bool result = worker->processUpdateAction(config);
-        ASSERT_FALSE(result);  // Returns false since RSU not registered
+        EXPECT_FALSE(result);  // Returns false since RSU not registered
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 0);
+        EXPECT_TRUE(truConfig["rsuConfigs"].size() == 0);
 
         // First add RSU
         Json::Value addMsg(Json::arrayValue);
@@ -632,10 +632,10 @@ namespace TelematicBridge
         updatedConfig.snmp.userKey = "newuser";
 
         result = worker->processUpdateAction(updatedConfig);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 1);
+        EXPECT_TRUE(truConfig["rsuConfigs"].size() == 1);
 
         // Verify the update was applied
         ASSERT_EQ(truConfig["rsuConfigs"][0]["event"].asString(), "updated");
@@ -644,8 +644,8 @@ namespace TelematicBridge
         // Clean up by deleting
         result = worker->processDeleteAction(updatedConfig);
         truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_TRUE(truConfig["rsuConfigs"].size() == 0);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(truConfig["rsuConfigs"].size() == 0);
+        EXPECT_TRUE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessDeleteActionNotRegistered)
@@ -654,7 +654,7 @@ namespace TelematicBridge
         config.rsu.ip = "192.168.1.99";
 
         bool result = worker->processDeleteAction(config);
-        ASSERT_FALSE(result);  // Returns false when RSU not found
+        EXPECT_FALSE(result);  // Returns false when RSU not found
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessDeleteActionSuccess)
@@ -671,7 +671,7 @@ namespace TelematicBridge
         deleteConfig.rsu.ip = "192.168.1.70";
 
         bool result = worker->processDeleteAction(deleteConfig);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessAddActionSuccess)
@@ -684,7 +684,7 @@ namespace TelematicBridge
         config.snmp.userKey = "user";
 
         bool result = worker->processAddAction(config);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         auto truConfig = worker->getTruConfigAsJsonArray();
         ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
@@ -716,7 +716,7 @@ namespace TelematicBridge
         config1.snmp.userKey = "user1";
 
         bool result = worker->processAddAction(config1);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         // Add second RSU
         rsuConfig config2;
@@ -727,7 +727,7 @@ namespace TelematicBridge
         config2.snmp.userKey = "user2";
 
         result = worker->processAddAction(config2);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         rsuConfig config3;
         config3.actionType = action::add;
@@ -737,7 +737,7 @@ namespace TelematicBridge
         config3.snmp.userKey = "user3";
 
         result = worker->processAddAction(config3);
-        ASSERT_FALSE(result);  
+        EXPECT_FALSE(result);  
 
         auto truConfig = worker->getTruConfigAsJsonArray();
         ASSERT_EQ(truConfig["rsuConfigs"].size(), 2);
@@ -768,7 +768,7 @@ namespace TelematicBridge
         config1.snmp.userKey = "user1";
 
         bool result = worker->processAddAction(config1);
-        ASSERT_TRUE(result);
+        EXPECT_TRUE(result);
 
         rsuConfig config2;
         config2.actionType = action::update;
@@ -778,7 +778,7 @@ namespace TelematicBridge
         config2.snmp.userKey = "user2";
 
         result = worker->processUpdateAction(config2);
-        ASSERT_FALSE(result); 
+        EXPECT_FALSE(result); 
 
         auto truConfig = worker->getTruConfigAsJsonArray();
         ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
@@ -800,7 +800,7 @@ namespace TelematicBridge
         message.append(rsuConfigJson);
 
         bool result = worker->setJsonArrayToRsuConfigList(message);
-        ASSERT_TRUE(result);  // Should still return true, but RSU not added due to unknown action
+        EXPECT_TRUE(result);  // Should still return true, but RSU not added due to unknown action
 
         // Verify that the RSU was not added (unknown action skips processing)
         auto truConfig = worker->getTruConfigAsJsonArray();
@@ -817,7 +817,7 @@ namespace TelematicBridge
         message.append(invalidConfig);
 
         bool result = worker->setJsonArrayToRsuConfigList(message);
-        ASSERT_FALSE(result);  // Should return false due to parse failure
+        EXPECT_FALSE(result);  // Should return false due to parse failure
 
         // Verify no RSU was added
         auto truConfig = worker->getTruConfigAsJsonArray();
@@ -848,7 +848,7 @@ namespace TelematicBridge
         message.append(updateConfig);
 
         bool result = worker->setJsonArrayToRsuConfigList(message);
-        ASSERT_TRUE(result);  // Overall should succeed
+        EXPECT_TRUE(result);  // Overall should succeed
 
         // Only the add action should have been processed
         auto truConfig = worker->getTruConfigAsJsonArray();
