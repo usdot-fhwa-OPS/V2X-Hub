@@ -617,10 +617,10 @@ namespace TelematicBridge
         ASSERT_TRUE(truConfig["rsuConfigs"].size() == 0);
 
         // First add RSU
-        Json::Value addMsg;
+        Json::Value addMsg(Json::arrayValue);
         Json::Value rsuConfigJson = createValidRsuConfigJson();
         rsuConfigJson["rsu"]["ip"] = "192.168.1.60";
-        addMsg["rsuConfigs"].append(rsuConfigJson);
+        addMsg.append(rsuConfigJson);
         worker->setJsonArrayToRsuConfigList(addMsg);
 
         // Now update the existing RSU
@@ -660,10 +660,10 @@ namespace TelematicBridge
     TEST_F(TestRSUConfigWorker, TestProcessDeleteActionSuccess)
     {
         // First add RSU
-        Json::Value addMsg;
+        Json::Value addMsg(Json::arrayValue);
         Json::Value rsuConfigJson = createValidRsuConfigJson();
         rsuConfigJson["rsu"]["ip"] = "192.168.1.70";
-        addMsg["rsuConfigs"].append(rsuConfigJson);
+        addMsg.append(rsuConfigJson);
         worker->setJsonArrayToRsuConfigList(addMsg);
 
         // Now delete it
