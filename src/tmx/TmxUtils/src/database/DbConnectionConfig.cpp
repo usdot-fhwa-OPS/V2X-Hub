@@ -6,11 +6,12 @@
  */
 
 #include "DbConnectionConfig.h"
-#include "../PluginLog.h"
+#include "../Logger.h"
 
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 namespace tmx {
 namespace utils {
@@ -44,13 +45,13 @@ void DbConnectionConfig::loadFromEnvironment() {
         passwordFile = std::string(pwdFileEnv);
     } else {
         passwordFile = "";
-        PLOG(logWARNING) << "MYSQL_PASSWORD environment variable not set";
+        LOG_TO_STREAM(logWARNING, std::cerr) << "MYSQL_PASSWORD environment variable not set" << std::endl;
     }
     
-    PLOG(logDEBUG) << "Database configuration loaded - Host: " << host 
+    LOG_TO_STREAM(logDEBUG, std::cout) << "Database configuration loaded - Host: " << host 
                    << ", Port: " << port 
                    << ", Database: " << database 
-                   << ", User: " << user;
+                   << ", User: " << user << std::endl;
 }
 
 std::string DbConnectionConfig::getEnvVar(const char* envVar, const std::string& defaultValue) const {
@@ -93,13 +94,13 @@ std::string DbConnectionConfig::getPassword() const {
     std::lock_guard<std::mutex> lock(configMutex);
     
     if (passwordFile.empty()) {
-        PLOG(logERROR) << "MYSQL_PASSWORD environment variable not set";
+        LOG_TO_STREAM(logERROR, std::cerr) << "MYSQL_PASSWORD environment variable not set" << std::endl;
         return "";
     }
     
     std::ifstream file(passwordFile);
     if (!file.is_open()) {
-        PLOG(logERROR) << "Unable to read password file: " << passwordFile;
+        LOG_TO_STREAM(logERROR, std::cerr) << "Unable to read password file: " << passwordFile << std::endl;
         return "";
     }
     
@@ -107,7 +108,7 @@ std::string DbConnectionConfig::getPassword() const {
     std::getline(file, password);
     
     if (password.empty()) {
-        PLOG(logERROR) << "Empty password file: " << passwordFile;
+        LOG_TO_STREAM(logERROR, std::cerr) << "Empty password file: " << passwordFile << std::endl;
         return "";
     }
     
@@ -115,7 +116,7 @@ std::string DbConnectionConfig::getPassword() const {
 }
 
 void DbConnectionConfig::reloadConfiguration() {
-    PLOG(logINFO) << "Reloading database configuration from environment variables";
+    LOG_TO_STREAM(logINFO, std::cout) << "Reloading database configuration from environment variables" << std::endl;
     loadFromEnvironment();
 }
 
