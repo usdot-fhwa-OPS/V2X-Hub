@@ -36,8 +36,12 @@ MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManage
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
 	//Load Environment Variables
-	ip = std::getenv("MESSAGE_RECEIVER_IP");
-    port = std::getenv("MESSAGE_RECEIVER_PORT");
+	ip = std::getenv("V2XHUB_IP");
+	f (ip == nullptr) {
+		PLOG(logERROR) << "IP not specified, using 127.0.0.1";
+		ip = "127.0.0.1";
+	}
+
 }
 
 void MessageReceiverPlugin::getmessageid()
