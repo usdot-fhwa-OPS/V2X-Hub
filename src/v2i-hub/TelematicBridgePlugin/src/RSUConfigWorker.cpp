@@ -302,8 +302,15 @@ namespace TelematicBridge
         std::lock_guard<std::mutex> lock(_configMutex);
         PLOG(logINFO) << "Updating RSU configuration for RSU IP: " << config.rsu.ip;
         if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
-            PLOG(logERROR) << "RSU " << config.rsu.ip << " currently not registered, ignoring request to update.";
-            return false;
+            PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, attempting to add.";
+            // Check max connections before adding
+            if(_truRegistrationMap.size() >= _maxConnections)
+            {
+                PLOG(logWARNING) << "Max number of connections reached("<<_maxConnections <<") . RSU " << config.rsu.ip << "will not be added.";
+                return false;
+            }
+            _truRegistrationMap.insert({config.rsu.ip, config});
+            PLOG(logDEBUG) << "Added RSU "<< config.rsu.ip << " to registered list";
         }
         else{
             PLOG(logINFO) << "Updated RSU configuration for RSU IP: " << config.rsu.ip;
@@ -318,8 +325,7 @@ namespace TelematicBridge
             PLOG(logINFO) << "Deleting RSU configuration for RSU IP: " << config.rsu.ip;
             std::lock_guard<std::mutex> lock(_configMutex);
             if(_truRegistrationMap.find(config.rsu.ip) == _truRegistrationMap.end()){
-                PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registered, ignoring request to delete.";
-                return false;
+                PLOG(logERROR) << "RSU "<< config.rsu.ip<<" currently not registering, ignoring request to delete.";
             }
             else{
                 _truRegistrationMap.erase(config.rsu.ip);
