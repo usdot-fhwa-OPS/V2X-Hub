@@ -380,8 +380,10 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	getmessageid();
 
 	//Load Environment Variables
-	ip = std::getenv("LOCAL_IP");
-	if (ip.empty()) {
+	if (std::getenv("LOCAL_IP") != nullptr) {
+		ip = std::getenv("LOCAL_IP")
+	}
+	else{
 		PLOG(logERROR) << "IP not specified, using 127.0.0.1";
 		ip = "127.0.0.1";
 	}
