@@ -800,7 +800,7 @@ namespace TelematicBridge
         message.append(rsuConfigJson);
 
         bool result = worker->setJsonArrayToRsuConfigList(message);
-        EXPECT_TRUE(result);  // Should still return true, but RSU not added due to unknown action
+        EXPECT_FALSE(result);  // Should still return true, but RSU not added due to unknown action
 
         // Verify that the RSU was not added (unknown action skips processing)
         auto truConfig = worker->getTruConfigAsJsonArray();
@@ -848,7 +848,7 @@ namespace TelematicBridge
         message.append(updateConfig);
 
         bool result = worker->setJsonArrayToRsuConfigList(message);
-        EXPECT_TRUE(result);  // Overall should succeed
+        EXPECT_FALSE(result);  // Overall should fail due to unknown action
 
         // Only the add action should have been processed
         auto truConfig = worker->getTruConfigAsJsonArray();
