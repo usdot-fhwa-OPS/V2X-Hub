@@ -169,6 +169,7 @@ namespace TelematicBridge
                         break;
                     default:
                         PLOG(logWARNING) << "Unknown action type for RSU config at index " << i << ", skipping.";
+                        success = false;
                 }
             } else {
                 PLOG(logERROR) << "Failed to parse RSU config at index " << i;
