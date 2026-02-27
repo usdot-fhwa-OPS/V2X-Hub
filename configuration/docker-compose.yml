@@ -50,8 +50,6 @@ services:
       - IS_TRU=TRUE                                                  # Enable TRU mode
       - NATS_URL=nats://localhost:4222                              # NATS server URL
       - RSU_CONFIG_PATH=/var/www/plugins/rsuConfigs.json
-      - MESSAGE_RECEIVER_IP=127.0.0.1
-      - MESSAGE_RECEIVER_PORT=5222
     secrets:
       - mysql_password
     volumes:
