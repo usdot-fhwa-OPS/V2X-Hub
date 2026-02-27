@@ -111,7 +111,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::add);
+        EXPECT_EQ(rsu.actionType, action::add);
     }
 
     TEST_F(TestRSUConfigWorker, TestStringToActionDelete)
@@ -123,7 +123,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::remove);
+        EXPECT_EQ(rsu.actionType, action::remove);
     }
 
     TEST_F(TestRSUConfigWorker, TestStringToActionUnknown)
@@ -135,7 +135,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::unknown);
+        EXPECT_EQ(rsu.actionType, action::unknown);
     }
 
     TEST_F(TestRSUConfigWorker, TestStringToActionCreate)
@@ -147,7 +147,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::add);
+        EXPECT_EQ(rsu.actionType, action::add);
     }
 
     TEST_F(TestRSUConfigWorker, TestStringToActionRemove)
@@ -159,7 +159,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::remove);
+        EXPECT_EQ(rsu.actionType, action::remove);
     }
 
     TEST_F(TestRSUConfigWorker, TestStringToActionUpdate)
@@ -171,7 +171,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::update);
+        EXPECT_EQ(rsu.actionType, action::update);
     }
 
     TEST_F(TestRSUConfigWorker, TestActionDefaultsToAdd)
@@ -183,7 +183,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.actionType, action::add);
+        EXPECT_EQ(rsu.actionType, action::add);
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigSuccess)
@@ -194,10 +194,10 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.event, "startup");
-        ASSERT_EQ(rsu.rsu.ip, "192.168.1.10");
-        ASSERT_EQ(rsu.rsu.port, 161);
-        ASSERT_EQ(rsu.snmp.userKey, "admin");
+        EXPECT_EQ(rsu.event, "startup");
+        EXPECT_EQ(rsu.rsu.ip, "192.168.1.10");
+        EXPECT_EQ(rsu.rsu.port, 161);
+        EXPECT_EQ(rsu.snmp.userKey, "admin");
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigMissingEvent)
@@ -242,7 +242,7 @@ namespace TelematicBridge
         bool result = worker->jsonValueToRsuConfig(config, rsu);
 
         EXPECT_TRUE(result);
-        ASSERT_EQ(rsu.rsu.port, 8080);  // Default port
+        EXPECT_EQ(rsu.rsu.port, 8080);  // Default port
     }
 
     TEST_F(TestRSUConfigWorker, TestJsonValueToRsuConfigInvalidRsuType)
@@ -273,8 +273,8 @@ namespace TelematicBridge
         // Verify loaded config
         string unitId = worker->getUnitId();
         int pluginHeartBeatInterval = worker->getPluginHeartBeatInterval();
-        ASSERT_EQ(pluginHeartBeatInterval, 30);
-        ASSERT_EQ(unitId, "Unit001");
+        EXPECT_EQ(pluginHeartBeatInterval, 30);
+        EXPECT_EQ(unitId, "Unit001");
     }
 
     TEST_F(TestRSUConfigWorker, TestLoadRSUConfigListFromFileNotFound)
@@ -391,12 +391,12 @@ namespace TelematicBridge
     }
 
     TEST_F(TestRSUConfigWorker, TestActionToString){
-        ASSERT_EQ(worker->actionToString(action::add), "add");
-        ASSERT_EQ(worker->actionToString(action::remove), "delete");
-        ASSERT_EQ(worker->actionToString(action::update), "update");
-        ASSERT_EQ(worker->actionToString(action::unknown), "unknown");
+        EXPECT_EQ(worker->actionToString(action::add), "add");
+        EXPECT_EQ(worker->actionToString(action::remove), "delete");
+        EXPECT_EQ(worker->actionToString(action::update), "update");
+        EXPECT_EQ(worker->actionToString(action::unknown), "unknown");
         action ac;
-        ASSERT_EQ(worker->actionToString(ac), "unknown");
+        EXPECT_EQ(worker->actionToString(ac), "unknown");
     }
 
     // ==================== rsuConfigToJsonValue Tests ====================
@@ -440,8 +440,8 @@ namespace TelematicBridge
         Json::Value result = worker->getTruConfigAsJsonArray();
 
         EXPECT_TRUE(result["rsuConfigs"].isArray());
-        ASSERT_GT(result["rsuConfigs"].size(), 0);
-        ASSERT_EQ(result["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.10");
+        EXPECT_GT(result["rsuConfigs"].size(), 0);
+        EXPECT_EQ(result["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.10");
     }
 
     // ==================== getTRUConfigResponse Tests ====================
@@ -454,7 +454,7 @@ namespace TelematicBridge
         EXPECT_TRUE(result.isMember("rsuConfigs"));
         EXPECT_TRUE(result.isMember("status"));
         EXPECT_TRUE(result.isMember("timestamp"));
-        ASSERT_EQ(result["status"].asString(), "success");
+        EXPECT_EQ(result["status"].asString(), "success");
     }
 
     TEST_F(TestRSUConfigWorker, TestGetTRUConfigResponseFailed)
@@ -462,7 +462,7 @@ namespace TelematicBridge
         Json::Value result = worker->getTRUConfigResponse(false);
 
         EXPECT_TRUE(result.isMember("status"));
-        ASSERT_EQ(result["status"].asString(), "failed");
+        EXPECT_EQ(result["status"].asString(), "failed");
     }
 
     TEST_F(TestRSUConfigWorker, TestGetTRUConfigResponseStructure)
@@ -501,7 +501,7 @@ namespace TelematicBridge
         removeTestFile(testPath);
 
         string unitId = worker->getUnitId();
-        ASSERT_EQ(unitId, "Unit001");
+        EXPECT_EQ(unitId, "Unit001");
     }
 
 
@@ -565,10 +565,10 @@ namespace TelematicBridge
         EXPECT_TRUE(result);
 
         auto jsonConfig = worker->getUnitConfigAsJsonArray();
-        ASSERT_EQ(jsonConfig["unitId"].asString(),"TestUnit");
-        ASSERT_EQ(jsonConfig["name"].asString(), "UnitName");
-        ASSERT_EQ(jsonConfig["maxConnections"].asInt(), 1);
-        ASSERT_EQ(jsonConfig["rsuStatusMonitorInterval"].asInt(), 120);
+        EXPECT_EQ(jsonConfig["unitId"].asString(),"TestUnit");
+        EXPECT_EQ(jsonConfig["name"].asString(), "UnitName");
+        EXPECT_EQ(jsonConfig["maxConnections"].asInt(), 1);
+        EXPECT_EQ(jsonConfig["rsuStatusMonitorInterval"].asInt(), 120);
 
     }
 
@@ -638,8 +638,8 @@ namespace TelematicBridge
         EXPECT_TRUE(truConfig["rsuConfigs"].size() == 1);
 
         // Verify the update was applied
-        ASSERT_EQ(truConfig["rsuConfigs"][0]["event"].asString(), "updated");
-        ASSERT_EQ(truConfig["rsuConfigs"][0]["snmp"]["user"].asString(), "newuser");
+        EXPECT_EQ(truConfig["rsuConfigs"][0]["event"].asString(), "updated");
+        EXPECT_EQ(truConfig["rsuConfigs"][0]["snmp"]["user"].asString(), "newuser");
 
         // Clean up by deleting
         result = worker->processDeleteAction(updatedConfig);
@@ -687,8 +687,8 @@ namespace TelematicBridge
         EXPECT_TRUE(result);
 
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
-        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.80");
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 1);
+        EXPECT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.80");
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessAddActionMaxConnectionsReached)
@@ -740,7 +740,7 @@ namespace TelematicBridge
         EXPECT_FALSE(result);  
 
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 2);
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 2);
     }
 
     TEST_F(TestRSUConfigWorker, TestProcessUpdateActionMaxConnectionsReached)
@@ -781,14 +781,14 @@ namespace TelematicBridge
         EXPECT_FALSE(result); 
 
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
-        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.91");
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 1);
+        EXPECT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.91");
     }
 
     TEST_F(TestRSUConfigWorker, getPluginHeartBeatInterval)
     {
         int interval = worker->getPluginHeartBeatInterval();
-        ASSERT_EQ(interval, 10); // Default value
+        EXPECT_EQ(interval, 10); // Default value
     }
 
     TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListWithUnknownAction)
@@ -804,7 +804,7 @@ namespace TelematicBridge
 
         // Verify that the RSU was not added (unknown action skips processing)
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 0);
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 0);
     }
 
     TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListWithInvalidJson)
@@ -821,7 +821,7 @@ namespace TelematicBridge
 
         // Verify no RSU was added
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 0);
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 0);
     }
 
     TEST_F(TestRSUConfigWorker, TestSetJsonArrayToRsuConfigListMultipleActionsIncludingUnknown)
@@ -852,7 +852,7 @@ namespace TelematicBridge
 
         // Only the add action should have been processed
         auto truConfig = worker->getTruConfigAsJsonArray();
-        ASSERT_EQ(truConfig["rsuConfigs"].size(), 1);
-        ASSERT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.100");
+        EXPECT_EQ(truConfig["rsuConfigs"].size(), 1);
+        EXPECT_EQ(truConfig["rsuConfigs"][0]["rsu"]["ip"].asString(), "192.168.1.100");
     }
 }
