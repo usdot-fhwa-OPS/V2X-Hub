@@ -48,7 +48,27 @@ By default our dev container installs several VSCode extensions helpful for deve
 
 ### Sonar Lint One-Time Setup
 
-The first time setting up Sonar Lint, there are a couple VSCode prompts to navitigate to allow you to get Sonar Lint Feedback.
+The first time setting up Sonar Lint, there are a couple VSCode prompts to navitigate to allow you to get Sonar Lint feedback. After deploying the DevContainer, you should see on the right hand side a new icon at the bottom representing the SonarLint VSCode extension.
+
+![alt text](docs/sonar_lint_tab.png)
+
+Clicking this icon should bring up a SonarQube Setup page. Under **Connected Mode** there should be a **SonarQube Cloud** menu with a single connection. Clicking this connection should provide a connection page that allows you to generate a token for a SonarQube Cloud connection. This provides some additional features such as a connection to Quality Profiles set on Sonar Cloud. Simply click **Generate Token** which should open a browser and allow you to login to Sonar Cloud with you GitHub account. Doing so will grant the VSCode extension a token to use to connect to Sonar Cloud.
+
+![alt text](docs/sonar_lint_connect.png)
+
+> [!NOTE]
+> Please ensure you save the connection after generating the token. Sometimes the **Save Connection** button is greyed out but simply resetting the organization or connection name should allow you to save the connection.
+
+Lastly you will need to build the code, using **Ctrl + Shift + B** or the build task. The Sonar Lint VS Code extension requires a compilation database file which is generated during the build to function.
+
+### Confirming Setup was Successful
+
+After compiling once, you should be able to edit a *.cpp file an save it. This should result in code smells reported both in the code editor and in the Sonar Qube Terminal
+
+![alt text](docs/sonar_lint_report.png)
+
+Using **Ctrl + I** will allow you to generate AI recommended fixes for reported issues where applicable 
+
 
 ## Configuring DevContainer to Trust Organizational Certificate Authorities / Internal TLS
 
