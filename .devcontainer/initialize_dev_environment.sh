@@ -7,6 +7,17 @@ ldconfig
 apt update 
 apt install -y valgrind gdb net-tools vim
 
+# Install perimeter certificates if present (for VPN Access)
+if compgen -G ".devcontainer/perimeter-certs/*.crt" > /dev/null; then
+    echo "Perimeter certificate(s) found. Installing..."
+
+    mkdir -p /usr/local/share/ca-certificates/extra && \
+    cp .devcontainer/perimeter-certs/*.crt /usr/local/share/ca-certificates/extra/ && \
+    update-ca-certificates
+else
+    echo "No perimeter certificates found. Skipping installation."
+fi
+
 # Install Node 22 for SonarLint
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 export NVM_DIR="$HOME/.nvm"

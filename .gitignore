@@ -6,6 +6,7 @@ src/build
 # manually created directories
 secrets/
 .devcontainer/MAP
+.devcontainer/perimeter-certs
 
 # Compiled source #
 ###################
