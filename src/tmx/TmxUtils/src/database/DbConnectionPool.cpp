@@ -6,6 +6,7 @@
  */
 
 #include "DbConnectionPool.h"
+#include "DbConnectionConfig.h"
 
 #include <cppconn/exception.h>
 #include <mutex>
@@ -20,7 +21,10 @@ vector<DbConnection> DbConnectionPool::pool;
 
 std::mutex lock;
 
-DbConnectionPool::DbConnectionPool(): _connectStr("tcp://127.0.0.1:3306") {}
+DbConnectionPool::DbConnectionPool() {
+	auto& config = DbConnectionConfig::getInstance();
+	_connectStr = config.getConnectionUrl();
+}
 
 DbConnection DbConnectionPool::Connection(string connectionUrl, string username, string password, string db) {
 	lock_guard<mutex> lg(lock);
@@ -120,27 +124,9 @@ void DbConnectionPool::SetConnectionUrl(std::string connectionUrl) {
 }
 
 std::string DbConnectionPool::GetPwd(){
-	// NOTE this is duplicated in ivpcore.cpp but no good way to reuse for now
-	// env should probably be named MYSQL_PASSWORD_FILE but is left for legacy
-	const char* EnvVar = "MYSQL_PASSWORD";
-	const char* pwdFile;
-	std::string PwdStr;
-	pwdFile = std::getenv(EnvVar);
-
-	if (pwdFile == nullptr) {
-		PLOG(logERROR) << "Unable to get MYSQL_PASSWORD";
-	} else{
-		std::ifstream t(pwdFile);
-		if (t) {
-			std::getline( t, PwdStr);
-			if (PwdStr.length() == 0) {
-				PLOG(logERROR) << "Empty pwd file: " << pwdFile;
-			}
-		} else {
-			PLOG(logERROR) << "Unable to read pwd file: " << pwdFile;
-		}
-	}
-	return PwdStr;
+	// Use the centralized configuration helper for password retrieval
+	auto& config = DbConnectionConfig::getInstance();
+	return config.getPassword();
 }
 
 } /* namespace utils */

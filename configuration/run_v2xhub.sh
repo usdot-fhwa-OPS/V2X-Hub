@@ -10,7 +10,8 @@ fi
 # Start V2X Hub
 sudo docker compose up -d
 
-# Update permissions for tmx logs created by plugins
+# Create and update permissions for tmx logs directory
+mkdir -p ./logs
 sudo chmod -R 777 ./logs
 
 
