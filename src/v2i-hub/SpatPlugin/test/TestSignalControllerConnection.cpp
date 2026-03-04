@@ -101,7 +101,7 @@ namespace SpatPlugin {
     }
 
     TEST_F(TestSignalControllerConnection, receiveBinarySPAT) {
-        auto spat_binary_buf = read_binary_file("../../SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
+        auto spat_binary_buf = read_binary_file("../../../v2i-hub/SpatPlugin/test/test_spat_binaries/spat_1721238398773.bin");
         EXPECT_CALL(*mockUdpServer, TimedReceive(_, _, _)).WillOnce(testing::DoAll(SetArrayArgument<0>(spat_binary_buf.begin(), spat_binary_buf.end()), Return(spat_binary_buf.size())));
         auto spat = (SPAT*)calloc(1, sizeof(SPAT));
         // Make sim clock to inject time

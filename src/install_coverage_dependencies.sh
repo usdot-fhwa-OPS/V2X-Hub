@@ -18,4 +18,4 @@ set -ex
 
 apt update
 export DEBIAN_FRONTEND=noninteractive
-apt-get install -y curl zip git gcovr
+apt install -y curl gcovr

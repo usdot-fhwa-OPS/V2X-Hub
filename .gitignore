@@ -1,10 +1,12 @@
 # build directories
 src/tmx/build
 src/v2i-hub/build
+src/build
 
 # manually created directories
 secrets/
 .devcontainer/MAP
+.devcontainer/perimeter-certs
 
 # Compiled source #
 ###################
@@ -91,4 +93,3 @@ tools/port-drayage-webservice/target/
 
 #Java PKS for HTTPS setup
 tools/port-drayage-webservice/src/main/resources/tutorial.jks
-.vscode/settings.json
