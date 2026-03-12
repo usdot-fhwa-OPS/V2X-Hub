@@ -6,7 +6,10 @@
 
 ## Setup
 
-This project includes a DevContainer setup which allows for developing in a containerized environment that will spawn run-time depedencies for testing 
+This project includes a DevContainer setup which allows for developing in a containerized environment that will spawn run-time depedencies for testing.
+
+> [!NOTE]
+> This setup will recreate a Dev Container docker image for V2X Hub, targeting the `build` stage in the dockerfile in order to include build dependencies. This image will be called **v2xhub-devcontainer**
 
 ### Installation
 

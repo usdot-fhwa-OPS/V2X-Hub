@@ -4,6 +4,7 @@ services:
       context: ..
       dockerfile: ./Dockerfile
       target: build-environment
+    image: v2xhub-devcontainer
     privileged: true
     # Building source code is memory intensive so we increase the memory limit.
     deploy:
