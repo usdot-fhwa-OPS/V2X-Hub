@@ -41,7 +41,7 @@ services:
     tty: true
     environment:
       - TZ=${TZ:-America/New_York}
-    volumes:
+    volumes
       - ssl-certs-volume:/etc/apache2/ssl:ro
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -I http://127.0.0.1/ >/dev/null || exit 1"]
