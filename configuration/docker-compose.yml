@@ -42,7 +42,7 @@ services:
     tty: true
     environment:
       - TZ=${TZ:-America/New_York}
-    volumes
+    volumes:
       - ssl-certs-volume:/etc/apache2/ssl:ro
 
 
