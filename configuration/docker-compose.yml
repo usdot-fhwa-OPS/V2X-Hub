@@ -35,7 +35,6 @@ services:
     container_name: php
     networks:
       - v2xhub_web_external
-      - v2xhub_app_external
     ports:
       - "80:80"
       - "443:443"
@@ -67,7 +66,7 @@ services:
       - "19760:19760"        # Command WebSocket
 
       # Message Receiver Plugin
-      - "26780-26800:26780-26800/udp"         # MessageReceiver (Range 26789 ±10)
+      - "26780-26800:26780-26800/udp" # MessageReceiver (Range 26789 ±10)
 
       # SPaT Plugin
       - "6053:6053/udp"      # TSC sends UDP
