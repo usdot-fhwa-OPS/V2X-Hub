@@ -8,11 +8,12 @@ services:
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
-    network_mode: host
+    networks:
+      - v2xhub_data_internal
     secrets:
       - mysql_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -33,7 +34,12 @@ services:
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
-    network_mode: host
+    networks:
+      - v2xhub_web_external
+      - v2xhub_app_external
+    ports:
+      - "80:80"
+      - "443:443"
     restart: always
     depends_on:
       - db
@@ -49,7 +55,36 @@ services:
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
-    network_mode: host
+    networks:
+      - v2xhub_data_internal
+      - v2xhub_app_external
+    ports:
+      # Command Plugin
+      - "19760:19760"        # Command WebSocket
+
+      # Message Receiver Plugin
+      - "26780-26800:26780-26800/udp"         # MessageReceiver (Range 26789 ±10)
+
+      # SPaT Plugin
+      - "6053:6053/udp"      # TSC sends UDP
+      - "5050:5050/udp"      # SNMP polling
+
+      # TIM Plugin
+      - "10000:10000/tcp"    # TIM WebServicePort
+
+      # CARMA Cloud Plugin
+      - "22222:22222/tcp"
+
+      # CDASim Adapter Plugin (simulation mode)
+      - "6767:6767/udp"   # CDASim registration
+      - "7575:7575/udp"   # time sync
+      - "5757:5757/udp"   # SIM_V2X (simulated V2X out)
+
+      # MUST Sensor Driver Plugin
+      - "4545:4545/udp"      # MUST detection receiver port
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: always
     depends_on:
       db:
@@ -58,14 +93,8 @@ services:
       nofile:
         soft: 2560
         hard: 2560
-    deploy:
-      resources:
-        limits:
-          memory: 2g
-        reservations:
-          memory: 1g
     environment:
-      - MYSQL_HOST=127.0.0.1
+      - MYSQL_HOST=db
       - MYSQL_PORT=3306
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
@@ -94,7 +123,10 @@ services:
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
-    network_mode: host
+    networks:
+      - v2xhub_web_external
+    ports:
+      - "8090:8090"              # Port Drayage web UI
     profiles: ["port_drayage"]
     deploy:
       resources:
@@ -137,3 +169,13 @@ volumes:
     #   type: 'none'
     #   o: 'bind'
     #   device: './logs' # Specify the absolute path on your host
+
+# Networks: separated by purpose
+networks:
+  v2xhub_web_external:
+    driver: bridge
+  v2xhub_app_external:
+    driver: bridge
+  v2xhub_data_internal:
+    driver: bridge
+    internal: true  # No external internet access - only inter-service communication
