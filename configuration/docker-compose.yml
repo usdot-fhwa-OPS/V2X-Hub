@@ -3,6 +3,7 @@ services:
     image: mysql:8.0
     container_name: mysql
     environment:
+      - TZ=${TZ:-America/New_York}
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
@@ -20,8 +21,6 @@ services:
     volumes:
       - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
       - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
       # The following 5 files are used for CDA1Tenth. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
       # three files to enable the CDA1Tenth sql files to be loaded.
@@ -46,9 +45,9 @@ services:
       - v2xhub
     stdin_open: true
     tty: true
+    environment:
+      - TZ=${TZ:-America/New_York}
     volumes:
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/etc/apache2/ssl:ro
 
   v2xhub:
@@ -92,6 +91,12 @@ services:
       nofile:
         soft: 2560
         hard: 2560
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 1g
     environment:
       - MYSQL_HOST=db
       - MYSQL_PORT=3306
@@ -112,13 +117,12 @@ services:
       - SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-/var/www/download/sensors.json}
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
+      - TZ=${TZ:-America/New_York}
     secrets:
       - mysql_password
     volumes:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
       - ssl-certs-volume:/var/www/plugins/ssl:rw
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
@@ -134,9 +138,8 @@ services:
           memory: 1g
         reservations:
           memory: 512m
-    volumes:
-      - /etc/localtime:/etc/localtime:ro 
-      - /etc/timezone:/etc/timezone:ro 
+    environment:
+      - TZ=${TZ:-America/New_York}
 secrets:
     mysql_password:
         environment: MYSQL_PASSWORD
