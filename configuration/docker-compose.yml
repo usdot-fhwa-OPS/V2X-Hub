@@ -50,8 +50,6 @@ services:
       retries: 12
       start_period: 30s
 
-
-
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
     container_name: v2xhub
