@@ -1,0 +1,61 @@
+name: v2xhub-validation
+title: V2X-Hub Network and Security Validation
+maintainer: V2X-Hub Team
+copyright: USDOT FHWA OPS
+copyright_email: support@v2xhub.org
+license: Apache-2.0
+summary: InSpec profile tests the network configuration, security settings, and operational status of a V2X-Hub Docker deployment.
+version: 1.0.0
+inspec_version: '>= 4.0'
+
+supports:
+  - platform-name: ubuntu
+    release: '22.04'
+
+depends: []
+
+inputs:
+  - name: mysql_host
+    description: MySQL database host
+    type: string
+    value: db
+    
+  - name: mysql_port
+    description: MySQL database port
+    type: numeric
+    value: 3306
+    
+  - name: mysql_database
+    description: MySQL database name
+    type: string
+    value: IVP
+    
+  - name: mysql_user
+    description: MySQL database user
+    type: string
+    value: IVP
+    
+  - name: websocket_port
+    description: V2XHub WebSocket port
+    type: numeric
+    value: 19760
+    
+  - name: v2x_port
+    description: V2XHub message bus port
+    type: numeric
+    value: 8686
+
+  - name: ivp_default_port
+    description: V2XHub IVP plugin port
+    type: numeric
+    value: 24601
+
+  - name: web_http_port
+    description: Web UI HTTP port
+    type: numeric
+    value: 80
+    
+  - name: web_https_port
+    description: Web UI HTTPS port
+    type: numeric
+    value: 443
