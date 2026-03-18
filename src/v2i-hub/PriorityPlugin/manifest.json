@@ -1,0 +1,52 @@
+{
+	"name":"PriorityPlugin",
+	"description":"Plugin to handle Signal Request Messages and place priority requests.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PriorityPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin."
+        },
+		{
+			"key":"IP",
+			"default":"192.168.55.92",
+			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
+		},
+		{
+			"key":"Port",
+			"default":"161",
+			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP communication."
+		},
+		{
+			"key":"TSC_SNMP_Community",
+			"default":"public",
+			"description":"The SNMP Community used for sending SNMP NTCIP communication to Traffic Signal Controller (TSC)."
+		},
+		{
+			"key":"VehicleClassLevel",
+			"default":"10",
+			"description":"The default NTCIP 1211 priorityRequestVehicleClassLevel (1..10). 1=highest precedence within class, 10=lowest."
+		},
+		{
+			"key":"ServiceStrategyNumber",
+			"default":"1",
+			"description":"The default NTCIP 1211 priorityRequestServiceStrategyNumber (1..255) sent with each priority request. Priority Request Generator (PRG) shall never set 0."
+		},
+		{
+			"key":"TimeOfServiceDesired",
+			"default":"5",
+			"description":"The priorityRequestTimeOfServiceDesired (TSD) (1..65535). Desired time in seconds to arrive at the intersection's stopping point, relative to the receipt of the message."
+		},
+		{
+			"key":"TimeOfEstimatedDeparture",
+			"default":"8",
+			"description":"The priorityRequestTimeOfEstimatedDeparture (TED) (1..65535). Estimated time in seconds to clear the intersection, relative to the receipt of the message."
+		}
+    ]
+}
