@@ -62,15 +62,4 @@ WORKDIR /var/log/tmx
 # PluginMonitor needs user with root permissions
 USER plugin
 
-# Set metadata labels
-LABEL org.label-schema.schema-version="1.0"
-LABEL org.label-schema.name="V2X-Hub-Deployment"
-LABEL org.label-schema.description="Image V2X-Hub Deployment"
-LABEL org.label-schema.vendor="Leidos"
-LABEL org.label-schema.version="${VERSION}"
-LABEL org.label-schema.url="https://highways.dot.gov/research/research-programs/operations"
-LABEL org.label-schema.vcs-url="https://github.com/usdot-fhwa-ops/V2X-HUB"
-LABEL org.label-schema.vcs-ref=${VCS_REF}
-LABEL org.label-schema.build-date=${BUILD_DATE}
-
 ENTRYPOINT ["/usr/local/bin/service.sh"]
