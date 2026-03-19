@@ -96,7 +96,7 @@ services:
       - v2xhub-download-volume:/var/www/download/:rw
       - ssl-certs-volume:/var/www/plugins/ssl:rw
     healthcheck:
-      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q tmxcore && ps -ef | grep -v grep | grep -q CommandPlugin ||
+      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q tmxcore && ps -ef | grep -v grep | grep -q CommandPlugin || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
