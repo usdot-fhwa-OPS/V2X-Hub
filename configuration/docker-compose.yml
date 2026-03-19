@@ -29,7 +29,6 @@ services:
       #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
       #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
       - mysql-datavolume:/var/lib/mysql
-
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
     container_name: php
@@ -44,7 +43,12 @@ services:
       - TZ=${TZ:-America/New_York}
     volumes:
       - ssl-certs-volume:/etc/apache2/ssl:ro
-
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -I http://127.0.0.1/ >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
@@ -91,6 +95,13 @@ services:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
       - ssl-certs-volume:/var/www/plugins/ssl:rw
+    healthcheck:
+      test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q tmxcore && ps -ef | grep -v grep | grep -q CommandPlugin || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
     container_name: port_drayage_webservice
