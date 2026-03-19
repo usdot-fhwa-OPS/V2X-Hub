@@ -1,6 +1,15 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.11.1, released Jan 30th, 2026
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.11.1 is a hotfix for version 7.11.0. It fixes the V2X Hub JSON Message Logger to prevent existing logs from being overwritten when the log file reaches its file size limit.
+
+**Fixes**  
+- Pull Requests: [V2X-Hub PR #835](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/835)
+
 Version 7.11.0, released Dec 24th, 2025
 --------------------------------------------------------
 
