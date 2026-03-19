@@ -28,8 +28,6 @@ jobs:
           # Disabling shallow clone is recommended for improving relevancy of reporting
           fetch-depth: 0
           submodules: recursive
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v6
       - name: Run install_dependencies.sh script
         run: |
           echo "CLONED_REPO_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
@@ -43,9 +41,8 @@ jobs:
           ldconfig
       - name: Run Tests & Generate Gcovr Reports
         run: |
-          mkdir bw-output
           cd src
-          build-wrapper-linux-x86-64 --out-dir ../bw-output bash build.sh coverage --j2735-version 2024 --skip-plugins ""
+          ./build.sh coverage --j2735-version 2024 --skip-plugins ""
           ./test.sh coverage
       - name: Run sonar-scanner
         uses: usdot-fhwa-stol/actions/sonar-scanner@main
