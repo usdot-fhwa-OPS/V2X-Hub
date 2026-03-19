@@ -95,10 +95,6 @@ services:
       - v2xhub-logs-volume:/var/log/tmx:rw
       - v2xhub-download-volume:/var/www/download/:rw
       - ssl-certs-volume:/var/www/plugins/ssl:rw
-      - ./tests/MAP:/var/www/download/MAP:ro
-      - ./tests/TIM:/var/www/download/TIM:ro
-      - ./tests/MessageReceiver:/var/www/download/MessageReceiver:ro
-
     healthcheck:
       test: ["CMD-SHELL", "ps -ef | grep -v grep | grep -q tmx || exit 1"]
       interval: 10s
