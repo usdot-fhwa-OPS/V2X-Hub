@@ -61,12 +61,19 @@ def read_log_to_dataframe(log_file):
         "31": "TIM",
         # Add more mappings as needed
     }
+    # Function to extract messageId and convert to name, with error handling for JSON decode errors
+    def convert_message_id(x):
+        try:
+            return message_id_to_name.get(
+                    # Convert messageId to string if necessary
+                    str(json.loads(x).get('messageId')))
+        except json.decoder.JSONDecodeError as e:
+            logging.error(f"Problem with JSON payload {x}",e )
+            return ""
+
     data['Message Type'] = data['Raw JSON String'].apply(
         lambda x: 
-            message_id_to_name.get(
-                # Convert messageId to string if necessary
-                str(json.loads(x).get('messageId'))
-            )
+            convert_message_id(x)
         )
     # Add this debug code before the DataFrame creation
     data.to_csv(
@@ -99,7 +106,7 @@ def calculate_messsage_performance(tx_log, rx_log):
         if not rx_row.empty:
             rx_timestamp = rx_row.iloc[0]['Timestamp']
             
-            if rx_timestamp - tx_timestamp > 200:
+            if rx_timestamp - tx_timestamp > 200 :
                 message_drop.append( (tx_timestamp, tx_message_id, tx_message))
             else:
                 latency.append( (tx_timestamp, tx_message_id, rx_timestamp - tx_timestamp))
@@ -107,7 +114,10 @@ def calculate_messsage_performance(tx_log, rx_log):
                 rx_log = rx_log.drop(rx_row.index[0])   
         else:
             message_drop.append( (tx_timestamp, tx_message_id, tx_message))
-    latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Message Type', 'Latency (ms)'])
+    if len(latency) > 1 :
+        latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Message Type', 'Latency (ms)'])
+    else:
+        latency_df = pd.DataFrame( columns=['Tx Timestamp', 'Message Type', 'Latency (ms)']) 
     if len(message_drop) > 1:
         message_drop_df = pd.DataFrame(message_drop, columns=['Tx Timestamp', 'Message Type', 'Message'])
     else:
@@ -231,6 +241,8 @@ def main():
     logging.debug('RSU TX Logs:\n%s', rsu_tx_logs.head())
     message_drop_df, latency_df = calculate_messsage_performance(v2xhub_tx_logs, rsu_tx_logs)
     logging.debug('Message Latency for first 5 messages:\n%s', latency_df.head())
+    logging.info(latency_df.describe())
+    logging.info(message_drop_df.describe())
     plot_latency(latency_df, './plots')
     plot_throughput(v2xhub_tx_logs, 'V2X Hub', './plots')
     plot_throughput(rsu_tx_logs, 'RSU', './plots')
