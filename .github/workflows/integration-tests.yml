@@ -1,0 +1,54 @@
+name: V2X-Hub Integration Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+      - master
+      - 'release/**'
+      - 'feature/**'
+    tags:
+      - '*'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout V2X-Hub
+        uses: actions/checkout@v5
+        with:
+          path: V2X-Hub
+
+      - name: Checkout v2xhub-integration-tests
+        uses: actions/checkout@v5
+        with:
+          repository: usdot-fhwa-OPS/v2xhub-integration-tests
+          ref: update_OCI_reference
+          token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
+          path: v2xhub-integration-tests
+          
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: v2xhub-integration-tests/requirements.txt
+
+      - name: Install test dependencies
+        working-directory: v2xhub-integration-tests
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run integration tests
+        working-directory: v2xhub-integration-tests
+        run: |
+          pytest -v tests/test_case.py
