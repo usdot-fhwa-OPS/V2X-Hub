@@ -34,7 +34,18 @@ jobs:
           ref: develop
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
-          
+      - name: Set V2XHUB_VERSION for this ref
+        working-directory: v2xhub-integration-tests
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            IMAGE_TAG="${{ github.head_ref }}"
+          else
+            IMAGE_TAG="${{ github.ref_name }}"
+          fi
+          IMAGE_TAG="${IMAGE_TAG//\//-}"
+          sed -i "s/^V2XHUB_VERSION=.*/V2XHUB_VERSION=${IMAGE_TAG}/" .env
+          echo "Using V2XHUB_VERSION=${IMAGE_TAG}"
+          cat .env
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
