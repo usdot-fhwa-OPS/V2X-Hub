@@ -31,10 +31,11 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
+          ref: update_OCI_reference
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
-      - name: Set V2XHUB_VERSION for this ref
+
+      - name: Set TAG_NAME and V2XHUB_VERSION for this ref
         working-directory: v2xhub-integration-tests
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -43,7 +44,9 @@ jobs:
             IMAGE_TAG="${{ github.ref_name }}"
           fi
           IMAGE_TAG="${IMAGE_TAG//\//-}"
+          sed -i "s/^TAG_NAME=.*/TAG_NAME=${IMAGE_TAG}/" .env
           sed -i "s/^V2XHUB_VERSION=.*/V2XHUB_VERSION=${IMAGE_TAG}/" .env
+          echo "Using TAG_NAME=${IMAGE_TAG}"
           echo "Using V2XHUB_VERSION=${IMAGE_TAG}"
           cat .env
       - name: Set up Python
