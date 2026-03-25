@@ -34,7 +34,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY scripts/deployment_dependencies.sh /usr/local/bin/
 RUN /usr/local/bin/deployment_dependencies.sh
 
-COPY --chown=plugin:adm --chmod=744 ./container /home/V2X-Hub/container/
+COPY --chown=plugin:adm --chmod=755 ./container /home/V2X-Hub/container/
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh && ./library.sh && ldconfig
 # Built Plugins
