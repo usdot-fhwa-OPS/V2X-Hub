@@ -34,20 +34,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY scripts/deployment_dependencies.sh /usr/local/bin/
 RUN /usr/local/bin/deployment_dependencies.sh
 
-COPY --chown=plugin:adm --chmod=755 ./container /home/V2X-Hub/container/
+COPY --chown=plugin:adm --chmod=644 ./container /home/V2X-Hub/container/
 WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh && ./library.sh && ldconfig
 # Built Plugins
-COPY --from=dependencies --chown=plugin:adm --chmod=755 /usr/local/plugins/ /usr/local/plugins/
+COPY --from=dependencies --chown=plugin:adm --chmod=644 /usr/local/plugins/ /usr/local/plugins/
 # Headers
-COPY --from=dependencies  --chown=plugin:adm --chmod=755 /usr/local/include/ /usr/local/include/
+COPY --from=dependencies  --chown=plugin:adm --chmod=644 /usr/local/include/ /usr/local/include/
 # Built Libraries for V2X Hub (tmx services) and ext/ (snmp, etc)
-COPY --from=dependencies  --chown=plugin:adm --chmod=755 /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=644 /usr/local/lib/ /usr/local/lib/
 # Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
-COPY --from=dependencies  --chown=plugin:adm --chmod=755 /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies  --chown=plugin:adm --chmod=644 /usr/local/bin/ /usr/local/bin/
 # CMake config iles
-COPY --from=dependencies --chown=plugin:adm --chmod=755 /usr/local/share/ /usr/local/share/
-COPY --from=dependencies --chown=plugin:adm --chmod=755 /var/www/plugins/ /var/www/plugins/
+COPY --from=dependencies --chown=plugin:adm --chmod=644 /usr/local/share/ /usr/local/share/
+COPY --from=dependencies --chown=plugin:adm --chmod=644 /var/www/plugins/ /var/www/plugins/
 # Installed STOL debian packages like (stol-j2735, timesync, etc)
 COPY --from=dependencies /opt/ /opt/
 COPY src/tmx/TmxCore/tmxcore.service /lib/systemd/system/
