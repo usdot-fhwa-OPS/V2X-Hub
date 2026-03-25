@@ -1,4 +1,4 @@
-name: Build, Publish, and Run Integration Tests
+name: Build V2X-Hub Images and Run Integration Tests
 
 on:
   workflow_dispatch:
@@ -28,19 +28,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for PHP
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/php
           flavor: |
@@ -50,7 +50,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: Build and push PHP image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           file: ./docker/Dockerfile-php
           push: true
@@ -64,19 +64,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Port Drayage
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/port-drayage-webservice
           flavor: |
@@ -86,7 +86,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: Build and push Port Drayage image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./tools/port-drayage-webservice/
           push: true
@@ -100,19 +100,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for V2X-Hub
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub
           flavor: |
@@ -122,7 +122,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: Build and push V2X-Hub AMD64 image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/amd64
@@ -136,19 +136,19 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for V2X-Hub
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub
           flavor: |
@@ -158,7 +158,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: Build and push V2X-Hub ARM64 image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           platforms: linux/arm64
@@ -169,17 +169,17 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-v2xhub-manifest:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: [build-v2xhub-amd64, build-v2xhub-arm64]
     steps:
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for V2X-Hub
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub
           flavor: |
@@ -204,7 +204,7 @@ jobs:
       - build-v2xhub-manifest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
       - name: Set up Docker Compose
@@ -212,13 +212,13 @@ jobs:
         with:
           version: latest
       - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Extract metadata (tags, labels) for Docker Compose
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub-application
           flavor: |
@@ -254,7 +254,7 @@ jobs:
           path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub
           flavor: |
