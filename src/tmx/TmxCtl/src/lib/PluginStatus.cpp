@@ -833,4 +833,57 @@ bool TmxControl::user_delete()
 	return false;
 }
 
+bool TmxControl::save_state(pluginlist &plugins, ...)
+{
+	if (!checkPerm())
+		return false;
+	return save_state();
+}
+
+bool TmxControl::save_state()
+{
+    try
+    {
+		tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+
+        std::string user = dbConfig.getUser();
+        std::string password = dbConfig.getPassword(); 
+        std::string host = dbConfig.getHost();
+        std::string dbname = dbConfig.getDatabase();
+
+        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql";
+
+		std::string cmd = "mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
+                  " --no-tablespaces "
+                  "--ignore-table=" + dbname + ".eventLog "
+                  "--ignore-table=" + dbname + ".messageActivity "
+                  "--ignore-table=" + dbname + ".messageType "
+                  "--ignore-table=" + dbname + ".pluginActivity "
+                  "--ignore-table=" + dbname + ".user "
+                  "> " + backupFile;
+		PLOG(logDEBUG) << "SQL Dump query is:  " << cmd;
+
+        int ret = std::system(cmd.c_str());
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "mysqldump failed with code " << ret;
+            return false;
+        }
+
+		_output.get_storage().get_tree().clear();
+		message payload;
+		message_tree_type tree;
+		tree.put("file", backupFile);	
+		payload.set_contents(tree);
+		_output = payload.get_container();
+
+		PLOG(logDEBUG) << "Database backup written to " << backupFile;
+		return true;
+    }
+    catch (const std::exception &ex)
+    {
+        PLOG(logERROR) << "Exception during backup: " << ex.what();
+        return false;
+    }
+}
 } /* namespace tmxctl */

@@ -91,6 +91,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
 	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
 	REG_FN(user_delete, NULL, "Delete a TMX user.");
+	REG_FN(save_state, NULL, "Save the current state of the system.");
 
 	// These have arguments
 	REG_FN_ARG(max_message_interval, "M", "Set the max message interval for the plugin", std::string);

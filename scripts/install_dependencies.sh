@@ -38,7 +38,8 @@ DEPENDENCIES="build-essential \
     librapidxml-dev \
     libprotobuf-c-dev \
     curl \
-    gdb"
+    gdb \
+    mysql-client"
 
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \

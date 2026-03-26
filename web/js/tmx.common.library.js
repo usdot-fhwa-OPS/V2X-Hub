@@ -684,6 +684,25 @@ function handleCommandMessage(msgData) {
             }        
 
         }
+        else if (msgData["command"].toUpperCase() === "SAVESTATE") {
+            const status = (msgData["status"] || "").toUpperCase();
+            if (status === "SUCCESS") {
+                if (msgData["fileBuffer"]) {
+                    $("#saveStateFeedback").html("Backup successful. Downloading...");
+                    const blob = new Blob([msgData["fileBuffer"]], { type: "application/sql" });
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.href = url;
+                    link.download = "v2x_hub_state.sql";
+                    link.click();
+                    URL.revokeObjectURL(url);
+                } else {
+                    $("#saveStateFeedback").html("Backup successful, but file not available.");
+                }
+            } else {
+                $("#saveStateFeedback").html("Backup failed: " + (msgData.reason || ""));
+            }
+        }
 
     }
 }
