@@ -247,7 +247,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
+          ref: feature/add_it_ci_container_logs
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
@@ -279,4 +279,4 @@ jobs:
           V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           echo "Running tests with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
-          pytest -v tests/test_case.py
+          pytest -x -v tests/test_case.py
