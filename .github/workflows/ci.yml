@@ -199,8 +199,6 @@ jobs:
   publish-docker-compose:
     runs-on: ubuntu-24.04
     needs:
-      - build-php
-      - build-port-drayage
       - build-v2xhub-manifest
     steps:
       - name: Checkout
@@ -249,7 +247,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
+          ref: feature/add_it_ci_container_logs
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
