@@ -131,6 +131,10 @@ jobs:
           provenance: true
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+            VCS_REF=${{ steps.meta.outputs.revision }}
+            BUILD_DATE=${{ steps.meta.outputs.created }}
 
   build-v2xhub-arm64:
     runs-on: ubuntu-24.04-arm
@@ -167,6 +171,10 @@ jobs:
           provenance: true
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-arm64
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.meta.outputs.version }}
+            VCS_REF=${{ steps.meta.outputs.revision }}
+            BUILD_DATE=${{ steps.meta.outputs.created }}
 
   build-v2xhub-manifest:
     runs-on: ubuntu-24.04
