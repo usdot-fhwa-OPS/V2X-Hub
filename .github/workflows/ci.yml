@@ -199,6 +199,8 @@ jobs:
   publish-docker-compose:
     runs-on: ubuntu-24.04
     needs:
+      - build-php
+      - build-port-drayage
       - build-v2xhub-manifest
     steps:
       - name: Checkout
