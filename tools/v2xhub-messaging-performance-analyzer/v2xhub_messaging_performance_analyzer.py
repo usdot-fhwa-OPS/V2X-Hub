@@ -8,10 +8,12 @@ and generating plots for visualization.
 
 import os
 import re
+import sys
 import argparse
 import logging
 import json
-from tkinter import Tk, filedialog
+
+from PyQt6.QtWidgets import QApplication, QFileDialog
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -21,30 +23,29 @@ def select_log_files():
     """
     Opens file dialogs for the user to select the originating source file and the destination file. Returns two dataframes: tx_logs and rx_logs.
     """
-    root = Tk()
-    root.withdraw()
+    app = QApplication.instance() or QApplication(sys.argv)
 
-    filetypes = [('Log files', '*.log'), ('All files', '*.*')]
+    file_filter = 'Log files (*.log);;All files (*)'
 
-    source_file = filedialog.askopenfilename(
-        title='Select Source Log File',
-        filetypes=filetypes
+    source_file, _ = QFileDialog.getOpenFileName(
+        None,
+        'Select Source Log File',
+        '',
+        file_filter
     )
     if not source_file:
         logging.error('No source log file selected.')
-        root.destroy()
         return None, None
 
-    destination_file = filedialog.askopenfilename(
-        title='Select Destination Log File',
-        filetypes=filetypes
+    destination_file, _ = QFileDialog.getOpenFileName(
+        None,
+        'Select Destination Log File',
+        '',
+        file_filter
     )
     if not destination_file:
         logging.error('No destination log file selected.')
-        root.destroy()
         return None, None
-
-    root.destroy()
 
     logging.debug('Reading source log file: %s', source_file)
     tx_logs = read_log_to_dataframe(source_file)
