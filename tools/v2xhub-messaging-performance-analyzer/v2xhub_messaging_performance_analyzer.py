@@ -13,6 +13,7 @@ import argparse
 import logging
 import json
 
+from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QApplication, QFileDialog
 
 import pandas as pd
@@ -21,7 +22,7 @@ import matplotlib.pyplot as plt
 
 def select_log_files():
     """
-    Opens file dialogs for the user to select the originating source file and the destination file. Returns two dataframes: tx_logs and rx_logs.
+    Opens file dialogs for the user to select the originating source file and the destination file. Returns the selected file paths.
     """
     app = QApplication.instance() or QApplication(sys.argv)
 
@@ -47,11 +48,11 @@ def select_log_files():
         logging.error('No destination log file selected.')
         return None, None
 
-    logging.debug('Reading source log file: %s', source_file)
-    tx_logs = read_log_to_dataframe(source_file)
-    logging.debug('Reading destination log file: %s', destination_file)
-    rx_logs = read_log_to_dataframe(destination_file)
-    return tx_logs, rx_logs
+    # Briefly run the event loop so the dialog window fully closes before returning control to the caller for processing.
+    QTimer.singleShot(1, app.quit)
+    app.exec()
+
+    return source_file, destination_file
 
 def read_log_to_dataframe(log_file):
     """
@@ -258,10 +259,14 @@ def main():
     # Create data and plots directories if not exist
     os.makedirs('./data', exist_ok=True)
     os.makedirs('./plots', exist_ok=True)
-    tx_logs, rx_logs = select_log_files()
-    if tx_logs is None or rx_logs is None:
+    source_file, destination_file = select_log_files()
+    if source_file is None or destination_file is None:
         print('File selection cancelled.')
         return
+    logging.debug('Reading source log file: %s', source_file)
+    tx_logs = read_log_to_dataframe(source_file)
+    logging.debug('Reading destination log file: %s', destination_file)
+    rx_logs = read_log_to_dataframe(destination_file)
     # Debug log first 5 rows of each dataframe
     logging.debug('V2X Hub TX Logs:\n%s', tx_logs.head())
     logging.debug('RSU TX Logs:\n%s', rx_logs.head())
