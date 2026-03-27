@@ -12,7 +12,6 @@ COPY ./ext /home/V2X-Hub/ext
 WORKDIR /home/V2X-Hub/ext/
 RUN ./build.sh
 
-COPY container/wait-for-it.sh /usr/local/bin/
 COPY container/service.sh /usr/local/bin/
 
 COPY ./container /home/V2X-Hub/container
