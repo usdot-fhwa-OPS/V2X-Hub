@@ -366,6 +366,7 @@ body{
 }
 
 #saveStateFeedback {
+    display: none;
     position:fixed;
     bottom:1%;
     left:50%;

@@ -1,20 +1,36 @@
-$(document).ready(function () {
-    
-    let saveStateTimeout = null;
+var startSaveStateTimer = null;
 
+$(document).ready(function () {
     $("#saveStateBtn").on("mousedown", function (e) {
-        const $btn = $(this);
-         $btn.attr("disabled", "true"); // disable to prevent double clicks
-        $("#saveStateFeedback").html("Starting database backup...");
+        $("#saveStateBtn").attr("disabled", "true"); // disable to prevent double clicks
+        showSaveStateFeedback("Starting database backup...");
         // Send command over WebSocket
         generateAndSendCommandMessage("savestate", []);
-
-        // Set a timeout to handle case if DB is not downloaded
-        saveStateTimeout = setTimeout(() => {
-            $("#saveStateFeedback").html("Backup timed out. Please try again.");
-            $btn.removeAttr("disabled"); // re-enable button
-        }, 5000);
-
+        startSaveStateProgressTimer();
         e.stopPropagation();
     });
 });
+
+function startSaveStateProgressTimer() {
+    stopSaveStateProgressTimer();
+    startSaveStateTimer = setTimeout(() => {
+        $("#saveStateFeedback").html("Backup timed out. Please try again.");
+        $("#saveStateBtn").removeAttr("disabled"); // re-enable button
+    }, 5000); // 5 seconds timeout
+}
+
+function stopSaveStateProgressTimer() {
+    if (startSaveStateTimer) {
+        clearTimeout(startSaveStateTimer);
+        startSaveStateTimer = null;
+        $("#saveStateBtn").removeAttr("disabled");
+    }
+}
+
+function showSaveStateFeedback(message) {
+    $("#saveStateFeedback").text(message).css("display", "block");
+}
+
+function hideSaveStateFeedback() {
+    $("#saveStateFeedback").css("display", "none");
+}

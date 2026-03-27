@@ -687,24 +687,40 @@ function handleCommandMessage(msgData) {
         else if (msgData["command"].toUpperCase() === "SAVESTATE") {
             const status = (msgData["status"] || "").toUpperCase();
             if (status === "SUCCESS") {
+                stopSaveStateProgressTimer();  // stops the timeout when backup completes
                 if (msgData["fileBuffer"]) {
-                    $("#saveStateFeedback").html("Backup successful. Downloading...");
-                    const blob = new Blob([msgData["fileBuffer"]], { type: "application/sql" });
+                    showSaveStateFeedback("Backup successful. Downloading...");
+                    const blob = base64ToBlob(msgData["fileBuffer"], "application/sql");
                     const link = document.createElement("a");
                     const url = URL.createObjectURL(blob);
                     link.href = url;
                     link.download = "v2x_hub_state.sql";
                     link.click();
                     URL.revokeObjectURL(url);
+                    hideSaveStateFeedback();
                 } else {
-                    $("#saveStateFeedback").html("Backup successful, but file not available.");
+                    showSaveStateFeedback("Backup successful, but file not available.");
+                    setTimeout(hideSaveStateFeedback, 3000); // hide after 3s
                 }
             } else {
-                $("#saveStateFeedback").html("Backup failed: " + (msgData.reason || ""));
+                showSaveStateFeedback("Backup failed: " + (msgData.reason || ""));
+                setTimeout(hideSaveStateFeedback, 3000); // hide after 3s
             }
         }
 
     }
+}
+
+function base64ToBlob(base64, mimeType) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    return new Blob([bytes], { type: mimeType });   
 }
 
 function launchErrorDialog(command, reason)

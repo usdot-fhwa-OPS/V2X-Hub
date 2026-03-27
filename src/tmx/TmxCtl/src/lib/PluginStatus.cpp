@@ -861,7 +861,6 @@ bool TmxControl::save_state()
                   "--ignore-table=" + dbname + ".pluginActivity "
                   "--ignore-table=" + dbname + ".user "
                   "> " + backupFile;
-		PLOG(logDEBUG) << "SQL Dump query is:  " << cmd;
 
         int ret = std::system(cmd.c_str());
         if (ret != 0)

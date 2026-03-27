@@ -352,7 +352,6 @@ int CommandPlugin::WSCallbackHTTP(
 		break;
 	case LWS_CALLBACK_HTTP:
 		//lws_write(wsi, (unsigned char*)response, strlen(response), LWS_WRITE_HTTP);
-		FILE_LOG(logDEBUG) << "LWS_CALLBACK_HTTP called with URI: " << (char *)in;
 		break;
 	case LWS_CALLBACK_HTTP_BODY:
 		/* create the POST argument parser if not already existing */
@@ -1108,10 +1107,12 @@ int CommandPlugin::WSCallbackBASE64(
 													oss << file.rdbuf();
 													std::string fileContent = oss.str();
 
-													// Optional: encode to Base64 if you want to send as text
-													// std::string encodedContent = Base64Encode(fileContent);
+													std::string encodedContent = tmx::utils::Base64::Encode(
+														reinterpret_cast<const unsigned char*>(fileContent.c_str()),
+														fileContent.size()
+													);
 
-													data["fileBuffer"] = fileContent; // or "encodedContent" if Base64
+													data["fileBuffer"] = encodedContent;
 													BuildCommandResponse(psdata->outputbuffer, id, command,
 																		"success", "Backup completed", data, arrayData);
 
