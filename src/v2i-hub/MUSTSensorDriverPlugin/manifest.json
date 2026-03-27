@@ -25,7 +25,7 @@
 		},
         {
             "key":"DetectionReceiverIP",
-            "default":"127.0.0.1",
+            "default":"0.0.0.0",
             "description":"IP Address V2X-Hub listens for incoming detections"
         },
         {
