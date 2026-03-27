@@ -289,4 +289,4 @@ jobs:
           V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           echo "Running tests with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
-          pytest -v tests/test_case.py
+          pytest -x -v tests/test_case.py
