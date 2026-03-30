@@ -1082,23 +1082,15 @@ int CommandPlugin::WSCallbackBASE64(
 										{
 											std::map<string, string> data;
 											std::map<string, string> arrayData;
-
 											FILE_LOG(logDEBUG) << "WSCallbackBASE64: Received command 'savestate'";
-
 											_tmxControl.ClearOptions();
-
 											bool rc = _tmxControl.save_state();
-
 											if (rc)
 											{
 												FILE_LOG(logDEBUG) << "WSCallbackBASE64 savestate success";
-
 												tmx::message_container_type *output = _tmxControl.GetOutput();
-						
 												std::string filePath = output->get_storage().get_tree().get<string>("file");
-
 												FILE_LOG(logDEBUG) << "Backup file created at: " << filePath;
-
 												// Open file and read content
 												std::ifstream file(filePath, std::ios::binary);
 												if (file)
@@ -1106,31 +1098,24 @@ int CommandPlugin::WSCallbackBASE64(
 													std::ostringstream oss;
 													oss << file.rdbuf();
 													std::string fileContent = oss.str();
-
 													std::string encodedContent = tmx::utils::Base64::Encode(
 														reinterpret_cast<const unsigned char*>(fileContent.c_str()),
 														fileContent.size()
 													);
-
 													data["fileBuffer"] = encodedContent;
-													BuildCommandResponse(psdata->outputbuffer, id, command,
-																		"success", "Backup completed", data, arrayData);
-
+													BuildCommandResponse(psdata->outputbuffer, id, command, "success", "Backup completed", data, arrayData);
 													FILE_LOG(logDEBUG) << "Backup file content sent over WebSocket";
 												}
 												else
 												{
 													FILE_LOG(logDEBUG) << "Failed to open backup file for sending";
-													BuildCommandResponse(psdata->outputbuffer, id, command,
-																		"failed", "Backup file could not be read", data, arrayData);
+													BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Backup file could not be read", data, arrayData);
 												}
 											}
 											else
 											{
 												FILE_LOG(logDEBUG) << "WSCallbackBASE64 savestate failed";
-
-												BuildCommandResponse(psdata->outputbuffer, id, command,
-																	"failed", "Backup failed", data, arrayData);
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Backup failed", data, arrayData);
 											}
 										}
 									}
