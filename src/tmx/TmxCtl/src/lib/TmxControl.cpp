@@ -65,7 +65,7 @@ void registerFunction(string name, const char *aliases, const char *descr,
 TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NULL)
 {
 	// Register the available functions as options
-#define REG_FN(X, Y, Z) registerFunction(#X, Y, Z, &TmxControl::X);
+#define REG_FN(X, Y, Z) registerFunction(#X, Y, Z, &TmxControl::X)
 #define REG_FN_ARG(X, Y, Z, T) registerFunction(#X, Y, Z, &TmxControl::X, \
 		boost::program_options::value<T>())
 
@@ -91,7 +91,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
 	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
 	REG_FN(user_delete, NULL, "Delete a TMX user.");
-	REG_FN(save_state, NULL, "Save the current state of the system.");
+	REG_FN(save_state, nullptr, "Save the current state of the system.");
 
 	// These have arguments
 	REG_FN_ARG(max_message_interval, "M", "Set the max message interval for the plugin", std::string);

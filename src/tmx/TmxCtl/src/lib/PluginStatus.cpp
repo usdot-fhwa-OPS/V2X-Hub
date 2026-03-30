@@ -833,7 +833,7 @@ bool TmxControl::user_delete()
 	return false;
 }
 
-bool TmxControl::save_state(pluginlist &plugins, ...)
+bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 {
 	if (!checkPerm())
 		return false;
@@ -844,7 +844,7 @@ bool TmxControl::save_state()
 {
     try
     {
-		tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
         std::string user = dbConfig.getUser();
         std::string password = dbConfig.getPassword(); 
@@ -862,8 +862,7 @@ bool TmxControl::save_state()
                   "--ignore-table=" + dbname + ".user "
                   "> " + backupFile;
 
-        int ret = std::system(cmd.c_str());
-        if (ret != 0)
+        if (int ret = std::system(cmd.c_str()); ret != 0)
         {
             PLOG(logERROR) << "mysqldump failed with code " << ret;
             return false;
