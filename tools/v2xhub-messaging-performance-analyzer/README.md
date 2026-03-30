@@ -1,9 +1,9 @@
 # V2X Hub Messaging Performance Analyzer
 
-This tool is intended analyze performance of V2X Hub messaging. This includes V2X Hub/RSU **latency**, **message drop** and **message frequency**. This tool ingests the output logfiles of the **JSON Message Logger Plugin** as well as the decoded pcaps of recorded traffic from RSUs.
+This tool is intended to analyze performance of V2X Hub messaging. This includes V2X Hub/RSU **latency**, **message drop** and **message frequency**. This tool ingests the output logfiles of the **JSON Message Logger Plugin** as well as the decoded pcaps of recorded traffic from RSUs.
 
 > [!IMPORTANT]  
-> To decode the pcap data from an RSU please use the **[pcapdecoder](https://github.com/usdot-fhwa-stol/pcapdecoder)** tool. After using this tool `.pcap` files should be converted to `.log` files of decoded JSON data
+> To decode the pcap data from an RSU please use the **[pcapdecoder](https://github.com/usdot-fhwa-stol/pcapdecoder)** tool. After using this tool `.pcap` files should be converted to `.log` files containing decoded JSON data
 
 ## Prerequisites
 
@@ -16,16 +16,26 @@ As mentioned above, this tool assumes all data is in the format of logs files. T
 
 ## Usage
 ```
-usage: v2xhub_messaging_performance_analyzer.py [-h] [--input_dir INPUT_DIR] [--debug]
+usage: v2xhub_messaging_performance_analyzer.py [-h] [--debug]
 
 Analyze V2X messaging performance from log files.
 
 options:
   -h, --help            show this help message and exit
-  --input_dir INPUT_DIR
-                        Directory containing RSU and V2X Hub log files
   --debug               Enable debug logging
 ```
+
+When the script starts, it opens two file selection dialogs in order:
+
+1. Select the source (transmit) log file.
+: This should be the originating message stream (for example, V2X Hub Tx logs).
+2. Select the destination (receive/forward) log file.
+: This should be the corresponding downstream stream used for comparison (for example, RSU inbound ethernet logs).
+
+After both files are selected, the script calculates message latency, message drops, and throughput, then writes results to:
+
+- `./data` for intermediate CSV files
+- `./plots` for generated charts
 
 ## Output
 

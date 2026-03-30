@@ -1,53 +1,88 @@
+#!/usr/bin/env python3
 """
 V2X Hub Messaging Performance Analyzer
-This script analyzes messaging performance between a V2X Hub and RSU
+This script analyzes messaging performance between a message source and a message destination
 by reading log files, calculating message drop, latency, and throughput,
 and generating plots for visualization.
 """
 
 import os
 import re
+import sys
 import argparse
 import logging
 import json
 
+from PyQt6.QtCore import QTimer
+from PyQt6.QtWidgets import QApplication, QFileDialog
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# Define main function which reads in input_dir using argparse
 
-def read_log_files(input_dir):
+def select_log_files():
     """
-    Reads input log files from RSU/V2X Hub in input_dir and returns
-    two dataframes: v2xhub_tx_logs and rsu_tx_logs.
-
-    :param input_dir: Description
+    Opens file dialogs for the user to select the originating source file and the destination file. Returns the selected file paths.
     """
-    rsu_tx_logs = None
-    v2xhub_tx_logs = None
+    app = QApplication.instance() or QApplication(sys.argv)
 
-    # Read log files from input directory
-    for filename in os.listdir(input_dir):
-        if filename.startswith('j2735') and "Tx" in filename and filename.endswith('.log'):
-            logging.debug('Reading V2X Hub log file: %s', filename)
-            v2xhub_tx_logs = read_log_to_dataframe(os.path.join(input_dir, filename))
-        elif 'tx' in filename and filename.endswith('.log'):
-            logging.debug('Reading RSU log file: %s', filename)
-            rsu_tx_logs = read_log_to_dataframe(os.path.join(input_dir, filename))
-    return v2xhub_tx_logs, rsu_tx_logs
+    file_filter = 'Log files (*.log);;All files (*)'
+
+    source_file, _ = QFileDialog.getOpenFileName(
+        None,
+        'Select Source Log File',
+        '',
+        file_filter
+    )
+    if not source_file:
+        logging.error('No source log file selected.')
+        return None, None
+
+    destination_file, _ = QFileDialog.getOpenFileName(
+        None,
+        'Select Destination Log File',
+        '',
+        file_filter
+    )
+    if not destination_file:
+        logging.error('No destination log file selected.')
+        return None, None
+
+    # Briefly run the event loop so the dialog window fully closes before returning control to the caller for processing.
+    QTimer.singleShot(1, app.quit)
+    app.exec()
+
+    return source_file, destination_file
 
 def read_log_to_dataframe(log_file):
     """
-    Reads *.log file as csv with separator " : "  and returns dataframe
+    Reads *.log file, joining lines that are continuations of multiline
+    JSON entries, and returns dataframe with Timestamp and Raw JSON String.
 
     :param log_file: Description
     """
-    data =  pd.read_csv(
-        log_file, sep=" : ",
-        header=None,
-        engine='python',
-        names= ['Timestamp', 'Raw JSON String']
-    )
+    entry_pattern = re.compile(r'^(\d+)\s+:\s+(.*)')
+    rows = []
+    with open(log_file, 'r') as f:
+        current_ts = None
+        current_json = None
+        for line in f:
+            line = line.rstrip('\n')
+            match = entry_pattern.match(line)
+            if match:
+                # Save previous entry if exists
+                if current_ts is not None:
+                    rows.append((int(current_ts), current_json.strip()))
+                current_ts = match.group(1)
+                current_json = match.group(2)
+            else:
+                # Continuation of previous entry's JSON
+                if current_json is not None:
+                    current_json += line
+        # Save last entry
+        if current_ts is not None:
+            rows.append((int(current_ts), current_json.strip()))
+    data = pd.DataFrame(rows, columns=['Timestamp', 'Raw JSON String'])
 
     # Regex to replace any boolean, null, or numeric values surrounded by quotes with unquoted
     # values
@@ -61,12 +96,18 @@ def read_log_to_dataframe(log_file):
         "31": "TIM",
         # Add more mappings as needed
     }
+    # Function to extract messageId and convert to name, with error handling for JSON decode errors
+    def convert_message_id(x):
+        try:
+            msg_id = str(json.loads(x).get('messageId'))
+            return message_id_to_name.get(msg_id, f"Unknown({msg_id})")
+        except json.decoder.JSONDecodeError as e:
+            logging.error(f"Problem with JSON payload {x}: {e}")
+            return "Unknown"
+
     data['Message Type'] = data['Raw JSON String'].apply(
         lambda x: 
-            message_id_to_name.get(
-                # Convert messageId to string if necessary
-                str(json.loads(x).get('messageId'))
-            )
+            convert_message_id(x)
         )
     # Add this debug code before the DataFrame creation
     data.to_csv(
@@ -83,8 +124,8 @@ def calculate_messsage_performance(tx_log, rx_log):
     rx_log, and calculating drop, latency.
     Returns dataframe for message drop and latency
 
-    :param v2xhub_tx_logs: Description
-    :param rsu_tx_logs: Description
+    :param tx_logs: Description
+    :param rx_logs: Description
     """
     message_drop =[[]]
     latency = [[]]
@@ -92,22 +133,25 @@ def calculate_messsage_performance(tx_log, rx_log):
         tx_timestamp = tx_row['Timestamp']
         tx_message = tx_row['Cleaned JSON String']
         tx_message_id = tx_row['Message Type']
-        
+
         # Find matching message in rx_log
         # make case insensitive to avoid capitalization differences in OCTET STRING encoding between ASN1C and pycrate
         rx_row = rx_log[rx_log['Cleaned JSON String'].str.lower() == tx_message.lower()]
         if not rx_row.empty:
             rx_timestamp = rx_row.iloc[0]['Timestamp']
-            
-            if rx_timestamp - tx_timestamp > 200:
+
+            if rx_timestamp - tx_timestamp > 200 :
                 message_drop.append( (tx_timestamp, tx_message_id, tx_message))
             else:
                 latency.append( (tx_timestamp, tx_message_id, rx_timestamp - tx_timestamp))
                 # Remove the matched row to avoid duplicate matches
-                rx_log = rx_log.drop(rx_row.index[0])   
+                rx_log = rx_log.drop(rx_row.index[0])
         else:
             message_drop.append( (tx_timestamp, tx_message_id, tx_message))
-    latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Message Type', 'Latency (ms)'])
+    if len(latency) > 1 :
+        latency_df = pd.DataFrame(latency, columns=['Tx Timestamp', 'Message Type', 'Latency (ms)'])
+    else:
+        latency_df = pd.DataFrame( columns=['Tx Timestamp', 'Message Type', 'Latency (ms)']) 
     if len(message_drop) > 1:
         message_drop_df = pd.DataFrame(message_drop, columns=['Tx Timestamp', 'Message Type', 'Message'])
     else:
@@ -179,7 +223,7 @@ def plot_throughput(tx_log, source , output_dir):
     marker_index = 0
     for message_id in tx_log['Message Type'].unique():
         subset_tx = tx_log[tx_log['Message Type'] == message_id]
-        subset_tx_throughput = subset_tx.resample('1s', on='DateTime').size()
+        subset_tx_throughput = subset_tx.set_index('DateTime').resample('1s').size()
         plt.scatter(subset_tx_throughput.index, subset_tx_throughput.values, label= message_id + ' Throughput' , marker=markers[marker_index])
         marker_index = (marker_index + 1) % len(markers)
     plt.title( source + ' Throughput Over Time')
@@ -202,11 +246,6 @@ def main():
         description='Analyze V2X messaging performance from log files.'
     )
     parser.add_argument(
-        '--input_dir',
-        type=str,
-        help='Directory containing RSU and V2X Hub log files'
-    )
-    parser.add_argument(
         '--debug',
         action='store_true',
         help='Enable debug logging'
@@ -217,23 +256,27 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
 
-    input_dir = args.input_dir
-    # Check input directory exists
-    if not os.path.isdir(input_dir):
-        print(f"Input directory {input_dir} does not exist.")
-        return
     # Create data and plots directories if not exist
     os.makedirs('./data', exist_ok=True)
     os.makedirs('./plots', exist_ok=True)
-    v2xhub_tx_logs, rsu_tx_logs = read_log_files(input_dir)
+    source_file, destination_file = select_log_files()
+    if source_file is None or destination_file is None:
+        print('File selection cancelled.')
+        return
+    logging.debug('Reading source log file: %s', source_file)
+    tx_logs = read_log_to_dataframe(source_file)
+    logging.debug('Reading destination log file: %s', destination_file)
+    rx_logs = read_log_to_dataframe(destination_file)
     # Debug log first 5 rows of each dataframe
-    logging.debug('V2X Hub TX Logs:\n%s', v2xhub_tx_logs.head())
-    logging.debug('RSU TX Logs:\n%s', rsu_tx_logs.head())
-    message_drop_df, latency_df = calculate_messsage_performance(v2xhub_tx_logs, rsu_tx_logs)
+    logging.debug('V2X Hub TX Logs:\n%s', tx_logs.head())
+    logging.debug('RSU TX Logs:\n%s', rx_logs.head())
+    message_drop_df, latency_df = calculate_messsage_performance(tx_logs, rx_logs)
     logging.debug('Message Latency for first 5 messages:\n%s', latency_df.head())
+    logging.info(latency_df.describe(percentiles=[.95, .99]))
+    logging.info(message_drop_df.describe())
     plot_latency(latency_df, './plots')
-    plot_throughput(v2xhub_tx_logs, 'V2X Hub', './plots')
-    plot_throughput(rsu_tx_logs, 'RSU', './plots')
+    plot_throughput(tx_logs, 'V2X Hub', './plots')
+    plot_throughput(rx_logs, 'RSU', './plots')
     if not message_drop_df.empty:
         logging.info('Message Drop detected for %d messages.', len(message_drop_df))
         plot_message_drop(message_drop_df, './plots')

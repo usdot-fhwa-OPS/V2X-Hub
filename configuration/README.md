@@ -1,14 +1,30 @@
 ## Introduction
-This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures.
+This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures with enhanced network security.
 
 > [!NOTE]
 > Separate deployment files/configurations are no longer necessary for arm64 and x86 deployments.
+
+> [!IMPORTANT]
+> **Network Security Enhancement**: V2X-Hub now uses isolated Docker networks for improved security. The database is completely isolated from external access, and only necessary ports are exposed. See [NETWORK_SECURITY.md](NETWORK_SECURITY.md) for detailed information.
+
+## Database Configuration
+
+V2X-Hub uses a secure network architecture with the following database configuration:
+
+- **Database Host**: `db` (Docker service name for internal communication)
+- **Database Port**: `3306` (accessible only within internal network)
+- **Database Name**: `IVP`
+- **Database User**: `IVP`
+- **Password Management**: Secured via Docker secrets
+
+The database is completely isolated on the `v2xhub_data_internal` network and cannot be accessed directly from external networks, providing enhanced security.
 
 ### Deployment Instructions
 Once downloaded, navigate to the configuration directory:
 ```
 cd ~/V2X-Hub/configuration/
 ```
+
 Run the initialization script:
 ```
 ./initialization.sh
