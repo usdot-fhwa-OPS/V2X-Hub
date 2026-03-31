@@ -22,6 +22,7 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 
 #include <UdpClient.h>
+#include <environment/EnvUtils.h>
 #include <tmx/messages/auto_message.hpp>
 #include "PedestrianPluginWorker.hpp"
 

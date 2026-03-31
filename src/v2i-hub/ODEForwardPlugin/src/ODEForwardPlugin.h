@@ -15,98 +15,96 @@
  * the License.
  */
 
- #ifndef TMX_PLUGINS_ODEForwardPlugin_H_
- #define TMX_PLUGINS_ODEForwardPlugin_H_
+#ifndef TMX_PLUGINS_ODEForwardPlugin_H_
+#define TMX_PLUGINS_ODEForwardPlugin_H_
 
- #include "PluginClient.h"
- #include "PluginDataMonitor.h"
- #include <iostream>
- #include <cstring>
- #include <string>
- #include <fstream>
- #include <stdio.h>
- #include <stdlib.h>
- #include <chrono>
- #include <atomic>
- #include <thread>
- #include <boost/algorithm/string.hpp>
- #include <tmx/messages/IvpJ2735.h>
- #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
- #include <tmx/j2735_messages/SpatMessage.hpp>
- #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
- #include <tmx/j2735_messages/MapDataMessage.hpp>
- #include <BasicSafetyMessage.h>
- #include <tmx/messages/auto_message.hpp>
- #include <librdkafka/rdkafkacpp.h>
- #include <tmx/json/cJSON.h>
- #include "/usr/local/include/date/date.h"
- #include "UDPMessageForwarder.h"
- #include "CommunicationModeHelper.h"
+#include "PluginClient.h"
+#include "PluginDataMonitor.h"
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <chrono>
+#include <atomic>
+#include <thread>
+#include <boost/algorithm/string.hpp>
+#include <tmx/messages/IvpJ2735.h>
+#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <tmx/j2735_messages/SpatMessage.hpp>
+#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+#include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <BasicSafetyMessage.h>
+#include <tmx/messages/auto_message.hpp>
+#include <librdkafka/rdkafkacpp.h>
+#include <tmx/json/cJSON.h>
+#include <environment/EnvUtils.h>
+#include "/usr/local/include/date/date.h"
+#include "UDPMessageForwarder.h"
+#include "CommunicationModeHelper.h"
 
  
- using namespace std;
- using namespace tmx;
- using namespace tmx::utils;
- using namespace tmx::messages;
- using namespace date;
-
- namespace ODEForwardPlugin
- {
 
 
- #define BYTESTOMB 1048576
-
- /**
-  * This plugin logs the BSM messages received in the following CSV format.
-  */
- class ODEForwardPlugin: public PluginClient
- {
- public:
- 	ODEForwardPlugin(std::string);
- 	virtual ~ODEForwardPlugin();
- protected:
- 	void UpdateConfigSettings();
-
- 	// Virtual method overrides.
- 	void OnConfigChanged(const char *key, const char *value);
- 	void OnStateChange(IvpPluginState state);
-
- 	void HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg);
- 	void HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg);
- 	void HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg);
- 	void HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg);
-
- private:
- 	std::atomic<uint64_t> _frequency{0};
- 	DATA_MONITOR(_frequency);   // Declares the
-
- 	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
-	void sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg);
-	void sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
-
- 	uint16_t _scheduleFrequency;
-	uint16_t _freqCounter;
- 	uint16_t _forwardMSG;
- 	std::string _BSMkafkaTopic;
- 	std::string _SPaTkafkaTopic;
- 	std::string _kafkaBrokerIp;
- 	std::string _kafkaBrokerPort;
- 	std::string kafkaConnectString;
- 	RdKafka::Conf *kafka_conf;
- 	RdKafka::Producer *kafka_producer;
-	int _MAPUDPPort;
-	int _TIMUDPPort;
-	int _BSMUDPPort;
-	int _SPATUDPPort;
-	std::string _communicationMode;
-	std::string _udpServerIpAddress;
-	std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
-	std::shared_ptr<CommunicationModeHelper> _communicationModeHelper;
- };
- std::mutex _cfgLock;
+namespace ODEForwardPlugin
+{
 
 
- } /* namespace ODEForwardPlugin */
+	constexpr std::size_t BYTESTOMB = 1048576ULL;
 
- #endif /* ODEForwardPlugin.h */
+	/**
+	 * This plugin logs the BSM messages received in the following CSV format.
+	 */
+	class ODEForwardPlugin: public tmx::utils::PluginClient
+	{
+		public:
+			explicit ODEForwardPlugin(const std::string &name);
+			~ODEForwardPlugin() override = default;
+		protected:
+			void UpdateConfigSettings();
+
+			// Virtual method overrides.
+			void OnConfigChanged(const char *key, const char *value) override;
+			void OnStateChange(IvpPluginState state) override;
+
+			void HandleRealTimePublish(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleSPaTPublish(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleTimPublish(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleMapPublish(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
+
+		private:
+			std::atomic<uint64_t> _frequency{0};
+			DATA_MONITOR(_frequency);   // Declares the
+
+			void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
+			void sendSpatKafkaMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
+			void sendBsmKafkaMessage(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
+			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
+
+			uint16_t _scheduleFrequency;
+			uint16_t _freqCounter;
+			uint16_t _forwardMSG;
+			std::string _BSMkafkaTopic;
+			std::string _SPaTkafkaTopic;
+			std::string _kafkaBrokerIp;
+			std::string _kafkaBrokerPort;
+			std::string kafkaConnectString;
+			RdKafka::Conf *kafka_conf;
+			RdKafka::Producer *kafka_producer;
+			int _MAPUDPPort;
+			int _TIMUDPPort;
+			int _BSMUDPPort;
+			int _SPATUDPPort;
+			std::string _communicationMode;
+			std::string _udpServerIpAddress;
+			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
+			std::shared_ptr<CommunicationModeHelper> _communicationModeHelper;
+			std::mutex _cfgLock;
+
+	};
+
+
+} /* namespace ODEForwardPlugin */
+
+#endif /* ODEForwardPlugin.h */

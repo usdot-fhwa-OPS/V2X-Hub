@@ -29,18 +29,13 @@
 			"description":"JSON data defining a list of SignalGroups and phases (Note Only used in SPAT MODE = TSCBM)."
 		},
 		{
-			"key":"Local_IP",
-			"default":"0.0.0.0",
-			"description":"The IPv4 address of the local computer for receiving Traffic Signal Controller Broadcast Messages."
-		},
-		{
 			"key":"Local_UDP_Port",
 			"default":"6053",
 			"description":"The local UDP port for reception of Traffic Signal Controller Broadcast Messages from the TSC."
 		},
 		{
 			"key":"TSC_IP",
-			"default":"0.0.0.0",
+			"default":"127.0.0.1",
 			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
 		},
 		{

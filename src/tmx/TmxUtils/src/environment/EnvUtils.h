@@ -4,7 +4,7 @@
 #include <string>
 #include "tmx/TmxException.hpp"
 
-namespace tmx::utils::sim{
+namespace tmx::utils::environment{
         /**
          * @brief Name of environment variable for enabling simulation components for V2X-Hub. If set
          * to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components 
@@ -60,7 +60,7 @@ namespace tmx::utils::sim{
          * @brief Name of environment variable for storing local IP of V2X Hub. Only necessary in SIMULATION MODE 
          * for CDASim connection.
          */
-        constexpr inline static const char *LOCAL_IP = "LOCAL_IP";
+        constexpr inline static const char *LOCAL_IP = "V2XHUB_IP";
         /**
          * @brief Name of environment variable for storing infrastructure id of V2xhub. Only necessary in SIMULATION MODE 
          * for CDASim connection.
@@ -77,13 +77,20 @@ namespace tmx::utils::sim{
          * @return true if SIMULATION_MODE is "true" or "TRUE" and false otherwise.
          */
         bool is_simulation_mode();
+
         /**
-         * @brief Get simulation configuration. 
+         * @brief Function to return local IP address of V2X-Hub. Only necessary in SIMULATION MODE for CDASim connection.
+         * @return string value of local IP address environment variable or empty string if not set.
+         */
+        std::string get_local_ip();
+
+        /**
+         * @brief Get environment variable configuration. 
          * @param config_name Name of configuration parameter
          * @param required bool flag whether configuration paramter is required (Default: true)
          * @throws tmx::TmxException if required configuration is unset or system not in simulation mode.
          * @return string value of sim configuration
          */
-        std::string get_sim_config(const char *config_name, bool required = true);
+        std::string get_environment_variable(const char *config_name, bool required = true);
 
 }

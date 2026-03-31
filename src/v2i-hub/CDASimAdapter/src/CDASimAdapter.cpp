@@ -6,7 +6,7 @@ using namespace tmx::utils;
 namespace CDASimAdapter{
 
     CDASimAdapter::CDASimAdapter(const std::string &name) : PluginClient(name){
-        if (!sim::is_simulation_mode()) {
+        if (!environment::is_simulation_mode()) {
             throw TmxException("CDASimAdapter only necessary in simulation mode!");
         }
 
@@ -94,19 +94,19 @@ namespace CDASimAdapter{
 
     bool CDASimAdapter::connect() {
         try {
-            std::string simulation_ip = sim::get_sim_config(sim::SIMULATION_IP);
-            std::string local_ip =  sim::get_sim_config(sim::LOCAL_IP);
+            std::string simulation_ip = environment::get_environment_variable(environment::SIMULATION_IP);
+            std::string local_ip =  environment::get_environment_variable(environment::LOCAL_IP);
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
-            uint simulation_registration_port = std::stoul(sim::get_sim_config(sim::SIMULATION_REGISTRATION_PORT));
-            uint time_sync_port = std::stoul(sim::get_sim_config(sim::TIME_SYNC_PORT));
-            auto simulated_interaction_port =static_cast<unsigned int>(std::stoi(sim::get_sim_config(sim::SIM_INTERACTION_PORT)));
-            uint v2x_port = std::stoul(sim::get_sim_config(sim::V2X_PORT));
-            uint sim_v2x_port = std::stoul(sim::get_sim_config(sim::SIM_V2X_PORT));
-            std::string infrastructure_id = sim::get_sim_config(sim::INFRASTRUCTURE_ID);
+            uint simulation_registration_port = std::stoul(environment::get_environment_variable(environment::SIMULATION_REGISTRATION_PORT));
+            uint time_sync_port = std::stoul(environment::get_environment_variable(environment::TIME_SYNC_PORT));
+            auto simulated_interaction_port =static_cast<unsigned int>(std::stoi(environment::get_environment_variable(environment::SIM_INTERACTION_PORT)));
+            uint v2x_port = std::stoul(environment::get_environment_variable(environment::V2X_PORT));
+            uint sim_v2x_port = std::stoul(environment::get_environment_variable(environment::SIM_V2X_PORT));
+            std::string infrastructure_id = environment::get_environment_variable(environment::INFRASTRUCTURE_ID);
             // Sensor JSON file path is an optional environment variable that allows configuration of
             // simulated sensor if provided.
             std::string sensor_json_file_path = "";
-            sensor_json_file_path = sim::get_sim_config(sim::SENSOR_JSON_FILE_PATH, false);
+            sensor_json_file_path = environment::get_environment_variable(environment::SENSOR_JSON_FILE_PATH, false);
 
             PLOG(logINFO) << "CDASim connecting " << simulation_ip <<
                     "\nUsing Registration Port : "  << std::to_string( simulation_registration_port) <<
