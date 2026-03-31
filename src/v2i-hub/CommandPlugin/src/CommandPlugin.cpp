@@ -1100,7 +1100,7 @@ int CommandPlugin::WSCallbackBASE64(
 													std::string fileContent = oss.str();
 													std::string encodedContent = tmx::utils::Base64::Encode(
 														reinterpret_cast<const unsigned char*>(fileContent.c_str()),
-														fileContent.size()
+														static_cast<unsigned int>(fileContent.size())
 													);
 													data["fileBuffer"] = encodedContent;
 													BuildCommandResponse(psdata->outputbuffer, id, command, "success", "Backup completed", data, arrayData);
