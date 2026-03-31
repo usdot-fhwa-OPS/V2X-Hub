@@ -878,6 +878,14 @@ bool TmxControl::save_state()
 		PLOG(logDEBUG) << "Database backup written to " << backupFile;
 		return true;
     }
+	catch (const boost::property_tree::ptree_error &ex) {
+		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
+		return false;
+	}
+	catch (const std::system_error &ex) {
+		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
+		return false;
+	}
     catch (const std::exception &ex)
     {
         PLOG(logERROR) << "Unexpected exception during backup: " << ex.what();
