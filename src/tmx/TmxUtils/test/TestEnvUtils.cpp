@@ -25,46 +25,44 @@ TEST(testEnvUtils, is_simulation_mode_false) {
 }
 
 TEST(testEnvUtils, get_environment_variable_nullptr) {
-    // Precondition for test (ASSERT)
     EXPECT_THROW(tmx::utils::environment::get_environment_variable(nullptr, false), tmx::TmxException );
-
 }
 
 TEST(testEnvUtils, get_environment_variable_unset) {
     // Precondition for test (ASSERT)
-    setenv(tmx::utils::environment::SIMULATION_MODE, "true", 1);
     unsetenv(tmx::utils::environment::SIMULATION_IP);
-    ASSERT_TRUE(tmx::utils::environment::is_simulation_mode());
 
     EXPECT_THROW(tmx::utils::environment::get_environment_variable(tmx::utils::environment::SIMULATION_IP), tmx::TmxException );
 }
 
 TEST(testEnvUtils, get_environment_variable_set) {
-    // Precondition for test (ASSERT)
     std::string simulation_ip = "127.0.0.1";
-    setenv(tmx::utils::environment::SIMULATION_MODE, "true", 1);
     setenv(tmx::utils::environment::SIMULATION_IP, simulation_ip.c_str(), 1);
-    ASSERT_TRUE(tmx::utils::environment::is_simulation_mode());
     
     EXPECT_EQ(tmx::utils::environment::get_environment_variable(tmx::utils::environment::SIMULATION_IP), simulation_ip );
 }
 
 TEST(testEnvUtils, get_environment_variable_optional_set) {
-    // Precondition for test (ASSERT)
     std::string simulation_ip = "127.0.0.1";
-    setenv(tmx::utils::environment::SIMULATION_MODE, "true", 1);
     setenv(tmx::utils::environment::SIMULATION_IP, simulation_ip.c_str(), 1);
-    ASSERT_TRUE(tmx::utils::environment::is_simulation_mode());
     
     EXPECT_EQ(tmx::utils::environment::get_environment_variable(tmx::utils::environment::SIMULATION_IP,false), simulation_ip );
 }
 
 TEST(testEnvUtils, get_environment_variable_optional_unset) {
-    // Precondition for test (ASSERT)
     std::string simulation_ip = "127.0.0.1";
-    setenv(tmx::utils::environment::SIMULATION_MODE, "true", 1);
     unsetenv(tmx::utils::environment::SIMULATION_IP);
-    ASSERT_TRUE(tmx::utils::environment::is_simulation_mode());
     
     EXPECT_TRUE(tmx::utils::environment::get_environment_variable(tmx::utils::environment::SIMULATION_IP,false).empty());
+}
+
+TEST(testEnvUtils, get_local_ip_unset) {
+    unsetenv(tmx::utils::environment::LOCAL_IP);
+    EXPECT_THROW(tmx::utils::environment::get_local_ip(), tmx::TmxException );
+}
+
+TEST(testEnvUtils, get_local_ip_set) {
+    std::string local_ip = "0.0.0.0";
+    setenv(tmx::utils::environment::LOCAL_IP, local_ip.c_str(), 1);
+    EXPECT_EQ(tmx::utils::environment::get_local_ip(), local_ip);
 }
