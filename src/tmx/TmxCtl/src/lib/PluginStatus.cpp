@@ -878,9 +878,14 @@ bool TmxControl::save_state()
 		PLOG(logDEBUG) << "Database backup written to " << backupFile;
 		return true;
     }
+	catch (const std::runtime_error &ex)
+	{
+		PLOG(logERROR) << "Runtime error during backup: " << ex.what();
+		return false;
+	}
     catch (const std::exception &ex)
     {
-        PLOG(logERROR) << "Exception during backup: " << ex.what();
+        PLOG(logERROR) << "Unexpected exception during backup: " << ex.what();
         return false;
     }
 }
