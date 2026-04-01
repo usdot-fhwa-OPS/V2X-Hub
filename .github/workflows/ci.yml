@@ -253,6 +253,13 @@ jobs:
       - publish-docker-compose
     timeout-minutes: 35
     steps:
+      - name: Checkout v2xhub-integration-tests
+        uses: actions/checkout@v5
+        with:
+          repository: usdot-fhwa-OPS/v2xhub-integration-tests
+          ref: develop
+          token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
+          path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
         id: meta
         uses: docker/metadata-action@v6
@@ -264,7 +271,7 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-      - name: run integration tests
+      - name: Run integration tests
         uses: usdot-fhwa-OPS/v2xhub-integration-tests/.github/actions/v2xhub-integration-test@develop
         with:
           v2xhub-integration-test-token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
