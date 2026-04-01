@@ -29,7 +29,8 @@ DEPENDENCIES="build-essential \
     zip \
     zlib1g \
     libprotobuf-c-dev \
-    curl"
+    curl \
+    mysql-client"
 
 # STOL library dependencies
 LIBRARY_DEPENDENCIES=" \

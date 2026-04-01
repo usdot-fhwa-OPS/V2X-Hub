@@ -82,6 +82,8 @@ public:
 	bool plugin_install(pluginlist &, ...);
 	bool plugin_remove();
 	bool plugin_remove(pluginlist &, ...);
+	bool save_state();
+	bool save_state(pluginlist &, ...);
 
 	//methods for using the class in other applications
 	void SetConnectionUrl(std::string url);
