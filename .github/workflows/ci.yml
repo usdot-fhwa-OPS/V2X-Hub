@@ -265,7 +265,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: run integration tests
-        uses: usdot-fhwa-OPS/v2xhub-integration-tests/.github/actions/v2xhub-integration-test@add-github-step-summary
+        uses: usdot-fhwa-OPS/v2xhub-integration-tests/.github/actions/v2xhub-integration-test@develop
         with:
           v2xhub-integration-test-token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           v2xhub-version: ${{ steps.meta.outputs.version }}
