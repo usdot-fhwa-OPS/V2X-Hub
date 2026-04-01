@@ -886,9 +886,9 @@ bool TmxControl::save_state()
 		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
 		return false;
 	}
-    catch (const std::exception &ex)
+    catch (const std::bad_alloc &ex)
     {
-        PLOG(logERROR) << "Unexpected exception during backup: " << ex.what();
+        PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
         return false;
     }
 }
