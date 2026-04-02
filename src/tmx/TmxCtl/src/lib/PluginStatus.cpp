@@ -833,4 +833,63 @@ bool TmxControl::user_delete()
 	return false;
 }
 
+bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
+{
+	if (!checkPerm())
+		return false;
+	return save_state();
+}
+
+bool TmxControl::save_state()
+{
+    try
+    {
+		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+
+        std::string user = dbConfig.getUser();
+        std::string password = dbConfig.getPassword(); 
+        std::string host = dbConfig.getHost();
+        std::string dbname = dbConfig.getDatabase();
+
+        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql";
+
+		std::string cmd = "mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
+                  " --no-tablespaces "
+                  "--ignore-table=" + dbname + ".eventLog "
+                  "--ignore-table=" + dbname + ".messageActivity "
+                  "--ignore-table=" + dbname + ".messageType "
+                  "--ignore-table=" + dbname + ".pluginActivity "
+                  "--ignore-table=" + dbname + ".user "
+                  "> " + backupFile;
+
+        if (int ret = std::system(cmd.c_str()); ret != 0)
+        {
+            PLOG(logERROR) << "mysqldump failed with code " << ret;
+            return false;
+        }
+
+		_output.get_storage().get_tree().clear();
+		message payload;
+		message_tree_type tree;
+		tree.put("file", backupFile);	
+		payload.set_contents(tree);
+		_output = payload.get_container();
+
+		PLOG(logDEBUG) << "Database backup written to " << backupFile;
+		return true;
+    }
+	catch (const boost::property_tree::ptree_error &ex) {
+		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
+		return false;
+	}
+	catch (const std::system_error &ex) {
+		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
+		return false;
+	}
+    catch (const std::bad_alloc &ex)
+    {
+        PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
+        return false;
+    }
+}
 } /* namespace tmxctl */

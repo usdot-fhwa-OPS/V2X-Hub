@@ -30,7 +30,7 @@
 		},
 		{
 			"key":"Local_IP",
-			"default":"127.0.0.1",
+			"default":"0.0.0.0",
 			"description":"The IPv4 address of the local computer for receiving Traffic Signal Controller Broadcast Messages."
 		},
 		{
@@ -40,7 +40,7 @@
 		},
 		{
 			"key":"TSC_IP",
-			"default":"127.0.0.1",
+			"default":"0.0.0.0",
 			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
 		},
 		{

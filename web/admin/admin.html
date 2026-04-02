@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../js/tmx.common.library.js" defer></script>
     <script type="text/javascript" src="js/tmx.custom.library.js" defer></script>
     <script type="text/javascript" src="../js/tmx.components.library.js" defer></script>
+    <script type="text/javascript" src="../js/tmx.save.state.js" defer></script>
 </head>
 
 <audio id="player"></audio>
@@ -49,7 +50,7 @@
         </div>    
         <div class="headerbottom">
            <div class="timelabel" id="timeDisplay"></div>
-           <div class="versionlabel" id="versionDisplay">7.11.0</div>
+           <div class="versionlabel" id="versionDisplay">7.11.1</div>
         </div>
     </div>
 
@@ -97,8 +98,10 @@
                         <button id="disableButton" class="filterButton">Disabled</button>
                         <button id="externalButton" class="filterButton">External</button>
                     </div>
-                    <button id="uploadFileBtn" style="display:inline-block;">Upload File</button>
+                    <button id="saveStateBtn" style="display:inline-block;">Save State</button>
+                    <button id="uploadFileBtn" style="display:inline-block; margin-right: .3em;">Upload File</button>
                 </div>
+                <div id="saveStateFeedback" class="feedBack"></div>
                 <div id="pluginList"></div>
                 <div id="newConfigDialog" class="site-dialog">
                     <div class="dialog-content">
