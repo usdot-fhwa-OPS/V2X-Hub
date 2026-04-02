@@ -57,12 +57,12 @@ TEST(testEnvUtils, get_environment_variable_optional_unset) {
 }
 
 TEST(testEnvUtils, get_local_ip_unset) {
-    unsetenv(tmx::utils::environment::LOCAL_IP);
+    unsetenv(tmx::utils::environment::V2XHUB_IP);
     EXPECT_THROW(tmx::utils::environment::get_local_ip(), tmx::TmxException );
 }
 
 TEST(testEnvUtils, get_local_ip_set) {
     std::string local_ip = "0.0.0.0";
-    setenv(tmx::utils::environment::LOCAL_IP, local_ip.c_str(), 1);
+    setenv(tmx::utils::environment::V2XHUB_IP, local_ip.c_str(), 1);
     EXPECT_EQ(tmx::utils::environment::get_local_ip(), local_ip);
 }

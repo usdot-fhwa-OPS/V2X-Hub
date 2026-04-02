@@ -60,16 +60,14 @@ namespace tmx::utils::environment{
          * @brief Name of environment variable for storing local IP of V2X Hub. Only necessary in SIMULATION MODE 
          * for CDASim connection.
          */
-        constexpr inline static const char *LOCAL_IP = "V2XHUB_IP";
+        constexpr inline static const char *V2XHUB_IP = "V2XHUB_IP";
         /**
-         * @brief Name of environment variable for storing infrastructure id of V2xhub. Only necessary in SIMULATION MODE 
-         * for CDASim connection.
+         * @brief Name of environment variable for storing infrastructure id of V2xhub. 
          */
         constexpr inline static const char *INFRASTRUCTURE_ID = "INFRASTRUCTURE_ID";
 
         /**
-         * @brief Name of environment variable for storing infrastructure name of v2xhub. Only necessary in SIMULATION MODE 
-         * for CDASim connection.
+         * @brief Name of environment variable for storing infrastructure name of v2xhub. 
         */
         constexpr inline static const char *INFRASTRUCTURE_NAME = "INFRASTRUCTURE_NAME";
         /**
@@ -79,18 +77,18 @@ namespace tmx::utils::environment{
         bool is_simulation_mode();
 
         /**
-         * @brief Function to return local IP address of V2X-Hub. Only necessary in SIMULATION MODE for CDASim connection.
+         * @brief Function to return local IP address of V2X-Hub configured with environment variable V2XHUB_IP. 
          * @return string value of local IP address environment variable or empty string if not set.
          */
         std::string get_local_ip();
 
         /**
-         * @brief Get environment variable configuration. 
-         * @param config_name Name of configuration parameter
-         * @param required bool flag whether configuration paramter is required (Default: true)
-         * @throws tmx::TmxException if required configuration is unset or system not in simulation mode.
-         * @return string value of sim configuration
+         * @brief Get environment variable. 
+         * @param env_name Name of environment variable
+         * @param required bool flag whether environment variable is required (Default: true)
+         * @throws tmx::TmxException if required environment variable is unset
+         * @return string value of environment variable
          */
-        std::string get_environment_variable(const char *config_name, bool required = true);
+        std::string get_environment_variable(const char *env_name, bool required = true);
 
 }

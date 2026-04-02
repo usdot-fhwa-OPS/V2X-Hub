@@ -12,27 +12,26 @@ namespace tmx::utils::environment{
         return false;
 
     }
-
+    
     std::string get_local_ip() {
-        auto local_ip = std::getenv(LOCAL_IP);
+        auto local_ip = std::getenv(V2XHUB_IP);
         if ( local_ip ) {
             return local_ip;
         }
         else {
-            throw TmxException("Local IP environment variable " + std::string(LOCAL_IP) + " not set!");
+            throw TmxException("Local IP environment variable " + std::string(V2XHUB_IP) + " not set!");
         }
     }
 
-    std::string get_environment_variable(const char *config_name, bool required) {
-        if ( config_name ) {
-            if ( std::getenv(config_name) != nullptr) {
-                std::string config =  std::getenv(config_name);
-                return config;
+    std::string get_environment_variable(const char *env_name, bool required) {
+        if ( env_name ) {
+            if ( std::getenv(env_name) != nullptr) {
+                std::string env_value =  std::getenv(env_name);
+                return env_value;
             }
             else {
-                std::string config_name_str = config_name;
                 if ( required ) {
-                    throw TmxException("Required environment variable " + config_name_str + " not set!");
+                    throw TmxException("Required environment variable " + std::string(env_name) + " not set!");
                 }
                 return "";
             }

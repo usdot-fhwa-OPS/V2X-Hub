@@ -95,7 +95,7 @@ namespace CDASimAdapter{
     bool CDASimAdapter::connect() {
         try {
             std::string simulation_ip = environment::get_environment_variable(environment::SIMULATION_IP);
-            std::string local_ip =  environment::get_environment_variable(environment::LOCAL_IP);
+            std::string local_ip =  environment::get_environment_variable(environment::V2XHUB_IP);
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
             uint simulation_registration_port = std::stoul(environment::get_environment_variable(environment::SIMULATION_REGISTRATION_PORT));
             uint time_sync_port = std::stoul(environment::get_environment_variable(environment::TIME_SYNC_PORT));
