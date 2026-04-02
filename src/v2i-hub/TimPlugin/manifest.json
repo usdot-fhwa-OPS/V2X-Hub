@@ -24,11 +24,6 @@
 			"description":""
 		},
 		{
-			"key":"WebServiceIP",
-			"default":"0.0.0.0",
-			"description":"IP address at which the web service exists"
-		},
-		{
 			"key":"WebServicePort",
 			"default":"10000",
 			"description":"Port at which Web service exists"

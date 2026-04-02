@@ -24,11 +24,6 @@
 			"description":"Comma separated list of SAE J2735 message ID values."
 		},
 		{
-			"key":"IP",
-			"default":"0.0.0.0",
-			"description":"IP address for the incoming message network connection."
-		},
-		{
 			"key":"Port",
 			"default":"26789",
 			"description":"Port for the incoming message network connection."

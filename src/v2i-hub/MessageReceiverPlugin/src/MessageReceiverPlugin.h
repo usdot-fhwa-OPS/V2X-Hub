@@ -36,6 +36,7 @@
 #include <tmx/messages/J2735Exception.hpp>
 #include <tmx/messages/SaeJ2735Traits.hpp>
 #include <tmx/messages/routeable_message.hpp>
+#include <environment/EnvUtils.h>
 
 
 #define UDP "UDP"

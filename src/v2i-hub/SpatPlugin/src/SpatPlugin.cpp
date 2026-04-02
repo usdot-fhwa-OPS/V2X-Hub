@@ -46,7 +46,7 @@ namespace SpatPlugin {
 			std::string intersection_name;
 			unsigned int intersection_id;
 			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json, &data_lock);
-			GetConfigValue<std::string>("Local_IP", ip_address, &data_lock);
+			ip_address = tmx::utils::environment::get_local_ip();
 			GetConfigValue<unsigned int>("Local_UDP_Port", port, &data_lock);
 			GetConfigValue<std::string>("TSC_IP", signal_controller_ip, &data_lock);
 			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port,&data_lock);

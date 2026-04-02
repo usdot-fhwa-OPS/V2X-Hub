@@ -19,11 +19,6 @@
 			"description":"The frequency to send the PSM in milliseconds."
 		},
 		{
-			"key":"WebServiceIP",
-			"default":"0.0.0.0",
-			"description":"IP address at which the web service exists"
-		},
-		{
 			"key":"WebServicePort",
 			"default":"9000",
 			"description":"Port at which Web service exists"
