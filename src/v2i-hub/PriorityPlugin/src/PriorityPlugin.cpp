@@ -14,6 +14,7 @@
  * the License.
  */
 #include "PriorityPlugin.hpp"
+#include <map>
 
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -53,8 +54,8 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::UpdateConfigSettings()
     {
-        GetConfigValue<std::string>("IP", _tscIP);
-        GetConfigValue<uint16_t>("Port", _tscPort);
+        std::string tscControllersJson;
+        GetConfigValue<std::string>("TSC_Controllers", tscControllersJson);
         GetConfigValue<std::string>("TSC_SNMP_Community", _snmpCommunity);
         
         GetConfigValue<uint8_t>("VehicleClassLevel", _classLevelStr);
@@ -62,17 +63,42 @@ namespace PriorityPlugin {
         GetConfigValue<uint16_t>("TimeOfServiceDesired", _tsd);
         GetConfigValue<uint16_t>("TimeOfEstimatedDeparture", _ted);
 
+        // Parse the TSC_Controllers JSON array and create an SNMP client per entry
+        _controllers.clear();
         try {
-            _snmpClient = std::make_shared<snmp_client>(
-                _tscIP, _tscPort, _snmpCommunity,
-                "", "", "",
-                SNMP_VERSION_1);
-        } catch (const snmp_client_exception &e) {
-            PLOG(logERROR) << "Failed to create SNMP client: " << e.what();
-            _snmpClient.reset();
+            boost::property_tree::ptree pt;
+            std::istringstream iss(tscControllersJson);
+            boost::property_tree::read_json(iss, pt);
+
+            for (const auto &entry : pt) {
+                ControllerInfo info;
+                info.intersectionID = entry.second.get<long>("IntersectionID");
+                info.ip = entry.second.get<std::string>("IP");
+                info.port = entry.second.get<uint16_t>("Port");
+
+                try {
+                    info.snmpClient = std::make_shared<snmp_client>(
+                        info.ip, info.port, _snmpCommunity,
+                        "", "", "",
+                        SNMP_VERSION_1);
+                } catch (const snmp_client_exception &e) {
+                    PLOG(logERROR) << "Failed to create SNMP client for IntersectionID="
+                                   << info.intersectionID << " (" << info.ip << ":" << info.port
+                                   << "): " << e.what();
+                    continue;
+                }
+
+                PLOG(logINFO) << "Configured controller: IntersectionID=" << info.intersectionID
+                               << " IP=" << info.ip << " Port=" << info.port;
+                _controllers[info.intersectionID] = std::move(info);
+            }
+        } catch (const boost::property_tree::json_parser_error &e) {
+            PLOG(logERROR) << "Failed to parse TSC_Controllers JSON: " << e.what();
+        } catch (const boost::property_tree::ptree_error &e) {
+            PLOG(logERROR) << "Invalid TSC_Controllers entry: " << e.what();
         }
 
-        PLOG(logINFO) << "PriorityPlugin configured: TSC=" << _tscIP << ":" << _tscPort
+        PLOG(logINFO) << "PriorityPlugin configured: " << _controllers.size() << " controller(s)"
                                    << " Community=" << _snmpCommunity
                                    << " ClassLevel=" << _classLevelStr
                                    << " Strategy=" << _strategyStr
@@ -112,6 +138,16 @@ namespace PriorityPlugin {
             vehicleIDLen = sizeof(srm->requestor.id.choice.stationID);
         }
 
+        if (!vehicleIDBytes || vehicleIDLen == 0) {
+            PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
+            _skippedMessages++;
+            SetStatus(_keySkippedMessages, _skippedMessages);
+            return;
+        }
+
+        // Build the map key from the raw vehicle ID bytes
+        std::string vehicleKey(reinterpret_cast<const char *>(vehicleIDBytes), vehicleIDLen);
+
         // Determine vehicle class type from the requestor role
         long role = 0;
         if (srm->requestor.type != nullptr) {
@@ -133,6 +169,22 @@ namespace PriorityPlugin {
                                  + static_cast<long>(utcNow.tm_min);
         long currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
 
+        // Build the requestor state, replacing any prior entry for this vehicle
+        uint8_t newSeq = static_cast<uint8_t>(srm->msgCnt);
+        auto existing = _requestorStates.find(vehicleKey);
+        if (existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
+            PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
+                            << ") for this vehicle, discarding.";
+            return;
+        }
+
+        RequestorState &state = _requestorStates[vehicleKey];
+        state.vehicleID.assign(vehicleIDBytes, vehicleIDBytes + vehicleIDLen);
+        state.classType = classType;
+        state.sequenceNumber = newSeq;
+        state.timeOfRequest = timeOfRequest;
+        state.requests.clear();
+
         // Process each SignalRequestPackage in the SRM
         for (int i = 0; i < srm->requests->list.count; i++) {
             auto *pkg = srm->requests->list.array[i];
@@ -141,6 +193,7 @@ namespace PriorityPlugin {
             }
 
             uint8_t requestID = static_cast<uint8_t>(pkg->request.requestID);
+            long intersectionID = pkg->request.id.id;
 
             // Compute priorityRequestTimeOfServiceDesired:
             // NTCIP 1211 5.1.1.1.7 — relative seconds to arrive at the intersection
@@ -181,9 +234,11 @@ namespace PriorityPlugin {
                     std::min(65535L, std::max(1L, departOffsetSec)));
             }
 
+            // Record this package in the requestor state
+            state.requests.push_back({requestID, intersectionID, timeOfService, timeOfDepart});
+
             // Encode the 29-byte NTCIP 1211 priority request
-            std::vector<uint8_t> encoded = EncodePriorityRequest(
-                requestID,
+            std::vector<uint8_t> encoded = EncodePriorityRequest(                requestID,
                 vehicleIDBytes,
                 vehicleIDLen,
                 classType,
@@ -195,10 +250,21 @@ namespace PriorityPlugin {
 
             PLOG(logINFO) << "Sending NTCIP 1211 priority request for requestID="
                                        << static_cast<int>(requestID)
-                                       << " intersectionID=" << pkg->request.id.id
-                                       << " to " << _tscIP << ":" << _tscPort;
+                                       << " intersectionID=" << intersectionID;
 
-            bool success = SendPriorityRequest(NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
+            auto it = _controllers.find(intersectionID);
+            if (it == _controllers.end()) {
+                PLOG(logWARNING) << "No controller configured for IntersectionID="
+                                  << intersectionID << ", skipping request.";
+                _skippedMessages++;
+                SetStatus(_keySkippedMessages, _skippedMessages);
+                continue;
+            }
+
+            const auto &controller = it->second;
+            PLOG(logINFO) << "Routing to controller " << controller.ip << ":" << controller.port;
+
+            bool success = SendPriorityRequest(controller.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
             if (success) {
                 _priorityRequestsSent++;
                 SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
@@ -207,6 +273,8 @@ namespace PriorityPlugin {
                 PLOG(logERROR) << "Failed to send priority request via SNMP.";
             }
         }
+
+        // BuildSSM(state);
     }
 
     uint8_t PriorityPlugin::MapVehicleClassType(long role) const
@@ -276,9 +344,9 @@ namespace PriorityPlugin {
         return buf;
     }
 
-    bool PriorityPlugin::SendPriorityRequest(const std::string &oidStr, const std::vector<uint8_t> &data)
+    bool PriorityPlugin::SendPriorityRequest(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data)
     {
-        if (!_snmpClient) {
+        if (!client) {
             PLOG(logERROR) << "SNMP client not initialized, cannot send priority request.";
             return false;
         }
@@ -288,7 +356,7 @@ namespace PriorityPlugin {
         val.type = snmp_response_obj::response_type::STRING;
         val.val_string.assign(data.begin(), data.end());
 
-        bool success = _snmpClient->process_snmp_request(
+        bool success = client->process_snmp_request(
             oidStr, request_type::SET, val);
 
         if (success) {
@@ -298,6 +366,84 @@ namespace PriorityPlugin {
         }
         return success;
     }
+
+    // void PriorityPlugin::BuildSSM(const RequestorState &state)
+    // {
+    //     if (state.requests.empty()) {
+    //         PLOG(logWARNING) << "No signal requests in state, skipping SSM build.";
+    //         return;
+    //     }
+
+    //     auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
+    //     memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
+
+    //     // Set second: milliseconds within the current UTC minute
+    //     time_t nowEpoch = std::time(nullptr);
+    //     struct tm utcNow;
+    //     gmtime_r(&nowEpoch, &utcNow);
+    //     ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
+
+    //     // Group signal requests by intersection ID; each intersection gets one SignalStatus entry
+    //     std::map<long, std::vector<const SignalRequest *>> byIntersection;
+    //     for (const auto &req : state.requests) {
+    //         byIntersection[req.intersectionID].push_back(&req);
+    //     }
+
+    //     for (const auto &entry : byIntersection) {
+    //         long intID = entry.first;
+    //         const auto &reqs = entry.second;
+
+    //         SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
+    //         signalStatus->id.id = intID;
+    //         signalStatus->sequenceNumber = state.sequenceNumber;
+
+    //         for (const auto *req : reqs) {
+    //             SignalStatusPackage *pkg = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
+    //             pkg->requester = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
+    //             pkg->requester->request = req->requestID;
+    //             pkg->requester->sequenceNumber = state.sequenceNumber;
+
+    //             // Reconstruct the vehicle ID from stored raw bytes
+    //             if (state.vehicleID.size() == sizeof(StationID_t)) {
+    //                 StationID_t sid = 0;
+    //                 std::memcpy(&sid, state.vehicleID.data(), sizeof(StationID_t));
+    //                 pkg->requester->id.choice.stationID = sid;
+    //                 pkg->requester->id.present = VehicleID_PR_stationID;
+    //             } else {
+    //                 pkg->requester->id.choice.entityID.buf =
+    //                     (uint8_t *)calloc(state.vehicleID.size(), 1);
+    //                 std::memcpy(pkg->requester->id.choice.entityID.buf,
+    //                             state.vehicleID.data(), state.vehicleID.size());
+    //                 pkg->requester->id.choice.entityID.size = state.vehicleID.size();
+    //                 pkg->requester->id.present = VehicleID_PR_entityID;
+    //             }
+
+    //             pkg->status = PrioritizationResponseStatus_processing;
+    //             asn_sequence_add(&signalStatus->sigStatus.list.array, pkg);
+    //         }
+
+    //         asn_sequence_add(&ssmPtr->status.list.array, signalStatus);
+    //     }
+
+    //     // Encode and broadcast the SSM
+    //     try {
+    //         SsmEncodedMessage encodedSSM;
+    //         MessageFrameMessage frame(ssmPtr);
+    //         encodedSSM.set_data(
+    //             TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<
+    //                 codec::uper<MessageFrameMessage>>(frame));
+    //         free(frame.get_j2735_data().get());
+    //         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
+
+    //         encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
+    //         encodedSSM.addDsrcMetadata(0x8002);
+    //         BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
+    //         PLOG(logINFO) << "SSM (processing) broadcast for " << state.requests.size() << " request(s).";
+    //     } catch (const std::exception &ex) {
+    //         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
+    //         PLOG(logERROR) << "Failed to encode/broadcast SSM: " << ex.what();
+    //     }
+    // }
 
 } /* namespace PriorityPlugin */
 

@@ -14,19 +14,14 @@
             "description":"The log level for this plugin."
         },
 		{
-			"key":"IP",
-			"default":"192.168.55.92",
-			"description":"The IPv4 address of the destination Traffic Signal Controller (TSC)."
+			"key":"TSC_Configuration_List",
+			"default":"[{\"IntersectionID\": 9709, \"IP\": \"192.168.55.91\", \"Port\": 161}]",
+			"description":"A JSON array of Traffic Signal Controller (TSC) entries. Each entry must contain: IntersectionID (integer matching the J2735 Intersection ID), IP (IPv4 address of the TSC), and Port (SNMP port on the TSC). Example: [{\"IntersectionID\": 9709, \"IP\": \"192.168.55.91\", \"Port\": 161}, {\"IntersectionID\": 9945, \"IP\": \"192.168.55.92\", \"Port\": 161}]"
 		},
 		{
-			"key":"Port",
-			"default":"161",
-			"description":"The destination port on the Traffic Signal Controller (TSC) for SNMP communication."
-		},
-		{
-			"key":"TSC_SNMP_Community",
-			"default":"public",
-			"description":"The SNMP Community used for sending SNMP NTCIP communication to Traffic Signal Controller (TSC)."
+			"key":"PluginRole",
+			"default":"PRS",
+			"description":"Role the plugin will assume. Acceptable values are PRS (Priority Request Server) and PRG (Priority Request Generator). If PRS is selected, the plugin will manage and prioritize one or more priority requests (SRMs) and generate one or more service requests. If PRG is selected, the plugin will pass along the priority requests to a presumed PRS running on the controller."
 		},
 		{
 			"key":"VehicleClassLevel",

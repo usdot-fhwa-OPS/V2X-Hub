@@ -568,6 +568,65 @@ TEST (J2735MessageTest, EncodeSrm)
 	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
+TEST (J2735MessageTest, EncodeSsm)
+{
+	SignalStatusMessage_t *message = (SignalStatusMessage_t *)calloc(1, sizeof(SignalStatusMessage_t));
+
+	MinuteOfTheYear_t *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	*timeStamp = 132558;
+	message->timeStamp = timeStamp;
+	message->second = 57000;
+
+	Common_MsgCount_t *msgSequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+	*msgSequenceNumber = 1;
+	message->sequenceNumber = msgSequenceNumber;
+
+	SignalStatusList_t *status = (SignalStatusList_t *)calloc(1, sizeof(SignalStatusList_t));
+	status->sequenceNumber = 1;
+	IntersectionReferenceID_t *reference_id = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
+	reference_id->id = 9709;
+	status->id = *reference_id;
+
+	SignalStatusPackage_t *sigStatus = (SignalStatusPackage_t *)calloc(1, sizeof(SignalStatusPackage_t));
+	SignalRequesterInfo_t *requester = (SignalRequesterInfo_t *)calloc(1, sizeof(SignalRequesterInfo_t));
+	VehicleID_t *vehicleId = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
+	*vehicleId = 708601865;
+	requester->id = vehicleId;
+	requester->request = 1;
+	requester->sequenceNumber = 1;
+	BasicVehicleRole_t *role = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
+	*role = 16;
+	requester->role = role;
+	sigStatus->requester = *requester;
+	IntersectionAccessPoint_t *inboundOn = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+	inboundOn->present = IntersectionAccessPoint_PR_lane;
+	inboundOn->choice.lane = 1;
+	sigStatus->inboundOn = *inboundOn;
+	MinuteOfTheYear_t *minute = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	*minute = 57000;
+	sigStatus->minute = minute;
+	DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	*second = 53606;
+	sigStatus->second = second;
+    DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	*duration = 10000;
+	sigStatus->duration = duration;
+	sigStatus->status = 2;
+	asn_sequence_add(&sigStatus->list.array, sigStatus);
+	status->sigStatus = sigStatus;
+	asn_sequence_add(&status->list.array, status);
+	message->status = *status;
+
+	tmx::messages::SsmEncodedMessage ssmEncodeMessage;
+	auto _ssmMessage = new tmx::messages::SsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_ssmMessage->get_j2735_data());
+	ssmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+	free(message);
+	free(frame_msg.get_j2735_data().get());
+	std::cout << ssmEncodeMessage.get_payload_str() << std::endl;
+}
+
+
 TEST(J2735MessageTest, EncodeTravelerInformation){
 	#if SAEJ2735_SPEC >= 2024
 	//2024 TIM message

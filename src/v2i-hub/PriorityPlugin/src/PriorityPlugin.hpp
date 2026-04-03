@@ -21,7 +21,11 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 #include "SNMPClient.h"
 #include <TmxMessageManager.h>
@@ -32,11 +36,17 @@
 
 namespace PriorityPlugin {
 
-    // NTCIP 1211 OID for prgPriorityRequestAbsolute (PRS-MIB1 5.1.2.8)
+    // NTCIP 1211 OID for prgPriorityRequestAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.8)
     static const std::string NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.8.0";
+
+    // NTCIP 1211 OID for prsServiceRequest (1211 v0224j CO-MIB1 5.2.2.1)
+    static const std::string NTCIP1211_PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
 
     // Size of the OER-encoded priority request OCTET STRING
     static constexpr size_t PRIORITY_REQUEST_SIZE = 29;
+
+    // Size of the OER-encoded service request OCTET STRING
+    static constexpr size_t SERVICE_REQUEST_SIZE = 110;
 
     // Vehicle ID field size within the NTCIP 1211 priority request
     static constexpr size_t VEHICLE_ID_FIELD_SIZE = 17;
@@ -75,6 +85,23 @@ namespace PriorityPlugin {
             void HandleSRM(tmx::messages::SrmMessage &msg, tmx::routeable_message &routeableMsg);
 
         private:
+            // Per-package signal request state decoded from an SRM
+            struct SignalRequest {
+                uint8_t requestID;
+                long intersectionID;
+                uint16_t timeOfService;
+                uint16_t timeOfDepart;
+            };
+
+            // Per-requestor state decoded from an SRM, keyed by vehicle ID
+            struct RequestorState {
+                std::vector<uint8_t> vehicleID;
+                uint8_t classType;
+                uint8_t sequenceNumber;
+                uint32_t timeOfRequest;
+                std::vector<SignalRequest> requests;
+            };
+
             /**
              * @brief Maps J2735 BasicVehicleRole to NTCIP 1211 priorityRequestVehicleClassType (1..10).
              * NTCIP 1211 class type is a precedence value:
@@ -105,19 +132,36 @@ namespace PriorityPlugin {
             std::vector<uint8_t> EncodePriorityRequest(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest) const;
 
             /**
-             * @brief Sends the encoded priority request OCTET STRING to the TSC via SNMP SET.
+             * @brief Sends the encoded priority request OCTET STRING to a TSC via SNMP SET.
+             * @param client The SNMP client for the target controller.
              * @param oid The OID to set.
              * @param data The raw byte buffer to send as an OCTET STRING.
              * @return bool true on success, false on failure.
              */
-            bool SendPriorityRequest(const std::string &oid, const std::vector<uint8_t> &data);
+            bool SendPriorityRequest(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data);
 
-            // SNMP client for TSC communication
-            std::shared_ptr<tmx::utils::snmp_client> _snmpClient;
+            /**
+             * @brief Builds and broadcasts a SignalStatusMessage with status=processing
+             *        for all signal requests in the given requestor state.
+             * @param state The fully-populated RequestorState after a new SRM is stored.
+             */
+            // void BuildSSM(const RequestorState &state);
+
+            // Per-controller configuration and SNMP client
+            struct ControllerInfo {
+                long intersectionID;
+                std::string ip;
+                uint16_t port;
+                std::shared_ptr<tmx::utils::snmp_client> snmpClient;
+            };
+
+            // Map of intersection ID to controller info
+            std::unordered_map<long, ControllerInfo> _controllers;
+
+            // Map of vehicle ID (raw bytes as string key) to latest requestor state
+            std::unordered_map<std::string, RequestorState> _requestorStates;
 
             // Configuration values
-            std::string _tscIP;
-            uint16_t _tscPort;
             std::string _snmpCommunity;
             uint8_t _classLevelStr;
             uint8_t _strategyStr;
