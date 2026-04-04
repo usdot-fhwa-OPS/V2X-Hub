@@ -22,13 +22,9 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
-
-
-
-	
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
+	TestMessage03_t* message = (TestMessage03_t*) calloc(1, sizeof(TestMessage03_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -87,7 +83,6 @@ TEST(J2735MessageTest, EncodeMobilityOperation)
 	free(frame_msg.get_j2735_data().get());	
 	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
@@ -179,10 +174,9 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
-
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
-	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
+	TestMessage01_t* message = (TestMessage01_t*) calloc(1, sizeof(TestMessage01_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -234,7 +228,6 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
@@ -296,8 +289,6 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	//Decode the encoded BSM
 	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
 }
-
-
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 {	
@@ -415,8 +406,6 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
-
-
 TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	string psm="<PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>109</secMark><msgCnt>0</msgCnt><id>115eadf0</id><position><lat>389549376</lat><long>-771491840</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>0</speed><heading>16010</heading><pathHistory><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>";
 	std::stringstream ss;
@@ -430,7 +419,7 @@ TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	std::cout << psmENC.get_payload_str()<<std::endl;
 	ASSERT_EQ(32,  psmENC.get_msgId());
 }
-	
+
 TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
@@ -444,7 +433,6 @@ TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	std::cout << tsm4Enc.get_payload_str()<<std::endl;
 	ASSERT_EQ(244,  tsm4Enc.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
@@ -581,23 +569,26 @@ TEST (J2735MessageTest, EncodeSsm)
 	*msgSequenceNumber = 1;
 	message->sequenceNumber = msgSequenceNumber;
 
-	SignalStatusList_t *status = (SignalStatusList_t *)calloc(1, sizeof(SignalStatusList_t));
-	status->sequenceNumber = 1;
-	IntersectionReferenceID_t *reference_id = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
-	reference_id->id = 9709;
-	status->id = *reference_id;
+	SignalStatus_t *signalStatus = (SignalStatus_t *)calloc(1, sizeof(SignalStatus_t));
+	signalStatus->sequenceNumber = 1;
+	signalStatus->id.id = 9709;
 
 	SignalStatusPackage_t *sigStatus = (SignalStatusPackage_t *)calloc(1, sizeof(SignalStatusPackage_t));
 	SignalRequesterInfo_t *requester = (SignalRequesterInfo_t *)calloc(1, sizeof(SignalRequesterInfo_t));
-	VehicleID_t *vehicleId = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
-	*vehicleId = 708601865;
-	requester->id = vehicleId;
+	TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+	VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
+	veh_id->present = VehicleID_PR_entityID;
+	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
+	entity_id->buf = my_bytes_id;
+	entity_id->size = sizeof(my_bytes_id);
+	veh_id->choice.entityID = *entity_id;
+	requester->id = *veh_id;
 	requester->request = 1;
 	requester->sequenceNumber = 1;
 	BasicVehicleRole_t *role = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
 	*role = 16;
 	requester->role = role;
-	sigStatus->requester = *requester;
+	sigStatus->requester = requester;
 	IntersectionAccessPoint_t *inboundOn = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
 	inboundOn->present = IntersectionAccessPoint_PR_lane;
 	inboundOn->choice.lane = 1;
@@ -612,10 +603,8 @@ TEST (J2735MessageTest, EncodeSsm)
 	*duration = 10000;
 	sigStatus->duration = duration;
 	sigStatus->status = 2;
-	asn_sequence_add(&sigStatus->list.array, sigStatus);
-	status->sigStatus = sigStatus;
-	asn_sequence_add(&status->list.array, status);
-	message->status = *status;
+	asn_sequence_add(&signalStatus->sigStatus.list, sigStatus);
+	asn_sequence_add(&message->status.list, signalStatus);
 
 	tmx::messages::SsmEncodedMessage ssmEncodeMessage;
 	auto _ssmMessage = new tmx::messages::SsmMessage(message);
@@ -623,9 +612,15 @@ TEST (J2735MessageTest, EncodeSsm)
 	ssmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	free(message);
 	free(frame_msg.get_j2735_data().get());
-	std::cout << ssmEncodeMessage.get_payload_str() << std::endl;
-}
 
+	// Test encoding
+	std::string expectedSsmEncHex = "001e1b6205cedea802000897b40b9004303028040a000437aa345989c408";
+	ASSERT_EQ(expectedSsmEncHex, ssmEncodeMessage.get_payload_str());
+
+	// Test decoding
+	auto decoded_ssm_ptr = ssmEncodeMessage.decode_j2735_message().get_j2735_data();
+	ASSERT_EQ(9709, decoded_ssm_ptr->status.list.array[0]->id.id);
+}
 
 TEST(J2735MessageTest, EncodeTravelerInformation){
 	#if SAEJ2735_SPEC >= 2024

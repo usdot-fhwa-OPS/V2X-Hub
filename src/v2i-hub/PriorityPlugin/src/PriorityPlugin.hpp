@@ -141,11 +141,11 @@ namespace PriorityPlugin {
             bool SendPriorityRequest(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data);
 
             /**
-             * @brief Builds and broadcasts a SignalStatusMessage with status=processing
+             * @brief Builds and broadcasts a SignalStatusMessage with applicable status
              *        for all signal requests in the given requestor state.
-             * @param state The fully-populated RequestorState after a new SRM is stored.
+             * @param state The RequestorState after a new SRM is stored.
              */
-            // void BuildSSM(const RequestorState &state);
+            void BuildSSM(const RequestorState &state);
 
             // Per-controller configuration and SNMP client
             struct ControllerInfo {

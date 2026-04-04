@@ -170,7 +170,7 @@ namespace PriorityPlugin {
         long currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
 
         // Build the requestor state, replacing any prior entry for this vehicle
-        uint8_t newSeq = static_cast<uint8_t>(srm->msgCnt);
+        uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
         auto existing = _requestorStates.find(vehicleKey);
         if (existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
             PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
@@ -274,7 +274,7 @@ namespace PriorityPlugin {
             }
         }
 
-        // BuildSSM(state);
+        BuildSSM(state);
     }
 
     uint8_t PriorityPlugin::MapVehicleClassType(long role) const
@@ -367,83 +367,83 @@ namespace PriorityPlugin {
         return success;
     }
 
-    // void PriorityPlugin::BuildSSM(const RequestorState &state)
-    // {
-    //     if (state.requests.empty()) {
-    //         PLOG(logWARNING) << "No signal requests in state, skipping SSM build.";
-    //         return;
-    //     }
+    void PriorityPlugin::BuildSSM(const RequestorState &state)
+    {
+        if (state.requests.empty()) {
+            PLOG(logWARNING) << "No signal requests in state, skipping SSM build.";
+            return;
+        }
 
-    //     auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
-    //     memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
+        auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
+        memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
 
-    //     // Set second: milliseconds within the current UTC minute
-    //     time_t nowEpoch = std::time(nullptr);
-    //     struct tm utcNow;
-    //     gmtime_r(&nowEpoch, &utcNow);
-    //     ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
+        // Set second: milliseconds within the current UTC minute
+        time_t nowEpoch = std::time(nullptr);
+        struct tm utcNow;
+        gmtime_r(&nowEpoch, &utcNow);
+        ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
 
-    //     // Group signal requests by intersection ID; each intersection gets one SignalStatus entry
-    //     std::map<long, std::vector<const SignalRequest *>> byIntersection;
-    //     for (const auto &req : state.requests) {
-    //         byIntersection[req.intersectionID].push_back(&req);
-    //     }
+        // Group signal requests by intersection ID; each intersection gets one SignalStatus entry
+        std::map<long, std::vector<const SignalRequest *>> byIntersection;
+        for (const auto &req : state.requests) {
+            byIntersection[req.intersectionID].push_back(&req);
+        }
 
-    //     for (const auto &entry : byIntersection) {
-    //         long intID = entry.first;
-    //         const auto &reqs = entry.second;
+        for (const auto &entry : byIntersection) {
+            long intID = entry.first;
+            const auto &reqs = entry.second;
 
-    //         SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
-    //         signalStatus->id.id = intID;
-    //         signalStatus->sequenceNumber = state.sequenceNumber;
+            SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
+            signalStatus->id.id = intID;
+            signalStatus->sequenceNumber = state.sequenceNumber;
 
-    //         for (const auto *req : reqs) {
-    //             SignalStatusPackage *pkg = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
-    //             pkg->requester = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
-    //             pkg->requester->request = req->requestID;
-    //             pkg->requester->sequenceNumber = state.sequenceNumber;
+            for (const auto *req : reqs) {
+                SignalStatusPackage *pkg = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
+                pkg->requester = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
+                pkg->requester->request = req->requestID;
+                pkg->requester->sequenceNumber = state.sequenceNumber;
 
-    //             // Reconstruct the vehicle ID from stored raw bytes
-    //             if (state.vehicleID.size() == sizeof(StationID_t)) {
-    //                 StationID_t sid = 0;
-    //                 std::memcpy(&sid, state.vehicleID.data(), sizeof(StationID_t));
-    //                 pkg->requester->id.choice.stationID = sid;
-    //                 pkg->requester->id.present = VehicleID_PR_stationID;
-    //             } else {
-    //                 pkg->requester->id.choice.entityID.buf =
-    //                     (uint8_t *)calloc(state.vehicleID.size(), 1);
-    //                 std::memcpy(pkg->requester->id.choice.entityID.buf,
-    //                             state.vehicleID.data(), state.vehicleID.size());
-    //                 pkg->requester->id.choice.entityID.size = state.vehicleID.size();
-    //                 pkg->requester->id.present = VehicleID_PR_entityID;
-    //             }
+                // Reconstruct the vehicle ID from stored raw bytes
+                if (state.vehicleID.size() == sizeof(StationID_t)) {
+                    StationID_t sid = 0;
+                    std::memcpy(&sid, state.vehicleID.data(), sizeof(StationID_t));
+                    pkg->requester->id.choice.stationID = sid;
+                    pkg->requester->id.present = VehicleID_PR_stationID;
+                } else {
+                    pkg->requester->id.choice.entityID.buf =
+                        (uint8_t *)calloc(state.vehicleID.size(), 1);
+                    std::memcpy(pkg->requester->id.choice.entityID.buf,
+                                state.vehicleID.data(), state.vehicleID.size());
+                    pkg->requester->id.choice.entityID.size = state.vehicleID.size();
+                    pkg->requester->id.present = VehicleID_PR_entityID;
+                }
 
-    //             pkg->status = PrioritizationResponseStatus_processing;
-    //             asn_sequence_add(&signalStatus->sigStatus.list.array, pkg);
-    //         }
+                pkg->status = PrioritizationResponseStatus_processing;
+                asn_sequence_add(&signalStatus->sigStatus.list, pkg);
+            }
 
-    //         asn_sequence_add(&ssmPtr->status.list.array, signalStatus);
-    //     }
+            asn_sequence_add(&ssmPtr->status.list, signalStatus);
+        }
 
-    //     // Encode and broadcast the SSM
-    //     try {
-    //         SsmEncodedMessage encodedSSM;
-    //         MessageFrameMessage frame(ssmPtr);
-    //         encodedSSM.set_data(
-    //             TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<
-    //                 codec::uper<MessageFrameMessage>>(frame));
-    //         free(frame.get_j2735_data().get());
-    //         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
+        // Encode and broadcast the SSM
+        try {
+            SsmEncodedMessage encodedSSM;
+            MessageFrameMessage frame(ssmPtr);
+            encodedSSM.set_data(
+                TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<
+                    codec::uper<MessageFrameMessage>>(frame));
+            free(frame.get_j2735_data().get());
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
 
-    //         encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
-    //         encodedSSM.addDsrcMetadata(0x8002);
-    //         BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
-    //         PLOG(logINFO) << "SSM (processing) broadcast for " << state.requests.size() << " request(s).";
-    //     } catch (const std::exception &ex) {
-    //         ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
-    //         PLOG(logERROR) << "Failed to encode/broadcast SSM: " << ex.what();
-    //     }
-    // }
+            encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
+            encodedSSM.addDsrcMetadata(0x8002);
+            BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
+            PLOG(logINFO) << "SSM (processing) broadcast for " << state.requests.size() << " request(s).";
+        } catch (const std::exception &ex) {
+            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
+            PLOG(logERROR) << "Failed to encode/broadcast SSM: " << ex.what();
+        }
+    }
 
 } /* namespace PriorityPlugin */
 
