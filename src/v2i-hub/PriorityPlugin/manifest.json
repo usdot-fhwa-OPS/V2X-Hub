@@ -24,24 +24,19 @@
 			"description":"Role the plugin will assume. Acceptable values are PRS (Priority Request Server) and PRG (Priority Request Generator). If PRS is selected, the plugin will manage and prioritize one or more priority requests (SRMs) and generate one or more service requests. If PRG is selected, the plugin will pass along the priority requests to a presumed PRS running on the controller."
 		},
 		{
-			"key":"VehicleClassLevel",
-			"default":"10",
-			"description":"The default NTCIP 1211 priorityRequestVehicleClassLevel (1..10). 1=highest precedence within class, 10=lowest."
-		},
-		{
 			"key":"ServiceStrategyNumber",
-			"default":"1",
+			"default":"-",
 			"description":"The default NTCIP 1211 priorityRequestServiceStrategyNumber (1..255) sent with each priority request. Priority Request Generator (PRG) shall never set 0."
 		},
 		{
-			"key":"TimeOfServiceDesired",
+			"key":"EstimatedTimeofArrival",
 			"default":"5",
-			"description":"The priorityRequestTimeOfServiceDesired (TSD) (1..65535). Desired time in seconds to arrive at the intersection's stopping point, relative to the receipt of the message."
+			"description":"Fallback in case the estimated time of arrival is not provided in SRM. The estimated time (1..65535) in seconds for the vehicle to arrive at the intersection, after making the request."
 		},
 		{
-			"key":"TimeOfEstimatedDeparture",
-			"default":"8",
-			"description":"The priorityRequestTimeOfEstimatedDeparture (TED) (1..65535). Estimated time in seconds to clear the intersection, relative to the receipt of the message."
+			"key":"EstimatedDepartureTime",
+			"default":"3",
+			"description":"Fallback in case the estimated time of departure is not provided in SRM. The estimated time (1..65535) in seconds for the vehicle to clear the intersection, after arrival."
 		}
     ]
 }

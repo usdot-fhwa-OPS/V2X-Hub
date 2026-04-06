@@ -18,6 +18,7 @@
 #include <cstring>
 #include <ctime>
 #include <iomanip>
+#include <tuple>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -104,15 +105,18 @@ namespace PriorityPlugin {
             };
 
             /**
-             * @brief Maps J2735 BasicVehicleRole to NTCIP 1211 priorityRequestVehicleClassType (1..10).
-             * NTCIP 1211 class type is a precedence value:
+             * @brief Maps J2735 BasicVehicleRole to NTCIP 1211 priorityRequestVehicleClassType (1..10) and priorityRequestVehicleClassLevel (1..10)
+             * NTCIP 1211 class is a precedence value:
+             * 
              *   1 = highest priority
              *   10 = lowest priority
-             * A request with a higher class type (lower number) overrides a lower class type.
+             * 
+             * The class level indicates the relative priority of a request within each class of request.
+             * The order of precedence is by class type and then class level.
              * @param role BasicVehicleRole enumeration value from the SRM requestor type.
-             * @return uint8_t NTCIP 1211 vehicle class type (1..10).
+             * @return std::pair<uint8_t, uint8_t> NTCIP 1211 vehicle class type (1..10) and class level (1..10).
              */
-            uint8_t MapVehicleClassType(long role) const;
+            std::pair<uint8_t, uint8_t> MapVehicleClass(long role) const;
 
             /**
              * @brief Encodes a priority request per NTCIP 1211 prgPriorityRequestAbsolute into a
@@ -174,10 +178,10 @@ namespace PriorityPlugin {
 
             // Configuration values
             std::string _snmpCommunity;
-            uint8_t _classLevelStr;
+            std::string _pluginRole;
             uint8_t _strategyStr;
-            uint16_t _tsd;
-            uint16_t _ted;
+            uint16_t _estimatedArrivalTime;
+            uint16_t _estimatedDepartureTime;
 
             // Status tracking
             unsigned long _priorityRequestsSent = 0;

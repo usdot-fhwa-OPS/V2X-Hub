@@ -57,11 +57,10 @@ namespace PriorityPlugin {
         std::string tscControllersJson;
         GetConfigValue<std::string>("TSC_Controllers", tscControllersJson);
         GetConfigValue<std::string>("TSC_SNMP_Community", _snmpCommunity);
-        
-        GetConfigValue<uint8_t>("VehicleClassLevel", _classLevelStr);
+        GetConfigValue<std::string>("PluginRole", _pluginRole);
         GetConfigValue<uint8_t>("ServiceStrategyNumber", _strategyStr);
-        GetConfigValue<uint16_t>("TimeOfServiceDesired", _tsd);
-        GetConfigValue<uint16_t>("TimeOfEstimatedDeparture", _ted);
+        GetConfigValue<uint16_t>("EstimatedArrivalTime", _estimatedArrivalTime);
+        GetConfigValue<uint16_t>("EstimatedDepartureTime", _estimatedDepartureTime);
 
         // Parse the TSC_Controllers JSON array and create an SNMP client per entry
         _controllers.clear();
@@ -100,10 +99,10 @@ namespace PriorityPlugin {
 
         PLOG(logINFO) << "PriorityPlugin configured: " << _controllers.size() << " controller(s)"
                                    << " Community=" << _snmpCommunity
-                                   << " ClassLevel=" << _classLevelStr
+                                   << " Role=" << _pluginRole
                                    << " Strategy=" << _strategyStr
-                                   << " TimeOfServiceDesired=" << _tsd
-                                   << " TimeOfEstimatedDeparture=" << _ted;
+                                   << " EstimatedArrivalTime=" << _estimatedArrivalTime
+                                   << " EstimatedDepartureTime=" << _estimatedDepartureTime;
     }
 
     void PriorityPlugin::HandleSRM(SrmMessage &msg, tmx::routeable_message &routeableMsg)
@@ -148,17 +147,7 @@ namespace PriorityPlugin {
         // Build the map key from the raw vehicle ID bytes
         std::string vehicleKey(reinterpret_cast<const char *>(vehicleIDBytes), vehicleIDLen);
 
-        // Determine vehicle class type from the requestor role
-        long role = 0;
-        if (srm->requestor.type != nullptr) {
-            role = srm->requestor.type->role;
-        }
-        uint8_t classType = MapVehicleClassType(role);
-
-        // Current epoch time for priorityRequestTimeOfRequest
-        uint32_t timeOfRequest = static_cast<uint32_t>(std::time(nullptr));
-
-        // Current time for computing relative offsets from "now"
+        // Current time for computing offsets from "now"
         time_t nowEpoch = std::time(nullptr);
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
@@ -168,6 +157,18 @@ namespace PriorityPlugin {
                                  + static_cast<long>(utcNow.tm_hour) * 60L
                                  + static_cast<long>(utcNow.tm_min);
         auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
+
+        // PRG-only: determine vehicle class and epoch time of request
+        uint8_t classType = 0, classLevel = 0;
+        uint32_t timeOfRequest = 0;
+        if (_pluginRole != "PRS") {
+            long role = 0;
+            if (srm->requestor.type != nullptr) {
+                role = srm->requestor.type->role;
+            }
+            std::tie(classType, classLevel) = MapVehicleClass(role);
+            timeOfRequest = static_cast<uint32_t>(nowEpoch);
+        }
 
         // Build the requestor state, replacing any prior entry for this vehicle
         auto newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
@@ -196,12 +197,8 @@ namespace PriorityPlugin {
             auto requestType = pkg->request.requestType;
             long intersectionID = pkg->request.id.id;
 
-            // Compute priorityRequestTimeOfServiceDesired:
-            // NTCIP 1211 5.1.1.1.7 — relative seconds to arrive at the intersection
-            // stopping point from receipt of the message.
+            // Compute ETA offset from "now" in milliseconds.
             // SRM provides MinuteOfTheYear (absolute) and DSecond (ms within minute).
-            // Convert the absolute ETA to a relative offset from "now".
-            auto timeOfService = _tsd;  // default per configuration
             long etaOffsetMs = 0;
             if (pkg->minute) {
                 auto etaMinuteOfYear = static_cast<long>(*pkg->minute);
@@ -218,39 +215,71 @@ namespace PriorityPlugin {
                 if (etaOffsetMs < 0) {
                     etaOffsetMs += 525960L * 60L * 1000L;  // MinuteOfTheYear max ≈ 365.25 days
                 }
-                auto etaOffsetSec = etaOffsetMs / 1000L;
-                timeOfService = static_cast<uint16_t>(
-                    std::min(65535L, std::max(1L, etaOffsetSec)));
             }
 
-            // Compute priorityRequestTimeOfEstimatedDeparture:
-            // NTCIP 1211 5.1.1.1.8 — relative seconds of estimated departure
-            // from the intersection from receipt of the message.
-            auto timeOfDepart = _ted;  // default per configuration
+            // timeOfService = SRM minute + second (ETA as relative offset from "now").
+            // timeOfDepart  = timeOfService + SRM duration.
+            // Fall back to configured defaults if the SRM does not provide these values.
+            long timeOfServiceOffsetMs = etaOffsetMs;
+            long timeOfDepartOffsetMs = timeOfServiceOffsetMs;
             if (pkg->duration) {
-                // Duration extends past the ETA
-                auto departOffsetMs = etaOffsetMs + static_cast<long>(*pkg->duration);
-                auto departOffsetSec = departOffsetMs / 1000L;
-                timeOfDepart = static_cast<uint16_t>(
-                    std::min(65535L, std::max(1L, departOffsetSec)));
+                timeOfDepartOffsetMs += static_cast<long>(*pkg->duration);
+            }
+
+            std::vector<uint8_t> encoded;
+            uint16_t timeOfService = 0;
+            uint16_t timeOfDepart = 0;
+            if (_pluginRole == "PRS") {
+                // Service request uses global time (epoch seconds)
+                uint32_t globalTimeOfService = 0;
+                uint32_t globalTimeOfDepart = 0;
+                if (pkg->minute) {
+                    globalTimeOfService = static_cast<uint32_t>(nowEpoch) +
+                        static_cast<uint32_t>(timeOfServiceOffsetMs / 1000L);
+                    globalTimeOfDepart = static_cast<uint32_t>(nowEpoch) +
+                        static_cast<uint32_t>(timeOfDepartOffsetMs / 1000L);
+                } else {
+                    globalTimeOfService = static_cast<uint32_t>(nowEpoch) +
+                        static_cast<uint32_t>(_estimatedArrivalTime);
+                    globalTimeOfDepart = static_cast<uint32_t>(nowEpoch) +
+                        static_cast<uint32_t>(_estimatedDepartureTime);
+                }
+                encoded = EncodeServiceRequest(
+                    _strategyStr,
+                    globalTimeOfService,
+                    globalTimeOfDepart,
+                    1  // requestStatus - default to 1
+                );
+            }
+            else {
+                // PRG: compute relative seconds for priority request
+                if (pkg->minute) {
+                    auto serviceOffsetSec = timeOfServiceOffsetMs / 1000L;
+                    timeOfService = static_cast<uint16_t>(
+                        std::min(65535L, std::max(1L, serviceOffsetSec)));
+                    auto departOffsetSec = timeOfDepartOffsetMs / 1000L;
+                    timeOfDepart = static_cast<uint16_t>(
+                        std::min(65535L, std::max(1L, departOffsetSec)));
+                } else {
+                    timeOfService = _estimatedArrivalTime;
+                    timeOfDepart = _estimatedDepartureTime;
+                }
+                encoded = EncodePriorityRequest(
+                requestID,
+                vehicleIDBytes,
+                vehicleIDLen,
+                classType,
+                classLevel,
+                _strategyStr,
+                timeOfService,
+                timeOfDepart,
+                timeOfRequest);
             }
 
             // Record this package in the requestor state
             state.requests.push_back({requestID, intersectionID, requestType, timeOfService, timeOfDepart});
 
-            // Encode the 29-byte NTCIP 1211 priority request
-            std::vector<uint8_t> encoded = EncodePriorityRequest(
-                requestID,
-                vehicleIDBytes,
-                vehicleIDLen,
-                classType,
-                _classLevelStr,
-                _strategyStr,
-                timeOfService,
-                timeOfDepart,
-                timeOfRequest);
-
-            PLOG(logINFO) << "Sending NTCIP 1211 priority request for requestID="
+            PLOG(logINFO) << "Sending NTCIP 1211 " << (_pluginRole == "PRS" ? "service" : "priority") << " request for requestID="
                                        << static_cast<int>(requestID)
                                        << " intersectionID=" << intersectionID;
 
@@ -266,43 +295,58 @@ namespace PriorityPlugin {
             const auto &controller = it->second;
             PLOG(logINFO) << "Routing to controller " << controller.ip << ":" << controller.port;
 
-            bool success = SendRequest(controller.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
+            bool success = SendRequest(controller.snmpClient, _pluginRole == "PRS" ? NTCIP1211_PRS_SERVICE_REQUEST_OID : NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
             if (success) {
                 _priorityRequestsSent++;
                 SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
-                PLOG(logINFO) << "Priority request sent successfully.";
+                PLOG(logINFO) << (_pluginRole == "PRS" ? "Service" : "Priority") << " request sent successfully.";
             } else {
-                PLOG(logERROR) << "Failed to send priority request via SNMP.";
+                PLOG(logERROR) << "Failed to send " << (_pluginRole == "PRS" ? "service" : "priority") << " request via SNMP.";
             }
         }
 
         BuildSSM(state);
     }
 
-    uint8_t PriorityPlugin::MapVehicleClassType(long role) const
+    std::pair<uint8_t, uint8_t> PriorityPlugin::MapVehicleClass(long role) const
     {
         switch (role) {
-            case 5:  // roadRescue
+            // Emergency vehicles - class type 1, levels by urgency
             case 6:  // emergency
-            case 7:  // safetyCar
-            case 11: // roadSideSource
+                return {1, 1};
             case 12: // police
+                return {1, 2};
             case 13: // fire
-            case 14: // ambulance 
-                return 1;   // Highest priority — emergency vehicles
+                return {1, 3};
+            case 14: // ambulance
+                return {1, 4};
+            case 5:  // roadRescue
+                return {1, 5};
+            case 7:  // safetyCar
+                return {1, 6};
+            case 11: // roadSideSource
+                return {1, 7};
+            // Transit - class type 3
             case 1:  // publicTransport
+                return {3, 1};
             case 16: // transit
-                return 3;   // Transit priority
-            case 4:  // roadWork
+                return {3, 2};
+            // Maintenance/supervisor - class type 5
             case 15: // dot
-                return 5;   // Maintenance/supervisor
+                return {5, 1};
+            case 4:  // roadWork
+                return {5, 2};
+            // Commercial/freight - class type 7
             case 3:  // dangerousGoods
+                return {7, 1};
             case 9:  // truck
+                return {7, 2};
             case 17: // slowMoving
+                return {7, 3};
             case 18: // stopNgo
-                return 7;   // Commercial/freight
+                return {7, 4};
             default:
-                return 10;  // Lowest priority
+                return {10, 1};  // Lowest priority
         }
     }
 
@@ -346,10 +390,35 @@ namespace PriorityPlugin {
         return buf;
     }
 
+    std::vector<uint8_t> PriorityPlugin::EncodeServiceRequest(uint8_t strategyNum, uint32_t timeOfService, uint32_t timeOfDeparture, uint8_t requestStatus)
+    {
+        std::vector<uint8_t> buf(SERVICE_REQUEST_SIZE, 0);
+
+        // Byte 0: prsServiceRequestStrategyNumber (1 byte)
+        buf[0] = strategyNum;
+
+        // Bytes 1-4: prsServiceRequestTimeOfServiceDesired (4 bytes, big-endian, global epoch time)
+        buf[1] = static_cast<uint8_t>((timeOfService >> 24) & 0xFF);
+        buf[2] = static_cast<uint8_t>((timeOfService >> 16) & 0xFF);
+        buf[3] = static_cast<uint8_t>((timeOfService >> 8) & 0xFF);
+        buf[4] = static_cast<uint8_t>(timeOfService & 0xFF);
+
+        // Bytes 5-8: prsServiceRequestTimeOfEstimatedDeparture (4 bytes, big-endian, global epoch time)
+        buf[5] = static_cast<uint8_t>((timeOfDeparture >> 24) & 0xFF);
+        buf[6] = static_cast<uint8_t>((timeOfDeparture >> 16) & 0xFF);
+        buf[7] = static_cast<uint8_t>((timeOfDeparture >> 8) & 0xFF);
+        buf[8] = static_cast<uint8_t>(timeOfDeparture & 0xFF);
+
+        // Byte 9: prsServiceRequestStatus (1 byte)
+        buf[9] = requestStatus;
+
+        return buf;
+    }
+
     bool PriorityPlugin::SendRequest(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data)
     {
         if (!client) {
-            PLOG(logERROR) << "SNMP client not initialized, cannot send priority request.";
+            PLOG(logERROR) << "SNMP client not initialized, cannot send " << (_pluginRole == "PRS" ? "service" : "priority") << " request.";
             return false;
         }
 
