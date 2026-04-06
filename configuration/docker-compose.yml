@@ -1,13 +1,13 @@
 services:
   db:
-    image: dhi.io/mysql:9.6
+    image: mysql:8.0.40
     container_name: mysql
     environment:
       - TZ=${TZ:-America/New_York}
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_password
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
     networks:
       - v2xhub_data_internal
     secrets:
