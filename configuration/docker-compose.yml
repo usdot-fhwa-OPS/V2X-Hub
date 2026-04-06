@@ -1,6 +1,6 @@
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.0.40
     container_name: mysql
     environment:
       - TZ=${TZ:-America/New_York}
