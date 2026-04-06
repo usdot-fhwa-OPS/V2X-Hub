@@ -89,6 +89,7 @@ namespace PriorityPlugin {
             struct SignalRequest {
                 uint8_t requestID;
                 long intersectionID;
+                long requestType;
                 uint16_t timeOfService;
                 uint16_t timeOfDepart;
             };
@@ -132,13 +133,23 @@ namespace PriorityPlugin {
             std::vector<uint8_t> EncodePriorityRequest(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest) const;
 
             /**
-             * @brief Sends the encoded priority request OCTET STRING to a TSC via SNMP SET.
+             * @brief Encodes a service request per NTCIP 1211 prsServiceRequest into a 110-byte OER-encoded OCTET STRING.
+             * @param strategyNum      Index in the priorityStrategyTable. INTEGER (1..255)
+             * @param timeofService    The estimated time of service desired expressed as global time. INTEGER (0..4294967295)
+             * @param timeOfDeparture  The estimated time of departure expressed as global time. INTEGER (0..4294967295)
+             * @param requestStatus    Type of strategy request sent by the PRS to the CO. INTEGER (1..255)
+             * @return std::vector<uint8_t> 110-byte OER-encoded buffer.
+             */
+            std::vector<uint8_t> EncodeServiceRequest(uint8_t strategyNum, uint32_t timeOfService, uint32_t timeOfDeparture, uint8_t requestStatus);
+
+            /**
+             * @brief Sends the encoded priority or service request OCTET STRING to a TSC via SNMP SET.
              * @param client The SNMP client for the target controller.
              * @param oid The OID to set.
              * @param data The raw byte buffer to send as an OCTET STRING.
              * @return bool true on success, false on failure.
              */
-            bool SendPriorityRequest(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data);
+            bool SendRequest(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data);
 
             /**
              * @brief Builds and broadcasts a SignalStatusMessage with applicable status

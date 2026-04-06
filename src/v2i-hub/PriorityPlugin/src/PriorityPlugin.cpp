@@ -163,14 +163,14 @@ namespace PriorityPlugin {
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
         // Compute current minute-of-year and second-within-minute
-        int currentDayOfYear = utcNow.tm_yday;
-        long currentMinuteOfYear = static_cast<long>(currentDayOfYear) * 1440L
+        auto currentDayOfYear = utcNow.tm_yday;
+        auto currentMinuteOfYear = static_cast<long>(currentDayOfYear) * 1440L
                                  + static_cast<long>(utcNow.tm_hour) * 60L
                                  + static_cast<long>(utcNow.tm_min);
-        long currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
+        auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
 
         // Build the requestor state, replacing any prior entry for this vehicle
-        uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
+        auto newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
         auto existing = _requestorStates.find(vehicleKey);
         if (existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
             PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
@@ -192,7 +192,8 @@ namespace PriorityPlugin {
                 continue;
             }
 
-            uint8_t requestID = static_cast<uint8_t>(pkg->request.requestID);
+            auto requestID = static_cast<uint8_t>(pkg->request.requestID);
+            auto requestType = pkg->request.requestType;
             long intersectionID = pkg->request.id.id;
 
             // Compute priorityRequestTimeOfServiceDesired:
@@ -200,24 +201,24 @@ namespace PriorityPlugin {
             // stopping point from receipt of the message.
             // SRM provides MinuteOfTheYear (absolute) and DSecond (ms within minute).
             // Convert the absolute ETA to a relative offset from "now".
-            uint16_t timeOfService = _tsd;  // default per configuration
+            auto timeOfService = _tsd;  // default per configuration
             long etaOffsetMs = 0;
             if (pkg->minute) {
-                long etaMinuteOfYear = static_cast<long>(*pkg->minute);
+                auto etaMinuteOfYear = static_cast<long>(*pkg->minute);
                 long etaMs = 0;
                 if (pkg->second) {
                     etaMs = static_cast<long>(*pkg->second);
                 }
                 // Total ms from start-of-year for ETA
-                long etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
+                auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
                 // Total ms from start-of-year for now
-                long nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
+                auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
                 etaOffsetMs = etaTotalMs - nowTotalMs;
                 // Handle year wrap-around
                 if (etaOffsetMs < 0) {
                     etaOffsetMs += 525960L * 60L * 1000L;  // MinuteOfTheYear max ≈ 365.25 days
                 }
-                long etaOffsetSec = etaOffsetMs / 1000L;
+                auto etaOffsetSec = etaOffsetMs / 1000L;
                 timeOfService = static_cast<uint16_t>(
                     std::min(65535L, std::max(1L, etaOffsetSec)));
             }
@@ -225,20 +226,21 @@ namespace PriorityPlugin {
             // Compute priorityRequestTimeOfEstimatedDeparture:
             // NTCIP 1211 5.1.1.1.8 — relative seconds of estimated departure
             // from the intersection from receipt of the message.
-            uint16_t timeOfDepart = _ted;  // default per configuration
+            auto timeOfDepart = _ted;  // default per configuration
             if (pkg->duration) {
                 // Duration extends past the ETA
-                long departOffsetMs = etaOffsetMs + static_cast<long>(*pkg->duration);
-                long departOffsetSec = departOffsetMs / 1000L;
+                auto departOffsetMs = etaOffsetMs + static_cast<long>(*pkg->duration);
+                auto departOffsetSec = departOffsetMs / 1000L;
                 timeOfDepart = static_cast<uint16_t>(
                     std::min(65535L, std::max(1L, departOffsetSec)));
             }
 
             // Record this package in the requestor state
-            state.requests.push_back({requestID, intersectionID, timeOfService, timeOfDepart});
+            state.requests.push_back({requestID, intersectionID, requestType, timeOfService, timeOfDepart});
 
             // Encode the 29-byte NTCIP 1211 priority request
-            std::vector<uint8_t> encoded = EncodePriorityRequest(                requestID,
+            std::vector<uint8_t> encoded = EncodePriorityRequest(
+                requestID,
                 vehicleIDBytes,
                 vehicleIDLen,
                 classType,
@@ -264,7 +266,7 @@ namespace PriorityPlugin {
             const auto &controller = it->second;
             PLOG(logINFO) << "Routing to controller " << controller.ip << ":" << controller.port;
 
-            bool success = SendPriorityRequest(controller.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
+            bool success = SendRequest(controller.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded);
             if (success) {
                 _priorityRequestsSent++;
                 SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
@@ -344,7 +346,7 @@ namespace PriorityPlugin {
         return buf;
     }
 
-    bool PriorityPlugin::SendPriorityRequest(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data)
+    bool PriorityPlugin::SendRequest(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data)
     {
         if (!client) {
             PLOG(logERROR) << "SNMP client not initialized, cannot send priority request.";
@@ -436,7 +438,7 @@ namespace PriorityPlugin {
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
 
             encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
-            encodedSSM.addDsrcMetadata(0x8002);
+            encodedSSM.addDsrcMetadata(0xE0000015);
             BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
             PLOG(logINFO) << "SSM (processing) broadcast for " << state.requests.size() << " request(s).";
         } catch (const std::exception &ex) {
