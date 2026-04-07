@@ -18,35 +18,36 @@
 using namespace std;
 using namespace testing;
 
-// Mock SQL Statement class
+// Simplified Mock SQL Statement class - only mock what we need
 class MockStatement : public sql::Statement {
 public:
     MOCK_METHOD(bool, execute, (const std::string& sql), (override));
     MOCK_METHOD(sql::ResultSet*, executeQuery, (const std::string& sql), (override));
     MOCK_METHOD(int, executeUpdate, (const std::string& sql), (override));
     MOCK_METHOD(void, close, (), (override));
-    MOCK_METHOD(bool, getMoreResults, (), (override));
-    MOCK_METHOD(void, cancel, (), (override));
-    MOCK_METHOD(void, clearWarnings, (), (override));
-    MOCK_METHOD(const sql::SQLWarning*, getWarnings, (), (override));
-    MOCK_METHOD(size_t, getMaxFieldSize, (), (override));
-    MOCK_METHOD(void, setMaxFieldSize, (size_t max), (override));
-    MOCK_METHOD(size_t, getMaxRows, (), (override));
-    MOCK_METHOD(void, setMaxRows, (size_t max), (override));
-    MOCK_METHOD(bool, getMoreResults, (int current), (override));
-    MOCK_METHOD(sql::ResultSet*, getResultSet, (), (override));
-    MOCK_METHOD(sql::ResultSet::enum_type, getResultSetType, (), (override));
-    MOCK_METHOD(uint64_t, getUpdateCount, (), (override));
-    MOCK_METHOD(void, setCursorName, (const std::string& name), (override));
-    MOCK_METHOD(void, setEscapeProcessing, (bool enable), (override));
-    MOCK_METHOD(void, setFetchDirection, (int direction), (override));
-    MOCK_METHOD(int, getFetchDirection, (), (override));
-    MOCK_METHOD(void, setFetchSize, (size_t rows), (override));
-    MOCK_METHOD(size_t, getFetchSize, (), (override));
-    MOCK_METHOD(void, setMaxRows, (int max), (override));
-    MOCK_METHOD(void, setQueryTimeout, (int seconds), (override));
-    MOCK_METHOD(int, getQueryTimeout, (), (override));
-    MOCK_METHOD(void, setResultSetType, (sql::ResultSet::enum_type type), (override));
+
+    // Provide default implementations for other methods to avoid pure virtual issues
+    bool getMoreResults() override { return false; }
+    void cancel() override {}
+    void clearWarnings() override {}
+    const sql::SQLWarning* getWarnings() override { return nullptr; }
+    size_t getMaxFieldSize() override { return 0; }
+    void setMaxFieldSize(size_t) override {}
+    size_t getMaxRows() override { return 0; }
+    void setMaxRows(size_t) override {}
+    bool getMoreResults(int) override { return false; }
+    sql::ResultSet* getResultSet() override { return nullptr; }
+    sql::ResultSet::enum_type getResultSetType() override { return sql::ResultSet::TYPE_FORWARD_ONLY; }
+    uint64_t getUpdateCount() override { return 0; }
+    void setCursorName(const std::string&) override {}
+    void setEscapeProcessing(bool) override {}
+    void setFetchDirection(int) override {}
+    int getFetchDirection() override { return 0; }
+    void setFetchSize(size_t) override {}
+    size_t getFetchSize() override { return 0; }
+    void setQueryTimeout(int) override {}
+    int getQueryTimeout() override { return 0; }
+    void setResultSetType(sql::ResultSet::enum_type) override {}
 };
 
 // Testable ConfigContext class that allows mocking
