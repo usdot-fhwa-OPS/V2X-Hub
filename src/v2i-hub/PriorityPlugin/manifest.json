@@ -24,9 +24,9 @@
 			"description":"Role the plugin will assume. Acceptable values are PRS (Priority Request Server) and PRG (Priority Request Generator). If PRS is selected, the plugin will manage and prioritize one or more priority requests (SRMs) and generate one or more service requests. If PRG is selected, the plugin will pass along the priority requests to a presumed PRS running on the controller."
 		},
 		{
-			"key":"ServiceStrategyNumber",
-			"default":"-",
-			"description":"The default NTCIP 1211 priorityRequestServiceStrategyNumber (1..255) sent with each priority request. Priority Request Generator (PRG) shall never set 0."
+			"key":"LaneStrategyMapping",
+			"default":"[]",
+			"description":"A JSON array mapping (IntersectionID, Lane) pairs to a service strategy number. The SRM inBoundLane is compared to this mapping. If no match is found, the request is rejected with a closedStrategyError (PRS mode) or a rejected SSM status (PRG mode). Example: [{\"IntersectionID\": 101, \"Lane\": 3, \"Strategy\": 1}, {\"IntersectionID\": 102, \"Lane\": 5, \"Strategy\": 2}]"
 		},
 		{
 			"key":"EstimatedTimeofArrival",
@@ -37,6 +37,21 @@
 			"key":"EstimatedDepartureTime",
 			"default":"3",
 			"description":"Fallback in case the estimated time of departure is not provided in SRM. The estimated time (1..65535) in seconds for the vehicle to clear the intersection, after arrival."
+		},
+		{
+			"key":"PollIntervalMs",
+			"default":"100",
+			"description":"PRS mode only. The interval in milliseconds at which the PRS polls the CO (Coordinator) for service request status exchanges. Per NTCIP 1211 3.5.4.1, valid range is 100-1000ms."
+		},
+		{
+			"key":"TimeToLiveSec",
+			"default":"60",
+			"description":"PRS mode only. The maximum time in seconds that the PRS considers a priority request after receiving it. Requests exceeding this time are automatically cleared. Per NTCIP 1211 3.5.1.2."
+		},
+		{
+			"key":"ReserviceClassTimes",
+			"default":"0,0,0,0,0,0,0,0,0,0",
+			"description":"PRS mode only. Comma-separated list of 10 reservice periods in seconds (limit not defined), one per vehicle class type (1..10). Defines the minimum time that must pass after servicing one priority request before another request of the same class is serviced. Per NTCIP 1211 3.5.1.1."
 		}
     ]
 }

@@ -1,0 +1,98 @@
+/**
+ * Copyright (C) 2026 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+
+#pragma once
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
+namespace PriorityPlugin {
+
+    // Size of the OER-encoded service request OCTET STRING (10 rows × 10 bytes + prsBusy(1) + 9 reserved = 110)
+    static constexpr size_t SERVICE_REQUEST_SIZE = 110;
+
+    // Number of rows in the prsServiceRequest and priorityStrategyRequestedTable
+    static constexpr size_t MAX_SERVICE_REQUESTS = 10;
+
+    // Bytes per row in prsServiceRequest. strategy(1) + TSD(4) + TED(4) + status(1) = 10
+    static constexpr size_t SERVICE_REQUEST_ROW_SIZE = 10;
+
+    // Offset of the prsBusy and coBusy byte in the 110-byte prsServiceRequest
+    static constexpr size_t SERVICE_REQUEST_BUSY_OFFSET = MAX_SERVICE_REQUESTS * SERVICE_REQUEST_ROW_SIZE; // byte 100
+
+    /**
+     * @brief NTCIP 1211 priorityRequestStatusInPRS and priorityStrategyRequestStatusInCO state values, per CO-MIB1 5.2.1.2.5 and PRS-MIB1 5.1.1.1.9.
+     */
+    enum class RequestStatus : uint8_t {
+        idleNotValid          = 1,
+        readyQueued           = 2,
+        readyOverridden       = 3,
+        activeProcessing      = 4,
+        activeCancel          = 5,
+        activeOverride        = 6,
+        activeNotOverridden   = 7,
+        closedCanceled        = 8,
+        reserviceError        = 9,
+        closedTimeToLiveError = 10,
+        closedTimerError      = 11,
+        closedStrategyError   = 12,
+        closedCompleted       = 13,
+        activeAdjustNotNeeded = 14,
+        closedFlash           = 15
+    };
+
+    /**
+     * @brief One row of the PRS priorityRequestTable (NTCIP 1211 5.1.1.1). The PRS maintains up to MAX_SERVICE_REQUESTS of these.
+     */
+    struct PriorityRequestEntry {
+        // Fields populated using incoming SRM
+        uint8_t  requestID              = 0;
+        std::vector<uint8_t> vehicleID;
+        uint8_t  vehicleClassType       = 10;  // NTCIP 1211 range 1..10; 10 = "other"
+        uint8_t  vehicleClassLevel      = 1;   // NTCIP 1211 range 1..10
+        uint8_t  serviceStrategyNumber  = 0;   // 0 = idle/no strategy, 1..255 = active
+
+        // Times expressed as global time (epoch seconds)
+        uint32_t timeOfServiceDesiredInPRS       = 0;
+        uint32_t timeOfEstimatedDepartureInPRS   = 0;
+
+        // PRS internal bookkeeping
+        uint32_t timeOfMessage          = 0;   // epoch seconds when PRS received the request
+        uint32_t timeToLive             = 0;   // epoch seconds at which the request expires
+
+        // Current status per the NTCIP 1211 state machine
+        RequestStatus statusInPRS       = RequestStatus::idleNotValid;
+
+        // Intersection ID that each request targets
+        long     intersectionID         = 0;
+
+        // SRM sequence number (for SSM building)
+        uint8_t  sequenceNumber         = 0;
+    };
+
+    /**
+     * @brief One row of the CO response within a prsServiceRequest GET response. These are the CO-side equivalents returned when PRS GETs prsServiceRequest.
+     */
+    struct CoServiceResponseRow {
+        uint8_t  strategyRequested                       = 0;
+        uint32_t requestedTimeOfServiceDesired           = 0;
+        uint32_t requestedTimeOfEstimatedDeparture       = 0;
+        RequestStatus requestStatusInCO                  = RequestStatus::idleNotValid;
+    };
+
+} /* namespace PriorityPlugin */
