@@ -7,7 +7,7 @@
 
 #include "ConfigContext.h"
 #include <sstream>
-
+#include "../logger.h"
 using namespace std;
 
 ConfigContext::ConfigContext()
@@ -90,55 +90,57 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
 
 	for(vector<PluginConfigurationParameterEntry>::iterator itr = entries.begin(); itr != entries.end(); itr++)
 	{
-		stringstream query;
-		query << "INSERT INTO `pluginConfigurationParameter` (`pluginId`, `key`, `value`, `defaultValue`, `description`) VALUES (";
-		query << "'" << pluginId << "'";
-		query << ", ";
-		query << "'" << DbContext::formatStringValue(itr->key) << "'";
-		query << ", ";
-		query << "'" << DbContext::formatStringValue(itr->value) << "'";
-		query << ", ";
-		query << "'" << DbContext::formatStringValue(itr->defaultValue) << "'";
-		query << ", ";
-		query << "'" << DbContext::formatStringValue(itr->description) << "'";
-		query << ") ON DUPLICATE KEY UPDATE defaultValue = VALUES(defaultValue), description = VALUES(description)";
+        std::string query =
+            "INSERT INTO `pluginConfigurationParameter` (`pluginId`, `key`, `value`, `defaultValue`, `description`) "
+            "VALUES (?, ?, ?, ?, ?) "
+            "ON DUPLICATE KEY UPDATE "
+            "`defaultValue` = VALUES(`defaultValue`), "
+            "`description` = VALUES(`description`)";
 
-		// Plugin system parameters always should update the value
-		if (pluginId == 0)
-			query << ", value = VALUES(value)";
+        // Plugin system parameters always should update the value
+        if (pluginId == 0)
+            query += ", `value` = VALUES(`value`)";
 
-		query << ";";
-
-		stmt->execute(query.str());
+        query += ";";
+LOG_ERROR("SQL INJECTION FIX >>>> initializePluginConfigParameters' query=[" << query << "]");
+        std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
+        pstmt->setUInt(1, pluginId);
+        pstmt->setString(2, itr->key);
+        pstmt->setString(3, itr->value);
+        pstmt->setString(4, itr->defaultValue);
+        pstmt->setString(5, itr->description);
+        pstmt->execute();
 	}
 
 	if (pluginId > 0)
 	{
-		stringstream query;
-		query << "DELETE FROM `pluginConfigurationParameter` WHERE `pluginId` = '";
-		query << pluginId;
-		query << "'";
+        std::string query = "DELETE FROM `pluginConfigurationParameter` WHERE `pluginId` = ?";
 
-		if (entries.size() > 0)
-		{
-			query << " AND `key` NOT IN (";
+        if (!entries.empty())
+        {
+            query += " AND `key` NOT IN (";
+            for (size_t i = 0; i < entries.size(); ++i)
+            {
+                if (i > 0)
+                    query += ", ";
+                query += "?";
+            }
+            query += ");";
+        }
+        else
+        {
+            query += ";";
+        }
 
-			bool first = true;
-			for(vector<PluginConfigurationParameterEntry>::iterator itr = entries.begin(); itr != entries.end(); itr++)
-			{
-				if (!first)
-					query << ",";
-				query << "'" << DbContext::formatStringValue(itr->key) << "'";
-				first = false;
-			}
-			query << ");";
-		}
-		else
-		{
-			query << ";";
-		}
+        std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
+        pstmt->setUInt(1, pluginId);
 
-		stmt->execute(query.str());
+        for (size_t i = 0; i < entries.size(); ++i)
+        {
+            pstmt->setString(static_cast<int>(i + 2), entries[i].key);
+        }
+
+        pstmt->execute();
 	}
 }
 
@@ -192,5 +194,3 @@ void ConfigContext::updatePluginConfigParameterValue(const PluginConfigurationPa
 
 	stmt->executeUpdate(query.str());
 }
-
-

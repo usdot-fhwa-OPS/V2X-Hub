@@ -40,7 +40,7 @@ protected:
 	DbContext();
 
 	sql::Statement *getStatement();
-
+	std::unique_ptr<sql::PreparedStatement> getPreparedStatement(const std::string& sql);
 	static std::string formatStringValue(std::string str);
 
 private:
