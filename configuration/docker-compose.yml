@@ -1,34 +1,38 @@
 services:
   db:
-    image: mysql:8.0.40
+    image: dhi.io/mysql:9.6
     container_name: mysql
+    entrypoint: ["bash", "/entrypoint-wrapper.sh"]
+    command: ["mysqld"]
     environment:
       - TZ=${TZ:-America/New_York}
       - MYSQL_DATABASE=IVP
       - MYSQL_USER=IVP
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
     networks:
       - v2xhub_data_internal
     secrets:
       - mysql_password
+      - mysql_root_password
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "db", "-u", "IVP", "-p$$(cat /run/secrets/mysql_password)"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u IVP -p$$(cat /run/secrets/mysql_password)"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     volumes:
-      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql
-      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
+      - ./mysql/entrypoint-wrapper.sh:/entrypoint-wrapper.sh:ro
+      - ./mysql/localhost.sql:/docker-entrypoint-initdb.d/localhost.sql:ro
+      - ./mysql/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql:ro
       # The following 5 files are used for CDA1Tenth. By default the standard "port_drayage.sql" file
       # will be loaded. Comment out the "port_drayage.sql" file above and uncomment the following 
       # three files to enable the CDA1Tenth sql files to be loaded.
-      #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql
-      #- ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql
-      #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql
+      #- ./mysql/garage_port_drayage/port_drayage.sql:/docker-entrypoint-initdb.d/port_drayage.sql:ro
+      #- ./mysql/garage_port_drayage/port_drayage_lane1.sql:/docker-entrypoint-initdb.d/port_drayage_lane1.sql:ro
+      #- ./mysql/garage_port_drayage/port_drayage_lane2.sql:/docker-entrypoint-initdb.d/port_drayage_lane2.sql:ro
+      #- ./mysql/garage_port_drayage/port_drayage_trb_short.sql:/docker-entrypoint-initdb.d/port_drayage_trb_short.sql:ro
+      #- ./mysql/garage_port_drayage/port_drayage_trb_long.sql:/docker-entrypoint-initdb.d/port_drayage_trb_long.sql:ro
       - mysql-datavolume:/var/lib/mysql
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
@@ -40,8 +44,10 @@ services:
       - "443:443"
     restart: always
     depends_on:
-      - db
-      - v2xhub
+      db:
+        condition: service_healthy
+      v2xhub:
+        condition: service_healthy
     stdin_open: true
     tty: true
     environment:
@@ -155,6 +161,8 @@ services:
 secrets:
     mysql_password:
         environment: MYSQL_PASSWORD
+    mysql_root_password:
+        environment: MYSQL_ROOT_PASSWORD
 
 volumes:
   mysql-datavolume:
