@@ -243,7 +243,7 @@ namespace PriorityPlugin {
             std::map<std::pair<long, long>, uint8_t> _laneStrategyMap;
 
             // Configuration values
-            // std::string _snmpCommunity = "public";
+            std::string _snmpCommunity = "public";
             std::string _pluginRole;
             uint16_t _estimatedArrivalTime;
             uint16_t _estimatedDepartureTime;

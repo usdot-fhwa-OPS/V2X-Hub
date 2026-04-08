@@ -143,7 +143,7 @@ namespace PriorityPlugin {
 
                 try {
                     info.snmpClient = std::make_shared<snmp_client>(
-                        info.ip, info.port, snmp_client::community_,
+                        info.ip, info.port, _snmpCommunity,
                         "", "", "",
                         SNMP_VERSION_1);
                 } catch (const snmp_client_exception &e) {
@@ -203,7 +203,7 @@ namespace PriorityPlugin {
             PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
             _skippedMessages++;
             SetStatus(_keySkippedMessages, _skippedMessages);
-            return;RunPrioritizationProcessing
+            return;
         }
 
         std::string vehicleKey(reinterpret_cast<const char *>(vehicleIDBytes), vehicleIDLen);
