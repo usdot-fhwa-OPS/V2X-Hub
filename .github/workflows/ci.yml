@@ -296,13 +296,11 @@ jobs:
       - sonarcloud
     timeout-minutes: 35
     steps:
+      - name: Something 
+        run: |
+          echo "Something is happening"
       - name: Checkout v2xhub-integration-tests
         uses: actions/checkout@v5
-        with:
-          repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
-          token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
-          path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
         id: meta
         uses: docker/metadata-action@v6
@@ -314,22 +312,8 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: v2xhub-integration-tests/requirements.txt
-      - name: Install test dependencies
-        working-directory: v2xhub-integration-tests
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
       - name: Run integration tests
-        working-directory: v2xhub-integration-tests
-        env:
-          TAG_NAME: ${{ steps.meta.outputs.version }}
-          V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
-        run: |
-          echo "Running tests with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
-          pytest -x -v tests/test_case.py
+        uses: usdot-fhwa-OPS/v2xhub-integration-tests/.github/actions/v2xhub-integration-test@develop
+        with:
+          v2xhub-integration-test-token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
+          v2xhub-version: ${{ steps.meta.outputs.version }}
