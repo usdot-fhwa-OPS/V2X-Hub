@@ -20,9 +20,13 @@ services:
       - ..:/workspace:cached
     # Overrides default command so things don't shut down after the process ends.
     command: /bin/sh -c "while sleep 10000; do :; done"
-    # Disable healthcheck because it will fail in the devcontainer before building
+    # Override healthcheck because it will fail in the devcontainer before building and php requires a healthcheck.
     healthcheck:
-      disable: true
+      test: ["CMD-SHELL", "true"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
   db:
     volumes:
