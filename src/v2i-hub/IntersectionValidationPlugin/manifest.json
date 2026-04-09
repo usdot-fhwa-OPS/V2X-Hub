@@ -1,0 +1,32 @@
+{
+  "name": "IntersectionValidationPlugin",
+  "description": "Intersection Validation plugin for validating the intersection data received from the MAP SPAT TIM messages.",
+  "version": "@PROJECT_VERSION@",
+  "exeLocation": "/bin/IntersectionValidationPlugin",
+  "coreIpAddr": "127.0.0.1",
+  "corePort": 24601,
+  "messageTypes": [
+    {
+      "type": "J2735",
+      "subtype": "SPAT-P",
+      "description": "Decoded SPaT messages"
+    },
+    {
+      "type": "J2735",
+      "subtype": "MAP-P",
+      "description": "Decoded MAP messages"
+    },
+    {
+      "type": "J2735",
+      "subtype": "TIM",
+      "description": "Traveler Information Messages"
+    }
+  ],
+  "configuration": [
+    {
+      "key": "Instance",
+      "default": "0",
+      "description": "The instance of this plugin."
+    }
+  ]
+}
