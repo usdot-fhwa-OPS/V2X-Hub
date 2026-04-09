@@ -56,6 +56,27 @@ namespace PriorityPlugin {
         closedFlash           = 15
     };
 
+    // Classify a RequestStatus by its name prefix, independent of numeric enum value.
+    inline constexpr bool IsReadyX(RequestStatus s) {
+        return s == RequestStatus::readyQueued ||
+               s == RequestStatus::readyOverridden;
+    }
+    inline constexpr bool IsActiveX(RequestStatus s) {
+        return s == RequestStatus::activeProcessing ||
+               s == RequestStatus::activeCancel ||
+               s == RequestStatus::activeOverride ||
+               s == RequestStatus::activeNotOverridden ||
+               s == RequestStatus::activeAdjustNotNeeded;
+    }
+    inline constexpr bool IsClosedX(RequestStatus s) {
+        return s == RequestStatus::closedCanceled ||
+               s == RequestStatus::closedTimeToLiveError ||
+               s == RequestStatus::closedTimerError ||
+               s == RequestStatus::closedStrategyError ||
+               s == RequestStatus::closedCompleted ||
+               s == RequestStatus::closedFlash;
+    }
+
     /**
      * @brief One row of the PRS priorityRequestTable (NTCIP 1211 5.1.1.1). The PRS maintains up to MAX_SERVICE_REQUESTS of these.
      */

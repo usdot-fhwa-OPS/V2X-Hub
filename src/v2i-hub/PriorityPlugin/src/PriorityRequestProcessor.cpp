@@ -133,22 +133,27 @@ namespace PriorityPlugin {
     {
         uint32_t now = static_cast<uint32_t>(std::time(nullptr));
 
-        // a) Expire entries where timeToLive has passed
+        // a) If priorityRequestStatusInPRS is 'readyX' or 'closedX',
+        //    AND priorityRequestTimeToLive >= GLO.globalTime, then reset the entire
+        //    priorityRequestTableEntry to its default value state (statusInPRS = idleNotValid).
+        //    Status is checked by name prefix (not by numeric enum range) so that all readyX
+        //    and closedX values are captured regardless of their position in the enum.
         for (auto &entry : _priorityRequestTable) {
             if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
 
-            auto s = static_cast<uint8_t>(entry.statusInPRS);
-            bool isReadyOrClosed = (s >= 2 && s <= 3) || (s >= 8 && s <= 15);
-            if (isReadyOrClosed && entry.timeToLive > 0 && now >= entry.timeToLive) {
+            bool readyOrClosed = IsReadyX(entry.statusInPRS) || IsClosedX(entry.statusInPRS);
+            if (readyOrClosed && entry.timeToLive > 0 && entry.timeToLive >= now) {
                 PLOG(logDEBUG) << "Expiring entry requestID=" << static_cast<int>(entry.requestID)
-                               << " (timeToLive exceeded)";
-                entry = PriorityRequestEntry{}; // Reset to default
+                               << " (timeToLive >= globalTime)";
+                entry = PriorityRequestEntry{}; // Reset to default (sets statusInPRS to idleNotValid)
                 continue;
             }
 
-            // b) closedTimeToLiveError if TSD > timeToLive
-            if (entry.statusInPRS == RequestStatus::readyQueued &&
-                entry.timeToLive > 0 &&
+            // b) If priorityRequestTimeOfServiceDesiredInPRS >
+            //    priorityRequestTimeToLive, set statusInPRS to 'closedTimeToLiveError'.
+            //    The standard places no precondition on current status, so this applies to
+            //    any non-idle entry whose desired service time exceeds the time-to-live.
+            if (entry.timeToLive > 0 &&
                 entry.timeOfServiceDesiredInPRS > entry.timeToLive) {
                 entry.statusInPRS = RequestStatus::closedTimeToLiveError;
                 PLOG(logDEBUG) << "requestID=" << static_cast<int>(entry.requestID)
@@ -156,11 +161,13 @@ namespace PriorityPlugin {
             }
         }
 
-        // c) If no activeX entries exist, sort readyQueued entries by priority
+        // c) If none of the entries in the priorityRequestTable
+        //    has a priorityRequestStatusInPRS of 'activeX', then reorder the table by priority.
+        //    All activeX statuses are checked by name (including activeAdjustNotNeeded)
+        //    rather than by numeric enum range.
         bool hasActive = false;
         for (const auto &entry : _priorityRequestTable) {
-            auto s = static_cast<uint8_t>(entry.statusInPRS);
-            if (s >= 4 && s <= 7) { // activeProcessing, activeCancel, activeOverride, activeNotOverridden
+            if (IsActiveX(entry.statusInPRS)) {
                 hasActive = true;
                 break;
             }
@@ -170,8 +177,7 @@ namespace PriorityPlugin {
             // Check if a higher-priority readyQueued request should override the active one (4.2.3.1 i)
             PriorityRequestEntry *activeEntry = nullptr;
             for (auto &entry : _priorityRequestTable) {
-                if (entry.statusInPRS == RequestStatus::activeProcessing ||
-                    entry.statusInPRS == RequestStatus::activeAdjustNotNeeded) {
+                if (IsActiveX(entry.statusInPRS)) {
                     activeEntry = &entry;
                     break;
                 }
@@ -210,24 +216,26 @@ namespace PriorityPlugin {
                 }
             }
 
-            // Sort: highest classType priority (lowest numeric), then highest classLevel (lowest numeric),
-            // then soonest TSD
+            // Sort ascending by classType, classLevel, and TSD
             std::sort(queued.begin(), queued.end(), [](const SortEntry &a, const SortEntry &b) {
                 if (a.classType != b.classType) return a.classType < b.classType;
                 if (a.classLevel != b.classLevel) return a.classLevel < b.classLevel;
                 return a.tsd < b.tsd;
             });
 
-            // Reorder: the sorted entries get assigned priorityRequestEntryNumber 1..N
-            // by swapping into the front of the table. Entry #1 (index 0) is what the CO acts on.
-            // We build the desired order: readyQueued (sorted), readyOverridden, closedX, idleNotValid
+            // Reorder the table so that the readyQueued entries are in sorted priority order
+            //   c.i)   readyQueued entries sorted by priority (assigned entryNumber 1..N)
+            //   c.ii)  followed by readyOverridden entries
+            //   c.iii) followed by closedX entries (and reserviceError)
+            //   c.iv)  followed by idleNotValid entries
+            // Entry #1 (index 0) is what the CO acts on first.
             std::vector<size_t> readyOverridden, closedEntries, idleEntries;
             for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
                 auto s = _priorityRequestTable[i].statusInPRS;
-                if (s == RequestStatus::readyQueued) continue; // handled above
+                if (s == RequestStatus::readyQueued) continue; // already in sorted queued list
                 if (s == RequestStatus::readyOverridden) readyOverridden.push_back(i);
                 else if (s == RequestStatus::idleNotValid) idleEntries.push_back(i);
-                else closedEntries.push_back(i);
+                else closedEntries.push_back(i); // closedX and reserviceError
             }
 
             std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> reordered;
@@ -253,80 +261,104 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::ApplyCoStatusUpdates(const std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &coRows)
     {
+        // Per Figure 24 Status Transition Diagram and 5.1.1.1.9 / 5.2.1.2.5 state values. 
+        // The PRS updates priorityRequestStatusInPRS based on the CO's returned
+        // priorityStrategyRequestStatusInCO. Each transition is guarded by the
+        // current PRS status matching the source state in the diagram.
         for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
             auto &entry = _priorityRequestTable[i];
             const auto &coRow = coRows[i];
 
             if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
 
-            // The CO returns its status for each row; map it back to PRS status per 4.3.1
             RequestStatus coStatus = coRow.requestStatusInCO;
 
-            // Per PRS-MIB: the CO responses that the PRS should act on:
             switch (coStatus) {
+                // readyQueued/readyOverridden > activeProcessing ("CO says okay")
                 case RequestStatus::activeProcessing:
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
+                    if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::activeProcessing;
-                        PLOG(logDEBUG) << "Row " << i << " → activeProcessing";
+                        PLOG(logDEBUG) << "Row " << i << " > activeProcessing";
                     }
                     break;
 
-                case RequestStatus::closedTimerError:
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
-                        entry.statusInPRS = RequestStatus::closedTimerError;
-                        PLOG(logDEBUG) << "Row " << i << " → closedTimerError";
-                    }
-                    break;
-
-                case RequestStatus::closedStrategyError:
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
-                        entry.statusInPRS = RequestStatus::closedStrategyError;
-                        PLOG(logDEBUG) << "Row " << i << " → closedStrategyError";
-                    }
-                    break;
-
+                // readyQueued/readyOverridden > activeAdjustNotNeeded ("CO says okay")
                 case RequestStatus::activeAdjustNotNeeded:
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
+                    if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::activeAdjustNotNeeded;
-                        PLOG(logDEBUG) << "Row " << i << " → activeAdjustNotNeeded";
+                        PLOG(logDEBUG) << "Row " << i << " > activeAdjustNotNeeded";
                     }
                     break;
 
+                // readyQueued/readyOverridden > closedTimerError ("CO says TSD & TED <> criteria")
+                case RequestStatus::closedTimerError:
+                    if (IsReadyX(entry.statusInPRS)) {
+                        entry.statusInPRS = RequestStatus::closedTimerError;
+                        PLOG(logDEBUG) << "Row " << i << " > closedTimerError";
+                    }
+                    break;
+
+                // readyQueued/readyOverridden > closedStrategyError ("CO says bad strategy")
+                case RequestStatus::closedStrategyError:
+                    if (IsReadyX(entry.statusInPRS)) {
+                        entry.statusInPRS = RequestStatus::closedStrategyError;
+                        PLOG(logDEBUG) << "Row " << i << " > closedStrategyError";
+                    }
+                    break;
+
+                // readyQueued/readyOverridden > closedFlash ("CO says controller in flash")
                 case RequestStatus::closedFlash:
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
+                    if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedFlash;
-                        PLOG(logDEBUG) << "Row " << i << " → closedFlash";
+                        PLOG(logDEBUG) << "Row " << i << " > closedFlash";
                     }
                     break;
 
+                // activeCancel > closedCanceled 
+                // readyQueued/readyOverridden > closedCanceled ("Cancel Received")
                 case RequestStatus::closedCanceled:
-                    if (entry.statusInPRS == RequestStatus::activeCancel) {
+                    bool validSource = IsReadyX(entry.statusInPRS) ||
+                                       entry.statusInPRS == RequestStatus::activeCancel;
+                    if (validSource) {
                         entry.statusInPRS = RequestStatus::closedCanceled;
-                        PLOG(logDEBUG) << "Row " << i << " → closedCanceled";
+                        PLOG(logDEBUG) << "Row " << i << " > closedCanceled";
                     }
                     break;
 
+                // closedCompleted can be reached from any activeX state ("CO says it finished")
                 case RequestStatus::closedCompleted: {
-                    entry.statusInPRS = RequestStatus::closedCompleted;
-                    // Reset reservice timer (4.2.4.1.3 f))
-                    uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10)
-                                        ? (entry.vehicleClassType - 1) : 9;
-                    _reserviceLastCompletedTime[classIdx] = static_cast<uint32_t>(std::time(nullptr));
-                    PLOG(logDEBUG) << "Row " << i << " → closedCompleted";
+                    if (IsActiveX(entry.statusInPRS)) {
+                        entry.statusInPRS = RequestStatus::closedCompleted;
+                        // Reset reservice timer (4.2.4.1.3 f))
+                        uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10)
+                                            ? (entry.vehicleClassType - 1) : 9;
+                        _reserviceLastCompletedTime[classIdx] = static_cast<uint32_t>(std::time(nullptr));
+                        PLOG(logDEBUG) << "Row " << i << " > closedCompleted";
+                    }
                     break;
                 }
 
+                // activeOverride > activeNotOverridden ("CO can do both")
                 case RequestStatus::activeNotOverridden:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::activeNotOverridden;
-                        PLOG(logDEBUG) << "Row " << i << " → activeNotOverridden";
+                        PLOG(logDEBUG) << "Row " << i << " > activeNotOverridden";
                     }
                     break;
 
+                // activeOverride > readyOverridden ("CO can terminate early")
                 case RequestStatus::readyOverridden:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::readyOverridden;
-                        PLOG(logDEBUG) << "Row " << i << " → readyOverridden";
+                        PLOG(logDEBUG) << "Row " << i << " > readyOverridden";
+                    }
+                    break;
+
+                // activeOverride > readyQueued ("CO can terminate early")
+                case RequestStatus::readyQueued:
+                    if (entry.statusInPRS == RequestStatus::activeOverride) {
+                        entry.statusInPRS = RequestStatus::readyQueued;
+                        PLOG(logDEBUG) << "Row " << i << " > readyQueued";
                     }
                     break;
 
