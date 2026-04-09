@@ -317,26 +317,28 @@ namespace PriorityPlugin {
                 // activeCancel > closedCanceled 
                 // readyQueued/readyOverridden > closedCanceled ("Cancel Received")
                 case RequestStatus::closedCanceled:
-                    bool validSource = IsReadyX(entry.statusInPRS) ||
-                                       entry.statusInPRS == RequestStatus::activeCancel;
+                {
+                    bool validSource = IsReadyX(entry.statusInPRS) || entry.statusInPRS == RequestStatus::activeCancel;
                     if (validSource) {
                         entry.statusInPRS = RequestStatus::closedCanceled;
                         PLOG(logDEBUG) << "Row " << i << " > closedCanceled";
                     }
+                }
                     break;
 
+
                 // closedCompleted can be reached from any activeX state ("CO says it finished")
-                case RequestStatus::closedCompleted: {
+                case RequestStatus::closedCompleted:
+                {
                     if (IsActiveX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedCompleted;
-                        // Reset reservice timer (4.2.4.1.3 f))
-                        uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10)
-                                            ? (entry.vehicleClassType - 1) : 9;
+                        // Reset reservice timer (4.2.4.1.3 (f))
+                        uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10) ? (entry.vehicleClassType - 1) : 9;
                         _reserviceLastCompletedTime[classIdx] = static_cast<uint32_t>(std::time(nullptr));
                         PLOG(logDEBUG) << "Row " << i << " > closedCompleted";
                     }
-                    break;
                 }
+                    break;
 
                 // activeOverride > activeNotOverridden ("CO can do both")
                 case RequestStatus::activeNotOverridden:
