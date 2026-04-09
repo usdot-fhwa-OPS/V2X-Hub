@@ -104,6 +104,13 @@ namespace PriorityPlugin {
 
         // SRM sequence number (for SSM building)
         uint8_t  sequenceNumber         = 0;
+
+        // Original BasicVehicleRole from the SRM requestor (for SSM requester->role)
+        long     role                   = 0;
+
+        // Inbound lane/approach from the SRM (for SSM inboundOn)
+        uint8_t  inboundPresent         = 0;   // IntersectionAccessPoint_PR value
+        long     inboundValue           = 0;
     };
 
     /**

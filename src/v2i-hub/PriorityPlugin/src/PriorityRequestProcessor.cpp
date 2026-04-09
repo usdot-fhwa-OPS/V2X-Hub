@@ -583,20 +583,50 @@ namespace PriorityPlugin {
         time_t nowEpoch = std::time(nullptr);
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
+        auto timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+        *timeStamp = static_cast<MinuteOfTheYear_t>(utcNow.tm_yday * 24 * 60 + utcNow.tm_hour * 60 + utcNow.tm_min);
+        ssmPtr->timeStamp = timeStamp;
         ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
+
+        // ssmPtr->sequenceNumber increments for every new SSM broadcast
+        _ssmSequenceCounter++;
+        auto msgSequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+        *msgSequenceNumber = _ssmSequenceCounter;
+        ssmPtr->sequenceNumber = msgSequenceNumber;
 
         for (const auto &pair : byIntersection) {
             long intID = pair.first;
             const auto &entries = pair.second;
 
+            // Build a fingerprint of the package contents for this intersection
+            // to detect changes and increment signalStatus->sequenceNumber accordingly
+            std::ostringstream fp;
+            for (const auto *entry : entries) {
+                fp << static_cast<int>(entry->requestID) << ","
+                   << static_cast<int>(entry->statusInPRS) << ","
+                   << static_cast<int>(entry->sequenceNumber) << ","
+                   << entry->timeOfServiceDesiredInPRS << ","
+                   << entry->timeOfEstimatedDepartureInPRS << ","
+                   << static_cast<int>(entry->inboundPresent) << ","
+                   << entry->inboundValue << ";";
+            }
+            std::string currentFingerprint = fp.str();
+
+            auto fpIt = _lastSignalStatusFingerprint.find(intID);
+            if (fpIt == _lastSignalStatusFingerprint.end() || fpIt->second != currentFingerprint) {
+                _signalStatusSeqByIntersection[intID]++;
+                _lastSignalStatusFingerprint[intID] = currentFingerprint;
+            }
+
             SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
             signalStatus->id.id = intID;
-            signalStatus->sequenceNumber = entries.front()->sequenceNumber;
+            signalStatus->sequenceNumber = _signalStatusSeqByIntersection[intID];
 
             for (const auto *entry : entries) {
                 SignalStatusPackage *pkg = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
                 pkg->requester = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
                 pkg->requester->request = entry->requestID;
+                // requester->sequenceNumber is the SRM sequence number being responded to
                 pkg->requester->sequenceNumber = entry->sequenceNumber;
 
                 if (entry->vehicleID.size() == sizeof(StationID_t)) {
@@ -611,6 +641,38 @@ namespace PriorityPlugin {
                                 entry->vehicleID.data(), entry->vehicleID.size());
                     pkg->requester->id.choice.entityID.size = entry->vehicleID.size();
                     pkg->requester->id.present = VehicleID_PR_entityID;
+                }
+
+                auto rolePtr = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
+                *rolePtr = static_cast<BasicVehicleRole_t>(entry->role);
+                pkg->requester->role = rolePtr;
+
+                pkg->inboundOn.present = static_cast<IntersectionAccessPoint_PR>(entry->inboundPresent);
+                if (entry->inboundPresent == IntersectionAccessPoint_PR_lane)
+                    pkg->inboundOn.choice.lane = entry->inboundValue;
+                else if (entry->inboundPresent == IntersectionAccessPoint_PR_approach)
+                    pkg->inboundOn.choice.approach = entry->inboundValue;
+
+                // Compute minute/second from timeOfServiceDesiredInPRS (epoch seconds)
+                if (entry->timeOfServiceDesiredInPRS > 0) {
+                    time_t tsdEpoch = static_cast<time_t>(entry->timeOfServiceDesiredInPRS);
+                    struct tm tsdUtc;
+                    gmtime_r(&tsdEpoch, &tsdUtc);
+                    auto minutePtr = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+                    *minutePtr = static_cast<MinuteOfTheYear_t>(tsdUtc.tm_yday * 24 * 60 + tsdUtc.tm_hour * 60 + tsdUtc.tm_min);
+                    pkg->minute = minutePtr;
+
+                    auto secondPtr = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+                    *secondPtr = static_cast<DSecond_t>(tsdUtc.tm_sec * 1000);
+                    pkg->second = secondPtr;
+                }
+
+                // Compute duration from TED - TSD
+                if (entry->timeOfEstimatedDepartureInPRS > entry->timeOfServiceDesiredInPRS) {
+                    auto durationPtr = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+                    *durationPtr = static_cast<DSecond_t>(
+                        (entry->timeOfEstimatedDepartureInPRS - entry->timeOfServiceDesiredInPRS) * 1000);
+                    pkg->duration = durationPtr;
                 }
 
                 pkg->status = MapStatusToSSM(entry->statusInPRS);
@@ -652,7 +714,17 @@ namespace PriorityPlugin {
         time_t nowEpoch = std::time(nullptr);
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
+
+        auto timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+        *timeStamp = static_cast<MinuteOfTheYear_t>(utcNow.tm_yday * 24 * 60 + utcNow.tm_hour * 60 + utcNow.tm_min);
+        ssmPtr->timeStamp = timeStamp;
         ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
+
+        // ssmPtr->sequenceNumber increments for every new SSM broadcast
+        _ssmSequenceCounter++;
+        auto msgSequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+        *msgSequenceNumber = _ssmSequenceCounter;
+        ssmPtr->sequenceNumber = msgSequenceNumber;
 
         std::map<long, std::vector<const SignalRequest *>> byIntersection;
         for (const auto &req : state.requests) {
@@ -663,14 +735,34 @@ namespace PriorityPlugin {
             long intID = mapEntry.first;
             const auto &reqs = mapEntry.second;
 
+            // Build fingerprint to detect content changes for signalStatus->sequenceNumber
+            std::ostringstream fp;
+            for (const auto *req : reqs) {
+                fp << static_cast<int>(req->requestID) << ","
+                   << (req->rejected ? 1 : 0) << ","
+                   << static_cast<int>(state.sequenceNumber) << ","
+                   << req->timeOfService << ","
+                   << req->timeOfDepart << ","
+                   << static_cast<int>(req->inboundPresent) << ","
+                   << req->inboundValue << ";";
+            }
+            std::string currentFingerprint = fp.str();
+
+            auto fpIt = _lastSignalStatusFingerprint.find(intID);
+            if (fpIt == _lastSignalStatusFingerprint.end() || fpIt->second != currentFingerprint) {
+                _signalStatusSeqByIntersection[intID]++;
+                _lastSignalStatusFingerprint[intID] = currentFingerprint;
+            }
+
             SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
             signalStatus->id.id = intID;
-            signalStatus->sequenceNumber = state.sequenceNumber;
+            signalStatus->sequenceNumber = _signalStatusSeqByIntersection[intID];
 
             for (const auto *req : reqs) {
                 SignalStatusPackage *pkg = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
                 pkg->requester = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
                 pkg->requester->request = req->requestID;
+                // requester->sequenceNumber is the SRM sequence number being responded to
                 pkg->requester->sequenceNumber = state.sequenceNumber;
 
                 if (state.vehicleID.size() == sizeof(StationID_t)) {
@@ -685,6 +777,34 @@ namespace PriorityPlugin {
                                 state.vehicleID.data(), state.vehicleID.size());
                     pkg->requester->id.choice.entityID.size = state.vehicleID.size();
                     pkg->requester->id.present = VehicleID_PR_entityID;
+                }
+
+                auto rolePtr = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
+                *rolePtr = static_cast<BasicVehicleRole_t>(state.role);
+                pkg->requester->role = rolePtr;
+
+                pkg->inboundOn.present = static_cast<IntersectionAccessPoint_PR>(req->inboundPresent);
+                if (req->inboundPresent == IntersectionAccessPoint_PR_lane)
+                    pkg->inboundOn.choice.lane = req->inboundValue;
+                else if (req->inboundPresent == IntersectionAccessPoint_PR_approach)
+                    pkg->inboundOn.choice.approach = req->inboundValue;
+
+                if (req->etaMinute > 0) {
+                    auto minutePtr = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+                    *minutePtr = static_cast<MinuteOfTheYear_t>(req->etaMinute);
+                    pkg->minute = minutePtr;
+                }
+
+                if (req->etaSecond > 0) {
+                    auto secondPtr = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+                    *secondPtr = static_cast<DSecond_t>(req->etaSecond);
+                    pkg->second = secondPtr;
+                }
+
+                if (req->duration > 0) {
+                    auto durationPtr = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+                    *durationPtr = static_cast<DSecond_t>(req->duration);
+                    pkg->duration = durationPtr;
                 }
 
                 pkg->status = req->rejected ? PrioritizationResponseStatus_rejected

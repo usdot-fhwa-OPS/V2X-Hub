@@ -317,6 +317,12 @@ namespace PriorityPlugin {
                 entry.vehicleID.assign(vehicleIDBytes, vehicleIDBytes + vehicleIDLen);
                 entry.vehicleClassType = classType;
                 entry.vehicleClassLevel = classLevel;
+                entry.role = role;
+                entry.inboundPresent = pkg->request.inBoundLane.present;
+                if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
+                    entry.inboundValue = pkg->request.inBoundLane.choice.lane;
+                else if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_approach)
+                    entry.inboundValue = pkg->request.inBoundLane.choice.approach;
 
                 if (!strategy) {
                     PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
@@ -393,6 +399,7 @@ namespace PriorityPlugin {
         state.classType = classType;
         state.sequenceNumber = newSeq;
         state.timeOfRequest = timeOfRequest;
+        state.role = role;
         state.requests.clear();
 
         for (int i = 0; i < srm->requests->list.count; i++) {
@@ -434,6 +441,16 @@ namespace PriorityPlugin {
                 ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
             auto strategy = LookupStrategy(intersectionID, inBoundLane);
 
+            uint8_t inbPresent = pkg->request.inBoundLane.present;
+            long inbValue = 0;
+            if (inbPresent == IntersectionAccessPoint_PR_lane)
+                inbValue = pkg->request.inBoundLane.choice.lane;
+            else if (inbPresent == IntersectionAccessPoint_PR_approach)
+                inbValue = pkg->request.inBoundLane.choice.approach;
+            long etaMin = pkg->minute ? static_cast<long>(*pkg->minute) : 0;
+            long etaSec = pkg->second ? static_cast<long>(*pkg->second) : 0;
+            long dur = pkg->duration ? static_cast<long>(*pkg->duration) : 0;
+
             if (!strategy) {
                 PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
                                  << intersectionID << " Lane=" << inBoundLane
@@ -441,7 +458,8 @@ namespace PriorityPlugin {
                 _skippedMessages++;
                 SetStatus(_keySkippedMessages, _skippedMessages);
                 state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true});
+                                          timeOfService, timeOfDepart, true,
+                                          inbPresent, inbValue, etaMin, etaSec, dur});
                 continue;
             }
 
@@ -456,7 +474,8 @@ namespace PriorityPlugin {
                 _skippedMessages++;
                 SetStatus(_keySkippedMessages, _skippedMessages);
                 state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true});
+                                          timeOfService, timeOfDepart, true,
+                                          inbPresent, inbValue, etaMin, etaSec, dur});
                 continue;
             }
 
@@ -464,11 +483,14 @@ namespace PriorityPlugin {
                 _priorityRequestsSent++;
                 SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
                 PLOG(logINFO) << "Priority request sent for requestID=" << static_cast<int>(requestID);
-                state.requests.push_back({requestID, intersectionID, requestType, timeOfService, timeOfDepart});
+                state.requests.push_back({requestID, intersectionID, requestType,
+                                          timeOfService, timeOfDepart, false,
+                                          inbPresent, inbValue, etaMin, etaSec, dur});
             } else {
                 PLOG(logERROR) << "Failed to send priority request for requestID=" << static_cast<int>(requestID);
                 state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true});
+                                          timeOfService, timeOfDepart, true,
+                                          inbPresent, inbValue, etaMin, etaSec, dur});
             }
         }
 

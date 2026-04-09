@@ -104,6 +104,11 @@ namespace PriorityPlugin {
                 uint16_t timeOfService;
                 uint16_t timeOfDepart;
                 bool rejected = false;
+                uint8_t inboundPresent = 0;
+                long inboundValue = 0;
+                long etaMinute = 0;
+                long etaSecond = 0;
+                long duration = 0;
             };
 
             // Per-requestor state decoded from an SRM, keyed by vehicle ID (used for PRG mode)
@@ -113,6 +118,7 @@ namespace PriorityPlugin {
                 uint8_t sequenceNumber;
                 uint32_t timeOfRequest;
                 std::vector<SignalRequest> requests;
+                long role = 0;
             };
 
             /**
@@ -258,5 +264,10 @@ namespace PriorityPlugin {
             const char* _keyPriorityRequestsSent = "Priority Requests Sent";
             const char* _keySkippedMessages = "Skipped Messages";
             const char* _keyServiceExchanges = "Service Exchanges";
+
+            // SSM sequence number tracking (per intersectionID)
+            uint8_t _ssmSequenceCounter = 0;
+            std::unordered_map<long, uint8_t> _signalStatusSeqByIntersection;
+            std::unordered_map<long, std::string> _lastSignalStatusFingerprint;
     };
 } /* namespace PriorityPlugin */
