@@ -325,6 +325,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Initialize directories
+        working-directory: v2xhub-integration-tests
+        run: |
+          mkdir ssl
+          mkdir download
+          mkdir logs
       - name: Run integration tests
         working-directory: v2xhub-integration-tests
         env:
