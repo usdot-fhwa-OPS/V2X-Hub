@@ -21,28 +21,47 @@ using namespace tmx::messages;
  
 namespace IntersectionValidation
 {
-    IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name)
-        : PluginClient(name)
+    IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name)
     {
  
-        AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::ValidateSpatMessage);
-        AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::ValidateMapDataMessage);
-        AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::ValidateTimMessage);
+        AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
+        AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
+        AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
  
         SubscribeToMessages();
     }
+
+    void IntersectionValidationPlugin::UpdateConfigSettings()
+    {
+        // TODO: Implement configuration setting update logic
+    }
+
+	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
+	{
+		// TODO: Implement configuration change handling
+	}
+
+	void IntersectionValidationPlugin::OnMessageReceived(IvpMessage *msg)
+	{
+		// TODO: Implement message receiving handling
+	}
+
+	void IntersectionValidationPlugin::OnStateChange(IvpPluginState state)
+	{
+		// TODO: Implement state change handling
+	}
  
-    void IntersectionValidationPlugin::ValidateSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
+    void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
         // TODO: Perform SPAT required fields validation
     }
  
-    void IntersectionValidationPlugin::ValidateMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
+    void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
         // TODO: Perform MAP required fields validation
     }
  
-    void IntersectionValidationPlugin::ValidateTimMessage(TimMessage &msg, routeable_message &routeableMsg)
+    void IntersectionValidationPlugin::HandleTimMessage(TimMessage &msg, routeable_message &routeableMsg)
     {
         // TODO: Perform TIM required fields validation
     }

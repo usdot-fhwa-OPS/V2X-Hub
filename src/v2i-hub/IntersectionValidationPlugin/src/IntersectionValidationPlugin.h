@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string>
 #include <thread>
-#include <PluginClient.h>
+#include <PluginClientClockAware.h>
  
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -33,16 +33,23 @@ using namespace tmx::messages;
 namespace IntersectionValidation
 {
  
-    class IntersectionValidationPlugin : public tmx::utils::PluginClient
+    class IntersectionValidationPlugin : public tmx::utils::PluginClientClockAware
     {
     public:
         IntersectionValidationPlugin(const std::string &name);
         ~IntersectionValidationPlugin() override = default;
+
+        void UpdateConfigSettings();
  
         // Message handlers
-        void ValidateSpatMessage(SpatMessage &msg, routeable_message &routeableMsg);
-        void ValidateMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
-        void ValidateTimMessage(TimMessage &msg, routeable_message &routeableMsg);
+        void HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg);
+        void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
+        void HandleTimMessage(TimMessage &msg, routeable_message &routeableMsg);
+
+    protected:
+        // Virtual method overrides.
+        void OnConfigChanged(const char *key, const char *value) override;
+        void OnMessageReceived(IvpMessage *msg) override;
+        void OnStateChange(IvpPluginState state) override;
     };
- 
 }

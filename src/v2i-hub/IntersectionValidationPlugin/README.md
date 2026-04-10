@@ -6,7 +6,7 @@ The Intersection Validation Plugin is responsible for validating MAP, SPaT and T
 
 ## Related Plugins
 
-A list of plugins related to the SPaT Plugin.
+A list of plugins related to the Intersection Validation Plugin.
 
 ## Configuration/Deployment
 
