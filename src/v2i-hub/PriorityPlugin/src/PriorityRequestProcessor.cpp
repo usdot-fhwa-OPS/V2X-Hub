@@ -408,6 +408,7 @@ namespace PriorityPlugin {
 
     bool PriorityPlugin::DecodeCoServiceResponse(const std::vector<uint8_t> &data, std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &rows, bool &coBusy) const
     {
+        PLOG(logDEBUG) << "Decoding CO service response (" << data.size() << " bytes)";
         if (data.size() < SERVICE_REQUEST_SIZE) {
             PLOG(logERROR) << "CO response too short: " << data.size() << " bytes (expected " << SERVICE_REQUEST_SIZE << ")";
             return false;

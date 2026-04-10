@@ -84,9 +84,9 @@ namespace PriorityPlugin {
         // Fields populated using incoming SRM
         uint8_t  requestID              = 0;
         std::vector<uint8_t> vehicleID;
-        uint8_t  vehicleClassType       = 10;  // NTCIP 1211 range 1..10; 10 = "other"
-        uint8_t  vehicleClassLevel      = 1;   // NTCIP 1211 range 1..10
-        uint8_t  serviceStrategyNumber  = 0;   // 0 = idle/no strategy, 1..255 = active
+        uint8_t  vehicleClassType       = 10;  // other
+        uint8_t  vehicleClassLevel      = 1;   // highest priority level
+        uint8_t  serviceStrategyNumber  = 0;   // no value, placeholder (1-255 valid)
 
         // Times expressed as global time (epoch seconds)
         uint32_t timeOfServiceDesiredInPRS       = 0;
