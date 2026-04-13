@@ -15,7 +15,15 @@ apt-get update --fix-missing
 DEPENDENCIES="build-essential \
     cmake \
     git \
-    libboost-all-dev \
+    file \
+    libboost-system-dev \
+    libboost-thread-dev \
+    libboost-log-dev \
+    libboost-chrono-dev \
+    libboost-atomic-dev \
+    libboost-regex-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
     libcurl4-openssl-dev \
     libev-dev \
     libgps-dev \
