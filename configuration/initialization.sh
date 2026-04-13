@@ -2,7 +2,7 @@
 set -e
 
 # Initialize Docker Environment for V2X Hub
-./initialize_docker_environment.sh
+./initialize_docker_environment.sh -i
 # Install Docker
 MIN_VERSION="2.1.0" # Example version, adjust as needed
 
