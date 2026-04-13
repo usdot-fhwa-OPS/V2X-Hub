@@ -29,7 +29,9 @@ namespace PriorityPlugin {
         std::vector<uint8_t> buf(PRIORITY_REQUEST_SIZE, 0);
         buf[0] = requestID;
         if (vehicleID && vehicleIDLen > 0) {
-            std::memcpy(&buf[1], vehicleID, std::min(vehicleIDLen, VEHICLE_ID_FIELD_SIZE));
+            size_t copyLen = std::min(vehicleIDLen, VEHICLE_ID_FIELD_SIZE);
+            size_t padOffset = VEHICLE_ID_FIELD_SIZE - copyLen;
+            std::memcpy(&buf[1 + padOffset], vehicleID, copyLen);
         }
         buf[18] = classType;
         buf[19] = classLevel;
@@ -150,7 +152,7 @@ namespace PriorityPlugin {
 
             bool readyOrClosed = IsReadyX(entry.statusInPRS) || IsClosedX(entry.statusInPRS);
             if (readyOrClosed && entry.timeToLive > 0 && now >= entry.timeToLive) {
-                entry = PriorityRequestEntry{};
+                entry = PriorityRequestEntry{}; // reset this entry to default
                 continue;
             }
 
@@ -164,7 +166,7 @@ namespace PriorityPlugin {
 
         // c) If none of the entries in the priorityRequestTable has a status of 'activeX',
         //    reorder by priority. Otherwise, check if a higher-priority readyQueued
-        //    request should override the active one (4.2.3.1 i).
+        //    request should override the active one.
         bool hasActive = false;
         for (const auto &entry : _table) {
             if (IsActiveX(entry.statusInPRS)) {
@@ -196,7 +198,7 @@ namespace PriorityPlugin {
             return;
         }
 
-        // Build a sortable index of readyQueued entries
+        // (i) Build a sortable index of readyQueued entries
         struct SortEntry {
             size_t idx;
             uint8_t classType;
@@ -220,8 +222,11 @@ namespace PriorityPlugin {
             return a.tsd < b.tsd;
         });
 
-        // Reorder the table so that the readyQueued entries are in sorted priority order.
-        // readyQueued (sorted) > readyOverridden > closedX/reserviceError > idleNotValid
+        // Reorder the table per sub-steps (i-iv):
+        // (i)   readyQueued (pre-sorted by priority above)
+        // (ii)  readyOverridden
+        // (iii) closedX
+        // (iv)  idleNotValid
         std::vector<size_t> readyOverridden, closedEntries, idleEntries;
         for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
             auto s = _table[i].statusInPRS;

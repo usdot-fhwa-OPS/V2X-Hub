@@ -99,7 +99,7 @@ namespace PriorityPlugin {
                 {
                     std::lock_guard<std::mutex> lock(_tableMutex);
 
-                    uint32_t now = static_cast<uint32_t>(std::time(nullptr));
+                    auto now = static_cast<uint32_t>(std::time(nullptr));
                     _processor.ApplyCoStatusUpdates(coRows, now);
 
                     _prsBusy = true;
@@ -427,7 +427,7 @@ namespace PriorityPlugin {
                     pkg->minute = minutePtr;
                 }
                 else {
-                    time_t fallbackEta = nowEpoch + static_cast<time_t>(_estimatedArrivalTime);
+                    auto fallbackEta = nowEpoch + static_cast<time_t>(_estimatedArrivalTime);
                     struct tm fallbackUtc;
                     gmtime_r(&fallbackEta, &fallbackUtc);
                     auto minutePtr = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
@@ -441,7 +441,7 @@ namespace PriorityPlugin {
                     pkg->second = secondPtr;
                 }
                 else {
-                    time_t fallbackEta = nowEpoch + static_cast<time_t>(_estimatedArrivalTime);
+                    auto fallbackEta = nowEpoch + static_cast<time_t>(_estimatedArrivalTime);
                     struct tm fallbackUtc;
                     gmtime_r(&fallbackEta, &fallbackUtc);
                     auto secondPtr = (DSecond_t *)calloc(1, sizeof(DSecond_t));
