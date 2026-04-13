@@ -25,10 +25,7 @@
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
- 
-using namespace tmx;
-using namespace tmx::utils;
-using namespace tmx::messages;
+
  
 namespace IntersectionValidation
 {
@@ -36,15 +33,15 @@ namespace IntersectionValidation
     class IntersectionValidationPlugin : public tmx::utils::PluginClientClockAware
     {
     public:
-        IntersectionValidationPlugin(const std::string &name);
+        explicit IntersectionValidationPlugin(const std::string &name);
         ~IntersectionValidationPlugin() override = default;
 
         void UpdateConfigSettings();
  
         // Message handlers
-        void HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg);
-        void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
-        void HandleTimMessage(TimMessage &msg, routeable_message &routeableMsg);
+        void HandleSpatMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
+        void HandleMapDataMessage(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
+        void HandleTimMessage(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
 
     protected:
         // Virtual method overrides.

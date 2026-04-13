@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The Intersection Validation Plugin is responsible for validating MAP, SPaT and TIM messages received from RSUs prior to sending these messages to Connected Intersections Message Monitoring Systems (CIMMS).
+The Intersection Validation Plugin is responsible for validating MAP, SPaT and TIM messages received from RSUs against the CTI 4501 standard.
 
 ## Related Plugins
 
