@@ -102,8 +102,8 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
             query += ", `value` = VALUES(`value`)";
 
         query += ";";
-LOG_ERROR("SQL INJECTION FIX >>>> initializePluginConfigParameters' query=[" << query << "]");
-        std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
+
+		std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
         pstmt->setUInt(1, pluginId);
         pstmt->setString(2, itr->key);
         pstmt->setString(3, itr->value);
