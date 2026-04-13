@@ -38,14 +38,20 @@ WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh && ./library.sh && ldconfig
 # Built Plugins
 COPY --from=dependencies --chown=plugin:adm --chmod=744 /usr/local/plugins/ /usr/local/plugins/
-# Headers
-COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/include/ /usr/local/include/
 # Built Libraries for V2X Hub (tmx services) and ext/ (snmp, etc)
-COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/ /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libpdclient.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libqserverPedestrian.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libtmxapi.* /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libtmxctlStatic.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libtmxutils.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/lib/libv2xhubWebAPI.a /usr/local/lib/
+
 # Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
-COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/bin/ /usr/local/bin/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/bin/tmxctl /usr/local/bin/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/bin/tmxcore /usr/local/bin/
+COPY --from=dependencies  --chown=plugin:adm --chmod=744 /usr/local/bin/j2735dump /usr/local/bin/
+
 # CMake config iles
-COPY --from=dependencies --chown=plugin:adm --chmod=744 /usr/local/share/ /usr/local/share/
 COPY --from=dependencies --chown=plugin:adm --chmod=744 /var/www/plugins/ /var/www/plugins/
 # Installed STOL debian packages like (stol-j2735, timesync, etc)
 COPY --from=dependencies /opt/ /opt/
