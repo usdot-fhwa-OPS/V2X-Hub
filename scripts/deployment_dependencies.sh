@@ -13,6 +13,7 @@ apt-get update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
 DEPENDENCIES="ca-certificates \
+    libboost-dev \
     libboost-system-dev \
     libboost-thread-dev \
     libboost-log-dev \

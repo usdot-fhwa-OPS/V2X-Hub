@@ -19,6 +19,7 @@ DEPENDENCIES="build-essential \
     git \
     ca-certificates \
     file \
+    libboost-dev \
     libboost-system-dev \
     libboost-thread-dev \
     libboost-log-dev \
