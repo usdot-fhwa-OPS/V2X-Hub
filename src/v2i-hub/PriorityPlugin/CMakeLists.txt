@@ -19,6 +19,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 
 add_library(${PROJECT_NAME}_lib src/PriorityRequestProcessor.cpp)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils)
 
 set(BINARY ${PROJECT_NAME}_test)
 file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
