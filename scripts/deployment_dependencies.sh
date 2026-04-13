@@ -47,4 +47,4 @@ LIBRARY_DEPENDENCIES=" \
 "
 
 # install all things needed for deployment, always done
-apt-get install -y $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+apt-get install -y --no-install-recommends $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
