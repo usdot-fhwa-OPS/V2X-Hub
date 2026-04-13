@@ -88,6 +88,7 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
 {
 	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
+	// Upsert Plugin Configuration Parameters
 	for(vector<PluginConfigurationParameterEntry>::iterator itr = entries.begin(); itr != entries.end(); itr++)
 	{
         std::string query =
@@ -112,36 +113,37 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
         pstmt->execute();
 	}
 
-	if (pluginId > 0)
-	{
-        std::string query = "DELETE FROM `pluginConfigurationParameter` WHERE `pluginId` = ?";
+	// No Cleanup Required
+	if (pluginId == 0)
+		return;
 
-        if (!entries.empty())
-        {
-            query += " AND `key` NOT IN (";
-            for (size_t i = 0; i < entries.size(); ++i)
-            {
-                if (i > 0)
-                    query += ", ";
-                query += "?";
-            }
-            query += ");";
-        }
-        else
-        {
-            query += ";";
-        }
-
-        std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
-        pstmt->setUInt(1, pluginId);
-
+	// Cleanup Unused Plugin Configuration Parameters
+    std::string query = "DELETE FROM `pluginConfigurationParameter` WHERE `pluginId` = ?";
+    if (!entries.empty())
+    {
+        query += " AND `key` NOT IN (";
         for (size_t i = 0; i < entries.size(); ++i)
         {
-            pstmt->setString(static_cast<int>(i + 2), entries[i].key);
+            if (i > 0)
+                query += ", ";
+            query += "?";
         }
+        query += ");";
+    }
+    else
+    {
+        query += ";";
+    }
 
-        pstmt->execute();
-	}
+    std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
+    pstmt->setUInt(1, pluginId);
+
+    for (size_t i = 0; i < entries.size(); ++i)
+    {
+        pstmt->setString(static_cast<int>(i + 2), entries[i].key);
+    }
+
+    pstmt->execute();
 }
 
 std::map<std::string, PluginConfigurationParameterEntry> ConfigContext::getPluginConfigParameters(unsigned int pluginId)
