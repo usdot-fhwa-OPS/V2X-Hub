@@ -26,7 +26,7 @@
 #include <utility>
 #include <vector>
 
-#include "PluginLog.h"
+#include <PluginLog.h>
 
 namespace PriorityPlugin {
 
