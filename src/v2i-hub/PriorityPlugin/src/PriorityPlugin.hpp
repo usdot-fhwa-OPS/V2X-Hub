@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "PriorityRequestProcessor.hpp"
 #include "PriorityTypes.hpp"
 
 #include <algorithm>
@@ -51,12 +52,6 @@ namespace PriorityPlugin {
 
     // NTCIP 1211 OID for prsServiceRequest (1211 v0224j CO-MIB1 5.2.2.1)
     static const std::string NTCIP1211_PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
-
-    // Size of the OER-encoded priority request OCTET STRING
-    static constexpr size_t PRIORITY_REQUEST_SIZE = 29;
-
-    // Vehicle ID field size within the NTCIP 1211 priority request
-    static constexpr size_t VEHICLE_ID_FIELD_SIZE = 17;
 
     class PriorityPlugin : public tmx::utils::TmxMessageManager {
         public:
@@ -122,51 +117,6 @@ namespace PriorityPlugin {
             };
 
             /**
-             * @brief Maps J2735 BasicVehicleRole to NTCIP 1211 priorityRequestVehicleClassType (1..10) and priorityRequestVehicleClassLevel (1..10).
-             * @param role BasicVehicleRole enumeration value from the SRM requestor type.
-             * @return std::pair<uint8_t, uint8_t> NTCIP 1211 vehicle class type (1..10) and class level (1..10).
-             */
-            std::pair<uint8_t, uint8_t> MapVehicleClass(long role) const;
-
-            /**
-             * @brief Looks up the serviceStrategyNumber for a given intersection and inbound lane.
-             * @param intersectionID The intersection ID from the SRM.
-             * @param lane The inbound lane ID from the SRM.
-             * @return The service strategy number or std::nullopt, if no mapping exists.
-             */
-            std::optional<uint8_t> LookupStrategy(long intersectionID, long lane) const;
-
-            /**
-             * @brief Encodes a priority request per NTCIP 1211 prgPriorityRequestAbsolute into a 29-byte OER-encoded OCTET STRING.
-             * @param requestID      priorityRequestID (1..255)
-             * @param vehicleID      Raw bytes of the vehicle identifier from the SRM requestor.
-             * @param vehicleIDLen   Length of the vehicleID buffer.
-             * @param classType      priorityRequestVehicleClassType (1..10)
-             * @param classLevel     priorityRequestVehicleClassLevel (1..10)
-             * @param strategyNum    priorityRequestServiceStrategyNumber (1..255)
-             * @param timeOfService  priorityRequestTimeOfServiceDesired (1..65535) relative seconds to arrive at the intersection stopping point from message receipt.
-             * @param timeOfDepart   priorityRequestTimeOfEstimatedDeparture (1..65535) relative seconds of estimated departure from the stopping point from message receipt.
-             * @param timeOfRequest  priorityRequestTimeOfRequest (0..4294967295) epoch seconds.
-             * @return std::vector<uint8_t> 29-byte OER-encoded buffer.
-             */
-            std::vector<uint8_t> EncodePriorityRequest(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest) const;
-
-            /**
-             * @brief Encodes the prsServiceRequest OCTET STRING per NTCIP 1211 CO-MIB 5.2.2.1.
-             * @return std::vector<uint8_t> 110-byte OER-encoded buffer.
-             */
-            std::vector<uint8_t> EncodeServiceRequest() const;
-
-            /**
-             * @brief Decodes a prsServiceRequest OCTET STRING received from a CO (GET response) into per-row CO status and the coBusy flag.
-             * @param data The raw 110-byte buffer.
-             * @param rows Array of 10 CoServiceResponseRows.
-             * @param coBusy Flag indicating if the CO reports busy.
-             * @return true on successful decode, false if data size is invalid.
-             */
-            bool DecodeCoServiceResponse(const std::vector<uint8_t> &data, std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &rows, bool &coBusy) const;
-
-            /**
              * @brief Sends the encoded OCTET STRING to a TSC via SNMP SET.
              * @return true on success, false on failure.
              */
@@ -184,29 +134,14 @@ namespace PriorityPlugin {
             void ServiceExchangeLoop();
 
             /**
-             * @brief Performs prioritization processing per NTCIP 1211 4.2.4.1.4.
-             *        Sorts the priority request table entries by class type (highest first),
-             *        class level (highest first), then soonest TSD. Expires stale entries.
-             *        Must be called while holding _tableMutex.
-             */
-            void RunPrioritizationProcessing();
-
-            /**
-             * @brief Applies the CO response statuses back into the priority request table
-             *        per NTCIP 1211 4.2.4.1.2 step (i) and 4.3.1 state transitions.
-             *        Must be called while holding _tableMutex.
-             */
-            void ApplyCoStatusUpdates(const std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &coRows);
-
-            /**
              * @brief Builds and broadcasts SSMs reflecting the current priorityRequestTable statuses.
              */
             void BroadcastSSMFromTable();
 
             /**
-             * @brief Maps a RequestStatus to the J2735 PrioritizationResponseStatus for SSM.
+             * @brief Maps the NTCIP 1211 priority request/strategy status to the J2735 PrioritizationResponseStatus for SSM.
              */
-            long MapStatusToSSM(RequestStatus status) const;
+            long MapNTCIPstatusToSSM(RequestStatus status) const;
 
             /**
              * @brief Builds and broadcasts a SignalStatusMessage with applicable status
@@ -229,24 +164,18 @@ namespace PriorityPlugin {
             // Map of vehicle ID (raw bytes as string key) to latest requestor state (PRG mode)
             std::unordered_map<std::string, RequestorState> _requestorStates;
 
-            // PRS mode: NTCIP 1211 priority request table (5.1.1.1)
-            // Protected by _tableMutex; accessed by SRM handler thread and exchange loop thread.
+            // For PRS mode: NTCIP 1211 priority request processor.
+            PriorityRequestProcessor _processor;
+
+            // Mutex to protect access to the priority request table and related state during the service exchange loop
             std::mutex _tableMutex;
-            std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> _priorityRequestTable;
 
             // PRS busy flag per 4.3.2: true while prioritization processing is in progress
             bool _prsBusy = false;
 
-            // Per-class reservice timers: epoch seconds when the last request of each class completed.
-            // Index 0 = class type 1, index 9 = class type 10.
-            std::array<uint32_t, 10> _reserviceLastCompletedTime = {};
-
             // Background exchange loop thread
             std::thread _exchangeThread;
             std::atomic<bool> _running{false};
-
-            // Lane-to-strategy mapping: key = (intersectionID, lane) → strategyNumber
-            std::map<std::pair<long, long>, uint8_t> _laneStrategyMap;
 
             // Configuration values
             std::string _snmpCommunity = "public";
@@ -254,7 +183,7 @@ namespace PriorityPlugin {
             uint16_t _estimatedArrivalTime;
             uint16_t _estimatedDepartureTime;
             uint32_t _pollIntervalMs;        // PRS-CO poll interval (100-1000ms)
-            uint32_t _timeToLiveSec;        // Max time PRS considers a priority request
+            uint32_t _timeToLiveSec;         // Max time PRS considers a priority request
             std::array<uint32_t, 10> _reserviceClassTime = {}; // Per-class reservice period (seconds)
 
             // Status tracking
@@ -268,6 +197,6 @@ namespace PriorityPlugin {
             // SSM sequence number tracking (per intersectionID)
             uint8_t _ssmSequenceCounter = 0;
             std::unordered_map<long, uint8_t> _signalStatusSeqByIntersection;
-            std::unordered_map<long, std::string> _lastSignalStatusFingerprint;
+            std::unordered_map<long, std::string> _lastSignalStatusKey;
     };
 } /* namespace PriorityPlugin */

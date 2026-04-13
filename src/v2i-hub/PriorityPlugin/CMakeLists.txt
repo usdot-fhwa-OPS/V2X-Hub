@@ -15,20 +15,13 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${XercesC_LIBRARY} ${NETSNMP_LI
 #############
 enable_testing()
 find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
-set(runPriorityTests_sources test/TestPriority.cpp)
-add_executable(runPriorityTests ${runPriorityTests_sources})
+add_library(${PROJECT_NAME}_lib src/PriorityRequestProcessor.cpp)
+target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
-target_include_directories(runPriorityTests PRIVATE
-        ${PROJECT_SOURCE_DIR}/src
-        ${XercesC_INCLUDE_DIRS}
-        ${NETSNMP_INCLUDE_DIRS}
-)
-
-target_link_libraries(runPriorityTests
-        tmxutils
-        ${XercesC_LIBRARY}
-        ${NETSNMP_LIBRARIES}
-        gtest gtest_main pthread
-)
+set(BINARY ${PROJECT_NAME}_test)
+file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+add_executable(${BINARY} ${TEST_SOURCES})
+add_test(NAME ${BINARY} COMMAND ${BINARY})
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME}_lib tmxutils gtest gtest_main pthread)

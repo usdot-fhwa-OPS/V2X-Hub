@@ -16,71 +16,9 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
-#include "PriorityPlugin.hpp"
-
+#include "PriorityRequestProcessor.hpp"
 
 using namespace PriorityPlugin;
-
-// Helper function; Same as the one in PriorityRequestProcessor, but allows for unit testing.
-static std::vector<uint8_t> EncodeServiceRequestHelper(const std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> &table, bool prsBusy)
-{
-    std::vector<uint8_t> buf(SERVICE_REQUEST_SIZE, 0);
-
-    for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
-        const auto &entry = table[i];
-        size_t offset = i * SERVICE_REQUEST_ROW_SIZE;
-        buf[offset + 0] = entry.serviceStrategyNumber;
-        uint32_t tsd = entry.timeOfServiceDesiredInPRS;
-        buf[offset + 1] = static_cast<uint8_t>((tsd >> 24) & 0xFF);
-        buf[offset + 2] = static_cast<uint8_t>((tsd >> 16) & 0xFF);
-        buf[offset + 3] = static_cast<uint8_t>((tsd >> 8) & 0xFF);
-        buf[offset + 4] = static_cast<uint8_t>(tsd & 0xFF);
-        uint32_t ted = entry.timeOfEstimatedDepartureInPRS;
-        buf[offset + 5] = static_cast<uint8_t>((ted >> 24) & 0xFF);
-        buf[offset + 6] = static_cast<uint8_t>((ted >> 16) & 0xFF);
-        buf[offset + 7] = static_cast<uint8_t>((ted >> 8) & 0xFF);
-        buf[offset + 8] = static_cast<uint8_t>(ted & 0xFF);
-        buf[offset + 9] = static_cast<uint8_t>(entry.statusInPRS);
-    }
-    buf[SERVICE_REQUEST_BUSY_OFFSET] = prsBusy ? 1 : 0;
-    return buf;
-}
-
-// Helper function; Same as the one in PriorityRequestProcessor, but allows for unit testing.
-static bool DecodeCoServiceResponse(const std::vector<uint8_t> &data,
-                                    std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &rows,
-                                    bool &coBusy)
-{
-    if (data.size() < SERVICE_REQUEST_SIZE) {
-        return false;
-    }
-
-    for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
-        size_t offset = i * SERVICE_REQUEST_ROW_SIZE;
-        rows[i].strategyRequested = data[offset + 0];
-        rows[i].requestedTimeOfServiceDesired =
-            (static_cast<uint32_t>(data[offset + 1]) << 24) |
-            (static_cast<uint32_t>(data[offset + 2]) << 16) |
-            (static_cast<uint32_t>(data[offset + 3]) << 8)  |
-             static_cast<uint32_t>(data[offset + 4]);
-        rows[i].requestedTimeOfEstimatedDeparture =
-            (static_cast<uint32_t>(data[offset + 5]) << 24) |
-            (static_cast<uint32_t>(data[offset + 6]) << 16) |
-            (static_cast<uint32_t>(data[offset + 7]) << 8)  |
-             static_cast<uint32_t>(data[offset + 8]);
-
-        uint8_t statusByte = data[offset + 9];
-        if (statusByte >= 1 && statusByte <= 15) {
-            rows[i].requestStatusInCO = static_cast<RequestStatus>(statusByte);
-        } else {
-            rows[i].requestStatusInCO = RequestStatus::idleNotValid;
-        }
-    }
-
-    coBusy = (data[SERVICE_REQUEST_BUSY_OFFSET] != 0);
-    return true;
-}
-
 
 TEST(PriorityTypesTest, RequestStatusValues) {
     EXPECT_EQ(static_cast<uint8_t>(RequestStatus::idleNotValid),          1);
@@ -119,7 +57,8 @@ TEST(PriorityTypesTest, ConstantsTest) {
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
-    std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> table;
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
     table[0].timeOfServiceDesiredInPRS = 0x12345678;
     table[0].timeOfEstimatedDepartureInPRS = 0x12345681;
@@ -130,7 +69,7 @@ TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
     table[1].timeOfEstimatedDepartureInPRS = 0x00000002;
     table[1].statusInPRS = RequestStatus::activeProcessing;
 
-    auto buf = EncodeServiceRequestHelper(table, false); // prsBusy=false
+    auto buf = proc.EncodeServiceRequest(false);
     EXPECT_EQ(buf.size(), 110u);
 
     EXPECT_EQ(buf[0], 1);
@@ -156,9 +95,9 @@ TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
 }
 
 TEST(PriorityRequestProcessorTest, PrsBusyFlag) {
-    std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> table;
-    EXPECT_EQ(EncodeServiceRequestHelper(table, false)[100], 0);
-    EXPECT_EQ(EncodeServiceRequestHelper(table, true)[100], 1);
+    PriorityRequestProcessor proc;
+    EXPECT_EQ(proc.EncodeServiceRequest(false)[100], 0);
+    EXPECT_EQ(proc.EncodeServiceRequest(true)[100], 1);
 }
 
 TEST(PriorityRequestProcessorTest, TestDecodeCoServiceResponse) {
@@ -177,7 +116,7 @@ TEST(PriorityRequestProcessorTest, TestDecodeCoServiceResponse) {
 
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> rows;
     bool coBusy = false;
-    ASSERT_TRUE(DecodeCoServiceResponse(data, rows, coBusy));
+    ASSERT_TRUE(PriorityRequestProcessor::DecodeCoServiceResponse(data, rows, coBusy));
     EXPECT_EQ(rows[0].strategyRequested, 1);
     EXPECT_EQ(rows[0].requestedTimeOfServiceDesired, 5u);
     EXPECT_EQ(rows[0].requestedTimeOfEstimatedDeparture, 8u);
@@ -201,28 +140,22 @@ TEST(PriorityRequestProcessorTest, TestInvalidStatusDefault) {
 
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> rows;
     bool coBusy = false;
-    ASSERT_TRUE(DecodeCoServiceResponse(data, rows, coBusy));
-    EXPECT_EQ(rows[0].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[1].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[2].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[3].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[4].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[5].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[6].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[7].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[8].requestStatusInCO, RequestStatus::idleNotValid);
-    EXPECT_EQ(rows[9].requestStatusInCO, RequestStatus::idleNotValid);
+    ASSERT_TRUE(PriorityRequestProcessor::DecodeCoServiceResponse(data, rows, coBusy));
+    for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
+        EXPECT_EQ(rows[i].requestStatusInCO, RequestStatus::idleNotValid);
+    }
 }
 
 TEST(PriorityRequestProcessorTest, DecodeCoServiceResponseShortBuffer) {
     std::vector<uint8_t> data(50, 0);
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> rows;
     bool coBusy = false;
-    EXPECT_FALSE(DecodeCoServiceResponse(data, rows, coBusy));
+    EXPECT_FALSE(PriorityRequestProcessor::DecodeCoServiceResponse(data, rows, coBusy));
 }
 
 TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
-    std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> table;
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
     table[0].timeOfServiceDesiredInPRS = 1775846010;
     table[0].timeOfEstimatedDepartureInPRS = 1775846013;
@@ -232,10 +165,10 @@ TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
     table[1].timeOfEstimatedDepartureInPRS = 1775846025;
     table[1].statusInPRS = RequestStatus::activeProcessing;
 
-    auto buf = EncodeServiceRequestHelper(table, true);
+    auto buf = proc.EncodeServiceRequest(true);
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> decoded;
     bool coBusy = false;
-    ASSERT_TRUE(DecodeCoServiceResponse(buf, decoded, coBusy));
+    ASSERT_TRUE(PriorityRequestProcessor::DecodeCoServiceResponse(buf, decoded, coBusy));
 
     EXPECT_EQ(decoded[0].strategyRequested, 1);
     EXPECT_EQ(decoded[0].requestedTimeOfServiceDesired, 1775846010u);
@@ -245,46 +178,19 @@ TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
     EXPECT_EQ(decoded[1].requestedTimeOfServiceDesired, 1775846020u);
     EXPECT_EQ(decoded[1].requestedTimeOfEstimatedDeparture, 1775846025u);
     EXPECT_EQ(decoded[1].requestStatusInCO, RequestStatus::activeProcessing);
-    EXPECT_TRUE(coBusy); // DecodeCoServiceResponse should set coBusy=true 
-}
-
-TEST(PriorityRequestProcessorTest, SortEntries) {
-    // Test sorting logic within RunPrioritizationProcessing.
-    // Should sort by classType, then classLevel, then TSD.
-    struct SortEntry { 
-        size_t idx;
-        uint8_t classType;
-        uint8_t classLevel;
-        uint32_t tsd;
-    };
-    std::vector<SortEntry> queued = {
-        {0, 7, 2, 1000},
-        {1, 1, 3, 500},
-        {2, 1, 1, 800},
-        {3, 3, 1, 200},
-        {4, 1, 1, 400},
-    };
-    std::sort(queued.begin(), queued.end(), [](const SortEntry &a, const SortEntry &b) {
-        if (a.classType != b.classType) return a.classType < b.classType;
-        if (a.classLevel != b.classLevel) return a.classLevel < b.classLevel;
-        return a.tsd < b.tsd;
-    });
-    EXPECT_EQ(queued[0].idx, 4u); // idx=4, classType=1, level=1, TSD=400
-    EXPECT_EQ(queued[1].idx, 2u); // idx=2, classType=1, level=1, TSD=800
-    EXPECT_EQ(queued[2].idx, 1u); // idx=1, classType=1, level=3, TSD=500
-    EXPECT_EQ(queued[3].idx, 3u); // idx=3, classType=3, level=1, TSD=200
-    EXPECT_EQ(queued[4].idx, 0u); // idx=0, classType=7, level=2, TSD=1000
+    EXPECT_TRUE(coBusy);
 }
 
 TEST(PriorityRequestProcessorTest, AllTenRowsFillBuffer) {
-    std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> table;
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
     for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
         table[i].serviceStrategyNumber = static_cast<uint8_t>(i + 1);
         table[i].timeOfServiceDesiredInPRS = 10 * (i + 1);
         table[i].timeOfEstimatedDepartureInPRS = 20 * (i + 1);
         table[i].statusInPRS = RequestStatus::readyQueued;
     }
-    auto buf = EncodeServiceRequestHelper(table, false);
+    auto buf = proc.EncodeServiceRequest(false);
     for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
         EXPECT_EQ(buf[i * SERVICE_REQUEST_ROW_SIZE], i + 1) << "Row " << i;
         EXPECT_EQ(buf[i * SERVICE_REQUEST_ROW_SIZE + 9], 2) << "Row " << i << " status";

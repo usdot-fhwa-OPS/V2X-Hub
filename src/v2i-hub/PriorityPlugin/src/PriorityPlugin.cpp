@@ -97,8 +97,12 @@ namespace PriorityPlugin {
             }
         }
 
-        // Parse per-(IntersectionID, Lane) strategy mapping JSON array
-        _laneStrategyMap.clear();
+        // Clear strategy mapping JSON array
+        {
+            std::lock_guard<std::mutex> lock(_tableMutex);
+            _processor.ClearLaneStrategyMap();
+        }
+        // Parse the LaneStrategyMapping JSON array and populate the processor's lane-strategy map
         std::string laneStrategyJson;
         GetConfigValue<std::string>("LaneStrategyMapping", laneStrategyJson);
         if (!laneStrategyJson.empty()) {
@@ -107,17 +111,21 @@ namespace PriorityPlugin {
                 std::istringstream lsIss(laneStrategyJson);
                 boost::property_tree::read_json(lsIss, lsPt);
                 for (const auto &item : lsPt) {
-                    long intID = item.second.get<long>("IntersectionID");
-                    long lane = item.second.get<long>("Lane");
+                    auto intID = item.second.get<long>("IntersectionID");
+                    auto lane = item.second.get<long>("Lane");
                     auto strategyVal = item.second.get<int>("Strategy");
                     if (strategyVal < 1 || strategyVal > 255) {
-                        PLOG(logWARNING) << "LaneStrategyMapping Strategy must be 1..255, skipping entry"
+                        PLOG(logWARNING) << "LaneStrategyMapping Strategy must be 1..255, skipping entry:"
                                          << " IntersectionID=" << intID << " Lane=" << lane
                                          << " Strategy=" << strategyVal;
                         continue;
                     }
-                    uint8_t strategy = static_cast<uint8_t>(strategyVal);
-                    _laneStrategyMap[{intID, lane}] = strategy;
+                    auto strategy = static_cast<uint8_t>(strategyVal);
+                    // Set the processor's lane-strategy map for a given intersection and lane
+                    {
+                        std::lock_guard<std::mutex> lock(_tableMutex);
+                        _processor.SetLaneStrategy(intID, lane, strategy);
+                    }
                     PLOG(logINFO) << "Lane strategy: IntersectionID=" << intID
                                   << " Lane=" << lane << " Strategy=" << static_cast<int>(strategy);
                 }
@@ -194,7 +202,8 @@ namespace PriorityPlugin {
         if (srm->requestor.id.present == VehicleID_PR_entityID) {
             vehicleIDBytes = srm->requestor.id.choice.entityID.buf;
             vehicleIDLen = srm->requestor.id.choice.entityID.size;
-        } else if (srm->requestor.id.present == VehicleID_PR_stationID) {
+        }
+        else if (srm->requestor.id.present == VehicleID_PR_stationID) {
             vehicleIDBytes = reinterpret_cast<const uint8_t *>(&srm->requestor.id.choice.stationID);
             vehicleIDLen = sizeof(srm->requestor.id.choice.stationID);
         }
@@ -218,18 +227,18 @@ namespace PriorityPlugin {
         auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
 
         // Determine vehicle class from the SRM requestor type
-        uint8_t classType = 10, classLevel = 1;
         long role = 0;
         if (srm->requestor.type != nullptr) {
             role = srm->requestor.type->role;
         }
-        std::tie(classType, classLevel) = MapVehicleClass(role);
+        auto [classType, classLevel] = PriorityRequestProcessor::MapVehicleClass(role);
 
         auto newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
 
-        // PRS mode: populate the priority request table
+        // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
         if (_pluginRole == "PRS") {
             std::lock_guard<std::mutex> lock(_tableMutex);
+            auto &table = _processor.Table();
 
             for (int i = 0; i < srm->requests->list.count; i++) {
                 auto *pkg = srm->requests->list.array[i];
@@ -254,25 +263,25 @@ namespace PriorityPlugin {
                 uint32_t globalTSD, globalTED;
                 if (pkg->minute) {
                     globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(etaOffsetMs / 1000L);
-                    long departOffsetMs = etaOffsetMs;
+                    auto departOffsetMs = etaOffsetMs;
                     if (pkg->duration) {
                         departOffsetMs += static_cast<long>(*pkg->duration);
                     }
                     globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(departOffsetMs / 1000L);
-                } else {
+                }
+                else {
                     globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedArrivalTime);
                     globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedDepartureTime);
                 }
 
                 // Check for an existing entry for this request (per 4.2.3.2 update check:
                 // match on requestID, vehicleID, classType, classLevel, strategyNumber)
-                long inBoundLane = (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
-                    ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
-                auto strategy = LookupStrategy(intersectionID, inBoundLane);
+                long inBoundLane = (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane) ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
+                auto strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
 
                 int existingIdx = -1;
                 for (size_t idx = 0; idx < MAX_SERVICE_REQUESTS; idx++) {
-                    auto &entry = _priorityRequestTable[idx];
+                    auto &entry = table[idx];
                     if (entry.statusInPRS != RequestStatus::idleNotValid &&
                         entry.requestID == requestID &&
                         entry.vehicleID == std::vector<uint8_t>(vehicleIDBytes, vehicleIDBytes + vehicleIDLen) &&
@@ -286,7 +295,7 @@ namespace PriorityPlugin {
 
                 if (existingIdx >= 0) {
                     // Update existing entry (priority request update per 4.2.3.2)
-                    auto &entry = _priorityRequestTable[existingIdx];
+                    auto &entry = table[existingIdx];
                     entry.timeOfServiceDesiredInPRS = globalTSD;
                     entry.timeOfEstimatedDepartureInPRS = globalTED;
                     entry.sequenceNumber = newSeq;
@@ -295,15 +304,16 @@ namespace PriorityPlugin {
                     continue;
                 }
 
-                // Find an idle slot (4.2.3.1 check (b): buffer full error if none available)
+                // Find an idle slot per 4.2.3.1 (b)
                 int freeIdx = -1;
                 for (size_t idx = 0; idx < MAX_SERVICE_REQUESTS; idx++) {
-                    if (_priorityRequestTable[idx].statusInPRS == RequestStatus::idleNotValid) {
+                    if (table[idx].statusInPRS == RequestStatus::idleNotValid) {
                         freeIdx = static_cast<int>(idx);
                         break;
                     }
                 }
 
+                // Set buffer full warning if none available
                 if (freeIdx < 0) {
                     PLOG(logWARNING) << "Priority request table full, cannot accept requestID="
                                       << static_cast<int>(requestID) << " (buffer full).";
@@ -312,17 +322,20 @@ namespace PriorityPlugin {
                     continue;
                 }
 
-                auto &entry = _priorityRequestTable[freeIdx];
+                // Store contents into the free slot per 4.2.3.1 (c-g)
+                auto &entry = table[freeIdx];
                 entry.requestID = requestID;
                 entry.vehicleID.assign(vehicleIDBytes, vehicleIDBytes + vehicleIDLen);
                 entry.vehicleClassType = classType;
                 entry.vehicleClassLevel = classLevel;
                 entry.role = role;
                 entry.inboundPresent = pkg->request.inBoundLane.present;
-                if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
+                if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane) {
                     entry.inboundValue = pkg->request.inBoundLane.choice.lane;
-                else if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_approach)
+                }
+                else if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_approach) {
                     entry.inboundValue = pkg->request.inBoundLane.choice.approach;
+                }
 
                 if (!strategy) {
                     PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
@@ -337,7 +350,6 @@ namespace PriorityPlugin {
                     entry.statusInPRS = RequestStatus::closedStrategyError;
                     continue;
                 }
-
                 entry.serviceStrategyNumber = *strategy;
                 entry.timeOfServiceDesiredInPRS = globalTSD;
                 entry.timeOfEstimatedDepartureInPRS = globalTED;
@@ -346,26 +358,25 @@ namespace PriorityPlugin {
                 entry.intersectionID = intersectionID;
                 entry.sequenceNumber = newSeq;
 
-                // Check reservice timer (4.2.3.1 step (h))
+                // Check reservice timer per 4.2.3.1 (h)
                 uint8_t classIdx = (classType >= 1 && classType <= 10) ? (classType - 1) : 9;
-                uint32_t reservicePeriod = _reserviceClassTime[classIdx];
-                uint32_t lastCompleted = _reserviceLastCompletedTime[classIdx];
+                auto reservicePeriod = _reserviceClassTime[classIdx];
+                auto lastCompleted = _processor.ReserviceLastCompleted(classType);
                 if (reservicePeriod > 0 && lastCompleted > 0 &&
                     (static_cast<uint32_t>(nowEpoch) - lastCompleted) < reservicePeriod) {
                     entry.statusInPRS = RequestStatus::reserviceError;
                     PLOG(logINFO) << "Reservice period not met for class " << static_cast<int>(classType)
                                   << ", setting reserviceError for slot " << freeIdx;
-                } else {
+                }
+                else {
                     entry.statusInPRS = RequestStatus::readyQueued;
                     PLOG(logINFO) << "Accepted priority request into slot " << freeIdx
                                   << " as readyQueued for requestID=" << static_cast<int>(requestID)
                                   << " intersection=" << intersectionID;
 
-                    // 4.2.3.1 step (i): If prsBusy is True and a lower ClassType
-                    // request is activeProcessing or activeAdjustNotNeeded, set it
-                    // to activeOverride so the new higher-priority request can be served.
+                    // Set request status per 4.2.3.1 (i)
                     if (_prsBusy) {
-                        for (auto &other : _priorityRequestTable) {
+                        for (auto &other : table) {
                             if (&other == &entry) continue;
                             if (other.statusInPRS == RequestStatus::activeProcessing ||
                                 other.statusInPRS == RequestStatus::activeAdjustNotNeeded) {
@@ -373,7 +384,8 @@ namespace PriorityPlugin {
                                     (classType == other.vehicleClassType &&
                                      classLevel < other.vehicleClassLevel)) {
                                     other.statusInPRS = RequestStatus::activeOverride;
-                                    PLOG(logINFO) << "New request overrides active entry (4.2.3.1 step i)";
+                                    PLOG(logINFO) << "New request overrode active entry in slot: " << (&other - &table[0])
+                                                  << " with lower priority class. Marking overridden entry as activeOverride.";
                                 }
                             }
                         }
@@ -381,11 +393,11 @@ namespace PriorityPlugin {
                 }
             }
 
-            return; // PRS mode: exchange loop handles SNMP communication
+            return;
         }
 
-        // PRG mode: direct SNMP SET (existing behavior)
-        uint32_t timeOfRequest = static_cast<uint32_t>(nowEpoch);
+        // PRG mode: direct conversion of SRM to priority request
+        auto timeOfRequest = static_cast<uint32_t>(nowEpoch);
 
         auto existing = _requestorStates.find(vehicleKey);
         if (existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
@@ -422,8 +434,8 @@ namespace PriorityPlugin {
                 }
             }
 
-            long timeOfServiceOffsetMs = etaOffsetMs;
-            long timeOfDepartOffsetMs = timeOfServiceOffsetMs;
+            auto timeOfServiceOffsetMs = etaOffsetMs;
+            auto timeOfDepartOffsetMs = timeOfServiceOffsetMs;
             if (pkg->duration) {
                 timeOfDepartOffsetMs += static_cast<long>(*pkg->duration);
             }
@@ -432,21 +444,29 @@ namespace PriorityPlugin {
             if (pkg->minute) {
                 timeOfService = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfServiceOffsetMs / 1000L)));
                 timeOfDepart = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfDepartOffsetMs / 1000L)));
-            } else {
+            }
+            else {
                 timeOfService = _estimatedArrivalTime;
                 timeOfDepart = _estimatedDepartureTime;
             }
 
             long inBoundLane = (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
                 ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
-            auto strategy = LookupStrategy(intersectionID, inBoundLane);
+            std::optional<uint8_t> strategy;
+            {
+                std::lock_guard<std::mutex> lock(_tableMutex);
+                strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
+            }
 
             uint8_t inbPresent = pkg->request.inBoundLane.present;
             long inbValue = 0;
-            if (inbPresent == IntersectionAccessPoint_PR_lane)
+            if (inbPresent == IntersectionAccessPoint_PR_lane) {
                 inbValue = pkg->request.inBoundLane.choice.lane;
-            else if (inbPresent == IntersectionAccessPoint_PR_approach)
+            }
+            else if (inbPresent == IntersectionAccessPoint_PR_approach) {
                 inbValue = pkg->request.inBoundLane.choice.approach;
+            }
+
             long etaMin = pkg->minute ? static_cast<long>(*pkg->minute) : 0;
             long etaSec = pkg->second ? static_cast<long>(*pkg->second) : 0;
             long dur = pkg->duration ? static_cast<long>(*pkg->duration) : 0;
@@ -463,10 +483,10 @@ namespace PriorityPlugin {
                 continue;
             }
 
-            auto encoded = EncodePriorityRequest(
-                requestID, vehicleIDBytes, vehicleIDLen,
-                classType, classLevel, *strategy,
-                timeOfService, timeOfDepart, timeOfRequest);
+            auto encoded = PriorityRequestProcessor::EncodePriorityRequest(
+                                                        requestID, vehicleIDBytes, vehicleIDLen,
+                                                        classType, classLevel, *strategy,
+                                                        timeOfService, timeOfDepart, timeOfRequest);
 
             auto it = _controllers.find(intersectionID);
             if (it == _controllers.end()) {
@@ -486,7 +506,8 @@ namespace PriorityPlugin {
                 state.requests.push_back({requestID, intersectionID, requestType,
                                           timeOfService, timeOfDepart, false,
                                           inbPresent, inbValue, etaMin, etaSec, dur});
-            } else {
+            }
+            else {
                 PLOG(logERROR) << "Failed to send priority request for requestID=" << static_cast<int>(requestID);
                 state.requests.push_back({requestID, intersectionID, requestType,
                                           timeOfService, timeOfDepart, true,

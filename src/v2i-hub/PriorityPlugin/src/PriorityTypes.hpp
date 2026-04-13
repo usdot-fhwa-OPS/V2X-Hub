@@ -35,6 +35,12 @@ namespace PriorityPlugin {
     // Offset of the prsBusy and coBusy byte in the 110-byte prsServiceRequest
     static constexpr size_t SERVICE_REQUEST_BUSY_OFFSET = MAX_SERVICE_REQUESTS * SERVICE_REQUEST_ROW_SIZE; // byte 100
 
+    // Size of the OER-encoded priority request OCTET STRING (NTCIP 1211 PRS-MIB1 5.1.2.8)
+    static constexpr size_t PRIORITY_REQUEST_SIZE = 29;
+
+    // Vehicle ID field size within the NTCIP 1211 priority request
+    static constexpr size_t VEHICLE_ID_FIELD_SIZE = 17;
+
     /**
      * @brief NTCIP 1211 priorityRequestStatusInPRS and priorityStrategyRequestStatusInCO state values, per CO-MIB1 5.2.1.2.5 and PRS-MIB1 5.1.1.1.9.
      */
