@@ -45,6 +45,7 @@ COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxap
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxctlStatic.a /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxutils.a /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libv2xhubWebAPI.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libqhttpengine.* /usr/local/lib/
 
 # Built Binaries for V2X Hub (tmx cli ) and ext/ (snmpget cli, etc)
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/bin/service.sh /usr/local/bin/

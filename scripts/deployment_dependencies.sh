@@ -12,9 +12,7 @@ apt-get clean
 apt-get update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
-DEPENDENCIES="build-essential \
-    cmake \
-    libboost-all-dev \
+DEPENDENCIES=" libboost-all-dev \
     libgps-dev \
     libjsoncpp-dev \
     libmysqlclient-dev \
