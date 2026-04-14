@@ -60,14 +60,7 @@ namespace PriorityPlugin {
                 setData = _processor.EncodeServiceRequest(_prsBusy);
             }
 
-            {
-                std::ostringstream hexStream;
-                hexStream << std::hex << std::setfill('0');
-                for (auto b : setData) {
-                    hexStream << std::setw(2) << static_cast<int>(b);
-                }
-                PLOG(logDEBUG2) << "PRS SET prsServiceRequest to CO: " << hexStream.str();
-            }
+            PLOG(logDEBUG2) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
             bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
             if (!setOk) {
                 PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";

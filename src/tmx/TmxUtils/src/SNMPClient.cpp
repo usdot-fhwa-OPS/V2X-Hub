@@ -1,4 +1,5 @@
 #include "SNMPClient.h"
+#include <tmx/messages/byte_stream.hpp>
 
 namespace tmx::utils
 {
@@ -261,17 +262,16 @@ namespace tmx::utils
             {
                 if (val.type == snmp_response_obj::response_type::INTEGER)
                 {
-                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val.val_int;
+                    PLOG(logDEBUG1) << "Attempting to SET value: " << val.val_int << " for OID: " << input_oid;
                     snmp_add_var(pdu, OID, OID_len, 'i', (std::to_string(val.val_int)).c_str());
                 }
-                // Needs to be finalized to support octet string use
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
-
-                    std::string val_string (val.val_string.begin(), val.val_string.end());
-                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val_string;
-
-                    snmp_add_var(pdu, OID, OID_len, 's', val_string.c_str());
+                    PLOG(logDEBUG1) << "Attempting to SET octet string: "
+                                    << tmx::byte_stream_encode(tmx::byte_stream(val.val_string.begin(), val.val_string.end()))
+                                    << " (" << val.val_string.size() << " bytes)"
+                                    << " for OID: " << input_oid;
+                    snmp_pdu_add_variable(pdu, OID, OID_len, ASN_OCTET_STR, val.val_string.data(), val.val_string.size());
                 }
             }
 
@@ -350,12 +350,9 @@ namespace tmx::utils
         }
 
         else if(val.type == snmp_response_obj::response_type::STRING){
-            FILE_LOG(logDEBUG) << "Success in SET for OID: " 
-                << input_oid 
-                << " Value:" 
-                << std::string(val.val_string.begin(), val.val_string.end()) 
-                << std::endl;
-
+            FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid
+                << " Value: " << tmx::byte_stream_encode(tmx::byte_stream(val.val_string.begin(), val.val_string.end()))
+                << " (" << val.val_string.size() << " bytes)" << std::endl;
         }
     }
 

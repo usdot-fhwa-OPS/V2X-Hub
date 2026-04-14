@@ -506,16 +506,9 @@ namespace PriorityPlugin {
                            << "\nstrategy=" << static_cast<int>(*strategy)
                            << "\ntimeOfService=" << timeOfService
                            << "\ntimeOfDepart=" << timeOfDepart;
-            {
-                std::ostringstream hexStream;
-                hexStream << std::hex << std::setfill('0');
-                for (auto b : encoded) {
-                    hexStream << std::setw(2) << static_cast<int>(b);
-                }
-                PLOG(logDEBUG2) << "Sending command:\n" << "snmpset -v1 -c public " 
-                                << it->second.ip << ":" << it->second.port << " " 
-                                << NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID << " x " << hexStream.str();
-            }
+            PLOG(logDEBUG2) << "Sending command:\n" << "snmpset -v1 -c public "
+                            << it->second.ip << ":" << it->second.port << " "
+                            << NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID << " x " << tmx::byte_stream_encode(encoded);
 
             if (SnmpSet(it->second.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded)) {
                 _priorityRequestsSent++;
