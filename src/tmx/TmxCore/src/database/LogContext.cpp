@@ -37,18 +37,18 @@ void LogContext::addEventLogEntry(std::string source, std::string description, L
 	}
 
 	try {
-		std::unique_ptr<sql::Statement> stmt(this->getStatement());
+	    std::unique_ptr<sql::PreparedStatement> stmt(
+			this->getPreparedStatement(
+				"INSERT INTO `eventLog` (`source`,`description`,`logLevel`) VALUES (?, ?, ?)"
+			)
+		);
 
-		stringstream query;
-		query << "INSERT INTO `eventLog` (`source`,`description`,`logLevel`) VALUES (";
-		query << "'" << source << "'";
-		query << ", ";
-		query << "'" << DbContext::formatStringValue(description) << "'";
-		query << ", ";
-		query << "'" << levelString << "'";
-		query << ");";
+		stmt->setString(1, source);
+		stmt->setString(2, description);
+		stmt->setString(3, levelString);
 
-		stmt->execute(query.str());
+		stmt->execute();
+
 	} catch (DbException &e) {
 		LOG_WARN("MySQL: Unable to add event log entry [" << e.what() << "]");
 	}
