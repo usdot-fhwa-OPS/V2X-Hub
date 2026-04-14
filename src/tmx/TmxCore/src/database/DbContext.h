@@ -49,6 +49,12 @@ protected:
 	 * @return A prepared statement ready for parameter binding and execution.
 	 */
 	std::unique_ptr<sql::PreparedStatement> getPreparedStatement(const std::string& sql);
+
+	/**
+	 * @deprecated This function is obsolete and will be removed after references
+	 * switch to database prepared statements which more reliably prevents SQL
+	 * injection attacks. Use getPreparedStatement() instead.
+	 */
 	static std::string formatStringValue(std::string str);
 
 private:

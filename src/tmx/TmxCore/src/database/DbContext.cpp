@@ -35,11 +35,6 @@ std::unique_ptr<sql::PreparedStatement> DbContext::getPreparedStatement(const st
     return std::unique_ptr<sql::PreparedStatement>(mCon->prepareStatement(sql));
 }
 
-/**
- * @deprecated This function is obsolete and will be removed after references
- * switch to database prepared statements which more reliably prevents SQL 
- * injection attacks. Use getStatement() instead.
- */
 std::string DbContext::formatStringValue(std::string str)
 {
 	std::stringstream ss;
