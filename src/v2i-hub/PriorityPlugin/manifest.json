@@ -15,7 +15,7 @@
         },
 		{
 			"key":"TSC_Configuration_List",
-			"default":"[{\"IntersectionID\": 9709, \"IP\": \"192.168.55.91\", \"Port\": 161}]",
+			"default":"[{\"IntersectionID\": 9709, \"IP\": \"192.168.55.92\", \"Port\": 161}]",
 			"description":"A JSON array of Traffic Signal Controller (TSC) entries. Each entry must contain: IntersectionID (integer matching the J2735 Intersection ID), IP (IPv4 address of the TSC), and Port (SNMP port on the TSC). Example: [{\"IntersectionID\": 9709, \"IP\": \"192.168.55.91\", \"Port\": 161}, {\"IntersectionID\": 9945, \"IP\": \"192.168.55.92\", \"Port\": 161}]"
 		},
 		{
@@ -25,7 +25,7 @@
 		},
 		{
 			"key":"LaneStrategyMapping",
-			"default":"[]",
+			"default":"[{\"IntersectionID\": 9709, \"Lane\": 2, \"Strategy\": 1}]",
 			"description":"A JSON array mapping (IntersectionID, Lane) pairs to a service strategy number. The SRM inBoundLane is compared to this mapping. If no match is found, the request is rejected with a closedStrategyError (PRS mode) or a rejected SSM status (PRG mode). Example: [{\"IntersectionID\": 101, \"Lane\": 3, \"Strategy\": 1}, {\"IntersectionID\": 102, \"Lane\": 5, \"Strategy\": 2}]"
 		},
 		{

@@ -20,15 +20,21 @@ namespace tmx::utils
         snmp_sess_init(&session);
         session.peername = ip_port;
         session.version = snmp_version_; // SNMP_VERSION_3
-        session.securityName = (char *)snmp_user.c_str();
-        session.securityNameLen = snmp_user.length();
-        session.securityModel = SNMP_SEC_MODEL_USM;
-
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
         {
-            session.community = (unsigned char *)community.c_str();
+            session.community = (unsigned char *)community_.c_str();
             session.community_len = community_.length();
+            if (snmp_version_ == SNMP_VERSION_1)
+                session.securityModel = SNMP_SEC_MODEL_SNMPv1;
+            else
+                session.securityModel = SNMP_SEC_MODEL_SNMPv2c;
+        }
+        else
+        {
+            session.securityName = (char *)snmp_user.c_str();
+            session.securityNameLen = snmp_user.length();
+            session.securityModel = SNMP_SEC_MODEL_USM;
         }
 
         // Set security level

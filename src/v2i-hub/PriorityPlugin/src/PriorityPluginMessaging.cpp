@@ -60,7 +60,14 @@ namespace PriorityPlugin {
                 setData = _processor.EncodeServiceRequest(_prsBusy);
             }
 
-            PLOG(logDEBUG) << "PRS SET prsServiceRequest to CO (" << setData.size() << " bytes)";
+            {
+                std::ostringstream hexStream;
+                hexStream << std::hex << std::setfill('0');
+                for (auto b : setData) {
+                    hexStream << std::setw(2) << static_cast<int>(b);
+                }
+                PLOG(logDEBUG2) << "PRS SET prsServiceRequest to CO: " << hexStream.str();
+            }
             bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
             if (!setOk) {
                 PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
@@ -341,14 +348,16 @@ namespace PriorityPlugin {
         auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
         memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
 
-        time_t nowEpoch = std::time(nullptr);
+        struct timespec nowTs;
+        clock_gettime(CLOCK_REALTIME, &nowTs);
         struct tm utcNow;
-        gmtime_r(&nowEpoch, &utcNow);
+        gmtime_r(&nowTs.tv_sec, &utcNow);
+        time_t nowEpoch = nowTs.tv_sec;
 
         auto timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
         *timeStamp = static_cast<MinuteOfTheYear_t>(utcNow.tm_yday * 24 * 60 + utcNow.tm_hour * 60 + utcNow.tm_min);
         ssmPtr->timeStamp = timeStamp;
-        ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000);
+        ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000 + nowTs.tv_nsec / 1000000);
 
         // ssmPtr->sequenceNumber increments for every new SSM broadcast
         _ssmSequenceCounter++;

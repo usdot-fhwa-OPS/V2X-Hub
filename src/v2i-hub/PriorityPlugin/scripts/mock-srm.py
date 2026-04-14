@@ -185,36 +185,37 @@ def sendMessage(msg: bytes, ip_send: str, port_send: int) -> None:
 class AddEntryDialog(QDialog):
     """Dialog for adding a new SRM entry with editable fields."""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, initial: dict | None = None):
         super().__init__(parent)
-        self.setWindowTitle("Add SRM Entry")
+        defaults = initial or {}
+        self.setWindowTitle("Edit SRM Entry" if initial else "Add SRM Entry")
         self.setMinimumWidth(380)
 
         layout = QFormLayout(self)
 
         self.intersection_id = QSpinBox()
         self.intersection_id.setRange(0, 65535)
-        self.intersection_id.setValue(9709)
+        self.intersection_id.setValue(defaults.get("intersection_id", 9709))
 
         self.inbound_lane = QSpinBox()
         self.inbound_lane.setRange(0, 255)
-        self.inbound_lane.setValue(1)
+        self.inbound_lane.setValue(defaults.get("inbound_lane", 1))
 
         self.eta = QSpinBox()
         self.eta.setRange(0, 3600)
-        self.eta.setValue(5)
+        self.eta.setValue(defaults.get("eta_s", 5))
         self.eta.setSuffix(" s")
 
         self.edt = QSpinBox()
         self.edt.setRange(0, 3600)
-        self.edt.setValue(3)
+        self.edt.setValue(defaults.get("edt_s", 3))
         self.edt.setSuffix(" s")
 
-        self.entity_id = QLineEdit("12345678")
+        self.entity_id = QLineEdit(defaults.get("entity_id", "12345678"))
 
         self.role = QComboBox()
         self.role.addItems(ROLE_CHOICES)
-        self.role.setCurrentText("transit")
+        self.role.setCurrentText(defaults.get("role", "transit"))
 
         layout.addRow("Intersection ID:", self.intersection_id)
         layout.addRow("Inbound Lane:", self.inbound_lane)
@@ -286,8 +287,10 @@ class MainWindow(QMainWindow):
 
         btn_layout = QHBoxLayout()
         self.add_btn = QPushButton("Add Entry")
+        self.edit_btn = QPushButton("Edit Selected")
         self.remove_btn = QPushButton("Remove Selected")
         btn_layout.addWidget(self.add_btn)
+        btn_layout.addWidget(self.edit_btn)
         btn_layout.addWidget(self.remove_btn)
         btn_layout.addStretch()
         entries_layout.addLayout(btn_layout)
@@ -305,23 +308,56 @@ class MainWindow(QMainWindow):
 
         # Signals
         self.add_btn.clicked.connect(self._on_add)
+        self.edit_btn.clicked.connect(self._on_edit)
         self.remove_btn.clicked.connect(self._on_remove)
         self.send_btn.clicked.connect(self._on_send)
+        self.table.doubleClicked.connect(lambda idx: self._edit_row(idx.row()))
 
     # Slots
-    def _on_add(self):
-        dlg = AddEntryDialog(self)
-        if dlg.exec() != QDialog.DialogCode.Accepted:
-            return
-        vals = dlg.values()
-        row = self.table.rowCount()
-        self.table.insertRow(row)
+    def _set_row(self, row: int, vals: dict) -> None:
+        """Write an entry dict into the given table row."""
         self.table.setItem(row, COL_INTERSECTION, QTableWidgetItem(str(vals["intersection_id"])))
         self.table.setItem(row, COL_LANE, QTableWidgetItem(str(vals["inbound_lane"])))
         self.table.setItem(row, COL_ETA, QTableWidgetItem(str(vals["eta_s"])))
         self.table.setItem(row, COL_EDT, QTableWidgetItem(str(vals["edt_s"])))
         self.table.setItem(row, COL_ENTITY, QTableWidgetItem(vals["entity_id"]))
         self.table.setItem(row, COL_ROLE, QTableWidgetItem(vals["role"]))
+
+    def _read_row(self, row: int) -> dict:
+        """Read a single table row back into an entry dict."""
+        return {
+            "intersection_id": int(self.table.item(row, COL_INTERSECTION).text()),
+            "inbound_lane": int(self.table.item(row, COL_LANE).text()),
+            "eta_s": int(self.table.item(row, COL_ETA).text()),
+            "edt_s": int(self.table.item(row, COL_EDT).text()),
+            "entity_id": self.table.item(row, COL_ENTITY).text(),
+            "role": self.table.item(row, COL_ROLE).text(),
+        }
+
+    def _on_add(self):
+        dlg = AddEntryDialog(self)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        row = self.table.rowCount()
+        self.table.insertRow(row)
+        self._set_row(row, dlg.values())
+
+    def _edit_row(self, row: int) -> None:
+        """Open the edit dialog for a specific table row."""
+        if row < 0 or row >= self.table.rowCount():
+            return
+        current = self._read_row(row)
+        dlg = AddEntryDialog(self, initial=current)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._set_row(row, dlg.values())
+
+    def _on_edit(self):
+        rows = sorted({idx.row() for idx in self.table.selectedIndexes()})
+        if not rows:
+            QMessageBox.information(self, "No selection", "Select a row to edit.")
+            return
+        self._edit_row(rows[0])
 
     def _on_remove(self):
         rows = sorted(
@@ -332,19 +368,7 @@ class MainWindow(QMainWindow):
 
     def _read_entries(self) -> list[dict]:
         """Read every table row back into a list of entry dicts."""
-        entries = []
-        for row in range(self.table.rowCount()):
-            entries.append(
-                {
-                    "intersection_id": int(self.table.item(row, COL_INTERSECTION).text()),
-                    "inbound_lane": int(self.table.item(row, COL_LANE).text()),
-                    "eta_s": int(self.table.item(row, COL_ETA).text()),
-                    "edt_s": int(self.table.item(row, COL_EDT).text()),
-                    "entity_id": self.table.item(row, COL_ENTITY).text(),
-                    "role": self.table.item(row, COL_ROLE).text(),
-                }
-            )
-        return entries
+        return [self._read_row(row) for row in range(self.table.rowCount())]
 
     def _on_send(self):
         if self.table.rowCount() == 0:

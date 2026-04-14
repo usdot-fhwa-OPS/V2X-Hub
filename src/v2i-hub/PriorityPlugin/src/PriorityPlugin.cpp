@@ -152,8 +152,8 @@ namespace PriorityPlugin {
                 try {
                     info.snmpClient = std::make_shared<snmp_client>(
                         info.ip, info.port, _snmpCommunity,
-                        "", "", "",
-                        SNMP_VERSION_1);
+                        "", "", "", "", "", "",
+                        SNMP_VERSION_1, SNMP_DEFAULT_TIMEOUT);
                 } catch (const snmp_client_exception &e) {
                     PLOG(logERROR) << "Failed to create SNMP client for IntersectionID="
                                    << info.intersectionID << " (" << info.ip << ":" << info.port
@@ -180,8 +180,9 @@ namespace PriorityPlugin {
     void PriorityPlugin::HandleSRM(SrmMessage &msg, tmx::routeable_message &routeableMsg)
     {
         PLOG(logINFO) << "Received Signal Request Message (SRM)";
-
-        auto srm = msg.get_j2735_data();
+        tmx::messages::SrmEncodedMessage srmEnc(routeableMsg);
+        auto srmDecoded = srmEnc.decode_j2735_message();
+        auto srm = srmDecoded.get_j2735_data();
         if (!srm) {
             PLOG(logWARNING) << "SRM decode returned null, skipping.";
             _skippedMessages++;
@@ -497,6 +498,23 @@ namespace PriorityPlugin {
                                           timeOfService, timeOfDepart, true,
                                           inbPresent, inbValue, etaMin, etaSec, dur});
                 continue;
+            }
+
+            PLOG(logDEBUG2) << "Sending priority request to: " << it->second.ip << ":" << it->second.port
+                           << "\nrequestID=" << static_cast<int>(requestID)
+                           << "\nIntersectionID=" << intersectionID
+                           << "\nstrategy=" << static_cast<int>(*strategy)
+                           << "\ntimeOfService=" << timeOfService
+                           << "\ntimeOfDepart=" << timeOfDepart;
+            {
+                std::ostringstream hexStream;
+                hexStream << std::hex << std::setfill('0');
+                for (auto b : encoded) {
+                    hexStream << std::setw(2) << static_cast<int>(b);
+                }
+                PLOG(logDEBUG2) << "Sending command:\n" << "snmpset -v1 -c public " 
+                                << it->second.ip << ":" << it->second.port << " " 
+                                << NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID << " x " << hexStream.str();
             }
 
             if (SnmpSet(it->second.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded)) {
