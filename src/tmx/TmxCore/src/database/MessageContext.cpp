@@ -55,33 +55,46 @@ void MessageContext::insertOrUpdateMessageActivity(MessageActivityEntry &entry)
 
 void MessageContext::insertMessageType(MessageTypeEntry &entry, bool updateDescriptionOnDuplicate)
 {
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
+	// INSERT / UPSERT Message Type
+    std::string query =
+        "INSERT INTO `messageType` (`type`, `subtype`, `description`) "
+        "VALUES (?, ?, ?) AS new ";
 
-	stringstream query;
-	query << "INSERT INTO messageType (type, subtype, description)";
-	query << " VALUES ('" << entry.type << "','" << entry.subtype << "','" << entry.description << "')";
-	if (updateDescriptionOnDuplicate)
-		query << " ON DUPLICATE KEY UPDATE description=VALUES(description)";
-	else
-		query << " ON DUPLICATE KEY UPDATE `description`=IF(LENGTH(`description`)=0, '" << entry.description << "', `description`)";
+    if (updateDescriptionOnDuplicate)
+    {
+		// Always update description
+        query += "ON DUPLICATE KEY UPDATE `description` = new.description";
+    }
+    else
+    {
+		// Only update description, if current description is empty
+        query += "ON DUPLICATE KEY UPDATE `description` = IF(LENGTH(`description`) = 0, new.description, `description`)";
+    }
 
-	query << ";";
+    std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
+    pstmt->setString(1, entry.type);
+    pstmt->setString(2, entry.subtype);
+    pstmt->setString(3, entry.description);
+    pstmt->execute();
 
-	stmt->execute(query.str());
+    // Query for id of row that was just inserted/updated.
+    std::unique_ptr<sql::PreparedStatement> qstmt(
+        this->getPreparedStatement(
+            "SELECT `id`, `description` FROM `messageType` "
+            "WHERE `type` = ? AND `subtype` = ?"
+        )
+    );
 
-	// Query for id of row that was just inserted/updated.
+    qstmt->setString(1, entry.type);
+    qstmt->setString(2, entry.subtype);
 
-	query.clear();
-	query.str("");
-	query << "SELECT * FROM `messageType`";
-	query << " WHERE `messageType`.`type` = '" << entry.type << "' AND `messageType`.`subtype` = '" << entry.subtype << "'";
-
-	std::unique_ptr<sql::ResultSet> rset(stmt->executeQuery(query.str()));
-	if (rset->next())
-	{
-		entry.id = rset->getUInt("id");
-		entry.description = rset->getUInt("description");
-	}
+    std::unique_ptr<sql::ResultSet> rset(qstmt->executeQuery());
+    if (rset->next())
+    {
+		// Retrieve current id and description for use outside of function
+        entry.id = rset->getUInt("id");
+        entry.description = rset->getString("description");
+    }
 }
 
 void MessageContext::mapPluginToMessageType(unsigned int pluginId, unsigned int messageTypeId)
