@@ -6,7 +6,6 @@
  */
 
 #include "PluginContext.h"
-#include "../logger.h"
 #include <assert.h>
 #include <sstream>
 
