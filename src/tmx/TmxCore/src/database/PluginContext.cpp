@@ -6,6 +6,7 @@
  */
 
 #include "PluginContext.h"
+#include "../logger.h"
 #include <assert.h>
 #include <sstream>
 
@@ -132,7 +133,7 @@ void PluginContext::setPluginStatusItems(unsigned int pluginId, std::vector<Plug
 	}
 }
 
-void PluginContext::removePluginStatusItems(unsigned int pluginId, std::vector<std::string> itemKeys)
+void PluginContext::removePluginStatusItems(unsigned int pluginId, const std::vector<std::string>& itemKeys)
 {
     std::unique_ptr<sql::PreparedStatement> stmt(
         this->getPreparedStatement(
@@ -140,7 +141,7 @@ void PluginContext::removePluginStatusItems(unsigned int pluginId, std::vector<s
         )
     );
 
-    for (const auto& key : itemKeys)
+	for (const auto& key : itemKeys)
     {
         stmt->setUInt(1, pluginId);
         stmt->setString(2, key);
