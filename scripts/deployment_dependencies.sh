@@ -13,7 +13,6 @@ apt-get update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
 DEPENDENCIES="ca-certificates \
-    libboost-dev \
     libboost-system-dev \
     libboost-thread-dev \
     libboost-log-dev \
@@ -49,4 +48,5 @@ LIBRARY_DEPENDENCIES=" \
 "
 
 # install all things needed for deployment, always done
-apt-get install -y --no-install-recommends $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+# TODO: --install-no-recommends
+apt-get install -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}

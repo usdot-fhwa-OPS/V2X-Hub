@@ -19,7 +19,6 @@ DEPENDENCIES="build-essential \
     git \
     ca-certificates \
     file \
-    libboost-dev \
     libboost-system-dev \
     libboost-thread-dev \
     libboost-log-dev \
@@ -62,7 +61,8 @@ LIBRARY_DEPENDENCIES=" \
 "
 
 # install all things needed for deployment, always done
-apt-get install -y --no-install-recommends $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+# TODO: --install-no-recommends
+apt-get install -y $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
 
 numCPU=$(nproc)
 
