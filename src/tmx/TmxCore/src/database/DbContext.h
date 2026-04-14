@@ -40,6 +40,14 @@ protected:
 	DbContext();
 
 	sql::Statement *getStatement();
+
+	/**
+	 * Creates a prepared SQL statement using the active database connection.
+	 * The caller is responsible for binding parameters before executing it.
+	 *
+	 * @param sql The SQL statement text containing parameter `?` placeholders.
+	 * @return A prepared statement ready for parameter binding and execution.
+	 */
 	std::unique_ptr<sql::PreparedStatement> getPreparedStatement(const std::string& sql);
 	static std::string formatStringValue(std::string str);
 
