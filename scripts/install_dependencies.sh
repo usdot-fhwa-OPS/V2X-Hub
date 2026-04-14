@@ -12,10 +12,21 @@ apt-get clean
 apt-get update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
+# file is required for netsnmp installation under ext/
+# ca-certificates is required for git 
 DEPENDENCIES="build-essential \
     cmake \
     git \
-    libboost-all-dev \
+    ca-certificates \
+    file \
+    libboost-system-dev \
+    libboost-thread-dev \
+    libboost-log-dev \
+    libboost-chrono-dev \
+    libboost-atomic-dev \
+    libboost-regex-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
     libcurl4-openssl-dev \
     libev-dev \
     libgps-dev \
@@ -50,6 +61,7 @@ LIBRARY_DEPENDENCIES=" \
 "
 
 # install all things needed for deployment, always done
+# TODO: --install-no-recommends
 apt-get install -y $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
 
 numCPU=$(nproc)
