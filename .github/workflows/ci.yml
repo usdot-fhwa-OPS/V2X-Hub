@@ -161,6 +161,18 @@ jobs:
             type=ref,event=branch
             type=ref,event=tag
             type=ref,event=pr
+      - name: Docker Scout
+        id: docker-scout
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-env: ${{ github.event.pull_request.base.ref }}
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
       - name: Build and push V2X-Hub ARM64 image
         uses: docker/build-push-action@v7
         with:
@@ -175,17 +187,6 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
             VCS_REF=${{ steps.meta.outputs.revision }}
             BUILD_DATE=${{ steps.meta.outputs.created }}
-      - name: Docker Scout
-        id: docker-scout
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@v1
-        with:
-          command: compare
-          image: ${{ steps.meta.outputs.tags }}
-          to-env: ${{ github.event.pull_request.base.ref }}
-          ignore-unchanged: true
-          only-severities: critical,high
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   build-v2xhub-manifest:
     runs-on: ubuntu-24.04
