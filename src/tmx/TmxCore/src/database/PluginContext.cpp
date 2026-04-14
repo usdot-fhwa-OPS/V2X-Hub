@@ -132,16 +132,20 @@ void PluginContext::setPluginStatusItems(unsigned int pluginId, std::vector<Plug
 	}
 }
 
-void PluginContext::removePluginStatusItems(unsigned int pluginId, std::vector<std::string> itemKeys)
+void PluginContext::removePluginStatusItems(unsigned int pluginId, const std::vector<std::string>& itemKeys)
 {
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
+    std::unique_ptr<sql::PreparedStatement> stmt(
+        this->getPreparedStatement(
+            "DELETE FROM `pluginStatus` WHERE `pluginId` = ? AND `key` = ?;"
+        )
+    );
 
-	for(vector<string>::iterator itr = itemKeys.begin(); itr != itemKeys.end(); itr++)
-	{
-		stringstream query;
-		query << "DELETE FROM `pluginStatus` WHERE `pluginId` = '" << pluginId << "' AND `key` = '" << DbContext::formatStringValue(*itr) << "';";
-		stmt->execute(query.str());
-	}
+	for (const auto& key : itemKeys)
+    {
+        stmt->setUInt(1, pluginId);
+        stmt->setString(2, key);
+        stmt->executeUpdate();
+    }
 }
 
 void PluginContext::removeAllPluginStatusItems(unsigned int pluginId)
