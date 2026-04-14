@@ -88,7 +88,7 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
 {
 	std::unique_ptr<sql::Statement> stmt(this->getStatement());
 
-	// Upsert Plugin Configuration Parameters
+	// Insert/Update Plugin Configuration Parameters
 	for(vector<PluginConfigurationParameterEntry>::iterator itr = entries.begin(); itr != entries.end(); itr++)
 	{
         std::string query =
@@ -100,7 +100,9 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
 
         // Plugin system parameters always should update the value
         if (pluginId == 0)
+        {
             query += ", `value` = VALUES(`value`)";
+        }
 
         query += ";";
 
@@ -115,7 +117,9 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
 
 	// No Cleanup Required
 	if (pluginId == 0)
+    {
 		return;
+    }
 
 	// Cleanup Unused Plugin Configuration Parameters
     std::string query = "DELETE FROM `pluginConfigurationParameter` WHERE `pluginId` = ?";
@@ -125,7 +129,9 @@ void ConfigContext::initializePluginConfigParameters(unsigned int pluginId, std:
         for (size_t i = 0; i < entries.size(); ++i)
         {
             if (i > 0)
+            {
                 query += ", ";
+            }
             query += "?";
         }
         query += ");";
