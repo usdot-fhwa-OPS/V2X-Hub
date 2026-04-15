@@ -36,10 +36,10 @@ namespace unit_test
         EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-256", "test1234", "AES-128", "testtesttest", SNMP_VERSION_3, 1000));
         EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-384", "test1234", "AES-192", "testtesttest", SNMP_VERSION_1, 1000));
         EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-192-Cisco", "testtesttest", SNMP_VERSION_2c, 1000));
-        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "dummy", "test1234", "AES-256-Cisco", "testtesttest", SNMP_VERSION_2c, 1000));
+        EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "SHA-512", "test1234", "AES-256-Cisco", "testtesttest", SNMP_VERSION_2c, 1000));
         EXPECT_NO_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000));
         EXPECT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authNoPriv", "dummy", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
-        EXPECT_THROW(snmp_client("127.0.0.1", port, "public", "test", "", "SHA-512", "test1234", "dummy", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
+        EXPECT_THROW(snmp_client("127.0.0.1", port, "public", "test", "authPriv", "SHA-512", "test1234", "dummy", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
         EXPECT_THROW(snmp_client("127.0.XX.XX", port, "public", "test", "", "SHA-512", "test1234", "AES-256", "testtesttest", SNMP_VERSION_3, 1000), snmp_client_exception);
     }
 

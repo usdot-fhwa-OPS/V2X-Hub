@@ -1,5 +1,6 @@
 #include "SNMPClient.h"
 #include <tmx/messages/byte_stream.hpp>
+#include <arpa/inet.h>
 
 namespace tmx::utils
 {
@@ -11,6 +12,14 @@ namespace tmx::utils
     {
 
         PLOG(logDEBUG1) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+
+        // Validate IP address format
+        struct in_addr addr4;
+        struct in6_addr addr6;
+        if (inet_pton(AF_INET, ip.c_str(), &addr4) != 1 && inet_pton(AF_INET6, ip.c_str(), &addr6) != 1)
+        {
+            throw snmp_client_exception("Invalid IP address: " + ip);
+        }
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
