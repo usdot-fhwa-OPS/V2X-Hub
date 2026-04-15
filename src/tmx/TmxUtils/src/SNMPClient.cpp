@@ -176,7 +176,10 @@ namespace tmx::utils
     snmp_client::~snmp_client()
     {
         PLOG(logINFO) << "Closing SNMP session";
-        snmp_close(ss);
+        if (ss)
+        {
+            snmp_close(ss);
+        }
     }
     bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
