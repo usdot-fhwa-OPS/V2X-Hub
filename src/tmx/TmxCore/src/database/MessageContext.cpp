@@ -68,7 +68,7 @@ void MessageContext::insertMessageType(MessageTypeEntry &entry, bool updateDescr
     else
     {
 		// Only update description, if current description is empty
-        query += "ON DUPLICATE KEY UPDATE `description` = IF(LENGTH(`description`) = 0, new.description, `description`)";
+        query += "ON DUPLICATE KEY UPDATE `description` = IF(LENGTH(`messageType`.`description`) = 0, new.description, `messageType`.`description`)";
     }
 
     std::unique_ptr<sql::PreparedStatement> pstmt(this->getPreparedStatement(query));
