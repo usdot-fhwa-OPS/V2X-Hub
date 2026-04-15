@@ -24,7 +24,7 @@ namespace tmx::utils
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
         {
-            session.community = reinterpret_cast<unsigned char *>(const_cast<char *>(community_.c_str()));
+            session.community = reinterpret_cast<unsigned char *>(community_.data());
             session.community_len = community_.length();
             if (snmp_version_ == SNMP_VERSION_1)
                 session.securityModel = SNMP_SEC_MODEL_SNMPv1;
@@ -73,7 +73,9 @@ namespace tmx::utils
             else if (authProtocol == "SHA-512") {
                 usmAuthProto = usmHMAC384SHA512AuthProtocol;
             }
-            else usmAuthProto = usmHMACSHA1AuthProtocol;
+            else {
+                throw snmp_client_exception("Invalid authentication protocol " + authProtocol + " !");
+            }
             // Passphrase used for authentication
             auto authPhrase_len = authPassPhrase.length();
             auto authPhrase = (u_char *)authPassPhrase.c_str();
@@ -122,7 +124,7 @@ namespace tmx::utils
                 usmPrivProto = usmAES256CiscoPrivProtocol;
                 privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
             }
-            else if (securityLevel == "authPriv" ) {
+            else {
                 throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
             }
             // Passphrase used for privacy
