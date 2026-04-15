@@ -36,9 +36,13 @@ namespace tmx::utils
             session.community = reinterpret_cast<unsigned char *>(community_.data());
             session.community_len = community_.length();
             if (snmp_version_ == SNMP_VERSION_1)
+            {
                 session.securityModel = SNMP_SEC_MODEL_SNMPv1;
+            }
             else
+            {
                 session.securityModel = SNMP_SEC_MODEL_SNMPv2c;
+            }
         }
         else
         {
