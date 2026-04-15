@@ -24,7 +24,7 @@ namespace tmx::utils
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
         {
-            session.community = (unsigned char *)community_.c_str();
+            session.community = reinterpret_cast<unsigned char *>(const_cast<char *>(community_.c_str()));
             session.community_len = community_.length();
             if (snmp_version_ == SNMP_VERSION_1)
                 session.securityModel = SNMP_SEC_MODEL_SNMPv1;
