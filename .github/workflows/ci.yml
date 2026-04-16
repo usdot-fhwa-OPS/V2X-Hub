@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   DOCKERHUB_NAMESPACE: usdotfhwaops
