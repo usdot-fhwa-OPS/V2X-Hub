@@ -210,7 +210,7 @@ jobs:
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
-          to-env: ${{ steps.meta.outputs.version }}
+          to-env: ${{ github.event.pull_request.base.ref }}
           ignore-unchanged: true
           only-severities: critical,high
           github-token: ${{ secrets.GITHUB_TOKEN }}
