@@ -139,12 +139,15 @@ void PluginContext::setPluginStatusItems(unsigned int pluginId, const std::vecto
     std::unique_ptr<sql::PreparedStatement> stmt(this->getPreparedStatement(query));
 
 	// Assign multirow insert inputs
-    int paramIndex = 1;
+    int paramIndex = 0;
     for (const auto &item : statusItems)
     {
-        stmt->setUInt(paramIndex++, pluginId);
-        stmt->setString(paramIndex++, item.key);
-        stmt->setString(paramIndex++, item.value);
+        stmt->setUInt(paramIndex + 1, pluginId);
+        stmt->setString(paramIndex + 2, item.key);
+        stmt->setString(paramIndex + 3, item.value);
+
+        // Increment for next row's tuple
+        paramIndex += 3;
     }
 
     stmt->execute();
