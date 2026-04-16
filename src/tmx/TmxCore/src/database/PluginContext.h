@@ -59,7 +59,7 @@ public:
 
 	void setStatusForAllPlugins(std::string status);
 	void setPluginStatus(unsigned int pluginId, std::string status);
-	void setPluginStatusItems(unsigned int pluginId, std::vector<PluginStatusItem> statusItems);
+	void setPluginStatusItems(unsigned int pluginId, const std::vector<PluginStatusItem>& statusItems);
 	void removePluginStatusItems(unsigned int pluginId, const std::vector<std::string>& itemKeys);
 	void removeAllPluginStatusItems(unsigned int pluginId);
 	void removeAllPluginStatusItems();
