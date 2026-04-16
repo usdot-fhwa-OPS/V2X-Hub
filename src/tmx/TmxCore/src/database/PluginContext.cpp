@@ -59,13 +59,29 @@ PluginEntry PluginContext::getPlugin(std::string pluginName)
 
 void PluginContext::insertOrUpdatePlugin(PluginEntry &entry)
 {
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
+	// Insert / Update Plugin
+	std::string query =
+		"INSERT INTO `plugin` (`name`, `description`, `version`) "
+		"VALUES (?, ?, ?) as new "
+		"ON DUPLICATE KEY UPDATE "
+		"`name` = new.name, "
+		"`description` = new.description, "
+		"`version` = new.version";
 
-	string query = "INSERT INTO plugin (name, description, version) VALUES ('" + DbContext::formatStringValue(entry.name) + "', '" + DbContext::formatStringValue(entry.description) + "', '" + DbContext::formatStringValue(entry.version) + "') ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), version = VALUES(version)";
-	stmt->execute(query);
+	std::unique_ptr<sql::PreparedStatement> insertStmt(this->getPreparedStatement(query));
+	insertStmt->setString(1, entry.name);
+	insertStmt->setString(2, entry.description);
+	insertStmt->setString(3, entry.version);
+	insertStmt->execute();
 
-	query = "SELECT `id` FROM `plugin` WHERE `plugin`.`name` = '" + entry.name + "';";
-	std::unique_ptr< sql::ResultSet > rset(stmt->executeQuery(query));
+	std::unique_ptr<sql::PreparedStatement> selectStmt(
+		this->getPreparedStatement("SELECT `id` FROM `plugin` WHERE `plugin`.`name` = ?")
+	);
+
+	selectStmt->setString(1, entry.name);
+
+	// Query for id of row that was just inserted/updated.
+	std::unique_ptr<sql::ResultSet> rset(selectStmt->executeQuery());
 	if (rset->next())
 	{
 		entry.id = rset->getUInt("id");
