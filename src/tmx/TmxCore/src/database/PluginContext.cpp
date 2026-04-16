@@ -8,7 +8,6 @@
 #include "PluginContext.h"
 #include <assert.h>
 #include <sstream>
-
 using namespace std;
 
 PluginContext::PluginContext()
@@ -59,13 +58,29 @@ PluginEntry PluginContext::getPlugin(std::string pluginName)
 
 void PluginContext::insertOrUpdatePlugin(PluginEntry &entry)
 {
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
+	// Insert / Update Plugin
+	std::string query =
+		"INSERT INTO `plugin` (`name`, `description`, `version`) "
+		"VALUES (?, ?, ?) as new "
+		"ON DUPLICATE KEY UPDATE "
+		"`name` = new.name, "
+		"`description` = new.description, "
+		"`version` = new.version";
 
-	string query = "INSERT INTO plugin (name, description, version) VALUES ('" + DbContext::formatStringValue(entry.name) + "', '" + DbContext::formatStringValue(entry.description) + "', '" + DbContext::formatStringValue(entry.version) + "') ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), version = VALUES(version)";
-	stmt->execute(query);
+	std::unique_ptr<sql::PreparedStatement> insertStmt(this->getPreparedStatement(query));
+	insertStmt->setString(1, entry.name);
+	insertStmt->setString(2, entry.description);
+	insertStmt->setString(3, entry.version);
+	insertStmt->execute();
 
-	query = "SELECT `id` FROM `plugin` WHERE `plugin`.`name` = '" + entry.name + "';";
-	std::unique_ptr< sql::ResultSet > rset(stmt->executeQuery(query));
+	std::unique_ptr<sql::PreparedStatement> selectStmt(
+		this->getPreparedStatement("SELECT `id` FROM `plugin` WHERE `plugin`.`name` = ?")
+	);
+
+	selectStmt->setString(1, entry.name);
+
+	// Query for id of row that was just inserted/updated.
+	std::unique_ptr<sql::ResultSet> rset(selectStmt->executeQuery());
 	if (rset->next())
 	{
 		entry.id = rset->getUInt("id");
@@ -80,14 +95,6 @@ void PluginContext::removeAllNotInstalled()
 	query << "DELETE FROM `plugin` WHERE `plugin`.`id` NOT IN (SELECT `installedPlugins`.`pluginId` FROM `installedPlugins`);";
 	stmt->execute(query.str());
 }
-
-/*void PluginContext::clearPluginStatuses()
-{
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
-
-	string query = "DELETE FROM `pluginStatus`";
-	stmt->execute(query);
-}*/
 
 void PluginContext::setStatusForAllPlugins(std::string status)
 {
@@ -108,28 +115,42 @@ void PluginContext::setPluginStatus(unsigned int pluginId, std::string status)
 	stmt->execute(query.str());
 }
 
-void PluginContext::setPluginStatusItems(unsigned int pluginId, std::vector<PluginStatusItem> statusItems)
+void PluginContext::setPluginStatusItems(unsigned int pluginId, const std::vector<PluginStatusItem>& statusItems)
 {
-	std::unique_ptr<sql::Statement> stmt(this->getStatement());
+	// No Status Changes
+    if (statusItems.empty()){
+        return;
+	}
 
-	if (statusItems.size() > 0)
-	{
-		stringstream query;
-		query << "INSERT INTO `pluginStatus` (`pluginId`,`key`,`value`) VALUES ";
-
-		bool first = true;
-		for(vector<PluginStatusItem>::iterator itr = statusItems.begin(); itr != statusItems.end(); itr++)
-		{
-			if (!first)
-				query << ", ";
-			query << "('" << pluginId << "', '" << DbContext::formatStringValue(itr->key) << "', '" << DbContext::formatStringValue(itr->value) << "')";
-			first = false;
+	// Insert / Update Plugin Status
+    std::string query = "INSERT INTO `pluginStatus` (`pluginId`, `key`, `value`) VALUES ";
+    //NOSONAR Build multirow insert of tuples e.g., (?, ?, ?), (?, ?, ?), (?, ?, ?)
+    for (size_t i = 0; i < statusItems.size(); ++i)
+    {
+        if (i > 0){
+            query += ", ";
 		}
 
-		query << " ON DUPLICATE KEY UPDATE value = VALUES(value);";
+        query += "(?, ?, ?)";
+    }
 
-		stmt->execute(query.str());
-	}
+    query += "  as new ON DUPLICATE KEY UPDATE `value` = new.value";
+
+    std::unique_ptr<sql::PreparedStatement> stmt(this->getPreparedStatement(query));
+
+	// Assign multirow insert inputs
+    int paramIndex = 0;
+    for (const auto &item : statusItems)
+    {
+        stmt->setUInt(paramIndex + 1, pluginId);
+        stmt->setString(paramIndex + 2, item.key);
+        stmt->setString(paramIndex + 3, item.value);
+
+        // Increment for next row's tuple
+        paramIndex += 3;
+    }
+
+    stmt->execute();
 }
 
 void PluginContext::removePluginStatusItems(unsigned int pluginId, const std::vector<std::string>& itemKeys)
