@@ -46,6 +46,8 @@ TEST(PriorityTypesTest, PriorityRequestEntries) {
     EXPECT_EQ(entry.timeOfServiceDesiredInPRS, 0u);
     EXPECT_EQ(entry.timeOfEstimatedDepartureInPRS, 0u);
     EXPECT_EQ(entry.statusInPRS, RequestStatus::idleNotValid);
+    EXPECT_EQ(entry.ssmBroadcastCount, 0);
+    EXPECT_EQ(entry.ssmLastStatus, RequestStatus::idleNotValid);
 }
 
 TEST(PriorityTypesTest, ConstantsTest) {
@@ -282,6 +284,74 @@ TEST(PriorityRequestProcessorTest, EncodePriorityRequestNullVehicleID) {
     EXPECT_EQ(buf[0], 9);
     for (size_t i = 1; i <= 17; i++) EXPECT_EQ(buf[i], 0);
     EXPECT_EQ(buf[18], 2);
+}
+
+TEST(PriorityRequestProcessorTest, TestEncodePriorityUpdate) {
+    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+    auto buf = PriorityRequestProcessor::EncodePriorityUpdate(
+        /*requestID*/   0x11,
+        vehId, sizeof(vehId),
+        /*classType*/   1,
+        /*classLevel*/  3,
+        /*strategyNum*/ 7,
+        /*TOS*/         0x1234,
+        /*TOD*/         0x5678,
+        /*TOR*/         0x12345678);
+
+    // Update is identical to Request encoding (29 bytes, same layout)
+    ASSERT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
+    auto reqBuf = PriorityRequestProcessor::EncodePriorityRequest(
+        0x11, vehId, sizeof(vehId), 1, 3, 7, 0x1234, 0x5678, 0x12345678);
+    EXPECT_EQ(buf, reqBuf);
+}
+
+TEST(PriorityRequestProcessorTest, TestEncodePriorityCancel) {
+    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+    auto buf = PriorityRequestProcessor::EncodePriorityCancel(
+        /*requestID*/   0x11,
+        vehId, sizeof(vehId),
+        /*classType*/   1,
+        /*classLevel*/  3,
+        /*strategyNum*/ 7);
+
+    ASSERT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(buf[0], 0x11);
+    // Vehicle ID right-padded in 17-byte field
+    for (size_t i = 1; i <= 13; i++) EXPECT_EQ(buf[i], 0);
+    EXPECT_EQ(buf[14], 0xAA);
+    EXPECT_EQ(buf[15], 0xBB);
+    EXPECT_EQ(buf[16], 0xCC);
+    EXPECT_EQ(buf[17], 0xDD);
+    EXPECT_EQ(buf[18], 1);  // classType
+    EXPECT_EQ(buf[19], 3);  // classLevel
+    EXPECT_EQ(buf[20], 7);  // strategyNum
+}
+
+TEST(PriorityRequestProcessorTest, TestEncodePriorityClear) {
+    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+    auto cancelBuf = PriorityRequestProcessor::EncodePriorityCancel(
+        0x11, vehId, sizeof(vehId), 1, 3, 7);
+    auto clearBuf = PriorityRequestProcessor::EncodePriorityClear(
+        0x11, vehId, sizeof(vehId), 1, 3, 7);
+
+    // Clear is identical encoding to Cancel (21 bytes); different OID at call site
+    ASSERT_EQ(clearBuf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(clearBuf, cancelBuf);
+}
+
+TEST(PriorityRequestProcessorTest, EncodePriorityCancelNullVehicleID) {
+    auto buf = PriorityRequestProcessor::EncodePriorityCancel(
+        9, nullptr, 0, 2, 2, 2);
+    ASSERT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(buf[0], 9);
+    for (size_t i = 1; i <= 17; i++) EXPECT_EQ(buf[i], 0);
+    EXPECT_EQ(buf[18], 2);
+    EXPECT_EQ(buf[19], 2);
+    EXPECT_EQ(buf[20], 2);
+}
+
+TEST(PriorityRequestProcessorTest, CancelSizeConstants) {
+    EXPECT_EQ(PRIORITY_CANCEL_SIZE, 21u);
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassEmergencyGroup) {

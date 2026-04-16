@@ -47,12 +47,37 @@ namespace PriorityPlugin {
         return buf;
     }
 
+    std::vector<uint8_t> PriorityRequestProcessor::EncodePriorityUpdate(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest)
+    {
+        return EncodePriorityRequest(requestID, vehicleID, vehicleIDLen, classType, classLevel, strategyNum, timeOfService, timeOfDepart, timeOfRequest);
+    }
+
+    std::vector<uint8_t> PriorityRequestProcessor::EncodePriorityCancel(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum)
+    {
+        std::vector<uint8_t> buf(PRIORITY_CANCEL_SIZE, 0);
+        buf[0] = requestID;
+        if (vehicleID && vehicleIDLen > 0) {
+            size_t copyLen = std::min(vehicleIDLen, VEHICLE_ID_FIELD_SIZE);
+            size_t padOffset = VEHICLE_ID_FIELD_SIZE - copyLen;
+            std::memcpy(&buf[1 + padOffset], vehicleID, copyLen);
+        }
+        buf[18] = classType;
+        buf[19] = classLevel;
+        buf[20] = strategyNum;
+        return buf;
+    }
+
+    std::vector<uint8_t> PriorityRequestProcessor::EncodePriorityClear(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum)
+    {
+        return EncodePriorityCancel(requestID, vehicleID, vehicleIDLen, classType, classLevel, strategyNum);
+    }
+
     bool PriorityRequestProcessor::DecodeCoServiceResponse(const std::vector<uint8_t> &data, std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &rows, bool &coBusy)
     {
         if (data.size() < SERVICE_REQUEST_SIZE) {
             return false;
         }
-        PLOG(logDEBUG) << "Decoding CO service response (" << data.size() << " bytes)";
+        PLOG(logDEBUG4) << "Decoding CO service response (" << data.size() << " bytes)";
 
         for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
             size_t offset = i * SERVICE_REQUEST_ROW_SIZE;
@@ -142,6 +167,31 @@ namespace PriorityPlugin {
         return buf;
     }
 
+    void PriorityRequestProcessor::CheckForOverride()
+    {
+        PriorityRequestEntry *activeEntry = nullptr;
+        for (auto &entry : _table) {
+            if (IsActiveX(entry.statusInPRS)) {
+                activeEntry = &entry;
+                break;
+            }
+        }
+        if (!activeEntry) {
+            return;
+        }
+        for (const auto &entry : _table) {
+            if (entry.statusInPRS != RequestStatus::readyQueued) {
+                continue;
+            }
+            if (entry.vehicleClassType < activeEntry->vehicleClassType ||
+                (entry.vehicleClassType == activeEntry->vehicleClassType &&
+                 entry.vehicleClassLevel < activeEntry->vehicleClassLevel)) {
+                activeEntry->statusInPRS = RequestStatus::activeOverride;
+            }
+            break;
+        }
+    }
+
     void PriorityRequestProcessor::RunPrioritizationProcessing(uint32_t now)
     {
         // a) If priorityRequestStatusInPRS is 'readyX' or 'closedX',
@@ -150,8 +200,8 @@ namespace PriorityPlugin {
         for (auto &entry : _table) {
             if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
 
-            bool readyOrClosed = IsReadyX(entry.statusInPRS) || IsClosedX(entry.statusInPRS);
-            if (readyOrClosed && entry.timeToLive > 0 && now >= entry.timeToLive) {
+            if (bool readyOrClosed = IsReadyX(entry.statusInPRS) || IsClosedX(entry.statusInPRS);
+                readyOrClosed && entry.timeToLive > 0 && now >= entry.timeToLive) {
                 entry = PriorityRequestEntry{}; // reset this entry to default
                 continue;
             }
@@ -176,25 +226,7 @@ namespace PriorityPlugin {
         }
 
         if (hasActive) {
-            PriorityRequestEntry *activeEntry = nullptr;
-            for (auto &entry : _table) {
-                if (IsActiveX(entry.statusInPRS)) {
-                    activeEntry = &entry;
-                    break;
-                }
-            }
-            if (activeEntry) {
-                for (auto &entry : _table) {
-                    if (entry.statusInPRS == RequestStatus::readyQueued) {
-                        if (entry.vehicleClassType < activeEntry->vehicleClassType ||
-                            (entry.vehicleClassType == activeEntry->vehicleClassType &&
-                             entry.vehicleClassLevel < activeEntry->vehicleClassLevel)) {
-                            activeEntry->statusInPRS = RequestStatus::activeOverride;
-                            break;
-                        }
-                    }
-                }
-            }
+            CheckForOverride();
             return;
         }
 
@@ -227,7 +259,9 @@ namespace PriorityPlugin {
         // (ii)  readyOverridden
         // (iii) closedX
         // (iv)  idleNotValid
-        std::vector<size_t> readyOverridden, closedEntries, idleEntries;
+        std::vector<size_t> readyOverridden;
+        std::vector<size_t> closedEntries;
+        std::vector<size_t> idleEntries;
         for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
             auto s = _table[i].statusInPRS;
             if (s == RequestStatus::readyQueued) continue;
@@ -239,19 +273,32 @@ namespace PriorityPlugin {
         std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> reordered;
         size_t pos = 0;
         for (const auto &se : queued) {
-            if (pos < MAX_SERVICE_REQUESTS) reordered[pos++] = _table[se.idx];
+            if (pos < MAX_SERVICE_REQUESTS) {
+                reordered[pos] = _table[se.idx];
+                ++pos;
+            }
         }
         for (auto idx : readyOverridden) {
-            if (pos < MAX_SERVICE_REQUESTS) reordered[pos++] = _table[idx];
+            if (pos < MAX_SERVICE_REQUESTS) {
+                reordered[pos] = _table[idx];
+                ++pos;
+            }
         }
         for (auto idx : closedEntries) {
-            if (pos < MAX_SERVICE_REQUESTS) reordered[pos++] = _table[idx];
+            if (pos < MAX_SERVICE_REQUESTS) {
+                reordered[pos] = _table[idx];
+                ++pos;
+            }
         }
         for (auto idx : idleEntries) {
-            if (pos < MAX_SERVICE_REQUESTS) reordered[pos++] = _table[idx];
+            if (pos < MAX_SERVICE_REQUESTS) {
+                reordered[pos] = _table[idx];
+                ++pos;
+            }
         }
         while (pos < MAX_SERVICE_REQUESTS) {
-            reordered[pos++] = PriorityRequestEntry{};
+            reordered[pos] = PriorityRequestEntry{};
+            ++pos;
         }
         _table = reordered;
     }
@@ -269,54 +316,54 @@ namespace PriorityPlugin {
             RequestStatus coStatus = coRow.requestStatusInCO;
 
             switch (coStatus) {
-                // readyQueued/readyOverridden > activeProcessing ("CO says okay")
+                // readyQueued/readyOverridden -> activeProcessing ("CO says okay")
                 case RequestStatus::activeProcessing:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::activeProcessing;
-                        PLOG(logDEBUG) << "Row " << i << " > activeProcessing";
+                        PLOG(logDEBUG) << "Row " << i << ": activeProcessing";
                     }
                     break;
 
-                // readyQueued/readyOverridden > activeAdjustNotNeeded ("CO says okay")
+                // readyQueued/readyOverridden -> activeAdjustNotNeeded ("CO says okay")
                 case RequestStatus::activeAdjustNotNeeded:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::activeAdjustNotNeeded;
-                        PLOG(logDEBUG) << "Row " << i << " > activeAdjustNotNeeded";
+                        PLOG(logDEBUG) << "Row " << i << ": activeAdjustNotNeeded";
                     }
                     break;
 
-                // readyQueued/readyOverridden > closedTimerError ("CO says TSD & TED <> criteria")
+                // readyQueued/readyOverridden -> closedTimerError ("CO says TSD & TED <> criteria")
                 case RequestStatus::closedTimerError:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedTimerError;
-                        PLOG(logDEBUG) << "Row " << i << " > closedTimerError";
+                        PLOG(logDEBUG) << "Row " << i << ": closedTimerError";
                     }
                     break;
 
-                // readyQueued/readyOverridden > closedStrategyError ("CO says bad strategy")
+                // readyQueued/readyOverridden -> closedStrategyError ("CO says bad strategy")
                 case RequestStatus::closedStrategyError:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedStrategyError;
-                        PLOG(logDEBUG) << "Row " << i << " > closedStrategyError";
+                        PLOG(logDEBUG) << "Row " << i << ": closedStrategyError";
                     }
                     break;
 
-                // readyQueued/readyOverridden > closedFlash ("CO says controller in flash")
+                // readyQueued/readyOverridden -> closedFlash ("CO says controller in flash")
                 case RequestStatus::closedFlash:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedFlash;
-                        PLOG(logDEBUG) << "Row " << i << " > closedFlash";
+                        PLOG(logDEBUG) << "Row " << i << ": closedFlash";
                     }
                     break;
 
-                // activeCancel > closedCanceled 
-                // readyQueued/readyOverridden > closedCanceled ("Cancel Received")
+                // activeCancel -> closedCanceled 
+                // or readyQueued/readyOverridden -> closedCanceled ("Cancel Received")
                 case RequestStatus::closedCanceled:
                 {
                     bool validSource = IsReadyX(entry.statusInPRS) || entry.statusInPRS == RequestStatus::activeCancel;
                     if (validSource) {
                         entry.statusInPRS = RequestStatus::closedCanceled;
-                        PLOG(logDEBUG) << "Row " << i << " > closedCanceled";
+                        PLOG(logDEBUG) << "Row " << i << ": closedCanceled";
                     }
                 }
                     break;
@@ -329,32 +376,32 @@ namespace PriorityPlugin {
                         // Reset reservice timer (4.2.4.1.3 (f))
                         uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10) ? (entry.vehicleClassType - 1) : 9;
                         _reserviceLastCompletedTime[classIdx] = now;
-                        PLOG(logDEBUG) << "Row " << i << " > closedCompleted";
+                        PLOG(logDEBUG) << "Row " << i << ": closedCompleted";
                     }
                 }
                     break;
 
-                // activeOverride > activeNotOverridden ("CO can do both")
+                // activeOverride -> activeNotOverridden ("CO can do both")
                 case RequestStatus::activeNotOverridden:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::activeNotOverridden;
-                        PLOG(logDEBUG) << "Row " << i << " > activeNotOverridden";
+                        PLOG(logDEBUG) << "Row " << i << ": activeNotOverridden";
                     }
                     break;
 
-                // activeOverride > readyOverridden ("CO can terminate early")
+                // activeOverride -> readyOverridden ("CO can terminate early")
                 case RequestStatus::readyOverridden:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::readyOverridden;
-                        PLOG(logDEBUG) << "Row " << i << " > readyOverridden";
+                        PLOG(logDEBUG) << "Row " << i << ": readyOverridden";
                     }
                     break;
 
-                // activeOverride > readyQueued ("CO can terminate early")
+                // activeOverride -> readyQueued ("CO can terminate early")
                 case RequestStatus::readyQueued:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::readyQueued;
-                        PLOG(logDEBUG) << "Row " << i << " > readyQueued";
+                        PLOG(logDEBUG) << "Row " << i << ": readyQueued";
                     }
                     break;
 

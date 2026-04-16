@@ -50,6 +50,15 @@ namespace PriorityPlugin {
     // NTCIP 1211 OID for prgPriorityRequestAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.8)
     static const std::string NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.8.0";
 
+    // NTCIP 1211 OID for prgPriorityUpdateAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.9)
+    static const std::string NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.9.0";
+
+    // NTCIP 1211 OID for prgPriorityCancel (1211 v02A-SE03f PRS-MIB1 5.1.2.5)
+    static const std::string NTCIP1211_PRIORITY_CANCEL_OID = "1.3.6.1.4.1.1206.4.2.11.2.5.0";
+
+    // NTCIP 1211 OID for prgPriorityClear (1211 v02A-SE03f PRS-MIB1 5.1.2.6)
+    static const std::string NTCIP1211_PRIORITY_CLEAR_OID = "1.3.6.1.4.1.1206.4.2.11.2.6.0";
+
     // NTCIP 1211 OID for prsServiceRequest (1211 v0224j CO-MIB1 5.2.2.1)
     static const std::string NTCIP1211_PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
 
@@ -91,6 +100,24 @@ namespace PriorityPlugin {
             void HandleSRM(tmx::messages::SrmMessage &msg, tmx::routeable_message &routeableMsg);
 
         private:
+            // PRG: request tracker 
+            // Tracks requests sent to the PRS so we can track new requests, updates, and when to send clear after cancel
+            enum class PrgRequestState : uint8_t {
+                sent,
+                canceled
+            };
+
+            struct PrgTrackedRequest {
+                uint8_t requestID;
+                long intersectionID;
+                std::vector<uint8_t> vehicleID;
+                uint8_t classType;
+                uint8_t classLevel;
+                uint8_t strategyNumber;
+                std::chrono::steady_clock::time_point sentTime;
+                PrgRequestState state = PrgRequestState::sent;
+            };
+
             // Per-package signal request state decoded from an SRM (used for PRG mode and SSM building)
             struct SignalRequest {
                 uint8_t requestID;
@@ -116,17 +143,25 @@ namespace PriorityPlugin {
                 long role = 0;
             };
 
+            // Per-controller configuration and SNMP client
+            struct ControllerInfo {
+                long intersectionID;
+                std::string ip;
+                uint16_t port;
+                std::shared_ptr<tmx::utils::snmp_client> snmpClient;
+            };
+
             /**
              * @brief Sends the encoded OCTET STRING to a TSC via SNMP SET.
              * @return true on success, false on failure.
              */
-            bool SnmpSet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data);
+            bool SnmpSet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data) const;
 
             /**
              * @brief Performs an SNMP GET on a given OID and returns the raw bytes.
              * @return true on success, false on failure.
              */
-            bool SnmpGet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, std::vector<uint8_t> &data);
+            bool SnmpGet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, std::vector<uint8_t> &data) const;
 
             /**
              * @brief Background thread entry point for the PRS-CO exchange loop. Implements NTCIP 1211 4.2.4.1.2 (PRS is Manager).
@@ -150,19 +185,44 @@ namespace PriorityPlugin {
              */
             void BuildSSM(const RequestorState &state);
 
-            // Per-controller configuration and SNMP client
-            struct ControllerInfo {
-                long intersectionID;
-                std::string ip;
-                uint16_t port;
-                std::shared_ptr<tmx::utils::snmp_client> snmpClient;
-            };
+            /**
+             * @brief Processes an SRM signal request package in PRS mode.
+             *        Called from HandleSRM for each package in the SRM when PluginRole is PRS.
+             * @param pkg the signal request package to process.
+             * @param vehicleID the decoded vehicle ID from the SRM requestor.
+             * @param classType the mapped NTCIP 1211 vehicle class type for this
+             * @param classLevel the mapped NTCIP 1211 vehicle class level for this request.
+             * @param newSeq the sequence number from the SRM, used for update checks.
+             * @param role the role from the SRM requestor, used for class mapping and override checks.
+             * @param currentMinuteOfYear the current minute of the year, used for ETA calculations.
+             * @param currentMsInMinute the current millisecond in the minute, used for ETA calculations.
+             * @param nowEpoch the current time in epoch seconds, used for time of request and ETA calculations.
+             */
+            void ProcessPrsPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, uint8_t classType, uint8_t classLevel, uint8_t newSeq, long role, long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch);
+
+            /**
+             * @brief Processes an SRM signal request package in PRG mode.
+             *        Called from HandleSRM for each package in the SRM when PluginRole is PRG.
+             * @param pkg the signal request package to process.
+             * @param vehicleID the decoded vehicle ID from the SRM requestor.
+             * @param vehicleKey the string key for this vehicle ID, used for request tracking in the PRG mode maps.
+             * @param classType the mapped NTCIP 1211 vehicle class type for this request.
+             * @param classLevel the mapped NTCIP 1211 vehicle class level for this request.
+             * @param currentMinuteOfYear the current minute of the year, used for ETA calculations.
+             * @param currentMsInMinute the current millisecond in the minute, used for ETA calculations.
+             * @param nowEpoch the current time in epoch seconds, used for time of request and ETA calculations.
+             * @param timeOfRequest the time of request to include in the priority request sent to the PRS, in epoch seconds.
+             */
+            void ProcessPrgPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey, uint8_t classType, uint8_t classLevel, long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch, uint32_t timeOfRequest, RequestorState &state);
 
             // Map of intersection ID to controller info
             std::unordered_map<long, ControllerInfo> _controllers;
 
-            // Map of vehicle ID (raw bytes as string key) to latest requestor state (PRG mode)
+            // Map of vehicle ID to latest requestor state (PRG mode)
             std::unordered_map<std::string, RequestorState> _requestorStates;
+
+            // Map of request ID to tracked PRG request for active requests
+            std::unordered_map<std::string, PrgTrackedRequest> _prgTrackedRequests;
 
             // For PRS mode: NTCIP 1211 priority request processor.
             PriorityRequestProcessor _processor;
@@ -184,6 +244,7 @@ namespace PriorityPlugin {
             uint16_t _estimatedDepartureTime;
             uint32_t _pollIntervalMs;        // PRS-CO poll interval (100-1000ms)
             uint32_t _timeToLiveSec;         // Max time PRS considers a priority request
+            uint8_t  _maxSsmBroadcastsPerStatus = 2; // 0 = unlimited
             std::array<uint32_t, 10> _reserviceClassTime = {}; // Per-class reservice period (seconds)
 
             // Status tracking

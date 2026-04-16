@@ -42,6 +42,7 @@ COL_ETA = 2
 COL_EDT = 3
 COL_ENTITY = 4
 COL_ROLE = 5
+COL_REQUEST_TYPE = 6
 COLUMN_LABELS = [
     "Intersection ID",
     "Inbound Lane",
@@ -49,6 +50,7 @@ COLUMN_LABELS = [
     "EDT (s from ETA)",
     "Entity ID",
     "Role",
+    "Request Type",
 ]
 
 ROLE_CHOICES = [
@@ -75,6 +77,12 @@ ROLE_CHOICES = [
     "pedestrian",
     "nonMotorized",
     "military",
+]
+
+REQUEST_TYPE_CHOICES = [
+    "priorityRequest",
+    "priorityRequestUpdate",
+    "priorityCancellation"
 ]
 
 
@@ -106,7 +114,7 @@ def buildSRM(entries: list[dict]) -> str:
     """Build an SRM JSON string from a list of entry dicts.
 
     Each entry dict has keys:
-        intersection_id, inbound_lane, eta_s, edt_s, entity_id, role
+        intersection_id, inbound_lane, eta_s, edt_s, entity_id, role, request_type
     """
     global msgCnt
     with msgCnt_lock:
@@ -125,7 +133,7 @@ def buildSRM(entries: list[dict]) -> str:
                 "request": {
                     "id": {"id": entry["intersection_id"]},
                     "requestID": 1,
-                    "requestType": "priorityRequest",
+                    "requestType": entry["request_type"],
                     "inBoundLane": {"lane": entry["inbound_lane"]},
                 },
                 "minute": eta_moy,
@@ -217,13 +225,17 @@ class AddEntryDialog(QDialog):
         self.role.addItems(ROLE_CHOICES)
         self.role.setCurrentText(defaults.get("role", "transit"))
 
+        self.request_type = QComboBox()
+        self.request_type.addItems(REQUEST_TYPE_CHOICES)
+        self.request_type.setCurrentText(defaults.get("request_type", "Request"))
+
         layout.addRow("Intersection ID:", self.intersection_id)
         layout.addRow("Inbound Lane:", self.inbound_lane)
         layout.addRow("Est. Time of Arrival:", self.eta)
         layout.addRow("Est. Departure Time:", self.edt)
         layout.addRow("Entity ID:", self.entity_id)
         layout.addRow("Role:", self.role)
-
+        layout.addRow("Request Type:", self.request_type)
         buttons = QDialogButtonBox(
             QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         )
@@ -239,6 +251,7 @@ class AddEntryDialog(QDialog):
             "edt_s": self.edt.value(),
             "entity_id": self.entity_id.text(),
             "role": self.role.currentText(),
+            "request_type": self.request_type.currentText(),
         }
 
 
@@ -246,7 +259,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Mock SRM Sender")
-        self.setMinimumSize(900, 600)
+        self.resize(900, 600)
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -322,6 +335,7 @@ class MainWindow(QMainWindow):
         self.table.setItem(row, COL_EDT, QTableWidgetItem(str(vals["edt_s"])))
         self.table.setItem(row, COL_ENTITY, QTableWidgetItem(vals["entity_id"]))
         self.table.setItem(row, COL_ROLE, QTableWidgetItem(vals["role"]))
+        self.table.setItem(row, COL_REQUEST_TYPE, QTableWidgetItem(vals["request_type"]))
 
     def _read_row(self, row: int) -> dict:
         """Read a single table row back into an entry dict."""
@@ -332,6 +346,7 @@ class MainWindow(QMainWindow):
             "edt_s": int(self.table.item(row, COL_EDT).text()),
             "entity_id": self.table.item(row, COL_ENTITY).text(),
             "role": self.table.item(row, COL_ROLE).text(),
+            "request_type": self.table.item(row, COL_REQUEST_TYPE).text(),
         }
 
     def _on_add(self):

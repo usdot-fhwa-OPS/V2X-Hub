@@ -38,6 +38,9 @@ namespace PriorityPlugin {
     // Size of the OER-encoded priority request OCTET STRING (NTCIP 1211 PRS-MIB1 5.1.2.8)
     static constexpr size_t PRIORITY_REQUEST_SIZE = 29;
 
+    // Size of the OER-encoded priority cancel/clear OCTET STRING (NTCIP 1211 PRS-MIB1 5.1.2.5/5.1.2.6)
+    static constexpr size_t PRIORITY_CANCEL_SIZE = 21;
+
     // Vehicle ID field size within the NTCIP 1211 priority request
     static constexpr size_t VEHICLE_ID_FIELD_SIZE = 17;
 
@@ -113,6 +116,10 @@ namespace PriorityPlugin {
 
         // Original BasicVehicleRole from the SRM requestor (for SSM requester->role)
         long     role                   = 0;
+
+        // SSM broadcast limiter: count resets on status transition
+        uint8_t  ssmBroadcastCount      = 0;
+        RequestStatus ssmLastStatus     = RequestStatus::idleNotValid;
 
         // Inbound lane/approach from the SRM (for SSM inboundOn)
         uint8_t  inboundPresent         = 0;   // IntersectionAccessPoint_PR value

@@ -55,6 +55,30 @@ namespace PriorityPlugin {
             static std::vector<uint8_t> EncodePriorityRequest(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest);
 
             /**
+             * @brief Encodes a priority update per NTCIP 1211 prgPriorityUpdateAbsolute into a 29-byte OER-encoded OCTET STRING.
+             *        Same layout as EncodePriorityRequest; delegates to it internally, but uses different OID.
+             */
+            static std::vector<uint8_t> EncodePriorityUpdate(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum, uint16_t timeOfService, uint16_t timeOfDepart, uint32_t timeOfRequest);
+
+            /**
+             * @brief Encodes a priority cancel per NTCIP 1211 prgPriorityCancel into a 21-byte OER-encoded OCTET STRING.
+             * @param requestID      priorityRequestID (1..255)
+             * @param vehicleID      Raw bytes of the vehicle identifier from the SRM requestor.
+             * @param vehicleIDLen   Length of the vehicleID buffer.
+             * @param classType      priorityRequestVehicleClassType (1..10)
+             * @param classLevel     priorityRequestVehicleClassLevel (1..10)
+             * @param strategyNum    priorityRequestServiceStrategyNumber (1..255)
+             * @return std::vector<uint8_t> 21-byte OER-encoded buffer.
+             */
+            static std::vector<uint8_t> EncodePriorityCancel(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum);
+
+            /**
+             * @brief Encodes a priority clear per NTCIP 1211 prgPriorityClear into a 21-byte OER-encoded OCTET STRING.
+             *        Same layout as EncodePriorityCancel; delegates to it internally, but uses different OID.
+             */
+            static std::vector<uint8_t> EncodePriorityClear(uint8_t requestID, const uint8_t *vehicleID, size_t vehicleIDLen, uint8_t classType, uint8_t classLevel, uint8_t strategyNum);
+
+            /**
              * @brief Decodes a prsServiceRequest OCTET STRING received from a CO (GET response) into per-row CO status and the coBusy flag.
              * @param data The raw 110-byte buffer.
              * @param rows Array of 10 CoServiceResponseRows.
@@ -103,6 +127,14 @@ namespace PriorityPlugin {
              */
             std::optional<uint8_t> LookupStrategy(long intersectionID, long lane) const;
 
+            /** @brief Clears the lane-strategy map. */
+            void ClearLaneStrategyMap() { _laneStrategyMap.clear(); }
+
+            /** @brief Sets the strategy number for a given (intersection, lane) in a lane-strategy map. */
+            void SetLaneStrategy(long intersectionID, long lane, uint8_t strategyNumber) {
+                _laneStrategyMap[{intersectionID, lane}] = strategyNumber;
+            }
+
             // Accessors for the priority request table
             std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> &Table() { return _table; }
             const std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> &Table() const { return _table; }
@@ -113,22 +145,17 @@ namespace PriorityPlugin {
                 return _reserviceLastCompletedTime[idx];
             }
 
-            // Clears the lane-strategy map
-            void ClearLaneStrategyMap() { _laneStrategyMap.clear(); }
-
-            // Sets the strategy number for a given (intersection, lane) in a lane-strategy map.
-            void SetLaneStrategy(long intersectionID, long lane, uint8_t strategyNumber) {
-                _laneStrategyMap[{intersectionID, lane}] = strategyNumber;
-            }
-
         private:
+            /** @brief Checks for override conditions in the priority request table. */
+            void CheckForOverride();
+
             // NTCIP 1211 priority request table (5.1.1.1).
             std::array<PriorityRequestEntry, MAX_SERVICE_REQUESTS> _table{};
 
             // Last request completion time for each class type, in epoch seconds.
             std::array<uint32_t, 10> _reserviceLastCompletedTime{};
 
-            // Lane-strategy mapping: key = (intersectionID, lane); value = strategyNumber
+            /** Lane-strategy mapping: key (intersectionID, lane), value (strategyNumber) */
             std::map<std::pair<long, long>, uint8_t> _laneStrategyMap;
     };
 

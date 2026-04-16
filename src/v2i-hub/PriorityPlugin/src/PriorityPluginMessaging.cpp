@@ -31,14 +31,15 @@ namespace PriorityPlugin {
             // Use the first controller that has any active/ready request in the table.
             std::shared_ptr<snmp_client> targetClient;
             {
-                std::lock_guard<std::mutex> lock(_tableMutex);
+                std::lock_guard lock(_tableMutex);
                 for (const auto &entry : _processor.Table()) {
-                    if (entry.statusInPRS != RequestStatus::idleNotValid) {
-                        auto it = _controllers.find(entry.intersectionID);
-                        if (it != _controllers.end() && it->second.snmpClient) {
-                            targetClient = it->second.snmpClient;
-                            break;
-                        }
+                    if (entry.statusInPRS == RequestStatus::idleNotValid) {
+                        continue;
+                    }
+                    auto it = _controllers.find(entry.intersectionID);
+                    if (it != _controllers.end() && it->second.snmpClient) {
+                        targetClient = it->second.snmpClient;
+                        break;
                     }
                 }
                 // If no active requests, use first available controller (idle polling)
@@ -56,13 +57,13 @@ namespace PriorityPlugin {
             // Note: steps c-e are actions on the CO side.
             std::vector<uint8_t> setData;
             {
-                std::lock_guard<std::mutex> lock(_tableMutex);
+                std::lock_guard lock(_tableMutex);
                 setData = _processor.EncodeServiceRequest(_prsBusy);
             }
 
-            PLOG(logDEBUG2) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
-            bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
-            if (!setOk) {
+            PLOG(logDEBUG3) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
+            if (bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
+                !setOk) {
                 PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
                 std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
                 continue;
@@ -72,32 +73,49 @@ namespace PriorityPlugin {
             // Note: step g is on the CO side.
             // h) If coBusy is True, keep polling GET until False
             bool coBusy = true;
+            bool coError = false;
             std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
-            int maxRetries = 50; // Safety limit to avoid infinite loop
-            while (coBusy && _running && maxRetries-- > 0) {
+            int maxRetries = 3; // Limit to avoid infinite loop
+            while (coBusy && _running && maxRetries > 0) {
+                --maxRetries;
                 std::vector<uint8_t> getData;
-                bool getOk = SnmpGet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, getData);
-                if (!getOk) {
+                if (bool getOk = SnmpGet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, getData);
+                    !getOk) {
                     PLOG(logERROR) << "PRS failed to GET prsServiceRequest from CO";
-                    break;
+                    coError = true;
                 }
 
-                if (!PriorityRequestProcessor::DecodeCoServiceResponse(getData, coRows, coBusy)) {
+                if (!coError && !PriorityRequestProcessor::DecodeCoServiceResponse(getData, coRows, coBusy)) {
                     PLOG(logERROR) << "Failed to decode CO service response";
+                    coError = true;
+                }
+
+                if (coError) {
                     break;
                 }
 
                 if (coBusy) {
-                    PLOG(logDEBUG) << "coBusy is True, re-polling CO...";
+                    PLOG(logDEBUG1) << "coBusy is True, re-polling CO...";
                     std::this_thread::sleep_for(std::chrono::milliseconds(10));
                 }
+            }
+
+            for (size_t i = 0; !coError && i < coRows.size(); ++i) {
+                const auto &[strategy, tsd, ted, status] = coRows[i];
+                if (strategy == 0 && tsd == 0 && ted == 0 &&
+                    status == RequestStatus::idleNotValid) {
+                    continue;
+                }
+                PLOG(logDEBUG1) << "CO row[" << i << "]: strategy=" << static_cast<int>(strategy)
+                                << " TSD=" << tsd << " TED=" << ted
+                                << " status=" << static_cast<int>(status);
             }
 
             // i) coBusy is False: set prsBusy to True and perform prioritization
             if (!coBusy) {
                 std::vector<uint8_t> updatedSetData;
                 {
-                    std::lock_guard<std::mutex> lock(_tableMutex);
+                    std::lock_guard lock(_tableMutex);
 
                     auto now = static_cast<uint32_t>(std::time(nullptr));
                     _processor.ApplyCoStatusUpdates(coRows, now);
@@ -117,7 +135,9 @@ namespace PriorityPlugin {
             }
 
             _serviceExchanges++;
-            SetStatus(_keyServiceExchanges, _serviceExchanges);
+            if (_serviceExchanges % 10 == 0) {
+                SetStatus(_keyServiceExchanges, _serviceExchanges);
+            }
 
             // Broadcast SSM reflecting current table state
             BroadcastSSMFromTable();
@@ -128,7 +148,7 @@ namespace PriorityPlugin {
         PLOG(logINFO) << "PRS service exchange loop stopped.";
     }
 
-    bool PriorityPlugin::SnmpSet(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data)
+    bool PriorityPlugin::SnmpSet(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, const std::vector<uint8_t> &data) const
     {
         if (!client) {
             PLOG(logERROR) << "SNMP client not initialized for SET.";
@@ -146,7 +166,7 @@ namespace PriorityPlugin {
         return success;
     }
 
-    bool PriorityPlugin::SnmpGet(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, std::vector<uint8_t> &data)
+    bool PriorityPlugin::SnmpGet(const std::shared_ptr<snmp_client> &client, const std::string &oidStr, std::vector<uint8_t> &data) const
     {
         if (!client) {
             PLOG(logERROR) << "SNMP client not initialized for GET.";
@@ -156,8 +176,8 @@ namespace PriorityPlugin {
         snmp_response_obj val;
         val.type = snmp_response_obj::response_type::STRING;
 
-        bool success = client->process_snmp_request(oidStr, request_type::GET, val);
-        if (!success) {
+        if (bool success = client->process_snmp_request(oidStr, request_type::GET, val);
+            !success) {
             PLOG(logERROR) << "SNMP GET failed for OID: " << oidStr;
             return false;
         }
@@ -195,14 +215,21 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::BroadcastSSMFromTable()
     {
-        // Collect non-idle entries grouped by intersection
-        std::map<long, std::vector<const PriorityRequestEntry *>> byIntersection;
+        // Collect non-idle entries grouped by intersection, skipping entries
+        // that have already been broadcast the maximum number of times for
+        // their current status.
+        std::map<long, std::vector<PriorityRequestEntry *>> byIntersection;
         {
-            std::lock_guard<std::mutex> lock(_tableMutex);
-            for (const auto &entry : _processor.Table()) {
-                if (entry.statusInPRS != RequestStatus::idleNotValid) {
-                    byIntersection[entry.intersectionID].push_back(&entry);
+            std::lock_guard lock(_tableMutex);
+            for (auto &entry : _processor.Table()) {
+                if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
+                if (entry.statusInPRS != entry.ssmLastStatus) {
+                    entry.ssmBroadcastCount = 0;
+                    entry.ssmLastStatus = entry.statusInPRS;
                 }
+                if (_maxSsmBroadcastsPerStatus > 0 && entry.ssmBroadcastCount >= _maxSsmBroadcastsPerStatus) continue;
+                entry.ssmBroadcastCount++;
+                byIntersection[entry.intersectionID].push_back(&entry);
             }
         }
 
@@ -261,14 +288,13 @@ namespace PriorityPlugin {
                 pkg->requester->sequenceNumber = entry->sequenceNumber;
 
                 if (entry->vehicleID.size() == sizeof(StationID_t)) {
-                    StationID_t sid = 0;
-                    std::memcpy(&sid, entry->vehicleID.data(), sizeof(StationID_t));
-                    pkg->requester->id.choice.stationID = sid;
+                    StationID_t stationID = 0;
+                    std::memcpy(&stationID, entry->vehicleID.data(), sizeof(StationID_t));
+                    pkg->requester->id.choice.stationID = stationID;
                     pkg->requester->id.present = VehicleID_PR_stationID;
                 }
                 else if (!entry->vehicleID.empty()) {
-                    pkg->requester->id.choice.entityID.buf =
-                        (uint8_t *)calloc(entry->vehicleID.size(), 1);
+                    pkg->requester->id.choice.entityID.buf = (uint8_t *)calloc(entry->vehicleID.size(), 1);
                     std::memcpy(pkg->requester->id.choice.entityID.buf,
                                 entry->vehicleID.data(), entry->vehicleID.size());
                     pkg->requester->id.choice.entityID.size = entry->vehicleID.size();
@@ -318,14 +344,14 @@ namespace PriorityPlugin {
             SsmEncodedMessage encodedSSM;
             MessageFrameMessage frame(ssmPtr);
             encodedSSM.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-            free(frame.get_j2735_data().get());
+            free(frame.get_j2735_data().get()); // NOSONAR: ASN.1 C struct allocated via calloc
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
 
             encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
             encodedSSM.addDsrcMetadata(0xE0000015);
             BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
             PLOG(logDEBUG) << "SSM broadcast from PRS table.";
-        } catch (const std::exception &ex) {
+        } catch (const std::invalid_argument &ex) {
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
             PLOG(logERROR) << "Failed to encode/broadcast SSM: " << ex.what();
         }
@@ -399,9 +425,9 @@ namespace PriorityPlugin {
                 pkg->requester->sequenceNumber = state.sequenceNumber;
 
                 if (state.vehicleID.size() == sizeof(StationID_t)) {
-                    StationID_t sid = 0;
-                    std::memcpy(&sid, state.vehicleID.data(), sizeof(StationID_t));
-                    pkg->requester->id.choice.stationID = sid;
+                    StationID_t stationID = 0;
+                    std::memcpy(&stationID, state.vehicleID.data(), sizeof(StationID_t));
+                    pkg->requester->id.choice.stationID = stationID;
                     pkg->requester->id.present = VehicleID_PR_stationID;
                 }
                 else {
@@ -465,8 +491,15 @@ namespace PriorityPlugin {
                     pkg->duration = durationPtr;
                 }
 
-                pkg->status = req->rejected ? PrioritizationResponseStatus_rejected
-                                             : PrioritizationResponseStatus_processing;
+                if (req->rejected) {
+                    pkg->status = PrioritizationResponseStatus_rejected;
+                }
+                else if (req->requestType == PriorityRequestType_priorityCancellation) {
+                    pkg->status = PrioritizationResponseStatus_watchOtherTraffic;
+                }
+                else {
+                    pkg->status = PrioritizationResponseStatus_processing;
+                }
                 asn_sequence_add(&signalStatus->sigStatus.list, pkg);
             }
             asn_sequence_add(&ssmPtr->status.list, signalStatus);
@@ -478,14 +511,14 @@ namespace PriorityPlugin {
             encodedSSM.set_data(
                 TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<
                     codec::uper<MessageFrameMessage>>(frame));
-            free(frame.get_j2735_data().get());
+            free(frame.get_j2735_data().get()); // NOSONAR: ASN.1 C struct allocated via calloc
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
 
             encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
             encodedSSM.addDsrcMetadata(0xE0000015);
             BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
             PLOG(logINFO) << "SSM (processing) broadcast for " << state.requests.size() << " request(s).";
-        } catch (const std::exception &ex) {
+        } catch (const std::invalid_argument &ex) {
             ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
             PLOG(logERROR) << "Failed to encode/broadcast SSM: " << ex.what();
         }

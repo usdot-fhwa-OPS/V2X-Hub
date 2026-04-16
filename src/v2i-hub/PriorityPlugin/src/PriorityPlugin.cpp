@@ -58,9 +58,6 @@ namespace PriorityPlugin {
     void PriorityPlugin::OnMessageReceived(tmx::routeable_message &msg)
     {
         PLOG(logDEBUG1) << "Routable Message: " << msg.to_string();
-        if (PluginClient::IsJ2735Message(msg))
-        {
-        }
     }
 
     void PriorityPlugin::UpdateConfigSettings()
@@ -80,6 +77,9 @@ namespace PriorityPlugin {
         }
         GetConfigValue<uint32_t>("PollIntervalMs", _pollIntervalMs);
         GetConfigValue<uint32_t>("TimeToLiveSec", _timeToLiveSec);
+        uint32_t maxSsmBroadcasts = _maxSsmBroadcastsPerStatus;
+        GetConfigValue<uint32_t>("MaxSsmBroadcastsPerStatus", maxSsmBroadcasts);
+        _maxSsmBroadcastsPerStatus = static_cast<uint8_t>(std::min(maxSsmBroadcasts, static_cast<uint32_t>(255)));
 
         // Parse per-class reservice times (comma-separated, up to 10 values)
         std::string reserviceStr;
@@ -92,14 +92,20 @@ namespace PriorityPlugin {
             while (std::getline(rss, tok, ',') && idx < 10) {
                 try {
                     _reserviceClassTime[idx] = static_cast<uint32_t>(std::stoul(tok));
-                } catch (...) {}
+                } catch (const std::invalid_argument &e) {
+                    PLOG(logWARNING) << "Invalid ReserviceClassTimes value at index " << idx
+                                     << ": '" << tok << "' (" << e.what() << ")";
+                } catch (const std::out_of_range &e) {
+                    PLOG(logWARNING) << "ReserviceClassTimes value out of range at index " << idx
+                                     << ": '" << tok << "' (" << e.what() << ")";
+                }
                 idx++;
             }
         }
 
         // Clear strategy mapping JSON array
         {
-            std::lock_guard<std::mutex> lock(_tableMutex);
+            std::lock_guard lock(_tableMutex);
             _processor.ClearLaneStrategyMap();
         }
         // Parse the LaneStrategyMapping JSON array and populate the processor's lane-strategy map
@@ -110,10 +116,10 @@ namespace PriorityPlugin {
                 boost::property_tree::ptree lsPt;
                 std::istringstream lsIss(laneStrategyJson);
                 boost::property_tree::read_json(lsIss, lsPt);
-                for (const auto &item : lsPt) {
-                    auto intID = item.second.get<long>("IntersectionID");
-                    auto lane = item.second.get<long>("Lane");
-                    auto strategyVal = item.second.get<int>("Strategy");
+                for (const auto &[_, node] : lsPt) {
+                    auto intID = node.get<long>("IntersectionID");
+                    auto lane = node.get<long>("Lane");
+                    auto strategyVal = node.get<int>("Strategy");
                     if (strategyVal < 1 || strategyVal > 255) {
                         PLOG(logWARNING) << "LaneStrategyMapping Strategy must be 1..255, skipping entry:"
                                          << " IntersectionID=" << intID << " Lane=" << lane
@@ -123,7 +129,7 @@ namespace PriorityPlugin {
                     auto strategy = static_cast<uint8_t>(strategyVal);
                     // Set the processor's lane-strategy map for a given intersection and lane
                     {
-                        std::lock_guard<std::mutex> lock(_tableMutex);
+                        std::lock_guard lock(_tableMutex);
                         _processor.SetLaneStrategy(intID, lane, strategy);
                     }
                     PLOG(logINFO) << "Lane strategy: IntersectionID=" << intID
@@ -143,11 +149,11 @@ namespace PriorityPlugin {
             std::istringstream iss(tscControllersJson);
             boost::property_tree::read_json(iss, pt);
 
-            for (const auto &entry : pt) {
+            for (const auto &[_, node] : pt) {
                 ControllerInfo info;
-                info.intersectionID = entry.second.get<long>("IntersectionID");
-                info.ip = entry.second.get<std::string>("IP");
-                info.port = entry.second.get<uint16_t>("Port");
+                info.intersectionID = node.get<long>("IntersectionID");
+                info.ip = node.get<std::string>("IP");
+                info.port = node.get<uint16_t>("Port");
 
                 try {
                     info.snmpClient = std::make_shared<snmp_client>(
@@ -198,25 +204,25 @@ namespace PriorityPlugin {
         }
 
         // Extract the vehicle ID from the requestor
-        const uint8_t *vehicleIDBytes = nullptr;
-        size_t vehicleIDLen = 0;
+        std::vector<uint8_t> vehicleID;
         if (srm->requestor.id.present == VehicleID_PR_entityID) {
-            vehicleIDBytes = srm->requestor.id.choice.entityID.buf;
-            vehicleIDLen = srm->requestor.id.choice.entityID.size;
+            auto *buf = srm->requestor.id.choice.entityID.buf;
+            auto len = srm->requestor.id.choice.entityID.size;
+            vehicleID.assign(buf, buf + len);
         }
         else if (srm->requestor.id.present == VehicleID_PR_stationID) {
-            vehicleIDBytes = reinterpret_cast<const uint8_t *>(&srm->requestor.id.choice.stationID);
-            vehicleIDLen = sizeof(srm->requestor.id.choice.stationID);
+            vehicleID.resize(sizeof(srm->requestor.id.choice.stationID));
+            std::memcpy(vehicleID.data(), &srm->requestor.id.choice.stationID, vehicleID.size());
         }
 
-        if (!vehicleIDBytes || vehicleIDLen == 0) {
+        if (vehicleID.empty()) {
             PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
             _skippedMessages++;
             SetStatus(_keySkippedMessages, _skippedMessages);
             return;
         }
 
-        std::string vehicleKey(reinterpret_cast<const char *>(vehicleIDBytes), vehicleIDLen);
+        std::string vehicleKey(vehicleID.begin(), vehicleID.end());
 
         time_t nowEpoch = std::time(nullptr);
         struct tm utcNow;
@@ -234,181 +240,61 @@ namespace PriorityPlugin {
         }
         auto [classType, classLevel] = PriorityRequestProcessor::MapVehicleClass(role);
 
-        auto newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
+        uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
 
         // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
         if (_pluginRole == "PRS") {
-            std::lock_guard<std::mutex> lock(_tableMutex);
-            auto &table = _processor.Table();
-
+            std::lock_guard lock(_tableMutex);
             for (int i = 0; i < srm->requests->list.count; i++) {
-                auto *pkg = srm->requests->list.array[i];
-                if (!pkg) continue;
-
-                auto requestID = static_cast<uint8_t>(pkg->request.requestID);
-                long intersectionID = pkg->request.id.id;
-
-                // Compute global TSD and TED
-                long etaOffsetMs = 0;
-                if (pkg->minute) {
-                    auto etaMinuteOfYear = static_cast<long>(*pkg->minute);
-                    long etaMs = pkg->second ? static_cast<long>(*pkg->second) : 0;
-                    auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
-                    auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
-                    etaOffsetMs = etaTotalMs - nowTotalMs;
-                    if (etaOffsetMs < 0) {
-                        etaOffsetMs += 525960L * 60L * 1000L;
-                    }
-                }
-
-                uint32_t globalTSD, globalTED;
-                if (pkg->minute) {
-                    globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(etaOffsetMs / 1000L);
-                    auto departOffsetMs = etaOffsetMs;
-                    if (pkg->duration) {
-                        departOffsetMs += static_cast<long>(*pkg->duration);
-                    }
-                    globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(departOffsetMs / 1000L);
-                }
-                else {
-                    globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedArrivalTime);
-                    globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedDepartureTime);
-                }
-
-                // Check for an existing entry for this request (per 4.2.3.2 update check:
-                // match on requestID, vehicleID, classType, classLevel, strategyNumber)
-                long inBoundLane = (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane) ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
-                auto strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
-
-                int existingIdx = -1;
-                for (size_t idx = 0; idx < MAX_SERVICE_REQUESTS; idx++) {
-                    auto &entry = table[idx];
-                    if (entry.statusInPRS != RequestStatus::idleNotValid &&
-                        entry.requestID == requestID &&
-                        entry.vehicleID == std::vector<uint8_t>(vehicleIDBytes, vehicleIDBytes + vehicleIDLen) &&
-                        entry.vehicleClassType == classType &&
-                        entry.vehicleClassLevel == classLevel &&
-                        strategy && entry.serviceStrategyNumber == *strategy) {
-                        existingIdx = static_cast<int>(idx);
-                        break;
-                    }
-                }
-
-                if (existingIdx >= 0) {
-                    // Update existing entry (priority request update per 4.2.3.2)
-                    auto &entry = table[existingIdx];
-                    entry.timeOfServiceDesiredInPRS = globalTSD;
-                    entry.timeOfEstimatedDepartureInPRS = globalTED;
-                    entry.sequenceNumber = newSeq;
-                    PLOG(logINFO) << "Updated priority request table entry " << existingIdx
-                                  << " for requestID=" << static_cast<int>(requestID);
-                    continue;
-                }
-
-                // Find an idle slot per 4.2.3.1 (b)
-                int freeIdx = -1;
-                for (size_t idx = 0; idx < MAX_SERVICE_REQUESTS; idx++) {
-                    if (table[idx].statusInPRS == RequestStatus::idleNotValid) {
-                        freeIdx = static_cast<int>(idx);
-                        break;
-                    }
-                }
-
-                // Set buffer full warning if none available
-                if (freeIdx < 0) {
-                    PLOG(logWARNING) << "Priority request table full, cannot accept requestID="
-                                      << static_cast<int>(requestID) << " (buffer full).";
-                    _skippedMessages++;
-                    SetStatus(_keySkippedMessages, _skippedMessages);
-                    continue;
-                }
-
-                // Store contents into the free slot per 4.2.3.1 (c-g)
-                auto &entry = table[freeIdx];
-                entry.requestID = requestID;
-                entry.vehicleID.assign(vehicleIDBytes, vehicleIDBytes + vehicleIDLen);
-                entry.vehicleClassType = classType;
-                entry.vehicleClassLevel = classLevel;
-                entry.role = role;
-                entry.inboundPresent = pkg->request.inBoundLane.present;
-                if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane) {
-                    entry.inboundValue = pkg->request.inBoundLane.choice.lane;
-                }
-                else if (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_approach) {
-                    entry.inboundValue = pkg->request.inBoundLane.choice.approach;
-                }
-
-                if (!strategy) {
-                    PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
-                                     << intersectionID << " Lane=" << inBoundLane
-                                     << ", rejecting requestID=" << static_cast<int>(requestID);
-                    entry.timeOfServiceDesiredInPRS = globalTSD;
-                    entry.timeOfEstimatedDepartureInPRS = globalTED;
-                    entry.timeOfMessage = static_cast<uint32_t>(nowEpoch);
-                    entry.timeToLive = static_cast<uint32_t>(nowEpoch) + _timeToLiveSec;
-                    entry.intersectionID = intersectionID;
-                    entry.sequenceNumber = newSeq;
-                    entry.statusInPRS = RequestStatus::closedStrategyError;
-                    continue;
-                }
-                entry.serviceStrategyNumber = *strategy;
-                entry.timeOfServiceDesiredInPRS = globalTSD;
-                entry.timeOfEstimatedDepartureInPRS = globalTED;
-                entry.timeOfMessage = static_cast<uint32_t>(nowEpoch);
-                entry.timeToLive = static_cast<uint32_t>(nowEpoch) + _timeToLiveSec;
-                entry.intersectionID = intersectionID;
-                entry.sequenceNumber = newSeq;
-
-                // Check reservice timer per 4.2.3.1 (h)
-                uint8_t classIdx = (classType >= 1 && classType <= 10) ? (classType - 1) : 9;
-                auto reservicePeriod = _reserviceClassTime[classIdx];
-                auto lastCompleted = _processor.ReserviceLastCompleted(classType);
-                if (reservicePeriod > 0 && lastCompleted > 0 &&
-                    (static_cast<uint32_t>(nowEpoch) - lastCompleted) < reservicePeriod) {
-                    entry.statusInPRS = RequestStatus::reserviceError;
-                    PLOG(logINFO) << "Reservice period not met for class " << static_cast<int>(classType)
-                                  << ", setting reserviceError for slot " << freeIdx;
-                }
-                else {
-                    entry.statusInPRS = RequestStatus::readyQueued;
-                    PLOG(logINFO) << "Accepted priority request into slot " << freeIdx
-                                  << " as readyQueued for requestID=" << static_cast<int>(requestID)
-                                  << " intersection=" << intersectionID;
-
-                    // Set request status per 4.2.3.1 (i)
-                    if (_prsBusy) {
-                        for (auto &other : table) {
-                            if (&other == &entry) continue;
-                            if (other.statusInPRS == RequestStatus::activeProcessing ||
-                                other.statusInPRS == RequestStatus::activeAdjustNotNeeded) {
-                                if (classType < other.vehicleClassType ||
-                                    (classType == other.vehicleClassType &&
-                                     classLevel < other.vehicleClassLevel)) {
-                                    other.statusInPRS = RequestStatus::activeOverride;
-                                    PLOG(logINFO) << "New request overrode active entry in slot: " << (&other - &table[0])
-                                                  << " with lower priority class. Marking overridden entry as activeOverride.";
-                                }
-                            }
-                        }
-                    }
+                const auto *pkg = srm->requests->list.array[i];
+                if (pkg) {
+                    ProcessPrsPackage(*pkg, vehicleID, classType, classLevel, newSeq, role,
+                                      currentMinuteOfYear, currentMsInMinute, nowEpoch);
                 }
             }
-
             return;
         }
 
         // PRG mode: direct conversion of SRM to priority request
         auto timeOfRequest = static_cast<uint32_t>(nowEpoch);
 
-        auto existing = _requestorStates.find(vehicleKey);
-        if (existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
+        if (auto existing = _requestorStates.find(vehicleKey);
+            existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
             PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
                             << ") for this vehicle, discarding.";
             return;
         }
 
+        // Sweep stale tracked requests - send clear for canceled entries, evict expired
+        auto now = std::chrono::steady_clock::now();
+        for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
+            auto &tracked = it->second;
+            auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
+
+            if (tracked.state == PrgRequestState::canceled && ageSec >= 2) {
+                // Send prgPriorityClear to the PRS
+                auto clearEncoded = PriorityRequestProcessor::EncodePriorityClear(
+                    tracked.requestID, tracked.vehicleID.data(), tracked.vehicleID.size(),
+                    tracked.classType, tracked.classLevel, tracked.strategyNumber);
+                if (auto ctrlIt = _controllers.find(tracked.intersectionID);
+                    ctrlIt != _controllers.end()) {
+                    PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
+                                   << " intersectionID=" << tracked.intersectionID;
+                    SnmpSet(ctrlIt->second.snmpClient, NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
+                }
+                it = _prgTrackedRequests.erase(it);
+            }
+            else if (ageSec >= static_cast<long>(_timeToLiveSec)) {
+                PLOG(logDEBUG) << "Evicting stale tracked request for requestID=" << static_cast<int>(tracked.requestID);
+                it = _prgTrackedRequests.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
+
         RequestorState &state = _requestorStates[vehicleKey];
-        state.vehicleID.assign(vehicleIDBytes, vehicleIDBytes + vehicleIDLen);
+        state.vehicleID = vehicleID;
         state.classType = classType;
         state.sequenceNumber = newSeq;
         state.timeOfRequest = timeOfRequest;
@@ -416,117 +302,349 @@ namespace PriorityPlugin {
         state.requests.clear();
 
         for (int i = 0; i < srm->requests->list.count; i++) {
-            auto *pkg = srm->requests->list.array[i];
-            if (!pkg) continue;
-
-            auto requestID = static_cast<uint8_t>(pkg->request.requestID);
-            auto requestType = pkg->request.requestType;
-            long intersectionID = pkg->request.id.id;
-
-            long etaOffsetMs = 0;
-            if (pkg->minute) {
-                auto etaMinuteOfYear = static_cast<long>(*pkg->minute);
-                long etaMs = pkg->second ? static_cast<long>(*pkg->second) : 0;
-                auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
-                auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
-                etaOffsetMs = etaTotalMs - nowTotalMs;
-                if (etaOffsetMs < 0) {
-                    etaOffsetMs += 525960L * 60L * 1000L;
-                }
-            }
-
-            auto timeOfServiceOffsetMs = etaOffsetMs;
-            auto timeOfDepartOffsetMs = timeOfServiceOffsetMs;
-            if (pkg->duration) {
-                timeOfDepartOffsetMs += static_cast<long>(*pkg->duration);
-            }
-
-            uint16_t timeOfService, timeOfDepart;
-            if (pkg->minute) {
-                timeOfService = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfServiceOffsetMs / 1000L)));
-                timeOfDepart = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfDepartOffsetMs / 1000L)));
-            }
-            else {
-                timeOfService = _estimatedArrivalTime;
-                timeOfDepart = _estimatedDepartureTime;
-            }
-
-            long inBoundLane = (pkg->request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
-                ? static_cast<long>(pkg->request.inBoundLane.choice.lane) : -1;
-            std::optional<uint8_t> strategy;
-            {
-                std::lock_guard<std::mutex> lock(_tableMutex);
-                strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
-            }
-
-            uint8_t inbPresent = pkg->request.inBoundLane.present;
-            long inbValue = 0;
-            if (inbPresent == IntersectionAccessPoint_PR_lane) {
-                inbValue = pkg->request.inBoundLane.choice.lane;
-            }
-            else if (inbPresent == IntersectionAccessPoint_PR_approach) {
-                inbValue = pkg->request.inBoundLane.choice.approach;
-            }
-
-            long etaMin = pkg->minute ? static_cast<long>(*pkg->minute) : 0;
-            long etaSec = pkg->second ? static_cast<long>(*pkg->second) : 0;
-            long dur = pkg->duration ? static_cast<long>(*pkg->duration) : 0;
-
-            if (!strategy) {
-                PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
-                                 << intersectionID << " Lane=" << inBoundLane
-                                 << ", rejecting requestID=" << static_cast<int>(requestID);
-                _skippedMessages++;
-                SetStatus(_keySkippedMessages, _skippedMessages);
-                state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true,
-                                          inbPresent, inbValue, etaMin, etaSec, dur});
-                continue;
-            }
-
-            auto encoded = PriorityRequestProcessor::EncodePriorityRequest(
-                                                        requestID, vehicleIDBytes, vehicleIDLen,
-                                                        classType, classLevel, *strategy,
-                                                        timeOfService, timeOfDepart, timeOfRequest);
-
-            auto it = _controllers.find(intersectionID);
-            if (it == _controllers.end()) {
-                PLOG(logWARNING) << "No controller configured for IntersectionID=" << intersectionID;
-                _skippedMessages++;
-                SetStatus(_keySkippedMessages, _skippedMessages);
-                state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true,
-                                          inbPresent, inbValue, etaMin, etaSec, dur});
-                continue;
-            }
-
-            PLOG(logDEBUG2) << "Sending priority request to: " << it->second.ip << ":" << it->second.port
-                           << "\nrequestID=" << static_cast<int>(requestID)
-                           << "\nIntersectionID=" << intersectionID
-                           << "\nstrategy=" << static_cast<int>(*strategy)
-                           << "\ntimeOfService=" << timeOfService
-                           << "\ntimeOfDepart=" << timeOfDepart;
-            PLOG(logDEBUG2) << "Sending command:\n" << "snmpset -v1 -c public "
-                            << it->second.ip << ":" << it->second.port << " "
-                            << NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID << " x " << tmx::byte_stream_encode(encoded);
-
-            if (SnmpSet(it->second.snmpClient, NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID, encoded)) {
-                _priorityRequestsSent++;
-                SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
-                PLOG(logINFO) << "Priority request sent for requestID=" << static_cast<int>(requestID);
-                state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, false,
-                                          inbPresent, inbValue, etaMin, etaSec, dur});
-            }
-            else {
-                PLOG(logERROR) << "Failed to send priority request for requestID=" << static_cast<int>(requestID);
-                state.requests.push_back({requestID, intersectionID, requestType,
-                                          timeOfService, timeOfDepart, true,
-                                          inbPresent, inbValue, etaMin, etaSec, dur});
+            const auto *pkg = srm->requests->list.array[i];
+            if (pkg) {
+                ProcessPrgPackage(*pkg, vehicleID, vehicleKey, classType, classLevel,
+                                  currentMinuteOfYear, currentMsInMinute, nowEpoch,
+                                  timeOfRequest, state);
             }
         }
 
-        BuildSSM(state);
+        uint8_t broadcastCount = _maxSsmBroadcastsPerStatus > 0 ? _maxSsmBroadcastsPerStatus : 1;
+        for (uint8_t i = 0; i < broadcastCount; i++) {
+            BuildSSM(state);
+        }
+    }
+
+    void PriorityPlugin::ProcessPrsPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, uint8_t classType, uint8_t classLevel, uint8_t newSeq, long role, long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch)
+    {
+        auto &table = _processor.Table();
+
+        auto requestID = static_cast<uint8_t>(pkg.request.requestID);
+        long intersectionID = pkg.request.id.id;
+
+        // Compute global TSD and TED
+        long etaOffsetMs = 0;
+        if (pkg.minute) {
+            auto etaMinuteOfYear = static_cast<long>(*pkg.minute);
+            long etaMs = pkg.second ? static_cast<long>(*pkg.second) : 0;
+            auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
+            auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
+            etaOffsetMs = etaTotalMs - nowTotalMs;
+            etaOffsetMs = (etaOffsetMs < 0) ? etaOffsetMs + 525960L * 60L * 1000L : etaOffsetMs;
+        }
+
+        uint32_t globalTSD;
+        uint32_t globalTED;
+        if (pkg.minute) {
+            globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(etaOffsetMs / 1000L);
+            auto departOffsetMs = etaOffsetMs;
+            if (pkg.duration) {
+                departOffsetMs += static_cast<long>(*pkg.duration);
+            }
+            globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(departOffsetMs / 1000L);
+        }
+        else {
+            globalTSD = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedArrivalTime);
+            globalTED = static_cast<uint32_t>(nowEpoch) + static_cast<uint32_t>(_estimatedDepartureTime);
+        }
+
+        // Get strategy number for this intersection and inbound lane
+        long inBoundLane = (pkg.request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
+                                ? static_cast<long>(pkg.request.inBoundLane.choice.lane) : -1;
+        auto strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
+
+        // Check for an existing entry for this request (per 4.2.3.2 (b))
+        if (auto existEntryIt = std::find_if(table.begin(), table.end(), [&](const auto &entry) {
+                return entry.statusInPRS != RequestStatus::idleNotValid &&
+                       entry.requestID == requestID &&
+                       entry.vehicleID == vehicleID &&
+                       entry.vehicleClassType == classType &&
+                       entry.vehicleClassLevel == classLevel &&
+                       strategy && entry.serviceStrategyNumber == *strategy;
+            }); existEntryIt != table.end()) {
+            // Update existing entry (priority request update per 4.2.3.2)
+            existEntryIt->timeOfServiceDesiredInPRS = globalTSD;
+            existEntryIt->timeOfEstimatedDepartureInPRS = globalTED;
+            existEntryIt->sequenceNumber = newSeq;
+            PLOG(logINFO) << "Updated priority request table entry " << (existEntryIt - table.begin())
+                          << " for requestID=" << static_cast<int>(requestID);
+            return;
+        }
+
+        // Find an idle slot per 4.2.3.1 (b)
+        auto freeIt = std::find_if(table.begin(), table.end(), [](const auto &entry) {
+            return entry.statusInPRS == RequestStatus::idleNotValid;
+        });
+
+        if (freeIt == table.end()) {
+            PLOG(logWARNING) << "Priority request table full, cannot accept requestID="
+                              << static_cast<int>(requestID) << " (buffer full).";
+            _skippedMessages++;
+            SetStatus(_keySkippedMessages, _skippedMessages);
+            return;
+        }
+
+        // Store contents into the free slot per 4.2.3.1 (c-g)
+        auto &entry = *freeIt;
+        entry.requestID = requestID;
+        entry.vehicleID = vehicleID;
+        entry.vehicleClassType = classType;
+        entry.vehicleClassLevel = classLevel;
+        entry.role = role;
+        entry.inboundPresent = pkg.request.inBoundLane.present;
+        if (pkg.request.inBoundLane.present == IntersectionAccessPoint_PR_lane) {
+            entry.inboundValue = pkg.request.inBoundLane.choice.lane;
+        }
+        else if (pkg.request.inBoundLane.present == IntersectionAccessPoint_PR_approach) {
+            entry.inboundValue = pkg.request.inBoundLane.choice.approach;
+        }
+
+        if (!strategy.has_value()) {
+            PLOG(logWARNING) << "No lane strategy mapping for IntersectionID=" << intersectionID
+                                                                  << ", Lane=" << inBoundLane
+                                                                  << ". Rejecting requestID=" << static_cast<int>(requestID);
+            entry.timeOfServiceDesiredInPRS = globalTSD;
+            entry.timeOfEstimatedDepartureInPRS = globalTED;
+            entry.timeOfMessage = static_cast<uint32_t>(nowEpoch);
+            entry.timeToLive = static_cast<uint32_t>(nowEpoch) + _timeToLiveSec;
+            entry.intersectionID = intersectionID;
+            entry.sequenceNumber = newSeq;
+            entry.statusInPRS = RequestStatus::closedStrategyError;
+            return;
+        }
+        entry.serviceStrategyNumber = *strategy;
+        entry.timeOfServiceDesiredInPRS = globalTSD;
+        entry.timeOfEstimatedDepartureInPRS = globalTED;
+        entry.timeOfMessage = static_cast<uint32_t>(nowEpoch);
+        entry.timeToLive = static_cast<uint32_t>(nowEpoch) + _timeToLiveSec;
+        entry.intersectionID = intersectionID;
+        entry.sequenceNumber = newSeq;
+
+        // Check reservice timer per 4.2.3.1 (h)
+        uint8_t classIdx = (classType >= 1 && classType <= 10) ? (classType - 1) : 9;
+        auto reservicePeriod = _reserviceClassTime[classIdx];
+        auto lastCompleted = _processor.ReserviceLastCompleted(classType);
+        if (reservicePeriod > 0 && lastCompleted > 0 &&
+            (static_cast<uint32_t>(nowEpoch) - lastCompleted) < reservicePeriod) {
+            entry.statusInPRS = RequestStatus::reserviceError;
+            PLOG(logINFO) << "Reservice period not met for class " << static_cast<int>(classType)
+                          << ", setting reserviceError for slot " << (freeIt - table.begin());
+            return;
+        }
+
+        entry.statusInPRS = RequestStatus::readyQueued;
+        PLOG(logINFO) << "Accepted priority request into slot " << (freeIt - table.begin())
+                      << " as readyQueued for requestID=" << static_cast<int>(requestID)
+                      << " intersection=" << intersectionID;
+
+        // Set request status per 4.2.3.1 (i) - check for override of active entries
+        if (!_prsBusy) {
+            return;
+        }
+        for (auto &other : table) {
+            if (&other == &entry) {
+                continue;
+            }
+            bool isActive = other.statusInPRS == RequestStatus::activeProcessing ||
+                            other.statusInPRS == RequestStatus::activeAdjustNotNeeded;
+            bool isLowerClass = classType < other.vehicleClassType ||
+                                (classType == other.vehicleClassType && classLevel < other.vehicleClassLevel);
+            if (isActive && isLowerClass) {
+                other.statusInPRS = RequestStatus::activeOverride;
+                PLOG(logINFO) << "New request overrode active entry in slot: " << (&other - &table[0])
+                              << " with lower priority class. Marking overridden entry as activeOverride.";
+            }
+        }
+    }
+
+    void PriorityPlugin::ProcessPrgPackage(const SignalRequestPackage &pkg,
+                                            const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey,
+                                            uint8_t classType, uint8_t classLevel,
+                                            long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch,
+                                            uint32_t timeOfRequest, RequestorState &state)
+    {
+        auto requestID = static_cast<uint8_t>(pkg.request.requestID);
+        auto requestType = pkg.request.requestType;
+        long intersectionID = pkg.request.id.id;
+
+        long etaOffsetMs = 0;
+        if (pkg.minute) {
+            auto etaMinuteOfYear = static_cast<long>(*pkg.minute);
+            long etaMs = pkg.second ? static_cast<long>(*pkg.second) : 0;
+            auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
+            auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
+            etaOffsetMs = etaTotalMs - nowTotalMs;
+        }
+        // Wrap negative offset to next year
+        etaOffsetMs = (etaOffsetMs < 0) ? etaOffsetMs + 525960L * 60L * 1000L : etaOffsetMs;
+
+        auto timeOfServiceOffsetMs = etaOffsetMs;
+        auto timeOfDepartOffsetMs = timeOfServiceOffsetMs;
+        if (pkg.duration) {
+            timeOfDepartOffsetMs += static_cast<long>(*pkg.duration);
+        }
+
+        uint16_t timeOfService;
+        uint16_t timeOfDepart;
+        if (pkg.minute) {
+            timeOfService = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfServiceOffsetMs / 1000L)));
+            timeOfDepart = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfDepartOffsetMs / 1000L)));
+        }
+        else {
+            timeOfService = _estimatedArrivalTime;
+            timeOfDepart = _estimatedDepartureTime;
+        }
+
+        long inBoundLane = (pkg.request.inBoundLane.present == IntersectionAccessPoint_PR_lane)
+            ? static_cast<long>(pkg.request.inBoundLane.choice.lane) : -1;
+        std::optional<uint8_t> strategy;
+        {
+            std::lock_guard lock(_tableMutex);
+            strategy = _processor.LookupStrategy(intersectionID, inBoundLane);
+        }
+
+        uint8_t inbPresent = pkg.request.inBoundLane.present;
+        long inbValue = 0;
+        if (inbPresent == IntersectionAccessPoint_PR_lane) {
+            inbValue = pkg.request.inBoundLane.choice.lane;
+        }
+        else if (inbPresent == IntersectionAccessPoint_PR_approach) {
+            inbValue = pkg.request.inBoundLane.choice.approach;
+        }
+
+        long etaMin = pkg.minute ? static_cast<long>(*pkg.minute) : 0;
+        long etaSec = pkg.second ? static_cast<long>(*pkg.second) : 0;
+        long dur = pkg.duration ? static_cast<long>(*pkg.duration) : 0;
+
+        if (!strategy.has_value()) {
+            PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="
+                             << intersectionID << " Lane=" << inBoundLane
+                             << ", rejecting requestID=" << static_cast<int>(requestID);
+            _skippedMessages++;
+            SetStatus(_keySkippedMessages, _skippedMessages);
+            state.requests.push_back({requestID, intersectionID, requestType,
+                                      timeOfService, timeOfDepart, true,
+                                      inbPresent, inbValue, etaMin, etaSec, dur});
+            return;
+        }
+
+        auto ctrlIt = _controllers.find(intersectionID);
+        if (ctrlIt == _controllers.end()) {
+            PLOG(logWARNING) << "No controller configured for IntersectionID=" << intersectionID;
+            _skippedMessages++;
+            SetStatus(_keySkippedMessages, _skippedMessages);
+            state.requests.push_back({requestID, intersectionID, requestType,
+                                      timeOfService, timeOfDepart, true,
+                                      inbPresent, inbValue, etaMin, etaSec, dur});
+            return;
+        }
+
+        // Composite tracker key for this request
+        std::string trackerKey = vehicleKey + "|" + std::to_string(requestID) + "|" + std::to_string(intersectionID);
+
+        // Branch on J2735 requestType per NTCIP 1211 4.2.3.1-4.2.3.4
+        std::vector<uint8_t> encoded;
+        std::string targetOID;
+        bool isCancelRequest = false;
+
+        if (requestType == PriorityRequestType_priorityCancellation) {
+            // requestType 3: Cancel - 21-byte payload to prgPriorityCancel OID
+            encoded = PriorityRequestProcessor::EncodePriorityCancel(
+                requestID, vehicleID.data(), vehicleID.size(),
+                classType, classLevel, *strategy);
+            targetOID = NTCIP1211_PRIORITY_CANCEL_OID;
+            isCancelRequest = true;
+            PLOG(logDEBUG) << "PRG cancel for requestID=" << static_cast<int>(requestID);
+        }
+        else if (requestType == PriorityRequestType_priorityRequestUpdate) {
+            // requestType 2: Explicit update
+            auto trackerIt = _prgTrackedRequests.find(trackerKey);
+            if (trackerIt == _prgTrackedRequests.end()) {
+                // No existing tracked request - send as new request with a warning
+                PLOG(logWARNING) << "Update requested but no tracked request found for requestID="
+                                 << static_cast<int>(requestID) << ", sending as new request.";
+                encoded = PriorityRequestProcessor::EncodePriorityRequest(
+                    requestID, vehicleID.data(), vehicleID.size(),
+                    classType, classLevel, *strategy,
+                    timeOfService, timeOfDepart, timeOfRequest);
+                targetOID = NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+            }
+            else {
+                encoded = PriorityRequestProcessor::EncodePriorityUpdate(
+                    requestID, vehicleID.data(), vehicleID.size(),
+                    classType, classLevel, *strategy,
+                    timeOfService, timeOfDepart, timeOfRequest);
+                targetOID = NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+            }
+        }
+        else {
+            // requestType 0 (reserved) or 1 (new request):
+            // Check tracker to decide new vs update
+            auto trackerIt = _prgTrackedRequests.find(trackerKey);
+            if (trackerIt != _prgTrackedRequests.end() && trackerIt->second.state == PrgRequestState::sent) {
+                // Existing tracked request in sent state - send as update
+                encoded = PriorityRequestProcessor::EncodePriorityUpdate(
+                    requestID, vehicleID.data(), vehicleID.size(),
+                    classType, classLevel, *strategy,
+                    timeOfService, timeOfDepart, timeOfRequest);
+                targetOID = NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+            }
+            else {
+                // No existing entry or canceled - send as new request
+                encoded = PriorityRequestProcessor::EncodePriorityRequest(
+                    requestID, vehicleID.data(), vehicleID.size(),
+                    classType, classLevel, *strategy,
+                    timeOfService, timeOfDepart, timeOfRequest);
+                targetOID = NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+            }
+        }
+
+        PLOG(logDEBUG2) << "Sending priority " << (isCancelRequest ? "cancel" : "request/update")
+                       << " to: " << ctrlIt->second.ip << ":" << ctrlIt->second.port
+                       << "\nrequestID=" << static_cast<int>(requestID)
+                       << "\nIntersectionID=" << intersectionID
+                       << "\nstrategy=" << static_cast<int>(*strategy)
+                       << "\nOID=" << targetOID;
+        PLOG(logDEBUG2) << "Sending command:\n" << "snmpset -v1 -c public "
+                        << ctrlIt->second.ip << ":" << ctrlIt->second.port << " "
+                        << targetOID << " x " << tmx::byte_stream_encode(encoded);
+
+        if (SnmpSet(ctrlIt->second.snmpClient, targetOID, encoded)) {
+            _priorityRequestsSent++;
+            SetStatus(_keyPriorityRequestsSent, _priorityRequestsSent);
+            PLOG(logINFO) << "Priority " << (isCancelRequest ? "cancel" : "request") << " sent for requestID=" << static_cast<int>(requestID);
+
+            // Update tracker
+            if (isCancelRequest) {
+                auto trackerIt = _prgTrackedRequests.find(trackerKey);
+                if (trackerIt != _prgTrackedRequests.end()) {
+                    trackerIt->second.state = PrgRequestState::canceled;
+                    trackerIt->second.sentTime = std::chrono::steady_clock::now();
+                }
+            }
+            else {
+                PrgTrackedRequest &tracked = _prgTrackedRequests[trackerKey];
+                tracked.requestID = requestID;
+                tracked.intersectionID = intersectionID;
+                tracked.vehicleID = vehicleID;
+                tracked.classType = classType;
+                tracked.classLevel = classLevel;
+                tracked.strategyNumber = *strategy;
+                tracked.sentTime = std::chrono::steady_clock::now();
+                tracked.state = PrgRequestState::sent;
+            }
+
+            state.requests.push_back({requestID, intersectionID, requestType,
+                                      timeOfService, timeOfDepart, false,
+                                      inbPresent, inbValue, etaMin, etaSec, dur});
+        }
+        else {
+            PLOG(logERROR) << "Failed to send priority " << (isCancelRequest ? "cancel" : "request") << " for requestID=" << static_cast<int>(requestID);
+            state.requests.push_back({requestID, intersectionID, requestType,
+                                      timeOfService, timeOfDepart, true,
+                                      inbPresent, inbValue, etaMin, etaSec, dur});
+        }
     }
 
 } /* namespace PriorityPlugin */
