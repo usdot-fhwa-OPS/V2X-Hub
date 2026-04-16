@@ -202,16 +202,26 @@ jobs:
             --tag "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
-      - name: Docker Scout
-        id: docker-scout
+      - name: Docker Scout Compare
+        id: docker-scout-compare
         if: ${{ github.event_name == 'pull_request' }}
         uses: docker/scout-action@v1
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
-          to-env: ${{ github.event.pull_request.base.ref }}
+          to-latest: true
           ignore-unchanged: true
           only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
+      - name: Docker Scout Record
+        id: docker-scout-record
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: environment
+          environment: ${{ steps.meta.outputs.version }}
+          image: ${{ steps.meta.outputs.tags }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
 
