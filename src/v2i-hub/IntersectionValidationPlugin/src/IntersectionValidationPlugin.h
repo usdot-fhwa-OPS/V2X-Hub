@@ -20,16 +20,16 @@
 #include <stdlib.h>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <PluginClientClockAware.h>
- 
+
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
- 
 namespace IntersectionValidation
 {
- 
+
     class IntersectionValidationPlugin : public tmx::utils::PluginClientClockAware
     {
     public:
@@ -37,16 +37,33 @@ namespace IntersectionValidation
         ~IntersectionValidationPlugin() override = default;
 
         void UpdateConfigSettings();
- 
+
         // Message handlers
         void HandleSpatMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
         void HandleMapDataMessage(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
         void HandleTimMessage(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
 
     protected:
-        // Virtual method overrides.
         void OnConfigChanged(const char *key, const char *value) override;
-        void OnMessageReceived(IvpMessage *msg) override;
         void OnStateChange(IvpPluginState state) override;
+        void OnMessageReceived(IvpMessage *msg) override;
+
+    private:
+        // Frequency tracking
+        uint64_t _lastSpatTimeMs = 0;
+        uint64_t _lastMapTimeMs = 0;
+
+        /**
+         * @brief Measure message frequency and broadcast TmxEventLogMessage if threshold exceeded.
+         * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
+         * @param thresholdMs maximum allowable interval in ms.
+         * @param messageType label for logging (e.g. "SPaT", "MAP").
+         */
+        void measureMessageFrequency(uint64_t &lastTimestampMs, uint64_t thresholdMs, const std::string &messageType);
+
+        // CTI 4501 thresholds
+        static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+        static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
     };
+
 }

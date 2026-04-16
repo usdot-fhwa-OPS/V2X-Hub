@@ -19,8 +19,12 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+
+#include "IntersectionValidationPlugin.h"
+#include "MessageFrequencyValidator.h"
  
 using namespace tmx::messages;
+using namespace IntersectionValidation;
  
 namespace {
  
@@ -38,6 +42,31 @@ TEST(MessageTypeTest, TimMessageCanBeInstantiated) {
     TimMessage msg;
     SUCCEED();
 }
+
+// Frequency Validation Tests
+ 
+TEST(FrequencyValidationTest, SpatIntervalWithinThreshold) {
+    auto result = calculateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_THRESHOLD_MS);
+    EXPECT_EQ(100u, result);
+}
+ 
+TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold) {
+    EXPECT_THROW(
+        calculateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_THRESHOLD_MS),
+        tmx::TmxException);
+}
+ 
+TEST(FrequencyValidationTest, MapIntervalWithinThreshold) {
+    auto result = calculateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_THRESHOLD_MS);
+    EXPECT_EQ(50u, result);
+}
+ 
+TEST(FrequencyValidationTest, MapIntervalExceedsThreshold) {
+    EXPECT_THROW(
+        calculateMessageInterval(1000, 1101, MAP_INTERVAL_MAX_THRESHOLD_MS),
+        tmx::TmxException);
+}
+ 
   
 TEST(SpatValidationTest, DISABLED_ValidSpatPassesValidation) {
     // TODO: Construct a SPaT with all required fields and verify validation passes

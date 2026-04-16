@@ -15,42 +15,89 @@
  */
  
 #include "IntersectionValidationPlugin.h"
+#include "MessageFrequencyValidator.h"
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
+using namespace std;
  
 namespace IntersectionValidation
 {
     IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name)
     {
- 
-        AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
-        AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
-        AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
- 
+
+        AddMessageFilter("J2735", "SPAT-P", IvpMsgFlags_RouteDSRC);
+        AddMessageFilter("J2735", "MAP-P", IvpMsgFlags_RouteDSRC);
+        AddMessageFilter("J2735", "TIM", IvpMsgFlags_RouteDSRC);
+
         SubscribeToMessages();
     }
 
     void IntersectionValidationPlugin::UpdateConfigSettings()
     {
-        // TODO: Implement configuration setting update logic
+        // TODO
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
 	{
-		// TODO: Implement configuration change handling
+		PluginClient::OnConfigChanged(key, value);
+        UpdateConfigSettings();
 	}
 
 	void IntersectionValidationPlugin::OnMessageReceived(IvpMessage *msg)
-	{
-		// TODO: Implement message receiving handling
-	}
+    {
+        PluginClient::OnMessageReceived(msg);
 
-	void IntersectionValidationPlugin::OnStateChange(IvpPluginState state)
+        if (msg == nullptr || msg->subtype == nullptr)
+            return;
+
+        std::string subtype(msg->subtype);
+
+        if (subtype == "SPAT-P")
+        {
+            measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
+        }
+        else if (subtype == "MAP-P")
+        {
+            measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
+        }
+        else if (subtype == "TIM")
+        {
+            // No CTI 4501 frequency requirement for TIM
+        }
+    }
+
+    void IntersectionValidationPlugin::OnStateChange(IvpPluginState state)
 	{
-		// TODO: Implement state change handling
-	}
- 
+        PluginClientClockAware::OnStateChange(state);
+
+        if (state == IvpPluginState_registered)
+        {
+            UpdateConfigSettings();
+        }
+    }
+
+    void IntersectionValidationPlugin::measureMessageFrequency(uint64_t &lastTimestampMs, uint64_t thresholdMs, const std::string &messageType)
+    {
+        uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+
+        try
+        {
+            IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, thresholdMs);
+        }
+        catch (const tmx::TmxException &e)
+        {
+            PLOG(tmx::utils::logWARNING) << messageType << " frequency violation: " << e.what();
+
+            TmxEventLogMessage eventLogMsg;
+            eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+            eventLogMsg.set_description(messageType + " " + e.what());
+            PluginClient::BroadcastMessage(eventLogMsg);
+        }
+
+        lastTimestampMs = currentTimeMs;
+    }
+
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
         // TODO: Perform SPAT required fields validation
@@ -65,7 +112,6 @@ namespace IntersectionValidation
     {
         // TODO: Perform TIM required fields validation
     }
- 
 }
  
 int main(int argc, char *argv[])
