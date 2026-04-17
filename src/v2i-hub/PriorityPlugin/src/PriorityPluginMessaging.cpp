@@ -55,18 +55,24 @@ namespace PriorityPlugin {
 
             // b) PRS shall SET prsServiceRequest to the CO.
             // Note: steps c-e are actions on the CO side.
+            // Only send the SET when the encoded table differs from what the
+            // CO already holds.
             std::vector<uint8_t> setData;
             {
                 std::lock_guard lock(_tableMutex);
                 setData = _processor.EncodeServiceRequest(_prsBusy);
             }
 
-            PLOG(logDEBUG3) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
-            if (bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
-                !setOk) {
-                PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
-                std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
-                continue;
+            if (bool shouldSet = (setData != _lastSentServiceRequest);
+                shouldSet) {
+                PLOG(logDEBUG3) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
+                if (bool setOk = SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
+                    !setOk) {
+                    PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
+                    std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
+                    continue;
+                }
+                _lastSentServiceRequest = setData;
             }
 
             // f) PRS shall then send a GET prsServiceRequest to the CO.
@@ -128,9 +134,14 @@ namespace PriorityPlugin {
                     updatedSetData = _processor.EncodeServiceRequest(_prsBusy);
                 }
 
-                // j) SET prsServiceRequest to the CO with updated table and prsBusy=False
-                if (!SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, updatedSetData)) {
-                    PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO after prioritization";
+                // j) SET prsServiceRequest to the CO only if the post-prioritization
+                // table differs from what the CO already holds.
+                if (updatedSetData != _lastSentServiceRequest) {
+                    if (!SnmpSet(targetClient, NTCIP1211_PRS_SERVICE_REQUEST_OID, updatedSetData)) {
+                        PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO after prioritization";
+                    } else {
+                        _lastSentServiceRequest = updatedSetData;
+                    }
                 }
             }
 
@@ -215,17 +226,20 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::BroadcastSSMFromTable()
     {
-        // Collect non-idle entries grouped by intersection, skipping entries
-        // that have already been broadcast the maximum number of times for
-        // their current status.
+        // Effective status is the CO-reported state when active, otherwise the PRS-asserted state.
+        auto effectiveStatus = [](const PriorityRequestEntry &e) {
+            return IsActiveX(e.statusInCO) ? e.statusInCO : e.statusInPRS;
+        };
+
         std::map<long, std::vector<PriorityRequestEntry *>> byIntersection;
         {
             std::lock_guard lock(_tableMutex);
             for (auto &entry : _processor.Table()) {
                 if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
-                if (entry.statusInPRS != entry.ssmLastStatus) {
+                if (auto effStatus = effectiveStatus(entry);
+                    effStatus != entry.ssmLastStatus) {
                     entry.ssmBroadcastCount = 0;
-                    entry.ssmLastStatus = entry.statusInPRS;
+                    entry.ssmLastStatus = effStatus;
                 }
                 if (_maxSsmBroadcastsPerStatus > 0 && entry.ssmBroadcastCount >= _maxSsmBroadcastsPerStatus) continue;
                 entry.ssmBroadcastCount++;
@@ -261,7 +275,7 @@ namespace PriorityPlugin {
             std::ostringstream seqKey;
             for (const auto *entry : entries) {
                 seqKey << static_cast<int>(entry->requestID) << ","
-                   << static_cast<int>(entry->statusInPRS) << ","
+                   << static_cast<int>(effectiveStatus(*entry)) << ","
                    << static_cast<int>(entry->sequenceNumber) << ","
                    << entry->timeOfServiceDesiredInPRS << ","
                    << entry->timeOfEstimatedDepartureInPRS << ","
@@ -333,7 +347,7 @@ namespace PriorityPlugin {
                     pkg->duration = durationPtr;
                 }
 
-                pkg->status = MapNTCIPstatusToSSM(entry->statusInPRS);
+                pkg->status = MapNTCIPstatusToSSM(effectiveStatus(*entry));
                 asn_sequence_add(&signalStatus->sigStatus.list, pkg);
             }
 

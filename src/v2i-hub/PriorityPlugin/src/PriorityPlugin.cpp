@@ -438,7 +438,7 @@ namespace PriorityPlugin {
                       << " as readyQueued for requestID=" << static_cast<int>(requestID)
                       << " intersection=" << intersectionID;
 
-        // Set request status per 4.2.3.1 (i) - check for override of active entries
+        // Set request status per 4.2.3.1 (i) - check for override of active entries in the CO.
         if (!_prsBusy) {
             return;
         }
@@ -446,8 +446,8 @@ namespace PriorityPlugin {
             if (&other == &entry) {
                 continue;
             }
-            bool isActive = other.statusInPRS == RequestStatus::activeProcessing ||
-                            other.statusInPRS == RequestStatus::activeAdjustNotNeeded;
+            bool isActive = other.statusInCO == RequestStatus::activeProcessing ||
+                            other.statusInCO == RequestStatus::activeAdjustNotNeeded;
             bool isLowerClass = classType < other.vehicleClassType ||
                                 (classType == other.vehicleClassType && classLevel < other.vehicleClassLevel);
             if (isActive && isLowerClass) {

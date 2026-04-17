@@ -170,8 +170,9 @@ namespace PriorityPlugin {
     void PriorityRequestProcessor::CheckForOverride()
     {
         PriorityRequestEntry *activeEntry = nullptr;
+        // Check for active entries in the CO
         for (auto &entry : _table) {
-            if (IsActiveX(entry.statusInPRS)) {
+            if (IsActiveX(entry.statusInCO)) {
                 activeEntry = &entry;
                 break;
             }
@@ -179,10 +180,14 @@ namespace PriorityPlugin {
         if (!activeEntry) {
             return;
         }
+
         for (const auto &entry : _table) {
+            if (&entry == activeEntry) continue;
+            // Check if any readyQueued entry has higher priority than the active entry
             if (entry.statusInPRS != RequestStatus::readyQueued) {
                 continue;
             }
+            // Determine if this entry has higher priority than the active entry
             if (entry.vehicleClassType < activeEntry->vehicleClassType ||
                 (entry.vehicleClassType == activeEntry->vehicleClassType &&
                  entry.vehicleClassLevel < activeEntry->vehicleClassLevel)) {
@@ -214,12 +219,12 @@ namespace PriorityPlugin {
             }
         }
 
-        // c) If none of the entries in the priorityRequestTable has a status of 'activeX',
+        // c) If none of the entries in the priorityRequestTable is 'activeX' at the CO,
         //    reorder by priority. Otherwise, check if a higher-priority readyQueued
         //    request should override the active one.
         bool hasActive = false;
         for (const auto &entry : _table) {
-            if (IsActiveX(entry.statusInPRS)) {
+            if (IsActiveX(entry.statusInCO)) {
                 hasActive = true;
                 break;
             }
@@ -305,8 +310,6 @@ namespace PriorityPlugin {
 
     void PriorityRequestProcessor::ApplyCoStatusUpdates(const std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &coRows, uint32_t now)
     {
-        // Per Figure 24 Status Transition Diagram and 5.1.1.1.9 / 5.2.1.2.5 state values.
-        // The PRS updates priorityRequestStatusInPRS based on the CO's returned priorityStrategyRequestStatusInCO.
         for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
             auto &entry = _table[i];
             const auto &coRow = coRows[i];
@@ -314,22 +317,15 @@ namespace PriorityPlugin {
             if (entry.statusInPRS == RequestStatus::idleNotValid) continue;
 
             RequestStatus coStatus = coRow.requestStatusInCO;
+            entry.statusInCO = coStatus;
 
             switch (coStatus) {
-                // readyQueued/readyOverridden -> activeProcessing ("CO says okay")
+                // CO-owned states, tracked in statusInCO above.
                 case RequestStatus::activeProcessing:
-                    if (IsReadyX(entry.statusInPRS)) {
-                        entry.statusInPRS = RequestStatus::activeProcessing;
-                        PLOG(logDEBUG) << "Row " << i << ": activeProcessing";
-                    }
-                    break;
-
-                // readyQueued/readyOverridden -> activeAdjustNotNeeded ("CO says okay")
                 case RequestStatus::activeAdjustNotNeeded:
-                    if (IsReadyX(entry.statusInPRS)) {
-                        entry.statusInPRS = RequestStatus::activeAdjustNotNeeded;
-                        PLOG(logDEBUG) << "Row " << i << ": activeAdjustNotNeeded";
-                    }
+                case RequestStatus::activeCancel:
+                case RequestStatus::activeNotOverridden:
+                    PLOG(logDEBUG) << "Row " << i << ": CO reports " << static_cast<int>(coStatus);
                     break;
 
                 // readyQueued/readyOverridden -> closedTimerError ("CO says TSD & TED <> criteria")
@@ -356,36 +352,23 @@ namespace PriorityPlugin {
                     }
                     break;
 
-                // activeCancel -> closedCanceled 
-                // or readyQueued/readyOverridden -> closedCanceled ("Cancel Received")
+                // readyQueued/readyOverridden/activeCancel-in-CO -> closedCanceled ("Cancel Received")
                 case RequestStatus::closedCanceled:
-                {
-                    bool validSource = IsReadyX(entry.statusInPRS) || entry.statusInPRS == RequestStatus::activeCancel;
-                    if (validSource) {
+                    if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedCanceled;
                         PLOG(logDEBUG) << "Row " << i << ": closedCanceled";
                     }
-                }
                     break;
 
-                // closedCompleted can be reached from any activeX state ("CO says it finished")
+                // readyX held in PRS status for the whole active phase
+                // Trigger is the CO's status. Accept it if the PRS has not already closed the entry. ("CO says it finished")
                 case RequestStatus::closedCompleted:
-                {
-                    if (IsActiveX(entry.statusInPRS)) {
+                    if (IsReadyX(entry.statusInPRS) || entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::closedCompleted;
                         // Reset reservice timer (4.2.4.1.3 (f))
                         uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10) ? (entry.vehicleClassType - 1) : 9;
                         _reserviceLastCompletedTime[classIdx] = now;
                         PLOG(logDEBUG) << "Row " << i << ": closedCompleted";
-                    }
-                }
-                    break;
-
-                // activeOverride -> activeNotOverridden ("CO can do both")
-                case RequestStatus::activeNotOverridden:
-                    if (entry.statusInPRS == RequestStatus::activeOverride) {
-                        entry.statusInPRS = RequestStatus::activeNotOverridden;
-                        PLOG(logDEBUG) << "Row " << i << ": activeNotOverridden";
                     }
                     break;
 

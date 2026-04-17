@@ -499,7 +499,8 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingHigherPriorityOver
     // Test step (c) with a higher priority request overriding an active request.
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
-    table[0].statusInPRS = RequestStatus::activeProcessing;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].statusInCO = RequestStatus::activeProcessing;
     table[0].vehicleClassType = 3;
     table[0].vehicleClassLevel = 2;
     table[0].requestID = 10;
@@ -513,6 +514,7 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingHigherPriorityOver
 
     const auto &t = proc.Table();
     EXPECT_EQ(t[0].statusInPRS, RequestStatus::activeOverride);
+    EXPECT_EQ(t[0].statusInCO, RequestStatus::activeProcessing);
     EXPECT_EQ(t[1].statusInPRS, RequestStatus::readyQueued);
 }
 
@@ -520,7 +522,8 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingEqualPriorityDoesN
     // Test step (c) with an equal priority request does not override an active request.
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
-    table[0].statusInPRS = RequestStatus::activeProcessing;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].statusInCO = RequestStatus::activeProcessing;
     table[0].vehicleClassType = 3;
     table[0].vehicleClassLevel = 2;
     table[1].statusInPRS = RequestStatus::readyQueued;
@@ -529,7 +532,8 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingEqualPriorityDoesN
 
     proc.RunPrioritizationProcessing(50);
 
-    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::activeProcessing);
+    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::activeProcessing);
 }
 
 TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingReorderTiesByTsd) {
@@ -578,7 +582,8 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingReordering) {
 }
 
 TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
-    // Ready to activeProcessing
+    // CO activeX states are tracked in statusInCO only
+    // statusInPRS stays readyX so that byte 9 of the next SET continues to carry a PRS-owned state.
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -587,25 +592,14 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         table[0].statusInPRS = RequestStatus::readyQueued;
         coRows[0].requestStatusInCO = RequestStatus::activeProcessing;
         table[1].statusInPRS = RequestStatus::readyOverridden;
-        coRows[1].requestStatusInCO = RequestStatus::activeProcessing;
+        coRows[1].requestStatusInCO = RequestStatus::activeAdjustNotNeeded;
 
         proc.ApplyCoStatusUpdates(coRows, 1000);
 
-        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::activeProcessing);
-        EXPECT_EQ(proc.Table()[1].statusInPRS, RequestStatus::activeProcessing);
-    }
-
-    // Ready to activeAdjustNotNeeded
-    {
-        PriorityRequestProcessor proc;
-        auto &table = proc.Table();
-        std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
-
-        table[0].statusInPRS = RequestStatus::readyQueued;
-        coRows[0].requestStatusInCO = RequestStatus::activeAdjustNotNeeded;
-
-        proc.ApplyCoStatusUpdates(coRows, 1000);
-        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::activeAdjustNotNeeded);
+        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::readyQueued);
+        EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::activeProcessing);
+        EXPECT_EQ(proc.Table()[1].statusInPRS, RequestStatus::readyOverridden);
+        EXPECT_EQ(proc.Table()[1].statusInCO, RequestStatus::activeAdjustNotNeeded);
     }
 
     // Ready to error states
@@ -629,7 +623,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(t[2].statusInPRS, RequestStatus::closedFlash);
     }
 
-    // closedCanceled from ready and activeCancel, but not activeProcessing
+    // closedCanceled accepted while PRS is in readyX.
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -637,37 +631,32 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
 
         table[0].statusInPRS = RequestStatus::readyQueued;
         coRows[0].requestStatusInCO = RequestStatus::closedCanceled;
-        table[1].statusInPRS = RequestStatus::activeCancel;
+        table[1].statusInPRS = RequestStatus::readyOverridden;
         coRows[1].requestStatusInCO = RequestStatus::closedCanceled;
-        table[2].statusInPRS = RequestStatus::activeProcessing;
-        coRows[2].requestStatusInCO = RequestStatus::closedCanceled;
 
         proc.ApplyCoStatusUpdates(coRows, 1000);
 
         const auto &t = proc.Table();
         EXPECT_EQ(t[0].statusInPRS, RequestStatus::closedCanceled);
         EXPECT_EQ(t[1].statusInPRS, RequestStatus::closedCanceled);
-        EXPECT_EQ(t[2].statusInPRS, RequestStatus::activeProcessing);
     }
 
-    // closedCompleted only from activeX, stamps reservice time
+    // closedCompleted from readyQueued. Stamps reservice time.
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
         std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
 
-        table[0].statusInPRS = RequestStatus::activeProcessing;
+        table[0].statusInPRS = RequestStatus::readyQueued;
+        table[0].statusInCO = RequestStatus::activeProcessing;
         table[0].vehicleClassType = 3;
         coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
-
-        table[1].statusInPRS = RequestStatus::readyQueued;
-        coRows[1].requestStatusInCO = RequestStatus::closedCompleted;
 
         proc.ApplyCoStatusUpdates(coRows, 42);
 
         EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::closedCompleted);
+        EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::closedCompleted);
         EXPECT_EQ(proc.ReserviceLastCompleted(3), 42u);
-        EXPECT_EQ(proc.Table()[1].statusInPRS, RequestStatus::readyQueued);
     }
 
     // closedCompleted with invalid classType clamps to last slot
@@ -676,7 +665,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         auto &table = proc.Table();
         std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
 
-        table[0].statusInPRS = RequestStatus::activeProcessing;
+        table[0].statusInPRS = RequestStatus::readyQueued;
         table[0].vehicleClassType = 99;
         coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
 
@@ -685,7 +674,8 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(proc.ReserviceLastCompleted(10), 555u);
     }
 
-    // activeOverride transitions
+    // activeOverride signaling: CO responds with readyOverridden or readyQueued -> PRS accepts the override termination
+    // activeNotOverridden is tracked in statusInCO only (CO-owned).
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -703,7 +693,8 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         proc.ApplyCoStatusUpdates(coRows, 1000);
 
         const auto &t = proc.Table();
-        EXPECT_EQ(t[0].statusInPRS, RequestStatus::activeNotOverridden);
+        EXPECT_EQ(t[0].statusInPRS, RequestStatus::activeOverride);
+        EXPECT_EQ(t[0].statusInCO, RequestStatus::activeNotOverridden);
         EXPECT_EQ(t[1].statusInPRS, RequestStatus::readyOverridden);
         EXPECT_EQ(t[2].statusInPRS, RequestStatus::readyQueued);
         EXPECT_EQ(t[3].statusInPRS, RequestStatus::readyQueued);
@@ -720,6 +711,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
 
         for (const auto &e : proc.Table()) {
             EXPECT_EQ(e.statusInPRS, RequestStatus::idleNotValid);
+            EXPECT_EQ(e.statusInCO, RequestStatus::idleNotValid);
         }
     }
 }

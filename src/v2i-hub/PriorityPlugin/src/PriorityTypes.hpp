@@ -105,8 +105,12 @@ namespace PriorityPlugin {
         uint32_t timeOfMessage          = 0;   // epoch seconds when PRS received the request
         uint32_t timeToLive             = 0;   // epoch seconds at which the request expires
 
-        // Current status per the NTCIP 1211 state machine
+        // PRS-owned state per NTCIP 1211 5.1.1.1.9.
         RequestStatus statusInPRS       = RequestStatus::idleNotValid;
+
+        // CO's most recently reported state per NTCIP 1211 5.2.1.2.5. Tracked separately 
+        // so the PRS does not echo CO-owned activeX values back on subsequent SETs.
+        RequestStatus statusInCO        = RequestStatus::idleNotValid;
 
         // Intersection ID that each request targets
         long     intersectionID         = 0;

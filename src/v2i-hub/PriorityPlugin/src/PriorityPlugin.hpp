@@ -233,6 +233,10 @@ namespace PriorityPlugin {
             // PRS busy flag per 4.3.2: true while prioritization processing is in progress
             bool _prsBusy = false;
 
+            // PRS mode: last prsServiceRequest payload sent to the CO.
+            // Used to avoid sending redundant SETs when the table state has not changed.
+            std::vector<uint8_t> _lastSentServiceRequest;
+
             // Background exchange loop thread
             std::thread _exchangeThread;
             std::atomic<bool> _running{false};
