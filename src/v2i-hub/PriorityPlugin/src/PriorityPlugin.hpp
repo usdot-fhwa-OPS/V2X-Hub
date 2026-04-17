@@ -248,7 +248,7 @@ namespace PriorityPlugin {
             uint16_t _estimatedDepartureTime;
             uint32_t _pollIntervalMs;        // PRS-CO poll interval (100-1000ms)
             uint32_t _timeToLiveSec;         // Max time PRS considers a priority request
-            uint8_t  _maxSsmBroadcastsPerStatus = 2; // 0 = unlimited
+            uint8_t  _maxSsmBroadcastsPerStatus = 2;
             std::array<uint32_t, 10> _reserviceClassTime = {}; // Per-class reservice period (seconds)
 
             // Status tracking

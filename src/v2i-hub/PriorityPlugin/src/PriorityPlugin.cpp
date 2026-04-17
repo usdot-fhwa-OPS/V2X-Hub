@@ -79,7 +79,8 @@ namespace PriorityPlugin {
         GetConfigValue<uint32_t>("TimeToLiveSec", _timeToLiveSec);
         uint32_t maxSsmBroadcasts = _maxSsmBroadcastsPerStatus;
         GetConfigValue<uint32_t>("MaxSsmBroadcastsPerStatus", maxSsmBroadcasts);
-        _maxSsmBroadcastsPerStatus = static_cast<uint8_t>(std::min(maxSsmBroadcasts, static_cast<uint32_t>(255)));
+        maxSsmBroadcasts = std::clamp(maxSsmBroadcasts, static_cast<uint32_t>(1), static_cast<uint32_t>(255));
+        _maxSsmBroadcastsPerStatus = static_cast<uint8_t>(maxSsmBroadcasts);
 
         // Parse per-class reservice times (comma-separated, up to 10 values)
         std::string reserviceStr;
@@ -310,8 +311,7 @@ namespace PriorityPlugin {
             }
         }
 
-        uint8_t broadcastCount = _maxSsmBroadcastsPerStatus > 0 ? _maxSsmBroadcastsPerStatus : 1;
-        for (uint8_t i = 0; i < broadcastCount; i++) {
+        for (uint8_t i = 0; i < _maxSsmBroadcastsPerStatus; i++) {
             BuildSSM(state);
         }
     }

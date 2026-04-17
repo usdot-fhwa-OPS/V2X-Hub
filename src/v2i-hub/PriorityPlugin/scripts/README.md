@@ -10,7 +10,7 @@ Run the [installation script](install.sh) to install all the dependencies.
 
 1. Enable the MessageReceiver plugin with RouteJ2735 set to true. Use all other default configurations.
 
-2. Enable the JSONMessageLogger plugin to log all received SRMs and generated SSMs.
+2. Optional: Enable the JSONMessageLogger plugin to decode and log all received SRMs and generated SSMs.
 
 3. Run the mock-srm.py script.
 

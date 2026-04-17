@@ -241,7 +241,7 @@ namespace PriorityPlugin {
                     entry.ssmBroadcastCount = 0;
                     entry.ssmLastStatus = effStatus;
                 }
-                if (_maxSsmBroadcastsPerStatus > 0 && entry.ssmBroadcastCount >= _maxSsmBroadcastsPerStatus) continue;
+                if (entry.ssmBroadcastCount >= _maxSsmBroadcastsPerStatus) continue;
                 entry.ssmBroadcastCount++;
                 byIntersection[entry.intersectionID].push_back(&entry);
             }

@@ -45,8 +45,8 @@
 		},
 		{
 			"key":"TimeToLiveSec",
-			"default":"60",
-			"description":"PRS mode only. The maximum time in seconds that the PRS considers a priority request after receiving it. Requests exceeding this time are automatically cleared. Per NTCIP 1211 3.5.1.2."
+			"default":"30",
+			"description":"PRS mode: The maximum time in seconds that the PRS considers a priority request after receiving it. Requests exceeding this time are automatically cleared. PRG mode: Used to evict stale requests."
 		},
 		{
 			"key":"ReserviceClassTimes",
@@ -56,7 +56,7 @@
 		{
 			"key":"MaxBroadcastsPerStatus",
 			"default":"2",
-			"description":"Maximum number of SSM broadcasts per priority request per status state. In PRS mode, the counter resets when the request transitions to a new status. In PRG mode, this is the number of SSM broadcasts per received SRM. Set to 0 for unlimited broadcasts (PRS only; PRG treats 0 as 1)."
+			"description":"Maximum number of SSM broadcasts per priority request per status state (1..255; values below 1 are clamped to 1). In PRS mode, the counter resets when the request transitions to a new status. In PRG mode, this is the number of SSM broadcasts per received SRM."
 		}
     ]
 }
