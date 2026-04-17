@@ -181,6 +181,7 @@ namespace PriorityPlugin {
             return;
         }
 
+        bool higherPriorityQueued = false;
         for (const auto &entry : _table) {
             if (&entry == activeEntry) continue;
             // Check if any readyQueued entry has higher priority than the active entry
@@ -191,9 +192,18 @@ namespace PriorityPlugin {
             if (entry.vehicleClassType < activeEntry->vehicleClassType ||
                 (entry.vehicleClassType == activeEntry->vehicleClassType &&
                  entry.vehicleClassLevel < activeEntry->vehicleClassLevel)) {
-                activeEntry->statusInPRS = RequestStatus::activeOverride;
+                higherPriorityQueued = true;
             }
             break;
+        }
+
+        if (higherPriorityQueued) {
+            activeEntry->statusInPRS = RequestStatus::activeOverride;
+        }
+        else if (activeEntry->statusInPRS == RequestStatus::activeOverride) {
+            // Higher-priority request withdrew or CO rejected the override (still activeX in CO).
+            // Stop asserting override so the next SET does not keep requesting one.
+            activeEntry->statusInPRS = RequestStatus::readyQueued;
         }
     }
 
