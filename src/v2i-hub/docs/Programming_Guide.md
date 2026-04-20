@@ -56,13 +56,13 @@ Below are the most common V2X Hub plugin integration and functionality and how t
 A V2X Hub Plugin may need to contain certain settings that vary from one deployment to the next, or perhaps may require a specific key to be entered. These are examples of V2X Hub configuration values. Configuration values are defined in the manifest file, stored in the V2X Hub configuration database, and then retrieved by the plugin during execution. In the Example Plugin we see two main functions that help with configuration.
 
 ```cpp
-void UpdateConfigSettings()
+void UpdateConfigSettings();
 ```
 
 This function updates an internal cache of all the needed Plugin parameters. In the case of Example Plugin, this function is called when the plugin starts and is connected (see State Changes), and when a configuration value is updated.
 
 ```cpp
-void OnConfigChanged(const char *key, const char *value)
+void OnConfigChanged(const char *key, const char *value);
 ```
 
 This function is called automatically when a configuration value is changed. The `key` parameter is set to the name of the configuration parameter that has changed and the `value` is set to the new value of that configuration parameter. Although it is possible to check the `key` for the correct value to update in the cached settings of a Plugin, it is often the practice to call `UpdateConfigSettings()` to re-read all of the values, effectively ignoring the supplied parameters.
@@ -527,26 +527,26 @@ ASN_SEQUENCE_ADD(&advisory->list, member);
 A V2X Hub routeable_message class represents the encoded message passed through the V2X Hub core server. Therefore, the contents are consistent between the plugin that sends the message and the plugin that receives it. Much of the previous sections discussed how a message is received in the plugin, but a plugin may also be a producer of any messages, whether they are J2735 messages or internal ones. The following API is available in the PluginClientClockAware parent class to handle the broadcast of a message through the V2X Hub system:
 
 ```cpp
-void BroadcastMessage(const IvpMessage *ivpMsg)
+void BroadcastMessage(const IvpMessage *ivpMsg);
 ```
 
 This is the function that directly emits the provided _ivpMsg_. This function is more typically invoked by the other forms below that expect a routeable_message class reference.
 
 ```cpp
-void BroadcastMessage(const tmx::routeable_message &routeableMsg)
+void BroadcastMessage(const tmx::routeable_message &routeableMsg);
 ```
 
 This function directly emits the provided `routeableMsg`. This is an efficient form because it just uses the underlying C-style structure contained in the class.
 
 ```cpp
-void BroadcastMessage(tmx::routeable_message &routeableMsg)
+void BroadcastMessage(tmx::routeable_message &routeableMsg);
 ```
 This function directly emits a _copy_ of the provided `routeableMsg`. This is less efficient than the previous form because the underlying C-style structure is first duplicated. The copy, however, is immediately destroyed after it is used.
 
 Since much of the work of a plugin is in building the message to send, most plugins do not really need to worry about the specifics of the V2X Hub routing messages. Therefore, there is a convenience function that can take any V2X Hub message and perform the encoding and the broadcast in one swoop:
 
 ```cpp
-template <typename MsgType> void BroadcastMessage(MsgType& message)
+template <typename MsgType> void BroadcastMessage(MsgType& message);
 ```
 
 This function routes the message through the V2X Hub. Below is code to send the TIM message created above by creating a TimEncodedMessage. Initialize the encoded message by passing a TimMessage which was created by a TravelerInformation. Set the TimEncodedMessage flags to route out of the DSRC radio, if the message is to be picked up by the DSRC Message Manger and broadcast out the RSU. Set the DSRC Metadata to its initial state, in this case out of the channel 178 with PSID 0x8003. The values set here are used as defaults, but the PSID and channel will be overwritten by the configuration in the DSRC Message Manager. Create a routable message based on the encoded message and call BroadcastMessage with the routable message to send the message into the V2X Hub.
@@ -1213,7 +1213,7 @@ template <typename MsgType> class TmxJ2735EncodedMessage: public TmxJ2735Encoded
 The template parameter `MsgType` is the TmxJ2735Message that is to be encoded and decoded. This class inherits from a simple base class that is just a JSON message type.
 
 ```cpp
-static constexpr const char *DefaultCodec = ASN1_CODEC<MsgType>::Encoding
+static constexpr const char *DefaultCodec = ASN1_CODEC<MsgType>::Encoding;
 ```
 
 The default encoding for this V2X Hub message is by default BER for the 2015 specification and UPER for the 2016 specification.
