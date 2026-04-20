@@ -165,4 +165,6 @@ else
     exit 1
 fi
 
+echo "Creating volume directories download/ logs/ ssl/"
+mkdir -m 755 -p download/ logs/ ssl/
 echo "Docker Environment Initialization Complete."
