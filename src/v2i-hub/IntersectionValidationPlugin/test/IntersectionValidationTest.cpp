@@ -45,6 +45,11 @@ TEST(MessageTypeTest, TimMessageCanBeInstantiated) {
 
 // Frequency Validation Tests
  
+TEST(FrequencyValidationTest, InitialMessageIntervalIsZero) {
+    auto result = calculateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS);
+    EXPECT_EQ(0u, result);
+}
+
 TEST(FrequencyValidationTest, SpatIntervalWithinThreshold) {
     auto result = calculateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_THRESHOLD_MS);
     EXPECT_EQ(100u, result);
@@ -53,6 +58,12 @@ TEST(FrequencyValidationTest, SpatIntervalWithinThreshold) {
 TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold) {
     EXPECT_THROW(
         calculateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_THRESHOLD_MS),
+        tmx::TmxException);
+}
+
+TEST(FrequencyValidationTest, SpatIntervalCurrentTimestampEarlierThanLastTimestamp) {
+    EXPECT_THROW(
+        calculateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
 }
  
@@ -66,8 +77,13 @@ TEST(FrequencyValidationTest, MapIntervalExceedsThreshold) {
         calculateMessageInterval(1000, 1101, MAP_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
 }
+
+TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestamp) {
+    EXPECT_THROW(
+        calculateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_THRESHOLD_MS),
+        tmx::TmxException);
+}
  
-  
 TEST(SpatValidationTest, DISABLED_ValidSpatPassesValidation) {
     // TODO: Construct a SPaT with all required fields and verify validation passes
 }

@@ -26,9 +26,9 @@ namespace IntersectionValidation
     IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name)
     {
 
-        AddMessageFilter("J2735", "SPAT-P", IvpMsgFlags_RouteDSRC);
-        AddMessageFilter("J2735", "MAP-P", IvpMsgFlags_RouteDSRC);
-        AddMessageFilter("J2735", "TIM", IvpMsgFlags_RouteDSRC);
+        AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
+        AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
+        AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
 
         SubscribeToMessages();
     }
@@ -46,10 +46,10 @@ namespace IntersectionValidation
 
 	void IntersectionValidationPlugin::OnMessageReceived(IvpMessage *msg)
     {
-        PluginClient::OnMessageReceived(msg);
-
         if (msg == nullptr || msg->subtype == nullptr)
             return;
+        
+        PluginClient::OnMessageReceived(msg);
 
         std::string subtype(msg->subtype);
 
@@ -100,11 +100,14 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
+        //measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");        
         // TODO: Perform SPAT required fields validation
+
     }
  
     void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
+        //measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
         // TODO: Perform MAP required fields validation
     }
  

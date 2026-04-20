@@ -26,6 +26,12 @@ namespace IntersectionValidation
             return 0;
         }
 
+        if (currentTimestampMs < lastTimestampMs)
+        {
+            throw tmx::TmxException("Current timestamp is earlier than last timestamp");
+            return 0;
+        }
+
         uint64_t intervalMs = currentTimestampMs - lastTimestampMs;
 
         if (intervalMs > thresholdMs)
