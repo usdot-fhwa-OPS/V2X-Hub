@@ -15,7 +15,8 @@
  */
  
 #include "IntersectionValidationPlugin.h"
-#include "MessageFrequencyValidator.h"
+#include "MessageIntervalValidator.h"
+
 using namespace tmx;
 using namespace tmx::utils;
 using namespace tmx::messages;
