@@ -46,12 +46,14 @@ namespace IntersectionValidation
     protected:
         void OnConfigChanged(const char *key, const char *value) override;
         void OnStateChange(IvpPluginState state) override;
-        void OnMessageReceived(IvpMessage *msg) override;
 
     private:
         // Frequency tracking
         uint64_t _lastSpatTimeMs = 0;
         uint64_t _lastMapTimeMs = 0;
+
+        const char *keySpatInterval = "SPaT Interval (ms)";
+        const char *keyMapInterval = "MAP Interval (ms)";
 
         /**
          * @brief Measure message frequency and broadcast TmxEventLogMessage if threshold exceeded.

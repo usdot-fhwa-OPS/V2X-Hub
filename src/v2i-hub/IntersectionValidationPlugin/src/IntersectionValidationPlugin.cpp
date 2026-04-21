@@ -29,6 +29,8 @@ namespace IntersectionValidation
         AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
         AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
         AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
+        _lastMapTimeMs = 0;
+        _lastSpatTimeMs = 0;
 
         SubscribeToMessages();
     }
@@ -44,29 +46,6 @@ namespace IntersectionValidation
         UpdateConfigSettings();
 	}
 
-	void IntersectionValidationPlugin::OnMessageReceived(IvpMessage *msg)
-    {
-        if (msg == nullptr || msg->subtype == nullptr)
-            return;
-        
-        PluginClient::OnMessageReceived(msg);
-
-        std::string subtype(msg->subtype);
-
-        if (subtype == "SPAT-P")
-        {
-            measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
-        }
-        else if (subtype == "MAP-P")
-        {
-            measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
-        }
-        else if (subtype == "TIM")
-        {
-            // No CTI 4501 frequency requirement for TIM
-        }
-    }
-
     void IntersectionValidationPlugin::OnStateChange(IvpPluginState state)
 	{
         PluginClientClockAware::OnStateChange(state);
@@ -80,10 +59,11 @@ namespace IntersectionValidation
     void IntersectionValidationPlugin::measureMessageFrequency(uint64_t &lastTimestampMs, uint64_t thresholdMs, const std::string &messageType)
     {
         uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
+        uint64_t intervalMs = 0;
+        
         try
         {
-            IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, thresholdMs);
+            intervalMs = IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, thresholdMs);
         }
         catch (const tmx::TmxException &e)
         {
@@ -95,19 +75,28 @@ namespace IntersectionValidation
             PluginClient::BroadcastMessage(eventLogMsg);
         }
 
+        if (messageType == "SPaT")
+        {
+            PluginClient::SetStatus("SPaT Message Interval (ms)", intervalMs);
+        }
+        else if (messageType == "MAP")
+        {
+            PluginClient::SetStatus("MAP Message Interval (ms)", intervalMs);
+        }
+
         lastTimestampMs = currentTimeMs;
     }
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
-        //measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");        
+        measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
         // TODO: Perform SPAT required fields validation
 
     }
  
     void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
-        //measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
+        measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
         // TODO: Perform MAP required fields validation
     }
  
