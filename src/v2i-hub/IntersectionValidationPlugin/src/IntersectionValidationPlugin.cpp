@@ -23,14 +23,14 @@ using namespace std;
  
 namespace IntersectionValidation
 {
-    IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name)
+    IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name),
+        _lastMapTimeMs(0),
+        _lastSpatTimeMs(0)
     {
 
         AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
         AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
         AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
-        _lastMapTimeMs = 0;
-        _lastSpatTimeMs = 0;
 
         SubscribeToMessages();
     }
@@ -60,7 +60,7 @@ namespace IntersectionValidation
     {
         uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
         uint64_t intervalMs = 0;
-        
+
         try
         {
             intervalMs = IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, thresholdMs);

@@ -52,9 +52,6 @@ namespace IntersectionValidation
         uint64_t _lastSpatTimeMs = 0;
         uint64_t _lastMapTimeMs = 0;
 
-        const char *keySpatInterval = "SPaT Interval (ms)";
-        const char *keyMapInterval = "MAP Interval (ms)";
-
         /**
          * @brief Measure message frequency and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
