@@ -30,7 +30,6 @@ namespace IntersectionValidation
 
         AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
         AddMessageFilter<MapDataMessage>(this, &IntersectionValidationPlugin::HandleMapDataMessage);
-        AddMessageFilter<TimMessage>(this, &IntersectionValidationPlugin::HandleTimMessage);
 
         SubscribeToMessages();
     }
@@ -98,11 +97,6 @@ namespace IntersectionValidation
     {
         measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
         // TODO: Perform MAP required fields validation
-    }
- 
-    void IntersectionValidationPlugin::HandleTimMessage(TimMessage &msg, routeable_message &routeableMsg)
-    {
-        // TODO: Perform TIM required fields validation
     }
 }
  

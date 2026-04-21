@@ -25,7 +25,6 @@
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
-#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
 namespace IntersectionValidation
 {
@@ -41,7 +40,6 @@ namespace IntersectionValidation
         // Message handlers
         void HandleSpatMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
         void HandleMapDataMessage(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
-        void HandleTimMessage(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
 
     protected:
         void OnConfigChanged(const char *key, const char *value) override;
@@ -49,8 +47,8 @@ namespace IntersectionValidation
 
     private:
         // Frequency tracking
-        uint64_t _lastSpatTimeMs = 0;
         uint64_t _lastMapTimeMs = 0;
+        uint64_t _lastSpatTimeMs = 0;
 
         /**
          * @brief Measure message frequency and broadcast TmxEventLogMessage if threshold exceeded.
