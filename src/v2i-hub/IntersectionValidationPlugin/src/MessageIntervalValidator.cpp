@@ -14,7 +14,7 @@
  * the License.
  */
 
-#include "MessageFrequencyValidator.h"
+#include "MessageIntervalValidator.h"
 
 namespace IntersectionValidation
 {

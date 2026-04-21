@@ -21,7 +21,7 @@
 #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
 #include "IntersectionValidationPlugin.h"
-#include "MessageFrequencyValidator.h"
+#include "MessageIntervalValidator.h"
  
 using namespace tmx::messages;
 using namespace IntersectionValidation;
