@@ -56,22 +56,34 @@ namespace IntersectionValidation
         }
     }
 
-    void IntersectionValidationPlugin::measureMessageFrequency(uint64_t &lastTimestampMs, uint64_t thresholdMs, const std::string &messageType)
+    void IntersectionValidationPlugin::measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType)
     {
         uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
         uint64_t intervalMs = 0;
 
         try
         {
-            intervalMs = IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, thresholdMs);
+            intervalMs = IntersectionValidation::calculateMessageInterval(lastTimestampMs, currentTimeMs, maxThresholdMs);
         }
         catch (const tmx::TmxException &e)
         {
-            PLOG(tmx::utils::logWARNING) << messageType << " frequency violation: " << e.what();
+            PLOG(tmx::utils::logWARNING) << messageType << " interval violation: " << e.what();
 
             TmxEventLogMessage eventLogMsg;
             eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
-            eventLogMsg.set_description(messageType + " " + e.what());
+            eventLogMsg.set_description(messageType + EVENT_MAX_THRESHOLD +
+                                        std::to_string(maxThresholdMs) + " ms. Actual: " + std::to_string(intervalMs) + " ms");
+            PluginClient::BroadcastMessage(eventLogMsg);
+        }
+
+        if (intervalMs > requiredThresholdMs && intervalMs <= maxThresholdMs)
+        {
+            PLOG(tmx::utils::logWARNING) << messageType << " interval violation: interval " << intervalMs << " ms";
+
+            TmxEventLogMessage eventLogMsg;
+            eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+            eventLogMsg.set_description(messageType + EVENT_REQUIRED_THRESHOLD +
+                                        std::to_string(requiredThresholdMs) + " ms. Actual: " + std::to_string(intervalMs) + " ms");
             PluginClient::BroadcastMessage(eventLogMsg);
         }
 
@@ -89,14 +101,14 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
-        measureMessageFrequency(_lastSpatTimeMs, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
+        measureMessageInterval(_lastSpatTimeMs, SPAT_INTERVAL_REQUIRED_MS, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
         // TODO: Perform SPAT required fields validation
 
     }
  
     void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
-        measureMessageFrequency(_lastMapTimeMs, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
+        measureMessageInterval(_lastMapTimeMs, MAP_INTERVAL_REQUIRED_MS, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
         // TODO: Perform MAP required fields validation
     }
 }

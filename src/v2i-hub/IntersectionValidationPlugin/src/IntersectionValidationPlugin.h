@@ -46,21 +46,26 @@ namespace IntersectionValidation
         void OnStateChange(IvpPluginState state) override;
 
     private:
-        // Frequency tracking
+        // Interval tracking
         uint64_t _lastMapTimeMs = 0;
         uint64_t _lastSpatTimeMs = 0;
 
         /**
-         * @brief Measure message frequency and broadcast TmxEventLogMessage if threshold exceeded.
+         * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
-         * @param thresholdMs maximum allowable interval in ms.
+         * @param requiredThresholdMs required threshold in ms.
+         * @param maxThresholdMs maximum threshold in ms.
          * @param messageType label for logging (e.g. "SPaT", "MAP").
          */
-        void measureMessageFrequency(uint64_t &lastTimestampMs, uint64_t thresholdMs, const std::string &messageType);
+        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
 
         // CTI 4501 thresholds
         static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
         static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
-    };
+        static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
+        static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1000;
 
+        static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
+        static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
+    };
 }
