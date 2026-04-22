@@ -53,13 +53,19 @@ namespace tmx::utils
 
     class snmp_client
     {
+    protected:
+        /** @brief Default constructor for use by derived classes. 
+         *         Needed by mock client for testing purposes.
+        */
+        snmp_client() = default;
+
     private:
         /*variables to store an snmp session*/
         // struct that holds information about who we're going to be talking to
         // We need to declare 2 of these, one to fill info with and second which is
         // a pointer returned by the library
         struct snmp_session session;
-        struct snmp_session *ss;
+        struct snmp_session *ss = nullptr;
 
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
@@ -81,9 +87,9 @@ namespace tmx::utils
         std::string community_ = "public";
         /* net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3
         https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/library/snmp.h */
-        int snmp_version_ = SNMP_VERSION_3; // default to 3 since previous versions not compatable currently
+        int snmp_version_ = SNMP_VERSION_3; // default to 3
         /*Time after which the the snmp request times out*/
-        int timeout_ = 10000;
+        int timeout_ = SNMP_DEFAULT_TIMEOUT; // default to 1s
         /**
          * @brief Helper method for populating snmp_respons_obj with SNMP get response.
          * @param val response object
@@ -108,9 +114,9 @@ namespace tmx::utils
          * @param authPassPhrase The authentication protocol pass phrase.
          * @param snmp_version The snmp_version as defined in net-snmp. Default to 0 if unassigned.
          *                     net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3"
-         * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 100 if unassigned
+         * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 1s if unassigned.
          * **/
-        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = 3, int timeout = 100): snmp_client(ip, port, community, snmp_user, securityLevel, "SHA", authPassPhrase,"","",snmp_version, timeout ) {};
+        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authPassPhrase, int snmp_version = 3, int timeout = SNMP_DEFAULT_TIMEOUT): snmp_client(ip, port, community, snmp_user, securityLevel, "SHA", authPassPhrase,"","",snmp_version, timeout ) {};
 
         /** @brief Constructor for SNMP Service client.
          *  Uses the arguments provided to establish an snmp connection
@@ -125,9 +131,9 @@ namespace tmx::utils
          * @param privPassPhrase The privacy protocol pass phrase.
          * @param snmp_version The snmp_version as defined in net-snmp. Default to 0 if unassigned.
          *                     net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3"
-         * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 100 if unassigned
+         * @param timeout The time in microseconds after which an snmp session request expires. Defaults to 1s if unassigned.
          * **/
-        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version = 3, int timeout = 100);
+        snmp_client(const std::string &ip, const int &port, const std::string &community, const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version = 3, int timeout = SNMP_DEFAULT_TIMEOUT);
 
         /* Disable default copy constructor*/
         snmp_client(snmp_client &sc) = delete;

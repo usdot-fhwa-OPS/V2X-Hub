@@ -1,4 +1,6 @@
 #include "SNMPClient.h"
+#include <tmx/messages/byte_stream.hpp>
+#include <arpa/inet.h>
 
 namespace tmx::utils
 {
@@ -9,7 +11,15 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG1) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+
+        // Validate IP address format
+        struct in_addr addr4;
+        struct in6_addr addr6;
+        if (inet_pton(AF_INET, ip.c_str(), &addr4) != 1 && inet_pton(AF_INET6, ip.c_str(), &addr6) != 1)
+        {
+            throw snmp_client_exception("Invalid IP address: " + ip);
+        }
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
         std::string ip_port_string = ip_ + ":" + std::to_string(port_);
@@ -20,15 +30,25 @@ namespace tmx::utils
         snmp_sess_init(&session);
         session.peername = ip_port;
         session.version = snmp_version_; // SNMP_VERSION_3
-        session.securityName = (char *)snmp_user.c_str();
-        session.securityNameLen = snmp_user.length();
-        session.securityModel = SNMP_SEC_MODEL_USM;
-
         // Fallback behavior to setup a community for SNMP V1/V2
         if (snmp_version_ != SNMP_VERSION_3)
         {
-            session.community = (unsigned char *)community.c_str();
+            session.community = reinterpret_cast<unsigned char *>(community_.data());
             session.community_len = community_.length();
+            if (snmp_version_ == SNMP_VERSION_1)
+            {
+                session.securityModel = SNMP_SEC_MODEL_SNMPv1;
+            }
+            else
+            {
+                session.securityModel = SNMP_SEC_MODEL_SNMPv2c;
+            }
+        }
+        else
+        {
+            session.securityName = (char *)snmp_user.c_str();
+            session.securityNameLen = snmp_user.length();
+            session.securityModel = SNMP_SEC_MODEL_USM;
         }
 
         // Set security level
@@ -66,7 +86,9 @@ namespace tmx::utils
             else if (authProtocol == "SHA-512") {
                 usmAuthProto = usmHMAC384SHA512AuthProtocol;
             }
-            else usmAuthProto = usmHMACSHA1AuthProtocol;
+            else {
+                throw snmp_client_exception("Invalid authentication protocol " + authProtocol + " !");
+            }
             // Passphrase used for authentication
             auto authPhrase_len = authPassPhrase.length();
             auto authPhrase = (u_char *)authPassPhrase.c_str();
@@ -115,7 +137,7 @@ namespace tmx::utils
                 usmPrivProto = usmAES256CiscoPrivProtocol;
                 privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
             }
-            else if (securityLevel == "authPriv" ) {
+            else {
                 throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
             }
             // Passphrase used for privacy
@@ -154,7 +176,10 @@ namespace tmx::utils
     snmp_client::~snmp_client()
     {
         PLOG(logINFO) << "Closing SNMP session";
-        snmp_close(ss);
+        if (ss)
+        {
+            snmp_close(ss);
+        }
     }
     bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
@@ -163,7 +188,7 @@ namespace tmx::utils
         /*Structure to hold response from the remote host*/
         struct snmp_pdu *response;
         pdu = snmp_pdu_create(SNMP_MSG_SET);
-        FILE_LOG(logDEBUG1) << "Sending SNMP Requests length " << requests.size();
+        FILE_LOG(logDEBUG3) << "Sending SNMP Requests length " << requests.size();
         std::string request_log = "Outgoing Request :";
         for (const auto &request : requests) {
             request_log.append("\n" + request.to_string());
@@ -183,15 +208,15 @@ namespace tmx::utils
             throw snmp_client_exception("Encountered " + std::to_string(failures) + " failures while creating PDU");
         }
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logDEBUG) << request_log; 
-        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logDEBUG3) << request_log; 
+        PLOG(logDEBUG3) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
         bool success = false;
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR ) {
             success = true;
             for (auto vars = response->variables; vars;
                      vars = vars->next_variable) {
-                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG) {
+                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG3) {
                     print_variable(vars->name, vars->name_length, vars);
                 }
             }
@@ -221,7 +246,7 @@ namespace tmx::utils
         // Create pdu for the data
         if (request_type == request_type::GET)
         {
-            PLOG(logDEBUG1) << "Attempting to GET value for: " << input_oid;
+            PLOG(logDEBUG3) << "Attempting to GET value for: " << input_oid;
             pdu = snmp_pdu_create(SNMP_MSG_GET);
         }
         else if (request_type == request_type::SET)
@@ -255,25 +280,24 @@ namespace tmx::utils
             {
                 if (val.type == snmp_response_obj::response_type::INTEGER)
                 {
-                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val.val_int;
+                    PLOG(logDEBUG3) << "Attempting to SET value: " << val.val_int << " for OID: " << input_oid;
                     snmp_add_var(pdu, OID, OID_len, 'i', (std::to_string(val.val_int)).c_str());
                 }
-                // Needs to be finalized to support octet string use
                 else if (val.type == snmp_response_obj::response_type::STRING)
                 {
-
-                    std::string val_string (val.val_string.begin(), val.val_string.end());
-                    PLOG(logDEBUG1) << "Attempting to SET value for " << input_oid << " to " << val_string;
-
-                    snmp_add_var(pdu, OID, OID_len, 's', val_string.c_str());
+                    PLOG(logDEBUG3) << "Attempting to SET octet string: "
+                                    << tmx::byte_stream_encode(tmx::byte_stream(val.val_string.begin(), val.val_string.end()))
+                                    << " (" << val.val_string.size() << " bytes)"
+                                    << " for OID: " << input_oid;
+                    snmp_pdu_add_variable(pdu, OID, OID_len, ASN_OCTET_STR, val.val_string.data(), val.val_string.size());
                 }
             }
 
-            PLOG(logDEBUG) << "Created OID for input: " << input_oid;
+            PLOG(logDEBUG3) << "Created OID for input: " << input_oid;
         }
         // Send the request
         int status = snmp_synch_response(ss, pdu, &response);
-        PLOG(logDEBUG) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
+        PLOG(logDEBUG3) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
 
         // Check GET response
         if (status == STAT_SUCCESS && response && response->errstat == SNMP_ERR_NOERROR )
@@ -340,16 +364,13 @@ namespace tmx::utils
 
     void snmp_client::process_snmp_set_response( const snmp_response_obj &val,  const std::string &input_oid) const {
         if(val.type == snmp_response_obj::response_type::INTEGER){
-            FILE_LOG(logDEBUG) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int << std::endl;
+            FILE_LOG(logDEBUG3) << "Success in SET for OID: " << input_oid << " Value: " << val.val_int << std::endl;
         }
 
         else if(val.type == snmp_response_obj::response_type::STRING){
-            FILE_LOG(logDEBUG) << "Success in SET for OID: " 
-                << input_oid 
-                << " Value:" 
-                << std::string(val.val_string.begin(), val.val_string.end()) 
-                << std::endl;
-
+            FILE_LOG(logDEBUG3) << "Success in SET for OID: " << input_oid
+                << " Value: " << tmx::byte_stream_encode(tmx::byte_stream(val.val_string.begin(), val.val_string.end()))
+                << " (" << val.val_string.size() << " bytes)" << std::endl;
         }
     }
 
