@@ -677,7 +677,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(proc.Table()[1].statusInCO, RequestStatus::activeAdjustNotNeeded);
     }
 
-    // Ready to error states
+    // Ready to closed states
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -698,7 +698,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(t[2].statusInPRS, RequestStatus::closedFlash);
     }
 
-    // closedCanceled accepted while PRS is in readyX.
+    // closedCanceled accepted while PRS is in readyX
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -716,7 +716,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(t[1].statusInPRS, RequestStatus::closedCanceled);
     }
 
-    // closedCompleted from readyQueued. Stamps reservice time.
+    // closedCompleted from readyQueued and reservice time stamped
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -749,8 +749,8 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(proc.ReserviceLastCompleted(10), 555u);
     }
 
-    // activeOverride signaling: CO responds with readyOverridden or readyQueued -> PRS accepts the override termination
-    // activeNotOverridden is tracked in statusInCO only (CO-owned).
+    // Given activeOverride, CO responds with readyOverridden or readyQueued. 
+    // PRS accepts the override, but activeNotOverridden is tracked only in statusInCO.
     {
         PriorityRequestProcessor proc;
         auto &table = proc.Table();
@@ -775,7 +775,7 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(t[3].statusInPRS, RequestStatus::readyQueued);
     }
 
-    // Skips idle entries
+    // Idle entries do nothing, stay at default idleNotValid state
     {
         PriorityRequestProcessor proc;
         std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
@@ -789,4 +789,91 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
             EXPECT_EQ(e.statusInCO, RequestStatus::idleNotValid);
         }
     }
+}
+
+TEST(PriorityRequestProcessorTest, EncodeServiceRequestIdenticalState) {
+    // The exchange loop gates to suppress redundant SETs and keeps a CO from 
+    // reprocessing a closed request. Check that two encodes of the same table 
+    // state produce an identical output.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].serviceStrategyNumber = 1;
+    table[0].timeOfServiceDesiredInPRS = 1775846010;
+    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].requestID = 42;
+
+    auto first = proc.EncodeServiceRequest(false);
+    auto second = proc.EncodeServiceRequest(false);
+    EXPECT_EQ(first, second);
+}
+
+TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenCoClosesRequest) {
+    // When the CO reports closedCompleted, ApplyCoStatusUpdates changes statusInPRS to closedCompleted. 
+    // The re-encoded payload must differ from the previous SET so the PRS acknowledges closure to the CO.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].serviceStrategyNumber = 1;
+    table[0].timeOfServiceDesiredInPRS = 1775846010;
+    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].requestID = 42;
+
+    auto before = proc.EncodeServiceRequest(false);
+
+    std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows{};
+    coRows[0].strategyRequested = 1;
+    coRows[0].requestedTimeOfServiceDesired = 1775846010;
+    coRows[0].requestedTimeOfEstimatedDeparture = 1775846020;
+    coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
+    proc.ApplyCoStatusUpdates(coRows, 1775846000);
+
+    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::closedCompleted);
+
+    auto after = proc.EncodeServiceRequest(false);
+    EXPECT_NE(before, after);
+    EXPECT_EQ(after[9], static_cast<uint8_t>(RequestStatus::closedCompleted));
+}
+
+TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenTtlExpires) {
+    // When the TTL for a readyX/closedX entry expires, RunPrioritizationProcessing resets the row to idleNotValid. 
+    // The re-encoded payload must differ from the prior SET so the exchange loop clears the row on the CO instead of
+    // leaving a stale entry.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].serviceStrategyNumber = 1;
+    table[0].timeOfServiceDesiredInPRS = 1775846010;
+    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].requestID = 42;
+    table[0].timeToLive = 1000;
+
+    auto before = proc.EncodeServiceRequest(false);
+
+    proc.RunPrioritizationProcessing(1001); // TTL < now
+
+    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::idleNotValid);
+
+    auto after = proc.EncodeServiceRequest(false);
+    EXPECT_NE(before, after);
+    EXPECT_EQ(after[9], static_cast<uint8_t>(RequestStatus::idleNotValid));
+}
+
+TEST(PriorityRequestProcessorTest, EncodeServiceRequestUsesStatusInPrsNotStatusInCo) {
+    // After the CO has reported activeProcessing, the next EncodeServiceRequest must still serialize
+    // the PRS-owned statusInPRS (readyQueued) into byte 9, not the CO-owned statusInCO.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].serviceStrategyNumber = 1;
+    table[0].statusInPRS = RequestStatus::readyQueued;
+
+    std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows{};
+    coRows[0].requestStatusInCO = RequestStatus::activeProcessing;
+    proc.ApplyCoStatusUpdates(coRows, 1000);
+
+    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::activeProcessing);
+
+    auto setPayload = proc.EncodeServiceRequest(false);
+    EXPECT_EQ(setPayload[9], static_cast<uint8_t>(RequestStatus::readyQueued));
 }

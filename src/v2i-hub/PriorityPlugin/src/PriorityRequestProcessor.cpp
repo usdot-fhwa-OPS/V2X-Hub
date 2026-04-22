@@ -330,7 +330,7 @@ namespace PriorityPlugin {
             entry.statusInCO = coStatus;
 
             switch (coStatus) {
-                // CO-owned states, tracked in statusInCO above.
+                // CO-owned states, tracked only in statusInCO.
                 case RequestStatus::activeProcessing:
                 case RequestStatus::activeAdjustNotNeeded:
                 case RequestStatus::activeCancel:
