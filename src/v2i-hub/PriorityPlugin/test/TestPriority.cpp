@@ -518,6 +518,81 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingHigherPriorityOver
     EXPECT_EQ(t[1].statusInPRS, RequestStatus::readyQueued);
 }
 
+TEST(PriorityRequestProcessorTest, CheckForOverrideClearsWhenHigherPriorityWithdraws) {
+    // CO is in activeX state in and PRS previously asserted activeOverride. 
+    // If higher priority readyQueued entry goes away, CheckForOverride must
+    // revert statusInPRS to readyQueued.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].statusInPRS = RequestStatus::activeOverride;
+    table[0].statusInCO = RequestStatus::activeNotOverridden;
+    table[0].vehicleClassType = 3;
+    table[0].vehicleClassLevel = 2;
+    table[0].requestID = 10;
+
+    proc.RunPrioritizationProcessing(50);
+
+    const auto &t = proc.Table();
+    EXPECT_EQ(t[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(t[0].statusInCO, RequestStatus::activeNotOverridden);
+}
+
+TEST(PriorityRequestProcessorTest, CheckForOverrideClearsWhenOnlyLowerPriorityQueued) {
+    // A lower priority readyQueued entry does not justify maintaining activeOverride 
+    // on the CO's active entry. Only a higher priority readyQueued entry does.
+    // So, activeOverride should clear in this scenario.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].statusInPRS = RequestStatus::activeOverride;
+    table[0].statusInCO = RequestStatus::activeProcessing;
+    table[0].vehicleClassType = 1;
+    table[0].vehicleClassLevel = 1;
+    table[0].requestID = 10;
+
+    table[1].statusInPRS = RequestStatus::readyQueued;
+    table[1].vehicleClassType = 7;
+    table[1].vehicleClassLevel = 2;
+    table[1].requestID = 20;
+
+    proc.RunPrioritizationProcessing(50);
+
+    const auto &t = proc.Table();
+    EXPECT_EQ(t[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(t[0].statusInCO, RequestStatus::activeProcessing);
+}
+
+TEST(PriorityRequestProcessorTest, CheckForOverrideAcrossTicks) {
+    // PRS asserts activeOverride when a higher priority readyQueued
+    // is placed and a CO entry is active. PRS then reverts on a later tick once
+    // that request is withdrawn. Guards against activeOverride getting stuck in
+    // statusInPRS after the triggering condition clears.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].statusInCO = RequestStatus::activeProcessing;
+    table[0].vehicleClassType = 3;
+    table[0].vehicleClassLevel = 2;
+    table[0].requestID = 10;
+
+    table[1].statusInPRS = RequestStatus::readyQueued;
+    table[1].vehicleClassType = 1;
+    table[1].vehicleClassLevel = 1;
+    table[1].requestID = 20;
+
+    proc.RunPrioritizationProcessing(50);
+    EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::activeOverride);
+
+    // Higher priority request withdraws, CO remains active in the original entry.
+    proc.Table()[1] = PriorityRequestEntry{};
+
+    proc.RunPrioritizationProcessing(51);
+
+    const auto &t = proc.Table();
+    EXPECT_EQ(t[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(t[0].statusInCO, RequestStatus::activeProcessing);
+    EXPECT_EQ(t[0].requestID, 10);
+}
+
 TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingEqualPriorityDoesNotOverrideActive) {
     // Test step (c) with an equal priority request does not override an active request.
     PriorityRequestProcessor proc;

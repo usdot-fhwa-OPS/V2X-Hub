@@ -81,7 +81,7 @@ namespace tmx::utils
         std::string community_ = "public";
         /* net-snmp version definition: SNMP_VERSION_1:0 SNMP_VERSION_2c:1 SNMP_VERSION_2u:2 SNMP_VERSION_3:3
         https://github.com/net-snmp/net-snmp/blob/master/include/net-snmp/library/snmp.h */
-        int snmp_version_ = SNMP_VERSION_3; // default to 3 since previous versions not compatable currently
+        int snmp_version_ = SNMP_VERSION_3; // default to 3
         /*Time after which the the snmp request times out*/
         int timeout_ = SNMP_DEFAULT_TIMEOUT; // default to 1s
         /**
