@@ -11,7 +11,7 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG4) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
 
         // Validate IP address format
         struct in_addr addr4;
@@ -36,9 +36,13 @@ namespace tmx::utils
             session.community = reinterpret_cast<unsigned char *>(community_.data());
             session.community_len = community_.length();
             if (snmp_version_ == SNMP_VERSION_1)
+            {
                 session.securityModel = SNMP_SEC_MODEL_SNMPv1;
+            }
             else
+            {
                 session.securityModel = SNMP_SEC_MODEL_SNMPv2c;
+            }
         }
         else
         {
@@ -172,7 +176,10 @@ namespace tmx::utils
     snmp_client::~snmp_client()
     {
         PLOG(logINFO) << "Closing SNMP session";
-        snmp_close(ss);
+        if (ss)
+        {
+            snmp_close(ss);
+        }
     }
     bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
@@ -181,7 +188,7 @@ namespace tmx::utils
         /*Structure to hold response from the remote host*/
         struct snmp_pdu *response;
         pdu = snmp_pdu_create(SNMP_MSG_SET);
-        FILE_LOG(logDEBUG1) << "Sending SNMP Requests length " << requests.size();
+        FILE_LOG(logDEBUG3) << "Sending SNMP Requests length " << requests.size();
         std::string request_log = "Outgoing Request :";
         for (const auto &request : requests) {
             request_log.append("\n" + request.to_string());
@@ -209,7 +216,7 @@ namespace tmx::utils
             success = true;
             for (auto vars = response->variables; vars;
                      vars = vars->next_variable) {
-                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG) {
+                if (tmx::utils::FILELog::ReportingLevel() >= tmx::utils::logDEBUG3) {
                     print_variable(vars->name, vars->name_length, vars);
                 }
             }

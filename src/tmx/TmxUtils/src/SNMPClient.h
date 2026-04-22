@@ -53,13 +53,19 @@ namespace tmx::utils
 
     class snmp_client
     {
+    protected:
+        /** @brief Default constructor for use by derived classes. 
+         *         Needed by mock client for testing purposes.
+        */
+        snmp_client() = default;
+
     private:
         /*variables to store an snmp session*/
         // struct that holds information about who we're going to be talking to
         // We need to declare 2 of these, one to fill info with and second which is
         // a pointer returned by the library
         struct snmp_session session;
-        struct snmp_session *ss;
+        struct snmp_session *ss = nullptr;
 
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
