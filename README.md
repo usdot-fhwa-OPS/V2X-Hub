@@ -1,4 +1,4 @@
-[![CI](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml)  ![Docker Pulls](https://img.shields.io/docker/pulls/usdotfhwaops/v2xhub)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) ![GitHub License](https://img.shields.io/github/license/usdot-fhwa-OPS/V2X-Hub)
+![GitHub Release](https://img.shields.io/github/v/release/usdot-fhwa-OPS/V2X-Hub) [![CI](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml)  ![Docker Pulls](https://img.shields.io/docker/pulls/usdotfhwaops/v2xhub)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) ![GitHub License](https://img.shields.io/github/license/usdot-fhwa-OPS/V2X-Hub)
 
 
 # Overview
