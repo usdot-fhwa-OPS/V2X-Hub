@@ -26,6 +26,14 @@ The toolset can be installed either locally or through a docker container. Pleas
 
 `sudo pip3 install -r requirements.txt`
 
+`cd src`
+
+- Install the J2735 definitions package from the local wheel. You may install any of the wheels available. 
+Example:
+   ```sh
+   pip install wheels/j2735_202409-*.whl
+   ```
+
 To run the application just enter: 
 
 `python3 validationTool.py`
