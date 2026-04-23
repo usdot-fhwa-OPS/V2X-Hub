@@ -1,4 +1,4 @@
-name: Build V2X-Hub Images and Run Integration Tests
+name: CI
 
 on:
   workflow_dispatch:

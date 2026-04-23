@@ -1,7 +1,6 @@
-## CI/CD Processes
-| CI/CD |  Sonar Code Quality |
-|----------------------|---------------------|
-[![Build V2X-Hub Images and Run Integration Tests](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml) | [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) |
+![GitHub Release](https://img.shields.io/github/v/release/usdot-fhwa-OPS/V2X-Hub) [![CI](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml/badge.svg)](https://github.com/usdot-fhwa-OPS/V2X-Hub/actions/workflows/ci.yml)  ![Docker Pulls](https://img.shields.io/docker/pulls/usdotfhwaops/v2xhub)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=usdot-fhwa-ops_V2X-Hub&metric=alert_status)](https://sonarcloud.io/dashboard?id=usdot-fhwa-ops_V2X-Hub) ![GitHub License](https://img.shields.io/github/license/usdot-fhwa-OPS/V2X-Hub)
+
+
 # Overview
 In order to bring infrastructure components into the Connected Vehicle architecture, you need software that will facilitate the exchange of data in a format that can be understood by both vehicles and infrastructure devices The V2X Hub, takes in data from vehicles via Basic Safety Messages (BSM) in a Society of Automotive Engineers (SAE) standard format and translates the data to a National Transportation Communications for ITS Protocol (NTCIP) that infrastructure components can understand.  And vice versa.   It translates Signal Phase and Timing (SPaT) data from NTCIP to SAE and sends it to the Roadside Unit (RSU) for broadcast to mobile devices, including vehicles. 
 
