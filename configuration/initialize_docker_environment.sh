@@ -73,9 +73,15 @@ if [[ $SIMULATION_MODE == "TRUE" ]]; then
     read -r -p "Enter Sensor Configuration File Path (or press Enter to use default as $SENSOR_JSON_FILE_PATH_DEFAULT): " SENSOR_JSON_FILE_PATH
     SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-$SENSOR_JSON_FILE_PATH_DEFAULT}
 fi
+
 # MySQL (IVP) User Password
 read -r -s -p "MYSQL PASSWORD (password for configuration database): " MYSQL_PASSWORD
 echo
+
+# MySQL (IVP) Root Password
+read -r -s -p "MYSQL ROOT PASSWORD (password for configuration database root user): " MYSQL_ROOT_PASSWORD
+echo
+
 # V2X Hub Username
 read -r -p "V2X Hub Admin Username (or press Enter to use default as v2xadmin): " V2XHUB_USERNAME
 V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
@@ -113,6 +119,7 @@ SIMULATION_MODE=$SIMULATION_MODE
 COMPOSE_PROFILES="$COMPOSE_PROFILES"
 SENSOR_JSON_FILE_PATH="$SENSOR_JSON_FILE_PATH"
 MYSQL_PASSWORD="$MYSQL_PASSWORD"
+MYSQL_ROOT_PASSWORD="$MYSQL_ROOT_PASSWORD"
 V2XHUB_USERNAME="$V2XHUB_USERNAME"
 V2XHUB_PASSWORD="$V2XHUB_PASSWORD"
 EOF

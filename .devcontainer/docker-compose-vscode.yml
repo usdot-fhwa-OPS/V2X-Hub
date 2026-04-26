@@ -19,7 +19,14 @@ services:
       # This is where VS Code should expect to find your project's source code and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
     # Overrides default command so things don't shut down after the process ends.
-    command: /bin/sh -c "while sleep 10000; do :; done"  
+    command: /bin/sh -c "while sleep 10000; do :; done"
+    # Override healthcheck because it will fail in the devcontainer before building and php requires a healthcheck.
+    healthcheck:
+      test: ["CMD-SHELL", "true"]
+      interval: 10s
+      timeout: 5s
+      retries: 1
+      start_period: 5s
 
   db:
     volumes:
