@@ -164,7 +164,8 @@ else
     echo "Error: .env file not found and no interactive input provided."
     exit 1
 fi
-
-echo "Creating volume directories download/ logs/ ssl/"
-mkdir -m 755 -p download/ logs/ ssl/
+# Read .env file and create volume directories if they do not exist
+source .env
+echo "Creating volume directories at ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/"
+mkdir -m 755 -p ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/
 echo "Docker Environment Initialization Complete."

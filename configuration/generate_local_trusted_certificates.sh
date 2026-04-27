@@ -1,19 +1,19 @@
 #!/bin/bash
 set -e
 # Check for ssl/cert-key.pem and ssl/cert.pem
-if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
+if [[ ! -f "/tmp/v2xhub_data/ssl/cert-key.pem" || ! -f "/tmp/v2xhub_data/ssl/cert.pem" ]]; then
     echo "Incomplete or missing SSL certificates."
     # Clear certificates if only one exists
-    if [[ -f "ssl/cert-key.pem" ]]; then
+    if [[ -f "/tmp/v2xhub_data/ssl/cert-key.pem" ]]; then
         echo "Only cert-key.pem found. Removing it..."
-        rm -f ssl/cert-key.pem
-    elif [[ -f "ssl/cert.pem" ]]; then
+        rm -f /tmp/v2xhub_data/ssl/cert-key.pem
+    elif [[ -f "/tmp/v2xhub_data/ssl/cert.pem" ]]; then
         echo "Only cert.pem found. Removing it..."
-        rm -f ssl/cert.pem
+        rm -f /tmp/v2xhub_data/ssl/cert.pem
     fi
     echo "Generating new certificates..."
-    mkdir -p ssl
-    cd ssl || exit
+    mkdir -p /tmp/v2xhub_data/ssl
+    cd /tmp/v2xhub_data/ssl || exit
     
     # Detect system architecture
     ARCH=$(uname -m)

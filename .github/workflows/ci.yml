@@ -328,9 +328,9 @@ jobs:
       - name: Initialize directories
         working-directory: v2xhub-integration-tests
         run: |
-          mkdir ssl
-          mkdir download
-          mkdir logs
+          mkdir -p /tmp/v2xhub_data/ssl
+          mkdir -p /tmp/v2xhub_data/download
+          mkdir -p /tmp/v2xhub_data/logs
       - name: Run integration tests
         working-directory: v2xhub-integration-tests
         env:
