@@ -327,15 +327,18 @@ jobs:
           pip install -r requirements.txt
       - name: Initialize directories
         working-directory: v2xhub-integration-tests
+        env:
+          V2XHUB_VOLUME_PATH: ${{ runner.temp }}/v2xhub_data
         run: |
-          mkdir -p /tmp/v2xhub_data/ssl
-          mkdir -p /tmp/v2xhub_data/download
-          mkdir -p /tmp/v2xhub_data/logs
+          mkdir -p ${V2XHUB_VOLUME_PATH}/ssl
+          mkdir -p ${V2XHUB_VOLUME_PATH}/download
+          mkdir -p ${V2XHUB_VOLUME_PATH}/logs
       - name: Run integration tests
         working-directory: v2xhub-integration-tests
         env:
           TAG_NAME: ${{ steps.meta.outputs.version }}
           V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
+          V2XHUB_VOLUME_PATH: ${{ runner.temp }}/v2xhub_data
         run: |
           echo "Running tests with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
           pytest -x -v tests/test_case.py
