@@ -330,9 +330,9 @@ jobs:
         env:
           V2XHUB_VOLUME_PATH: ${{ runner.temp }}/v2xhub_data
         run: |
-          mkdir -p ${V2XHUB_VOLUME_PATH}/ssl
-          mkdir -p ${V2XHUB_VOLUME_PATH}/download
-          mkdir -p ${V2XHUB_VOLUME_PATH}/logs
+          mkdir -p "$V2XHUB_VOLUME_PATH/ssl"
+          mkdir -p "$V2XHUB_VOLUME_PATH/download"
+          mkdir -p "$V2XHUB_VOLUME_PATH/logs"
       - name: Run integration tests
         working-directory: v2xhub-integration-tests
         env:
