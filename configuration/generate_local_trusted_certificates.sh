@@ -72,6 +72,6 @@ if [[ ! -f "$SSL_DIR/cert-key.pem" || ! -f "$SSL_DIR/cert.pem" ]]; then
     fi
     mkcert -install
     mkcert -cert-file "$SSL_DIR/cert.pem" -key-file "$SSL_DIR/cert-key.pem" localhost 127.0.0.1 ::1
-    sudo chmod ugo+r "$SSL_DIR/cert.pem" "$SSL_DIR/cert-key.pem""
+    sudo chmod ugo+r "$SSL_DIR/cert.pem" "$SSL_DIR/cert-key.pem"
     echo "SSL certificates generated successfully."
 fi
