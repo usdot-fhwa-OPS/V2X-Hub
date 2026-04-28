@@ -33,6 +33,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 if [[ "$interactive" == true ]]; then
   
 
@@ -153,19 +155,19 @@ if [[ "$interactive" == true ]]; then
         V2XHUB_PASSWORD=$V2XHUB_PASSWORD
         SIMULATION_IP=$SIMULATION_IP 
         "
-        echo "$ENV_FILE_CONTENT" > .env
+        echo "$ENV_FILE_CONTENT" > "$SCRIPT_DIR/.env"
     else
         echo "Aborting. No changes were made to the .env file."
     fi
 # If in non-interactive mode, check if .env file exists and fail if not
-elif [[ -f .env ]]; then
+elif [[ -f "$SCRIPT_DIR/.env" ]]; then
     echo "Using existing .env file."
 else
     echo "Error: .env file not found and no interactive input provided."
     exit 1
 fi
 # Read .env file and create volume directories if they do not exist
-source .env
+source "$SCRIPT_DIR/.env"
 echo "Creating volume directories at ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/"
 mkdir -m 755 -p ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/
 echo "Docker Environment Initialization Complete."
