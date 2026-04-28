@@ -5,7 +5,7 @@
 	// and https://github.com/microsoft/vscode-dev-containers/blob/main/container-templates/docker-compose/.devcontainer/devcontainer.json
 	"name": "V2X Hub Docker Compose Dev",
 	// Check for .env file in configuration directory. Copy devcontainer.env if none exists
-	"initializeCommand" : ".devcontainer/check_for_env.sh",
+	"initializeCommand" : "./configuration/initialize_docker_environment.sh",
 	// Update the 'dockerComposeFile' list if you have more compose files or use different names.
 	"dockerComposeFile": ["../configuration/docker-compose.yml","docker-compose-vscode.yml"],
 

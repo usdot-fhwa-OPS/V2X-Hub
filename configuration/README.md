@@ -52,7 +52,7 @@ Installation complete!
 
 To support execution in a simulated environment, V2X-Hub is in the process of integrating with CDASim, a Co-Simulation tool built as an extension of Eclipse Mosiac. This extension will incorporate integration with several other platforms including CARMA-Platform and CARLA. The setup for this simply requires setting environment variables for the V2X-Hub docker compose deployment. These can be set via the `initialization.sh` script and can be manually edited after.
 
-### Docker Environment Vaeriables
+### Docker Environment Variables
 
 * **V2XHUB_VERSION** – Version of V2X-Hub to deloy ( Docker Tag/ GitHub Tag )
 * **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
@@ -75,6 +75,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **MYSQL_DATABASE** – Database Name
 * **MYSQL_USER** – Database username
 * **MYSQL_PASSWORD** – Managed via Docker secrets
+* **V2XHUB_VOLUME_PATH** – Path to which local volume or shared memory between the container and host machine will be setup. See the docker-compose.yml for more information on the specific volumes V2X Hub deployets.
 
 ### Access V2X-Hub 
 To access V2X-Hub UI, either chromium or google-chrome browser can be used by running the following commands:
@@ -88,10 +89,8 @@ google-chrome  <v2xhub_ip>
  ```
 
 > [!NOTE]  
-> V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
+> V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `${V2XHUB_VOLUME_PATH}/ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
 
 > [!NOTE]  
 > If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`). These certificates need to be explicitly trusted by the browser. To do this simply navigate to `https://<v2xhub-ip>` and accept the warning. After this you should be redirected to the login page.
 
-> [!WARNING]  
-> To use generated trusted certificates the `docker-compose.yml` file needs to be modified to map the local ssl directory to the ssl docker compose volume. See the comment in the `ssl` docker compose defined volume for instructions for modifications
