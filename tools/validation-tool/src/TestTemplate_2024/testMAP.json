@@ -1,0 +1,151 @@
+{ 
+    "testgroup":"MAP",
+    "testoperator": "person",
+    "testdate": "",
+    "testlist":
+    {
+        "Exist-01": 
+        {   "testtype": "exist",
+            "testobj" : "messageId"
+        },
+        "Exist-02": 
+        {   "testtype": "exist",
+            "testobj" : "msgIssueRevision"
+        },
+        "Exist-03": 
+        {   "testtype": "exist",
+            "testobj" : "regionId"
+        },
+        "Exist-04": 
+        {   "testtype": "exist",
+            "testobj" : "id"
+        },
+        "Exist-05": 
+        {   "testtype": "exist",
+            "testobj" : "revision"
+        },
+        "Exist-06": 
+        {   "testtype": "exist",
+            "testobj" : "lat"
+        },
+        "Exist-07":
+        {   "testtype": "exist",
+            "testobj" : "long"
+        },
+        "Exist-08": 
+        {   "testtype": "exist",
+            "testobj" : "nodeList"
+        },
+        "Exist-09": 
+        {   "testtype": "exist",
+            "testobj" : "ingressApproach"
+        },
+        "Exist-10": 
+        {   "testtype": "exist",
+            "testobj" : "laneID"
+        },
+        "Exist-11": 
+        {   "testtype": "exist",
+            "testobj" : "egressApproach"
+        },
+        "Exist-12": 
+        {   "testtype": "exist",
+            "testobj" : "directionalUse"
+        },
+        "Exist-13": 
+        {   "testtype": "exist",
+            "testobj" : "lane"
+        },
+        "Exist-14": 
+        {   "testtype": "exist",
+            "testobj" : "maneuver"
+        },
+        "Verify-01": 
+        {   "testtype": "verify",
+            "testobj" : "messageId",
+            "verificationtype": "exact",
+            "value": 18
+        },
+        "Verify-02": 
+        {   "testtype": "verify",
+            "testobj" : "msgIssueRevision",
+            "verificationtype": "range",
+            "value": [0,127]
+        },
+        "Verify-03": 
+        {   "testtype": "verify",
+            "testobj" : "regionId",
+            "verificationtype": "range",
+            "value": [0,255]
+        },
+        "Verify-04": 
+        {   "testtype": "verify",
+            "testobj" : "id",
+            "verificationtype": "range",
+            "value": [0,65535]
+        },
+        "Verify-05": 
+        {   "testtype": "verify",
+            "testobj" : "revision",
+            "verificationtype": "range",
+            "value": [0,127]
+        },
+        "Verify-06": 
+        {   "testtype": "verify",
+            "testobj" : "lat",
+            "verificationtype": "range",
+            "value": [-900000000,900000001]
+        },
+        "Verify-07": 
+        {   "testtype": "verify",
+            "testobj" : "long",
+            "verificationtype": "range",
+            "value": [-1799999999,1800000001]
+        },
+        "Verify-08": 
+        {   "testtype": "verify",
+            "testobj" : "nodeList",
+            "verificationtype": "choice",
+            "choices": ["nodes","computed"]
+        },
+        "Verify-09": 
+        {   "testtype": "verify",
+            "testobj" : "ingressApproach",
+            "verificationtype": "range",
+            "value": [0,15]
+        },
+        "Verify-10": 
+        {   "testtype": "verify",
+            "testobj" : "laneID",
+            "verificationtype": "range",
+            "value": [0,255]
+        },
+        "Verify-11": 
+        {   "testtype": "verify",
+            "testobj" : "egressApproach",
+            "verificationtype": "range",
+            "value": [0,15]
+        },            
+        "Verify-12": 
+        {   "testtype": "verify",
+            "testobj" : "directionalUse",
+            "verificationtype": "bitstring",
+            "size": 2
+        },
+        "Verify-13": 
+        {   "testtype": "verify",
+            "testobj" : "lane",
+            "verificationtype": "range",
+            "value": [0,255]
+
+        },
+        "Verify-14": 
+        {   "testtype": "verify",
+            "testobj" : "maneuver",
+            "verificationtype": "bitstring",
+            "size": 12
+        }
+        
+    }
+
+}

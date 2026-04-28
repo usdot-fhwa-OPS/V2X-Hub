@@ -22,8 +22,9 @@ report_file = open("report.csv", "w")
 createdPreview = False
 createdTestSetup = False
 createdTestResult = False
+ValidateSample = False
 testlist = ""
-testTemplate = ""
+testTemplate = {}
 parsed = {}
 message = ""
 initialMessage = ""
@@ -56,6 +57,38 @@ message_ids = {
     "0029": "SDSM",
 }
 
+DSRC_msg_ids = {
+    18: "MAP",
+    19: "SPAT",
+    20: "BSM",
+    31: "TIM",
+    32: "PSM",
+    41: "SDSM"
+}
+
+def LoadTests(msg_id):
+    global testTemplate
+    testfile = "./TestTemplate_2024/test"
+    msg_type = DSRC_msg_ids.get(msg_id)
+    if not msg_type:
+        print(f"No Message ID found for {msg_id}")
+        return 0
+    testfile += f"{msg_type}.json"
+    with open(testfile) as file:
+        testTemplate = json.load(file)
+    setupTestTemplate()
+    return 1    
+
+def ValidateMessage(msg_id,decoded_json):
+    global testTemplate, parsed
+    msg_type = DSRC_msg_ids.get(msg_id)
+    if not msg_type:
+        print(f"No Message ID found for {msg_id}")
+        return 0
+    parsed = decoded_json
+    certify()
+    stop_listener()
+    return 0
 
 @dataclass
 class DecodedPacket:
@@ -406,59 +439,78 @@ def certify():
         if testvector is True:
             app.addLabel(key)
             testtype = ""
-
-            for testkey in value:
-                if value[testkey] in ("exist", "verify", "print"):
-                    testtype = value[testkey]
+            
+            testtype = value.get("testtype")
+            testobj = value.get("testobj")
+            if not testtype or not testobj:
+                continue
+            #for testkey in value:
+            #    print(f"value: {value}")
+            #    if value[testkey] in ("exist", "verify", "print"):
+            #        testtype = value[testkey]
+            #    else:
+            if testtype == "exist":
+                ret = list(find(testobj, parsed))
+                if len(ret) > 0:
+                    app.setLabel(key, key + " :: " + testobj + " :: PASSED")
+                    app.setLabelFg(key, "green")
                 else:
-                    if testtype == "exist":
-                        ret = list(find(value[testkey], parsed))
-                        if len(ret) > 0:
-                            app.setLabel(key, key + " :: " + value[testkey] + " :: PASSED")
+                    app.setLabel(key, key + " :: " + testobj + " :: FAILED")
+                    app.setLabelFg(key, "red")
+
+            elif testtype == "verify":
+                msg1 = list(find(testobj, parsed))
+                msg1s = list(map(str, msg1))
+                verificationtype = value.get("verificationtype")
+                report_file.write("%s:: (Received):: " % testobj)
+                for ls in msg1s:
+                    report_file.write("%s , " % ls)
+                report_file.write("\n")
+
+                if verificationtype == "exact":
+                    exactvalue = value.get("value")
+                    result = all(str(x) == str(exactvalue) for x in msg1)
+                    print(result)
+                    if result:
+                        app.setLabel(key, key + " :: " + testobj + " :: PASSED")
+                        app.setLabelFg(key, "green")
+                        continue
+                    app.setLabel(key, key + " :: " + testobj + " :: FAILED")
+                    app.setLabelFg(key, "red")
+                    continue
+
+                elif verificationtype == "range":
+                    pass
+
+                elif verificationtype == "choice":
+                    pass
+                
+                elif verificationtype == "bitstring":
+                    pass
+
+                if len(msg1s) > 0:
+                    try:
+                        if collections.Counter(msg1s):
+                            app.setLabel(key, key + " :: " + testobj + " :: PASSED")
                             app.setLabelFg(key, "green")
                         else:
-                            app.setLabel(key, key + " :: " + value[testkey] + " :: FAILED")
+                            app.setLabel(key, key + " :: " + testobj + " :: FAILED")
                             app.setLabelFg(key, "red")
+                    except Exception:
+                        app.setLabel(key, key + " :: " + testobj + " :: ERROR")
+                        app.setLabelFg(key, "red")
+                else:
+                    app.setLabel(key, key + " :: " + testobj + " :: UNAVAILABLE")
+                    app.setLabelFg(key, "orange")
 
-                    elif testtype == "verify":
-                        msg1 = list(find(value[testkey], parsed))
-                        msg2 = list(find(value[testkey], initialMessageObj))
-                        msg1s = list(map(str, msg1))
-                        msg2s = list(map(str, msg2))
-
-                        report_file.write("%s:: (Received):: " % value[testkey])
-                        for ls in msg1s:
-                            report_file.write("%s , " % ls)
-                        report_file.write("\n")
-
-                        report_file.write("%s:: (Initial):: " % value[testkey])
-                        for ls in msg2s:
-                            report_file.write("%s , " % ls)
-                        report_file.write("\n")
-
-                        if len(msg1s) > 0 and len(msg2s) > 0:
-                            try:
-                                if collections.Counter(msg1s) == collections.Counter(msg2s):
-                                    app.setLabel(key, key + " :: " + value[testkey] + " :: PASSED")
-                                    app.setLabelFg(key, "green")
-                                else:
-                                    app.setLabel(key, key + " :: " + value[testkey] + " :: FAILED")
-                                    app.setLabelFg(key, "red")
-                            except Exception:
-                                app.setLabel(key, key + " :: " + value[testkey] + " :: ERROR")
-                                app.setLabelFg(key, "red")
-                        else:
-                            app.setLabel(key, key + " :: " + value[testkey] + " :: UNAVAILABLE")
-                            app.setLabelFg(key, "orange")
-
-                    elif testtype == "print":
-                        ret = list(find(value[testkey], parsed))
-                        if len(ret) > 0:
-                            app.setLabel(key, key + " :: " + value[testkey] + ":: " + str(ret))
-                            app.setLabelFg(key, "green")
-                        else:
-                            app.setLabel(key, key + " :: " + value[testkey] + " :: UNAVAILABLE")
-                            app.setLabelFg(key, "orange")
+            elif testtype == "print":
+                ret = list(find(testobj, parsed))
+                if len(ret) > 0:
+                    app.setLabel(key, key + " :: " + testobj + ":: " + str(ret))
+                    app.setLabelFg(key, "green")
+                else:
+                    app.setLabel(key, key + " :: " + testobj + " :: UNAVAILABLE")
+                    app.setLabelFg(key, "orange")
 
     app.stopLabelFrame()
 
@@ -506,6 +558,9 @@ def process_payload(payload_hex: str, source_ip: str, source_port: int, psid: Op
         print(json.dumps(decoded_json, indent=2))
         print_message_queue_status()
 
+        msg_filter = app.getOptionBox("Message Filter")
+        if (msg_filter == DSRC_msg_ids.get(message_id)):
+            ValidateMessage(message_id,decoded_json)
 #######  uncomment app.queueFunction(certify) when ready to try validating messages, commented out to avoid needing test template ######
         # app.queueFunction(certify)
 
@@ -655,14 +710,23 @@ def stop_listener():
 
 
 def run():
-    global running, listener_thread
+    global running, listener_thread, ValidateSample
 
     print("Run Button Pressed", flush=True)
 
     # initialMessageText = app.getTextArea("message content")
     # with open("./.localsample", "w") as f:
     #     f.write(initialMessageText)
-
+    if ValidateSample:
+        initialMessageText = app.getTextArea("message content")
+        with open("./.localsample", "w") as f:
+            f.write(initialMessageText)
+        initm = json.loads(initialMessageText)
+        dict2str2 = json.dumps(initm, indent=4, sort_keys=True, ensure_ascii=False)
+        decoded_msg = json.loads(dict2str2, parse_int=str)
+        ValidateMessage(int(decoded_msg.get("messageId")),decoded_msg)
+        return 0
+    
     port_value = app.getEntry("Server port")
     print("Server port raw value:", repr(port_value), flush=True)
 
@@ -689,70 +753,56 @@ def run():
 
 
 def preview():
-    global testTemplate, message, createdTestSetup
+    global testTemplate, message, createdTestSetup, ValidateSample
     app.clearLabel("er1")
     app.clearLabel("er2")
     app.clearLabel("er3")
     app.clearLabel("er4")
 
     filepath1 = app.getEntry("Local sample file")
-    filepath2 = app.getEntry("Test template")
+    #filepath2 = app.getEntry("Test template")
     snifferscript = app.getTextArea("Sniffer Script")
 
     flag = 1
-
-    if filepath1 == "":
-        app.setLabel("er1", "Empty local sample file input")
-        app.setLabelBg("er1", "red")
-        flag = 0
-    if filepath2 == "":
-        app.setLabel("er2", "Empty input test template")
-        app.setLabelBg("er2", "red")
-        flag = 0
-
-    if flag == 0:
-        return 0
-
-    if snifferscript == "":
-        app.setLabel("er3", "Empty sniffer script, Using default")
-        app.setLabelBg("er3", "red")
-        app.setTextArea(
-            "Sniffer Script",
-            "sudo tcpdump -i lo port 1516 -Aq | grep -m 1 \"Payload=\" | sed 's|Payload=||g' | netcat <HOST IP> <HOST PORT>"
-        )
-
-    with open(filepath1, "r") as file:
-        sampleMsg = file.read()
-
-    message = sampleMsg
-    app.clearTextArea("message content")
-    app.setTextArea("message content", message, end=False)
-
-    with open(filepath2) as file:
-        testTemplate = json.load(file)
-
-    setupTestTemplate()
+    if filepath1:
+        ValidateSample = True
+        with open(filepath1, "r") as file:
+            sampleMsg = file.read()
+        message = sampleMsg
+        app.clearTextArea("message content")
+        app.setTextArea("message content", message, end=False)
+        samplejson = safe_json_loads(sampleMsg)
+        LoadTests(samplejson.get("messageId"))
+    else:
+        ValidateSample = False
+        message_filter = app.getOptionBox("Message Filter")
+        msg_id = int(list(DSRC_msg_ids.keys())[list(DSRC_msg_ids.values()).index(message_filter)])
+        LoadTests(msg_id)
+        #setupTestTemplate()
 
 
 def setupTestTemplate():
     global testTemplate, createdTestSetup, testlist
 
     if createdTestSetup is False:
-        testlist = testTemplate["testlist"]
+        testlist = testTemplate.get("testlist")
         app.startPanedFrame("t1")
 
         app.startLabelFrame("Test information")
-        app.addLabel("Testgroup", "Testgroup : " + testTemplate["testgroup"])
-        app.addLabel("Testoperator", "Testoperator : " + testTemplate["testoperator"])
-        if testTemplate["testdate"] == "":
+        app.addLabel("Testgroup", "Testgroup : " + testTemplate.get("testgroup",""))
+        app.addLabel("Testoperator", "Testoperator : " + testTemplate.get("testoperator",""))
+        if testTemplate.get("testdate","") == "":
             today = date.today()
             app.addLabel("Testdate", "Date : " + today.strftime("%d/%m/%Y"))
         else:
             app.addLabel("Testdate", "Date : " + testTemplate["testdate"])
 
-        for keys in testlist.keys():
-            app.addCheckBox(keys)
-            app.setCheckBox(keys)
+        if testlist != None:
+            for keys in testlist.keys():
+                app.addCheckBox(keys)
+                app.setCheckBox(keys)
+        else:
+            app.addMessage(f"Press run to start UDP server.")
 
         createdTestSetup = True
         app.stopLabelFrame()
@@ -761,25 +811,25 @@ def setupTestTemplate():
 
     else:
         app.openLabelFrame("Test information")
-        for keys in testlist.keys():
-            app.removeCheckBox(keys)
+        if testlist != None:
+            for keys in testlist.keys():
+                app.removeCheckBox(keys)
 
-        testlist = testTemplate["testlist"]
-        app.setLabel("Testgroup", "Testgroup : " + testTemplate["testgroup"])
-        app.setLabel("Testoperator", "Testoperator : " + testTemplate["testoperator"])
+        testlist = testTemplate.get("testlist")
+        app.setLabel("Testgroup", "Testgroup : " + testTemplate.get("testgroup",""))
+        app.setLabel("Testoperator", "Testoperator : " + testTemplate.get("testoperator",""))
 
-        if testTemplate["testdate"] == "":
+        if testTemplate.get("testdate","") == "":
             today = date.today()
             app.setLabel("Testdate", "Date : " + today.strftime("%d/%m/%Y"))
         else:
             app.setLabel("Testdate", "Date : " + testTemplate["testdate"])
-
-        for keys in testlist.keys():
-            app.addCheckBox(keys)
-            app.setCheckBox(keys)
-
+      
+        if testlist != None:
+            for keys in testlist.keys():
+                app.addCheckBox(keys)
+                app.setCheckBox(keys)
         app.stopLabelFrame()
-
 
 def on_stop():
     stop_listener()
@@ -799,7 +849,8 @@ app.addLabelOpenEntry("Local sample file")
 app.stopLabelFrame()
 
 app.startLabelFrame("Test Setup")
-app.addLabelOpenEntry("Test template")
+#app.addLabelOpenEntry("Test template")
+app.addLabelOptionBox("Message Filter",DSRC_msg_ids.values())
 app.addLabelNumericEntry("Server port")
 app.setEntryDefault("Server port", "5398")
 app.stopLabelFrame()

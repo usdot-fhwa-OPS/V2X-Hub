@@ -1,0 +1,3 @@
+Map Test Cases Changes:
+ - Removed refPoint and updated with lat & long
+ - Removed connectingLane and updated with lane 
