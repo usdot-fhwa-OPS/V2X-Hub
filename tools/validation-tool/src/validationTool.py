@@ -81,12 +81,14 @@ def LoadTests(msg_id):
 
 def ValidateMessage(msg_id,decoded_json):
     global testTemplate, parsed
+    #stop_listener()
     msg_type = DSRC_msg_ids.get(msg_id)
     if not msg_type:
         print(f"No Message ID found for {msg_id}")
         return 0
     parsed = decoded_json
     certify()
+    print("certify complete")
     stop_listener()
     return 0
 
@@ -417,10 +419,6 @@ def certify():
 
     initialMessageText = app.getTextArea("message content")
 
-    initm = json.loads(initialMessageText)
-    dict2str2 = json.dumps(initm, indent=4, sort_keys=True, ensure_ascii=False)
-    initialMessageObj = json.loads(dict2str2, parse_int=str)
-
     if createdTestResult is False:
         app.startPanedFrame("r1")
         app.startLabelFrame("Results: Summary")
@@ -444,11 +442,7 @@ def certify():
             testobj = value.get("testobj")
             if not testtype or not testobj:
                 continue
-            #for testkey in value:
-            #    print(f"value: {value}")
-            #    if value[testkey] in ("exist", "verify", "print"):
-            #        testtype = value[testkey]
-            #    else:
+
             if testtype == "exist":
                 ret = list(find(testobj, parsed))
                 if len(ret) > 0:
@@ -460,48 +454,68 @@ def certify():
 
             elif testtype == "verify":
                 msg1 = list(find(testobj, parsed))
+                try:
+                    msg1set = set(msg1)
+                except:
+                    flatmsg1 = []
+                    for x in msg1:
+                        deepsearch = list(find(testobj, x))
+                        if(deepsearch):
+                            flatmsg1 += deepsearch
+                    if not flatmsg1:
+                        msg1set = msg1
+                    else:
+                        msg1set = set(flatmsg1)
                 msg1s = list(map(str, msg1))
                 verificationtype = value.get("verificationtype")
                 report_file.write("%s:: (Received):: " % testobj)
                 for ls in msg1s:
                     report_file.write("%s , " % ls)
                 report_file.write("\n")
-
-                if verificationtype == "exact":
-                    exactvalue = value.get("value")
-                    result = all(str(x) == str(exactvalue) for x in msg1)
-                    print(result)
-                    if result:
-                        app.setLabel(key, key + " :: " + testobj + " :: PASSED")
-                        app.setLabelFg(key, "green")
-                        continue
-                    app.setLabel(key, key + " :: " + testobj + " :: FAILED")
-                    app.setLabelFg(key, "red")
-                    continue
-
-                elif verificationtype == "range":
-                    pass
-
-                elif verificationtype == "choice":
-                    pass
-                
-                elif verificationtype == "bitstring":
-                    pass
-
-                if len(msg1s) > 0:
-                    try:
-                        if collections.Counter(msg1s):
-                            app.setLabel(key, key + " :: " + testobj + " :: PASSED")
-                            app.setLabelFg(key, "green")
-                        else:
-                            app.setLabel(key, key + " :: " + testobj + " :: FAILED")
-                            app.setLabelFg(key, "red")
-                    except Exception:
-                        app.setLabel(key, key + " :: " + testobj + " :: ERROR")
-                        app.setLabelFg(key, "red")
-                else:
+                if not msg1set:
                     app.setLabel(key, key + " :: " + testobj + " :: UNAVAILABLE")
                     app.setLabelFg(key, "orange")
+                    continue
+
+                #Verify an exact value is meet for a given testobj
+                if verificationtype == "exact":
+                    exactvalue = value.get("value")
+                    result = all(str(x) == str(exactvalue) for x in msg1set)
+
+                #Verify a testobj value is within acceptable range
+                elif verificationtype == "range":
+                    rangevalue = value.get("value")
+                    minvalue = rangevalue[0]
+                    maxvalue = rangevalue[1]
+                    result = all((int(x) >= minvalue and int(x) <= maxvalue) for x in msg1set)
+                    
+                #Verify that a testobj is a valid choice
+                elif verificationtype == "choice":
+                    choices = value.get("choices")
+                    result = all(all((y in choices)for y in x.keys())for x in msg1set)
+
+                #Verify that a testobj is complying with a bitstring size
+                elif verificationtype == "bitstring":
+                    size = value.get("size")
+                    
+                    #result = all(not(x << size) for x in msg1set)
+                    result = True
+                    for x in msg1set:
+                        convertvalue = int(x,16)
+                        totalbits = len(x)*4
+                        lowerbits = totalbits - size
+                        mask = (1 << lowerbits) - 1
+                        if not ((convertvalue & mask) == 0):
+                            result = False
+                            break
+ 
+                #Display Results
+                if result:
+                    app.setLabel(key, key + " :: " + testobj + " :: PASSED")
+                    app.setLabelFg(key, "green")
+                else:
+                    app.setLabel(key, key + " :: " + testobj + " :: FAILED")
+                    app.setLabelFg(key, "red") 
 
             elif testtype == "print":
                 ret = list(find(testobj, parsed))
@@ -571,53 +585,6 @@ def process_payload(payload_hex: str, source_ip: str, source_port: int, psid: Op
         print("payloadLen : {} bytes".format(len(payload_hex) // 2))
         print("payloadHex : {}".format(payload_hex))
         print("Error      : {}".format(exc))
-
-
-# def udp_listener(bind_ip: str, bind_port: int) -> None:
-#     global running, listener_socket
-
-#     try:
-#         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#         listener_socket = sock
-#         sock.bind((bind_ip, bind_port))
-#         sock.settimeout(1.0)
-
-#         print("Listening on UDP {}:{}".format(bind_ip, bind_port))
-
-#         while running:
-#             try:
-#                 data, addr = sock.recvfrom(65535)
-#             except socket.timeout:
-#                 continue
-#             except Exception as exc:
-#                 if running:
-#                     print("Socket receive error:", exc)
-#                 continue
-
-#             source_ip, source_port = addr[0], addr[1]
-#             candidates = extract_payload(data)
-
-#             if not candidates:
-#                 print("\nNo J2735 payload found from {}:{}".format(source_ip, source_port))
-#                 raw_hex = binascii.hexlify(data).decode("ascii").lower()
-#                 print("Raw datagram hex:", raw_hex)
-#                 continue
-
-#             for payload_hex, psid in candidates:
-#                 if payload_hex:
-#                     process_payload(payload_hex, source_ip, source_port, psid)
-
-#     except Exception as exc:
-#         print("Listener startup error:", exc)
-
-#     finally:
-#         if listener_socket is not None:
-#             try:
-#                 listener_socket.close()
-#             except Exception:
-#                 pass
-#         listener_socket = None
-#         print("Listener stopped.")
 
 
 def udp_listener(bind_ip: str, bind_port: int) -> None:
@@ -714,9 +681,6 @@ def run():
 
     print("Run Button Pressed", flush=True)
 
-    # initialMessageText = app.getTextArea("message content")
-    # with open("./.localsample", "w") as f:
-    #     f.write(initialMessageText)
     if ValidateSample:
         initialMessageText = app.getTextArea("message content")
         with open("./.localsample", "w") as f:
@@ -760,7 +724,6 @@ def preview():
     app.clearLabel("er4")
 
     filepath1 = app.getEntry("Local sample file")
-    #filepath2 = app.getEntry("Test template")
     snifferscript = app.getTextArea("Sniffer Script")
 
     flag = 1
@@ -778,7 +741,6 @@ def preview():
         message_filter = app.getOptionBox("Message Filter")
         msg_id = int(list(DSRC_msg_ids.keys())[list(DSRC_msg_ids.values()).index(message_filter)])
         LoadTests(msg_id)
-        #setupTestTemplate()
 
 
 def setupTestTemplate():
@@ -849,7 +811,6 @@ app.addLabelOpenEntry("Local sample file")
 app.stopLabelFrame()
 
 app.startLabelFrame("Test Setup")
-#app.addLabelOpenEntry("Test template")
 app.addLabelOptionBox("Message Filter",DSRC_msg_ids.values())
 app.addLabelNumericEntry("Server port")
 app.setEntryDefault("Server port", "5398")
