@@ -1,0 +1,119 @@
+{
+    "testgroup": "TIM",
+    "testoperator": "person",
+    "testdate": "",
+    "testlist": {
+        "Exist-01": {
+            "testtype": "exist",
+            "testobj": "messageId"
+        },
+        "Exist-02": {
+            "testtype": "exist",
+            "testobj": "msgCnt"
+        },
+        "Exist-03": {
+            "testtype": "exist",
+            "testobj": "dataFrames"
+        },
+        "Exist-04": {
+            "testtype": "exist",
+            "testobj": "frameType"
+        },
+        "Exist-05": {
+            "testtype": "exist",
+            "testobj": "msgId"
+        },
+        "Exist-06": {
+            "testtype": "exist",
+            "testobj": "startTime"
+        },
+        "Exist-07": {
+            "testtype": "exist",
+            "testobj": "durationTime"
+        },
+        "Exist-08": {
+            "testtype": "exist",
+            "testobj": "priority"
+        },
+        "Exist-09": {
+            "testtype": "exist",
+            "testobj": "regions"
+        },
+        "Exist-10": {
+            "testtype": "exist",
+            "testobj": "content"
+        },
+        "Exist-11": {
+            "testtype": "exist",
+            "testobj": "contentNew"
+        },
+        "Verify-01": {
+            "testtype": "verify",
+            "testobj": "messageId",
+            "verificationtype": "exact",
+            "value": 31
+        },
+        "Verify-02": {
+            "testtype": "verify",
+            "testobj": "msgCnt",
+            "verificationtype": "range",
+            "value": [
+                0,
+                127
+            ]
+        },
+        "Verify-03": {
+            "testtype": "verify",
+            "testobj": "startTime",
+            "verificationtype": "range",
+            "value": [
+                0,
+                527040
+            ]
+        },
+        "Verify-04": {
+            "testtype": "verify",
+            "testobj": "durationTime",
+            "verificationtype": "range",
+            "value": [
+                0,
+                32000
+            ]
+        },
+        "Verify-05": {
+            "testtype": "verify",
+            "testobj": "priority",
+            "verificationtype": "range",
+            "value": [
+                0,
+                7
+            ]
+        },
+        "Verify-06": {
+            "testtype": "verify",
+            "testobj": "content",
+            "verificationtype": "choice",
+            "choices": [
+                "advisory",
+                "workZone",
+                "genericSign",
+                "speedLimit",
+                "exitService"
+            ]
+        },
+        "Verify-07": {
+            "testtype": "verify",
+            "testobj": "viewAngle",
+            "verificationtype": "bitstring",
+            "size": 16
+        },
+        "Verify-08": {
+            "testtype": "verify",
+            "testobj": "contentNew",
+            "verificationtype": "choice",
+            "choices": [
+                "frictionInfo"
+            ]
+        }
+    }
+}
