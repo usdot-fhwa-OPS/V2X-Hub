@@ -29,7 +29,7 @@ using namespace IntersectionValidation;
  
 namespace {
 
-    const std::string SPAT_SCHEMA_PATH = "/workspace/src/v2i-hub/IntersectionValidationPlugin/json/spat.schema.json";
+    const std::string SPAT_SCHEMA_PATH = "spat.schema.json";
  
 TEST(MessageTypeTest, SpatMessageCanBeInstantiated) {
     SpatMessage msg;
