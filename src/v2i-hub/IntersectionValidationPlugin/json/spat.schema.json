@@ -1,0 +1,1255 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.SPATMessageFrame",
+  "description": "ASN.1 SEQUENCE Type",
+  "properties": {
+    "messageId": {
+      "type": "integer",
+      "const": 19
+    },
+    "value": {
+      "type": "object",
+      "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.SPATMessageFrameValue",
+      "description": "ASN.1 SEQUENCE Type",
+      "properties": {
+        "SPAT": {
+          "type": "object",
+          "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT",
+          "description": "ASN.1 SEQUENCE Type",
+          "properties": {
+            "timeStamp": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 527040
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 63
+            },
+            "intersections": {
+              "type": "array",
+              "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionStateList",
+              "description": "ASN.1 SEQUENCE OF Type",
+              "items": {
+                "type": "object",
+                "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionState",
+                "description": "ASN.1 SEQUENCE Type",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 63
+                  },
+                  "id": {
+                    "type": "object",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.IntersectionReferenceID",
+                    "description": "ASN.1 SEQUENCE Type",
+                    "properties": {
+                      "region": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      },
+                      "id": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 65535
+                      }
+                    },
+                    "required": [
+                      "id"
+                    ]
+                  },
+                  "revision": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 127
+                  },
+                  "status": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^[0-9a-fA-F]{4}$"
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string",
+                            "pattern": "^[0-9a-fA-F]{4}$"
+                          },
+                          "length": {
+                            "type": "integer",
+                            "minimum": 16,
+                            "maximum": 16
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "length"
+                        ]
+                      }
+                    ],
+                    "description": "BIT STRING - hex encoded, 16 bits"
+                  },
+                  "moy": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 527040
+                  },
+                  "timeStamp": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 65535
+                  },
+                  "enabledLanes": {
+                    "type": "array",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.EnabledLaneList",
+                    "description": "ASN.1 SEQUENCE OF Type",
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 255
+                    },
+                    "minItems": 1,
+                    "maxItems": 16
+                  },
+                  "states": {
+                    "type": "array",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementList",
+                    "description": "ASN.1 SEQUENCE OF Type",
+                    "items": {
+                      "type": "object",
+                      "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementState",
+                      "description": "ASN.1 SEQUENCE Type",
+                      "properties": {
+                        "movementName": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 63
+                        },
+                        "signalGroup": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "state-time-speed": {
+                          "type": "array",
+                          "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementEventList",
+                          "description": "ASN.1 SEQUENCE OF Type",
+                          "items": {
+                            "type": "object",
+                            "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementEvent",
+                            "description": "ASN.1 SEQUENCE Type",
+                            "properties": {
+                              "eventState": {
+                                "type": "string",
+                                "enum": [
+                                  "unavailable",
+                                  "dark",
+                                  "stop-Then-Proceed",
+                                  "stop-And-Remain",
+                                  "pre-Movement",
+                                  "permissive-Movement-Allowed",
+                                  "protected-Movement-Allowed",
+                                  "permissive-clearance",
+                                  "protected-clearance",
+                                  "caution-Conflicting-Traffic"
+                                ]
+                              },
+                              "timing": {
+                                "type": "object",
+                                "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.TimeChangeDetails",
+                                "description": "ASN.1 SEQUENCE Type",
+                                "properties": {
+                                  "startTime": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 36111
+                                  },
+                                  "minEndTime": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 36111
+                                  },
+                                  "maxEndTime": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 36111
+                                  },
+                                  "likelyTime": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 36111
+                                  },
+                                  "confidence": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 15
+                                  },
+                                  "nextTime": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 36111
+                                  }
+                                },
+                                "required": [
+                                  "minEndTime"
+                                ]
+                              },
+                              "speeds": {
+                                "type": "array",
+                                "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.AdvisorySpeedList",
+                                "description": "ASN.1 SEQUENCE OF Type",
+                                "items": {
+                                  "type": "object",
+                                  "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.AdvisorySpeed",
+                                  "description": "ASN.1 SEQUENCE Type",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "none",
+                                        "greenwave",
+                                        "ecoDrive",
+                                        "transit"
+                                      ]
+                                    },
+                                    "speed": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 500
+                                    },
+                                    "confidence": {
+                                      "type": "string",
+                                      "enum": [
+                                        "unavailable",
+                                        "prec100ms",
+                                        "prec10ms",
+                                        "prec5ms",
+                                        "prec1ms",
+                                        "prec0-1ms",
+                                        "prec0-05ms",
+                                        "prec0-01ms"
+                                      ]
+                                    },
+                                    "distance": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 10000
+                                    },
+                                    "class": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 255
+                                    },
+                                    "regional": {
+                                      "type": "array",
+                                      "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.AdvisorySpeed$SequenceOfRegional",
+                                      "description": "ASN.1 SEQUENCE OF Type",
+                                      "items": {
+                                        "type": "object",
+                                        "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_AdvisorySpeed",
+                                        "description": "ASN.1 SEQUENCE Type",
+                                        "properties": {
+                                          
+                                        }
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 4
+                                    }
+                                  },
+                                  "required": [
+                                    "type"
+                                  ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 16
+                              },
+                              "regional": {
+                                "type": "array",
+                                "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementEvent$SequenceOfRegional",
+                                "description": "ASN.1 SEQUENCE OF Type",
+                                "items": {
+                                  "type": "object",
+                                  "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_MovementEvent",
+                                  "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "regionId": {
+                                          "type": "integer",
+                                          "const": 2
+                                        },
+                                        "regExtValue": {
+                                          "type": "object",
+                                          "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.MovementEvent_addGrpBReg_MovementEvent",
+                                          "description": "ASN.1 SEQUENCE Type",
+                                          "properties": {
+                                            "MovementEvent_addGrpB": {
+                                              "type": "object",
+                                              "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.MovementEvent_addGrpB",
+                                              "description": "ASN.1 SEQUENCE Type",
+                                              "properties": {
+                                                "startTime": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 9001
+                                                },
+                                                "minEndTime": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 2402
+                                                },
+                                                "maxEndTime": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 2402
+                                                },
+                                                "likelyTime": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 9001
+                                                },
+                                                "confidence": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 15
+                                                },
+                                                "nextTime": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 9001
+                                                }
+                                              },
+                                              "required": [
+                                                "minEndTime"
+                                              ]
+                                            }
+                                          },
+                                          "required": [
+                                            "MovementEvent_addGrpB"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "regionId",
+                                        "regExtValue"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 4
+                              }
+                            },
+                            "required": [
+                              "eventState"
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "maneuverAssistList": {
+                          "type": "array",
+                          "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ManeuverAssistList",
+                          "description": "ASN.1 SEQUENCE OF Type",
+                          "items": {
+                            "type": "object",
+                            "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ConnectionManeuverAssist",
+                            "description": "ASN.1 SEQUENCE Type",
+                            "properties": {
+                              "connectionID": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 255
+                              },
+                              "queueLength": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 10000
+                              },
+                              "availableStorageLength": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 10000
+                              },
+                              "waitOnStop": {
+                                "type": "boolean"
+                              },
+                              "pedBicycleDetect": {
+                                "type": "boolean"
+                              },
+                              "regional": {
+                                "type": "array",
+                                "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ConnectionManeuverAssist$SequenceOfRegional",
+                                "description": "ASN.1 SEQUENCE OF Type",
+                                "items": {
+                                  "type": "object",
+                                  "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_ConnectionManeuverAssist",
+                                  "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "regionId": {
+                                          "type": "integer",
+                                          "const": 3
+                                        },
+                                        "regExtValue": {
+                                          "type": "object",
+                                          "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.ConnectionManeuverAssist_addGrpCReg_ConnectionManeuverAssist",
+                                          "description": "ASN.1 SEQUENCE Type",
+                                          "properties": {
+                                            "ConnectionManeuverAssist_addGrpC": {
+                                              "type": "object",
+                                              "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.ConnectionManeuverAssist_addGrpC",
+                                              "description": "ASN.1 SEQUENCE Type",
+                                              "properties": {
+                                                "vehicleToLanePositions": {
+                                                  "type": "array",
+                                                  "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.VehicleToLanePositionList",
+                                                  "description": "ASN.1 SEQUENCE OF Type",
+                                                  "items": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.VehicleToLanePosition",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "stationID": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "maximum": 4294967295
+                                                      },
+                                                      "laneID": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "maximum": 255
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "stationID",
+                                                      "laneID"
+                                                    ]
+                                                  },
+                                                  "maxItems": 2147483647
+                                                },
+                                                "rsuDistanceFromAnchor": {
+                                                  "type": "object",
+                                                  "title": "us.dot.its.jpo.asn.j2735.r2024.Common.NodeOffsetPointXY",
+                                                  "description": "ASN.1 CHOICE Type - represents a union of possible types",
+                                                  "oneOf": [
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY1": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_20b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -512,
+                                                              "maximum": 511
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -512,
+                                                              "maximum": 511
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY1"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY2": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_22b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -1024,
+                                                              "maximum": 1023
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -1024,
+                                                              "maximum": 1023
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY2"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY3": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_24b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -2048,
+                                                              "maximum": 2047
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -2048,
+                                                              "maximum": 2047
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY3"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY4": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_26b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -4096,
+                                                              "maximum": 4095
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -4096,
+                                                              "maximum": 4095
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY4"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY5": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_28b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -8192,
+                                                              "maximum": 8191
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -8192,
+                                                              "maximum": 8191
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY5"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-XY6": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_32b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "x": {
+                                                              "type": "integer",
+                                                              "minimum": -32768,
+                                                              "maximum": 32767
+                                                            },
+                                                            "y": {
+                                                              "type": "integer",
+                                                              "minimum": -32768,
+                                                              "maximum": 32767
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "x",
+                                                            "y"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-XY6"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "node-LatLon": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_LLmD_64b",
+                                                          "description": "ASN.1 SEQUENCE Type",
+                                                          "properties": {
+                                                            "lon": {
+                                                              "type": "integer",
+                                                              "minimum": -1799999999,
+                                                              "maximum": 1800000001
+                                                            },
+                                                            "lat": {
+                                                              "type": "integer",
+                                                              "minimum": -900000000,
+                                                              "maximum": 900000001
+                                                            }
+                                                          },
+                                                          "required": [
+                                                            "lon",
+                                                            "lat"
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "node-LatLon"
+                                                      ]
+                                                    },
+                                                    {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "regional": {
+                                                          "type": "object",
+                                                          "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_NodeOffsetPointXY",
+                                                          "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                                                          "oneOf": [
+                                                            {
+                                                              "type": "object",
+                                                              "properties": {
+                                                                "regionId": {
+                                                                  "type": "integer",
+                                                                  "const": 2
+                                                                },
+                                                                "regExtValue": {
+                                                                  "type": "object",
+                                                                  "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.NodeOffsetPointXY_addGrpBReg_NodeOffsetPointXY",
+                                                                  "description": "ASN.1 SEQUENCE Type",
+                                                                  "properties": {
+                                                                    "NodeOffsetPointXY_addGrpB": {
+                                                                      
+                                                                    }
+                                                                  }
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "regionId",
+                                                                "regExtValue"
+                                                              ]
+                                                            }
+                                                          ]
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "regional"
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "vehicleToLanePositions"
+                                              ]
+                                            }
+                                          },
+                                          "required": [
+                                            "ConnectionManeuverAssist_addGrpC"
+                                          ]
+                                        }
+                                      },
+                                      "required": [
+                                        "regionId",
+                                        "regExtValue"
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "minItems": 1,
+                                "maxItems": 4
+                              }
+                            },
+                            "required": [
+                              "connectionID"
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 16
+                        },
+                        "regional": {
+                          "type": "array",
+                          "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.MovementState$SequenceOfRegional",
+                          "description": "ASN.1 SEQUENCE OF Type",
+                          "items": {
+                            "type": "object",
+                            "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_MovementState",
+                            "description": "ASN.1 SEQUENCE Type",
+                            "properties": {
+                              
+                            }
+                          },
+                          "minItems": 1,
+                          "maxItems": 4
+                        }
+                      },
+                      "required": [
+                        "signalGroup",
+                        "state-time-speed"
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 255
+                  },
+                  "maneuverAssistList": {
+                    "type": "array",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ManeuverAssistList",
+                    "description": "ASN.1 SEQUENCE OF Type",
+                    "items": {
+                      "type": "object",
+                      "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ConnectionManeuverAssist",
+                      "description": "ASN.1 SEQUENCE Type",
+                      "properties": {
+                        "connectionID": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 255
+                        },
+                        "queueLength": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "availableStorageLength": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 10000
+                        },
+                        "waitOnStop": {
+                          "type": "boolean"
+                        },
+                        "pedBicycleDetect": {
+                          "type": "boolean"
+                        },
+                        "regional": {
+                          "type": "array",
+                          "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.ConnectionManeuverAssist$SequenceOfRegional",
+                          "description": "ASN.1 SEQUENCE OF Type",
+                          "items": {
+                            "type": "object",
+                            "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_ConnectionManeuverAssist",
+                            "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "regionId": {
+                                    "type": "integer",
+                                    "const": 3
+                                  },
+                                  "regExtValue": {
+                                    "type": "object",
+                                    "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.ConnectionManeuverAssist_addGrpCReg_ConnectionManeuverAssist",
+                                    "description": "ASN.1 SEQUENCE Type",
+                                    "properties": {
+                                      "ConnectionManeuverAssist_addGrpC": {
+                                        "type": "object",
+                                        "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.ConnectionManeuverAssist_addGrpC",
+                                        "description": "ASN.1 SEQUENCE Type",
+                                        "properties": {
+                                          "vehicleToLanePositions": {
+                                            "type": "array",
+                                            "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.VehicleToLanePositionList",
+                                            "description": "ASN.1 SEQUENCE OF Type",
+                                            "items": {
+                                              "type": "object",
+                                              "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.VehicleToLanePosition",
+                                              "description": "ASN.1 SEQUENCE Type",
+                                              "properties": {
+                                                "stationID": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 4294967295
+                                                },
+                                                "laneID": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "maximum": 255
+                                                }
+                                              },
+                                              "required": [
+                                                "stationID",
+                                                "laneID"
+                                              ]
+                                            },
+                                            "maxItems": 2147483647
+                                          },
+                                          "rsuDistanceFromAnchor": {
+                                            "type": "object",
+                                            "title": "us.dot.its.jpo.asn.j2735.r2024.Common.NodeOffsetPointXY",
+                                            "description": "ASN.1 CHOICE Type - represents a union of possible types",
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY1": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_20b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -512,
+                                                        "maximum": 511
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -512,
+                                                        "maximum": 511
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY1"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY2": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_22b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -1024,
+                                                        "maximum": 1023
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -1024,
+                                                        "maximum": 1023
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY2"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY3": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_24b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -2048,
+                                                        "maximum": 2047
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -2048,
+                                                        "maximum": 2047
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY3"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY4": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_26b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -4096,
+                                                        "maximum": 4095
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -4096,
+                                                        "maximum": 4095
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY4"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY5": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_28b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -8192,
+                                                        "maximum": 8191
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -8192,
+                                                        "maximum": 8191
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY5"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-XY6": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_XY_32b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "x": {
+                                                        "type": "integer",
+                                                        "minimum": -32768,
+                                                        "maximum": 32767
+                                                      },
+                                                      "y": {
+                                                        "type": "integer",
+                                                        "minimum": -32768,
+                                                        "maximum": 32767
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "x",
+                                                      "y"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-XY6"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "node-LatLon": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.Node_LLmD_64b",
+                                                    "description": "ASN.1 SEQUENCE Type",
+                                                    "properties": {
+                                                      "lon": {
+                                                        "type": "integer",
+                                                        "minimum": -1799999999,
+                                                        "maximum": 1800000001
+                                                      },
+                                                      "lat": {
+                                                        "type": "integer",
+                                                        "minimum": -900000000,
+                                                        "maximum": 900000001
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "lon",
+                                                      "lat"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "node-LatLon"
+                                                ]
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "regional": {
+                                                    "type": "object",
+                                                    "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_NodeOffsetPointXY",
+                                                    "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                                                    "oneOf": [
+                                                      {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "regionId": {
+                                                            "type": "integer",
+                                                            "const": 2
+                                                          },
+                                                          "regExtValue": {
+                                                            "type": "object",
+                                                            "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.NodeOffsetPointXY_addGrpBReg_NodeOffsetPointXY",
+                                                            "description": "ASN.1 SEQUENCE Type",
+                                                            "properties": {
+                                                              "NodeOffsetPointXY_addGrpB": {
+                                                                
+                                                              }
+                                                            }
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "regionId",
+                                                          "regExtValue"
+                                                        ]
+                                                      }
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "regional"
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        },
+                                        "required": [
+                                          "vehicleToLanePositions"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "ConnectionManeuverAssist_addGrpC"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "regionId",
+                                  "regExtValue"
+                                ]
+                              }
+                            ]
+                          },
+                          "minItems": 1,
+                          "maxItems": 4
+                        }
+                      },
+                      "required": [
+                        "connectionID"
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 16
+                  },
+                  "regional": {
+                    "type": "array",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.IntersectionState$SequenceOfRegional",
+                    "description": "ASN.1 SEQUENCE OF Type",
+                    "items": {
+                      "type": "object",
+                      "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_IntersectionState",
+                      "description": "ASN.1 SEQUENCE Type with Parameterized Values",
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "regionId": {
+                              "type": "integer",
+                              "const": 3
+                            },
+                            "regExtValue": {
+                              "type": "object",
+                              "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.IntersectionState_addGrpCReg_IntersectionState",
+                              "description": "ASN.1 SEQUENCE Type",
+                              "properties": {
+                                "IntersectionState_addGrpC": {
+                                  "type": "object",
+                                  "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.IntersectionState_addGrpC",
+                                  "description": "ASN.1 SEQUENCE Type",
+                                  "properties": {
+                                    "activePrioritizations": {
+                                      "type": "array",
+                                      "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.PrioritizationResponseList",
+                                      "description": "ASN.1 SEQUENCE OF Type",
+                                      "items": {
+                                        "type": "object",
+                                        "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpC.PrioritizationResponse",
+                                        "description": "ASN.1 SEQUENCE Type",
+                                        "properties": {
+                                          "stationID": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 4294967295
+                                          },
+                                          "priorState": {
+                                            "type": "string",
+                                            "enum": [
+                                              "unknown",
+                                              "requested",
+                                              "processing",
+                                              "watchOtherTraffic",
+                                              "granted",
+                                              "rejected",
+                                              "maxPresence",
+                                              "reserviceLocked"
+                                            ]
+                                          },
+                                          "signalGroup": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "maximum": 255
+                                          }
+                                        },
+                                        "required": [
+                                          "stationID",
+                                          "priorState",
+                                          "signalGroup"
+                                        ]
+                                      },
+                                      "maxItems": 2147483647
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "required": [
+                            "regionId",
+                            "regExtValue"
+                          ]
+                        }
+                      ]
+                    },
+                    "minItems": 1,
+                    "maxItems": 4
+                  },
+                  "roadAuthorityID": {
+                    "type": "object",
+                    "title": "us.dot.its.jpo.asn.j2735.r2024.Common.RoadAuthorityID",
+                    "description": "ASN.1 CHOICE Type - represents a union of possible types",
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "fullRdAuthID": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "fullRdAuthID"
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "relRdAuthID": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "relRdAuthID"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "revision",
+                  "status",
+                  "states"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 32
+            },
+            "regional": {
+              "type": "array",
+              "title": "us.dot.its.jpo.asn.j2735.r2024.SPAT.SPAT$SequenceOfRegional",
+              "description": "ASN.1 SEQUENCE OF Type",
+              "items": {
+                "type": "object",
+                "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_SPAT",
+                "description": "ASN.1 SEQUENCE Type",
+                "properties": {
+                  
+                }
+              },
+              "minItems": 1,
+              "maxItems": 4
+            }
+          },
+          "required": [
+            "intersections"
+          ]
+        }
+      },
+      "required": [
+        "SPAT"
+      ]
+    }
+  },
+  "required": [
+    "messageId",
+    "value"
+  ],
+  "definitions": {
+    
+  }
+}

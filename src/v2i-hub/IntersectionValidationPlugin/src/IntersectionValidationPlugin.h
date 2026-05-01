@@ -20,16 +20,18 @@
 #include <stdlib.h>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <PluginClientClockAware.h>
- 
+#include "jsoncpp/json/json.h"
+
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
-#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
- 
+
+
 namespace IntersectionValidation
 {
- 
+
     class IntersectionValidationPlugin : public tmx::utils::PluginClientClockAware
     {
     public:
@@ -37,16 +39,41 @@ namespace IntersectionValidation
         ~IntersectionValidationPlugin() override = default;
 
         void UpdateConfigSettings();
- 
+
         // Message handlers
         void HandleSpatMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
         void HandleMapDataMessage(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
-        void HandleTimMessage(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
 
     protected:
-        // Virtual method overrides.
         void OnConfigChanged(const char *key, const char *value) override;
-        void OnMessageReceived(IvpMessage *msg) override;
         void OnStateChange(IvpPluginState state) override;
+
+    private:
+        // Interval tracking
+        uint64_t _lastMapTimeMs = 0;
+        uint64_t _lastSpatTimeMs = 0;
+
+        std::string spatSchemaPath = "/workspace/src/v2i-hub/IntersectionValidationPlugin/json/spat.schema.json";
+        uint spatFieldValidationErrors;
+
+        /**
+         * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
+         * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
+         * @param requiredThresholdMs required threshold in ms.
+         * @param maxThresholdMs maximum threshold in ms.
+         * @param messageType label for logging (e.g. "SPaT", "MAP").
+         */
+        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
+
+        // CTI 4501 thresholds
+        static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+        static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
+        static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
+        static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1000;
+
+        static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
+        static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
+        
+        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " message failed CTI 4501 field validation: ";
     };
 }
