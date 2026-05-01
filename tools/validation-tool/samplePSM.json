@@ -1,0 +1,36 @@
+{
+    "messageId": 32,
+    "value": {
+        "PersonalSafetyMessage": {
+            "basicType": "aPEDESTRIAN",
+            "secMark": 45000,
+            "msgCnt": 1,
+            "id": "00000001",
+            "position": {
+                "lat": 389549153,
+                "long": -771488965,
+                "elevation": 400
+            },
+            "accuracy": {
+                "semiMajor": 50,
+                "semiMinor": 50,
+                "orientation": 0
+            },
+            "speed": 125,
+            "heading": 8000,
+            "accelSet": {
+                "long": 0,
+                "lat": 0,
+                "vert": 0,
+                "yaw": 0
+            },
+            "pathPrediction": {
+                "radiusOfCurve": 32767,
+                "confidence": 200
+            },
+            "propulsion": {
+                "human": "onFoot"
+            }
+        }
+    }
+}

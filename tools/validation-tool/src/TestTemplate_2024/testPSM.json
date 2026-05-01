@@ -1,0 +1,130 @@
+{
+    "testgroup": "PSM",
+    "testoperator": "person",
+    "testdate": "",
+    "testlist":
+    {
+        "Exist-01":
+        {   "testtype": "exist",
+            "testobj" : "messageId"
+        },
+        "Exist-02":
+        {   "testtype": "exist",
+            "testobj" : "basicType"
+        },
+        "Exist-03":
+        {   "testtype": "exist",
+            "testobj" : "secMark"
+        },
+        "Exist-04":
+        {   "testtype": "exist",
+            "testobj" : "msgCnt"
+        },
+        "Exist-05":
+        {   "testtype": "exist",
+            "testobj" : "id"
+        },
+        "Exist-06":
+        {   "testtype": "exist",
+            "testobj" : "position"
+        },
+        "Exist-07":
+        {   "testtype": "exist",
+            "testobj" : "lat"
+        },
+        "Exist-08":
+        {   "testtype": "exist",
+            "testobj" : "long"
+        },
+        "Exist-09":
+        {   "testtype": "exist",
+            "testobj" : "accuracy"
+        },
+        "Exist-10":
+        {   "testtype": "exist",
+            "testobj" : "semiMajor"
+        },
+        "Exist-11":
+        {   "testtype": "exist",
+            "testobj" : "semiMinor"
+        },
+        "Exist-12":
+        {   "testtype": "exist",
+            "testobj" : "orientation"
+        },
+        "Exist-13":
+        {   "testtype": "exist",
+            "testobj" : "speed"
+        },
+        "Exist-14":
+        {   "testtype": "exist",
+            "testobj" : "heading"
+        },
+        "Verify-01":
+        {   "testtype": "verify",
+            "testobj" : "messageId",
+            "verificationtype": "exact",
+            "value": 32
+        },
+        "Verify-02":
+        {   "testtype": "verify",
+            "testobj" : "msgCnt",
+            "verificationtype": "range",
+            "value": [0, 127]
+        },
+        "Verify-03":
+        {   "testtype": "verify",
+            "testobj" : "secMark",
+            "verificationtype": "range",
+            "value": [0, 65535]
+        },
+        "Verify-04":
+        {   "testtype": "verify",
+            "testobj" : "lat",
+            "verificationtype": "range",
+            "value": [-900000000, 900000001]
+        },
+        "Verify-05":
+        {   "testtype": "verify",
+            "testobj" : "long",
+            "verificationtype": "range",
+            "value": [-1799999999, 1800000001]
+        },
+        "Verify-06":
+        {   "testtype": "verify",
+            "testobj" : "semiMajor",
+            "verificationtype": "range",
+            "value": [0, 255]
+        },
+        "Verify-07":
+        {   "testtype": "verify",
+            "testobj" : "semiMinor",
+            "verificationtype": "range",
+            "value": [0, 255]
+        },
+        "Verify-08":
+        {   "testtype": "verify",
+            "testobj" : "orientation",
+            "verificationtype": "range",
+            "value": [0, 65535]
+        },
+        "Verify-09":
+        {   "testtype": "verify",
+            "testobj" : "speed",
+            "verificationtype": "range",
+            "value": [0, 8191]
+        },
+        "Verify-10":
+        {   "testtype": "verify",
+            "testobj" : "heading",
+            "verificationtype": "range",
+            "value": [0, 28800]
+        },
+        "Verify-11":
+        {   "testtype": "verify",
+            "testobj" : "propulsion",
+            "verificationtype": "choice",
+            "choices": ["human", "animal", "motor"]
+        }
+    }
+}
