@@ -1,4 +1,4 @@
-name: Build V2X-Hub Images and Run Integration Tests
+name: CI
 
 on:
   workflow_dispatch:
@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   DOCKERHUB_NAMESPACE: usdotfhwaops
@@ -135,7 +136,6 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
             VCS_REF=${{ steps.meta.outputs.revision }}
             BUILD_DATE=${{ steps.meta.outputs.created }}
-
   build-v2xhub-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -203,6 +203,28 @@ jobs:
             --tag "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
+      - name: Docker Scout Compare
+        id: docker-scout-compare
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-env: ${{ github.event.pull_request.base.ref }}
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
+      - name: Docker Scout Record
+        id: docker-scout-record
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: environment
+          environment: ${{ steps.meta.outputs.version }}
+          image: ${{ steps.meta.outputs.tags }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
 
   publish-docker-compose:
     runs-on: ubuntu-24.04
@@ -325,11 +347,20 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Initialize directories
+        working-directory: v2xhub-integration-tests
+        env:
+          V2XHUB_VOLUME_PATH: ${{ runner.temp }}/v2xhub_data
+        run: |
+          mkdir -p "$V2XHUB_VOLUME_PATH/ssl"
+          mkdir -p "$V2XHUB_VOLUME_PATH/download"
+          mkdir -p "$V2XHUB_VOLUME_PATH/logs"
       - name: Run integration tests
         working-directory: v2xhub-integration-tests
         env:
           TAG_NAME: ${{ steps.meta.outputs.version }}
           V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
+          V2XHUB_VOLUME_PATH: ${{ runner.temp }}/v2xhub_data
         run: |
           echo "Running tests with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
           pytest -x -v tests/test_case.py

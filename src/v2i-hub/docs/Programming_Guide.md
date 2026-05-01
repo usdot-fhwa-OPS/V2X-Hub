@@ -56,13 +56,13 @@ Below are the most common V2X Hub plugin integration and functionality and how t
 A V2X Hub Plugin may need to contain certain settings that vary from one deployment to the next, or perhaps may require a specific key to be entered. These are examples of V2X Hub configuration values. Configuration values are defined in the manifest file, stored in the V2X Hub configuration database, and then retrieved by the plugin during execution. In the Example Plugin we see two main functions that help with configuration.
 
 ```cpp
-void UpdateConfigSettings()
+void UpdateConfigSettings();
 ```
 
 This function updates an internal cache of all the needed Plugin parameters. In the case of Example Plugin, this function is called when the plugin starts and is connected (see State Changes), and when a configuration value is updated.
 
 ```cpp
-void OnConfigChanged(const char *key, const char *value)
+void OnConfigChanged(const char *key, const char *value);
 ```
 
 This function is called automatically when a configuration value is changed. The `key` parameter is set to the name of the configuration parameter that has changed and the `value` is set to the new value of that configuration parameter. Although it is possible to check the `key` for the correct value to update in the cached settings of a Plugin, it is often the practice to call `UpdateConfigSettings()` to re-read all of the values, effectively ignoring the supplied parameters.
@@ -86,19 +86,19 @@ In the second example, the “Frequency” parameter is retrieved and stored in 
 To receive message from the V2X Hub, your plugin will need to subscribe to the message types you wish to receive. This is done by using the AddMessageFilter function from the API. In our ExamplePlugin, the constructor of the plugin is registering for three different messages. The pattern for subscribing to messages is below.
 
 ```cpp
-void AddMessageFilter(const char *type, const char *subtype)
+void AddMessageFilter(const char *type, const char *subtype);
 ```
 
 The simplest form of `AddMessageFilter()` is to directly pass the V2X Hub message type and subtype. If a message that matches that type and subtype will be forwarded to this plugin, invoking the call back. A special `*` input can be used for subtype to request **all** message subtypes of a given type. The Example Plugin does not directly use this form of subscription.
 
 ```cpp
-void AddMessageFilter<MessageType>(this, MessageHandlerFunction)
+void AddMessageFilter<MessageType>(this, MessageHandlerFunction);
 ```
 
 This templated function formally describes exactly what message is expected to be received and how it is to be handled. Whereas the basic form above only provides a type and subtype and the handling is intended to be inside the call back function, this form describes the exact structure of the message that is expected, which includes the type and subtype, and a specific call back function to use to handle this message type. Each handler function must be structured in the form:
 
 ```cpp
-void HandlerFunctionName(MessageType &msg, routeable_message &routeableMsg)
+void HandlerFunctionName(MessageType &msg, routeable_message &routeableMsg);
 ```
 
 The first parameter `msg` is the converted V2X Hub message of that type defined in the filter request, and the second parameter `routeableMsg` is the broader V2X Hub routing message, which contains the routing information used by V2X Hub, plus a “payload” that is an encoded version of `msg`. The latter parameter is often only used if timing information is needed.
@@ -106,11 +106,11 @@ The first parameter `msg` is the converted V2X Hub message of that type defined 
 As stated above, there are three messages that Example Plugin is looking to handle, therefore there are three separate handler functions. A full list of supported API messages can be found in Appendix C. When handling a message please refer to the OSADP source code for the message structure.
 
 ```cpp
-void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
+void HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg);
 
-void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg)
+void HandleDecodedBsmMessage(DecodedBsmMessage &msg, routeable_message &routeableMsg);
 
-void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg)
+void HandleDataChangeMessage(DataChangeMessage &msg, routeable_message &routeableMsg);
 ```
 
 ```cpp
@@ -128,7 +128,7 @@ Once a plugin is registered, it is safe to retrieve configuration settings from 
 Whenever a state changes, the plugin will be notified by following call back.
 
 ```cpp
-void OnStateChange(IvpPluginState state)
+void OnStateChange(IvpPluginState state);
 ```
 
 The _state_ parameter is an enum value that specifies the new state of the plugin. The typical scenario as seen in the Example Plugin is simply to call the `UpdateConfigSettings()` function when the state changes to registered. Additional functionality can be handled on disconnect and connect state changes in the OnStateChange call back.
@@ -175,13 +175,13 @@ PLOG(logDEBUG) << ”My message: “ << intVariable;
 As stated in the Subscribing to Messages section, there are two types of message filters that can be applied. In either case, receiving a message of subscribed type and subtype will automatically invoke the following call back API on the Plugin:
 
 ```cpp
-void OnMessageReceived(IvpMessage *msg)
+void OnMessageReceived(IvpMessage *msg);
 ```
 
 The `msg` parameter is a pointer to the full V2X Hub message structure. This simple C-style struct contains the routing information such as type, subtype, the source plugin and a receive timestamp, along with the payload, which is the actual message, as well as the encoding of the payload. In this handler, however, the developer is responsible for checking the type and retrieving the payload.
 
 ```cpp
-void HandleMessageType(MessageType &msg, routeable_message &routeableMsg)
+void HandleMessageType(MessageType &msg, routeable_message &routeableMsg);
 ```
 
 This handler function is associated with the templated AddMessageFilter() function described above in the Subscribing to Messages section. Because this function registers the exact C++ class to use for messages of a given type and subtype, the incoming message payload can automatically be converted to that type. The result is passed into the handler function in the `msg` parameter. The `routeableMsg` parameter is synonymous with the full V2X Hub message pointer passed into the OnMessageReceived() function, but as a fully encapsulated C++ class.
@@ -193,7 +193,7 @@ Because the handler in this form has already been converted to a message class, 
 The incoming V2X Hub message payload are generally encoded for performance reasons. Some messages may be just string information, thus encoded as a simple character string, while there may also be encodings of numeric or Boolean data. Each of these can be decoded directly from the payload, and the following API exists in the **routeable_message** class to obtain the payload value as a string: Due to performance issues with the iMX6 architecture, using this method of decoding message is not recommended for high frequency message types, like SPAT or BSM.
 
 ```cpp
-std::string get_payload_str()
+std::string get_payload_str();
 ```
 
 Although there is no direct function to convert the string values to a Boolean or a number, such an operation is easily done with the aforementioned Boost lexical_cast operation.
@@ -201,7 +201,7 @@ Although there is no direct function to convert the string values to a Boolean o
 The most common payload encoding, however, is a JSON form. The get_payload_str() function in this case, will return the entire JSON as a string. This may be handy for storing or logging and can even be used in conjunction with regular expressions, a direct API is available to convert the JSON information into any V2X Hub message class.
 
 ```cpp
-template <typename MessageType> MessageType get_payload()
+template <typename MessageType> MessageType get_payload();
 ```
 
 See the Sample TIM Message Creation section for more information on how a V2X Hub Message must be created.
@@ -219,37 +219,37 @@ In the Example Plugin, the three handler functions are set to receive: a MapData
 Encoding a V2X Hub message is effectively the opposite of decoding one. The following API is available in the routeable_message class to assist:
 
 ```cpp
-void set_payload(std::string payload)
+void set_payload(std::string payload);
 ```
 
 Encode the payload as a direct string.
 
 ```cpp
-void set_payload(bool payload)
+void set_payload(bool payload);
 ```
 
 Encode the payload as a Boolean type.
 
 ```cpp
-void set_payload(int number)
+void set_payload(int number);
 ```
 
 Encode the payload as an integer type.
 
 ```cpp
-void set_payload(double number)
+void set_payload(double number);
 ```
 
 Encode the payload as a double type.
 
 ```cpp
-void set_payload(tmx_message<JSON> &payload)
+void set_payload(tmx_message<JSON> &payload);
 ```
 
 Encode the payload as a JSON type. There is also a form to encode as a different format like XML, but all of those payloads are directly converted to a string, therefore have a large performance cost.
 
 ```cpp
-void set_payload_bytes(const byte_stream &bytes)
+void set_payload_bytes(const byte_stream &bytes);
 ```
 
 Encode the payload as a hexstring. The encoding by default is set to a “bytearray/hexstring”. Therefore, if the hexstring is ASN.1 encoding, the message encoding value must be changed to reflect the correct encoding.
@@ -257,7 +257,7 @@ Encode the payload as a hexstring. The encoding by default is set to a “bytear
 A V2X Hub J2375 encoded message type understands the correct encodings for passing J2735 messages, version 2016. Therefore, it is always recommended to use this class to handle J2735 messages. There is a simple function available to correctly initialize the message with an encoded payload:
 
 ```cpp
-void initialize(MsgType &payload)
+void initialize(MsgType &payload);
 ```
 
 The `payload` parameter must be of the correct J2735 message type. For example, a BsmEncodedMessage will only initialize with a BsmMessage. It is also important to note that the most common errors occur inside the encoding of a J2735 message because the `payload` parameter does not contain the correct data and therefore cannot be encoded per the ASN.1 rules. Typical issues include missing values, certain values out-of-bounds, incorrect bit mask settings and invalid array construction. Therefore, it is recommended to always separately test the encoding when generating J2735 messages.
@@ -527,26 +527,26 @@ ASN_SEQUENCE_ADD(&advisory->list, member);
 A V2X Hub routeable_message class represents the encoded message passed through the V2X Hub core server. Therefore, the contents are consistent between the plugin that sends the message and the plugin that receives it. Much of the previous sections discussed how a message is received in the plugin, but a plugin may also be a producer of any messages, whether they are J2735 messages or internal ones. The following API is available in the PluginClientClockAware parent class to handle the broadcast of a message through the V2X Hub system:
 
 ```cpp
-void BroadcastMessage(const IvpMessage *ivpMsg)
+void BroadcastMessage(const IvpMessage *ivpMsg);
 ```
 
 This is the function that directly emits the provided _ivpMsg_. This function is more typically invoked by the other forms below that expect a routeable_message class reference.
 
 ```cpp
-void BroadcastMessage(const tmx::routeable_message &routeableMsg)
+void BroadcastMessage(const tmx::routeable_message &routeableMsg);
 ```
 
 This function directly emits the provided `routeableMsg`. This is an efficient form because it just uses the underlying C-style structure contained in the class.
 
 ```cpp
-void BroadcastMessage(tmx::routeable_message &routeableMsg)
+void BroadcastMessage(tmx::routeable_message &routeableMsg);
 ```
 This function directly emits a _copy_ of the provided `routeableMsg`. This is less efficient than the previous form because the underlying C-style structure is first duplicated. The copy, however, is immediately destroyed after it is used.
 
 Since much of the work of a plugin is in building the message to send, most plugins do not really need to worry about the specifics of the V2X Hub routing messages. Therefore, there is a convenience function that can take any V2X Hub message and perform the encoding and the broadcast in one swoop:
 
 ```cpp
-template <typename MsgType> void BroadcastMessage(MsgType& message)
+template <typename MsgType> void BroadcastMessage(MsgType& message);
 ```
 
 This function routes the message through the V2X Hub. Below is code to send the TIM message created above by creating a TimEncodedMessage. Initialize the encoded message by passing a TimMessage which was created by a TravelerInformation. Set the TimEncodedMessage flags to route out of the DSRC radio, if the message is to be picked up by the DSRC Message Manger and broadcast out the RSU. Set the DSRC Metadata to its initial state, in this case out of the channel 178 with PSID 0x8003. The values set here are used as defaults, but the PSID and channel will be overwritten by the configuration in the DSRC Message Manager. Create a routable message based on the encoded message and call BroadcastMessage with the routable message to send the message into the V2X Hub.
@@ -586,7 +586,7 @@ The `PluginClient` base class provides two default status values that all extend
 Errors can occur in the plugin, and it is always useful to have information available to help debug a problem that occurs. Aside for logging, any exceptions that occur in the plugin can be handled using the following function:
 
 ```cpp
-void HandleException(std::exception &ex)
+void HandleException(std::exception &ex);
 ```
 
 By default, the exception will be logged, with all helpful debug information, and the plugin will exit. If the problem is recoverable, it is possible to simply log the exception and continue.
@@ -594,7 +594,7 @@ By default, the exception will be logged, with all helpful debug information, an
 Certain V2X Hub API errors can occur, which automatically invoke the following call back:
 
 ```cpp
-void OnError(IvpError err)
+void OnError(IvpError err);
 ```
 
 The `err` parameter specifies what problem occurred. Some problems include errors in the manifest or missing configuration keys. By default, the error is simply logged, but this function can be overridden to provide better error handling.
@@ -886,43 +886,43 @@ However, not every message type has a predictably known rate. For example, an ap
 The base class for lock-free threading in V2X Hub is based on the [Boost](http://www.boost.org/doc/libs/1_58_0/doc/html/lockfree.html) single producer, single consumer lock-free queue solution, which means that as long as only one thread is writing to the queue and only one thread is reading from that same queue, then no locking is necessary. This template class allows both a lock-free input queue and a separate lock-free output queue of any type, so that the actual worker can read some message and write out a different one to be broadcast.
 
 ```cpp
-bool push(const InQueueT &item)
+bool push(const InQueueT &item);
 ```
 
 The `push()` operation adds an item to the incoming queue. It returns true if the `item` was inserted, or false otherwise.
 
 ```cpp
-bool pop(OutQueueT &item)
+bool pop(OutQueueT &item);
 ```
 
 The `pop()` operation removes an item from the outgoing queue and saves it to the `item` parameter. If no item is on the queue, then the function returns false and the contents of `item` are undefined.
 
 ```cpp
-bool push_out(const OutQueueT &item)
+bool push_out(const OutQueueT &item);
 ```
 
 Typically used internally to add `item` to the outgoing queue. Keep in mind that only one thread should write to the outgoing queue. Returns true if the item was push to the queue and false otherwise.
 
 ```cpp
-uint64_t inQueueSize()
+uint64_t inQueueSize();
 ```
 
 Returns the current size of the incoming queue.
 
 ```cpp
- uint64_t outQueueSize()
+ uint64_t outQueueSize();
 ```
 
 Returns the current size of the outgoing queue.
 
 ```cpp
-void doWork(InQueueT &item)
+void doWork(InQueueT &item);
 ```
 
 The work function done to process the next incoming `item`. This is a virtual function that must be over-ridden in the implementation class. This function is only called when there is something in the incoming queue.
 
 ```cpp
-void idle()
+void idle();
 ```
 
 When nothing is in the incoming queue, the `idle()` operation is called. This gives the thread an opportunity to sleep before trying again. Optimal sleep timing is up to the implementation but should be driven by queue size history, so the thread will be able to wake up in time for another incoming item. Trying to run without an idle operation, however, will lead to high CPU utilization.
@@ -932,19 +932,19 @@ When nothing is in the incoming queue, the `idle()` operation is called. This gi
 A helper class that maintains a number of lock-free thread implementations and assigns incoming queue items by a 2-byte identifier. The first item for the identifier is assigned based on a strategy of either round-robin (the default), randomized, or by shortest queue. Afterwards, if the identifier is already set to use a specific thread, then that incoming item is assigned to the same thread’s queue. This is to facilitate cases where the incoming items must be processed sequentially under the assumption that data from previous incoming messages are still important to any new message handling. For example, to process BSMs from 20 sources, each source can be assigned one of the 5 worker threads in a group, thus not only ensuring each thread only processes 40 messages per second, but also that information from previous BSMs on that source, say path history, can be persisted in the thread local memory since incoming BSMs from that source all are assigned to the same thread.
 
 ```cpp
-void set_size(size_t size)
+void set_size(size_t size);
 ```
 
 Sets the size of the thread group, initially zero. Once a new thread is added, it is automatically started. Because shrinking the group is not allowed, the size can really only increase and never decrease.
 
 ```cpp
-void assign(uint8_t group, uint8_t id, const InQueueT &item)
+void assign(uint8_t group, uint8_t id, const InQueueT &item);
 ```
 
 Assign an incoming item to a thread queue based on the 1-byte group and 1-byte id.
 
 ```cpp
-void unassign(uint8_t group, uint8_t id)
+void unassign(uint8_t group, uint8_t id);
 ```
 
 Remove a thread assignment for the 1-byte group and 1-byte id. The next `assign()` operation will pick a new thread.
@@ -954,25 +954,25 @@ Remove a thread assignment for the 1-byte group and 1-byte id. The next `assign(
 This helper class utilizes a thread group of lock-free threads to set up a network of worker threads to process incoming V2X Hub messages. The class inherits directly from PluginClientClockAware, thus implementing classes need to inherit from TmxMessageManager instead. The class is designed to work both as an incoming V2X Hub message decoder and handler using the mechanism described in Message Handling and as a rapid producer of V2X Hub messages. The incoming item may either be a ready-made V2X Hub message pointer, which will simply be passed along to the handler, or a raw set of bytes, which first must be converted into an appropriate V2X Hub message before being passed to the handler. It is important to note that using this class consolidates the processing of messages into a handful of worker threads, including any decoding.
 
 ```cpp
-void OnMessageReceived(IvpMessage *msg)
+void OnMessageReceived(IvpMessage *msg);
 ```
 
 The PluginClientClockAware override that takes the incoming message and quickly assigns the message to a worker thread. No decoding of the message is attempted. By default, this assigns the message to the next available thread, and does **not** using grouping of sources. This function must be re-implemented in a subclass to provide such functionality.
 
 ```cpp
-void IncomingMessage(const uint8_t *bytes, size_t size, const char *encoding, uint8_t groupId, uint8_t uniqId)
+void IncomingMessage(const uint8_t *bytes, size_t size, const char *encoding, uint8_t groupId, uint8_t uniqId);
 ```
 
 Assign a byte array, assuming a specific encoding, to a worker thread based on the 1-byte group and 1-byte unique id. This can be used, for example, to receive bytes from a UDP stream based on the last 2 bytes of the incoming source address. The worker thread will then convert into a V2X Hub message and the handler will be invoked. In this case, however, the handler might just broadcast the message. There is also a similar form of this function for an incoming string message, such as in JSON.
 
 ```cpp
-void IncomingMessage(const IvpMessage *msg, uint8_t groupId, uint8_t uniqId)
+void IncomingMessage(const IvpMessage *msg, uint8_t groupId, uint8_t uniqId);
 ```
 
 Assign a V2X Hub message pointer to a worker thread based on the 1-byte group and 1-byte unique id. This is typically done upon receipt of a message from the V2X Hub core server and is used primarily to force the time-consuming handling of messages into separate thread.
 
 ```cpp
-void OutgoingMessage(const tmx::routeable_message &msg)
+void OutgoingMessage(const tmx::routeable_message &msg);
 ```
 
 A helpful function that allows the worker threads to pass a message to the outgoing queue.
@@ -1139,13 +1139,13 @@ template <typename DataType> class TmxJ2735Message: public tmx::tmx_message
 The class template parameter _DataType_ is expected to be the generated J2735 C-style structures, and the class extends a V2X Hub message type that is XML/JSON based. Therefore, these messages can be dumped out in XML/JSON form by serializing to an I/O stream, which simply calls to_string().
 
 ```cpp
-TmxJ2735Message(DataType *data = 0)
+TmxJ2735Message(DataType *data = 0);
 ```
 
 This constructor builds a J2735 message from the given pointer to an already created structure. This form assumes control over the management of the pointer, i.e. it will be freed when the object is destructed. If the pointer is null, which is the default case, the message is considered empty.
 
 ```cpp
-TmxJ2735Message(const TmxJ2735Message <DataType> & msg)
+TmxJ2735Message(const TmxJ2735Message <DataType> & msg);
 ```
 
 A basic copy constructor that directly uses the same underlying J2735 structure pointer, effectively increasing the reference count by one. Therefore, the pointer will only be freed when the last reference to it was destroyed. Therefore, the original object can go out of scope without destroying the underlying structure used in this copy. Because the pointers are shared, changes to data inside will affect all references.
@@ -1169,25 +1169,25 @@ PLOG(logINFO) << copy << endl; // Should be the exact same SPAT data
 ```
 
 ```cpp
-TmxJ2735Message(DataType &msg)
+TmxJ2735Message(DataType &msg);
 ```
 
 A constructor from an existing J2735 message reference. In this case, it is assumed that memory management is done outside this class, so destroying the object has no impact on the underlying structure.
 
 ```cpp
-TmxJ2735Message(const std::shared_ptr<message_type> &other)
+TmxJ2735Message(const std::shared_ptr<message_type> &other);
 ```
 
 A constructor from an existing J2735 message pointer that already has a shared reference count. The current ownership of memory management is maintained, but the reference count is increased by one. If the smart pointer was created outside the V2X Hub API, then cleanup must be done outside the V2X Hub objects, but this could also be a smart pointer obtained from a TmxJ2735Message class, in which case the source object cleanup will be executed upon destruction of all references. As with the copy constructor, the original object can go out of scope without destroying the pointer, but any changes to the structure affects all references.
 
 ```cpp
-std::shared_ptr<message_type> get_j2735_data()
+std::shared_ptr<message_type> get_j2735_data();
 ```
 
 Return a pointer to the underlying J2735 message structure. This uses a C++ smart pointer so that the contents can be shared safely without having to pass around copies.
 
 ```cpp
-void set_j2735_data(const message_type *data)
+void set_j2735_data(const message_type *data);
 ```
 
 As mentioned, the TmxJ2735Message class is copied with shared pointers to the same structure. In fact, the asn1c compiled structures do not have the innate capability to be copied. Thus, deep-copy duplication is only possible via the internal XML container. This function is used to set the contents of the message by serializing the pointer structure to XML and rebuilding an empty structure from XML. The object loses any existing reference to a J2735 structure, so do **not** use this function in replacement of a copy constructor.
@@ -1213,49 +1213,49 @@ template <typename MsgType> class TmxJ2735EncodedMessage: public TmxJ2735Encoded
 The template parameter `MsgType` is the TmxJ2735Message that is to be encoded and decoded. This class inherits from a simple base class that is just a JSON message type.
 
 ```cpp
-static constexpr const char *DefaultCodec = ASN1_CODEC<MsgType>::Encoding
+static constexpr const char *DefaultCodec = ASN1_CODEC<MsgType>::Encoding;
 ```
 
 The default encoding for this V2X Hub message is by default BER for the 2015 specification and UPER for the 2016 specification.
 
 ```cpp
-void set_data(const std::vector<uint8_t> &data)
+void set_data(const std::vector<uint8_t> &data);
 ```
 
 Set the payload contents with the encoded bytes. The encoding type is set to the appropriate encoded hexstring.
 
 ```cpp
-MsgType decode_j2735_message()
+MsgType decode_j2735_message();
 ```
 
 Return a copy of the TmxJ2735Message payload, decoded from the hexstring. For performance reason, the actual decoding of the bytes is done exactly once (unless the bytes are modified), and the message returned is built as a copy so that the underlying structure is shared amongst all the objects built using this function.
 
 ```cpp
-void encode_j2735_message(MsgType &message)
+void encode_j2735_message(MsgType &message);
 ```
 
 Set the contents of the payload by encoding the `message` to a byte stream.
 
 ```cpp
-tmx_message get_payload()
+tmx_message get_payload();
 ```
 
 Return the payload, which is effectively the same call as `decode_j2735_message()`, but it also pre-sets the XML or JSON container of the message.
 
 ```cpp
-int get_msgId()
+int get_msgId();
 ```
 
 Writes out the identifier for the J2735 message. These were specified in the 2015 specification but were taken out in the 2016 specification. However, the enumeration was carried into V2X Hub for continuity purposes.
 
 ```cpp
-void initialize(MsgType &payload)
+void initialize(MsgType &payload);
 ```
 
 A convenience method to initialize this message with an encoded byte stream of the specified payload.
 
 ```cpp
-tmx::routeable_message::get_payload<TmxJ2735Message<MsgType>>()
+tmx::routeable_message::get_payload<TmxJ2735Message<MsgType>>();
 ```
 
 In order for Message Handling to be able to invoke the proper handler function by J2735 type, each TmxJ2735Message must have a template specialization for retrieving the payload as that type. This is typically done by creating a temporary TmxJ2735EncodedMessage type with the supplied encoded byte stream, then invoking the `get_payload()` on that encoded message type to retrieve the decoded message. The object that is returned can then be used as the input to the handler function.
