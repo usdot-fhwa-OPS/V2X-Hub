@@ -1,19 +1,28 @@
 #!/bin/bash
 set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Load .env if present to get V2XHUB_VOLUME_PATH
+if [ -f "${SCRIPT_DIR}/.env" ]; then
+  source "${SCRIPT_DIR}/.env"
+fi
+# Ensure required environment variable is set
+: "${V2XHUB_VOLUME_PATH:?V2XHUB_VOLUME_PATH must be set}"
+
+SSL_DIR="${V2XHUB_VOLUME_PATH}/ssl"
 # Check for ssl/cert-key.pem and ssl/cert.pem
-if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
+if [[ ! -f "$SSL_DIR/cert-key.pem" || ! -f "$SSL_DIR/cert.pem" ]]; then
     echo "Incomplete or missing SSL certificates."
     # Clear certificates if only one exists
-    if [[ -f "ssl/cert-key.pem" ]]; then
+    if [[ -f "$SSL_DIR/cert-key.pem" ]]; then
         echo "Only cert-key.pem found. Removing it..."
-        rm -f ssl/cert-key.pem
-    elif [[ -f "ssl/cert.pem" ]]; then
+        rm -f "$SSL_DIR/cert-key.pem"
+    elif [[ -f "$SSL_DIR/cert.pem" ]]; then
         echo "Only cert.pem found. Removing it..."
-        rm -f ssl/cert.pem
+        rm -f "$SSL_DIR/cert.pem"
     fi
     echo "Generating new certificates..."
-    mkdir -p ssl
-    cd ssl || exit
+    mkdir -p "$SSL_DIR"
     
     # Detect system architecture
     ARCH=$(uname -m)
@@ -62,10 +71,7 @@ if [[ ! -f "ssl/cert-key.pem" || ! -f "ssl/cert.pem" ]]; then
         echo "mkcert installed successfully for ${MKCERT_ARCH}."
     fi
     mkcert -install
-    mkcert localhost 127.0.0.1 ::1
-    mv *-key.pem cert-key.pem
-    mv localhost+* cert.pem
-    sudo chmod ugo+r *.pem
+    mkcert -cert-file "$SSL_DIR/cert.pem" -key-file "$SSL_DIR/cert-key.pem" localhost 127.0.0.1 ::1
+    sudo chmod ugo+r "$SSL_DIR/cert.pem" "$SSL_DIR/cert-key.pem"
     echo "SSL certificates generated successfully."
-    cd .. || exit
 fi
