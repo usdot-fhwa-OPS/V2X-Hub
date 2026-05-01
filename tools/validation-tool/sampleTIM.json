@@ -1,0 +1,124 @@
+{
+    "messageId": 31,
+    "value": {
+        "TravelerInformation": {
+            "msgCnt": 1,
+            "dataFrames": [
+                {
+                    "doNotUse1": 0,
+                    "frameType": "advisory",
+                    "msgId": {
+                        "roadSignID": {
+                            "position": {
+                                "lat": 389549153,
+                                "long": -771488965,
+                                "elevation": 400
+                            },
+                            "viewAngle": 0000,
+                        }
+                    },
+                    "startTime": 394574,
+                    "durationTime": 32000,
+                    "priority": 5,
+                    "doNotUse2": 0,
+                    "regions": [
+                        {
+                            "anchor": {
+                                "lat": 389549153,
+                                "long": -771488965,
+                                "elevation": 400
+                            },
+                            "laneWidth": 366,
+                            "directionality": "forward",
+                            "closedPath": false,
+                            "direction": 0000,
+                            "description": {
+                                "path": {
+                                    "offset": {
+                                        "xy": {
+                                            "nodes": [
+                                                {
+                                                    "delta": {
+                                                        "node-LatLon": {
+                                                            "lon": -771489394,
+                                                            "lat": 389549194
+                                                        }
+                                                    },
+                                                    "attributes": {
+                                                        "dElevation": -10
+                                                    }
+                                                },
+                                                {
+                                                    "delta": {
+                                                        "node-LatLon": {
+                                                            "lon": -771487215,
+                                                            "lat": 389548996
+                                                        }
+                                                    },
+                                                    "attributes": {
+                                                        "dElevation": 10
+                                                    }
+                                                },
+                                                {
+                                                    "delta": {
+                                                        "node-LatLon": {
+                                                            "lon": -771485210,
+                                                            "lat": 389548981
+                                                        }
+                                                    },
+                                                    "attributes": {
+                                                        "dElevation": 10
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "doNotUse3": 0,
+                    "doNotUse4": 0,
+                    "content": {
+                        "speedLimit": [
+                            {
+                                "item": {
+                                    "itis": 27
+                                }
+                            },
+                            {
+                                "item": {
+                                    "text": "Curve Ahead"
+                                }
+                            },
+                            {
+                                "item": {
+                                    "itis": 2564
+                                }
+                            },
+                            {
+                                "item": {
+                                    "text": 25
+                                }
+                            },
+                            {
+                                "item": {
+                                    "itis": 8720
+                                }
+                            }
+                        ]
+                    },
+                    "contentNew": {
+                        "frictionInfo": {
+                            "roadSurfaceDescription": {
+                                "portlandCement": {
+                                    "type": "newSharp"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}
