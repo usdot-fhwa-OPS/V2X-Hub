@@ -27,7 +27,11 @@ namespace TimPlugin {
 #endif
         auto timPtr = tim->get_j2735_data();
         // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
+#if SAEJ2735_SPEC >= 2024
         timPtr->dataFrames.list.array[0]->durationTime = 32000;
+#else
+        timPtr->dataFrames.list.array[0]->duratonTime = 32000;
+#endif
         EXPECT_TRUE(isTimActive(tim));
         // Start time 2025 May 14 5:36 PM (UTC)
         // Duration is 32000 miutes -> indefinite
@@ -371,13 +375,17 @@ namespace TimPlugin {
                     </TravelerDataFrame>
                 </dataFrames>
             </TravelerInformation>
-        )"
+        )";
 #endif
         auto tim = readTimXml(timXml);
         auto timPtr = tim->get_j2735_data();
         EXPECT_EQ(2025, *(timPtr->dataFrames.list.array[0]->startYear));
         EXPECT_EQ(181181, timPtr->dataFrames.list.array[0]->startTime);
+#if SAEJ2735_SPEC >= 2024
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
+#else
+        EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->duratonTime);
+#endif
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
 
 
@@ -392,7 +400,11 @@ namespace TimPlugin {
         auto timPtr = tim->get_j2735_data();
         EXPECT_EQ(2025, *(timPtr->dataFrames.list.array[0]->startYear));
         EXPECT_EQ(181181, timPtr->dataFrames.list.array[0]->startTime);
+#if SAEJ2735_SPEC >= 2024
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
+#else
+        EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->duratonTime);
+#endif
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
         // Attempt to read from file that does not exist
         EXPECT_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
