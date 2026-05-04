@@ -98,10 +98,12 @@ namespace IntersectionValidation
         }
 
         lastTimestampMs = currentTimeMs;
-    } 
+    }
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
+        uint64_t handlerBeginMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+ 
         // Frequency validation
         measureMessageInterval(_lastSpatTimeMs, SPAT_INTERVAL_REQUIRED_MS, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
  
@@ -109,24 +111,22 @@ namespace IntersectionValidation
         if (spatSchemaPath.empty())
         {
             PLOG(logWARNING) << "SpatSchemaPath not configured, skipping field validation";
+            PluginClient::SetStatus("SPAT Schema Path configured", "No");
             return;
         }
  
         try
         {
-            tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
-                routeableMsg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
-
-
             // Convert SPAT to JSON
-            auto spatData = rMsg.decode_j2735_message().get_j2735_data();
-            auto spatJsonMsg = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(spatData);
+            auto spatData = msg.get_j2735_data();
+            auto spatJsonMsg = TmxJ2735Message<SPAT, tmx::JSON>(spatData);
             std::string spatJsonStr = spatJsonMsg.to_string();
  
             PLOG(logDEBUG) << "SPaT JSON: " << spatJsonStr;
  
             // Validate against schema file
             FieldValidation result = validateJsonAgainstSchemaFile(spatJsonStr, spatSchemaPath);
+            PluginClient::SetStatus("Spat Schema Path configured", "Yes");
  
             if (!result.valid)
             {
@@ -135,21 +135,49 @@ namespace IntersectionValidation
                     PLOG(logWARNING) << "SPaT field validation failure: " << error;
                 }
  
-                TmxEventLogMessage eventLogMsg;
-                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
-                eventLogMsg.set_description("SPaT" + EVENT_FIELD_VALIDATION_FAILED + result.errors[0]);
-                PluginClient::BroadcastMessage(eventLogMsg);
+                // Get intersection ID from message
+                int intersectionId = -1;
+                if (spatData && spatData->intersections.list.count > 0 &&
+                    spatData->intersections.list.array != nullptr)
+                {
+                    intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
+                }
+ 
+                uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+ 
+                std::vector<MissingDataElement> elements;
+                for (const auto &elem : result.errors)
+                {
+                    elements.emplace_back(elem);
+                }
+ 
+                CTI4501ValidationMessage eventMsg;
+                eventMsg.set_eventGeneratedAt(handlerEndMs);
+                eventMsg.set_eventType("SpatMinimumData");
+                eventMsg.set_intersectionID(intersectionId);
+                eventMsg.set_roadRegulatorID(-1);
+                eventMsg.set_source(rsuSource);
+                eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
+                eventMsg.set_missingDataElements(elements);
+ 
+                PluginClient::BroadcastMessage(eventMsg);
  
                 spatFieldValidationErrors++;
-                PluginClient::SetStatus("SPaT Field Validation Errors", spatFieldValidationErrors);
+                
             }
+            else
+            {
+                spatValidationPassed++;
+            }
+            PluginClient::SetStatus("SPaT Validation Passed", spatValidationPassed);
+            PluginClient::SetStatus("SPaT Validation Failed", spatFieldValidationErrors);
         }
         catch (const std::exception &e)
         {
             PLOG(logERROR) << "Error during SPaT field validation: " << e.what();
         }
     }
- 
+
     void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
         measureMessageInterval(_lastMapTimeMs, MAP_INTERVAL_REQUIRED_MS, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
