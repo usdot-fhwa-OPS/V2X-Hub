@@ -1,0 +1,12 @@
+services:
+  validation-tool:
+    image: validation-tool:gui
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: "host"
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ./sample:/validationTool/sample:ro
