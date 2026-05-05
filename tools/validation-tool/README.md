@@ -40,11 +40,21 @@ To run the application just enter:
 
 *Docker container*:
 
-`sudo docker build -t <containerImageName> .`
+1. At `tools/validation-tool/`, run the following to build the image:
+```bash
+docker compose build
+```
 
-`sudo apt-get install x11-xserver-utils && host +` <-- *(in order to allow docker access to x11 server)*
+2. Allow local connections to the X server:
+```bash
+xhost +local:docker
+```
 
-`sudo docker run --network=host -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix:rw <containerImageName>`
+3. Start the app:
+```bash
+docker compose up
+```
+
 
 ## Usage
 
