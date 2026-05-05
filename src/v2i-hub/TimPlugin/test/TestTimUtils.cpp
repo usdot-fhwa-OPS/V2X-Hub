@@ -260,7 +260,7 @@ namespace TimPlugin {
                         </roadSignID>
                     </msgId>
                     <startYear>2025</startYear>
-                    <startTime>5760</startTime>
+                    <startTime>181181</startTime>
                     <duratonTime>5760</duratonTime>
                     <priority>5</priority>
                     <sspLocationRights>0</sspLocationRights>
