@@ -734,7 +734,7 @@ li > a {
 
 #fileButtonOptions > button { 
     margin-right: 1%;
-    width: 25%;
+    width: 24%;
     height: 80%;
 }
 #fileButtonOptions > button[disabled="true"] { 

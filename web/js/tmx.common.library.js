@@ -626,17 +626,21 @@ function handleCommandMessage(msgData) {
             } else if (state == "UPLOAD") {
                 var status = msgData["status"].toUpperCase();
                 var typeIsPlugin = false;
+                var typeIsState = false;
                 if (status == "SUCCESS") {
                     if (debugLevel > 0) console.log("Finished successfully");
                     typeIsPlugin = checkIfPluginUploadAndInstall();
+                    typeIsState = checkIfUpdateState();
 
                     stopClearFileUploadProgressTimer();
-                    if (!typeIsPlugin) {
+                    if (!typeIsPlugin && !typeIsState) {
                         startClearFileUploadProgressTimer();
-                    } else {
+                    } else if (typeIsPlugin) {
                         var fullWidth = parseFloat($("#fileUploadProgressDiv").css("width"));
                         $("#fileUploadProgress").html("Installing plugin...");
                         $("#fileUploadProgressContainer").css("left", (((fullWidth - parseFloat($("#fileUploadProgressContainer").css("width"))) / 2) / fullWidth) * 100 + "%");
+                    } else if (typeIsState) {
+                        $("#fileUploadProgress").html("Restoring system state...");
                     }
                 } else {
                     if (debugLevel > 0) console.log("Finished failed");
@@ -705,6 +709,23 @@ function handleCommandMessage(msgData) {
             } else {
                 showSaveStateFeedback("Backup failed: " + (msgData.reason || ""));
                 setTimeout(hideSaveStateFeedback, 3000); // hide after 3s
+            }
+        }
+        else if (msgData["command"].toUpperCase() === "UPLOADSTATE") {
+            if (msgData["status"] != null && msgData["status"] != undefined) {
+                var status = msgData["status"].toUpperCase();
+            }
+            if (status == "FAILED") {
+                launchErrorDialog(msgData["command"], status + " : " + reason);
+                stopClearFileUploadProgressTimer();
+                $("#fileUploadProgress").html("");
+                $("#fileUploadProgressFeedback").html("");
+            } else {
+                stopClearFileUploadProgressTimer();
+                $("#fileUploadProgressFeedback").html(msgData["reason"]);
+                var fullWidth = parseFloat($("#fileUploadProgressDiv").css("width"));
+                $("#fileUploadProgressContainer").css("left", (((fullWidth - parseFloat($("#fileUploadProgressContainer").css("width"))) / 2) / fullWidth) * 100 + "%");
+                startClearFileUploadProgressTimer();
             }
         }
 
