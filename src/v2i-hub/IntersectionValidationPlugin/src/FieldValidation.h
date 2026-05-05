@@ -16,6 +16,10 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <rapidjson/document.h>
+#include <rapidjson/schema.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 namespace IntersectionValidation
 {
@@ -27,11 +31,51 @@ namespace IntersectionValidation
     };
 
     /**
+     * @brief Recursively convert numeric strings in a RapidJSON value to integers, except for keys named "status".
+     * @param value The RapidJSON value to process.
+     * @param allocator The RapidJSON allocator for modifying the value.
+     * @param key The current key being processed (used to skip "status" fields).
+     */
+    static void convertNumericStrings(rapidjson::Value &value,
+                                      rapidjson::Document::AllocatorType &allocator,
+                                      const std::string &key = "");
+    /**
      * @brief Load a file's contents into a string.
      * @param filePath Path to the file.
      * @return File contents as a string.
      */
     std::string loadFileContents(const std::string &filePath);
+
+    /**
+     * @brief Check if a JSON Schema node declares a specific type (e.g., "integer"), handling both string and array forms of the "type" keyword.
+     * @param schema The JSON Schema node to check.
+     * @param typeName The type name to look for (e.g., "integer").
+     * @return True if the schema declares the type, false otherwise.
+     */
+    static bool schemaHasType(const rapidjson::Value &schema, const char *typeName);
+
+    /**
+     * @brief Get the schema node for a property key, or nullptr if not found.
+     * @param schema The JSON Schema node representing the parent object.
+     * @param key The property key to look up.
+     * @return Pointer to the schema node for the property, or nullptr if not found.
+     */
+    static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key);
+   
+    /**
+     * @brief Get the schema node for array items, or nullptr if not found.
+     * @param schema The JSON Schema node representing the array.
+     * @return Pointer to the schema node for the array items, or nullptr if not found
+     */
+    static const rapidjson::Value *getItemsSchema(const rapidjson::Value &schema);
+
+    /**
+     * @brief Attempt to convert a RapidJSON value from a numeric string to an integer. Returns true if conversion was successful.
+     * @param value The RapidJSON value to convert. Must be a string containing a valid integer representation.
+     * @return True if the value was successfully converted to an integer, false otherwise.
+     */
+    static bool tryConvertToInt(rapidjson::Value &value);
+    
     /**
      * @brief Validate a JSON string against a JSON Schema string using RapidJSON SchemaValidator.
      * @param jsonStr The JSON string to validate.

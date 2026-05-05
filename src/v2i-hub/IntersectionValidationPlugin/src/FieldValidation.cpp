@@ -19,10 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
-#include <rapidjson/document.h>
-#include <rapidjson/schema.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+
 
 namespace IntersectionValidation
 {
@@ -45,32 +42,105 @@ namespace IntersectionValidation
         return buffer.str();
     }
 
-    static void convertNumericStrings(rapidjson::Value &value,
-                                      rapidjson::Document::AllocatorType &allocator,
-                                      const std::string &key = "")
+    static bool schemaHasType(const rapidjson::Value &schema, const char *typeName)
     {
-        if (value.IsString() && key != "status")
+        if (!schema.IsObject() || !schema.HasMember("type"))
         {
-            const char *str = value.GetString();
-            char *end;
-            long num = std::strtol(str, &end, 10);
-            if (*end == '\0' && str[0] != '\0')
+            return false;
+        }
+
+        const auto &typeVal = schema["type"];
+        if (typeVal.IsString())
+        {
+            return std::string(typeVal.GetString()) == typeName;
+        }
+
+        // Handle "type": ["integer", "string"] arrays
+        if (typeVal.IsArray())
+        {
+            for (rapidjson::SizeType i = 0; i < typeVal.Size(); ++i)
             {
-                value.SetInt64(num);
+                if (typeVal[i].IsString() && std::string(typeVal[i].GetString()) == typeName)
+                {
+                    return true;
+                }
             }
         }
-        else if (value.IsObject())
+
+        return false;
+    }
+
+    static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key)
+    {
+        if (schema.IsObject() && schema.HasMember("properties") &&
+            schema["properties"].IsObject() && schema["properties"].HasMember(key))
+        {
+            return &schema["properties"][key];
+        }
+        return nullptr;
+    }
+
+    static const rapidjson::Value *getItemsSchema(const rapidjson::Value &schema)
+    {
+        if (schema.IsObject() && schema.HasMember("items") && schema["items"].IsObject())
+        {
+            return &schema["items"];
+        }
+        return nullptr;
+    }
+
+    static bool tryConvertToInt(rapidjson::Value &value)
+    {
+        if (!value.IsString())
+        {
+            return false;
+        }
+
+        const char *str = value.GetString();
+        char *end = nullptr;
+        int64_t num = std::strtoll(str, &end, 10);
+        if (end == str || *end != '\0')
+        {
+            return false;
+        }
+
+        value.SetInt64(num);
+        return true;
+    }
+
+    void convertNumericStrings(rapidjson::Value &value,
+                               rapidjson::Document::AllocatorType &allocator,
+                               const rapidjson::Value &schema)
+    {
+        if (value.IsObject())
         {
             for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it)
             {
-                convertNumericStrings(it->value, allocator, it->name.GetString());
+                const rapidjson::Value *propSchema = getPropertySchema(schema, it->name.GetString());
+                if (propSchema == nullptr)
+                {
+                    continue;
+                }
+
+                if (schemaHasType(*propSchema, "integer"))
+                {
+                    tryConvertToInt(it->value);
+                }
+                else
+                {
+                    convertNumericStrings(it->value, allocator, *propSchema);
+                }
             }
         }
         else if (value.IsArray())
         {
-            for (auto it = value.Begin(); it != value.End(); ++it)
+            const rapidjson::Value *itemsSchema = getItemsSchema(schema);
+            if (itemsSchema != nullptr)
             {
-                convertNumericStrings(*it, allocator, key);
+                for (rapidjson::SizeType i = 0; i < value.Size(); ++i)
+                {
+                    convertNumericStrings(value[i], allocator, *itemsSchema);
+                }
             }
         }
     }
@@ -102,7 +172,7 @@ namespace IntersectionValidation
         }
 
         // Convert numeric strings to integers
-        convertNumericStrings(doc, doc.GetAllocator());
+        convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
 
         // Validate
         if (rapidjson::SchemaValidator validator(schema); !doc.Accept(validator))

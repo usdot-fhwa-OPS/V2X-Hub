@@ -54,7 +54,7 @@ namespace IntersectionValidation
         uint64_t _lastMapTimeMs = 0;
         uint64_t _lastSpatTimeMs = 0;
 
-        std::string spatSchemaPath = "/workspace/src/v2i-hub/IntersectionValidationPlugin/json/spat.schema.json";
+        std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         uint spatFieldValidationErrors;
         uint spatValidationPassed;
         std::string rsuSource;

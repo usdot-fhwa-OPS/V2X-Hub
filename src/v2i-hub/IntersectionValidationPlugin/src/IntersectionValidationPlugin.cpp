@@ -114,16 +114,15 @@ namespace IntersectionValidation
             PluginClient::SetStatus("SPAT Schema Path configured", "No");
             return;
         }
- 
+
         try
         {
-            // Convert SPAT to JSON
             auto spatData = msg.get_j2735_data();
             auto spatJsonMsg = TmxJ2735Message<SPAT, tmx::JSON>(spatData);
             std::string spatJsonStr = spatJsonMsg.to_string();
- 
-            PLOG(logDEBUG) << "SPaT JSON: " << spatJsonStr;
- 
+
+            PLOG(logWARNING) << "SPaT JSON: " << spatJsonStr;
+            
             // Validate against schema file
             FieldValidation result = validateJsonAgainstSchemaFile(spatJsonStr, spatSchemaPath);
             PluginClient::SetStatus("Spat Schema Path configured", "Yes");
@@ -134,7 +133,7 @@ namespace IntersectionValidation
                 {
                     PLOG(logWARNING) << "SPaT field validation failure: " << error;
                 }
- 
+
                 // Get intersection ID from message
                 int intersectionId = -1;
                 if (spatData && spatData->intersections.list.count > 0 &&
@@ -142,9 +141,9 @@ namespace IntersectionValidation
                 {
                     intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
                 }
- 
+
                 uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
- 
+
                 std::vector<MissingDataElement> elements;
                 for (const auto &elem : result.errors)
                 {
@@ -163,7 +162,6 @@ namespace IntersectionValidation
                 PluginClient::BroadcastMessage(eventMsg);
  
                 spatFieldValidationErrors++;
-                
             }
             else
             {

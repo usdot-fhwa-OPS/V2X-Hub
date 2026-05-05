@@ -12,7 +12,7 @@ add_library(${PROJECT_NAME}_lib src/MessageIntervalValidator.cpp src/FieldValida
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
-file(COPY ${PROJECT_SOURCE_DIR}/json/spat.schema.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${PROJECT_SOURCE_DIR}/resources/spat.schema.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 #############
 ## Testing ##
