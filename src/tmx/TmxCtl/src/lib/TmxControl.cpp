@@ -101,7 +101,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN_ARG(load_manifest, "m", "(Re-)load the plugin manifest to the database", std::string);
 	REG_FN_ARG(plugin_install, NULL, "Decompress and install the specified plugin install file on this system.", std::string);
 	REG_FN_ARG(plugin_remove, NULL, "Delete the specified plugin on this system.  No wildcards accepted.", std::string);
-	REG_FN_ARG(upload_state, NULL, "Upload state from SQL file", std::string);
+	REG_FN_ARG(upload_state, nullptr, "Upload state from SQL file", std::string);
 
 #undef REG_FN_ARG
 #undef REG_FN

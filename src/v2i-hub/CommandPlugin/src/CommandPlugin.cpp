@@ -1125,57 +1125,44 @@ int CommandPlugin::WSCallbackBASE64(
 											std::map<string, string> data;
 											std::map<string, string> arrayData;
 
-											try
+											if (argsList.find("statefile") == argsList.end())
 											{
-												for (const auto &kv : argsList)
-												{
-													FILE_LOG(logDEBUG) << "Arg key=" << kv.first << " value=" << kv.second;
-												}
-
-												if (argsList.find("statefile") == argsList.end())
-												{
-													FILE_LOG(logERROR) << "statefile not found in argsList";
-													BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing statefile", data, arrayData);
-													return 0;
-												}
-
-												std::string fileName = argsList["statefile"];
-
-												if (fileName.empty())
-												{
-													FILE_LOG(logERROR) << "statefile is empty";
-													BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Empty statefile", data, arrayData);
-													return 0;
-												}
-
-												std::string filePath;
-												{
-													lock_guard<mutex> lock(_configLock);
-													filePath = _downloadPath;
-												}
-
-												filePath.append("/STATE/");
-												filePath.append(fileName);
-
-												FILE_LOG(logDEBUG) << "Restoring state from file: " << filePath;
-
-												bool rc = _tmxControl.upload_state(filePath);
-
-												if (rc)
-												{
-													FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate success";
-													BuildCommandResponse(psdata->outputbuffer, id, command, "success", "State restore completed", data, arrayData);
-												}
-												else
-												{
-													FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate failed";
-													BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "State restore failed", data, arrayData);
-												}
+												FILE_LOG(logERROR) << "statefile not found in argsList";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing statefile", data, arrayData);
+												return 0;
 											}
-											catch (const std::exception &e)
+
+											std::string fileName = argsList["statefile"];
+
+											if (fileName.empty())
 											{
-												FILE_LOG(logERROR) << "uploadstate exception: " << e.what();
-												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Invalid payload", data, arrayData);
+												FILE_LOG(logERROR) << "statefile is empty";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Empty statefile", data, arrayData);
+												return 0;
+											}
+
+											std::string filePath;
+											{
+											std::scoped_lock lock(_configLock);
+											filePath = _downloadPath;
+											}
+
+											filePath.append("/STATE/");
+											filePath.append(fileName);
+
+											FILE_LOG(logDEBUG) << "Restoring state from file: " << filePath;
+
+											bool rc = _tmxControl.upload_state(filePath);
+
+											if (rc)
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate success";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "success", "State restore completed", data, arrayData);
+											}
+											else
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate failed";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "State restore failed", data, arrayData);
 											}
 										}
 									}

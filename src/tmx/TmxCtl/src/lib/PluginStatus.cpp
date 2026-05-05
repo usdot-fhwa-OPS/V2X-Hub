@@ -921,15 +921,13 @@ bool TmxControl::upload_state(const std::string &filePath)
             return false;
         }
 
-        // Read preview safely
-        std::string preview((std::istreambuf_iterator<char>(test)),
-                             std::istreambuf_iterator<char>());
-
-        if (preview.find("DROP DATABASE") != std::string::npos)
-        {
-            FILE_LOG(logERROR) << "Dangerous SQL detected in file: " << filePath;
-            return false;
-        }
+		if (std::string preview((std::istreambuf_iterator<char>(test)),
+                        std::istreambuf_iterator<char>());
+			preview.find("DROP DATABASE") != std::string::npos)
+		{
+			FILE_LOG(logERROR) << "Dangerous SQL detected in file: " << filePath;
+			return false;
+		}
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
@@ -956,10 +954,15 @@ bool TmxControl::upload_state(const std::string &filePath)
         FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
         return true;
     }
-    catch (const std::exception &e)
-    {
-        FILE_LOG(logERROR) << "upload_state exception: " << e.what();
-        return false;
-    }
+    catch (const std::ios_base::failure &e)
+	{
+		FILE_LOG(logERROR) << "File I/O error: " << e.what();
+		return false;
+	}
+	catch (const std::bad_alloc &e)
+	{
+		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		return false;
+	}
 }
 } /* namespace tmxctl */
