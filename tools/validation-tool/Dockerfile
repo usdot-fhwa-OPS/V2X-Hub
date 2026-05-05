@@ -1,21 +1,21 @@
-FROM ubuntu:18.04
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND="noninteractive" TZ="America/New_York"
-RUN apt-get update -y && apt-get install -y python3-dev python3-pip git unzip python3-tk
+RUN apt-get update -y && apt-get install -y python3.12 python3.12-dev python3.12-venv python3.12-tk git unzip curl
 
-RUN  python3 -m pip install --upgrade pip
 
 RUN mkdir /validationTool
-COPY . /validationTool
-
-WORKDIR /validationTool
-RUN git clone git@github.com:P1sec/pycrate.git
-WORKDIR /validationTool/pycrate
-RUN python3 setup.py install
+COPY ./src /validationTool
+COPY ./requirements-py3.12.txt /validationTool/requirements.txt
 
 WORKDIR /validationTool
 
-RUN pip3 install -r requirements.txt
+# create venv with and install dependencies
+RUN python3 -m venv .venv
+ENV PATH="/validationTool/.venv/bin:$PATH"
+
+RUN python -m pip install -r requirements.txt && \
+    python -m pip install wheels/j2735_202409-0.1.0-py3-none-any.whl
 
 ENTRYPOINT [ "python3" ]
 
