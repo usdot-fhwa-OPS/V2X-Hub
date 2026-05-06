@@ -51,11 +51,7 @@ MACRO (BuildTmxPlugin)
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources")
         file(GLOB RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
         if(RESOURCE_FILES)
-            file(COPY ${RESOURCE_FILES}
-                 DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources")
-            file(GLOB ZIP_RESOURCE_FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/*")
-            LIST(APPEND ZIP_FILES_${PROJECT_NAME} ${ZIP_RESOURCE_FILES})
-            LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/")
+            LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/*")
         endif()
     endif()
 
