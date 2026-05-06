@@ -49,9 +49,10 @@ MACRO (BuildTmxPlugin)
 
     # include any additional files needed for the plugin, such as the json schema for validation
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+    
         file(GLOB RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
         if(RESOURCE_FILES)
-            LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/*")
+            LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/")
         endif()
     endif()
 
