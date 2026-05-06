@@ -86,7 +86,188 @@ TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestam
         calculateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
 }
+
+// SPaT Field Validation Tests
+
+TEST(FileLoadingTest, LoadExistingFile) {
+    std::string path = "/tmp/test_schema.json";
+    std::ofstream out(path);
+    out << R"({"type": "object"})";
+    out.close();
  
+    std::string contents = loadFileContents(path);
+    EXPECT_EQ(R"({"type": "object"})", contents);
+    std::remove(path.c_str());
+}
+ 
+TEST(FileLoadingTest, LoadNonExistentFileThrows) {
+    EXPECT_THROW(loadFileContents("/tmp/does_not_exist.json"), std::runtime_error);
+}
+
+TEST(SchemaValidationTest, InvalidJsonFails) {
+    std::string schema = R"({"type": "object", "required": ["name"]})";
+    auto result = validateJsonAgainstSchema("not json", schema);
+    EXPECT_FALSE(result.valid);
+    EXPECT_EQ("Failed to parse input JSON", result.errors[0]);
+}
+ 
+TEST(SchemaValidationTest, InvalidSchemaFails) {
+    auto result = validateJsonAgainstSchema("{}", "not a schema");
+    EXPECT_FALSE(result.valid);
+    EXPECT_EQ("Failed to parse JSON schema", result.errors[0]);
+}
+ 
+TEST(SchemaValidationTest, NonExistentSchemaFileFails) {
+    auto result = validateJsonAgainstSchemaFile(R"({})", "/tmp/missing_schema.json");
+    EXPECT_FALSE(result.valid);
+    EXPECT_EQ("Failed to open file: /tmp/missing_schema.json", result.errors[0]);
+}
+
+TEST(ConvertNumericStringsTest, ConvertsStringToIntWhenSchemaExpectsInteger) {
+    // Schema declares "id" as integer
+    std::string schemaStr = R"({"type": "object", "properties": {"id": {"type": "integer"}}})";
+    std::string jsonStr = R"({"id": "42"})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["id"].IsInt64());
+    EXPECT_EQ(42, doc["id"].GetInt64());
+}
+ 
+TEST(ConvertNumericStringsTest, LeavesStringWhenSchemaExpectsString) {
+    // Schema declares "status" as string (like BIT STRING hex fields)
+    std::string schemaStr = R"({"type": "object", "properties": {"status": {"type": "string"}}})";
+    std::string jsonStr = R"({"status": "0000"})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["status"].IsString());
+    EXPECT_STREQ("0000", doc["status"].GetString());
+}
+ 
+TEST(ConvertNumericStringsTest, LeavesNonNumericStringUnchanged) {
+    // Schema declares "name" as integer but value is non-numeric — can't convert
+    std::string schemaStr = R"({"type": "object", "properties": {"name": {"type": "integer"}}})";
+    std::string jsonStr = R"({"name": "hello"})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    // Should remain string since "hello" is not parseable as int
+    EXPECT_TRUE(doc["name"].IsString());
+    EXPECT_STREQ("hello", doc["name"].GetString());
+}
+ 
+TEST(ConvertNumericStringsTest, HandlesSchemaTypeArray) {
+    // Schema declares type as array: ["integer", "string"]
+    std::string schemaStr = R"({"type": "object", "properties": {"value": {"type": ["integer", "string"]}}})";
+    std::string jsonStr = R"({"value": "99"})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["value"].IsInt64());
+    EXPECT_EQ(99, doc["value"].GetInt64());
+}
+ 
+TEST(ConvertNumericStringsTest, SkipsFieldNotInSchema) {
+    // "extra" is not in schema properties — should be left alone
+    std::string schemaStr = R"({"type": "object", "properties": {"id": {"type": "integer"}}})";
+    std::string jsonStr = R"({"id": "10", "extra": "999"})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["id"].IsInt64());
+    EXPECT_EQ(10, doc["id"].GetInt64());
+    EXPECT_TRUE(doc["extra"].IsString());
+    EXPECT_STREQ("999", doc["extra"].GetString());
+}
+ 
+TEST(ConvertNumericStringsTest, RecursesIntoNestedObjects) {
+    std::string schemaStr = R"({
+        "type": "object",
+        "properties": {
+            "inner": {
+                "type": "object",
+                "properties": {
+                    "count": {"type": "integer"}
+                }
+            }
+        }
+    })";
+    std::string jsonStr = R"({"inner": {"count": "7"}})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["inner"]["count"].IsInt64());
+    EXPECT_EQ(7, doc["inner"]["count"].GetInt64());
+}
+ 
+TEST(ConvertNumericStringsTest, RecursesIntoArrayItems) {
+    std::string schemaStr = R"({
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"}
+                    }
+                }
+            }
+        }
+    })";
+    std::string jsonStr = R"({"items": [{"id": "1"}, {"id": "2"}]})";
+ 
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+ 
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+ 
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+ 
+    EXPECT_TRUE(doc["items"][0]["id"].IsInt64());
+    EXPECT_EQ(1, doc["items"][0]["id"].GetInt64());
+    EXPECT_TRUE(doc["items"][1]["id"].IsInt64());
+    EXPECT_EQ(2, doc["items"][1]["id"].GetInt64());
+}
+
 TEST(SpatFieldValidationTest, ValidSpatPasses) {
     std::string json = R"({
         "messageId": 19,

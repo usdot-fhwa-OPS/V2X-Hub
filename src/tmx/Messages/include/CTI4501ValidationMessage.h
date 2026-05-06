@@ -10,8 +10,8 @@
 #include <tmx/messages/message.hpp>
 #include "MessageTypes.h"
 
-namespace tmx {
-namespace messages {
+namespace tmx::messages {
+
 
 struct ProcessingTimePeriod {
     int64_t beginTimestamp = 0;
@@ -58,8 +58,8 @@ struct MissingDataElement {
 class CTI4501ValidationMessage : public tmx::message
 {
 public:
-    CTI4501ValidationMessage() {}
-    CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
+    CTI4501ValidationMessage() = default;
+    explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
 
     static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
 
@@ -87,7 +87,6 @@ public:
     array_attribute(MissingDataElement, missingDataElements)
 };
 
-} /* namespace messages */
-} /* namespace tmx */
+} /* namespace tmx::messages */
 
 #endif /* INCLUDE_CTI4501VALIDATIONMESSAGE_H_ */

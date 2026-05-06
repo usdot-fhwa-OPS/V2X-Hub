@@ -36,9 +36,9 @@ namespace IntersectionValidation
      * @param allocator The RapidJSON allocator for modifying the value.
      * @param key The current key being processed (used to skip "status" fields).
      */
-    static void convertNumericStrings(rapidjson::Value &value,
+    void convertNumericStrings(rapidjson::Value &value,
                                       rapidjson::Document::AllocatorType &allocator,
-                                      const std::string &key = "");
+                                      const rapidjson::Value &schema);
     /**
      * @brief Load a file's contents into a string.
      * @param filePath Path to the file.
