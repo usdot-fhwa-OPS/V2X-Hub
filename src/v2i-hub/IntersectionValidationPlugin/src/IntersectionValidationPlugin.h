@@ -22,9 +22,13 @@
 #include <thread>
 #include <mutex>
 #include <PluginClientClockAware.h>
+#include <jsoncpp/json/json.h>
+#include <CTI4501ValidationMessage.h>
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
+
+
 
 namespace IntersectionValidation
 {
@@ -50,6 +54,11 @@ namespace IntersectionValidation
         uint64_t _lastMapTimeMs = 0;
         uint64_t _lastSpatTimeMs = 0;
 
+        std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
+        uint spatFieldValidationErrors;
+        uint spatValidationPassed;
+        std::string rsuSource;
+
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
@@ -67,5 +76,7 @@ namespace IntersectionValidation
 
         static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
         static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
+        
+        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " Message failed CTI 4501 field validation: ";
     };
 }

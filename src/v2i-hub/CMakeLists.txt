@@ -46,6 +46,17 @@ MACRO (BuildTmxPlugin)
     ADD_CUSTOM_TARGET ("${PROJECT_NAME}-data" ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip)
     FILE(GLOB ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/manifest.json")
     LIST(APPEND ZIP_FILES_${PROJECT_NAME} "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/bin/${PROJECT_NAME}")
+
+    # include any additional files needed for the plugin, such as the json schema for validation
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/resources")
+        FILE(GLOB RESOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/resources/*")
+        if(RESOURCE_FILES)
+            FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/resources" DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}")
+            FILE(GLOB_RECURSE RESOURCE_FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/resources/*")
+            LIST(APPEND ZIP_FILES_${PROJECT_NAME} ${RESOURCE_FILES})
+        endif()
+    endif()
+
     # create the zip file with the structure that is needed, meaning the plugin
     # name as the directory with manifest.json and bin under this
     create_zip(${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.zip "${ZIP_FILES_${PROJECT_NAME}}" ${CMAKE_CURRENT_BINARY_DIR})

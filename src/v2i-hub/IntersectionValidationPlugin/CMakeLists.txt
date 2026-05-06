@@ -8,9 +8,11 @@ BuildTmxPlugin ()
 
 TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock )
 
-add_library(${PROJECT_NAME}_lib src/MessageIntervalValidator.cpp)
+add_library(${PROJECT_NAME}_lib src/MessageIntervalValidator.cpp src/FieldValidation.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
+
+file(COPY ${PROJECT_SOURCE_DIR}/resources/spat.schema.json DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 #############
 ## Testing ##
