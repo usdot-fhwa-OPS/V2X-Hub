@@ -30,6 +30,7 @@ namespace PriorityPlugin {
             // Determine which controller to communicate with.
             // Use the first controller that has any active/ready request in the table.
             std::shared_ptr<snmp_client> targetClient;
+            long targetIntersectionID = 0;
             {
                 std::lock_guard lock(_tableMutex);
                 for (const auto &entry : _processor.Table()) {
@@ -39,12 +40,14 @@ namespace PriorityPlugin {
                     auto it = _controllers.find(entry.intersectionID);
                     if (it != _controllers.end() && it->second.snmpClient) {
                         targetClient = it->second.snmpClient;
+                        targetIntersectionID = it->second.intersectionID;
                         break;
                     }
                 }
                 // If no active requests, use first available controller (idle polling)
                 if (!targetClient && !_controllers.empty()) {
                     targetClient = _controllers.begin()->second.snmpClient;
+                    targetIntersectionID = _controllers.begin()->second.intersectionID;
                 }
             }
 
@@ -112,7 +115,8 @@ namespace PriorityPlugin {
                     status == RequestStatus::idleNotValid) {
                     continue;
                 }
-                PLOG(logDEBUG1) << "CO row[" << i << "]: strategy=" << static_cast<int>(strategy)
+                PLOG(logDEBUG1) << "CO row[" << i << "]: IntersectionID=" << targetIntersectionID
+                                << " strategy=" << static_cast<int>(strategy)
                                 << " TSD=" << tsd << " TED=" << ted
                                 << " status=" << static_cast<int>(status);
             }

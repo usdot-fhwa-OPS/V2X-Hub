@@ -245,6 +245,15 @@ namespace PriorityPlugin {
 
         // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
         if (_pluginRole == "PRS") {
+            // Dedup: the same SRM may sometimes be routed back from multiple nearby intersections.
+            if (auto existing = _prsLastSeqByVehicle.find(vehicleKey);
+                existing != _prsLastSeqByVehicle.end() && existing->second == newSeq) {
+                PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
+                                << ") for this vehicle, discarding.";
+                return;
+            }
+            _prsLastSeqByVehicle[vehicleKey] = newSeq;
+
             std::lock_guard lock(_tableMutex);
             for (int i = 0; i < srm->requests->list.count; i++) {
                 const auto *pkg = srm->requests->list.array[i];

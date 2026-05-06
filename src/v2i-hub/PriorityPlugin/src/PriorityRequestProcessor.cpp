@@ -335,14 +335,16 @@ namespace PriorityPlugin {
                 case RequestStatus::activeAdjustNotNeeded:
                 case RequestStatus::activeCancel:
                 case RequestStatus::activeNotOverridden:
-                    PLOG(logDEBUG) << "Row " << i << ": CO reports " << static_cast<int>(coStatus);
+                    PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                   << ": CO reports " << static_cast<int>(coStatus);
                     break;
 
                 // readyQueued/readyOverridden -> closedTimerError ("CO says TSD & TED <> criteria")
                 case RequestStatus::closedTimerError:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedTimerError;
-                        PLOG(logDEBUG) << "Row " << i << ": closedTimerError";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": closedTimerError";
                     }
                     break;
 
@@ -350,7 +352,8 @@ namespace PriorityPlugin {
                 case RequestStatus::closedStrategyError:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedStrategyError;
-                        PLOG(logDEBUG) << "Row " << i << ": closedStrategyError";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": closedStrategyError";
                     }
                     break;
 
@@ -358,7 +361,8 @@ namespace PriorityPlugin {
                 case RequestStatus::closedFlash:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedFlash;
-                        PLOG(logDEBUG) << "Row " << i << ": closedFlash";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": closedFlash";
                     }
                     break;
 
@@ -366,7 +370,8 @@ namespace PriorityPlugin {
                 case RequestStatus::closedCanceled:
                     if (IsReadyX(entry.statusInPRS)) {
                         entry.statusInPRS = RequestStatus::closedCanceled;
-                        PLOG(logDEBUG) << "Row " << i << ": closedCanceled";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": closedCanceled";
                     }
                     break;
 
@@ -378,7 +383,8 @@ namespace PriorityPlugin {
                         // Reset reservice timer (4.2.4.1.3 (f))
                         uint8_t classIdx = (entry.vehicleClassType >= 1 && entry.vehicleClassType <= 10) ? (entry.vehicleClassType - 1) : 9;
                         _reserviceLastCompletedTime[classIdx] = now;
-                        PLOG(logDEBUG) << "Row " << i << ": closedCompleted";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": closedCompleted";
                     }
                     break;
 
@@ -386,7 +392,8 @@ namespace PriorityPlugin {
                 case RequestStatus::readyOverridden:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::readyOverridden;
-                        PLOG(logDEBUG) << "Row " << i << ": readyOverridden";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": readyOverridden";
                     }
                     break;
 
@@ -394,7 +401,8 @@ namespace PriorityPlugin {
                 case RequestStatus::readyQueued:
                     if (entry.statusInPRS == RequestStatus::activeOverride) {
                         entry.statusInPRS = RequestStatus::readyQueued;
-                        PLOG(logDEBUG) << "Row " << i << ": readyQueued";
+                        PLOG(logDEBUG) << "Row " << i << " IntersectionID=" << entry.intersectionID
+                                       << ": readyQueued";
                     }
                     break;
 

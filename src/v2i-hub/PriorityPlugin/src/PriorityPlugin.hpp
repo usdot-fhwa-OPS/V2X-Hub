@@ -224,6 +224,10 @@ namespace PriorityPlugin {
             // Map of request ID to tracked PRG request for active requests
             std::unordered_map<std::string, PrgTrackedRequest> _prgTrackedRequests;
 
+            // PRS mode: last seen SRM sequence number per vehicle, used to drop
+            // duplicates delivered by multiple intersections near the vehicle.
+            std::unordered_map<std::string, uint8_t> _prsLastSeqByVehicle;
+
             // For PRS mode: NTCIP 1211 priority request processor.
             PriorityRequestProcessor _processor;
 

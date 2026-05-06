@@ -6,12 +6,13 @@ import threading
 import socket
 
 import j2735_202409
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QDoubleSpinBox,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -38,20 +39,28 @@ _send_dest = None
 # Column indices for the SRM entry table
 COL_INTERSECTION = 0
 COL_LANE = 1
-COL_ETA = 2
-COL_EDT = 3
-COL_ENTITY = 4
-COL_ROLE = 5
-COL_REQUEST_TYPE = 6
+COL_DISTANCE = 2
+COL_CLEARANCE = 3
+COL_SPEED = 4
+COL_ENTITY = 5
+COL_ROLE = 6
+COL_REQUEST_TYPE = 7
 COLUMN_LABELS = [
     "Intersection ID",
     "Inbound Lane",
-    "ETA (s from now)",
-    "EDT (s from ETA)",
+    "Distance to Intersection (m)",
+    "Clearance Distance (m)",
+    "Speed (m/s)",
     "Entity ID",
     "Role",
     "Request Type",
 ]
+
+# J2735 Velocity_t units: 0.02 m/s
+J2735_SPEED = 0.02
+
+# Guard speed to avoid division by zero
+MIN_SPEED = 0.01
 
 ROLE_CHOICES = [
     "basicVehicle",
@@ -114,7 +123,12 @@ def buildSRM(entries: list[dict]) -> str:
     """Build an SRM JSON string from a list of entry dicts.
 
     Each entry dict has keys:
-        intersection_id, inbound_lane, eta_s, edt_s, entity_id, role, request_type
+        intersection_id, inbound_lane, distance_m, clearance_m, speed_mps,
+        entity_id, role, request_type
+
+    ETA is derived from distance_m / speed_mps and EDT (duration in ms) from
+    clearance_m / speed_mps. A zero distance means the vehicle is at the stop
+    bar (ETA = now); a zero clearance means the vehicle has cleared.
     """
     global msgCnt
     with msgCnt_lock:
@@ -123,10 +137,11 @@ def buildSRM(entries: list[dict]) -> str:
 
     requests = []
     for entry in entries:
-        eta_moy, eta_ds = offsetToMOYAndDSecond(entry["eta_s"])
+        speed = max(float(entry["speed_mps"]), MIN_SPEED)
+        eta_s = max(round(float(entry["distance_m"]) / speed), 0)
+        edt_s = max(round(float(entry["clearance_m"]) / speed), 0)
 
-        # edt_s is seconds from ETA, convert to duration in milliseconds
-        duration = max(entry["edt_s"] * 1000, 0)
+        eta_moy, eta_ds = offsetToMOYAndDSecond(eta_s)
 
         requests.append(
             {
@@ -138,7 +153,7 @@ def buildSRM(entries: list[dict]) -> str:
                 },
                 "minute": eta_moy,
                 "second": eta_ds,
-                "duration": duration,
+                "duration": edt_s * 1000,
             }
         )
 
@@ -146,6 +161,7 @@ def buildSRM(entries: list[dict]) -> str:
     first = entries[0]
     entity_id = first["entity_id"]
     role = first["role"]
+    speed_field = max(round(float(first["speed_mps"]) / J2735_SPEED), 0)
 
     srm = {
         "messageId": 29,
@@ -164,7 +180,7 @@ def buildSRM(entries: list[dict]) -> str:
                         "elevation": 40,
                     },
                     "heading": 0,
-                    "speed": {"transmisson": "unavailable", "speed": 415},
+                    "speed": {"transmisson": "unavailable", "speed": speed_field},
                 },
             },
         },
@@ -209,15 +225,26 @@ class AddEntryDialog(QDialog):
         self.inbound_lane.setRange(0, 255)
         self.inbound_lane.setValue(defaults.get("inbound_lane", 1))
 
-        self.eta = QSpinBox()
-        self.eta.setRange(0, 3600)
-        self.eta.setValue(defaults.get("eta_s", 5))
-        self.eta.setSuffix(" s")
+        self.distance = QDoubleSpinBox()
+        self.distance.setRange(0.0, 100000.0)
+        self.distance.setDecimals(1)
+        self.distance.setSingleStep(1.0)
+        self.distance.setValue(float(defaults.get("distance_m", 100)))
+        self.distance.setSuffix(" m")
 
-        self.edt = QSpinBox()
-        self.edt.setRange(0, 3600)
-        self.edt.setValue(defaults.get("edt_s", 3))
-        self.edt.setSuffix(" s")
+        self.clearance = QDoubleSpinBox()
+        self.clearance.setRange(0.0, 10000.0)
+        self.clearance.setDecimals(1)
+        self.clearance.setSingleStep(1.0)
+        self.clearance.setValue(float(defaults.get("clearance_m", 30)))
+        self.clearance.setSuffix(" m")
+
+        self.speed = QDoubleSpinBox()
+        self.speed.setRange(0.1, 120.0)
+        self.speed.setDecimals(2)
+        self.speed.setSingleStep(0.5)
+        self.speed.setValue(defaults.get("speed_mps", 10.0))
+        self.speed.setSuffix(" m/s")
 
         self.entity_id = QLineEdit(defaults.get("entity_id", "12345678"))
 
@@ -231,8 +258,9 @@ class AddEntryDialog(QDialog):
 
         layout.addRow("Intersection ID:", self.intersection_id)
         layout.addRow("Inbound Lane:", self.inbound_lane)
-        layout.addRow("Est. Time of Arrival:", self.eta)
-        layout.addRow("Est. Departure Time:", self.edt)
+        layout.addRow("Distance to Intersection:", self.distance)
+        layout.addRow("Clearance Distance:", self.clearance)
+        layout.addRow("Speed:", self.speed)
         layout.addRow("Entity ID:", self.entity_id)
         layout.addRow("Role:", self.role)
         layout.addRow("Request Type:", self.request_type)
@@ -247,8 +275,9 @@ class AddEntryDialog(QDialog):
         return {
             "intersection_id": self.intersection_id.value(),
             "inbound_lane": self.inbound_lane.value(),
-            "eta_s": self.eta.value(),
-            "edt_s": self.edt.value(),
+            "distance_m": self.distance.value(),
+            "clearance_m": self.clearance.value(),
+            "speed_mps": self.speed.value(),
             "entity_id": self.entity_id.text(),
             "role": self.role.currentText(),
             "request_type": self.request_type.currentText(),
@@ -310,20 +339,39 @@ class MainWindow(QMainWindow):
 
         root_layout.addWidget(entries_group)
 
-        # Send button
+        # Send buttons
+        send_btn_layout = QHBoxLayout()
         self.send_btn = QPushButton("Send SRM")
         self.send_btn.setFixedHeight(36)
-        root_layout.addWidget(self.send_btn)
+        send_btn_layout.addWidget(self.send_btn)
+        self.simulate_btn = QPushButton("Simulate Approach")
+        self.simulate_btn.setFixedHeight(36)
+        self.simulate_btn.setToolTip(
+            "Send an initial priorityRequest, then priorityRequestUpdate messages "
+            "at 1 Hz. Each tick advances the vehicle by speed_mps * 1 s, "
+            "consuming distance-to-intersection first and then clearance. "
+            "Stops when the intersection is cleared."
+        )
+        send_btn_layout.addWidget(self.simulate_btn)
+        root_layout.addLayout(send_btn_layout)
 
         self.status_label = QLabel("")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         root_layout.addWidget(self.status_label)
+
+        # Approach-simulation state
+        self._sim_timer = QTimer(self)
+        self._sim_timer.setInterval(1000)
+        self._sim_timer.timeout.connect(self._on_simulate_tick)
+        self._sim_entries: list[dict] = []
+        self._sim_target: tuple[str, int] = ("", 0)
 
         # Signals
         self.add_btn.clicked.connect(self._on_add)
         self.edit_btn.clicked.connect(self._on_edit)
         self.remove_btn.clicked.connect(self._on_remove)
         self.send_btn.clicked.connect(self._on_send)
+        self.simulate_btn.clicked.connect(self._on_simulate)
         self.table.doubleClicked.connect(lambda idx: self._edit_row(idx.row()))
 
     # Slots
@@ -331,8 +379,9 @@ class MainWindow(QMainWindow):
         """Write an entry dict into the given table row."""
         self.table.setItem(row, COL_INTERSECTION, QTableWidgetItem(str(vals["intersection_id"])))
         self.table.setItem(row, COL_LANE, QTableWidgetItem(str(vals["inbound_lane"])))
-        self.table.setItem(row, COL_ETA, QTableWidgetItem(str(vals["eta_s"])))
-        self.table.setItem(row, COL_EDT, QTableWidgetItem(str(vals["edt_s"])))
+        self.table.setItem(row, COL_DISTANCE, QTableWidgetItem(f"{vals['distance_m']:.1f}"))
+        self.table.setItem(row, COL_CLEARANCE, QTableWidgetItem(f"{vals['clearance_m']:.1f}"))
+        self.table.setItem(row, COL_SPEED, QTableWidgetItem(f"{vals['speed_mps']:.2f}"))
         self.table.setItem(row, COL_ENTITY, QTableWidgetItem(vals["entity_id"]))
         self.table.setItem(row, COL_ROLE, QTableWidgetItem(vals["role"]))
         self.table.setItem(row, COL_REQUEST_TYPE, QTableWidgetItem(vals["request_type"]))
@@ -342,8 +391,9 @@ class MainWindow(QMainWindow):
         return {
             "intersection_id": int(self.table.item(row, COL_INTERSECTION).text()),
             "inbound_lane": int(self.table.item(row, COL_LANE).text()),
-            "eta_s": int(self.table.item(row, COL_ETA).text()),
-            "edt_s": int(self.table.item(row, COL_EDT).text()),
+            "distance_m": float(self.table.item(row, COL_DISTANCE).text()),
+            "clearance_m": float(self.table.item(row, COL_CLEARANCE).text()),
+            "speed_mps": float(self.table.item(row, COL_SPEED).text()),
             "entity_id": self.table.item(row, COL_ENTITY).text(),
             "role": self.table.item(row, COL_ROLE).text(),
             "request_type": self.table.item(row, COL_REQUEST_TYPE).text(),
@@ -385,35 +435,153 @@ class MainWindow(QMainWindow):
         """Read every table row back into a list of entry dicts."""
         return [self._read_row(row) for row in range(self.table.rowCount())]
 
-    def _on_send(self):
-        if self.table.rowCount() == 0:
-            QMessageBox.warning(self, "No entries", "Add at least one SRM entry before sending.")
-            return
+    def _send_entries(self, entries: list[dict]) -> tuple[int, int]:
+        """Encode and UDP-send the given entries, grouped by entity.
 
+        Returns (srm_count, total_bytes). Raises on send/encode failure.
+        """
         ip = self.ip_input.text().strip()
         port = self.port_input.value()
-        entries = self._read_entries()
 
         # Group entries by Entity ID so each entity gets its own SRM
         groups: dict[str, list[dict]] = {}
         for entry in entries:
             groups.setdefault(entry["entity_id"], []).append(entry)
 
+        frame = j2735_202409.MessageFrame.MessageFrame
+        total_bytes = 0
+        for _, group_entries in groups.items():
+            srm_str = buildSRM(group_entries)
+            frame.from_jer(srm_str)
+            uper = frame.to_uper()
+            sendMessage(uper, ip, port)
+            total_bytes += len(uper)
+        return len(groups), total_bytes
+
+    def _on_send(self):
+        if self.table.rowCount() == 0:
+            QMessageBox.warning(self, "No entries", "Add at least one SRM entry before sending.")
+            return
+
+        entries = self._read_entries()
+        ip = self.ip_input.text().strip()
+        port = self.port_input.value()
         try:
-            frame = j2735_202409.MessageFrame.MessageFrame
-            total_bytes = 0
-            for entity_id, group_entries in groups.items():
-                srm_str = buildSRM(group_entries)
-                frame.from_jer(srm_str)
-                uper = frame.to_uper()
-                sendMessage(uper, ip, port)
-                total_bytes += len(uper)
+            count, total_bytes = self._send_entries(entries)
             self.status_label.setText(
-                f"Sent {len(groups)} SRM(s) ({total_bytes} bytes total) to {ip}:{port}"
+                f"Sent {count} SRM(s) ({total_bytes} bytes total) to {ip}:{port}"
             )
         except Exception as exc:
             QMessageBox.critical(self, "Send Error", str(exc))
             self.status_label.setText("Send failed.")
+
+    def _on_simulate(self):
+        """Start (or cancel) a 1 Hz approach simulation.
+
+        Sends a single priorityRequest with the table's entries, then fires
+        priorityRequestUpdate messages every second. On each tick the vehicle
+        advances by (speed_mps * 1 s), consuming distance_m first, then
+        clearance_m. The simulation stops once every entry has cleared the
+        intersection (distance_m == 0 and clearance_m == 0).
+        """
+        if self._sim_timer.isActive():
+            self._stop_simulation("Simulation cancelled.")
+            return
+
+        if self.table.rowCount() == 0:
+            QMessageBox.warning(self, "No entries", "Add at least one SRM entry before simulating.")
+            return
+
+        entries = self._read_entries()
+        if all(entry["distance_m"] + entry["clearance_m"] <= 0 for entry in entries):
+            QMessageBox.warning(
+                self, "Already cleared",
+                "At least one entry needs distance + clearance > 0 m for the approach to run."
+            )
+            return
+
+        # Force the first message to be a priorityRequest; subsequent ticks use updates.
+        for entry in entries:
+            entry["request_type"] = "priorityRequest"
+
+        ip = self.ip_input.text().strip()
+        port = self.port_input.value()
+        try:
+            count, total_bytes = self._send_entries(entries)
+        except Exception as exc:
+            QMessageBox.critical(self, "Send Error", str(exc))
+            self.status_label.setText("Send failed.")
+            return
+
+        self._sim_entries = entries
+        self._sim_target = (ip, port)
+        self._set_controls_enabled(False)
+        self.simulate_btn.setText("Cancel Simulation")
+        self.simulate_btn.setEnabled(True)
+        self.status_label.setText(
+            f"Simulating approach to {ip}:{port} — initial priorityRequest sent "
+            f"({count} SRM(s), {total_bytes} bytes)."
+        )
+        self._sim_timer.start()
+
+    def _advance_entry(self, entry: dict, dt_s: float) -> None:
+        """Advance one entry by dt_s seconds at its configured speed."""
+        dv = max(float(entry["speed_mps"]), MIN_SPEED) * dt_s
+        distance = float(entry["distance_m"])
+        clearance = float(entry["clearance_m"])
+        if distance > 0:
+            if dv >= distance:
+                clearance = max(clearance - (dv - distance), 0.0)
+                distance = 0.0
+            else:
+                distance -= dv
+        else:
+            clearance = max(clearance - dv, 0.0)
+        entry["distance_m"] = distance
+        entry["clearance_m"] = clearance
+
+    def _on_simulate_tick(self):
+        """Advance each simulated entry by one tick and broadcast updates."""
+        dt_s = self._sim_timer.interval() / 1000.0
+        for entry in self._sim_entries:
+            self._advance_entry(entry, dt_s)
+            entry["request_type"] = "priorityRequestUpdate"
+
+        ip, port = self._sim_target
+        try:
+            count, total_bytes = self._send_entries(self._sim_entries)
+        except Exception as exc:
+            QMessageBox.critical(self, "Send Error", str(exc))
+            self._stop_simulation("Send failed; simulation stopped.")
+            return
+
+        max_distance = max((entry["distance_m"] for entry in self._sim_entries), default=0.0)
+        max_clearance = max((entry["clearance_m"] for entry in self._sim_entries), default=0.0)
+        self.status_label.setText(
+            f"Simulating {ip}:{port} — priorityRequestUpdate sent "
+            f"({count} SRM(s), {total_bytes} bytes, dist={max_distance:.1f} m, "
+            f"clr={max_clearance:.1f} m)."
+        )
+
+        if all(e["distance_m"] <= 0 and e["clearance_m"] <= 0 for e in self._sim_entries):
+            self._stop_simulation("Intersection cleared — simulation complete.")
+
+    def _stop_simulation(self, status_text: str) -> None:
+        self._sim_timer.stop()
+        self._sim_entries = []
+        self._sim_target = ("", 0)
+        self.simulate_btn.setText("Simulate Approach")
+        self._set_controls_enabled(True)
+        self.status_label.setText(status_text)
+
+    def _set_controls_enabled(self, enabled: bool) -> None:
+        """Enable or disable controls that should not be touched during simulation."""
+        for widget in (
+            self.add_btn, self.edit_btn, self.remove_btn,
+            self.send_btn, self.ip_input, self.port_input,
+        ):
+            widget.setEnabled(enabled)
+        self.table.setEnabled(enabled)
 
 
 # Entry point
