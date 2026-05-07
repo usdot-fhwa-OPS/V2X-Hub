@@ -526,17 +526,26 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
     curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
 	// Enforce certificate validation
-    if (enforceTLSVerification) {
-        curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 1L);
-        curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 2L);
-        // curl_easy_setopt(req, CURLOPT_CAINFO, "/path/to/internal-ca.pem");
-    } else {
+	curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 2L);
+    // curl_easy_setopt(req, CURLOPT_CAINFO, "/path/to/internal-ca.pem");
+
+#ifdef ALLOW_INSECURE_TLS
+    if (!enforceTLSVerification) {
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
 		PLOG(logWARNING) << "TLS verification disabled by setting configuration 'enforceTLSVerification' to false. "
 			<< "CARMA-Cloud certificate and hostname validation are NOT being enforced. "
 			<< "This option should only be disabled in non-production / development environments for temporary troubleshooting.";
     }
+#else
+    if (!enforceTLSVerification) {
+        PLOG(logERROR)
+            << "TLS verification can ONLY be disabled in Debug builds.";
+        curl_easy_cleanup(req);
+        return 1;
+    }
+#endif
 
     curl_easy_setopt(req, CURLOPT_CONNECTTIMEOUT_MS, 500L);
     curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
