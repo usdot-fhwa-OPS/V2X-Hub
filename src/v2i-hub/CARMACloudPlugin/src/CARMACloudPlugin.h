@@ -106,7 +106,6 @@ protected:
 
 	// Virtual method overrides.
 	void OnConfigChanged(const char *key, const char *value);
-	//void OnMessageReceived(IvpMessage *msg);
 	void OnStateChange(IvpPluginState state);
 
 	int  StartWebService();
@@ -211,6 +210,8 @@ private:
 	std::string list_tcm = "true";
 	//API URL to accept TCM response
 	const QString TCM_REPLY = "tcmreply";
+	// Enforce TLS verification. Default is true.  False should only be used for development and debugging purposes.
+	bool enforceTLSVerification = false;
 };
 std::mutex _cfgLock;
 }

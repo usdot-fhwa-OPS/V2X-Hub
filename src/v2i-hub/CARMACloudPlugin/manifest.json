@@ -1,6 +1,6 @@
 {
 	"name":"CARMACloud",
-	"description":"CARMA cloud plugin for making websocket connection with CARMA cloud .",
+	"description":"CARMA cloud plugin for making websocket connection with CARMA cloud. Requires external SSH tunnel to be established.",
 	"version":"@PROJECT_VERSION@",
 	"exeLocation":"/bin/CARMACloudPlugin",
 	"coreIpAddr":"127.0.0.1",
@@ -16,17 +16,12 @@
 		{
 			"key":"WebServicePort",
 			"default":"22222",
-			"description":"Server Port for V2X hub to receive TCM messages"
+			"description":"Port for V2X hub to receive TCM messages from CARMA Cloud"
 		},
 		{
-			"key":"CARMACloudIP",
-			"default":"http://127.0.0.1",
-			"description":"Server IP address of carma-cloud"
-		},
-		{
-			"key":"CARMACloudPort",
-			"default":"33333",
-			"description":"Server Port for V2X hub to send TCR messages to carma-cloud"
+			"key":"CARMACloudBaseUrl",
+			"default":"https://host.docker.internal:33333",
+			"description":"Host or server IP address and port for SSH-tunnel to CARMA Cloud"
 		},
 		{
 			"key":"fetchTime",
@@ -72,6 +67,11 @@
 			"key":"listTCM",
 			"default":"true",
 			"description":"Indicator to determine if v2xhub receives a list of TCMs from carma-cloud. Default to true, returning a list of TCM. If false, return one TCM at a time. Indicator value can only be either true or false."
+		},
+		{
+			"key":"enforceTLSVerification",
+			"default":"true",
+			"description":"Indicator to determine if v2xhub should enforce TLS verification for CARMA-Cloud connnection. Default to true.  False should only be used for development and debugging purposes."
 		}
 	]
 }
