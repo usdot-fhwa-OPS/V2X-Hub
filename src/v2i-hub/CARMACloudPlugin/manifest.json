@@ -71,7 +71,7 @@
 		{
 			"key":"enforceTLSVerification",
 			"default":"true",
-			"description":"Indicator to determine if v2xhub should enforce TLS verification for CARMA-Cloud connnection. Default to true.  False should only be used for development and debugging purposes."
+			"description":"Indicator to determine if v2xhub should enforce TLS verification for CARMA-Cloud connnection. Default to true.  False should only be used for development and debugging purposes - must be a compiled Debug build."
 		}
 	]
 }
