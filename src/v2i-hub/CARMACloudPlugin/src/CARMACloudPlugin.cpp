@@ -42,8 +42,6 @@ CARMACloudPlugin::CARMACloudPlugin(string name) : PluginClientClockAware(name)
 void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &routeableMsg)
 {
 	auto carmaRequest = msg.get_j2735_data();
-	asn_fprint(stdout, &asn_DEF_TestMessage04, carmaRequest.get());
-
 
 	// convert reqid bytes to hex string.
 	size_t hexlen = 2; //size of each hex representation with a leading 0
