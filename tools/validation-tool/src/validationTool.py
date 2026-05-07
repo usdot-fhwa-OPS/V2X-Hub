@@ -508,6 +508,16 @@ def certify():
                         if not ((convertvalue & mask) == 0):
                             result = False
                             break
+
+                elif verificationtype == "length":
+                    lengthvalue = value.get("value")
+                    minlength = lengthvalue[0]
+                    maxlength = lengthvalue[1]
+                    result = all((len(x) >= minlength and len(x) <= maxlength) for x in msg1set)
+
+                elif verificationtype == "enum":
+                    enum = value.get("value")
+                    result = all((x in enum)for x in msg1set)
  
                 #Display Results
                 if result:

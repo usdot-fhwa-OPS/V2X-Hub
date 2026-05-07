@@ -50,41 +50,97 @@
         {   "testtype": "exist",
             "testobj" : "maxEndTime"
         },
+        "Exist-10":
+        { "testtype": "exist",
+          "testobj": "type"
+        },
+        "Exist-11": 
+        { "testtype": "exist",
+          "testobj": "Connectionid"
+        },
         "Verify-01": 
         {   "testtype": "verify",
-            "testobj" : "name"
+            "testobj" : "name",
+            "verificationtype": "length",
+            "value": [1,63]
         },
         "Verify-02": 
         {   "testtype": "verify",
-            "testobj" : "regionId"
+            "testobj" : "regionId",
+            "verificationtype": "range",
+            "value": [0,255]
         },
         "Verify-03": 
         {   "testtype": "verify",
-            "testobj" : "id"
+            "testobj" : "id",
+            "verificationtype": "range",
+            "value": [0,65535]
         },
         "Verify-04": 
         {   "testtype": "verify",
-            "testobj" : "revision"
+            "testobj" : "revision",
+            "verificationtype": "range",
+            "value": [0,127]
         },
         "Verify-05": 
         {   "testtype": "verify",
-            "testobj" : "status"
+            "testobj" : "status",
+            "verificationtype": "bitstring",
+            "size": 16
         },
         "Verify-06": 
         {   "testtype": "verify",
-            "testobj" : "signalGroup"
+            "testobj" : "signalGroup",
+            "verificationtype": "range",
+            "value": [0,255]
         },
         "Verify-07": 
         {   "testtype": "verify",
-            "testobj" : "eventState"
+            "testobj" : "eventState",
+            "verificationtype": "enum",
+            "value": 
+            [
+                "unavailable",
+                "dark",
+                "stop-Then-Proceed",
+                "stop-And-Remain",
+                "pre-Movement",
+                "permissive-Movement-Allowed",
+                "protected-Movement-Allowed",
+                "permissive-clearance",
+                "protected-clearance",
+                "caution-Conflicting-Traffic"
+            ]
         },
         "Verify-08": 
         {   "testtype": "verify",
-            "testobj" : "minEndTime"
+            "testobj" : "minEndTime",
+            "verificationtype": "range",
+            "value": [0,36111]
         },
         "Verify-09": 
         {   "testtype": "verify",
-            "testobj" : "maxEndTime"
+            "testobj" : "maxEndTime",
+            "verificationtype": "range",
+            "value": [0,36111]
+        },
+        "Verify-10": 
+        {   "testtype": "verify",
+            "testobj" : "type",
+            "verificationtype": "choice",
+            "value": 
+            [
+                "none",
+                "greenwave",
+                "ecoDrive",
+                "transit"
+            ]
+        },
+        "Verify-11": 
+        {   "testtype": "verify",
+            "testobj" : "Connectionid",
+            "verificationtype": "range",
+            "value": [0,255]
         }
     }
 
