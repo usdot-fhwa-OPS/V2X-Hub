@@ -223,7 +223,10 @@ namespace PriorityPlugin {
 
             // b) If priorityRequestTimeOfServiceDesiredInPRS >
             //    priorityRequestTimeToLive, set statusInPRS to 'closedTimeToLiveError'.
-            if (entry.timeToLive > 0 &&
+            // Skip entries already in a closedX state so a prior closedStrategyError,
+            // closedTimerError, etc. is not overwritten by a bogus TTL verdict.
+            if (!IsClosedX(entry.statusInPRS) &&
+                entry.timeToLive > 0 &&
                 entry.timeOfServiceDesiredInPRS > entry.timeToLive) {
                 entry.statusInPRS = RequestStatus::closedTimeToLiveError;
             }

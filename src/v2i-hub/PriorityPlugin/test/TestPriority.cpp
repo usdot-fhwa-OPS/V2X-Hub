@@ -465,6 +465,28 @@ TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingClosedTimeToLive) 
     EXPECT_TRUE(found);
 }
 
+TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingDoesNotOverwriteClosedX) {
+    // Step (b) must not relabel an entry that is already in a closedX state.
+    // A closedStrategyError with TSD > TTL should stay closedStrategyError.
+    PriorityRequestProcessor proc;
+    auto &table = proc.Table();
+    table[0].statusInPRS = RequestStatus::closedStrategyError;
+    table[0].timeToLive = 500;
+    table[0].timeOfServiceDesiredInPRS = 600;
+    table[0].requestID = 11;
+
+    proc.RunPrioritizationProcessing(100);
+
+    bool found = false;
+    for (const auto &e : proc.Table()) {
+        if (e.requestID == 11) {
+            EXPECT_EQ(e.statusInPRS, RequestStatus::closedStrategyError);
+            found = true;
+        }
+    }
+    EXPECT_TRUE(found);
+}
+
 TEST(PriorityRequestProcessorTest, RunPrioritizationProcessingReorderByPriority) {
     // Test step (c) reordering with three ready requests of different priority.
     PriorityRequestProcessor proc;

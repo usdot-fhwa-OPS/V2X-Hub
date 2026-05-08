@@ -340,7 +340,18 @@ namespace PriorityPlugin {
             auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
             auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
             etaOffsetMs = etaTotalMs - nowTotalMs;
-            etaOffsetMs = (etaOffsetMs < 0) ? etaOffsetMs + 525960L * 60L * 1000L : etaOffsetMs;
+            // Only wrap when the Dec/Jan boundary is the more plausible interpretation
+            // (raw offset > half a year in the past). Small negatives from clock skew or
+            // latency fall through unchanged so the CO can judge them on its own.
+            constexpr long YEAR_MS = 525960L * 60L * 1000L;
+            if (etaOffsetMs < -YEAR_MS / 2) {
+                etaOffsetMs += YEAR_MS;
+            }
+            long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;
+            const char *sign = (etaOffsetMs < 0) ? "past" : "future";
+            if (absMs > 30000)      PLOG(logERROR)   << "SRM ETA " << absMs << "ms in " << sign << " (check clock sync)";
+            else if (absMs > 5000)  PLOG(logWARNING) << "SRM ETA " << absMs << "ms in " << sign;
+            else if (absMs > 2000)  PLOG(logDEBUG)   << "SRM ETA " << absMs << "ms in " << sign;
         }
 
         uint32_t globalTSD;
@@ -484,9 +495,17 @@ namespace PriorityPlugin {
             auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
             auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
             etaOffsetMs = etaTotalMs - nowTotalMs;
+            // Only wrap when the Dec/Jan boundary is the more plausible interpretation.
+            constexpr long YEAR_MS = 525960L * 60L * 1000L;
+            if (etaOffsetMs < -YEAR_MS / 2) {
+                etaOffsetMs += YEAR_MS;
+            }
+            long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;
+            const char *sign = (etaOffsetMs < 0) ? "past" : "future";
+            if (absMs > 30000)      PLOG(logERROR)   << "SRM ETA " << absMs << "ms in " << sign << " (check clock sync)";
+            else if (absMs > 5000)  PLOG(logWARNING) << "SRM ETA " << absMs << "ms in " << sign;
+            else if (absMs > 2000)  PLOG(logDEBUG)   << "SRM ETA " << absMs << "ms in " << sign;
         }
-        // Wrap negative offset to next year
-        etaOffsetMs = (etaOffsetMs < 0) ? etaOffsetMs + 525960L * 60L * 1000L : etaOffsetMs;
 
         auto timeOfServiceOffsetMs = etaOffsetMs;
         auto timeOfDepartOffsetMs = timeOfServiceOffsetMs;
