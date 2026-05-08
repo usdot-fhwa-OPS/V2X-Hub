@@ -100,10 +100,29 @@ CARMA Cloud: TcmReqServlet.doPost() / run() handles `/carmacloud/tcmreq`
 > - `host.docker.internal` should be used when the SSH tunnel is established on the host machine while V2X-Hub is running inside a Docker container.
 > - The default HTTPS forwarding port is `8443`, but this may vary depending on deployment configuration.
 
-### Reply traffic
-CARMA Cloud sends TCM reply using host from TCR HTTPS request and port defined in TCR message via HTTP post over SSH reverse tunnel. V2X-Hub's CARMA Cloud Plugin process.
+### Reply Traffic
+After processing the TCR request, CARMA Cloud sends the corresponding TCM response back to V2X-Hub using an HTTP POST over the SSH reverse tunnel. The response destination is determined using the source host from the original HTTPS TCR request together with the callback port defined in the TCR message.
 
-CARMA Cloud’s TomcatTcmReqServlet.run() handles reply → POST to http://127.0.0.1:22222/tcmreply(or whatever the source IP was for carmacloud/tcmreq and port in TCM message)  → SSH reverse tunnel maps CARMA Cloud’s localhost:22222 back to plugin localhost:22222 → CARMACloudPlugin::CARMAResponseHandler handles /tcmreply
+> [!WARNING]
+> This communication pattern does not follow the traditional HTTP request/response flow.
+> CARMA Cloud initiates a separate outbound HTTP POST back to V2X-Hub after asynchronously processing the original TCR request.
+
+### Reply communication flow with code references:
+
+```
+CARMA Cloud: TcmReqServlet.run() processes TCR request sends HTTP POST to `http://127.0.0.1:22222/tcmreply` (or the source host from the original /carmacloud/tcmreq request and callback port defined in the TCR)
+    ↓
+SSH reverse tunnel which maps the remote CARMA Cloud server HTTP endpoint to V2X-Hub (e.g., CARMA Cloud’s localhost:22222 to V2X-Hub’s container localhost:22222)
+    ↓
+CARMACloudPlugin::CARMAResponseHandler handles /tcmreply
+```
+
+> [!IMPORTANT]
+> - CARMA Cloud determines the callback destination from:
+>    - the source IP/host of the original `/carmacloud/tcmreq` request
+>    - the callback port provided in the TCR message
+> - The SSH reverse tunnel allows CARMA Cloud to securely initiate communication back to V2X-Hub even when V2X-Hub is running behind NAT or inside a Docker container.
+> - The `/tcmreply` endpoint is hosted by the CARMA Cloud Plugin within V2X-Hub.
 
 ## Functionality Testing
 
