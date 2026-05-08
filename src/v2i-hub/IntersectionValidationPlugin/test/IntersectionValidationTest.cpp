@@ -18,7 +18,6 @@
 
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
-#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
 
 #include "IntersectionValidationPlugin.h"
 #include "MessageIntervalValidator.h"
@@ -29,7 +28,9 @@ using namespace IntersectionValidation;
  
 namespace {
 
-    const std::string SPAT_SCHEMA_PATH = "spat.schema.json";
+const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
+const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
+
  
 TEST(MessageTypeTest, SpatMessageCanBeInstantiated) {
     SpatMessage msg;
@@ -38,11 +39,6 @@ TEST(MessageTypeTest, SpatMessageCanBeInstantiated) {
  
 TEST(MessageTypeTest, MapDataMessageCanBeInstantiated) {
     MapDataMessage msg;
-    SUCCEED();
-}
- 
-TEST(MessageTypeTest, TimMessageCanBeInstantiated) {
-    TimMessage msg;
     SUCCEED();
 }
 
@@ -399,17 +395,314 @@ TEST(SpatFieldValidationTest, MissingStatusFails) {
     EXPECT_FALSE(result.valid);
 }
  
-TEST(MapValidationTest, DISABLED_ValidMapPassesValidation) {
-    // TODO: Construct a MAP with all required fields and verify validation passes
+// MAP field validation
+
+TEST(MapFieldValidationTest, ValidMapPasses) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneWidth": 366,
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "nodeList": {
+                            "nodes": [
+                                {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                                {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                            ]
+                        }
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
 }
 
-  
-TEST(FrequencyValidationTest, DISABLED_SpatFrequencyWithinExpectedFrequency) {
-    // TODO: Simulate SPaT messages arriving at expected frequency
+TEST(MapFieldValidationTest, MissingMessageIdFails) {
+    std::string json = R"({
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
 }
- 
-TEST(FrequencyValidationTest, DISABLED_MapFrequencyWithinExpectedFrequency) {
-    // TODO: Simulate MAP messages arriving at expected frequency
+
+TEST(MapFieldValidationTest, MissingMsgIssueRevisionFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 1, "y": 2}}},
+                            {"delta": {"node-XY1": {"x": 3, "y": 4}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingIntersectionIdFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 1, "y": 2}}},
+                            {"delta": {"node-XY1": {"x": 3, "y": 4}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingRefPointFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 1, "y": 2}}},
+                            {"delta": {"node-XY1": {"x": 3, "y": 4}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingRefPointLatFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 1, "y": 2}}},
+                            {"delta": {"node-XY1": {"x": 3, "y": 4}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingLaneSetFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512}
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingLaneAttributesFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 1, "y": 2}}},
+                            {"delta": {"node-XY1": {"x": 3, "y": 4}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, MissingNodeListFails) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        }
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+}
+
+TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [{
+                        "laneID": 1,
+                        "laneAttributes": {
+                            "directionalUse": "C0",
+                            "sharedWith": "0000",
+                            "laneType": {"vehicle": "00"}
+                        },
+                        "maneuvers": "0400",
+                        "nodeList": {"nodes": [
+                            {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                            {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                        ]}
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
+}
+
+TEST(MapFieldValidationTest, MultipleLanesPasses) {
+    std::string json = R"({
+        "messageId": 18,
+        "value": {
+            "MapData": {
+                "msgIssueRevision": 1,
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "laneSet": [
+                        {
+                            "laneID": 1,
+                            "ingressApproach": 1,
+                            "laneAttributes": {
+                                "directionalUse": "C0",
+                                "sharedWith": "0000",
+                                "laneType": {"vehicle": "00"}
+                            },
+                            "nodeList": {"nodes": [
+                                {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                                {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                            ]}
+                        },
+                        {
+                            "laneID": 2,
+                            "egressApproach": 1,
+                            "laneAttributes": {
+                                "directionalUse": "40",
+                                "sharedWith": "0000",
+                                "laneType": {"vehicle": "00"}
+                            },
+                            "nodeList": {"nodes": [
+                                {"delta": {"node-XY1": {"x": -10, "y": -20}}},
+                                {"delta": {"node-XY1": {"x": -30, "y": -40}}}
+                            ]}
+                        }
+                    ]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
+    EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
 }
  
 } // namespace
