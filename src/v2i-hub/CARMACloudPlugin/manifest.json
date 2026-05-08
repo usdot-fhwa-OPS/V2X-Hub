@@ -72,6 +72,11 @@
 			"key":"enforceTLSVerification",
 			"default":"true",
 			"description":"Indicator to determine if v2xhub should enforce TLS verification for CARMA-Cloud connnection. Default to true.  False should only be used for development and debugging purposes - must be a compiled Debug build."
+		},
+		{
+			"key":"carma_cloud_ca_cert_path",
+			"default":"",
+			"description":"Optional CA bundle for TLS validation when CARMA-Cloud uses a private/internal CA. Deploy the PEM file to /var/www/plugins/ssl and reference the mounted container path in configuration."
 		}
 	]
 }

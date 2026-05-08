@@ -2,6 +2,7 @@
 #include <WGS84Point.h>
 #include <math.h>
 #include <thread>
+#include <cstdlib>
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -485,8 +486,13 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("listTCM",list_tcm);
 	GetConfigValue<string>("CARMACloudBaseUrl",carma_cloud_url);
 	GetConfigValue<bool>("enforceTLSVerification",enforceTLSVerification);
+	GetConfigValue<string>("carma_cloud_ca_cert_path",carma_cloud_ca_cert_path);
+
 	PLOG(logDEBUG) << "Setting CARMA Cloud Base URL to " << carma_cloud_url << std::endl;
 	PLOG(logDEBUG) << "Setting CARMA Cloud 'Enforce TLS Verification' mode to " << enforceTLSVerification << std::endl;
+    PLOG(logDEBUG) << "Setting CARMA Cloud CA cert path to "
+                   << (carma_cloud_ca_cert_path.empty() ? "<system default>" : carma_cloud_ca_cert_path)
+                   << std::endl;
 }
 
 void CARMACloudPlugin::OnConfigChanged(const char *key, const char *value) {
@@ -528,9 +534,14 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 	// Enforce certificate validation
 	curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 2L);
-    // curl_easy_setopt(req, CURLOPT_CAINFO, "/path/to/internal-ca.pem");
+    // Use configured CA bundle for TLS certificate validation when connecting
+	// to services secured with a private/internal Certificate Authority (CA).
+	if (!carma_cloud_ca_cert_path.empty()) {
+		curl_easy_setopt(req, CURLOPT_CAINFO, carma_cloud_ca_cert_path.c_str());
+	}
 
 #ifdef ALLOW_INSECURE_TLS
+	// VONLY included when compiled as a Debug build
     if (!enforceTLSVerification) {
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -540,8 +551,7 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
     }
 #else
     if (!enforceTLSVerification) {
-        PLOG(logERROR)
-            << "TLS verification can ONLY be disabled in Debug builds.";
+        PLOG(logERROR) << "TLS verification can ONLY be disabled in Debug builds.";
         curl_easy_cleanup(req);
         return 1;
     }
@@ -552,9 +562,9 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
     curl_easy_setopt(req, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(req, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
 
-    if (strcmp(local_method.c_str(), "POST") == 0) {
+    if (local_method == "POST") {
         curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
-        curl_easy_setopt(req, CURLOPT_POSTFIELDSIZE, (long)local_msg.size());
+        curl_easy_setopt(req, CURLOPT_POSTFIELDSIZE, static_cast<long>(local_msg.size()));
     }
 
     CURLcode res = curl_easy_perform(req);

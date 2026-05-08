@@ -32,9 +32,33 @@ The CARMA Cloud Plugin supports the following configuration parameters.
 | `WebServicePort`         | Port used by V2X-Hub to receive TCM messages from CARMA Cloud through the SSH tunnel.                                    |
 | `CARMACloudBaseUrl`      | Base HTTPS URL used to communicate with CARMA Cloud through the SSH tunnel. Example: `https://host.docker.internal:8443` |
 | `enforceTLSVerification` | Enables TLS certificate verification for CARMA Cloud connections. Default: `true`.                                       |
+| `carma_cloud_ca_cert_path` | Optional path to a PEM-encoded CA certificate bundle used to validate CARMA Cloud TLS certificates signed by a private/internal CA. |
 
 > [!WARNING]
-> `enforceTLSVerification=false` should **ONLY** be used for local development or debugging purposes. V2X-Hub must be compiled as a `Debug` build. Production deployments should always enable TLS verification.
+> - `enforceTLSVerification=false` should **ONLY** be used for local development or debugging purposes. V2X-Hub must be compiled as a `Debug` build. Production deployments should always enable TLS verification.
+> - Consider using a trusted CA bundle over disabling TLS verification with `enforceTLSVerification=false`.
+
+<details>
+<summary><strong>Optional: Using a private/internal Certificate Authority (CA)</strong></summary>
+
+<h4> Private CA Certificate Requirements</h4>
+
+When CARMA Cloud uses a self-signed certificate or certificates signed by a private/internal Certificate Authority (CA), configure `carma_cloud_ca_cert_path` to point to the trusted CA certificate bundle.
+
+Example:
+
+```ini
+carma_cloud_ca_cert_path=/var/www/plugins/ssl/carma-cloud-rootCA.pem
+```
+
+#### Certificate Requirements
+* The certificate file must be PEM encoded.
+* The certificate bundle should contain the root CA certificate and any required intermediate CA certificates.
+* The certificate file must be accessible from within the V2X-Hub runtime environment or container.
+* The CARMA Cloud TLS server certificate must include `host.docker.internal` in the Subject Alternative Name (SAN) extension when V2X-Hub connects using `https://host.docker.internal:8443`.
+  * Example: `DNS.2 = host.docker.internal`
+
+</details>
 
 ---
 
