@@ -18,7 +18,7 @@ Receives V2X communications from V2X actors, such as Connected and Automated Veh
 
 ### Emergency Response Vehicle (ERV) Cloud Forwarding
 
-For forwarding ERV communications from V2X actors to CARMA Cloud.
+Provides functionality for forwarding ERV communications from V2X actors to CARMA Cloud.
 
 ## Configuration / Deployment
 
@@ -33,7 +33,7 @@ The CARMA Cloud Plugin supports the following configuration parameters.
 | `enforceTLSVerification` | Enables TLS certificate verification for CARMA Cloud connections. Default: `true`.                                       |
 
 > [!WARNING]
-> `enforceTLSVerification=false` should **ONLY** be used for local development or debugging purposes. V2X-Hub must be compiled with `BUILD_TYPE` of `Debug`. Production deployments should always enable TLS verification.
+> `enforceTLSVerification=false` should **ONLY** be used for local development or debugging purposes. V2X-Hub must be compiled as a `Debug` build. Production deployments should always enable TLS verification.
 
 ---
 
@@ -49,9 +49,9 @@ The CARMA Cloud Plugin supports the following configuration parameters.
 | `TCMNOAcknowledgementDescription`  | If no acknowledgement is received from a CMV within the configured timeout period for a matching TCM, the plugin generates a `NO ACK` message for display in the UI. |
 
 
-### TCP Tunnels
+### SSH Tunnels
 
-To securely connect V2X-Hub to a remotely hosted CARMA Cloud instance, SSH forward and reverse tunnels must be configured. The forward tunnel forwards HTTPS traffic from V2X-Hub's host environment to the remote CARMA Cloud server.  The reverse tunnel forwards TCM reply traffic from the remote CARMA Cloud server to V2X-Hub's host environment. The following steps configure these tunnels:
+To securely connect V2X-Hub to a remotely hosted CARMA Cloud instance, SSH forward and reverse tunnels must be configured. The forward tunnel forwards HTTPS traffic from V2X-Hub's host machine to the remote CARMA Cloud server.  The reverse tunnel forwards TCM reply traffic from the remote CARMA Cloud server to V2X-Hub's host machine. The following steps configure these tunnels:
 
 1. Provision the required `.pem` key file for SSH authentication and place it in the `./scripts/` directory.
 
@@ -79,7 +79,7 @@ When Traffic Control Requests (TCRs) are received, the plugin forwards them to C
 ## Technical Communication Flow
 
 ### Request Traffic
-The Message Receiver Plugin receives a TCR from an RSU and publishes it to the CARMA Cloud Plugin. The CARMA Cloud Plugin then sends a TCM request containing the TCR message to CARMA Cloud using an HTTPS POST over the SSH forward tunnel. CARMA Cloud processes the request and later initiates a separate HTTP TCM response back to V2X-Hub.
+The Message Receiver Plugin receives a TCR from an RSU and publishes it to the CARMA Cloud Plugin. The CARMA Cloud Plugin then sends a TCM request containing the TCR message to CARMA Cloud using an HTTPS POST over the SSH forward tunnel. CARMA Cloud processes the request and later initiates a separate HTTP TCM response to V2X-Hub.
 
 > [!WARNING]
 > This does not follow the typical HTTP request/response pattern.  CARMA Cloud initiates a separate HTTP TCM response back to V2X-Hub after processing the TCM request.
@@ -88,7 +88,7 @@ The Message Receiver Plugin receives a TCR from an RSU and publishes it to the C
 ```
 Message Receiver Plugin
     ↓
-CARMA Cloud Plugin: CARMACloudPlugin::CloudSend() sends HTTPS POST to `https://host.docker.internal:8443/carmacloud/tcmreq` (or the configured CARMACloudBaseUrl/carmacloud/tcmreq)
+CARMA Cloud Plugin: CARMACloudPlugin::CloudSend() sends HTTPS POST to `https://host.docker.internal:8443/carmacloud/tcmreq` (or the configured CARMACloudBaseUrl plus /carmacloud/tcmreq)
     ↓
 SSH forward tunnel maps the host machine HTTPS endpoint to the remote CARMA Cloud HTTPS endpoint (e.g., V2X-Hub’s host machine localhost:33333 → CARMA Cloud localhost:8443)
     ↓
@@ -97,7 +97,7 @@ CARMA Cloud: TcmReqServlet.doPost() / run() handles `/carmacloud/tcmreq`
 
 > [!IMPORTANT]
 > - HTTPS is used for communication between V2X-Hub and CARMA Cloud to improve transport security and support stronger TLS configurations.
-> - WARNING: The SSH forward tunnel remains required because CARMA Cloud's `TcmReqServlet.java` uses `getRemoteAddr()` to determine the callback destination for TCM responses.
+> - The SSH forward tunnel remains **required** because CARMA Cloud's `TcmReqServlet.java` uses `getRemoteAddr()` to determine the callback destination for TCM responses.
 > - The SSH forward tunnel is configured with the `-g` option so Docker containers can access the forwarded port through `host.docker.internal`.
 > - `host.docker.internal` should be used when the SSH tunnel is established on the host machine while V2X-Hub is running inside a Docker container.
 > - The default HTTPS forwarding port is `8443`, but this may vary depending on deployment configuration.
@@ -136,3 +136,34 @@ To test functionality of CARMA Cloud Plugin without an active vehicle, we have p
 3. Enable both the CARMA Cloud Plugin and Message Receiver Plugin.
 4. Run `python3 tcr_script.py` to send a mock TCR to the Message Receiver Plugin.
 5. Confirm that TCM messages are received by the CARMA Cloud Plugin using the Messages tab in the V2X-Hub Admin UI.
+6. Verify CARMA Cloud HTTP access logs and application logs received TCR request.
+
+The following examples show expected CARMA Cloud HTTP access and application logs after a successful TCR request.
+<details>
+<summary><strong>Expected HTTP access logs results</strong></summary>
+  
+```shell
+ubuntu@carma-cloud-server:~$ sudo grep "carmacloud/tcmreq" carmacloudvol/logs/localhost_access_log.2026-05-07.txt
+127.0.0.1 - - [07/May/2026:11:40:58 +0000] "POST /carmacloud/tcmreq HTTP/1.1" 200 -
+```
+</details>
+
+<details>
+<summary><strong>Expected application log results with request and reply</strong></summary>
+  
+```xml
+ubuntu@carma-cloud-server:~$ sudo more carma-cloud/carmacloudvol/logs/carmacloud.log 
+
+[DEBUG 11:40:58.091 [TcmReqServlet] - 127.0.0.1<?xml version="1.0" encoding="UTF-8"?><TrafficControlRequest port="22222" list="true"><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><scale>-1</scale><bounds><oldest>29614300</oldest><reflon>-771512807</reflon><reflat>38954865
+4</reflat><offsets><deltax>3426</deltax><deltay>0</deltay></offsets><offsets><deltax>3426</deltax><deltay>2317</deltay></offsets><offsets><deltax>0</deltax><deltay>2317</deltay></offsets></bounds></TrafficControlRequest>
+
+[DEBUG 11:40:58.105 [TcmReqServlet] - <?xml version="1.0" encoding="UTF-8"?><TrafficControlMessageList><TrafficControlMessage><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>00cccaf0a3be3de3287ad6ccb7686934</id><updated>0</upd
+ated><package><label>workzone</label><tcids><Id128b>00cccaf0a3be3de3287ad6ccb7686934</Id128b></tcids></package><params><vclasses><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-singl
+e-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>29632
+054</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><latperm><none/><emergency-only/></latperm></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>29632054</reftime><reflon>-771475726</reflon><r
+eflat>389550079</reflat><refelv>0</refelv><refwidth>411</refwidth><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>-1</width></PathNode><PathNode><x>-1468</x><y>-302</y><width>-8</width></PathNode><PathNode><x>-1469</x><y>-301</y><width>-14</width></PathNode><P
+athNode><x>-1470</x><y>-279</y><width>-13</width></PathNode><PathNode><x>-1480</x><y>-228</y><width>-5</width></PathNode><PathNode><x>-1487</x><y>-180</y><width>2</width></PathNode><PathNode><x>-1495</x><y>-106</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-16</y><w
+idth>2</width></PathNode><PathNode><x>-1498</x><y>50</y><width>6</width></PathNode><PathNode><x>-1496</x><y>101</y><width>12</width></PathNode><PathNode><x>-1490</x><y>166</y><width>10</width></PathNode><PathNode><x>-1482</x><y>230</y><width>7</width></PathNode><PathNode><x>
+-562</x><y>97</y><width>1</width></PathNode></nodes></geometry></tcmV01></TrafficControlMessage></TrafficControlMessageList>
+```
+</details>
