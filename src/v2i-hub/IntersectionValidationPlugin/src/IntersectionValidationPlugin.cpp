@@ -107,9 +107,6 @@ namespace IntersectionValidation
                                                              int intersectionId,
                                                              uint64_t handlerBeginMs)
     {
-        uint32_t &passed = (messageType == "SPaT") ? spatValidationPassed : mapValidationPassed;
-        uint32_t &failed = (messageType == "SPaT") ? spatFieldValidationErrors : mapFieldValidationErrors;
-
         FieldValidation result = validateJsonAgainstSchemaFile(jsonStr, schemaPath);
         
         if (messageType == "SPaT")
@@ -146,23 +143,6 @@ namespace IntersectionValidation
             eventMsg.set_missingDataElements(elements);
 
             PluginClient::BroadcastMessage(eventMsg);
-
-            failed++;
-        }
-        else
-        {
-            passed++;
-        }
-
-        if (messageType == "SPaT")
-        {
-            PluginClient::SetStatus("SPaT Field Validation Passed", passed);
-            PluginClient::SetStatus("SPaT Field Validation Failed", failed);
-        }
-        else if (messageType == "MAP")
-        {
-            PluginClient::SetStatus("MAP Field Validation Passed", passed);
-            PluginClient::SetStatus("MAP Field Validation Failed", failed);
         }
     }
 
