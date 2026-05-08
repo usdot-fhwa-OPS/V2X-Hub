@@ -15,12 +15,8 @@
 #include <pthread.h>
 #include <sstream>
 #include <string>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
-
-#pragma GCC diagnostic pop
 #include <tmx/apimessages/TmxEventLog.hpp>
 #include <tmx/messages/routeable_message.hpp>
 #include <tmx/messages/TmxJ2735.hpp>
