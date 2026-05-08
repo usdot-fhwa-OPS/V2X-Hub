@@ -18,7 +18,7 @@ Receives V2X communications from V2X actors, such as Connected and Automated Veh
 
 ### Emergency Response Vehicle (ERV) Cloud Forwarding
 
-For forwarding ERV communications from V2X actors to CARMA cloud.
+For forwarding ERV communications from V2X actors to CARMA Cloud.
 
 ## Configuration / Deployment
 
@@ -42,16 +42,16 @@ The CARMA Cloud Plugin supports the following configuration parameters.
 | Parameter                          | Description                                                                                        |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `fetchTime` | Number of days in the past for which TCMs are requested from CARMA Cloud.                                             |
-| `listTCM`   | Determines whether CARMA Cloud returns a list of TCMs (`true`) or individual seperate TCM messages (`false`). Default: `true`. |
+| `listTCM`   | Determines whether CARMA Cloud returns a list of TCMs (`true`) or individual separate TCM messages (`false`). Default: `true`. |
 | `TCMRepeatedlyBroadcastTimeOut`    | Duration in milliseconds that a received TCM will continue to be rebroadcast.                      |
 | `TCMRepeatedlyBroadcastSleep`      | Sleep interval in milliseconds between repeated TCM broadcasts.                                    |
 | `TCMRepeatedlyBroadCastTotalTimes` | Maximum number of repeated broadcasts for TCMs with the same request ID during the timeout period. |
 | `TCMNOAcknowledgementDescription`  | If no acknowledgement is received from a CMV within the configured timeout period for a matching TCM, the plugin generates a `NO ACK` message for display in the UI. |
 
 
-### TCP Tunnel
+### TCP Tunnels
 
-To securely connect V2X-Hub to a remotely hosted CARMA Cloud instance, SSH forward and reverse tunnels must be configured. The forward tunnel forwards HTTPS traffic from V2X-Hub's host environment to the remote CARMA Cloud server.  The reverse tunnel forwards TCM reply traffic from the remote CARMA Cloud server to V2X-Hub's host environment. The steps to configure these tunnels are:
+To securely connect V2X-Hub to a remotely hosted CARMA Cloud instance, SSH forward and reverse tunnels must be configured. The forward tunnel forwards HTTPS traffic from V2X-Hub's host environment to the remote CARMA Cloud server.  The reverse tunnel forwards TCM reply traffic from the remote CARMA Cloud server to V2X-Hub's host environment. The following steps configure these tunnels:
 
 1. Provision the required `.pem` key file for SSH authentication and place it in the `./scripts/` directory.
 
@@ -69,16 +69,17 @@ When Traffic Control Requests (TCRs) are received, the plugin forwards them to C
 
 ### Messages
 
-**TCR**: This message contains information from a requesting CAV about what traffic controls it wants to know about. This includes information about time and location for which it wants traffic controls. 
+**TCR**: This message contains information from a requesting CAV about which traffic controls it is requesting, including the time and geographic region for which the controls apply.
 
-**TCM**: This message contains information about traffic controls like speed limits or lane closures and geographic information about the locations they apply to.
+**TCM**: This message contains information about traffic controls such as speed limits or lane closures and geographic information about the locations they apply to.
+
 > [!NOTE]
-> **TCM** and **TCR** are CARMA ecosystem prototype messages that have been proposed to the SAE standard for inclusion in J2735 V2X Message set.
+> **TCM** and **TCR** are CARMA ecosystem prototype messages that have been proposed for inclusion in the SAE J2735 V2X message set.
 
 ## Technical Communication Flow
 
-### Request traffic
-The Message Receiver Plugin receives a TCR from an RSU and publishes it to the CARMA Cloud Plugin. The CARMA Cloud Plugin then sends a TCM request with the TCR message to CARMA Cloud using an HTTPS POST over the SSH forward tunnel. CARMA Cloud processes the request and prepares to return the appropriate HTTP TCM response initiated by CARMA Cloud server to V2X-Hub. 
+### Request Traffic
+The Message Receiver Plugin receives a TCR from an RSU and publishes it to the CARMA Cloud Plugin. The CARMA Cloud Plugin then sends a TCM request containing the TCR message to CARMA Cloud using an HTTPS POST over the SSH forward tunnel. CARMA Cloud processes the request and later initiates a separate HTTP TCM response back to V2X-Hub.
 
 > [!WARNING]
 > This does not follow the typical HTTP request/response pattern.  CARMA Cloud initiates a separate HTTP TCM response back to V2X-Hub after processing the TCM request.
@@ -96,14 +97,13 @@ CARMA Cloud: TcmReqServlet.doPost() / run() handles `/carmacloud/tcmreq`
 
 > [!IMPORTANT]
 > - HTTPS is used for communication between V2X-Hub and CARMA Cloud to improve transport security and support stronger TLS configurations.
-> - WARNING: The SSH forward tunnel is required still because CARMA Cloud's `TcmReqServlet.java` reads the caller’s IP address with `getRemoteAddr()` for the TCM response.
-> - WARNING: The SSH forward tunnel remains required because CARMA Cloud's `TcmReqServlet.java` reads the caller’s IP address from incoming request with `getRemoteAddr()` to determine the callback destination for TCM responses.
+> - WARNING: The SSH forward tunnel remains required because CARMA Cloud's `TcmReqServlet.java` uses `getRemoteAddr()` to determine the callback destination for TCM responses.
 > - The SSH forward tunnel is configured with the `-g` option so Docker containers can access the forwarded port through `host.docker.internal`.
 > - `host.docker.internal` should be used when the SSH tunnel is established on the host machine while V2X-Hub is running inside a Docker container.
 > - The default HTTPS forwarding port is `8443`, but this may vary depending on deployment configuration.
 
 ### Reply Traffic
-After processing the TCR request, CARMA Cloud sends the corresponding TCM response back to V2X-Hub using an HTTP POST over the SSH reverse tunnel. The response destination is determined using the source host from the original HTTPS TCR request together with the callback port defined in the TCR message.
+After processing the TCR request, CARMA Cloud sends the corresponding TCM response back to V2X-Hub using an HTTP POST over the SSH reverse tunnel. The response destination is determined using the source host from the original HTTPS TCR request together with the callback port specified in the TCR message.
 
 > [!WARNING]
 > This communication pattern does not follow the traditional HTTP request/response flow.
