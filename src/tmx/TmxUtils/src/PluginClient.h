@@ -37,15 +37,7 @@
 
 #define PLOG(level) PLUGIN_LOG(level, _name)
 
-#define LOG_LEVEL_CFG "TMXLogLevel"
-
-#define SYSTEM_PARAMETER_ADD \
-	"INSERT INTO `pluginConfigurationParameter` (`pluginId`, `key`, `value`, `defaultValue`, `description`) \
-	 VALUES ( ?, ?, ?, ?, ? ) \
-	 ON DUPLICATE KEY UPDATE value = VALUES(value), defaultValue = VALUES(defaultValue), description = VALUES(description)"
-
-namespace tmx {
-namespace utils {
+namespace tmx::utils {
 
 
 // C++ wrapper for an ivpapi plugin.
@@ -55,10 +47,10 @@ class PluginClient: public Runnable {
 	friend class PluginExtender;
 
 public:
-	PluginClient(const std::string &name);
-	virtual ~PluginClient();
+	explicit PluginClient(const std::string &name);
+	~PluginClient() override;
 
-	virtual bool ProcessOptions(const boost::program_options::variables_map &);
+	bool ProcessOptions(const boost::program_options::variables_map &) override;
 
 	/// Static map used to track which PluginClient instance goes with which IvpPlugin* created.
 	/// This allows the static callback functions below to call the instance virtual callback functions.
@@ -84,7 +76,7 @@ public:
 	template <typename MsgType, class HandlerType>
 	void AddMessageFilter(HandlerType *plugin, void (HandlerType::*handler)(MsgType &, tmx::routeable_message &) = 0)
 	{
-		typedef MsgType msg_type;
+		using msg_type = MsgType;
 
 		AddMessageFilter(MsgType::MessageType, MsgType::MessageSubType);
 
@@ -180,7 +172,7 @@ public:
 	}
 
 	/// Main method of the plugin that should not return until the plugin exits.
-	virtual int Main();
+	int Main() override;
 
 	/// Handle an exception thrown in the plugin.  The requirement is to log the message
 	/// in the event log.  By default, the program also terminates
@@ -199,18 +191,18 @@ public:
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		if (lock != NULL)
+		if (lock != nullptr)
 			lock->lock();
 
 		// Maybe this is a system-wide parameter?
-		if (text == NULL && _sysConfig != NULL)
+		if (text == nullptr && _sysConfig != nullptr)
 		{
 			pthread_mutex_lock(&_plugin->lock);
 			text = ivpConfig_getCopyOfValueFromCollection(_sysConfig, key.c_str());
 			pthread_mutex_unlock(&_plugin->lock);
 		}
 
-		if (text != NULL)
+		if (text != nullptr)
 		{
 			try
 			{
@@ -225,7 +217,7 @@ public:
 			free(text);
 		}
 
-		if (lock != NULL)
+		if (lock != nullptr)
 			lock->unlock();
 
 		return success;
@@ -260,7 +252,7 @@ public:
 			valString = boost::lexical_cast<std::string>(value);
 			defString = boost::lexical_cast<std::string>(defaultValue);
 		}
-		catch (boost::bad_lexical_cast const &ex)
+		catch (const boost::bad_lexical_cast& )
 		{
 			PLOG(logERROR) << "Unable to convert type " << battelle::attributes::type_name(value) <<
 					" to string for parameter " << key;
@@ -271,7 +263,7 @@ public:
 
 		if (notify)
 		{
-			IvpConfigCollection *collection = NULL;
+			IvpConfigCollection *collection = nullptr;
 			collection = ivpConfig_addItemToCollection(collection, key.c_str(), valString.c_str(), defString.c_str());
 
 			tmx::routeable_message msg(ivpConfig_createMsg(collection));
@@ -398,26 +390,25 @@ private:
 
 	// Code for message handler registration and invoking
 	struct handler_allocator {
-		virtual ~handler_allocator() {}
-
+		virtual ~handler_allocator() = default;		
 		virtual std::string get_messageType() = 0;
 		virtual void invokeHandler(tmx::routeable_message &routeableMsg) = 0;
 	};
 
 	template <typename MsgType, class PluginType, class HandlerType>
 	struct handler_allocator_impl: public handler_allocator {
-		typedef MsgType type;
+		using msg_type = MsgType;
 
 		handler_allocator_impl(PluginType *plugin,
 				void (HandlerType::*handler)(MsgType &, tmx::routeable_message &)):
 					instance(plugin), fn(handler) {}
 
-		std::string get_messageType()
+		std::string get_messageType() override
 		{
 			return battelle::attributes::type_id_name<MsgType>();
 		}
 
-		void invokeHandler(tmx::routeable_message &routeableMsg)
+		void invokeHandler(tmx::routeable_message &routeableMsg) override
 		{
 			MsgType msg = routeableMsg.template get_payload<MsgType>();
 			if (fn)
@@ -475,8 +466,7 @@ template<>
 inline bool PluginClient::GetConfigValue<bool>(const std::string &key, bool &value, std::mutex *lock)
 {
 	std::string strValue;
-	bool success = GetConfigValue<std::string>(key, strValue, lock);
-	if (!success)
+	if ( bool success = GetConfigValue<std::string>(key, strValue, lock); !success)
 		return false;
 
 	if (boost::iequals(strValue, "1")
@@ -501,6 +491,6 @@ inline void PluginClient::BroadcastMessage<tmx::messages::TmxEventLogMessage>(tm
 	ivp_addEventLog(_plugin, message.get_level(), message.get_description().c_str());
 }
 
-}} // namespace tmx::utils
+} // namespace tmx::utils
 
 #endif /* SRC_PLUGINCLIENT_H_ */
