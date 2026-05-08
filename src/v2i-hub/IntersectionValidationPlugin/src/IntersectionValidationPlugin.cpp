@@ -28,8 +28,9 @@ namespace IntersectionValidation
     IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name),
         _lastMapTimeMs(0),
         _lastSpatTimeMs(0),
-        spatValidationPassed(0),
         spatFieldValidationErrors(0),
+        spatValidationPassed(0),
+        mapFieldValidationErrors(0),
         mapValidationPassed(0)
     {
 
@@ -103,6 +104,72 @@ namespace IntersectionValidation
         lastTimestampMs = currentTimeMs;
     }
 
+    void IntersectionValidationPlugin::validateMessageFields(const std::string &jsonStr,
+                                                             const std::string &schemaPath,
+                                                             const std::string &eventType,
+                                                             const std::string &messageType,
+                                                             int intersectionId,
+                                                             uint64_t handlerBeginMs)
+    {
+        uint32_t &passed = (messageType == "SPaT") ? spatValidationPassed : mapValidationPassed;
+        uint32_t &failed = (messageType == "SPaT") ? spatFieldValidationErrors : mapFieldValidationErrors;
+
+        FieldValidation result = validateJsonAgainstSchemaFile(jsonStr, schemaPath);
+        
+        if (messageType == "SPaT")
+        {
+            PluginClient::SetStatus("SPAT Schema Path configured", "Yes");
+        }
+        else if (messageType == "MAP")
+        {
+            PluginClient::SetStatus("MAP Schema Path configured", "Yes");
+        }
+
+        if (!result.valid)
+        {
+            for (const auto &error : result.errors)
+            {
+                PLOG(logWARNING) << messageType << " field validation failure: " << error;
+            }
+
+            uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+
+            std::vector<MissingDataElement> elements;
+            for (const auto &elem : result.errors)
+            {
+                elements.emplace_back(elem);
+            }
+
+            CTI4501ValidationMessage eventMsg;
+            eventMsg.set_eventGeneratedAt(handlerEndMs);
+            eventMsg.set_eventType(eventType);
+            eventMsg.set_intersectionID(intersectionId);
+            eventMsg.set_roadRegulatorID(-1);
+            eventMsg.set_source(rsuSource);
+            eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
+            eventMsg.set_missingDataElements(elements);
+
+            PluginClient::BroadcastMessage(eventMsg);
+
+            failed++;
+        }
+        else
+        {
+            passed++;
+        }
+
+        if (messageType == "SPaT")
+        {
+            PluginClient::SetStatus("SPaT Field Validation Passed", passed);
+            PluginClient::SetStatus("SPaT Field Validation Failed", failed);
+        }
+        else if (messageType == "MAP")
+        {
+            PluginClient::SetStatus("MAP Field Validation Passed", passed);
+            PluginClient::SetStatus("MAP Field Validation Failed", failed);
+        }
+    }
+
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
         uint64_t handlerBeginMs = PluginClientClockAware::getClock()->nowInMilliseconds();
@@ -124,54 +191,17 @@ namespace IntersectionValidation
             auto spatJsonMsg = TmxJ2735Message<SPAT, tmx::JSON>(spatData);
             std::string spatJsonStr = spatJsonMsg.to_string();
 
-            PLOG(logWARNING) << "SPaT JSON: " << spatJsonStr;
-            
-            // Validate against schema file
-            FieldValidation result = validateJsonAgainstSchemaFile(spatJsonStr, spatSchemaPath);
-            PluginClient::SetStatus("Spat Schema Path configured", "Yes");
- 
-            if (!result.valid)
+            // Get intersection ID from message
+            int intersectionId = -1;
+            if (spatData && spatData->intersections.list.count > 0 &&
+                spatData->intersections.list.array != nullptr)
             {
-                for (const auto &error : result.errors)
-                {
-                    PLOG(logWARNING) << "SPaT field validation failure: " << error;
-                }
-
-                // Get intersection ID from message
-                int intersectionId = -1;
-                if (spatData && spatData->intersections.list.count > 0 &&
-                    spatData->intersections.list.array != nullptr)
-                {
-                    intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
-                }
-
-                uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
-                std::vector<MissingDataElement> elements;
-                for (const auto &elem : result.errors)
-                {
-                    elements.emplace_back(elem);
-                }
- 
-                CTI4501ValidationMessage eventMsg;
-                eventMsg.set_eventGeneratedAt(handlerEndMs);
-                eventMsg.set_eventType("SpatMinimumData");
-                eventMsg.set_intersectionID(intersectionId);
-                eventMsg.set_roadRegulatorID(-1);
-                eventMsg.set_source(rsuSource);
-                eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
-                eventMsg.set_missingDataElements(elements);
- 
-                PluginClient::BroadcastMessage(eventMsg);
- 
-                spatFieldValidationErrors++;
+                intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
             }
-            else
-            {
-                spatValidationPassed++;
-            }
-            PluginClient::SetStatus("SPaT Validation Passed", spatValidationPassed);
-            PluginClient::SetStatus("SPaT Validation Failed", spatFieldValidationErrors);
+ 
+            PLOG(logDEBUG) << "SPAT JSON: " << spatJsonStr;
+ 
+            validateMessageFields(spatJsonStr, spatSchemaPath, "SpatMinimumData", "SPaT", intersectionId, handlerBeginMs);
         }
         catch (const std::exception &e)
         {
@@ -183,6 +213,7 @@ namespace IntersectionValidation
     {
         uint64_t handlerBeginMs = PluginClientClockAware::getClock()->nowInMilliseconds();
  
+        // Frequency validation
         measureMessageInterval(_lastMapTimeMs, MAP_INTERVAL_REQUIRED_MS, MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP");
         
         // Field validation
@@ -195,59 +226,22 @@ namespace IntersectionValidation
 
         try
         {
-            // Convert MAP to JSON            
             auto mapData = msg.get_j2735_data();
             auto mapJsonMsg = TmxJ2735Message<MapData, tmx::JSON>(mapData);
             std::string mapJsonStr = mapJsonMsg.to_string();
-            
-            PLOG(tmx::utils::logWARNING) << "MAP JSON: " << mapJsonStr;
-            
-            // Validate against schema file
-            FieldValidation result = validateJsonAgainstSchemaFile(mapJsonStr, mapSchemaPath);
-            PluginClient::SetStatus("MAP Schema Path configured", "Yes");
  
-            if (!result.valid)
+            PLOG(logDEBUG) << "MAP JSON: " << mapJsonStr;
+ 
+            // Get intersection ID from message
+            int intersectionId = -1;
+            if (mapData && mapData->intersections != nullptr &&
+                mapData->intersections->list.count > 0 &&
+                mapData->intersections->list.array != nullptr)
             {
-                for (const auto &error : result.errors)
-                {
-                    PLOG(logWARNING) << "MAP field validation failure: " << error;
-                }
-
-                // Get intersection ID from message
-                int intersectionId = -1;
-                if (mapData && mapData->intersections->list.count > 0 &&
-                    mapData->intersections->list.array != nullptr)
-                {
-                    intersectionId = static_cast<int>(mapData->intersections->list.array[0]->id.id);
-                }
-
-                uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
-                std::vector<MissingDataElement> elements;
-                for (const auto &elem : result.errors)
-                {
-                    elements.emplace_back(elem);
-                }
- 
-                CTI4501ValidationMessage eventMsg;
-                eventMsg.set_eventGeneratedAt(handlerEndMs);
-                eventMsg.set_eventType("MapMinimumData");
-                eventMsg.set_intersectionID(intersectionId);
-                eventMsg.set_roadRegulatorID(-1);
-                eventMsg.set_source(rsuSource);
-                eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
-                eventMsg.set_missingDataElements(elements);
- 
-                PluginClient::BroadcastMessage(eventMsg);
- 
-                mapFieldValidationErrors++;
+                intersectionId = static_cast<int>(mapData->intersections->list.array[0]->id.id);
             }
-            else
-            {
-                mapValidationPassed++;
-            }
-            PluginClient::SetStatus("MAP Validation Passed", mapValidationPassed);
-            PluginClient::SetStatus("MAP Validation Failed", mapFieldValidationErrors);
+ 
+            validateMessageFields(mapJsonStr, mapSchemaPath, "MapMinimumData", "MAP", intersectionId, handlerBeginMs);
         }
         catch (const std::exception &e)
         {
