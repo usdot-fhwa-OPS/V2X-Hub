@@ -11,7 +11,6 @@ TARGET_LINK_LIBRARIES (${PROJECT_NAME} tmxutils rdkafka++)
 #############
 enable_testing()
 add_library(${PROJECT_NAME}_lib 
-    src/CommunicationModeHelper.cpp 
     src/UDPMessageForwarder.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
