@@ -62,7 +62,7 @@ To securely connect V2X-Hub to a remotely hosted CARMA Cloud instance, SSH forwa
    * Set `CARMACloudBaseUrl` to use HTTPS and port `8443`
    * Example: `https://host.docker.internal:8443`
 
-For additional information about when to use `host.docker.internal` with Docker containers, see the [Network Security documentation](../../../configuration/NETWORK_SECURITY.md#verify-network-connectivity).
+For additional information about when to use `host.docker.internal` with Docker containers, see the [Network Security documentation](../../../configuration/NETWORK_SECURITY.md#using-hostdockerinternal).
 
 ## Design
 ![Alt text](docs/CARMACloudCommunicationArchitecture.png)
