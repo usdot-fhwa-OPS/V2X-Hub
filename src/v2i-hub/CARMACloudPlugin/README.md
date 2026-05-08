@@ -20,27 +20,36 @@ For receiving V2X communication from V2X actors like CAVs (Connected Autonomous 
 
 For forwarding ERV communications from V2X actors to CARMA cloud.
 
-## Configuration/Deployment
+## Configuration / Deployment
 
+The CARMA Cloud Plugin supports the following configuration parameters.
 This plugin has several configuration parameters. Below these are listed out as together with descriptions on how to set them.
 
-**WebServicePort**: Port for V2X-Hub to receive TCM messages from CARMA Cloud over SSH-tunnel.
 
-**CARMACloudBaseUrl**: Host or server IP address and port for SSH-tunnel to CARMA Cloud.
+### Connection Settings
 
-**fetchTime**: Time in days from which all TCMs will be requested from CARMA Cloud 
+| Parameter                | Description                                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `WebServicePort`         | Port used by V2X-Hub to receive TCM messages from CARMA Cloud through the SSH tunnel.                                    |
+| `CARMACloudBaseUrl`      | Base HTTPS URL used to communicate with CARMA Cloud through the SSH tunnel. Example: `https://host.docker.internal:8443` |
+| `enforceTLSVerification` | Enables TLS certificate verification for CARMA Cloud connections. Default: `true`.                                       |
 
-**TCMRepeatedlyBroadcastTimeOut**: After it receives TCM from carma cloud, it repeatedly broadcasts TCM until TCMRepeatTimeOut milliseconds.
+> [!WARNING]
+> `enforceTLSVerification=false` should **ONLY** be used for local development or debugging purposes. V2X-Hub must be compiled with `BUILD_TYPE` of `Debug`. Production deployments should always enable TLS verification.
 
-**TCMRepeatedlyBroadcastSleep**: The repeatedly broadcast thread should sleep for number of milliseconds.
+---
 
-**TCMRepeatedlyBroadCastTotalTimes**: The number of times TCMs with the same request id should be repeatedly broadcast within the time out period.
+### TCM Settings
 
-**TCMNOAcknowledgementDescription**: If the plugin does not receives any aknowledgement from CMV within the configured seconds that match the original TCM, the plugin will create an NO ACK message and display it on UI.
+| Parameter                          | Description                                                                                        |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fetchTime` | Number of days in the past for which TCMs are requested from CARMA Cloud.                                             |
+| `listTCM`   | Determines whether CARMA Cloud returns a list of TCMs (`true`) or individual seperate TCM messages (`false`). Default: `true`. |
+| `TCMRepeatedlyBroadcastTimeOut`    | Duration in milliseconds that a received TCM will continue to be rebroadcast.                      |
+| `TCMRepeatedlyBroadcastSleep`      | Sleep interval in milliseconds between repeated TCM broadcasts.                                    |
+| `TCMRepeatedlyBroadCastTotalTimes` | Maximum number of repeated broadcasts for TCMs with the same request ID during the timeout period. |
+| `TCMNOAcknowledgementDescription`  | If no acknowledgement is received from a CMV within the configured timeout period for a matching TCM, the plugin generates a `NO ACK` message for display in the UI. |
 
-**listTCM**: Indicator to determine if v2xhub receives a list of TCMs from carma-cloud. Default to true, returning a list of TCM. If false, return one TCM at a time. Indicator value can only be either true or false.
-
-**enforceTLSVerification**: Indicator to determine if v2xhub should enforce TLS verification for CARMA-Cloud connnection. Default to true. False should **ONLY** be used for development and debugging purposes; further must be compiled as a Debug build.
 
 ### TCP Tunnel
 
