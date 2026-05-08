@@ -541,7 +541,7 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 	}
 
 #ifdef ALLOW_INSECURE_TLS
-	// VONLY included when compiled as a Debug build
+	// ONLY included when compiled as a Debug build
     if (!enforceTLSVerification) {
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
