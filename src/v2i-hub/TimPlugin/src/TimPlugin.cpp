@@ -114,8 +114,7 @@ void TimPlugin::UpdateConfigSettings() {
 		}
 
 	}
-	
-	GetConfigValue<string>("WebServiceIP", webip);
+	webip = tmx::utils::environment::get_local_ip();
 	GetConfigValue<uint16_t>("WebServicePort", webport);
 
 }

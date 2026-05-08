@@ -60,11 +60,6 @@
 			"description":"Port number to be used for KAFKA broker"
 		},
 		{
-			"key": "UDPServerIpAddress",
-			"default": "0.0.0.0",
-			"description":"IP address to be used for UDP socket connection."
-		},
-		{
 			"key": "TIMUDPPort",
 			"default": "47900",
 			"description":"Port number to be used for sending TIM message via UDP socket."

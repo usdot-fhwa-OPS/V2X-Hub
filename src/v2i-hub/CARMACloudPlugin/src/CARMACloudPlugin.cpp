@@ -477,8 +477,8 @@ int CARMACloudPlugin::StartWebService()
 
 
 void CARMACloudPlugin::UpdateConfigSettings() {
-    std::lock_guard<mutex> lock(_cfgLock);
-	GetConfigValue<string>("WebServiceIP",webip);
+	std::scoped_lock lock(_cfgLock);
+	webip = tmx::utils::environment::get_local_ip();
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<uint16_t>("fetchTime",fetchtime);
 	GetConfigValue<string>("MobilityOperationStrategies", _strategies);	

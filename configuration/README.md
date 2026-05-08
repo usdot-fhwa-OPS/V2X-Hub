@@ -63,7 +63,9 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
 * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
 * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
-* **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub.
+* **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub. Defaults to 0.0.0.0
+> [!NOTE]
+> For docker compose deployments please use default value to accomodate docker bridge network security setup. For non-containerized or custom deployments set this value to the IP address of the hosting machine.
 * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
 * **V2XHUB_USER** – V2X Hub Administrator Username to create on startup
 * **V2XHUB_PASSWORD** – V2X Hub Administrator Password to create on startup

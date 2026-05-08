@@ -19,6 +19,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   DOCKERHUB_NAMESPACE: usdotfhwaops
@@ -135,7 +136,6 @@ jobs:
             VERSION=${{ steps.meta.outputs.version }}
             VCS_REF=${{ steps.meta.outputs.revision }}
             BUILD_DATE=${{ steps.meta.outputs.created }}
-
   build-v2xhub-arm64:
     runs-on: ubuntu-24.04-arm
     steps:
@@ -203,6 +203,28 @@ jobs:
             --tag "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
+      - name: Docker Scout Compare
+        id: docker-scout-compare
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          image: ${{ steps.meta.outputs.tags }}
+          to-env: ${{ github.event.pull_request.base.ref }}
+          ignore-unchanged: true
+          only-severities: critical,high
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
+      - name: Docker Scout Record
+        id: docker-scout-record
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: environment
+          environment: ${{ steps.meta.outputs.version }}
+          image: ${{ steps.meta.outputs.tags }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
 
   publish-docker-compose:
     runs-on: ubuntu-24.04
@@ -244,6 +266,48 @@ jobs:
           echo "Publishing with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
           docker compose publish --with-env --yes ${{ steps.meta.outputs.tags }}
 
+  sonarcloud:
+    runs-on: ubuntu-24.04
+    container:
+      image: ubuntu:jammy-20230126
+    steps:
+      - name: Install curl, zip, git, gcovr
+        run: |
+          apt update
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get install -y curl zip git gcovr
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Run install_dependencies.sh script
+        run: |
+          echo "CLONED_REPO_PATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
+          ls -la $GITHUB_WORKSPACE
+          scripts/install_dependencies.sh
+
+      - name: Build Ext Components
+        run: |
+          cd ext
+          ./build.sh
+          ../container/library.sh
+          ldconfig
+
+      - name: Run Tests & Generate Gcovr Reports
+        run: |
+          cd src
+          ./build.sh coverage --j2735-version 2024 --skip-plugins ""
+          ./test.sh coverage
+
+      - name: Run sonar-scanner
+        uses: usdot-fhwa-stol/actions/sonar-scanner@main
+        with:
+          sonar-token: ${{ secrets.SONAR_TOKEN }}
+          working-dir: ${{ env.CLONED_REPO_PATH }}
+
   integration-tests:
     runs-on: ubuntu-24.04
     needs:
@@ -251,6 +315,7 @@ jobs:
       - build-port-drayage
       - build-v2xhub-manifest
       - publish-docker-compose
+      - sonarcloud
     timeout-minutes: 35
     steps:
       - name: Checkout v2xhub-integration-tests

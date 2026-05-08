@@ -258,7 +258,7 @@ void PedestrianPlugin::UpdateConfigSettings()
 	// Configuration settings are retrieved from the API using the GetConfigValue template class.
 	// This method does NOT execute in the main thread, so variables must be protected
 	// (e.g. using std::atomic, std::mutex, etc.).
-
+	webip = tmx::utils::environment::get_local_ip();
 	GetConfigValue<std::string>("WebServiceIP", webip, &_cfgLock);
 	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
 	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);

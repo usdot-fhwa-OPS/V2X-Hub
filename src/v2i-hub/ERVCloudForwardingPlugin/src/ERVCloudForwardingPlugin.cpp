@@ -103,7 +103,7 @@ namespace ERVCloudForwardingPlugin
     void ERVCloudForwardingPlugin::UpdateConfigSettings()
     {
         std::lock_guard<mutex> lock(_cfgLock);
-        GetConfigValue<string>("WebServiceIP", _webIp);
+	    _webIp = tmx::utils::environment::get_local_ip();
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);

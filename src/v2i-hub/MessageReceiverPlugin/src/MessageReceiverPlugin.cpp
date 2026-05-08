@@ -366,7 +366,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue<string>("HSMurl",baseurl);
 	GetConfigValue<string>("messageid",messageidstr);
-	GetConfigValue("IP", ip);
+	ip = tmx::utils::environment::get_local_ip();
 	GetConfigValue("Port", port);
 	_skippedSignVerifyErrorResponse = 0;
 	SetStatus<uint>(Key_SkippedSignVerifyError, _skippedSignVerifyErrorResponse);

@@ -49,9 +49,8 @@ namespace MUSTSensorDriverPlugin {
 			GetConfigValue<std::string>("ProjectionString", projString);
 			GetConfigValue<std::string>("SensorId", sensorId);
 			// Setup  UDP Server 
-			std::string ip_address;
 			unsigned int port;
-			GetConfigValue<std::string>("DetectionReceiverIP", ip_address);
+			std::string ip_address = tmx::utils::environment::get_local_ip();
 			GetConfigValue<uint>("DetectionReceiverPort", port);
 			GetConfigValue<double>("DetectionPositionVariance", positionVariance);
 			GetConfigValue<double>("DetectionVelocityVariance", velocityVariance);

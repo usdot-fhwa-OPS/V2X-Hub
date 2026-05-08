@@ -1,0 +1,71 @@
+/**
+ * Copyright (C) 2026 LEIDOS.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this except in compliance with the License. You may obtain a copy of
+ * the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
+ */
+#pragma once
+#include <iostream>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string>
+#include <thread>
+#include <mutex>
+#include <PluginClientClockAware.h>
+
+#include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <tmx/j2735_messages/SpatMessage.hpp>
+
+namespace IntersectionValidation
+{
+
+    class IntersectionValidationPlugin : public tmx::utils::PluginClientClockAware
+    {
+    public:
+        explicit IntersectionValidationPlugin(const std::string &name);
+        ~IntersectionValidationPlugin() override = default;
+
+        void UpdateConfigSettings();
+
+        // Message handlers
+        void HandleSpatMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
+        void HandleMapDataMessage(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
+
+    protected:
+        void OnConfigChanged(const char *key, const char *value) override;
+        void OnStateChange(IvpPluginState state) override;
+
+    private:
+        // Interval tracking
+        uint64_t _lastMapTimeMs = 0;
+        uint64_t _lastSpatTimeMs = 0;
+
+        /**
+         * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
+         * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
+         * @param requiredThresholdMs required threshold in ms.
+         * @param maxThresholdMs maximum threshold in ms.
+         * @param messageType label for logging (e.g. "SPaT", "MAP").
+         */
+        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
+
+        // CTI 4501 thresholds
+        static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
+        static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
+        static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
+        static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1000;
+
+        static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
+        static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
+    };
+}

@@ -18,7 +18,7 @@
 #include <tmx/IvpPlugin.h>
 #include <PluginClient.h>
 #include "CDASimConnection.hpp"
-#include <simulation/SimulationEnvUtils.h>
+#include <environment/EnvUtils.h>
 #include "ThreadWorker.h"
 
 namespace CDASimAdapter
