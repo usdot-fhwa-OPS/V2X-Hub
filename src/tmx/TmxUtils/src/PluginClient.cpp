@@ -36,7 +36,7 @@ namespace utils {
 
 // Helper function to get database connection using configuration
 static DbConnection getConfiguredConnection(DbConnectionPool& pool) {
-	auto& config = DbConnectionConfig::getInstance();
+	const auto& config = DbConnectionConfig::getInstance();
 	std::string pwd = pool.GetPwd();
 	return pool.Connection(config.getConnectionUrl(), config.getUser(), pwd, config.getDatabase());
 }
@@ -46,11 +46,11 @@ std::map<IvpPlugin*, PluginClient*> PluginClient::_instanceMap;
 SystemContext PluginClient::_sysContext;
 
 
-PluginClient::PluginClient(std::string name) :
+PluginClient::PluginClient(const std::string &name) :
 	_name(name),
 	_logPrefix(name + " - "),
-	_msgFilter(NULL),
-	_sysConfig(NULL)
+	_msgFilter(nullptr),
+	_sysConfig(nullptr)
 {
 	PLOG(logDEBUG2) << "Constructing the plugin";
 
@@ -81,7 +81,7 @@ PluginClient::PluginClient(std::string name) :
 		if (manifest->name && strlen(manifest->name) > 0)
 			_name = string(manifest->name);
 		ivpRegister_destroyManifest(manifest);
-		manifest = NULL;
+		manifest = nullptr;
 
 		PLOG(logDEBUG) << "Plugin " << _name << " has been registered with IVP";
 	}
@@ -93,14 +93,14 @@ PluginClient::PluginClient(std::string name) :
 		DbConnection conn = getConfiguredConnection(pool);
 
 		PluginUpgrader::UpgradeDatabase(&conn, IVPUTILS_VERSION);
-	} catch (runtime_error &ex) {
+	} catch (const std::runtime_error &ex) {
 		PLOG(logERROR) << "Unable to upgrade database: " << ex.what();
 	}
 
 	PLOG(logDEBUG2) << "Registering the IVP plugin instance";
 	PluginClient::_instanceMap[_plugin] = this;
 
-	_keepAlive = new PluginKeepAlive(this);
+	_keepAlive = std::make_unique<PluginKeepAlive>(this);
 	_startTime = std::chrono::system_clock::now();
 }
 
@@ -109,46 +109,41 @@ PluginClient::~PluginClient()
 	if (this->_msgFilter)
 	{
 		ivpSubscribe_destroyFilter(this->_msgFilter);
-		this->_msgFilter = NULL;
+		this->_msgFilter = nullptr;
 	}
 
 	if (this->_sysConfig)
 	{
 		ivpConfig_destroyCollection(this->_sysConfig);
-		this->_sysConfig = NULL;
+		this->_sysConfig = nullptr;
 	}
 
-	if (this->_keepAlive)
-	{
-		delete this->_keepAlive;
-		this->_keepAlive = NULL;
-	}
 }
 
-PluginClient *PluginClient::FindPlugin(string name)
+PluginClient *PluginClient::FindPlugin(const std::string &name)
 {
-	for (map<IvpPlugin *, PluginClient *>::iterator i = PluginClient::_instanceMap.begin(); i != PluginClient::_instanceMap.end(); i++)
+	for (const auto& [key, entry] : PluginClient::_instanceMap)
 	{
-		if (i->second && i->second->GetName() == name)
+		if (entry && entry->GetName() == name)
 		{
-			return i->second;
+			return entry;
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 // static wrapper for OnConfigChanged.
 void PluginClient::StaticOnConfigChanged(IvpPlugin *plugin, const char *key, const char *value)
 {
-	PluginClient *p = PluginClient::_instanceMap[plugin];
-	if (p)
+
+	if (PluginClient *p = PluginClient::_instanceMap[plugin]; p)
 	{
 		try
 		{
 			p->OnConfigChanged(key, value);
 		}
-		catch (exception &ex)
+		catch (std::exception &ex)
 		{
 			p->HandleException(ex, false);
 		}
@@ -173,18 +168,18 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 	// If this is a system parameter, update the value
 	pthread_mutex_lock(&_plugin->lock);
 
-	char *results = NULL;
-	if (_sysConfig != NULL)
+	char *results = nullptr;
+	if (_sysConfig != nullptr)
 		results = ivpConfig_getCopyOfValueFromCollection(_sysConfig, key);
 
-	if (results != NULL)
+	if (results != nullptr)
 	{
 		ivpConfig_updateValueInCollection(_sysConfig, key, value);
 	}
 	else
 	{
 		// If it is not in the manifest, assume it belongs as a system parameter
-		if (_plugin->config != NULL)
+		if (_plugin->config != nullptr)
 			results = ivpConfig_getCopyOfValueFromCollection(_plugin->config, key);
 
 		if (!results)
@@ -208,7 +203,7 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 	} else if (strcmp("LogOutput", key) == 0)
 	{
 		std::string logFile(value);
-		FILE *logStream = NULL;
+		FILE *logStream = nullptr;
 		if (logFile != "-")
 		{
 			// Check if relative path or absolute path
@@ -223,12 +218,12 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 				logFile = logDir + "/" + logFile;
 			}
 			logStream = fopen(logFile.c_str(), "w");
-			if (logStream == NULL) {
+			if (logStream == nullptr) {
 				FILE_LOG(logERROR) << "Could not open log file: " << strerror(errno) << ".  Logging to standard output." << std::endl;
 			}
 		}
 
-		if (logStream == NULL) {
+		if (logStream == nullptr) {
 			Output2FILE::Stream() = stdout;
 		}
 		else {
@@ -246,7 +241,7 @@ void PluginClient::OnConfigChanged(const char *key, const char *value)
 			double minVal = battelle::attributes::attribute_lexical_cast<double>(value);
 			this->_keepAlive->set_Frequency(chrono::milliseconds((int)(minVal * 60 * 1000)));
 		}
-		catch (exception &ex)
+		catch (std::exception &ex)
 		{
 			this->HandleException(ex, false);
 		}
@@ -263,7 +258,7 @@ void PluginClient::StaticOnError(IvpPlugin *plugin, IvpError err)
 		{
 			p->OnError(err);
 		}
-		catch (exception &ex)
+		catch (std::exception &ex)
 		{
 			p->HandleException(ex, false);
 		}
@@ -290,7 +285,7 @@ void PluginClient::StaticOnMessageReceived(IvpPlugin *plugin, IvpMessage *msg)
 	if (p)
 	{
 		struct timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 		uint64_t microsecondsSinceEpoch = (uint64_t)(tv.tv_sec) * 1000000 + (uint64_t)(tv.tv_usec);
 
 		try
@@ -298,7 +293,7 @@ void PluginClient::StaticOnMessageReceived(IvpPlugin *plugin, IvpMessage *msg)
 			p->OnMessageReceived(msg);
 			PluginClient::_sysContext.trackMessageHandled(p->GetName(), msg, microsecondsSinceEpoch);
 		}
-		catch (exception &ex)
+		catch (std::exception &ex)
 		{
 			p->HandleException(ex, false);
 		}
@@ -341,7 +336,7 @@ void PluginClient::StaticOnStateChange(IvpPlugin *plugin, IvpPluginState state)
 			p->SetStartTimeStatus();
 			p->OnStateChange(state);
 		}
-		catch (exception &ex)
+		catch (std::exception &ex)
 		{
 			p->HandleException(ex, false);
 		}
@@ -377,10 +372,8 @@ void PluginClient::SetStartTimeStatus()
 }
 
 long PluginClient::getPss() const {
-	 long pss = 0;
-    std::ifstream smaps_file("/proc/self/smaps"); // Open the smaps file for the current process.
-
-    if (smaps_file.is_open()) {
+	long pss = 0;
+    if (std::ifstream smaps_file("/proc/self/smaps"); smaps_file.is_open()) {
         std::string line;
         std::regex pss_regex("^Pss:\\s+(\\d+)"); // Regular expression to find "Pss:" followed by digits.
         std::smatch match;
@@ -405,17 +398,18 @@ void PluginClient::AddMessageFilter(const char *type, const char *subtype, IvpMs
 
 void PluginClient::SubscribeToMessages()
 {
-	if (_msgFilter == NULL)
+	if (_msgFilter == nullptr)
 		throw PluginException("Error subscribing to messages.  No message filters were added.");
 
 	ivp_subscribe(_plugin, _msgFilter);
 	ivpSubscribe_destroyFilter(_msgFilter);
-	_msgFilter = NULL;
+	_msgFilter = nullptr;
 }
 
 void PluginClient::UpdatePssStatus(){
-		long _pss = getPss();
-		SetStatus("Memory Usage (Proportional Set Size) Kbs", _pss);
+	// Get the current PSS value and update the status item.  PSS is in KB, so divide by 1024 to get MB.
+	long _pss = getPss();
+	SetStatus("Memory Usage (Proportional Set Size) MBs", _pss/1024);
 }
 
 int PluginClient::Main()

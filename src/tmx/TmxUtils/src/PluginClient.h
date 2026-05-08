@@ -34,10 +34,6 @@
 #include "database/DbConnectionPool.h"
 #include "database/SystemContext.h"
 
-// Redefine PLOG for plugins
-#ifdef PLOG
-#undef PLOG
-#endif
 
 #define PLOG(level) PLUGIN_LOG(level, _name)
 
@@ -59,7 +55,7 @@ class PluginClient: public Runnable {
 	friend class PluginExtender;
 
 public:
-	PluginClient(std::string name);
+	PluginClient(const std::string &name);
 	virtual ~PluginClient();
 
 	virtual bool ProcessOptions(const boost::program_options::variables_map &);
@@ -73,7 +69,7 @@ public:
 	static void StaticOnMessageReceived(IvpPlugin *plugin, IvpMessage *msg);
 	static void StaticOnStateChange(IvpPlugin *plugin, IvpPluginState state);
 
-	static PluginClient *FindPlugin(std::string name);
+	static PluginClient *FindPlugin( const std::string &name);
 	static void StaticOnConfigChanged(PluginClient *plugin, const char *key, const char *value);
 	static void StaticOnError(PluginClient *plugin, IvpError err);
 	static void StaticOnMessageReceived(PluginClient *plugin, IvpMessage *msg);
@@ -385,8 +381,8 @@ protected:
 private:
 	/**
 	 * Helper function to get the PSS (Proportional Set Size) of the plugin.
-	 * This is the memory usage of the plugin in Kbs.
-	 * @return The PSS of the plugin in Kbs.
+	 * This is the memory usage of the plugin in MBs.
+	 * @return The PSS of the plugin in MBs.
 	 */
  	long getPss() const;
 
@@ -394,7 +390,7 @@ private:
 
 	IvpMsgFilter* _msgFilter;
 	IvpConfigCollection *_sysConfig;
-	PluginKeepAlive *_keepAlive;
+	std::unique_ptr<PluginKeepAlive> _keepAlive;
 	std::chrono::system_clock::time_point _startTime;
 
 	// Map a plugin status key to the last value set for that key.
