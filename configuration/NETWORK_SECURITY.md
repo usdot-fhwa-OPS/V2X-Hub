@@ -147,6 +147,47 @@ docker network inspect configuration_v2xhub_app_external
 docker network inspect configuration_v2xhub_data_internal
 ```
 
+## Using `host.docker.internal`
+
+When V2X-Hub is running inside a Docker container, some services may still execute on the host machine rather than inside the container network. In these cases, containers cannot access the host machine using `localhost` or `127.0.0.1`, because those addresses resolve to the container itself.
+
+Docker provides the special hostname: 
+```text
+host.docker.internal
+```
+
+This hostname resolves to the host machine from within the container and should be used whenever a V2X-Hub plugin must communicate with a service running on the host system.
+
+### Example Use Case
+
+The CARMA Cloud Plugin uses SSH forward and reverse tunnels that are typically established on the host machine. Since the plugin executes inside the V2X-Hub Docker container, the plugin must connect to the host machine tunnel endpoint using:
+
+```text
+https://host.docker.internal:8443
+```
+
+instead of:
+
+```text
+https://localhost:8443
+```
+
+### When to Use `host.docker.internal`
+
+Use `host.docker.internal` when all of the following are true:
+
+* V2X-Hub is running inside a Docker container
+* The target service or SSH tunnel is running on the host machine
+* The container must access the host machine network endpoint
+
+### When NOT to Use `host.docker.internal`
+
+Do not use `host.docker.internal` when:
+
+* Both services run inside the same Docker network
+* Communication occurs directly between containers using Docker Compose service names
+* V2X-Hub is running directly on the host machine instead of inside Docker
+
 ## Security Benefits Achieved
 
 ### ✅ **Defense in Depth**
