@@ -27,11 +27,7 @@ namespace IntersectionValidation
 {
     IntersectionValidationPlugin::IntersectionValidationPlugin(const std::string &name): PluginClientClockAware(name),
         _lastMapTimeMs(0),
-        _lastSpatTimeMs(0),
-        spatFieldValidationErrors(0),
-        spatValidationPassed(0),
-        mapFieldValidationErrors(0),
-        mapValidationPassed(0)
+        _lastSpatTimeMs(0)
     {
 
         AddMessageFilter<SpatMessage>(this, &IntersectionValidationPlugin::HandleSpatMessage);
