@@ -10,7 +10,8 @@ A list of plugins related to the CARMA Cloud Plugin.
 
 ### Immediate Forward Plugin
 
-Provides RSU Immediate Message Forwarding (IMF) functionality for broadcasting V2X messages, such as Traffic Control Messages (TCMs), from CARMA Cloud to V2X actors.
+Provides RSU Immediate Message Forwarding (IMF) functionality for broadcasting V2X messages, such as Traffic Control Messages (TCMs), from CARMA Cloud to V2X actors. 
+See the [Immediate Forward Plugin README](../ImmediateForwardPlugin/README.md).
 
 ### Message Receiver Plugin
 
