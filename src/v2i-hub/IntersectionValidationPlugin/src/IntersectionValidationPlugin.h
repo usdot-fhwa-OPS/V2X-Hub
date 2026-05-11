@@ -55,8 +55,7 @@ namespace IntersectionValidation
         uint64_t _lastSpatTimeMs = 0;
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
-        uint spatFieldValidationErrors;
-        uint spatValidationPassed;
+        std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
         std::string rsuSource;
 
         /**
@@ -67,6 +66,22 @@ namespace IntersectionValidation
          * @param messageType label for logging (e.g. "SPaT", "MAP").
          */
         void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
+
+        /**
+         * @brief Validate JSON string against schema file, and update plugin status and broadcast CTI4501ValidationMessage if validation fails.
+         * @param jsonStr The JSON string to validate.
+         * @param schemaPath Path to the JSON Schema file.
+         * @param eventType The event type to use in the CTI4501ValidationMessage
+         * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
+         * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage
+         * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         */
+        void validateMessageFields(const std::string &jsonStr,
+                                                              const std::string &schemaPath,
+                                                              const std::string &eventType,
+                                                              const std::string &messageType,
+                                                              int intersectionId,
+                                                              uint64_t handlerBeginMs);
 
         // CTI 4501 thresholds
         static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
