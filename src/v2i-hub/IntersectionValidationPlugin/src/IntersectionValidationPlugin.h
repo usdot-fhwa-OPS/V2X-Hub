@@ -56,6 +56,10 @@ namespace IntersectionValidation
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
+        uint spatFieldValidationErrors;
+        uint spatValidationPassed;
+        uint mapFieldValidationErrors;
+        uint mapValidationPassed;
         std::string rsuSource;
 
         /**
