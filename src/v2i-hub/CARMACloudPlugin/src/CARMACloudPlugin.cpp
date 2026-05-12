@@ -2,6 +2,7 @@
 #include <WGS84Point.h>
 #include <math.h>
 #include <thread>
+#include <cstdlib>
 using namespace std;
 using namespace tmx::messages;
 using namespace tmx::utils;
@@ -43,8 +44,6 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 {
 	auto carmaRequest = msg.get_j2735_data();
 
-
-
 	// convert reqid bytes to hex string.
 	size_t hexlen = 2; //size of each hex representation with a leading 0
 	char reqid[carmaRequest->body.choice.tcrV01.reqid.size * hexlen + 1];
@@ -54,7 +53,6 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 	}
 
 	printf("%s\n",reqid);
-
 	long int reqseq = carmaRequest->body.choice.tcrV01.reqseq;
 	long int scale = carmaRequest->body.choice.tcrV01.scale;
 	
@@ -68,7 +66,6 @@ void CARMACloudPlugin::HandleCARMARequest(tsm4Message &msg, routeable_message &r
 
 	while (cnt < totBounds)
 	{
-
 		long lat = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflat;
 		long longg = carmaRequest->body.choice.tcrV01.bounds.list.array[cnt]->reflon;
 
@@ -487,19 +484,22 @@ void CARMACloudPlugin::UpdateConfigSettings() {
 	GetConfigValue<int>("TCMRepeatedlyBroadCastTotalTimes", _TCMRepeatedlyBroadCastTotalTimes);
 	GetConfigValue<int>("TCMRepeatedlyBroadcastSleep", _TCMRepeatedlyBroadcastSleep);
 	GetConfigValue<string>("listTCM",list_tcm);
-	std::string carma_cloud_ip;
-	uint carma_cloud_port;
-	GetConfigValue<string>("CARMACloudIP",carma_cloud_ip);
-	GetConfigValue<uint>("CARMACloudPort",carma_cloud_port);
-	carma_cloud_url = carma_cloud_ip + ":" + std::to_string(carma_cloud_port);
-	PLOG(logDEBUG) << "Setting CARMA Cloud URL to " << carma_cloud_url << std::endl;
-	
+	GetConfigValue<string>("CARMACloudBaseUrl",carma_cloud_url);
+	GetConfigValue<bool>("enforceTLSVerification",enforceTLSVerification);
+	GetConfigValue<string>("carma_cloud_ca_cert_path",carma_cloud_ca_cert_path);
+
+	PLOG(logDEBUG) << "Setting CARMA Cloud Base URL to " << carma_cloud_url << std::endl;
+	PLOG(logDEBUG) << "Setting CARMA Cloud 'Enforce TLS Verification' mode to " << enforceTLSVerification << std::endl;
+    PLOG(logDEBUG) << "Setting CARMA Cloud CA cert path to "
+                   << (carma_cloud_ca_cert_path.empty() ? "<system default>" : carma_cloud_ca_cert_path)
+                   << std::endl;
 }
 
 void CARMACloudPlugin::OnConfigChanged(const char *key, const char *value) {
 	PluginClient::OnConfigChanged(key, value);
 	UpdateConfigSettings();
 }
+	void OnStateChange(IvpPluginState state);
 
 void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 	PluginClient::OnStateChange(state);
@@ -511,36 +511,75 @@ void CARMACloudPlugin::OnStateChange(IvpPluginState state) {
 
 void CARMACloudPlugin::CloudSendAsync(const string& local_msg,const string& local_url, const string& local_base, const string& local_method)
 {
-	std::thread t([this, &local_msg, &local_url, &local_base, &local_method](){	
-		CloudSend(local_msg, local_url, local_base, local_method);	
+	std::thread t([this, local_msg, local_url, local_base, local_method]() {
+		CloudSend(local_msg, local_url, local_base, local_method);
 	});
 	t.detach();
 }
 
 int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url, const string& local_base, const string& local_method)
 { 	
-	CURL *req;
-	CURLcode res;
-	string urlfull = local_url+local_base;	
-	req = curl_easy_init();
-	if(req) {
-		curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
+    CURL* req = curl_easy_init();
+    if (!req) return 1;
 
-		if(strcmp(local_method.c_str(),"POST")==0)
-		{
-			curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
-			curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L); // Request operation complete within max millisecond timeout 
-			res = curl_easy_perform(req);
-			if(res != CURLE_OK)
-			{
-				fprintf(stderr, "curl send failed: %s\n",curl_easy_strerror(res));
-				return 1;
-			}	  
-		}
-		curl_easy_cleanup(req);
-	}	
-  	
-  return 0;
+    const std::string urlfull = local_url + local_base;
+
+    curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
+    curl_easy_setopt(req, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+    curl_easy_setopt(req, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
+
+	// Enforce modern TLS
+    curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
+	// Enforce certificate validation
+	curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 2L);
+    // Use configured CA bundle for TLS certificate validation when connecting
+	// to services secured with a private/internal Certificate Authority (CA).
+	if (!carma_cloud_ca_cert_path.empty()) {
+		curl_easy_setopt(req, CURLOPT_CAINFO, carma_cloud_ca_cert_path.c_str());
+	}
+
+#ifdef ALLOW_INSECURE_TLS
+	// By disabled in release builds. Only enabled in debug builds for testing and debugging purposes
+	// Can be ignored for sonar scanning since not in released images
+	// BEGIN-NOSCAN
+	// ONLY included when compiled as a Debug build
+    if (!enforceTLSVerification) {
+        curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
+		PLOG(logWARNING) << "TLS verification disabled by setting configuration 'enforceTLSVerification' to false. "
+			<< "CARMA-Cloud certificate and hostname validation are NOT being enforced. "
+			<< "This option should only be disabled in non-production / development environments for temporary troubleshooting.";
+    }
+	// END-NOSCAN
+#else
+    if (!enforceTLSVerification) {
+        PLOG(logERROR) << "TLS verification can ONLY be disabled in Debug builds.";
+        curl_easy_cleanup(req);
+        return 1;
+    }
+#endif
+
+    curl_easy_setopt(req, CURLOPT_CONNECTTIMEOUT_MS, 500L);
+    curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
+    curl_easy_setopt(req, CURLOPT_NOSIGNAL, 1L);
+    curl_easy_setopt(req, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+    if (local_method == "POST") {
+        curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
+        curl_easy_setopt(req, CURLOPT_POSTFIELDSIZE, static_cast<long>(local_msg.size()));
+    }
+
+    CURLcode res = curl_easy_perform(req);
+    curl_easy_cleanup(req);
+
+    if (res != CURLE_OK) {
+        PLOG(logERROR) << "curl send failed: " << curl_easy_strerror(res);
+        return 1;
+    }
+
+    return 0;
 }
 
 void CARMACloudPlugin::ConvertString2Vector(std::vector<string> &sub_str_v, const string &str) const{

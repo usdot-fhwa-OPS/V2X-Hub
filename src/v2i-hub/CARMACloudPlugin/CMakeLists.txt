@@ -34,3 +34,7 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} PUBLIC tmxutils ${XercesC_LIBRARY} ${NET
 
 
 link_directories(${CMAKE_PREFIX_PATH}/lib)
+
+target_compile_definitions(CARMACloudPlugin PRIVATE
+    $<$<CONFIG:Debug>:ALLOW_INSECURE_TLS=1>
+)
