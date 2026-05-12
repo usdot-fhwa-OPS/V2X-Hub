@@ -541,6 +541,9 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 	}
 
 #ifdef ALLOW_INSECURE_TLS
+	// By disabled in release builds. Only enabled in debug builds for testing and debugging purposes
+	// Can be ignored for sonar scanning since not in released images
+	// BEGIN-NOSCAN
 	// ONLY included when compiled as a Debug build
     if (!enforceTLSVerification) {
         curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -549,6 +552,7 @@ int CARMACloudPlugin::CloudSend(const string &local_msg, const string& local_url
 			<< "CARMA-Cloud certificate and hostname validation are NOT being enforced. "
 			<< "This option should only be disabled in non-production / development environments for temporary troubleshooting.";
     }
+	// END-NOSCAN
 #else
     if (!enforceTLSVerification) {
         PLOG(logERROR) << "TLS verification can ONLY be disabled in Debug builds.";
