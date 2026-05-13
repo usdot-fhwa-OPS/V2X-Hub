@@ -47,6 +47,12 @@ namespace ERVCloudForwardingPlugin
     private:
         uint16_t _webPort;
         string _webIp;
+        // Enforce TLS verification. Default is true.  False should only be used for development and debugging purposes.
+        bool enforceTLSVerification = false;
+        // Optional CA bundle used by the CARMA-Cloud Plugin for TLS validation
+        // when CARMA-Cloud is secured with a private/internal Certificate Authority.
+        // set plugin configuration carma_cloud_ca_cert_path=/var/www/plugins/ssl/carma-cloud-internal-ca.pem
+        std::string carma_cloud_ca_cert_path;
         string _rsuIp;
         string _rsuName;
         uint16_t _snmpPort;
@@ -59,7 +65,7 @@ namespace ERVCloudForwardingPlugin
         string _securityUser;
         string _authPassPhrase;
         string _GPSOID;
-        const string _CLOUDURL = "http://127.0.0.1:33333";
+        string carma_cloud_url;
         const string _CLOUDBSMREQ = "/carmacloud/rsu/req";
         const string _CLOUDRSUREQ = "/carmacloud/rsu/register";
         const string _POSTMETHOD = "POST";

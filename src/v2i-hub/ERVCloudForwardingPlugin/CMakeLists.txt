@@ -23,6 +23,9 @@ TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC ${NETSNMP_INCLUDE_DIRS} ${Qt5C
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP}
     ${NETSNMP_LIBRARIES} ${QHttpEngine_LIBRARY} ${Boost_SYSTEM_LIBRARY} NemaTode curl Qt5Core Qt5Network qhttpengine v2xhubWebAPI)
 link_directories(${CMAKE_PREFIX_PATH}/lib)
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+    $<$<CONFIG:Debug>:ALLOW_INSECURE_TLS=1>
+)
 
 # ############
 # # Testing ##

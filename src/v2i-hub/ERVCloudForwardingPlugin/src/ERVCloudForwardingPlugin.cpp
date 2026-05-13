@@ -69,7 +69,7 @@ namespace ERVCloudForwardingPlugin
                 string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
                 auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
                 PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
-                auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+                auto status = CloudSend(xml_str, carma_cloud_url, _CLOUDRSUREQ, _POSTMETHOD);
                 if (status == 1)
                 {
                     PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
@@ -109,6 +109,15 @@ namespace ERVCloudForwardingPlugin
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("GPSOID", _GPSOID);
         GetConfigValue<string>("RSUName", _rsuName);
+        GetConfigValue<string>("CARMACloudBaseUrl",carma_cloud_url);
+        GetConfigValue<bool>("enforceTLSVerification",enforceTLSVerification);
+        GetConfigValue<string>("carma_cloud_ca_cert_path",carma_cloud_ca_cert_path);
+
+        PLOG(logDEBUG) << "Setting CARMA Cloud Base URL to " << carma_cloud_url << std::endl;
+        PLOG(logDEBUG) << "Setting CARMA Cloud 'Enforce TLS Verification' mode to " << enforceTLSVerification << std::endl;
+        PLOG(logDEBUG) << "Setting CARMA Cloud CA cert path to "
+                    << (carma_cloud_ca_cert_path.empty() ? "<system default>" : carma_cloud_ca_cert_path)
+                    << std::endl;
     }
 
     void ERVCloudForwardingPlugin::BroadcastBSM(const string &bsmHex)
