@@ -5,7 +5,9 @@ namespace ODEForwardPlugin
 {
     void UDPMessageForwarder::sendMessage(UDPMessageType messageType, const std::string& message){
         try{
-            _udpClientsMap.at(messageType)->Send(message);
+            // Convert hex string to bytes
+            tmx::byte_stream bytes = tmx::byte_stream_decode(message);
+            _udpClientsMap.at(messageType)->Send(bytes.data(), bytes.size());
         }catch(const std::out_of_range& ex){
             throw TmxException("UDP Client not found for message type. Error message: " + std::string(ex.what()));
         }catch(const std::invalid_argument& ex){
