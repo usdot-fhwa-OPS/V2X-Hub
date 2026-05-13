@@ -892,4 +892,77 @@ bool TmxControl::save_state()
         return false;
     }
 }
+
+bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
+{
+    if (!_opts || !_opts->count("upload-state"))
+	{
+		FILE_LOG(logERROR) << "Missing required argument: --upload-state <filePath>";
+		return false;
+	}
+
+	std::string filePath = (*_opts)["upload-state"].as<std::string>();
+    return upload_state(filePath);
+}
+
+bool TmxControl::upload_state(const std::string &filePath)
+{
+    if (!checkPerm())
+        return false;
+
+    try
+    {
+        FILE_LOG(logDEBUG) << "upload_state() called with filePath: [" << filePath << "]";
+
+        std::ifstream test(filePath);
+        if (!test.good())
+        {
+            FILE_LOG(logERROR) << "File does not exist: " << filePath;
+            return false;
+        }
+
+		if (std::string preview((std::istreambuf_iterator<char>(test)),
+                        std::istreambuf_iterator<char>());
+			preview.find("DROP DATABASE") != std::string::npos)
+		{
+			FILE_LOG(logERROR) << "Dangerous SQL detected in file: " << filePath;
+			return false;
+		}
+
+        const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+
+        std::string cmd =
+            "mysql -u " + dbConfig.getUser() +
+            " -p" + dbConfig.getPassword() +
+            " -h " + dbConfig.getHost() +
+            " " + dbConfig.getDatabase() +
+            " < \"" + filePath + "\"";
+
+        FILE_LOG(logDEBUG) << "Executing SQL restore command:";
+        FILE_LOG(logDEBUG) << cmd;
+
+        int rc = system(cmd.c_str());
+
+        FILE_LOG(logDEBUG) << "MySQL return code: " << rc;
+
+        if (rc != 0)
+        {
+            FILE_LOG(logERROR) << "MySQL restore failed with code " << rc;
+            return false;
+        }
+
+        FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
+        return true;
+    }
+    catch (const std::ios_base::failure &e)
+	{
+		FILE_LOG(logERROR) << "File I/O error: " << e.what();
+		return false;
+	}
+	catch (const std::bad_alloc &e)
+	{
+		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		return false;
+	}
+}
 } /* namespace tmxctl */
