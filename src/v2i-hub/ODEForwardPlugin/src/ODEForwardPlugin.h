@@ -71,12 +71,19 @@ namespace ODEForwardPlugin
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
 			uint16_t _scheduleFrequency;
-			uint16_t _freqCounter;
 			uint16_t _forwardMSG;
 			int _MAPUDPPort;
 			int _TIMUDPPort;
 			int _BSMUDPPort;
 			int _SPATUDPPort;
+			uint _spatFwdCount = 0;
+			uint _timFwdCount = 0;
+			uint _mapFwdCount = 0;
+			uint _bsmFwdCount = 0;
+			uint _bsmSkipCount= 0;
+			uint _timSkipCount = 0;
+			uint _spatSkipCount = 0;
+			uint _mapSkipCount = 0;
 			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
 			std::mutex _cfgLock;

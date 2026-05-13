@@ -108,21 +108,53 @@ namespace ODEForwardPlugin
 	 * @routeable_message not used
 	 */
 	void ODEForwardPlugin::HandleRealTimePublish([[maybe_unused]] BsmMessage &msg, routeable_message &routeableMsg) {
-		sendUDPMessage(routeableMsg, UDPMessageType::BSM);
+		try {
+			sendUDPMessage(routeableMsg, UDPMessageType::BSM);
+			++_bsmFwdCount;
+			SetStatus<uint>("BSM Forwarded", _bsmFwdCount);
+		} catch (const tmx::TmxException &e) {
+			PLOG(logERROR) << "Failed to forward BSM message: " << e.what();
+			++_bsmSkipCount;
+			SetStatus<uint>("BSM Skipped", _bsmSkipCount);
+		}
 
 	}
 
 	void ODEForwardPlugin::HandleSPaTPublish([[maybe_unused]] SpatMessage &msg, routeable_message &routeableMsg) {
-		sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
+		try {
+			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
+			++_spatFwdCount;
+			SetStatus<uint>("SPAT Forwarded", _spatFwdCount);
+		} catch (const tmx::TmxException &e) {
+			PLOG(logERROR) << "Failed to forward SPAT message: " << e.what();
+			++_spatSkipCount;
+			SetStatus<uint>("SPAT Skipped", _spatSkipCount);
+		}
 	}
 
 	void ODEForwardPlugin::HandleTimPublish([[maybe_unused]] TimMessage &msg, routeable_message &routeableMsg) {
-		sendUDPMessage(routeableMsg, UDPMessageType::TIM);
+		try {
+			sendUDPMessage(routeableMsg, UDPMessageType::TIM);
+			++_timFwdCount;
+			SetStatus<uint>("TIM Forwarded", _timFwdCount);
+		} catch (const tmx::TmxException &e) {
+			PLOG(logERROR) << "Failed to forward TIM message: " << e.what();
+			++_timSkipCount;
+			SetStatus<uint>("TIM Skipped", _timSkipCount);
+		}
 	}
 
 
 	void ODEForwardPlugin::HandleMapPublish([[maybe_unused]] MapDataMessage &msg, routeable_message &routeableMsg) {
-		sendUDPMessage(routeableMsg, UDPMessageType::MAP);
+		try {
+			sendUDPMessage(routeableMsg, UDPMessageType::MAP);
+			++_mapFwdCount;
+			SetStatus<uint>("MAP Forwarded", _mapFwdCount);
+		} catch (const tmx::TmxException &e) {
+			PLOG(logERROR) << "Failed to forward MAP message: " << e.what();
+			++_mapSkipCount;
+			SetStatus<uint>("MAP Skipped", _mapSkipCount);
+		}
 	}
 
 	void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const{
