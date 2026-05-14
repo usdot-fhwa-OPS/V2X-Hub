@@ -141,15 +141,6 @@ int UdpClient::Send(void *buffer, size_t size)
 
 int UdpClient::Send(const std::string& message)
 {
-	//printf("UdpClient.Send: ");
-
-	//printf("%s", _addrInfo->ai_canonname);
-
-	//for (int i=0; i < _addrInfo->ai_addrlen; i++)
-	//	printf("%d", _addrInfo->ai_addr->sa_data[i]);
-
-	//printf("\n");
-
     return sendto(_socket, message.c_str(), message.length(), 0, _addrInfo->ai_addr, _addrInfo->ai_addrlen);
 }
 

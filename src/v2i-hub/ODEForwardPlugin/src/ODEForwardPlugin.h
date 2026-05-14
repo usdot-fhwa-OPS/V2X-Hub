@@ -18,8 +18,7 @@
 #ifndef TMX_PLUGINS_ODEForwardPlugin_H_
 #define TMX_PLUGINS_ODEForwardPlugin_H_
 
-#include "PluginClient.h"
-#include "PluginDataMonitor.h"
+#include <PluginClient.h>
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -37,21 +36,15 @@
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <BasicSafetyMessage.h>
 #include <tmx/messages/auto_message.hpp>
-#include <librdkafka/rdkafkacpp.h>
 #include <tmx/json/cJSON.h>
 #include <environment/EnvUtils.h>
-#include "/usr/local/include/date/date.h"
 #include "UDPMessageForwarder.h"
-#include "CommunicationModeHelper.h"
 
  
 
 
 namespace ODEForwardPlugin
 {
-
-
-	constexpr std::size_t BYTESTOMB = 1048576ULL;
 
 	/**
 	 * This plugin logs the BSM messages received in the following CSV format.
@@ -74,32 +67,25 @@ namespace ODEForwardPlugin
 			void HandleMapPublish(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
 
 		private:
-			std::atomic<uint64_t> _frequency{0};
-			DATA_MONITOR(_frequency);   // Declares the
 
-			void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
-			void sendSpatKafkaMessage(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
-			void sendBsmKafkaMessage(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
 			uint16_t _scheduleFrequency;
-			uint16_t _freqCounter;
 			uint16_t _forwardMSG;
-			std::string _BSMkafkaTopic;
-			std::string _SPaTkafkaTopic;
-			std::string _kafkaBrokerIp;
-			std::string _kafkaBrokerPort;
-			std::string kafkaConnectString;
-			RdKafka::Conf *kafka_conf;
-			RdKafka::Producer *kafka_producer;
 			int _MAPUDPPort;
 			int _TIMUDPPort;
 			int _BSMUDPPort;
 			int _SPATUDPPort;
-			std::string _communicationMode;
+			uint _spatFwdCount = 0;
+			uint _timFwdCount = 0;
+			uint _mapFwdCount = 0;
+			uint _bsmFwdCount = 0;
+			uint _bsmSkipCount= 0;
+			uint _timSkipCount = 0;
+			uint _spatSkipCount = 0;
+			uint _mapSkipCount = 0;
 			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
-			std::shared_ptr<CommunicationModeHelper> _communicationModeHelper;
 			std::mutex _cfgLock;
 
 	};

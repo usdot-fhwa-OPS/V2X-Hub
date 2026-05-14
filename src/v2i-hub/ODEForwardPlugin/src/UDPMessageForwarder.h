@@ -4,6 +4,7 @@
 #include <tmx/TmxException.hpp>
 #include <vector>
 #include <bitset>
+#include <tmx/messages/byte_stream.hpp>
 
 using tmx::utils::UdpClient;
 using tmx::TmxException;

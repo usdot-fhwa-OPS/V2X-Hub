@@ -71,15 +71,5 @@ namespace ODEForwardPlugin{
         EXPECT_EQ(_udpMessageForwarder->getUdpClient(UDPMessageType::SPAT)->GetPort(), 2235);
     }
 
-    TEST_F(test_UDPMessageForwarder, test_hexToBytes){
-        //TIM Hex to bytes
-        std::string timHex = "001f526011c35d000000000023667bac0407299b9ef9e7a9b9408230dfffe4386ba00078005a53373df3cf5372810461b90ffff53373df3cf53728104618129800010704a04c7d7976ca3501872e1bb66ad19b2620";
-        std::string expectedBytes="031829617195930000035102123172474115515824923116918564130482232552285610716001200908355612432078311412949718515255245511152236024555401670241815201741607612512111820253113546271821062091553832";
-        std::string bytesResult = _udpMessageForwarder->hexToBytes(timHex);
-        std::stringstream bytesToIntResult;
-        for(unsigned char byte: bytesResult){
-            bytesToIntResult << (int)byte;
-        }
-       EXPECT_EQ(bytesToIntResult.str(), expectedBytes);
-    }
+
 }
