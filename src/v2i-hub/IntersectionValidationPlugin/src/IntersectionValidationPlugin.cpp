@@ -70,6 +70,7 @@ namespace IntersectionValidation
         {
             PLOG(tmx::utils::logWARNING) << messageType << " interval violation: " << e.what();
 
+            // Calculate interval if there is an exception thrown
             if (lastTimestampMs != 0)
             {
                 intervalMs = currentTimeMs - lastTimestampMs;
