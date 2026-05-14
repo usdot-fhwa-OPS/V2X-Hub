@@ -70,6 +70,11 @@ namespace IntersectionValidation
         {
             PLOG(tmx::utils::logWARNING) << messageType << " interval violation: " << e.what();
 
+            if (lastTimestampMs != 0)
+            {
+                intervalMs = currentTimeMs - lastTimestampMs;
+            }
+
             TmxEventLogMessage eventLogMsg;
             eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
             eventLogMsg.set_description(messageType + EVENT_MAX_THRESHOLD +
@@ -183,8 +188,9 @@ namespace IntersectionValidation
 
         try
         {
+            // Convert SPAT to JSON
             auto spatData = msg.get_j2735_data();
-            auto spatJsonMsg = TmxJ2735Message<SPAT, tmx::JSON>(spatData);
+            auto spatJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(spatData);
             std::string spatJsonStr = spatJsonMsg.to_string();
 
             // Get intersection ID from message
@@ -222,8 +228,9 @@ namespace IntersectionValidation
 
         try
         {
+            // Convert MAP to JSON
             auto mapData = msg.get_j2735_data();
-            auto mapJsonMsg = TmxJ2735Message<MapData, tmx::JSON>(mapData);
+            auto mapJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(mapData);
             std::string mapJsonStr = mapJsonMsg.to_string();
  
             PLOG(logDEBUG) << "MAP JSON: " << mapJsonStr;
