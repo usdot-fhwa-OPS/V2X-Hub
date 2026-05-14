@@ -91,7 +91,12 @@ public:
 	 */
 	TmxJ2735Message(message_type *data = 0):
 		tmx::tmx_message<Format>(),
-		_j2735_data(data, [](message_type *p) { j2735::j2735_destroy<traits_type>(p); } ) { }
+		_j2735_data(data, [](message_type *p) { 
+			// TODO : Temporarily commenting this line out due to heap-use-after-free errors
+			// that occur when using Plugin AddFilter handlers with j2735 messages.
+			// This will likely cause memory leaks, but will prevent the exceptions from occurring until a better solution can be found.
+			// j2735::j2735_destroy<traits_type>(p); 
+		} ) { }
 
 	/**
 	 * Copy constructor
