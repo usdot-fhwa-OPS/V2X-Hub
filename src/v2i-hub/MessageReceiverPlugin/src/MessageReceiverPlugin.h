@@ -47,6 +47,7 @@ public:
 	explicit MessageReceiverPlugin(const std::string &name);
 	~MessageReceiverPlugin() override = default;
 	int Main() override;
+	using tmx::utils::TmxMessageManager::OnMessageReceived;
 	void OnMessageReceived(tmx::routeable_message &msg) override;
 	void getmessageid();
 protected:
