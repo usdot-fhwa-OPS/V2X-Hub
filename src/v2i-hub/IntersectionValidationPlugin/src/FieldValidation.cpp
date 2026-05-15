@@ -44,18 +44,21 @@ namespace IntersectionValidation
 
     static bool schemaHasType(const rapidjson::Value &schema, const char *typeName)
     {
+        // Verify that the schema node is an object and has a "type" member
         if (!schema.IsObject() || !schema.HasMember("type"))
         {
             return false;
         }
 
         const auto &typeVal = schema["type"];
+
+        // Check if the type is an integer
         if (typeVal.IsString())
         {
             return std::string(typeVal.GetString()) == typeName;
         }
 
-        // Handle "type": ["integer", "string"] arrays
+        // Check if the type is an array form 
         if (typeVal.IsArray())
         {
             for (rapidjson::SizeType i = 0; i < typeVal.Size(); ++i)
@@ -72,26 +75,30 @@ namespace IntersectionValidation
 
     static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key)
     {
+        // Schema node must be an object to have properties
         if (!schema.IsObject())
         {
             return nullptr;
         }
 
-        // Direct properties lookup
+        // Directly look at the properites of the current node
+        // eg. {"properties": {"id": {"type": "integer"}}}
         if (schema.HasMember("properties") &&
             schema["properties"].IsObject() && schema["properties"].HasMember(key))
         {
             return &schema["properties"][key];
         }
 
-        // Search inside oneOf / anyOf / allOf
+        // If not found directly, look through the oneOf, anyOf, allOf branches (CHOICE options)
         for (const char *combiner : {"oneOf", "anyOf", "allOf"})
         {
+            // Skip if this combiner doesn't exist or isn't an array
             if (!schema.HasMember(combiner) || !schema[combiner].IsArray())
             {
                 continue;
             }
 
+            // Search each branch recursively to find property since it could be nested within one of the branches
             for (rapidjson::SizeType i = 0; i < schema[combiner].Size(); ++i)
             {
                 const rapidjson::Value *found = getPropertySchema(schema[combiner][i], key);
@@ -107,10 +114,15 @@ namespace IntersectionValidation
 
     static const rapidjson::Value *getItemsSchema(const rapidjson::Value &schema)
     {
+        // Arrays in JSON Schema define their element type under the "items" key
+        // Return a pointer to it so convertNumericStrings can recurse into
+        // each array element with the correct schema context
         if (schema.IsObject() && schema.HasMember("items") && schema["items"].IsObject())
         {
             return &schema["items"];
         }
+
+        // If no "items" defined, array elements have no schema to validate against
         return nullptr;
     }
 
@@ -121,9 +133,11 @@ namespace IntersectionValidation
             return false;
         }
 
+        // Parse the string as an integer
         const char *str = value.GetString();
         char *end = nullptr;
         int64_t num = std::strtoll(str, &end, 10);
+
         if (end == str || *end != '\0')
         {
             return false;
@@ -137,17 +151,21 @@ namespace IntersectionValidation
                                rapidjson::Document::AllocatorType &allocator,
                                const rapidjson::Value &schema)
     {
+        // Check if the the value is a string and if in the schema the field is defined as an integer
         if (value.IsString() && schemaHasType(schema, "integer"))
         {
             tryConvertToInt(value);
         }
+        // If the value is an object, recursively check its properties against the schema
         else if (value.IsObject())
         {
             for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it)
             {
+                // Look up the field's schema definition 
                 const rapidjson::Value *propSchema = getPropertySchema(schema, it->name.GetString());
                 if (propSchema == nullptr)
                 {
+                    // Field is not defined in the schema, skip conversion for this field
                     continue;
                 }
 
@@ -191,6 +209,8 @@ namespace IntersectionValidation
 
         for (auto it = value.MemberBegin(); it != value.MemberEnd();)
         {
+            // If a member's value is an empty string (""), remove it so that the schema
+            // sees it as absent rather than a present but empty value (string vs object)
             if (it->value.IsString() && it->value.GetStringLength() == 0)
             {
                 it = value.EraseMember(it);
