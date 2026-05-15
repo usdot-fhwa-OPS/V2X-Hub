@@ -72,11 +72,36 @@ namespace IntersectionValidation
 
     static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key)
     {
-        if (schema.IsObject() && schema.HasMember("properties") &&
+        if (!schema.IsObject())
+        {
+            return nullptr;
+        }
+
+        // Direct properties lookup
+        if (schema.HasMember("properties") &&
             schema["properties"].IsObject() && schema["properties"].HasMember(key))
         {
             return &schema["properties"][key];
         }
+
+        // Search inside oneOf / anyOf / allOf
+        for (const char *combiner : {"oneOf", "anyOf", "allOf"})
+        {
+            if (!schema.HasMember(combiner) || !schema[combiner].IsArray())
+            {
+                continue;
+            }
+
+            for (rapidjson::SizeType i = 0; i < schema[combiner].Size(); ++i)
+            {
+                const rapidjson::Value *found = getPropertySchema(schema[combiner][i], key);
+                if (found != nullptr)
+                {
+                    return found;
+                }
+            }
+        }
+
         return nullptr;
     }
 
@@ -112,7 +137,11 @@ namespace IntersectionValidation
                                rapidjson::Document::AllocatorType &allocator,
                                const rapidjson::Value &schema)
     {
-        if (value.IsObject())
+        if (value.IsString() && schemaHasType(schema, "integer"))
+        {
+            tryConvertToInt(value);
+        }
+        else if (value.IsObject())
         {
             for (auto it = value.MemberBegin(); it != value.MemberEnd(); ++it)
             {
@@ -145,6 +174,38 @@ namespace IntersectionValidation
         }
     }
 
+    static void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator)
+    {
+        if (!value.IsObject())
+        {
+            return;
+        }
+
+        if (value.IsArray())
+        {
+            for (rapidjson::SizeType i = 0; i < value.Size(); ++i)
+            {
+                removeEmptyStrings(value[i], allocator);
+            }
+        }
+
+        for (auto it = value.MemberBegin(); it != value.MemberEnd();)
+        {
+            if (it->value.IsString() && it->value.GetStringLength() == 0)
+            {
+                it = value.EraseMember(it);
+            }
+            else
+            {
+                if (it->value.IsObject() || it->value.IsArray())
+                {
+                    removeEmptyStrings(it->value, allocator);
+                }
+                ++it;
+            }
+        }
+    }
+
     FieldValidation validateJsonAgainstSchema(const std::string &jsonStr, const std::string &schemaStr)
     {
         FieldValidation result;
@@ -170,6 +231,9 @@ namespace IntersectionValidation
             result.errors.emplace_back("Failed to parse input JSON");
             return result;
         }
+
+        // Remove empty strings
+        removeEmptyStrings(doc, doc.GetAllocator());
 
         // Convert numeric strings to integers
         convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
