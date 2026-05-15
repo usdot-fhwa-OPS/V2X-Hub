@@ -39,37 +39,28 @@
 #include <environment/EnvUtils.h>
 
 
-#define UDP "UDP"
 
-//using namespace Botan; 
 namespace MessageReceiver {
 
 class MessageReceiverPlugin: public tmx::utils::TmxMessageManager {
 public:
-	MessageReceiverPlugin(std::string);
-	virtual ~MessageReceiverPlugin();
-	int Main();
-	void OnMessageReceived(tmx::routeable_message &msg);
+	explicit MessageReceiverPlugin(const std::string &name);
+	~MessageReceiverPlugin() override = default;
+	int Main() override;
+	void OnMessageReceived(tmx::routeable_message &msg) override;
 	void getmessageid();
 protected:
 	void UpdateConfigSettings();
 
 	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnStateChange(IvpPluginState state);
+	void OnConfigChanged(const char *key, const char *value) override;
+	void OnStateChange(IvpPluginState state) override;
 private:
-	tmx::messages::BsmMessage* DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-			   uint32_t longitude, uint32_t elevation, tmx::messages::DecodedBsmMessage &decodedBsm);
-	tmx::messages::SrmMessage* DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-		uint32_t longitude, uint32_t role);
 	std::atomic<bool> cfgChanged { false };
 	std::string ip;
 	unsigned short port = 0;
-
+	tmx::messages::J2735MessageFactory factory;
 	std::atomic<bool> routeDsrc { false };
-	std::atomic<bool> simBSM { true };
-	std::atomic<bool> simSRM { true };
-	std::atomic<bool> simLoc { true };
 	unsigned int verState;
 	std::string url; 
 	std::string baseurl;

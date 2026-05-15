@@ -8,15 +8,7 @@
 #include "MessageReceiverPlugin.h"
 
 
-#define ABBR_BSM 1000
-#define ABBR_SRM 2000
-
 #define IDCHECKLIMIT 60
-#if SAEJ2735_SPEC >= 2024
-typedef Common_Longitude_t Longitude_t;
-typedef Common_Latitude_t Latitude_t;
-typedef Common_Elevation_t Elevation_t;
-#endif
 using namespace std;
 using namespace boost::asio;
 using namespace tmx;
@@ -32,7 +24,7 @@ namespace MessageReceiver {
 	static std::atomic<uint64_t> totalBytes {0};
 	static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
-MessageReceiverPlugin::MessageReceiverPlugin(std::string name): TmxMessageManager(name)
+MessageReceiverPlugin::MessageReceiverPlugin(const std::string &name): TmxMessageManager(name)
 {	
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
@@ -55,276 +47,33 @@ void MessageReceiverPlugin::getmessageid()
 }
 
 
-MessageReceiverPlugin::~MessageReceiverPlugin() { }
 
-template <typename T>
-TmxJ2735EncodedMessage<T> *encode(TmxJ2735EncodedMessage<T> &encMsg, T *msg) {
-	encMsg.clear();
 
-	if (msg)
-		encMsg.initialize(*msg);
-
-	// Clean up the TMX message pointer and thus the J2735 structure pointer
-	delete msg;
-	return &encMsg;
-}
-
-BsmMessage* MessageReceiverPlugin::DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-			   uint32_t longitude, uint32_t elevation, DecodedBsmMessage &decodedBsm)
-{
-	PLOG(logDEBUG4) << "BSM vehicleId: " << vehicleId
-			<< ", heading: " << heading
-			<< ", speed: " << speed
-			<< ", latitude: " << latitude
-			<< ", longitude: " << longitude
-			<< ", elevation: " << elevation<< " \n";
-
-	//send BSM
-
-	// Set the temp ID
-	decodedBsm.set_TemporaryId(vehicleId);
-
-	// Heading
-	decodedBsm.set_Heading((float)(heading / 1000000.0));
-	decodedBsm.set_IsHeadingValid(true);
-
-	// Speed
-	decodedBsm.set_Speed_mps((double)(speed / 1000.0));
-	decodedBsm.set_IsSpeedValid(true);
-
-	// Latitude and Longitude
-	decodedBsm.set_Latitude((double)(latitude / 1000000.0 - 180));
-	decodedBsm.set_Longitude((double)(longitude / 1000000.0 - 180));
-	decodedBsm.set_IsLocationValid(true);
-
-	// Altitude
-	decodedBsm.set_Elevation_m((float)(elevation / 1000.0 - 500));
-	decodedBsm.set_IsElevationValid(true);
-
-	
-
-	BasicSafetyMessage *bsm = (BasicSafetyMessage *)calloc(1, sizeof(BasicSafetyMessage));
-	if (bsm)
-		BsmConverter::ToBasicSafetyMessage(decodedBsm, *bsm);
-	
-	PLOG(logDEBUG4) << " Decoded BSM: " << decodedBsm;
-	// Note that this constructor assumes control of cleaning up the J2735 structure pointer
-	return new BsmMessage(bsm);
-}
-
-SrmMessage* MessageReceiverPlugin::DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-		uint32_t longitude, uint32_t role)
-{
-	PLOG(logDEBUG4) << "SRM vehicleId: " << vehicleId
-			<< ", heading: " << heading
-			<< ", speed: " << speed
-			<< ", latitude: " << latitude
-			<< ", longitude: " << longitude
-			<< ", role: " << role;
-
-	// send SRM
-	size_t s = sizeof(vehicleId);
-	SignalRequestMessage *srm = (SignalRequestMessage *)calloc(1, sizeof(SignalRequestMessage));
-	if (srm) {
-		srm->requestor.id.present = VehicleID_PR_entityID;
-		srm->requestor.id.choice.entityID.size = s;
-		srm->requestor.id.choice.entityID.buf = (uint8_t *)calloc(s, sizeof(uint8_t));
-		if (srm->requestor.id.choice.entityID.buf)
-			memcpy(srm->requestor.id.choice.entityID.buf, &vehicleId, s);
-
-		srm->requestor.type =
-				(struct RequestorType *)calloc(1, sizeof(struct RequestorType));
-		if (srm->requestor.type)
-		{
-			srm->requestor.type->role = (BasicVehicleRole_t)role;
-			srm->requestor.position =
-				(struct RequestorPositionVector *)calloc(1, sizeof(struct RequestorPositionVector));
-			if (srm->requestor.position)
-			{
-				srm->requestor.position->position.lat = (Latitude_t)(10.0 * latitude - 1800000000);
-				srm->requestor.position->position.Long = (Longitude_t)(10.0 * longitude - 1800000000);
-				srm->requestor.position->heading =
-						#if SAEJ2735_SPEC < 2020
-						(DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
-						#else
-						(Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
-						#endif
-				if (srm->requestor.position->heading)
-					#if SAEJ2735_SPEC < 2020
-					*(srm->requestor.position->heading) = (DSRC_Angle_t)(heading / 12500.0);
-					#else
-					*(srm->requestor.position->heading) = (Common_Angle_t)(heading / 12500.0);
-					#endif
-				srm->requestor.position->speed =
-						(TransmissionAndSpeed *)calloc(1, sizeof(TransmissionAndSpeed));
-				if (srm->requestor.position->speed)
-				{
-					srm->requestor.position->speed->transmisson = TransmissionState_unavailable;
-					srm->requestor.position->speed->speed = (Velocity_t)(speed / 20.0);
-				}
-			}
-		}
-	}
-
-	// Note that this constructor assumes control of cleaning up the J2735 structure pointer
-	return new SrmMessage(srm);
-}
 
 void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 {
-	routeable_message *sendMsg = &msg;
 
-	DecodedBsmMessage decodedBsm;
-	BsmEncodedMessage encodedBsm;
-	SrmEncodedMessage encodedSrm;
+	PLOG(logDEBUG1) << "Received message " << msg.get_payload_str();
+	tmx::byte_stream payload = msg.get_payload_bytes();
 
-	int msgPSID = api::msgPSID::None_PSID;
-
-	if (msg.get_type() == "Unknown" && msg.get_subtype() == "Unknown")
-	{
-		if (msg.get_encoding() == api::ENCODING_JSON_STRING)
-		{
-			// Check to see if the payload is a routable message
-
-			message payloadMsg = msg.get_payload<message>();
-			if (payloadMsg.get_untyped("header.type", "Unknown") != "Unknown")
-			{
-				msg.clear();
-				msg.set_contents(payloadMsg.get_container());
-				msg.reinit();
-			}
-		}
-		else if (msg.get_encoding() == api::ENCODING_BYTEARRAY_STRING)
-		{
-			try
-			{
-				// Check for an abbreviated message
-				byte_stream bytesFull = msg.get_payload_bytes();
-				byte_stream bytes; 
-				if (bytes.size() > 8)
-				{
-					PLOG(logDEBUG) << "Looking for abbreviated message in bytes " << bytes;
-					uint16_t msgType;
-					uint8_t msgVersion;
-					uint16_t id;
-					uint16_t dataLength;
-					uint32_t vehID, heaDing, spEed, laTi, loNg, eleVate; // stores for data 
-
-					std::vector<unsigned char>::iterator cnt = bytesFull.begin();
-
-					while(cnt != bytesFull.end())
-					{
-							if(*cnt == 0x00 && (*(cnt+1) == 0x14 || *(cnt+1) == 0x12 || *(cnt+1) == 0x13))
-							{
-									break;
-							}
-							cnt++;
-					}
-
-					while(cnt != bytesFull.end())
-					{
-							bytes.push_back(*cnt);
-							cnt++;
-
-					}
-
-
-					msgType = ntohs(*((uint16_t*)bytes.data()));
-					msgVersion = ntohs(*((uint16_t*)&(bytes.data()[2])));
-					id = ntohs(*((uint16_t*)&(bytes.data()[4])));
-					dataLength = ntohs(*((uint16_t*)&(bytes.data()[6])));
-
-
-					PLOG(logDEBUG1) << " Got message,  msgType: " << msgType
-							<< ", msgVersion: " << msgVersion
-							<< ", id: " << id
-							<< ", dataLength: " << dataLength;
-
-					if (dataLength > 0)
-					{
-						switch (msgType)
-						{
-						case ABBR_BSM:
-							if (bytes.size() >= 32 && dataLength >= 24)
-							{
-								if (!simBSM && !simLoc) return;
-
-								//extract data
-								//vehicleId(4), heading*M(4), speed*K(4), (latitude+180)*M(4), (longitude+180)*M(4), elevation (4)
-								BsmMessage *bsm = DecodeBsm(ntohl(*((uint32_t*)&(bytes.data()[8]))),
-										ntohl(*((uint32_t*)&(bytes.data()[12]))),
-										ntohl(*((uint32_t*)&(bytes.data()[16]))),
-										ntohl(*((uint32_t*)&(bytes.data()[20]))),
-										ntohl(*((uint32_t*)&(bytes.data()[24]))),
-										ntohl(*((uint32_t*)&(bytes.data()[28]))),
-										decodedBsm);
-
-								if (simLoc) {
-									LocationMessage loc(::to_string(decodedBsm.get_TemporaryId()),
-													    location::SignalQualityTypes::SimulationMode,
-														"", ::to_string(msg.get_timestamp()),
-														decodedBsm.get_Latitude(), decodedBsm.get_Longitude(),
-														location::FixTypes::ThreeD, 0, 0.0,
-														decodedBsm.get_Speed_mps(), decodedBsm.get_Heading());
-									loc.set_Altitude(decodedBsm.get_Elevation_m());
-
-									routeable_message rMsg;
-									rMsg.initialize(loc);
-
-									this->IncomingMessage(rMsg, 0, 0, msg.get_timestamp());
-								}
-
-								sendMsg = encode(encodedBsm, bsm);
-								msgPSID = api::msgPSID::basicSafetyMessage_PSID;
-								if (!simBSM) return;
-							}
-							break;
-						case ABBR_SRM:
-							if (bytes.size() >= 32 && dataLength >= 24)
-							{
-								if (!simSRM) return;
-
-								//extract data
-								//vehicleId(4), heading*M(4), speed*K(4), (latitude+180)*M(4), (longitude+180)*M(4), role (4)
-								SrmMessage *srm = DecodeSrm(ntohl(*((uint32_t*)&(bytes.data()[8]))),
-										ntohl(*((uint32_t*)&(bytes.data()[12]))),
-										ntohl(*((uint32_t*)&(bytes.data()[16]))),
-										ntohl(*((uint32_t*)&(bytes.data()[20]))),
-										ntohl(*((uint32_t*)&(bytes.data()[24]))),
-										ntohl(*((uint32_t*)&(bytes.data()[28]))));
-								sendMsg = encode(encodedSrm, srm);
-								msgPSID = api::msgPSID::signalRequestMessage_PSID;
-							}
-							break;
-						default:
-							{
-								PLOG(logDEBUG) << "Unknown byte format.  Dropping message";
-							}
-							return;
-						}
-					}
-				}
-			}
-			catch (exception &ex)
-			{
-				this->HandleException(ex, false);
-				return;
-			}
-		}
-	}	
-
-
-	// Make sure the timestamp matches the incoming source message
-
-	sendMsg->set_timestamp(msg.get_timestamp());
-
+	 tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
+            msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
+	// Decode Encode J2735 Message
+	auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
+	// Convert J2735 data to TmxJ2735Message for JSON serialization
+	auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
+	// Serial J2735 message to JSON
+	std::string jsonPayloadStr = j2735Message.to_string();
+	// Log JSON Message
+	PLOG(logDEBUG1) << "Decoded J2735 Message: " << jsonPayloadStr;
+ 	// std::unique_ptr<tmx::messages::TmxJ2735EncodedMessageBase> msgPtr(factory.NewMessage(payload));
 	// Keep a count of each type of message received
-	string name(sendMsg->get_subtype());
-	if (!IsJ2735Message(*sendMsg))
+	string name(msg.get_subtype());
+	if (!IsJ2735Message(msg))
 	{
 		// If not a J2735 message, save the type also
 		name.insert(0, "/");
-		name.insert(0, sendMsg->get_type());
+		name.insert(0, msg.get_type());
 	}
 
 	if (!totalCount.count(name))
@@ -342,15 +91,14 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 
 		if (routeDsrc)
 		{	
-			sendMsg->set_flags(IvpMsgFlags_RouteDSRC);
-			sendMsg->addDsrcMetadata(msgPSID);
+			msg.set_flags(IvpMsgFlags_RouteDSRC);
 		}
 		else
 		{
 			
-			sendMsg->set_flags(IvpMsgFlags_None);
+			msg.set_flags(IvpMsgFlags_None);
 		}
-		this->OutgoingMessage(*sendMsg);
+		this->OutgoingMessage(msg);
 	}
 }
 
@@ -360,9 +108,6 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 
 	// Atomic flags
 	GetConfigValue("RouteJ2735", routeDsrc);
-	GetConfigValue("EnableSimulatedBSM", simBSM);
-	GetConfigValue("EnableSimulatedSRM", simSRM);
-	GetConfigValue("EnableSimulatedLocation", simLoc);
 	GetConfigValue<unsigned int>("EnableVerification", verState);
 	GetConfigValue<string>("HSMurl",baseurl);
 	GetConfigValue<string>("messageid",messageidstr);
@@ -403,7 +148,6 @@ int MessageReceiverPlugin::Main()
 	std::unique_ptr<tmx::utils::UdpServer> server;
 
 	byte_stream extractedpayload(4000);
-	int mlen=0;
 
 	while (_plugin->state != IvpPluginState_error)
 	{
@@ -442,7 +186,6 @@ int MessageReceiverPlugin::Main()
 
     				stringstream ss;
     				ss << std::hex << std::setfill('0');
-					uint16_t it=0; 
 
     				for (uint16_t it=0; it <len; it++) {
         				ss << std::setw(2) << static_cast<unsigned>(incoming[it]);
