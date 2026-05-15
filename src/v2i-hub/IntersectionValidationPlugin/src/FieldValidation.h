@@ -56,6 +56,8 @@ namespace IntersectionValidation
 
     /**
      * @brief Get the schema node for a property key, or nullptr if not found.
+     *        First checks the direct "properties" object, If not found, then 
+     *        search through the oneOf, anyOf, allOf branches recursively.
      * @param schema The JSON Schema node representing the parent object.
      * @param key The property key to look up.
      * @return Pointer to the schema node for the property, or nullptr if not found.
@@ -83,6 +85,17 @@ namespace IntersectionValidation
      * @return FieldValidation containing validity and list of errors.
      */
     FieldValidation validateJsonAgainstSchema(const std::string &jsonStr, const std::string &schemaStr);
+
+    /**
+     * @brief Recursively remove empty-string values from a JSON document.
+     *
+     *        Checks to see if a value is an empty string, if so it removes it
+     *        so that during validation, the schema treats it as an empty field rather than a present but empty string value.
+     * 
+     * @param value The JSON value to process in-place.
+     * @param allocator The document allocator.
+     */
+    static void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator);
 
     /**
      * @brief Validate a JSON string against a JSON Schema.
