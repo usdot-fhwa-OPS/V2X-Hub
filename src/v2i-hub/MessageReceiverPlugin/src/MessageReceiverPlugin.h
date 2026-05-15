@@ -59,7 +59,6 @@ private:
 	std::atomic<bool> cfgChanged { false };
 	std::string ip;
 	unsigned short port = 0;
-	tmx::messages::J2735MessageFactory factory;
 	std::atomic<bool> routeDsrc { false };
 	unsigned int verState;
 	std::string url; 
