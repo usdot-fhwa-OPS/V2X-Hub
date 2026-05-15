@@ -52,21 +52,6 @@ void MessageReceiverPlugin::getmessageid()
 
 void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 {
-
-	PLOG(logDEBUG1) << "Received message " << msg.get_payload_str();
-	tmx::byte_stream payload = msg.get_payload_bytes();
-
-	 tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage> rMsg = 
-            msg.get_payload<tmx::messages::TmxJ2735EncodedMessage<tmx::messages::MessageFrameMessage>>();
-	// Decode Encode J2735 Message
-	auto j2735Data = rMsg.decode_j2735_message().get_j2735_data();
-	// Convert J2735 data to TmxJ2735Message for JSON serialization
-	auto j2735Message = tmx::messages::TmxJ2735Message<MessageFrame_t, tmx::JSON>(j2735Data);
-	// Serial J2735 message to JSON
-	std::string jsonPayloadStr = j2735Message.to_string();
-	// Log JSON Message
-	PLOG(logDEBUG1) << "Decoded J2735 Message: " << jsonPayloadStr;
- 	// std::unique_ptr<tmx::messages::TmxJ2735EncodedMessageBase> msgPtr(factory.NewMessage(payload));
 	// Keep a count of each type of message received
 	string name(msg.get_subtype());
 	if (!IsJ2735Message(msg))
