@@ -73,6 +73,28 @@ namespace IntersectionValidation
         return false;
     }
 
+    static bool tryConvertToBool(rapidjson::Value &value)
+    {
+        if (!value.IsString())
+        {
+            return false;
+        }
+
+        const char *str = value.GetString();
+        if (std::strcmp(str, "true") == 0)
+        {
+            value.SetBool(true);
+            return true;
+        }
+        if (std::strcmp(str, "false") == 0)
+        {
+            value.SetBool(false);
+            return true;
+        }
+
+        return false;
+    }
+
     static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key)
     {
         // Schema node must be an object to have properties
@@ -172,6 +194,10 @@ namespace IntersectionValidation
                 if (schemaHasType(*propSchema, "integer"))
                 {
                     tryConvertToInt(it->value);
+                }
+                else if (schemaHasType(*propSchema, "boolean"))
+                {
+                    tryConvertToBool(it->value);
                 }
                 else
                 {
