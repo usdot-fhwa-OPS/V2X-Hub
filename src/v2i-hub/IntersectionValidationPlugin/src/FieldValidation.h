@@ -77,6 +77,13 @@ namespace IntersectionValidation
      * @return True if the value was successfully converted to an integer, false otherwise.
      */
     static bool tryConvertToInt(rapidjson::Value &value);
+
+    /**
+     * @brief Attempt to convert a RapidJSON value from a string to a boolean. Returns true if conversion was successful.
+     * @param value The RapidJSON value to convert. Must be a string "true" or "false".
+     * @return True if the value was successfully converted to a boolean, false otherwise.
+     */
+    static bool tryConvertToBool(rapidjson::Value &value);
     
     /**
      * @brief Validate a JSON string against a JSON Schema string using RapidJSON SchemaValidator.
