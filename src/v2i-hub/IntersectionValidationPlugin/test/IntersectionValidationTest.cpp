@@ -485,14 +485,14 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 73,
                   "queueLength": 7134,
                   "availableStorageLength": 7803,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 34,
                   "queueLength": 2359,
                   "availableStorageLength": 6137,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -548,7 +548,7 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 33,
                   "queueLength": 7556,
                   "availableStorageLength": 2283,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -712,7 +712,7 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 50,
                   "queueLength": 2545,
                   "availableStorageLength": 915,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -723,28 +723,28 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
               "connectionID": 209,
               "queueLength": 6043,
               "availableStorageLength": 7308,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             },
             {
               "connectionID": 30,
               "queueLength": 6426,
               "availableStorageLength": 5206,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             },
             {
               "connectionID": 101,
               "queueLength": 5339,
               "availableStorageLength": 1523,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             },
             {
               "connectionID": 96,
               "queueLength": 8514,
               "availableStorageLength": 5733,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             }
           ],
@@ -957,14 +957,14 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 156,
                   "queueLength": 3267,
                   "availableStorageLength": 6831,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 240,
                   "queueLength": 8431,
                   "availableStorageLength": 5769,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -1088,21 +1088,21 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 32,
                   "queueLength": 4269,
                   "availableStorageLength": 6191,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 149,
                   "queueLength": 5573,
                   "availableStorageLength": 4699,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 67,
                   "queueLength": 7712,
                   "availableStorageLength": 6626,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -1253,35 +1253,35 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
                   "connectionID": 103,
                   "queueLength": 2848,
                   "availableStorageLength": 734,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 108,
                   "queueLength": 2987,
                   "availableStorageLength": 8172,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 92,
                   "queueLength": 6983,
                   "availableStorageLength": 695,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 104,
                   "queueLength": 8319,
                   "availableStorageLength": 4924,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 },
                 {
                   "connectionID": 190,
                   "queueLength": 8114,
                   "availableStorageLength": 3535,
-                  "waitOnStop": true,
+                  "waitOnStop": "true",
                   "pedBicycleDetect": true
                 }
               ]
@@ -1292,21 +1292,21 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
               "connectionID": 186,
               "queueLength": 3124,
               "availableStorageLength": 3060,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             },
             {
               "connectionID": 165,
               "queueLength": 2489,
               "availableStorageLength": 3993,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             },
             {
               "connectionID": 206,
               "queueLength": 9306,
               "availableStorageLength": 5304,
-              "waitOnStop": true,
+              "waitOnStop": "true",
               "pedBicycleDetect": true
             }
           ],
@@ -1423,6 +1423,101 @@ TEST(SpatFieldValidationTest, MissingStatusFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
+}
+
+TEST(ConvertNumericStringsTest, ConvertsBooleanStringTrue) {
+    std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
+    std::string jsonStr = R"({"active": "true"})";
+
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+
+    EXPECT_TRUE(doc["active"].IsBool());
+    EXPECT_TRUE(doc["active"].GetBool());
+}
+
+TEST(ConvertNumericStringsTest, ConvertsBooleanStringFalse) {
+    std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
+    std::string jsonStr = R"({"active": "false"})";
+
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+
+    EXPECT_TRUE(doc["active"].IsBool());
+    EXPECT_FALSE(doc["active"].GetBool());
+}
+
+TEST(ConvertNumericStringsTest, LeavesBooleanWhenSchemaExpectsString) {
+    std::string schemaStr = R"({"type": "object", "properties": {"flag": {"type": "string"}}})";
+    std::string jsonStr = R"({"flag": "true"})";
+
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+
+    EXPECT_TRUE(doc["flag"].IsString());
+    EXPECT_STREQ("true", doc["flag"].GetString());
+}
+
+TEST(ConvertNumericStringsTest, LeavesInvalidBooleanStringUnchanged) {
+    std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
+    std::string jsonStr = R"({"active": "yes"})";
+
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+
+    EXPECT_TRUE(doc["active"].IsString());
+    EXPECT_STREQ("yes", doc["active"].GetString());
+}
+
+TEST(ConvertNumericStringsTest, ConvertsBooleanInArray) {
+    std::string schemaStr = R"({
+        "type": "object",
+        "properties": {
+            "items": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {"type": "boolean"}
+                    }
+                }
+            }
+        }
+    })";
+    std::string jsonStr = R"({"items": [{"enabled": "true"}, {"enabled": "false"}]})";
+
+    rapidjson::Document schemaDoc;
+    schemaDoc.Parse(schemaStr.c_str());
+
+    rapidjson::Document doc;
+    doc.Parse(jsonStr.c_str());
+
+    convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
+
+    EXPECT_TRUE(doc["items"][0]["enabled"].IsBool());
+    EXPECT_TRUE(doc["items"][0]["enabled"].GetBool());
+    EXPECT_TRUE(doc["items"][1]["enabled"].IsBool());
+    EXPECT_FALSE(doc["items"][1]["enabled"].GetBool());
 }
  
 // MAP field validation
