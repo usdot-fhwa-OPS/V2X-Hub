@@ -178,6 +178,11 @@ namespace IntersectionValidation
         {
             tryConvertToInt(value);
         }
+        // Check if the the value is a string and if in the schema the field is defined as an boolean
+        else if (value.IsString() && schemaHasType(schema, "boolean"))
+        {
+            tryConvertToBool(value);
+        }
         // If the value is an object, recursively check its properties against the schema
         else if (value.IsObject())
         {
