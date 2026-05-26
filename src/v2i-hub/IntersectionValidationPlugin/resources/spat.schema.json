@@ -196,7 +196,10 @@
                                   }
                                 },
                                 "required": [
-                                  "minEndTime"
+                                  "startTime",
+                                  "minEndTime",
+                                  "maxEndTime",
+                                  "nextTime"
                                 ]
                               },
                               "speeds": {
@@ -347,7 +350,8 @@
                               }
                             },
                             "required": [
-                              "eventState"
+                              "eventState",
+                              "timing"
                             ]
                           },
                           "minItems": 1,
@@ -1213,7 +1217,9 @@
                   "id",
                   "revision",
                   "status",
-                  "states"
+                  "timeStamp",
+                  "states",
+                  "roadAuthorityID"
                 ]
               },
               "minItems": 1,
@@ -1236,6 +1242,7 @@
             }
           },
           "required": [
+            "timeStamp",
             "intersections"
           ]
         }
