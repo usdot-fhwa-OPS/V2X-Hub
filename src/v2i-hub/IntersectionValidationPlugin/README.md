@@ -12,7 +12,7 @@ A list of plugins related to the Intersection Validation Plugin.
 
 There are no unique configuration parameters for this plugin, although the log level can be set to "Warning" to view any message interval violations, and "Debug" to view the decoded MAP and SPaT messages in a JSON format that undergo message validation. The log level can be set to "Error" to view any errors from the message validation and where in the message the violation exists. 
 
-The JSON schemas, which detail the proper structure and required fields in a MAP and SPaT message, for message validation exist under the resources directory. Both the MAP and SPaT schemas are custom and include additional required fields specified by the CTI 4501 standard, on top of the required fields specified by the J2735 standard. For SPaT messages, those additional fields include:
+The JSON schemas, which detail the proper structure and required fields in a MAP and SPaT message, for message validation exist under the `resources/` directory. Both the MAP and SPaT schemas are custom and include additional required fields specified by the CTI 4501 standard, on top of the required fields specified by the J2735 standard. For SPaT messages, those additional fields include:
 
 * TimeStamp
 
