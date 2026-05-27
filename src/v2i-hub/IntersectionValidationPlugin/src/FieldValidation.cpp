@@ -19,6 +19,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <cstring>
 
 
 namespace IntersectionValidation
@@ -68,6 +69,28 @@ namespace IntersectionValidation
                     return true;
                 }
             }
+        }
+
+        return false;
+    }
+
+    static bool tryConvertToBool(rapidjson::Value &value)
+    {
+        if (!value.IsString())
+        {
+            return false;
+        }
+
+        const char *str = value.GetString();
+        if (std::strcmp(str, "true") == 0)
+        {
+            value.SetBool(true);
+            return true;
+        }
+        if (std::strcmp(str, "false") == 0)
+        {
+            value.SetBool(false);
+            return true;
         }
 
         return false;
@@ -156,6 +179,11 @@ namespace IntersectionValidation
         {
             tryConvertToInt(value);
         }
+        // Check if the the value is a string and if in the schema the field is defined as an boolean
+        else if (value.IsString() && schemaHasType(schema, "boolean"))
+        {
+            tryConvertToBool(value);
+        }
         // If the value is an object, recursively check its properties against the schema
         else if (value.IsObject())
         {
@@ -172,6 +200,10 @@ namespace IntersectionValidation
                 if (schemaHasType(*propSchema, "integer"))
                 {
                     tryConvertToInt(it->value);
+                }
+                else if (schemaHasType(*propSchema, "boolean"))
+                {
+                    tryConvertToBool(it->value);
                 }
                 else
                 {

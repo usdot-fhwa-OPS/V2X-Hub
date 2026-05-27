@@ -1,6 +1,6 @@
 {
   "name": "IntersectionValidationPlugin",
-  "description": "Intersection Validation plugin for validating the intersection data received from the MAP SPAT TIM messages.",
+  "description": "Intersection Validation plugin for validating the intersection data received from the MAP SPAT messages.",
   "version": "@PROJECT_VERSION@",
   "exeLocation": "/bin/IntersectionValidationPlugin",
   "coreIpAddr": "127.0.0.1",
@@ -15,11 +15,6 @@
       "type": "J2735",
       "subtype": "MAP-P",
       "description": "Full geometric layout of the intersection."
-    },
-    {
-      "type": "J2735",
-      "subtype": "TIM",
-      "description": "Travelor Information Message indicating the active Work Zone information."
     }
   ],
   "configuration":[
