@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this except in compliance with the License. You may obtain a copy of
- * the License at 
+ * the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -22,192 +22,212 @@
 #include "IntersectionValidationPlugin.h"
 #include "MessageIntervalValidator.h"
 #include "FieldValidation.h"
- 
+
 using namespace tmx::messages;
 using namespace IntersectionValidation;
- 
-namespace {
 
-const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
-const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
+namespace
+{
 
- 
-TEST(MessageTypeTest, SpatMessageCanBeInstantiated) {
+  const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
+  const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
+
+  TEST(MessageTypeTest, SpatMessageCanBeInstantiated)
+  {
     SpatMessage msg;
     SUCCEED();
-}
- 
-TEST(MessageTypeTest, MapDataMessageCanBeInstantiated) {
+  }
+
+  TEST(MessageTypeTest, MapDataMessageCanBeInstantiated)
+  {
     MapDataMessage msg;
     SUCCEED();
-}
+  }
 
-// Frequency Validation Tests
- 
-TEST(FrequencyValidationTest, InitialMessageIntervalIsZero) {
+  // Frequency Validation Tests
+
+  TEST(FrequencyValidationTest, InitialMessageIntervalIsZero)
+  {
     auto result = calculateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS);
     EXPECT_EQ(0u, result);
-}
+  }
 
-TEST(FrequencyValidationTest, SpatIntervalWithinThreshold) {
+  TEST(FrequencyValidationTest, SpatIntervalWithinThreshold)
+  {
     auto result = calculateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_THRESHOLD_MS);
     EXPECT_EQ(100u, result);
-}
- 
-TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold) {
+  }
+
+  TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold)
+  {
     EXPECT_THROW(
         calculateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
-}
+  }
 
-TEST(FrequencyValidationTest, SpatIntervalCurrentTimestampEarlierThanLastTimestamp) {
+  TEST(FrequencyValidationTest, SpatIntervalCurrentTimestampEarlierThanLastTimestamp)
+  {
     EXPECT_THROW(
         calculateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
-}
- 
-TEST(FrequencyValidationTest, MapIntervalWithinThreshold) {
+  }
+
+  TEST(FrequencyValidationTest, MapIntervalWithinThreshold)
+  {
     auto result = calculateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_THRESHOLD_MS);
     EXPECT_EQ(50u, result);
-}
- 
-TEST(FrequencyValidationTest, MapIntervalExceedsThreshold) {
+  }
+
+  TEST(FrequencyValidationTest, MapIntervalExceedsThreshold)
+  {
     EXPECT_THROW(
         calculateMessageInterval(1000, 1101, MAP_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
-}
+  }
 
-TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestamp) {
+  TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestamp)
+  {
     EXPECT_THROW(
         calculateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_THRESHOLD_MS),
         tmx::TmxException);
-}
+  }
 
-// SPaT Field Validation Tests
+  // SPaT Field Validation Tests
 
-TEST(FileLoadingTest, LoadExistingFile) {
+  TEST(FileLoadingTest, LoadExistingFile)
+  {
     std::string path = "/tmp/test_schema.json";
     std::ofstream out(path);
     out << R"({"type": "object"})";
     out.close();
- 
+
     std::string contents = loadFileContents(path);
     EXPECT_EQ(R"({"type": "object"})", contents);
     std::remove(path.c_str());
-}
- 
-TEST(FileLoadingTest, LoadNonExistentFileThrows) {
-    EXPECT_THROW(loadFileContents("/tmp/does_not_exist.json"), std::runtime_error);
-}
+  }
 
-TEST(SchemaValidationTest, InvalidJsonFails) {
+  TEST(FileLoadingTest, LoadNonExistentFileThrows)
+  {
+    EXPECT_THROW(loadFileContents("/tmp/does_not_exist.json"), std::runtime_error);
+  }
+
+  TEST(SchemaValidationTest, InvalidJsonFails)
+  {
     std::string schema = R"({"type": "object", "required": ["name"]})";
     auto result = validateJsonAgainstSchema("not json", schema);
     EXPECT_FALSE(result.valid);
     EXPECT_EQ("Failed to parse input JSON", result.errors[0]);
-}
- 
-TEST(SchemaValidationTest, InvalidSchemaFails) {
+  }
+
+  TEST(SchemaValidationTest, InvalidSchemaFails)
+  {
     auto result = validateJsonAgainstSchema("{}", "not a schema");
     EXPECT_FALSE(result.valid);
     EXPECT_EQ("Failed to parse JSON schema", result.errors[0]);
-}
- 
-TEST(SchemaValidationTest, NonExistentSchemaFileFails) {
+  }
+
+  TEST(SchemaValidationTest, NonExistentSchemaFileFails)
+  {
     auto result = validateJsonAgainstSchemaFile(R"({})", "/tmp/missing_schema.json");
     EXPECT_FALSE(result.valid);
     EXPECT_EQ("Failed to open file: /tmp/missing_schema.json", result.errors[0]);
-}
+  }
 
-TEST(ConvertNumericStringsTest, ConvertsStringToIntWhenSchemaExpectsInteger) {
+  TEST(ConvertNumericStringsTest, ConvertsStringToIntWhenSchemaExpectsInteger)
+  {
     // Schema declares "id" as integer
     std::string schemaStr = R"({"type": "object", "properties": {"id": {"type": "integer"}}})";
     std::string jsonStr = R"({"id": "42"})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["id"].IsInt64());
     EXPECT_EQ(42, doc["id"].GetInt64());
-}
- 
-TEST(ConvertNumericStringsTest, LeavesStringWhenSchemaExpectsString) {
+  }
+
+  TEST(ConvertNumericStringsTest, LeavesStringWhenSchemaExpectsString)
+  {
     // Schema declares "status" as string (like BIT STRING hex fields)
     std::string schemaStr = R"({"type": "object", "properties": {"status": {"type": "string"}}})";
     std::string jsonStr = R"({"status": "0000"})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["status"].IsString());
     EXPECT_STREQ("0000", doc["status"].GetString());
-}
- 
-TEST(ConvertNumericStringsTest, LeavesNonNumericStringUnchanged) {
+  }
+
+  TEST(ConvertNumericStringsTest, LeavesNonNumericStringUnchanged)
+  {
     // Schema declares "name" as integer but value is non-numeric — can't convert
     std::string schemaStr = R"({"type": "object", "properties": {"name": {"type": "integer"}}})";
     std::string jsonStr = R"({"name": "hello"})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     // Should remain string since "hello" is not parseable as int
     EXPECT_TRUE(doc["name"].IsString());
     EXPECT_STREQ("hello", doc["name"].GetString());
-}
- 
-TEST(ConvertNumericStringsTest, HandlesSchemaTypeArray) {
+  }
+
+  TEST(ConvertNumericStringsTest, HandlesSchemaTypeArray)
+  {
     // Schema declares type as array: ["integer", "string"]
     std::string schemaStr = R"({"type": "object", "properties": {"value": {"type": ["integer", "string"]}}})";
     std::string jsonStr = R"({"value": "99"})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["value"].IsInt64());
     EXPECT_EQ(99, doc["value"].GetInt64());
-}
- 
-TEST(ConvertNumericStringsTest, SkipsFieldNotInSchema) {
+  }
+
+  TEST(ConvertNumericStringsTest, SkipsFieldNotInSchema)
+  {
     // "extra" is not in schema properties — should be left alone
     std::string schemaStr = R"({"type": "object", "properties": {"id": {"type": "integer"}}})";
     std::string jsonStr = R"({"id": "10", "extra": "999"})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["id"].IsInt64());
     EXPECT_EQ(10, doc["id"].GetInt64());
     EXPECT_TRUE(doc["extra"].IsString());
     EXPECT_STREQ("999", doc["extra"].GetString());
-}
- 
-TEST(ConvertNumericStringsTest, RecursesIntoNestedObjects) {
+  }
+
+  TEST(ConvertNumericStringsTest, RecursesIntoNestedObjects)
+  {
     std::string schemaStr = R"({
         "type": "object",
         "properties": {
@@ -220,20 +240,21 @@ TEST(ConvertNumericStringsTest, RecursesIntoNestedObjects) {
         }
     })";
     std::string jsonStr = R"({"inner": {"count": "7"}})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["inner"]["count"].IsInt64());
     EXPECT_EQ(7, doc["inner"]["count"].GetInt64());
-}
- 
-TEST(ConvertNumericStringsTest, RecursesIntoArrayItems) {
+  }
+
+  TEST(ConvertNumericStringsTest, RecursesIntoArrayItems)
+  {
     std::string schemaStr = R"({
         "type": "object",
         "properties": {
@@ -249,23 +270,23 @@ TEST(ConvertNumericStringsTest, RecursesIntoArrayItems) {
         }
     })";
     std::string jsonStr = R"({"items": [{"id": "1"}, {"id": "2"}]})";
- 
+
     rapidjson::Document schemaDoc;
     schemaDoc.Parse(schemaStr.c_str());
- 
+
     rapidjson::Document doc;
     doc.Parse(jsonStr.c_str());
- 
+
     convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
- 
+
     EXPECT_TRUE(doc["items"][0]["id"].IsInt64());
     EXPECT_EQ(1, doc["items"][0]["id"].GetInt64());
     EXPECT_TRUE(doc["items"][1]["id"].IsInt64());
     EXPECT_EQ(2, doc["items"][1]["id"].GetInt64());
-}
+  }
 
-TEST(SpatFieldValidationTest, ValidSpatPasses)
-{
+  TEST(SpatFieldValidationTest, ValidSpatPasses)
+  {
     std::string json = R"({
   "messageId": 19,
   "value": {
@@ -1320,9 +1341,10 @@ TEST(SpatFieldValidationTest, ValidSpatPasses)
 })";
     auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
-}
+  }
 
-TEST(SpatFieldValidationTest, MissingMessageIdFails) {
+  TEST(SpatFieldValidationTest, MissingMessageIdFails)
+  {
     std::string json = R"({
         "value": {
             "SPAT": {
@@ -1343,9 +1365,10 @@ TEST(SpatFieldValidationTest, MissingMessageIdFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
- 
-TEST(SpatFieldValidationTest, MissingIntersectionsFails) {
+  }
+
+  TEST(SpatFieldValidationTest, MissingIntersectionsFails)
+  {
     std::string json = R"({
         "messageId": 19,
         "value": {
@@ -1354,78 +1377,82 @@ TEST(SpatFieldValidationTest, MissingIntersectionsFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
- 
-TEST(SpatFieldValidationTest, MissingIntersectionIdFails) {
-    std::string json = R"({
-        "messageId": 19,
-        "value": {
-            "SPAT": {
-                "intersections": [{
-                    "revision": 0,
-                    "status": "0000",
-                    "states": [{
-                        "signalGroup": 2,
-                        "state-time-speed": [{
-                            "eventState": "stop-And-Remain",
-                            "timing": {"minEndTime": 22120}
-                        }]
-                    }]
-                }]
-            }
-        }
-    })";
-    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
-    EXPECT_FALSE(result.valid);
-}
- 
-TEST(SpatFieldValidationTest, MissingRevisionFails) {
-    std::string json = R"({
-        "messageId": 19,
-        "value": {
-            "SPAT": {
-                "intersections": [{
-                    "id": {"id": 12111},
-                    "status": "0000",
-                    "states": [{
-                        "signalGroup": 2,
-                        "state-time-speed": [{
-                            "eventState": "stop-And-Remain",
-                            "timing": {"minEndTime": 22120}
-                        }]
-                    }]
-                }]
-            }
-        }
-    })";
-    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
-    EXPECT_FALSE(result.valid);
-}
- 
-TEST(SpatFieldValidationTest, MissingStatusFails) {
-    std::string json = R"({
-        "messageId": 19,
-        "value": {
-            "SPAT": {
-                "intersections": [{
-                    "id": {"id": 12111},
-                    "revision": 0,
-                    "states": [{
-                        "signalGroup": 2,
-                        "state-time-speed": [{
-                            "eventState": "stop-And-Remain",
-                            "timing": {"minEndTime": 22120}
-                        }]
-                    }]
-                }]
-            }
-        }
-    })";
-    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
-    EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(ConvertNumericStringsTest, ConvertsBooleanStringTrue) {
+  TEST(SpatFieldValidationTest, MissingIntersectionIdFails)
+  {
+    std::string json = R"({
+        "messageId": 19,
+        "value": {
+            "SPAT": {
+                "intersections": [{
+                    "revision": 0,
+                    "status": "0000",
+                    "states": [{
+                        "signalGroup": 2,
+                        "state-time-speed": [{
+                            "eventState": "stop-And-Remain",
+                            "timing": {"minEndTime": 22120}
+                        }]
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+  }
+
+  TEST(SpatFieldValidationTest, MissingRevisionFails)
+  {
+    std::string json = R"({
+        "messageId": 19,
+        "value": {
+            "SPAT": {
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "status": "0000",
+                    "states": [{
+                        "signalGroup": 2,
+                        "state-time-speed": [{
+                            "eventState": "stop-And-Remain",
+                            "timing": {"minEndTime": 22120}
+                        }]
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+  }
+
+  TEST(SpatFieldValidationTest, MissingStatusFails)
+  {
+    std::string json = R"({
+        "messageId": 19,
+        "value": {
+            "SPAT": {
+                "intersections": [{
+                    "id": {"id": 12111},
+                    "revision": 0,
+                    "states": [{
+                        "signalGroup": 2,
+                        "state-time-speed": [{
+                            "eventState": "stop-And-Remain",
+                            "timing": {"minEndTime": 22120}
+                        }]
+                    }]
+                }]
+            }
+        }
+    })";
+    auto result = validateJsonAgainstSchemaFile(json, SPAT_SCHEMA_PATH);
+    EXPECT_FALSE(result.valid);
+  }
+
+  TEST(ConvertNumericStringsTest, ConvertsBooleanStringTrue)
+  {
     std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
     std::string jsonStr = R"({"active": "true"})";
 
@@ -1439,9 +1466,10 @@ TEST(ConvertNumericStringsTest, ConvertsBooleanStringTrue) {
 
     EXPECT_TRUE(doc["active"].IsBool());
     EXPECT_TRUE(doc["active"].GetBool());
-}
+  }
 
-TEST(ConvertNumericStringsTest, ConvertsBooleanStringFalse) {
+  TEST(ConvertNumericStringsTest, ConvertsBooleanStringFalse)
+  {
     std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
     std::string jsonStr = R"({"active": "false"})";
 
@@ -1455,9 +1483,10 @@ TEST(ConvertNumericStringsTest, ConvertsBooleanStringFalse) {
 
     EXPECT_TRUE(doc["active"].IsBool());
     EXPECT_FALSE(doc["active"].GetBool());
-}
+  }
 
-TEST(ConvertNumericStringsTest, LeavesBooleanWhenSchemaExpectsString) {
+  TEST(ConvertNumericStringsTest, LeavesBooleanWhenSchemaExpectsString)
+  {
     std::string schemaStr = R"({"type": "object", "properties": {"flag": {"type": "string"}}})";
     std::string jsonStr = R"({"flag": "true"})";
 
@@ -1471,9 +1500,10 @@ TEST(ConvertNumericStringsTest, LeavesBooleanWhenSchemaExpectsString) {
 
     EXPECT_TRUE(doc["flag"].IsString());
     EXPECT_STREQ("true", doc["flag"].GetString());
-}
+  }
 
-TEST(ConvertNumericStringsTest, LeavesInvalidBooleanStringUnchanged) {
+  TEST(ConvertNumericStringsTest, LeavesInvalidBooleanStringUnchanged)
+  {
     std::string schemaStr = R"({"type": "object", "properties": {"active": {"type": "boolean"}}})";
     std::string jsonStr = R"({"active": "yes"})";
 
@@ -1487,9 +1517,10 @@ TEST(ConvertNumericStringsTest, LeavesInvalidBooleanStringUnchanged) {
 
     EXPECT_TRUE(doc["active"].IsString());
     EXPECT_STREQ("yes", doc["active"].GetString());
-}
+  }
 
-TEST(ConvertNumericStringsTest, ConvertsBooleanInArray) {
+  TEST(ConvertNumericStringsTest, ConvertsBooleanInArray)
+  {
     std::string schemaStr = R"({
         "type": "object",
         "properties": {
@@ -1518,44 +1549,2844 @@ TEST(ConvertNumericStringsTest, ConvertsBooleanInArray) {
     EXPECT_TRUE(doc["items"][0]["enabled"].GetBool());
     EXPECT_TRUE(doc["items"][1]["enabled"].IsBool());
     EXPECT_FALSE(doc["items"][1]["enabled"].GetBool());
-}
- 
-// MAP field validation
+  }
 
-TEST(MapFieldValidationTest, ValidMapPasses) {
+  // MAP field validation
+
+  TEST(MapFieldValidationTest, ValidMapPasses)
+  {
     std::string json = R"({
-        "messageId": 18,
-        "value": {
-            "MapData": {
-                "msgIssueRevision": 1,
-                "intersections": [{
-                    "id": {"id": 12111},
-                    "revision": 0,
-                    "refPoint": {"lat": 389519791, "long": -771483512},
-                    "laneWidth": 366,
-                    "laneSet": [{
-                        "laneID": 1,
-                        "laneAttributes": {
-                            "directionalUse": "C0",
-                            "sharedWith": "0000",
-                            "laneType": {"vehicle": "00"}
-                        },
-                        "nodeList": {
-                            "nodes": [
-                                {"delta": {"node-XY1": {"x": 100, "y": 200}}},
-                                {"delta": {"node-XY1": {"x": 150, "y": 250}}}
-                            ]
-                        }
-                    }]
-                }]
+  "messageId": 18,
+  "value": {
+    "MapData":{
+      "timeStamp": 415833,
+      "msgIssueRevision": 76,
+      "layerType": "curveData",
+      "layerID": 88,
+      "intersections": [
+        {
+          "name": "JRWQERRMGBSHOPBFAQOUALCEYSUCYJUSNHFMUTNWMXIDOIUDIRHRSDROQKQGM",
+          "id": {
+            "region": 8519,
+            "id": 6782
+          },
+          "revision": 88,
+          "refPoint": {
+            "lat": 702102039,
+            "long": 648915460,
+            "elevation": 6268
+          },
+          "laneWidth": 30296,
+          "speedLimits": [
+            {
+              "type": "truckMaxSpeed",
+              "speed": 7638
+            },
+            {
+              "type": "vehiclesWithTrailersMinSpeed",
+              "speed": 8087
+            },
+            {
+              "type": "maxSpeedInSchoolZone",
+              "speed": 5331
             }
+          ],
+          "laneSet": [
+            {
+              "laneID": 237,
+              "name": "UPMGGWXJMVTVNIBUL",
+              "ingressApproach": 8,
+              "egressApproach": 6,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "C9C0",
+                "laneType": {
+                  "median": "3953"
+                }
+              },
+              "maneuvers": "91A0",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": -1689,
+                        "y": -402
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "hydrantPresent"
+                      ],
+                      "disabled": [
+                        "costToPark"
+                      ],
+                      "enabled": [
+                        "turnOutPointOnLeft",
+                        "taperToLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": 35
+                        },
+                        {
+                          "laneCrownPointLeft": 98
+                        },
+                        {
+                          "pathEndPointAngle": -149
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "truckMaxSpeed",
+                              "speed": 4325
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 273,
+                      "dElevation": 165
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": -1347,
+                        "y": 776
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "reserved",
+                        "hydrantPresent",
+                        "reserved"
+                      ],
+                      "disabled": [
+                        "freeParking",
+                        "sharedBikeLane",
+                        "doNotBlock",
+                        "transitStopOnLeft"
+                      ],
+                      "enabled": [
+                        "mergingLaneLeft",
+                        "taperToRight",
+                        "rumbleStripPresent",
+                        "curbOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "maxSpeedInSchoolZone",
+                              "speed": 4776
+                            },
+                            {
+                              "type": "maxSpeedInSchoolZone",
+                              "speed": 7892
+                            },
+                            {
+                              "type": "vehiclesWithTrailersMaxSpeed",
+                              "speed": 1073
+                            },
+                            {
+                              "type": "maxSpeedInConstructionZone",
+                              "speed": 7471
+                            }
+                          ]
+                        },
+                        {
+                          "laneAngle": 106
+                        },
+                        {
+                          "laneCrownPointLeft": 42
+                        },
+                        {
+                          "laneCrownPointLeft": -108
+                        }
+                      ],
+                      "dWidth": -91,
+                      "dElevation": 182
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY4": {
+                        "x": 3786,
+                        "y": -2826
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleA"
+                      ],
+                      "disabled": [
+                        "transitStopInLane"
+                      ],
+                      "enabled": [
+                        "taperToLeft",
+                        "doNotBlock",
+                        "adjacentParkingOnLeft",
+                        "mergingLaneLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": -96
+                        }
+                      ],
+                      "dWidth": 65,
+                      "dElevation": -15
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 225,
+                    "maneuver": "A540"
+                  },
+                  "remoteIntersection": {
+                    "region": 1160,
+                    "id": 49417
+                  },
+                  "signalGroup": 36,
+                  "userClass": 154,
+                  "connectionID": 241
+                }
+              ],
+              "overlays": [
+                156,
+                223,
+                245,
+                130
+              ]
+            },
+            {
+              "laneID": 231,
+              "name": "LAMMXAFQVTJEGIGQIRB",
+              "ingressApproach": 14,
+              "egressApproach": 5,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "77C0",
+                "laneType": {
+                  "median": "F79D"
+                }
+              },
+              "maneuvers": "4C10",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": -352,
+                        "y": 246
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "mergePoint",
+                        "downstreamStopLine",
+                        "downstreamStartNode"
+                      ],
+                      "disabled": [
+                        "doNotBlock"
+                      ],
+                      "enabled": [
+                        "loadingzoneOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 54
+                        },
+                        {
+                          "laneAngle": 71
+                        }
+                      ],
+                      "dWidth": -505,
+                      "dElevation": -232
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": 24320810,
+                        "lat": -377322091
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "downstreamStopLine",
+                        "mergePoint",
+                        "curbPresentAtStepOff"
+                      ],
+                      "disabled": [
+                        "rfSignalRequestPresent",
+                        "adjacentBikeLaneOnLeft",
+                        "loadingzoneOnRight",
+                        "curbOnLeft"
+                      ],
+                      "enabled": [
+                        "bikeBoxInFront",
+                        "parallelParking"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": -52
+                        },
+                        {
+                          "laneCrownPointCenter": 67
+                        },
+                        {
+                          "laneAngle": 171
+                        }
+                      ],
+                      "dWidth": 6,
+                      "dElevation": 467
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": 5,
+                        "y": -405
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "downstreamStopLine",
+                        "stopLine"
+                      ],
+                      "disabled": [
+                        "lowCurbsPresent",
+                        "transitStopOnRight"
+                      ],
+                      "enabled": [
+                        "mergingLaneLeft",
+                        "lowCurbsPresent",
+                        "safeIsland",
+                        "transitStopOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 94
+                        },
+                        {
+                          "laneCrownPointCenter": 92
+                        }
+                      ],
+                      "dWidth": -319,
+                      "dElevation": 132
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 76,
+                    "maneuver": "5C10"
+                  },
+                  "remoteIntersection": {
+                    "region": 24129,
+                    "id": 27370
+                  },
+                  "signalGroup": 137,
+                  "userClass": 240,
+                  "connectionID": 39
+                },
+                {
+                  "connectingLane": {
+                    "lane": 246,
+                    "maneuver": "07E0"
+                  },
+                  "remoteIntersection": {
+                    "region": 48391,
+                    "id": 61519
+                  },
+                  "signalGroup": 46,
+                  "userClass": 74,
+                  "connectionID": 235
+                }
+              ],
+              "overlays": [
+                211,
+                2,
+                240,
+                81
+              ]
+            },
+            {
+              "laneID": 50,
+              "name": "BAAJXWARQRUPJJVWUKUGHUQKBMVIIVRPSSDELUJBMWHMDGK",
+              "ingressApproach": 8,
+              "egressApproach": 4,
+              "laneAttributes": {
+                "directionalUse": "80",
+                "sharedWith": "01C0",
+                "laneType": {
+                  "trackedVehicle": "40F0"
+                }
+              },
+              "maneuvers": "8C80",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": 475,
+                        "y": 1271
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "stopLine",
+                        "curbPresentAtStepOff",
+                        "downstreamStartNode",
+                        "safeIsland"
+                      ],
+                      "disabled": [
+                        "freeParking"
+                      ],
+                      "enabled": [
+                        "transitStopOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": -11
+                        },
+                        {
+                          "laneCrownPointCenter": 75
+                        },
+                        {
+                          "laneCrownPointRight": 3
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "truckNightMaxSpeed",
+                              "speed": 2408
+                            },
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 6729
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 414,
+                      "dElevation": -209
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": -980228109,
+                        "lat": -32828165
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "partialCurbIntrusion"
+                      ],
+                      "enabled": [
+                        "midBlockCurbPresent",
+                        "transitStopOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": -11
+                        },
+                        {
+                          "laneCrownPointLeft": 21
+                        },
+                        {
+                          "pathEndPointAngle": -40
+                        },
+                        {
+                          "laneCrownPointCenter": 74
+                        }
+                      ],
+                      "dWidth": -237,
+                      "dElevation": 131
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY4": {
+                        "x": 425,
+                        "y": 1204
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleB"
+                      ],
+                      "disabled": [
+                        "loadingzoneOnRight",
+                        "curbOnRight",
+                        "mergingLaneLeft",
+                        "adjacentParkingOnRight"
+                      ],
+                      "enabled": [
+                        "partialCurbIntrusion",
+                        "adjacentParkingOnRight",
+                        "adjacentBikeLaneOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": -125
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehicleMaxSpeed",
+                              "speed": 5546
+                            },
+                            {
+                              "type": "vehiclesWithTrailersMinSpeed",
+                              "speed": 3471
+                            },
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 3587
+                            }
+                          ]
+                        },
+                        {
+                          "pathEndPointAngle": 37
+                        },
+                        {
+                          "pathEndPointAngle": 146
+                        }
+                      ],
+                      "dWidth": 274,
+                      "dElevation": 192
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": -6881,
+                        "y": 860
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "hydrantPresent",
+                        "stopLine",
+                        "reserved",
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "curbOnLeft",
+                        "midBlockCurbPresent",
+                        "loadingzoneOnLeft",
+                        "reserved"
+                      ],
+                      "enabled": [
+                        "freeParking",
+                        "mergingLaneRight",
+                        "adjacentBikeLaneOnLeft",
+                        "curbOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": -69
+                        },
+                        {
+                          "laneCrownPointCenter": 115
+                        }
+                      ],
+                      "dWidth": -491,
+                      "dElevation": 353
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 152,
+                    "maneuver": "DFC0"
+                  },
+                  "remoteIntersection": {
+                    "region": 59187,
+                    "id": 20956
+                  },
+                  "signalGroup": 172,
+                  "userClass": 225,
+                  "connectionID": 68
+                },
+                {
+                  "connectingLane": {
+                    "lane": 32,
+                    "maneuver": "8930"
+                  },
+                  "remoteIntersection": {
+                    "region": 29665,
+                    "id": 55977
+                  },
+                  "signalGroup": 40,
+                  "userClass": 199,
+                  "connectionID": 51
+                },
+                {
+                  "connectingLane": {
+                    "lane": 170,
+                    "maneuver": "E940"
+                  },
+                  "remoteIntersection": {
+                    "region": 12514,
+                    "id": 42065
+                  },
+                  "signalGroup": 93,
+                  "userClass": 240,
+                  "connectionID": 76
+                },
+                {
+                  "connectingLane": {
+                    "lane": 78,
+                    "maneuver": "8510"
+                  },
+                  "remoteIntersection": {
+                    "region": 53064,
+                    "id": 46548
+                  },
+                  "signalGroup": 130,
+                  "userClass": 6,
+                  "connectionID": 98
+                }
+              ],
+              "overlays": [
+                206,
+                130,
+                17
+              ]
+            },
+            {
+              "laneID": 180,
+              "name": "NJCNIJKMIELXFWNVXIYMELFH",
+              "ingressApproach": 9,
+              "egressApproach": 13,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "8C40",
+                "laneType": {
+                  "parking": "BF0D"
+                }
+              },
+              "maneuvers": "8D50",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": -167,
+                        "y": 105
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "closedToTraffic",
+                        "reserved"
+                      ],
+                      "disabled": [
+                        "parallelParking",
+                        "freeParking"
+                      ],
+                      "enabled": [
+                        "rfSignalRequestPresent",
+                        "turnOutPointOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": 112
+                        }
+                      ],
+                      "dWidth": -269,
+                      "dElevation": 340
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": 854,
+                        "y": -5682
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "divergePoint",
+                        "divergePoint",
+                        "divergePoint",
+                        "roundedCapStyleB"
+                      ],
+                      "disabled": [
+                        "whiteLine",
+                        "taperToLeft",
+                        "lowCurbsPresent",
+                        "adjacentBikeLaneOnRight"
+                      ],
+                      "enabled": [
+                        "headInParking",
+                        "sharedBikeLane",
+                        "doNotBlock"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": 43
+                        },
+                        {
+                          "laneCrownPointRight": 36
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "maxSpeedInConstructionZone",
+                              "speed": 4487
+                            },
+                            {
+                              "type": "vehicleMaxSpeed",
+                              "speed": 2676
+                            },
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 3945
+                            },
+                            {
+                              "type": "truckNightMaxSpeed",
+                              "speed": 1846
+                            }
+                          ]
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "maxSpeedInSchoolZoneWhenChildrenArePresent",
+                              "speed": 7160
+                            },
+                            {
+                              "type": "truckMaxSpeed",
+                              "speed": 1451
+                            },
+                            {
+                              "type": "unknown",
+                              "speed": 1146
+                            },
+                            {
+                              "type": "truckNightMaxSpeed",
+                              "speed": 5022
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 397,
+                      "dElevation": 264
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 36,
+                    "maneuver": "FBD0"
+                  },
+                  "remoteIntersection": {
+                    "region": 38786,
+                    "id": 8582
+                  },
+                  "signalGroup": 207,
+                  "userClass": 225,
+                  "connectionID": 0
+                },
+                {
+                  "connectingLane": {
+                    "lane": 215,
+                    "maneuver": "D980"
+                  },
+                  "remoteIntersection": {
+                    "region": 36512,
+                    "id": 62874
+                  },
+                  "signalGroup": 86,
+                  "userClass": 212,
+                  "connectionID": 41
+                },
+                {
+                  "connectingLane": {
+                    "lane": 84,
+                    "maneuver": "02E0"
+                  },
+                  "remoteIntersection": {
+                    "region": 36642,
+                    "id": 37414
+                  },
+                  "signalGroup": 159,
+                  "userClass": 63,
+                  "connectionID": 89
+                }
+              ],
+              "overlays": [
+                119,
+                170,
+                227,
+                241
+              ]
+            }
+          ],
+          "roadAuthorityID": {
+            "fullRdAuthID": "2.31.264"
+          }
+        },
+        {
+          "name": "VJNAIENE",
+          "id": {
+            "region": 31368,
+            "id": 50481
+          },
+          "revision": 5,
+          "refPoint": {
+            "lat": 561517654,
+            "long": 1119656094,
+            "elevation": 8871
+          },
+          "laneWidth": 28042,
+          "speedLimits": [
+            {
+              "type": "vehicleNightMaxSpeed",
+              "speed": 4933
+            },
+            {
+              "type": "vehiclesWithTrailersMinSpeed",
+              "speed": 1507
+            },
+            {
+              "type": "vehiclesWithTrailersMaxSpeed",
+              "speed": 1624
+            },
+            {
+              "type": "vehicleMinSpeed",
+              "speed": 1832
+            }
+          ],
+          "laneSet": [
+            {
+              "laneID": 99,
+              "name": "COJSVBDKMURRWNPMLNEGQTJICGLLQWBAKKWGOHIXSQMGFAPLGQPQHQWS",
+              "ingressApproach": 14,
+              "egressApproach": 13,
+              "laneAttributes": {
+                "directionalUse": "40",
+                "sharedWith": "4D00",
+                "laneType": {
+                  "median": "9F46"
+                }
+              },
+              "maneuvers": "2370",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY6": {
+                        "x": -25809,
+                        "y": -25348
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "safeIsland",
+                        "curbPresentAtStepOff",
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "costToPark",
+                        "mergingLaneRight"
+                      ],
+                      "enabled": [
+                        "timeRestrictionsOnParking",
+                        "rumbleStripPresent"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": 21
+                        },
+                        {
+                          "laneAngle": 28
+                        }
+                      ],
+                      "dWidth": -466,
+                      "dElevation": -152
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": -7157,
+                        "y": 148
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "safeIsland",
+                        "stopLine",
+                        "closedToTraffic",
+                        "downstreamStartNode"
+                      ],
+                      "disabled": [
+                        "taperToLeft"
+                      ],
+                      "enabled": [
+                        "freeParking",
+                        "turnOutPointOnLeft",
+                        "partialCurbIntrusion"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": -131
+                        },
+                        {
+                          "laneAngle": -96
+                        }
+                      ],
+                      "dWidth": -55,
+                      "dElevation": 137
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY2": {
+                        "x": 911,
+                        "y": 406
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff"
+                      ],
+                      "disabled": [
+                        "lowCurbsPresent",
+                        "turnOutPointOnRight",
+                        "sharedWithTrackedVehicle",
+                        "transitStopOnLeft"
+                      ],
+                      "enabled": [
+                        "mergingLaneLeft",
+                        "rumbleStripPresent",
+                        "turnOutPointOnRight",
+                        "transitStopOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 70
+                        }
+                      ],
+                      "dWidth": 416,
+                      "dElevation": 349
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 221,
+                    "maneuver": "FAA0"
+                  },
+                  "remoteIntersection": {
+                    "region": 36121,
+                    "id": 50025
+                  },
+                  "signalGroup": 184,
+                  "userClass": 56,
+                  "connectionID": 88
+                },
+                {
+                  "connectingLane": {
+                    "lane": 226,
+                    "maneuver": "6FD0"
+                  },
+                  "remoteIntersection": {
+                    "region": 47221,
+                    "id": 47675
+                  },
+                  "signalGroup": 190,
+                  "userClass": 19,
+                  "connectionID": 106
+                }
+              ],
+              "overlays": [
+                156,
+                114,
+                186
+              ]
+            }
+          ],
+          "roadAuthorityID": {
+            "relRdAuthID": "20688"
+          }
         }
-    })";
+      ],
+      "roadSegments": [
+        {
+          "name": "CPYHVNV",
+          "id": {
+            "region": 33263,
+            "id": 38364
+          },
+          "revision": 43,
+          "refPoint": {
+            "lat": 71734265,
+            "long": -1289512729,
+            "elevation": 42339
+          },
+          "laneWidth": 11126,
+          "speedLimits": [
+            {
+              "type": "maxSpeedInSchoolZone",
+              "speed": 6398
+            },
+            {
+              "type": "vehiclesWithTrailersNightMaxSpeed",
+              "speed": 1497
+            },
+            {
+              "type": "unknown",
+              "speed": 3397
+            },
+            {
+              "type": "vehiclesWithTrailersMaxSpeed",
+              "speed": 5686
+            }
+          ],
+          "roadLaneSet": [
+            {
+              "laneID": 81,
+              "name": "YNHGVCBKPWSVQKPJHAEN",
+              "ingressApproach": 6,
+              "egressApproach": 14,
+              "laneAttributes": {
+                "directionalUse": "80",
+                "sharedWith": "CF40",
+                "laneType": {
+                  "parking": "403B"
+                }
+              },
+              "maneuvers": "9AB0",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": -273478191,
+                        "lat": -300445483
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleB",
+                        "curbPresentAtStepOff",
+                        "curbPresentAtStepOff"
+                      ],
+                      "disabled": [
+                        "mergingLaneRight"
+                      ],
+                      "enabled": [
+                        "unEvenPavementPresent",
+                        "midBlockCurbPresent",
+                        "headInParking"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointLeft": -116
+                        },
+                        {
+                          "laneCrownPointRight": -24
+                        }
+                      ],
+                      "dWidth": -459,
+                      "dElevation": -26
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": 323,
+                        "y": -188
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "downstreamStartNode",
+                        "divergePoint",
+                        "roundedCapStyleA"
+                      ],
+                      "disabled": [
+                        "doNotBlock",
+                        "doNotBlock"
+                      ],
+                      "enabled": [
+                        "parallelParking"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": 76
+                        },
+                        {
+                          "pathEndPointAngle": 13
+                        },
+                        {
+                          "laneCrownPointRight": 52
+                        }
+                      ],
+                      "dWidth": -33,
+                      "dElevation": 189
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY2": {
+                        "x": -465,
+                        "y": 615
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "mergePoint",
+                        "curbPresentAtStepOff",
+                        "curbPresentAtStepOff",
+                        "divergePoint"
+                      ],
+                      "disabled": [
+                        "taperToCenterLine",
+                        "partialCurbIntrusion"
+                      ],
+                      "enabled": [
+                        "loadingzoneOnLeft",
+                        "partialCurbIntrusion",
+                        "curbOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "maxSpeedInSchoolZoneWhenChildrenArePresent",
+                              "speed": 1665
+                            },
+                            {
+                              "type": "maxSpeedInConstructionZone",
+                              "speed": 1204
+                            }
+                          ]
+                        },
+                        {
+                          "laneAngle": 55
+                        },
+                        {
+                          "laneCrownPointRight": -50
+                        }
+                      ],
+                      "dWidth": 308,
+                      "dElevation": -116
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": 1736879831,
+                        "lat": 234983173
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleA"
+                      ],
+                      "disabled": [
+                        "transitStopOnRight",
+                        "rfSignalRequestPresent"
+                      ],
+                      "enabled": [
+                        "mergingLaneLeft",
+                        "safeIsland"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": -36
+                        },
+                        {
+                          "laneAngle": -80
+                        }
+                      ],
+                      "dWidth": 84,
+                      "dElevation": -235
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 6,
+                    "maneuver": "59B0"
+                  },
+                  "remoteIntersection": {
+                    "region": 33041,
+                    "id": 86
+                  },
+                  "signalGroup": 127,
+                  "userClass": 170,
+                  "connectionID": 211
+                },
+                {
+                  "connectingLane": {
+                    "lane": 72,
+                    "maneuver": "D9D0"
+                  },
+                  "remoteIntersection": {
+                    "region": 2232,
+                    "id": 57119
+                  },
+                  "signalGroup": 39,
+                  "userClass": 100,
+                  "connectionID": 76
+                }
+              ],
+              "overlays": [
+                120,
+                123
+              ]
+            },
+            {
+              "laneID": 201,
+              "name": "AKRVNRNPAOVKYQVXTVMLYWMIHNYEEJEEXGTXXGBIHTKABCLMFUSGCFJVQ",
+              "ingressApproach": 0,
+              "egressApproach": 7,
+              "laneAttributes": {
+                "directionalUse": "40",
+                "sharedWith": "5780",
+                "laneType": {
+                  "trackedVehicle": "F2D5"
+                }
+              },
+              "maneuvers": "4120",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": -98156291,
+                        "lat": 183505986
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleA",
+                        "divergePoint",
+                        "reserved"
+                      ],
+                      "disabled": [
+                        "lowCurbsPresent",
+                        "costToPark"
+                      ],
+                      "enabled": [
+                        "adjacentParkingOnLeft",
+                        "partialCurbIntrusion",
+                        "taperToRight",
+                        "timeRestrictionsOnParking"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 55
+                        }
+                      ],
+                      "dWidth": 30,
+                      "dElevation": 66
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY6": {
+                        "x": 29643,
+                        "y": 32602
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "safeIsland"
+                      ],
+                      "enabled": [
+                        "mergingLaneLeft",
+                        "audibleSignalingPresent",
+                        "unEvenPavementPresent"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 84
+                        },
+                        {
+                          "pathEndPointAngle": 96
+                        }
+                      ],
+                      "dWidth": 221,
+                      "dElevation": -291
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 199,
+                    "maneuver": "92D0"
+                  },
+                  "remoteIntersection": {
+                    "region": 37976,
+                    "id": 21733
+                  },
+                  "signalGroup": 159,
+                  "userClass": 194,
+                  "connectionID": 61
+                }
+              ],
+              "overlays": [
+                145,
+                233,
+                74
+              ]
+            },
+            {
+              "laneID": 235,
+              "name": "NKWEQTSGFGLTIIBKENRLOGOKAMJCFNVUFDGHWGAHWMRCJYLVFEWJSCTSYXBKA",
+              "ingressApproach": 2,
+              "egressApproach": 1,
+              "laneAttributes": {
+                "directionalUse": "80",
+                "sharedWith": "A840",
+                "laneType": {
+                  "vehicle": {
+                    "value": "35",
+                    "length": 8
+                  }
+                }
+              },
+              "maneuvers": "CD00",
+              "nodeList": {
+                "computed": {
+                  "referenceLaneId": 61,
+                  "offsetXaxis": {
+                    "small": 1899
+                  },
+                  "offsetYaxis": {
+                    "large": -28817
+                  },
+                  "rotateXY": 12948,
+                  "scaleXaxis": -838,
+                  "scaleYaxis": -736
+                }
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 212,
+                    "maneuver": "D300"
+                  },
+                  "remoteIntersection": {
+                    "region": 52860,
+                    "id": 47223
+                  },
+                  "signalGroup": 130,
+                  "userClass": 231,
+                  "connectionID": 10
+                },
+                {
+                  "connectingLane": {
+                    "lane": 74,
+                    "maneuver": "CFC0"
+                  },
+                  "remoteIntersection": {
+                    "region": 11311,
+                    "id": 41024
+                  },
+                  "signalGroup": 141,
+                  "userClass": 195,
+                  "connectionID": 124
+                },
+                {
+                  "connectingLane": {
+                    "lane": 130,
+                    "maneuver": "8140"
+                  },
+                  "remoteIntersection": {
+                    "region": 3495,
+                    "id": 60672
+                  },
+                  "signalGroup": 70,
+                  "userClass": 187,
+                  "connectionID": 118
+                }
+              ],
+              "overlays": [
+                220,
+                178,
+                254
+              ]
+            },
+            {
+              "laneID": 11,
+              "name": "HHMIBDFUQJSOKPCKKNPPRUDCBHSRGVGLJBQIBR",
+              "ingressApproach": 2,
+              "egressApproach": 12,
+              "laneAttributes": {
+                "directionalUse": "00",
+                "sharedWith": "E340",
+                "laneType": {
+                  "trackedVehicle": "737A"
+                }
+              },
+              "maneuvers": "1C80",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": 979,
+                        "y": -765
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "downstreamStartNode"
+                      ],
+                      "disabled": [
+                        "adjacentBikeLaneOnRight",
+                        "loadingzoneOnRight",
+                        "sharedBikeLane",
+                        "taperToCenterLine"
+                      ],
+                      "enabled": [
+                        "safeIsland",
+                        "transitStopInLane",
+                        "turnOutPointOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": -95
+                        }
+                      ],
+                      "dWidth": -97,
+                      "dElevation": 169
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": 847,
+                        "y": 5704
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "loadingzoneOnLeft",
+                        "reserved"
+                      ],
+                      "enabled": [
+                        "transitStopOnLeft",
+                        "lowCurbsPresent"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointCenter": 88
+                        },
+                        {
+                          "laneCrownPointRight": 43
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 1736
+                            },
+                            {
+                              "type": "vehiclesWithTrailersMinSpeed",
+                              "speed": 7753
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": -48,
+                      "dElevation": -337
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY4": {
+                        "x": 3778,
+                        "y": -2277
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "hydrantPresent",
+                        "roundedCapStyleA",
+                        "closedToTraffic",
+                        "stopLine"
+                      ],
+                      "disabled": [
+                        "transitStopInLane",
+                        "transitStopInLane",
+                        "midBlockCurbPresent",
+                        "transitStopInLane"
+                      ],
+                      "enabled": [
+                        "parallelParking",
+                        "mergingLaneLeft"
+                      ],
+                      "data": [
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehicleMaxSpeed",
+                              "speed": 5411
+                            },
+                            {
+                              "type": "maxSpeedInConstructionZone",
+                              "speed": 2135
+                            },
+                            {
+                              "type": "unknown",
+                              "speed": 6167
+                            }
+                          ]
+                        },
+                        {
+                          "laneAngle": 75
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "unknown",
+                              "speed": 4692
+                            }
+                          ]
+                        },
+                        {
+                          "laneAngle": 111
+                        }
+                      ],
+                      "dWidth": 26,
+                      "dElevation": -152
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 131,
+                    "maneuver": "B6E0"
+                  },
+                  "remoteIntersection": {
+                    "region": 12122,
+                    "id": 57752
+                  },
+                  "signalGroup": 237,
+                  "userClass": 114,
+                  "connectionID": 88
+                }
+              ],
+              "overlays": [
+                194,
+                41,
+                44,
+                211
+              ]
+            }
+          ]
+        },
+        {
+          "name": "SDTSNFJQSJTVPFRIJDQKVFORBJKUSSCXVXYFDKVAYJKJVVY",
+          "id": {
+            "region": 20508,
+            "id": 7089
+          },
+          "revision": 33,
+          "refPoint": {
+            "lat": -806034592,
+            "long": -373014989,
+            "elevation": 30987
+          },
+          "laneWidth": 28106,
+          "speedLimits": [
+            {
+              "type": "maxSpeedInSchoolZoneWhenChildrenArePresent",
+              "speed": 857
+            },
+            {
+              "type": "maxSpeedInSchoolZoneWhenChildrenArePresent",
+              "speed": 1730
+            }
+          ],
+          "roadLaneSet": [
+            {
+              "laneID": 216,
+              "name": "RGUYIPLBDRKKWUKJELQYFLQYCVHUPPXTMSJDVUPNUYSGWT",
+              "ingressApproach": 9,
+              "egressApproach": 1,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "4D00",
+                "laneType": {
+                  "sidewalk": "B9DE"
+                }
+              },
+              "maneuvers": "4AE0",
+              "nodeList": {
+                "computed": {
+                  "referenceLaneId": 227,
+                  "offsetXaxis": {
+                    "large": -6653
+                  },
+                  "offsetYaxis": {
+                    "small": 1007
+                  },
+                  "rotateXY": 3460,
+                  "scaleXaxis": 1357,
+                  "scaleYaxis": 1306
+                }
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 165,
+                    "maneuver": "00E0"
+                  },
+                  "remoteIntersection": {
+                    "region": 51369,
+                    "id": 45017
+                  },
+                  "signalGroup": 226,
+                  "userClass": 206,
+                  "connectionID": 165
+                },
+                {
+                  "connectingLane": {
+                    "lane": 70,
+                    "maneuver": "7270"
+                  },
+                  "remoteIntersection": {
+                    "region": 65062,
+                    "id": 46188
+                  },
+                  "signalGroup": 65,
+                  "userClass": 99,
+                  "connectionID": 120
+                },
+                {
+                  "connectingLane": {
+                    "lane": 42,
+                    "maneuver": "4830"
+                  },
+                  "remoteIntersection": {
+                    "region": 15425,
+                    "id": 25075
+                  },
+                  "signalGroup": 14,
+                  "userClass": 227,
+                  "connectionID": 107
+                },
+                {
+                  "connectingLane": {
+                    "lane": 153,
+                    "maneuver": "4AF0"
+                  },
+                  "remoteIntersection": {
+                    "region": 58631,
+                    "id": 55240
+                  },
+                  "signalGroup": 148,
+                  "userClass": 193,
+                  "connectionID": 103
+                }
+              ],
+              "overlays": [
+                40
+              ]
+            },
+            {
+              "laneID": 90,
+              "name": "KGRSPLBSXQMOPQUOYJDJKGYVPRGIMHIQKO",
+              "ingressApproach": 10,
+              "egressApproach": 2,
+              "laneAttributes": {
+                "directionalUse": "00",
+                "sharedWith": "E9C0",
+                "laneType": {
+                  "bikeLane": "CA8C"
+                }
+              },
+              "maneuvers": "CD00",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": -522244173,
+                        "lat": -434481673
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "downstreamStopLine",
+                        "stopLine",
+                        "safeIsland"
+                      ],
+                      "disabled": [
+                        "reserved",
+                        "lowCurbsPresent",
+                        "turnOutPointOnRight",
+                        "adjacentParkingOnRight"
+                      ],
+                      "enabled": [
+                        "transitStopOnLeft",
+                        "turnOutPointOnRight",
+                        "taperToLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": -19
+                        },
+                        {
+                          "laneCrownPointRight": -96
+                        }
+                      ],
+                      "dWidth": 242,
+                      "dElevation": -18
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": -3048,
+                        "y": 2642
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "safeIsland"
+                      ],
+                      "disabled": [
+                        "adaptiveTimingPresent"
+                      ],
+                      "enabled": [
+                        "taperToCenterLine",
+                        "partialCurbIntrusion",
+                        "loadingzoneOnRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointLeft": 27
+                        },
+                        {
+                          "laneCrownPointCenter": 96
+                        },
+                        {
+                          "laneCrownPointRight": 90
+                        }
+                      ],
+                      "dWidth": 89,
+                      "dElevation": -134
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY2": {
+                        "x": 229,
+                        "y": 435
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "stopLine",
+                        "roundedCapStyleA",
+                        "roundedCapStyleA",
+                        "safeIsland"
+                      ],
+                      "disabled": [
+                        "partialCurbIntrusion",
+                        "adjacentParkingOnRight",
+                        "lowCurbsPresent",
+                        "whiteLine"
+                      ],
+                      "enabled": [
+                        "adjacentParkingOnRight",
+                        "bikeBoxInFront"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointLeft": 119
+                        },
+                        {
+                          "laneCrownPointCenter": 43
+                        },
+                        {
+                          "laneCrownPointLeft": 116
+                        }
+                      ],
+                      "dWidth": 164,
+                      "dElevation": 18
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 176,
+                    "maneuver": "FC30"
+                  },
+                  "remoteIntersection": {
+                    "region": 52717,
+                    "id": 15063
+                  },
+                  "signalGroup": 181,
+                  "userClass": 140,
+                  "connectionID": 184
+                },
+                {
+                  "connectingLane": {
+                    "lane": 227,
+                    "maneuver": "C400"
+                  },
+                  "remoteIntersection": {
+                    "region": 20808,
+                    "id": 49821
+                  },
+                  "signalGroup": 205,
+                  "userClass": 218,
+                  "connectionID": 164
+                },
+                {
+                  "connectingLane": {
+                    "lane": 42,
+                    "maneuver": "2F00"
+                  },
+                  "remoteIntersection": {
+                    "region": 35331,
+                    "id": 48387
+                  },
+                  "signalGroup": 141,
+                  "userClass": 140,
+                  "connectionID": 103
+                },
+                {
+                  "connectingLane": {
+                    "lane": 93,
+                    "maneuver": "F160"
+                  },
+                  "remoteIntersection": {
+                    "region": 31954,
+                    "id": 42479
+                  },
+                  "signalGroup": 249,
+                  "userClass": 238,
+                  "connectionID": 225
+                }
+              ],
+              "overlays": [
+                56,
+                37
+              ]
+            },
+            {
+              "laneID": 77,
+              "name": "QPUCM",
+              "ingressApproach": 9,
+              "egressApproach": 14,
+              "laneAttributes": {
+                "directionalUse": "80",
+                "sharedWith": "7740",
+                "laneType": {
+                  "striping": "FA07"
+                }
+              },
+              "maneuvers": "6F70",
+              "nodeList": {
+                "computed": {
+                  "referenceLaneId": 121,
+                  "offsetXaxis": {
+                    "large": -18104
+                  },
+                  "offsetYaxis": {
+                    "small": 826
+                  },
+                  "rotateXY": 27247,
+                  "scaleXaxis": 132,
+                  "scaleYaxis": 553
+                }
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 187,
+                    "maneuver": "9770"
+                  },
+                  "remoteIntersection": {
+                    "region": 52561,
+                    "id": 15198
+                  },
+                  "signalGroup": 130,
+                  "userClass": 20,
+                  "connectionID": 99
+                },
+                {
+                  "connectingLane": {
+                    "lane": 120,
+                    "maneuver": "EAA0"
+                  },
+                  "remoteIntersection": {
+                    "region": 26979,
+                    "id": 64450
+                  },
+                  "signalGroup": 146,
+                  "userClass": 182,
+                  "connectionID": 53
+                }
+              ],
+              "overlays": [
+                224,
+                37,
+                80,
+                94
+              ]
+            }
+          ]
+        },
+        {
+          "name": "LPOTAFVUQNVUSKRLNKBARBCBLPQSGRPBVLKCBELRFKTFBKAFYSXOOVXX",
+          "id": {
+            "region": 2452,
+            "id": 3155
+          },
+          "revision": 124,
+          "refPoint": {
+            "lat": 471868940,
+            "long": 1694017460,
+            "elevation": 11290
+          },
+          "laneWidth": 18654,
+          "speedLimits": [
+            {
+              "type": "maxSpeedInConstructionZone",
+              "speed": 2215
+            },
+            {
+              "type": "vehicleMaxSpeed",
+              "speed": 4638
+            }
+          ],
+          "roadLaneSet": [
+            {
+              "laneID": 138,
+              "name": "UOQFWUDBEGAUPTFGGUXPKPFMCLTELQDGUFGMWA",
+              "ingressApproach": 10,
+              "egressApproach": 5,
+              "laneAttributes": {
+                "directionalUse": "40",
+                "sharedWith": "5F00",
+                "laneType": {
+                  "vehicle": {
+                    "value": "40",
+                    "length": 8
+                  }
+                }
+              },
+              "maneuvers": "48B0",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": -785,
+                        "y": -1144
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleA",
+                        "roundedCapStyleA",
+                        "stopLine"
+                      ],
+                      "disabled": [
+                        "timeRestrictionsOnParking"
+                      ],
+                      "enabled": [
+                        "adjacentBikeLaneOnRight",
+                        "adjacentParkingOnLeft",
+                        "sharedWithTrackedVehicle"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointLeft": -101
+                        },
+                        {
+                          "pathEndPointAngle": -109
+                        },
+                        {
+                          "laneCrownPointLeft": -2
+                        },
+                        {
+                          "pathEndPointAngle": 148
+                        }
+                      ],
+                      "dWidth": -478,
+                      "dElevation": 90
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": -281,
+                        "y": 276
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "reserved"
+                      ],
+                      "disabled": [
+                        "lowCurbsPresent",
+                        "lowCurbsPresent",
+                        "adjacentBikeLaneOnLeft"
+                      ],
+                      "enabled": [
+                        "reserved",
+                        "rfSignalRequestPresent",
+                        "safeIsland"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointLeft": 109
+                        }
+                      ],
+                      "dWidth": -246,
+                      "dElevation": 144
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY6": {
+                        "x": -32732,
+                        "y": 14726
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "safeIsland"
+                      ],
+                      "disabled": [
+                        "loadingzoneOnLeft",
+                        "headInParking",
+                        "unEvenPavementPresent",
+                        "transitStopInLane"
+                      ],
+                      "enabled": [
+                        "midBlockCurbPresent",
+                        "transitStopOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": -90
+                        }
+                      ],
+                      "dWidth": 392,
+                      "dElevation": 277
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 224,
+                    "maneuver": "98F0"
+                  },
+                  "remoteIntersection": {
+                    "region": 4583,
+                    "id": 6490
+                  },
+                  "signalGroup": 25,
+                  "userClass": 140,
+                  "connectionID": 39
+                },
+                {
+                  "connectingLane": {
+                    "lane": 135,
+                    "maneuver": "A500"
+                  },
+                  "remoteIntersection": {
+                    "region": 25373,
+                    "id": 15256
+                  },
+                  "signalGroup": 49,
+                  "userClass": 35,
+                  "connectionID": 21
+                },
+                {
+                  "connectingLane": {
+                    "lane": 167,
+                    "maneuver": "52E0"
+                  },
+                  "remoteIntersection": {
+                    "region": 29521,
+                    "id": 12547
+                  },
+                  "signalGroup": 93,
+                  "userClass": 171,
+                  "connectionID": 116
+                },
+                {
+                  "connectingLane": {
+                    "lane": 68,
+                    "maneuver": "4E40"
+                  },
+                  "remoteIntersection": {
+                    "region": 20788,
+                    "id": 44045
+                  },
+                  "signalGroup": 66,
+                  "userClass": 212,
+                  "connectionID": 163
+                }
+              ],
+              "overlays": [
+                225,
+                232
+              ]
+            },
+            {
+              "laneID": 159,
+              "name": "PVQVIDWCSSSNIBNMMEKTPMUAISTQMQIIPQNWQUJAS",
+              "ingressApproach": 10,
+              "egressApproach": 8,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "8D00",
+                "laneType": {
+                  "median": "5401"
+                }
+              },
+              "maneuvers": "7D40",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": 297,
+                        "y": 1119
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "stopLine",
+                        "downstreamStopLine",
+                        "mergePoint",
+                        "downstreamStopLine"
+                      ],
+                      "disabled": [
+                        "adaptiveTimingPresent",
+                        "turnOutPointOnRight",
+                        "bikeBoxInFront"
+                      ],
+                      "enabled": [
+                        "taperToCenterLine",
+                        "taperToRight",
+                        "unEvenPavementPresent"
+                      ],
+                      "data": [
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "maxSpeedInSchoolZone",
+                              "speed": 6129
+                            },
+                            {
+                              "type": "maxSpeedInConstructionZone",
+                              "speed": 4670
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": -480,
+                      "dElevation": 396
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-LatLon": {
+                        "lon": 1299083759,
+                        "lat": 123359613
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "roundedCapStyleA",
+                        "divergePoint"
+                      ],
+                      "disabled": [
+                        "adjacentParkingOnLeft"
+                      ],
+                      "enabled": [
+                        "partialCurbIntrusion",
+                        "taperToLeft",
+                        "reserved"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": -33
+                        },
+                        {
+                          "laneCrownPointRight": -97
+                        },
+                        {
+                          "pathEndPointAngle": -34
+                        }
+                      ],
+                      "dWidth": -392,
+                      "dElevation": 406
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": -915,
+                        "y": 896
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "stopLine"
+                      ],
+                      "disabled": [
+                        "rfSignalRequestPresent",
+                        "taperToLeft",
+                        "sharedWithTrackedVehicle",
+                        "loadingzoneOnRight"
+                      ],
+                      "enabled": [
+                        "safeIsland",
+                        "partialCurbIntrusion",
+                        "mergingLaneLeft",
+                        "adjacentParkingOnLeft"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": -77
+                        }
+                      ],
+                      "dWidth": 424,
+                      "dElevation": -238
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 87,
+                    "maneuver": "0080"
+                  },
+                  "remoteIntersection": {
+                    "region": 43272,
+                    "id": 27486
+                  },
+                  "signalGroup": 168,
+                  "userClass": 216,
+                  "connectionID": 125
+                }
+              ],
+              "overlays": [
+                38,
+                113,
+                190
+              ]
+            },
+            {
+              "laneID": 26,
+              "name": "XOLFDXONITUFDQTXDRFM",
+              "ingressApproach": 6,
+              "egressApproach": 4,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "D700",
+                "laneType": {
+                  "sidewalk": "06DF"
+                }
+              },
+              "maneuvers": "5690",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY4": {
+                        "x": 535,
+                        "y": -40
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "hydrantPresent",
+                        "downstreamStopLine",
+                        "safeIsland",
+                        "curbPresentAtStepOff"
+                      ],
+                      "disabled": [
+                        "lowCurbsPresent"
+                      ],
+                      "enabled": [
+                        "rfSignalRequestPresent",
+                        "adaptiveTimingPresent",
+                        "taperToRight"
+                      ],
+                      "data": [
+                        {
+                          "laneCrownPointRight": 6
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehiclesWithTrailersMinSpeed",
+                              "speed": 4697
+                            },
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 6167
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 149,
+                      "dElevation": -137
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY5": {
+                        "x": 3559,
+                        "y": -6656
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "closedToTraffic",
+                        "closedToTraffic",
+                        "divergePoint"
+                      ],
+                      "disabled": [
+                        "curbOnLeft",
+                        "safeIsland",
+                        "doNotBlock"
+                      ],
+                      "enabled": [
+                        "doNotBlock"
+                      ],
+                      "data": [
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehiclesWithTrailersMaxSpeed",
+                              "speed": 5955
+                            },
+                            {
+                              "type": "truckMinSpeed",
+                              "speed": 4925
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 29,
+                      "dElevation": -197
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 37,
+                    "maneuver": "A110"
+                  },
+                  "remoteIntersection": {
+                    "region": 58175,
+                    "id": 38879
+                  },
+                  "signalGroup": 88,
+                  "userClass": 31,
+                  "connectionID": 60
+                },
+                {
+                  "connectingLane": {
+                    "lane": 201,
+                    "maneuver": "7680"
+                  },
+                  "remoteIntersection": {
+                    "region": 13762,
+                    "id": 26774
+                  },
+                  "signalGroup": 28,
+                  "userClass": 108,
+                  "connectionID": 249
+                }
+              ],
+              "overlays": [
+                86,
+                21
+              ]
+            },
+            {
+              "laneID": 244,
+              "name": "AFCHAPMDAYIISDWWOWTKCFP",
+              "ingressApproach": 2,
+              "egressApproach": 8,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "A900",
+                "laneType": {
+                  "median": "A9C1"
+                }
+              },
+              "maneuvers": "B700",
+              "nodeList": {
+                "computed": {
+                  "referenceLaneId": 170,
+                  "offsetXaxis": {
+                    "small": 533
+                  },
+                  "offsetYaxis": {
+                    "small": -255
+                  },
+                  "rotateXY": 23698,
+                  "scaleXaxis": -875,
+                  "scaleYaxis": 730
+                }
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 76,
+                    "maneuver": "5D90"
+                  },
+                  "remoteIntersection": {
+                    "region": 2225,
+                    "id": 20353
+                  },
+                  "signalGroup": 90,
+                  "userClass": 41,
+                  "connectionID": 38
+                },
+                {
+                  "connectingLane": {
+                    "lane": 253,
+                    "maneuver": "5B70"
+                  },
+                  "remoteIntersection": {
+                    "region": 575,
+                    "id": 47122
+                  },
+                  "signalGroup": 76,
+                  "userClass": 175,
+                  "connectionID": 29
+                },
+                {
+                  "connectingLane": {
+                    "lane": 131,
+                    "maneuver": "A8A0"
+                  },
+                  "remoteIntersection": {
+                    "region": 15311,
+                    "id": 50909
+                  },
+                  "signalGroup": 67,
+                  "userClass": 113,
+                  "connectionID": 42
+                },
+                {
+                  "connectingLane": {
+                    "lane": 24,
+                    "maneuver": "D5A0"
+                  },
+                  "remoteIntersection": {
+                    "region": 18437,
+                    "id": 32193
+                  },
+                  "signalGroup": 97,
+                  "userClass": 194,
+                  "connectionID": 134
+                }
+              ],
+              "overlays": [
+                6,
+                195,
+                219
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CIRSCYU",
+          "id": {
+            "region": 50924,
+            "id": 30160
+          },
+          "revision": 42,
+          "refPoint": {
+            "lat": -135402320,
+            "long": 715075671,
+            "elevation": 22560
+          },
+          "laneWidth": 29125,
+          "speedLimits": [
+            {
+              "type": "truckMaxSpeed",
+              "speed": 6305
+            },
+            {
+              "type": "vehicleNightMaxSpeed",
+              "speed": 6498
+            }
+          ],
+          "roadLaneSet": [
+            {
+              "laneID": 103,
+              "name": "BRGVLQKUNWDWRJRJ",
+              "ingressApproach": 11,
+              "egressApproach": 4,
+              "laneAttributes": {
+                "directionalUse": "00",
+                "sharedWith": "33C0",
+                "laneType": {
+                  "crosswalk": "ED8B"
+                }
+              },
+              "maneuvers": "5BB0",
+              "nodeList": {
+                "nodes": [
+                  {
+                    "delta": {
+                      "node-XY6": {
+                        "x": 10075,
+                        "y": -2604
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "stopLine"
+                      ],
+                      "disabled": [
+                        "turnOutPointOnLeft",
+                        "bikeBoxInFront",
+                        "midBlockCurbPresent",
+                        "curbOnRight"
+                      ],
+                      "enabled": [
+                        "costToPark"
+                      ],
+                      "data": [
+                        {
+                          "laneAngle": -44
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehicleMinSpeed",
+                              "speed": 1275
+                            },
+                            {
+                              "type": "vehiclesWithTrailersMaxSpeed",
+                              "speed": 7594
+                            },
+                            {
+                              "type": "truckMinSpeed",
+                              "speed": 6705
+                            },
+                            {
+                              "type": "vehicleMaxSpeed",
+                              "speed": 144
+                            }
+                          ]
+                        },
+                        {
+                          "laneAngle": -128
+                        },
+                        {
+                          "laneCrownPointRight": -50
+                        }
+                      ],
+                      "dWidth": 411,
+                      "dElevation": 414
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY6": {
+                        "x": -16326,
+                        "y": -19209
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "curbPresentAtStepOff",
+                        "divergePoint",
+                        "downstreamStartNode"
+                      ],
+                      "disabled": [
+                        "adjacentBikeLaneOnRight",
+                        "adjacentParkingOnRight"
+                      ],
+                      "enabled": [
+                        "taperToLeft",
+                        "mergingLaneRight",
+                        "taperToRight"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": -88
+                        }
+                      ],
+                      "dWidth": 208,
+                      "dElevation": 325
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY1": {
+                        "x": -101,
+                        "y": -199
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "reserved"
+                      ],
+                      "disabled": [
+                        "sharedBikeLane",
+                        "mergingLaneLeft",
+                        "rumbleStripPresent",
+                        "lowCurbsPresent"
+                      ],
+                      "enabled": [
+                        "costToPark",
+                        "mergingLaneLeft",
+                        "rfSignalRequestPresent",
+                        "curbOnRight"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": 106
+                        },
+                        {
+                          "laneAngle": 36
+                        }
+                      ],
+                      "dWidth": 158,
+                      "dElevation": 404
+                    }
+                  },
+                  {
+                    "delta": {
+                      "node-XY3": {
+                        "x": 176,
+                        "y": 1769
+                      }
+                    },
+                    "attributes": {
+                      "localNode": [
+                        "divergePoint"
+                      ],
+                      "disabled": [
+                        "adjacentParkingOnRight",
+                        "curbOnLeft"
+                      ],
+                      "enabled": [
+                        "loadingzoneOnRight",
+                        "mergingLaneRight",
+                        "reserved",
+                        "sharedBikeLane"
+                      ],
+                      "data": [
+                        {
+                          "pathEndPointAngle": -11
+                        },
+                        {
+                          "laneAngle": -125
+                        },
+                        {
+                          "laneCrownPointCenter": 92
+                        },
+                        {
+                          "speedLimits": [
+                            {
+                              "type": "vehicleNightMaxSpeed",
+                              "speed": 8034
+                            }
+                          ]
+                        }
+                      ],
+                      "dWidth": 304,
+                      "dElevation": -411
+                    }
+                  }
+                ]
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 163,
+                    "maneuver": "D0B0"
+                  },
+                  "remoteIntersection": {
+                    "region": 15456,
+                    "id": 16885
+                  },
+                  "signalGroup": 61,
+                  "userClass": 220,
+                  "connectionID": 17
+                },
+                {
+                  "connectingLane": {
+                    "lane": 50,
+                    "maneuver": "F450"
+                  },
+                  "remoteIntersection": {
+                    "region": 36901,
+                    "id": 54367
+                  },
+                  "signalGroup": 109,
+                  "userClass": 73,
+                  "connectionID": 189
+                },
+                {
+                  "connectingLane": {
+                    "lane": 216,
+                    "maneuver": "5540"
+                  },
+                  "remoteIntersection": {
+                    "region": 59313,
+                    "id": 12281
+                  },
+                  "signalGroup": 213,
+                  "userClass": 227,
+                  "connectionID": 183
+                }
+              ],
+              "overlays": [
+                115,
+                230,
+                216,
+                160
+              ]
+            },
+            {
+              "laneID": 98,
+              "name": "BNC",
+              "ingressApproach": 2,
+              "egressApproach": 1,
+              "laneAttributes": {
+                "directionalUse": "C0",
+                "sharedWith": "9A40",
+                "laneType": {
+                  "sidewalk": "C684"
+                }
+              },
+              "maneuvers": "4600",
+              "nodeList": {
+                "computed": {
+                  "referenceLaneId": 181,
+                  "offsetXaxis": {
+                    "small": -1563
+                  },
+                  "offsetYaxis": {
+                    "small": -559
+                  },
+                  "rotateXY": 16756,
+                  "scaleXaxis": -1465,
+                  "scaleYaxis": -2041
+                }
+              },
+              "connectsTo": [
+                {
+                  "connectingLane": {
+                    "lane": 140,
+                    "maneuver": "D360"
+                  },
+                  "remoteIntersection": {
+                    "region": 35146,
+                    "id": 31551
+                  },
+                  "signalGroup": 30,
+                  "userClass": 220,
+                  "connectionID": 145
+                }
+              ],
+              "overlays": [
+                225,
+                171,
+                23
+              ]
+            }
+          ]
+        }
+      ],
+      "dataParameters": {
+        
+      },
+      "restrictionList": [
+        {
+          "id": 167,
+          "users": [
+            {
+              "basicType": "equippedTaxis"
+            },
+            {
+              "basicType": "equippedTaxis"
+            }
+          ]
+        },
+        {
+          "id": 130,
+          "users": [
+            {
+              "basicType": "equippedTransit"
+            },
+            {
+              "basicType": "wheelchairUsers"
+            }
+          ]
+        }
+      ]
+    }
+  }
+})";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingMessageIdFails) {
+  TEST(MapFieldValidationTest, MissingMessageIdFails)
+  {
     std::string json = R"({
         "value": {
             "MapData": {
@@ -1565,9 +4396,10 @@ TEST(MapFieldValidationTest, MissingMessageIdFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingMsgIssueRevisionFails) {
+  TEST(MapFieldValidationTest, MissingMsgIssueRevisionFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1594,9 +4426,10 @@ TEST(MapFieldValidationTest, MissingMsgIssueRevisionFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingIntersectionIdFails) {
+  TEST(MapFieldValidationTest, MissingIntersectionIdFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1623,9 +4456,10 @@ TEST(MapFieldValidationTest, MissingIntersectionIdFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingRefPointFails) {
+  TEST(MapFieldValidationTest, MissingRefPointFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1652,9 +4486,10 @@ TEST(MapFieldValidationTest, MissingRefPointFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingRefPointLatFails) {
+  TEST(MapFieldValidationTest, MissingRefPointLatFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1682,9 +4517,10 @@ TEST(MapFieldValidationTest, MissingRefPointLatFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingLaneSetFails) {
+  TEST(MapFieldValidationTest, MissingLaneSetFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1700,9 +4536,10 @@ TEST(MapFieldValidationTest, MissingLaneSetFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingLaneAttributesFails) {
+  TEST(MapFieldValidationTest, MissingLaneAttributesFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1725,9 +4562,10 @@ TEST(MapFieldValidationTest, MissingLaneAttributesFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, MissingNodeListFails) {
+  TEST(MapFieldValidationTest, MissingNodeListFails)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1751,9 +4589,10 @@ TEST(MapFieldValidationTest, MissingNodeListFails) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_FALSE(result.valid);
-}
+  }
 
-TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings) {
+  TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1762,7 +4601,9 @@ TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings) {
                 "intersections": [{
                     "id": {"id": 12111},
                     "revision": 0,
-                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "refPoint": {"lat": 389519791, "long": -771483512, "elevation": 100},
+                    "laneWidth": 366,
+                    "speedLimits": [{"type": "vehicleMaxSpeed", "speed": 500}],
                     "laneSet": [{
                         "laneID": 1,
                         "laneAttributes": {
@@ -1774,7 +4615,11 @@ TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings) {
                         "nodeList": {"nodes": [
                             {"delta": {"node-XY1": {"x": 100, "y": 200}}},
                             {"delta": {"node-XY1": {"x": 150, "y": 250}}}
-                        ]}
+                        ]},
+                        "connectsTo": [{
+                            "connectingLane": {"lane": 2, "maneuver": "0400"},
+                            "signalGroup": 1
+                        }]
                     }]
                 }]
             }
@@ -1782,9 +4627,10 @@ TEST(MapFieldValidationTest, BitStringFieldsPreservedAsStrings) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
-}
+  }
 
-TEST(MapFieldValidationTest, MultipleLanesPasses) {
+  TEST(MapFieldValidationTest, MultipleLanesPasses)
+  {
     std::string json = R"({
         "messageId": 18,
         "value": {
@@ -1793,7 +4639,9 @@ TEST(MapFieldValidationTest, MultipleLanesPasses) {
                 "intersections": [{
                     "id": {"id": 12111},
                     "revision": 0,
-                    "refPoint": {"lat": 389519791, "long": -771483512},
+                    "refPoint": {"lat": 389519791, "long": -771483512, "elevation": 100},
+                    "laneWidth": 366,
+                    "speedLimits": [{"type": "vehicleMaxSpeed", "speed": 500}],
                     "laneSet": [
                         {
                             "laneID": 1,
@@ -1803,10 +4651,15 @@ TEST(MapFieldValidationTest, MultipleLanesPasses) {
                                 "sharedWith": "0000",
                                 "laneType": {"vehicle": "00"}
                             },
+                            "maneuvers": "0400",
                             "nodeList": {"nodes": [
                                 {"delta": {"node-XY1": {"x": 10, "y": 20}}},
                                 {"delta": {"node-XY1": {"x": 30, "y": 40}}}
-                            ]}
+                            ]},
+                            "connectsTo": [{
+                                "connectingLane": {"lane": 2, "maneuver": "0400"},
+                                "signalGroup": 1
+                            }]
                         },
                         {
                             "laneID": 2,
@@ -1816,10 +4669,15 @@ TEST(MapFieldValidationTest, MultipleLanesPasses) {
                                 "sharedWith": "0000",
                                 "laneType": {"vehicle": "00"}
                             },
+                            "maneuvers": "0800",
                             "nodeList": {"nodes": [
                                 {"delta": {"node-XY1": {"x": -10, "y": -20}}},
                                 {"delta": {"node-XY1": {"x": -30, "y": -40}}}
-                            ]}
+                            ]},
+                            "connectsTo": [{
+                                "connectingLane": {"lane": 1, "maneuver": "0800"},
+                                "signalGroup": 2
+                            }]
                         }
                     ]
                 }]
@@ -1828,6 +4686,6 @@ TEST(MapFieldValidationTest, MultipleLanesPasses) {
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
-}
- 
+  }
+
 } // namespace
