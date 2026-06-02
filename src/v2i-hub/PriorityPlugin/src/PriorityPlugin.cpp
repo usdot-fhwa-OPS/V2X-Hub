@@ -85,76 +85,41 @@ namespace PriorityPlugin {
         // Parse per-class reservice times (comma-separated, up to 10 values)
         std::string reserviceStr;
         GetConfigValue<std::string>("ReserviceClassTimes", reserviceStr);
-        _reserviceClassTime = {};
-        if (!reserviceStr.empty()) {
-            std::istringstream rss(reserviceStr);
-            std::string tok;
-            size_t idx = 0;
-            while (std::getline(rss, tok, ',') && idx < 10) {
-                try {
-                    _reserviceClassTime[idx] = static_cast<uint32_t>(std::stoul(tok));
-                } catch (const std::invalid_argument &e) {
-                    PLOG(logWARNING) << "Invalid ReserviceClassTimes value at index " << idx
-                                     << ": '" << tok << "' (" << e.what() << ")";
-                } catch (const std::out_of_range &e) {
-                    PLOG(logWARNING) << "ReserviceClassTimes value out of range at index " << idx
-                                     << ": '" << tok << "' (" << e.what() << ")";
-                }
-                idx++;
-            }
-        }
+        _reserviceClassTime = parseReserviceClassTimes(reserviceStr);
 
-        // Clear strategy mapping JSON array
+        // Repopulate the processor's lane-strategy map from the LaneStrategyMapping JSON array
+        std::string laneStrategyJson;
+        GetConfigValue<std::string>("LaneStrategyMapping", laneStrategyJson);
         {
             std::lock_guard lock(_tableMutex);
             _processor.ClearLaneStrategyMap();
         }
-        // Parse the LaneStrategyMapping JSON array and populate the processor's lane-strategy map
-        std::string laneStrategyJson;
-        GetConfigValue<std::string>("LaneStrategyMapping", laneStrategyJson);
-        if (!laneStrategyJson.empty()) {
-            try {
-                boost::property_tree::ptree lsPt;
-                std::istringstream lsIss(laneStrategyJson);
-                boost::property_tree::read_json(lsIss, lsPt);
-                for (const auto &[_, node] : lsPt) {
-                    auto intID = node.get<long>("IntersectionID");
-                    auto lane = node.get<long>("Lane");
-                    auto strategyVal = node.get<int>("Strategy");
-                    if (strategyVal < 1 || strategyVal > 255) {
-                        PLOG(logWARNING) << "LaneStrategyMapping Strategy must be 1..255, skipping entry:"
-                                         << " IntersectionID=" << intID << " Lane=" << lane
-                                         << " Strategy=" << strategyVal;
-                        continue;
-                    }
-                    auto strategy = static_cast<uint8_t>(strategyVal);
-                    // Set the processor's lane-strategy map for a given intersection and lane
-                    {
-                        std::lock_guard lock(_tableMutex);
-                        _processor.SetLaneStrategy(intID, lane, strategy);
-                    }
-                    PLOG(logINFO) << "Lane strategy: IntersectionID=" << intID
-                                  << " Lane=" << lane << " Strategy=" << static_cast<int>(strategy);
+        try {
+            auto laneStrategyEntries = parseLaneStrategyMapping(laneStrategyJson);
+            for (const auto &entry : laneStrategyEntries) {
+                {
+                    std::lock_guard lock(_tableMutex);
+                    _processor.SetLaneStrategy(entry.intersectionID, entry.lane, entry.strategy);
                 }
-            } catch (const boost::property_tree::json_parser_error &e) {
-                PLOG(logERROR) << "Failed to parse LaneStrategyMapping JSON: " << e.what();
-            } catch (const boost::property_tree::ptree_error &e) {
-                PLOG(logERROR) << "Invalid LaneStrategyMapping entry: " << e.what();
+                PLOG(logINFO) << "Lane strategy: IntersectionID=" << entry.intersectionID
+                              << " Lane=" << entry.lane
+                              << " Strategy=" << static_cast<int>(entry.strategy);
             }
+        } catch (const boost::property_tree::json_parser_error &e) {
+            PLOG(logERROR) << "Failed to parse LaneStrategyMapping JSON: " << e.what();
+        } catch (const boost::property_tree::ptree_error &e) {
+            PLOG(logERROR) << "Invalid LaneStrategyMapping entry: " << e.what();
         }
 
         // Parse the TSC_Controllers JSON array and create an SNMP client per entry
         _controllers.clear();
         try {
-            boost::property_tree::ptree pt;
-            std::istringstream iss(tscControllersJson);
-            boost::property_tree::read_json(iss, pt);
-
-            for (const auto &[_, node] : pt) {
+            auto controllerConfigs = parseTscConfigurationList(tscControllersJson);
+            for (const auto &cfg : controllerConfigs) {
                 ControllerInfo info;
-                info.intersectionID = node.get<long>("IntersectionID");
-                info.ip = node.get<std::string>("IP");
-                info.port = node.get<uint16_t>("Port");
+                info.intersectionID = cfg.intersectionID;
+                info.ip             = cfg.ip;
+                info.port           = cfg.port;
 
                 try {
                     info.snmpClient = std::make_shared<snmp_client>(
@@ -190,138 +155,142 @@ namespace PriorityPlugin {
         tmx::messages::SrmEncodedMessage srmEnc(routeableMsg);
         auto srmDecoded = srmEnc.decode_j2735_message();
         auto srm = srmDecoded.get_j2735_data();
-        if (!srm) {
-            PLOG(logWARNING) << "SRM decode returned null, skipping.";
-            _skippedMessages++;
-            SetStatus(_keySkippedMessages, _skippedMessages);
-            return;
-        }
 
-        if (!srm->requests || srm->requests->list.count <= 0) {
-            PLOG(logWARNING) << "SRM contains no signal request packages, skipping.";
-            _skippedMessages++;
-            SetStatus(_keySkippedMessages, _skippedMessages);
-            return;
-        }
+        if (srm) {
+            if (!srm->requests || srm->requests->list.count <= 0) {
+                PLOG(logWARNING) << "SRM contains no signal request packages, skipping.";
+                _skippedMessages++;
+                SetStatus(_keySkippedMessages, _skippedMessages);
+                return;
+            }
 
-        // Extract the vehicle ID from the requestor
-        std::vector<uint8_t> vehicleID;
-        if (srm->requestor.id.present == VehicleID_PR_entityID) {
-            auto *buf = srm->requestor.id.choice.entityID.buf;
-            auto len = srm->requestor.id.choice.entityID.size;
-            vehicleID.assign(buf, buf + len);
-        }
-        else if (srm->requestor.id.present == VehicleID_PR_stationID) {
-            vehicleID.resize(sizeof(srm->requestor.id.choice.stationID));
-            std::memcpy(vehicleID.data(), &srm->requestor.id.choice.stationID, vehicleID.size());
-        }
+            // Extract the vehicle ID from the requestor
+            std::vector<uint8_t> vehicleID;
+            if (srm->requestor.id.present == VehicleID_PR_entityID) {
+                auto *buf = srm->requestor.id.choice.entityID.buf;
+                auto len = srm->requestor.id.choice.entityID.size;
+                vehicleID.assign(buf, buf + len);
+            }
+            else if (srm->requestor.id.present == VehicleID_PR_stationID) {
+                vehicleID.resize(sizeof(srm->requestor.id.choice.stationID));
+                std::memcpy(vehicleID.data(), &srm->requestor.id.choice.stationID, vehicleID.size());
+            }
 
-        if (vehicleID.empty()) {
-            PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
-            _skippedMessages++;
-            SetStatus(_keySkippedMessages, _skippedMessages);
-            return;
-        }
+            if (vehicleID.empty()) {
+                PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
+                _skippedMessages++;
+                SetStatus(_keySkippedMessages, _skippedMessages);
+                return;
+            }
 
-        std::string vehicleKey(vehicleID.begin(), vehicleID.end());
+            std::string vehicleKey(vehicleID.begin(), vehicleID.end());
 
-        time_t nowEpoch = std::time(nullptr);
-        struct tm utcNow;
-        gmtime_r(&nowEpoch, &utcNow);
-        auto currentDayOfYear = utcNow.tm_yday;
-        auto currentMinuteOfYear = static_cast<long>(currentDayOfYear) * 1440L
-                                 + static_cast<long>(utcNow.tm_hour) * 60L
-                                 + static_cast<long>(utcNow.tm_min);
-        auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
+            time_t nowEpoch = std::time(nullptr);
+            struct tm utcNow;
+            gmtime_r(&nowEpoch, &utcNow);
+            auto currentDayOfYear = utcNow.tm_yday;
+            auto currentMinuteOfYear = static_cast<long>(currentDayOfYear) * 1440L
+                                    + static_cast<long>(utcNow.tm_hour) * 60L
+                                    + static_cast<long>(utcNow.tm_min);
+            auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
 
-        // Determine vehicle class from the SRM requestor type
-        long role = 0;
-        if (srm->requestor.type != nullptr) {
-            role = srm->requestor.type->role;
-        }
-        auto [classType, classLevel] = PriorityRequestProcessor::MapVehicleClass(role);
+            // Determine vehicle class from the SRM requestor type
+            long role = 0;
+            if (srm->requestor.type != nullptr) {
+                role = srm->requestor.type->role;
+            }
+            auto [classType, classLevel] = PriorityRequestProcessor::MapVehicleClass(role);
 
-        uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
+            uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
 
-        // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
-        if (_pluginRole == "PRS") {
-            // Dedup: the same SRM may sometimes be routed back from multiple nearby intersections.
-            if (auto existing = _prsLastSeqByVehicle.find(vehicleKey);
-                existing != _prsLastSeqByVehicle.end() && existing->second == newSeq) {
+            // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
+            if (_pluginRole == "PRS") {
+                // Dedup: the same SRM may sometimes be routed back from multiple nearby intersections.
+                if (auto existing = _prsLastSeqByVehicle.find(vehicleKey);
+                    existing != _prsLastSeqByVehicle.end() && existing->second == newSeq) {
+                    PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
+                                    << ") for this vehicle, discarding.";
+                    return;
+                }
+                _prsLastSeqByVehicle[vehicleKey] = newSeq;
+
+                std::lock_guard lock(_tableMutex);
+                for (int i = 0; i < srm->requests->list.count; i++) {
+                    const auto *pkg = srm->requests->list.array[i];
+                    if (pkg) {
+                        ProcessPrsPackage(*pkg, vehicleID, classType, classLevel, newSeq, role,
+                                        currentMinuteOfYear, currentMsInMinute, nowEpoch);
+                    }
+                }
+                return;
+            }
+
+            // PRG mode: direct conversion of SRM to priority request
+            auto timeOfRequest = static_cast<uint32_t>(nowEpoch);
+
+            if (auto existing = _requestorStates.find(vehicleKey);
+                existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
                 PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
                                 << ") for this vehicle, discarding.";
                 return;
             }
-            _prsLastSeqByVehicle[vehicleKey] = newSeq;
 
-            std::lock_guard lock(_tableMutex);
+            // Sweep stale tracked requests - send clear for canceled entries, evict expired
+            auto now = std::chrono::steady_clock::now();
+            for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
+                auto &tracked = it->second;
+                auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
+
+                if (tracked.state == PrgRequestState::canceled && ageSec >= 2) {
+                    // Send prgPriorityClear to the PRS
+                    auto clearEncoded = PriorityRequestProcessor::EncodePriorityClear(
+                        tracked.requestID, tracked.vehicleID.data(), tracked.vehicleID.size(),
+                        tracked.classType, tracked.classLevel, tracked.strategyNumber);
+                    if (auto ctrlIt = _controllers.find(tracked.intersectionID);
+                        ctrlIt != _controllers.end()) {
+                        PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
+                                    << " intersectionID=" << tracked.intersectionID;
+                        SnmpSet(ctrlIt->second.snmpClient, NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
+                    }
+                    it = _prgTrackedRequests.erase(it);
+                }
+                else if (ageSec >= static_cast<long>(_timeToLiveSec)) {
+                    PLOG(logDEBUG) << "Evicting stale tracked request for requestID=" << static_cast<int>(tracked.requestID);
+                    it = _prgTrackedRequests.erase(it);
+                }
+                else {
+                    ++it;
+                }
+            }
+
+            RequestorState &state = _requestorStates[vehicleKey];
+            state.vehicleID = vehicleID;
+            state.classType = classType;
+            state.sequenceNumber = newSeq;
+            state.timeOfRequest = timeOfRequest;
+            state.role = role;
+            state.requests.clear();
+
             for (int i = 0; i < srm->requests->list.count; i++) {
                 const auto *pkg = srm->requests->list.array[i];
                 if (pkg) {
-                    ProcessPrsPackage(*pkg, vehicleID, classType, classLevel, newSeq, role,
-                                      currentMinuteOfYear, currentMsInMinute, nowEpoch);
+                    ProcessPrgPackage(*pkg, vehicleID, vehicleKey, classType, classLevel,
+                                    currentMinuteOfYear, currentMsInMinute,
+                                    timeOfRequest, state);
                 }
             }
+
+            for (uint8_t i = 0; i < _maxSsmBroadcastsPerStatus; i++) {
+                BuildSSM(state);
+            }
+
+        }
+
+        else {
+            PLOG(logWARNING) << "SRM decode returned null, skipping.";
+            _skippedMessages++;
+            SetStatus(_keySkippedMessages, _skippedMessages);
             return;
-        }
-
-        // PRG mode: direct conversion of SRM to priority request
-        auto timeOfRequest = static_cast<uint32_t>(nowEpoch);
-
-        if (auto existing = _requestorStates.find(vehicleKey);
-            existing != _requestorStates.end() && existing->second.sequenceNumber == newSeq) {
-            PLOG(logDEBUG1) << "SRM sequence number unchanged (" << static_cast<int>(newSeq)
-                            << ") for this vehicle, discarding.";
-            return;
-        }
-
-        // Sweep stale tracked requests - send clear for canceled entries, evict expired
-        auto now = std::chrono::steady_clock::now();
-        for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
-            auto &tracked = it->second;
-            auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
-
-            if (tracked.state == PrgRequestState::canceled && ageSec >= 2) {
-                // Send prgPriorityClear to the PRS
-                auto clearEncoded = PriorityRequestProcessor::EncodePriorityClear(
-                    tracked.requestID, tracked.vehicleID.data(), tracked.vehicleID.size(),
-                    tracked.classType, tracked.classLevel, tracked.strategyNumber);
-                if (auto ctrlIt = _controllers.find(tracked.intersectionID);
-                    ctrlIt != _controllers.end()) {
-                    PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
-                                   << " intersectionID=" << tracked.intersectionID;
-                    SnmpSet(ctrlIt->second.snmpClient, NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
-                }
-                it = _prgTrackedRequests.erase(it);
-            }
-            else if (ageSec >= static_cast<long>(_timeToLiveSec)) {
-                PLOG(logDEBUG) << "Evicting stale tracked request for requestID=" << static_cast<int>(tracked.requestID);
-                it = _prgTrackedRequests.erase(it);
-            }
-            else {
-                ++it;
-            }
-        }
-
-        RequestorState &state = _requestorStates[vehicleKey];
-        state.vehicleID = vehicleID;
-        state.classType = classType;
-        state.sequenceNumber = newSeq;
-        state.timeOfRequest = timeOfRequest;
-        state.role = role;
-        state.requests.clear();
-
-        for (int i = 0; i < srm->requests->list.count; i++) {
-            const auto *pkg = srm->requests->list.array[i];
-            if (pkg) {
-                ProcessPrgPackage(*pkg, vehicleID, vehicleKey, classType, classLevel,
-                                  currentMinuteOfYear, currentMsInMinute,
-                                  timeOfRequest, state);
-            }
-        }
-
-        for (uint8_t i = 0; i < _maxSsmBroadcastsPerStatus; i++) {
-            BuildSSM(state);
         }
     }
 
