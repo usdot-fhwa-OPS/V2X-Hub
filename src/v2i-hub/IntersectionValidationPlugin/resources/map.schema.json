@@ -286,7 +286,8 @@
                     },
                     "required": [
                       "lat",
-                      "long"
+                      "long",
+                      "elevation"
                     ]
                   },
                   "laneWidth": {
@@ -713,9 +714,7 @@
                               "type": "object",
                               "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_LaneAttributes",
                               "description": "ASN.1 SEQUENCE Type",
-                              "properties": {
-                                
-                              }
+                              "properties": {}
                             }
                           },
                           "required": [
@@ -996,9 +995,7 @@
                                                         "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.NodeOffsetPointXY_addGrpBReg_NodeOffsetPointXY",
                                                         "description": "ASN.1 SEQUENCE Type",
                                                         "properties": {
-                                                          "NodeOffsetPointXY_addGrpB": {
-                                                            
-                                                          }
+                                                          "NodeOffsetPointXY_addGrpB": {}
                                                         }
                                                       }
                                                     },
@@ -1296,9 +1293,7 @@
                                                                     "type": "object",
                                                                     "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.LaneDataAttribute_addGrpB",
                                                                     "description": "ASN.1 SEQUENCE Type",
-                                                                    "properties": {
-                                                                      
-                                                                    }
+                                                                    "properties": {}
                                                                   }
                                                                 }
                                                               }
@@ -1341,9 +1336,7 @@
                                               "type": "object",
                                               "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_NodeAttributeSetXY",
                                               "description": "ASN.1 SEQUENCE Type",
-                                              "properties": {
-                                                
-                                              }
+                                              "properties": {}
                                             },
                                             "minItems": 1,
                                             "maxItems": 4
@@ -1465,9 +1458,7 @@
                                         "type": "object",
                                         "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_ComputedLane",
                                         "description": "ASN.1 SEQUENCE Type",
-                                        "properties": {
-                                          
-                                        }
+                                        "properties": {}
                                       },
                                       "minItems": 1,
                                       "maxItems": 4
@@ -1534,7 +1525,8 @@
                                   }
                                 },
                                 "required": [
-                                  "lane"
+                                  "lane",
+                                  "maneuver"
                                 ]
                               },
                               "remoteIntersection": {
@@ -1574,7 +1566,8 @@
                               }
                             },
                             "required": [
-                              "connectingLane"
+                              "connectingLane",
+                              "signalGroup"
                             ]
                           },
                           "minItems": 1,
@@ -1600,9 +1593,7 @@
                             "type": "object",
                             "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_GenericLane",
                             "description": "ASN.1 SEQUENCE Type",
-                            "properties": {
-                              
-                            }
+                            "properties": {}
                           },
                           "minItems": 1,
                           "maxItems": 4
@@ -1611,7 +1602,9 @@
                       "required": [
                         "laneID",
                         "laneAttributes",
-                        "nodeList"
+                        "nodeList",
+                        "maneuvers",
+                        "connectsTo"
                       ]
                     },
                     "minItems": 1,
@@ -1630,9 +1623,7 @@
                           "type": "object",
                           "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_SignalControlZone",
                           "description": "ASN.1 SEQUENCE Type",
-                          "properties": {
-                            
-                          }
+                          "properties": {}
                         }
                       },
                       "required": [
@@ -1650,9 +1641,7 @@
                       "type": "object",
                       "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_IntersectionGeometry",
                       "description": "ASN.1 SEQUENCE Type",
-                      "properties": {
-                        
-                      }
+                      "properties": {}
                     },
                     "minItems": 1,
                     "maxItems": 4
@@ -1691,7 +1680,9 @@
                   "id",
                   "revision",
                   "refPoint",
-                  "laneSet"
+                  "laneSet",
+                  "laneWidth",
+                  "speedLimits"
                 ]
               },
               "minItems": 1,
@@ -2364,9 +2355,7 @@
                               "type": "object",
                               "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_LaneAttributes",
                               "description": "ASN.1 SEQUENCE Type",
-                              "properties": {
-                                
-                              }
+                              "properties": {}
                             }
                           },
                           "required": [
@@ -2647,9 +2636,7 @@
                                                         "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.NodeOffsetPointXY_addGrpBReg_NodeOffsetPointXY",
                                                         "description": "ASN.1 SEQUENCE Type",
                                                         "properties": {
-                                                          "NodeOffsetPointXY_addGrpB": {
-                                                            
-                                                          }
+                                                          "NodeOffsetPointXY_addGrpB": {}
                                                         }
                                                       }
                                                     },
@@ -2947,9 +2934,7 @@
                                                                     "type": "object",
                                                                     "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.LaneDataAttribute_addGrpB",
                                                                     "description": "ASN.1 SEQUENCE Type",
-                                                                    "properties": {
-                                                                      
-                                                                    }
+                                                                    "properties": {}
                                                                   }
                                                                 }
                                                               }
@@ -2992,9 +2977,7 @@
                                               "type": "object",
                                               "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_NodeAttributeSetXY",
                                               "description": "ASN.1 SEQUENCE Type",
-                                              "properties": {
-                                                
-                                              }
+                                              "properties": {}
                                             },
                                             "minItems": 1,
                                             "maxItems": 4
@@ -3116,9 +3099,7 @@
                                         "type": "object",
                                         "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_ComputedLane",
                                         "description": "ASN.1 SEQUENCE Type",
-                                        "properties": {
-                                          
-                                        }
+                                        "properties": {}
                                       },
                                       "minItems": 1,
                                       "maxItems": 4
@@ -3251,9 +3232,7 @@
                             "type": "object",
                             "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_GenericLane",
                             "description": "ASN.1 SEQUENCE Type",
-                            "properties": {
-                              
-                            }
+                            "properties": {}
                           },
                           "minItems": 1,
                           "maxItems": 4
@@ -3276,9 +3255,7 @@
                       "type": "object",
                       "title": "us.dot.its.jpo.asn.j2735.r2024.REGION.Reg_RoadSegment",
                       "description": "ASN.1 SEQUENCE Type",
-                      "properties": {
-                        
-                      }
+                      "properties": {}
                     },
                     "minItems": 1,
                     "maxItems": 4
@@ -3707,9 +3684,7 @@
                                                       "title": "us.dot.its.jpo.asn.j2735.r2024.AddGrpB.NodeOffsetPointXY_addGrpBReg_NodeOffsetPointXY",
                                                       "description": "ASN.1 SEQUENCE Type",
                                                       "properties": {
-                                                        "NodeOffsetPointXY_addGrpB": {
-                                                          
-                                                        }
+                                                        "NodeOffsetPointXY_addGrpB": {}
                                                       }
                                                     }
                                                   },
@@ -3758,7 +3733,8 @@
             }
           },
           "required": [
-            "msgIssueRevision"
+            "msgIssueRevision",
+            "intersections"
           ]
         }
       },
@@ -3771,7 +3747,5 @@
     "messageId",
     "value"
   ],
-  "definitions": {
-    
-  }
+  "definitions": {}
 }
