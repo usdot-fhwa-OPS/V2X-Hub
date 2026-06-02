@@ -851,16 +851,27 @@ bool TmxControl::save_state()
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
 
-        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql";
+		// Read passphrase from environment
+        const char* passphraseEnv = std::getenv("DB_BACKUP_PASSPHRASE");
+        if (!passphraseEnv || std::string(passphraseEnv).empty())
+        {
+            PLOG(logERROR) << "DB_BACKUP_PASSPHRASE environment variable is not set";
+            return false;
+        }
+
+        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
 		std::string cmd = "mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
-                  " --no-tablespaces "
-                  "--ignore-table=" + dbname + ".eventLog "
-                  "--ignore-table=" + dbname + ".messageActivity "
-                  "--ignore-table=" + dbname + ".messageType "
-                  "--ignore-table=" + dbname + ".pluginActivity "
-                  "--ignore-table=" + dbname + ".user "
-                  "> " + backupFile;
+            " --no-tablespaces "
+            "--ignore-table=" + dbname + ".eventLog "
+            "--ignore-table=" + dbname + ".messageActivity "
+            "--ignore-table=" + dbname + ".messageType "
+            "--ignore-table=" + dbname + ".pluginActivity "
+            "--ignore-table=" + dbname + ".user "
+            " | gzip "
+            " | openssl enc -aes-256-cbc -salt -pbkdf2 "
+            " -pass env:DB_BACKUP_PASSPHRASE "
+            " -out \"" + backupFile + "\"";
 
         if (int ret = std::system(cmd.c_str()); ret != 0)
         {
@@ -875,7 +886,7 @@ bool TmxControl::save_state()
 		payload.set_contents(tree);
 		_output = payload.get_container();
 
-		PLOG(logDEBUG) << "Database backup written to " << backupFile;
+		PLOG(logDEBUG) << "Encrypted database backup written to " << backupFile;
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
@@ -920,23 +931,35 @@ bool TmxControl::upload_state(const std::string &filePath)
             FILE_LOG(logERROR) << "File does not exist: " << filePath;
             return false;
         }
+		test.close();
 
-		if (std::string preview((std::istreambuf_iterator<char>(test)),
-                        std::istreambuf_iterator<char>());
-			preview.find("DROP DATABASE") != std::string::npos)
-		{
-			FILE_LOG(logERROR) << "Dangerous SQL detected in file: " << filePath;
-			return false;
-		}
+		// Reject unencrypted files — must end with .sql.gz.enc
+        if (filePath.size() < 11 ||
+            filePath.substr(filePath.size() - 11) != ".sql.gz.enc")
+        {
+            FILE_LOG(logERROR) << "Rejected non-encrypted state file: " << filePath;
+            return false;
+        }
+
+        // Read passphrase from environment
+        const char* passphraseEnv = std::getenv("DB_BACKUP_PASSPHRASE");
+        if (!passphraseEnv || std::string(passphraseEnv).empty())
+        {
+            FILE_LOG(logERROR) << "DB_BACKUP_PASSPHRASE environment variable is not set";
+            return false;
+        }
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
-
-        std::string cmd =
-            "mysql -u " + dbConfig.getUser() +
-            " -p" + dbConfig.getPassword() +
-            " -h " + dbConfig.getHost() +
-            " " + dbConfig.getDatabase() +
-            " < \"" + filePath + "\"";
+		
+		std::string cmd =
+			"openssl enc -d -aes-256-cbc -pbkdf2 "
+			" -in \"" + filePath + "\""
+			" -pass env:DB_BACKUP_PASSPHRASE "
+			" | gunzip "
+			" | mysql -u " + dbConfig.getUser() +
+			" -p" + dbConfig.getPassword() +
+			" -h " + dbConfig.getHost() +
+			" " + dbConfig.getDatabase();
 
         FILE_LOG(logDEBUG) << "Executing SQL restore command:";
         FILE_LOG(logDEBUG) << cmd;

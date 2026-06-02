@@ -123,6 +123,7 @@ services:
       - V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}
       - V2XHUB_PASSWORD=${V2XHUB_PASSWORD}
       - TZ=${TZ:-America/New_York}
+      - DB_BACKUP_PASSPHRASE=${DB_BACKUP_PASSPHRASE}
     secrets:
       - mysql_password
     volumes:
