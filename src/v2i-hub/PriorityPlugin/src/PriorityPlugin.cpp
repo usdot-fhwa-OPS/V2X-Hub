@@ -315,7 +315,7 @@ namespace PriorityPlugin {
             const auto *pkg = srm->requests->list.array[i];
             if (pkg) {
                 ProcessPrgPackage(*pkg, vehicleID, vehicleKey, classType, classLevel,
-                                  currentMinuteOfYear, currentMsInMinute, nowEpoch,
+                                  currentMinuteOfYear, currentMsInMinute,
                                   timeOfRequest, state);
             }
         }
@@ -343,8 +343,8 @@ namespace PriorityPlugin {
             // Only wrap when the Dec/Jan boundary is the more plausible interpretation
             // (raw offset > half a year in the past). Small negatives from clock skew or
             // latency fall through unchanged so the CO can judge them on its own.
-            constexpr long YEAR_MS = 525960L * 60L * 1000L;
-            if (etaOffsetMs < -YEAR_MS / 2) {
+            if (constexpr long YEAR_MS = 525960L * 60L * 1000L; etaOffsetMs < -YEAR_MS / 2) 
+            {
                 etaOffsetMs += YEAR_MS;
             }
             long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;
@@ -444,8 +444,8 @@ namespace PriorityPlugin {
         // Check reservice timer per 4.2.3.1 (h)
         uint8_t classIdx = (classType >= 1 && classType <= 10) ? (classType - 1) : 9;
         auto reservicePeriod = _reserviceClassTime[classIdx];
-        auto lastCompleted = _processor.ReserviceLastCompleted(classType);
-        if (reservicePeriod > 0 && lastCompleted > 0 &&
+        if (auto lastCompleted = _processor.ReserviceLastCompleted(classType);
+            reservicePeriod > 0 && lastCompleted > 0 &&
             (static_cast<uint32_t>(nowEpoch) - lastCompleted) < reservicePeriod) {
             entry.statusInPRS = RequestStatus::reserviceError;
             PLOG(logINFO) << "Reservice period not met for class " << static_cast<int>(classType)
@@ -481,7 +481,7 @@ namespace PriorityPlugin {
     void PriorityPlugin::ProcessPrgPackage(const SignalRequestPackage &pkg,
                                             const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey,
                                             uint8_t classType, uint8_t classLevel,
-                                            long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch,
+                                            long currentMinuteOfYear, long currentMsInMinute,
                                             uint32_t timeOfRequest, RequestorState &state)
     {
         auto requestID = static_cast<uint8_t>(pkg.request.requestID);
@@ -496,8 +496,7 @@ namespace PriorityPlugin {
             auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
             etaOffsetMs = etaTotalMs - nowTotalMs;
             // Only wrap when the Dec/Jan boundary is the more plausible interpretation.
-            constexpr long YEAR_MS = 525960L * 60L * 1000L;
-            if (etaOffsetMs < -YEAR_MS / 2) {
+            if (constexpr long YEAR_MS = 525960L * 60L * 1000L; etaOffsetMs < -YEAR_MS / 2) {
                 etaOffsetMs += YEAR_MS;
             }
             long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;

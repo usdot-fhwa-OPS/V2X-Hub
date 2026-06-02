@@ -270,10 +270,7 @@ namespace PriorityPlugin {
         *msgSequenceNumber = _ssmSequenceCounter;
         ssmPtr->sequenceNumber = msgSequenceNumber;
 
-        for (const auto &pair : byIntersection) {
-            long intID = pair.first;
-            const auto &entries = pair.second;
-
+        for (const auto &[intID, entries] : byIntersection) {
             // Create a key to track the package contents for this intersection
             // and detect changes and increment signalStatus->sequenceNumber accordingly
             std::ostringstream seqKey;
@@ -288,8 +285,8 @@ namespace PriorityPlugin {
             }
             std::string currentSeqKey = seqKey.str();
 
-            auto lastSeqKeyIter = _lastSignalStatusKey.find(intID);
-            if (lastSeqKeyIter == _lastSignalStatusKey.end() || lastSeqKeyIter->second != currentSeqKey) {
+            if (auto lastSeqKeyIter = _lastSignalStatusKey.find(intID);
+                lastSeqKeyIter == _lastSignalStatusKey.end() || lastSeqKeyIter->second != currentSeqKey) {
                 _signalStatusSeqByIntersection[intID]++;
                 _lastSignalStatusKey[intID] = currentSeqKey;
             }
@@ -407,10 +404,7 @@ namespace PriorityPlugin {
             byIntersection[req.intersectionID].push_back(&req);
         }
 
-        for (const auto &mapEntry : byIntersection) {
-            long intID = mapEntry.first;
-            const auto &reqs = mapEntry.second;
-
+        for (const auto &[intID, reqs] : byIntersection) {
             // Create a key to track the package contents for this intersection
             // and detect changes and increment signalStatus->sequenceNumber accordingly
             std::ostringstream seqKey;
@@ -425,8 +419,8 @@ namespace PriorityPlugin {
             }
             std::string currentSeqKey = seqKey.str();
 
-            auto lastSeqKeyIter = _lastSignalStatusKey.find(intID);
-            if (lastSeqKeyIter == _lastSignalStatusKey.end() || lastSeqKeyIter->second != currentSeqKey) {
+            if (auto lastSeqKeyIter = _lastSignalStatusKey.find(intID);
+                lastSeqKeyIter == _lastSignalStatusKey.end() || lastSeqKeyIter->second != currentSeqKey) {
                 _signalStatusSeqByIntersection[intID]++;
                 _lastSignalStatusKey[intID] = currentSeqKey;
             }

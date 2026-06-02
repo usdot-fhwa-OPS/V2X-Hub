@@ -66,18 +66,18 @@ namespace PriorityPlugin {
     };
 
     // Classify a RequestStatus by its name prefix, independent of numeric enum value.
-    inline constexpr bool IsReadyX(RequestStatus s) {
+    constexpr bool IsReadyX(RequestStatus s) {
         return s == RequestStatus::readyQueued ||
                s == RequestStatus::readyOverridden;
     }
-    inline constexpr bool IsActiveX(RequestStatus s) {
+    constexpr bool IsActiveX(RequestStatus s) {
         return s == RequestStatus::activeProcessing ||
                s == RequestStatus::activeCancel ||
                s == RequestStatus::activeOverride ||
                s == RequestStatus::activeNotOverridden ||
                s == RequestStatus::activeAdjustNotNeeded;
     }
-    inline constexpr bool IsClosedX(RequestStatus s) {
+    constexpr bool IsClosedX(RequestStatus s) {
         return s == RequestStatus::closedCanceled ||
                s == RequestStatus::closedTimeToLiveError ||
                s == RequestStatus::closedTimerError ||

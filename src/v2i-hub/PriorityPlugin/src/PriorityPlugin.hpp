@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "PriorityConfiguration.h"
 #include "PriorityRequestProcessor.hpp"
 #include "PriorityTypes.hpp"
 
@@ -210,10 +211,9 @@ namespace PriorityPlugin {
              * @param classLevel the mapped NTCIP 1211 vehicle class level for this request.
              * @param currentMinuteOfYear the current minute of the year, used for ETA calculations.
              * @param currentMsInMinute the current millisecond in the minute, used for ETA calculations.
-             * @param nowEpoch the current time in epoch seconds, used for time of request and ETA calculations.
              * @param timeOfRequest the time of request to include in the priority request sent to the PRS, in epoch seconds.
              */
-            void ProcessPrgPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey, uint8_t classType, uint8_t classLevel, long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch, uint32_t timeOfRequest, RequestorState &state);
+            void ProcessPrgPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey, uint8_t classType, uint8_t classLevel, long currentMinuteOfYear, long currentMsInMinute, uint32_t timeOfRequest, RequestorState &state);
 
             // Map of intersection ID to controller info
             std::unordered_map<long, ControllerInfo> _controllers;

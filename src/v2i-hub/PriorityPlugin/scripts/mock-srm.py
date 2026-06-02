@@ -1,9 +1,10 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 import datetime
 import sys
 import json
 import threading
 import socket
+from typing import Final
 
 import j2735_202409
 from PyQt6.QtCore import Qt, QTimer
@@ -35,6 +36,9 @@ msgCnt_lock = threading.Lock()
 _send_sock = None
 _send_sock_lock = threading.Lock()
 _send_dest = None
+
+# Exception message constant
+SEND_ERROR: Final = "Send Error"
 
 # Column indices for the SRM entry table
 COL_INTERSECTION = 0
@@ -95,7 +99,7 @@ REQUEST_TYPE_CHOICES = [
 ]
 
 
-def getMOY() -> int:
+def get_moy() -> int:
     """Minute-of-year for the current UTC time."""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     start_of_year = datetime.datetime(now.year, 1, 1, tzinfo=datetime.timezone.utc)
@@ -103,13 +107,13 @@ def getMOY() -> int:
     return delta.days * 1440 + now.hour * 60 + now.minute
 
 
-def getDSecond() -> int:
+def get_d_second() -> int:
     """Millisecond within the current UTC minute."""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     return now.second * 1000 + now.microsecond // 1000
 
 
-def offsetToMOYAndDSecond(offset_seconds: int) -> tuple[int, int]:
+def offset_to_moy_dsecond(offset_seconds: int) -> tuple[int, int]:
     """Convert a seconds-from-now offset into (MOY, DSecond) pair."""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     target = now + datetime.timedelta(seconds=offset_seconds)
@@ -119,7 +123,7 @@ def offsetToMOYAndDSecond(offset_seconds: int) -> tuple[int, int]:
     dsecond = target.second * 1000 + target.microsecond // 1000
     return moy, dsecond
 
-def buildSRM(entries: list[dict]) -> str:
+def build_srm(entries: list[dict]) -> str:
     """Build an SRM JSON string from a list of entry dicts.
 
     Each entry dict has keys:
@@ -141,7 +145,7 @@ def buildSRM(entries: list[dict]) -> str:
         eta_s = max(round(float(entry["distance_m"]) / speed), 0)
         edt_s = max(round(float(entry["clearance_m"]) / speed), 0)
 
-        eta_moy, eta_ds = offsetToMOYAndDSecond(eta_s)
+        eta_moy, eta_ds = offset_to_moy_dsecond(eta_s)
 
         requests.append(
             {
@@ -166,8 +170,8 @@ def buildSRM(entries: list[dict]) -> str:
     srm = {
         "messageId": 29,
         "value": {
-            "timeStamp": getMOY(),
-            "second": getDSecond(),
+            "timeStamp": get_moy(),
+            "second": get_d_second(),
             "sequenceNumber": cnt,
             "requests": requests,
             "requestor": {
@@ -189,7 +193,7 @@ def buildSRM(entries: list[dict]) -> str:
     return json.dumps(srm)
 
 
-def sendMessage(msg: bytes, ip_send: str, port_send: int) -> None:
+def send_message(msg: bytes, ip_send: str, port_send: int) -> None:
     """Send a UDP datagram, reusing a cached socket."""
     global _send_sock, _send_dest
     try:
@@ -450,11 +454,11 @@ class MainWindow(QMainWindow):
 
         frame = j2735_202409.MessageFrame.MessageFrame
         total_bytes = 0
-        for _, group_entries in groups.items():
-            srm_str = buildSRM(group_entries)
+        for group_entries in groups.values():
+            srm_str = build_srm(group_entries)
             frame.from_jer(srm_str)
             uper = frame.to_uper()
-            sendMessage(uper, ip, port)
+            send_message(uper, ip, port)
             total_bytes += len(uper)
         return len(groups), total_bytes
 
@@ -472,7 +476,7 @@ class MainWindow(QMainWindow):
                 f"Sent {count} SRM(s) ({total_bytes} bytes total) to {ip}:{port}"
             )
         except Exception as exc:
-            QMessageBox.critical(self, "Send Error", str(exc))
+            QMessageBox.critical(self, SEND_ERROR, str(exc))
             self.status_label.setText("Send failed.")
 
     def _on_simulate(self):
@@ -509,7 +513,7 @@ class MainWindow(QMainWindow):
         try:
             count, total_bytes = self._send_entries(entries)
         except Exception as exc:
-            QMessageBox.critical(self, "Send Error", str(exc))
+            QMessageBox.critical(self, SEND_ERROR, str(exc))
             self.status_label.setText("Send failed.")
             return
 
@@ -551,7 +555,7 @@ class MainWindow(QMainWindow):
         try:
             count, total_bytes = self._send_entries(self._sim_entries)
         except Exception as exc:
-            QMessageBox.critical(self, "Send Error", str(exc))
+            QMessageBox.critical(self, SEND_ERROR, str(exc))
             self._stop_simulation("Send failed; simulation stopped.")
             return
 
