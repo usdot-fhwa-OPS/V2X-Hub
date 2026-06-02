@@ -32,20 +32,9 @@ namespace
   const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
   const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
 
-  TEST(MessageTypeTest, SpatMessageCanBeInstantiated)
-  {
-    SpatMessage msg;
-    SUCCEED();
-  }
-
-  TEST(MessageTypeTest, MapDataMessageCanBeInstantiated)
-  {
-    MapDataMessage msg;
-    SUCCEED();
-  }
-
   // Frequency Validation Tests
 
+  // When lastTimestampMs is 0, we should treat it as the first message and return an interval of 0
   TEST(FrequencyValidationTest, InitialMessageIntervalIsZero)
   {
     auto result = calculateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS);
