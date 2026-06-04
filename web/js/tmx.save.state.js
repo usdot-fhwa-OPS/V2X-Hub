@@ -5,10 +5,6 @@ $(document).ready(function () {
     $("#saveStateBtn").on("mousedown", function (e) {
         initializeSaveStatePasswordDialog();
         $("#saveStateBtn").attr("disabled", "true"); // disable to prevent double clicks
-        // showSaveStateFeedback("Starting database backup...");
-        // // Send command over WebSocket
-        // generateAndSendCommandMessage("savestate", []);
-        // startSaveStateProgressTimer();
         $("#saveStatePassword").val("");
         $("#saveStatePasswordConfirm").val("");
         $("#saveStatePasswordError").html("");
