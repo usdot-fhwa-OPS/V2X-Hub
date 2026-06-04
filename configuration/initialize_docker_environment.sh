@@ -43,7 +43,6 @@ if [[ "$interactive" == true ]]; then
     INFRASTRUCTURE_ID_DEFAULT="rsu_1234"
     INFRASTRUCTURE_NAME_DEFAULT="East Intersection"
     V2XHUB_IP_DEFAULT="127.0.0.1"
-    V2XHUB_VOLUME_PATH_DEFAULT="/tmp/v2xhub_data"
     SIMULATION_MODE_DEFAULT="FALSE"
     SIMULATION_IP_DEFAULT="127.0.0.1"
     SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
@@ -98,10 +97,6 @@ if [[ "$interactive" == true ]]; then
     read -r -p "Enter V2XHub IP (or press Enter to use default as $V2XHUB_IP_DEFAULT): " V2XHUB_IP
     V2XHUB_IP=${V2XHUB_IP:-$V2XHUB_IP_DEFAULT}
 
-    # V2X Hub Volume Path
-    read -r -p "Enter V2X Hub Volume Path (or press Enter to use default as $V2XHUB_VOLUME_PATH_DEFAULT): " V2XHUB_VOLUME_PATH
-    V2XHUB_VOLUME_PATH=${V2XHUB_VOLUME_PATH:-$V2XHUB_VOLUME_PATH_DEFAULT}
-
     # Simulation Mode
     read -r -p "Simulation Mode (TRUE/FALSE, or press Enter to use default as $SIMULATION_MODE_DEFAULT): " SIMULATION_MODE
     SIMULATION_MODE=${SIMULATION_MODE:-$SIMULATION_MODE_DEFAULT}
@@ -143,27 +138,23 @@ if [[ "$interactive" == true ]]; then
         echo "Password must be 8-12 charcters, and contain at least one of each of the following: uppercase letter, lowercase letter, number, and symbol"
         exit 1
     fi
-
     echo "WARNING: This will overwrite the existing .env file if it exists."
     read -r -p "Are you sure you want to continue? (Y/N): " overwrite_confirm
     if [[ "$overwrite_confirm" =~ [yY](es)* ]]; then
         # Write to .env file
-        ENV_FILE_CONTENT="# CAUTION! These are development configuration values only intended
-# for developer easy of deployment. Please run ./initialization script or
-# update credentials and configurations for deployment
-V2XHUB_VERSION=\"$V2XHUB_VERSION\"
-INFRASTRUCTURE_ID=\"$INFRASTRUCTURE_ID\"
-INFRASTRUCTURE_NAME=\"$INFRASTRUCTURE_NAME\"
-V2XHUB_IP=\"$V2XHUB_IP\"
-SIMULATION_MODE=\"$SIMULATION_MODE\"
-COMPOSE_PROFILES=\"$COMPOSE_PROFILES\"
-SENSOR_JSON_FILE_PATH=\"$SENSOR_JSON_FILE_PATH\"
-MYSQL_PASSWORD=\"$MYSQL_PASSWORD\"
-V2XHUB_USERNAME=\"$V2XHUB_USERNAME\"
-V2XHUB_PASSWORD=\"$V2XHUB_PASSWORD\"
-SIMULATION_IP=\"$SIMULATION_IP\"
-V2XHUB_VOLUME_PATH=\"$V2XHUB_VOLUME_PATH\"
-"
+        ENV_FILE_CONTENT="
+        V2XHUB_VERSION=$V2XHUB_VERSION
+        INFRASTRUCTURE_ID=$INFRASTRUCTURE_ID
+        INFRASTRUCTURE_NAME=$INFRASTRUCTURE_NAME
+        V2XHUB_IP=$V2XHUB_IP
+        SIMULATION_MODE=$SIMULATION_MODE
+        COMPOSE_PROFILES=$COMPOSE_PROFILES
+        SENSOR_JSON_FILE_PATH=$SENSOR_JSON_FILE_PATH
+        MYSQL_PASSWORD=$MYSQL_PASSWORD
+        V2XHUB_USERNAME=$V2XHUB_USERNAME
+        V2XHUB_PASSWORD=$V2XHUB_PASSWORD
+        SIMULATION_IP=$SIMULATION_IP 
+        "
         echo "$ENV_FILE_CONTENT" > "$SCRIPT_DIR/.env"
     else
         echo "Aborting. No changes were made to the .env file."
