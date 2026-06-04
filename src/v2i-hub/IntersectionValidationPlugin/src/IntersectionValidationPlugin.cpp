@@ -17,6 +17,7 @@
 #include "IntersectionValidationPlugin.h"
 #include "MessageIntervalValidator.h"
 #include "FieldValidation.h"
+#include "RevisionCounterValidator.h"
 
 using namespace tmx;
 using namespace tmx::utils;
@@ -172,6 +173,64 @@ namespace IntersectionValidation
         }
     }
 
+    void IntersectionValidationPlugin::validateRevisionCounters(const std::string &jsonStr,
+                                                                const std::string &eventType,
+                                                                const std::string &messageType,
+                                                                int intersectionId,
+                                                                uint64_t handlerBeginMs)
+    {
+        RevisionCounterResult result = (messageType == "SPaT")
+                                           ? _revisionValidator.validateSpatRevision(jsonStr)
+                                           : _revisionValidator.validateMapRevision(jsonStr);
+
+        uint &passed = (messageType == "SPaT") ? spatRevisionPassed : mapRevisionPassed;
+        uint &failed = (messageType == "SPaT") ? spatRevisionFailed : mapRevisionFailed;
+
+        if (!result.valid)
+        {
+            for (const auto &violation : result.violations)
+            {
+                PLOG(logWARNING) << messageType << " revision counter violation: " << violation;
+            }
+
+            uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+
+            std::vector<MissingDataElement> elements;
+            for (const auto &violation : result.violations)
+            {
+                elements.emplace_back(violation);
+            }
+
+            CTI4501ValidationMessage eventMsg;
+            eventMsg.set_eventGeneratedAt(handlerEndMs);
+            eventMsg.set_eventType(eventType);
+            eventMsg.set_intersectionID(intersectionId);
+            eventMsg.set_roadRegulatorID(-1);
+            eventMsg.set_source(rsuSource);
+            eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
+            eventMsg.set_missingDataElements(elements);
+
+            PluginClient::BroadcastMessage(eventMsg);
+
+            failed++;
+        }
+        else
+        {
+            passed++;
+        }
+
+        if (messageType == "SPaT")
+        {
+            PluginClient::SetStatus("SPaT Revision Validation Passed", passed);
+            PluginClient::SetStatus("SPaT Revision Validation Failed", failed);
+        }
+        else if (messageType == "MAP")
+        {
+            PluginClient::SetStatus("MAP Revision Validation Passed", passed);
+            PluginClient::SetStatus("MAP Revision Validation Failed", failed);
+        }
+    }
+
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
         uint64_t handlerBeginMs = PluginClientClockAware::getClock()->nowInMilliseconds();
@@ -205,6 +264,8 @@ namespace IntersectionValidation
             PLOG(logDEBUG) << "SPAT JSON: " << spatJsonStr;
  
             validateMessageFields(spatJsonStr, spatSchemaPath, "SpatMinimumData", "SPaT", intersectionId, handlerBeginMs);
+
+            validateRevisionCounters(spatJsonStr, "SpatMessageCountProgressionEvent", "SPaT", intersectionId, handlerBeginMs);
         }
         catch (const std::exception &e)
         {
@@ -246,6 +307,8 @@ namespace IntersectionValidation
             }
  
             validateMessageFields(mapJsonStr, mapSchemaPath, "MapMinimumData", "MAP", intersectionId, handlerBeginMs);
+            
+            validateRevisionCounters(mapJsonStr, "MapMessageCountProgressionEvent", "MAP", intersectionId, handlerBeginMs);
         }
         catch (const std::exception &e)
         {

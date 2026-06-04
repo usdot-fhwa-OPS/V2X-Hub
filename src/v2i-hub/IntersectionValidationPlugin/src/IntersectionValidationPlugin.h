@@ -24,6 +24,7 @@
 #include <PluginClientClockAware.h>
 #include <jsoncpp/json/json.h>
 #include <CTI4501ValidationMessage.h>
+#include "RevisionCounterValidator.h"
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -62,6 +63,11 @@ namespace IntersectionValidation
         uint mapValidationPassed;
         std::string rsuSource;
 
+        uint spatRevisionPassed = 0;
+        uint mapRevisionPassed = 0;
+        uint spatRevisionFailed = 0;
+        uint mapRevisionFailed = 0;
+
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
@@ -86,6 +92,24 @@ namespace IntersectionValidation
                                                               const std::string &messageType,
                                                               int intersectionId,
                                                               uint64_t handlerBeginMs);
+
+        /**
+         * @brief Validate revision counters increase when message changes
+         * @param jsonStr The JSON string to validate.
+         * @param eventType The event type to use in the CTI4501ValidationMessage
+         * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
+         * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage
+         * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         */
+        void validateRevisionCounters(const std::string &jsonStr,
+                                      const std::string &eventType,
+                                      const std::string &messageType,
+                                      int intersectionId,
+                                      uint64_t handlerBeginMs);
+
+        // Revision counter validator — stores previous message state and
+        // compares against current to detect CTI 4501 revision violations
+        RevisionCounterValidator _revisionValidator;
 
         // CTI 4501 thresholds
         static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
