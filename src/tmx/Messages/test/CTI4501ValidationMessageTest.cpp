@@ -49,7 +49,7 @@ namespace tmx::messages
 
     TEST_F(CTI4501ValidationMessageTest, to_string)
     {
-        std::string expectedStr = "{\"eventGeneratedAt\":\"12222222222\",\"eventType\":\"SpatMinimumData\",\"intersectionID\":\"123\",\"roadRegulatorID\":\"456\",\"source\":\"RSU\",\"timePeriod\":{\"beginTimestamp\":\"11111111111\",\"endTimestamp\":\"12222222222\"},\"missingDataElements\":[\"id\",\"minEndTime\"],\"timestampA\":\"2023-01-01T00:00:00Z\",\"timestampB\":\"2023-01-01T00:00:00Z\",\"messageCountA\":\"1\",\"messageCountB\":\"2\"}\n";
+        std::string expectedStr = "{\"eventGeneratedAt\":\"12222222222\",\"eventType\":\"SpatMinimumData\",\"intersectionID\":\"123\",\"roadRegulatorID\":\"456\",\"source\":\"RSU\",,\"timestampA\":\"2023-01-01T00:00:00Z\",\"timestampB\":\"2023-01-01T00:00:00Z\",\"messageCountA\":\"1\",\"messageCountB\":\"2\",\"timePeriod\":{\"beginTimestamp\":\"11111111111\",\"endTimestamp\":\"12222222222\"},\"missingDataElements\":[\"id\",\"minEndTime\"]}\n";
         EXPECT_EQ(expectedStr, tmxCti4501Ptr->to_string());
     }
 
