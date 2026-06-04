@@ -214,7 +214,7 @@ namespace IntersectionValidation
 
             failed++;
         }
-        else
+        else if (result.comparisonPerformed)
         {
             passed++;
         }

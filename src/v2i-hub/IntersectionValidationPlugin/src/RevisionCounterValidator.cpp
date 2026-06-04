@@ -25,9 +25,8 @@ namespace IntersectionValidation
 
     int RevisionCounterValidator::extractInt(const rapidjson::Value &value, int defaultVal)
     {
-        // TMX may serialize integers as either actual ints or strings.
-        // Handle both forms so revision counters and intersection IDs
-        // are extracted correctly regardless of TMX serialization.
+        // Handle both forms of integer representations (ints or strings)
+        // so revision counters and intersection IDs are extracted
         if (value.IsInt())
         {
             return value.GetInt();
@@ -61,6 +60,7 @@ namespace IntersectionValidation
                                                           const std::string &messageType,
                                                           RevisionCounterResult &result)
     {
+        result.comparisonPerformed = true;
         // Compare current content against stored previous content
         bool contentChanged = (contentHash != prevState.contentHash);
 
@@ -300,6 +300,7 @@ namespace IntersectionValidation
         {
             return;
         }
+        result.comparisonPerformed = true;
 
         bool msgRevisionChanged = (currentMsgRevision != _prevMapMessage.msgIssueRevision);
 

@@ -28,6 +28,7 @@ namespace IntersectionValidation
     struct RevisionCounterResult
     {
         bool valid = true;
+        bool comparisonPerformed = false;
         std::vector<std::string> violations;
     };
 
