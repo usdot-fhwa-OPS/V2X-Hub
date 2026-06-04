@@ -126,6 +126,13 @@
                         <input type='hidden' name='MAX_FILE_SIZE' value='100000000' />
                         <div id="uploadFilesDiv"><div class="uploadFilesLabel">Select a file to upload: </div><input id="uploadFiles" name="uploadedFiles" type="file" data-acceptedfiletypes="" /><br /></div>
                         <span id="fileDestPathLabel">Upload Directory: </span><input id="fileDestPathInput" type="text" style="display:none;" value="" autocomplete="off" />
+                        
+                        <div id="statePasswordSection" style="display:none; margin-top:10px;">
+                            <label><b>State Restore Passphrase</b></label><br/>
+                            <input type="password" id="uploadStatePassword" style="width: 50%;" />
+                            <div id="uploadStatePasswordError" style="color:red; margin-top:5px;"></div>
+                        </div>
+
                         <button id="submitFileButton" type="submit" style="display:none;">Submit</button>
                     </form>
                     <iframe name="formTarget" style="display:none;"></iframe>
@@ -136,7 +143,32 @@
                         <div id="err_dialog_command" class="feedBack"></div>
                         <div id="err_dialog_feedback" class="feedBack"></div>
                     </div>
-                </div>      
+                </div> 
+                
+                <div id="saveStatePasswordDialog" style="display:none;">
+                    <div style="margin-bottom:10px;">
+                        <label for="saveStatePassword">
+                            Enter a password to encrypt this backup:
+                        </label>
+                        <br />
+                        <input type="password"
+                            id="saveStatePassword"
+                            style="width:95%;" />
+                    </div>
+
+                    <div>
+                        <label for="saveStatePasswordConfirm">
+                            Confirm password:
+                        </label>
+                        <br />
+                        <input type="password"
+                            id="saveStatePasswordConfirm"
+                            style="width:95%;" />
+                    </div>
+
+                    <div id="saveStatePasswordError"
+                        style="color:red;margin-top:10px;"></div>
+                </div>
 
             </div>
             <div id="tabs-2">

@@ -6,6 +6,7 @@ var clearUploadProgressTimer = null;
 var uploadFileType = null;
 var uploadFile = null;
 var defaultFileDestPath = "/var/www/download/";
+var uploadStatePassphrase = "";
 
 /**
 *   Print text to console with a timestamp.
@@ -64,6 +65,15 @@ function setFileTypesForAndOpenFileUploadForm(type, accessLevel, fileTypeStringL
     $("#fileButtonOptions > button[data-type=\"" + type + "\"]").addClass("activeFileOption");
     $("#fileButtonOptions > button:not([data-type=\"" + type + "\"])").removeClass("activeFileOption");
     $("#uploadFiles").attr("data-acceptedFileTypes", fileTypeStringList);
+
+    if (type === "state") {
+        $("#statePasswordSection").show();
+    } else {
+        $("#statePasswordSection").hide();
+        $("#uploadStatePassword").val("");
+        $("#uploadStatePasswordError").html("");
+    }
+
     if (type == "other") {
         $("#fileDestPathLabel").css("display", "");
         $("#fileDestPathInput").css("display", "");
@@ -170,7 +180,7 @@ function checkIfUpdateState() {
 }
 
 function sendUpdateStateCommand(filename) {
-    generateAndSendCommandMessage("uploadstate", [{ name: "statefile", value: filename}]);
+    generateAndSendCommandMessage("uploadstate", [{ name: "statefile", value: filename}, { name: "passphrase", value: uploadStatePassphrase}]);
 }
 
 function checkIfPluginUploadAndInstall() {
@@ -228,6 +238,22 @@ $(document).ready(function () {
                 uploadFile = uploadFiles.files[0];
                 var destPath = "";
                 var type = $(".activeFileOption").attr("data-type");
+
+                $("#fileUploadErrorFeedback").html("");
+                $("#uploadStatePasswordError").html("");
+
+                 if (type === "state") {
+
+                    var password = $("#uploadStatePassword").val();
+
+                    if (!password || password.trim() === "") {
+                        $("#uploadStatePasswordError").html("Passphrase is required.");
+                        return;
+                    }
+
+                    uploadStatePassphrase = password.trim();
+                }
+
                 uploadFileType = type;
                 if (type == "map") {
                     destPath = defaultFileDestPath + "MAP/";
@@ -258,6 +284,11 @@ $(document).ready(function () {
         $(this).attr("disabled", "true");
         $("#fileDestPathInput").val(defaultFileDestPath);
         populateFileUploadDialogBasedOnAccessLevel();
+
+         $("#uploadStatePassword").val("");
+        $("#uploadStatePasswordError").html("");
+        uploadStatePassphrase = "";
+        
         $("#fileUploadDialog").dialog("open");
         resizeDialogWindow($(".ui-dialog[aria-describedby=\"fileUploadDialog\"]"));
         $(".ui-dialog-buttonset > .ui-button:contains(\"Submit\")").button("disable");

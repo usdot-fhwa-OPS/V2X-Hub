@@ -144,25 +144,6 @@ if [[ "$interactive" == true ]]; then
         exit 1
     fi
 
-    # Database Backup Passphrase
-    echo "Enter a passphrase for encrypting/decrypting database state backups."
-    echo "Store this securely — you will need it to restore any saved state."
-    read -r -s -p "DB Backup Passphrase (input will be hidden): " DB_BACKUP_PASSPHRASE
-    echo
-    read -r -s -p "Confirm DB Backup Passphrase: " DB_BACKUP_PASSPHRASE_CONFIRM
-    echo
-    while [ "$DB_BACKUP_PASSPHRASE" != "$DB_BACKUP_PASSPHRASE_CONFIRM" ]; do
-        echo "Passphrases do not match. Please try again."
-        read -r -s -p "DB Backup Passphrase: " DB_BACKUP_PASSPHRASE
-        echo
-        read -r -s -p "Confirm DB Backup Passphrase: " DB_BACKUP_PASSPHRASE_CONFIRM
-        echo
-    done
-    if [ -z "$DB_BACKUP_PASSPHRASE" ]; then
-        echo "ERROR: DB_BACKUP_PASSPHRASE cannot be empty."
-        exit 1
-    fi
-
     echo "WARNING: This will overwrite the existing .env file if it exists."
     read -r -p "Are you sure you want to continue? (Y/N): " overwrite_confirm
     if [[ "$overwrite_confirm" =~ [yY](es)* ]]; then
@@ -182,7 +163,6 @@ V2XHUB_USERNAME=\"$V2XHUB_USERNAME\"
 V2XHUB_PASSWORD=\"$V2XHUB_PASSWORD\"
 SIMULATION_IP=\"$SIMULATION_IP\"
 V2XHUB_VOLUME_PATH=\"$V2XHUB_VOLUME_PATH\"
-DB_BACKUP_PASSPHRASE=\"$DB_BACKUP_PASSPHRASE\"
 "
         echo "$ENV_FILE_CONTENT" > "$SCRIPT_DIR/.env"
     else

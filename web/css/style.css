@@ -379,6 +379,15 @@ body{
     z-index:1000;
 }
 
+/* jQuery UI dialog override (optional polish) */
+.ui-dialog {
+    font-size: 0.9em;
+}
+
+.ui-dialog .ui-dialog-buttonpane button {
+    padding: 0.4em 1em;
+}
+
 #fileUploadErrorFeedback {
     margin-top: 2%;
 }

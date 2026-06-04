@@ -835,12 +835,18 @@ bool TmxControl::user_delete()
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 {
-	if (!checkPerm())
-		return false;
-	return save_state();
+	if (!_opts || !_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
+
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    return save_state(passphrase);
 }
 
-bool TmxControl::save_state()
+bool TmxControl::save_state(const std::string &passphrase)
 {
     try
     {
@@ -851,17 +857,17 @@ bool TmxControl::save_state()
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
 
-		// Read passphrase from environment
-        const char* passphraseEnv = std::getenv("DB_BACKUP_PASSPHRASE");
-        if (!passphraseEnv || std::string(passphraseEnv).empty())
-        {
-            PLOG(logERROR) << "DB_BACKUP_PASSPHRASE environment variable is not set";
-            return false;
-        }
+		if (passphrase.empty())
+		{
+			FILE_LOG(logERROR) << "Passphrase not provided for saving state";
+			return false;
+		}
 
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
-		std::string cmd = "mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
+		std::string cmd = 
+			"bash -c 'set -o pipefail && "
+			"mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
             " --no-tablespaces "
             "--ignore-table=" + dbname + ".eventLog "
             "--ignore-table=" + dbname + ".messageActivity "
@@ -870,8 +876,8 @@ bool TmxControl::save_state()
             "--ignore-table=" + dbname + ".user "
             " | gzip "
             " | openssl enc -aes-256-cbc -salt -pbkdf2 "
-            " -pass env:DB_BACKUP_PASSPHRASE "
-            " -out \"" + backupFile + "\"";
+           	" -pass pass:" + passphrase + " "
+            " -out \"" + backupFile + "\"'";
 
         if (int ret = std::system(cmd.c_str()); ret != 0)
         {
@@ -913,10 +919,24 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 	}
 
 	std::string filePath = (*_opts)["upload-state"].as<std::string>();
-    return upload_state(filePath);
+        if (!_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
+
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    if (passphrase.empty())
+    {
+        FILE_LOG(logERROR) << "Empty passphrase not allowed";
+        return false;
+    }
+
+    return upload_state(filePath, passphrase);
 }
 
-bool TmxControl::upload_state(const std::string &filePath)
+bool TmxControl::upload_state(const std::string &filePath, const std::string &passphrase)
 {
     if (!checkPerm())
         return false;
@@ -941,25 +961,25 @@ bool TmxControl::upload_state(const std::string &filePath)
             return false;
         }
 
-        // Read passphrase from environment
-        const char* passphraseEnv = std::getenv("DB_BACKUP_PASSPHRASE");
-        if (!passphraseEnv || std::string(passphraseEnv).empty())
-        {
-            FILE_LOG(logERROR) << "DB_BACKUP_PASSPHRASE environment variable is not set";
-            return false;
-        }
+		if (passphrase.empty())
+		{
+			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
+			return false;
+		}
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 		
 		std::string cmd =
+			"bash -c 'set -o pipefail && "
 			"openssl enc -d -aes-256-cbc -pbkdf2 "
 			" -in \"" + filePath + "\""
-			" -pass env:DB_BACKUP_PASSPHRASE "
+			 " -pass pass:" + passphrase + " "
 			" | gunzip "
 			" | mysql -u " + dbConfig.getUser() +
 			" -p" + dbConfig.getPassword() +
 			" -h " + dbConfig.getHost() +
-			" " + dbConfig.getDatabase();
+			" " + dbConfig.getDatabase() +
+			"'";
 
         FILE_LOG(logDEBUG) << "Executing SQL restore command:";
         FILE_LOG(logDEBUG) << cmd;

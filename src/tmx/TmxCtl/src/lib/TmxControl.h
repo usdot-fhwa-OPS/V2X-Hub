@@ -82,10 +82,10 @@ public:
 	bool plugin_install(pluginlist &, ...);
 	bool plugin_remove();
 	bool plugin_remove(pluginlist &, ...);
-	bool save_state();
+	bool save_state(const std::string &passphrase);
 	bool save_state(pluginlist &, ...);
 	bool upload_state(pluginlist &, ...);
-	bool upload_state(const std::string &filePath);
+	bool upload_state(const std::string &filePath, const std::string &passphrase);
 
 	//methods for using the class in other applications
 	void SetConnectionUrl(std::string url);

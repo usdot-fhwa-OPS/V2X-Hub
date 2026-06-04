@@ -724,6 +724,7 @@ function handleCommandMessage(msgData) {
                 stopClearFileUploadProgressTimer();
                 $("#fileUploadProgress").html("");
                 $("#fileUploadProgressFeedback").html("");
+                $("#uploadFileBtn").removeAttr("disabled");
             } else {
                 stopClearFileUploadProgressTimer();
                 $("#fileUploadProgressFeedback").html(msgData["reason"]);
