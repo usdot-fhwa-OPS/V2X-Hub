@@ -5249,4 +5249,24 @@ namespace
     EXPECT_TRUE(result.valid);
   }
 
+  TEST(SpatRevisionCounterTest, JSONParseFailure)
+  {
+    RevisionCounterValidator validator;
+    std::string invalidJson = R"({"messageId": 19, "value": {"SPAT": {)"; // Malformed JSON
+    auto result = validator.validateSpatRevision(invalidJson);
+    EXPECT_FALSE(result.valid);
+    EXPECT_TRUE(result.violations.size() >= 1);
+    EXPECT_NE(std::string::npos, result.violations[0].find("Failed to parse SPaT JSON"));
+  }
+
+  TEST(MapRevisionCounterTest, JSONParseFailure)
+  {
+    RevisionCounterValidator validator;
+    std::string invalidJson = R"({"messageId": 19, "value": {"MAP": {)"; // Malformed JSON
+    auto result = validator.validateMapRevision(invalidJson);
+    EXPECT_FALSE(result.valid);
+    EXPECT_TRUE(result.violations.size() >= 1);
+    EXPECT_NE(std::string::npos, result.violations[0].find("Failed to parse MAP JSON"));
+  }
+
 } // namespace
