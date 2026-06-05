@@ -224,7 +224,7 @@ namespace IntersectionValidation
         }
     }
 
-    static void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator)
+    void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator)
     {
         if (!value.IsObject())
         {

@@ -22,6 +22,7 @@
 #include "IntersectionValidationPlugin.h"
 #include "MessageIntervalValidator.h"
 #include "FieldValidation.h"
+#include "RevisionCounterValidator.h"
 
 using namespace tmx::messages;
 using namespace IntersectionValidation;
@@ -4675,6 +4676,603 @@ namespace
     })";
     auto result = validateJsonAgainstSchemaFile(json, MAP_SCHEMA_PATH);
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
+  }
+
+  rapidjson::Document parseJson(const std::string &json)
+  {
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    return doc;
+  }
+  // ---- SPaT Revision Counter Tests ----
+
+  // SPaT content changed → revision must increment
+  TEST(SpatRevisionCounterTest, ContentChangedRevisionIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    // First message: revision 0, signalGroup 2
+    auto msg1 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 0,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    // Second message: revision 1, signalGroup changed to 4 (content changed)
+    auto msg2 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 1,
+            "status": "0000",
+            "states": [{"signalGroup": 4, "state-time-speed": [
+                {"eventState": "protected-Movement-Allowed", "timing": {"minEndTime": 22180}}
+            ]}]
+        }]}}
+    })");
+
+    auto result1 = validator.validateSpatRevision(msg1);
+    EXPECT_TRUE(result1.valid); // First message — no previous to compare
+
+    auto result2 = validator.validateSpatRevision(msg2);
+    EXPECT_TRUE(result2.valid) << (result2.violations.empty() ? "" : result2.violations[0]);
+  }
+
+  // SPaT content changed but revision NOT incremented, violation
+  TEST(SpatRevisionCounterTest, ContentChangedRevisionNotIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 5,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    // Content changed (different eventState) but revision stays at 5
+    auto msg2 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 5,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "protected-Movement-Allowed", "timing": {"minEndTime": 22180}}
+            ]}]
+        }]}}
+    })");
+
+    validator.validateSpatRevision(msg1);
+    auto result = validator.validateSpatRevision(msg2);
+
+    EXPECT_FALSE(result.valid);
+    EXPECT_EQ(1u, result.violations.size());
+    EXPECT_NE(std::string::npos, result.violations[0].find("content changed but revision counter did not increment"));
+  }
+
+  // SPaT content unchanged, revision must stay the same
+  TEST(SpatRevisionCounterTest, ContentUnchangedRevisionSame)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 3,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    validator.validateSpatRevision(msg);
+    auto result = validator.validateSpatRevision(msg); // Same message again
+
+    EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
+  }
+
+  // SPaT content unchanged but revision incremented, violation
+  TEST(SpatRevisionCounterTest, ContentUnchangedRevisionIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 3,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    // Same content but revision incremented from 3 to 4
+    auto msg2 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 4,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}  
+    })");
+
+    validator.validateSpatRevision(msg1);
+    auto result = validator.validateSpatRevision(msg2);
+
+    EXPECT_FALSE(result.valid);
+    EXPECT_EQ(1u, result.violations.size());
+    EXPECT_NE(std::string::npos, result.violations[0].find("content unchanged but revision counter incremented"));
+  }
+
+  // SPaT only timestamp changed, revision must stay the same (no violation)
+  TEST(SpatRevisionCounterTest, OnlyTimestampChangedRevisionSame)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"timeStamp": 35176, "intersections": [{
+            "id": {"id": 12111},
+            "revision": 3,
+            "status": "0000",
+            "timeStamp": 100,
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    // Only timeStamp changed — content is the same
+    auto msg2 = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"timeStamp": 35176, "intersections": [{
+            "id": {"id": 12111},
+            "revision": 3,
+            "status": "0000",
+            "timeStamp": 200,
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    validator.validateSpatRevision(msg1);
+    auto result = validator.validateSpatRevision(msg2);
+
+    EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
+  }
+
+  // ---- MAP Revision Counter Tests ----
+
+  // MAP content changed, msgIssueRevision must increment
+  TEST(MapRevisionCounterTest, ContentChangedMsgRevisionIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 1,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    // laneID changed from 1 to 2, revisions incremented
+    auto msg2 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 2,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 1,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 2, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    validator.validateMapRevision(msg1);
+    auto result = validator.validateMapRevision(msg2);
+    EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
+  }
+
+  // MAP content changed but msgIssueRevision NOT incremented 
+  TEST(MapRevisionCounterTest, ContentChangedMsgRevisionNotIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 5,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    // Content changed but msgIssueRevision stays at 5
+    auto msg2 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 5,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 99, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    validator.validateMapRevision(msg1);
+    auto result = validator.validateMapRevision(msg2);
+
+    EXPECT_FALSE(result.valid);
+    EXPECT_TRUE(result.violations.size() >= 1);
+    
+    bool foundMsgRevisionViolation = false;
+    for (const auto &v : result.violations)
+    {
+      if (v.find("msgIssueRevision did not increment") != std::string::npos)
+      {
+        foundMsgRevisionViolation = true;
+      }
+    }
+    EXPECT_TRUE(foundMsgRevisionViolation);
+  }
+
+  // MAP content unchanged, msgIssueRevision must stay the same
+  TEST(MapRevisionCounterTest, ContentUnchangedMsgRevisionSame)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 3,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    validator.validateMapRevision(msg);
+    auto result = validator.validateMapRevision(msg); // Same message
+    EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
+  }
+
+  // MAP content unchanged but msgIssueRevision incremented, violation
+  TEST(MapRevisionCounterTest, ContentUnchangedMsgRevisionIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 3,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    // Same content but msgIssueRevision changed from 3 to 4
+    auto msg2 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 4,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 389519791, "long": -771483512},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 100, "y": 200}}},
+                    {"delta": {"node-XY1": {"x": 150, "y": 250}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    validator.validateMapRevision(msg1);
+    auto result = validator.validateMapRevision(msg2);
+
+    EXPECT_FALSE(result.valid);
+    bool foundViolation = false;
+    for (const auto &v : result.violations)
+    {
+      if (v.find("msgIssueRevision incremented") != std::string::npos)
+      {
+        foundViolation = true;
+      }
+    }
+    EXPECT_TRUE(foundViolation);
+  }
+
+  // MAP intersection content changed, intersection revision must increment
+  TEST(MapRevisionCounterTest, IntersectionChangedRevisionIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 1,
+            "intersections": [
+                {"id": {"id": 9001}, "revision": 0,
+                 "refPoint": {"lat": 100, "long": 200},
+                 "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                 }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                    {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                 ]}}]},
+                {"id": {"id": 9002}, "revision": 0,
+                 "refPoint": {"lat": 300, "long": 400},
+                 "laneSet": [{"laneID": 5, "laneAttributes": {
+                    "directionalUse": "40", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                 }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 50, "y": 60}}},
+                    {"delta": {"node-XY1": {"x": 70, "y": 80}}}
+                 ]}}]}
+            ]
+        }}
+    })");
+
+    // Intersection 9001 changed, revision incremented.
+    // Intersection 9002 unchanged, revision stays at 0.
+    // msgIssueRevision incremented because 9001 changed.
+    auto msg2 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 2,
+            "intersections": [
+                {"id": {"id": 9001}, "revision": 1,
+                 "refPoint": {"lat": 100, "long": 200},
+                 "laneSet": [{"laneID": 2, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                 }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                    {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                 ]}}]},
+                {"id": {"id": 9002}, "revision": 0,
+                 "refPoint": {"lat": 300, "long": 400},
+                 "laneSet": [{"laneID": 5, "laneAttributes": {
+                    "directionalUse": "40", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                 }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 50, "y": 60}}},
+                    {"delta": {"node-XY1": {"x": 70, "y": 80}}}
+                 ]}}]}
+            ]
+        }}
+    })");
+
+    validator.validateMapRevision(msg1);
+    auto result = validator.validateMapRevision(msg2);
+    EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
+  }
+
+  // MAP intersection changed but intersection revision NOT incremented, violation
+  TEST(MapRevisionCounterTest, IntersectionChangedRevisionNotIncremented)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg1 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 1,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 100, "long": 200},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                    {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    // Content changed but intersection revision stays at 0
+    auto msg2 = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 2,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 999, "long": 888},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                    {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    validator.validateMapRevision(msg1);
+    auto result = validator.validateMapRevision(msg2);
+
+    EXPECT_FALSE(result.valid);
+    bool foundIntersectionViolation = false;
+    for (const auto &v : result.violations)
+    {
+      if (v.find("intersection 9001") != std::string::npos &&
+          v.find("content changed but revision counter did not increment") != std::string::npos)
+      {
+        foundIntersectionViolation = true;
+      }
+    }
+    EXPECT_TRUE(foundIntersectionViolation);
+  }
+
+  // First message — no previous state, should always pass
+  TEST(SpatRevisionCounterTest, FirstMessageAlwaysPasses)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg = parseJson(R"({
+        "messageId": 19,
+        "value": {"SPAT": {"intersections": [{
+            "id": {"id": 12111},
+            "revision": 0,
+            "status": "0000",
+            "states": [{"signalGroup": 2, "state-time-speed": [
+                {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
+            ]}]
+        }]}}
+    })");
+
+    auto result = validator.validateSpatRevision(msg);
+    EXPECT_TRUE(result.valid);
+    EXPECT_TRUE(result.violations.empty());
+  }
+
+  TEST(MapRevisionCounterTest, FirstMessageAlwaysPasses)
+  {
+    RevisionCounterValidator validator;
+
+    auto msg = parseJson(R"({
+        "messageId": 18,
+        "value": {"MapData": {
+            "msgIssueRevision": 1,
+            "intersections": [{
+                "id": {"id": 9001},
+                "revision": 0,
+                "refPoint": {"lat": 100, "long": 200},
+                "laneSet": [{"laneID": 1, "laneAttributes": {
+                    "directionalUse": "C0", "sharedWith": "0000",
+                    "laneType": {"vehicle": "00"}
+                }, "nodeList": {"nodes": [
+                    {"delta": {"node-XY1": {"x": 10, "y": 20}}},
+                    {"delta": {"node-XY1": {"x": 30, "y": 40}}}
+                ]}}]
+            }]
+        }}
+    })");
+
+    auto result = validator.validateMapRevision(msg);
+    EXPECT_TRUE(result.valid);
+    EXPECT_TRUE(result.violations.empty());
+  }
+
+  // Missing intersections — should pass without violations
+  TEST(SpatRevisionCounterTest, MissingIntersectionsNoViolation)
+  {
+    RevisionCounterValidator validator;
+    auto msg = parseJson(R"({"messageId": 19, "value": {"SPAT": {}}})");
+    auto result = validator.validateSpatRevision(msg);
+    EXPECT_TRUE(result.valid);
+  }
+
+  TEST(MapRevisionCounterTest, MissingIntersectionsNoViolation)
+  {
+    RevisionCounterValidator validator;
+    auto msg = parseJson(R"({"messageId": 18, "value": {"MapData": {"msgIssueRevision": 1}}})");
+    auto result = validator.validateMapRevision(msg);
+    EXPECT_TRUE(result.valid);
+  }
+
+  TEST(SpatRevisionCounterTest, JSONParseFailure)
+  {
+    RevisionCounterValidator validator;
+    auto invalidJson = parseJson(R"({"messageId": 19, "value": {"SPAT": {)"); // Malformed JSON
+    auto result = validator.validateSpatRevision(invalidJson);
+    EXPECT_FALSE(result.valid);
+    EXPECT_TRUE(result.violations.size() >= 1);
+    EXPECT_NE(std::string::npos, result.violations[0].find("Failed to parse SPaT JSON"));
+  }
+
+  TEST(MapRevisionCounterTest, JSONParseFailure)
+  {
+    RevisionCounterValidator validator;
+    auto invalidJson = parseJson(R"({"messageId": 19, "value": {"MAP": {)"); // Malformed JSON
+    auto result = validator.validateMapRevision(invalidJson);
+    EXPECT_FALSE(result.valid);
+    EXPECT_TRUE(result.violations.size() >= 1);
+    EXPECT_NE(std::string::npos, result.violations[0].find("Failed to parse MAP JSON"));
   }
 
 } // namespace

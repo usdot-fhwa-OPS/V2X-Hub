@@ -18,6 +18,10 @@ namespace tmx::messages
             tmxCti4501Ptr->set_intersectionID(123);
             tmxCti4501Ptr->set_roadRegulatorID(456);
             tmxCti4501Ptr->set_source("RSU");
+            tmxCti4501Ptr->set_timestampA("2023-01-01T00:00:00Z");
+            tmxCti4501Ptr->set_timestampB("2023-01-01T00:00:00Z");
+            tmxCti4501Ptr->set_messageCountA(1);
+            tmxCti4501Ptr->set_messageCountB(2);
             ProcessingTimePeriod timePeriod(11111111111, 12222222222);
             tmxCti4501Ptr->set_timePeriod(timePeriod);
             std::vector<MissingDataElement> elements{MissingDataElement("id"), MissingDataElement("minEndTime")};
@@ -37,11 +41,15 @@ namespace tmx::messages
         ASSERT_EQ(2, tmxCti4501Ptr->get_missingDataElements().size());
         EXPECT_EQ("id", tmxCti4501Ptr->get_missingDataElements()[0].value);
         EXPECT_EQ("minEndTime", tmxCti4501Ptr->get_missingDataElements()[1].value);
+        EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr->get_timestampA());
+        EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr->get_timestampB());
+        EXPECT_EQ(1, tmxCti4501Ptr->get_messageCountA());
+        EXPECT_EQ(2, tmxCti4501Ptr->get_messageCountB());
     }
 
     TEST_F(CTI4501ValidationMessageTest, to_string)
     {
-        std::string expectedStr = "{\"eventGeneratedAt\":\"12222222222\",\"eventType\":\"SpatMinimumData\",\"intersectionID\":\"123\",\"roadRegulatorID\":\"456\",\"source\":\"RSU\",\"timePeriod\":{\"beginTimestamp\":\"11111111111\",\"endTimestamp\":\"12222222222\"},\"missingDataElements\":[\"id\",\"minEndTime\"]}\n";
+        std::string expectedStr = "{\"eventGeneratedAt\":\"12222222222\",\"eventType\":\"SpatMinimumData\",\"intersectionID\":\"123\",\"roadRegulatorID\":\"456\",\"source\":\"RSU\",\"timestampA\":\"2023-01-01T00:00:00Z\",\"timestampB\":\"2023-01-01T00:00:00Z\",\"messageCountA\":\"1\",\"messageCountB\":\"2\",\"timePeriod\":{\"beginTimestamp\":\"11111111111\",\"endTimestamp\":\"12222222222\"},\"missingDataElements\":[\"id\",\"minEndTime\"]}\n";
         EXPECT_EQ(expectedStr, tmxCti4501Ptr->to_string());
     }
 
@@ -62,7 +70,11 @@ namespace tmx::messages
                                     "missingDataElements": [
                                         "id",
                                         "minEndTime"
-                                    ]
+                                    ],
+                                    "timestampA": "2023-01-01T00:00:00Z",
+                                    "timestampB": "2023-01-01T00:00:00Z",
+                                    "messageCountA": 1,
+                                    "messageCountB": 2
                                 }
                                 )";
         tmxCti4501Ptr2->set_contents(expectedStr);
@@ -77,5 +89,9 @@ namespace tmx::messages
         ASSERT_EQ(2, tmxCti4501Ptr2->get_missingDataElements().size());
         EXPECT_EQ("id", tmxCti4501Ptr2->get_missingDataElements()[0].value);
         EXPECT_EQ("minEndTime", tmxCti4501Ptr2->get_missingDataElements()[1].value);
+        EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr2->get_timestampA());
+        EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr2->get_timestampB());
+        EXPECT_EQ(1, tmxCti4501Ptr2->get_messageCountA());
+        EXPECT_EQ(2, tmxCti4501Ptr2->get_messageCountB());
     }
 }

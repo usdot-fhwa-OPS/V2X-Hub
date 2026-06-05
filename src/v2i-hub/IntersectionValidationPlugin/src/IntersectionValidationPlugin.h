@@ -24,6 +24,7 @@
 #include <PluginClientClockAware.h>
 #include <jsoncpp/json/json.h>
 #include <CTI4501ValidationMessage.h>
+#include "RevisionCounterValidator.h"
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -56,11 +57,16 @@ namespace IntersectionValidation
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
-        uint spatFieldValidationErrors;
-        uint spatValidationPassed;
-        uint mapFieldValidationErrors;
-        uint mapValidationPassed;
+        uint spatFieldValidationErrors = 0;
+        uint spatValidationPassed = 0;
+        uint mapFieldValidationErrors = 0;
+        uint mapValidationPassed = 0;
         std::string rsuSource;
+
+        uint spatRevisionPassed = 0;
+        uint mapRevisionPassed = 0;
+        uint spatRevisionFailed = 0;
+        uint mapRevisionFailed = 0;
 
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
@@ -72,20 +78,50 @@ namespace IntersectionValidation
         void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
 
         /**
+         * @brief Parse JSON, preprocess, run both field validation and
+         *        revision counter validation on the same preprocessed document.
+         *
+         * @param jsonStr Raw JSON string from TMX.
+         * @param schemaPath Path to the CTI 4501 schema file.
+         * @param fieldEventType Event type for field validation failures (e.g. "SpatMinimumData").
+         * @param revisionEventType Event type for revision violations (e.g. "SpatRevisionCounter").
+         * @param messageType Display name ("SPaT" or "MAP").
+         * @param intersectionId Intersection ID for event messages.
+         * @param handlerBeginMs Timestamp when the handler started.
+         */
+        void validateMessage(const std::string &jsonStr, const std::string &schemaPath,
+                             const std::string &fieldEventType, const std::string &revisionEventType,
+                             const std::string &messageType, int intersectionId,
+                             uint64_t handlerBeginMs);
+
+        /**
          * @brief Validate JSON string against schema file, and update plugin status and broadcast CTI4501ValidationMessage if validation fails.
-         * @param jsonStr The JSON string to validate.
-         * @param schemaPath Path to the JSON Schema file.
-         * @param eventType The event type to use in the CTI4501ValidationMessage
+         * @param doc The preprocessed JSON document to validate.
+         * @param schemaDoc The JSON Schema document to validate against.
+         * @param eventType The event type to use in the CTI4501ValidationMessage if validation fails.
          * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
-         * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage
+         * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage if validation fails.
          * @param handlerBeginMs Timestamp in milliseconds when message handling began
          */
-        void validateMessageFields(const std::string &jsonStr,
-                                                              const std::string &schemaPath,
-                                                              const std::string &eventType,
-                                                              const std::string &messageType,
-                                                              int intersectionId,
-                                                              uint64_t handlerBeginMs);
+        void validateMessageFields(const rapidjson::Document &doc, const rapidjson::Document &schemaDoc,
+                                    const std::string &eventType, const std::string &messageType,
+                                    int intersectionId, uint64_t handlerBeginMs);
+
+        /**
+         * @brief Validate revision counters increase when message changes
+         * @param doc The preprocessed JSON document to validate.
+         * @param eventType The event type to use in the CTI4501ValidationMessage if validation fails.
+         * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
+         * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage if validation fails.
+         * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         */
+        void validateRevisionCounters(const rapidjson::Document &doc,
+                                       const std::string &eventType, const std::string &messageType,
+                                       int intersectionId, uint64_t handlerBeginMs);
+
+        // Revision counter validator — stores previous message state and
+        // compares against current to detect CTI 4501 revision violations
+        RevisionCounterValidator _revisionValidator;
 
         // CTI 4501 thresholds
         static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;

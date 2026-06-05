@@ -102,7 +102,7 @@ namespace IntersectionValidation
      * @param value The JSON value to process in-place.
      * @param allocator The document allocator.
      */
-    static void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator);
+    void removeEmptyStrings(rapidjson::Value &value, rapidjson::Document::AllocatorType &allocator);
 
     /**
      * @brief Validate a JSON string against a JSON Schema.

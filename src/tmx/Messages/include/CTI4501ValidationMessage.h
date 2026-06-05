@@ -68,7 +68,8 @@ public:
     // Time when event was generated
     std_attribute(this->msg, int64_t, eventGeneratedAt, 0, )
 
-    // Event type identifier (e.g. "SpatMinimumData", "MapMinimumData", "MapBroadcastRate", "SpatBroadcastRate")
+    // Event type identifier (e.g. "SpatMinimumData", "MapMinimumData", "MapBroadcastRate", "SpatBroadcastRate"
+    // "MapMessageCountProgressionEvent", "SpatMessageCountProgressionEvent", etc.)
     std_attribute(this->msg, std::string, eventType, "", )
 
     // Intersection ID from the message, or -1 if unavailable
@@ -85,6 +86,18 @@ public:
 
     // Missing CTI 4501 required fields
     array_attribute(MissingDataElement, missingDataElements)
+
+    // Timestamp A
+    std_attribute(this->msg, std::string, timestampA, "", )
+
+    std_attribute(this->msg, std::string, timestampB, "", )
+
+    // Message Count A
+    std_attribute(this->msg, int64_t, messageCountA, 0, )
+
+    // Message Count B
+    std_attribute(this->msg, int64_t, messageCountB, 0, )
+
 };
 
 } /* namespace tmx::messages */
