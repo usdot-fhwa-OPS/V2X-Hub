@@ -1083,8 +1083,23 @@ int CommandPlugin::WSCallbackBASE64(
 											std::map<string, string> data;
 											std::map<string, string> arrayData;
 											FILE_LOG(logDEBUG) << "WSCallbackBASE64: Received command 'savestate'";
+
+											std::string passphrase = "";
+
+											if (argsList.find("passphrase") != argsList.end())
+											{
+												passphrase = argsList["passphrase"];
+											}
+
+											if (passphrase.empty())
+											{
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing passphrase", data, arrayData);
+												return 0;
+											}
+
+
 											_tmxControl.ClearOptions();
-											bool rc = _tmxControl.save_state();
+											bool rc = _tmxControl.save_state(passphrase);
 											if (rc)
 											{
 												FILE_LOG(logDEBUG) << "WSCallbackBASE64 savestate success";
@@ -1141,6 +1156,19 @@ int CommandPlugin::WSCallbackBASE64(
 												return 0;
 											}
 
+											std::string passphrase = "";
+
+											if (argsList.find("passphrase") != argsList.end())
+											{
+												passphrase = argsList["passphrase"];
+											}
+
+											if (passphrase.empty())
+											{
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing passphrase", data, arrayData);
+												return 0;
+											}
+
 											std::string filePath;
 											{
 											std::scoped_lock lock(_configLock);
@@ -1152,7 +1180,7 @@ int CommandPlugin::WSCallbackBASE64(
 
 											FILE_LOG(logDEBUG) << "Restoring state from file: " << filePath;
 
-											bool rc = _tmxControl.upload_state(filePath);
+											bool rc = _tmxControl.upload_state(filePath, passphrase);
 
 											if (rc)
 											{

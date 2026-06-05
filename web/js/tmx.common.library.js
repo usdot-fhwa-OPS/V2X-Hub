@@ -694,11 +694,15 @@ function handleCommandMessage(msgData) {
                 stopSaveStateProgressTimer();  // stops the timeout when backup completes
                 if (msgData["fileBuffer"]) {
                     showSaveStateFeedback("Backup successful. Downloading...");
-                    const blob = base64ToBlob(msgData["fileBuffer"], "application/sql");
+                    const blob = base64ToBlob(msgData["fileBuffer"], "application/octet-stream");
                     const link = document.createElement("a");
                     const url = URL.createObjectURL(blob);
                     link.href = url;
-                    link.download = "v2x_hub_state.sql";
+                    const timestamp = new Date()
+                        .toISOString()
+                        .replace(/[:.]/g, "-");
+
+                    link.download = `v2x_hub_state_${timestamp}.sql.gz.enc`;
                     link.click();
                     URL.revokeObjectURL(url);
                     hideSaveStateFeedback();
@@ -720,6 +724,7 @@ function handleCommandMessage(msgData) {
                 stopClearFileUploadProgressTimer();
                 $("#fileUploadProgress").html("");
                 $("#fileUploadProgressFeedback").html("");
+                $("#uploadFileBtn").removeAttr("disabled");
             } else {
                 stopClearFileUploadProgressTimer();
                 $("#fileUploadProgressFeedback").html(msgData["reason"]);

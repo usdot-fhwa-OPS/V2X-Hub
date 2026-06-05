@@ -835,12 +835,18 @@ bool TmxControl::user_delete()
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 {
-	if (!checkPerm())
-		return false;
-	return save_state();
+	if (!_opts || !_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
+
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    return save_state(passphrase);
 }
 
-bool TmxControl::save_state()
+bool TmxControl::save_state(const std::string &passphrase)
 {
     try
     {
@@ -851,16 +857,27 @@ bool TmxControl::save_state()
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
 
-        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql";
+		if (passphrase.empty())
+		{
+			FILE_LOG(logERROR) << "Passphrase not provided for saving state";
+			return false;
+		}
 
-		std::string cmd = "mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
-                  " --no-tablespaces "
-                  "--ignore-table=" + dbname + ".eventLog "
-                  "--ignore-table=" + dbname + ".messageActivity "
-                  "--ignore-table=" + dbname + ".messageType "
-                  "--ignore-table=" + dbname + ".pluginActivity "
-                  "--ignore-table=" + dbname + ".user "
-                  "> " + backupFile;
+        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
+
+		std::string cmd = 
+			"bash -c 'set -o pipefail && "
+			"mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
+            " --no-tablespaces "
+            "--ignore-table=" + dbname + ".eventLog "
+            "--ignore-table=" + dbname + ".messageActivity "
+            "--ignore-table=" + dbname + ".messageType "
+            "--ignore-table=" + dbname + ".pluginActivity "
+            "--ignore-table=" + dbname + ".user "
+            " | gzip "
+            " | openssl enc -aes-256-cbc -salt -pbkdf2 "
+           	" -pass pass:" + passphrase + " "
+            " -out \"" + backupFile + "\"'";
 
         if (int ret = std::system(cmd.c_str()); ret != 0)
         {
@@ -875,7 +892,7 @@ bool TmxControl::save_state()
 		payload.set_contents(tree);
 		_output = payload.get_container();
 
-		PLOG(logDEBUG) << "Database backup written to " << backupFile;
+		PLOG(logDEBUG) << "Encrypted database backup written to " << backupFile;
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
@@ -902,10 +919,24 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 	}
 
 	std::string filePath = (*_opts)["upload-state"].as<std::string>();
-    return upload_state(filePath);
+        if (!_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
+
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    if (passphrase.empty())
+    {
+        FILE_LOG(logERROR) << "Empty passphrase not allowed";
+        return false;
+    }
+
+    return upload_state(filePath, passphrase);
 }
 
-bool TmxControl::upload_state(const std::string &filePath)
+bool TmxControl::upload_state(const std::string &filePath, const std::string &passphrase)
 {
     if (!checkPerm())
         return false;
@@ -920,23 +951,35 @@ bool TmxControl::upload_state(const std::string &filePath)
             FILE_LOG(logERROR) << "File does not exist: " << filePath;
             return false;
         }
+		test.close();
 
-		if (std::string preview((std::istreambuf_iterator<char>(test)),
-                        std::istreambuf_iterator<char>());
-			preview.find("DROP DATABASE") != std::string::npos)
+		// Reject unencrypted files — must end with .sql.gz.enc
+        if (filePath.size() < 11 ||
+            filePath.substr(filePath.size() - 11) != ".sql.gz.enc")
+        {
+            FILE_LOG(logERROR) << "Rejected non-encrypted state file: " << filePath;
+            return false;
+        }
+
+		if (passphrase.empty())
 		{
-			FILE_LOG(logERROR) << "Dangerous SQL detected in file: " << filePath;
+			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
 			return false;
 		}
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
-
-        std::string cmd =
-            "mysql -u " + dbConfig.getUser() +
-            " -p" + dbConfig.getPassword() +
-            " -h " + dbConfig.getHost() +
-            " " + dbConfig.getDatabase() +
-            " < \"" + filePath + "\"";
+		
+		std::string cmd =
+			"bash -c 'set -o pipefail && "
+			"openssl enc -d -aes-256-cbc -pbkdf2 "
+			" -in \"" + filePath + "\""
+			 " -pass pass:" + passphrase + " "
+			" | gunzip "
+			" | mysql -u " + dbConfig.getUser() +
+			" -p" + dbConfig.getPassword() +
+			" -h " + dbConfig.getHost() +
+			" " + dbConfig.getDatabase() +
+			"'";
 
         FILE_LOG(logDEBUG) << "Executing SQL restore command:";
         FILE_LOG(logDEBUG) << cmd;

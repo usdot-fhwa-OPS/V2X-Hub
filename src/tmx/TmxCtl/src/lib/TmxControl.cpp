@@ -146,7 +146,10 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 				"A TMX system users access level. 1 = ReadOnly, 2 = ApplicationAdministrator, 3 = SystemAdministrator")
 			("rowLimit",
 				boost::program_options::value<string>(),
-				"Max number of rows to return");
+				"Max number of rows to return")
+			("passphrase",
+				boost::program_options::value<string>(),
+				"Passphrase used to encrypt/decrypt state files");
 }
 
 TmxControl::~TmxControl() {}
