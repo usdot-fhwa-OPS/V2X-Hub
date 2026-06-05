@@ -4678,6 +4678,12 @@ namespace
     EXPECT_TRUE(result.valid) << (result.errors.empty() ? "" : result.errors[0]);
   }
 
+  rapidjson::Document parseJson(const std::string &json)
+  {
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    return doc;
+  }
   // ---- SPaT Revision Counter Tests ----
 
   // SPaT content changed → revision must increment
@@ -4686,7 +4692,7 @@ namespace
     RevisionCounterValidator validator;
 
     // First message: revision 0, signalGroup 2
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4696,10 +4702,10 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     // Second message: revision 1, signalGroup changed to 4 (content changed)
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4709,7 +4715,7 @@ namespace
                 {"eventState": "protected-Movement-Allowed", "timing": {"minEndTime": 22180}}
             ]}]
         }]}}
-    })";
+    })");
 
     auto result1 = validator.validateSpatRevision(msg1);
     EXPECT_TRUE(result1.valid); // First message — no previous to compare
@@ -4723,7 +4729,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4733,10 +4739,10 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     // Content changed (different eventState) but revision stays at 5
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4746,7 +4752,7 @@ namespace
                 {"eventState": "protected-Movement-Allowed", "timing": {"minEndTime": 22180}}
             ]}]
         }]}}
-    })";
+    })");
 
     validator.validateSpatRevision(msg1);
     auto result = validator.validateSpatRevision(msg2);
@@ -4761,7 +4767,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg = R"({
+    auto msg = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4771,7 +4777,7 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     validator.validateSpatRevision(msg);
     auto result = validator.validateSpatRevision(msg); // Same message again
@@ -4784,7 +4790,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4794,10 +4800,10 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     // Same content but revision incremented from 3 to 4
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -4806,8 +4812,8 @@ namespace
             "states": [{"signalGroup": 2, "state-time-speed": [
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
-        }]}}
-    })";
+        }]}}  
+    })");
 
     validator.validateSpatRevision(msg1);
     auto result = validator.validateSpatRevision(msg2);
@@ -4822,7 +4828,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"timeStamp": 35176, "intersections": [{
             "id": {"id": 12111},
@@ -4833,10 +4839,10 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     // Only timeStamp changed — content is the same
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"timeStamp": 35176, "intersections": [{
             "id": {"id": 12111},
@@ -4847,7 +4853,7 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     validator.validateSpatRevision(msg1);
     auto result = validator.validateSpatRevision(msg2);
@@ -4862,7 +4868,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 1,
@@ -4879,10 +4885,10 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     // laneID changed from 1 to 2, revisions incremented
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 2,
@@ -4899,7 +4905,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg1);
     auto result = validator.validateMapRevision(msg2);
@@ -4911,7 +4917,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 5,
@@ -4928,10 +4934,10 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     // Content changed but msgIssueRevision stays at 5
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 5,
@@ -4948,7 +4954,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg1);
     auto result = validator.validateMapRevision(msg2);
@@ -4972,7 +4978,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg = R"({
+    auto msg = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 3,
@@ -4989,7 +4995,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg);
     auto result = validator.validateMapRevision(msg); // Same message
@@ -5001,7 +5007,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 3,
@@ -5018,10 +5024,10 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     // Same content but msgIssueRevision changed from 3 to 4
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 4,
@@ -5038,7 +5044,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg1);
     auto result = validator.validateMapRevision(msg2);
@@ -5060,7 +5066,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 1,
@@ -5085,12 +5091,12 @@ namespace
                  ]}}]}
             ]
         }}
-    })";
+    })");
 
     // Intersection 9001 changed, revision incremented.
     // Intersection 9002 unchanged, revision stays at 0.
     // msgIssueRevision incremented because 9001 changed.
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 2,
@@ -5115,7 +5121,7 @@ namespace
                  ]}}]}
             ]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg1);
     auto result = validator.validateMapRevision(msg2);
@@ -5127,7 +5133,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg1 = R"({
+    auto msg1 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 1,
@@ -5144,10 +5150,10 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     // Content changed but intersection revision stays at 0
-    std::string msg2 = R"({
+    auto msg2 = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 2,
@@ -5164,7 +5170,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     validator.validateMapRevision(msg1);
     auto result = validator.validateMapRevision(msg2);
@@ -5187,7 +5193,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg = R"({
+    auto msg = parseJson(R"({
         "messageId": 19,
         "value": {"SPAT": {"intersections": [{
             "id": {"id": 12111},
@@ -5197,7 +5203,7 @@ namespace
                 {"eventState": "stop-And-Remain", "timing": {"minEndTime": 22120}}
             ]}]
         }]}}
-    })";
+    })");
 
     auto result = validator.validateSpatRevision(msg);
     EXPECT_TRUE(result.valid);
@@ -5208,7 +5214,7 @@ namespace
   {
     RevisionCounterValidator validator;
 
-    std::string msg = R"({
+    auto msg = parseJson(R"({
         "messageId": 18,
         "value": {"MapData": {
             "msgIssueRevision": 1,
@@ -5225,7 +5231,7 @@ namespace
                 ]}}]
             }]
         }}
-    })";
+    })");
 
     auto result = validator.validateMapRevision(msg);
     EXPECT_TRUE(result.valid);
@@ -5236,7 +5242,7 @@ namespace
   TEST(SpatRevisionCounterTest, MissingIntersectionsNoViolation)
   {
     RevisionCounterValidator validator;
-    std::string msg = R"({"messageId": 19, "value": {"SPAT": {}}})";
+    auto msg = parseJson(R"({"messageId": 19, "value": {"SPAT": {}}})");
     auto result = validator.validateSpatRevision(msg);
     EXPECT_TRUE(result.valid);
   }
@@ -5244,7 +5250,7 @@ namespace
   TEST(MapRevisionCounterTest, MissingIntersectionsNoViolation)
   {
     RevisionCounterValidator validator;
-    std::string msg = R"({"messageId": 18, "value": {"MapData": {"msgIssueRevision": 1}}})";
+    auto msg = parseJson(R"({"messageId": 18, "value": {"MapData": {"msgIssueRevision": 1}}})");
     auto result = validator.validateMapRevision(msg);
     EXPECT_TRUE(result.valid);
   }
@@ -5252,7 +5258,7 @@ namespace
   TEST(SpatRevisionCounterTest, JSONParseFailure)
   {
     RevisionCounterValidator validator;
-    std::string invalidJson = R"({"messageId": 19, "value": {"SPAT": {)"; // Malformed JSON
+    auto invalidJson = parseJson(R"({"messageId": 19, "value": {"SPAT": {)"); // Malformed JSON
     auto result = validator.validateSpatRevision(invalidJson);
     EXPECT_FALSE(result.valid);
     EXPECT_TRUE(result.violations.size() >= 1);
@@ -5262,7 +5268,7 @@ namespace
   TEST(MapRevisionCounterTest, JSONParseFailure)
   {
     RevisionCounterValidator validator;
-    std::string invalidJson = R"({"messageId": 19, "value": {"MAP": {)"; // Malformed JSON
+    auto invalidJson = parseJson(R"({"messageId": 19, "value": {"MAP": {)"); // Malformed JSON
     auto result = validator.validateMapRevision(invalidJson);
     EXPECT_FALSE(result.valid);
     EXPECT_TRUE(result.violations.size() >= 1);

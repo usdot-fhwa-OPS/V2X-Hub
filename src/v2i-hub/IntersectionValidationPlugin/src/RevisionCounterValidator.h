@@ -55,10 +55,10 @@ namespace IntersectionValidation
          * - If content is not changed, check if revision stayed the same
          * - Update the internal state with the current message for next comparison
          *
-         * @param spatJson The full SPaT MessageFrame JSON string.
+         * @param doc The full SPaT MessageFrame JSON document.
          * @return RevisionCounterResult with any violations found.
          */
-        RevisionCounterResult validateSpatRevision(const std::string &spatJson);
+        RevisionCounterResult validateSpatRevision(const rapidjson::Document &doc);
 
         /**
          * @brief Validate MAP message-level and intersection-level revision counters.
@@ -67,10 +67,10 @@ namespace IntersectionValidation
          * - Check message-level msgIssueRevision based on whether any intersection content changed
          * - Updates internal state with curent message for next comparison
          *
-         * @param mapJson The full MAP MessageFrame JSON string.
+         * @param doc The full MAP MessageFrame JSON document.
          * @return RevisionCounterResult with any violations found.
          */
-        RevisionCounterResult validateMapRevision(const std::string &mapJson);
+        RevisionCounterResult validateMapRevision(const rapidjson::Document &doc);
 
     private:
         /**
@@ -119,14 +119,6 @@ namespace IntersectionValidation
          * @return A JSON string representation.
          */
         static std::string toJSONString(const rapidjson::Value &value);
-
-        /**
-         * @brief Extract an integer from a JSON value that may be int or string.
-         * @param value The JSON value to extract from.
-         * @param defaultVal Value to return if extraction fails.
-         * @return The extracted integer or defaultVal.
-         */
-        static int extractInt(const rapidjson::Value &value, int defaultVal = -1);
 
         /**
          * @brief Create a content hash for an intersection, stripping timestamps

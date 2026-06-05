@@ -23,21 +23,6 @@
 namespace IntersectionValidation
 {
 
-    int RevisionCounterValidator::extractInt(const rapidjson::Value &value, int defaultVal)
-    {
-        // Handle both forms of integer representations (ints or strings)
-        // so revision counters and intersection IDs are extracted
-        if (value.IsInt())
-        {
-            return value.GetInt();
-        }
-        if (value.IsString())
-        {
-            return std::atoi(value.GetString());
-        }
-        return defaultVal;
-    }
-
     std::string RevisionCounterValidator::createContentHash(const rapidjson::Value &intersection)
     {
         // Strip timestamp fields
@@ -135,22 +120,18 @@ namespace IntersectionValidation
         return buffer.GetString();
     }
 
-    RevisionCounterResult RevisionCounterValidator::validateSpatRevision(const std::string &spatJson)
+    RevisionCounterResult RevisionCounterValidator::validateSpatRevision(const rapidjson::Document &doc)
     {
         RevisionCounterResult result;
 
-        // Parse the SPaT MessageFrame JSON
-        rapidjson::Document doc;
-        doc.Parse(spatJson.c_str());
         if (doc.HasParseError())
         {
             result.valid = false;
-            result.violations.emplace_back("Failed to parse SPaT JSON for revision validation");
+            result.violations.emplace_back("Failed to parse SPaT JSON");
             return result;
         }
 
-        // Navigate to the intersections array
-        // Structure: {"messageId":19, "value":{"SPAT":{"intersections":[...]}}}
+        // Navigate to intersections array
         if (!doc.HasMember("value") || !doc["value"].HasMember("SPAT") ||
             !doc["value"]["SPAT"].HasMember("intersections") ||
             !doc["value"]["SPAT"]["intersections"].IsArray())
@@ -160,57 +141,46 @@ namespace IntersectionValidation
 
         const auto &intersections = doc["value"]["SPAT"]["intersections"];
 
-        // Validate each intersection's revision counter against its
-        // previously stored state. The first time an intersection is seen,
-        // no comparison is performed — it just stores the initial state.
         for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
         {
             const auto &intersection = intersections[i];
 
-            // Skip intersections without a valid ID
             if (!intersection.HasMember("id") || !intersection["id"].HasMember("id"))
             {
                 continue;
             }
 
-            int intersectionId = extractInt(intersection["id"]["id"]);
+            // Values are already integers after convertNumericStrings
+            int intersectionId = intersection["id"]["id"].GetInt();
             int currentRevision = intersection.HasMember("revision")
-                                      ? extractInt(intersection["revision"])
+                                      ? intersection["revision"].GetInt()
                                       : -1;
 
-            // Create content hash excluding timestamps and revision
             std::string contentHash = createContentHash(intersection);
 
-            // Compare against previous state if we've seen this intersection before
             if (auto prevIt = _prevSpatIntersections.find(intersectionId); prevIt != _prevSpatIntersections.end())
             {
                 checkRevisionViolation(intersectionId, currentRevision, contentHash,
                                        prevIt->second, "SPaT", result);
             }
 
-            // Store current state for next message comparison
             _prevSpatIntersections[intersectionId] = {currentRevision, contentHash};
         }
 
         return result;
     }
 
-    RevisionCounterResult RevisionCounterValidator::validateMapRevision(const std::string &mapJson)
+    RevisionCounterResult RevisionCounterValidator::validateMapRevision(const rapidjson::Document &doc)
     {
         RevisionCounterResult result;
 
-        // Parse the MAP MessageFrame JSON
-        rapidjson::Document doc;
-        doc.Parse(mapJson.c_str());
         if (doc.HasParseError())
         {
             result.valid = false;
-            result.violations.emplace_back("Failed to parse MAP JSON for revision validation");
+            result.violations.emplace_back("Failed to parse MAP JSON");
             return result;
         }
 
-        // Navigate to MapData
-        // Structure: {"messageId":18, "value":{"MapData":{...}}}
         if (!doc.HasMember("value") || !doc["value"].HasMember("MapData"))
         {
             return result;
@@ -218,13 +188,11 @@ namespace IntersectionValidation
 
         const auto &mapData = doc["value"]["MapData"];
 
-        // Extract message-level revision counter
+        // Values are already integers after convertNumericStrings
         int currentMsgRevision = mapData.HasMember("msgIssueRevision")
-                                     ? extractInt(mapData["msgIssueRevision"])
+                                     ? mapData["msgIssueRevision"].GetInt()
                                      : -1;
 
-        // Validate per-intersection revision counters and track
-        // whether any intersection content changed
         bool anyIntersectionChanged = false;
 
         if (mapData.HasMember("intersections") && mapData["intersections"].IsArray())
@@ -233,11 +201,8 @@ namespace IntersectionValidation
                 mapData["intersections"], result);
         }
 
-        // Validate message-level msgIssueRevision based on whether
-        // any intersection content changed
         validateMsgIssueRevision(currentMsgRevision, anyIntersectionChanged, result);
 
-        // Update message-level state for next comparison
         _prevMapMessage.msgIssueRevision = currentMsgRevision;
         _hasMapPrevious = true;
 
@@ -253,23 +218,20 @@ namespace IntersectionValidation
         {
             const auto &intersection = intersections[i];
 
-            // Skip intersections without a valid ID
             if (!intersection.HasMember("id") || !intersection["id"].HasMember("id"))
             {
                 continue;
             }
 
-            int intersectionId = extractInt(intersection["id"]["id"]);
+            int intersectionId = intersection["id"]["id"].GetInt();
             int currentRevision = intersection.HasMember("revision")
-                                      ? extractInt(intersection["revision"])
+                                      ? intersection["revision"].GetInt()
                                       : -1;
 
-            // Create content hash excluding timestamps and revision
             std::string contentHash = createContentHash(intersection);
 
             if (auto prevIt = _prevMapIntersections.find(intersectionId); prevIt != _prevMapIntersections.end())
             {
-                // Compare against previous state and check for revision violations
                 bool changed = checkRevisionViolation(intersectionId, currentRevision,
                                                       contentHash, prevIt->second, "MAP", result);
                 if (changed)
@@ -279,11 +241,9 @@ namespace IntersectionValidation
             }
             else
             {
-                // First time seeing this intersection — treat as new content
                 anyChanged = true;
             }
 
-            // Store current state for next message comparison
             _prevMapIntersections[intersectionId] = {currentRevision, contentHash};
         }
 
