@@ -32,9 +32,10 @@ namespace ODEForwardPlugin
 	ODEForwardPlugin::ODEForwardPlugin(const string &name): PluginClient(name)
 	{
 		AddMessageFilter < BsmMessage > (this, &ODEForwardPlugin::HandleRealTimePublish);
-		AddMessageFilter < SpatMessage > (this, &ODEForwardPlugin::HandleSPaTPublish);
+		AddMessageFilter < SpatMessage >(this, &ODEForwardPlugin::HandleSPaTPublish);
 		AddMessageFilter < MapDataMessage > (this, &ODEForwardPlugin::HandleMapPublish);
 		AddMessageFilter < TimMessage > (this, &ODEForwardPlugin::HandleTimPublish);
+		AddMessageFilter < CTI4501ValidationMessage > (this, &ODEForwardPlugin::HandleValidationEvent);
 		// Subscribe to all messages specified by the filters above.
 		SubscribeToMessages();
 		_udpMessageForwarder = std::make_shared<UDPMessageForwarder>();
@@ -117,10 +118,12 @@ namespace ODEForwardPlugin
 			++_bsmSkipCount;
 			SetStatus<uint>("BSM Skipped", _bsmSkipCount);
 		}
-
 	}
 
 	void ODEForwardPlugin::HandleSPaTPublish([[maybe_unused]] SpatMessage &msg, routeable_message &routeableMsg) {
+		if (!(routeableMsg.get_flags() & IvpMsgFlags_Validated)) {
+				return;
+		}
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
 			++_spatFwdCount;
@@ -132,7 +135,8 @@ namespace ODEForwardPlugin
 		}
 	}
 
-	void ODEForwardPlugin::HandleTimPublish([[maybe_unused]] TimMessage &msg, routeable_message &routeableMsg) {
+	void ODEForwardPlugin::HandleTimPublish([[maybe_unused]] TimMessage &msg, routeable_message &routeableMsg)
+	{
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::TIM);
 			++_timFwdCount;
@@ -144,9 +148,13 @@ namespace ODEForwardPlugin
 		}
 	}
 
-
-	void ODEForwardPlugin::HandleMapPublish([[maybe_unused]] MapDataMessage &msg, routeable_message &routeableMsg) {
-		try {
+	void ODEForwardPlugin::HandleMapPublish([[maybe_unused]] MapDataMessage &msg, routeable_message &routeableMsg)
+    {
+		if (!(routeableMsg.get_flags() & IvpMsgFlags_Validated)) {
+			return;
+		}
+        try
+        {
 			sendUDPMessage(routeableMsg, UDPMessageType::MAP);
 			++_mapFwdCount;
 			SetStatus<uint>("MAP Forwarded", _mapFwdCount);
@@ -155,7 +163,7 @@ namespace ODEForwardPlugin
 			++_mapSkipCount;
 			SetStatus<uint>("MAP Skipped", _mapSkipCount);
 		}
-	}
+    }
 
 	void ODEForwardPlugin::sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const{
 		std::string message = routeableMsg.get_payload_str().c_str();
@@ -163,6 +171,30 @@ namespace ODEForwardPlugin
 		_udpMessageForwarder->sendMessage(udpMessageType, message);
 	}
 
+	void ODEForwardPlugin::HandleValidationEvent(CTI4501ValidationMessage &msg, routeable_message &routeableMsg)
+    {
+        std::string eventType = msg.get_eventType();
+        int intersectionId = msg.get_intersectionID();
+
+        std::scoped_lock lock(_violationFlagLock);
+
+        if (eventType == "SpatMessageCountProgression")
+        {
+            // Flag this intersection so the next SPaT message gets its
+            // revision corrected before forwarding to ODE
+            _spatRevisionViolationFlag[intersectionId] = true;
+            PLOG(logWARNING) << "SPaT revision violation flagged for intersection " << intersectionId
+                             << " — next message will be corrected";
+        }
+        else if (eventType == "MapMessageCountProgression")
+        {
+            // Flag MAP so the next MAP message gets its msgIssueRevision
+            // corrected before forwarding to ODE
+            _mapRevisionViolationFlag = true;
+            PLOG(logWARNING) << "MAP revision violation flagged for intersection " << intersectionId
+                             << " — next message will be corrected";
+        }
+    }
 
 } /* namespace ODEForwardPlugin */
 

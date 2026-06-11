@@ -68,6 +68,12 @@ namespace IntersectionValidation
         uint spatRevisionFailed = 0;
         uint mapRevisionFailed = 0;
 
+        // Change detection state for downstream forwarding
+        std::unordered_map<int, std::string> _prevSpatContentHash;
+        std::unordered_map<int, int> _prevSpatRevision;
+        std::unordered_map<int, std::string> _prevMapContentHash;
+        int _prevMapMsgIssueRevision = -1;
+
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).

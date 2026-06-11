@@ -277,6 +277,9 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
+        if (routeableMsg.get_flags() & IvpMsgFlags_Validated)
+            return;
+
         uint64_t handlerBeginMs = PluginClientClockAware::getClock()->nowInMilliseconds();
  
         measureMessageInterval(_lastSpatTimeMs, SPAT_INTERVAL_REQUIRED_MS, SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT");
@@ -294,6 +297,8 @@ namespace IntersectionValidation
  
             // Extract intersection ID before JSON conversion
             int intersectionId = -1;
+            int currentRevision = -1;
+
             if (spatData && spatData->intersections.list.count > 0 &&
                 spatData->intersections.list.array != nullptr)
             {
@@ -305,10 +310,67 @@ namespace IntersectionValidation
             std::string spatJsonStr = spatJsonMsg.to_string();
  
             PLOG(logDEBUG) << "SPaT JSON: " << spatJsonStr;
- 
+
             // Parse, preprocess, validate
-            validateMessage(spatJsonStr, spatSchemaPath, "SpatMinimumData", "SpatRevisionCounter",
+            validateMessage(spatJsonStr, spatSchemaPath, "SpatMinimumData", "SpatMessageCountProgression",
                             "SPaT", intersectionId, handlerBeginMs);
+
+            // Compute content hash for forwarding decision
+            std::string contentHash;
+            rapidjson::Document doc;
+            doc.Parse(spatJsonStr.c_str());
+            if (!doc.HasParseError() && doc.HasMember("value") &&
+                doc["value"].HasMember("SPAT") &&
+                doc["value"]["SPAT"].HasMember("intersections") &&
+                doc["value"]["SPAT"]["intersections"].IsArray() &&
+                !doc["value"]["SPAT"]["intersections"].Empty())
+            {
+                contentHash = RevisionCounterValidator::createContentHash(
+                    doc["value"]["SPAT"]["intersections"][0]);
+            }
+
+            // Decide whether to forward
+            bool shouldForward = false;
+            auto prevHashIt = _prevSpatContentHash.find(intersectionId);
+            auto prevRevIt = _prevSpatRevision.find(intersectionId);
+
+            if (prevHashIt == _prevSpatContentHash.end())
+            {
+                // First message for this intersection — always forward
+                shouldForward = true;
+            }
+            else
+            {
+                bool contentChanged = (contentHash != prevHashIt->second);
+                bool revisionChanged = (currentRevision != prevRevIt->second);
+
+                if (contentChanged || revisionChanged)
+                {
+                    shouldForward = true;
+
+                    // Correct revision if content changed but revisions didn't increment
+                    if (contentChanged && !revisionChanged && spatData &&
+                        spatData->intersections.list.count > 0)
+                    {
+                        int corrected = (currentRevision + 1) % 128;
+                        spatData->intersections.list.array[0]->revision = corrected;
+                        currentRevision = corrected;
+                        PLOG(logWARNING) << "Corrected SPaT revision for intersection "
+                                         << intersectionId << " to " << corrected;
+                    }
+                }
+            }
+
+            // Update stored state
+            _prevSpatContentHash[intersectionId] = contentHash;
+            _prevSpatRevision[intersectionId] = currentRevision;
+
+            // Re-broadcast
+            if (shouldForward)
+            {
+                routeableMsg.set_flags(IvpMsgFlags_Validated);
+                PluginClient::BroadcastMessage(routeableMsg);
+            }
         }
         catch (const std::exception &e)
         {
@@ -348,8 +410,10 @@ namespace IntersectionValidation
             PLOG(logDEBUG) << "MAP JSON: " << mapJsonStr;
  
             // Parse, preprocess, validate
-            validateMessage(mapJsonStr, mapSchemaPath, "MapMinimumData", "MapRevisionCounter",
+            validateMessage(mapJsonStr, mapSchemaPath, "MapMinimumData", "MapMessageCountProgression",
                             "MAP", intersectionId, handlerBeginMs);
+
+            
         }
         catch (const std::exception &e)
         {
