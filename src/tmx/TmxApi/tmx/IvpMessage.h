@@ -18,6 +18,7 @@ extern "C"
 typedef unsigned int IvpMsgFlags;
 #define IvpMsgFlags_None 0x00
 #define IvpMsgFlags_RouteDSRC 0x01
+#define IvpMsgFlags_Validated 0x02
 
 typedef struct IvpDsrcMetadata {
 	int psid;

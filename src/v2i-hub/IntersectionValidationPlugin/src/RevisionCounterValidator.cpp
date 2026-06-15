@@ -120,6 +120,55 @@ namespace IntersectionValidation
         return buffer.GetString();
     }
 
+    void RevisionCounterValidator::processIntersectionArray(const rapidjson::Value &intersections,
+                                                            std::unordered_map<int, IntersectionState> &prevStates,
+                                                            const std::string &messageType,
+                                                            RevisionCounterResult &result,
+                                                            bool &anyChanged)
+    {
+        for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
+        {
+            const auto &intersection = intersections[i];
+
+            if (!intersection.HasMember("id") || !intersection["id"].HasMember("id"))
+            {
+                continue;
+            }
+
+            // Values are already integers after convertNumericStrings
+            int intersectionId = intersection["id"]["id"].GetInt();
+            int currentRevision = intersection.HasMember("revision")
+                                      ? intersection["revision"].GetInt()
+                                      : -1;
+
+            std::string contentHash = createContentHash(intersection);
+
+            IntersectionChangeInfo change;
+            change.id = intersectionId;
+            change.currentRevision = currentRevision;
+
+            if (auto prevIt = prevStates.find(intersectionId); prevIt != prevStates.end())
+            {
+                change.contentChanged = checkRevisionViolation(intersectionId, currentRevision, contentHash,
+                                                               prevIt->second, messageType, result);
+                change.revisionChanged = (currentRevision != prevIt->second.revision);
+                if (change.contentChanged)
+                {
+                    anyChanged = true;
+                }
+            }
+            else
+            {
+                // First time we've seen this intersection
+                change.contentChanged = true;
+                anyChanged = true;
+            }
+
+            result.intersectionChanges.push_back(change);
+            prevStates[intersectionId] = {currentRevision, contentHash};
+        }
+    }
+
     RevisionCounterResult RevisionCounterValidator::validateSpatRevision(const rapidjson::Document &doc)
     {
         RevisionCounterResult result;
@@ -139,33 +188,9 @@ namespace IntersectionValidation
             return result;
         }
 
-        const auto &intersections = doc["value"]["SPAT"]["intersections"];
-
-        for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
-        {
-            const auto &intersection = intersections[i];
-
-            if (!intersection.HasMember("id") || !intersection["id"].HasMember("id"))
-            {
-                continue;
-            }
-
-            // Values are already integers after convertNumericStrings
-            int intersectionId = intersection["id"]["id"].GetInt();
-            int currentRevision = intersection.HasMember("revision")
-                                      ? intersection["revision"].GetInt()
-                                      : -1;
-
-            std::string contentHash = createContentHash(intersection);
-
-            if (auto prevIt = _prevSpatIntersections.find(intersectionId); prevIt != _prevSpatIntersections.end())
-            {
-                checkRevisionViolation(intersectionId, currentRevision, contentHash,
-                                       prevIt->second, "SPaT", result);
-            }
-
-            _prevSpatIntersections[intersectionId] = {currentRevision, contentHash};
-        }
+        bool anyChanged = false; 
+        processIntersectionArray(doc["value"]["SPAT"]["intersections"], _prevSpatIntersections,
+                                 "SPaT", result, anyChanged);
 
         return result;
     }
@@ -203,6 +228,14 @@ namespace IntersectionValidation
 
         validateMsgIssueRevision(currentMsgRevision, anyIntersectionChanged, result);
 
+        // Capture message-level revision state
+        result.currentMsgRevision = currentMsgRevision;
+        if (_hasMapPrevious)
+        {
+            result.hasMsgRevision     = true;
+            result.msgRevisionChanged = (currentMsgRevision != _prevMapMessage.msgIssueRevision);
+        }
+
         _prevMapMessage.msgIssueRevision = currentMsgRevision;
         _hasMapPrevious = true;
 
@@ -213,40 +246,7 @@ namespace IntersectionValidation
                                                             RevisionCounterResult &result)
     {
         bool anyChanged = false;
-
-        for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
-        {
-            const auto &intersection = intersections[i];
-
-            if (!intersection.HasMember("id") || !intersection["id"].HasMember("id"))
-            {
-                continue;
-            }
-
-            int intersectionId = intersection["id"]["id"].GetInt();
-            int currentRevision = intersection.HasMember("revision")
-                                      ? intersection["revision"].GetInt()
-                                      : -1;
-
-            std::string contentHash = createContentHash(intersection);
-
-            if (auto prevIt = _prevMapIntersections.find(intersectionId); prevIt != _prevMapIntersections.end())
-            {
-                bool changed = checkRevisionViolation(intersectionId, currentRevision,
-                                                      contentHash, prevIt->second, "MAP", result);
-                if (changed)
-                {
-                    anyChanged = true;
-                }
-            }
-            else
-            {
-                anyChanged = true;
-            }
-
-            _prevMapIntersections[intersectionId] = {currentRevision, contentHash};
-        }
-
+        processIntersectionArray(intersections, _prevMapIntersections, "MAP", result, anyChanged);
         return anyChanged;
     }
 

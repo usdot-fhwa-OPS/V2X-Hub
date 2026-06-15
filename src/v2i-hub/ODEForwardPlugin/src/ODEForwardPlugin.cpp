@@ -121,6 +121,12 @@ namespace ODEForwardPlugin
 	}
 
 	void ODEForwardPlugin::HandleSPaTPublish([[maybe_unused]] SpatMessage &msg, routeable_message &routeableMsg) {
+		PLOG(logDEBUG) << "ODE HandleSPaT flags=" << routeableMsg.get_flags();
+		if (!(routeableMsg.get_flags() & IvpMsgFlags_Validated)) {
+			PLOG(logDEBUG) << "ODE skip, not validated";
+        	return;
+		}
+		
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
 			++_spatFwdCount;
@@ -146,6 +152,10 @@ namespace ODEForwardPlugin
 
 
 	void ODEForwardPlugin::HandleMapPublish([[maybe_unused]] MapDataMessage &msg, routeable_message &routeableMsg) {
+		if (!(routeableMsg.get_flags() & IvpMsgFlags_Validated)) {
+			PLOG(logDEBUG) << "ODE skip, not validated";
+        	return;
+		}
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::MAP);
 			++_mapFwdCount;

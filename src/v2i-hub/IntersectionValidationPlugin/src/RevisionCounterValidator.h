@@ -23,6 +23,17 @@ namespace IntersectionValidation
 {
 
     /**
+     * @brief Info for changing revision count
+     */
+    struct IntersectionChangeInfo
+    {
+        int id = -1;
+        bool contentChanged = false;
+        bool revisionChanged = false;
+        int currentRevision = -1;
+    };
+
+    /**
      * @brief Result of a revision counter validation check.
      */
     struct RevisionCounterResult
@@ -30,6 +41,13 @@ namespace IntersectionValidation
         bool valid = true;
         bool comparisonPerformed = false;
         std::vector<std::string> violations;
+        std::vector<IntersectionChangeInfo> intersectionChanges;
+
+        // Message-level revision state. Populated for MAP only; for SPaT
+        // hasMsgRevision stays false and the planner ignores these fields.
+        int  currentMsgRevision = -1;
+        bool msgRevisionChanged = false;
+        bool hasMsgRevision     = false; // true once a previous MAP message exists to compare against
     };
 
     /**
@@ -49,7 +67,7 @@ namespace IntersectionValidation
 
         /**
          * @brief Validate SPaT intersection revision counters. For each intersection in SPaT message,
-         * 
+         *
          * - Strip timestamp field for the comparison
          * - If content is changed, check if revision was increased
          * - If content is not changed, check if revision stayed the same
@@ -143,6 +161,24 @@ namespace IntersectionValidation
                                                           const IntersectionState &prevState,
                                                           const std::string &messageType,
                                                           RevisionCounterResult &result);
+
+        /**
+         * @brief Walk an intersections JSON array, build per-intersection IntersectionChangeInfo,
+         *        report CTI 4501 violations, and update the supplied previous-state map.
+         *
+         *        Shared by SPaT and MAP so the per-intersection rule lives in one place.
+         *
+         * @param intersections The intersections JSON array.
+         * @param prevStates Previous-state map for this message type (SPaT or MAP).
+         * @param messageType "SPaT" or "MAP" for violation messages.
+         * @param result The result to populate (intersectionChanges + violations).
+         * @param anyChanged Set true if any intersection's content changed.
+         */
+        void processIntersectionArray(const rapidjson::Value &intersections,
+                                      std::unordered_map<int, IntersectionState> &prevStates,
+                                      const std::string &messageType,
+                                      RevisionCounterResult &result,
+                                      bool &anyChanged);
 
         /**
          * @brief Validate revision counters for each intersection in a MAP message.
