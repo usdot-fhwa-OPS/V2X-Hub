@@ -70,6 +70,9 @@ namespace IntersectionValidation
         uint spatRevisionFailed = 0;
         uint mapRevisionFailed = 0;
 
+        uint spatRevisionCorrectionsApplied = 0;
+        uint mapRevisionCorrectionsApplied = 0;
+
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).

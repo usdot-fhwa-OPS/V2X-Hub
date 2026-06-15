@@ -19,11 +19,11 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
-#include "IntersectionValidationPlugin.h"
-#include "MessageIntervalValidator.h"
-#include "FieldValidation.h"
-#include "RevisionCounterValidator.h"
-#include "ODEForwarding.h"
+#include <IntersectionValidationPlugin.h>
+#include <MessageIntervalValidator.h>
+#include <FieldValidation.h>
+#include <RevisionCounterValidator.h>
+#include <ODEForwarding.h>
 
 using namespace tmx::messages;
 using namespace IntersectionValidation;
@@ -5336,7 +5336,7 @@ namespace
     auto plan = planForwarding(r);
 
     EXPECT_TRUE(plan.shouldForward);
-    ASSERT_EQ(plan.corrections.count(42), 1u);
+    EXPECT_EQ(plan.corrections.count(42), 1u);
     EXPECT_EQ(plan.corrections.at(42), 35);
   }
 
@@ -5347,7 +5347,7 @@ namespace
     r.intersectionChanges.push_back(makeChange(42, true, false, 127));
     auto plan = planForwarding(r);
 
-    ASSERT_EQ(plan.corrections.count(42), 1u);
+    EXPECT_EQ(plan.corrections.count(42), 1u);
     EXPECT_EQ(plan.corrections.at(42), 0);
   }
 
@@ -5393,7 +5393,7 @@ namespace
     auto plan = planForwarding(r);
 
     EXPECT_TRUE(plan.shouldForward);
-    ASSERT_EQ(plan.corrections.count(7), 1u);
+    EXPECT_EQ(plan.corrections.count(7), 1u);
     EXPECT_EQ(plan.corrections.at(7), 21);
     EXPECT_EQ(plan.msgRevisionCorrection, 11);
   }
@@ -5436,7 +5436,7 @@ namespace
         {"id":{"id":59963},"revision":35,"status":"0040"}]}}})");
     auto r = v.validateSpatRevision(d2);
 
-    ASSERT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_EQ(r.intersectionChanges[0].id, 59963);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
     EXPECT_TRUE(r.intersectionChanges[0].revisionChanged);
@@ -5454,7 +5454,7 @@ namespace
         {"id":{"id":1},"revision":34,"status":"0040"}]}}})");
     auto r = v.validateSpatRevision(d2);
 
-    ASSERT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
     EXPECT_FALSE(r.intersectionChanges[0].revisionChanged);
     EXPECT_EQ(r.intersectionChanges[0].currentRevision, 34);
@@ -5492,7 +5492,7 @@ namespace
     EXPECT_TRUE(r.hasMsgRevision);
     EXPECT_FALSE(r.msgRevisionChanged);
     EXPECT_EQ(r.currentMsgRevision, 5);
-    ASSERT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
   }
 

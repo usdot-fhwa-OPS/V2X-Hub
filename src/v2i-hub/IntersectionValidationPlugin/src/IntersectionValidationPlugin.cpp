@@ -307,6 +307,8 @@ namespace IntersectionValidation
             return;
         }
 
+        uint &correctedCount = spatRevisionCorrectionsApplied;
+
         // Apply each correction to the matching intersection in message
         for (int i = 0; i < spatDataRef->intersections.list.count; ++i)
         {
@@ -316,6 +318,8 @@ namespace IntersectionValidation
                 spatDataRef->intersections.list.array[i]->revision = it->second;
                 PLOG(logWARNING) << "Corrected SPaT revision for intersection " << id
                                  << " to " << it->second;
+                correctedCount++;
+                PluginClient::SetStatus("SPaT Revision Corrections Applied", correctedCount);
             }
         }
 
@@ -342,6 +346,8 @@ namespace IntersectionValidation
             return;
         }
 
+        uint &correctedCount = mapRevisionCorrectionsApplied;
+
         // Message-level correction
         if (msgRevisionCorrection >= 0)
         {
@@ -361,6 +367,8 @@ namespace IntersectionValidation
                     ig->revision = it->second;
                     PLOG(logWARNING) << "Corrected MAP revision for intersection " << id
                                      << " to " << it->second;
+                    correctedCount++;
+                    PluginClient::SetStatus("MAP Revision Corrections Applied", correctedCount);
                 }
             }
         }
