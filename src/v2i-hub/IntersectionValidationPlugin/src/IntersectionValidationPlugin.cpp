@@ -310,7 +310,7 @@ namespace IntersectionValidation
         // Apply each correction to the matching intersection in message
         for (int i = 0; i < spatDataRef->intersections.list.count; ++i)
         {
-            int id = static_cast<int>(spatDataRef->intersections.list.array[i]->id.id);
+            auto id = static_cast<int>(spatDataRef->intersections.list.array[i]->id.id);
             if (auto it = corrections.find(id); it != corrections.end())
             {
                 spatDataRef->intersections.list.array[i]->revision = it->second;
@@ -355,7 +355,7 @@ namespace IntersectionValidation
             for (int i = 0; i < mapDataRef->intersections->list.count; ++i)
             {
                 auto *ig = mapDataRef->intersections->list.array[i];
-                int id = static_cast<int>(ig->id.id);
+                auto id = static_cast<int>(ig->id.id);
                 if (auto it = corrections.find(id); it != corrections.end())
                 {
                     ig->revision = it->second;
