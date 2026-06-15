@@ -291,7 +291,7 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::broadcastValidated(routeable_message &msg)
     {
-        // set_flags AFTER any initialize() on the encoded message (verified ordering).
+        // set_flags on the encoded message
         msg.set_flags(IvpMsgFlags_Validated);
         PluginClient::BroadcastMessage(msg);
     }
@@ -300,14 +300,14 @@ namespace IntersectionValidation
                                                             const std::shared_ptr<SPAT> &spatDataRef,
                                                             const std::map<int, int> &corrections)
     {
-        // No corrections — original UPER bytes are still valid, just flag and forward.
+        // No corrections
         if (corrections.empty())
         {
             broadcastValidated(routeableMsg);
             return;
         }
 
-        // Apply each correction to the matching intersection in the ASN.1 frame.
+        // Apply each correction to the matching intersection in message
         for (int i = 0; i < spatDataRef->intersections.list.count; ++i)
         {
             int id = static_cast<int>(spatDataRef->intersections.list.array[i]->id.id);
@@ -319,7 +319,7 @@ namespace IntersectionValidation
             }
         }
 
-        // Re-encode from the mutated frame
+        // Re-encode
         SpatMessage corrected(spatDataRef);
         SpatEncodedMessage encodedMsg;
         encodedMsg.initialize(corrected);
@@ -335,21 +335,21 @@ namespace IntersectionValidation
                                                            const std::map<int, int> &corrections,
                                                            int msgRevisionCorrection)
     {
-        // No corrections of either kind — original UPER bytes are valid, just flag and forward.
+        // No corrections
         if (corrections.empty() && msgRevisionCorrection < 0)
         {
             broadcastValidated(routeableMsg);
             return;
         }
 
-        // Message-level correction. msgIssueRevision is a mandatory MsgCount field.
+        // Message-level correction
         if (msgRevisionCorrection >= 0)
         {
             mapDataRef->msgIssueRevision = msgRevisionCorrection;
             PLOG(logWARNING) << "Corrected MAP msgIssueRevision to " << msgRevisionCorrection;
         }
 
-        // Per-intersection corrections. MAP 'intersections' is an OPTIONAL pointer — null-check it.
+        // Per-intersection corrections
         if (!corrections.empty() && mapDataRef->intersections != nullptr)
         {
             for (int i = 0; i < mapDataRef->intersections->list.count; ++i)
@@ -365,13 +365,6 @@ namespace IntersectionValidation
             }
         }
 
-        // Re-encode from the mutated frame.
-        // *** VERIFY in your tree before relying on this: ***
-        //   1. MapDataMessage has a ctor taking std::shared_ptr<MapData>
-        //   2. the encoded type is MapDataEncodedMessage (TMX_J2735_DECLARE(MapData,...) naming),
-        //      NOT MapEncodedMessage — grep to confirm
-        //   3. MAP re-encode has thrown "Unable to stream JSON contents in memory" on large
-        //      payloads before — test with a MINIMAL real MAP first
         MapDataMessage corrected(mapDataRef);
         MapDataEncodedMessage encodedMsg;
         encodedMsg.initialize(corrected);
@@ -384,7 +377,7 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
-        // Skip our own re-broadcasts
+        // Skip re-broadcasts
         if (routeableMsg.get_flags() & IvpMsgFlags_Validated)
             return;
 
@@ -432,7 +425,7 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::HandleMapDataMessage(MapDataMessage &msg, routeable_message &routeableMsg)
     {
-        // Skip our own re-broadcasts
+        // Skip re-broadcasts
         if (routeableMsg.get_flags() & IvpMsgFlags_Validated)
             return;
 
@@ -450,7 +443,7 @@ namespace IntersectionValidation
         try
         {
             auto mapData = msg.get_j2735_data();
-            auto mapDataRef = mapData; // keep alive past JSON conversion
+            auto mapDataRef = mapData;
 
             // Extract intersection ID before JSON conversion
             int intersectionId = -1;

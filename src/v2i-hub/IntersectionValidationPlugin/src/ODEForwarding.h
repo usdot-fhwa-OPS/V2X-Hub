@@ -26,8 +26,8 @@ namespace IntersectionValidation
     struct ODEForwarding
     {
         bool shouldForward = false;
-        std::map<int, int> corrections; // intersectionId -> corrected per-intersection revision
-        int msgRevisionCorrection = -1;  // -1 = none; MAP msgIssueRevision corrected value (MAP only)
+        std::map<int, int> corrections; // Intersection level revision correction
+        int msgRevisionCorrection = -1;  // msgRevisionCount correction (MAP)
     };
 
     /**
