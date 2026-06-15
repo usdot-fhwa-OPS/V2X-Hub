@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "PriorityConfiguration.h"
+#include "PriorityConfiguration.hpp"
 #include "PriorityRequestProcessor.hpp"
 #include "PriorityTypes.hpp"
 
@@ -40,6 +40,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "SNMPClient.h"
+#include <tsc/NTCIP_1211_MIB.h>
 #include <TmxMessageManager.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/messages/TmxJ2735Codec.hpp>
@@ -47,21 +48,6 @@
 #include <tmx/j2735_messages/SignalStatusMessage.hpp>
 
 namespace PriorityPlugin {
-
-    // NTCIP 1211 OID for prgPriorityRequestAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.8)
-    static const std::string NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.8.0";
-
-    // NTCIP 1211 OID for prgPriorityUpdateAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.9)
-    static const std::string NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.9.0";
-
-    // NTCIP 1211 OID for prgPriorityCancel (1211 v02A-SE03f PRS-MIB1 5.1.2.5)
-    static const std::string NTCIP1211_PRIORITY_CANCEL_OID = "1.3.6.1.4.1.1206.4.2.11.2.5.0";
-
-    // NTCIP 1211 OID for prgPriorityClear (1211 v02A-SE03f PRS-MIB1 5.1.2.6)
-    static const std::string NTCIP1211_PRIORITY_CLEAR_OID = "1.3.6.1.4.1.1206.4.2.11.2.6.0";
-
-    // NTCIP 1211 OID for prsServiceRequest (1211 v0224j CO-MIB1 5.2.2.1)
-    static const std::string NTCIP1211_PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
 
     class PriorityPlugin : public tmx::utils::TmxMessageManager {
         public:

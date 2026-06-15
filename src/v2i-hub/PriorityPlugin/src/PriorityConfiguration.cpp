@@ -14,7 +14,7 @@
  * the License.
  */
 
-#include "PriorityConfiguration.h"
+#include "PriorityConfiguration.hpp"
 
 #include <sstream>
 #include <stdexcept>

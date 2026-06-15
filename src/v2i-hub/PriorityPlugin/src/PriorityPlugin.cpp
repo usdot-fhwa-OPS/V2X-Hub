@@ -176,13 +176,6 @@ namespace PriorityPlugin {
                 std::memcpy(vehicleID.data(), &srm->requestor.id.choice.stationID, vehicleID.size());
             }
 
-            if (vehicleID.empty()) {
-                PLOG(logWARNING) << "SRM has no identifiable vehicle ID, skipping.";
-                _skippedMessages++;
-                SetStatus(_keySkippedMessages, _skippedMessages);
-                return;
-            }
-
             std::string vehicleKey(vehicleID.begin(), vehicleID.end());
 
             time_t nowEpoch = std::time(nullptr);
@@ -250,7 +243,7 @@ namespace PriorityPlugin {
                         ctrlIt != _controllers.end()) {
                         PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
                                     << " intersectionID=" << tracked.intersectionID;
-                        SnmpSet(ctrlIt->second.snmpClient, NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
+                        SnmpSet(ctrlIt->second.snmpClient, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
                     }
                     it = _prgTrackedRequests.erase(it);
                 }
@@ -290,7 +283,6 @@ namespace PriorityPlugin {
             PLOG(logWARNING) << "SRM decode returned null, skipping.";
             _skippedMessages++;
             SetStatus(_keySkippedMessages, _skippedMessages);
-            return;
         }
     }
 
@@ -549,7 +541,7 @@ namespace PriorityPlugin {
             encoded = PriorityRequestProcessor::EncodePriorityCancel(
                 requestID, vehicleID.data(), vehicleID.size(),
                 classType, classLevel, *strategy);
-            targetOID = NTCIP1211_PRIORITY_CANCEL_OID;
+            targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CANCEL_OID;
             isCancelRequest = true;
             PLOG(logDEBUG) << "PRG cancel for requestID=" << static_cast<int>(requestID);
         }
@@ -564,14 +556,14 @@ namespace PriorityPlugin {
                     requestID, vehicleID.data(), vehicleID.size(),
                     classType, classLevel, *strategy,
                     timeOfService, timeOfDepart, timeOfRequest);
-                targetOID = NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+                targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
             }
             else {
                 encoded = PriorityRequestProcessor::EncodePriorityUpdate(
                     requestID, vehicleID.data(), vehicleID.size(),
                     classType, classLevel, *strategy,
                     timeOfService, timeOfDepart, timeOfRequest);
-                targetOID = NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+                targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
             }
         }
         else {
@@ -584,7 +576,7 @@ namespace PriorityPlugin {
                     requestID, vehicleID.data(), vehicleID.size(),
                     classType, classLevel, *strategy,
                     timeOfService, timeOfDepart, timeOfRequest);
-                targetOID = NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+                targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
             }
             else {
                 // No existing entry or canceled - send as new request
@@ -592,7 +584,7 @@ namespace PriorityPlugin {
                     requestID, vehicleID.data(), vehicleID.size(),
                     classType, classLevel, *strategy,
                     timeOfService, timeOfDepart, timeOfRequest);
-                targetOID = NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+                targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
             }
         }
 

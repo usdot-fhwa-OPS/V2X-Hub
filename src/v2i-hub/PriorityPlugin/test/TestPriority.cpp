@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
-#include "PriorityConfiguration.h"
+#include "PriorityConfiguration.hpp"
 #include "PriorityRequestProcessor.hpp"
 
 using namespace PriorityPlugin;
