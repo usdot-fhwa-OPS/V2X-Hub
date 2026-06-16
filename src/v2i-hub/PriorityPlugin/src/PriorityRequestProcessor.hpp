@@ -18,13 +18,11 @@
 
 #include "PriorityTypes.hpp"
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
+#include <algorithm>
+#include <cstring>
 #include <map>
 #include <optional>
 #include <utility>
-#include <vector>
 
 #include <PluginLog.h>
 
@@ -86,13 +84,6 @@ namespace PriorityPlugin {
              * @return true on successful decode, false if data size is invalid.
              */
             static bool DecodeCoServiceResponse(const std::vector<uint8_t> &data, std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> &rows, bool &coBusy);
-
-            /**
-             * @brief Maps J2735 BasicVehicleRole to NTCIP 1211 priorityRequestVehicleClassType (1..10) and priorityRequestVehicleClassLevel (1..10).
-             * @param role BasicVehicleRole enumeration value from the SRM requestor type.
-             * @return std::pair<uint8_t, uint8_t> NTCIP 1211 vehicle class type (1..10) and class level (1..10).
-             */
-            static std::pair<uint8_t, uint8_t> MapVehicleClass(long role);
 
             /**
              * @brief Encodes the prsServiceRequest OCTET STRING per NTCIP 1211 CO-MIB 5.2.2.1.

@@ -16,10 +16,6 @@
 
 #include "PriorityRequestProcessor.hpp"
 
-#include <algorithm>
-#include <cstring>
-#include <vector>
-
 using namespace tmx::utils;
 
 namespace PriorityPlugin {
@@ -107,28 +103,6 @@ namespace PriorityPlugin {
 
         coBusy = (data[SERVICE_REQUEST_BUSY_OFFSET] != 0);
         return true;
-    }
-
-    std::pair<uint8_t, uint8_t> PriorityRequestProcessor::MapVehicleClass(long role)
-    {
-        switch (role) {
-            case 6:  return {1, 1}; // emergency
-            case 12: return {1, 2}; // police
-            case 13: return {1, 3}; // fire
-            case 14: return {1, 4}; // ambulance
-            case 5:  return {1, 5}; // roadRescue
-            case 7:  return {1, 6}; // safetyCar
-            case 11: return {1, 7}; // roadSideSource
-            case 1:  return {3, 1}; // publicTransport
-            case 16: return {3, 2}; // transit
-            case 15: return {5, 1}; // dot
-            case 4:  return {5, 2}; // roadWork
-            case 3:  return {7, 1}; // dangerousGoods
-            case 9:  return {7, 2}; // truck
-            case 17: return {7, 3}; // slowMoving
-            case 18: return {7, 4}; // stopNgo
-            default: return {10, 1};
-        }
     }
 
     std::vector<uint8_t> PriorityRequestProcessor::EncodeServiceRequest(bool prsBusy) const

@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <boost/property_tree/json_parser.hpp>
 #include "PriorityConfiguration.hpp"
+#include "PriorityPluginWorker.hpp"
 #include "PriorityRequestProcessor.hpp"
 
 using namespace PriorityPlugin;
@@ -358,41 +359,41 @@ TEST(PriorityRequestProcessorTest, CancelSizeConstants) {
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassEmergencyGroup) {
     using P = std::pair<uint8_t, uint8_t>;
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(6),  (P{1, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(12), (P{1, 2}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(13), (P{1, 3}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(14), (P{1, 4}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(5),  (P{1, 5}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(7),  (P{1, 6}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(11), (P{1, 7}));
+    EXPECT_EQ(MapVehicleClass(6),  (P{1, 1}));
+    EXPECT_EQ(MapVehicleClass(12), (P{1, 2}));
+    EXPECT_EQ(MapVehicleClass(13), (P{1, 3}));
+    EXPECT_EQ(MapVehicleClass(14), (P{1, 4}));
+    EXPECT_EQ(MapVehicleClass(5),  (P{1, 5}));
+    EXPECT_EQ(MapVehicleClass(7),  (P{1, 6}));
+    EXPECT_EQ(MapVehicleClass(11), (P{1, 7}));
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassTransitGroup) {
     using P = std::pair<uint8_t, uint8_t>;
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(1),  (P{3, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(16), (P{3, 2}));
+    EXPECT_EQ(MapVehicleClass(1),  (P{3, 1}));
+    EXPECT_EQ(MapVehicleClass(16), (P{3, 2}));
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassWorkGroup) {
     using P = std::pair<uint8_t, uint8_t>;
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(15), (P{5, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(4),  (P{5, 2}));
+    EXPECT_EQ(MapVehicleClass(15), (P{5, 1}));
+    EXPECT_EQ(MapVehicleClass(4),  (P{5, 2}));
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassTruckGroup) {
     using P = std::pair<uint8_t, uint8_t>;
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(3),  (P{7, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(9),  (P{7, 2}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(17), (P{7, 3}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(18), (P{7, 4}));
+    EXPECT_EQ(MapVehicleClass(3),  (P{7, 1}));
+    EXPECT_EQ(MapVehicleClass(9),  (P{7, 2}));
+    EXPECT_EQ(MapVehicleClass(17), (P{7, 3}));
+    EXPECT_EQ(MapVehicleClass(18), (P{7, 4}));
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassDefault) {
     using P = std::pair<uint8_t, uint8_t>;
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(0),   (P{10, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(2),   (P{10, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(99),  (P{10, 1}));
-    EXPECT_EQ(PriorityRequestProcessor::MapVehicleClass(-1),  (P{10, 1}));
+    EXPECT_EQ(MapVehicleClass(0),   (P{10, 1}));
+    EXPECT_EQ(MapVehicleClass(2),   (P{10, 1}));
+    EXPECT_EQ(MapVehicleClass(99),  (P{10, 1}));
+    EXPECT_EQ(MapVehicleClass(-1),  (P{10, 1}));
 }
 
 TEST(PriorityRequestProcessorTest, LookupStrategyTest) {

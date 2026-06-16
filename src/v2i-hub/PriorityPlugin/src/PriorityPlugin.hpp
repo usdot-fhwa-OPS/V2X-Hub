@@ -16,37 +16,27 @@
 
 #pragma once
 
+#include "PluginClient.h"
 #include "PluginClientClockAware.h"
 
 #include "PriorityConfiguration.hpp"
+#include "PriorityPluginWorker.hpp"
 #include "PriorityRequestProcessor.hpp"
-#include "PriorityTypes.hpp"
 
-#include <algorithm>
 #include <atomic>
 #include <chrono>
-#include <cstring>
 #include <ctime>
-#include <iomanip>
-#include <map>
-#include <mutex>
-#include <optional>
-#include <thread>
-#include <tuple>
 #include <memory>
-#include <sstream>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
-
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 #include "SNMPClient.h"
 #include <tsc/NTCIP_1211_MIB.h>
-#include <tmx/messages/TmxJ2735.hpp>
-#include <tmx/messages/TmxJ2735Codec.hpp>
 #include <tmx/j2735_messages/SignalRequestMessage.hpp>
 #include <tmx/j2735_messages/SignalStatusMessage.hpp>
+
 
 namespace PriorityPlugin {
 
@@ -195,6 +185,14 @@ namespace PriorityPlugin {
              * @param timeOfRequest the time of request to include in the priority request sent to the PRS, in epoch seconds.
              */
             void ProcessPrgPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey, uint8_t classType, uint8_t classLevel, long currentMinuteOfYear, long currentMsInMinute, uint32_t timeOfRequest, RequestorState &state);
+
+            /**
+             * @brief Sweeps stale entries from _prgTrackedRequests (PRG mode).
+             *        Sends prgPriorityClear for canceled entries that have aged out
+             *        and evicts entries past _timeToLiveSec.
+             * @param now Function starting count time.
+             */
+            void SweepStaleTrackedRequests(std::chrono::steady_clock::time_point now);
 
             // Map of intersection ID to controller info
             std::unordered_map<long, ControllerInfo> _controllers;

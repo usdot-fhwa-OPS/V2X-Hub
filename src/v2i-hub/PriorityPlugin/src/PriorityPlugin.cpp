@@ -160,34 +160,18 @@ namespace PriorityPlugin {
             }
 
             // Extract the vehicle ID from the requestor
-            std::vector<uint8_t> vehicleID;
-            if (srm->requestor.id.present == VehicleID_PR_entityID) {
-                auto *buf = srm->requestor.id.choice.entityID.buf;
-                auto len = srm->requestor.id.choice.entityID.size;
-                vehicleID.assign(buf, buf + len);
-            }
-            else if (srm->requestor.id.present == VehicleID_PR_stationID) {
-                vehicleID.resize(sizeof(srm->requestor.id.choice.stationID));
-                std::memcpy(vehicleID.data(), &srm->requestor.id.choice.stationID, vehicleID.size());
-            }
-
+            auto vehicleID = ExtractVehicleID(srm->requestor.id);
             std::string vehicleKey(vehicleID.begin(), vehicleID.end());
 
             time_t nowEpoch = std::time(nullptr);
-            struct tm utcNow;
-            gmtime_r(&nowEpoch, &utcNow);
-            auto currentDayOfYear = utcNow.tm_yday;
-            auto currentMinuteOfYear = static_cast<long>(currentDayOfYear) * 1440L
-                                    + static_cast<long>(utcNow.tm_hour) * 60L
-                                    + static_cast<long>(utcNow.tm_min);
-            auto currentMsInMinute = static_cast<long>(utcNow.tm_sec) * 1000L;
+            auto [currentMinuteOfYear, currentMsInMinute] = ComputeMinuteAndMsOfYear(nowEpoch);
 
             // Determine vehicle class from the SRM requestor type
             long role = 0;
             if (srm->requestor.type != nullptr) {
                 role = srm->requestor.type->role;
             }
-            auto [classType, classLevel] = PriorityRequestProcessor::MapVehicleClass(role);
+            auto [classType, classLevel] = MapVehicleClass(role);
 
             uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
 
@@ -223,33 +207,7 @@ namespace PriorityPlugin {
                 return;
             }
 
-            // Sweep stale tracked requests - send clear for canceled entries, evict expired
-            auto now = std::chrono::steady_clock::now();
-            for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
-                auto &tracked = it->second;
-                auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
-
-                if (tracked.state == PrgRequestState::canceled && ageSec >= 2) {
-                    // Send prgPriorityClear to the PRS
-                    auto clearEncoded = PriorityRequestProcessor::EncodePriorityClear(
-                        tracked.requestID, tracked.vehicleID.data(), tracked.vehicleID.size(),
-                        tracked.classType, tracked.classLevel, tracked.strategyNumber);
-                    if (auto ctrlIt = _controllers.find(tracked.intersectionID);
-                        ctrlIt != _controllers.end()) {
-                        PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
-                                    << " intersectionID=" << tracked.intersectionID;
-                        SnmpSet(ctrlIt->second.snmpClient, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
-                    }
-                    it = _prgTrackedRequests.erase(it);
-                }
-                else if (ageSec >= static_cast<long>(_timeToLiveSec)) {
-                    PLOG(logDEBUG) << "Evicting stale tracked request for requestID=" << static_cast<int>(tracked.requestID);
-                    it = _prgTrackedRequests.erase(it);
-                }
-                else {
-                    ++it;
-                }
-            }
+            SweepStaleTrackedRequests(std::chrono::steady_clock::now());
 
             RequestorState &state = _requestorStates[vehicleKey];
             state.vehicleID = vehicleID;
@@ -291,23 +249,11 @@ namespace PriorityPlugin {
         // Compute global TSD and TED
         long etaOffsetMs = 0;
         if (pkg.minute) {
-            auto etaMinuteOfYear = static_cast<long>(*pkg.minute);
-            long etaMs = pkg.second ? static_cast<long>(*pkg.second) : 0;
-            auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
-            auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
-            etaOffsetMs = etaTotalMs - nowTotalMs;
-            // Only wrap when the Dec/Jan boundary is the more plausible interpretation
-            // (raw offset > half a year in the past). Small negatives from clock skew or
-            // latency fall through unchanged so the CO can judge them on its own.
-            if (constexpr long YEAR_MS = 525960L * 60L * 1000L; etaOffsetMs < -YEAR_MS / 2) 
-            {
-                etaOffsetMs += YEAR_MS;
-            }
-            long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;
-            const char *sign = (etaOffsetMs < 0) ? "past" : "future";
-            if (absMs > 30000)      PLOG(logERROR)   << "SRM ETA " << absMs << "ms in " << sign << " (check clock sync)";
-            else if (absMs > 5000)  PLOG(logWARNING) << "SRM ETA " << absMs << "ms in " << sign;
-            else if (absMs > 2000)  PLOG(logDEBUG)   << "SRM ETA " << absMs << "ms in " << sign;
+            etaOffsetMs = ComputeEtaOffsetMs(
+                static_cast<long>(*pkg.minute),
+                pkg.second ? static_cast<long>(*pkg.second) : 0,
+                currentMinuteOfYear, currentMsInMinute);
+            LogEtaSkew(etaOffsetMs);
         }
 
         uint32_t globalTSD;
@@ -446,20 +392,11 @@ namespace PriorityPlugin {
 
         long etaOffsetMs = 0;
         if (pkg.minute) {
-            auto etaMinuteOfYear = static_cast<long>(*pkg.minute);
-            long etaMs = pkg.second ? static_cast<long>(*pkg.second) : 0;
-            auto etaTotalMs = etaMinuteOfYear * 60L * 1000L + etaMs;
-            auto nowTotalMs = currentMinuteOfYear * 60L * 1000L + currentMsInMinute;
-            etaOffsetMs = etaTotalMs - nowTotalMs;
-            // Only wrap when the Dec/Jan boundary is the more plausible interpretation.
-            if (constexpr long YEAR_MS = 525960L * 60L * 1000L; etaOffsetMs < -YEAR_MS / 2) {
-                etaOffsetMs += YEAR_MS;
-            }
-            long absMs = (etaOffsetMs < 0) ? -etaOffsetMs : etaOffsetMs;
-            const char *sign = (etaOffsetMs < 0) ? "past" : "future";
-            if (absMs > 30000)      PLOG(logERROR)   << "SRM ETA " << absMs << "ms in " << sign << " (check clock sync)";
-            else if (absMs > 5000)  PLOG(logWARNING) << "SRM ETA " << absMs << "ms in " << sign;
-            else if (absMs > 2000)  PLOG(logDEBUG)   << "SRM ETA " << absMs << "ms in " << sign;
+            etaOffsetMs = ComputeEtaOffsetMs(
+                static_cast<long>(*pkg.minute),
+                pkg.second ? static_cast<long>(*pkg.second) : 0,
+                currentMinuteOfYear, currentMsInMinute);
+            LogEtaSkew(etaOffsetMs);
         }
 
         auto timeOfServiceOffsetMs = etaOffsetMs;
@@ -627,6 +564,38 @@ namespace PriorityPlugin {
             state.requests.push_back({requestID, intersectionID, requestType,
                                       timeOfService, timeOfDepart, true,
                                       inbPresent, inbValue, etaMin, etaSec, dur});
+        }
+    }
+
+    void PriorityPlugin::SweepStaleTrackedRequests(std::chrono::steady_clock::time_point now)
+    {
+        for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
+            auto &tracked = it->second;
+            auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
+            bool isCanceled = (tracked.state == PrgRequestState::canceled);
+
+            switch (ClassifyStaleTrackedRequest(isCanceled, ageSec, static_cast<long>(_timeToLiveSec))) {
+                case StaleTrackedAction::SendClearAndErase: {
+                    auto clearEncoded = PriorityRequestProcessor::EncodePriorityClear(
+                        tracked.requestID, tracked.vehicleID.data(), tracked.vehicleID.size(),
+                        tracked.classType, tracked.classLevel, tracked.strategyNumber);
+                    if (auto ctrlIt = _controllers.find(tracked.intersectionID);
+                        ctrlIt != _controllers.end()) {
+                        PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
+                                       << " intersectionID=" << tracked.intersectionID;
+                        SnmpSet(ctrlIt->second.snmpClient, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
+                    }
+                    it = _prgTrackedRequests.erase(it);
+                    break;
+                }
+                case StaleTrackedAction::Evict:
+                    PLOG(logDEBUG) << "Evicting stale tracked request for requestID=" << static_cast<int>(tracked.requestID);
+                    it = _prgTrackedRequests.erase(it);
+                    break;
+                case StaleTrackedAction::Keep:
+                    ++it;
+                    break;
+            }
         }
     }
 
