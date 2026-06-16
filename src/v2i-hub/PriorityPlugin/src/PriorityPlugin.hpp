@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include "PluginClientClockAware.h"
+
 #include "PriorityConfiguration.hpp"
 #include "PriorityRequestProcessor.hpp"
 #include "PriorityTypes.hpp"
@@ -41,7 +43,6 @@
 
 #include "SNMPClient.h"
 #include <tsc/NTCIP_1211_MIB.h>
-#include <TmxMessageManager.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/messages/TmxJ2735Codec.hpp>
 #include <tmx/j2735_messages/SignalRequestMessage.hpp>
@@ -49,7 +50,7 @@
 
 namespace PriorityPlugin {
 
-    class PriorityPlugin : public tmx::utils::TmxMessageManager {
+    class PriorityPlugin : public tmx::utils::PluginClientClockAware {
         public:
             explicit PriorityPlugin(const std::string &name);
             ~PriorityPlugin() override;
@@ -72,12 +73,6 @@ namespace PriorityPlugin {
              * @param value new value of the configuration key.
              */
             void OnConfigChanged(const char *key, const char *value) override;
-
-            /**
-            * @brief Overrides PluginClient OnMessageReceived(tmx::routeable_message &msg) method.
-            * @param msg incoming message received by the plugin.
-            */
-            void OnMessageReceived(tmx::routeable_message &msg) override;
 
             /**
              * @brief Handles incoming Signal Request Messages (SRMs).

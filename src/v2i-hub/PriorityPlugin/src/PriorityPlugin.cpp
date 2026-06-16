@@ -20,7 +20,7 @@ using namespace tmx::messages;
 using namespace tmx::utils;
 
 namespace PriorityPlugin {
-    PriorityPlugin::PriorityPlugin(const std::string &name) : TmxMessageManager(name)
+    PriorityPlugin::PriorityPlugin(const std::string &name) : PluginClientClockAware(name)
     {
         AddMessageFilter <SrmMessage> (this, &PriorityPlugin::HandleSRM);
         SubscribeToMessages();
@@ -36,7 +36,7 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::OnStateChange(IvpPluginState state)
     {
-        TmxMessageManager::OnStateChange(state);
+        OnStateChange(state);
 		if (state == IvpPluginState_registered) {
 			UpdateConfigSettings();
 
@@ -51,13 +51,8 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::OnConfigChanged(const char *key, const char *value)
     {
-        TmxMessageManager::OnConfigChanged(key, value);
+        OnConfigChanged(key, value);
 		UpdateConfigSettings();
-    }
-
-    void PriorityPlugin::OnMessageReceived(tmx::routeable_message &msg)
-    {
-        PLOG(logDEBUG1) << "Routable Message: " << msg.to_string();
     }
 
     void PriorityPlugin::UpdateConfigSettings()

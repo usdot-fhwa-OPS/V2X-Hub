@@ -52,7 +52,7 @@ namespace PriorityPlugin {
             }
 
             if (!targetClient) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
+                PluginClientClockAware::getClock()->sleep_for(_pollIntervalMs);
                 continue;
             }
 
@@ -72,7 +72,7 @@ namespace PriorityPlugin {
                 if (bool setOk = SnmpSet(targetClient, tsc::mib::ntcip1211::NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
                     !setOk) {
                     PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
-                    std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
+                    PluginClientClockAware::getClock()->sleep_for(_pollIntervalMs);
                     continue;
                 }
                 _lastSentServiceRequest = setData;
@@ -105,7 +105,7 @@ namespace PriorityPlugin {
 
                 if (coBusy) {
                     PLOG(logDEBUG1) << "coBusy is True, re-polling CO...";
-                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                    PluginClientClockAware::getClock()->sleep_for(10);
                 }
             }
 
@@ -157,7 +157,7 @@ namespace PriorityPlugin {
             // Broadcast SSM reflecting current table state
             BroadcastSSMFromTable();
 
-            std::this_thread::sleep_for(std::chrono::milliseconds(_pollIntervalMs));
+            PluginClientClockAware::getClock()->sleep_for(_pollIntervalMs);
         }
 
         PLOG(logINFO) << "PRS service exchange loop stopped.";
