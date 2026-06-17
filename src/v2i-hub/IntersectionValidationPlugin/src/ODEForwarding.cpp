@@ -15,6 +15,7 @@
  */
 
 #include "ODEForwarding.h"
+#include <algorithm>
 
 namespace IntersectionValidation
 {
@@ -25,14 +26,8 @@ namespace IntersectionValidation
             return true;
         }
 
-        for (const auto &change : result.intersectionChanges)
-        {
-            if (change.contentChanged)
-            {
-                return true;
-            }
-        }
-        
-        return false;
+        // Forward when any intersection's content changed.
+        return std::any_of(result.intersectionChanges.begin(), result.intersectionChanges.end(),
+                           [](const IntersectionChangeInfo &change) { return change.contentChanged; });
     }
 }

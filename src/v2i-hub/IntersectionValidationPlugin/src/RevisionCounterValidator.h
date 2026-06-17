@@ -174,7 +174,7 @@ namespace IntersectionValidation
          * @param result The result to populate (intersectionChanges + violations).
          * @param anyChanged Set true if any intersection's content changed.
          */
-        const void processIntersectionArray(const rapidjson::Value &intersections,
+        void processIntersectionArray(const rapidjson::Value &intersections,
                                       std::unordered_map<int, IntersectionState> &prevStates,
                                       const std::string &messageType,
                                       RevisionCounterResult &result,

@@ -120,7 +120,7 @@ namespace IntersectionValidation
         return buffer.GetString();
     }
 
-    const void RevisionCounterValidator::processIntersectionArray(const rapidjson::Value &intersections,
+    void RevisionCounterValidator::processIntersectionArray(const rapidjson::Value &intersections,
                                                             std::unordered_map<int, IntersectionState> &prevStates,
                                                             const std::string &messageType,
                                                             RevisionCounterResult &result,
