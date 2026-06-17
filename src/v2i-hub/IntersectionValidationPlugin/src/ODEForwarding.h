@@ -20,21 +20,9 @@
 namespace IntersectionValidation
 {
     /**
-     * @brief What to do with a validated message: whether to re-broadcast it,
-     *        and any revision corrections to apply before doing so.
+     * @brief Decide whether a validated message should be forwarded.
+     * 
+     *    Forward any message that has its content changed
      */
-    struct ODEForwarding
-    {
-        bool shouldForward = false;
-        std::map<int, int> corrections; // Intersection level revision correction
-        int msgRevisionCorrection = -1;  // msgRevisionCount correction (MAP)
-    };
-
-    /**
-     * @brief Decide whether a validated message should be forwarded and what
-     *        revision corrections to apply. Used for BOTH SPaT and MAP:
-     *        the message-level (msgIssueRevision) branch only fires when
-     *        result.hasMsgRevision is true, which is MAP-only.
-     */
-    ODEForwarding planForwarding(const RevisionCounterResult &result);
+    bool planForwarding(const RevisionCounterResult &result);
 }

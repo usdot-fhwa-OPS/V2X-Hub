@@ -70,9 +70,6 @@ namespace IntersectionValidation
         uint spatRevisionFailed = 0;
         uint mapRevisionFailed = 0;
 
-        uint spatRevisionCorrectionsApplied = 0;
-        uint mapRevisionCorrectionsApplied = 0;
-
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
@@ -131,24 +128,6 @@ namespace IntersectionValidation
          *        Single-sources the validated-flag spelling for both SPaT and MAP.
          */
         void broadcastValidated(tmx::routeable_message &msg);
-
-        /**
-         * @brief Apply per-intersection revision corrections to the SPaT message and
-         *        re-broadcast the validated SPaT with IvpMsgFlags_Validated set.
-         */
-        void forwardValidatedSpat(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg,
-                                  const std::shared_ptr<SPAT> &spatDataRef,
-                                  const std::map<int, int> &corrections);
-
-        /**
-         * @brief Apply intersection and message revision corrections MAP ASN.1 message, then re-broadcast
-         *        the validated MAP with IvpMsgFlags_Validated set.
-         * @param msgRevisionCorrection corrected msgIssueRevision, or -1 for none.
-         */
-        void forwardValidatedMap(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg,
-                                 const std::shared_ptr<MapData> &mapDataRef,
-                                 const std::map<int, int> &corrections,
-                                 int msgRevisionCorrection);
 
         // Revision counter validator — stores previous message state and
         // compares against current to detect CTI 4501 revision violations

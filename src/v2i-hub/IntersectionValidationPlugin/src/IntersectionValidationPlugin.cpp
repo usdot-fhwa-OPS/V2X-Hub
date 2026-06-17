@@ -296,93 +296,6 @@ namespace IntersectionValidation
         PluginClient::BroadcastMessage(msg);
     }
 
-    void IntersectionValidationPlugin::forwardValidatedSpat(SpatMessage &msg, routeable_message &routeableMsg,
-                                                            const std::shared_ptr<SPAT> &spatDataRef,
-                                                            const std::map<int, int> &corrections)
-    {
-        // No corrections
-        if (corrections.empty())
-        {
-            broadcastValidated(routeableMsg);
-            return;
-        }
-
-        uint &correctedCount = spatRevisionCorrectionsApplied;
-
-        // Apply each correction to the matching intersection in message
-        for (int i = 0; i < spatDataRef->intersections.list.count; ++i)
-        {
-            auto id = static_cast<int>(spatDataRef->intersections.list.array[i]->id.id);
-            if (auto it = corrections.find(id); it != corrections.end())
-            {
-                spatDataRef->intersections.list.array[i]->revision = it->second;
-                PLOG(logWARNING) << "Corrected SPaT revision for intersection " << id
-                                 << " to " << it->second;
-                correctedCount++;
-                PluginClient::SetStatus("SPaT Revision Corrections Applied", correctedCount);
-            }
-        }
-
-        // Re-encode
-        SpatMessage corrected(spatDataRef);
-        SpatEncodedMessage encodedMsg;
-        encodedMsg.initialize(corrected);
-
-        if (auto *rMsg = dynamic_cast<routeable_message *>(&encodedMsg))
-            broadcastValidated(*rMsg);
-        else
-            PLOG(logERROR) << "Failed to cast SpatEncodedMessage to routeable_message";
-    }
-
-    void IntersectionValidationPlugin::forwardValidatedMap(MapDataMessage &msg, routeable_message &routeableMsg,
-                                                           const std::shared_ptr<MapData> &mapDataRef,
-                                                           const std::map<int, int> &corrections,
-                                                           int msgRevisionCorrection)
-    {
-        // No corrections
-        if (corrections.empty() && msgRevisionCorrection < 0)
-        {
-            broadcastValidated(routeableMsg);
-            return;
-        }
-
-        uint &correctedCount = mapRevisionCorrectionsApplied;
-
-        // Message-level correction
-        if (msgRevisionCorrection >= 0)
-        {
-            mapDataRef->msgIssueRevision = msgRevisionCorrection;
-            PLOG(logWARNING) << "Corrected MAP msgIssueRevision to " << msgRevisionCorrection;
-        }
-
-        // Per-intersection corrections
-        if (!corrections.empty() && mapDataRef->intersections != nullptr)
-        {
-            for (int i = 0; i < mapDataRef->intersections->list.count; ++i)
-            {
-                auto *ig = mapDataRef->intersections->list.array[i];
-                auto id = static_cast<int>(ig->id.id);
-                if (auto it = corrections.find(id); it != corrections.end())
-                {
-                    ig->revision = it->second;
-                    PLOG(logWARNING) << "Corrected MAP revision for intersection " << id
-                                     << " to " << it->second;
-                    correctedCount++;
-                    PluginClient::SetStatus("MAP Revision Corrections Applied", correctedCount);
-                }
-            }
-        }
-
-        MapDataMessage corrected(mapDataRef);
-        MapDataEncodedMessage encodedMsg;
-        encodedMsg.initialize(corrected);
-
-        if (auto *rMsg = dynamic_cast<routeable_message *>(&encodedMsg))
-            broadcastValidated(*rMsg);
-        else
-            PLOG(logERROR) << "Failed to cast MapDataEncodedMessage to routeable_message";
-    }
-
     void IntersectionValidationPlugin::HandleSpatMessage(SpatMessage &msg, routeable_message &routeableMsg)
     {
         // Skip re-broadcasts
@@ -421,9 +334,8 @@ namespace IntersectionValidation
             RevisionCounterResult revResult = validateMessage(spatJsonStr, spatSchemaPath, "SpatMinimumData",
                                                               "SpatRevisionCounter", "SPaT", intersectionId, handlerBeginMs);
 
-            ODEForwarding plan = planForwarding(revResult);
-            if (plan.shouldForward)
-                forwardValidatedSpat(msg, routeableMsg, spatDataRef, plan.corrections);
+            if (planForwarding(revResult))
+                broadcastValidated(routeableMsg);
         }
         catch (const std::exception &e)
         {
@@ -469,9 +381,8 @@ namespace IntersectionValidation
             RevisionCounterResult revResult = validateMessage(mapJsonStr, mapSchemaPath, "MapMinimumData",
                                                               "MapRevisionCounter", "MAP", intersectionId, handlerBeginMs);
 
-            ODEForwarding plan = planForwarding(revResult);
-            if (plan.shouldForward)
-                forwardValidatedMap(msg, routeableMsg, mapDataRef, plan.corrections, plan.msgRevisionCorrection);
+            if (planForwarding(revResult))
+                broadcastValidated(routeableMsg);
         }
         catch (const std::exception &e)
         {

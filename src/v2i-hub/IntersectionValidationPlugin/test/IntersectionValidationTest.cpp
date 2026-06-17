@@ -5277,223 +5277,101 @@ namespace
   }
 
   // Frequency Throttling Test
-  
-  IntersectionChangeInfo makeChange(int id, bool content, bool rev, int curRev)
+
+    IntersectionChangeInfo makeChange(int id, bool contentChanged)
   {
     IntersectionChangeInfo c;
     c.id = id;
-    c.contentChanged = content;
-    c.revisionChanged = rev;
-    c.currentRevision = curRev;
+    c.contentChanged = contentChanged;
     return c;
   }
-
-  rapidjson::Document parseDoc(const std::string &json)
-  {
-    rapidjson::Document d;
-    d.Parse(json.c_str());
-    return d;
-  }
-
-  TEST(PlanForwardingTest, FirstMessageForwardsNoCorrections)
+ 
+  TEST(ShouldForwardTest, FirstMessageForwards)
   {
     RevisionCounterResult r;
     r.comparisonPerformed = false;
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_TRUE(plan.corrections.empty());
-    EXPECT_EQ(plan.msgRevisionCorrection, -1);
+    EXPECT_TRUE(planForwarding(r));
   }
-
-  TEST(PlanForwardingTest, NoChangesDoesNotForward)
+ 
+  TEST(ShouldForwardTest, NoContentChangeDoesNotForward)
   {
     RevisionCounterResult r;
     r.comparisonPerformed = true;
-    r.intersectionChanges.push_back(makeChange(1, false, false, 5));
-    auto plan = planForwarding(r);
-
-    EXPECT_FALSE(plan.shouldForward);
-    EXPECT_TRUE(plan.corrections.empty());
+    r.intersectionChanges.push_back(makeChange(1, false));
+    EXPECT_FALSE(planForwarding(r));
   }
-
-  TEST(PlanForwardingTest, ContentAndRevisionChangedForwardsNoCorrection)
+ 
+  TEST(ShouldForwardTest, ContentChangedForwards)
   {
     RevisionCounterResult r;
     r.comparisonPerformed = true;
-    r.intersectionChanges.push_back(makeChange(1, true, true, 5));
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_TRUE(plan.corrections.empty()); // revision increased correctly, nothing to fix
+    r.intersectionChanges.push_back(makeChange(1, true));
+    EXPECT_TRUE(planForwarding(r));
   }
-
-  TEST(PlanForwardingTest, ContentChangedRevisionStuckProducesCorrection)
+ 
+  TEST(ShouldForwardTest, AnyIntersectionChangedForwards)
   {
     RevisionCounterResult r;
     r.comparisonPerformed = true;
-    r.intersectionChanges.push_back(makeChange(42, true, false, 34));
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_EQ(plan.corrections.count(42), 1u);
-    EXPECT_EQ(plan.corrections.at(42), 35);
+    r.intersectionChanges.push_back(makeChange(59963, false));
+    r.intersectionChanges.push_back(makeChange(18364, true));
+    EXPECT_TRUE(planForwarding(r));
   }
-
-  TEST(PlanForwardingTest, RevisionCorrectionWrapsAt128)
+ 
+  TEST(ShouldForwardTest, AllIntersectionsUnchangedDoesNotForward)
   {
     RevisionCounterResult r;
     r.comparisonPerformed = true;
-    r.intersectionChanges.push_back(makeChange(42, true, false, 127));
-    auto plan = planForwarding(r);
-
-    EXPECT_EQ(plan.corrections.count(42), 1u);
-    EXPECT_EQ(plan.corrections.at(42), 0);
+    r.intersectionChanges.push_back(makeChange(59963, false));
+    r.intersectionChanges.push_back(makeChange(18364, false));
+    EXPECT_FALSE(planForwarding(r));
   }
-
-  TEST(PlanForwardingTest, SpatIgnoresMessageLevelFields)
+ 
+  TEST(RevisionResultTest, SpatContentChangeFlaggedInIntersectionChanges)
   {
-    // hasMsgRevision == false (SPaT)
-    // msgRevisionChanged set but SPaT doesn't have it so no forward
-    RevisionCounterResult r;
-    r.comparisonPerformed = true;
-    r.hasMsgRevision = false;
-    r.msgRevisionChanged = true;
-    r.currentMsgRevision = 5;
-    r.intersectionChanges.push_back(makeChange(1, false, false, 5));
-    auto plan = planForwarding(r);
-
-    EXPECT_FALSE(plan.shouldForward);
-    EXPECT_EQ(plan.msgRevisionCorrection, -1);
-  }
-
-  TEST(PlanForwardingTest, MapContentChangedMsgRevisionStuckCorrectsMsgRevision)
-  {
-    RevisionCounterResult r;
-    r.comparisonPerformed = true;
-    r.hasMsgRevision = true;
-    r.msgRevisionChanged = false;
-    r.currentMsgRevision = 10;
-    r.intersectionChanges.push_back(makeChange(1, true, true, 3));
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_TRUE(plan.corrections.empty());
-    EXPECT_EQ(plan.msgRevisionCorrection, 11);
-  }
-
-  TEST(PlanForwardingTest, MapBothCountersStuckCorrectsBoth)
-  {
-    RevisionCounterResult r;
-    r.comparisonPerformed = true;
-    r.hasMsgRevision = true;
-    r.msgRevisionChanged = false;
-    r.currentMsgRevision = 10;
-    r.intersectionChanges.push_back(makeChange(7, true, false, 20));
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_EQ(plan.corrections.count(7), 1u);
-    EXPECT_EQ(plan.corrections.at(7), 21);
-    EXPECT_EQ(plan.msgRevisionCorrection, 11);
-  }
-
-  TEST(PlanForwardingTest, MapContentChangedMsgRevisionMovedNoMsgCorrection)
-  {
-    RevisionCounterResult r;
-    r.comparisonPerformed = true;
-    r.hasMsgRevision = true;
-    r.msgRevisionChanged = true; // sender increased msgIssueRevision correctly
-    r.currentMsgRevision = 11;
-    r.intersectionChanges.push_back(makeChange(1, true, true, 3));
-    auto plan = planForwarding(r);
-
-    EXPECT_TRUE(plan.shouldForward);
-    EXPECT_EQ(plan.msgRevisionCorrection, -1); // nothing to correct
-  }
-
-  TEST(PlanForwardingTest, MapMsgRevisionCorrectionWrapsAt128)
-  {
-    RevisionCounterResult r;
-    r.comparisonPerformed = true;
-    r.hasMsgRevision = true;
-    r.msgRevisionChanged = false;
-    r.currentMsgRevision = 127;
-    r.intersectionChanges.push_back(makeChange(1, true, true, 3));
-    auto plan = planForwarding(r);
-
-    EXPECT_EQ(plan.msgRevisionCorrection, 0); // should go back to 0
-  }
-
-  TEST(RevisionResultTest, SpatPopulatesIntersectionChanges)
-  {
-    RevisionCounterValidator v;
-    auto d1 = parseDoc(R"({"value":{"SPAT":{"intersections":[
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
         {"id":{"id":59963},"revision":34,"status":"0000"}]}}})");
-    v.validateSpatRevision(d1);
-
-    auto d2 = parseDoc(R"({"value":{"SPAT":{"intersections":[
-        {"id":{"id":59963},"revision":35,"status":"0040"}]}}})");
-    auto r = v.validateSpatRevision(d2);
-
+    validator.validateSpatRevision(d1);
+ 
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":34,"status":"0040"}]}}})");
+    auto r = validator.validateSpatRevision(d2);
+ 
     EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_EQ(r.intersectionChanges[0].id, 59963);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
-    EXPECT_TRUE(r.intersectionChanges[0].revisionChanged);
-    EXPECT_EQ(r.intersectionChanges[0].currentRevision, 35);
   }
-
-  TEST(RevisionResultTest, SpatIntersectionChangesFlagsStuckRevision)
+ 
+  TEST(RevisionResultTest, SpatNoContentChangeFlaggedFalse)
   {
-    RevisionCounterValidator v;
-    auto d1 = parseDoc(R"({"value":{"SPAT":{"intersections":[
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
         {"id":{"id":1},"revision":34,"status":"0000"}]}}})");
-    v.validateSpatRevision(d1);
-
-    auto d2 = parseDoc(R"({"value":{"SPAT":{"intersections":[
-        {"id":{"id":1},"revision":34,"status":"0040"}]}}})");
-    auto r = v.validateSpatRevision(d2);
-
+    validator.validateSpatRevision(d1);
+ 
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":1},"revision":34,"status":"0000"}]}}})"); // identical
+    auto r = validator.validateSpatRevision(d2);
+ 
     EXPECT_EQ(r.intersectionChanges.size(), 1u);
-    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
-    EXPECT_FALSE(r.intersectionChanges[0].revisionChanged);
-    EXPECT_EQ(r.intersectionChanges[0].currentRevision, 34);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
   }
-
-  TEST(RevisionResultTest, MapSetsMessageLevelFields)
+ 
+  TEST(RevisionResultTest, MapContentChangeFlaggedInIntersectionChanges)
   {
-    RevisionCounterValidator v;
-    auto d1 = parseDoc(R"({"value":{"MapData":{"msgIssueRevision":7,"intersections":[
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
         {"id":{"id":1},"revision":0,"laneWidth":360}]}}})");
-    auto r1 = v.validateMapRevision(d1);
-    EXPECT_FALSE(r1.hasMsgRevision); // first MAP, nothing to compare
-    EXPECT_EQ(r1.currentMsgRevision, 7);
-
-    auto d2 = parseDoc(R"({"value":{"MapData":{"msgIssueRevision":8,"intersections":[
-        {"id":{"id":1},"revision":1,"laneWidth":370}]}}})");
-    auto r2 = v.validateMapRevision(d2);
-    EXPECT_TRUE(r2.hasMsgRevision);
-    EXPECT_TRUE(r2.msgRevisionChanged);
-    EXPECT_EQ(r2.currentMsgRevision, 8);
-  }
-
-  TEST(RevisionResultTest, MapMsgRevisionUnchangedReportedToPlanner)
-  {
-    RevisionCounterValidator v;
-    auto d1 = parseDoc(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
-        {"id":{"id":1},"revision":0,"laneWidth":360}]}}})");
-    v.validateMapRevision(d1);
-
-    // content changes but msgIssueRevision stays 5
-    auto d2 = parseDoc(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
-        {"id":{"id":1},"revision":0,"laneWidth":999}]}}})");
-    auto r = v.validateMapRevision(d2);
-
-    EXPECT_TRUE(r.hasMsgRevision);
-    EXPECT_FALSE(r.msgRevisionChanged);
-    EXPECT_EQ(r.currentMsgRevision, 5);
+    validator.validateMapRevision(d1);
+ 
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999}]}}})"); // content moved
+    auto r = validator.validateMapRevision(d2);
+ 
     EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
   }
+
 
 } // namespace
