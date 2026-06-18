@@ -23,7 +23,7 @@ namespace IntersectionValidation
 {
 
     /**
-     * @brief Info for changing revision count
+     * @brief Change information for a single intersection, 
      */
     struct IntersectionChangeInfo
     {
@@ -41,7 +41,7 @@ namespace IntersectionValidation
         bool valid = true;
         bool comparisonPerformed = false;
         std::vector<std::string> violations;
-        std::vector<IntersectionChangeInfo> intersectionChanges;
+        std::vector<IntersectionChangeInfo> intersectionChanges; // Vector to represent all intersection changes in a MAP/SPaT message
 
         // Message-level revision state. Populated for MAP only; for SPaT
         // hasMsgRevision stays false and the planner ignores these fields.

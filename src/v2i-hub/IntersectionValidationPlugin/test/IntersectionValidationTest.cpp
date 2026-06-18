@@ -5372,6 +5372,117 @@ namespace
     EXPECT_EQ(r.intersectionChanges.size(), 1u);
     EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
   }
+  
+  TEST(RevisionResultTest, SpatMultiIntersectionOnlyFirstChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
 
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0040"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})"); // only #1 moved
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_EQ(r.intersectionChanges[0].id, 59963);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_EQ(r.intersectionChanges[1].id, 18364);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatMultiIntersectionBothChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0040"},
+        {"id":{"id":18364},"revision":0,"status":"0080"}]}}})"); // both moved
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_TRUE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatMultiIntersectionNoneChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})"); // identical
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionOnlyFirstChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":6,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})"); // only #1 moved
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_EQ(r.intersectionChanges[0].id, 1);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_EQ(r.intersectionChanges[1].id, 2);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionBothChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":6,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999},
+        {"id":{"id":2},"revision":0,"laneWidth":888}]}}})"); // both moved
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_TRUE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionNoneChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})"); // identical
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
 
 } // namespace
