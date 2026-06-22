@@ -217,6 +217,5 @@ private:
     // set plugin configuration carma_cloud_ca_cert_path=/var/www/plugins/ssl/carma-cloud-internal-ca.pem
 	std::string carma_cloud_ca_cert_path;
 };
-std::mutex _cfgLock;
 }
 #endif

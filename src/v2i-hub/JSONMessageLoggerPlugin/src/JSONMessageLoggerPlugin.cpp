@@ -116,9 +116,9 @@ namespace JSONMessageLoggerPlugin {
         unsigned int maxFileSize = 0;
         unsigned int maxFiles = 0;
         std::string logDir;
-        GetConfigValue<unsigned int>("MaxFileSize",maxFileSize, &_configMutex);
-        GetConfigValue<unsigned int>("MaxFiles",maxFiles, &_configMutex);
-        GetConfigValue<std::string>("LogDir", logDir, &_configMutex);
+        GetConfigValue<unsigned int>("MaxFileSize",maxFileSize);
+        GetConfigValue<unsigned int>("MaxFiles",maxFiles);
+        GetConfigValue<std::string>("LogDir", logDir);
         initLogging(maxFileSize, maxFiles, logDir);
     }
     

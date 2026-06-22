@@ -33,7 +33,6 @@ CARMAStreetsPlugin::CARMAStreetsPlugin(string name) :
 
 void CARMAStreetsPlugin::UpdateConfigSettings() {
 
-	lock_guard<mutex> lock(_cfgLock);
 	// Populate Header Information for outgoing mobility operation messages and filter Header for incoming mobility operation messages
 	GetConfigValue<string>("IntersectionId", _intersectionId);
 	// Kafka broker configuration

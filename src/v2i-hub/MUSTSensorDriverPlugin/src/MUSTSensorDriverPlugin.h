@@ -34,7 +34,6 @@ namespace MUSTSensorDriverPlugin
     class MUSTSensorDriverPlugin : public tmx::utils::PluginClientClockAware
     {
         private:
-            std::mutex _configMutex;
             /**
              * @brief Status label simulation time to be displayed by each plugin.
              */

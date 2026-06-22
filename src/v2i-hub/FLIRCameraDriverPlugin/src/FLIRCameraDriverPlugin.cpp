@@ -171,7 +171,7 @@ namespace FLIRCameraDriverPlugin
 		SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
 		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 		std::string flirConfigsStr;
-		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
+		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
 
 		if (!runningWebSocket)

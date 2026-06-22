@@ -52,7 +52,6 @@ namespace ODEForwardPlugin
 
 		int instance;
 		GetConfigValue("Instance", instance);
-		std::scoped_lock lock(_cfgLock);
 		GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
 		GetConfigValue<uint16_t>("ForwardMSG", _forwardMSG);
 		GetConfigValue<int>("MAPUDPPort", _MAPUDPPort);

@@ -86,7 +86,6 @@ namespace ODEForwardPlugin
 			uint _mapSkipCount = 0;
 			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
-			std::mutex _cfgLock;
 
 	};
 

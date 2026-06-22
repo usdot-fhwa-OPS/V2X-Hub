@@ -182,12 +182,12 @@ public:
 	// @param lock If non-NULL, this mutex is locked while value is set.
 	// @return true on success; false if the value could not be retrieved.
 	template <typename T>
-	bool GetConfigValue(const std::string &key, T &value, std::mutex *lock = NULL)
+	bool GetConfigValue(const std::string &key, T &value)
 	{
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		lock->lock();
+		_configLock->lock();
 
 		// Maybe this is a system-wide parameter?
 		if (text == nullptr && _sysConfig != nullptr)
@@ -212,7 +212,7 @@ public:
 			free(text);
 		}
 
-		lock->unlock();
+		_configLock->unlock();
 
 		return success;
 	}
@@ -381,6 +381,8 @@ private:
 
 	// Map a plugin status key to the last value set for that key.
 	std::map<std::string, std::string> _statusMap;
+	
+	std::unique_ptr<std::mutex> _configLock = std::make_unique<std::mutex>();
 
 	// Code for message handler registration and invoking
 	struct handler_allocator {
@@ -432,11 +434,11 @@ private:
 };
 
 template<>
-inline bool PluginClient::GetConfigValue(const std::string &key, boost::property_tree::ptree &value, std::mutex *lock)
+inline bool PluginClient::GetConfigValue(const std::string &key, boost::property_tree::ptree &value)
 {
 	bool success = false;
 	std::string string_val;
-	success = GetConfigValue<std::string>(key, string_val, lock);
+	success = GetConfigValue<std::string>(key, string_val);
 	if (!success) return success;
 
 	std::stringstream ss;
@@ -457,10 +459,10 @@ inline bool PluginClient::GetConfigValue(const std::string &key, boost::property
 }
 
 template<>
-inline bool PluginClient::GetConfigValue<bool>(const std::string &key, bool &value, std::mutex *lock)
+inline bool PluginClient::GetConfigValue<bool>(const std::string &key, bool &value)
 {
 	std::string strValue;
-	if ( bool success = GetConfigValue<std::string>(key, strValue, lock); !success)
+	if ( bool success = GetConfigValue<std::string>(key, strValue); !success)
 		return false;
 
 	if (boost::iequals(strValue, "1")

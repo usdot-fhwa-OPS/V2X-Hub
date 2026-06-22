@@ -229,7 +229,6 @@ private:
 	 */
 	uint _srmMessageSkipped = 0;
 };
-std::mutex _cfgLock;
 
 }
 #endif
