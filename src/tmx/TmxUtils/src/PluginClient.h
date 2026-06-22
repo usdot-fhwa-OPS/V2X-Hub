@@ -187,7 +187,7 @@ public:
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		_configLock->lock();
+		_configLock.lock();
 
 		// Maybe this is a system-wide parameter?
 		if (text == nullptr && _sysConfig != nullptr)
@@ -212,7 +212,7 @@ public:
 			free(text);
 		}
 
-		_configLock->unlock();
+		_configLock.unlock();
 
 		return success;
 	}
@@ -382,7 +382,7 @@ private:
 	// Map a plugin status key to the last value set for that key.
 	std::map<std::string, std::string> _statusMap;
 	
-	std::unique_ptr<std::mutex> _configLock = std::make_unique<std::mutex>();
+	std::mutex _configLock;
 
 	// Code for message handler registration and invoking
 	struct handler_allocator {
