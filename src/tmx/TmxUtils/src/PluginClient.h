@@ -187,8 +187,7 @@ public:
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		if (lock != nullptr)
-			lock->lock();
+		lock->lock();
 
 		// Maybe this is a system-wide parameter?
 		if (text == nullptr && _sysConfig != nullptr)
@@ -213,8 +212,7 @@ public:
 			free(text);
 		}
 
-		if (lock != nullptr)
-			lock->unlock();
+		lock->unlock();
 
 		return success;
 	}
