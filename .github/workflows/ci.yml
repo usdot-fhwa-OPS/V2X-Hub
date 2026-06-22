@@ -238,7 +238,7 @@ jobs:
         with:
           submodules: recursive
       - name: Set up Docker Compose
-        uses: docker/setup-compose-action@v1
+        uses: docker/setup-compose-action@v2
         with:
           version: latest
       - name: Log in to Docker Hub
@@ -337,7 +337,7 @@ jobs:
             type=ref,event=tag
             type=ref,event=pr
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
