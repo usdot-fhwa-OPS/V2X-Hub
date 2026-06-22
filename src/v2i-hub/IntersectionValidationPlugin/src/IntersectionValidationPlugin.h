@@ -21,6 +21,8 @@
 #include <string>
 #include <thread>
 #include <mutex>
+#include <map>
+#include <memory>
 #include <PluginClientClockAware.h>
 #include <jsoncpp/json/json.h>
 #include <CTI4501ValidationMessage.h>
@@ -88,8 +90,9 @@ namespace IntersectionValidation
          * @param messageType Display name ("SPaT" or "MAP").
          * @param intersectionId Intersection ID for event messages.
          * @param handlerBeginMs Timestamp when the handler started.
+         * @return Result from revision counter validation check (including intersection info for revision changes)
          */
-        void validateMessage(const std::string &jsonStr, const std::string &schemaPath,
+        RevisionCounterResult validateMessage(const std::string &jsonStr, const std::string &schemaPath,
                              const std::string &fieldEventType, const std::string &revisionEventType,
                              const std::string &messageType, int intersectionId,
                              uint64_t handlerBeginMs);
@@ -114,10 +117,17 @@ namespace IntersectionValidation
          * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
          * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage if validation fails.
          * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         * @return Result from revision counter validation check
          */
-        void validateRevisionCounters(const rapidjson::Document &doc,
+        RevisionCounterResult validateRevisionCounters(const rapidjson::Document &doc,
                                        const std::string &eventType, const std::string &messageType,
                                        int intersectionId, uint64_t handlerBeginMs);
+
+        /**
+         * @brief Set IvpMsgFlags_Validated on a routeable message and broadcast it.
+         *        Single-sources the validated-flag spelling for both SPaT and MAP.
+         */
+        void broadcastValidated(tmx::routeable_message &msg);
 
         // Revision counter validator — stores previous message state and
         // compares against current to detect CTI 4501 revision violations
