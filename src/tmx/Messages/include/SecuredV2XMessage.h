@@ -28,13 +28,13 @@ class SecuredV2XMessage : public tmx::message
 public:
 SecuredV2XMessage() {}
 SecuredV2XMessage(const tmx::message_container_type &contents): tmx::message(contents) {}
-    /// Full SPDU bytes (stored as string for JSON transport).
+    /// Full SPDU bytes 
 std_attribute(this->msg, std::string, spdu_data, "", )
-    /// Packet UUID bytes (stored as string for JSON transport).
+    /// Packet UUID 
 std_attribute(this->msg, std::string, uuid, "", )
     /// J2735 payload type, e.g. "BSM", "PSM", "MAP".
 std_attribute(this->msg, std::string, MessageType, "", )
-    /// Packet reception time, epoch milliseconds.
+    /// timestamp
 std_attribute(this->msg, int64_t, timestamp_ms, 0, )
     /// DSRC metadata: PSID and channel.
 std_attribute(this->msg, DsrcMetadata, dsrc_metadata, DsrcMetadata(), )
@@ -56,6 +56,5 @@ std::string s = get_uuid();
 return std::make_shared<std::vector<uint8_t>>(s.begin(), s.end());
     }
 };
-} /* namespace messages */
-} /* namespace tmx */
+} 
 #endif /* INCLUDE__SecuredV2XMessage_H_ */
