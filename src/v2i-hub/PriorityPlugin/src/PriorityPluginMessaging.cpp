@@ -127,7 +127,7 @@ namespace PriorityPlugin {
                 {
                     std::lock_guard lock(_tableMutex);
 
-                    auto now = static_cast<uint32_t>(std::time(nullptr));
+                    auto now = static_cast<uint32_t>(getClock()->nowInSeconds());
                     _processor.ApplyCoStatusUpdates(coRows, now);
 
                     _prsBusy = true;
@@ -256,7 +256,7 @@ namespace PriorityPlugin {
         auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
         memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
 
-        time_t nowEpoch = std::time(nullptr);
+        auto nowEpoch = static_cast<time_t>(getClock()->nowInSeconds());
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
         auto timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
@@ -382,16 +382,16 @@ namespace PriorityPlugin {
         auto ssmPtr = std::make_shared<SignalStatusMessage_t>();
         memset(ssmPtr.get(), 0, sizeof(SignalStatusMessage_t));
 
-        struct timespec nowTs;
-        clock_gettime(CLOCK_REALTIME, &nowTs);
+        uint64_t nowMs = getClock()->nowInMilliseconds();
+        auto nowEpoch = static_cast<time_t>(nowMs / 1000);
+        auto subsecMs = static_cast<uint32_t>(nowMs % 1000);
         struct tm utcNow;
-        gmtime_r(&nowTs.tv_sec, &utcNow);
-        time_t nowEpoch = nowTs.tv_sec;
+        gmtime_r(&nowEpoch, &utcNow);
 
         auto timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
         *timeStamp = static_cast<MinuteOfTheYear_t>(utcNow.tm_yday * 24 * 60 + utcNow.tm_hour * 60 + utcNow.tm_min);
         ssmPtr->timeStamp = timeStamp;
-        ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000 + nowTs.tv_nsec / 1000000);
+        ssmPtr->second = static_cast<DSecond_t>(utcNow.tm_sec * 1000 + subsecMs);
 
         // ssmPtr->sequenceNumber increments for every new SSM broadcast
         _ssmSequenceCounter++;

@@ -163,7 +163,7 @@ namespace PriorityPlugin {
             auto vehicleID = ExtractVehicleID(srm->requestor.id);
             std::string vehicleKey(vehicleID.begin(), vehicleID.end());
 
-            time_t nowEpoch = std::time(nullptr);
+            auto nowEpoch = static_cast<time_t>(getClock()->nowInSeconds());
             auto [currentMinuteOfYear, currentMsInMinute] = ComputeMinuteAndMsOfYear(nowEpoch);
 
             // Determine vehicle class from the SRM requestor type
@@ -207,7 +207,7 @@ namespace PriorityPlugin {
                 return;
             }
 
-            SweepStaleTrackedRequests(std::chrono::steady_clock::now());
+            SweepStaleTrackedRequests(getClock()->nowInMilliseconds());
 
             RequestorState &state = _requestorStates[vehicleKey];
             state.vehicleID = vehicleID;
@@ -536,11 +536,12 @@ namespace PriorityPlugin {
             PLOG(logINFO) << "Priority " << (isCancelRequest ? "cancel" : "request") << " sent for requestID=" << static_cast<int>(requestID);
 
             // Update tracker
+            uint64_t nowMs = getClock()->nowInMilliseconds();
             if (isCancelRequest) {
                 auto trackerIt = _prgTrackedRequests.find(trackerKey);
                 if (trackerIt != _prgTrackedRequests.end()) {
                     trackerIt->second.state = PrgRequestState::canceled;
-                    trackerIt->second.sentTime = std::chrono::steady_clock::now();
+                    trackerIt->second.sentTimeMs = nowMs;
                 }
             }
             else {
@@ -551,7 +552,7 @@ namespace PriorityPlugin {
                 tracked.classType = classType;
                 tracked.classLevel = classLevel;
                 tracked.strategyNumber = *strategy;
-                tracked.sentTime = std::chrono::steady_clock::now();
+                tracked.sentTimeMs = nowMs;
                 tracked.state = PrgRequestState::sent;
             }
 
@@ -567,11 +568,11 @@ namespace PriorityPlugin {
         }
     }
 
-    void PriorityPlugin::SweepStaleTrackedRequests(std::chrono::steady_clock::time_point now)
+    void PriorityPlugin::SweepStaleTrackedRequests(uint64_t nowMs)
     {
         for (auto it = _prgTrackedRequests.begin(); it != _prgTrackedRequests.end(); ) {
             auto &tracked = it->second;
-            auto ageSec = std::chrono::duration_cast<std::chrono::seconds>(now - tracked.sentTime).count();
+            auto ageSec = static_cast<long>((nowMs - tracked.sentTimeMs) / 1000);
             bool isCanceled = (tracked.state == PrgRequestState::canceled);
 
             switch (ClassifyStaleTrackedRequest(isCanceled, ageSec, static_cast<long>(_timeToLiveSec))) {

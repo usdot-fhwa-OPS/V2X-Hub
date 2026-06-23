@@ -86,7 +86,7 @@ namespace PriorityPlugin {
                 uint8_t classType;
                 uint8_t classLevel;
                 uint8_t strategyNumber;
-                std::chrono::steady_clock::time_point sentTime;
+                uint64_t sentTimeMs;
                 PrgRequestState state = PrgRequestState::sent;
             };
 
@@ -190,9 +190,9 @@ namespace PriorityPlugin {
              * @brief Sweeps stale entries from _prgTrackedRequests (PRG mode).
              *        Sends prgPriorityClear for canceled entries that have aged out
              *        and evicts entries past _timeToLiveSec.
-             * @param now Function starting count time.
+             * @param nowMs Current time in milliseconds (from CarmaClock).
              */
-            void SweepStaleTrackedRequests(std::chrono::steady_clock::time_point now);
+            void SweepStaleTrackedRequests(uint64_t nowMs);
 
             // Map of intersection ID to controller info
             std::unordered_map<long, ControllerInfo> _controllers;
