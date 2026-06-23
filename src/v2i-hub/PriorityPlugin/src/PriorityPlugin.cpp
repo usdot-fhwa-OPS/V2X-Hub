@@ -36,7 +36,7 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::OnStateChange(IvpPluginState state)
     {
-        OnStateChange(state);
+        PluginClientClockAware::OnStateChange(state);
 		if (state == IvpPluginState_registered) {
 			UpdateConfigSettings();
 
@@ -51,7 +51,7 @@ namespace PriorityPlugin {
 
     void PriorityPlugin::OnConfigChanged(const char *key, const char *value)
     {
-        OnConfigChanged(key, value);
+        PluginClientClockAware::OnConfigChanged(key, value);
 		UpdateConfigSettings();
     }
 
