@@ -49,4 +49,4 @@ LIBRARY_DEPENDENCIES=" \
 
 # install all things needed for deployment, always done
 # TODO: --install-no-recommends
-apt install --install-no-recommends -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+apt install --no-install-recommends -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
