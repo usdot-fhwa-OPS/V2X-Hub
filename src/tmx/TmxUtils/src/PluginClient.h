@@ -187,7 +187,7 @@ public:
 		bool success = false;
 		char *text = ivp_getCopyOfConfigurationValue(_plugin, key.c_str());
 
-		_configLock.lock();
+		std::scoped_lock<std::mutex> lock(_configLock);
 
 		// Maybe this is a system-wide parameter?
 		if (text == nullptr && _sysConfig != nullptr)
@@ -212,7 +212,6 @@ public:
 			free(text);
 		}
 
-		_configLock.unlock();
 
 		return success;
 	}
