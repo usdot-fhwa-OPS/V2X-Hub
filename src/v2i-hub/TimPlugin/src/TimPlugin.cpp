@@ -100,7 +100,6 @@ int TimPlugin::StartWebService()
 
 void TimPlugin::UpdateConfigSettings() {
 
-	std::scoped_lock lock{_cfgLock};
 	
 	GetConfigValue<uint64_t>("Interval", _interval);
 	

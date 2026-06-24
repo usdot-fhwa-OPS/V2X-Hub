@@ -45,17 +45,17 @@ namespace SpatPlugin {
 			std::string signal_controller_snmp_community;
 			std::string intersection_name;
 			unsigned int intersection_id;
-			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json, &data_lock);
+			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json);
 			ip_address = tmx::utils::environment::get_local_ip();
-			GetConfigValue<unsigned int>("Local_UDP_Port", port, &data_lock);
-			GetConfigValue<std::string>("TSC_IP", signal_controller_ip, &data_lock);
-			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port,&data_lock);
-			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community,&data_lock);
+			GetConfigValue<unsigned int>("Local_UDP_Port", port);
+			GetConfigValue<std::string>("TSC_IP", signal_controller_ip);
+			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port);
+			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community);
 
-			GetConfigValue<std::string>("Intersection_Name", intersection_name,&data_lock);
-			GetConfigValue<unsigned int>("Intersection_Id", intersection_id, &data_lock);
+			GetConfigValue<std::string>("Intersection_Name", intersection_name);
+			GetConfigValue<unsigned int>("Intersection_Id", intersection_id);
 			std::string spat_string;
-			GetConfigValue<std::string>("SPAT_Mode", spat_string, &data_lock);
+			GetConfigValue<std::string>("SPAT_Mode", spat_string);
 			spatMode = spat_mode_from_string(spat_string);
 			if (spatMode == SPAT_MODE::UNKNOWN) {
 				tmx::messages::TmxEventLogMessage eventLogMsg;

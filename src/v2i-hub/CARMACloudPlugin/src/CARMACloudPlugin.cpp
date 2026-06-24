@@ -21,7 +21,6 @@ CARMACloudPlugin::CARMACloudPlugin(string name) : PluginClientClockAware(name)
 {
 
 	UpdateConfigSettings();
-	std::lock_guard<mutex> lock(_cfgLock);
 	AddMessageFilter < tsm4Message > (this, &CARMACloudPlugin::HandleCARMARequest);
 	AddMessageFilter < tsm3Message > (this, &CARMACloudPlugin::HandleMobilityOperationMessage);
 
@@ -474,7 +473,6 @@ int CARMACloudPlugin::StartWebService()
 
 
 void CARMACloudPlugin::UpdateConfigSettings() {
-	std::scoped_lock lock(_cfgLock);
 	webip = tmx::utils::environment::get_local_ip();
 	GetConfigValue<uint16_t>("WebServicePort",webport);
 	GetConfigValue<uint16_t>("fetchTime",fetchtime);

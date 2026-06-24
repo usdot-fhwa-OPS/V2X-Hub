@@ -61,10 +61,6 @@ namespace SpatPlugin {
 
 		private:
 			/**
-			 * @brief Mutex for thread safety for configuration parameters.
-			 */
-			std::mutex data_lock;
-			/**
 			 * @brief Thread timer used to periodically consume broadcast SPaT
 			 * data from the TSC .
 			 */

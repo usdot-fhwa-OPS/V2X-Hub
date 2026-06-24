@@ -5,7 +5,6 @@ namespace ERVCloudForwardingPlugin
     ERVCloudForwardingPlugin::ERVCloudForwardingPlugin(const string &name) : PluginClient(name)
     {
         UpdateConfigSettings();
-        std::lock_guard<mutex> lock(_cfgLock);
         AddMessageFilter<BsmMessage>(this, &ERVCloudForwardingPlugin::handleBSM);
         // Subscribe to all messages specified by the filters above.
         SubscribeToMessages();
@@ -102,7 +101,6 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::UpdateConfigSettings()
     {
-        std::lock_guard<mutex> lock(_cfgLock);
 	    _webIp = tmx::utils::environment::get_local_ip();
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);

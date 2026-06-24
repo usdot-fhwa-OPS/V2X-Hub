@@ -44,7 +44,6 @@ namespace JSONMessageLoggerPlugin {
             void UpdateConfigSettings();
 
         private:
-            std::mutex _configMutex;
             /**
              * Logger to record received J2735 messages in JSON format.
              */

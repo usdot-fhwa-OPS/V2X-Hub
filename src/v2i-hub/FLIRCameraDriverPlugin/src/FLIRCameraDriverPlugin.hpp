@@ -66,7 +66,6 @@ namespace FLIRCameraDriverPlugin
 			
 		private:
 			
-			std::mutex _cfgLock;
 			
 			std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> flirSessions;
 			std::shared_ptr<FLIRConfigurations> flirConfigsPtr;

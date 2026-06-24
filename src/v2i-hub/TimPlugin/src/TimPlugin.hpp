@@ -103,7 +103,6 @@ namespace TimPlugin {
 			std::atomic<bool> _isTimFileNew{false};
 			//Post request to update TIM
 			std::atomic<bool> _isTimUpdated{false};
-			std::mutex _cfgLock;
 
 
 	};
