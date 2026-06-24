@@ -62,10 +62,11 @@ private:
 	unsigned short port = 0;
 	std::atomic<bool> routeDsrc { false };
 	unsigned int verState;
-	std::string url; 
+	std::string url;
 	std::string baseurl;
 	std::vector<string> messageid;
-	std::string messageidstr; 
+	std::string messageidstr;
+	bool fullSPDUMode = false;
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
@@ -73,7 +74,7 @@ private:
 	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
 
 
-	
+
 
 };
 

@@ -25,7 +25,7 @@ namespace MessageReceiver {
 	static std::map<std::string, std::atomic<uint32_t> > totalCount;
 
 MessageReceiverPlugin::MessageReceiverPlugin(const std::string &name): TmxMessageManager(name)
-{	
+{
 	errThrottle.set_Frequency(std::chrono::milliseconds(ERROR_WAIT_MS));
 	statThrottle.set_Frequency(std::chrono::milliseconds(STATUS_WAIT_MS));
 }
@@ -35,13 +35,13 @@ void MessageReceiverPlugin::getmessageid()
 
 	stringstream ss(messageidstr);
 
-	messageid.clear(); // better to clear out the vector 
+	messageid.clear(); // better to clear out the vector
 
 	while(ss.good())
 	{
 		string tmp;
 		getline(ss, tmp, ',' );
-		messageid.push_back(tmp); 
+		messageid.push_back(tmp);
 	}
 
 }
@@ -75,12 +75,12 @@ void MessageReceiverPlugin::OnMessageReceived(routeable_message &msg)
 		PLOG(logDEBUG) << "Routing " << name << " message.";
 
 		if (routeDsrc)
-		{	
+		{
 			msg.set_flags(IvpMsgFlags_RouteDSRC);
 		}
 		else
 		{
-			
+
 			msg.set_flags(IvpMsgFlags_None);
 		}
 		this->OutgoingMessage(msg);
@@ -98,6 +98,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue<string>("messageid",messageidstr);
 	ip = tmx::utils::environment::get_local_ip();
 	GetConfigValue("Port", port);
+	GetConfigValue("FullSPDUMode", fullSPDUMode);
 	_skippedSignVerifyErrorResponse = 0;
 	SetStatus<uint>(Key_SkippedSignVerifyError, _skippedSignVerifyErrorResponse);
 
@@ -124,6 +125,100 @@ void MessageReceiverPlugin::OnStateChange(IvpPluginState state)
 		UpdateConfigSettings();
 	}
 }
+
+bool unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet)
+{
+    if (d->protocolVersion != 3)      return false;
+
+    switch (d->content.present) {
+        case Ieee1609Dot2Content_PR_unsecuredData: {
+            const Opaque_t& op = d->content.choice.unsecuredData;
+            if (!op.buf || op.size <= 0) return false;
+            payloadOut.assign(op.buf, op.buf + op.size);
+            return true;
+        }
+        case Ieee1609Dot2Content_PR_signedData: {              // recurse
+            const SignedData_t* sd = d->content.choice.signedData;
+            if (!sd) return false;
+            if (!psidSet) {
+                psidOut = static_cast<uint32_t>(sd->tbsData.headerInfo.psid);
+                psidSet = true;
+            }
+            const Ieee1609Dot2Data_t* next = sd->tbsData.payload.data;  // OPTIONAL
+            if (!next) return false;
+            return unwrapSpdu(next, payloadOut, psidOut, psidSet);
+        }
+
+        default:
+            return false;                // unknown CHOICE
+    }
+}
+
+long MessageReceiverPlugin::identifyJ2735Type(const std::vector<uint8_t>& payload)
+{
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0');
+    size_t n = std::min<size_t>(payload.size(), IDCHECKLIMIT / 2);
+    for (size_t i = 0; i < n; ++i)
+        ss << std::setw(2) << static_cast<unsigned>(payload[i]);
+
+    size_t idloc; int mlen; long msgId;
+    return findMessageId(ss.str(), idloc, mlen, msgId) ? msgId : -1;
+}
+
+bool MessageReceiverPlugin::findMessageId(const std::string& hex, size_t& idloc,
+                                          int& hexLen, long& dsrcMsgId)
+{
+    for (const auto& id : messageid)
+    {
+        size_t loc = hex.find(id);
+        if (loc != std::string::npos && loc < IDCHECKLIMIT)
+        {
+            int mlen;
+            if (hex[loc + 4] == '8')                       // length > 256, long form
+            {
+                std::string tmp = hex.substr(loc + 5, 3);
+                mlen = (strtol(tmp.c_str(), nullptr, 16) + 4) * 2;
+            }
+            else                                           // short form
+            {
+                std::string tmp = hex.substr(loc + 4, 2);
+                mlen = (strtol(tmp.c_str(), nullptr, 16) + 3) * 2;
+            }
+            idloc    = loc;
+            hexLen   = mlen;
+            dsrcMsgId = strtol(id.c_str(), nullptr, 16);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MessageReceiverPlugin::buildSecuredV2XMessage(const byte_stream& incoming, int len, uint64_t rxTime, SecuredV2XMessage& out, std::vector<uint8_t>& payloadOut)
+{
+    // 1. Decode the SPDU
+    Ieee1609Dot2Data_t* decodedPtr = nullptr;
+	// Add decode message logic
+
+    // 2. Walk to the inner J2735 payload
+    uint32_t psid = 0;
+	bool psidSet = false;
+    if (!unwrapSpdu(decodedPtr.get(), payloadOut, psid, psidSet, 0)) {
+        PLOG(logDEBUG) << "No unsecured J2735 payload found in SPDU";
+        return false;
+    }
+
+    // 3. Populate the struct
+    out.spdu = std::make_shared<const std::vector<uint8_t>>(
+                            incoming.data(), incoming.data() + len);
+    out.id            = _uuidGen();
+    out.rxTimestampMs = rxTime;
+    out.dsrc.psid     = psid;
+    out.dsrc.channel  = _dsrcChannel;
+    out.j2735Type = identifyJ2735Type(payloadOut);
+    return true;
+}
+
 
 int MessageReceiverPlugin::Main()
 {
@@ -159,15 +254,27 @@ int MessageReceiverPlugin::Main()
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				totalBytes += len;
-				int txlen=0; 
-				
+				int txlen=0;
+
 				// @SONAR_STOP@
 				// if verification enabled, access HSM
+				if (fullSPDUMode == true){
+					SecuredV2XMessage secMsg;
+					std::vector<uint8_t> payload;
+					if (!buildSecuredV2XMessage(incoming, len, time, secMsg, payload))
+						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
+
+					// handleSecuredV2XMessage(secMsg);
+
+					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
+					txlen = payload.size();
+
+				}
 
 				if (verState == 1)
-				{  
+				{
 
-					//  convert unit8_t vector to hex stream 
+					//  convert unit8_t vector to hex stream
 
     				stringstream ss;
     				ss << std::hex << std::setfill('0');
@@ -176,9 +283,9 @@ int MessageReceiverPlugin::Main()
         				ss << std::setw(2) << static_cast<unsigned>(incoming[it]);
     				}
 
-					string msg = ss.str(); 
+					string msg = ss.str();
 
-					//the incoming payload is hex encoded, convert this to base64 
+					//the incoming payload is hex encoded, convert this to base64
 					std::string base64msg="";
 
 					hex2base64(msg,base64msg);
@@ -187,23 +294,23 @@ int MessageReceiverPlugin::Main()
 
 					std::string req = "\'{\"message\":\""+base64msg+"\"}\'";
 
-					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req; 
+					string cmd1="curl -X POST "+url+" -H \'Content-Type: application/json\' -d "+req;
 
-					const char *cmd=cmd1.c_str();  
+					const char *cmd=cmd1.c_str();
 					char buffer[2048];
 					std::string result="";
-					FILE* pipemsg= popen(cmd,"r"); 
+					FILE* pipemsg= popen(cmd,"r");
 
 					if (pipemsg == NULL ) throw std::runtime_error("popen() failed!");
-					
+
 					try{
 						while (fgets(buffer, sizeof(buffer),pipemsg) != NULL)
 						{
-							result+=buffer; 
+							result+=buffer;
 						}
 					} catch (std::exception const & ex) {
-					
-						pclose(pipemsg); 
+
+						pclose(pipemsg);
 						SetStatus<uint>(Key_SkippedSignVerifyError, ++_skippedSignVerifyErrorResponse);
 						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 						continue;
@@ -225,67 +332,45 @@ int MessageReceiverPlugin::Main()
 
 					int msgValid = sd->valueint;
 
-					string extractedmsg=""; 
+					string extractedmsg="";
 					bool foundId=false;
 
 					if (msgValid == 1)
 					{
-						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message 
+						// look for a valid message type. 0012,0013,0014 etc. and count length of bytes to extract the message
 
-						std::vector<string>::iterator itr=messageid.begin(); 
-						int mlen; 
-						
-						while(itr != messageid.end())
+						size_t idloc;
+						int mlen;
+						long msgId;
+
+						if (!findMessageId(msg, idloc, mlen, msgId))
 						{
-							//look for the message header within the first 20 bytes. 
-							size_t idloc = msg.find(*itr);
+							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n";
+							continue;  //do not send the message out to v2x hub if msgid check fails
+						}
 
-							if(idloc != string::npos and idloc < IDCHECKLIMIT) // making sure the msgID lies within the first IDCHECKLIMIT Characters 
-							{
-								// message id found 
-								if (msg[idloc+4] == '8') // if the length is longer than 256 
-								{
-									string tmp = msg.substr(idloc+5,3); 
-									const char *c = tmp.c_str(); // take out next three nibble for length 
-									mlen = (strtol(c,nullptr,16)+4)*2; // 5 nibbles added for msgid and the extra 1 byte
-									extractedmsg = msg.substr(idloc,mlen); 
+						string extractedmsg = msg.substr(idloc, mlen);
 
-								}
-								else 
-								{
-									string tmp = msg.substr(idloc+4,2);
-									const char *c = tmp.c_str(); // take out next three nibble for length 
-									mlen = (strtol(c,nullptr,16)+3)*2; // 5 nibbles added for msgid and the extra 1 byte
-									extractedmsg = msg.substr(idloc,mlen);
-								}
+						int k=0;
 
-								foundId=true; 
-
-								int k=0; 
-
-								for (unsigned int i = 0; i < extractedmsg.length(); i += 2) {
-									string bs = extractedmsg.substr(i, 2);
-									uint8_t byte = (uint8_t) strtol(bs.c_str(), nullptr, 16);
-									extractedpayload[k++]=byte; 
-									txlen++;
-									
-								}
-								break; // can break out if already found a msg id 
-							} 
-							itr++; 
+						for (unsigned int i = 0; i < extractedmsg.length(); i += 2) {
+							string bs = extractedmsg.substr(i, 2);
+							uint8_t byte = (uint8_t) strtol(bs.c_str(), nullptr, 16);
+							extractedpayload[k++]=byte;
+							txlen++;
 						}
 
 						if (foundId==false)
 						{
-							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n"; 
-							continue;  //do not send the message out to v2x hub if msgid check fails 
+							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n";
+							continue;  //do not send the message out to v2x hub if msgid check fails
 						}
 					}
 					else
 					{
-						PLOG(logDEBUG) <<" Unable to verify the incoming message: Message Verification Error and dropped \n"; 
+						PLOG(logDEBUG) <<" Unable to verify the incoming message: Message Verification Error and dropped \n";
 
-						continue; // do not send the message out to v2x hub core if validation fails 
+						continue; // do not send the message out to v2x hub core if validation fails
 					}
 
 				}
@@ -317,7 +402,7 @@ int MessageReceiverPlugin::Main()
 				}
 
 				this->IncomingMessage(extractedpayload.data(), txlen, enc.empty() ? nullptr : enc.c_str(), 0, 0, time);
-				
+
 			}
 			else if (len < 0)
 			{

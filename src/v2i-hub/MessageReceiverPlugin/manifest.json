@@ -37,11 +37,16 @@
 			"key":"EnableVerification",
 			"default":"0",
 			"description":"If enabled, security HSM features are enabled and MessageReceiver Plugin will try to verify incoming message."
-		},		
+		},
 		{
 			"key":"HSMurl",
 			"default": "http://<SoftHSM IP>:3000/v1/scms/",
 			"description": "REST API endpoint url needed to make HSM calls"
+		},
+		{
+			"key":"FullSPDUMode",
+			"default":"false",
+			"description":"If enabled, the MessageReceiver Plugin will use the full SPDU mode for message verification."
 		}
 	]
 }
