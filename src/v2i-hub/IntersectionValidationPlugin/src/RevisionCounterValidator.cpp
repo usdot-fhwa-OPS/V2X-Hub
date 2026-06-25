@@ -33,9 +33,9 @@ namespace IntersectionValidation
             {
                 // Check intersection revision AND message-level msgIssueRevision
                 const bool revisionBad = change.contentChanged && !revisionProperIncrement;
-                const bool msgRevisionBad = change.contentChanged && ctx.hasMsgPrev &&
-                                            ((ctx.prevMsgRevision + 1) % 128 != ctx.currentMsgRevision);
-                if (!revisionBad && !msgRevisionBad)
+                
+                if (const bool msgRevisionBad = change.contentChanged && ctx.hasMsgPrev &&
+                        ((ctx.prevMsgRevision + 1) % 128 != ctx.currentMsgRevision); !revisionBad && !msgRevisionBad)
                 {
                     return;
                 }
@@ -54,8 +54,8 @@ namespace IntersectionValidation
             }
 
             const bool noChange = (!change.contentChanged && !change.revisionChanged);
-            const bool validIncrement = (change.contentChanged && revisionProperIncrement);
-            if (noChange || validIncrement)
+
+            if (const bool validIncrement = (change.contentChanged && revisionProperIncrement); noChange || validIncrement)
             {
                 return;
             }
@@ -193,8 +193,7 @@ namespace IntersectionValidation
             change.currentRevision = currentRevision;
             change.timestampB = currentTimestamp;
 
-            auto prevIt = prevStates.find(intersectionId);
-            if (prevIt == prevStates.end())
+            if (auto prevIt = prevStates.find(intersectionId); prevIt == prevStates.end())
             {
                 // First time we've seen this intersection: nothing to compare against,
                 // so no progression event (matches conflictmonitor requiring a prior state).
