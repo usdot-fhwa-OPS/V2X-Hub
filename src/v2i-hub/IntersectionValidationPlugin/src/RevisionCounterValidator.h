@@ -32,31 +32,22 @@ namespace IntersectionValidation
         bool revisionChanged = false;
         int currentRevision = -1;
 
-        // Previous/current message timestamps for this intersection (ISO-8601),
-        // emitted as timestampA/timestampB on a MessageCountProgression event.
+        // Previous/current message timestamps for this intersection
         std::string timestampA;
         std::string timestampB;
 
-        // jpo-conflictmonitor MessageCountProgression mirror. progressionViolation
-        // is computed with conflictmonitor's EXACT per-message-type rule (see
-        // processIntersectionArray in the .cpp). That rule differs from the CTI 4501
-        // validity rule, so this is independent of contentChanged/revisionChanged
-        // and of result.valid. progressionCountA/B are the A/B counter pair to
-        // report: the intersection revision, or (MAP only) the msgIssueRevision
-        // pair when only the message-level counter misbehaved.
+        // Progression counts
         bool progressionViolation = false;
         int progressionCountA = 0;
         int progressionCountB = 0;
     };
 
     /**
-     * @brief Per-call context for the MessageCountProgression mirror. Bundles the
-     *        SPaT-vs-MAP selector and the MAP-only message-level revision inputs so
-     *        processIntersectionArray stays within the parameter limit.
+     * @brief Per-call context for the MessageCountProgression 
      */
     struct MsgProgressionCtx
     {
-        bool mapStyle = false;        // false = SPaT rule, true = MAP (content-gated) rule
+        bool mapStyle = false;        // false = SPaT rule, true = MAP rule
         bool hasMsgPrev = false;      // MAP: was a previous msgIssueRevision seen?
         int prevMsgRevision = -1;     // MAP: previous msgIssueRevision
         int currentMsgRevision = -1;  // MAP: current msgIssueRevision
