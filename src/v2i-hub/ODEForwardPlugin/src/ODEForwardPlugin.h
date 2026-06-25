@@ -77,15 +77,6 @@ namespace ODEForwardPlugin
 			/**
 			 * Handle a CTI 4501 validation event emitted by the IntersectionValidationPlugin
 			 * and forward its JSON payload to the matching jpo-conflictmonitor Kafka topic.
-			 *
-			 * All three validation-event message classes (CTI4501ValidationMessage /
-			 * BroadcastRateValidationMessage / MessageCountProgressionValidationMessage)
-			 * share the same TMX routing identity (type "Application", subtype
-			 * "CTI4501ValidationEvent"), so a single filter catches every family. The
-			 * concrete family is selected here by the "eventType" field, which is common
-			 * to all of them. This plugin is a dumb forwarder: it reads eventType to pick
-			 * the topic and re-publishes the raw payload unchanged. Schema correctness is
-			 * owned entirely by the emitting plugin.
 			 */
 			void HandleValidationEvent(tmx::messages::CTI4501ValidationMessage &msg, tmx::routeable_message &routeableMsg);
 
@@ -99,14 +90,19 @@ namespace ODEForwardPlugin
 			int _TIMUDPPort;
 			int _BSMUDPPort;
 			int _SPATUDPPort;
-			uint _spatFwdCount = 0;
-			uint _timFwdCount = 0;
-			uint _mapFwdCount = 0;
-			uint _bsmFwdCount = 0;
-			uint _bsmSkipCount= 0;
-			uint _timSkipCount = 0;
-			uint _spatSkipCount = 0;
-			uint _mapSkipCount = 0;
+
+			// Forwarded/skipped counters for one message stream
+			struct ForwardStats
+			{
+				uint forwarded = 0;
+				uint skipped = 0;
+			};
+			ForwardStats _bsmStats;
+			ForwardStats _spatStats;
+			ForwardStats _timStats;
+			ForwardStats _mapStats;
+			ForwardStats _validationStats;
+
 			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
 			std::mutex _cfgLock;
@@ -118,12 +114,10 @@ namespace ODEForwardPlugin
 			/// Shared producer; fans out to per-event-type topics via send(payload, topic).
 			std::shared_ptr<tmx::utils::kafka_producer_worker> _kafkaProducer;
 			/// Maps the validation eventType string to its destination Kafka topic.
-			std::map<std::string, std::string> _validationTopics;
+			std::map<std::string, std::string, std::less<>> _validationTopics;
 			/// Serializes producer (re)creation and send(); send() recreates the topic
 			/// handle on a topic-name change, which is not concurrency-safe on its own.
 			std::mutex _kafkaLock;
-			uint _validationFwdCount = 0;
-			uint _validationSkipCount = 0;
 
 	};
 

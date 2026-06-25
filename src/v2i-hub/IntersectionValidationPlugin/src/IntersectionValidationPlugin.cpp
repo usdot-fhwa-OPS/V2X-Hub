@@ -30,20 +30,21 @@ using namespace std;
 
 namespace
 {
-    // Format an epoch-ms timestamp as an ISO-8601 UTC string for the timestampA/timestampB
-    // fields on a MessageCountProgression event. conflictmonitor treats these as opaque
-    // human-readable strings.
+    // Format timestamp as an UTC string for the timestampA/timestampB
     std::string formatIso8601Utc(uint64_t epochMs)
     {
-        const std::time_t secs = static_cast<std::time_t>(epochMs / 1000);
-        const int millis = static_cast<int>(epochMs % 1000);
+        const auto secs = static_cast<std::time_t>(epochMs / 1000);
+        const auto millis = static_cast<int>(epochMs % 1000);
         std::tm tmUtc{};
         gmtime_r(&secs, &tmUtc);
-        char buf[32];
-        std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", &tmUtc);
-        char out[40];
-        std::snprintf(out, sizeof(out), "%s.%03dZ", buf, millis);
-        return out;
+
+        std::array<char, 32> buf{};
+        std::strftime(buf.data(), buf.size(), "%Y-%m-%dT%H:%M:%S", &tmUtc);
+
+        std::ostringstream out;
+        out << buf.data() << '.'
+            << std::setfill('0') << std::setw(3) << millis << 'Z';
+        return out.str();
     }
 }
 
@@ -353,10 +354,8 @@ namespace IntersectionValidation
                 intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
             }
 
-            // Interval check now emits a BroadcastRate event per violation, so it
-            // needs the intersection ID.
-            measureMessageInterval(_lastSpatTimeMs, SPAT_INTERVAL_REQUIRED_MS,
-                                   SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT", intersectionId);
+            measureMessageInterval(_lastSpatTimeMs, CTI_SPAT_INTERVAL_REQUIRED_MS,
+                                   CTI_SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT", intersectionId);
  
             // Convert to full MessageFrame JSON
             auto spatJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(spatData);
@@ -404,8 +403,8 @@ namespace IntersectionValidation
                 intersectionId = static_cast<int>(mapData->intersections->list.array[0]->id.id);
             }
 
-            measureMessageInterval(_lastMapTimeMs, MAP_INTERVAL_REQUIRED_MS,
-                                   MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP", intersectionId);
+            measureMessageInterval(_lastMapTimeMs, CTI_MAP_INTERVAL_REQUIRED_MS,
+                                   CTI_MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP", intersectionId);
  
             auto mapJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(mapData);
             std::string mapJsonStr = mapJsonMsg.to_string();

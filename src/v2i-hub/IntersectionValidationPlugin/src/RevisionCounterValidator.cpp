@@ -22,6 +22,49 @@
 
 namespace IntersectionValidation
 {
+    namespace
+    {
+        void evaluateProgression(IntersectionChangeInfo &change, int prevRevision,
+                                 const MsgProgressionCtx &ctx)
+        {
+            const bool revisionProperIncrement = ((prevRevision + 1) % 128 == change.currentRevision);
+
+            if (ctx.mapStyle)
+            {
+                // Check intersection revision AND message-level msgIssueRevision
+                const bool revisionBad = change.contentChanged && !revisionProperIncrement;
+                const bool msgRevisionBad = change.contentChanged && ctx.hasMsgPrev &&
+                                            ((ctx.prevMsgRevision + 1) % 128 != ctx.currentMsgRevision);
+                if (!revisionBad && !msgRevisionBad)
+                {
+                    return;
+                }
+                change.progressionViolation = true;
+                if (revisionBad)
+                {
+                    change.progressionCountA = prevRevision;
+                    change.progressionCountB = change.currentRevision;
+                }
+                else
+                {
+                    change.progressionCountA = ctx.prevMsgRevision;
+                    change.progressionCountB = ctx.currentMsgRevision;
+                }
+                return;
+            }
+
+            const bool noChange = (!change.contentChanged && !change.revisionChanged);
+            const bool validIncrement = (change.contentChanged && revisionProperIncrement);
+            if (noChange || validIncrement)
+            {
+                return;
+            }
+            change.progressionViolation = true;
+            change.progressionCountA = prevRevision;
+            change.progressionCountB = change.currentRevision;
+        }
+    } // namespace
+
 
     std::string RevisionCounterValidator::createContentHash(const rapidjson::Value &intersection)
     {
@@ -126,10 +169,7 @@ namespace IntersectionValidation
                                                             RevisionCounterResult &result,
                                                             bool &anyChanged,
                                                             const std::string &currentTimestamp,
-                                                            bool mapStyle,
-                                                            bool hasMsgPrev,
-                                                            int prevMsgRevision,
-                                                            int currentMsgRevision)
+                                                            const MsgProgressionCtx &progressionCtx)
     {
         for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
         {
@@ -153,58 +193,24 @@ namespace IntersectionValidation
             change.currentRevision = currentRevision;
             change.timestampB = currentTimestamp;
 
-            if (auto prevIt = prevStates.find(intersectionId); prevIt != prevStates.end())
+            auto prevIt = prevStates.find(intersectionId);
+            if (prevIt == prevStates.end())
+            {
+                // First time we've seen this intersection: nothing to compare against,
+                // so no progression event (matches conflictmonitor requiring a prior state).
+                change.contentChanged = true;
+                anyChanged = true;
+            }
+            else
             {
                 change.contentChanged = checkRevisionViolation(intersectionId, currentRevision, contentHash,
                                                                prevIt->second, messageType, result);
                 change.revisionChanged = (currentRevision != prevIt->second.revision);
                 change.timestampA = prevIt->second.timestamp;
-                if (change.contentChanged)
-                {
-                    anyChanged = true;
-                }
+                anyChanged = anyChanged || change.contentChanged;
 
-                const int prevRevision = prevIt->second.revision;
-                const bool revisionProperIncrement = ((prevRevision + 1) % 128 == currentRevision);
-
-                if (mapStyle)
-                {
-                    const bool revisionBad = change.contentChanged && !revisionProperIncrement;
-                    const bool msgRevisionBad = change.contentChanged && hasMsgPrev &&
-                                                ((prevMsgRevision + 1) % 128 != currentMsgRevision);
-
-                    if (revisionBad || msgRevisionBad)
-                    {
-                        change.progressionViolation = true;
-                        if (revisionBad)
-                        {
-                            change.progressionCountA = prevRevision;
-                            change.progressionCountB = currentRevision;
-                        }
-                        else
-                        {
-                            change.progressionCountA = prevMsgRevision;
-                            change.progressionCountB = currentMsgRevision;
-                        }
-                    }
-                }
-                else
-                {
-                    const bool noChange = (!change.contentChanged && !change.revisionChanged);
-                    const bool validIncrement = (change.contentChanged && revisionProperIncrement);
-                    if (!noChange && !validIncrement)
-                    {
-                        change.progressionViolation = true;
-                        change.progressionCountA = prevRevision;
-                        change.progressionCountB = currentRevision;
-                    }
-                }
-            }
-            else
-            {
-                // First time we've seen this intersection
-                change.contentChanged = true;
-                anyChanged = true;
+                // MessageCountProgression mirror (SPaT/MAP rule lives in evaluateProgression).
+                evaluateProgression(change, prevIt->second.revision, progressionCtx);
             }
 
             result.intersectionChanges.push_back(change);
@@ -293,9 +299,12 @@ namespace IntersectionValidation
                                                             int currentMsgRevision)
     {
         bool anyChanged = false;
+        // _prevMapMessage still holds the PREVIOUS msgIssueRevision here; it is not
+        // updated until after this call returns, so it is safe to pass as prevMsgRevision.
         processIntersectionArray(intersections, _prevMapIntersections, "MAP", result, anyChanged,
-                                 currentTimestamp, /*mapStyle=*/true, _hasMapPrevious,
-                                 _prevMapMessage.msgIssueRevision, currentMsgRevision);
+                                 currentTimestamp,
+                                 MsgProgressionCtx{/*mapStyle=*/true, _hasMapPrevious,
+                                                   _prevMapMessage.msgIssueRevision, currentMsgRevision});
         return anyChanged;
     }
 

@@ -168,12 +168,12 @@ namespace ODEForwardPlugin
 	void ODEForwardPlugin::HandleRealTimePublish([[maybe_unused]] BsmMessage &msg, routeable_message &routeableMsg) {
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::BSM);
-			++_bsmFwdCount;
-			SetStatus<uint>("BSM Forwarded", _bsmFwdCount);
+			++_bsmStats.forwarded;
+			SetStatus<uint>("BSM Forwarded", _bsmStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward BSM message: " << e.what();
-			++_bsmSkipCount;
-			SetStatus<uint>("BSM Skipped", _bsmSkipCount);
+			++_bsmStats.skipped;
+			SetStatus<uint>("BSM Skipped", _bsmStats.skipped);
 		}
 
 	}
@@ -186,24 +186,24 @@ namespace ODEForwardPlugin
 		}
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
-			++_spatFwdCount;
-			SetStatus<uint>("SPAT Forwarded", _spatFwdCount);
+			++_spatStats.forwarded;
+			SetStatus<uint>("SPAT Forwarded", _spatStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward SPAT message: " << e.what();
-			++_spatSkipCount;
-			SetStatus<uint>("SPAT Skipped", _spatSkipCount);
+			++_spatStats.skipped;
+			SetStatus<uint>("SPAT Skipped", _spatStats.skipped);
 		}
 	}
 
 	void ODEForwardPlugin::HandleTimPublish([[maybe_unused]] TimMessage &msg, routeable_message &routeableMsg) {
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::TIM);
-			++_timFwdCount;
-			SetStatus<uint>("TIM Forwarded", _timFwdCount);
+			++_timStats.forwarded;
+			SetStatus<uint>("TIM Forwarded", _timStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward TIM message: " << e.what();
-			++_timSkipCount;
-			SetStatus<uint>("TIM Skipped", _timSkipCount);
+			++_timStats.skipped;
+			SetStatus<uint>("TIM Skipped", _timStats.skipped);
 		}
 	}
 
@@ -216,12 +216,12 @@ namespace ODEForwardPlugin
 		}
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::MAP);
-			++_mapFwdCount;
-			SetStatus<uint>("MAP Forwarded", _mapFwdCount);
+			++_mapStats.forwarded;
+			SetStatus<uint>("MAP Forwarded", _mapStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward MAP message: " << e.what();
-			++_mapSkipCount;
-			SetStatus<uint>("MAP Skipped", _mapSkipCount);
+			++_mapStats.skipped;
+			SetStatus<uint>("MAP Skipped", _mapStats.skipped);
 		}
 	}
 
@@ -234,8 +234,8 @@ namespace ODEForwardPlugin
 		{
 			PLOG(logWARNING) << "Dropping validation event '" << eventType
 			                 << "': Kafka producer is not available.";
-			++_validationSkipCount;
-			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
+			++_validationStats.skipped;
+			SetStatus<uint>("Validation Events Skipped", _validationStats.skipped);
 			return;
 		}
 
@@ -244,8 +244,8 @@ namespace ODEForwardPlugin
 		{
 			PLOG(logWARNING) << "Dropping validation event: no Kafka topic configured for "
 			                    "eventType '" << eventType << "'.";
-			++_validationSkipCount;
-			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
+			++_validationStats.skipped;
+			SetStatus<uint>("Validation Events Skipped", _validationStats.skipped);
 			return;
 		}
 
@@ -255,13 +255,13 @@ namespace ODEForwardPlugin
 			_kafkaProducer->send(payload, it->second);
 			PLOG(logDEBUG) << "Forwarded validation event '" << eventType
 			               << "' to Kafka topic '" << it->second << "'.";
-			++_validationFwdCount;
-			SetStatus<uint>("Validation Events Forwarded", _validationFwdCount);
+			++_validationStats.forwarded;
+			SetStatus<uint>("Validation Events Forwarded", _validationStats.forwarded);
 		} catch (const std::exception &e) {
 			PLOG(logERROR) << "Failed to forward validation event '" << eventType
 			               << "': " << e.what();
-			++_validationSkipCount;
-			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
+			++_validationStats.skipped;
+			SetStatus<uint>("Validation Events Skipped", _validationStats.skipped);
 		}
 	}
 

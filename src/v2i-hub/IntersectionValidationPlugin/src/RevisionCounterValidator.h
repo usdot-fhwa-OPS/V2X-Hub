@@ -32,14 +32,36 @@ namespace IntersectionValidation
         bool revisionChanged = false;
         int currentRevision = -1;
 
-        // Previous/current message timestamps on a MessageCountProgression event
+        // Previous/current message timestamps for this intersection (ISO-8601),
+        // emitted as timestampA/timestampB on a MessageCountProgression event.
         std::string timestampA;
         std::string timestampB;
 
+        // jpo-conflictmonitor MessageCountProgression mirror. progressionViolation
+        // is computed with conflictmonitor's EXACT per-message-type rule (see
+        // processIntersectionArray in the .cpp). That rule differs from the CTI 4501
+        // validity rule, so this is independent of contentChanged/revisionChanged
+        // and of result.valid. progressionCountA/B are the A/B counter pair to
+        // report: the intersection revision, or (MAP only) the msgIssueRevision
+        // pair when only the message-level counter misbehaved.
         bool progressionViolation = false;
         int progressionCountA = 0;
         int progressionCountB = 0;
     };
+
+    /**
+     * @brief Per-call context for the MessageCountProgression mirror. Bundles the
+     *        SPaT-vs-MAP selector and the MAP-only message-level revision inputs so
+     *        processIntersectionArray stays within the parameter limit.
+     */
+    struct MsgProgressionCtx
+    {
+        bool mapStyle = false;        // false = SPaT rule, true = MAP (content-gated) rule
+        bool hasMsgPrev = false;      // MAP: was a previous msgIssueRevision seen?
+        int prevMsgRevision = -1;     // MAP: previous msgIssueRevision
+        int currentMsgRevision = -1;  // MAP: current msgIssueRevision
+    };
+
 
     /**
      * @brief Result of a revision counter validation check.
@@ -110,6 +132,7 @@ namespace IntersectionValidation
             std::string contentHash; // JSON content with timestamps stripped
             std::string timestamp;   // processing timestamp when this state was stored
         };
+
 
         /**
          * @brief Stored state for previous MAP message-level data.
@@ -184,6 +207,7 @@ namespace IntersectionValidation
          * @param messageType "SPaT" or "MAP" for violation messages.
          * @param result The result to populate (intersectionChanges + violations).
          * @param anyChanged Set true if any intersection's content changed.
+         * @param progressionCtx SPaT/MAP selector and MAP message-level revision inputs.
          */
         void processIntersectionArray(const rapidjson::Value &intersections,
                                       std::unordered_map<int, IntersectionState> &prevStates,
@@ -191,10 +215,7 @@ namespace IntersectionValidation
                                       RevisionCounterResult &result,
                                       bool &anyChanged,
                                       const std::string &currentTimestamp,
-                                      bool mapStyle = false,
-                                      bool hasMsgPrev = false,
-                                      int prevMsgRevision = -1,
-                                      int currentMsgRevision = -1);
+                                      const MsgProgressionCtx &progressionCtx = {});
 
         /**
          * @brief Validate revision counters for each intersection in a MAP message.
