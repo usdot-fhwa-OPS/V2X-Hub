@@ -354,8 +354,8 @@ namespace IntersectionValidation
                 intersectionId = static_cast<int>(spatData->intersections.list.array[0]->id.id);
             }
 
-            measureMessageInterval(_lastSpatTimeMs, CTI_SPAT_INTERVAL_REQUIRED_MS,
-                                   CTI_SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT", intersectionId);
+            measureMessageInterval(_lastSpatTimeMs, SPAT_INTERVAL_REQUIRED_MS,
+                                   SPAT_INTERVAL_MAX_THRESHOLD_MS, "SPaT", intersectionId);
  
             // Convert to full MessageFrame JSON
             auto spatJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(spatData);
@@ -403,8 +403,8 @@ namespace IntersectionValidation
                 intersectionId = static_cast<int>(mapData->intersections->list.array[0]->id.id);
             }
 
-            measureMessageInterval(_lastMapTimeMs, CTI_MAP_INTERVAL_REQUIRED_MS,
-                                   CTI_MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP", intersectionId);
+            measureMessageInterval(_lastMapTimeMs, MAP_INTERVAL_REQUIRED_MS,
+                                   MAP_INTERVAL_MAX_THRESHOLD_MS, "MAP", intersectionId);
  
             auto mapJsonMsg = TmxJ2735Message<MessageFrame, tmx::JSON>(mapData);
             std::string mapJsonStr = mapJsonMsg.to_string();

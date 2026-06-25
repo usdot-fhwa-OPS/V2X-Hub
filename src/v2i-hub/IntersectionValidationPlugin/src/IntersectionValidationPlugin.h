@@ -140,12 +140,6 @@ namespace IntersectionValidation
         // compares against current to detect CTI 4501 revision violations
         RevisionCounterValidator _revisionValidator;
 
-        // CTI 4501 thresholds
-        static constexpr uint64_t CTI_SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
-        static constexpr uint64_t CTI_MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
-        static constexpr uint64_t CTI_SPAT_INTERVAL_REQUIRED_MS = 125;
-        static constexpr uint64_t CTI_MAP_INTERVAL_REQUIRED_MS = 1000;
-
         static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
         static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
 
