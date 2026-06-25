@@ -38,6 +38,8 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     msg.set_uuid(uuid);
     msg.set_MessageType("BSM"); // BasicSafetyMessage
     msg.set_timestamp_ms(1718900000000);
+    msg.set_psid(8002);
+    msg.set_channel(183);
 
 
     std::cout << msg.to_string() << std::endl;
@@ -51,6 +53,8 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
 
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
+    EXPECT_EQ(8002, msg.get_psid());
+    EXPECT_EQ(183, msg.get_channel());
 }
 
 TEST(RawSpduTest, SetAndGetAttributesPsm) {
@@ -64,7 +68,8 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     msg.set_MessageType("PSM"); // PersonalSafetyMessage
     msg.set_timestamp_ms(1718900123456);
 
-
+    msg.set_psid(8001);
+    msg.set_channel(183);
     std::cout << msg.to_string() << std::endl;
 
     EXPECT_EQ("PSM", msg.get_MessageType());
@@ -75,5 +80,7 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
 
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
+    EXPECT_EQ(8001, msg.get_psid());
+    EXPECT_EQ(183, msg.get_channel());
 }
 
