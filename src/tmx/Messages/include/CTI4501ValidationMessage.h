@@ -98,6 +98,14 @@ public:
     // Message Count B
     std_attribute(this->msg, int64_t, messageCountB, 0, )
 
+    // Kafka topic whose rate was measured (BroadcastRate)
+    std_attribute(this->msg, std::string, topicName, "", )
+
+    // Number of messages observed in the time period (BroadcastRate)
+        std_attribute(this->msg, int, numberOfMessages, 0, )
+
+    // "SPAT" or "MAP" (MessageCountProgression)
+    std_attribute(this->msg, std::string, messageType, "", )
 };
 
 } /* namespace tmx::messages */

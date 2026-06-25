@@ -124,7 +124,12 @@ namespace IntersectionValidation
                                                             std::unordered_map<int, IntersectionState> &prevStates,
                                                             const std::string &messageType,
                                                             RevisionCounterResult &result,
-                                                            bool &anyChanged)
+                                                            bool &anyChanged,
+                                                            const std::string &currentTimestamp,
+                                                            bool mapStyle,
+                                                            bool hasMsgPrev,
+                                                            int prevMsgRevision,
+                                                            int currentMsgRevision)
     {
         for (rapidjson::SizeType i = 0; i < intersections.Size(); ++i)
         {
@@ -146,15 +151,53 @@ namespace IntersectionValidation
             IntersectionChangeInfo change;
             change.id = intersectionId;
             change.currentRevision = currentRevision;
+            change.timestampB = currentTimestamp;
 
             if (auto prevIt = prevStates.find(intersectionId); prevIt != prevStates.end())
             {
                 change.contentChanged = checkRevisionViolation(intersectionId, currentRevision, contentHash,
                                                                prevIt->second, messageType, result);
                 change.revisionChanged = (currentRevision != prevIt->second.revision);
+                change.timestampA = prevIt->second.timestamp;
                 if (change.contentChanged)
                 {
                     anyChanged = true;
+                }
+
+                const int prevRevision = prevIt->second.revision;
+                const bool revisionProperIncrement = ((prevRevision + 1) % 128 == currentRevision);
+
+                if (mapStyle)
+                {
+                    const bool revisionBad = change.contentChanged && !revisionProperIncrement;
+                    const bool msgRevisionBad = change.contentChanged && hasMsgPrev &&
+                                                ((prevMsgRevision + 1) % 128 != currentMsgRevision);
+
+                    if (revisionBad || msgRevisionBad)
+                    {
+                        change.progressionViolation = true;
+                        if (revisionBad)
+                        {
+                            change.progressionCountA = prevRevision;
+                            change.progressionCountB = currentRevision;
+                        }
+                        else
+                        {
+                            change.progressionCountA = prevMsgRevision;
+                            change.progressionCountB = currentMsgRevision;
+                        }
+                    }
+                }
+                else
+                {
+                    const bool noChange = (!change.contentChanged && !change.revisionChanged);
+                    const bool validIncrement = (change.contentChanged && revisionProperIncrement);
+                    if (!noChange && !validIncrement)
+                    {
+                        change.progressionViolation = true;
+                        change.progressionCountA = prevRevision;
+                        change.progressionCountB = currentRevision;
+                    }
                 }
             }
             else
@@ -165,11 +208,12 @@ namespace IntersectionValidation
             }
 
             result.intersectionChanges.push_back(change);
-            prevStates[intersectionId] = {currentRevision, contentHash};
+            prevStates[intersectionId] = {currentRevision, contentHash, currentTimestamp};
         }
     }
 
-    RevisionCounterResult RevisionCounterValidator::validateSpatRevision(const rapidjson::Document &doc)
+    RevisionCounterResult RevisionCounterValidator::validateSpatRevision(const rapidjson::Document &doc,
+                                                                         const std::string &currentTimestamp)
     {
         RevisionCounterResult result;
 
@@ -190,12 +234,13 @@ namespace IntersectionValidation
 
         bool anyChanged = false; 
         processIntersectionArray(doc["value"]["SPAT"]["intersections"], _prevSpatIntersections,
-                                 "SPaT", result, anyChanged);
+                                 "SPaT", result, anyChanged, currentTimestamp);
 
         return result;
     }
 
-    RevisionCounterResult RevisionCounterValidator::validateMapRevision(const rapidjson::Document &doc)
+    RevisionCounterResult RevisionCounterValidator::validateMapRevision(const rapidjson::Document &doc,
+                                                                        const std::string &currentTimestamp)
     {
         RevisionCounterResult result;
 
@@ -223,7 +268,7 @@ namespace IntersectionValidation
         if (mapData.HasMember("intersections") && mapData["intersections"].IsArray())
         {
             anyIntersectionChanged = validateMapIntersections(
-                mapData["intersections"], result);
+                mapData["intersections"], result, currentTimestamp, currentMsgRevision);
         }
 
         validateMsgIssueRevision(currentMsgRevision, anyIntersectionChanged, result);
@@ -243,10 +288,14 @@ namespace IntersectionValidation
     }
 
     bool RevisionCounterValidator::validateMapIntersections(const rapidjson::Value &intersections,
-                                                            RevisionCounterResult &result)
+                                                            RevisionCounterResult &result,
+                                                            const std::string &currentTimestamp,
+                                                            int currentMsgRevision)
     {
         bool anyChanged = false;
-        processIntersectionArray(intersections, _prevMapIntersections, "MAP", result, anyChanged);
+        processIntersectionArray(intersections, _prevMapIntersections, "MAP", result, anyChanged,
+                                 currentTimestamp, /*mapStyle=*/true, _hasMapPrevious,
+                                 _prevMapMessage.msgIssueRevision, currentMsgRevision);
         return anyChanged;
     }
 

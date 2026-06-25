@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2019 LEIDOS.
  *
@@ -35,6 +34,9 @@ namespace ODEForwardPlugin
 		AddMessageFilter < SpatMessage > (this, &ODEForwardPlugin::HandleSPaTPublish);
 		AddMessageFilter < MapDataMessage > (this, &ODEForwardPlugin::HandleMapPublish);
 		AddMessageFilter < TimMessage > (this, &ODEForwardPlugin::HandleTimPublish);
+
+		AddMessageFilter < CTI4501ValidationMessage > (this, &ODEForwardPlugin::HandleValidationEvent);
+
 		// Subscribe to all messages specified by the filters above.
 		SubscribeToMessages();
 		_udpMessageForwarder = std::make_shared<UDPMessageForwarder>();
@@ -69,7 +71,62 @@ namespace ODEForwardPlugin
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
 		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
-		
+
+		// Kafka validation-event forwarding configuration
+		// Kafka validation-event forwarding configuration
+		std::string kafkaBrokerIp;
+		std::string kafkaBrokerPort;
+		GetConfigValue<std::string>("KafkaBrokerIp", kafkaBrokerIp);
+		GetConfigValue<std::string>("KafkaBrokerPort", kafkaBrokerPort);
+
+		std::scoped_lock kafkaLock(_kafkaLock);
+
+		if (!kafkaBrokerIp.empty() && !kafkaBrokerPort.empty())
+		{
+			_kafkaBrokers = kafkaBrokerIp + ":" + kafkaBrokerPort;
+		}
+		else
+		{
+			_kafkaBrokers.clear();
+		}
+
+		// jpo-conflictmonitor topic names
+		_validationTopics = {
+			{"SpatMinimumData", "topic.CmSpatMinimumDataEvents"},
+			{"MapMinimumData", "topic.CmMapMinimumDataEvents"},
+			{"SpatMessageCountProgression", "topic.CmSpatMessageCountProgressionEvents"},
+			{"MapMessageCountProgression", "topic.CmMapMessageCountProgressionEvents"},
+			{"SpatBroadcastRate", "topic.CmSpatBroadcastRateEvents"},
+			{"MapBroadcastRate", "topic.CmMapBroadcastRateEvents"},
+		};
+	}
+
+	/**
+	 * Create the Kafka producer used to forward CTI 4501 validation events
+	 */
+	void ODEForwardPlugin::InitKafkaProducer()
+	{
+		std::scoped_lock kafkaLock(_kafkaLock);
+
+		if (_kafkaBrokers.empty())
+		{
+			PLOG(logWARNING) << "KafkaBrokers not configured; CTI 4501 validation-event "
+			                    "forwarding to conflictmonitor is disabled.";
+			return;
+		}
+
+		kafka_client client;
+		_kafkaProducer = client.create_producer(_kafkaBrokers);
+		if (!_kafkaProducer || !_kafkaProducer->init_producer())
+		{
+			PLOG(logERROR) << "Failed to initialize Kafka producer for brokers '"
+			               << _kafkaBrokers << "'; validation-event forwarding disabled.";
+			_kafkaProducer.reset();
+			return;
+		}
+
+		PLOG(logINFO) << "Kafka producer initialized for validation-event "
+		                 "forwarding to brokers '" << _kafkaBrokers << "'.";
 	}
 
 	/**
@@ -96,6 +153,7 @@ namespace ODEForwardPlugin
 		if (state == IvpPluginState_registered)
 		{
 			UpdateConfigSettings();
+			InitKafkaProducer();
 		}
 	}
 
@@ -126,7 +184,6 @@ namespace ODEForwardPlugin
 			PLOG(logDEBUG) << "ODE skip, not validated";
         	return;
 		}
-		
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
 			++_spatFwdCount;
@@ -152,6 +209,7 @@ namespace ODEForwardPlugin
 
 
 	void ODEForwardPlugin::HandleMapPublish([[maybe_unused]] MapDataMessage &msg, routeable_message &routeableMsg) {
+		PLOG(logDEBUG) << "ODE HandleMAP flags=" << routeableMsg.get_flags();
 		if (!(routeableMsg.get_flags() & IvpMsgFlags_Validated)) {
 			PLOG(logDEBUG) << "ODE skip, not validated";
         	return;
@@ -164,6 +222,46 @@ namespace ODEForwardPlugin
 			PLOG(logERROR) << "Failed to forward MAP message: " << e.what();
 			++_mapSkipCount;
 			SetStatus<uint>("MAP Skipped", _mapSkipCount);
+		}
+	}
+
+	void ODEForwardPlugin::HandleValidationEvent(CTI4501ValidationMessage &msg, routeable_message &routeableMsg) {
+		const std::string eventType = msg.get_eventType();
+
+		std::scoped_lock lock(_kafkaLock);
+
+		if (!_kafkaProducer || !_kafkaProducer->is_running())
+		{
+			PLOG(logWARNING) << "Dropping validation event '" << eventType
+			                 << "': Kafka producer is not available.";
+			++_validationSkipCount;
+			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
+			return;
+		}
+
+		auto it = _validationTopics.find(eventType);
+		if (it == _validationTopics.end())
+		{
+			PLOG(logWARNING) << "Dropping validation event: no Kafka topic configured for "
+			                    "eventType '" << eventType << "'.";
+			++_validationSkipCount;
+			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
+			return;
+		}
+
+		try {
+			// Forward the payload unchanged
+			const std::string payload = routeableMsg.get_payload_str();
+			_kafkaProducer->send(payload, it->second);
+			PLOG(logDEBUG) << "Forwarded validation event '" << eventType
+			               << "' to Kafka topic '" << it->second << "'.";
+			++_validationFwdCount;
+			SetStatus<uint>("Validation Events Forwarded", _validationFwdCount);
+		} catch (const std::exception &e) {
+			PLOG(logERROR) << "Failed to forward validation event '" << eventType
+			               << "': " << e.what();
+			++_validationSkipCount;
+			SetStatus<uint>("Validation Events Skipped", _validationSkipCount);
 		}
 	}
 
