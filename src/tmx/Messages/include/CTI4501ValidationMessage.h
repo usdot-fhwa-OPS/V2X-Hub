@@ -1,9 +1,8 @@
 /*
  * CTI4501ValidationMessage.h
  *
- * TMX message type for CTI 4501 intersection validation events. 
+ * TMX message type for CTI 4501 intersection validation events.
  */
-
 #ifndef INCLUDE_CTI4501VALIDATIONMESSAGE_H_
 #define INCLUDE_CTI4501VALIDATIONMESSAGE_H_
 
@@ -11,7 +10,6 @@
 #include "MessageTypes.h"
 
 namespace tmx::messages {
-
 
 struct ProcessingTimePeriod {
     int64_t beginTimestamp = 0;
@@ -61,8 +59,18 @@ public:
     CTI4501ValidationMessage() = default;
     explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
 
-    static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
+    CTI4501ValidationMessage(const CTI4501ValidationMessage &) = default;
+    CTI4501ValidationMessage &operator=(const CTI4501ValidationMessage &) = default;
+    CTI4501ValidationMessage(CTI4501ValidationMessage &&other) noexcept
+        : tmx::message(other) {}
 
+    CTI4501ValidationMessage &operator=(CTI4501ValidationMessage &&other) noexcept
+    {
+        tmx::message::operator=(other);
+        return *this;
+    }
+
+    static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
     static constexpr const char *MessageSubType = "CTI4501ValidationEvent";
 
     // Time when event was generated
@@ -89,7 +97,6 @@ public:
 
     // Timestamp A
     std_attribute(this->msg, std::string, timestampA, "", )
-
     std_attribute(this->msg, std::string, timestampB, "", )
 
     // Message Count A
@@ -102,7 +109,7 @@ public:
     std_attribute(this->msg, std::string, topicName, "", )
 
     // Number of messages observed in the time period (BroadcastRate)
-        std_attribute(this->msg, int, numberOfMessages, 0, )
+    std_attribute(this->msg, int, numberOfMessages, 0, )
 
     // "SPAT" or "MAP" (MessageCountProgression)
     std_attribute(this->msg, std::string, messageType, "", )
