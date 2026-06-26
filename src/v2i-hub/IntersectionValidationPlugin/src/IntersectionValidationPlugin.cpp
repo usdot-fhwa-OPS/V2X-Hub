@@ -262,7 +262,7 @@ namespace IntersectionValidation
                                                                 [[maybe_unused]] int intersectionId,
                                                                 uint64_t handlerBeginMs)
     {
-        const std::string currentTimestamp = formatIso8601Utc(handlerBeginMs);
+        const std::string currentTimestamp = formatIso8601Utc(getClock());
         RevisionCounterResult result = (messageType == "SPaT")
                                            ? _revisionValidator.validateSpatRevision(doc, currentTimestamp)
                                            : _revisionValidator.validateMapRevision(doc, currentTimestamp);
