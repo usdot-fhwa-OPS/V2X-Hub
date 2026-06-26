@@ -31,21 +31,22 @@ using namespace std;
 namespace
 {
     // Format timestamp as an UTC string for the timestampA/timestampB
-    std::string formatIso8601Utc(uint64_t epochMs)
+    std::string formatIso8601Utc(const std::shared_ptr<fwha_stol::lib::time::CarmaClock> &clock)
     {
+        const uint64_t epochMs = clock->nowInMilliseconds();
         const auto secs = static_cast<std::time_t>(epochMs / 1000);
         const auto millis = static_cast<int>(epochMs % 1000);
         std::tm tmUtc{};
         gmtime_r(&secs, &tmUtc);
-
+ 
         std::array<char, 32> buf{};
         std::strftime(buf.data(), buf.size(), "%Y-%m-%dT%H:%M:%S", &tmUtc);
-
+ 
         std::ostringstream out;
-        out << buf.data() << '.'
-            << std::setfill('0') << std::setw(3) << millis << 'Z';
+        out << buf.data() << '.' << std::setfill('0') << std::setw(3) << millis << 'Z';
         return out.str();
     }
+
 }
 
 namespace IntersectionValidation

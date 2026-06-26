@@ -22,10 +22,8 @@
 
 namespace IntersectionValidation
 {
-    namespace
-    {
-        void evaluateProgression(IntersectionChangeInfo &change, int prevRevision,
-                                 const MsgProgressionCtx &ctx)
+    void RevisionCounterValidator::evaluateProgression(IntersectionChangeInfo &change, int prevRevision,
+                                                       const MsgProgressionCtx &ctx)
         {
             const bool revisionProperIncrement = ((prevRevision + 1) % 128 == change.currentRevision);
 
@@ -33,9 +31,9 @@ namespace IntersectionValidation
             {
                 // Check intersection revision AND message-level msgIssueRevision
                 const bool revisionBad = change.contentChanged && !revisionProperIncrement;
-                
                 if (const bool msgRevisionBad = change.contentChanged && ctx.hasMsgPrev &&
-                        ((ctx.prevMsgRevision + 1) % 128 != ctx.currentMsgRevision); !revisionBad && !msgRevisionBad)
+                                                ((ctx.prevMsgRevision + 1) % 128 != ctx.currentMsgRevision);
+                    !revisionBad && !msgRevisionBad)
                 {
                     return;
                 }
@@ -54,8 +52,8 @@ namespace IntersectionValidation
             }
 
             const bool noChange = (!change.contentChanged && !change.revisionChanged);
-
-            if (const bool validIncrement = (change.contentChanged && revisionProperIncrement); noChange || validIncrement)
+            if (const bool validIncrement = (change.contentChanged && revisionProperIncrement);
+                noChange || validIncrement)
             {
                 return;
             }
@@ -63,7 +61,6 @@ namespace IntersectionValidation
             change.progressionCountA = prevRevision;
             change.progressionCountB = change.currentRevision;
         }
-    } // namespace
 
 
     std::string RevisionCounterValidator::createContentHash(const rapidjson::Value &intersection)

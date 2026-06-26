@@ -113,6 +113,16 @@ namespace IntersectionValidation
         RevisionCounterResult validateMapRevision(const rapidjson::Document &doc,
                                                   const std::string &currentTimestamp = "");
 
+        /**
+         * @brief Fills the progression fields (progressionViolation, progressionCountA/B) on
+         *        @p change given the previous revision and the per-call context.
+         *
+         *        A "valid" progression is a content change paired with a +1 (mod 128)
+         *        counter increment
+         */
+        static void evaluateProgression(IntersectionChangeInfo &change, int prevRevision,
+                                        const MsgProgressionCtx &ctx);
+
     private:
         /**
          * @brief Stored state for a previous intersection message.
