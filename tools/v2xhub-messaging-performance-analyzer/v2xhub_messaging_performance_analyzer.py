@@ -19,11 +19,20 @@ from PyQt6.QtWidgets import QApplication, QFileDialog
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import argparse
+from pathlib import Path
 
-def select_log_files():
+
+def select_log_files(input_file_one=None,input_file_two=None):
     """
     Opens file dialogs for the user to select the originating source file and the destination file. Returns the selected file paths.
     """
+
+    # Updated hardcoded input file paths (bypasses UI)
+    if input_file_one and input_file_two:
+        # If files were provided via command line, return them immediately
+        return input_file_one, input_file_two
+    
     app = QApplication.instance() or QApplication(sys.argv)
 
     file_filter = 'Log files (*.log);;All files (*)'
@@ -54,7 +63,7 @@ def select_log_files():
 
     return source_file, destination_file
 
-def read_log_to_dataframe(log_file):
+def read_log_to_dataframe(log_file,data_dir):
     """
     Reads *.log file, joining lines that are continuations of multiline
     JSON entries, and returns dataframe with Timestamp and Raw JSON String.
@@ -110,8 +119,9 @@ def read_log_to_dataframe(log_file):
             convert_message_id(x)
         )
     # Add this debug code before the DataFrame creation
+    csv_path = data_dir / (os.path.basename(log_file) + ".csv")
     data.to_csv(
-        "data/" + os.path.basename(log_file) + ".csv",
+        csv_path,
         index=False,
         columns=['Timestamp', 'Message Type', 'Cleaned JSON String']
     )
@@ -241,32 +251,40 @@ def main():
     Reads files from input_directory, calculates messaging performance metrics
     and generates plots saved to ./plots directory.
     """
-
+    
+    # Check for command-line arguments (from orchestrator)
     parser = argparse.ArgumentParser(
         description='Analyze V2X messaging performance from log files.'
     )
+    parser.add_argument('--input-file-one')
+    parser.add_argument('--input-file-two')
+    parser.add_argument("--output-dir", type=Path, default=Path('.'), help="Output directory")
     parser.add_argument(
         '--debug',
         action='store_true',
         help='Enable debug logging'
     )
+
     args = parser.parse_args()
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
 
-    # Create data and plots directories if not exist
-    os.makedirs('./data', exist_ok=True)
-    os.makedirs('./plots', exist_ok=True)
-    source_file, destination_file = select_log_files()
+    # Use the passed directory or default to local folders
+    data_dir = args.output_dir / 'data'
+    plots_dir = args.output_dir / 'plots'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    plots_dir.mkdir(parents=True, exist_ok=True)
+
+    source_file, destination_file = select_log_files(args.input_file_one,args.input_file_two)
     if source_file is None or destination_file is None:
         print('File selection cancelled.')
         return
     logging.debug('Reading source log file: %s', source_file)
-    tx_logs = read_log_to_dataframe(source_file)
+    tx_logs = read_log_to_dataframe(source_file, data_dir)
     logging.debug('Reading destination log file: %s', destination_file)
-    rx_logs = read_log_to_dataframe(destination_file)
+    rx_logs = read_log_to_dataframe(destination_file, data_dir)
     # Debug log first 5 rows of each dataframe
     logging.debug('V2X Hub TX Logs:\n%s', tx_logs.head())
     logging.debug('RSU TX Logs:\n%s', rx_logs.head())
@@ -274,12 +292,23 @@ def main():
     logging.debug('Message Latency for first 5 messages:\n%s', latency_df.head())
     logging.info(latency_df.describe(percentiles=[.95, .99]))
     logging.info(message_drop_df.describe())
-    plot_latency(latency_df, './plots')
-    plot_throughput(tx_logs, 'V2X Hub', './plots')
-    plot_throughput(rx_logs, 'RSU', './plots')
+    plot_latency(latency_df, plots_dir)
+    plot_throughput(tx_logs, 'V2X Hub', plots_dir)
+    plot_throughput(rx_logs, 'RSU', plots_dir)
     if not message_drop_df.empty:
         logging.info('Message Drop detected for %d messages.', len(message_drop_df))
-        plot_message_drop(message_drop_df, './plots')
+        plot_message_drop(message_drop_df, plots_dir)
+
+    # Formatted output for csv testing spreadsheet
+    if not latency_df.empty:
+        avg_latency = latency_df['Latency (ms)'].mean()
+        # Extract source/destination names from the filenames
+        src_name = os.path.basename(source_file).replace('decoded_', '').replace('.log', '')
+        dst_name = os.path.basename(destination_file).replace('decoded_', '').replace('.log', '')
+        
+        #CSV Output Line
+        print(f"\nRESULT_SUMMARY: {src_name} -> {dst_name}: {avg_latency} ms")
 
 if __name__ == "__main__":
     main()
+
