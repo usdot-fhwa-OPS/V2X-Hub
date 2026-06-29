@@ -23,15 +23,15 @@ import argparse
 from pathlib import Path
 
 
-def select_log_files(input_src=None,input_dst=None):
+def select_log_files(transmit_log=None,receive_log=None):
     """
     Opens file dialogs for the user to select the originating source file and the destination file. Returns the selected file paths.
     """
 
     # Updated hardcoded input file paths (bypasses UI)
-    if input_src and input_dst:
+    if transmit_log and receive_log:
         # If files were provided via command line, return them immediately
-        return input_src, input_dst
+        return transmit_log, receive_log
     
     app = QApplication.instance() or QApplication(sys.argv)
 
@@ -256,8 +256,8 @@ def main():
     parser = argparse.ArgumentParser(
         description='Analyze V2X messaging performance from log files.'
     )
-    parser.add_argument('--input-src',help="Source log file")
-    parser.add_argument('--input-dst',help="Destination log file")
+    parser.add_argument('--transmit-log',help="Select the source (transmit) log file. This should be the originating message stream (for example, V2X Hub Tx logs).")
+    parser.add_argument('--receive-log',help="Select the destination (receive/forward) log file. This should be the corresponding downstream stream used for comparison (for example, RSU inbound ethernet logs).")
     parser.add_argument("--output-dir", type=Path, default=Path('.'), help="Output directory")
     parser.add_argument(
         '--debug',
@@ -277,7 +277,7 @@ def main():
     data_dir.mkdir(parents=True, exist_ok=True)
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    source_file, destination_file = select_log_files(args.input_src,args.input_dst)
+    source_file, destination_file = select_log_files(args.transmit_log,args.receive_log)
     if source_file is None or destination_file is None:
         print('File selection cancelled.')
         return
