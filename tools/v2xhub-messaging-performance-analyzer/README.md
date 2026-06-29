@@ -16,14 +16,18 @@ As mentioned above, this tool assumes all data is in the format of logs files. T
 
 ## Usage
 ```
-usage: v2xhub_messaging_performance_analyzer.py [-h] [--debug]
+usage: v2xhub_messaging_performance_analyzer.py [-h] [--debug] [--transmit-log] [--receive-log] [--output-dir]
 
 Analyze V2X messaging performance from log files.
 
 options:
   -h, --help            show this help message and exit
   --debug               Enable debug logging
+  --transmit-log        Select the source (transmit) log file. This should be the originating message stream (for example, V2X Hub Tx logs).
+  --receive-log         Select the destination (receive/forward) log file. This should be the corresponding downstream stream used for comparison (for example, RSU inbound ethernet logs).
+  --output-dir          Output directory
 ```
+### Interactive
 
 When the script starts, it opens two file selection dialogs in order:
 
@@ -36,6 +40,18 @@ After both files are selected, the script calculates message latency, message dr
 
 - `./data` for intermediate CSV files
 - `./plots` for generated charts
+
+### Non Interactive
+
+Using the three command line arguments, define: 
+1. The source (transmit) log file
+2. The destination (receive/forward) log file.
+3. The main output directory
+: This should be the overarching output folder that `./data` and `./plots` will be stored in.
+
+After the command line arguments are set, the script calculates message latency, message drops, and throughput, then writes results to: 
+- output_dir / 'data' for intermediate CSV files
+- output_dir / 'plots' for generated charts
 
 ## Output
 
