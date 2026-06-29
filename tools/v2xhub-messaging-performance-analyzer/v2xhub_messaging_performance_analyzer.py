@@ -23,15 +23,15 @@ import argparse
 from pathlib import Path
 
 
-def select_log_files(input_file_one=None,input_file_two=None):
+def select_log_files(input_src=None,input_dst=None):
     """
     Opens file dialogs for the user to select the originating source file and the destination file. Returns the selected file paths.
     """
 
     # Updated hardcoded input file paths (bypasses UI)
-    if input_file_one and input_file_two:
+    if input_src and input_dst:
         # If files were provided via command line, return them immediately
-        return input_file_one, input_file_two
+        return input_src, input_dst
     
     app = QApplication.instance() or QApplication(sys.argv)
 
@@ -256,8 +256,8 @@ def main():
     parser = argparse.ArgumentParser(
         description='Analyze V2X messaging performance from log files.'
     )
-    parser.add_argument('--input-file-one')
-    parser.add_argument('--input-file-two')
+    parser.add_argument('--input-src',help="Source log file")
+    parser.add_argument('--input-dst',help="Destination log file")
     parser.add_argument("--output-dir", type=Path, default=Path('.'), help="Output directory")
     parser.add_argument(
         '--debug',
@@ -277,7 +277,7 @@ def main():
     data_dir.mkdir(parents=True, exist_ok=True)
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    source_file, destination_file = select_log_files(args.input_file_one,args.input_file_two)
+    source_file, destination_file = select_log_files(args.input_src,args.input_dst)
     if source_file is None or destination_file is None:
         print('File selection cancelled.')
         return
@@ -311,4 +311,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
+    
