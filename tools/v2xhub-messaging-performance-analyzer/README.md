@@ -16,15 +16,15 @@ As mentioned above, this tool assumes all data is in the format of logs files. T
 
 ## Usage
 ```
-usage: v2xhub_messaging_performance_analyzer.py [-h] [--debug] [--input-src] [--input-dst] [--output-dir]
+usage: v2xhub_messaging_performance_analyzer.py [-h] [--debug] [--transmit-log] [--receive-log] [--output-dir]
 
 Analyze V2X messaging performance from log files.
 
 options:
   -h, --help            show this help message and exit
   --debug               Enable debug logging
-  --input-src           Source log file
-  --input-dst           Destination log file
+  --transmit-log        Select the source (transmit) log file. This should be the originating message stream (for example, V2X Hub Tx logs).
+  --receive-log         Select the destination (receive/forward) log file. This should be the corresponding downstream stream used for comparison (for example, RSU inbound ethernet logs).
   --output-dir          Output directory
 ```
 ### Interactive
