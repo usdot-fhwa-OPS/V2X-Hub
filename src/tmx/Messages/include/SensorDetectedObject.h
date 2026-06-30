@@ -22,6 +22,9 @@ namespace tmx::messages
         SensorDetectedObject()=default;
         explicit SensorDetectedObject(const tmx::message_container_type &contents) : tmx::message(contents) {};
         ~SensorDetectedObject() override{};
+        // Delete move constructor
+        SensorDetectedObject(const SensorDetectedObject&) = default;
+        SensorDetectedObject(const SensorDetectedObject&&) = delete;
         // Message type for routing this message through TMX core
         static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
 
@@ -69,5 +72,6 @@ namespace tmx::messages
         object_attribute(Size, size);
         
     };
-
+    // static_assert(std::is_nothrow_move_constructible_v<SensorDetectedObject> || !std::is_move_constructible<SensorDetectedObject>::value, 
+    //           "SensorDetectedObject does have a move constructor and is not noexcept!");
 }

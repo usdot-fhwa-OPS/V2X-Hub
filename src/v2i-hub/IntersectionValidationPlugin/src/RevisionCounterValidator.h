@@ -31,7 +31,28 @@ namespace IntersectionValidation
         bool contentChanged = false;
         bool revisionChanged = false;
         int currentRevision = -1;
+
+        // Previous/current message timestamps for this intersection
+        std::string timestampA;
+        std::string timestampB;
+
+        // Progression counts
+        bool progressionViolation = false;
+        int progressionCountA = 0;
+        int progressionCountB = 0;
     };
+
+    /**
+     * @brief Per-call context for the MessageCountProgression 
+     */
+    struct MsgProgressionCtx
+    {
+        bool mapStyle = false;        // false = SPaT rule, true = MAP rule
+        bool hasMsgPrev = false;      // MAP: was a previous msgIssueRevision seen?
+        int prevMsgRevision = -1;     // MAP: previous msgIssueRevision
+        int currentMsgRevision = -1;  // MAP: current msgIssueRevision
+    };
+
 
     /**
      * @brief Result of a revision counter validation check.
@@ -76,7 +97,8 @@ namespace IntersectionValidation
          * @param doc The full SPaT MessageFrame JSON document.
          * @return RevisionCounterResult with any violations found.
          */
-        RevisionCounterResult validateSpatRevision(const rapidjson::Document &doc);
+        RevisionCounterResult validateSpatRevision(const rapidjson::Document &doc,
+                                                   const std::string &currentTimestamp = "");
 
         /**
          * @brief Validate MAP message-level and intersection-level revision counters.
@@ -88,7 +110,18 @@ namespace IntersectionValidation
          * @param doc The full MAP MessageFrame JSON document.
          * @return RevisionCounterResult with any violations found.
          */
-        RevisionCounterResult validateMapRevision(const rapidjson::Document &doc);
+        RevisionCounterResult validateMapRevision(const rapidjson::Document &doc,
+                                                  const std::string &currentTimestamp = "");
+
+        /**
+         * @brief Fills the progression fields (progressionViolation, progressionCountA/B) on
+         *        @p change given the previous revision and the per-call context.
+         *
+         *        A "valid" progression is a content change paired with a +1 (mod 128)
+         *        counter increment
+         */
+        static void evaluateProgression(IntersectionChangeInfo &change, int prevRevision,
+                                        const MsgProgressionCtx &ctx);
 
     private:
         /**
@@ -98,7 +131,9 @@ namespace IntersectionValidation
         {
             int revision = -1;
             std::string contentHash; // JSON content with timestamps stripped
+            std::string timestamp;   // processing timestamp when this state was stored
         };
+
 
         /**
          * @brief Stored state for previous MAP message-level data.
@@ -173,12 +208,15 @@ namespace IntersectionValidation
          * @param messageType "SPaT" or "MAP" for violation messages.
          * @param result The result to populate (intersectionChanges + violations).
          * @param anyChanged Set true if any intersection's content changed.
+         * @param progressionCtx SPaT/MAP selector and MAP message-level revision inputs.
          */
         void processIntersectionArray(const rapidjson::Value &intersections,
                                       std::unordered_map<int, IntersectionState> &prevStates,
                                       const std::string &messageType,
                                       RevisionCounterResult &result,
-                                      bool &anyChanged);
+                                      bool &anyChanged,
+                                      const std::string &currentTimestamp,
+                                      const MsgProgressionCtx &progressionCtx = {});
 
         /**
          * @brief Validate revision counters for each intersection in a MAP message.
@@ -187,7 +225,9 @@ namespace IntersectionValidation
          * @return true if any intersection content changed.
          */
         bool validateMapIntersections(const rapidjson::Value &intersections,
-                                      RevisionCounterResult &result);
+                                      RevisionCounterResult &result,
+                                      const std::string &currentTimestamp,
+                                      int currentMsgRevision);
 
         /**
          * @brief Validate the message-level msgIssueRevision counter.
