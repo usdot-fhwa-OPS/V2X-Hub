@@ -27,7 +27,7 @@ namespace tmx::messages
             tmxCti4501Ptr->set_messageType("SPAT");
             ProcessingTimePeriod timePeriod(11111111111, 12222222222);
             tmxCti4501Ptr->set_timePeriod(timePeriod);
-            std::vector<MissingDataElement> elements{MissingDataElement("id"), MissingDataElement("minEndTime")};
+            std::vector<std::string> elements{"id", "minEndTime"};
             tmxCti4501Ptr->set_missingDataElements(elements);
         }
     };
