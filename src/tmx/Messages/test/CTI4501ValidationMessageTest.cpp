@@ -42,8 +42,8 @@ namespace tmx::messages
         EXPECT_EQ(11111111111, tmxCti4501Ptr->get_timePeriod().beginTimestamp);
         EXPECT_EQ(12222222222, tmxCti4501Ptr->get_timePeriod().endTimestamp);
         ASSERT_EQ(2, tmxCti4501Ptr->get_missingDataElements().size());
-        EXPECT_EQ("id", tmxCti4501Ptr->get_missingDataElements()[0].value);
-        EXPECT_EQ("minEndTime", tmxCti4501Ptr->get_missingDataElements()[1].value);
+        EXPECT_EQ("id", tmxCti4501Ptr->get_missingDataElements()[0]);
+        EXPECT_EQ("minEndTime", tmxCti4501Ptr->get_missingDataElements()[1]);
         EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr->get_timestampA());
         EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr->get_timestampB());
         EXPECT_EQ(1, tmxCti4501Ptr->get_messageCountA());
@@ -96,8 +96,8 @@ namespace tmx::messages
         EXPECT_EQ(11111111111, tmxCti4501Ptr2->get_timePeriod().beginTimestamp);
         EXPECT_EQ(12222222222, tmxCti4501Ptr2->get_timePeriod().endTimestamp);
         ASSERT_EQ(2, tmxCti4501Ptr2->get_missingDataElements().size());
-        EXPECT_EQ("id", tmxCti4501Ptr2->get_missingDataElements()[0].value);
-        EXPECT_EQ("minEndTime", tmxCti4501Ptr2->get_missingDataElements()[1].value);
+        EXPECT_EQ("id", tmxCti4501Ptr2->get_missingDataElements()[0]);
+        EXPECT_EQ("minEndTime", tmxCti4501Ptr2->get_missingDataElements()[1]);
         EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr2->get_timestampA());
         EXPECT_EQ("2023-01-01T00:00:00Z", tmxCti4501Ptr2->get_timestampB());
         EXPECT_EQ(1, tmxCti4501Ptr2->get_messageCountA());
