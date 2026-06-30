@@ -58,18 +58,7 @@ class CTI4501ValidationMessage : public tmx::message
 public:
     CTI4501ValidationMessage() = default;
     explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
-
-    CTI4501ValidationMessage(const CTI4501ValidationMessage &) = default;
-    CTI4501ValidationMessage &operator=(const CTI4501ValidationMessage &) = default;
-    CTI4501ValidationMessage(CTI4501ValidationMessage &&other) noexcept
-        : tmx::message(other) {}
-
-    CTI4501ValidationMessage &operator=(CTI4501ValidationMessage &&other) noexcept
-    {
-        tmx::message::operator=(other);
-        return *this;
-    }
-
+    
     static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
     static constexpr const char *MessageSubType = "CTI4501ValidationEvent";
 
