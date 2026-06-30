@@ -20,6 +20,7 @@ namespace tmx::messages
     {
     public:
         SensorDetectedObject()=default;
+        
         explicit SensorDetectedObject(const tmx::message_container_type &contents) : tmx::message(contents) {};
         ~SensorDetectedObject() override{};
         // Message type for routing this message through TMX core
@@ -51,6 +52,7 @@ namespace tmx::messages
         // Cartesian orientation of object. Assumed to be ENU coordinate frame.
         object_attribute(Orientation, orientation);
         //Covariance associated with the orientation.
+
         two_dimension_array_attribute(Covariance, orientationCovariance);
 
         //Linear velocity in meter per second
