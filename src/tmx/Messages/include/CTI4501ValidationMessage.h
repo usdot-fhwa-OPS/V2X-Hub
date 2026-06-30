@@ -58,7 +58,9 @@ class CTI4501ValidationMessage : public tmx::message
 public:
     CTI4501ValidationMessage() = default;
     explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
-    
+    CTI4501ValidationMessage(const CTI4501ValidationMessage&) = default;
+    // Delete move constructor
+    CTI4501ValidationMessage(const CTI4501ValidationMessage&&) = delete;
     static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
     static constexpr const char *MessageSubType = "CTI4501ValidationEvent";
 
@@ -103,7 +105,9 @@ public:
     // "SPAT" or "MAP" (MessageCountProgression)
     std_attribute(this->msg, std::string, messageType, "", )
 };
-
+// Ensures the class can be moved safely without throwing
+// static_assert(std::is_nothrow_move_constructible_v<CTI4501ValidationMessage> || !std::is_move_constructible<CTI4501ValidationMessage>::value, 
+//               "CTI4501ValidationMessage does have a move constructor and is not noexcept!");
 } /* namespace tmx::messages */
 
 #endif /* INCLUDE_CTI4501VALIDATIONMESSAGE_H_ */
