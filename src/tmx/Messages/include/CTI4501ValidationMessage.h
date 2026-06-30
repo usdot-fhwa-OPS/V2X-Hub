@@ -6,6 +6,7 @@
 #ifndef INCLUDE_CTI4501VALIDATIONMESSAGE_H_
 #define INCLUDE_CTI4501VALIDATIONMESSAGE_H_
 
+
 #include <tmx/messages/message.hpp>
 #include "MessageTypes.h"
 
