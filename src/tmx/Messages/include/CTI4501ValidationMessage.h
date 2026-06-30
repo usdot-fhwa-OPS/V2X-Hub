@@ -34,24 +34,7 @@ struct ProcessingTimePeriod {
     }
 };
 
-struct MissingDataElement {
-    std::string value;
 
-    MissingDataElement() = default;
-    explicit MissingDataElement(const std::string &val) : value(val) {}
-
-    static message_tree_type to_tree(const MissingDataElement &elem) {
-        message_tree_type tree;
-        tree.put("", elem.value);
-        return tree;
-    }
-
-    static MissingDataElement from_tree(const message_tree_type &tree) {
-        MissingDataElement elem;
-        elem.value = tree.get<std::string>("");
-        return elem;
-    }
-};
 
 class CTI4501ValidationMessage : public tmx::message
 {
@@ -82,7 +65,7 @@ public:
     object_attribute(ProcessingTimePeriod, timePeriod)
 
     // Missing CTI 4501 required fields
-    array_attribute(MissingDataElement, missingDataElements)
+    array_attribute(std::string, missingDataElements)
 
     // Timestamp A
     std_attribute(this->msg, std::string, timestampA, "", )
