@@ -177,7 +177,7 @@ namespace IntersectionValidation
 
         // Run both validations on the same preprocessed document
         validateMessageFields(doc, schemaDoc, fieldEventType, messageType, intersectionId, handlerBeginMs);
-        return validateRevisionCounters(doc, revisionEventType, messageType, intersectionId, handlerBeginMs);
+        return validateRevisionCounters(doc, revisionEventType, messageType, intersectionId);
     }
 
     void IntersectionValidationPlugin::validateMessageFields(const rapidjson::Document &doc,
