@@ -91,7 +91,7 @@ public:
 
     // Missing CTI 4501 required fields
     std::vector<MissingDataElement> get_missingDataElements() { return get_array<MissingDataElement>("missingDataElements"); }
-    void set_missingDataElements(std::vector<MissingDataElement> array) { set_array<MissingDataElement>("missingDataElements", array); }
+    void set_missingDataElements(const std::vector<MissingDataElement> array) { set_array<MissingDataElement>("missingDataElements", array); }
 
     // Timestamp A
     std_attribute(this->msg, std::string, timestampA, "", )
