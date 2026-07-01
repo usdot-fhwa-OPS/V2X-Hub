@@ -86,12 +86,10 @@ public:
     std_attribute(this->msg, std::string, source, "", )
 
     // Time period
-    ProcessingTimePeriod get_timePeriod() { return get_object<ProcessingTimePeriod>("timePeriod"); }
-    void set_timePeriod(ProcessingTimePeriod obj) { set_object<ProcessingTimePeriod>("timePeriod", obj); }
+    object_attribute(ProcessingTimePeriod, timePeriod)
 
     // Missing CTI 4501 required fields
-    std::vector<MissingDataElement> get_missingDataElements() { return get_array<MissingDataElement>("missingDataElements"); }
-    void set_missingDataElements(const std::vector<MissingDataElement> &array) { set_array<MissingDataElement>("missingDataElements", array); }
+    array_attribute(MissingDataElement, missingDataElements)
 
     // Timestamp A
     std_attribute(this->msg, std::string, timestampA, "", )

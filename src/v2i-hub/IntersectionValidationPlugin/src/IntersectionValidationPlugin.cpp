@@ -259,8 +259,7 @@ namespace IntersectionValidation
     RevisionCounterResult IntersectionValidationPlugin::validateRevisionCounters(const rapidjson::Document &doc,
                                                                 const std::string &eventType,
                                                                 const std::string &messageType,
-                                                                [[maybe_unused]] int intersectionId,
-                                                                uint64_t handlerBeginMs)
+                                                                [[maybe_unused]] int intersectionId)
     {
         const std::string currentTimestamp = formatIso8601Utc(getClock());
         RevisionCounterResult result = (messageType == "SPaT")

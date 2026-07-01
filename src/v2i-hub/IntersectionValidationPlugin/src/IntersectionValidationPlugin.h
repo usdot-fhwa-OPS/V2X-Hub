@@ -128,7 +128,7 @@ namespace IntersectionValidation
          */
         RevisionCounterResult validateRevisionCounters(const rapidjson::Document &doc,
                                        const std::string &eventType, const std::string &messageType,
-                                       int intersectionId, uint64_t handlerBeginMs);
+                                       int intersectionId);
 
         /**
          * @brief Set IvpMsgFlags_Validated on a routeable message and broadcast it.
