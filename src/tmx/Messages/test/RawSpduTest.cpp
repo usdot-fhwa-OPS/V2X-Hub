@@ -7,16 +7,6 @@ using namespace std;
 using namespace tmx;
 using namespace tmx::messages;
 
-// Function to convert hex string to byte array
-tmx::byte_stream hexStringToByteArray(const std::string& hex) {
-    tmx::byte_stream bytes;
-    for (unsigned int i = 0; i < hex.length(); i += 2) {
-        std::string byteString = hex.substr(i, 2);
-        uint8_t byte = (uint8_t) strtol(byteString.c_str(), NULL, 16);
-        bytes.push_back(byte);
-    }
-    return bytes;
-}
 static const std::string BsmHex =
     "001425067c0eb5842562e66e8a2b9ea6c96408b97fffffff900027d9637d07d0007fff8000640fa0";
 
@@ -31,8 +21,8 @@ static const std::string UuidHex = "0a303030303fdfa7";
 TEST(RawSpduTest, SetAndGetAttributesBsm) {
     RawSpdu msg;
 
-    tmx::byte_stream spdu = hexStringToByteArray(BsmHex);
-    tmx::byte_stream uuid = hexStringToByteArray(UuidHex);
+    tmx::byte_stream spdu = tmx::byte_stream_decode(BsmHex);
+    tmx::byte_stream uuid = tmx::byte_stream_decode(UuidHex);
 
     msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
     msg.set_uuid(uuid);
@@ -57,11 +47,35 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     EXPECT_EQ(183, msg.get_channel());
 }
 
+TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
+{
+    RawSpdu msg;
+
+    tmx::byte_stream spdu = tmx::byte_stream_decode(BsmHex);
+    tmx::byte_stream uuid = tmx::byte_stream_decode(UuidHex);
+
+    msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
+    msg.set_uuid(uuid);
+    msg.set_MessageType("BSM");
+    msg.set_timestamp_ms(1718900000000);
+    msg.set_psid(8002);
+    msg.set_channel(183);
+
+    std::string json = msg.to_string();
+
+    EXPECT_NE(json.find("\"spdu_data\":\"" + BsmHex + "\""), std::string::npos);
+    EXPECT_NE(json.find("\"uuid\":\"" + UuidHex + "\""), std::string::npos);
+    EXPECT_NE(json.find("\"MessageType\":\"BSM\""), std::string::npos);
+    EXPECT_NE(json.find("\"timestamp_ms\":\"1718900000000\""), std::string::npos);
+    EXPECT_NE(json.find("\"psid\":\"8002\""), std::string::npos);
+    EXPECT_NE(json.find("\"channel\":\"183\""), std::string::npos);
+}
+
 TEST(RawSpduTest, SetAndGetAttributesPsm) {
     RawSpdu msg;
 
-    tmx::byte_stream spdu = hexStringToByteArray(BsmHex);
-    tmx::byte_stream uuid = hexStringToByteArray(UuidHex);
+    tmx::byte_stream spdu = tmx::byte_stream_decode(BsmHex);
+    tmx::byte_stream uuid = tmx::byte_stream_decode(UuidHex);
 
     msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
     msg.set_uuid(uuid);
