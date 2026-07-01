@@ -58,13 +58,14 @@ class CTI4501ValidationMessage : public tmx::message
 public:
     CTI4501ValidationMessage() = default;
     explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
+
     // TODO: Included to avoid rule c.66 implicit move constructor is not noexcept
     ~CTI4501ValidationMessage() override = default;
     // Copy constructor
     CTI4501ValidationMessage(const CTI4501ValidationMessage &other) = default;
     // Copy assignment operator
     CTI4501ValidationMessage& operator=(const CTI4501ValidationMessage& other) = default;
-    
+
     static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
     static constexpr const char *MessageSubType = "CTI4501ValidationEvent";
 
@@ -85,10 +86,12 @@ public:
     std_attribute(this->msg, std::string, source, "", )
 
     // Time period
-    object_attribute(ProcessingTimePeriod, timePeriod)
+    ProcessingTimePeriod get_timePeriod() { return get_object<ProcessingTimePeriod>("timePeriod"); }
+    void set_timePeriod(ProcessingTimePeriod obj) { set_object<ProcessingTimePeriod>("timePeriod", obj); }
 
     // Missing CTI 4501 required fields
-    array_attribute(MissingDataElement, missingDataElements)
+    std::vector<MissingDataElement> get_missingDataElements() { return get_array<MissingDataElement>("missingDataElements"); }
+    void set_missingDataElements(std::vector<MissingDataElement> array) { set_array<MissingDataElement>("missingDataElements", array); }
 
     // Timestamp A
     std_attribute(this->msg, std::string, timestampA, "", )
