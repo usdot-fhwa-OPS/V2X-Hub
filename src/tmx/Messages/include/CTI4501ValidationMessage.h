@@ -58,6 +58,12 @@ class CTI4501ValidationMessage : public tmx::message
 public:
     CTI4501ValidationMessage() = default;
     explicit CTI4501ValidationMessage(const tmx::message_container_type &contents) : tmx::message(contents) {}
+    // TODO: Included to avoid rule c.66 implicit move constructor is not noexcept
+    ~CTI4501ValidationMessage() override = default;
+    // Copy constructor
+    CTI4501ValidationMessage(const CTI4501ValidationMessage &other) = default;
+    // Copy assignment operator
+    CTI4501ValidationMessage& operator=(const CTI4501ValidationMessage& other) = default;
     
     static constexpr const char *MessageType = MSGTYPE_APPLICATION_STRING;
     static constexpr const char *MessageSubType = "CTI4501ValidationEvent";
