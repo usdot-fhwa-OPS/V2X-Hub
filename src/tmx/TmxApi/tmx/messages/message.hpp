@@ -103,7 +103,7 @@ public:
 	 *
 	 * @param other The message to copy from
 	 */
-	tmx_message(const tmx_message<Format> &other):
+	tmx_message(const tmx_message<Format> &other) noexcept:
 		tmx_message<Format>(other, 0) { }
 
 	/**

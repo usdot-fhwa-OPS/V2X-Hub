@@ -27,6 +27,7 @@
 #include <jsoncpp/json/json.h>
 #include <CTI4501ValidationMessage.h>
 #include "RevisionCounterValidator.h"
+#include "MessageIntervalValidator.h"
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -70,6 +71,10 @@ namespace IntersectionValidation
         uint spatRevisionFailed = 0;
         uint mapRevisionFailed = 0;
 
+        // Identifier of the measured input stream, reported as topicName on a BroadcastRate event
+        std::string spatInputTopic;
+        std::string mapInputTopic;
+
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
          * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
@@ -77,7 +82,8 @@ namespace IntersectionValidation
          * @param maxThresholdMs maximum threshold in ms.
          * @param messageType label for logging (e.g. "SPaT", "MAP").
          */
-        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs, const std::string &messageType);
+        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs,
+                                    const std::string &messageType, int intersectionId);
 
         /**
          * @brief Parse JSON, preprocess, run both field validation and
@@ -86,7 +92,7 @@ namespace IntersectionValidation
          * @param jsonStr Raw JSON string from TMX.
          * @param schemaPath Path to the CTI 4501 schema file.
          * @param fieldEventType Event type for field validation failures (e.g. "SpatMinimumData").
-         * @param revisionEventType Event type for revision violations (e.g. "SpatRevisionCounter").
+         * @param revisionEventType Event type for revision violations (e.g. "SpatMessageCountProgression").
          * @param messageType Display name ("SPaT" or "MAP").
          * @param intersectionId Intersection ID for event messages.
          * @param handlerBeginMs Timestamp when the handler started.
@@ -110,6 +116,7 @@ namespace IntersectionValidation
                                     const std::string &eventType, const std::string &messageType,
                                     int intersectionId, uint64_t handlerBeginMs);
 
+
         /**
          * @brief Validate revision counters increase when message changes
          * @param doc The preprocessed JSON document to validate.
@@ -121,7 +128,7 @@ namespace IntersectionValidation
          */
         RevisionCounterResult validateRevisionCounters(const rapidjson::Document &doc,
                                        const std::string &eventType, const std::string &messageType,
-                                       int intersectionId, uint64_t handlerBeginMs);
+                                       int intersectionId);
 
         /**
          * @brief Set IvpMsgFlags_Validated on a routeable message and broadcast it.
@@ -133,15 +140,9 @@ namespace IntersectionValidation
         // compares against current to detect CTI 4501 revision violations
         RevisionCounterValidator _revisionValidator;
 
-        // CTI 4501 thresholds
-        static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
-        static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
-        static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
-        static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1000;
-
         static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
         static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
-        
+
         static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " Message failed CTI 4501 field validation: ";
     };
 }
