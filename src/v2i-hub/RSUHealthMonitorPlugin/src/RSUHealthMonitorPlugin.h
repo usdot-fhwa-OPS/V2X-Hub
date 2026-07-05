@@ -18,7 +18,6 @@ namespace RSUHealthMonitor
     class RSUHealthMonitorPlugin : public PluginClient
     {
     private:
-        mutex _configMutex;
         uint16_t _interval;
         string _rsuConfigListStr;
         shared_ptr<RSUConfigurationList> _rsuConfigListPtr;

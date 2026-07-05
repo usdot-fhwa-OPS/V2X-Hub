@@ -54,7 +54,6 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 
 
 		// Mutex along with the data it protects.
-		std::mutex _configMutex;
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
 		std::unordered_map<std::string, std::unique_ptr<tmx::utils::UdpClient>> _udpClientMap;
 		// A map of SNMP Clients for sending V2X communication to different RSUs for broadvast (RSU Spec NTCIP 1218)

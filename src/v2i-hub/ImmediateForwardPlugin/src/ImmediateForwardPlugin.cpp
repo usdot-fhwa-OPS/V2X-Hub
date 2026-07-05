@@ -94,7 +94,7 @@ namespace ImmediateForward
 		SetStatus<uint>(Key_SkippedInvalidUdpClient, _skippedInvalidUdpClient);
 		SetStatus<uint>(Key_SkippedSignError, _skippedSignErrorResponse);
 		std::string immediateForwardConfigurationsJson;
-		GetConfigValue<string>("ImmediateForwardConfigurations", immediateForwardConfigurationsJson, &_configMutex);
+		GetConfigValue<string>("ImmediateForwardConfigurations", immediateForwardConfigurationsJson);
 		_imfConfigs.clear();
 		_imfConfigs =  parseImmediateForwardConfiguration(immediateForwardConfigurationsJson);
 		// Setup UDP Clients

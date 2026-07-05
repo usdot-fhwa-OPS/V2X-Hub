@@ -45,7 +45,6 @@ namespace MUSTSensorDriverPlugin {
 		// This method does NOT execute in the main thread, so variables must be protected
 		// (e.g. using std::atomic, std::mutex, etc.).
 		if (this->IsPluginState(IvpPluginState_registered)) {
-			std::scoped_lock<std::mutex> lock(_configMutex);
 			GetConfigValue<std::string>("ProjectionString", projString);
 			GetConfigValue<std::string>("SensorId", sensorId);
 			// Setup  UDP Server 

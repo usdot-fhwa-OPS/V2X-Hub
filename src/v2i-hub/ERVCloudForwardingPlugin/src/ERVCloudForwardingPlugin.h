@@ -109,6 +109,5 @@ namespace ERVCloudForwardingPlugin
         void PeriodicRSURegisterReq();
     };
 } // namespace ERVCloudForwardingPlugin
-std::mutex _cfgLock;
 
 #endif

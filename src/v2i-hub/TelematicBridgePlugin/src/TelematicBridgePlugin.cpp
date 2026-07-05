@@ -51,7 +51,6 @@ namespace TelematicBridge
 
     void TelematicBridgePlugin::UpdateConfigSettings()
     {
-        lock_guard<mutex> lock(_configMutex);
         GetConfigValue<string>("NATSUrl", _natsURL);
         GetConfigValue<string>("MessageExclusionList", _excludedMessages);
         unit_st unit = {_unitId, _unitName, UNIT_TYPE_INFRASTRUCTURE};

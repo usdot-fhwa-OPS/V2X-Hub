@@ -19,10 +19,11 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
-#include "IntersectionValidationPlugin.h"
-#include "MessageIntervalValidator.h"
-#include "FieldValidation.h"
-#include "RevisionCounterValidator.h"
+#include <IntersectionValidationPlugin.h>
+#include <MessageIntervalValidator.h>
+#include <FieldValidation.h>
+#include <RevisionCounterValidator.h>
+#include <ODEForwarding.h>
 
 using namespace tmx::messages;
 using namespace IntersectionValidation;
@@ -4912,7 +4913,7 @@ namespace
     EXPECT_TRUE(result.valid) << (result.violations.empty() ? "" : result.violations[0]);
   }
 
-  // MAP content changed but msgIssueRevision NOT incremented 
+  // MAP content changed but msgIssueRevision NOT incremented
   TEST(MapRevisionCounterTest, ContentChangedMsgRevisionNotIncremented)
   {
     RevisionCounterValidator validator;
@@ -4961,7 +4962,7 @@ namespace
 
     EXPECT_FALSE(result.valid);
     EXPECT_TRUE(result.violations.size() >= 1);
-    
+
     bool foundMsgRevisionViolation = false;
     for (const auto &v : result.violations)
     {
@@ -5273,6 +5274,364 @@ namespace
     EXPECT_FALSE(result.valid);
     EXPECT_TRUE(result.violations.size() >= 1);
     EXPECT_NE(std::string::npos, result.violations[0].find("Failed to parse MAP JSON"));
+  }
+
+  // Frequency Throttling Test
+
+  IntersectionChangeInfo makeChange(int id, bool contentChanged)
+  {
+    IntersectionChangeInfo c;
+    c.id = id;
+    c.contentChanged = contentChanged;
+    return c;
+  }
+
+  TEST(ShouldForwardTest, FirstMessageForwards)
+  {
+    RevisionCounterResult r;
+    r.comparisonPerformed = false;
+    EXPECT_TRUE(planForwarding(r));
+  }
+
+  TEST(ShouldForwardTest, NoContentChangeDoesNotForward)
+  {
+    RevisionCounterResult r;
+    r.comparisonPerformed = true;
+    r.intersectionChanges.push_back(makeChange(1, false));
+    EXPECT_FALSE(planForwarding(r));
+  }
+
+  TEST(ShouldForwardTest, ContentChangedForwards)
+  {
+    RevisionCounterResult r;
+    r.comparisonPerformed = true;
+    r.intersectionChanges.push_back(makeChange(1, true));
+    EXPECT_TRUE(planForwarding(r));
+  }
+
+  TEST(ShouldForwardTest, AnyIntersectionChangedForwards)
+  {
+    RevisionCounterResult r;
+    r.comparisonPerformed = true;
+    r.intersectionChanges.push_back(makeChange(59963, false));
+    r.intersectionChanges.push_back(makeChange(18364, true));
+    EXPECT_TRUE(planForwarding(r));
+  }
+
+  TEST(ShouldForwardTest, AllIntersectionsUnchangedDoesNotForward)
+  {
+    RevisionCounterResult r;
+    r.comparisonPerformed = true;
+    r.intersectionChanges.push_back(makeChange(59963, false));
+    r.intersectionChanges.push_back(makeChange(18364, false));
+    EXPECT_FALSE(planForwarding(r));
+  }
+
+  TEST(RevisionResultTest, SpatContentChangeFlaggedInIntersectionChanges)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":34,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":34,"status":"0040"}]}}})");
+    auto r = validator.validateSpatRevision(d2);
+
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_EQ(r.intersectionChanges[0].id, 59963);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatNoContentChangeFlaggedFalse)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":1},"revision":34,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":1},"revision":34,"status":"0000"}]}}})"); // identical
+    auto r = validator.validateSpatRevision(d2);
+
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapContentChangeFlaggedInIntersectionChanges)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999}]}}})"); // content moved
+    auto r = validator.validateMapRevision(d2);
+
+    EXPECT_EQ(r.intersectionChanges.size(), 1u);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatMultiIntersectionOnlyFirstChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0040"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})"); // only #1 moved
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_EQ(r.intersectionChanges[0].id, 59963);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_EQ(r.intersectionChanges[1].id, 18364);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatMultiIntersectionBothChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0040"},
+        {"id":{"id":18364},"revision":0,"status":"0080"}]}}})"); // both moved
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_TRUE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, SpatMultiIntersectionNoneChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})");
+    validator.validateSpatRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"SPAT":{"intersections":[
+        {"id":{"id":59963},"revision":0,"status":"0000"},
+        {"id":{"id":18364},"revision":0,"status":"0000"}]}}})"); // identical
+    auto r = validator.validateSpatRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionOnlyFirstChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":6,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})"); // only #1 moved
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_EQ(r.intersectionChanges[0].id, 1);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_EQ(r.intersectionChanges[1].id, 2);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionBothChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":6,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":999},
+        {"id":{"id":2},"revision":0,"laneWidth":888}]}}})"); // both moved
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_TRUE(r.intersectionChanges[0].contentChanged);
+    EXPECT_TRUE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(RevisionResultTest, MapMultiIntersectionNoneChanged)
+  {
+    RevisionCounterValidator validator;
+    auto d1 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})");
+    validator.validateMapRevision(d1);
+
+    auto d2 = parseJson(R"({"value":{"MapData":{"msgIssueRevision":5,"intersections":[
+        {"id":{"id":1},"revision":0,"laneWidth":360},
+        {"id":{"id":2},"revision":0,"laneWidth":720}]}}})"); // identical
+    auto r = validator.validateMapRevision(d2);
+
+    ASSERT_EQ(r.intersectionChanges.size(), 2u);
+    EXPECT_FALSE(r.intersectionChanges[0].contentChanged);
+    EXPECT_FALSE(r.intersectionChanges[1].contentChanged);
+  }
+
+  TEST(EvaluateProgressionTest, SpatContentSameRevisionBumpedViolation)
+  {
+    IntersectionChangeInfo change;
+    change.id = 1;
+    change.contentChanged = false;
+    change.revisionChanged = true;
+    change.currentRevision = 6;
+
+    MsgProgressionCtx ctx;
+    RevisionCounterValidator::evaluateProgression(change, /*prevRevision=*/5, ctx);
+
+    EXPECT_TRUE(change.progressionViolation);
+    EXPECT_EQ(5, change.progressionCountA);
+    EXPECT_EQ(6, change.progressionCountB);
+  }
+
+  // SPaT: content changed with proper +1 increment
+  TEST(EvaluateProgressionTest, SpatContentChangedProperIncrementNoViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 6;
+
+    MsgProgressionCtx ctx;
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_FALSE(change.progressionViolation);
+  }
+
+  // SPaT: content + revision both unchanged
+  TEST(EvaluateProgressionTest, SpatNoChangeNoViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = false;
+    change.revisionChanged = false;
+    change.currentRevision = 5;
+
+    MsgProgressionCtx ctx;
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_FALSE(change.progressionViolation);
+  }
+
+  // SPaT: content changed but revision did NOT properly increment
+  TEST(EvaluateProgressionTest, SpatContentChangedBadIncrementViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 8; // prev 5, +1 would be 6, not 8
+
+    MsgProgressionCtx ctx;
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_TRUE(change.progressionViolation);
+    EXPECT_EQ(5, change.progressionCountA);
+    EXPECT_EQ(8, change.progressionCountB);
+  }
+
+  // SPaT: mod-128 wrap (127 → 0) is a proper increment
+  TEST(EvaluateProgressionTest, SpatModWrapNoViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 0;
+
+    MsgProgressionCtx ctx;
+    RevisionCounterValidator::evaluateProgression(change, 127, ctx);
+
+    EXPECT_FALSE(change.progressionViolation);
+  }
+
+  // MAP: content changed + intersection revision stuck 
+  TEST(EvaluateProgressionTest, MapContentChangedRevisionStuckReportsRevisionPair)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = false;
+    change.currentRevision = 5; // stuck at 5
+
+    MsgProgressionCtx ctx;
+    ctx.mapStyle = true;
+    ctx.hasMsgPrev = true;
+    ctx.prevMsgRevision = 5;
+    ctx.currentMsgRevision = 6; // msgRev fine; revision is the problem
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_TRUE(change.progressionViolation);
+    EXPECT_EQ(5, change.progressionCountA); // revision pair takes priority
+    EXPECT_EQ(5, change.progressionCountB);
+  }
+
+  // MAP: content changed, intersection rev proper +1, but msgIssueRevision stuck
+  TEST(EvaluateProgressionTest, MapContentChangedMsgRevStuckReportsMsgRevPair)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 6; // prev 5, proper +1
+
+    MsgProgressionCtx ctx;
+    ctx.mapStyle = true;
+    ctx.hasMsgPrev = true;
+    ctx.prevMsgRevision = 5;
+    ctx.currentMsgRevision = 5; // stuck → this is the reported pair
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_TRUE(change.progressionViolation);
+    EXPECT_EQ(5, change.progressionCountA);
+    EXPECT_EQ(5, change.progressionCountB);
+  }
+
+  // MAP: content changed, both intersection rev and msgRev increment properly
+  TEST(EvaluateProgressionTest, MapAllProperNoViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 6;
+
+    MsgProgressionCtx ctx;
+    ctx.mapStyle = true;
+    ctx.hasMsgPrev = true;
+    ctx.prevMsgRevision = 5;
+    ctx.currentMsgRevision = 6;
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_FALSE(change.progressionViolation);
+  }
+
+  // MAP: no previous msgIssueRevision seen yet
+  TEST(EvaluateProgressionTest, MapNoMsgPrevRevisionProperNoViolation)
+  {
+    IntersectionChangeInfo change;
+    change.contentChanged = true;
+    change.revisionChanged = true;
+    change.currentRevision = 6;
+
+    MsgProgressionCtx ctx;
+    ctx.mapStyle = true;
+    ctx.hasMsgPrev = false; // first MAP — no msgRev comparison
+    ctx.currentMsgRevision = 99;
+    RevisionCounterValidator::evaluateProgression(change, 5, ctx);
+
+    EXPECT_FALSE(change.progressionViolation);
   }
 
 } // namespace
