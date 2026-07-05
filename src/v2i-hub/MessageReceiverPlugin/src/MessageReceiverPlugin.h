@@ -36,6 +36,9 @@
 #include <tmx/messages/J2735Exception.hpp>
 #include <tmx/messages/SaeJ2735Traits.hpp>
 #include <tmx/messages/routeable_message.hpp>
+#include <RawSpdu.h>
+#include <stol-1609dot2-2022/Ieee1609Dot2Data.h>
+#include <stol-1609dot2-2022/Ieee1609Dot2Content.h>
 #include <environment/EnvUtils.h>
 
 
@@ -72,7 +75,9 @@ private:
 	tmx::utils::FrequencyThrottle<int> statThrottle;
 	uint _skippedSignVerifyErrorResponse;
 	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
-
+	long identifyJ2735Type(const std::vector<uint8_t>& payload);
+	bool findMessageId(const std::string& hex, size_t& idloc, int& hexLen, long& dsrcMsgId);
+	bool buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut);
 
 
 

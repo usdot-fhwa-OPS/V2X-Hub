@@ -128,24 +128,28 @@ void MessageReceiverPlugin::OnStateChange(IvpPluginState state)
 
 bool unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet)
 {
+	//Implementation notes for this function: psidOut and psidSet are not overwritten unless a PSID exists within the message.
+	//psidOut and psidSet might be modified even if the overall return is false and the unwrap operation failed.
     if (d->protocolVersion != 3)      return false;
 
-    switch (d->content.present) {
+    switch (d->content->present) {
         case Ieee1609Dot2Content_PR_unsecuredData: {
-            const Opaque_t& op = d->content.choice.unsecuredData;
+            const Opaque_t& op = d->content->choice.unsecuredData;
             if (!op.buf || op.size <= 0) return false;
             payloadOut.assign(op.buf, op.buf + op.size);
             return true;
         }
         case Ieee1609Dot2Content_PR_signedData: {              // recurse
-            const SignedData_t* sd = d->content.choice.signedData;
+            const SignedData_t* sd = d->content->choice.signedData;
             if (!sd) return false;
             if (!psidSet) {
-                psidOut = static_cast<uint32_t>(sd->tbsData.headerInfo.psid);
+                psidOut = static_cast<uint32_t>(sd->tbsData->headerInfo.psid);
                 psidSet = true;
             }
-            const Ieee1609Dot2Data_t* next = sd->tbsData.payload.data;  // OPTIONAL
-            if (!next) return false;
+            const Ieee1609Dot2Data_t* next = sd->tbsData->payload->data;  // OPTIONAL
+            if (!next) {
+				return false;
+			}
             return unwrapSpdu(next, payloadOut, psidOut, psidSet);
         }
 
@@ -154,7 +158,7 @@ bool unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, u
     }
 }
 
-long MessageReceiverPlugin::identifyJ2735Type(const std::vector<uint8_t>& payload)
+int64_t MessageReceiverPlugin::identifyJ2735Type(const std::vector<uint8_t>& payload)
 {
     std::stringstream ss;
     ss << std::hex << std::setfill('0');
@@ -194,28 +198,37 @@ bool MessageReceiverPlugin::findMessageId(const std::string& hex, size_t& idloc,
     return false;
 }
 
-bool MessageReceiverPlugin::buildSecuredV2XMessage(const byte_stream& incoming, int len, uint64_t rxTime, SecuredV2XMessage& out, std::vector<uint8_t>& payloadOut)
+bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut)
 {
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
-	// Add decode message logic
+	// TODO: Add decode message logic
+	asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
+                                   (void**)&decodedPtr, incoming.data(), len);
+
+	auto del = [](Ieee1609Dot2Data_t* p){ ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, p); };
+	std::unique_ptr<Ieee1609Dot2Data_t, decltype(del)> decoded(decodedPtr, del);								   
+	
+	if (rv.code != RC_OK || !decoded) {
+        PLOG(logDEBUG) << "SPDU OER decode failed (rc=" << rv.code << ")";
+        return false;
+    }
 
     // 2. Walk to the inner J2735 payload
     uint32_t psid = 0;
 	bool psidSet = false;
-    if (!unwrapSpdu(decodedPtr.get(), payloadOut, psid, psidSet, 0)) {
+    if (!unwrapSpdu(decodedPtr, payloadOut, psid, psidSet)) {
         PLOG(logDEBUG) << "No unsecured J2735 payload found in SPDU";
         return false;
     }
 
     // 3. Populate the struct
-    out.spdu = std::make_shared<const std::vector<uint8_t>>(
-                            incoming.data(), incoming.data() + len);
-    out.id            = _uuidGen();
-    out.rxTimestampMs = rxTime;
-    out.dsrc.psid     = psid;
-    out.dsrc.channel  = _dsrcChannel;
-    out.j2735Type = identifyJ2735Type(payloadOut);
+    out.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(incoming.data()) );
+    out.uuid            = _uuidGen();
+    out.timestamp_ms = rxTime;
+    out.psid     = psid;
+    out.channel  = _dsrcChannel;
+    out.MessageType = identifyJ2735Type(payloadOut);
     return true;
 }
 
@@ -258,10 +271,10 @@ int MessageReceiverPlugin::Main()
 
 				// @SONAR_STOP@
 				// if verification enabled, access HSM
-				if (fullSPDUMode == true){
-					SecuredV2XMessage secMsg;
+				if (fullSPDUMode){
+					RawSpdu secMsg;
 					std::vector<uint8_t> payload;
-					if (!buildSecuredV2XMessage(incoming, len, time, secMsg, payload))
+					if (!buildRawSpduMessage(incoming, len, time, secMsg, payload))
 						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
 
 					// handleSecuredV2XMessage(secMsg);
