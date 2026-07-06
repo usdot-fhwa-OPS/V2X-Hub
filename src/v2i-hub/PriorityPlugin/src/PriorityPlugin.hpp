@@ -16,12 +16,15 @@
 
 #pragma once
 
-#include "PluginClient.h"
 #include "PluginClientClockAware.h"
 
 #include "PriorityConfiguration.hpp"
 #include "PriorityPluginWorker.hpp"
+#include "PriorityRequestBuilder.hpp"
 #include "PriorityRequestProcessor.hpp"
+#include "PrsServiceExchange.hpp"
+#include "SsmBuilder.hpp"
+#include "PriorityTypes.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -72,49 +75,6 @@ namespace PriorityPlugin {
             void HandleSRM(tmx::messages::SrmMessage &msg, tmx::routeable_message &routeableMsg);
 
         private:
-            // PRG: request tracker 
-            // Tracks requests sent to the PRS so we can track new requests, updates, and when to send clear after cancel
-            enum class PrgRequestState : uint8_t {
-                sent,
-                canceled
-            };
-
-            struct PrgTrackedRequest {
-                uint8_t requestID;
-                long intersectionID;
-                std::vector<uint8_t> vehicleID;
-                uint8_t classType;
-                uint8_t classLevel;
-                uint8_t strategyNumber;
-                uint64_t sentTimeMs;
-                PrgRequestState state = PrgRequestState::sent;
-            };
-
-            // Per-package signal request state decoded from an SRM (used for PRG mode and SSM building)
-            struct SignalRequest {
-                uint8_t requestID;
-                long intersectionID;
-                long requestType;
-                uint16_t timeOfService;
-                uint16_t timeOfDepart;
-                bool rejected = false;
-                uint8_t inboundPresent = 0;
-                long inboundValue = 0;
-                long etaMinute = 0;
-                long etaSecond = 0;
-                long duration = 0;
-            };
-
-            // Per-requestor state decoded from an SRM, keyed by vehicle ID (used for PRG mode)
-            struct RequestorState {
-                std::vector<uint8_t> vehicleID;
-                uint8_t classType;
-                uint8_t sequenceNumber;
-                uint32_t timeOfRequest;
-                std::vector<SignalRequest> requests;
-                long role = 0;
-            };
-
             // Per-controller configuration and SNMP client
             struct ControllerInfo {
                 long intersectionID;
@@ -124,19 +84,10 @@ namespace PriorityPlugin {
             };
 
             /**
-             * @brief Sends the encoded OCTET STRING to a TSC via SNMP SET.
-             * @return true on success, false on failure.
-             */
-            bool SnmpSet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, const std::vector<uint8_t> &data) const;
-
-            /**
-             * @brief Performs an SNMP GET on a given OID and returns the raw bytes.
-             * @return true on success, false on failure.
-             */
-            bool SnmpGet(const std::shared_ptr<tmx::utils::snmp_client> &client, const std::string &oid, std::vector<uint8_t> &data) const;
-
-            /**
-             * @brief Background thread entry point for the PRS-CO exchange loop. Implements NTCIP 1211 4.2.4.1.2 (PRS is Manager).
+             * @brief Background thread entry point for the PRS-CO exchange loop. Contains the
+             *        while/sleep loop and controller selection. The per-iteration protocol
+             *        logic is in DoOneServiceExchange (PrsServiceExchange.hpp).
+             *        Implements NTCIP 1211 4.2.4.1.2 (PRS is Manager).
              */
             void ServiceExchangeLoop();
 
@@ -146,9 +97,10 @@ namespace PriorityPlugin {
             void BroadcastSSMFromTable();
 
             /**
-             * @brief Maps the NTCIP 1211 priority request/strategy status to the J2735 PrioritizationResponseStatus for SSM.
+             * @brief Encodes the given SSM tree and broadcasts it.
+             * @param ssmPtr the SSM tree to encode.
              */
-            long MapNTCIPstatusToSSM(RequestStatus status) const;
+            void EncodeAndBroadcastSSM(const std::shared_ptr<SignalStatusMessage_t> &ssmPtr);
 
             /**
              * @brief Builds and broadcasts a SignalStatusMessage with applicable status
@@ -161,35 +113,22 @@ namespace PriorityPlugin {
              * @brief Processes an SRM signal request package in PRS mode.
              *        Called from HandleSRM for each package in the SRM when PluginRole is PRS.
              * @param pkg the signal request package to process.
-             * @param vehicleID the decoded vehicle ID from the SRM requestor.
-             * @param classType the mapped NTCIP 1211 vehicle class type for this
-             * @param classLevel the mapped NTCIP 1211 vehicle class level for this request.
-             * @param newSeq the sequence number from the SRM, used for update checks.
-             * @param role the role from the SRM requestor, used for class mapping and override checks.
-             * @param currentMinuteOfYear the current minute of the year, used for ETA calculations.
-             * @param currentMsInMinute the current millisecond in the minute, used for ETA calculations.
-             * @param nowEpoch the current time in epoch seconds, used for time of request and ETA calculations.
+             * @param input the per-SRM request context, built once in HandleSRM and reused for every package in the SRM.
              */
-            void ProcessPrsPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, uint8_t classType, uint8_t classLevel, uint8_t newSeq, long role, long currentMinuteOfYear, long currentMsInMinute, time_t nowEpoch);
+            void ProcessPrsPackage(const SignalRequestPackage &pkg, const PrsPackageInput &input);
 
             /**
              * @brief Processes an SRM signal request package in PRG mode.
              *        Called from HandleSRM for each package in the SRM when PluginRole is PRG.
              * @param pkg the signal request package to process.
-             * @param vehicleID the decoded vehicle ID from the SRM requestor.
-             * @param vehicleKey the string key for this vehicle ID, used for request tracking in the PRG mode maps.
-             * @param classType the mapped NTCIP 1211 vehicle class type for this request.
-             * @param classLevel the mapped NTCIP 1211 vehicle class level for this request.
-             * @param currentMinuteOfYear the current minute of the year, used for ETA calculations.
-             * @param currentMsInMinute the current millisecond in the minute, used for ETA calculations.
-             * @param timeOfRequest the time of request to include in the priority request sent to the PRS, in epoch seconds.
+             * @param input the per-SRM request context, built once in HandleSRM and reused for every package in the SRM.
+             * @param state the RequestorState to record the resulting SignalRequest into.
              */
-            void ProcessPrgPackage(const SignalRequestPackage &pkg, const std::vector<uint8_t> &vehicleID, const std::string &vehicleKey, uint8_t classType, uint8_t classLevel, long currentMinuteOfYear, long currentMsInMinute, uint32_t timeOfRequest, RequestorState &state);
+            void ProcessPrgPackage(const SignalRequestPackage &pkg, const PrgPackageInput &input, RequestorState &state);
 
             /**
              * @brief Sweeps stale entries from _prgTrackedRequests (PRG mode).
-             *        Sends prgPriorityClear for canceled entries that have aged out
-             *        and evicts entries past _timeToLiveSec.
+             *        Sends prgPriorityClear for canceled entries that have aged out and evicts entries past _timeToLiveSec.
              * @param nowMs Current time in milliseconds (from CarmaClock).
              */
             void SweepStaleTrackedRequests(uint64_t nowMs);

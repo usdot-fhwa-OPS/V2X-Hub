@@ -140,4 +140,59 @@ namespace PriorityPlugin {
         RequestStatus requestStatusInCO                  = RequestStatus::idleNotValid;
     };
 
+    /**
+     * @brief State of a priority request the PRG has sent to a PRS/CO.
+     *        Used to distinguish active requests from canceled ones awaiting a clear.
+     */
+    enum class PrgRequestState : uint8_t {
+        sent,
+        canceled
+    };
+
+    /**
+     * @brief Priority request the PRG has sent, keyed by requestID, intersectionID, and vehicleID. 
+     *        Drives update vs. new requests and the post-cancel clear sweep (PRG mode).
+     */
+    struct PrgTrackedRequest {
+        uint8_t requestID;
+        long intersectionID;
+        std::vector<uint8_t> vehicleID;
+        uint8_t classType;
+        uint8_t classLevel;
+        uint8_t strategyNumber;
+        uint64_t sentTimeMs;
+        PrgRequestState state = PrgRequestState::sent;
+    };
+
+    /**
+     * @brief Signal request package decoded from an SRM. Captures the timing and
+     *        lane fields needed to build an SSM and (PRG mode) the outgoing priority request.
+     */
+    struct SignalRequest {
+        uint8_t requestID;
+        long intersectionID;
+        long requestType;
+        uint16_t timeOfService;
+        uint16_t timeOfDepart;
+        bool rejected = false;
+        uint8_t inboundPresent = 0;
+        long inboundValue = 0;
+        long etaMinute = 0;
+        long etaSecond = 0;
+        long duration = 0;
+    };
+
+    /**
+     * @brief All requests from a unique requestor, keyed by vehicleID.
+     *        Built during SRM dispatch and consumed when building the responding SSM (PRG mode).
+     */
+    struct RequestorState {
+        std::vector<uint8_t> vehicleID;
+        uint8_t classType;
+        uint8_t sequenceNumber;
+        uint32_t timeOfRequest;
+        std::vector<SignalRequest> requests;
+        long role = 0;
+    };
+
 } /* namespace PriorityPlugin */
