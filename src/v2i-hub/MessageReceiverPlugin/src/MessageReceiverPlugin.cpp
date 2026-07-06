@@ -126,7 +126,7 @@ void MessageReceiverPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-bool unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet)
+bool MessageReceiverPlugin::unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet)
 {
 	//Implementation notes for this function: psidOut and psidSet are not overwritten unless a PSID exists within the message.
 	//psidOut and psidSet might be modified even if the overall return is false and the unwrap operation failed.
@@ -202,7 +202,7 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
 {
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
-	// TODO: Add decode message logic
+	
 	asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, incoming.data(), len);
 
@@ -223,12 +223,15 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     }
 
     // 3. Populate the struct
-    out.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(incoming.data()) );
-    out.uuid            = _uuidGen();
-    out.timestamp_ms = rxTime;
-    out.psid     = psid;
-    out.channel  = _dsrcChannel;
-    out.MessageType = identifyJ2735Type(payloadOut);
+    
+	out.set_spdu_data(tmx::byte_stream(incoming.data(), incoming.data() + len));
+    boost::uuids::uuid u = _uuidGen();
+	out.set_uuid(tmx::byte_stream(u.begin(), u.end())); 
+    out.set_timestamp_ms(rxTime);
+    out.set_psid(psid);
+	int _dsrcChannel = 0;
+    out.set_channel(_dsrcChannel);
+    out.set_MessageType(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
     return true;
 }
 
@@ -275,9 +278,7 @@ int MessageReceiverPlugin::Main()
 					RawSpdu secMsg;
 					std::vector<uint8_t> payload;
 					if (!buildRawSpduMessage(incoming, len, time, secMsg, payload))
-						PLOG(logERROR) << "Error parsing Messages: " << ex.what();
-
-					// handleSecuredV2XMessage(secMsg);
+						PLOG(logERROR) << "Error parsing SPDU Messages";
 
 					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
 					txlen = payload.size();

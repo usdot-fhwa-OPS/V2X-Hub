@@ -39,6 +39,8 @@
 #include <RawSpdu.h>
 #include <stol-1609dot2-2022/Ieee1609Dot2Data.h>
 #include <stol-1609dot2-2022/Ieee1609Dot2Content.h>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <environment/EnvUtils.h>
 
 
@@ -70,6 +72,7 @@ private:
 	std::vector<string> messageid;
 	std::string messageidstr;
 	bool fullSPDUMode = false;
+	boost::uuids::random_generator _uuidGen;
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
@@ -78,6 +81,7 @@ private:
 	long identifyJ2735Type(const std::vector<uint8_t>& payload);
 	bool findMessageId(const std::string& hex, size_t& idloc, int& hexLen, long& dsrcMsgId);
 	bool buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut);
+	bool unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet);
 
 
 
