@@ -34,10 +34,10 @@ namespace PriorityPlugin {
      * @brief References for a single PRS-CO service exchange.
      */
     struct ServiceExchangeContext {
-        PriorityRequestProcessor &processor;            // NTCIP 1211 priority request processor
-        std::mutex &tableMutex;                         // Guards the processor's table
-        std::vector<uint8_t> &lastSentServiceRequest;   // Last prsServiceRequest payload SET to the CO (mutated on a successful SET)
-        bool &prsBusy;                                  // PRS busy flag, set True during prioritization
+        PriorityRequestProcessor &processor;            ///< NTCIP 1211 priority request processor
+        std::mutex &tableMutex;                         ///< Guards the processor's table
+        std::vector<uint8_t> &lastSentServiceRequest;   ///< Last prsServiceRequest payload SET to the CO (mutated on a successful SET)
+        bool &prsBusy;                                  ///< PRS busy flag, set True during prioritization
     };
 
     /**

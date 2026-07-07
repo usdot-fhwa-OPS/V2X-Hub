@@ -31,15 +31,12 @@ namespace PriorityPlugin {
         long intersectionID = pkg.request.id.id;
 
         // Compute global TSD and TED
+        uint32_t globalTSD;
+        uint32_t globalTED;
         long etaOffsetMs = 0;
         if (pkg.minute) {
             etaOffsetMs = ComputeEtaOffsetMs(static_cast<long>(*pkg.minute), pkg.second ? static_cast<long>(*pkg.second) : 0, input.currentMinuteOfYear, input.currentMsInMinute);
             LogEtaSkew(etaOffsetMs);
-        }
-
-        uint32_t globalTSD;
-        uint32_t globalTED;
-        if (pkg.minute) {
             globalTSD = static_cast<uint32_t>(input.nowEpoch) + static_cast<uint32_t>(etaOffsetMs / 1000L);
             auto departOffsetMs = etaOffsetMs;
             if (pkg.duration) {

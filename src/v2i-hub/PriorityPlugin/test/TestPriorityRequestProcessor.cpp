@@ -22,12 +22,28 @@
 
 using namespace PriorityPlugin;
 
+namespace {
+    // Values shared across the encode tests
+    constexpr uint8_t TEST_VEHICLE_ID[] = {0xAA, 0xBB, 0xCC, 0xDD};
+    constexpr uint8_t TEST_REQUEST_ID = 0x11;
+    constexpr uint8_t TEST_CLASS_TYPE = 1;
+    constexpr uint8_t TEST_CLASS_LEVEL = 3;
+    constexpr uint8_t TEST_STRATEGY_NUM = 7;
+    constexpr uint16_t TEST_TIME_OF_SERVICE = 0x1234;
+    constexpr uint16_t TEST_TIME_OF_DEPART = 0x5678;
+    constexpr uint32_t TEST_TIME_OF_REQUEST = 0x12345678;
+    constexpr uint32_t TEST_PRS_TSD = 0x12345678;
+    constexpr uint32_t TEST_PRS_TED = 0x12345681;
+    constexpr uint32_t TEST_EPOCH_TSD = 1775846010;
+    constexpr uint32_t TEST_EPOCH_TED = 1775846020;
+} // namespace
+
 TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
-    table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = 0x12345678;
-    table[0].timeOfEstimatedDepartureInPRS = 0x12345681;
+    table[0].serviceStrategyNumber = TEST_STRATEGY_NUM;
+    table[0].timeOfServiceDesiredInPRS = TEST_PRS_TSD;
+    table[0].timeOfEstimatedDepartureInPRS = TEST_PRS_TED;
     table[0].statusInPRS = RequestStatus::readyQueued;
 
     table[1].serviceStrategyNumber = 2;
@@ -36,9 +52,9 @@ TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
     table[1].statusInPRS = RequestStatus::activeProcessing;
 
     auto buf = proc.EncodeServiceRequest(false);
-    EXPECT_EQ(buf.size(), 110u);
+    EXPECT_EQ(buf.size(), SERVICE_REQUEST_SIZE);
 
-    EXPECT_EQ(buf[0], 1);
+    EXPECT_EQ(buf[0], TEST_STRATEGY_NUM);
     EXPECT_EQ(buf[1], 0x12);
     EXPECT_EQ(buf[2], 0x34);
     EXPECT_EQ(buf[3], 0x56);
@@ -53,17 +69,17 @@ TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
     EXPECT_EQ(buf[14], 0x01);
     EXPECT_EQ(buf[18], 0x02);
     EXPECT_EQ(buf[19], 4); // activeProcessing
-    EXPECT_EQ(buf[100], 0); // prsBusy=false
+    EXPECT_EQ(buf[SERVICE_REQUEST_BUSY_OFFSET], 0); // prsBusy=false
 
-    for (size_t i = 101; i < 110; i++) {
+    for (size_t i = SERVICE_REQUEST_BUSY_OFFSET + 1; i < SERVICE_REQUEST_SIZE; i++) {
         EXPECT_EQ(buf[i], 0) << "Reserved byte " << i;
     }
 }
 
 TEST(PriorityRequestProcessorTest, PrsBusyFlag) {
     PriorityRequestProcessor proc;
-    EXPECT_EQ(proc.EncodeServiceRequest(false)[100], 0);
-    EXPECT_EQ(proc.EncodeServiceRequest(true)[100], 1);
+    EXPECT_EQ(proc.EncodeServiceRequest(false)[SERVICE_REQUEST_BUSY_OFFSET], 0);
+    EXPECT_EQ(proc.EncodeServiceRequest(true)[SERVICE_REQUEST_BUSY_OFFSET], 1);
 }
 
 TEST(PriorityRequestProcessorTest, TestDecodeCoServiceResponse) {
@@ -77,8 +93,8 @@ TEST(PriorityRequestProcessorTest, TestDecodeCoServiceResponse) {
     data[7] = (ted >> 8) & 0xFF; data[8] = ted & 0xFF;
     data[9] = 4;
     data[19] = 2;
-    data[100] = 1;
-    data[101] = 0;
+    data[SERVICE_REQUEST_BUSY_OFFSET] = 1;
+    data[SERVICE_REQUEST_BUSY_OFFSET + 1] = 0;
 
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> rows;
     bool coBusy = false;
@@ -123,12 +139,12 @@ TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = 1775846010;
-    table[0].timeOfEstimatedDepartureInPRS = 1775846013;
+    table[0].timeOfServiceDesiredInPRS = TEST_EPOCH_TSD;
+    table[0].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TSD + 3;
     table[0].statusInPRS = RequestStatus::readyQueued;
     table[1].serviceStrategyNumber = 2;
-    table[1].timeOfServiceDesiredInPRS = 1775846020;
-    table[1].timeOfEstimatedDepartureInPRS = 1775846025;
+    table[1].timeOfServiceDesiredInPRS = TEST_EPOCH_TED;
+    table[1].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TED + 5;
     table[1].statusInPRS = RequestStatus::activeProcessing;
 
     auto buf = proc.EncodeServiceRequest(true);
@@ -137,12 +153,12 @@ TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
     ASSERT_TRUE(PriorityRequestProcessor::DecodeCoServiceResponse(buf, decoded, coBusy));
 
     EXPECT_EQ(decoded[0].strategyRequested, 1);
-    EXPECT_EQ(decoded[0].requestedTimeOfServiceDesired, 1775846010u);
-    EXPECT_EQ(decoded[0].requestedTimeOfEstimatedDeparture, 1775846013u);
+    EXPECT_EQ(decoded[0].requestedTimeOfServiceDesired, TEST_EPOCH_TSD);
+    EXPECT_EQ(decoded[0].requestedTimeOfEstimatedDeparture, TEST_EPOCH_TSD + 3);
     EXPECT_EQ(decoded[0].requestStatusInCO, RequestStatus::readyQueued);
     EXPECT_EQ(decoded[1].strategyRequested, 2);
-    EXPECT_EQ(decoded[1].requestedTimeOfServiceDesired, 1775846020u);
-    EXPECT_EQ(decoded[1].requestedTimeOfEstimatedDeparture, 1775846025u);
+    EXPECT_EQ(decoded[1].requestedTimeOfServiceDesired, TEST_EPOCH_TED);
+    EXPECT_EQ(decoded[1].requestedTimeOfEstimatedDeparture, TEST_EPOCH_TED + 5);
     EXPECT_EQ(decoded[1].requestStatusInCO, RequestStatus::activeProcessing);
     EXPECT_TRUE(coBusy);
 }
@@ -169,27 +185,26 @@ TEST(PriorityRequestProcessorTest, PriorityRequestSizeConstants) {
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodePriorityRequest) {
-    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
     auto buf = PriorityRequestProcessor::EncodePriorityRequest(
-        /*requestID*/   0x11,
-        vehId, sizeof(vehId),
-        /*classType*/   1,
-        /*classLevel*/  3,
-        /*strategyNum*/ 7,
-        /*TOS*/         0x1234,
-        /*TOD*/         0x5678,
-        /*TOR*/         0x12345678);
+        TEST_REQUEST_ID,
+        TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE,
+        TEST_CLASS_LEVEL,
+        TEST_STRATEGY_NUM,
+        TEST_TIME_OF_SERVICE,
+        TEST_TIME_OF_DEPART,
+        TEST_TIME_OF_REQUEST);
 
     ASSERT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
-    EXPECT_EQ(buf[0], 0x11);
+    EXPECT_EQ(buf[0], TEST_REQUEST_ID);
     for (size_t i = 1; i <= 13; i++) EXPECT_EQ(buf[i], 0); // left-padding; assumed to be vehicle VIN in 1211, but we use SRM vehicle ID, which is shorter
-    EXPECT_EQ(buf[14], 0xAA);
-    EXPECT_EQ(buf[15], 0xBB);
-    EXPECT_EQ(buf[16], 0xCC);
-    EXPECT_EQ(buf[17], 0xDD);
-    EXPECT_EQ(buf[18], 1);
-    EXPECT_EQ(buf[19], 3);
-    EXPECT_EQ(buf[20], 7);
+    EXPECT_EQ(buf[14], TEST_VEHICLE_ID[0]);
+    EXPECT_EQ(buf[15], TEST_VEHICLE_ID[1]);
+    EXPECT_EQ(buf[16], TEST_VEHICLE_ID[2]);
+    EXPECT_EQ(buf[17], TEST_VEHICLE_ID[3]);
+    EXPECT_EQ(buf[18], TEST_CLASS_TYPE);
+    EXPECT_EQ(buf[19], TEST_CLASS_LEVEL);
+    EXPECT_EQ(buf[20], TEST_STRATEGY_NUM);
     EXPECT_EQ(buf[21], 0x12);
     EXPECT_EQ(buf[22], 0x34);
     EXPECT_EQ(buf[23], 0x56);
@@ -219,52 +234,53 @@ TEST(PriorityRequestProcessorTest, EncodePriorityRequestNullVehicleID) {
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodePriorityUpdate) {
-    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
     auto buf = PriorityRequestProcessor::EncodePriorityUpdate(
-        /*requestID*/   0x11,
-        vehId, sizeof(vehId),
-        /*classType*/   1,
-        /*classLevel*/  3,
-        /*strategyNum*/ 7,
-        /*TOS*/         0x1234,
-        /*TOD*/         0x5678,
-        /*TOR*/         0x12345678);
+        TEST_REQUEST_ID,
+        TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE,
+        TEST_CLASS_LEVEL,
+        TEST_STRATEGY_NUM,
+        TEST_TIME_OF_SERVICE,
+        TEST_TIME_OF_DEPART,
+        TEST_TIME_OF_REQUEST);
 
     // Update is identical to Request encoding (29 bytes, same layout)
     ASSERT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
     auto reqBuf = PriorityRequestProcessor::EncodePriorityRequest(
-        0x11, vehId, sizeof(vehId), 1, 3, 7, 0x1234, 0x5678, 0x12345678);
+        TEST_REQUEST_ID, TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE, TEST_CLASS_LEVEL, TEST_STRATEGY_NUM,
+        TEST_TIME_OF_SERVICE, TEST_TIME_OF_DEPART, TEST_TIME_OF_REQUEST);
     EXPECT_EQ(buf, reqBuf);
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodePriorityCancel) {
-    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
     auto buf = PriorityRequestProcessor::EncodePriorityCancel(
-        /*requestID*/   0x11,
-        vehId, sizeof(vehId),
-        /*classType*/   1,
-        /*classLevel*/  3,
-        /*strategyNum*/ 7);
+        TEST_REQUEST_ID,
+        TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE,
+        TEST_CLASS_LEVEL,
+        TEST_STRATEGY_NUM);
 
     ASSERT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
-    EXPECT_EQ(buf[0], 0x11);
+    EXPECT_EQ(buf[0], TEST_REQUEST_ID);
     // Vehicle ID right-padded in 17-byte field
     for (size_t i = 1; i <= 13; i++) EXPECT_EQ(buf[i], 0);
-    EXPECT_EQ(buf[14], 0xAA);
-    EXPECT_EQ(buf[15], 0xBB);
-    EXPECT_EQ(buf[16], 0xCC);
-    EXPECT_EQ(buf[17], 0xDD);
-    EXPECT_EQ(buf[18], 1);  // classType
-    EXPECT_EQ(buf[19], 3);  // classLevel
-    EXPECT_EQ(buf[20], 7);  // strategyNum
+    EXPECT_EQ(buf[14], TEST_VEHICLE_ID[0]);
+    EXPECT_EQ(buf[15], TEST_VEHICLE_ID[1]);
+    EXPECT_EQ(buf[16], TEST_VEHICLE_ID[2]);
+    EXPECT_EQ(buf[17], TEST_VEHICLE_ID[3]);
+    EXPECT_EQ(buf[18], TEST_CLASS_TYPE);
+    EXPECT_EQ(buf[19], TEST_CLASS_LEVEL);
+    EXPECT_EQ(buf[20], TEST_STRATEGY_NUM);
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodePriorityClear) {
-    uint8_t vehId[4] = {0xAA, 0xBB, 0xCC, 0xDD};
     auto cancelBuf = PriorityRequestProcessor::EncodePriorityCancel(
-        0x11, vehId, sizeof(vehId), 1, 3, 7);
+        TEST_REQUEST_ID, TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE, TEST_CLASS_LEVEL, TEST_STRATEGY_NUM);
     auto clearBuf = PriorityRequestProcessor::EncodePriorityClear(
-        0x11, vehId, sizeof(vehId), 1, 3, 7);
+        TEST_REQUEST_ID, TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
+        TEST_CLASS_TYPE, TEST_CLASS_LEVEL, TEST_STRATEGY_NUM);
 
     // Clear is identical encoding to Cancel (21 bytes); different OID at call site
     ASSERT_EQ(clearBuf.size(), PRIORITY_CANCEL_SIZE);
@@ -752,8 +768,8 @@ TEST(PriorityRequestProcessorTest, EncodeServiceRequestIdenticalState) {
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = 1775846010;
-    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].timeOfServiceDesiredInPRS = TEST_EPOCH_TSD;
+    table[0].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TED;
     table[0].statusInPRS = RequestStatus::readyQueued;
     table[0].requestID = 42;
 
@@ -768,8 +784,8 @@ TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenCoClosesReques
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = 1775846010;
-    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].timeOfServiceDesiredInPRS = TEST_EPOCH_TSD;
+    table[0].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TED;
     table[0].statusInPRS = RequestStatus::readyQueued;
     table[0].requestID = 42;
 
@@ -777,8 +793,8 @@ TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenCoClosesReques
 
     std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows{};
     coRows[0].strategyRequested = 1;
-    coRows[0].requestedTimeOfServiceDesired = 1775846010;
-    coRows[0].requestedTimeOfEstimatedDeparture = 1775846020;
+    coRows[0].requestedTimeOfServiceDesired = TEST_EPOCH_TSD;
+    coRows[0].requestedTimeOfEstimatedDeparture = TEST_EPOCH_TED;
     coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
     proc.ApplyCoStatusUpdates(coRows, 1775846000);
 
@@ -796,8 +812,8 @@ TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenTtlExpires) {
     PriorityRequestProcessor proc;
     auto &table = proc.Table();
     table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = 1775846010;
-    table[0].timeOfEstimatedDepartureInPRS = 1775846020;
+    table[0].timeOfServiceDesiredInPRS = TEST_EPOCH_TSD;
+    table[0].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TED;
     table[0].statusInPRS = RequestStatus::readyQueued;
     table[0].requestID = 42;
     table[0].timeToLive = 1000;

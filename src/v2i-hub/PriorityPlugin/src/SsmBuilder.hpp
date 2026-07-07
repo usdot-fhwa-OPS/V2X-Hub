@@ -33,9 +33,9 @@ namespace PriorityPlugin {
      * @brief References to the SSM sequencing state shared by both SSM builders.
      */
     struct SsmBroadcastState {
-        uint8_t &ssmSequenceCounter; // sequence number for each SSM entry, incremented on SSM build.
-        std::unordered_map<long, uint8_t> &signalStatusSeqByIntersection; // Per-intersection signalStatus sequenceNumber.
-        std::unordered_map<long, std::string> &lastSignalStatusKey; // Key for latest signalStatus package per intersection.
+        uint8_t &ssmSequenceCounter; ///< sequence number for each SSM entry, incremented on SSM build.
+        std::unordered_map<long, uint8_t> &signalStatusSeqByIntersection; ///< Per-intersection signalStatus sequenceNumber.
+        std::unordered_map<long, std::string> &lastSignalStatusKey; ///< Key for latest signalStatus package per intersection.
     };
 
     /**

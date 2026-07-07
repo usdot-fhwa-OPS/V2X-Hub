@@ -38,15 +38,15 @@ namespace PriorityPlugin {
      */
     struct PrsPackageResult {
         enum class Action : uint8_t {
-            Updated,    // Existing entry updated (priority request update).
-            Inserted,   // New entry stored as readyQueued.
-            Rejected,   // Stored with a closed/error status (strategy missing or reservice locked).
-            TableFull   // No free slot; nothing stored.
+            Updated,    ///< Existing entry updated (priority request update).
+            Inserted,   ///< New entry stored as readyQueued.
+            Rejected,   ///< Stored with a closed/error status (strategy missing or reservice locked).
+            TableFull   ///< No free slot; nothing stored.
         };
 
         Action action = Action::TableFull;
-        size_t slotIndex = 0;            // Index into the table for action
-        bool overrideTriggered = false;  // True if any active entry is set to activeOverride.
+        size_t slotIndex = 0;            ///< Index into the table for action
+        bool overrideTriggered = false;  ///< True if any active entry is set to activeOverride.
     };
 
     /**
@@ -54,53 +54,53 @@ namespace PriorityPlugin {
      */
     struct PrgPackageResult {
         enum class Outcome : uint8_t {
-            Send,           // Send encodedPayload to targetOID, then apply the tracker mutation on success.
-            NoStrategy,     // No lane-strategy mapping; nothing to send (request rejected).
-            NoController    // No controller configured for the intersection; nothing to send (request rejected).
+            Send,           ///< Send encodedPayload to targetOID, then apply the tracker mutation on success.
+            NoStrategy,     ///< No lane-strategy mapping; nothing to send (request rejected).
+            NoController    ///< No controller configured for the intersection; nothing to send (request rejected).
         };
 
         Outcome outcome = Outcome::NoStrategy;
-        std::vector<uint8_t> encodedPayload;  // OER-encoded request/update/cancel
-        std::string targetOID;                // NTCIP 1211 OID to SET
-        bool isCancel = false;                // True if this is a priority cancel
-        SignalRequest signalRequest;          // The request to record in RequestorState
-        std::string trackerKey;               // Composite tracker key for this request
-        PrgTrackedRequest trackerEntry;       // Tracker entry to store on a successful non-cancel SET
+        std::vector<uint8_t> encodedPayload;  ///< OER-encoded request/update/cancel
+        std::string targetOID;                ///< NTCIP 1211 OID to SET
+        bool isCancel = false;                ///< True if this is a priority cancel
+        SignalRequest signalRequest;          ///< The request to record in RequestorState
+        std::string trackerKey;               ///< Composite tracker key for this request
+        PrgTrackedRequest trackerEntry;       ///< Tracker entry to store on a successful non-cancel SET
     };
 
     /**
      * @brief Request inputs for ApplyPrsPackage.
      */
     struct PrsPackageInput {
-        const std::vector<uint8_t> &vehicleID;      // decoded vehicle ID bytes
-        uint8_t classType = 0;                      // mapped NTCIP 1211 vehicle class type (1..10)
-        uint8_t classLevel = 0;                     // mapped NTCIP 1211 vehicle class level (1..10)
-        uint8_t newSeq = 0;                         // SRM sequence number
-        long role = 0;                              // BasicVehicleRole
-        long currentMinuteOfYear = 0;               // current minute of year
-        long currentMsInMinute = 0;                 // current millisecond in minute
-        time_t nowEpoch = 0;                        // current time in epoch seconds
-        const std::array<uint32_t, 10> &reserviceClassTime;  // per-class reservice periods (seconds)
-        uint32_t timeToLiveSec = 0;                 // seconds a stored request remains valid
-        uint16_t estimatedArrivalTime = 0;          // fallback time-of-service when the package has no minute
-        uint16_t estimatedDepartureTime = 0;        // fallback time-of-departure when the package has no minute
-        bool prsBusy = false;                       // true while prioritization is in progress (enables override)
+        const std::vector<uint8_t> &vehicleID;      ///< decoded vehicle ID bytes
+        uint8_t classType = 0;                      ///< mapped NTCIP 1211 vehicle class type (1..10)
+        uint8_t classLevel = 0;                     ///< mapped NTCIP 1211 vehicle class level (1..10)
+        uint8_t newSeq = 0;                         ///< SRM sequence number
+        long role = 0;                              ///< BasicVehicleRole
+        long currentMinuteOfYear = 0;               ///< current minute of year
+        long currentMsInMinute = 0;                 ///< current millisecond in minute
+        time_t nowEpoch = 0;                        ///< current time in epoch seconds
+        const std::array<uint32_t, 10> &reserviceClassTime;  ///< per-class reservice periods (seconds)
+        uint32_t timeToLiveSec = 0;                 ///< seconds a stored request remains valid
+        uint16_t estimatedArrivalTime = 0;          ///< fallback time-of-service when the package has no minute
+        uint16_t estimatedDepartureTime = 0;        ///< fallback time-of-departure when the package has no minute
+        bool prsBusy = false;                       ///< true while prioritization is in progress (enables override)
     };
 
     /**
      * @brief Request inputs for BuildPrgPackage.
      */
     struct PrgPackageInput {
-        const std::vector<uint8_t> &vehicleID;   // decoded vehicle ID bytes
-        const std::string &vehicleKey;           // string key for this vehicle ID
-        uint8_t classType = 0;                   // mapped NTCIP 1211 vehicle class type (1..10)
-        uint8_t classLevel = 0;                  // mapped NTCIP 1211 vehicle class level (1..10)
-        long currentMinuteOfYear = 0;            // current minute of year
-        long currentMsInMinute = 0;              // current millisecond in minute
-        uint32_t timeOfRequest = 0;              // time of request to embed (epoch seconds)
-        uint16_t estimatedArrivalTime = 0;       // fallback time-of-service when the package has no minute
-        uint16_t estimatedDepartureTime = 0;     // fallback time-of-departure when the package has no minute
-        uint64_t nowMs = 0;                      // current utc time in milliseconds (stamps the tracker entry)
+        const std::vector<uint8_t> &vehicleID;   ///< decoded vehicle ID bytes
+        const std::string &vehicleKey;           ///< string key for this vehicle ID
+        uint8_t classType = 0;                   ///< mapped NTCIP 1211 vehicle class type (1..10)
+        uint8_t classLevel = 0;                  ///< mapped NTCIP 1211 vehicle class level (1..10)
+        long currentMinuteOfYear = 0;            ///< current minute of year
+        long currentMsInMinute = 0;              ///< current millisecond in minute
+        uint32_t timeOfRequest = 0;              ///< time of request to embed (epoch seconds)
+        uint16_t estimatedArrivalTime = 0;       ///< fallback time-of-service when the package has no minute
+        uint16_t estimatedDepartureTime = 0;     ///< fallback time-of-departure when the package has no minute
+        uint64_t nowMs = 0;                      ///< current utc time in milliseconds (stamps the tracker entry)
     };
 
 
