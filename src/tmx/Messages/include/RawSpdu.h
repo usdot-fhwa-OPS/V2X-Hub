@@ -38,7 +38,7 @@ namespace tmx
             RawSpdu() {}
             RawSpdu(const tmx::message_container_type &contents) : tmx::message(contents) {}
             // Full SPDU bytes
-            std_attribute(this->msg, tmx::byte_stream, spduData, tmx::byte_stream(), )
+                std_attribute(this->msg, tmx::byte_stream, spduData, tmx::byte_stream(), )
                 // Packet UUID
                 std_attribute(this->msg, tmx::byte_stream, uuid, tmx::byte_stream(), )
 
@@ -51,15 +51,6 @@ namespace tmx
                 ///  channel Number
                 std_attribute(this->msg, int, channel, 0, )
                 // Set the SPDU data as a vector of bytes
-                void setSpduDataBytes(std::shared_ptr<std::vector<uint8_t>> bytes)
-            {
-                set_spduData(tmx::byte_stream(bytes->begin(), bytes->end()));
-            }
-            std::shared_ptr<std::vector<uint8_t>> getSpduDataBytes()
-            {
-                tmx::byte_stream bs = get_spduData();
-                return std::make_shared<std::vector<uint8_t>>(bs.begin(), bs.end());
-            }
         };
     }
 }

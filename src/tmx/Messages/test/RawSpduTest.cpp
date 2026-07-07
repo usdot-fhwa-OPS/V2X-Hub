@@ -24,7 +24,7 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     tmx::byte_stream spdu = tmx::byte_stream_decode(bsmHex);
     tmx::byte_stream uuid = tmx::byte_stream_decode(uuidHex);
 
-    msg.setSpduDataBytes(std::make_shared<std::vector<uint8_t>>(spdu));
+    msg.set_spduData(spdu);
     msg.set_uuid(uuid);
     msg.set_timestampMs(1718900000000);
     msg.set_messageType("BSM"); // BasicSafetyMessage
@@ -38,8 +38,8 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     EXPECT_EQ(1718900000000, msg.get_timestampMs());
 
 
-    auto spduOut = msg.getSpduDataBytes();
-    EXPECT_EQ(spdu, *spduOut);
+    auto spduOut = msg.get_spduData();
+    EXPECT_EQ(spdu, spduOut);
 
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
@@ -54,7 +54,7 @@ TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
     tmx::byte_stream spdu = tmx::byte_stream_decode(bsmHex);
     tmx::byte_stream uuid = tmx::byte_stream_decode(uuidHex);
 
-    msg.setSpduDataBytes(std::make_shared<std::vector<uint8_t>>(spdu));
+    msg.set_spduData(spdu);
     msg.set_uuid(uuid);
     msg.set_messageType("BSM");
     msg.set_timestampMs(1718900000000);
@@ -77,7 +77,7 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     tmx::byte_stream spdu = tmx::byte_stream_decode(psmHex);
     tmx::byte_stream uuid = tmx::byte_stream_decode(uuidHex);
 
-    msg.setSpduDataBytes(std::make_shared<std::vector<uint8_t>>(spdu));
+    msg.set_spduData(spdu);
     msg.set_uuid(uuid);
     msg.set_messageType("PSM"); // PersonalSafetyMessage
     msg.set_timestampMs(1718900123456);
@@ -89,8 +89,8 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     EXPECT_EQ("PSM", msg.get_messageType());
     EXPECT_EQ(1718900123456, msg.get_timestampMs());
 
-    auto spduOut = msg.getSpduDataBytes();
-    EXPECT_EQ(spdu, *spduOut);
+    auto spduOut = msg.get_spduData();
+    EXPECT_EQ(spdu, spduOut);
 
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
