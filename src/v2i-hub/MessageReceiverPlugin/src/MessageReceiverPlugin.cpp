@@ -203,7 +203,7 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
 	
-	asn_dec_rval_t rv = uper_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
+	asn_dec_rval_t rv = uper_decode_complete(nullptr, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, incoming.data(), len);
 
 	auto del = [](Ieee1609Dot2Data_t* p){ ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, p); };
@@ -230,7 +230,7 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     out.set_psid(psid);
 	int _dsrcChannel = 0; // TODO: This needs to be updated
     out.set_channel(_dsrcChannel);
-    out.set_MessageType(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
+    out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
     return true;
 }
 
@@ -282,6 +282,10 @@ int MessageReceiverPlugin::Main()
 
 					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
 					txlen = payload.size();
+
+					tmx::routeable_message rMsg;
+					rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
+					this->OutgoingMessage(rMsg, true);
 
 				}
 

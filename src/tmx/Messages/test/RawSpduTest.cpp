@@ -26,7 +26,7 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
 
     msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
     msg.set_uuid(uuid);
-    msg.set_MessageType("BSM"); // BasicSafetyMessage
+    msg.set_msg_type("BSM"); // BasicSafetyMessage
     msg.set_timestamp_ms(1718900000000);
     msg.set_psid(8002);
     msg.set_channel(183);
@@ -34,7 +34,7 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
 
     std::cout << msg.to_string() << std::endl;
 
-    EXPECT_EQ("BSM", msg.get_MessageType());
+    EXPECT_EQ("BSM", msg.get_msg_type());
     EXPECT_EQ(1718900000000, msg.get_timestamp_ms());
 
 
@@ -56,7 +56,7 @@ TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
 
     msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
     msg.set_uuid(uuid);
-    msg.set_MessageType("BSM");
+    msg.set_msg_type("BSM");
     msg.set_timestamp_ms(1718900000000);
     msg.set_psid(8002);
     msg.set_channel(183);
@@ -79,14 +79,14 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
 
     msg.set_spdu_data_bytes(std::make_shared<std::vector<uint8_t>>(spdu));
     msg.set_uuid(uuid);
-    msg.set_MessageType("PSM"); // PersonalSafetyMessage
+    msg.set_msg_type("PSM"); // PersonalSafetyMessage
     msg.set_timestamp_ms(1718900123456);
 
     msg.set_psid(8001);
     msg.set_channel(183);
     std::cout << msg.to_string() << std::endl;
 
-    EXPECT_EQ("PSM", msg.get_MessageType());
+    EXPECT_EQ("PSM", msg.get_msg_type());
     EXPECT_EQ(1718900123456, msg.get_timestamp_ms());
 
     auto spduOut = msg.get_spdu_data_bytes();

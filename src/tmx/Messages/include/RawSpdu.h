@@ -36,25 +36,33 @@ namespace tmx
         {
         public:
             RawSpdu() {}
+            #if __cplusplus > 199711L
+                /// Message type for routing this message through TMX core.
+                static constexpr const char* MessageType = MSGTYPE_DECODED_STRING;
+
+                /// Message sub type for routing this message through TMX core.
+                static constexpr const char* MessageSubType = MSGSUBTYPE_BASIC_STRING;
+            #endif
             RawSpdu(const tmx::message_container_type &contents) : tmx::message(contents) {}
-            // Full SPDU bytes
-            std_attribute(this->msg, tmx::byte_stream, spdu_data, tmx::byte_stream(), )
+
+                // Full SPDU bytes
+                std_attribute(this->msg, tmx::byte_stream, spdu_data, tmx::byte_stream(), );
                 // Packet UUID
-                std_attribute(this->msg, tmx::byte_stream, uuid, tmx::byte_stream(), )
+                std_attribute(this->msg, tmx::byte_stream, uuid, tmx::byte_stream(), );
 
                 // J2735 payload type, e.g. "BSM", "PSM", "MAP".
-                std_attribute(this->msg, std::string, MessageType, "", )
+                std_attribute(this->msg, std::string, msg_type, "", );
                 // timestamp
-                std_attribute(this->msg, int64_t, timestamp_ms, 0, )
+                std_attribute(this->msg, int64_t, timestamp_ms, 0, );
                 /// 1609Dot2 PSID.
-                std_attribute(this->msg, int, psid, 0, )
+                std_attribute(this->msg, int, psid, 0, );
                 ///  channel Number
-                std_attribute(this->msg, int, channel, 0, )
+                std_attribute(this->msg, int, channel, 0, );
                 // Set the SPDU data as a vector of bytes
                 void set_spdu_data_bytes(std::shared_ptr<std::vector<uint8_t>> bytes)
-            {
-                set_spdu_data(tmx::byte_stream(bytes->begin(), bytes->end()));
-            }
+                {
+                    set_spdu_data(tmx::byte_stream(bytes->begin(), bytes->end()));
+                }
             std::shared_ptr<std::vector<uint8_t>> get_spdu_data_bytes()
             {
                 tmx::byte_stream bs = get_spdu_data();
