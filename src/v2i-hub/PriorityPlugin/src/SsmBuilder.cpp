@@ -103,21 +103,35 @@ namespace PriorityPlugin {
     long MapNTCIPstatusToSSM(RequestStatus status)
     {
         switch (status) {
+            // PRS validated the request; the CO has not activated it yet.
             case RequestStatus::readyQueued:
                 return PrioritizationResponseStatus_requested;
-            case RequestStatus::activeProcessing:
-            case RequestStatus::activeAdjustNotNeeded:
+
+            // Still in the queue behind a prior request (readyOverridden can
+            // return to readyQueued) or in a transient override negotiation.
+            case RequestStatus::readyOverridden:
             case RequestStatus::activeOverride:
                 return PrioritizationResponseStatus_processing;
+
+            // Priority intervention is active, needs no timing adjustment, or has been completed
+            case RequestStatus::activeProcessing:
+            case RequestStatus::activeAdjustNotNeeded:
+            case RequestStatus::activeNotOverridden:
             case RequestStatus::closedCompleted:
                 return PrioritizationResponseStatus_granted;
+
+            // Cancel in flight or cancelled by requester.
+            // No more permission; watch for other traffic.
+            case RequestStatus::activeCancel:
             case RequestStatus::closedCanceled:
+                return PrioritizationResponseStatus_watchOtherTraffic;
+
+            // CO refusals.
             case RequestStatus::closedTimerError:
             case RequestStatus::closedStrategyError:
             case RequestStatus::closedFlash:
-            case RequestStatus::activeNotOverridden:
-            case RequestStatus::readyOverridden:
                 return PrioritizationResponseStatus_rejected;
+
             case RequestStatus::closedTimeToLiveError:
                 return PrioritizationResponseStatus_maxPresence;
             case RequestStatus::reserviceError:

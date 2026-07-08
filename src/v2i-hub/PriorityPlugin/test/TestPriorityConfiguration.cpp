@@ -15,6 +15,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <cmath>
 #include <boost/property_tree/json_parser.hpp>
 #include "PriorityConfiguration.hpp"
 
@@ -187,8 +188,18 @@ TEST(PriorityConfigurationTest, ParseReserviceClassTimesInvalidValue) {
     }
 }
 
+TEST(PriorityConfigurationTest, ParseReserviceClassTimesOutOfRangeValue) {
+    // 2^64 exceeds unsigned long; std::stoul throws out_of_range, value stays 0.
+    auto oor = std::pow(2, 64);
+    auto classTimes = "3," + std::to_string(oor) + ",9";
+    auto result = parseReserviceClassTimes(classTimes);
+    EXPECT_EQ(result[0], 3u);
+    EXPECT_EQ(result[1], 0u);
+    EXPECT_EQ(result[2], 9u);
+}
+
 TEST(PriorityConfigurationTest, ParseReserviceClassTimesEmptyValue) {
-    // Trailing comma produces an empty token at idx 2; std::stoul throws invalid_argument.
+    // Empty at idx 2; std::stoul throws invalid_argument, value stays 0.
     auto result = parseReserviceClassTimes("1,2,,4");
     EXPECT_EQ(result[0], 1u);
     EXPECT_EQ(result[1], 2u);
