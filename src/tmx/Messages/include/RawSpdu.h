@@ -30,7 +30,6 @@ namespace tmx
          *   - timestamp_ms: Epoch timestamp in milliseconds, received or generated time
          *                   depending on the producer. Defaults to 0 if unset.
          *   - psid:         1609.2 PSID (Protocol Service Identifier),specified as an integer.
-         *   - channel:      The channel on which the message should be  transmitted,specified as an integer. 
          */
         class RawSpdu : public tmx::message
         {
@@ -48,9 +47,7 @@ namespace tmx
                 std_attribute(this->msg, int64_t, timestampMs, 0, )
                 /// 1609Dot2 PSID.
                 std_attribute(this->msg, int, psid, 0, )
-                ///  channel Number
-                std_attribute(this->msg, int, channel, 0, )
-                // Set the SPDU data as a vector of bytes
+        
         };
     }
 }

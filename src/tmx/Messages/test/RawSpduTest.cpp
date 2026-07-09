@@ -26,10 +26,10 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
 
     msg.set_spduData(spdu);
     msg.set_uuid(uuid);
-    msg.set_timestampMs(1718900000000);
     msg.set_messageType("BSM"); // BasicSafetyMessage
+    msg.set_timestampMs(1718900000000);
     msg.set_psid(8002);
-    msg.set_channel(183);
+
 
 
     std::cout << msg.to_string() << std::endl;
@@ -44,7 +44,7 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
     EXPECT_EQ(8002, msg.get_psid());
-    EXPECT_EQ(183, msg.get_channel());
+
 }
 
 TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
@@ -59,7 +59,6 @@ TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
     msg.set_messageType("BSM");
     msg.set_timestampMs(1718900000000);
     msg.set_psid(8002);
-    msg.set_channel(183);
 
     std::string json = msg.to_string();
 
@@ -68,7 +67,6 @@ TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
     EXPECT_NE(json.find("\"messageType\":\"BSM\""), std::string::npos);
     EXPECT_NE(json.find("\"timestampMs\":\"1718900000000\""), std::string::npos);
     EXPECT_NE(json.find("\"psid\":\"8002\""), std::string::npos);
-    EXPECT_NE(json.find("\"channel\":\"183\""), std::string::npos);
 }
 
 TEST(RawSpduTest, SetAndGetAttributesPsm) {
@@ -83,7 +81,6 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     msg.set_timestampMs(1718900123456);
 
     msg.set_psid(8001);
-    msg.set_channel(183);
     std::cout << msg.to_string() << std::endl;
 
     EXPECT_EQ("PSM", msg.get_messageType());
@@ -95,6 +92,5 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
     EXPECT_EQ(8001, msg.get_psid());
-    EXPECT_EQ(183, msg.get_channel());
 }
 
