@@ -233,8 +233,6 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     out.set_channel(_dsrcChannel);
     out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
 	
-	PLOG(logDEBUG) << "SPDU timestamp"<<std::atol(rxTime);
-	PLOG(logDEBUG) << "SPDU PSID"<<std::atol(psid);
 	PLOG(logDEBUG) << "SPDU msg type"<<std::to_string(identifyJ2735Type(payloadOut));
 
     return true;
@@ -284,20 +282,21 @@ int MessageReceiverPlugin::Main()
 					RawSpdu spduMsg;
 					std::vector<uint8_t> payload;
 					if (!buildRawSpduMessage(incoming, len, time, spduMsg, payload))
+					{
 						PLOG(logERROR) << "Error parsing SPDU Messages";
+						continue;
+					}
+					
 					
 
 					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
 					txlen = payload.size();
-
-					std::ostringstream oss;
     
-					oss << "[";
-					for (size_t i = 0; i < payload.size(); ++i) {
-						oss << payload[i];
-						if (i < payload.size() - 1) oss << ", "; // Prevent trailing comma
-					}
-					oss << "]";
+					std::ostringstream oss;
+					oss << std::hex << std::setfill('0');
+					for (uint8_t b : payload) oss << std::setw(2) << (unsigned)b;
+					PLOG(logDEBUG) << "SPDU inner payload (" << payload.size() << " bytes): " << oss.str();
+					
 					std::string result = oss.str();
 					PLOG(logDEBUG) << "Received SPDU Message with payload: "<< result;
 
