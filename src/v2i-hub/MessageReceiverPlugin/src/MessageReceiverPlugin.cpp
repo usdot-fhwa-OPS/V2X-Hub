@@ -200,7 +200,7 @@ bool MessageReceiverPlugin::findMessageId(const std::string& hex, size_t& idloc,
 
 bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut)
 {
-	PLOG(logINFO) << "Entering buildRawSpduMessage";
+	PLOG(logDEBUG) << "Entering buildRawSpduMessage";
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
 	
@@ -233,9 +233,9 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     out.set_channel(_dsrcChannel);
     out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
 	
-	PLOG(logINFO) << "SPDU timestamp"<<std::atol(rxTime);
-	PLOG(logINFO) << "SPDU PSID"<<std::atol(psid);
-	PLOG(logINFO) << "SPDU msg type"<<std::to_string(identifyJ2735Type(payloadOut));
+	PLOG(logDEBUG) << "SPDU timestamp"<<std::atol(rxTime);
+	PLOG(logDEBUG) << "SPDU PSID"<<std::atol(psid);
+	PLOG(logDEBUG) << "SPDU msg type"<<std::to_string(identifyJ2735Type(payloadOut));
 
     return true;
 }
