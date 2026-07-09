@@ -283,6 +283,17 @@ int MessageReceiverPlugin::Main()
 					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
 					txlen = payload.size();
 
+					std::ostringstream oss;
+    
+					oss << "[";
+					for (size_t i = 0; i < payload.size(); ++i) {
+						oss << payload[i];
+						if (i < payload.size() - 1) oss << ", "; // Prevent trailing comma
+					}
+					oss << "]";
+					std::string result = oss.str();
+					PLOG(logDEBUG) << "Received SPDU Message with payload: "<< result;
+
 					tmx::routeable_message rMsg;
 					rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
 					this->OutgoingMessage(rMsg, true);
