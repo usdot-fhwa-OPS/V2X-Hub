@@ -42,9 +42,8 @@ if [[ "$interactive" == true ]]; then
     PORT_DRAYAGE_ENABLED_DEFAULT="FALSE"
     INFRASTRUCTURE_ID_DEFAULT="rsu_1234"
     INFRASTRUCTURE_NAME_DEFAULT="East Intersection"
-    V2XHUB_IP_DEFAULT="127.0.0.1"
+    V2XHUB_IP_DEFAULT="0.0.0.0"
     SIMULATION_MODE_DEFAULT="FALSE"
-    SIMULATION_IP_DEFAULT="127.0.0.1"
     SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
     COMPOSE_PROFILES=""
 
@@ -104,8 +103,8 @@ if [[ "$interactive" == true ]]; then
     # In Simulation Mode
     if [[ $SIMULATION_MODE == "TRUE" ]]; then
         # Simulation IP
-        read -r -p "Enter Simulation IP (or press Enter to use default is $SIMULATION_IP_DEFAULT): " SIMULATION_IP
-        SIMULATION_IP=${SIMULATION_IP:-$SIMULATION_IP_DEFAULT}
+        read -r -p "Enter Simulation IP (loop back addresses will not work and redirect traffic to containers virtual network ip): " SIMULATION_IP
+        SIMULATION_IP=${SIMULATION_IP}
 
         # Sensor Configuration File Path
         read -r -p "Enter Sensor Configuration File Path (or press Enter to use default as $SENSOR_JSON_FILE_PATH_DEFAULT): " SENSOR_JSON_FILE_PATH
