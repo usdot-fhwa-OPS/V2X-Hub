@@ -231,6 +231,11 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
 	int _dsrcChannel = 0; // TODO: This needs to be updated
     out.set_channel(_dsrcChannel);
     out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
+	
+	PLOG(logINFO) << "SPDU timestamp"<<rxTime;
+	PLOG(logINFO) << "SPDU PSID"<<std::atol(psid);
+	PLOG(logINFO) << "SPDU msg type"<<std::to_string(identifyJ2735Type(payloadOut));
+
     return true;
 }
 
