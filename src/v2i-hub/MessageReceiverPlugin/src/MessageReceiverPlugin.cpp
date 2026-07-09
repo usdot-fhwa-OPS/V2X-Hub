@@ -263,7 +263,7 @@ int MessageReceiverPlugin::Main()
 		try
 		{
 			int len = server ? server->TimedReceive((char *)incoming.data(), incoming.size(), 5) : 0;
-
+			PLOG(logDEBUG) << "Received message of size "<< len;
 			if (len > 0)
 			{
 				PLOG(logDEBUG) << "Received Message";
