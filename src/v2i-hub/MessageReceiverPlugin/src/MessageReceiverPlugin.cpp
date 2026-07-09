@@ -266,6 +266,7 @@ int MessageReceiverPlugin::Main()
 
 			if (len > 0)
 			{
+				PLOG(logDEBUG) << "Received Message";
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
 
 				totalBytes += len;
