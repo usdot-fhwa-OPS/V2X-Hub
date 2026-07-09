@@ -45,6 +45,7 @@ if [[ "$interactive" == true ]]; then
     V2XHUB_IP_DEFAULT="0.0.0.0"
     SIMULATION_MODE_DEFAULT="FALSE"
     SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
+    V2XHUB_VOLUME_PATH_DEFAULT="/tmp/v2xhub_data/"
     COMPOSE_PROFILES=""
 
     echo "Initializing Docker Environment for V2X Hub..."
@@ -88,6 +89,10 @@ if [[ "$interactive" == true ]]; then
     read -r -p "Enter Infrastructure id (or press Enter to use default as $INFRASTRUCTURE_ID_DEFAULT): " INFRASTRUCTURE_ID
     INFRASTRUCTURE_ID=${INFRASTRUCTURE_ID:-$INFRASTRUCTURE_ID_DEFAULT}
 
+    # V2X Hub Volume Path
+    read -r -p "Enter an absolute file path to store V2X Hub Volumes  (or press Enter to use default as $V2XHUB_VOLUME_PATH_DEFAULT): " V2XHUB_VOLUME_PATH
+    V2XHUB_VOLUME_PATH=${V2XHUB_VOLUME_PATH:-$V2XHUB_VOLUME_PATH_DEFAULT}
+    
     # Infrastructure name
     read -r -p "Enter Infrastructure name (or press Enter to use default as $INFRASTRUCTURE_NAME_DEFAULT): " INFRASTRUCTURE_NAME
     INFRASTRUCTURE_NAME=${INFRASTRUCTURE_NAME:-$INFRASTRUCTURE_NAME_DEFAULT}
@@ -153,6 +158,7 @@ if [[ "$interactive" == true ]]; then
         V2XHUB_USERNAME=$V2XHUB_USERNAME
         V2XHUB_PASSWORD=$V2XHUB_PASSWORD
         SIMULATION_IP=$SIMULATION_IP 
+        V2XHUB_VOLUME_PATH=$V2XHUB_VOLUME_PATH
         "
         echo "$ENV_FILE_CONTENT" > "$SCRIPT_DIR/.env"
     else
@@ -167,6 +173,6 @@ else
 fi
 # Read .env file and create volume directories if they do not exist
 source "$SCRIPT_DIR/.env"
-echo "Creating volume directories at ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/"
-mkdir -m 755 -p ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/download/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/logs/ ${V2XHUB_VOLUME_PATH:-/tmp/v2xhub_data}/ssl/
+echo "Creating volume directories at ${V2XHUB_VOLUME_PATH}/download/ ${V2XHUB_VOLUME_PATH}/logs/ ${V2XHUB_VOLUME_PATH}/ssl/"
+mkdir -m 755 -p ${V2XHUB_VOLUME_PATH}/download/ ${V2XHUB_VOLUME_PATH}/logs/ ${V2XHUB_VOLUME_PATH}/ssl/
 echo "Docker Environment Initialization Complete."
