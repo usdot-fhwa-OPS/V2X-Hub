@@ -223,13 +223,13 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     }
 
     // 3. Populate tmx message
-	out.set_spdu_data(tmx::byte_stream(incoming.data(), incoming.data() + len));
+	out.set_spduData(tmx::byte_stream(incoming.data(), incoming.data() + len));
     boost::uuids::uuid u = _uuidGen();
 	out.set_uuid(tmx::byte_stream(u.begin(), u.end())); 
-    out.set_timestamp_ms(rxTime);
+    out.set_timestampMs(rxTime);
     out.set_psid(psid);
 
-    out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut)));
+    out.set_messageType(std::to_string(identifyJ2735Type(payloadOut)));
     return true;
 }
 
