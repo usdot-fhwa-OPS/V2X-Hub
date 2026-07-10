@@ -235,6 +235,14 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     out.set_channel(_dsrcChannel);
     out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
 	
+	tmx::byte_stream sd = out.get_spdu_data();
+    tmx::byte_stream id = out.get_uuid();
+    std::ostringstream so, uo;
+    so << std::hex << std::setfill('0');
+    for (uint8_t b : sd) so << std::setw(2) << (unsigned)b;
+    uo << std::hex << std::setfill('0');
+    for (uint8_t b : id) uo << std::setw(2) << (unsigned)b;
+
 	PLOG(logDEBUG) << "RawSpdu.spdu_data  (" << sd.size() << " B): " << so.str();
     PLOG(logDEBUG) << "RawSpdu.uuid       (" << id.size() << " B): " << uo.str();
     PLOG(logDEBUG) << "RawSpdu.timestamp_ms = " << out.get_timestamp_ms();
