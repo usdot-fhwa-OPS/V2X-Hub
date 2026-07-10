@@ -228,9 +228,8 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
 	out.set_uuid(tmx::byte_stream(u.begin(), u.end())); 
     out.set_timestamp_ms(rxTime);
     out.set_psid(psid);
-	int _dsrcChannel = 0; // TODO: This needs to be updated
-    out.set_channel(_dsrcChannel);
-    out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
+
+    out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut)));
     return true;
 }
 
@@ -277,7 +276,10 @@ int MessageReceiverPlugin::Main()
 					RawSpdu spduMsg;
 					std::vector<uint8_t> payload;
 					if (!buildRawSpduMessage(incoming, len, time, spduMsg, payload))
+					{
 						PLOG(logERROR) << "Error parsing SPDU Messages";
+						continue;
+					}
 					
 
 					std::copy(payload.begin(), payload.end(), extractedpayload.begin());
