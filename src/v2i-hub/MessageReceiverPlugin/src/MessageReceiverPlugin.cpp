@@ -203,7 +203,7 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
 	
-	asn_dec_rval_t rv = uper_decode_complete(nullptr, &asn_DEF_Ieee1609Dot2Data,
+	asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, incoming.data(), len);
 
 	auto del = [](Ieee1609Dot2Data_t* p){ ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, p); };
