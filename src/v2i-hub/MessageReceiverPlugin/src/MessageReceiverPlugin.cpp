@@ -203,9 +203,11 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
 	PLOG(logDEBUG) << "Entering buildRawSpduMessage";
     // 1. Decode the SPDU
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
-	
-	asn_dec_rval_t rv = uper_decode_complete(nullptr, &asn_DEF_Ieee1609Dot2Data,
+	asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, incoming.data(), len);
+	
+	// asn_dec_rval_t rv = uper_decode_complete(nullptr, &asn_DEF_Ieee1609Dot2Data,
+    //                                (void**)&decodedPtr, incoming.data(), len);
 
 	auto del = [](Ieee1609Dot2Data_t* p){ ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, p); };
 	std::unique_ptr<Ieee1609Dot2Data_t, decltype(del)> decoded(decodedPtr, del);								   
@@ -233,7 +235,12 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
     out.set_channel(_dsrcChannel);
     out.set_msg_type(std::to_string(identifyJ2735Type(payloadOut))); // This should use a mapping from Message id to string name instead
 	
-	PLOG(logDEBUG) << "SPDU msg type"<<std::to_string(identifyJ2735Type(payloadOut));
+	PLOG(logDEBUG) << "RawSpdu.spdu_data  (" << sd.size() << " B): " << so.str();
+    PLOG(logDEBUG) << "RawSpdu.uuid       (" << id.size() << " B): " << uo.str();
+    PLOG(logDEBUG) << "RawSpdu.timestamp_ms = " << out.get_timestamp_ms();
+    PLOG(logDEBUG) << "RawSpdu.psid         = " << out.get_psid();
+    PLOG(logDEBUG) << "RawSpdu.channel      = " << out.get_channel();
+    PLOG(logDEBUG) << "RawSpdu.msg_type     = " << out.get_msg_type();
 
     return true;
 }
