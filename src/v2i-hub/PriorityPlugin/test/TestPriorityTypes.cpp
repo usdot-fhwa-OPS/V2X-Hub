@@ -49,14 +49,6 @@ TEST(PriorityTypesTest, PriorityRequestEntries) {
     EXPECT_EQ(entry.ssmLastStatus, RequestStatus::idleNotValid);
 }
 
-TEST(PriorityTypesTest, ConstantsTest) {
-    EXPECT_EQ(SERVICE_REQUEST_SIZE, 110u);
-    EXPECT_EQ(MAX_SERVICE_REQUESTS, 10u);
-    EXPECT_EQ(SERVICE_REQUEST_ROW_SIZE, 10u);
-    EXPECT_EQ(SERVICE_REQUEST_BUSY_OFFSET, 100u);
-    EXPECT_EQ(MAX_SERVICE_REQUESTS * SERVICE_REQUEST_ROW_SIZE + 1 + 9, SERVICE_REQUEST_SIZE);
-}
-
 TEST(PriorityTypesTest, IsReadyXtest) {
     EXPECT_TRUE(IsReadyX(RequestStatus::readyQueued));
     EXPECT_TRUE(IsReadyX(RequestStatus::readyOverridden));

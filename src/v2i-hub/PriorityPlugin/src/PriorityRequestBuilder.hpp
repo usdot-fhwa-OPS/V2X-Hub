@@ -56,7 +56,8 @@ namespace PriorityPlugin {
         enum class Outcome : uint8_t {
             Send,           ///< Send encodedPayload to targetOID, then apply the tracker mutation on success.
             NoStrategy,     ///< No lane-strategy mapping; nothing to send (request rejected).
-            NoController    ///< No controller configured for the intersection; nothing to send (request rejected).
+            NoController,   ///< No controller configured for the intersection; nothing to send (request rejected).
+            InvalidEta      ///< Computed time-of-service/depart outside the NTCIP 1211 1..65535 range; nothing to send (request rejected).
         };
 
         Outcome outcome = Outcome::NoStrategy;

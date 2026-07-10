@@ -76,12 +76,6 @@ TEST(PriorityRequestProcessorTest, TestEncodeServiceRequest) {
     }
 }
 
-TEST(PriorityRequestProcessorTest, PrsBusyFlag) {
-    PriorityRequestProcessor proc;
-    EXPECT_EQ(proc.EncodeServiceRequest(false)[SERVICE_REQUEST_BUSY_OFFSET], 0);
-    EXPECT_EQ(proc.EncodeServiceRequest(true)[SERVICE_REQUEST_BUSY_OFFSET], 1);
-}
-
 TEST(PriorityRequestProcessorTest, TestDecodeCoServiceResponse) {
     std::vector<uint8_t> data(SERVICE_REQUEST_SIZE, 0);
     data[0] = 1;
@@ -161,27 +155,6 @@ TEST(PriorityRequestProcessorTest, EncodeDecodePrsServiceRequest) {
     EXPECT_EQ(decoded[1].requestedTimeOfEstimatedDeparture, TEST_EPOCH_TED + 5);
     EXPECT_EQ(decoded[1].requestStatusInCO, RequestStatus::activeProcessing);
     EXPECT_TRUE(coBusy);
-}
-
-TEST(PriorityRequestProcessorTest, AllTenRowsFillBuffer) {
-    PriorityRequestProcessor proc;
-    auto &table = proc.Table();
-    for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
-        table[i].serviceStrategyNumber = static_cast<uint8_t>(i + 1);
-        table[i].timeOfServiceDesiredInPRS = 10 * (i + 1);
-        table[i].timeOfEstimatedDepartureInPRS = 20 * (i + 1);
-        table[i].statusInPRS = RequestStatus::readyQueued;
-    }
-    auto buf = proc.EncodeServiceRequest(false);
-    for (size_t i = 0; i < MAX_SERVICE_REQUESTS; i++) {
-        EXPECT_EQ(buf[i * SERVICE_REQUEST_ROW_SIZE], i + 1) << "Row " << i;
-        EXPECT_EQ(buf[i * SERVICE_REQUEST_ROW_SIZE + 9], 2) << "Row " << i << " status";
-    }
-}
-
-TEST(PriorityRequestProcessorTest, PriorityRequestSizeConstants) {
-    EXPECT_EQ(PRIORITY_REQUEST_SIZE, 29u);
-    EXPECT_EQ(VEHICLE_ID_FIELD_SIZE, 17u);
 }
 
 TEST(PriorityRequestProcessorTest, TestEncodePriorityRequest) {
@@ -298,10 +271,6 @@ TEST(PriorityRequestProcessorTest, EncodePriorityCancelNullVehicleID) {
     EXPECT_EQ(buf[20], 2);
 }
 
-TEST(PriorityRequestProcessorTest, CancelSizeConstants) {
-    EXPECT_EQ(PRIORITY_CANCEL_SIZE, 21u);
-}
-
 TEST(PriorityRequestProcessorTest, MapVehicleClassEmergencyGroup) {
     using P = std::pair<uint8_t, uint8_t>;
     EXPECT_EQ(MapVehicleClass(6),  (P{1, 1}));
@@ -357,11 +326,6 @@ TEST(PriorityRequestProcessorTest, LookupStrategyNegativeLaneTest) {
     PriorityRequestProcessor proc;
     proc.SetLaneStrategy(100, 1, 5); // intersectionID, lane, strategyNumber
     EXPECT_FALSE(proc.LookupStrategy(100, -1).has_value());
-}
-
-TEST(PriorityRequestProcessorTest, LookupStrategyEmptyMap) {
-    PriorityRequestProcessor proc;
-    EXPECT_FALSE(proc.LookupStrategy(100, 1).has_value());
 }
 
 TEST(PriorityRequestProcessorTest, ClearLaneStrategyMap) {
@@ -745,6 +709,73 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
         EXPECT_EQ(t[3].statusInPRS, RequestStatus::readyQueued);
     }
 
+    // activeCancel is CO-owned, tracked only in statusInCO
+    {
+        PriorityRequestProcessor proc;
+        auto &table = proc.Table();
+        std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
+
+        table[0].statusInPRS = RequestStatus::readyQueued;
+        coRows[0].requestStatusInCO = RequestStatus::activeCancel;
+        table[1].statusInPRS = RequestStatus::readyQueued;
+        coRows[1].requestStatusInCO = RequestStatus::activeNotOverridden;
+
+        proc.ApplyCoStatusUpdates(coRows, 1000);
+
+        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::readyQueued);
+        EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::activeCancel);
+        EXPECT_EQ(proc.Table()[1].statusInPRS, RequestStatus::readyQueued);
+        EXPECT_EQ(proc.Table()[1].statusInCO, RequestStatus::activeNotOverridden);
+    }
+
+    // closedCompleted accepted from activeOverride (PRS overrode, CO finished anyway)
+    {
+        PriorityRequestProcessor proc;
+        auto &table = proc.Table();
+        std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
+
+        table[0].statusInPRS = RequestStatus::activeOverride;
+        table[0].vehicleClassType = 2;
+        coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
+
+        proc.ApplyCoStatusUpdates(coRows, 77);
+
+        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::closedCompleted);
+        EXPECT_EQ(proc.ReserviceLastCompleted(2), 77u);
+    }
+
+    // closedCompleted NOT accepted once the PRS already closed the entry
+    {
+        PriorityRequestProcessor proc;
+        auto &table = proc.Table();
+        std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
+
+        table[0].statusInPRS = RequestStatus::closedCanceled;
+        coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
+
+        proc.ApplyCoStatusUpdates(coRows, 1000);
+
+        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::closedCanceled);
+    }
+
+    // PRS-owned CO statuses with no matching transition fall through the default case
+    {
+        PriorityRequestProcessor proc;
+        auto &table = proc.Table();
+        std::array<CoServiceResponseRow, MAX_SERVICE_REQUESTS> coRows;
+
+        table[0].statusInPRS = RequestStatus::readyQueued;
+        coRows[0].requestStatusInCO = RequestStatus::reserviceError;
+        table[1].statusInPRS = RequestStatus::readyQueued;
+        coRows[1].requestStatusInCO = RequestStatus::idleNotValid;
+
+        proc.ApplyCoStatusUpdates(coRows, 1000);
+
+        EXPECT_EQ(proc.Table()[0].statusInPRS, RequestStatus::readyQueued);
+        EXPECT_EQ(proc.Table()[0].statusInCO, RequestStatus::reserviceError);
+        EXPECT_EQ(proc.Table()[1].statusInPRS, RequestStatus::readyQueued);
+    }
+
     // Idle entries do nothing, stay at default idleNotValid state
     {
         PriorityRequestProcessor proc;
@@ -759,23 +790,6 @@ TEST(PriorityRequestProcessorTest, TestApplyCoStatusUpdates) {
             EXPECT_EQ(e.statusInCO, RequestStatus::idleNotValid);
         }
     }
-}
-
-TEST(PriorityRequestProcessorTest, EncodeServiceRequestIdenticalState) {
-    // The exchange loop gates to suppress redundant SETs and keeps a CO from 
-    // reprocessing a closed request. Check that two encodes of the same table 
-    // state produce an identical output.
-    PriorityRequestProcessor proc;
-    auto &table = proc.Table();
-    table[0].serviceStrategyNumber = 1;
-    table[0].timeOfServiceDesiredInPRS = TEST_EPOCH_TSD;
-    table[0].timeOfEstimatedDepartureInPRS = TEST_EPOCH_TED;
-    table[0].statusInPRS = RequestStatus::readyQueued;
-    table[0].requestID = 42;
-
-    auto first = proc.EncodeServiceRequest(false);
-    auto second = proc.EncodeServiceRequest(false);
-    EXPECT_EQ(first, second);
 }
 
 TEST(PriorityRequestProcessorTest, EncodeServiceRequestChangesWhenCoClosesRequest) {

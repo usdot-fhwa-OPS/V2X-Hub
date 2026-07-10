@@ -186,11 +186,21 @@ namespace PriorityPlugin {
             timeOfDepartOffsetMs += static_cast<long>(*pkg.duration);
         }
 
-        uint16_t timeOfService;
-        uint16_t timeOfDepart;
+        uint16_t timeOfService = 0;
+        uint16_t timeOfDepart = 0;
+        bool etaOutOfRange = false;
         if (pkg.minute) {
-            timeOfService = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfServiceOffsetMs / 1000L)));
-            timeOfDepart = static_cast<uint16_t>(std::min(65535L, std::max(1L, timeOfDepartOffsetMs / 1000L)));
+            auto timeOfServiceSec = timeOfServiceOffsetMs / 1000L;
+            auto timeOfDepartSec = timeOfDepartOffsetMs / 1000L;
+            // NTCIP 1211 time-of-service/depart fields are valid over 1..65535 seconds.
+            if (timeOfServiceSec < 1L || timeOfServiceSec > 65535L ||
+                timeOfDepartSec < 1L || timeOfDepartSec > 65535L) {
+                etaOutOfRange = true;
+            }
+            else {
+                timeOfService = static_cast<uint16_t>(timeOfServiceSec);
+                timeOfDepart = static_cast<uint16_t>(timeOfDepartSec);
+            }
         }
         else {
             timeOfService = input.estimatedArrivalTime;
@@ -214,6 +224,14 @@ namespace PriorityPlugin {
         long duration = pkg.duration ? static_cast<long>(*pkg.duration) : 0;
 
         result.signalRequest = {requestID, intersectionID, requestType, timeOfService, timeOfDepart, false, inboundPresent, inboundValue, etaMin, etaSec, duration};
+
+        if (etaOutOfRange) {
+            PLOG(logWARNING) << "Time-of-service/depart outside NTCIP 1211 range (1..65535s) for requestID="
+                             << static_cast<int>(requestID) << ", rejecting.";
+            result.outcome = PrgPackageResult::Outcome::InvalidEta;
+            result.signalRequest.rejected = true;
+            return result;
+        }
 
         if (!strategy.has_value()) {
             PLOG(logWARNING) << "No lane strategy mapping for IntersectionID="

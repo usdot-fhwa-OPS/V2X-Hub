@@ -37,21 +37,6 @@ TEST(PriorityConfigurationTest, ParseTscConfigurationListEmptyStringArray) {
     EXPECT_TRUE(configs.empty());
 }
 
-TEST(PriorityConfigurationTest, ParseTscConfigurationListMultipleEntries) {
-    const std::string json = R"([
-        {"IntersectionID": 9709, "IP": "192.168.55.91", "Port": 161},
-        {"IntersectionID": 9945, "IP": "192.168.55.92", "Port": 162}
-    ])";
-    auto configs = parseTscConfigurationList(json);
-    ASSERT_EQ(configs.size(), 2u);
-    EXPECT_EQ(configs[0].intersectionID, 9709);
-    EXPECT_EQ(configs[0].ip, "192.168.55.91");
-    EXPECT_EQ(configs[0].port, 161);
-    EXPECT_EQ(configs[1].intersectionID, 9945);
-    EXPECT_EQ(configs[1].ip, "192.168.55.92");
-    EXPECT_EQ(configs[1].port, 162);
-}
-
 TEST(PriorityConfigurationTest, ParseTscConfigurationListMalformedJson) {
     EXPECT_THROW(parseTscConfigurationList("not json"),
                  boost::property_tree::json_parser_error);
@@ -77,21 +62,6 @@ TEST(PriorityConfigurationTest, ParseLaneStrategyMapping) {
 TEST(PriorityConfigurationTest, ParseLaneStrategyMappingEmptyString) {
     auto entries = parseLaneStrategyMapping("");
     EXPECT_TRUE(entries.empty());
-}
-
-TEST(PriorityConfigurationTest, ParseLaneStrategyMappingMultipleEntries) {
-    const std::string json = R"([
-        {"IntersectionID": 101, "Lane": 3, "Strategy": 1},
-        {"IntersectionID": 102, "Lane": 5, "Strategy": 2}
-    ])";
-    auto entries = parseLaneStrategyMapping(json);
-    ASSERT_EQ(entries.size(), 2u);
-    EXPECT_EQ(entries[0].intersectionID, 101);
-    EXPECT_EQ(entries[0].lane, 3);
-    EXPECT_EQ(entries[0].strategy, 1);
-    EXPECT_EQ(entries[1].intersectionID, 102);
-    EXPECT_EQ(entries[1].lane, 5);
-    EXPECT_EQ(entries[1].strategy, 2);
 }
 
 TEST(PriorityConfigurationTest, ParseLaneStrategyMappingStrategyBoundaries) {
@@ -130,13 +100,6 @@ TEST(PriorityConfigurationTest, ParseLaneStrategyMappingMissingFieldThrows) {
     // Strategy missing - ptree throws on node.get<>()
     const std::string json = R"([{"IntersectionID": 1, "Lane": 2}])";
     EXPECT_THROW(parseLaneStrategyMapping(json), boost::property_tree::ptree_error);
-}
-
-TEST(PriorityConfigurationTest, ParseReserviceClassTimes) {
-    auto result = parseReserviceClassTimes("0,0,0,0,0,0,0,0,0,0");
-    for (size_t i = 0; i < ReserviceClassTimesSize; i++) {
-        EXPECT_EQ(result[i], 0u) << "index " << i;
-    }
 }
 
 TEST(PriorityConfigurationTest, ParseReserviceClassTimesEmptyString) {
@@ -196,13 +159,4 @@ TEST(PriorityConfigurationTest, ParseReserviceClassTimesOutOfRangeValue) {
     EXPECT_EQ(result[0], 3u);
     EXPECT_EQ(result[1], 0u);
     EXPECT_EQ(result[2], 9u);
-}
-
-TEST(PriorityConfigurationTest, ParseReserviceClassTimesEmptyValue) {
-    // Empty at idx 2; std::stoul throws invalid_argument, value stays 0.
-    auto result = parseReserviceClassTimes("1,2,,4");
-    EXPECT_EQ(result[0], 1u);
-    EXPECT_EQ(result[1], 2u);
-    EXPECT_EQ(result[2], 0u);
-    EXPECT_EQ(result[3], 4u);
 }

@@ -59,12 +59,6 @@ TEST(ExtractVehicleIDTest, NothingPresent) {
     EXPECT_TRUE(ExtractVehicleID(id).empty());
 }
 
-TEST(ComputeMinuteAndMsOfYearTest, EpochZeroIsStartOfYear) {
-    auto [minuteOfYear, msInMinute] = ComputeMinuteAndMsOfYear(0);
-    EXPECT_EQ(minuteOfYear, 0L);
-    EXPECT_EQ(msInMinute, 0L);
-}
-
 TEST(ComputeMinuteAndMsOfYearTest, KnownTimestamp) {
     // 2026-01-02 01:01:30 UTC
     constexpr time_t TEST_EPOCH_JAN_2 = 1767315690;

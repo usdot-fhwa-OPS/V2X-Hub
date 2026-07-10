@@ -51,6 +51,22 @@ namespace {
             pkg.request.inBoundLane.present = IntersectionAccessPoint_PR_lane;
             pkg.request.inBoundLane.choice.lane = inboundLane;
         }
+
+        // Attach the optional J2735 ETA fields (minute of year, ms in minute, ms duration).
+        void WithEta(long minute, long second, long duration) {
+            minuteStore = minute;
+            secondStore = second;
+            durationStore = duration;
+            pkg.minute = &minuteStore;
+            pkg.second = &secondStore;
+            pkg.duration = &durationStore;
+        }
+
+        // Switch the inbound access point to an approach instead of a lane.
+        void WithApproach(long approach) {
+            pkg.request.inBoundLane.present = IntersectionAccessPoint_PR_approach;
+            pkg.request.inBoundLane.choice.approach = approach;
+        }
     };
 } // namespace
 
@@ -277,6 +293,198 @@ TEST(BuildPrgPackageTest, NoControllerForIntersection) {
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::NoController);
     EXPECT_TRUE(result.signalRequest.rejected);
     EXPECT_TRUE(result.encodedPayload.empty());
+}
+
+TEST(ApplyPrsPackageTest, EtaMinutePresentComputesGlobalTimes) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    auto &table = proc.Table();
+    std::array<uint32_t, 10> reservice{};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+    // Creates 60500ms offset. 5000ms duration puts departure 65500ms out.
+    pk.WithEta(10, 500, 5000);
+
+    auto result = ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID, 1, 1, 4, 2,
+        /*minOfYear*/ 9, /*msInMinute*/ 0, TEST_NOW_EPOCH, reservice, TEST_TTL_SEC,
+        TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, false});
+
+    EXPECT_EQ(result.action, PrsPackageResult::Action::Inserted);
+    EXPECT_EQ(table[0].timeOfServiceDesiredInPRS, static_cast<uint32_t>(TEST_NOW_EPOCH) + 60u);
+    EXPECT_EQ(table[0].timeOfEstimatedDepartureInPRS, static_cast<uint32_t>(TEST_NOW_EPOCH) + 65u);
+}
+
+TEST(ApplyPrsPackageTest, ApproachInboundHasNoLaneStrategy) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    auto &table = proc.Table();
+    std::array<uint32_t, 10> reservice{};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+    pk.WithApproach(4);
+
+    auto result = ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID, 1, 1, 4, 2,
+        0, 0, TEST_NOW_EPOCH, reservice, TEST_TTL_SEC, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, false});
+
+    // Strategy lookup requires a lane; an approach-only request is rejected but recorded
+    EXPECT_EQ(result.action, PrsPackageResult::Action::Rejected);
+    EXPECT_EQ(table[result.slotIndex].statusInPRS, RequestStatus::closedStrategyError);
+    EXPECT_EQ(table[result.slotIndex].inboundPresent, IntersectionAccessPoint_PR_approach);
+    EXPECT_EQ(table[result.slotIndex].inboundValue, 4);
+}
+
+TEST(BuildPrgPackageTest, ApproachInboundRecorded) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    std::unordered_map<std::string, PrgTrackedRequest> tracked;
+    std::unordered_set<long> configured{TEST_INTERSECTION_ID};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+    pk.WithApproach(4);
+
+    auto result = BuildPrgPackage(tracked, configured, proc, pk.pkg, PrgPackageInput{
+        TEST_VEHICLE_ID, TEST_VEHICLE_KEY, 1, 1, 0, 0, TEST_TIME_OF_REQUEST,
+        TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
+
+    // No lane means no strategy, but the approach is still recorded for the SSM
+    EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::NoStrategy);
+    EXPECT_EQ(result.signalRequest.inboundPresent, IntersectionAccessPoint_PR_approach);
+    EXPECT_EQ(result.signalRequest.inboundValue, 4);
+}
+
+TEST(ApplyPrsPackageTest, PrsBusyWithNoActiveEntriesDoesNotOverride) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    auto &table = proc.Table();
+    std::array<uint32_t, 10> reservice{};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+
+    auto result = ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID, 1, 1, 4, 2,
+        0, 0, TEST_NOW_EPOCH, reservice, TEST_TTL_SEC, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE,
+        /*prsBusy*/ true});
+
+    EXPECT_EQ(result.action, PrsPackageResult::Action::Inserted);
+    EXPECT_FALSE(result.overrideTriggered);
+}
+
+TEST(ApplyPrsPackageTest, LowerPriorityDoesNotOverrideActive) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    auto &table = proc.Table();
+
+    table[0].statusInPRS = RequestStatus::readyQueued;
+    table[0].statusInCO = RequestStatus::activeAdjustNotNeeded;
+    table[0].vehicleClassType = 1;
+    table[0].vehicleClassLevel = 1;
+    table[0].requestID = 50;
+    table[0].vehicleID = {0xEE};
+
+    std::array<uint32_t, 10> reservice{};
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+
+    auto result = ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID,
+        /*classType*/ 7, /*classLevel*/ 2,
+        4, 2, 0, 0, TEST_NOW_EPOCH, reservice, TEST_TTL_SEC, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE,
+        /*prsBusy*/ true});
+
+    EXPECT_EQ(result.action, PrsPackageResult::Action::Inserted);
+    EXPECT_FALSE(result.overrideTriggered);
+    EXPECT_EQ(table[0].statusInPRS, RequestStatus::readyQueued);
+}
+
+TEST(BuildPrgPackageTest, EtaMinutePresentComputesRelativeTimes) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    std::unordered_map<std::string, PrgTrackedRequest> tracked;
+    std::unordered_set<long> configured{TEST_INTERSECTION_ID};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+    pk.WithEta(10, 500, 5000);
+
+    auto result = BuildPrgPackage(tracked, configured, proc, pk.pkg, PrgPackageInput{
+        TEST_VEHICLE_ID, TEST_VEHICLE_KEY, 1, 1, /*minOfYear*/ 9, /*msInMinute*/ 0,
+        TEST_TIME_OF_REQUEST, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
+
+    EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
+    EXPECT_EQ(result.signalRequest.timeOfService, 60); // expect truncated 60.5s
+    EXPECT_EQ(result.signalRequest.timeOfDepart, 65);
+    EXPECT_EQ(result.signalRequest.etaMinute, 10);
+    EXPECT_EQ(result.signalRequest.etaSecond, 500);
+    EXPECT_EQ(result.signalRequest.duration, 5000);
+    EXPECT_EQ(result.trackerEntry.requestID, TEST_REQUEST_ID);
+    EXPECT_EQ(result.trackerEntry.intersectionID, TEST_INTERSECTION_ID);
+    EXPECT_EQ(result.trackerEntry.sentTimeMs, TEST_NOW_MS);
+    EXPECT_EQ(result.trackerEntry.state, PrgRequestState::sent);
+}
+
+TEST(BuildPrgPackageTest, PastEtaOutOfRangeRejected) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    std::unordered_map<std::string, PrgTrackedRequest> tracked;
+    std::unordered_set<long> configured{TEST_INTERSECTION_ID};
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+    pk.WithEta(9, 0, 0); // one minute in the past relative to minute 10
+
+    auto result = BuildPrgPackage(tracked, configured, proc, pk.pkg, PrgPackageInput{
+        TEST_VEHICLE_ID, TEST_VEHICLE_KEY, 1, 1, /*minOfYear*/ 10, /*msInMinute*/ 0,
+        TEST_TIME_OF_REQUEST, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
+
+    // NTCIP 1211 time fields are 1..65535; a past offset is out of range and rejected
+    EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::InvalidEta);
+    EXPECT_TRUE(result.signalRequest.rejected);
+    EXPECT_TRUE(result.encodedPayload.empty());
+}
+
+TEST(BuildPrgPackageTest, UpdateWithTrackerUsesUpdateOid) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    std::unordered_map<std::string, PrgTrackedRequest> tracked;
+    std::unordered_set<long> configured{TEST_INTERSECTION_ID};
+
+    std::string trackerKey = TEST_VEHICLE_KEY + "|" + std::to_string(TEST_REQUEST_ID)
+        + "|" + std::to_string(TEST_INTERSECTION_ID);
+    PrgTrackedRequest existing;
+    existing.requestID = TEST_REQUEST_ID;
+    existing.intersectionID = TEST_INTERSECTION_ID;
+    existing.state = PrgRequestState::sent;
+    tracked[trackerKey] = existing;
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequestUpdate);
+
+    auto result = BuildPrgPackage(tracked, configured, proc, pk.pkg, PrgPackageInput{
+        TEST_VEHICLE_ID, TEST_VEHICLE_KEY, 1, 1, 0, 0, TEST_TIME_OF_REQUEST,
+        TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
+
+    EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID);
+    EXPECT_EQ(result.encodedPayload.size(), PRIORITY_REQUEST_SIZE);
+}
+
+TEST(BuildPrgPackageTest, CanceledTrackerSendsNewRequest) {
+    PriorityRequestProcessor proc;
+    proc.SetLaneStrategy(TEST_INTERSECTION_ID, TEST_LANE, TEST_STRATEGY);
+    std::unordered_map<std::string, PrgTrackedRequest> tracked;
+    std::unordered_set<long> configured{TEST_INTERSECTION_ID};
+
+    std::string trackerKey = TEST_VEHICLE_KEY + "|" + std::to_string(TEST_REQUEST_ID)
+        + "|" + std::to_string(TEST_INTERSECTION_ID);
+    PrgTrackedRequest existing;
+    existing.requestID = TEST_REQUEST_ID;
+    existing.intersectionID = TEST_INTERSECTION_ID;
+    existing.state = PrgRequestState::canceled;
+    tracked[trackerKey] = existing;
+
+    SrmPackage pk(TEST_INTERSECTION_ID, TEST_REQUEST_ID, PriorityRequestType_priorityRequest);
+
+    auto result = BuildPrgPackage(tracked, configured, proc, pk.pkg, PrgPackageInput{
+        TEST_VEHICLE_ID, TEST_VEHICLE_KEY, 1, 1, 0, 0, TEST_TIME_OF_REQUEST,
+        TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
+
+    EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
+    // A canceled tracked request is treated as gone; the SRM starts a new request
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID);
 }
 
 TEST(BuildPrgPackageTest, NoStrategyMapping) {
