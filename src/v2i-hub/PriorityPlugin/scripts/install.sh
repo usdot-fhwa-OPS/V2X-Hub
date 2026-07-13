@@ -1,29 +1,31 @@
 #!/bin/bash
 set -e
 
-REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-VENV_DIR="${VENV_DIR:-$REPO_ROOT/.venv}"
-
 # Dependencies
-dependencies="python3 \
-    python3-pip \
-    python3-venv"
+dependencies="python3"
 
 # Install preliminary dependencies
 sudo apt-get update
 sudo apt-get install -y $dependencies
 
+# Declare local variables for paths and commands
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VENV_DIR=${VENV_DIR:-"$REPO_ROOT/.venv"}
+SYSTEM_PYTHON=${PYTHON:-python3}
+
 # Create virtual environment if it doesn't exist
-if [[ ! -d "$VENV_DIR" ]]; then
-  echo "Creating virtual environment at $VENV_DIR…"
-  python3 -m venv "$VENV_DIR"
+if [ ! -x "$VENV_DIR/bin/python" ]; then
+  echo "Creating virtual environment at $VENV_DIR..."
+  "$SYSTEM_PYTHON" -m venv "$VENV_DIR"
 fi
 
 # Activate virtual environment
 # shellcheck disable=SC1091
 source "$VENV_DIR/bin/activate"
 
+# Upgrade pip in the venv
 PYTHON_BIN="$VENV_DIR/bin/python"
+"$PYTHON_BIN" -m pip install -U pip >/dev/null 2>&1 || true
 
 # Ensure j2735_202409 package is present; clone/install only if missing
 echo "Checking for Python module 'j2735_202409'…"

@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include "PriorityConfigurationException.hpp"
+
 namespace PriorityPlugin {
 
     static constexpr const char *IntersectionIDKey = "IntersectionID";
@@ -32,6 +34,19 @@ namespace PriorityPlugin {
     static constexpr int    StrategyMin             = 1;
     static constexpr int    StrategyMax             = 255;
     static constexpr size_t ReserviceClassTimesSize = 10;
+
+    /**
+     * @brief Operating role of the plugin per NTCIP 1211: Priority Request
+     *        Server (PRS) or Priority Request Generator (PRG).
+     */
+    enum class PluginRole { PRS, PRG };
+
+    /**
+     * @brief Returns the configuration string for a PluginRole.
+     */
+    constexpr const char *pluginRoleToString(PluginRole role) {
+        return role == PluginRole::PRS ? "PRS" : "PRG";
+    }
 
     /**
      * @brief Parsed TSC controller entry from the TSC_Configuration_List JSON.
@@ -53,24 +68,35 @@ namespace PriorityPlugin {
 
     /**
      * @brief Parses the TSC_Configuration_List JSON array.
-     * @param json The raw JSON array string. An empty string yields an empty vector.
+     * @param json The raw JSON array string.
      * @return std::vector<ControllerConfig> One entry per JSON object in the array.
+     * @throws PriorityConfigurationException If the string is empty.
      */
     std::vector<ControllerConfig> parseTscConfigurationList(const std::string &json);
 
     /**
      * @brief Parses the LaneStrategyMapping JSON array.
-     * @param json The raw JSON array string. An empty string yields an empty vector.
+     * @param json The raw JSON array string.
      * @return std::vector<LaneStrategyEntry> One entry per accepted JSON object.
+     * @throws PriorityConfigurationException If the string is empty.
      */
     std::vector<LaneStrategyEntry> parseLaneStrategyMapping(const std::string &json);
 
     /**
      * @brief Parses a comma-separated list of unsigned integers into a fixed-size array
      *        of reservice periods (seconds), one per vehicle class type (1..10).
-     * @param reserviceStr The comma-separated string. An empty string yields a zero-filled array.
+     * @param reserviceStr The comma-separated string.
      * @return std::array<uint32_t, 10> Reservice periods indexed by (classType - 1).
+     * @throws PriorityConfigurationException If the string is empty.
      */
     std::array<uint32_t, ReserviceClassTimesSize> parseReserviceClassTimes(const std::string &reserviceStr);
+
+    /**
+     * @brief Parses the PluginRole configuration value.
+     * @param role The configured role string. Must be exactly "PRS" or "PRG".
+     * @return PluginRole The parsed role.
+     * @throws PriorityConfigurationException If the string is not "PRS" or "PRG".
+     */
+    PluginRole parsePluginRole(const std::string &role);
 
 } /* namespace PriorityPlugin */

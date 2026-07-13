@@ -9,17 +9,17 @@ namespace tmx::utils::tsc::mib::ntcip1211
      */
 
     // prgPriorityRequestAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.8)
-    static const std::string NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.8.0";
+    static const std::string PRIORITY_REQUEST_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.8.0";
 
     // prgPriorityUpdateAbsolute (1211 v02A-SE03f PRS-MIB1 5.1.2.9)
-    static const std::string NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.9.0";
+    static const std::string PRIORITY_UPDATE_ABSOLUTE_OID = "1.3.6.1.4.1.1206.4.2.11.2.9.0";
 
     // prgPriorityCancel (1211 v02A-SE03f PRS-MIB1 5.1.2.5)
-    static const std::string NTCIP1211_PRIORITY_CANCEL_OID = "1.3.6.1.4.1.1206.4.2.11.2.5.0";
+    static const std::string PRIORITY_CANCEL_OID = "1.3.6.1.4.1.1206.4.2.11.2.5.0";
 
     // prgPriorityClear (1211 v02A-SE03f PRS-MIB1 5.1.2.6)
-    static const std::string NTCIP1211_PRIORITY_CLEAR_OID = "1.3.6.1.4.1.1206.4.2.11.2.6.0";
+    static const std::string PRIORITY_CLEAR_OID = "1.3.6.1.4.1.1206.4.2.11.2.6.0";
 
     // prsServiceRequest (1211 v0224j CO-MIB1 5.2.2.1)
-    static const std::string NTCIP1211_PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
+    static const std::string PRS_SERVICE_REQUEST_OID = "1.3.6.1.4.1.1206.4.2.11.4.1.0";
 }

@@ -107,7 +107,7 @@ TEST(ApplyPrsPackageTest, UpdateExistingEntry) {
     // First application
     ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID, 1, 1, 4, 2,
         0, 0, TEST_NOW_EPOCH, reservice, TEST_TTL_SEC, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, false});
-    ASSERT_EQ(table[0].statusInPRS, RequestStatus::readyQueued);
+    EXPECT_EQ(table[0].statusInPRS, RequestStatus::readyQueued);
 
     // Same package, but update with new sequence and times
     auto result = ApplyPrsPackage(table, proc, pk.pkg, PrsPackageInput{TEST_VEHICLE_ID, 1, 1, 9, 2,
@@ -149,7 +149,7 @@ TEST(ApplyPrsPackageTest, ReserviceNotMetRejected) {
     table[0].vehicleClassType = 1;
     coRows[0].requestStatusInCO = RequestStatus::closedCompleted;
     proc.ApplyCoStatusUpdates(coRows, 1000);
-    ASSERT_EQ(proc.ReserviceLastCompleted(1), 1000u);
+    EXPECT_EQ(proc.ReserviceLastCompleted(1), 1000u);
     // Reset the seeded slot back to idle so the new request lands cleanly.
     table[0] = PriorityRequestEntry{};
 
@@ -228,7 +228,7 @@ TEST(BuildPrgPackageTest, CancellationPath) {
 
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
     EXPECT_TRUE(result.isCancel);
-    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CANCEL_OID);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::PRIORITY_CANCEL_OID);
     EXPECT_EQ(result.encodedPayload.size(), PRIORITY_CANCEL_SIZE);
 }
 
@@ -247,7 +247,7 @@ TEST(BuildPrgPackageTest, UpdateWithoutTracker) {
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
     EXPECT_FALSE(result.isCancel);
     // No tracker; sends as a new request instead of update
-    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::PRIORITY_REQUEST_ABSOLUTE_OID);
     EXPECT_EQ(result.encodedPayload.size(), PRIORITY_REQUEST_SIZE);
 }
 
@@ -274,7 +274,7 @@ TEST(BuildPrgPackageTest, NewRequestWithTracker) {
 
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
     // Existing tracker; sends update request
-    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::PRIORITY_UPDATE_ABSOLUTE_OID);
     EXPECT_EQ(result.trackerKey, trackerKey);
 }
 
@@ -458,7 +458,7 @@ TEST(BuildPrgPackageTest, UpdateWithTrackerUsesUpdateOid) {
         TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, TEST_NOW_MS});
 
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
-    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::PRIORITY_UPDATE_ABSOLUTE_OID);
     EXPECT_EQ(result.encodedPayload.size(), PRIORITY_REQUEST_SIZE);
 }
 
@@ -484,7 +484,7 @@ TEST(BuildPrgPackageTest, CanceledTrackerSendsNewRequest) {
 
     EXPECT_EQ(result.outcome, PrgPackageResult::Outcome::Send);
     // A canceled tracked request is treated as gone; the SRM starts a new request
-    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID);
+    EXPECT_EQ(result.targetOID, tsc::mib::ntcip1211::PRIORITY_REQUEST_ABSOLUTE_OID);
 }
 
 TEST(BuildPrgPackageTest, NoStrategyMapping) {

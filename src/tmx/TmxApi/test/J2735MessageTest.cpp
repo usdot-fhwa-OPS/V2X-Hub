@@ -558,25 +558,25 @@ TEST (J2735MessageTest, EncodeSrm)
 
 TEST (J2735MessageTest, EncodeSsm)
 {
-	SignalStatusMessage_t *message = (SignalStatusMessage_t *)calloc(1, sizeof(SignalStatusMessage_t));
+	auto *message = (SignalStatusMessage_t *)calloc(1, sizeof(SignalStatusMessage_t));
 
-	MinuteOfTheYear_t *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	auto *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
 	*timeStamp = 132558;
 	message->timeStamp = timeStamp;
 	message->second = 57000;
 
-	Common_MsgCount_t *msgSequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
+	auto *msgSequenceNumber = (Common_MsgCount_t *)calloc(1, sizeof(Common_MsgCount_t));
 	*msgSequenceNumber = 1;
 	message->sequenceNumber = msgSequenceNumber;
 
-	SignalStatus_t *signalStatus = (SignalStatus_t *)calloc(1, sizeof(SignalStatus_t));
+	auto *signalStatus = (SignalStatus_t *)calloc(1, sizeof(SignalStatus_t));
 	signalStatus->sequenceNumber = 1;
 	signalStatus->id.id = 9709;
 
-	SignalStatusPackage_t *sigStatus = (SignalStatusPackage_t *)calloc(1, sizeof(SignalStatusPackage_t));
-	SignalRequesterInfo_t *requester = (SignalRequesterInfo_t *)calloc(1, sizeof(SignalRequesterInfo_t));
-	TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
-	VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
+	auto *sigStatus = (SignalStatusPackage_t *)calloc(1, sizeof(SignalStatusPackage_t));
+	auto *requester = (SignalRequesterInfo_t *)calloc(1, sizeof(SignalRequesterInfo_t));
+	auto *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
+	auto *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
 	veh_id->present = VehicleID_PR_entityID;
 	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
 	entity_id->buf = my_bytes_id;
@@ -585,21 +585,21 @@ TEST (J2735MessageTest, EncodeSsm)
 	requester->id = *veh_id;
 	requester->request = 1;
 	requester->sequenceNumber = 1;
-	BasicVehicleRole_t *role = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
+	auto *role = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
 	*role = 16;
 	requester->role = role;
 	sigStatus->requester = requester;
-	IntersectionAccessPoint_t *inboundOn = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
+	auto *inboundOn = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
 	inboundOn->present = IntersectionAccessPoint_PR_lane;
 	inboundOn->choice.lane = 1;
 	sigStatus->inboundOn = *inboundOn;
-	MinuteOfTheYear_t *minute = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	auto *minute = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
 	*minute = 57000;
 	sigStatus->minute = minute;
-	DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	auto *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
 	*second = 53606;
 	sigStatus->second = second;
-    DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+    auto *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
 	*duration = 10000;
 	sigStatus->duration = duration;
 	sigStatus->status = 2;
@@ -610,16 +610,16 @@ TEST (J2735MessageTest, EncodeSsm)
 	auto _ssmMessage = new tmx::messages::SsmMessage(message);
 	tmx::messages::MessageFrameMessage frame_msg(_ssmMessage->get_j2735_data());
 	ssmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
+	j2735::j2735_destroy<SsmTraits>(message);
 	free(frame_msg.get_j2735_data().get());
 
 	// Test encoding
 	std::string expectedSsmEncHex = "001e1b6205cedea802000897b40b9004303028040a000437aa345989c408";
-	ASSERT_EQ(expectedSsmEncHex, ssmEncodeMessage.get_payload_str());
+	EXPECT_EQ(expectedSsmEncHex, ssmEncodeMessage.get_payload_str());
 
 	// Test decoding
 	auto decoded_ssm_ptr = ssmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(9709, decoded_ssm_ptr->status.list.array[0]->id.id);
+	EXPECT_EQ(9709, decoded_ssm_ptr->status.list.array[0]->id.id);
 }
 
 TEST(J2735MessageTest, EncodeTravelerInformation){

@@ -146,7 +146,7 @@ namespace PriorityPlugin {
             // duplicates delivered by multiple intersections near the vehicle.
             std::unordered_map<std::string, uint8_t> _prsLastSeqByVehicle;
 
-            // For PRS mode: NTCIP 1211 priority request processor.
+            // For both modes: NTCIP 1211 priority request processor.
             PriorityRequestProcessor _processor;
 
             // Mutex to protect access to the priority request table and related state during the service exchange loop
@@ -165,7 +165,7 @@ namespace PriorityPlugin {
 
             // Configuration values
             std::string _snmpCommunity = "public";
-            std::string _pluginRole;
+            PluginRole _pluginRole = PluginRole::PRS;
             uint16_t _estimatedArrivalTime;
             uint16_t _estimatedDepartureTime;
             uint32_t _pollIntervalMs;        // PRS-CO poll interval (100-1000ms)

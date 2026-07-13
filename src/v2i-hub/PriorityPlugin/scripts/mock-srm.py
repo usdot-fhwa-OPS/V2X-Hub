@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import datetime
+import time
 import sys
 import json
 import threading
@@ -66,6 +67,7 @@ J2735_SPEED = 0.02
 # Guard speed to avoid division by zero
 MIN_SPEED = 0.01
 
+# All options for requestor roles
 ROLE_CHOICES = [
     "basicVehicle",
     "publicTransport",
@@ -98,29 +100,36 @@ REQUEST_TYPE_CHOICES = [
     "priorityCancellation"
 ]
 
+MIN_IN_DAY = 1440 
+"""Amount of minutes in a day = 60 min * 24 hours. Used for conversions."""
+MIN_IN_HOUR = 60
+"""Amount of minutes in an hour. Used for conversions."""
+MILLISEC = 1000
+"""Amount of milliseconds in a second. Used for conversions."""
+
+
 
 def get_moy() -> int:
-    """Minute-of-year for the current UTC time."""
+    """Return the minute-of-year for the current UTC time."""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     start_of_year = datetime.datetime(now.year, 1, 1, tzinfo=datetime.timezone.utc)
     delta = now - start_of_year
-    return delta.days * 1440 + now.hour * 60 + now.minute
-
+    return delta.days * MIN_IN_DAY + now.hour * MIN_IN_HOUR + now.minute
 
 def get_d_second() -> int:
-    """Millisecond within the current UTC minute."""
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
-    return now.second * 1000 + now.microsecond // 1000
-
+    """Return the millisecond within the current minute."""
+    return (time.time_ns() // 1_000_000) % 60_000
 
 def offset_to_moy_dsecond(offset_seconds: int) -> tuple[int, int]:
-    """Convert a seconds-from-now offset into (MOY, DSecond) pair."""
+    """Convert a seconds-from-now offset into (MOY, DSecond) pair.
+    Returns:
+        tuple[int, int]: offset min, offset ms"""
     now = datetime.datetime.now(tz=datetime.timezone.utc)
     target = now + datetime.timedelta(seconds=offset_seconds)
     start_of_year = datetime.datetime(target.year, 1, 1, tzinfo=datetime.timezone.utc)
     delta = target - start_of_year
-    moy = delta.days * 1440 + target.hour * 60 + target.minute
-    dsecond = target.second * 1000 + target.microsecond // 1000
+    moy = delta.days * MIN_IN_DAY + target.hour * MIN_IN_HOUR + target.minute
+    dsecond = target.second * MILLISEC + target.microsecond // MILLISEC
     return moy, dsecond
 
 def build_srm(entries: list[dict]) -> str:
@@ -133,6 +142,8 @@ def build_srm(entries: list[dict]) -> str:
     ETA is derived from distance_m / speed_mps and EDT (duration in ms) from
     clearance_m / speed_mps. A zero distance means the vehicle is at the stop
     bar (ETA = now); a zero clearance means the vehicle has cleared.
+    Returns:
+        str: SRM
     """
     global msgCnt
     with msgCnt_lock:
@@ -157,7 +168,7 @@ def build_srm(entries: list[dict]) -> str:
                 },
                 "minute": eta_moy,
                 "second": eta_ds,
-                "duration": edt_s * 1000,
+                "duration": edt_s * MILLISEC,
             }
         )
 
@@ -291,7 +302,7 @@ class AddEntryDialog(QDialog):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Mock SRM Sender")
+        self.setWindowTitle("Mock Signal Request Message (SRM) Sender")
         self.resize(900, 600)
 
         central = QWidget()
@@ -365,7 +376,7 @@ class MainWindow(QMainWindow):
 
         # Approach-simulation state
         self._sim_timer = QTimer(self)
-        self._sim_timer.setInterval(1000)
+        self._sim_timer.setInterval(1000) # 1 sec
         self._sim_timer.timeout.connect(self._on_simulate_tick)
         self._sim_entries: list[dict] = []
         self._sim_target: tuple[str, int] = ("", 0)
@@ -504,7 +515,7 @@ class MainWindow(QMainWindow):
             )
             return
 
-        # Force the first message to be a priorityRequest; subsequent ticks use updates.
+        # Force the first message to be a priorityRequest. Subsequent requests use priorityRequestUpdate.
         for entry in entries:
             entry["request_type"] = "priorityRequest"
 
@@ -546,7 +557,7 @@ class MainWindow(QMainWindow):
 
     def _on_simulate_tick(self):
         """Advance each simulated entry by one tick and broadcast updates."""
-        dt_s = self._sim_timer.interval() / 1000.0
+        dt_s = self._sim_timer.interval() / 1000.0 # 1 sec
         for entry in self._sim_entries:
             self._advance_entry(entry, dt_s)
             entry["request_type"] = "priorityRequestUpdate"

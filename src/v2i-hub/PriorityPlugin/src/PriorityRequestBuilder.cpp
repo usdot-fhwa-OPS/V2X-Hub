@@ -259,7 +259,7 @@ namespace PriorityPlugin {
             result.encodedPayload = PriorityRequestProcessor::EncodePriorityCancel(
                 requestID, input.vehicleID.data(), input.vehicleID.size(),
                 input.classType, input.classLevel, *strategy);
-            result.targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CANCEL_OID;
+            result.targetOID = tsc::mib::ntcip1211::PRIORITY_CANCEL_OID;
             result.isCancel = true;
             PLOG(logDEBUG) << "PRG cancel for requestID=" << static_cast<int>(requestID);
         }
@@ -274,14 +274,14 @@ namespace PriorityPlugin {
                     requestID, input.vehicleID.data(), input.vehicleID.size(),
                     input.classType, input.classLevel, *strategy,
                     timeOfService, timeOfDepart, input.timeOfRequest);
-                result.targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+                result.targetOID = tsc::mib::ntcip1211::PRIORITY_REQUEST_ABSOLUTE_OID;
             }
             else {
                 result.encodedPayload = PriorityRequestProcessor::EncodePriorityUpdate(
                     requestID, input.vehicleID.data(), input.vehicleID.size(),
                     input.classType, input.classLevel, *strategy,
                     timeOfService, timeOfDepart, input.timeOfRequest);
-                result.targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+                result.targetOID = tsc::mib::ntcip1211::PRIORITY_UPDATE_ABSOLUTE_OID;
             }
         }
         else {
@@ -294,7 +294,7 @@ namespace PriorityPlugin {
                     requestID, input.vehicleID.data(), input.vehicleID.size(),
                     input.classType, input.classLevel, *strategy,
                     timeOfService, timeOfDepart, input.timeOfRequest);
-                result.targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_UPDATE_ABSOLUTE_OID;
+                result.targetOID = tsc::mib::ntcip1211::PRIORITY_UPDATE_ABSOLUTE_OID;
             }
             else {
                 // No existing entry or canceled - send as new request
@@ -302,7 +302,7 @@ namespace PriorityPlugin {
                     requestID, input.vehicleID.data(), input.vehicleID.size(),
                     input.classType, input.classLevel, *strategy,
                     timeOfService, timeOfDepart, input.timeOfRequest);
-                result.targetOID = tsc::mib::ntcip1211::NTCIP1211_PRIORITY_REQUEST_ABSOLUTE_OID;
+                result.targetOID = tsc::mib::ntcip1211::PRIORITY_REQUEST_ABSOLUTE_OID;
             }
         }
 

@@ -24,16 +24,16 @@ using namespace PriorityPlugin;
 TEST(PriorityConfigurationTest, ParseTscConfigurationList) {
     const std::string json = R"([{"IntersectionID": 9709, "IP": "192.168.55.92", "Port": 161}])";
     auto configs = parseTscConfigurationList(json);
-    ASSERT_EQ(configs.size(), 1u);
+    EXPECT_EQ(configs.size(), 1u);
     EXPECT_EQ(configs[0].intersectionID, 9709);
     EXPECT_EQ(configs[0].ip, "192.168.55.92");
     EXPECT_EQ(configs[0].port, 161);
 }
 
 TEST(PriorityConfigurationTest, ParseTscConfigurationListEmptyStringArray) {
-    auto configs = parseTscConfigurationList("");
-    EXPECT_TRUE(configs.empty());
-    configs = parseTscConfigurationList("[]");
+    // An empty string is a configuration error; an empty JSON array is valid
+    EXPECT_THROW(parseTscConfigurationList(""), PriorityConfigurationException);
+    auto configs = parseTscConfigurationList("[]");
     EXPECT_TRUE(configs.empty());
 }
 
@@ -53,15 +53,14 @@ TEST(PriorityConfigurationTest, ParseTscConfigurationListMissingField) {
 TEST(PriorityConfigurationTest, ParseLaneStrategyMapping) {
     const std::string json = R"([{"IntersectionID": 9709, "Lane": 2, "Strategy": 1}])";
     auto entries = parseLaneStrategyMapping(json);
-    ASSERT_EQ(entries.size(), 1u);
+    EXPECT_EQ(entries.size(), 1u);
     EXPECT_EQ(entries[0].intersectionID, 9709);
     EXPECT_EQ(entries[0].lane, 2);
     EXPECT_EQ(entries[0].strategy, 1);
 }
 
 TEST(PriorityConfigurationTest, ParseLaneStrategyMappingEmptyString) {
-    auto entries = parseLaneStrategyMapping("");
-    EXPECT_TRUE(entries.empty());
+    EXPECT_THROW(parseLaneStrategyMapping(""), PriorityConfigurationException);
 }
 
 TEST(PriorityConfigurationTest, ParseLaneStrategyMappingStrategyBoundaries) {
@@ -71,7 +70,7 @@ TEST(PriorityConfigurationTest, ParseLaneStrategyMappingStrategyBoundaries) {
         {"IntersectionID": 2, "Lane": 2, "Strategy": 255}
     ])";
     auto entries = parseLaneStrategyMapping(json);
-    ASSERT_EQ(entries.size(), 2u);
+    EXPECT_EQ(entries.size(), 2u);
     EXPECT_EQ(entries[0].strategy, 1);
     EXPECT_EQ(entries[1].strategy, 255);
 }
@@ -85,7 +84,7 @@ TEST(PriorityConfigurationTest, ParseLaneStrategyMappingStrategyOutOfRangeSkippe
         {"IntersectionID": 4, "Lane": 4, "Strategy": -1}
     ])";
     auto entries = parseLaneStrategyMapping(json);
-    ASSERT_EQ(entries.size(), 1u);
+    EXPECT_EQ(entries.size(), 1u);
     EXPECT_EQ(entries[0].intersectionID, 2);
     EXPECT_EQ(entries[0].lane, 2);
     EXPECT_EQ(entries[0].strategy, 50);
@@ -103,10 +102,8 @@ TEST(PriorityConfigurationTest, ParseLaneStrategyMappingMissingFieldThrows) {
 }
 
 TEST(PriorityConfigurationTest, ParseReserviceClassTimesEmptyString) {
-    auto result = parseReserviceClassTimes("");
-    for (size_t i = 0; i < ReserviceClassTimesSize; i++) {
-        EXPECT_EQ(result[i], 0u) << "index " << i;
-    }
+    // An empty string is a configuration error
+    EXPECT_THROW(parseReserviceClassTimes(""), PriorityConfigurationException);
 }
 
 TEST(PriorityConfigurationTest, ParseReserviceClassTimesAllSlotsPopulated) {
@@ -149,6 +146,24 @@ TEST(PriorityConfigurationTest, ParseReserviceClassTimesInvalidValue) {
     for (size_t i = 3; i < ReserviceClassTimesSize; i++) {
         EXPECT_EQ(result[i], 0u) << "index " << i;
     }
+}
+
+TEST(PriorityConfigurationTest, ParsePluginRoleValidValues) {
+    EXPECT_EQ(parsePluginRole("PRS"), PluginRole::PRS);
+    EXPECT_EQ(parsePluginRole("PRG"), PluginRole::PRG);
+}
+
+TEST(PriorityConfigurationTest, ParsePluginRoleInvalidValuesThrow) {
+    // Matching is strict: anything but exactly "PRS" or "PRG" is a configuration error
+    EXPECT_THROW(parsePluginRole(""), PriorityConfigurationException);
+    EXPECT_THROW(parsePluginRole("prs"), PriorityConfigurationException);
+    EXPECT_THROW(parsePluginRole("PRS "), PriorityConfigurationException);
+    EXPECT_THROW(parsePluginRole("PSR"), PriorityConfigurationException);
+}
+
+TEST(PriorityConfigurationTest, PluginRoleToString) {
+    EXPECT_STREQ(pluginRoleToString(PluginRole::PRS), "PRS");
+    EXPECT_STREQ(pluginRoleToString(PluginRole::PRG), "PRG");
 }
 
 TEST(PriorityConfigurationTest, ParseReserviceClassTimesOutOfRangeValue) {

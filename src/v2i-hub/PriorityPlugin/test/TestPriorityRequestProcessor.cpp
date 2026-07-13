@@ -168,7 +168,7 @@ TEST(PriorityRequestProcessorTest, TestEncodePriorityRequest) {
         TEST_TIME_OF_DEPART,
         TEST_TIME_OF_REQUEST);
 
-    ASSERT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
+    EXPECT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
     EXPECT_EQ(buf[0], TEST_REQUEST_ID);
     for (size_t i = 1; i <= 13; i++) EXPECT_EQ(buf[i], 0); // left-padding; assumed to be vehicle VIN in 1211, but we use SRM vehicle ID, which is shorter
     EXPECT_EQ(buf[14], TEST_VEHICLE_ID[0]);
@@ -218,7 +218,7 @@ TEST(PriorityRequestProcessorTest, TestEncodePriorityUpdate) {
         TEST_TIME_OF_REQUEST);
 
     // Update is identical to Request encoding (29 bytes, same layout)
-    ASSERT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
+    EXPECT_EQ(buf.size(), PRIORITY_REQUEST_SIZE);
     auto reqBuf = PriorityRequestProcessor::EncodePriorityRequest(
         TEST_REQUEST_ID, TEST_VEHICLE_ID, sizeof(TEST_VEHICLE_ID),
         TEST_CLASS_TYPE, TEST_CLASS_LEVEL, TEST_STRATEGY_NUM,
@@ -234,7 +234,7 @@ TEST(PriorityRequestProcessorTest, TestEncodePriorityCancel) {
         TEST_CLASS_LEVEL,
         TEST_STRATEGY_NUM);
 
-    ASSERT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
     EXPECT_EQ(buf[0], TEST_REQUEST_ID);
     // Vehicle ID right-padded in 17-byte field
     for (size_t i = 1; i <= 13; i++) EXPECT_EQ(buf[i], 0);
@@ -256,14 +256,14 @@ TEST(PriorityRequestProcessorTest, TestEncodePriorityClear) {
         TEST_CLASS_TYPE, TEST_CLASS_LEVEL, TEST_STRATEGY_NUM);
 
     // Clear is identical encoding to Cancel (21 bytes); different OID at call site
-    ASSERT_EQ(clearBuf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(clearBuf.size(), PRIORITY_CANCEL_SIZE);
     EXPECT_EQ(clearBuf, cancelBuf);
 }
 
 TEST(PriorityRequestProcessorTest, EncodePriorityCancelNullVehicleID) {
     auto buf = PriorityRequestProcessor::EncodePriorityCancel(
         9, nullptr, 0, 2, 2, 2);
-    ASSERT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
+    EXPECT_EQ(buf.size(), PRIORITY_CANCEL_SIZE);
     EXPECT_EQ(buf[0], 9);
     for (size_t i = 1; i <= 17; i++) EXPECT_EQ(buf[i], 0);
     EXPECT_EQ(buf[18], 2);

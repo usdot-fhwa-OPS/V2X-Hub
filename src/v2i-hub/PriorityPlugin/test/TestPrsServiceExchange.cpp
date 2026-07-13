@@ -30,7 +30,7 @@ using testing::Invoke;
 using testing::Return;
 
 namespace {
-    const std::string SERVICE_OID = tsc::mib::ntcip1211::NTCIP1211_PRS_SERVICE_REQUEST_OID;
+    const std::string SERVICE_OID = tsc::mib::ntcip1211::PRS_SERVICE_REQUEST_OID;
     constexpr long TEST_INTERSECTION_ID = 9709;
 
     std::shared_ptr<unit_test::mock_snmp_client> MakeMockClient() {

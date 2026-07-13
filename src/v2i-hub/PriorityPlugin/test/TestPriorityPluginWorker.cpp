@@ -50,7 +50,7 @@ TEST(ExtractVehicleIDTest, VehicleIDChoices) {
         id.choice.stationID = 0x11223344;
 
         auto out = ExtractVehicleID(id);
-        ASSERT_EQ(out.size(), sizeof(StationID_t));
+        EXPECT_EQ(out.size(), sizeof(StationID_t));
         StationID_t decoded = 0;
         std::memcpy(&decoded, out.data(), sizeof(decoded));
         EXPECT_EQ(decoded, 0x11223344UL);

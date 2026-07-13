@@ -238,7 +238,7 @@ static CONSTEXPR const char *STATUS_STOPPED_STRING = "Stopped / Disconnected";
 enum msgPSID
 {
 	None_PSID = 0x00,
-	mapData_PSID = 0xE0000017,
+	mapData_PSID = 0xE0000017, // updated to reflect IEEE PSID Public Listing and SAE J3268_202303
 	signalPhaseAndTimingMessage_PSID = 0x8002,
 	basicSafetyMessage_PSID = 0x20,
 	commonSafetyRequest_PSID = 0x20,

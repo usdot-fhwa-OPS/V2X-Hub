@@ -77,7 +77,7 @@ namespace PriorityPlugin {
         if (bool shouldSet = (setData != ctx.lastSentServiceRequest);
             shouldSet) {
             PLOG(logDEBUG3) << "PRS SET prsServiceRequest to CO: " << tmx::byte_stream_encode(setData);
-            if (bool setOk = SnmpSet(targetClient, tsc::mib::ntcip1211::NTCIP1211_PRS_SERVICE_REQUEST_OID, setData);
+            if (bool setOk = SnmpSet(targetClient, tsc::mib::ntcip1211::PRS_SERVICE_REQUEST_OID, setData);
                 !setOk) {
                 PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO";
                 return ExchangeResult::SnmpSetFailed;
@@ -95,7 +95,7 @@ namespace PriorityPlugin {
         while (coBusy && running && maxRetries > 0) {
             --maxRetries;
             std::vector<uint8_t> getData;
-            if (bool getOk = SnmpGet(targetClient, tsc::mib::ntcip1211::NTCIP1211_PRS_SERVICE_REQUEST_OID, getData);
+            if (bool getOk = SnmpGet(targetClient, tsc::mib::ntcip1211::PRS_SERVICE_REQUEST_OID, getData);
                 !getOk) {
                 PLOG(logERROR) << "PRS failed to GET prsServiceRequest from CO";
                 coError = true;
@@ -155,7 +155,7 @@ namespace PriorityPlugin {
         // j) SET prsServiceRequest to the CO only if the post-prioritization
         // table differs from what the CO already holds.
         if (updatedSetData != ctx.lastSentServiceRequest) {
-            if (!SnmpSet(targetClient, tsc::mib::ntcip1211::NTCIP1211_PRS_SERVICE_REQUEST_OID, updatedSetData)) {
+            if (!SnmpSet(targetClient, tsc::mib::ntcip1211::PRS_SERVICE_REQUEST_OID, updatedSetData)) {
                 PLOG(logERROR) << "PRS failed to SET prsServiceRequest to CO after prioritization";
                 return ExchangeResult::SnmpSetFailed;
             }

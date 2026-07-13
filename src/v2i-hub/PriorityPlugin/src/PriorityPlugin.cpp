@@ -41,7 +41,7 @@ namespace PriorityPlugin {
 			UpdateConfigSettings();
 
             // Start the PRS-CO exchange loop thread if in PRS mode
-            if (_pluginRole == "PRS" && !_running) {
+            if (_pluginRole == PluginRole::PRS && !_running) {
                 _running = true;
                 _exchangeThread = std::thread(&PriorityPlugin::ServiceExchangeLoop, this);
                 PLOG(logINFO) << "Started PRS-CO service exchange loop thread.";
@@ -59,7 +59,13 @@ namespace PriorityPlugin {
     {
         std::string tscControllersJson;
         GetConfigValue<std::string>("TSC_Configuration_List", tscControllersJson);
-        GetConfigValue<std::string>("PluginRole", _pluginRole);
+        std::string pluginRoleStr;
+        GetConfigValue<std::string>("PluginRole", pluginRoleStr);
+        try {
+            _pluginRole = parsePluginRole(pluginRoleStr);
+        } catch (const PriorityConfigurationException &e) {
+            PLOG(logERROR) << "Keeping role " << pluginRoleToString(_pluginRole) << ": " << e.what();
+        }
         GetConfigValue<uint16_t>("EstimatedTimeofArrival", _estimatedArrivalTime);
         GetConfigValue<uint16_t>("EstimatedDepartureTime", _estimatedDepartureTime);
         if (_estimatedArrivalTime < 1) {
@@ -80,7 +86,12 @@ namespace PriorityPlugin {
         // Parse per-class reservice times (comma-separated, up to 10 values)
         std::string reserviceStr;
         GetConfigValue<std::string>("ReserviceClassTimes", reserviceStr);
-        _reserviceClassTime = parseReserviceClassTimes(reserviceStr);
+        try {
+            _reserviceClassTime = parseReserviceClassTimes(reserviceStr);
+        } catch (const PriorityConfigurationException &e) {
+            PLOG(logERROR) << "Invalid ReserviceClassTimes, keeping zeroed reservice times: " << e.what();
+            _reserviceClassTime = {};
+        }
 
         // Repopulate the processor's lane-strategy map from the LaneStrategyMapping JSON array
         std::string laneStrategyJson;
@@ -104,6 +115,8 @@ namespace PriorityPlugin {
             PLOG(logERROR) << "Failed to parse LaneStrategyMapping JSON: " << e.what();
         } catch (const boost::property_tree::ptree_error &e) {
             PLOG(logERROR) << "Invalid LaneStrategyMapping entry: " << e.what();
+        } catch (const PriorityConfigurationException &e) {
+            PLOG(logERROR) << "Invalid LaneStrategyMapping: " << e.what();
         }
 
         // Parse the TSC_Controllers JSON array and create an SNMP client per entry
@@ -129,9 +142,7 @@ namespace PriorityPlugin {
 
                     // Display the failure in the UI and the event log
                     SetStatus<std::string>(("Controller " + std::to_string(info.intersectionID)).c_str(), "Disconnected");
-                    tmx::messages::TmxEventLogMessage eventLogMsg;
-                    eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
-                    eventLogMsg.set_description(detail);
+                    TmxEventLogMessage eventLogMsg(e, detail, false);
                     BroadcastMessage(eventLogMsg, GetName());
                     continue;
                 }
@@ -144,10 +155,12 @@ namespace PriorityPlugin {
             PLOG(logERROR) << "Failed to parse TSC_Controllers JSON: " << e.what();
         } catch (const boost::property_tree::ptree_error &e) {
             PLOG(logERROR) << "Invalid TSC_Controllers entry: " << e.what();
+        } catch (const PriorityConfigurationException &e) {
+            PLOG(logERROR) << "Invalid TSC_Controllers configuration: " << e.what();
         }
 
         PLOG(logINFO) << "PriorityPlugin configured: " << _controllers.size() << " controller(s)"
-                                    << " Role=" << _pluginRole
+                                    << " Role=" << pluginRoleToString(_pluginRole)
                                     << " PollInterval=" << _pollIntervalMs << "ms"
                                     << " TimeToLive=" << _timeToLiveSec << "s";
     }
@@ -155,7 +168,7 @@ namespace PriorityPlugin {
     void PriorityPlugin::HandleSRM(SrmMessage &msg, tmx::routeable_message &routeableMsg)
     {
         PLOG(logINFO) << "Received Signal Request Message (SRM)";
-        tmx::messages::SrmEncodedMessage srmEnc(routeableMsg);
+        SrmEncodedMessage srmEnc(routeableMsg);
         auto srmDecoded = srmEnc.decode_j2735_message();
         auto srm = srmDecoded.get_j2735_data();
 
@@ -184,7 +197,7 @@ namespace PriorityPlugin {
             uint8_t newSeq = srm->sequenceNumber ? static_cast<uint8_t>(*srm->sequenceNumber) : 0;
 
             // PRS mode: handle SRM per NTCIP 1211 4.2.3.1 (how PRS receives a priority request from a PRG).
-            if (_pluginRole == "PRS") {
+            if (_pluginRole == PluginRole::PRS) {
                 // Dedup: the same SRM may sometimes be routed back from multiple nearby intersections.
                 if (auto existing = _prsLastSeqByVehicle.find(vehicleKey);
                     existing != _prsLastSeqByVehicle.end() && existing->second == newSeq) {
@@ -360,7 +373,7 @@ namespace PriorityPlugin {
                         ctrlIt != _controllers.end()) {
                         PLOG(logDEBUG) << "Sending prgPriorityClear for requestID=" << static_cast<int>(tracked.requestID)
                                        << " intersectionID=" << tracked.intersectionID;
-                        SnmpSet(ctrlIt->second.snmpClient, tsc::mib::ntcip1211::NTCIP1211_PRIORITY_CLEAR_OID, clearEncoded);
+                        SnmpSet(ctrlIt->second.snmpClient, tsc::mib::ntcip1211::PRIORITY_CLEAR_OID, clearEncoded);
                     }
                     it = _prgTrackedRequests.erase(it);
                     break;
@@ -438,7 +451,7 @@ namespace PriorityPlugin {
             free(frame.get_j2735_data().get()); // NOSONAR: ASN.1 C struct allocated via calloc
 
             encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
-            encodedSSM.addDsrcMetadata(tmx::messages::api::signalStatusMessage_PSID);
+            encodedSSM.addDsrcMetadata(api::signalStatusMessage_PSID);
             BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));
             PLOG(logDEBUG) << "SSM broadcast.";
         } catch (const std::invalid_argument &ex) {

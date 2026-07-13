@@ -15,6 +15,7 @@
  */
 
 #include "PriorityConfiguration.hpp"
+#include "PriorityConfigurationException.hpp"
 
 #include <sstream>
 #include <stdexcept>
@@ -31,10 +32,10 @@ namespace PriorityPlugin {
 
     std::vector<ControllerConfig> parseTscConfigurationList(const std::string &json)
     {
-        std::vector<ControllerConfig> configs;
         if (json.empty()) {
-            return configs;
+            throw PriorityConfigurationException("TSC_Configuration_List JSON is empty");
         }
+        std::vector<ControllerConfig> configs;
 
         boost::property_tree::ptree pt;
         std::istringstream iss(json);
@@ -52,10 +53,10 @@ namespace PriorityPlugin {
 
     std::vector<LaneStrategyEntry> parseLaneStrategyMapping(const std::string &json)
     {
-        std::vector<LaneStrategyEntry> entries;
         if (json.empty()) {
-            return entries;
+            throw PriorityConfigurationException("LaneStrategyMapping JSON is empty");
         }
+        std::vector<LaneStrategyEntry> entries;
 
         boost::property_tree::ptree pt;
         std::istringstream iss(json);
@@ -80,10 +81,10 @@ namespace PriorityPlugin {
 
     std::array<uint32_t, ReserviceClassTimesSize> parseReserviceClassTimes(const std::string &reserviceStr)
     {
-        std::array<uint32_t, ReserviceClassTimesSize> result{};
         if (reserviceStr.empty()) {
-            return result;
+            throw PriorityConfigurationException("ReserviceClassTimes string is empty");
         }
+        std::array<uint32_t, ReserviceClassTimesSize> result{};
 
         std::istringstream rss(reserviceStr);
         std::string tok;
@@ -101,6 +102,17 @@ namespace PriorityPlugin {
             idx++;
         }
         return result;
+    }
+
+    PluginRole parsePluginRole(const std::string &role)
+    {
+        if (role == "PRS") {
+            return PluginRole::PRS;
+        }
+        if (role == "PRG") {
+            return PluginRole::PRG;
+        }
+        throw PriorityConfigurationException(R"(PluginRole must be "PRS" or "PRG", got: ')" + role + "'");
     }
 
 } /* namespace PriorityPlugin */

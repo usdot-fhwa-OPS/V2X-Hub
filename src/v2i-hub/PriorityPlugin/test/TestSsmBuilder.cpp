@@ -123,7 +123,7 @@ TEST(BuildSsmFromTableTest, SingleEntryYieldsOneStatusAndPackage) {
     auto st = fix.state();
     auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     EXPECT_EQ(SignalStatusCount(ssm.get()), 1);
     EXPECT_EQ(FirstSignalStatusPackageCount(ssm.get()), 1);
     EXPECT_EQ(ssm->status.list.array[0]->id.id, TEST_INTERSECTION_ID);
@@ -214,9 +214,9 @@ TEST(BuildSsmFromRequestorTest, RejectedRequestMapsToRejectedStatus) {
     auto st = fix.state();
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, st);
 
-    ASSERT_NE(ssm, nullptr);
-    ASSERT_EQ(SignalStatusCount(ssm.get()), 1);
-    ASSERT_EQ(FirstSignalStatusPackageCount(ssm.get()), 1);
+    EXPECT_NE(ssm, nullptr);
+    EXPECT_EQ(SignalStatusCount(ssm.get()), 1);
+    EXPECT_EQ(FirstSignalStatusPackageCount(ssm.get()), 1);
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
     EXPECT_EQ(pkg->status, PrioritizationResponseStatus_rejected);
     EXPECT_EQ(pkg->inboundOn.present, IntersectionAccessPoint_PR_lane);
@@ -241,7 +241,7 @@ TEST(BuildSsmFromRequestorTest, CancellationMapsToWatchOtherTraffic) {
     auto st = fix.state();
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     EXPECT_EQ(ssm->status.list.array[0]->sigStatus.list.array[0]->status, PrioritizationResponseStatus_watchOtherTraffic);
 }
 
@@ -261,9 +261,9 @@ TEST(BuildSsmFromTableTest, RequesterChoiceVariants) {
         auto st = fix.state();
         auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-        ASSERT_NE(ssm, nullptr);
+        EXPECT_NE(ssm, nullptr);
         auto *requester = ssm->status.list.array[0]->sigStatus.list.array[0]->requester;
-        ASSERT_NE(requester, nullptr);
+        EXPECT_NE(requester, nullptr);
         EXPECT_EQ(requester->id.present, VehicleID_PR_stationID);
         EXPECT_EQ(requester->id.choice.stationID, station);
     }
@@ -279,9 +279,9 @@ TEST(BuildSsmFromTableTest, RequesterChoiceVariants) {
         auto st = fix.state();
         auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-        ASSERT_NE(ssm, nullptr);
+        EXPECT_NE(ssm, nullptr);
         auto *requester = ssm->status.list.array[0]->sigStatus.list.array[0]->requester;
-        ASSERT_NE(requester, nullptr);
+        EXPECT_NE(requester, nullptr);
         EXPECT_EQ(requester->id.present, VehicleID_PR_NOTHING);
     }
 }
@@ -300,7 +300,7 @@ TEST(BuildSsmFromTableTest, OmitMinuteAndDuration) {
     auto st = fix.state();
     auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
     EXPECT_EQ(pkg->inboundOn.present, IntersectionAccessPoint_PR_approach);
     EXPECT_EQ(pkg->inboundOn.choice.approach, 5);
@@ -320,7 +320,7 @@ TEST(BuildSsmFromTableTest, CoActiveState) {
     auto st = fix.state();
     auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     // CO activeProcessing wins over the PRS readyQueued for the SSM status 
     // Active service is reported as granted
     EXPECT_EQ(ssm->status.list.array[0]->sigStatus.list.array[0]->status, PrioritizationResponseStatus_granted);
@@ -365,7 +365,7 @@ TEST(BuildSsmFromTableTest, OneIntersectionEntryOneSignalStatus) {
     auto st = fix.state();
     auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     EXPECT_EQ(SignalStatusCount(ssm.get()), 1); // 1 intersection, one status
     EXPECT_EQ(FirstSignalStatusPackageCount(ssm.get()), 2); // 2 packages in one status
     EXPECT_EQ(ssm->status.list.array[0]->id.id, TEST_INTERSECTION_ID);
@@ -390,8 +390,8 @@ TEST(BuildSsmFromTableTest, TwoIntersectionEntriesTwoSignalStatuses) {
     auto st = fix.state();
     auto ssm = BuildSsmFromTable(table, TEST_MAX_BROADCASTS, TEST_NOW_EPOCH, st);
 
-    ASSERT_NE(ssm, nullptr);
-    ASSERT_EQ(SignalStatusCount(ssm.get()), 2); // 2 intersections, 2 statuses
+    EXPECT_NE(ssm, nullptr);
+    EXPECT_EQ(SignalStatusCount(ssm.get()), 2); // 2 intersections, 2 statuses
     EXPECT_EQ(ssm->status.list.array[0]->id.id, TEST_INTERSECTION_ID);
     EXPECT_EQ(ssm->status.list.array[0]->sigStatus.list.count, 1);
     EXPECT_EQ(ssm->status.list.array[0]->sigStatus.list.array[0]->requester->request, TEST_REQUEST_ID);
@@ -419,7 +419,7 @@ TEST(BuildSsmFromRequestorTest, InboundApproachSet) {
     auto st = fix.state();
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
     EXPECT_EQ(pkg->inboundOn.present, IntersectionAccessPoint_PR_approach);
     EXPECT_EQ(pkg->inboundOn.choice.approach, 3);
@@ -445,7 +445,7 @@ TEST(BuildSsmFromRequestorTest, FallbackWhenDepartureNotAfterArrival) {
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, /*arrival*/ 30, /*departure*/ 20, st);
 
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
-    ASSERT_NE(pkg->duration, nullptr);
+    EXPECT_NE(pkg->duration, nullptr);
     EXPECT_EQ(*pkg->duration, 20 * 1000);
 }
 
@@ -465,7 +465,7 @@ TEST(BuildSsmFromRequestorTest, DurationFromEstimateWhenDepartureAfterArrival) {
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, st);
 
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
-    ASSERT_NE(pkg->duration, nullptr);
+    EXPECT_NE(pkg->duration, nullptr);
     EXPECT_EQ(*pkg->duration, (TEST_EST_DEPARTURE - TEST_EST_ARRIVAL) * 1000);
 }
 
@@ -487,8 +487,8 @@ TEST(BuildSsmFromRequestorTest, EtaFallbackWhenMinuteAbsent) {
     auto st = fix.state();
     auto ssm = BuildSsmFromRequestor(state, TEST_NOW_MS, TEST_EST_ARRIVAL, TEST_EST_DEPARTURE, st);
 
-    ASSERT_NE(ssm, nullptr);
+    EXPECT_NE(ssm, nullptr);
     auto &pkg = ssm->status.list.array[0]->sigStatus.list.array[0];
-    ASSERT_NE(pkg->minute, nullptr); // fallback logic triggered; not null
+    EXPECT_NE(pkg->minute, nullptr); // fallback logic triggered; not null
     EXPECT_EQ(pkg->status, PrioritizationResponseStatus_processing);
 }
