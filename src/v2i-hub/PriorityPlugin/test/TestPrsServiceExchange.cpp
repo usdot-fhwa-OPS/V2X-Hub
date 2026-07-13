@@ -110,11 +110,11 @@ TEST(SnmpHelpersTest, SetFailureReturnsFalse) {
 TEST(SnmpHelpersTest, GetReturnsResponseBytes) {
     auto mock = MakeMockClient();
     EXPECT_CALL(*mock, process_snmp_request(SERVICE_OID, request_type::GET, _))
-        .WillOnce(RespondWith({0xAA, 0xBB}));
+        .WillOnce(RespondWith({0x0A, 0x0B}));
 
     std::vector<uint8_t> data;
     EXPECT_TRUE(SnmpGet(mock, SERVICE_OID, data));
-    EXPECT_EQ(data, (std::vector<uint8_t>{0xAA, 0xBB}));
+    EXPECT_EQ(data, (std::vector<uint8_t>{0x0A, 0x0B}));
 }
 
 TEST(SnmpHelpersTest, GetFailureReturnsFalse) {
