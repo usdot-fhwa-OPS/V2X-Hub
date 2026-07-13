@@ -20,43 +20,49 @@
 
 using namespace PriorityPlugin;
 
-TEST(ExtractVehicleIDTest, EntityIDNull) {
-    VehicleID_t id{};
-    id.present = VehicleID_PR_entityID;
-    id.choice.entityID.buf = nullptr;
-    id.choice.entityID.size = 0;
+TEST(ExtractVehicleIDTest, VehicleIDChoices) {
+    // entityID choice with a null buffer yields an empty vector
+    {
+        VehicleID_t id{};
+        id.present = VehicleID_PR_entityID;
+        id.choice.entityID.buf = nullptr;
+        id.choice.entityID.size = 0;
 
-    EXPECT_TRUE(ExtractVehicleID(id).empty());
-}
+        EXPECT_TRUE(ExtractVehicleID(id).empty());
+    }
 
-TEST(ExtractVehicleIDTest, EntityIDBytes) {
-    uint8_t raw[] = {0xAA, 0xBB, 0xCC, 0xDD};
-    VehicleID_t id{};
-    id.present = VehicleID_PR_entityID;
-    id.choice.entityID.buf = raw;
-    id.choice.entityID.size = sizeof(raw);
+    // entityID choice with bytes is copied through directly
+    {
+        uint8_t raw[] = {0xAA, 0xBB, 0xCC, 0xDD};
+        VehicleID_t id{};
+        id.present = VehicleID_PR_entityID;
+        id.choice.entityID.buf = raw;
+        id.choice.entityID.size = sizeof(raw);
 
-    auto out = ExtractVehicleID(id);
-    EXPECT_EQ(out, (std::vector<uint8_t>{0xAA, 0xBB, 0xCC, 0xDD}));
-}
+        auto out = ExtractVehicleID(id);
+        EXPECT_EQ(out, (std::vector<uint8_t>{0xAA, 0xBB, 0xCC, 0xDD}));
+    }
 
-TEST(ExtractVehicleIDTest, StationID) {
-    VehicleID_t id{};
-    id.present = VehicleID_PR_stationID;
-    id.choice.stationID = 0x11223344;
+    // stationID choice is serialized into its byte representation
+    {
+        VehicleID_t id{};
+        id.present = VehicleID_PR_stationID;
+        id.choice.stationID = 0x11223344;
 
-    auto out = ExtractVehicleID(id);
-    ASSERT_EQ(out.size(), sizeof(StationID_t));
-    StationID_t decoded = 0;
-    std::memcpy(&decoded, out.data(), sizeof(decoded));
-    EXPECT_EQ(decoded, 0x11223344UL);
-}
+        auto out = ExtractVehicleID(id);
+        ASSERT_EQ(out.size(), sizeof(StationID_t));
+        StationID_t decoded = 0;
+        std::memcpy(&decoded, out.data(), sizeof(decoded));
+        EXPECT_EQ(decoded, 0x11223344UL);
+    }
 
-TEST(ExtractVehicleIDTest, NothingPresent) {
-    VehicleID_t id{};
-    id.present = VehicleID_PR_NOTHING;
+    // No choice present yields an empty vector
+    {
+        VehicleID_t id{};
+        id.present = VehicleID_PR_NOTHING;
 
-    EXPECT_TRUE(ExtractVehicleID(id).empty());
+        EXPECT_TRUE(ExtractVehicleID(id).empty());
+    }
 }
 
 TEST(ComputeMinuteAndMsOfYearTest, KnownTimestamp) {
@@ -82,29 +88,23 @@ TEST(ComputeEtaOffsetMsTest, SmallNegativeOffsetIsNotWrapped) {
 
 TEST(ComputeEtaOffsetMsTest, DecJanBoundaryWraps) {
     // ETA minute 1 (early Jan) vs current minute 525950 (late Dec)
-    // Offset is almost a year in the past, so it wraps forward.
+    // Offset is almost a year in the past, so it wraps forward
     constexpr long YEAR_MS = 525960L * 60L * 1000L;
     long expected = (1L * 60000L) + YEAR_MS - (525950L * 60000L);
     EXPECT_EQ(ComputeEtaOffsetMs(1, 0, 525950, 0), expected);
     EXPECT_GT(expected, 0L);
 }
 
-TEST(ClassifyStaleTrackedRequestTest, OldCanceledIsCleared) {
+TEST(ClassifyStaleTrackedRequestTest, ClassifyByCanceledAndTtlState) {
+    // Canceled and old enough to clear; canceled takes precedence over TTL eviction
     EXPECT_EQ(ClassifyStaleTrackedRequest(true, 2, 100), StaleTrackedAction::SendClearAndErase);
-    // Canceled takes precedence over TTL eviction
     EXPECT_EQ(ClassifyStaleTrackedRequest(true, 500, 100), StaleTrackedAction::SendClearAndErase);
-}
-
-TEST(ClassifyStaleTrackedRequestTest, CanceledTooRecentIsKept) {
+    // Canceled but too recent to clear yet
     EXPECT_EQ(ClassifyStaleTrackedRequest(true, 1, 100), StaleTrackedAction::Keep);
-}
-
-TEST(ClassifyStaleTrackedRequestTest, TtlExpiryEvicts) {
+    // Not canceled, but TTL expired
     EXPECT_EQ(ClassifyStaleTrackedRequest(false, 100, 100), StaleTrackedAction::Evict);
     EXPECT_EQ(ClassifyStaleTrackedRequest(false, 101, 100), StaleTrackedAction::Evict);
-}
-
-TEST(ClassifyStaleTrackedRequestTest, FreshRequestIsKept) {
+    // Not canceled, TTL not yet expired
     EXPECT_EQ(ClassifyStaleTrackedRequest(false, 99, 100), StaleTrackedAction::Keep);
     EXPECT_EQ(ClassifyStaleTrackedRequest(false, 0, 100), StaleTrackedAction::Keep);
 }

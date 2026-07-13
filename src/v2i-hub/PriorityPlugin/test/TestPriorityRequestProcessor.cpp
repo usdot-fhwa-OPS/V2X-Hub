@@ -320,12 +320,8 @@ TEST(PriorityRequestProcessorTest, LookupStrategyTest) {
     EXPECT_EQ(proc.LookupStrategy(106, 1).value(), 3);
     EXPECT_FALSE(proc.LookupStrategy(100, 3).has_value());
     EXPECT_FALSE(proc.LookupStrategy(300, 1).has_value());
-}
-
-TEST(PriorityRequestProcessorTest, LookupStrategyNegativeLaneTest) {
-    PriorityRequestProcessor proc;
-    proc.SetLaneStrategy(100, 1, 5); // intersectionID, lane, strategyNumber
-    EXPECT_FALSE(proc.LookupStrategy(100, -1).has_value());
+    // A negative lane never matches, even for a configured intersection
+    EXPECT_FALSE(proc.LookupStrategy(9709, -1).has_value());
 }
 
 TEST(PriorityRequestProcessorTest, ClearLaneStrategyMap) {
