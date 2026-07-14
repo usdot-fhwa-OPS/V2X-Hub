@@ -101,6 +101,7 @@ void MessageReceiverPlugin::UpdateConfigSettings()
 	GetConfigValue("FullSPDUMode", fullSPDUMode);
 	_skippedSignVerifyErrorResponse = 0;
 	SetStatus<uint>(Key_SkippedSignVerifyError, _skippedSignVerifyErrorResponse);
+	SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
 
 	getmessageid();
 
@@ -302,6 +303,10 @@ int MessageReceiverPlugin::Main()
 					{
 						PLOG(logERROR) << "Error parsing SPDU Messages";
 						continue;
+					}
+					else{
+						_processedSPDU++;
+						SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
 					}
 					
 					
