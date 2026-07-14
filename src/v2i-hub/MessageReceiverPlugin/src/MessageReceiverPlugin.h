@@ -77,7 +77,9 @@ private:
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
 	uint _skippedSignVerifyErrorResponse;
+	uint _processedSPDU = 0;
 	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
+	const char* Key_ProcessedSPDU = "Message Processed (SPDU)";
 	long identifyJ2735Type(const std::vector<uint8_t>& payload);
 	bool findMessageId(const std::string& hex, size_t& idloc, int& hexLen, long& dsrcMsgId);
 	bool buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut);
