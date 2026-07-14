@@ -247,8 +247,6 @@ bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int
 	PLOG(logDEBUG) << "RawSpdu.spdu_data  (" << sd.size() << " B): " << so.str();
     PLOG(logDEBUG) << "RawSpdu.uuid       (" << id.size() << " B): " << uo.str();
     PLOG(logDEBUG) << "RawSpdu.timestamp_ms = " << out.get_timestamp_ms();
-	string name(payloadOut.get_subtype());
-	PLOG(logDEBUG) << "RawSpdu.msg_type     = " << name;
     PLOG(logDEBUG) << "RawSpdu.psid         = " << out.get_psid();
     PLOG(logDEBUG) << "RawSpdu.channel      = " << out.get_channel();
     PLOG(logDEBUG) << "RawSpdu.msg_type     = " << out.get_msg_type();
