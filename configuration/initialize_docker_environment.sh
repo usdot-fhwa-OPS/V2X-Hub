@@ -45,7 +45,7 @@ if [[ "$interactive" == true ]]; then
     V2XHUB_IP_DEFAULT="0.0.0.0"
     SIMULATION_MODE_DEFAULT="FALSE"
     SENSOR_JSON_FILE_PATH_DEFAULT="/var/www/download/sensors.json"
-    V2XHUB_VOLUME_PATH_DEFAULT="/tmp/v2xhub_data/"
+    V2XHUB_VOLUME_PATH_DEFAULT="/tmp/v2xhub_data"
     COMPOSE_PROFILES=""
 
     echo "Initializing Docker Environment for V2X Hub..."
@@ -149,7 +149,7 @@ if [[ "$interactive" == true ]]; then
         ENV_FILE_CONTENT="
         V2XHUB_VERSION=$V2XHUB_VERSION
         INFRASTRUCTURE_ID=$INFRASTRUCTURE_ID
-        INFRASTRUCTURE_NAME=$INFRASTRUCTURE_NAME
+        INFRASTRUCTURE_NAME=\"$INFRASTRUCTURE_NAME\"
         V2XHUB_IP=$V2XHUB_IP
         SIMULATION_MODE=$SIMULATION_MODE
         COMPOSE_PROFILES=$COMPOSE_PROFILES
