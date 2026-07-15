@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Script for testing multiple SRMs with the Priority Plugin. This script allows the user to configure multiple SRM entries using a UI.
+   SRM entries can be udp-sent once or a simulated approach to an intersection can be udp-sent to V2X Hub at the Message Receiver Plugin."""
 import datetime
 import time
 import sys
@@ -493,10 +495,10 @@ class MainWindow(QMainWindow):
     def _on_simulate(self):
         """Start (or cancel) a 1 Hz approach simulation.
 
-        Sends a single priorityRequest with the table's entries, then fires
-        priorityRequestUpdate messages every second. On each tick the vehicle
-        advances by (speed_mps * 1 s), consuming distance_m first, then
-        clearance_m. The simulation stops once every entry has cleared the
+        Sends a series of SRMs. The first message is sent as a priorityRequest.
+        Subsequest messages are sent with their request set to priorityRequestUpdate.
+        On each tick, the vehicle advances by (speed_mps * 1 s), consuming distance_m first, 
+        then clearance_m. The simulation stops once every entry has cleared the
         intersection (distance_m == 0 and clearance_m == 0).
         """
         if self._sim_timer.isActive():

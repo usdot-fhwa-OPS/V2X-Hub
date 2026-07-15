@@ -1,4 +1,6 @@
 #!/bin/bash
+# This script installs the dependencies required to run the mock-srm.py script. 
+
 set -e
 
 # Dependencies

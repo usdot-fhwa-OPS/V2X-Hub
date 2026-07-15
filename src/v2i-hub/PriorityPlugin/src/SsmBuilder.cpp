@@ -38,7 +38,7 @@ namespace PriorityPlugin {
         // Allocates a zeroed ASN.1 struct.
         template <typename T>
         T *AllocAsn() {
-            return static_cast<T *>(calloc(1, sizeof(T))); // NOSONAR - freed via free() by ASN_STRUCT_FREE
+            return static_cast<T *>(calloc(1, sizeof(T)));
         }
 
         // Allocates a zeroed ASN.1 scalar.
@@ -51,7 +51,7 @@ namespace PriorityPlugin {
 
         // Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
         uint8_t *AllocAsnBuffer(size_t size) {
-            return static_cast<uint8_t *>(calloc(size, 1)); // NOSONAR - freed via free() by ASN_STRUCT_FREE
+            return static_cast<uint8_t *>(calloc(size, 1));
         }
 
         // Allocates a SignalStatusMessage_t, owned by a shared_ptr.

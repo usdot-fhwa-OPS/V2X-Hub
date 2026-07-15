@@ -297,15 +297,15 @@ TEST(PriorityRequestProcessorTest, MapVehicleClassWorkGroup) {
 TEST(PriorityRequestProcessorTest, MapVehicleClassTruckGroup) {
     using P = std::pair<uint8_t, uint8_t>;
     EXPECT_EQ(MapVehicleClass(3),  (P{7, 1}));
-    EXPECT_EQ(MapVehicleClass(9),  (P{7, 2}));
-    EXPECT_EQ(MapVehicleClass(17), (P{7, 3}));
-    EXPECT_EQ(MapVehicleClass(18), (P{7, 4}));
+    EXPECT_EQ(MapVehicleClass(2),  (P{7, 2}));
+    EXPECT_EQ(MapVehicleClass(9),  (P{7, 3}));
+    EXPECT_EQ(MapVehicleClass(17), (P{7, 4}));
+    EXPECT_EQ(MapVehicleClass(18), (P{7, 5}));
 }
 
 TEST(PriorityRequestProcessorTest, MapVehicleClassDefault) {
     using P = std::pair<uint8_t, uint8_t>;
     EXPECT_EQ(MapVehicleClass(0),   (P{10, 1}));
-    EXPECT_EQ(MapVehicleClass(2),   (P{10, 1}));
     EXPECT_EQ(MapVehicleClass(99),  (P{10, 1}));
     EXPECT_EQ(MapVehicleClass(-1),  (P{10, 1}));
 }

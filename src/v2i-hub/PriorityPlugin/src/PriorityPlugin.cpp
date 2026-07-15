@@ -447,9 +447,8 @@ namespace PriorityPlugin {
         try {
             SsmEncodedMessage encodedSSM;
             MessageFrameMessage frame(ssmPtr);
-            encodedSSM.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
-            free(frame.get_j2735_data().get()); // NOSONAR: ASN.1 C struct allocated via calloc
 
+            encodedSSM.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame));
             encodedSSM.set_flags(IvpMsgFlags_RouteDSRC);
             encodedSSM.addDsrcMetadata(api::signalStatusMessage_PSID);
             BroadcastMessage(static_cast<tmx::routeable_message &>(encodedSSM));

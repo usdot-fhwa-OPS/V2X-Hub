@@ -545,12 +545,12 @@ TEST (J2735MessageTest, EncodeSrm)
 	request_package_2->request = *request_2;
 	asn_sequence_add(&requests->list.array, request_package_2);
 	message->requests = requests;
-	tmx::messages::SrmEncodedMessage srmEncodeMessage;
-	auto _srmMessage = new tmx::messages::SrmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
+
+
+	SrmEncodedMessage srmEncodeMessage;
+	auto _srmMessage = new SrmMessage(message);
+	MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
-	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
 	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
@@ -611,7 +611,6 @@ TEST (J2735MessageTest, EncodeSsm)
 	tmx::messages::MessageFrameMessage frame_msg(_ssmMessage->get_j2735_data());
 	ssmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 	j2735::j2735_destroy<SsmTraits>(message);
-	free(frame_msg.get_j2735_data().get());
 
 	// Test encoding
 	std::string expectedSsmEncHex = "001e1b6205cedea802000897b40b9004303028040a000437aa345989c408";

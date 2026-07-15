@@ -94,10 +94,11 @@ namespace PriorityPlugin {
             case 15: return {5, 1}; // dot
             case 4:  return {5, 2}; // roadWork
             case 3:  return {7, 1}; // dangerousGoods
-            case 9:  return {7, 2}; // truck
-            case 17: return {7, 3}; // slowMoving
-            case 18: return {7, 4}; // stopNgo
-            default: return {10, 1};
+            case 2:  return {7, 2}; // specialTransport (heavy load)
+            case 9:  return {7, 3}; // truck
+            case 17: return {7, 4}; // slowMoving
+            case 18: return {7, 5}; // stopNgo
+            default: return {10, 1}; // (0 basicVehicle, 8 non-unknown, 10 motorcycle, 19 cyclist, 20 pedestrian, 21 nonMotorized, 22 military)
         }
     }
 
