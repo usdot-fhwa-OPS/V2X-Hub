@@ -29,7 +29,7 @@ When `PluginRole` is `PRS`, the plugin implements the PRS role of the NTCIP 1211
    - Encodes the table into a `prsServiceRequest` and SNMP SETs it to the CO.
    - SNMP GETs `prsServiceRequest` back from the CO, polling until `coBusy` is false.
    - Applies CO-side status updates to the table, runs NTCIP 1211 prioritization (sorts queued entries by class type, then class level, then soonest TSD, and expires stale rows), and SETs the updated table back to the CO.
-4. After each exchange, builds and broadcasts one SSM per intersection reflecting the effective status of every non-idle row. Broadcasts per row are throttled by `MaxBroadcastsPerStatus`. The counter resets whenever the effective status changes.
+4. After each exchange, builds and broadcasts a single SSM containing one `SignalStatus` per intersection, reflecting the effective status of every non-idle row. Broadcasts per row are throttled by `MaxBroadcastsPerStatus`. The counter resets whenever the effective status changes.
 
 ### PRG Mode
 
@@ -70,7 +70,7 @@ The plugin subscribes to `SrmMessage` via `TmxMessageManager` and routes incomin
 `PriorityRequestProcessor` owns the PRS-side state: the 10-row priority request table, the lane-strategy map, the per-class reservice timestamps, and the OER encode/decode routines for `prgPriorityRequestAbsolute`, `prgPriorityUpdateAbsolute`, `prgPriorityCancel`, `prgPriorityClear`, and `prsServiceRequest`. All access to the table is serialized by `_tableMutex` because the PRS background exchange loop and the message-receiving thread both touch it.
 
 ### Response Generation
-SSM generation lives in `PriorityPluginMessaging.cpp`. `BroadcastSSMFromTable` (PRS mode) probes the priorityRequestTable, groups entries by intersection, and builds one `SignalStatus` per intersection with a per-package `PrioritizationResponseStatus`, which is mapped from the NTCIP status. `BuildSSM` (PRG mode) emits one SSM per incoming SRM using the per-requestor `RequestorState` built during dispatch.
+SSM generation lives in `SsmBuilder.cpp`. Both builders produce a single SSM containing one `SignalStatus` per intersection, with one `SignalStatusPackage` per request. `BuildSsmFromTable` (PRS mode) walks the priorityRequestTable, skipping idle rows and rows that have exhausted `MaxBroadcastsPerStatus`, and maps each remaining row's effective NTCIP status to a J2735 `PrioritizationResponseStatus` via `MapNTCIPstatusToSSM`. `BuildSsmFromRequestor` (PRG mode) builds an SSM from the per-requestor `RequestorState` populated while dispatching the SRM; because the PRG receives no NTCIP status feedback, each package status is set directly from the dispatch outcome (`processing`, `rejected`, or `watchOtherTraffic`) rather than mapped from an NTCIP status. The plugin invokes this builder `MaxBroadcastsPerStatus` times per received SRM.
 
 See `NTCIP 1211 v02A-SE03, Object Definitions for Signal Control and Prioritization (SCP) Published August 2017` at [Published Standards](https://www.ntcip.org/document-numbers-and-status/).
 
@@ -82,7 +82,7 @@ See `NTCIP 1211 v02A-SE03, Object Definitions for Signal Control and Prioritizat
 
 ## Functionality Testing
 
-The `scripts/` directory contains a mock SRM generator that can drive the plugin without an OBU. See `scripts/README.md` for setup. 
+The `scripts/` directory contains a mock SRM generator that can drive the plugin without an OBU. I working Traffic Signal Controller with a configured Priority entry is still required. See `scripts/README.md` for setup mock SRM generator instructions. 
 
 ### Workflow:
 
