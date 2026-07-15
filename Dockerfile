@@ -38,12 +38,13 @@ WORKDIR /home/V2X-Hub/container/
 RUN ./database.sh && ./library.sh && ldconfig
 # Built Plugins
 COPY --from=dependencies --chown=plugin:adm --chmod=544 /usr/local/plugins/ /usr/local/plugins/
-# Built Libraries for V2X Hub (tmx services)
+# Copy built tmx libraries
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxapi.* /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxctlStatic.a /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxutils.a /usr/local/lib/
-COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/share/tmx/*.cmake /usr/local/share/tmx/
-COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/include/tmxutils/*.h* /usr/local/include/tmxutils/
+# Copy installed CMake config files and headers for tmx libraries 
+COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/share/tmx/ /usr/local/share/tmx/
+COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/include/tmx/ /usr/local/include/tmx/
 
 # Built libraries in ext/ (e.g. libsnmp, libqhttpengine, etc)
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libv2xhubWebAPI.a /usr/local/lib/
