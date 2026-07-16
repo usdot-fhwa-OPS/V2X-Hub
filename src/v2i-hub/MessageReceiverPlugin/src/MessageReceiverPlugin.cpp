@@ -6,9 +6,9 @@
  */
 
 #include "MessageReceiverPlugin.h"
+#include "Utils.h"
 
 
-#define IDCHECKLIMIT 60
 using namespace std;
 using namespace boost::asio;
 using namespace tmx;
@@ -127,113 +127,6 @@ void MessageReceiverPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
-bool MessageReceiverPlugin::unwrapSpdu(const Ieee1609Dot2Data_t* d, std::vector<uint8_t>& payloadOut, uint32_t& psidOut, bool& psidSet)
-{
-	//Implementation notes for this function: psidOut and psidSet are not overwritten unless a PSID exists within the message.
-	//psidOut and psidSet might be modified even if the overall return is false and the unwrap operation failed.
-    if (d->protocolVersion != 3)      return false;
-
-    switch (d->content->present) {
-        case Ieee1609Dot2Content_PR_unsecuredData: {
-            const Opaque_t& op = d->content->choice.unsecuredData;
-            if (!op.buf || op.size <= 0) return false;
-            payloadOut.assign(op.buf, op.buf + op.size);
-            return true;
-        }
-        case Ieee1609Dot2Content_PR_signedData: {              // recurse
-            const SignedData_t* sd = d->content->choice.signedData;
-            if (!sd) return false;
-            if (!psidSet) {
-                psidOut = static_cast<uint32_t>(sd->tbsData->headerInfo.psid);
-                psidSet = true;
-            }
-            const Ieee1609Dot2Data_t* next = sd->tbsData->payload->data;  // OPTIONAL
-            if (!next) {
-				return false;
-			}
-            return unwrapSpdu(next, payloadOut, psidOut, psidSet);
-        }
-
-        default:
-            return false;                // unknown CHOICE
-    }
-}
-
-int64_t MessageReceiverPlugin::identifyJ2735Type(const std::vector<uint8_t>& payload)
-{
-    std::stringstream ss;
-    ss << std::hex << std::setfill('0');
-    size_t n = std::min<size_t>(payload.size(), IDCHECKLIMIT / 2);
-    for (size_t i = 0; i < n; ++i)
-        ss << std::setw(2) << static_cast<unsigned>(payload[i]);
-
-    size_t idloc; int mlen; long msgId;
-    return findMessageId(ss.str(), idloc, mlen, msgId) ? msgId : -1;
-}
-
-bool MessageReceiverPlugin::findMessageId(const std::string& hex, size_t& idloc,
-                                          int& hexLen, long& dsrcMsgId)
-{
-    for (const auto& id : messageid)
-    {
-        size_t loc = hex.find(id);
-        if (loc != std::string::npos && loc < IDCHECKLIMIT)
-        {
-            int mlen;
-            if (hex[loc + 4] == '8')                       // length > 256, long form
-            {
-                std::string tmp = hex.substr(loc + 5, 3);
-                mlen = (strtol(tmp.c_str(), nullptr, 16) + 4) * 2;
-            }
-            else                                           // short form
-            {
-                std::string tmp = hex.substr(loc + 4, 2);
-                mlen = (strtol(tmp.c_str(), nullptr, 16) + 3) * 2;
-            }
-            idloc    = loc;
-            hexLen   = mlen;
-            dsrcMsgId = strtol(id.c_str(), nullptr, 16);
-            return true;
-        }
-    }
-    return false;
-}
-
-bool MessageReceiverPlugin::buildRawSpduMessage(const byte_stream& incoming, int len, uint64_t rxTime, tmx::messages::RawSpdu& out, std::vector<uint8_t>& payloadOut)
-{
-    // 1. Decode the SPDU
-    Ieee1609Dot2Data_t* decodedPtr = nullptr;
-	
-	asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
-                                   (void**)&decodedPtr, incoming.data(), len);
-
-	auto del = [](Ieee1609Dot2Data_t* p){ ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, p); };
-	std::unique_ptr<Ieee1609Dot2Data_t, decltype(del)> decoded(decodedPtr, del);								   
-	
-	if (rv.code != RC_OK || !decoded) {
-        PLOG(logDEBUG) << "SPDU uper decode failed (rc=" << rv.code << ")";
-        return false;
-    }
-
-    // 2. Walk to the inner J2735 payload
-    uint32_t psid = 0;
-	bool psidSet = false;
-    if (!unwrapSpdu(decodedPtr, payloadOut, psid, psidSet)) {
-        PLOG(logDEBUG) << "No unsecured J2735 payload found in SPDU";
-        return false;
-    }
-
-    // 3. Populate tmx message
-	out.set_spduData(tmx::byte_stream(incoming.data(), incoming.data() + len));
-    boost::uuids::uuid u = _uuidGen();
-	out.set_uuid(tmx::byte_stream(u.begin(), u.end())); 
-    out.set_timestampMs(rxTime);
-    out.set_psid(psid);
-
-    out.set_messageType(std::to_string(identifyJ2735Type(payloadOut)));
-    return true;
-}
-
 
 int MessageReceiverPlugin::Main()
 {
@@ -276,7 +169,7 @@ int MessageReceiverPlugin::Main()
 				if (fullSPDUMode){
 					RawSpdu spduMsg;
 					std::vector<uint8_t> payload;
-					if (!buildRawSpduMessage(incoming, len, time, spduMsg, payload))
+					if (!MessageReceiver::buildRawSpduMessage(incoming.data(), len, time,messageid, _uuidGen(), spduMsg, payload))
 					{
 						PLOG(logERROR) << "Error parsing SPDU Messages";
 						continue;
@@ -368,7 +261,7 @@ int MessageReceiverPlugin::Main()
 						int mlen;
 						long msgId;
 
-						if (!findMessageId(msg, idloc, mlen, msgId))
+						if (!findMessageId(messageid, msg, idloc, mlen, msgId))
 						{
 							PLOG(logDEBUG) <<" Unable to find any valid msg ID in the incoming message. \n";
 							continue;  //do not send the message out to v2x hub if msgid check fails

@@ -7,10 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 SET (TMX_PLUGIN_NAME "MessageReceiver")
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-set(1609dot2_LIBRARY_NAME "::stol-1609dot2-2022")
 find_package(stol-1609dot2-2022 REQUIRED)
 
 BuildTmxPlugin ()
 
 TARGET_INCLUDE_DIRECTORIES ( ${PROJECT_NAME} PUBLIC /opt/carma/include/stol-1609dot2-2022)
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ${1609dot2_LIBRARY_NAME}) #libbotan-2)
+TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils "::stol-1609dot2-2022") #libbotan-2)
