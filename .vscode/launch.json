@@ -27,7 +27,7 @@
           "name": "(gdb) Attach",
           "type": "cppdbg",
           "request": "attach",
-          "program": "/var/www/plugins/CommandPlugin/bin/CommandPlugin",
+          "program": "/var/www/plugins/IntersectionValidationPlugin/bin/IntersectionValidationPlugin",
           "processId": "${command:pickProcess}",
           "MIMode": "gdb",
           "setupCommands": [

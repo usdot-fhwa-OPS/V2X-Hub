@@ -283,7 +283,7 @@ public:
 	 * @return The decoded J2735 message
 	 */
 	template <typename DecType>
-	static typename DecType::type *decode_j2735_message(tmx::byte_stream bytes)
+	static std::shared_ptr<typename DecType::type> decode_j2735_message(tmx::byte_stream bytes)
 	{
 		typedef typename DecType::type type;
 		typedef typename DecType::message_type msg_type;
@@ -294,7 +294,9 @@ public:
 
 		if (rval.code == RC_OK)
 		{
-			return new type(obj);
+			return std::shared_ptr<type>(new type(obj)[](type* object) {
+					ASN_STRUCT_FREE(*MsgType::get_descriptor(), object);
+				});
 		}
 		else
 		{
@@ -379,7 +381,7 @@ public:
 				}
 				else
 				{
-					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData));
+					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData));
 				}
 			}
 			else
@@ -513,7 +515,7 @@ public:
 		this->encode_j2735_message(payload);
 	}
 private:
-	std::unique_ptr<MsgType> _decoded;
+	std::shared_ptr<MsgType> _decoded;
 	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for 
 	// decoding/encoding purposes (see decode_j2735_message() method)
 	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer

@@ -9,5 +9,6 @@
         "projectKey": "usdot-fhwa-ops_V2X-Hub"
     },
     "sonarlint.pathToNodeExecutable": "/root/.nvm/versions/node/v22.22.0/bin/node",
-    "sonarlint.pathToCompileCommands": "${workspaceFolder}/src/build/compile_commands.json"
+    "sonarlint.pathToCompileCommands": "${workspaceFolder}/src/build/compile_commands.json",
+    "cmake.sourceDirectory": "/home/dev/V2X-Hub/src"
 }
