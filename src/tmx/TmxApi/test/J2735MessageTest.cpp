@@ -8,6 +8,7 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <tmx/messages/message_document.hpp>
+#include <array>
 #include <vector>
 #include <iostream>
 #include <chrono>
@@ -22,13 +23,35 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
+	namespace {
+	// Note for allocation helpers below: 
+        // ASN.1 allocations must come from the malloc family.
+        // j2735_destroy releases the SSM tree with ASN_STRUCT_FREE, which calls free() on every node.
+        // calloc's zeroing also marks all optional fields absent.
 
+        // Allocates a zeroed ASN.1 struct.
+        template <typename T>
+        T *AllocAsn() {
+            return static_cast<T *>(calloc(1, sizeof(T)));
+        }
 
+        // Allocates a zeroed ASN.1 scalar.
+        template <typename T>
+        T *AllocAsn(T value) {
+            auto *p = AllocAsn<T>();
+            *p = value;
+            return p;
+        }
 
-	
+        // Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
+        uint8_t *AllocAsnBuffer(size_t size) {
+            return static_cast<uint8_t *>(calloc(size, 1));
+        }
+	}
+
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
+	TestMessage03_t* message = (TestMessage03_t*) calloc(1, sizeof(TestMessage03_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -87,7 +110,6 @@ TEST(J2735MessageTest, EncodeMobilityOperation)
 	free(frame_msg.get_j2735_data().get());	
 	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
@@ -179,10 +201,9 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
 }
 
-
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
-	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
+	TestMessage01_t* message = (TestMessage01_t*) calloc(1, sizeof(TestMessage01_t) );
 
 	/**
 	 * Populate MobilityHeader 
@@ -234,7 +255,6 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	free(frame_msg.get_j2735_data().get());
 	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
@@ -296,8 +316,6 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	//Decode the encoded BSM
 	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
 }
-
-
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 {	
@@ -415,8 +433,6 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
-
-
 TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	string psm="<PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>109</secMark><msgCnt>0</msgCnt><id>115eadf0</id><position><lat>389549376</lat><long>-771491840</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>0</speed><heading>16010</heading><pathHistory><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>";
 	std::stringstream ss;
@@ -430,7 +446,7 @@ TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	std::cout << psmENC.get_payload_str()<<std::endl;
 	ASSERT_EQ(32,  psmENC.get_msgId());
 }
-	
+
 TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
@@ -444,7 +460,6 @@ TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	std::cout << tsm4Enc.get_payload_str()<<std::endl;
 	ASSERT_EQ(244,  tsm4Enc.get_msgId());
 }
-
 
 TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
@@ -472,100 +487,159 @@ TEST(J2735MessageTest, EncodeTrafficControlMessage){
 
 TEST (J2735MessageTest, EncodeSrm)
 {
-	SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
+	auto *message = AllocAsn<SignalRequestMessage>();
 	message->second = 12;
-	RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
-	VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
-	veh_id->present = VehicleID_PR_entityID;
-	TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
-	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	entity_id->buf = my_bytes_id;
-	entity_id->size = sizeof(my_bytes_id);
-	veh_id->choice.entityID = *entity_id;
-	requestor->id = *veh_id;
-	RequestorType_t *requestType = (RequestorType_t *)calloc(1, sizeof(RequestorType_t));
+	RequestorDescription requestor{};
+	VehicleID veh_id{};
+	veh_id.present = VehicleID_PR_entityID;
+	const std::array<uint8_t, 4> my_bytes_id = {1, 12, 12, 10};
+	veh_id.choice.entityID.buf = AllocAsnBuffer(my_bytes_id.size());
+	memcpy(veh_id.choice.entityID.buf, my_bytes_id.data(), my_bytes_id.size());
+	veh_id.choice.entityID.size = my_bytes_id.size();
+	requestor.id = veh_id;
+	auto *requestType = AllocAsn<RequestorType>();
 	requestType->role = 0;
-	requestor->type = requestType;
-	RequestorPositionVector_t *position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+	requestor.type = requestType;
+	auto *position = AllocAsn<RequestorPositionVector>();
 	#if SAEJ2735_SPEC < 2020
-	DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+	DSRC_Angle_t *heading_angle = AllocAsn<DSRC_Angle_t>();
 	#else
-	Common_Angle_t *heading_angle = (Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
+	auto *heading_angle = AllocAsn<Common_Angle_t>();
 	#endif
 	*heading_angle = 123;
 	position->heading = heading_angle;
-	Position3D_t *position_point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+	Position3D position_point{};
 	#if SAEJ2735_SPEC < 2020
-	DSRC_Elevation_t *elev = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+	auto *elev = AllocAsn<DSRC_Elevation_t>();
 	#else
-	Common_Elevation_t *elev = (Common_Elevation_t *)calloc(1, sizeof(Common_Elevation_t));
+	auto *elev = AllocAsn<Common_Elevation_t>();
 	#endif
 	*elev = 12;
-	position_point->elevation = elev;
-	position_point->lat = 3712333;
-	position_point->Long = 8012333;
-	position->position = *position_point;
-	TransmissionAndSpeed_t *speed = (TransmissionAndSpeed_t *)calloc(1, sizeof(TransmissionAndSpeed_t));
+	position_point.elevation = elev;
+	position_point.lat = 3712333;
+	position_point.Long = 8012333;
+	position->position = position_point;
+	auto *speed = AllocAsn<TransmissionAndSpeed>();
 	speed->speed = 10;
-	TransmissionState_t *transmission_state = (TransmissionState_t *)calloc(1, sizeof(TransmissionState_t));
-	*transmission_state = 1111;
 	speed->transmisson = 7;
 	position->speed = speed;
-	requestor->position = position;
-	message->requestor = *requestor;
+	requestor.position = position;
+	message->requestor = requestor;
 
-	SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
-	//First: Request Package
-	SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
-	MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+	auto *requests = AllocAsn<SignalRequestList>();
+	// First: Request Package
+	auto *request_package = AllocAsn<SignalRequestPackage>();
+	auto *min = AllocAsn<MinuteOfTheYear_t>();
 	*min = 123;
 	request_package->minute = min;
-	DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	auto *duration = AllocAsn<DSecond_t>();
 	*duration = 122;
 	request_package->duration = duration;
-	DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+	auto *second = AllocAsn<DSecond_t>();
 	*second = 1212;
 	request_package->second = second;
-	SignalRequest_t *request = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
-	IntersectionReferenceID_t *refer_id = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
-	refer_id->id = 1222;
-	request->id = *refer_id;
-	request->requestID = 1;
-	request->requestType = 0;
-	IntersectionAccessPoint_t *inBoundLane = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
-	inBoundLane->present = IntersectionAccessPoint_PR_lane;
-	inBoundLane->choice.lane = 1;
-	request->inBoundLane = *inBoundLane;
-	request_package->request = *request;
+	SignalRequest request{};
+	IntersectionReferenceID refer_id{};
+	refer_id.id = 1222;
+	request.id = refer_id;
+	request.requestID = 1;
+	request.requestType = 0;
+	IntersectionAccessPoint inBoundLane{};
+	inBoundLane.present = IntersectionAccessPoint_PR_lane;
+	inBoundLane.choice.lane = 1;
+	request.inBoundLane = inBoundLane;
+	request_package->request = request;
 	asn_sequence_add(&requests->list.array, request_package);
 
-	//Second: Request Package
-	SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
-	request_package_2->minute = min;
-	request_package_2->duration = duration;
-	request_package_2->second = second;
-	SignalRequest_t *request_2 = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
-	IntersectionReferenceID_t *referId2 = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
-	referId2->id = 2333;
-	request_2->id = *referId2;
-	request_2->requestID = 2;
-	request_2->requestType = 1;
-	IntersectionAccessPoint_t *inBoundLane2 = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
-	inBoundLane2->present = IntersectionAccessPoint_PR_approach;
-	inBoundLane2->choice.approach = 1;
-	request_2->inBoundLane = *inBoundLane2;
-	request_package_2->request = *request_2;
+	// Second: Request Package
+	// Each package needs its own allocations
+	// Sharing pointers with the first package would double-free when j2735_destroy is called
+	auto *request_package_2 = AllocAsn<SignalRequestPackage>();
+	request_package_2->minute = AllocAsn<MinuteOfTheYear_t>(*min);
+	request_package_2->duration = AllocAsn<DSecond_t>(*duration);
+	request_package_2->second = AllocAsn<DSecond_t>(*second);
+	SignalRequest request_2{};
+	IntersectionReferenceID referId2{};
+	referId2.id = 2333;
+	request_2.id = referId2;
+	request_2.requestID = 2;
+	request_2.requestType = 1;
+	IntersectionAccessPoint inBoundLane2{};
+	inBoundLane2.present = IntersectionAccessPoint_PR_approach;
+	inBoundLane2.choice.approach = 1;
+	request_2.inBoundLane = inBoundLane2;
+	request_package_2->request = request_2;
 	asn_sequence_add(&requests->list.array, request_package_2);
 	message->requests = requests;
-	tmx::messages::SrmEncodedMessage srmEncodeMessage;
-	auto _srmMessage = new tmx::messages::SrmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
+
+
+	SrmEncodedMessage srmEncodeMessage;
+	// srmMessage owns the SRM tree and releases it with j2735_destroy when it goes out of scope
+	SrmMessage srmMessage(message);
+	// MessageFrame lives on the stack and copies the SRM, so nothing here needs a manual free
+	MessageFrame frame{};
+	frame.messageId = SrmMessage::get_default_messageId();
+	frame.value.present = MessageFrame__value_PR_SignalRequestMessage;
+	frame.value.choice.SignalRequestMessage = *srmMessage.get_j2735_data();
+	MessageFrameMessage frame_msg(frame);
 	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
+
+	// Test encoding
+	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());
 	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
-	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
+	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());
+}
+
+TEST (J2735MessageTest, EncodeSsm)
+{
+	auto *message = AllocAsn<SignalStatusMessage_t>();
+	message->timeStamp = AllocAsn<MinuteOfTheYear_t>(132558);
+	message->second = 57000;
+	message->sequenceNumber = AllocAsn<Common_MsgCount_t>(1);
+
+	auto *signalStatus = AllocAsn<SignalStatus_t>();
+	signalStatus->sequenceNumber = 1;
+	signalStatus->id.id = 9709;
+
+	auto *sigStatus = AllocAsn<SignalStatusPackage_t>();
+	auto *requester = AllocAsn<SignalRequesterInfo_t>();
+	requester->id.present = VehicleID_PR_entityID;
+	const std::array<uint8_t, 4> my_bytes_id = {1, 12, 12, 10};
+	requester->id.choice.entityID.buf = AllocAsnBuffer(my_bytes_id.size());
+	memcpy(requester->id.choice.entityID.buf, my_bytes_id.data(), my_bytes_id.size());
+	requester->id.choice.entityID.size = my_bytes_id.size();
+	requester->request = 1;
+	requester->sequenceNumber = 1;
+	requester->role = AllocAsn<BasicVehicleRole_t>(16);
+	sigStatus->requester = requester;
+	sigStatus->inboundOn.present = IntersectionAccessPoint_PR_lane;
+	sigStatus->inboundOn.choice.lane = 1;
+	sigStatus->minute = AllocAsn<MinuteOfTheYear_t>(57000);
+	sigStatus->second = AllocAsn<DSecond_t>(53606);
+	sigStatus->duration = AllocAsn<DSecond_t>(10000);
+	sigStatus->status = 2;
+	asn_sequence_add(&signalStatus->sigStatus.list, sigStatus);
+	asn_sequence_add(&message->status.list, signalStatus);
+
+	tmx::messages::SsmEncodedMessage ssmEncodeMessage;
+	// ssmMessage owns the SSM tree and releases it with j2735_destroy when it
+	// goes out of scope. The MessageFrame shell lives on the stack and shallow-
+	// copies the SSM, so nothing here needs a manual free.
+	tmx::messages::SsmMessage ssmMessage(message);
+	MessageFrame frame{};
+	frame.messageId = tmx::messages::SsmMessage::get_default_messageId();
+	frame.value.present = MessageFrame__value_PR_SignalStatusMessage;
+	frame.value.choice.SignalStatusMessage = *ssmMessage.get_j2735_data();
+	tmx::messages::MessageFrameMessage frame_msg(frame);
+	ssmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
+
+	// Test encoding
+	std::string expectedSsmEncHex = "001e1b6205cedea802000897b40b9004303028040a000437aa345989c408";
+	EXPECT_EQ(expectedSsmEncHex, ssmEncodeMessage.get_payload_str());
+
+	// Test decoding
+	auto decoded_ssm_ptr = ssmEncodeMessage.decode_j2735_message().get_j2735_data();
+	EXPECT_EQ(9709, decoded_ssm_ptr->status.list.array[0]->id.id);
 }
 
 TEST(J2735MessageTest, EncodeTravelerInformation){

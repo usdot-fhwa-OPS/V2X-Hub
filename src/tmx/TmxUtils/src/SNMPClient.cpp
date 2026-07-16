@@ -234,7 +234,7 @@ namespace tmx::utils
         return success;
 
 
-        
+
     }
     // Original implementation used in Carma Streets https://github.com/usdot-fhwa-stol/snmp-client
     bool snmp_client::process_snmp_request(const std::string &input_oid, const request_type &request_type, snmp_response_obj &val)
