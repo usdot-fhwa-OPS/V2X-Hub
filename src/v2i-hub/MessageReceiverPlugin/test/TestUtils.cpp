@@ -70,9 +70,7 @@ TEST(TestUtils, testDecodeSpduInvalid){
        "644304430400d0218214c801c10410a6400c08688626862601c043043130");
     // Corrupt the SPDU data to make it invalid
     spdu[1] = 0xFF;
-    EXPECT_THROW({
-        auto decoded = MessageReceiver::decodeSpdu(spdu, spdu.size());
-    }, tmx::TmxException);
+    EXPECT_THROW(MessageReceiver::decodeSpdu(spdu, spdu.size()), tmx::TmxException);
 }
 
 TEST(TestUtils, testDecodeSpduEmpty){

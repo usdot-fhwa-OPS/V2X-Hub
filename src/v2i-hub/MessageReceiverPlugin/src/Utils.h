@@ -84,7 +84,8 @@ inline std::shared_ptr<Ieee1609Dot2Data_t> decodeSpdu(const tmx::byte_stream& da
     asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, data.data(), len);
     
-    if (rv.code != RC_OK || !decodedPtr) { 
+    if (rv.code != RC_OK || !decodedPtr) {
+        ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, decodedPtr);  // Free if allocated
         throw tmx::TmxException("Failed to decode SPDU: " + std::to_string(rv.consumed) + " bytes consumed of " 
             + std::to_string(len) + ".");
     }
