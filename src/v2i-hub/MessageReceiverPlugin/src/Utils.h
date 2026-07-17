@@ -77,12 +77,12 @@ inline bool unwrapSpdu(const Ieee1609Dot2Data_t *d, std::vector<uint8_t>& payloa
     }
 }
 
-inline std::shared_ptr<Ieee1609Dot2Data_t> decodeSpdu(const uint8_t* data, int len)
+inline std::shared_ptr<Ieee1609Dot2Data_t> decodeSpdu(const tmx::byte_stream& data, int len)
 {
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
     
     asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
-                                   (void**)&decodedPtr, data, len);
+                                   (void**)&decodedPtr, data.data(), len);
     
     if (rv.code != RC_OK || !decodedPtr) { 
         throw tmx::TmxException("Failed to decode SPDU: " + std::to_string(rv.consumed) + " bytes consumed of " 

@@ -167,7 +167,7 @@ int MessageReceiverPlugin::Main()
 					uint psid = 0;
 					bool psidSet = false;
 					try {
-						decoded = decodeSpdu(incoming.data(), len);
+						decoded = decodeSpdu(incoming, len);
 					}
 					catch (const tmx::TmxException &ex) {
 						PLOG(logERROR) << "Error decoding SPDU: " << ex.what();
