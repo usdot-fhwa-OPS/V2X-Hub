@@ -81,7 +81,7 @@ inline std::shared_ptr<Ieee1609Dot2Data_t> decodeSpdu(const tmx::byte_stream& da
 {
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
     
-    asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
+    asn_dec_rval_t rv = oer_decode(0, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, data.data(), len);
     
     if (rv.code != RC_OK || !decodedPtr) {
