@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <sys/resource.h>
 
 #include <RawSpdu.h>
 #include <stol-1609dot2-2022/Ieee1609Dot2Data.h>
@@ -80,13 +81,16 @@ inline bool unwrapSpdu(const Ieee1609Dot2Data_t *d, std::vector<uint8_t>& payloa
 inline std::shared_ptr<Ieee1609Dot2Data_t> decodeSpdu(const tmx::byte_stream& data, int len)
 {
     Ieee1609Dot2Data_t* decodedPtr = nullptr;
-    
-    asn_dec_rval_t rv = oer_decode(nullptr, &asn_DEF_Ieee1609Dot2Data,
+    asn_codec_ctx_t codecCtx;
+
+    codecCtx.max_stack_size = 0; // Disable stack size checking for this decode operation
+    asn_dec_rval_t rv = oer_decode(&codecCtx, &asn_DEF_Ieee1609Dot2Data,
                                    (void**)&decodedPtr, data.data(), len);
     
     if (rv.code != RC_OK || !decodedPtr) {
+        asn_fprint(stderr, &asn_DEF_Ieee1609Dot2Data, decodedPtr);  // Print for debugging
         ASN_STRUCT_FREE(asn_DEF_Ieee1609Dot2Data, decodedPtr);  // Free if allocated
-        throw tmx::TmxException("Failed to decode SPDU: " + std::to_string(rv.consumed) + " bytes consumed of " 
+        throw tmx::TmxException("Failed to decode SPDU with error code " + std::to_string(rv.code) + " after consumed : " + std::to_string(rv.consumed) + " bytes consumed of " 
             + std::to_string(len) + ".");
     }
     std::shared_ptr<Ieee1609Dot2Data_t> decoded(
