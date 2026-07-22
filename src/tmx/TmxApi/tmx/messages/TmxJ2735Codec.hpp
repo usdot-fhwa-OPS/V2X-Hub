@@ -294,8 +294,9 @@ public:
 
 		if (rval.code == RC_OK)
 		{
-			return std::shared_ptr<type>(new type(obj)[](type* object) {
-					ASN_STRUCT_FREE(*MsgType::get_descriptor(), object);
+			return std::shared_ptr<type>(new type(obj),[]
+				(type* obj) {
+					ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
 				});
 		}
 		else
@@ -362,26 +363,26 @@ public:
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{	
-					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::uper<MessageFrameMessage> >(theData));
+					_frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::uper<MessageFrameMessage> >(theData);
 					_decoded.reset(new MsgType(_frame->get_j2735_data()));	
 				}
 				else
 				{
-					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<UperCodec>(theData));
+					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<UperCodec>(theData);
 				}
 			}
 			else if (is_der())
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{
-					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+					_frame = (TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::der<MessageFrameMessage> >(theData));
 					_decoded.reset(new MsgType(_frame->get_j2735_data()));
 				}
 				else
 				{
-					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData));
+					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData);
 				}
 			}
 			else
@@ -520,7 +521,7 @@ private:
 	// decoding/encoding purposes (see decode_j2735_message() method)
 	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer
 	// Never delete this pointer directly will result in a memory leak
-	std::unique_ptr<MessageFrameMessage> _frame;
+	std::shared_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()
 	{

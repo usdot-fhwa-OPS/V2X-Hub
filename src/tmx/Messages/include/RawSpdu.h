@@ -1,8 +1,7 @@
 /*
  * RawSpdu.h
  */
-#ifndef INCLUDE__RawSpdu _H_
-#define INCLUDE__RawSpdu _H_
+#pragma once
 #include <tmx/messages/message.hpp>
 #include <tmx/messages/byte_stream.hpp>
 #include <memory>
@@ -58,4 +57,3 @@ namespace tmx
         };
     }
 }
-#endif /* INCLUDE__RawSpdu _H_ */

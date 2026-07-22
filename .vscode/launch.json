@@ -8,7 +8,7 @@
             "name": "gdb",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/v2i-hub/build/FLIRCameraDriverPlugin/FLIRCameraDriverPlugin_test",
+            "program": "${workspaceFolder}/src/build/tmx/TmxApi/tmxapi_test",
             "args": [],
             "stopAtEntry": true,
             "cwd": "${fileDirname}",
