@@ -28,80 +28,70 @@ namespace unit_test {
 	
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
-	// auto message = std::make_shared<TestMessage03_t>( new TestMessage03_t() , [](TestMessage03_t *p) { 
-	// 	ASN_STRUCT_FREE(asn_DEF_TestMessage03, p); 
-	// } );
+	// TestMessage03_t* message = (TestMessage03_t*) calloc(1, sizeof(TestMessage03_t) );
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = std::shared_ptr<TestMessage03_t>(
+		static_cast<TestMessage03_t*>(calloc(1, sizeof(TestMessage03_t))),
+		[](TestMessage03_t *p) {
+			j2735::j2735_destroy<tsm3Traits>(p);
+		} 
+	);
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int success = 1;
 	
-	// char* my_str = (char *) "sender_id";
-	// uint8_t * my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	// message->header.hostStaticId.buf = my_bytes;
-	// message->header.hostStaticId.size = strlen(my_str);
-	// message->header.targetStaticId.buf = my_bytes;
-	// message->header.targetStaticId.size = strlen(my_str);
 	std::string hostStaticId_str = "host_id";
-	OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	success = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 	std::string targetStaticId_str = "targer_id";
-	OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	success = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	// my_str = (char *) "bsm_idXX";
-	// my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	// message->header.hostBSMId.buf = my_bytes;
-	// message->header.hostBSMId.size = strlen(my_str);
 	std::string bsmId_str = "bsm_idXX";
-	OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	success = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	// my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	// my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	// message->header.planId.buf = my_bytes;
-	// message->header.planId.size = strlen(my_str);
 	std::string planId_str = "00000000-0000-0000-0000-000000000000";
-	OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	success = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll);
-	OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
-	// char * my_str_1 = new char[strlen(timestamp_str.c_str())+1];
-	// uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())+1];
-
-	// strcpy(my_str_1, timestamp_str.c_str());
-	// for(int i = 0; i< strlen(my_str_1); i++)
-	// {
-	// 	my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	// }
-	// message->header.timestamp.buf = my_bytes_1;
-	// message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	success = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+	
 
 	/**
 	 * Populate MobilityOperation Body 
 	 */
-	// my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	// my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	// message->body.operationParams.buf = my_bytes;
-	// message->body.operationParams.size = strlen(my_str);
+	
 	std::string operationParams_str = "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	OCTET_STRING_fromString( &message->body.operationParams, operationParams_str.c_str());
+	success = OCTET_STRING_fromString( &message->body.operationParams, operationParams_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	// my_str = (char *) "carma3/Geofence_Acknowledgement";
-	// my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	// message->body.strategy.buf = my_bytes;
-	// message->body.strategy.size = strlen(my_str);
+	
 	std::string strategy_str = "carma3/Geofence_Acknowledgement";
-	OCTET_STRING_fromString( &message->body.strategy, strategy_str.c_str());
+	success = OCTET_STRING_fromString( &message->body.strategy, strategy_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
 	tmx::messages::tsm3EncodedMessage tsm3EncodeMessage;
 	tmx::messages::tsm3Message  _tsm3Message(message);
 	tmx::messages::MessageFrameMessage frame_msg(_tsm3Message.get_j2735_data());
 	tsm3EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage03>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-
-	EXPECT_EQ(243,  tsm3EncodeMessage.get_msgId());
-	// delete[] my_bytes_1;
-	// delete[] my_str_1;
-	// delete _tsm3Message;
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm3EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f380b32e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868dddc78796dc2cd7c7cbbf365dd8f2df838f5eedfdf665c99f2edcbbba0b3d3961cd9b4e3bf8f7eee9cb7ecbfa723a41d3961cd9b4e3bf8f7eee9cb7ecbfa722c41871ebddbfbeccb933e5db977747483a72eb95620e5970f3dfb9d20dfc3a69dfbb0ec41cb2e1e7bf720e997c74";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
