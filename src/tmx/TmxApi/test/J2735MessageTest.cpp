@@ -28,7 +28,6 @@ namespace unit_test {
 	
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	// TestMessage03_t* message = (TestMessage03_t*) calloc(1, sizeof(TestMessage03_t) );
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
 	auto message = std::shared_ptr<TestMessage03_t>(
 		static_cast<TestMessage03_t*>(calloc(1, sizeof(TestMessage03_t))),
@@ -97,89 +96,100 @@ TEST(J2735MessageTest, EncodeMobilityOperation)
 
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
-	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = std::shared_ptr<TestMessage00_t>(
+		static_cast<TestMessage00_t*>(calloc(1, sizeof(TestMessage00_t))),
+		[](TestMessage00_t *p) {
+			j2735::j2735_destroy<tsm0Traits>(p);
+		} 
+	);
 	
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int success = 1;
 	
-	char* my_str = (char *) "sender_id";
-	
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	std::string hostStaticId_str = "host_id";
+	success = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+	std::string targetStaticId_str = "targer_id";
+	success = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string bsmId_str = "bsm_idXX";
+	success = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string planId_str = "00000000-0000-0000-0000-000000000000";
+	success = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++) 
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	success = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
 	/**
-	 * Populate MobilityRequest Body 
+	 * Populate MobilityOperation Body 
 	 */
-	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategyParams.buf = my_bytes;
-	message->body.strategyParams.size = strlen(my_str);
+	
+	std::string strategyParams_str = "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	success = OCTET_STRING_fromString( &message->body.strategyParams, strategyParams_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	my_str = (char *) "carma3/Geofence_Acknowledgement";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str); 
+	
+	std::string strategy_str = "carma3/Geofence_Acknowledgement";
+	success = OCTET_STRING_fromString( &message->body.strategy, strategy_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
 	message->body.urgency = 1;
 	message->body.planType = 0;
 	message->body.location.ecefX = 1;
 	message->body.location.ecefY = 1;
 	message->body.location.ecefZ = 1;
-	message->body.location.timestamp.buf = my_bytes_1;
-	message->body.location.timestamp.size = strlen(my_str_1);
-	message->body.expiration = (MobilityTimestamp_t*)malloc(sizeof(MobilityTimestamp_t));
-	message->body.expiration->buf = my_bytes_1;
-	message->body.expiration->size = strlen(my_str_1);
+	success = OCTET_STRING_fromString( &message->body.location.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+	
+	std::string expiration_str = std::to_string(1784819631875000000);
+	message->body.expiration = (MobilityTimestamp_t*)calloc(1,sizeof(MobilityTimestamp_t));
+	success = OCTET_STRING_fromString( message->body.expiration, expiration_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+	
 
-	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
-	offset->offsetX = 1;
-	offset->offsetY = 1;
-	offset->offsetZ = 1;
-	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
-	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
+	MobilityECEFOffset_t offset ;
+	offset.offsetX = 1;
+	offset.offsetY = 1;
+	offset.offsetZ = 1;
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
 
-	message->body.trajectoryStart = (MobilityLocation*)malloc(sizeof(MobilityLocation));
+	message->body.trajectoryStart = (MobilityLocation*)calloc(1,sizeof(MobilityLocation));
 	message->body.trajectoryStart->ecefX = 1;
 	message->body.trajectoryStart->ecefY = 1;
 	message->body.trajectoryStart->ecefZ = 1;
-	message->body.trajectoryStart->timestamp.buf = my_bytes_1;
-	message->body.trajectoryStart->timestamp.size = strlen(my_str_1);
+	success = OCTET_STRING_fromString( &message->body.trajectoryStart->timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 		
 	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
 	tmx::messages::tsm0Message  _tsm0Message(message);
 	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message.get_j2735_data());
 	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-
-	delete my_bytes_1;
-	delete my_str_1;
-	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm0EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f080ff2e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868debb8f0f2db859af8f977e6cbbb1e5bf071ebddbfbeccb933e5db9777400029832a0d5306541aa60ca83562ddc3470c5cb666c5c3760c983170d1b8b3d3961cd9b4e3bf8f7eee9cb7ecbfa723a41d3961cd9b4e3bf8f7eee9cb7ecbfa722c41871ebddbfbeccb933e5db977747483a72eb95620e5970f3dfb9d20dfc3a69dfbb0ec41cb2e1e7bf720e997c744c19506a9832a0d5306541ab16ee1a3862e5b3362e1bb064c18b868dd8b770d1c3172d99b170ddab060c1830600";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
