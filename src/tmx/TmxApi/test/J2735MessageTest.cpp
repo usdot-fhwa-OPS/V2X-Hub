@@ -234,7 +234,8 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	/**
 	 * Populate MobilityResponse Body 
 	 */
-	message->body.isAccepted = 1;
+	message->body.isAccepted = true;
+	// Int from 0-1000. See ASN.1 definition
 	message->body.urgency = 1;
 	//Enumeration between 0-13. See ASN.1 definition
 	message->body.planType = 3; // PlanType: joinPlatoonAtRear
@@ -264,18 +265,25 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
-	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
-
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = std::shared_ptr<BasicSafetyMessage_t>(
+		static_cast<BasicSafetyMessage_t*>(calloc(1, sizeof(BasicSafetyMessage_t))),
+		[](BasicSafetyMessage_t *p) {
+			j2735::j2735_destroy<BsmTraits>(p);
+		} 
+	);
 	/**
 	 * Populate BSMcoreData 
 	 */
 	
-	char* my_str = (char *) "sender_id";
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	
 	message->coreData.msgCnt = 1;
-	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	message->coreData.id.buf = my_bytes_id;
-	message->coreData.id.size = sizeof(my_bytes_id);
+	// TempId is octet string and can be populated from buffer
+	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+	bool success = OCTET_STRING_fromBuf(&message->coreData.id, my_bytes_id, sizeof(my_bytes_id));
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+
 	message->coreData.secMark = 1023;
 	message->coreData.lat = 38954961;
 	message->coreData.Long = -77149303;
@@ -302,7 +310,10 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	message->coreData.brakes.traction = 1; // allow 0,1,2,3
 	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
 	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
-	uint8_t  my_bytes_brakes[1] = {8};
+	// Allocate memory for wheelBrakes BIT_STRING. Otherwise Asan gives error :
+	// ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed
+	uint8_t  *my_bytes_brakes = static_cast<uint8_t *>(calloc(1, sizeof(uint8_t)));
+	*my_bytes_brakes = 8;
 	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
 	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
 	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
@@ -311,16 +322,20 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	message->coreData.size.length = 500;
 	message->coreData.size.width = 300;
 
+	asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, message.get());
+
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
-	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	tmx::messages::BsmMessage  _bsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage.get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
-	//Decode the encoded BSM
-	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	
+	// Get encode message as hex string
+	tmx::byte_stream bytes = bsmEncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "001425004043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
