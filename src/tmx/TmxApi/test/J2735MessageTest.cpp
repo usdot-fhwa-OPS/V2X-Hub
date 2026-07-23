@@ -195,57 +195,70 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
-	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
-
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = std::shared_ptr<TestMessage01_t>(
+		static_cast<TestMessage01_t*>(calloc(1, sizeof(TestMessage01_t))),
+		[](TestMessage01_t *p) {
+			j2735::j2735_destroy<tsm1Traits>(p);
+		} 
+	);
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int success = 1;
 	
-	char* my_str = (char *) "sender_id";
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	std::string hostStaticId_str = "host_id";
+	success = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
+	std::string targetStaticId_str = "targer_id";
+	success = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string bsmId_str = "bsm_idXX";
+	success = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string planId_str = "00000000-0000-0000-0000-000000000000";
+	success = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	success = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(success, 0);
 
 	/**
 	 * Populate MobilityResponse Body 
 	 */
 	message->body.isAccepted = 1;
 	message->body.urgency = 1;
+	//Enumeration between 0-13. See ASN.1 definition
+	message->body.planType = 3; // PlanType: joinPlatoonAtRear
+	message->body.reason = (MobilityReason_t*)calloc(1,sizeof(MobilityReason_t));
+	// Enumeration between 0-8. See ASN.1 definition
+	*message->body.reason = 5; // Reason: OtherwiseEngaged
+	message->body.repeat = (MobilityRepeat_t*)calloc(1,sizeof(MobilityRepeat_t));
+	// Enumeration between 0-2. See ASN.1 definition
+	*message->body.repeat = 2; // Repeat: neverRequestAgain
+
+	asn_fprint(stdout, &asn_DEF_TestMessage01, message.get());
 
 	tmx::messages::tsm1EncodedMessage tsm1EncodeMessage;
-	tmx::messages::tsm1Message*  _tsm1Message = new tmx::messages::tsm1Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message->get_j2735_data());
+	tmx::messages::tsm1Message  _tsm1Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message.get_j2735_data());
 	tsm1EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage01>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-	free(message);
-	delete my_bytes_1;
-	delete my_str_1;
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm1EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f14a2e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868df00632a0";
+	EXPECT_EQ(hex_str, expected_hex_str);
+
 }
 
 
