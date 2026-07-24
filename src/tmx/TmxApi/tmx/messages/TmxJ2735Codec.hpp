@@ -289,21 +289,14 @@ public:
 		typedef typename DecType::message_type msg_type;
 
 		DecType decoder;
-		msg_type *obj = 0;
+		msg_type *obj = static_cast<msg_type*>(calloc(1,sizeof(msg_type)));
 		asn_dec_rval_t rval = decoder.decode((void **)&obj, bytes);
 
 		if (rval.code == RC_OK)
 		{
-			return std::shared_ptr<type>(
-				// TmxJ2735Message will own C struct pointer and be responsible for cleanup
-				new type(obj)
-				// static_cast<type*>(calloc(1,sizeof(type)))
-				// obj
-				,[]
-				(type* obj) {
-					ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
-					// j2735::j2735_destroy<msg_type>(obj)
-				});
+			// TmxJ2735Message will own C struct pointer and be responsible for cleanup. 
+			// See constructor TmxJ2735Message(message_type *data = 0) in Tmxj2735.hpp
+			return std::make_shared<type>(obj);
 		}
 		else
 		{
