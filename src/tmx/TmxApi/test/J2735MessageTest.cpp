@@ -455,6 +455,16 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 	// ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
+TEST(J2735MessageTest, DecodeBasicSafetyMessagePartII){
+	J2735MessageFactory factory;
+	std::string hexString = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
+	tmx::byte_stream bytes = tmx::byte_stream_decode(hexString);
+	std::shared_ptr<MessageFrameEncodedMessage> msg = std::shared_ptr<MessageFrameEncodedMessage>(static_cast<MessageFrameEncodedMessage*>(factory.NewMessage(bytes)));
+	auto decoded_msg = msg->decode_j2735_message();
+	std::string expected_json_message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MessageFrame><messageId>20</messageId><value><BasicSafetyMessage><coreData><msgCnt>1</msgCnt><id>010C0C0A</id><secMark>1023</secMark><lat>38954961</lat><long>-77149303</long><elev>72</elev><accuracy><semiMajor>200</semiMajor><semiMinor>200</semiMinor><orientation>100</orientation></accuracy><transmission><neutral/></transmission><speed>100</speed><heading>12</heading><angle>10</angle><accelSet><long>300</long><lat>100</lat><vert>100</vert><yaw>0</yaw></accelSet><brakes><wheelBrakes>00001</wheelBrakes><traction><off/></traction><abs><off/></abs><scs><off/></scs><brakeBoost><off/></brakeBoost><auxBrakes><off/></auxBrakes></brakes><size><width>300</width><length>500</length></size></coreData><partII><BSMpartIIExtension><partII-Id>1</partII-Id><partII-Value><SpecialVehicleExtensions><vehicleAlerts><doNotUse>0</doNotUse><sirenUse><inUse/></sirenUse><lightsUse><inUse/></lightsUse><multi><unavailable/></multi><responseType><emergency/></responseType></vehicleAlerts></SpecialVehicleExtensions></partII-Value></BSMpartIIExtension></partII><regional><Reg-BasicSafetyMessage><regionId>128</regionId><regExtValue><BasicSafetyMessage-addGrpCarma><routeDestinationPoints><Position3D-addGrpCarma><lat>12</lat><long>1312</long></Position3D-addGrpCarma><Position3D-addGrpCarma><lat>1012</lat><long>2312</long></Position3D-addGrpCarma></routeDestinationPoints></BasicSafetyMessage-addGrpCarma></regExtValue></Reg-BasicSafetyMessage></regional></BasicSafetyMessage></value></MessageFrame>";
+	EXPECT_EQ(decoded_msg.to_string(),expected_json_message);
+}
+
 
 
 TEST(J2735MessageTest, EncodePersonalSafetyMessage){

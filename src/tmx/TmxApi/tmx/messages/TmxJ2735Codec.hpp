@@ -294,9 +294,15 @@ public:
 
 		if (rval.code == RC_OK)
 		{
-			return std::shared_ptr<type>(new type(obj),[]
+			return std::shared_ptr<type>(
+				// TmxJ2735Message will own C struct pointer and be responsible for cleanup
+				new type(obj)
+				// static_cast<type*>(calloc(1,sizeof(type)))
+				// obj
+				,[]
 				(type* obj) {
 					ASN_STRUCT_FREE(*MsgType::get_descriptor(), obj);
+					// j2735::j2735_destroy<msg_type>(obj)
 				});
 		}
 		else

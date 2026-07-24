@@ -97,7 +97,6 @@ public:
 			// This will likely cause memory leaks, but will prevent the exceptions from occurring until a better solution can be found.
 			j2735::j2735_destroy<traits_type>(p); 
 		} ) { 
-			std::cout << "TmxJ2735Message constructor called for " << this->to_string() << std::endl;
 		}
 
 	/**
