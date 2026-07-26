@@ -15,7 +15,6 @@ on:
       - develop
       - master
       - 'release/**'
-      - vh-1588-ode-plugin-ip-config-fix
     types: [opened, synchronize, reopened]
 
 permissions:
