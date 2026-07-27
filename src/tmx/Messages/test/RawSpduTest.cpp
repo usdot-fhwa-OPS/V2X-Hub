@@ -44,7 +44,6 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     auto uuidOut = msg.get_uuid();
     EXPECT_EQ(uuid, uuidOut);
     EXPECT_EQ(8002, msg.get_psid());
-
 }
 
 TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)

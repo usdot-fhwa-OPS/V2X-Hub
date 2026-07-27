@@ -8,6 +8,7 @@
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/testMessage03.hpp>
 #include <tmx/messages/message_document.hpp>
+#include <array>
 #include <vector>
 #include <iostream>
 #include <chrono>
@@ -22,10 +23,32 @@ using namespace tmx::messages;
 
 namespace unit_test {
 
+	namespace {
+	// Note for allocation helpers below: 
+        // ASN.1 allocations must come from the malloc family.
+        // j2735_destroy releases the SSM tree with ASN_STRUCT_FREE, which calls free() on every node.
+        // calloc's zeroing also marks all optional fields absent.
 
+        // Allocates a zeroed ASN.1 struct.
+        template <typename T>
+        T *AllocAsn() {
+            return static_cast<T *>(calloc(1, sizeof(T)));
+        }
 
+        // Allocates a zeroed ASN.1 scalar.
+        template <typename T>
+        T *AllocAsn(T value) {
+            auto *p = AllocAsn<T>();
+            *p = value;
+            return p;
+        }
 
-	
+        // Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
+        uint8_t *AllocAsnBuffer(size_t size) {
+            return static_cast<uint8_t *>(calloc(size, 1));
+        }
+	}
+
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
@@ -92,7 +115,6 @@ TEST(J2735MessageTest, EncodeMobilityOperation)
 	std::string expected_hex_str = "00f380b32e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868dddc78796dc2cd7c7cbbf365dd8f2df838f5eedfdf665c99f2edcbbba0b3d3961cd9b4e3bf8f7eee9cb7ecbfa723a41d3961cd9b4e3bf8f7eee9cb7ecbfa722c41871ebddbfbeccb933e5db977747483a72eb95620e5970f3dfb9d20dfc3a69dfbb0ec41cb2e1e7bf720e997c74";
 	EXPECT_EQ(hex_str, expected_hex_str);
 }
-
 
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
@@ -192,7 +214,6 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
-
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
@@ -261,7 +282,6 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	EXPECT_EQ(hex_str, expected_hex_str);
 
 }
-
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
@@ -452,8 +472,6 @@ TEST(J2735MessageTest, DecodeBasicSafetyMessagePartII){
 	EXPECT_EQ(decoded_msg.to_string(),expected_json_message);
 }
 
-
-
 TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	string psm="<PersonalSafetyMessage><basicType><aPEDESTRIAN/></basicType><secMark>109</secMark><msgCnt>0</msgCnt><id>115eadf0</id><position><lat>389549376</lat><long>-771491840</long></position><accuracy><semiMajor>255</semiMajor><semiMinor>255</semiMinor><orientation>65535</orientation></accuracy><speed>0</speed><heading>16010</heading><pathHistory><crumbData><PathHistoryPoint><latOffset>0</latOffset><lonOffset>0</lonOffset><elevationOffset>0</elevationOffset><timeOffset>1</timeOffset></PathHistoryPoint></crumbData></pathHistory></PersonalSafetyMessage>";
 	std::stringstream ss;
@@ -472,7 +490,7 @@ TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	EXPECT_EQ(expectedHexString, hexString);
 
 }
-	
+
 TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	string tsm4str="<TestMessage04><body><tcrV01><reqid>C7C9A13FE6AC464E</reqid><reqseq>0</reqseq><scale>0</scale><bounds><TrafficControlBounds><oldest>27493419</oldest><reflon>-818349472</reflon><reflat>281118677</reflat><offsets><OffsetPoint><deltax>376</deltax><deltay>0</deltay></OffsetPoint><OffsetPoint><deltax>376</deltax><deltay>1320</deltay></OffsetPoint><OffsetPoint><deltax>0</deltax><deltay>1320</deltay></OffsetPoint></offsets></TrafficControlBounds></bounds></tcrV01> </body></TestMessage04>";
 	std::stringstream ss;
@@ -490,7 +508,6 @@ TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	std::string expectedHexString = "00f42538f93427fcd588c9c00c0000001a3842b3a82cc5f8ccce1ab02f1000102f10a5100010a500";
 	EXPECT_EQ(expectedHexString, hexString);
 }
-
 
 TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	//Has <refwidth> tag in TCM
@@ -546,9 +563,9 @@ TEST (J2735MessageTest, EncodeSrm)
 
 	message->requestor.position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
 	#if SAEJ2735_SPEC < 2020
-	DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
+	DSRC_Angle_t *heading_angle = AllocAsn<DSRC_Angle_t>();
 	#else
-	Common_Angle_t *heading_angle = (Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
+	auto *heading_angle = AllocAsn<Common_Angle_t>();
 	#endif
 	*heading_angle = 123;
 	message->requestor.position->heading = heading_angle;
