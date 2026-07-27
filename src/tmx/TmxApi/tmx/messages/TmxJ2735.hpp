@@ -215,7 +215,7 @@ public:
 				}
 				// Add custom deleter for newly allocated decoded messages.
 				// Note: reset removes any custom deleter set before hand
-				j2735_data.reset(tmp, 
+				_j2735_data.reset(tmp, 
 					[](message_type *p) { 
 						j2735::j2735_destroy<traits_type>(p); 
 					} 

@@ -483,8 +483,12 @@ TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	container.load<XML>(ss);
 	tsm4msg.set_contents(container.get_storage().get_tree());
 	tsm4Enc.encode_j2735_message(tsm4msg);
-	std::cout << tsm4Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(244,  tsm4Enc.get_msgId());
+	
+	// Get UPER HEX
+	tmx::byte_stream bytes = tsm4Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f42538f93427fcd588c9c00c0000001a3842b3a82cc5f8ccce1ab02f1000102f10a5100010a500";
+	EXPECT_EQ(expectedHexString, hexString);
 }
 
 
@@ -499,17 +503,28 @@ TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
-	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
+	tmx::byte_stream bytes = tsm5Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f580d83cc190ac4a6e610588000024002400d2e36234213ff6bc8e0de4980c5960000000000002977dfcb5fadfbb2add987765c7b37f3cb9000034b8d88d084ffdaf238379260316580d0c41461c824a2cc34e3d0c000001a3b7738bcf64e5ec1007ff1549cbc39e774cdbb86a2d78f4dc34000001a3b7733a8312768cced14e200006a352c3d80008000805fcd60b4a017f3582d2805fcd60b4a017f3582d1805fcd60b4a017f3582d2805fcd20b4a097f3582d2805fcd60b49f97f3582d1805fcd60b4a017f3582d2805fcd60b4a017f3582d2805ffce00ba000";
+	EXPECT_EQ(expectedHexString, hexString);
+			
+}
 
-	//No <refwidth> tag in TCM
-	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+TEST(J2735MessageTest, EncodeTrafficControlMessageWithoutRefwidth) {
+	//Has <refwidth> tag in TCM
+	std::string tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	std::stringstream ss;
+	tsm5Message tsm5msg;
+	tsm5EncodedMessage tsm5Enc;
+	tmx::message_container_type container;
 	ss<<tsm5str;
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
-	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
+	tmx::byte_stream bytes = tsm5Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f580923f43831b9940e530180000040004009d0164749874ba6791df7c2a0b6c980000000000023f7dfcb5fadfbb280004e80b23a4c3a5d33c8efbe1505b64c1a18828c39049459869c7a180000034fb241179ec9cbd8200ffe2a1397873cee99b770d45af1e9b8680000034fb2407a9bd5013373d4d440033c01180018000805e899ff9a097a27802d875e89e016e2d7e8e802282";
+	EXPECT_EQ(expectedHexString, hexString);
 }
 
 TEST (J2735MessageTest, EncodeSrm)
