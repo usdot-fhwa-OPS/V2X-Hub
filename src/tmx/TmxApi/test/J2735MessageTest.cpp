@@ -855,8 +855,18 @@ TEST(J2735MessageTest, EncodeSDSM)
 	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
 	EXPECT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
-	// //Decode SDSM
-	// auto sdsm_ptr = SdsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	// ASSERT_EQ(10, sdsm_ptr->msgCnt);
-}
+
+
+
+	}
+
+	TEST(J2735MessageTest, DecodeSDSM) {
+		J2735MessageFactory factory;
+		std::string hexString = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
+		tmx::byte_stream bytes = tmx::byte_stream_decode(hexString);
+		std::shared_ptr<MessageFrameEncodedMessage> msg = std::shared_ptr<MessageFrameEncodedMessage>(static_cast<MessageFrameEncodedMessage*>(factory.NewMessage(bytes)));
+		auto decoded_msg = msg->decode_j2735_message();
+		std::string expected_json_message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MessageFrame><messageId>41</messageId><value><SensorDataSharingMessage><msgCnt>10</msgCnt><sourceID>010C0C0A</sourceID><equipmentType><unknown/></equipmentType><sDSMTimeStamp><year>2023</year></sDSMTimeStamp><refPos><lat>38121212</lat><long>-77121212</long></refPos><refPosXYConf><semiMajor>12</semiMajor><semiMinor>52</semiMinor><orientation>10</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><unknown/></objType><objTypeCfd>1</objTypeCfd><objectID>1</objectID><measurementTime>1</measurementTime><timeConfidence><time-100-000/></timeConfidence><pos><offsetX>1</offsetX><offsetY>1</offsetY></pos><posConfidence><pos><a500m/></pos><elevation><elev-500-00/></elevation></posConfidence><speed>1</speed><speedConfidence><prec100ms/></speedConfidence><heading>1</heading><headingConf><prec10deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage></value></MessageFrame>";
+		EXPECT_EQ(decoded_msg.to_string(),expected_json_message);
+	}
 }
