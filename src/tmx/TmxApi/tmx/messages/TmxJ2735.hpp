@@ -197,8 +197,13 @@ public:
 							"\nFailed after " << rval.consumed << " bytes.";
 					BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
 				}
-
-				_j2735_data.reset(tmp);
+				// Add custom deleter for newly allocated decoded messages
+				// Note: reset removes any custom deleter set before hand
+				_j2735_data.reset(tmp, 
+					[](message_type *p) { 
+						j2735::j2735_destroy<traits_type>(p); 
+					} 
+				);
 			}else if (tmx_message<Format>::is_format("JSON")) {
 				rval = jer_decode(NULL, get_descriptor(), (void **)&tmp, myData.c_str(), myData.size());
 				if (rval.code != RC_OK)
@@ -208,8 +213,13 @@ public:
 							"\nFailed after " << rval.consumed << " bytes.";
 					BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
 				}
-
-				_j2735_data.reset(tmp);
+				// Add custom deleter for newly allocated decoded messages.
+				// Note: reset removes any custom deleter set before hand
+				j2735_data.reset(tmp, 
+					[](message_type *p) { 
+						j2735::j2735_destroy<traits_type>(p); 
+					} 
+				);
 			} else {
 				BOOST_THROW_EXCEPTION(J2735Exception("Unsupported format for J2735 message: " + tmx::tmx_message<Format>::format()));
 			}

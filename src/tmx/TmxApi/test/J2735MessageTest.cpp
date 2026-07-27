@@ -440,19 +440,6 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
 	EXPECT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
 
-	//Decode the encoded BSM
-	// auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	// ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
-	// ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
-	// auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-	// auto decoded_reg_bsm = (Reg_BasicSafetyMessage_t *)calloc(1, sizeof(Reg_BasicSafetyMessage_t));
-	// auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
-	// decoded_regional = decoded_bsm_ptr->regional;
-	// decoded_reg_bsm = decoded_regional->list.array[0];
-	// ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
-	// ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
-	// ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
-	// ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
 }
 
 TEST(J2735MessageTest, DecodeBasicSafetyMessagePartII){
@@ -477,8 +464,13 @@ TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
-	std::cout << psmENC.get_payload_str()<<std::endl;
-	ASSERT_EQ(32,  psmENC.get_msgId());
+	
+	// Get UPER hex
+	tmx::byte_stream bytes = psmENC.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00202320000200da00457ab7c04cdcf6403d4dc9ffffffffff0003e8a0008000200008000000";
+	EXPECT_EQ(expectedHexString, hexString);
+
 }
 	
 TEST(J2735MessageTest, EncodeTrafficControlRequest){
