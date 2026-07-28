@@ -327,10 +327,10 @@ jobs:
     timeout-minutes: 35
     steps:
       - name: Checkout v2xhub-integration-tests
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
+          ref: ${{ github.base_ref || 'develop' }}
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
