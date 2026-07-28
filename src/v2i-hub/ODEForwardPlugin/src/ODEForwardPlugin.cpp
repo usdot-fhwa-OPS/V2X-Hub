@@ -48,41 +48,33 @@ namespace ODEForwardPlugin
 	 */
 	void ODEForwardPlugin::UpdateConfigSettings()
 	{
-		// Configuration settings are retrieved from the API using the GetConfigValue template class.
-		// This method does NOT execute in the main thread, so variables must be protected
-		// (e.g. using std::atomic, std::mutex, etc.).
-
-		int instance;
-		GetConfigValue("Instance", instance);
-		GetConfigValue<uint16_t>("schedule_frequency", _scheduleFrequency);
-		GetConfigValue<uint16_t>("ForwardMSG", _forwardMSG);
-		GetConfigValue<int>("MAPUDPPort", _MAPUDPPort);
-		GetConfigValue<int>("TIMUDPPort", _TIMUDPPort);
-		GetConfigValue<int>("BSMUDPPort", _BSMUDPPort);
-		GetConfigValue<int>("SPATUDPPort", _SPATUDPPort);
-		_udpServerIpAddress = tmx::utils::environment::get_local_ip();
-		//Update communication mode
-
-		
+		std::string odeIp = "";
+		u_int mapUdpPort = 0;
+		u_int timUdpPort = 0;
+		u_int bsmUdpPort = 0;
+		u_int spatUdpPort = 0;
+		GetConfigValue<std::string>("OdeIp", odeIp);
+		GetConfigValue<u_int>("MAPUDPPort", mapUdpPort);
+		GetConfigValue<u_int>("TIMUDPPort", timUdpPort);
+		GetConfigValue<u_int>("BSMUDPPort", bsmUdpPort);
+		GetConfigValue<u_int>("SPATUDPPort", spatUdpPort);
 
 		//Create UDP clients for different messages
-		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(_udpServerIpAddress, _BSMUDPPort));
-		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(_udpServerIpAddress, _MAPUDPPort));
-		_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(_udpServerIpAddress, _TIMUDPPort));
-		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(_udpServerIpAddress, _SPATUDPPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::BSM, std::make_shared<UdpClient>(odeIp, bsmUdpPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::MAP, std::make_shared<UdpClient>(odeIp, mapUdpPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::TIM, std::make_shared<UdpClient>(odeIp, timUdpPort));
+		_udpMessageForwarder->attachUdpClient(UDPMessageType::SPAT, std::make_shared<UdpClient>(odeIp, spatUdpPort));
 
 		// Kafka validation-event forwarding configuration
-		// Kafka validation-event forwarding configuration
-		std::string kafkaBrokerIp;
+		
 		std::string kafkaBrokerPort;
-		GetConfigValue<std::string>("KafkaBrokerIp", kafkaBrokerIp);
 		GetConfigValue<std::string>("KafkaBrokerPort", kafkaBrokerPort);
 
 		std::scoped_lock kafkaLock(_kafkaLock);
 
-		if (!kafkaBrokerIp.empty() && !kafkaBrokerPort.empty())
+		if (!odeIp.empty() && !kafkaBrokerPort.empty())
 		{
-			_kafkaBrokers = kafkaBrokerIp + ":" + kafkaBrokerPort;
+			_kafkaBrokers = odeIp + ":" + kafkaBrokerPort;
 		}
 		else
 		{

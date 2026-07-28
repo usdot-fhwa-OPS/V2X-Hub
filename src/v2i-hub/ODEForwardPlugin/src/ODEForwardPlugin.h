@@ -84,12 +84,6 @@ namespace ODEForwardPlugin
 
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
-			uint16_t _scheduleFrequency;
-			uint16_t _forwardMSG;
-			int _MAPUDPPort;
-			int _TIMUDPPort;
-			int _BSMUDPPort;
-			int _SPATUDPPort;
 
 			// Forwarded/skipped counters for one message stream
 			struct ForwardStats
@@ -103,7 +97,6 @@ namespace ODEForwardPlugin
 			ForwardStats _mapStats;
 			ForwardStats _validationStats;
 
-			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
 
 			// Kafka validation-event forwarding
