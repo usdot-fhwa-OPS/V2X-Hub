@@ -124,6 +124,18 @@ void MessageReceiverPlugin::OnStateChange(IvpPluginState state)
 	}
 }
 
+inline const char* get_encoding(byte_t b){
+	switch (b) {
+		case 0x00:
+			return api::ENCODING_ASN1_UPER_STRING;
+		case 0x30:
+			return api::ENCODING_ASN1_BER_STRING;
+		case '{':
+			return api::ENCODING_JSON_STRING;
+		default:
+			return api::ENCODING_BYTEARRAY_STRING;
+	}
+}
 
 int MessageReceiverPlugin::Main()
 {
@@ -149,7 +161,7 @@ int MessageReceiverPlugin::Main()
 		}
 
 		try
-{
+		{
 			int nBytesReceived = server ? server->TimedReceive((char *)incoming.data(), incoming.size(), 5) : 0;
 			if (nBytesReceived > 0){
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
@@ -161,23 +173,11 @@ int MessageReceiverPlugin::Main()
 
 				// Support different encodings
 				string enc;
-				switch (fullPayload[0]) {
-					case 0x00:
-						enc = api::ENCODING_ASN1_UPER_STRING;
-						break;
-					case 0x30:
-						enc = api::ENCODING_ASN1_BER_STRING;
-						break;
-					case '{':
-						enc = api::ENCODING_JSON_STRING;
-						break;
-					default:
-						enc = api::ENCODING_BYTEARRAY_STRING;
-				}
 
 				if(!fullSPDUMode){
 					// if not in full SPDU mode, just send the raw bytes corresponding 
-					// to raw message payload bytes (unsecured) to TMX Core 			
+					// to raw message payload bytes (unsecured) to TMX Core
+					enc = get_encoding(fullPayload[0]);		
 					this->IncomingMessage(fullPayload.data(), nBytesReceived, enc.c_str(), 0, 0, time);
 				}
 				else {
@@ -196,7 +196,7 @@ int MessageReceiverPlugin::Main()
 						_failedSPDU++;
 						SetStatus<uint>(Key_FailedSPDU, _failedSPDU);
 					}
-					if (!unwrapSpdu(decoded.get(), msgPayload, psid, psidSet, 0)) {
+					if (!unwrapSpdu(decoded.get(), msgPayload, psid, psidSet, 0) || msgPayload.empty()) {
 						// if unwrap fails, no message is sent to TMX core
 						PLOG(logERROR) << "Error unwrapping SPDU";
 						//Broadcast TmxEventLog message
@@ -208,6 +208,7 @@ int MessageReceiverPlugin::Main()
 					}
 					else {
 						// put the extracted msg payload on the TMX core
+						enc = get_encoding(msgPayload[0]);  // note the encoding is retrieved from the unsecured payload
 						this->IncomingMessage(msgPayload.data(), msgPayload.size(), enc.c_str(), 0, 0, time); 
 
 						//Create RawSpdu message and send to TMX Core
