@@ -132,8 +132,6 @@ int MessageReceiverPlugin::Main()
 	byte_stream incoming(4000);
 	std::unique_ptr<tmx::utils::UdpServer> server;
 
-	byte_stream fullPayload(4000);
-
 	while (_plugin->state != IvpPluginState_error)
 	{
 		// See if the server values are different
@@ -151,12 +149,12 @@ int MessageReceiverPlugin::Main()
 		}
 
 		try
-		{
+{
 			int nBytesReceived = server ? server->TimedReceive((char *)incoming.data(), incoming.size(), 5) : 0;
-
-			if (nBytesReceived > 0)
-			{
+			if (nBytesReceived > 0){
 				uint64_t time = Clock::GetMillisecondsSinceEpoch();
+				byte_stream fullPayload;
+				byte_stream msgPayload;
 
 				totalBytes += nBytesReceived;
 				fullPayload.assign(incoming.begin(), incoming.begin() + nBytesReceived);
@@ -183,13 +181,12 @@ int MessageReceiverPlugin::Main()
 					this->IncomingMessage(fullPayload.data(), nBytesReceived, enc.c_str(), 0, 0, time);
 				}
 				else {
-					// extract the unsecured payload from the SPDU 
-					tmx::byte_stream msgPayload;
+					// extract the unsecured payload from the SPDU
 					std::shared_ptr<Ieee1609Dot2Data_t> decoded;
 					uint psid = 0;
 					bool psidSet = false;
 					try {
-						decoded = decodeSpdu(incoming, nBytesReceived);
+						decoded = decodeSpdu(fullPayload, nBytesReceived);
 					}
 					catch (const tmx::TmxException &ex) {
 						PLOG(logERROR) << "Error decoding SPDU: " << ex.what();
@@ -199,8 +196,8 @@ int MessageReceiverPlugin::Main()
 						_failedSPDU++;
 						SetStatus<uint>(Key_FailedSPDU, _failedSPDU);
 					}
-					int msgPayloadSize = unwrapSpdu(decoded.get(), msgPayload, psid, psidSet, 0);
-					if (msgPayloadSize < 0) {
+					if (!unwrapSpdu(decoded.get(), msgPayload, psid, psidSet, 0)) {
+						// if unwrap fails, no message is sent to TMX core
 						PLOG(logERROR) << "Error unwrapping SPDU";
 						//Broadcast TmxEventLog message
 						tmx::messages::TmxEventLogMessage eventLog("Error unwrapping SPDU");
@@ -209,20 +206,19 @@ int MessageReceiverPlugin::Main()
 						_failedSPDU++;
 						SetStatus<uint>(Key_FailedSPDU, _failedSPDU);
 					}
-					// put the extracted msg payload on the TMX core
-					this->IncomingMessage(msgPayload.data(), msgPayloadSize, enc.c_str(), 0, 0, time); 
+					else {
+						// put the extracted msg payload on the TMX core
+						this->IncomingMessage(msgPayload.data(), msgPayload.size(), enc.c_str(), 0, 0, time); 
 
-					//Create RawSpdu message and send to TMX Core
-					auto spduMsg = buildRawSpdu(psid, fullPayload, msgPayload, time, _uuidGen());
-					_processedSPDU++;
-					SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
-					tmx::routeable_message rMsg;
-					rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
-					this->OutgoingMessage(rMsg);
-
+						//Create RawSpdu message and send to TMX Core
+						auto spduMsg = buildRawSpdu(psid, fullPayload, msgPayload, time, _uuidGen());
+						_processedSPDU++;
+						SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
+						tmx::routeable_message rMsg;
+						rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
+						this->OutgoingMessage(rMsg);
+					}
 				}
-				
-
 			}
 			else if (nBytesReceived < 0)
 			{

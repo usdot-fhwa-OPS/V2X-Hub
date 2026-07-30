@@ -23,29 +23,29 @@ namespace MessageReceiver {
 
     /**
      * @brief Unwraps a 1609.2 SPDU to extract the unsecured payload bytes, PSID, and whether the PSID was set.
-     * Returns the size of the extracted payload, or -1 on error.
+     * Returns boolean indicating success or failure. 
      * 
      * @param d Ieee1609Dot2Data_t pointer to the SPDU data to unwrap.
      * @param payloadOut the byte_stream to store the extracted unsecured payload bytes.
      * @param psidOut stores the extracted PSID if found.
      * @param psidSet boolean flag indicating whether the PSID was set.
      * @param depth the current recursion depth (used to prevent excessive nesting).
-     * @return int (size of extracted payload, or -1 on error)
+     * @return bool
      */
-    inline int unwrapSpdu(const Ieee1609Dot2Data_t *d, std::vector<uint8_t>& payloadOut,
+    inline bool unwrapSpdu(const Ieee1609Dot2Data_t *d, std::vector<uint8_t>& payloadOut,
                         uint32_t& psidOut, bool& psidSet, int depth)   // no default here
     {
         if (!d || depth > MAX_SPDU_DEPTH) 
         {
-            return -1;
+            return false;
         }
         if (d->protocolVersion != 3)      
         {
-            return -1;
+            return false;
         }
         if (!d->content)                  
         {
-            return -1;
+            return false;
         }
 
         switch (d->content->present) {
@@ -53,16 +53,16 @@ namespace MessageReceiver {
                 const Opaque_t& op = d->content->choice.unsecuredData;
                 if (!op.buf || op.size <= 0) 
                 {
-                    return -1;
+                    return false;
                 }
                 payloadOut.assign(op.buf, op.buf + op.size);
-                return static_cast<int>(op.size);
+                return true;
             }
             case Ieee1609Dot2Content_PR_signedData: {
                 const SignedData_t* sd = d->content->choice.signedData;
                 if (!sd || !sd->tbsData) 
                 {
-                    return -1;
+                    return false;
                 }
                 if (!psidSet) {
                     psidOut = static_cast<uint32_t>(sd->tbsData->headerInfo.psid);
@@ -70,7 +70,7 @@ namespace MessageReceiver {
                 }
                 if (!sd->tbsData->payload) 
                 {
-                    return -1;
+                    return false;
                 }
                 const Ieee1609Dot2Data_t* next = sd->tbsData->payload->data;  // OPTIONAL
                 if (!next) 
@@ -80,7 +80,7 @@ namespace MessageReceiver {
                 return unwrapSpdu(next, payloadOut, psidOut, psidSet, depth + 1);
             }
             default:
-                return -1;
+                return false;
         }
     }
 
