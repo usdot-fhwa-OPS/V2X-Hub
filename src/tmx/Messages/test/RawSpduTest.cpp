@@ -2,6 +2,8 @@
 #include "RawSpdu.h"
 #include <vector>
 #include <iostream>
+#include "tmx/messages/routeable_message.hpp"
+#include "tmx/json/cJSON.h"
 
 using namespace std;
 using namespace tmx;
@@ -100,3 +102,39 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     EXPECT_EQ(8001, rawSpdu.get_psid());
 }
 
+
+TEST(RawSpduTest, SPDUtoIvpMessageConversionRoundTrip){
+    // the goal of the test is to verify that once the SPDU is sent over tmx and becomes
+    // an IvpMessage, it can be converted back to a RawSpdu and the attributes are preserved
+    RawSpdu rawSpdu;
+
+    tmx::byte_stream spdu = tmx::byte_stream_decode(rawBytesPsmHex);
+    tmx::byte_stream msg = tmx::byte_stream_decode(psmHex);
+    tmx::byte_stream uuid = tmx::byte_stream_decode(uuidHex);
+
+    rawSpdu.set_fullByteData(spdu);
+    rawSpdu.set_msgByteData(msg);
+    rawSpdu.set_uuid(uuid);
+    rawSpdu.set_messageType("PSM"); // PersonalSafetyMessage
+    long ts = 1718900123456;
+    rawSpdu.set_timestampMs(ts);
+    rawSpdu.set_psid(8001);
+
+    // simulating sending the RawSpdu over tmx
+    tmx::routeable_message rMsg;
+	rMsg.initialize<tmx::messages::RawSpdu>(rawSpdu);
+
+    // get the IvpMessage from the rMsg
+    auto ivpMsg = std::as_const(rMsg).get_message();  // as_const is needed to avoid memory leak
+
+    // simulating receiving the IvpMessage and converting it back to a RawSpdu
+    tmx::routeable_message rMsg2(ivpMsg);
+    tmx::messages::RawSpdu rawSpdu2 = rMsg2.get_payload<tmx::messages::RawSpdu>();
+
+    EXPECT_EQ("PSM", rawSpdu2.get_messageType());
+    EXPECT_EQ(ts, rawSpdu2.get_timestampMs());
+    EXPECT_EQ(spdu, rawSpdu2.get_fullByteData());
+    EXPECT_EQ(msg, rawSpdu2.get_msgByteData());
+    EXPECT_EQ(uuid, rawSpdu2.get_uuid());
+    EXPECT_EQ(8001, rawSpdu2.get_psid());
+}
