@@ -8,7 +8,7 @@ This directory contains the build scripts as well as the source code required fo
 The `build.sh` script here is used to build V2X Hub. The documentation is provided below or can be accessed using the `-h` parameter.
 
 ```bash
-Usage: ./build.sh [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list']
+Usage: ./build.sh [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list'] [--select-plugins 'list']
 
 Required positional arguments:
   BUILD_TYPE            The build type (e.g., debug, release, coverage)
@@ -17,11 +17,22 @@ Required options:
   --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)
 
 Optional options:
-  --skip-plugins STRING Space-separated list of plugin directory names to skip (case-sensitive, default empty = build all)
-  -h, --help            Show this help message and exit
+  --skip-plugins STRING   Space-separated list of plugin directory names to skip  (case-sensitive, default empty = build all)
+  --select-plugins STRING Space-separated list of plugin directory names to build (case-sensitive, default empty = build all).
+                          When specified, only these plugins are built, minus any that also appear in --skip-plugins.
+  -h, --help              Show this help message and exit
 
 If arguments are not provided, the script will prompt interactively.
 ```
+
+Plugin names for both options are the directory names under `src/v2i-hub` and are case-sensitive; unrecognized names are reported as a warning and ignored. `--select-plugins` is useful during development to build a single plugin:
+
+```bash
+./build.sh debug --j2735-version 2024 --select-plugins "<plugin name>"
+```
+
+Note that `CommandPlugin` is always built regardless of these options, since it is required to connect to the web UI.
+
 DockerHub hosted V2X Hub images include all plugins by default. Instructions below can be used to build lightweight images for a subset of plugins.
 
 1. From the repo root:  
