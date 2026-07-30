@@ -129,7 +129,7 @@ namespace MessageReceiver {
         tmx::messages::RawSpdu spduMsg;
         spduMsg.set_fullByteData(fullByteData);
         spduMsg.set_msgByteData(msgByteData);
-        spduMsg.set_uuid(uuid);
+        spduMsg.set_uuid(tmx::byte_stream(uuid.begin(), uuid.end()));
         spduMsg.set_timestampMs(rxTime);
         spduMsg.set_psid(psid);
         spduMsg.set_messageType("Missing ID"); // TODO: Placeholder until we update this to include string message ID from payload
