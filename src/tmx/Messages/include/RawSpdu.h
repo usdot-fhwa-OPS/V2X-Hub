@@ -42,8 +42,12 @@ namespace tmx
                 static constexpr const char* MessageSubType = MSGSUBTYPE_BASIC_STRING;
             #endif
             RawSpdu(const tmx::message_container_type &contents) : tmx::message(contents) {}
-            // Full SPDU bytes
-                std_attribute(this->msg, tmx::byte_stream, spduData, tmx::byte_stream(), )
+                // Full SPDU bytes
+                std_attribute(this->msg, tmx::byte_stream, fullByteData, tmx::byte_stream(), )
+
+                // Actual message payload bytes (unsecured)
+                std_attribute(this->msg, tmx::byte_stream, msgByteData, tmx::byte_stream(), )
+
                 // Packet UUID
                 std_attribute(this->msg, tmx::byte_stream, uuid, tmx::byte_stream(), )
 
