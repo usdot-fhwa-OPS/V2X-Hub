@@ -194,16 +194,16 @@ TEST(TestUtils, testUnwrapSpdu){
 }
 
 TEST(TestUtils, testBuildRawSpdu){
-    tmx::byte_stream payload = byte_stream_decode("0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
-       "01011910c110c1002c0860853200304104299001021a2189a189806010c10c4c00a0820853200804"
-       "644304430400d0218214c801c10410a6400c08688626862601c043043130");
+    tmx::byte_stream fullPayload = byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
+    tmx::byte_stream msgPayload = byte_stream_decode("00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f8");
     uint psid = 123;
     auto uuid = boost::uuids::random_generator()();
     // Convert UUID to byte stream for comparison
     tmx::byte_stream uuidBytes(uuid.begin(), uuid.end());
-    auto spduMsg = MessageReceiver::buildRawSpdu(psid, payload, 1234567890, uuid);
+    auto spduMsg = MessageReceiver::buildRawSpdu(psid, fullPayload, msgPayload, 1234567890, uuid);
     EXPECT_EQ(spduMsg.get_psid(), psid);
-    EXPECT_EQ(spduMsg.get_spduData(), payload);
+    EXPECT_EQ(spduMsg.get_fullByteData(), fullPayload);
+    EXPECT_EQ(spduMsg.get_msgByteData(), msgPayload);
     EXPECT_EQ(spduMsg.get_timestampMs(), 1234567890);
     EXPECT_EQ(spduMsg.get_uuid(), uuidBytes);
     EXPECT_EQ(spduMsg.get_messageType(), "Missing ID");
