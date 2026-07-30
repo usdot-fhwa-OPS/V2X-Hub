@@ -35,18 +35,18 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     rawSpdu.set_msgByteData(msg);
     rawSpdu.set_uuid(uuid);
     rawSpdu.set_messageType("BSM"); // BasicSafetyMessage
-    long timestampMS = 1718900000000
-    msg.set_timestampMs(ts);
+    long ts = 1718900000000;
+    rawSpdu.set_timestampMs(ts);
     rawSpdu.set_psid(8002);
 
 
     std::cout << rawSpdu.to_string() << std::endl;
 
     EXPECT_EQ("BSM", rawSpdu.get_messageType());
-    EXPECT_EQ(timestampMS, rawSpdu.get_timestampMs());
+    EXPECT_EQ(ts, rawSpdu.get_timestampMs());
     EXPECT_EQ(spdu, rawSpdu.get_fullByteData());
     EXPECT_EQ(msg, rawSpdu.get_msgByteData());
-    EXPECT_EQ(uuid, msg.get_uuid());
+    EXPECT_EQ(uuid, rawSpdu.get_uuid());
     EXPECT_EQ(8002, rawSpdu.get_psid());
 }
 
@@ -65,10 +65,10 @@ TEST(RawSpduTest, ToStringSerializesByteStreamAsHexString)
     rawSpdu.set_timestampMs(1718900000000);
     rawSpdu.set_psid(8002);
 
-    std::string json = msg.to_string();
+    std::string json = rawSpdu.to_string();
 
-    EXPECT_NE(json.find("\"fullByteData\":\"" + bsmHex + "\""), std::string::npos);
-    EXPECT_NE(json.find("\"msgByteData\":\"" + rawBytesBsmHex + "\""), std::string::npos);
+    EXPECT_NE(json.find("\"fullByteData\":\"" + rawBytesBsmHex + "\""), std::string::npos);
+    EXPECT_NE(json.find("\"msgByteData\":\"" + bsmHex + "\""), std::string::npos);
     EXPECT_NE(json.find("\"uuid\":\"" + uuidHex + "\""), std::string::npos);
     EXPECT_NE(json.find("\"messageType\":\"BSM\""), std::string::npos);
     EXPECT_NE(json.find("\"timestampMs\":\"1718900000000\""), std::string::npos);
@@ -79,7 +79,7 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     RawSpdu rawSpdu;
 
     tmx::byte_stream spdu = tmx::byte_stream_decode(rawBytesPsmHex);
-    tms::byte_stream msg = tmx::byte_stream_decode(psmHex);
+    tmx::byte_stream msg = tmx::byte_stream_decode(psmHex);
     tmx::byte_stream uuid = tmx::byte_stream_decode(uuidHex);
 
     rawSpdu.set_fullByteData(spdu);
