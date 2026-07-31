@@ -64,7 +64,8 @@ namespace IntersectionValidation
 
     void IntersectionValidationPlugin::UpdateConfigSettings()
     {
-        // TODO
+        // RSU identifier
+        GetConfigValue<std::string>("rsuSource", rsuSource);
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
