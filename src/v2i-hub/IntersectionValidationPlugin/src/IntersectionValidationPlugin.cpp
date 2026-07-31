@@ -66,8 +66,6 @@ namespace IntersectionValidation
     {
         // RSU identifier
         GetConfigValue<std::string>("rsuSource", rsuSource);
-
-        SetStatus("RSU Source", rsuSource.empty() ? "(not configured)" : rsuSource);
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)

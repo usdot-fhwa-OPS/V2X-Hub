@@ -31,7 +31,7 @@
     {
       "key": "rsuSource",
       "default": "-",
-      "description": "IP Address of the RSU"
+      "description": "IP Address of the RSU that sends the SPAT/MAP messages that are validated by this plugin. The IP is added to the 'source' field of all CTI 4501 Validation events so that consumers can attribute the event to the reporting RSU."
     }
   ]
 }
