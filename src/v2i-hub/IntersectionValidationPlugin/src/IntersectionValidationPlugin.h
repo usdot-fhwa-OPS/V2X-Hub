@@ -72,8 +72,8 @@ namespace IntersectionValidation
         uint mapRevisionFailed = 0;
 
         // Identifier of the measured input stream, reported as topicName on a BroadcastRate event
-        std::string spatInputTopic;
-        std::string mapInputTopic;
+        std::string spatInputTopic = "topic.ProcessedSpat";
+        std::string mapInputTopic = "topic.ProcessedMap";
 
         /**
          * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
