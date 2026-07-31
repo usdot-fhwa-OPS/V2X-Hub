@@ -64,7 +64,7 @@ namespace IntersectionValidation
         uint spatValidationPassed = 0;
         uint mapFieldValidationErrors = 0;
         uint mapValidationPassed = 0;
-        std::string rsuSource;
+        std::string rsuSource; // TODO: Instead of setting the rsu IP here, have the message receiver grab the IP and attach it to the message
 
         uint spatRevisionPassed = 0;
         uint mapRevisionPassed = 0;
