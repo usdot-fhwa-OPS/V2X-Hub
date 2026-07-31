@@ -39,6 +39,23 @@ DEFINE_MEMBER_CHECKER(messageType)
 template <typename T>
 struct SaeJ2735Traits { };
 
+// Primary template: returns false for everything else
+template <typename T, template <typename...> class Template>
+struct is_instance_of : std::false_type {};
+
+// Partial specialization: matches when T is an instantiation of Template
+template <template <typename...> class Template, typename... Args>
+struct is_instance_of<Template<Args...>, Template> : std::true_type {};
+
+/**
+ * Used to determine whether type is instance of template class.
+ * std::is_same_v only works with full defined classes.
+ */
+template <typename T, template <typename...> class Template>
+inline constexpr bool is_instance_of_v = is_instance_of<T, Template>::value;
+
+
+
 template <typename TraitsType>
 static constexpr typename std::enable_if<HAS_MEMBER(TraitsType, messageId), const int>::type
 get_default_messageId() {
@@ -93,6 +110,7 @@ get_messageTag()
 			get_messageType<TraitsType>();
 }
 
+
 template <typename TraitsType>
 static void j2735_destroy(typename TraitsType::message_type *ptr,
 						  const typename TraitsType::asn_type *descr = get_descriptor<TraitsType>())
@@ -107,6 +125,17 @@ static void j2735_destroy(typename TraitsType::message_type *ptr,
 	}
 	else
 		free(ptr);
+}
+
+template <typename TraitsType>
+static std::shared_ptr<typename TraitsType::message_type> j2735_create() {
+	std::shared_ptr<typename TraitsType::message_type> alloc(
+		static_cast<typename TraitsType::message_type *>(calloc(1, sizeof(typename TraitsType::message_type))),
+		[](typename TraitsType::message_type *rawPtr) {
+			j2735_destroy<TraitsType>(rawPtr);
+		}
+	);
+	return alloc;
 }
 
 template <typename ToTraitsType, typename FromTraitsType>

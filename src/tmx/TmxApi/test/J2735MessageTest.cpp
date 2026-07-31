@@ -35,29 +35,15 @@ namespace unit_test {
             return static_cast<T *>(calloc(1, sizeof(T)));
         }
 
-        // Allocates a zeroed ASN.1 scalar.
-        template <typename T>
-        T *AllocAsn(T value) {
-            auto *p = AllocAsn<T>();
-            *p = value;
-            return p;
-        }
 
-        // Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
-        uint8_t *AllocAsnBuffer(size_t size) {
-            return static_cast<uint8_t *>(calloc(size, 1));
-        }
+       
 	}
 
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<TestMessage03_t>(
-		static_cast<TestMessage03_t*>(calloc(1, sizeof(TestMessage03_t))),
-		[](TestMessage03_t *p) {
-			j2735::j2735_destroy<tsm3Traits>(p);
-		} 
-	);
+	// Allocate a C-style struct using j2735::j2735_create which includes custom delete (see SaeJ2735Traits.hpp).
+	auto message = j2735::j2735_create<tsm3Traits>(); 
+	
 	/**
 	 * Populate MobilityHeader 
 	 */
@@ -119,12 +105,7 @@ TEST(J2735MessageTest, EncodeMobilityOperation)
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<TestMessage00_t>(
-		static_cast<TestMessage00_t*>(calloc(1, sizeof(TestMessage00_t))),
-		[](TestMessage00_t *p) {
-			j2735::j2735_destroy<tsm0Traits>(p);
-		} 
-	);
+	auto message = j2735::j2735_create<tsm0Traits>();
 	
 	/**
 	 * Populate MobilityHeader 
@@ -180,7 +161,7 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	ASSERT_EQ(failed, 0);
 	
 	std::string expiration_str = std::to_string(1784819631875000000);
-	message->body.expiration = (MobilityTimestamp_t*)calloc(1,sizeof(MobilityTimestamp_t));
+	message->body.expiration = AllocAsn<MobilityTimestamp_t>();
 	failed = OCTET_STRING_fromString( message->body.expiration, expiration_str.c_str());
 	// If operation fails, unit test is no longer valid
 	ASSERT_EQ(failed, 0);
@@ -193,7 +174,7 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
 	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
 
-	message->body.trajectoryStart = (MobilityLocation*)calloc(1,sizeof(MobilityLocation));
+	message->body.trajectoryStart = AllocAsn<MobilityLocation>();
 	message->body.trajectoryStart->ecefX = 1;
 	message->body.trajectoryStart->ecefY = 1;
 	message->body.trajectoryStart->ecefZ = 1;
@@ -217,12 +198,7 @@ TEST(J2735MessageTest, EncodeMobilityRequest)
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<TestMessage01_t>(
-		static_cast<TestMessage01_t*>(calloc(1, sizeof(TestMessage01_t))),
-		[](TestMessage01_t *p) {
-			j2735::j2735_destroy<tsm1Traits>(p);
-		} 
-	);
+	auto message = j2735::j2735_create<tsm1Traits>();
 	/**
 	 * Populate MobilityHeader 
 	 */
@@ -260,10 +236,10 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 	message->body.urgency = 1;
 	//Enumeration between 0-13. See ASN.1 definition
 	message->body.planType = 3; // PlanType: joinPlatoonAtRear
-	message->body.reason = (MobilityReason_t*)calloc(1,sizeof(MobilityReason_t));
+	message->body.reason = AllocAsn<MobilityReason_t>();
 	// Enumeration between 0-8. See ASN.1 definition
 	*message->body.reason = 5; // Reason: OtherwiseEngaged
-	message->body.repeat = (MobilityRepeat_t*)calloc(1,sizeof(MobilityRepeat_t));
+	message->body.repeat = AllocAsn<MobilityRepeat_t>();
 	// Enumeration between 0-2. See ASN.1 definition
 	*message->body.repeat = 2; // Repeat: neverRequestAgain
 
@@ -286,12 +262,7 @@ TEST(J2735MessageTest, EncodeMobilityResponse)
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<BasicSafetyMessage_t>(
-		static_cast<BasicSafetyMessage_t*>(calloc(1, sizeof(BasicSafetyMessage_t))),
-		[](BasicSafetyMessage_t *p) {
-			j2735::j2735_destroy<BsmTraits>(p);
-		} 
-	);
+	auto message = j2735::j2735_create<BsmTraits>();
 	/**
 	 * Populate BSMcoreData 
 	 */
@@ -361,12 +332,7 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 {	
 // Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<BasicSafetyMessage_t>(
-		static_cast<BasicSafetyMessage_t*>(calloc(1, sizeof(BasicSafetyMessage_t))),
-		[](BasicSafetyMessage_t *p) {
-			j2735::j2735_destroy<BsmTraits>(p);
-		} 
-	);	
+	auto message = j2735::j2735_create<BsmTraits>();	
 	/**
 	 * Populate BSMcoreData 
 	 */
@@ -416,37 +382,35 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 	message->coreData.size.width = 300;
 
 	// Allocate optional BSM partII
-	message->partII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
-	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
+	message->partII = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__partII>();
+	auto partIICnt = AllocAsn<BSMpartIIExtension_t>();
 	partIICnt->partII_Id = 1;
 	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
 
-	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts = (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts = AllocAsn<EmergencyDetails_t> ();
 	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse = LightbarInUse_inUse;
-	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = (ResponseType_t*) calloc(1, sizeof(ResponseType_t));
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = AllocAsn<ResponseType_t>();
 	*partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = ResponseType_emergency;
 	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse = SirenInUse_inUse;	
 	
     asn_sequence_add(&message->partII->list.array, partIICnt);
 	// BSM regional extension
-    message->regional = (BasicSafetyMessage::BasicSafetyMessage__regional*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-    auto reg_bsm = (Reg_BasicSafetyMessage_t*) calloc(1, sizeof(Reg_BasicSafetyMessage_t));
+    message->regional = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__regional>();
+    auto reg_bsm = AllocAsn<Reg_BasicSafetyMessage_t>();
     reg_bsm->regionId = 128;
     reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
 
-    // BasicSafetyMessage_addGrpCarma_t carma_bsm_data;
-    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
-    auto point = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints = AllocAsn<BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints>();
+    auto point = AllocAsn<Position3D_t>();
 	auto dummy_lat = 12;
 	auto dummy_long = 1312;
     point->lat = dummy_lat;
     point->Long = dummy_long;
     asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point);
-    auto point2 = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    auto point2 = AllocAsn<Position3D_t>();
     point2->lat = dummy_lat + 1000;
     point2->Long = dummy_long + 1000;
     asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point2);
-    // carma_bsm_data.routeDestinationPoints = carma_bsm_destination_points;
 
     asn_sequence_add(&message->regional->list.array, reg_bsm);
 
@@ -547,12 +511,8 @@ TEST(J2735MessageTest, EncodeTrafficControlMessageWithoutRefwidth) {
 TEST (J2735MessageTest, EncodeSrm)
 {
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<SignalRequestMessage_t>(
-		static_cast<SignalRequestMessage_t*>(calloc(1, sizeof(SignalRequestMessage_t))),
-		[](SignalRequestMessage_t *p) {
-			j2735::j2735_destroy<SrmTraits>(p);
-		} 
-	);
+	auto message = j2735::j2735_create<SrmTraits>();
+
 	message->second = 12;
 	message->requestor.id.present = VehicleID_PR_entityID;
 		// TempId is octet string and can be populated from buffer
@@ -561,7 +521,7 @@ TEST (J2735MessageTest, EncodeSrm)
 	// If operation fails, unit test is no longer valid
 	ASSERT_EQ(failed, 0);
 
-	message->requestor.position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+	message->requestor.position = AllocAsn<RequestorPositionVector_t>();
 	#if SAEJ2735_SPEC < 2020
 	DSRC_Angle_t *heading_angle = AllocAsn<DSRC_Angle_t>();
 	#else
@@ -570,29 +530,30 @@ TEST (J2735MessageTest, EncodeSrm)
 	*heading_angle = 123;
 	message->requestor.position->heading = heading_angle;
 	#if SAEJ2735_SPEC < 2020
-	message->requestor.position->position.elevation = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+	message->requestor.position->position.elevation = AllocAsn<DSRC_Elevation_t>();
 	#else
-	message->requestor.position->position.elevation = (Common_Elevation_t *)calloc(1, sizeof(Common_Elevation_t));
+	message->requestor.position->position.elevation = AllocAsn<Common_Elevation_t>();
 	#endif
 	*message->requestor.position->position.elevation = 12;
 	message->requestor.position->position.lat = 3712333;
 	message->requestor.position->position.Long = 8012333;
-	TransmissionAndSpeed_t *speed = (TransmissionAndSpeed_t *)calloc(1, sizeof(TransmissionAndSpeed_t));
+	TransmissionAndSpeed_t *speed = AllocAsn<TransmissionAndSpeed_t>();
 	speed->speed = 10;
 	speed->transmisson = 7;
 	message->requestor.position->speed = speed;
 
-	SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
+	SignalRequestList_t *requests = AllocAsn<SignalRequestList_t>();
 	//First: Request Package
-	SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+	SignalRequestPackage_t *request_package = AllocAsn<SignalRequestPackage_t>();
 	{
-		MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+		// Seperate context so that each request package has its own allocated values 
+		MinuteOfTheYear_t *min = AllocAsn<MinuteOfTheYear_t>();
 		*min = 123;
 		request_package->minute = min;
-		DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+		DSecond_t *duration = AllocAsn<DSecond_t>();
 		*duration = 122;
 		request_package->duration = duration;
-		DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+		DSecond_t *second = AllocAsn<DSecond_t>();
 		*second = 1212;
 		request_package->second = second;
 	}
@@ -606,15 +567,15 @@ TEST (J2735MessageTest, EncodeSrm)
 	asn_sequence_add(&requests->list.array, request_package);
 
 	//Second: Request Package
-	SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
+	SignalRequestPackage_t *request_package_2 = AllocAsn<SignalRequestPackage_t>();
 	{
-		MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+		MinuteOfTheYear_t *min = AllocAsn<MinuteOfTheYear_t>();
 		*min = 123;
 		request_package_2->minute = min;
-		DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+		DSecond_t *duration = AllocAsn<DSecond_t>();
 		*duration = 122;
 		request_package_2->duration = duration;
-		DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+		DSecond_t *second = AllocAsn<DSecond_t>();
 		*second = 1212;
 		request_package_2->second = second;
 	}
@@ -805,12 +766,7 @@ TEST(J2735MessageTest, EncodeTravelerInformation){
 TEST(J2735MessageTest, EncodeSDSM)
 {
 	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
-	auto message = std::shared_ptr<SensorDataSharingMessage_t>(
-		static_cast<SensorDataSharingMessage_t*>(calloc(1, sizeof(SensorDataSharingMessage_t))),
-		[](SensorDataSharingMessage_t *p) {
-			j2735::j2735_destroy<SdsmTraits>(p);
-		} 
-	);
+	auto message = j2735::j2735_create<SdsmTraits>();
 	message->msgCnt = 10;
 	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
 	bool failed = OCTET_STRING_fromBuf(&message->sourceID, my_bytes_id, sizeof(my_bytes_id));
@@ -818,7 +774,7 @@ TEST(J2735MessageTest, EncodeSDSM)
 	message->equipmentType = EquipmentType_unknown;
 	
 
-	auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
+	auto year = AllocAsn<DYear_t>();
 	*year= 2023;
 	message->sDSMTimeStamp.year = year;
 
@@ -829,7 +785,7 @@ TEST(J2735MessageTest, EncodeSDSM)
 	message->refPosXYConf.semiMajor = 12;
 	message->refPosXYConf.semiMinor = 52;
 
-	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
+	auto objectData = AllocAsn<DetectedObjectData_t>();
 	objectData->detObjCommon.objType = ObjectType_unknown;
 	objectData->detObjCommon.objTypeCfd = 1;
 	objectData->detObjCommon.objectID = 1;

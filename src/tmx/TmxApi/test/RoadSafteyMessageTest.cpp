@@ -1,5 +1,6 @@
 #include <boost/any.hpp>
 #include <gtest/gtest.h>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <tmx/j2735_messages/RoadSafetyMessage.hpp>
 #include <vector>
 #include <iostream>
@@ -202,12 +203,19 @@ TEST(RoadSafetyMessageTest, EncodeRoadSafetyMessageLaneClosure) {
   
 	std::string expectedRSMEncHex = "00215b0101051f41808022202000218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
 	EXPECT_EQ(expectedRSMEncHex, RsmEncodeMessage.get_payload_str());
-
-	// // Decode RSM
-	// auto rsm_ptr = RsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	// EXPECT_EQ(12, rsm_ptr->commonContainer.eventInfo.eventUpdate);
+	
 }
-// // Test encoding of Road Safety Message with reduced speed zone content
+
+TEST(RoadSafetyMessageTest, DecodeRoadSafetyMessageLaneClosure ) {
+	tmx::messages::J2735MessageFactory factory;
+	std::string hexString = "00215b0101051f41808022202000218181431f9fa15ac00000008000054edb8b1439665b0c194c0000281a40ae7e74902ba058a3fbb81b28fb720d1a3e7484448f9d1f960280024a9db7162872ccb618329820034012007401748a5900c8";
+	tmx::byte_stream bytes = tmx::byte_stream_decode(hexString);
+	auto msg = std::shared_ptr<MessageFrameEncodedMessage>(static_cast<MessageFrameEncodedMessage*>(factory.NewMessage(bytes)));
+	auto decoded_msg = msg->decode_j2735_message();
+	std::string expected_json_message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MessageFrame><messageId>33</messageId><value><RoadSafetyMessage><commonContainer><eventInfo><eventID><operatorID><fullRdAuthID>1.0.15628.4.1.17.1.0</fullRdAuthID></operatorID><uniqueID>010C0C0A</uniqueID></eventID><eventUpdate>12</eventUpdate><eventCancellation><false/></eventCancellation><startDateTime><year>2024</year><month>5</month><day>13</day><hour>12</hour><minute>0</minute><second>0</second></startDateTime><causeCode>2</causeCode><affectedVehicles><all-vehicles/></affectedVehicles></eventInfo><regionInfo><RegionInfo><referencePoint><lat>423010836</lat><long>-836990707</long><elevation>2380</elevation></referencePoint><approachRegion><broadRegion><applicableHeading><heading>0</heading><tolerance>5</tolerance></applicableHeading><broadArea><polygon><node-3Doffset><lat-offset>174</lat-offset><long-offset>-198</long-offset></node-3Doffset><node-3Doffset><lat-offset>174</lat-offset><long-offset>177</long-offset></node-3Doffset><node-3Doffset><lat-offset>-69</lat-offset><long-offset>217</long-offset></node-3Doffset><node-3Doffset><lat-offset>-292</lat-offset><long-offset>419</long-offset></node-3Doffset><node-3Doffset><lat-offset>-396</lat-offset><long-offset>546</long-offset></node-3Doffset><node-3Doffset><lat-offset>-396</lat-offset><long-offset>-212</long-offset></node-3Doffset></polygon></broadArea></broadRegion></approachRegion></RegionInfo></regionInfo></commonContainer><content><laneClosureContainer><laneStatus><LaneInfo><lanePosition>1</lanePosition><laneClosed><true/></laneClosed></LaneInfo></laneStatus><closureRegion><referencePoint><lat>423010836</lat><long>-836990707</long><elevation>2380</elevation></referencePoint><referencePointType><startOfEvent/></referencePointType><approachRegion><paths><Path><pathWidth>26</pathWidth><pathPoints><node-3Doffset><lat-offset>14</lat-offset><long-offset>23</long-offset></node-3Doffset><node-3Doffset><lat-offset>1324</lat-offset><long-offset>50</long-offset></node-3Doffset></pathPoints></Path></paths></approachRegion></closureRegion></laneClosureContainer></content></RoadSafetyMessage></value></MessageFrame>";
+}
+
+// Test encoding of Road Safety Message with reduced speed zone content
 // TEST(RoadSafetyMessageTest, EncodeRoadSafetyMessageReduceSpeed) {
 
 // 	/**

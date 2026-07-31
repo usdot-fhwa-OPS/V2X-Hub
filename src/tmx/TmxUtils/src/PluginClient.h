@@ -410,13 +410,12 @@ private:
 		{
 			if ( instance->IsJ2735Message(routeableMsg)) {
 				
-				if constexpr (std::is_same_v<MsgType, tmx::messages::MapDataMessage> || std::is_same_v<MsgType, tmx::messages::SpatMessage>) {
+				if constexpr (tmx::messages::j2735::is_instance_of_v<MsgType, tmx::messages::TmxJ2735Message>) {
 					tmx::messages::J2735MessageFactory factory;
 					tmx::byte_stream bytes = routeableMsg.get_payload_bytes();
 					std::shared_ptr<tmx::messages::TmxJ2735EncodedMessage<MsgType>> encodeMsg(
 						static_cast< tmx::messages::TmxJ2735EncodedMessage<MsgType> * > (factory.NewMessage(bytes))
 					);
-					// std::shared_ptr<tmx::messages::TmxJ2735EncodedMessage<MsgType>> encodedCast(dynamic_pointer_cast<tmx::messages::TmxJ2735EncodedMessage<MsgType>>(encodeMsg));
 					MsgType msg = encodeMsg->decode_j2735_message();
 					if (fn)
 						(instance->*fn)(msg, routeableMsg);
