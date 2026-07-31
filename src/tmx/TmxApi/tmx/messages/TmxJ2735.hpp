@@ -128,10 +128,15 @@ public:
 	TmxJ2735Message(const std::shared_ptr<OtherMsgType> &other):
 		tmx::tmx_message<Format>()
 		,_j2735_data(j2735::j2735_cast<message_type>(other.get()), [](message_type *p) {
-			// Since we are not preforming a deep copy of the ASN.1 struct, we cannot destroy it here.
-			// The original owner of the pointer is still responsible for destroying it. Instead
-			// we will just free the casted pointer which will in most cased be MessageFrameMessage wrapper
-			free(p);
+			if ( get_messageType() == "MessageFrame" ) {
+				// Since we are not preforming a deep copy of the ASN.1 struct, we cannot destroy it here.
+				// The original owner of the pointer is still responsible for destroying it. Instead
+				// we will just free the casted pointer which will in most cased be MessageFrameMessage wrapper
+				free(p);
+				p = nullptr;
+			}
+			// If a MessageFrame message is being down cast as a J2735 type, there is no additional memory allocation
+			// so the original pointer will be responsible for completely cleaning up the memory.
 		}) 
 		{
 			
