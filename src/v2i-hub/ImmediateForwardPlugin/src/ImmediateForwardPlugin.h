@@ -33,6 +33,7 @@
 
 #include "ImmediateForwardConfiguration.h"
 #include "IMFNTCIP1218Worker.h"
+#include "SpduForwarder.h"
 
 namespace ImmediateForward
 {
@@ -44,7 +45,8 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 	private:
 		void UpdateConfigSettings();
 		bool UpdateUdpClientFromConfigSettings(uint clientIndex);
-		void SendMessageToRadio(IvpMessage *msg);	
+		void SendMessageToRadio(IvpMessage *msg);
+		void SendSpduToRadio(IvpMessage *msg);
 
 
 		// Virtual method overrides.
@@ -70,6 +72,7 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		uint _skippedNoMessageRoute;
 		uint _skippedInvalidUdpClient;
 		uint _skippedSignErrorResponse;
+		uint _skippedInvalidSpdu;
 
 	};
 
