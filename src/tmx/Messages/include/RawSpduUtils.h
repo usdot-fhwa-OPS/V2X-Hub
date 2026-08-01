@@ -33,6 +33,8 @@
 namespace tmx {
 namespace messages {
 
+    static J2735MessageFactory spduUtilJ2735Factory_;
+
     /** Maximum nesting depth allowed when unwrapping a 1609.2 SPDU. */
     constexpr int MAX_SPDU_DEPTH = 20;
 
@@ -138,13 +140,10 @@ namespace messages {
     /**
      * @brief Resolve the J2735 subtype label (e.g. "BSM", "PSM-P") for an encoded payload.
      *
-     * Decodes just far enough to identify the message. Constructing a
-     * J2735MessageFactory is cheap: it binds references to shared static maps.
-     *
      * @param payload the unsecured J2735 payload bytes.
      * @return the subtype label, or SPDU_UNKNOWN_MESSAGE_TYPE if unidentifiable.
      */
-    inline std::string getJ2735SubType(const tmx::byte_stream &payload)
+    inline std::string getJ2735SubType(tmx::byte_stream &payload)
     {
         if (payload.empty())
         {
@@ -152,13 +151,22 @@ namespace messages {
         }
 
         try
-        {
-            J2735MessageFactory factory;
-            std::unique_ptr<tmx::routeable_message> decoded(factory.NewMessage(payload));
-            if (decoded)
-            {
-                return decoded->get_subtype();
+        {   
+            auto id = spduUtilJ2735Factory_.GetCodecAndMessageId(payload);
+
+            if(id >= 0){
+                auto msgType = spduUtilJ2735Factory_.MessageType(id);
+                if(msgType){
+                    return std::string(msgType);
+                }
+                else {
+                    return SPDU_UNKNOWN_MESSAGE_TYPE;
+                }
             }
+            else {
+                return SPDU_UNKNOWN_MESSAGE_TYPE;
+            }
+
         }
         catch (const std::exception &)
         {
