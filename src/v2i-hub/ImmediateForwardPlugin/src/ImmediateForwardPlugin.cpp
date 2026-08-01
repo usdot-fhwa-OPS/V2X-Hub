@@ -279,14 +279,14 @@ namespace ImmediateForward
 						client->Send(message);
 						PLOG(logDEBUG1) << _logPrefix << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
 									<< ", PSID: " << messageConfig.psid << ", Client: " << client->GetAddress()
-									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
+									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string(messageConfig.channel.value()) : ::to_string(msg->dsrcMetadata->channel))
 									<< ", Port: " << client->GetAddress();
 					}
 					else {
 						const auto &client = _snmpClientMap.at(imfConfig.name);
 						PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType << ", SendType: " << messageConfig.sendType
 									<< ", PSID: " << messageConfig.psid << ", Client: " << client->get_port()
-									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
+									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string(messageConfig.channel.value()) : ::to_string(msg->dsrcMetadata->channel))
 									<< ", Port: " << client->get_port();
 						sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
 					}
