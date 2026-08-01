@@ -30,8 +30,7 @@
 
 #include <boost/uuid/uuid.hpp>
 
-namespace tmx {
-namespace messages {
+namespace tmx::messages {
 
     static J2735MessageFactory spduUtilJ2735Factory_;
 
@@ -201,7 +200,6 @@ namespace messages {
         return spduMsg;
     }
 
-} // namespace messages
-} // namespace tmx
+} // namespace tmx::messages
 
 #endif /* TMX_MESSAGES_RAWSPDUUTILS_H_ */
