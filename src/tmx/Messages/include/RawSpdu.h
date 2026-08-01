@@ -36,7 +36,7 @@ namespace tmx
             RawSpdu() {}
             #if __cplusplus > 199711L
                 /// Message type for routing this message through TMX core.
-                static constexpr const char* MessageType = MSGTYPE_DECODED_STRING;
+                static constexpr const char* MessageType = MSGTYPE_SPDU_STRING;
 
                 /// Message sub type for routing this message through TMX core.
                 static constexpr const char* MessageSubType = MSGSUBTYPE_BASIC_STRING;
