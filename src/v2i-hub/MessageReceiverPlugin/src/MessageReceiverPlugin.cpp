@@ -6,7 +6,7 @@
  */
 
 #include "MessageReceiverPlugin.h"
-#include "tmx/messages/RawSpduUtils.h"
+#include "RawSpduUtils.h"
 
 
 using namespace std;
