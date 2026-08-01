@@ -315,8 +315,9 @@ namespace ImmediateForward
 		{
 			spduData = extractSpduForwardData(msg);
 		}
-		catch (const tmx::TmxException &ex)
+		catch (const std::exception &ex)
 		{
+			// Also covers deserialization errors raised while reading the RawSpdu payload back.
 			SetStatus<uint>(Key_SkippedInvalidSpdu, ++_skippedInvalidSpdu);
 			PLOG(logWARNING) << "Could not forward SPDU. Message Ignored: " << ex.what();
 			return;
@@ -336,7 +337,7 @@ namespace ImmediateForward
 		_messageCountMap[spduData.messageType] = msgCount;
 
 		if (_spduStatusThrottle.Monitor(spduData.messageType)) {
-			SetStatus<int>(spduData.messageType, msgCount);
+			SetStatus<int>(spduData.messageType.c_str(), msgCount);
 		}
 
 		bool foundMessageType = false;
