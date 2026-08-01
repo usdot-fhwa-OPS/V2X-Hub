@@ -143,7 +143,7 @@ namespace messages {
      * @param payload the unsecured J2735 payload bytes.
      * @return the subtype label, or SPDU_UNKNOWN_MESSAGE_TYPE if unidentifiable.
      */
-    inline std::string getJ2735SubType(tmx::byte_stream &payload)
+    inline std::string getJ2735SubType(const tmx::byte_stream &payload)
     {
         if (payload.empty())
         {
@@ -151,8 +151,8 @@ namespace messages {
         }
 
         try
-        {   
-            auto id = spduUtilJ2735Factory_.GetCodecAndMessageId(payload);
+        {   tmx::byte_stream payloadCopy(payload);
+            auto id = spduUtilJ2735Factory_.GetMessageId(payloadCopy);
 
             if(id >= 0){
                 auto msgType = spduUtilJ2735Factory_.MessageType(id);
