@@ -212,3 +212,16 @@ TEST(RawSpduUtilsTest, testBuildRawSpdu){
     std::cout << "Extracted message type: " << std::endl;
     std::cout << spduMsg.get_messageType() << std::endl;
 }
+
+TEST(RawSpduUtilsTest, testMsgTypeExtractionFromMsgBytes){
+    // spat
+    tmx::byte_stream msgPayload = tmx::byte_stream_decode("00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f8");
+
+    EXPECT_EQ(tmx::messages::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING);  // "SPAT-P"
+
+    msgPayload = tmx::byte_stream_decode("001425067c0eb5842562e66e8a2b9ea6c96408b97fffffff900027d9637d07d0007fff8000640fa0");
+    EXPECT_EQ(tmx::messages::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING);  // "BSM"
+
+    msgPayload = tmx::byte_stream_decode("00201c000002a5158048d159e14cdd338f3d4da420101effffffff00000000");
+    EXPECT_EQ(tmx::messages::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING);  // "PSM-P"
+}
