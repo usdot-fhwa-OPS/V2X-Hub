@@ -14,6 +14,8 @@
 #ifndef INCLUDE_TMXAPIMESSAGES_H_
 #define INCLUDE_TMXAPIMESSAGES_H_
 
+#include <array>
+
 #ifndef CONSTEXPR
 #if __cplusplus > 199711L
 #define CONSTEXPR constexpr
@@ -341,7 +343,7 @@ static CONSTEXPR const char *MSGPSID_TESTMESSAGE14_PSID_STRING = "0xBFEE";
 static CONSTEXPR const char *MSGPSID_TESTMESSAGE15_PSID_STRING = "0xBFEE";
 
 // for easy lookup of PSID by message subtype string
-constexpr std::pair<std::string_view, msgPSID> MSGTYPE_PSID_PAIRS[] = {
+constexpr std::array<std::pair<std::string_view, msgPSID>, 33> MSGTYPE_PSID_PAIRS = {{
 	{MSGSUBTYPE_BASICSAFETYMESSAGE_STRING, msgPSID::basicSafetyMessage_PSID},
 	{MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING, msgPSID::personalSafetyMessage_PSID},
 	{MSGSUBTYPE_PERSONALSAFETYMESSAGE2_STRING, msgPSID::personalSafetyMessage2_PSID},
@@ -375,7 +377,7 @@ constexpr std::pair<std::string_view, msgPSID> MSGTYPE_PSID_PAIRS[] = {
 	{MSGSUBTYPE_ROADUSERCHARGINGREPORTMESSAGE_STRING, msgPSID::roadUserChargingReportMessage_PSID},
 	{MSGSUBTYPE_NMEACORRECTIONS_STRING, msgPSID::nmeaCorrections_PSID},
 	{MSGSUBTYPE_RTCMCORRECTIONS_STRING, msgPSID::rtcmCorrections_PSID},
-};
+}};
 
 
 } /* End namespace api */
