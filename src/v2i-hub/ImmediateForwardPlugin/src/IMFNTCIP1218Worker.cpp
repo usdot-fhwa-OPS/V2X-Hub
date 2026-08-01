@@ -137,8 +137,8 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index){
-        
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::optional<std::string> &psidOverride){
+
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
             'x',
@@ -151,6 +151,17 @@ namespace ImmediateForward {
                 "1"
         };
         std::vector reqs {payload, enable};
+        if (psidOverride.has_value()) {
+            // Update the row PSID in the same batch, so no additional round trip is needed
+            size_t pos = psidOverride.value().find("x");
+            std::string psidWithoutPrefix = pos == std::string::npos ? psidOverride.value() : psidOverride.value().substr(pos+1);
+            snmp_request psid{
+                rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
+                'x',
+                psidWithoutPrefix
+            };
+            reqs.push_back(psid);
+        }
         client->process_snmp_set_requests(reqs);
     }
 
