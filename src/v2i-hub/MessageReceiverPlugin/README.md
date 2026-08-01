@@ -22,6 +22,11 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 **RawSpdMessage**: The original undecoded bytes representing a IEEE 1609.2 message which will included an SAE J2735 message
 
+`RawSpdu` messages are published with the `IvpMsgFlags_RouteDSRC` flag and with DSRC metadata attached, using the PSID unwrapped from the SPDU and the default channel of 183. This allows the [Immediate Forward Plugin](../ImmediateForwardPlugin/README.md) to pick them up and re-broadcast the original SPDU bytes unmodified.
+
+> [!IMPORTANT]
+> When forwarding SPDUs for re-broadcast, set **RouteJ2735** to `false`. Otherwise, in `FullSPDUMode`, each received message is routed twice: once as the unsecured J2735 message and once as the `RawSpdu`, which results in the Immediate Forward Plugin broadcasting it twice.
+
 ## Functionality Testing 
 
 ### Test Normal Mode
