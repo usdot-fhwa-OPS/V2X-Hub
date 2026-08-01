@@ -6,6 +6,8 @@ INSTALL (DIRECTORY include
          DESTINATION . COMPONENT ${PROJECT_NAME}
          FILES_MATCHING PATTERN "*.h*")
 
+find_package(stol-1609dot2-2022 REQUIRED)
+
 #############
 ## Testing ##
 #############
@@ -19,4 +21,4 @@ add_executable(${BINARY} ${TEST_SOURCES})
  
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 target_include_directories(${BINARY} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(${BINARY} PUBLIC ${TMXAPI_LIBRARIES} gtest)
+target_link_libraries(${BINARY} PUBLIC ${TMXAPI_LIBRARIES} gtest ::stol-1609dot2-2022)
