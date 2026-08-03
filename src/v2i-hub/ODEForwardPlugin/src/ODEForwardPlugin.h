@@ -84,6 +84,8 @@ namespace ODEForwardPlugin
 
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
+			std::string convertToNum(const std::string &json) const;
+
 
 			// Forwarded/skipped counters for one message stream
 			struct ForwardStats
