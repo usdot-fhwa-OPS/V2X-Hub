@@ -34,6 +34,7 @@
 
 namespace tmx::utils {
 
+    std::mutex factoryMutex_;
     static tmx::messages::J2735MessageFactory spduUtilJ2735Factory_;
 
     /** Maximum nesting depth allowed when unwrapping a 1609.2 SPDU. */
@@ -149,7 +150,9 @@ namespace tmx::utils {
         }
 
         try
-        {   tmx::byte_stream payloadCopy(payload);
+        {   
+            tmx::byte_stream payloadCopy(payload);
+            std::lock_guard<std::mutex> guard(factoryMutex_); // ensure thread-safe access to the factory
             auto id = spduUtilJ2735Factory_.GetMessageId(payloadCopy);
 
             if(id >= 0){
