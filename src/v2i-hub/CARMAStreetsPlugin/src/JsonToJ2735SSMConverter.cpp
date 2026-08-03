@@ -150,6 +150,5 @@ namespace CARMAStreetsPlugin
     {
         tmx::messages::MessageFrameMessage frame(ssmPtr);
         encodedSSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-        free(frame.get_j2735_data().get());
     }
 }
