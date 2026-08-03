@@ -31,7 +31,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
                        rdkafka++ 
                        ::carma-clock
                        pthread
-                       ::stol-1609dot2-2022 REQUIRED
+                       ::stol-1609dot2-2022
                        )
                        
 set(TMXUTILS_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
@@ -59,5 +59,5 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 add_test(NAME ${BINARY} COMMAND ${BINARY})
 
-target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES}  gtest ::stol-1609dot2-2022 REQUIRED
+target_link_libraries(${BINARY} PUBLIC ${PROJECT_NAME} rdkafka++ gmock ${TMXAPI_LIBRARIES} ${ASN_J2735_LIBRARIES} ${UUID_LIBRARY} ${NETSNMPAGENT} ${NETSNMPMIBS} ${NETSNMP} ${NETSNMP_LIBRARIES}  gtest ::stol-1609dot2-2022
 )
