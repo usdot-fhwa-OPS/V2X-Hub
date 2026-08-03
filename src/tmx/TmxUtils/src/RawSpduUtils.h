@@ -20,6 +20,8 @@
 #include <vector>
 
 #include <RawSpdu.h>
+#include "PluginLog.h"
+#include "TmxLog.h"
 
 #include <stol-1609dot2-2022/Ieee1609Dot2Data.h>
 #include <stol-1609dot2-2022/Ieee1609Dot2Content.h>
@@ -164,7 +166,7 @@ namespace tmx::utils {
             }
 
         }
-        catch (const std::exception &)
+        catch (const std::exception &e)
         {   
             // log error and return unknown type in case of exception
             FILE_LOG(logERROR) << "Error determining J2735 subtype from payload bytes : " << e.what();
