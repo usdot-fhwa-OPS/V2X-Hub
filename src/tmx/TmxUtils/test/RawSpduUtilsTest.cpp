@@ -14,8 +14,10 @@
  * the License.
  */
 #include <gtest/gtest.h>
-#include <Utils.h>
+#include <RawSpduUtils.h>
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
 /**
  * @brief Helper static function to write buffer to a stringstream.  Used for JER encoding of SPDU data.
  * @param buffer The buffer to write to the stringstream.
@@ -33,8 +35,8 @@ static int writeToStringStream(const void *buffer, size_t size, void *app_key)
     ss->write(static_cast<const char *>(buffer), size);
     return 0;
 }
-TEST(TestUtils, testDecodeSpdu){
-    tmx::byte_stream spdu = byte_stream_decode("03806b0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
+TEST(RawSpduUtilsTest, testDecodeSpdu){
+    tmx::byte_stream spdu = tmx::byte_stream_decode("03806b0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
        "01011910c110c1002c0860853200304104299001021a2189a189806010c10c4c00a0820853200804"
        "644304430400d0218214c801c10410a6400c08688626862601c043043130");
     /* spdu content
@@ -50,7 +52,7 @@ TEST(TestUtils, testDecodeSpdu){
             68 86 26 86 26 01 C0 43 04 31 30
         }
     */
-    auto decoded = MessageReceiver::decodeSpdu(spdu, spdu.size());
+    auto decoded = tmx::utils::decodeSpdu(spdu, spdu.size());
     asn_fprint(stdout, &asn_DEF_Ieee1609Dot2Data, decoded.get());
     // All follow on assertions required decoded pointer
     ASSERT_TRUE(decoded != nullptr);
@@ -63,8 +65,8 @@ TEST(TestUtils, testDecodeSpdu){
     std::string expectedJson = R"({"protocolVersion":3,"content":{"unsecuredData":"0013680038422E1E7D2FC9DDD32F2E7971F4D3BF709B640800020D766174858008208214C801011910C110C1002C0860853200304104299001021A2189A189806010C10C4C00A0820853200804644304430400D0218214C801C10410A6400C08688626862601C043043130"}})";
     EXPECT_EQ(json, expectedJson);
 }
-TEST(TestUtils, testDecodeSpduSigned) {
-    tmx::byte_stream spdu = byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
+TEST(RawSpduUtilsTest, testDecodeSpduSigned) {
+    tmx::byte_stream spdu = tmx::byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
     /*
     Ieee1609Dot2Data ::= {
         protocolVersion: 3
@@ -149,7 +151,7 @@ TEST(TestUtils, testDecodeSpduSigned) {
         }
     }
     */
-    auto decoded = MessageReceiver::decodeSpdu(spdu, spdu.size());
+    auto decoded = tmx::utils::decodeSpdu(spdu, spdu.size());
     asn_fprint(stdout, &asn_DEF_Ieee1609Dot2Data, decoded.get());
     // All follow on assertions required decoded pointer
     ASSERT_TRUE(decoded != nullptr);
@@ -163,48 +165,72 @@ TEST(TestUtils, testDecodeSpduSigned) {
     EXPECT_EQ(json, expectedJson);
 }
 
-TEST(TestUtils, testDecodeSpduInvalid){
-    tmx::byte_stream spdu = byte_stream_decode("03806b0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
+TEST(RawSpduUtilsTest, testDecodeSpduInvalid){
+    tmx::byte_stream spdu = tmx::byte_stream_decode("03806b0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
        "01011910c110c1002c0860853200304104299001021a2189a189806010c10c4c00a0820853200804"
        "644304430400d0218214c801c10410a6400c08688626862601c043043130");
     // Corrupt the SPDU data to make it invalid
     spdu[1] = 0xFF;
-    EXPECT_THROW(MessageReceiver::decodeSpdu(spdu, spdu.size()), tmx::TmxException);
+    EXPECT_THROW(tmx::utils::decodeSpdu(spdu, spdu.size()), tmx::TmxException);
 }
 
-TEST(TestUtils, testDecodeSpduEmpty){
+TEST(RawSpduUtilsTest, testDecodeSpduEmpty){
     tmx::byte_stream spdu;
     EXPECT_THROW({
-        auto decoded = MessageReceiver::decodeSpdu(spdu, spdu.size());
+        auto decoded = tmx::utils::decodeSpdu(spdu, spdu.size());
     }, tmx::TmxException);
 }
 
-TEST(TestUtils, testUnwrapSpdu){
-    tmx::byte_stream spdu = byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
-    auto decoded = MessageReceiver::decodeSpdu(spdu, spdu.size());
+TEST(RawSpduUtilsTest, testUnwrapSpdu){
+    tmx::byte_stream spdu = tmx::byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
+    auto decoded = tmx::utils::decodeSpdu(spdu, spdu.size());
     tmx::byte_stream payload;
     uint psid = 0;
     bool psidSet = false;
-    bool result = MessageReceiver::unwrapSpdu(decoded.get(), payload, psid, psidSet, 0);
+    bool result = tmx::utils::unwrapSpdu(decoded.get(), payload, psid, psidSet, 0);
     EXPECT_TRUE(result);
     EXPECT_TRUE(psidSet);
     std::string expectedPayloadHex = "00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f8";
-    std::string actualPayloadHex = byte_stream_encode(payload);
+    std::string actualPayloadHex = tmx::byte_stream_encode(payload);
     EXPECT_EQ(actualPayloadHex, expectedPayloadHex);
 }
 
-TEST(TestUtils, testBuildRawSpdu){
-    tmx::byte_stream payload = byte_stream_decode("0013680038422e1e7d2fc9ddd32f2e7971f4d3bf709b640800020d766174858008208214c8"
-       "01011910c110c1002c0860853200304104299001021a2189a189806010c10c4c00a0820853200804"
-       "644304430400d0218214c801c10410a6400c08688626862601c043043130");
+TEST(RawSpduUtilsTest, testBuildRawSpdu){
+    tmx::byte_stream fullPayload = tmx::byte_stream_decode("0381004003806d00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f850018200027df99e1f5dfa1738128fd203e9ae11f3810101000301801631afb5fc255d0f50820838ca0cf8a2890d5c5e6f5b000329cf3cb58400a9830101800348010680032040978007008101205ff4100001828001838005008001f0400001270001870002bfee81821212260959f3b3abf3ad90388bf779fec9d2c8b44078bd32ad9eb4e7feaaa9b88083741bc528c5c7ece6f1f0f2d6ddd01f61517e717402eb08609741285557cc65054f51ef089c3e267d71e23d56ac088ef0b01d95161b21a90465cbfd9d0efa798b");
+    tmx::byte_stream msgPayload = tmx::byte_stream_decode("00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f8");
     uint psid = 123;
     auto uuid = boost::uuids::random_generator()();
     // Convert UUID to byte stream for comparison
     tmx::byte_stream uuidBytes(uuid.begin(), uuid.end());
-    auto spduMsg = MessageReceiver::buildRawSpdu(psid, payload, 1234567890, uuid);
+    auto spduMsg = tmx::utils::buildRawSpdu(psid, fullPayload, msgPayload, 1234567890, uuid);
     EXPECT_EQ(spduMsg.get_psid(), psid);
-    EXPECT_EQ(spduMsg.get_spduData(), payload);
+    EXPECT_EQ(spduMsg.get_fullByteData(), fullPayload);
+    EXPECT_EQ(spduMsg.get_msgByteData(), msgPayload);
     EXPECT_EQ(spduMsg.get_timestampMs(), 1234567890);
     EXPECT_EQ(spduMsg.get_uuid(), uuidBytes);
-    EXPECT_EQ(spduMsg.get_messageType(), "Missing ID");
+    EXPECT_EQ(spduMsg.get_messageType(), tmx::messages::api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING);  // "SPAT-P"
+    std::cout << "Extracted message type: " << std::endl;
+    std::cout << spduMsg.get_messageType() << std::endl;
+}
+
+TEST(RawSpduUtilsTest, testMsgTypeExtractionFromMsgBytes){
+    // spat
+    tmx::byte_stream msgPayload = tmx::byte_stream_decode("00136a003842be5e7d1049ddd32f2e7971f4d3bf7097b4080000e8c4513f05800820809c7c00810d0508e508e02c086028470030410138f80202320a0a4a0a406010c04e3e00a0820271f00604341423942380d02180a11c01c10d052e652e601008c82829282901c0430138f8");
+
+    EXPECT_EQ(tmx::utils::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING);  // "SPAT-P"
+
+    msgPayload = tmx::byte_stream_decode("001425067c0eb5842562e66e8a2b9ea6c96408b97fffffff900027d9637d07d0007fff8000640fa0");
+    EXPECT_EQ(tmx::utils::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_BASICSAFETYMESSAGE_STRING);  // "BSM"
+
+    msgPayload = tmx::byte_stream_decode("00201c000002a5158048d159e14cdd338f3d4da420101effffffff00000000");
+    EXPECT_EQ(tmx::utils::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING);  // "PSM-P"
+}
+
+TEST(RawSpduUtilsTest, testAssignMsgPSID){
+    // test assignMsgPSID for all known message types
+    using namespace tmx::utils;
+    using namespace tmx::messages::api;
+    for(const auto& [msgType, psid] : MSGTYPE_PSID_PAIRS){
+        EXPECT_EQ(assignMsgPSID(msgType), psid);
+    }
 }
