@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include <RawSpdu.h>
 #include "PluginLog.h"
