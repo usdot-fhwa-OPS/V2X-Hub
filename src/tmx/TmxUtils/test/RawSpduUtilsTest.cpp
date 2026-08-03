@@ -225,3 +225,12 @@ TEST(RawSpduUtilsTest, testMsgTypeExtractionFromMsgBytes){
     msgPayload = tmx::byte_stream_decode("00201c000002a5158048d159e14cdd338f3d4da420101effffffff00000000");
     EXPECT_EQ(tmx::utils::getJ2735SubType(msgPayload), tmx::messages::api::MSGSUBTYPE_PERSONALSAFETYMESSAGE_STRING);  // "PSM-P"
 }
+
+TEST(RawSpduUtilsTest, testAssignMsgPSID){
+    // test assignMsgPSID for all known message types
+    using namespace tmx::utils;
+    using namespace tmx::messages::api;
+    for(const auto& [msgType, psid] : MSGTYPE_PSID_PAIRS){
+        EXPECT_EQ(assignMsgPSID(msgType), psid);
+    }
+}

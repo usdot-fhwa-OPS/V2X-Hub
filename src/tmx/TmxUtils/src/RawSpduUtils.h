@@ -201,6 +201,24 @@ namespace tmx::utils {
         return spduMsg;
     }
 
+    /**
+     * @brief Assigns a PSID to a message type.
+     * Using constexpr to allow compile-time evaluation for known message types, avoiding overhead of using hashmap.
+     *
+     * @param msgType The message type.
+     * @return The assigned PSID.
+     */
+    constexpr tmx::messages::api::msgPSID assignMsgPSID(std::string_view msgType)
+    {
+        using namespace tmx::messages::api;
+        for (const auto &entry : MSGTYPE_PSID_PAIRS)
+        {
+            if (msgType == entry.first)
+                return entry.second;
+        }
+        return msgPSID::None_PSID;
+    }
+
 } // namespace tmx::utils
 
 #endif /* TMX_UTILS_RAWSPDUUTILS_H_ */
