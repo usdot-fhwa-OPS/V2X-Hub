@@ -32,7 +32,7 @@
 
 namespace tmx::utils {
 
-    static J2735MessageFactory spduUtilJ2735Factory_;
+    static tmx::messages::J2735MessageFactory spduUtilJ2735Factory_;
 
     /** Maximum nesting depth allowed when unwrapping a 1609.2 SPDU. */
     constexpr int MAX_SPDU_DEPTH = 20;
@@ -141,10 +141,9 @@ namespace tmx::utils {
      */
     inline std::string getJ2735SubType(const tmx::byte_stream &payload)
     {   
-        using UNKNOWN_MESSAGE_TYPE = tmx::messages::api::MSGSUBTYPE_UNKNOWN_STRING;
         if (payload.empty())
         {
-            return UNKNOWN_MESSAGE_TYPE;
+            return UNKNOWN_SUBTYPE;
         }
 
         try
@@ -157,11 +156,11 @@ namespace tmx::utils {
                     return std::string(msgType);
                 }
                 else {
-                    return UNKNOWN_MESSAGE_TYPE;
+                    return UNKNOWN_SUBTYPE;
                 }
             }
             else {
-                return UNKNOWN_MESSAGE_TYPE;
+                return UNKNOWN_SUBTYPE;
             }
 
         }
@@ -169,7 +168,7 @@ namespace tmx::utils {
         {   
             // log error and return unknown type in case of exception
             FILE_LOG(logERROR) << "Error determining J2735 subtype from payload bytes : " << e.what();
-            return UNKNOWN_MESSAGE_TYPE;
+            return UNKNOWN_SUBTYPE;
         }
         
     }
