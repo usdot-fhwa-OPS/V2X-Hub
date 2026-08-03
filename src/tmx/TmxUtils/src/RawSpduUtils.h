@@ -11,8 +11,8 @@
  * to their include path.
  */
 
-#ifndef TMX_MESSAGES_RAWSPDUUTILS_H_
-#define TMX_MESSAGES_RAWSPDUUTILS_H_
+#ifndef TMX_UTILS_RAWSPDUUTILS_H_
+#define TMX_UTILS_RAWSPDUUTILS_H_
 
 #include <cstdint>
 #include <memory>
@@ -30,15 +30,12 @@
 
 #include <boost/uuid/uuid.hpp>
 
-namespace tmx::messages {
+namespace tmx::utils {
 
     static J2735MessageFactory spduUtilJ2735Factory_;
 
     /** Maximum nesting depth allowed when unwrapping a 1609.2 SPDU. */
     constexpr int MAX_SPDU_DEPTH = 20;
-
-    /** Message type recorded when the J2735 payload cannot be identified. */
-    static constexpr const char *SPDU_UNKNOWN_MESSAGE_TYPE = "Unknown";
 
     /**
      * @brief Unwraps a 1609.2 SPDU to extract the unsecured payload bytes, PSID, and whether the PSID was set.
@@ -140,13 +137,14 @@ namespace tmx::messages {
      * @brief Resolve the J2735 subtype label (e.g. "BSM", "PSM-P") for an encoded payload.
      *
      * @param payload the unsecured J2735 payload bytes.
-     * @return the subtype label, or SPDU_UNKNOWN_MESSAGE_TYPE if unidentifiable.
+     * @return the subtype label, or tmx::messages::api::MSGSUBTYPE_UNKNOWN_STRING if unidentifiable.
      */
     inline std::string getJ2735SubType(const tmx::byte_stream &payload)
-    {
+    {   
+        using UNKNOWN_MESSAGE_TYPE = tmx::messages::api::MSGSUBTYPE_UNKNOWN_STRING;
         if (payload.empty())
         {
-            return SPDU_UNKNOWN_MESSAGE_TYPE;
+            return UNKNOWN_MESSAGE_TYPE;
         }
 
         try
@@ -159,19 +157,21 @@ namespace tmx::messages {
                     return std::string(msgType);
                 }
                 else {
-                    return SPDU_UNKNOWN_MESSAGE_TYPE;
+                    return UNKNOWN_MESSAGE_TYPE;
                 }
             }
             else {
-                return SPDU_UNKNOWN_MESSAGE_TYPE;
+                return UNKNOWN_MESSAGE_TYPE;
             }
 
         }
         catch (const std::exception &)
-        {
-            // Identifying the type is best-effort; the SPDU is still forwarded.
+        {   
+            // log error and return unknown type in case of exception
+            FILE_LOG(logERROR) << "Error determining J2735 subtype from payload bytes : " << e.what();
+            return UNKNOWN_MESSAGE_TYPE;
         }
-        return SPDU_UNKNOWN_MESSAGE_TYPE;
+        
     }
 
     /**
@@ -200,6 +200,6 @@ namespace tmx::messages {
         return spduMsg;
     }
 
-} // namespace tmx::messages
+} // namespace tmx::utils
 
-#endif /* TMX_MESSAGES_RAWSPDUUTILS_H_ */
+#endif /* TMX_UTILS_RAWSPDUUTILS_H_ */
