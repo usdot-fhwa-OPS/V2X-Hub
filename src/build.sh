@@ -19,7 +19,7 @@ set -e
 numCPU=$(nproc)
 
 show_help() {
-  echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list'] [--select-plugins 'list']"
+  echo "Usage: $0 [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list']"
   echo ""
   echo "Required positional arguments:"
   echo "  BUILD_TYPE            The build type (e.g., debug, release, coverage)"
@@ -28,10 +28,8 @@ show_help() {
   echo "  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)"
   echo ""
   echo "Optional options:"
-  echo "  --skip-plugins STRING   Space-separated list of plugin directory names to skip  (case-sensitive, default empty = build all)"
-  echo "  --select-plugins STRING Space-separated list of plugin directory names to build (case-sensitive, default empty = build all)."
-  echo "                          When specified, only these plugins are built, minus any that also appear in --skip-plugins."
-  echo "  -h, --help              Show this help message and exit"
+  echo "  --skip-plugins STRING Space-separated list of plugin directory names to skip  (case-sensitive, default empty = build all)"
+  echo "  -h, --help            Show this help message and exit"
   echo ""
   echo "If arguments are not provided, the script will prompt interactively."
 }
@@ -40,7 +38,6 @@ show_help() {
 BUILD_TYPE=""
 J2735_VERSION=""
 SKIP_PLUGINS=""
-SELECT_PLUGINS=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -60,15 +57,6 @@ while [[ $# -gt 0 ]]; do
         shift 2
       else
         SKIP_PLUGINS=""
-        shift 1
-      fi
-      ;;
-    --select-plugins)
-      if [[ $# -gt 1 ]]; then
-        SELECT_PLUGINS="$2"
-        shift 2
-      else
-        SELECT_PLUGINS=""
         shift 1
       fi
       ;;
@@ -133,56 +121,27 @@ echo "Build Type: $BUILD_TYPE"
 echo "J2735 Version: $J2735_VERSION"
 
 
-# Collect the list of available plugin directory names (those holding a CMakeLists.txt)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-plugin_dirs=()
-for plugin_cmake in "${SCRIPT_DIR}"/v2i-hub/*/CMakeLists.txt; do
-  [[ -f "$plugin_cmake" ]] || continue
-  plugin_dirs+=("$(basename "$(dirname "$plugin_cmake")")")
-done
+
+
+
 
 # Process skip plugins input
 cmake_flags=""
-skipped_plugins=()
 if [[ -n "$SKIP_PLUGINS" ]]; then
-  IFS=' ' read -r -a requested_skips <<< "$SKIP_PLUGINS"
-  for plugin in "${requested_skips[@]}"; do
+  IFS=' ' read -r -a skipped_plugins <<< "$SKIP_PLUGINS"
+  for plugin in "${skipped_plugins[@]}"; do
     if [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
-      skipped_plugins+=("$plugin")
+      cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
     else
       echo "Warning: Invalid plugin to skip '$plugin' - ignoring."
     fi
-  done
-fi
-
-# Process select plugins input. When set, every plugin outside the selection is skipped,
-# and a selected plugin listed in SKIP_PLUGINS stays skipped.
-if [[ -n "$SELECT_PLUGINS" ]]; then
-  IFS=' ' read -r -a selected_plugins <<< "$SELECT_PLUGINS"
-  for plugin in "${selected_plugins[@]}"; do
-    if ! [[ " ${plugin_dirs[*]} " =~ " ${plugin} " ]]; then
-      echo "Warning: Invalid plugin to select '$plugin' - ignoring."
-    fi
-  done
-  for plugin in "${plugin_dirs[@]}"; do
-    if ! [[ " ${selected_plugins[*]} " =~ " ${plugin} " ]]; then
-      skipped_plugins+=("$plugin")
-    fi
-  done
-fi
-
-if [[ ${#skipped_plugins[@]} -gt 0 ]]; then
-  # De-duplicate, since a plugin can be both outside the selection and explicitly skipped
-  IFS=$'\n' read -r -d '' -a skipped_plugins < <(printf '%s\n' "${skipped_plugins[@]}" | sort -u && printf '\0')
-  for plugin in "${skipped_plugins[@]}"; do
-    cmake_flags="$cmake_flags -DSKIP_${plugin}=ON"
   done
   echo "Skipping specified plugins: ${skipped_plugins[*]}"
 else
   echo "No plugins skipped (building all)"
 fi
 
-cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${cmake_flags} .
+cmake -Bbuild -DCMAKE_PREFIX_PATH=\"/usr/local/share/tmx\;/opt/carma/cmake\;\" -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_C_FLAGS="${CMAKE_CXX_FLAGS}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DSAEJ2735_SPEC_VERSION="${J2735_VERSION}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .
 cmake --build build -j "${numCPU}"
 cmake --install build
 
