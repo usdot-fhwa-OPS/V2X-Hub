@@ -4,6 +4,7 @@
 #include <string>
 #include "jsoncpp/json/json.h"
 #include "JsonToJ2735SpatConverter.h"
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 
 namespace CARMAStreetsPlugin
 {
@@ -51,29 +52,27 @@ namespace CARMAStreetsPlugin
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2Spat)
     {
-        auto spat_ptr = std::make_shared<SPAT>();
+        auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
         JsonToJ2735SpatConverter converter;
         ASSERT_EQ(spat_ptr->intersections.list.count, 0);
-        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        converter.convertJson2Spat(spat_json, spat_ptr);
         ASSERT_EQ(spat_ptr->intersections.list.count, 1);
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, convertJson2SpatMMITSS) {
-        auto spat_ptr = std::make_shared<SPAT>();
+        auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
         std::string spat_json_str = R"({"time_stamp": 159533, "name": "", "intersections": [{"name": "", "id": 36243, "revision": 1, "status": 2, "moy": 159533, "time_stamp": 8609, "states": [{"movement_name": "", "signal_group": 1, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32223, "confidence": 0}}]}, {"movement_name": "", "signal_group": 2, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32226, "confidence": 0}}]}, {"movement_name": "", "signal_group": 3, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32223, "confidence": 0}}]}, {"movement_name": "", "signal_group": 4, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32226, "confidence": 0}}]}, {"movement_name": "", "signal_group": 5, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32223, "confidence": 0}}]}, {"movement_name": "", "signal_group": 6, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32226, "confidence": 0}}]}, {"movement_name": "", "signal_group": 7, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32223, "confidence": 0}}]}, {"movement_name": "", "signal_group": 8, "state_time_speed": [{"event_state": 3, "timing": {"start_time": 0, "min_end_time": 32226, "confidence": 0}}]}]}]})";
         Json::Reader reader;
         auto parse_success = reader.parse(spat_json_str, spat_json, true);
         EXPECT_TRUE(parse_success);
         JsonToJ2735SpatConverter converter;
         EXPECT_EQ(spat_ptr->intersections.list.count, 0);
-        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        converter.convertJson2Spat(spat_json, spat_ptr);
         EXPECT_EQ(spat_ptr->intersections.list.count, 1);
         tmx::messages::SpatEncodedMessage encodedSpat;
         converter.encodeSpat(spat_ptr, encodedSpat);
         std::string encoded_spat_str = "00138080426f2d01846c981000226f2d21a107001043f80003eef8000000000000001021fc0001f788000000000000000c10fe0000fbbe0000000000000008087f00007de20000000000000005043f80003eef8000000000000003021fc0001f788000000000000001c10fe0000fbbe0000000000000010087f00007de20000000000000";
         EXPECT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 
     }
 
@@ -86,7 +85,7 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(intersections->list.count, 0);
             converter.convertJson2IntersectionStateList(spat_json["intersections"], intersections);
             ASSERT_EQ(intersections->list.count, 1);
-            free(intersections);
+            ASN_STRUCT_FREE(asn_DEF_IntersectionStateList,intersections);
         }
     }
 
@@ -99,7 +98,7 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(states->list.count, 0);
             converter.convertJson2MovementList(movement_list_json["states"], states);
             ASSERT_EQ(states->list.count, 1);
-            free(states);
+            ASN_STRUCT_FREE(asn_DEF_MovementList, states);
         }
     }
 
@@ -112,9 +111,7 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(state_time_speed->list.count, 0);
             converter.convertJson2MovementEventList(movement_events_json["state_time_speed"], state_time_speed);
             ASSERT_EQ(state_time_speed->list.count, 1);
-            free(state_time_speed->list.array[0]->speeds);
-            free(state_time_speed->list.array[0]->timing);
-            free(state_time_speed);
+            ASN_STRUCT_FREE(asn_DEF_MovementEventList, state_time_speed);
         }
     }
 
@@ -127,21 +124,20 @@ namespace CARMAStreetsPlugin
             ASSERT_EQ(maneuver_assist_list->list.count, 0);
             converter.convertJson2ManeuverAssistList(manuever_assist_list_json["maneuver_assist_list"], maneuver_assist_list);
             ASSERT_EQ(maneuver_assist_list->list.count, 1);
-            free(maneuver_assist_list);
+            ASN_STRUCT_FREE(asn_DEF_ManeuverAssistList, maneuver_assist_list);
         }
     }
 
     TEST_F(test_JsonToJ2735SpatConverter, encodeSpat)
     {
-        auto spat_ptr = std::make_shared<SPAT>();
+        auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
         JsonToJ2735SpatConverter converter;
-        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        converter.convertJson2Spat(spat_json, spat_ptr);
 
         tmx::messages::SpatEncodedMessage encodedSpat;
         converter.encodeSpat(spat_ptr, encodedSpat);
         std::string encoded_spat_str = "0013808f44d48a0383ebe5e7d24eee997973cb8fa69dfb84653e000013522886841c02010fefdccfe5cfe5c00000000000e08df7ee67f067f06000000000002043fbf7340234023000000000000821fdfb99fee9fee800000000000c11befdccfe0cfe0c000000000008087f7ee67f2e7f2e000000000005043fbf733fdd3fdd000000000003021fdfb9a011a0118000000000";
         ASSERT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
     }
 
     /**
@@ -159,10 +155,10 @@ namespace CARMAStreetsPlugin
             "{\"movement_name\":\"\",\"signal_group\":5,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":35115,\"min_end_time\":35545,\"max_end_time\":35545,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35545,\"min_end_time\":35645,\"max_end_time\":35645,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35645,\"min_end_time\":35675,\"max_end_time\":35675,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35675,\"min_end_time\":36205,\"max_end_time\":36205,\"confidence\":0}}]},"
             "{\"movement_name\":\"\",\"signal_group\":6,\"state_time_speed\":[{\"event_state\":3,\"timing\":{\"start_time\":34695,\"min_end_time\":35125,\"max_end_time\":35125,\"confidence\":0}},{\"event_state\":6,\"timing\":{\"start_time\":35125,\"min_end_time\":35225,\"max_end_time\":35225,\"confidence\":0}},{\"event_state\":8,\"timing\":{\"start_time\":35225,\"min_end_time\":35255,\"max_end_time\":35255,\"confidence\":0}},{\"event_state\":3,\"timing\":{\"start_time\":35255,\"min_end_time\":35685,\"max_end_time\":35685,\"confidence\":0}}]}]}]}";
         Json::Reader reader;
-        auto spat_ptr = std::make_shared<SPAT>();
+        auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
         auto parse_success = reader.parse(spat_json_string, spat_json, true);
         JsonToJ2735SpatConverter converter;
-        converter.convertJson2Spat(spat_json, spat_ptr.get());
+        converter.convertJson2Spat(spat_json, spat_ptr);
         tmx::messages::SpatEncodedMessage encodedSpat;
        
         ASSERT_THROW( converter.encodeSpat(spat_ptr, encodedSpat), tmx::TmxException );

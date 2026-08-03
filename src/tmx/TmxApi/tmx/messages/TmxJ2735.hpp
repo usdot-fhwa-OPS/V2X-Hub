@@ -92,9 +92,8 @@ public:
 	TmxJ2735Message(message_type *data = 0):
 		tmx::tmx_message<Format>(),
 		_j2735_data(data, [](message_type *p) { 
-			// TODO : Temporarily commenting this line out due to heap-use-after-free errors
-			// that occur when using Plugin AddFilter handlers with j2735 messages.
-			// This will likely cause memory leaks, but will prevent the exceptions from occurring until a better solution can be found.
+			// when initialized with raw pointer to C struct -> clean up C struct using ASN_STRUCT_FREE
+			// (see SaeJ2735Traits.hpp)
 			j2735::j2735_destroy<traits_type>(p); 
 		} ) { 
 		}

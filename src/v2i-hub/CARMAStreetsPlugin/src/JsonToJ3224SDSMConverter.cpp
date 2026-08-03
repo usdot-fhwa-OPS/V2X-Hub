@@ -36,7 +36,6 @@ namespace CARMAStreetsPlugin
         return parseResult;
     }
     void JsonToJ3224SDSMConverter::convertJsonToSDSM(const Json::Value &sdsm_json, const std::shared_ptr<SensorDataSharingMessage_t> &sdsm) const {
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SensorDataSharingMessage, sdsm.get());
         // Message Count
         sdsm->msgCnt = sdsm_json["msg_cnt"].asInt64();
         // Source ID (Expecting format "rsu_<4-digit-number>")
@@ -220,12 +219,9 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ3224SDSMConverter::encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
     {
-        auto _sdsmMessage = new tmx::messages::SdsmMessage(sdsmPtr);
-        tmx::messages::MessageFrameMessage frame(_sdsmMessage->get_j2735_data());
+        tmx::messages::SdsmMessage _sdsmMessage (sdsmPtr);
+        tmx::messages::MessageFrameMessage frame(_sdsmMessage.get_j2735_data());
         encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-        asn_fprint(stdout, &asn_DEF_MessageFrame, frame.get_j2735_data().get());
-        free(frame.get_j2735_data().get());
-        delete(_sdsmMessage);
     }
 
     void JsonToJ3224SDSMConverter::populateOptionalData(const Json::Value &optional_data_json, DetectedObjectOptionalData_t *optional_data) const {

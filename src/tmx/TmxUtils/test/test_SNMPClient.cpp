@@ -44,6 +44,7 @@ namespace unit_test
     }
 
 
+
     TEST_F(test_SNMPClient, simpleTest)
     {
         auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000);
