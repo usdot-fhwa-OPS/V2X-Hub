@@ -208,7 +208,7 @@ TEST(RawSpduUtilsTest, testBuildRawSpdu){
     EXPECT_EQ(spduMsg.get_msgByteData(), msgPayload);
     EXPECT_EQ(spduMsg.get_timestampMs(), 1234567890);
     EXPECT_EQ(spduMsg.get_uuid(), uuidBytes);
-    EXPECT_EQ(spduMsg.get_messageType(), tmx::utils::api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING);  // "SPAT-P"
+    EXPECT_EQ(spduMsg.get_messageType(), tmx::messages::api::MSGSUBTYPE_SIGNALPHASEANDTIMINGMESSAGE_STRING);  // "SPAT-P"
     std::cout << "Extracted message type: " << std::endl;
     std::cout << spduMsg.get_messageType() << std::endl;
 }
