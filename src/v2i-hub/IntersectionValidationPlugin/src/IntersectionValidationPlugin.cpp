@@ -22,6 +22,7 @@
 
 #include <ctime>
 #include <cstdio>
+#include <rapidjson/pointer.h>
 
 using namespace tmx;
 using namespace tmx::utils;
@@ -47,6 +48,144 @@ namespace
         return out.str();
     }
 
+    // Turn a rapidjson instanceRef ("#/value/SPAT/intersections/0/states/0/timing")
+    // into a path relative to the message body ("intersections/0/states/0/timing"),
+    // so a reported element reads as a location an operator can find in the message.
+    std::string trimInstanceRef(const std::string &instanceRef)
+    {
+        std::string path = instanceRef;
+        if (path.rfind("#/", 0) == 0)
+        {
+            path.erase(0, 2);
+        }
+        else if (path == "#")
+        {
+            path.clear();
+        }
+
+        for (const std::string &prefix : {std::string("value/SPAT/"), std::string("value/MapData/")})
+        {
+            if (path.rfind(prefix, 0) == 0)
+            {
+                path.erase(0, prefix.size());
+                break;
+            }
+        }
+        return path;
+    }
+
+    // Resolve a local "#/..." $ref against the root schema. Returns nullptr for
+    // external or unresolvable refs.
+    const rapidjson::Value *resolveRef(const rapidjson::Value &node,
+                                       const rapidjson::Document &schemaRoot)
+    {
+        auto ref = node.FindMember("$ref");
+        if (ref == node.MemberEnd() || !ref->value.IsString())
+        {
+            return &node;
+        }
+
+        const std::string refStr = ref->value.GetString();
+        if (refStr.empty() || refStr[0] != '#')
+        {
+            return nullptr;
+        }
+        if (refStr == "#")
+        {
+            return &schemaRoot;
+        }
+        return rapidjson::Pointer(refStr.substr(1).c_str()).Get(schemaRoot);
+    }
+
+    // Recursively compare the document against the schema and collect every required
+    // property that is absent, as "path/to/object/fieldName".
+    //
+    // conflictmonitor's missingDataElements is a list of the absent elements, not a
+    // single validator diagnostic. rapidjson 1.1.0 has no continue-on-error, so the
+    // validator only reports the first failure; walking the schema ourselves reports
+    // all of them. anyOf/oneOf are deliberately not descended into: which branch was
+    // intended is ambiguous, so reporting from them would produce false positives.
+    void collectMissingRequired(const rapidjson::Value &schemaNode,
+                                const rapidjson::Value &instance,
+                                const rapidjson::Document &schemaRoot,
+                                const std::string &path,
+                                std::vector<MissingDataElement> &out,
+                                int depth = 0)
+    {
+        constexpr int MAX_DEPTH = 64; // guards against $ref cycles
+        if (depth > MAX_DEPTH)
+        {
+            return;
+        }
+
+        const rapidjson::Value *schema = resolveRef(schemaNode, schemaRoot);
+        if (schema == nullptr || !schema->IsObject())
+        {
+            return;
+        }
+
+        // Required properties absent from this object
+        if (instance.IsObject())
+        {
+            auto required = schema->FindMember("required");
+            if (required != schema->MemberEnd() && required->value.IsArray())
+            {
+                for (const auto &name : required->value.GetArray())
+                {
+                    if (name.IsString() && !instance.HasMember(name.GetString()))
+                    {
+                        out.emplace_back(path.empty()
+                                             ? std::string(name.GetString())
+                                             : path + "/" + name.GetString());
+                    }
+                }
+            }
+
+            // Descend into the properties that are actually present
+            auto properties = schema->FindMember("properties");
+            if (properties != schema->MemberEnd() && properties->value.IsObject())
+            {
+                for (auto it = properties->value.MemberBegin();
+                     it != properties->value.MemberEnd(); ++it)
+                {
+                    auto child = instance.FindMember(it->name);
+                    if (child != instance.MemberEnd())
+                    {
+                        const std::string childPath =
+                            path.empty() ? it->name.GetString() : path + "/" + it->name.GetString();
+                        collectMissingRequired(it->value, child->value, schemaRoot,
+                                               childPath, out, depth + 1);
+                    }
+                }
+            }
+        }
+
+        // Descend into array elements
+        if (instance.IsArray())
+        {
+            auto items = schema->FindMember("items");
+            if (items != schema->MemberEnd() && items->value.IsObject())
+            {
+                rapidjson::SizeType index = 0;
+                for (const auto &element : instance.GetArray())
+                {
+                    collectMissingRequired(items->value, element, schemaRoot,
+                                           path + "/" + std::to_string(index), out, depth + 1);
+                    ++index;
+                }
+            }
+        }
+
+        // allOf applies every subschema, so its required constraints all hold
+        auto allOf = schema->FindMember("allOf");
+        if (allOf != schema->MemberEnd() && allOf->value.IsArray())
+        {
+            for (const auto &sub : allOf->value.GetArray())
+            {
+                collectMissingRequired(sub, instance, schemaRoot, path, out, depth + 1);
+            }
+        }
+    }
 }
 
 namespace IntersectionValidation
@@ -206,26 +345,28 @@ namespace IntersectionValidation
 
         if (!doc.Accept(validator))
         {
-            // Build error string with keyword, document path, and schema path
-            rapidjson::StringBuffer sb;
+            // One entry per missing element, e.g. "intersections/0/states/0/timing/minEndTime"
+            std::vector<MissingDataElement> elements;
+            collectMissingRequired(schemaDoc, doc, schemaDoc, "", elements);
 
-            const char *keyword = validator.GetInvalidSchemaKeyword();
-            std::string error = "Schema validation failed: keyword=";
-            error += keyword ? keyword : "unknown";
+            if (elements.empty())
+            {
+                // Validation failed for a reason other than a missing required property
+                // (type mismatch, enum, range). Report the failing keyword and location
+                // so the event still says something useful.
+                rapidjson::StringBuffer sb;
+                const char *keyword = validator.GetInvalidSchemaKeyword();
+                validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
+                elements.emplace_back(std::string(keyword ? keyword : "unknown") + " at " +
+                                      trimInstanceRef(sb.GetString()));
+            }
 
-            validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
-            error += ", document_path=" + std::string(sb.GetString());
-            sb.Clear();
-
-            validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
-            error += ", schema_path=" + std::string(sb.GetString());
-
-            PLOG(logWARNING) << messageType << " field validation failure: " << error;
+            for (const auto &element : elements)
+            {
+                PLOG(logWARNING) << messageType << " field validation failure: missing " << element.value;
+            }
 
             uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
-            std::vector<MissingDataElement> elements;
-            elements.emplace_back(error);
 
             CTI4501ValidationMessage eventMsg;
             eventMsg.set_eventGeneratedAt(handlerEndMs);
