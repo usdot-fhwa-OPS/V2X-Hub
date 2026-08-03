@@ -42,7 +42,6 @@ TEST(RawSpduTest, SetAndGetAttributesBsm) {
     rawSpdu.set_psid(8002);
 
 
-    std::cout << rawSpdu.to_string() << std::endl;
 
     EXPECT_EQ("BSM", rawSpdu.get_messageType());
     EXPECT_EQ(ts, rawSpdu.get_timestampMs());
@@ -92,7 +91,6 @@ TEST(RawSpduTest, SetAndGetAttributesPsm) {
     rawSpdu.set_timestampMs(ts);
 
     rawSpdu.set_psid(8001);
-    std::cout << rawSpdu.to_string() << std::endl;
 
     EXPECT_EQ("PSM", rawSpdu.get_messageType());
     EXPECT_EQ(ts, rawSpdu.get_timestampMs());
