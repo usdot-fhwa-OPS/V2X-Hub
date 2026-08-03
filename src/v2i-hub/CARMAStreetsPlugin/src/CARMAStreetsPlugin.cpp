@@ -292,7 +292,7 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
 		
 	}else{
-		for (auto srmJson : srmJsonV)
+		for (const auto &srmJson : srmJsonV)
         {
 			Json::StreamWriterBuilder builder;
 			const std::string srmJsonStr = Json::writeString(builder, srmJson);
@@ -589,13 +589,11 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					// Skip messages that fail to encode.
 					PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
 						<< ex.what() << std::endl;
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
 
 					continue;
 				}
 				
-				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 				PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
 
 				//Broadcast the encoded SPAT message

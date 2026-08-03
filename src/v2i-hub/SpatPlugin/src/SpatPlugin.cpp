@@ -163,9 +163,9 @@ namespace SpatPlugin {
 
 	void SpatPlugin::processTSCBM() {
 		PLOG(logDEBUG) << "Attempting to process package as TSCBM...";
-		auto spatPtr = (SPAT*)calloc(1, sizeof(SPAT));
+		auto spatPtr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
 		// Includes call to UDP socket which will block on incoming packet
-		scConnection->receiveBinarySPAT(spatPtr, PluginClientClockAware::getClock());
+		scConnection->receiveBinarySPAT(spatPtr.get(), PluginClientClockAware::getClock());
 		// Initialize message after receiving data to ensure timestamp is accurate to when packet is received and not when we
 		// started waiting for incoming packet
 		tmx::messages::SpatEncodedMessage spatEncoded;
@@ -177,14 +177,6 @@ namespace SpatPlugin {
 		spatEncoded.set_flags(IvpMsgFlags_RouteDSRC);
 		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded);
 		BroadcastMessage(*rMsg);
-		// TODO Fix j2735::j2735_cast used in TmxJ2735Message(const std::shared_ptr<OtherMsgType> &other)
-		// constructor which allocates memory for wrapping Message Frame (see J2735MessageTemplate.hpp)
-		// without a mechanism to  free it later causing memory leak here if we attempt to initialize a 
-		// EncodeSPatMessage here with the SpatMesssage directly. Adding a deleter to _j2735_data
-		// shared_ptr seems to solve the issue here but causes issues for other unit tests and potentially 
-		// else where. Due to this known issue we need to create MessageFrameMessage manualy and ensure pointer 
-		// to underlying MessageFrame is freed explicitly to avoid memory leak.
-		free(frame.get_j2735_data().get());
 	}
 	
 
