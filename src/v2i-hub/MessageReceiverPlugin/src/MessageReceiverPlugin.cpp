@@ -216,11 +216,7 @@ int MessageReceiverPlugin::Main()
 						_processedSPDU++;
 						SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
 						tmx::routeable_message rMsg;
-						// Flag for DSRC routing so plugins such as ImmediateForward, which filter on
-						// IvpMsgFlags_RouteDSRC, receive the SPDU for re-broadcast.
-						rMsg.initialize<tmx::messages::RawSpdu>(spduMsg, "", 0, IvpMsgFlags_RouteDSRC);
-						// The PSID comes from the SPDU itself; the channel defaults to 183.
-						rMsg.addDsrcMetadata(psid);
+						rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
 						this->OutgoingMessage(rMsg);
 					}
 				}
