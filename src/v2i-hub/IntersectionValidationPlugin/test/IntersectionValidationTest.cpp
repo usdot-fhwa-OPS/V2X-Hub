@@ -5634,7 +5634,6 @@ namespace
     EXPECT_FALSE(change.progressionViolation);
   }
 
-
   rapidjson::Document parse(const char *json)
   {
     rapidjson::Document doc;
@@ -5726,7 +5725,7 @@ TEST(RefOrTest, ReturnsFallbackWhenNoRef)
 
 TEST(RefOrTest, ReturnsFallbackWhenNotObject)
 {
-  rapidjson::Document node = parse(R"("just a string")");l
+  rapidjson::Document node = parse(R"("just a string")");
   EXPECT_EQ(refOr(node, "fallback"), "fallback");
 }
  
