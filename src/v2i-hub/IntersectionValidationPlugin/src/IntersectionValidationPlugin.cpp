@@ -22,7 +22,6 @@
 
 #include <ctime>
 #include <cstdio>
-#include <rapidjson/pointer.h>
 
 using namespace tmx;
 using namespace tmx::utils;
@@ -46,153 +45,6 @@ namespace
         std::ostringstream out;
         out << buf.data() << '.' << std::setfill('0') << std::setw(3) << millis << 'Z';
         return out.str();
-    }
-
-    // Resolve a local "#/..." $ref against the root schema. Returns nullptr for
-    // external or unresolvable refs.
-    const rapidjson::Value *resolveRef(const rapidjson::Value &node,
-                                       const rapidjson::Document &schemaRoot)
-    {
-        auto ref = node.FindMember("$ref");
-        if (ref == node.MemberEnd() || !ref->value.IsString())
-        {
-            return &node;
-        }
-
-        const std::string refStr = ref->value.GetString();
-        if (refStr.empty() || refStr[0] != '#')
-        {
-            return nullptr;
-        }
-        if (refStr == "#")
-        {
-            return &schemaRoot;
-        }
-        return rapidjson::Pointer(refStr.substr(1).c_str()).Get(schemaRoot);
-    }
-
-    // Recursively compare the document against the schema and collect every required
-    // property that is absent
-    void collectMissingRequired(const rapidjson::Value &schemaNode,
-                                const rapidjson::Value &instance,
-                                const rapidjson::Document &schemaRoot,
-                                const std::string &jsonPath,
-                                const std::string &schemaPath,
-                                std::vector<MissingDataElement> &out,
-                                int depth = 0)
-    {
-        constexpr int MAX_DEPTH = 64; // guards against $ref cycles
-        if (depth > MAX_DEPTH)
-        {
-            return;
-        }
-
-        // Following a $ref re-bases the reported schema reference on the ref target,
-        // so entries cite "#/$defs/J2735TimeMark" rather than the full inline path.
-        std::string resolvedSchemaPath = schemaPath;
-        if (schemaNode.IsObject())
-        {
-            auto ref = schemaNode.FindMember("$ref");
-            if (ref != schemaNode.MemberEnd() && ref->value.IsString())
-            {
-                resolvedSchemaPath = ref->value.GetString();
-            }
-        }
-
-        const rapidjson::Value *schema = resolveRef(schemaNode, schemaRoot);
-        if (schema == nullptr || !schema->IsObject())
-        {
-            return;
-        }
-
-        if (instance.IsObject())
-        {
-            auto properties = schema->FindMember("properties");
-
-            // Required properties absent from this object
-            auto required = schema->FindMember("required");
-            if (required != schema->MemberEnd() && required->value.IsArray())
-            {
-                for (const auto &name : required->value.GetArray())
-                {
-                    if (!name.IsString() || instance.HasMember(name.GetString()))
-                    {
-                        continue;
-                    }
-
-                    // Prefer the missing property's own schema reference
-                    std::string elementSchemaPath =
-                        resolvedSchemaPath + "/properties/" + name.GetString();
-                    if (properties != schema->MemberEnd() && properties->value.IsObject())
-                    {
-                        auto propSchema = properties->value.FindMember(name.GetString());
-                        if (propSchema != properties->value.MemberEnd() &&
-                            propSchema->value.IsObject())
-                        {
-                            auto propRef = propSchema->value.FindMember("$ref");
-                            if (propRef != propSchema->value.MemberEnd() &&
-                                propRef->value.IsString())
-                            {
-                                elementSchemaPath = propRef->value.GetString();
-                            }
-                        }
-                    }
-
-                    out.emplace_back(jsonPath + "." + name.GetString() +
-                                     " is missing (" + elementSchemaPath + ")");
-                }
-            }
-
-            // Descend into the properties that are actually present
-            if (properties != schema->MemberEnd() && properties->value.IsObject())
-            {
-                for (auto it = properties->value.MemberBegin();
-                     it != properties->value.MemberEnd(); ++it)
-                {
-                    auto child = instance.FindMember(it->name);
-                    if (child != instance.MemberEnd())
-                    {
-                        collectMissingRequired(it->value, child->value, schemaRoot,
-                                               jsonPath + "." + it->name.GetString(),
-                                               resolvedSchemaPath + "/properties/" +
-                                                   it->name.GetString(),
-                                               out, depth + 1);
-                    }
-                }
-            }
-        }
-
-        // Descend into array elements
-        if (instance.IsArray())
-        {
-            auto items = schema->FindMember("items");
-            if (items != schema->MemberEnd() && items->value.IsObject())
-            {
-                rapidjson::SizeType index = 0;
-                for (const auto &element : instance.GetArray())
-                {
-                    collectMissingRequired(items->value, element, schemaRoot,
-                                           jsonPath + "[" + std::to_string(index) + "]",
-                                           resolvedSchemaPath + "/items",
-                                           out, depth + 1);
-                    ++index;
-                }
-            }
-        }
-
-        // allOf applies every subschema, so its required constraints all hold
-        auto allOf = schema->FindMember("allOf");
-        if (allOf != schema->MemberEnd() && allOf->value.IsArray())
-        {
-            rapidjson::SizeType index = 0;
-            for (const auto &sub : allOf->value.GetArray())
-            {
-                collectMissingRequired(sub, instance, schemaRoot, jsonPath,
-                                       resolvedSchemaPath + "/allOf/" + std::to_string(index),
-                                       out, depth + 1);
-                ++index;
-            }
-        }
     }
 }
 
@@ -353,10 +205,13 @@ namespace IntersectionValidation
 
         if (!doc.Accept(validator))
         {
-            // One entry per missing element, formatted to match conflictmonitor's own
-            // minimum-data strings.
+            // Enumerate every missing required element then
+            // wrap the JSON-path strings into MissingDataElement for the event.
             std::vector<MissingDataElement> elements;
-            collectMissingRequired(schemaDoc, doc, schemaDoc, "$", "#", elements);
+            for (const auto &field : IntersectionValidation::collectMissingRequiredFields(schemaDoc, doc))
+            {
+                elements.emplace_back(field);
+            }
 
             if (elements.empty())
             {
