@@ -19,9 +19,6 @@
 
 #include <string>
 #include <vector>
-// #include <rapidjson/document.h>
-// #include <rapidjson/stringbuffer.h>
-// #include <rapidjson/writer.h>
 
 using namespace std;
 using namespace tmx;
