@@ -8,7 +8,7 @@
             "name": "gdb",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/build/tmx/TmxApi/tmxapi_test",
+            "program": "${workspaceFolder}/src/v2i-hub/build/FLIRCameraDriverPlugin/FLIRCameraDriverPlugin_test",
             "args": [],
             "stopAtEntry": true,
             "cwd": "${fileDirname}",
@@ -27,7 +27,7 @@
           "name": "(gdb) Attach",
           "type": "cppdbg",
           "request": "attach",
-          "program": "/var/www/plugins/IntersectionValidationPlugin/bin/IntersectionValidationPlugin",
+          "program": "/var/www/plugins/CommandPlugin/bin/CommandPlugin",
           "processId": "${command:pickProcess}",
           "MIMode": "gdb",
           "setupCommands": [
