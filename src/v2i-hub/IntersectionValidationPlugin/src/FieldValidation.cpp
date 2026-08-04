@@ -22,15 +22,18 @@
 #include <cstring>
 #include <rapidjson/pointer.h>
 
-// Collects missing required fields. This functionality creates a list of the missing data elements
-// based on the format that CV Manager expects.
-namespace
+namespace IntersectionValidation
 {
+
+    class FileLoadException : public std::runtime_error
+    {
+    public:
+        using std::runtime_error::runtime_error;
+    };
+
     // Depth cap guards against $ref cycles.
     constexpr int MAX_SCHEMA_DEPTH = 64;
 
-    // Resolve a local "#/..." $ref against the root schema. Returns nullptr for
-    // external or unresolvable refs.
     const rapidjson::Value *resolveRef(const rapidjson::Value &node,
                                        const rapidjson::Value &schemaRoot)
     {
@@ -52,8 +55,6 @@ namespace
         return rapidjson::Pointer(refStr.substr(1).c_str()).Get(schemaRoot);
     }
 
-    // Following a $ref re-bases reported schema references on the ref target, so
-    // entries cite "#/$defs/J2735TimeMark" rather than the full inline path
     std::string refOr(const rapidjson::Value &node, const std::string &fallback)
     {
         if (node.IsObject())
@@ -67,8 +68,6 @@ namespace
         return fallback;
     }
 
-    // Schema reference to cite for a missing property: the property's own $ref if it
-    // has one, otherwise the inline "<parent>/properties/<name>" fallback.
     std::string propertySchemaRef(const rapidjson::Value &schema, const char *name,
                                   const std::string &fallback)
     {
@@ -85,17 +84,6 @@ namespace
         return refOr(propSchema->value, fallback);
     }
 
-    // Forward declaration so handleObject can recurse back into the entry point.
-    void collectMissingRequired(const rapidjson::Value &schemaNode,
-                                const rapidjson::Value &instance,
-                                const rapidjson::Value &schemaRoot,
-                                const std::string &jsonPath,
-                                const std::string &schemaPath,
-                                std::vector<std::string> &out,
-                                int depth = 0);
-
-    // Object handling on its own so its two required/descend loops reset the nesting
-    // baseline and stay within the depth limit
     void handleObject(const rapidjson::Value &schema, const rapidjson::Value &instance,
                       const rapidjson::Value &schemaRoot, const std::string &jsonPath,
                       const std::string &resolvedSchemaPath,
@@ -144,8 +132,6 @@ namespace
         }
     }
 
-    // Recursively compare the document against the schema and collect every required
-    // property that is absent
     void collectMissingRequired(const rapidjson::Value &schemaNode,
                                 const rapidjson::Value &instance,
                                 const rapidjson::Value &schemaRoot,
@@ -201,17 +187,6 @@ namespace
             }
         }
     }
-}
-
-
-namespace IntersectionValidation
-{
-
-    class FileLoadException : public std::runtime_error
-    {
-    public:
-        using std::runtime_error::runtime_error;
-    };
 
     std::string loadFileContents(const std::string &filePath)
     {
