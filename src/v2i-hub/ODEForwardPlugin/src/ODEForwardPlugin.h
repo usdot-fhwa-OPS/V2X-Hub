@@ -41,6 +41,9 @@
 #include <tmx/json/cJSON.h>
 #include <environment/EnvUtils.h>
 #include <kafka/kafka_client.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include "UDPMessageForwarder.h"
 #include "CTI4501ValidationMessage.h"
 
@@ -83,6 +86,8 @@ namespace ODEForwardPlugin
 		private:
 
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
+
+			void toNumber(rapidjson::Value &parent, const std::vector<std::string> &fields) const;
 
 			std::string convertToNum(const std::string &json) const;
 
