@@ -119,6 +119,45 @@ namespace IntersectionValidation
     std::string loadFileContents(const std::string &filePath);
 
     /**
+     * @brief Check if a JSON Schema node declares a specific type (e.g., "integer"), handling both string and array forms of the "type" keyword.
+     * @param schema The JSON Schema node to check.
+     * @param typeName The type name to look for (e.g., "integer").
+     * @return True if the schema declares the type, false otherwise.
+     */
+    static bool schemaHasType(const rapidjson::Value &schema, const char *typeName);
+
+    /**
+     * @brief Get the schema node for a property key, or nullptr if not found.
+     *        First checks the direct "properties" object, If not found, then 
+     *        search through the oneOf, anyOf, allOf branches recursively.
+     * @param schema The JSON Schema node representing the parent object.
+     * @param key The property key to look up.
+     * @return Pointer to the schema node for the property, or nullptr if not found.
+     */
+    static const rapidjson::Value *getPropertySchema(const rapidjson::Value &schema, const char *key);
+   
+    /**
+     * @brief Get the schema node for array items, or nullptr if not found.
+     * @param schema The JSON Schema node representing the array.
+     * @return Pointer to the schema node for the array items, or nullptr if not found
+     */
+    static const rapidjson::Value *getItemsSchema(const rapidjson::Value &schema);
+
+    /**
+     * @brief Attempt to convert a RapidJSON value from a numeric string to an integer. Returns true if conversion was successful.
+     * @param value The RapidJSON value to convert. Must be a string containing a valid integer representation.
+     * @return True if the value was successfully converted to an integer, false otherwise.
+     */
+    static bool tryConvertToInt(rapidjson::Value &value);
+
+    /**
+     * @brief Attempt to convert a RapidJSON value from a string to a boolean. Returns true if conversion was successful.
+     * @param value The RapidJSON value to convert. Must be a string "true" or "false".
+     * @return True if the value was successfully converted to a boolean, false otherwise.
+     */
+    static bool tryConvertToBool(rapidjson::Value &value);
+
+    /**
      * @brief Validate a JSON string against a JSON Schema string using RapidJSON SchemaValidator.
      * @param jsonStr The JSON string to validate.
      * @param schemaStr The JSON Schema as a string.
