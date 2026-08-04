@@ -137,7 +137,7 @@ namespace CARMAStreetsPlugin
         tmx::messages::SpatEncodedMessage encodedSpat;
         converter.encodeSpat(spat_ptr, encodedSpat);
         std::string encoded_spat_str = "0013808f44d48a0383ebe5e7d24eee997973cb8fa69dfb84653e000013522886841c02010fefdccfe5cfe5c00000000000e08df7ee67f067f06000000000002043fbf7340234023000000000000821fdfb99fee9fee800000000000c11befdccfe0cfe0c000000000008087f7ee67f2e7f2e000000000005043fbf733fdd3fdd000000000003021fdfb9a011a0118000000000";
-        ASSERT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
+        EXPECT_EQ(encoded_spat_str, encodedSpat.get_payload_str());
     }
 
     /**
