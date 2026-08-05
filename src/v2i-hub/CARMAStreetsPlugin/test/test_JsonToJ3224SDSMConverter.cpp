@@ -95,9 +95,9 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage_t>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
-
+        asn_fprint(stderr, &asn_DEF_SensorDataSharingMessage, sdsmPtr.get());
         EXPECT_EQ(1, sdsmPtr->objects.list.array[0]->detObjCommon.objType);
         EXPECT_EQ(65, sdsmPtr->objects.list.array[0]->detObjCommon.objTypeCfd);
         EXPECT_EQ(12200, sdsmPtr->objects.list.array[0]->detObjCommon.objectID);
@@ -224,7 +224,7 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
 
@@ -341,7 +341,7 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
         EXPECT_EQ(1, *sdsmPtr->objects.list.array[0]->detObjOptData->choice.detVRU.basicType);
@@ -443,7 +443,7 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
         EXPECT_EQ(400, sdsmPtr->objects.list.array[0]->detObjOptData->choice.detObst.obstSize.width);
@@ -533,7 +533,7 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
         tmx::messages::SdsmEncodedMessage encodedSdsm;
@@ -679,7 +679,7 @@ namespace CARMAStreetsPlugin
         Json::Value root;
         bool result = converter.parseJsonString(valid_json_str, root);
         EXPECT_TRUE(result);
-        auto sdsmPtr = std::make_shared<SensorDataSharingMessage>();
+        auto sdsmPtr = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         converter.convertJsonToSDSM(root, sdsmPtr);
 
         EXPECT_EQ(3, sdsmPtr->objects.list.count);

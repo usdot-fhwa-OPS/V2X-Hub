@@ -123,9 +123,12 @@ static void j2735_destroy(typename TraitsType::message_type *ptr,
 	{
 		typename TraitsType::asn_type *asnType = (typename TraitsType::asn_type *)descr;
 		ASN_STRUCT_FREE((*asnType), ptr);
+		ptr = nullptr;
 	}
-	else
+	else {
 		free(ptr);
+		ptr = nullptr;
+	}
 }
 /**
  * A helper function to allocate a zeroed ASN.1 struct and manage it with shared_ptr and a custom deleter.
