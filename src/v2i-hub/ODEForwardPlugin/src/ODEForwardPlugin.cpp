@@ -18,7 +18,6 @@
 #include "ODEForwardPlugin.h"
 
 #include <string>
-#include <vector>
 
 using namespace std;
 using namespace tmx;
@@ -220,65 +219,6 @@ namespace ODEForwardPlugin
 		}
 	}
 
-	// Convert the numerical strings to integers
-	void ODEForwardPlugin::toNumber(rapidjson::Value &parent, const std::vector<std::string> &fields) const
-	{
-		for (const auto &field : fields)
-		{
-			auto it = parent.FindMember(field.c_str());
-			if (it == parent.MemberEnd() || !it->value.IsString())
-			{
-				continue;
-			}
-
-			const std::string raw = it->value.GetString();
-			try
-			{
-				size_t consumed = 0;
-				const int64_t parsed = std::stoll(raw, &consumed);
-				// Only replace on a clean, complete parse; leave anything else as-is.
-				if (consumed == raw.size())
-				{
-					it->value.SetInt64(parsed);
-				}
-			}
-			catch (const std::exception &e)
-			{
-				PLOG(logWARNING) << "Failed to convert field '" << field
-					             << "' to number: " << e.what();
-				// Not an integer; leave the original string in place.
-			}
-		}
-	}
-
-	std::string ODEForwardPlugin::convertToNum(const std::string &json) const {
-		static const std::vector<std::string> numericFields {
-			"eventGeneratedAt", "intersectionID", "roadRegulatorID",
-			"numberOfMessages", "messageCountA", "messageCountB"
-		};
-		static const std::vector<std::string> timePeriodFields { "beginTimestamp", "endTimestamp" };
-
-		rapidjson::Document doc;
-		doc.Parse(json.c_str());
-		if (doc.HasParseError() || !doc.IsObject())
-		{
-			return json;
-		}
-
-		toNumber(doc, numericFields);
-
-		if (auto timePeriod = doc.FindMember("timePeriod"); timePeriod != doc.MemberEnd() 
-															&& timePeriod->value.IsObject())
-		{
-			toNumber(timePeriod->value, timePeriodFields);
-		}
-
-		rapidjson::StringBuffer buffer;
-		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-		doc.Accept(writer);
-		return buffer.GetString();
-	}
-
 	void ODEForwardPlugin::HandleValidationEvent(CTI4501ValidationMessage &msg, routeable_message &routeableMsg) {
 		const std::string eventType = msg.get_eventType();
 
@@ -305,7 +245,9 @@ namespace ODEForwardPlugin
 
 		try {
 			// Convert TMX's all-string values into correctly typed JSON numbers
-			const std::string payload = convertToNum(routeableMsg.get_payload_str());
+			const std::string payload = convertToNum(
+				routeableMsg.get_payload_str(),
+				[this](const std::string &m) { PLOG(logWARNING) << m; });
 			_kafkaProducer->send(payload, it->second);
 			PLOG(logDEBUG) << "Forwarded validation event '" << eventType
 			               << "' to Kafka topic '" << it->second << "'.";

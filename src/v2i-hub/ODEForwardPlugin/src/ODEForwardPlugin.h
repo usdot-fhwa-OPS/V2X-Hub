@@ -30,6 +30,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -46,6 +47,7 @@
 #include <rapidjson/writer.h>
 #include "UDPMessageForwarder.h"
 #include "CTI4501ValidationMessage.h"
+#include "ODEForwardConversion.h"
 
  
 
@@ -86,10 +88,6 @@ namespace ODEForwardPlugin
 		private:
 
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
-
-			void toNumber(rapidjson::Value &parent, const std::vector<std::string> &fields) const;
-
-			std::string convertToNum(const std::string &json) const;
 
 
 			// Forwarded/skipped counters for one message stream
