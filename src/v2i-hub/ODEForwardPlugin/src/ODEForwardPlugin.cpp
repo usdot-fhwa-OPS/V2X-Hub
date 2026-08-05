@@ -16,6 +16,9 @@
 
 
 #include "ODEForwardPlugin.h"
+
+#include <string>
+
 using namespace std;
 using namespace tmx;
 using namespace tmx::utils;
@@ -241,8 +244,10 @@ namespace ODEForwardPlugin
 		}
 
 		try {
-			// Forward the payload unchanged
-			const std::string payload = routeableMsg.get_payload_str();
+			// Convert TMX's all-string values into correctly typed JSON numbers
+			const std::string payload = convertToNum(
+				routeableMsg.get_payload_str(),
+				[this](const std::string &m) { PLOG(logWARNING) << m; });
 			_kafkaProducer->send(payload, it->second);
 			PLOG(logDEBUG) << "Forwarded validation event '" << eventType
 			               << "' to Kafka topic '" << it->second << "'.";

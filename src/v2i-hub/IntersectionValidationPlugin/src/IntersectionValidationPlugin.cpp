@@ -46,7 +46,6 @@ namespace
         out << buf.data() << '.' << std::setfill('0') << std::setw(3) << millis << 'Z';
         return out.str();
     }
-
 }
 
 namespace IntersectionValidation
@@ -206,26 +205,33 @@ namespace IntersectionValidation
 
         if (!doc.Accept(validator))
         {
-            // Build error string with keyword, document path, and schema path
-            rapidjson::StringBuffer sb;
+            // Enumerate every missing required element then
+            // wrap the JSON-path strings into MissingDataElement for the event.
+            std::vector<MissingDataElement> elements;
+            for (const auto &field : IntersectionValidation::collectMissingRequiredFields(schemaDoc, doc))
+            {
+                elements.emplace_back(field);
+            }
 
-            const char *keyword = validator.GetInvalidSchemaKeyword();
-            std::string error = "Schema validation failed: keyword=";
-            error += keyword ? keyword : "unknown";
+            if (elements.empty())
+            {
+                // Validation failed for a reason other than a missing required property
+                rapidjson::StringBuffer docSb;
+                rapidjson::StringBuffer schemaSb;
+                const char *keyword = validator.GetInvalidSchemaKeyword();
+                validator.GetInvalidDocumentPointer().StringifyUriFragment(docSb);
+                validator.GetInvalidSchemaPointer().StringifyUriFragment(schemaSb);
+                elements.emplace_back(std::string(docSb.GetString()) + " failed " +
+                                      (keyword ? keyword : "validation") + " (" +
+                                      schemaSb.GetString() + ")");
+            }
 
-            validator.GetInvalidDocumentPointer().StringifyUriFragment(sb);
-            error += ", document_path=" + std::string(sb.GetString());
-            sb.Clear();
-
-            validator.GetInvalidSchemaPointer().StringifyUriFragment(sb);
-            error += ", schema_path=" + std::string(sb.GetString());
-
-            PLOG(logWARNING) << messageType << " field validation failure: " << error;
+            for (const auto &element : elements)
+            {
+                PLOG(logWARNING) << messageType << " field validation failure: " << element.value;
+            }
 
             uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
-            std::vector<MissingDataElement> elements;
-            elements.emplace_back(error);
 
             CTI4501ValidationMessage eventMsg;
             eventMsg.set_eventGeneratedAt(handlerEndMs);
