@@ -52,6 +52,27 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		void OnMessageReceived(IvpMessage *msg);
 		void OnStateChange(IvpPluginState state);
 
+		/**
+		 * @brief Sign a message payload by posting it to the configured SCMS/HSM container.
+		 *
+		 * @param imfConfig RSU configuration providing the HSM URL.
+		 * @param messageConfig Message configuration providing the send type.
+		 * @param msg TMX message whose hex payload is signed.
+		 * @param payloadbyte Out parameter set to the hex encoded signed payload on success.
+		 * @return true Signing succeeded and payloadbyte was populated.
+		 */
+		inline void SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte);
+
+		/**
+		 * @brief Format a forwarding message per the USDOT RSU Specifications v4.1 Appendix C protocol.
+		 *
+		 * @param imfConfig RSU configuration providing the TX mode and signature flag.
+		 * @param messageConfig Message configuration providing the send type, PSID and optional channel.
+		 * @param msg TMX message supplying the DSRC channel when messageConfig has none.
+		 * @param payloadbyte Hex encoded payload to forward.
+		 * @return string The formatted message, ready to send to the RSU over UDP.
+		 */
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
