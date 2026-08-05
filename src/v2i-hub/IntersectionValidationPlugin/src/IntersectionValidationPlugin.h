@@ -111,10 +111,12 @@ namespace IntersectionValidation
          * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
          * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage if validation fails.
          * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         * @param contentChanged Boolean value indicating if the content of the message 
+         has changed
          */
         void validateMessageFields(const rapidjson::Document &doc, const rapidjson::Document &schemaDoc,
                                     const std::string &eventType, const std::string &messageType,
-                                    int intersectionId, uint64_t handlerBeginMs);
+                                    int intersectionId, uint64_t handlerBeginMs, bool contentChanged);
 
 
         /**
