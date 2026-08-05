@@ -289,7 +289,7 @@ public:
 		typedef typename DecType::message_type msg_type;
 
 		DecType decoder;
-		msg_type *obj = static_cast<msg_type*>(calloc(1,sizeof(msg_type)));
+		auto *obj = static_cast<msg_type*>(calloc(1,sizeof(msg_type)));
 		asn_dec_rval_t rval = decoder.decode((void **)&obj, bytes);
 
 		if (rval.code == RC_OK)

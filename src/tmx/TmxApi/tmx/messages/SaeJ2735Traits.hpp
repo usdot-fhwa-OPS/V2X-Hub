@@ -5,8 +5,7 @@
  *      Author: gmb
  */
 
-#ifndef TMX_MESSAGES_SAEJ2735TRAITS_HPP_
-#define TMX_MESSAGES_SAEJ2735TRAITS_HPP_
+#pragma once
 
 #include <tmx/attributes/type_basics.hpp>
 #include <tmx/messages/J2735Exception.hpp>
@@ -40,10 +39,12 @@ template <typename T>
 struct SaeJ2735Traits { };
 
 // Primary template: returns false for everything else
+// Helper for is_instance_of_v
 template <typename T, template <typename...> class Template>
 struct is_instance_of : std::false_type {};
 
 // Partial specialization: matches when T is an instantiation of Template
+// Helper for is_instance_of_v
 template <template <typename...> class Template, typename... Args>
 struct is_instance_of<Template<Args...>, Template> : std::true_type {};
 
@@ -126,7 +127,11 @@ static void j2735_destroy(typename TraitsType::message_type *ptr,
 	else
 		free(ptr);
 }
-
+/**
+ * A helper function to allocate a zeroed ASN.1 struct and manage it with shared_ptr and a custom deleter.
+ * @return A shared_ptr to the allocated ASN.1 struct
+ * @tparam TraitsType The traits type for the ASN.1 struct to allocate
+ */
 template <typename TraitsType>
 static std::shared_ptr<typename TraitsType::message_type> j2735_create() {
 	std::shared_ptr<typename TraitsType::message_type> alloc(
@@ -137,6 +142,30 @@ static std::shared_ptr<typename TraitsType::message_type> j2735_create() {
 	);
 	return alloc;
 }
+/**
+ * A helper function to allocate a zeroed ASN.1 struct.
+ * @tparam T The ASN.1 struct type to allocate
+ * @return A pointer to the allocated ASN.1 struct
+ * @note The allocated struct should not be directly freed, rather the large ASN.1 C struct created by j2735_create() will recursively free all of its members, including this struct
+ */
+template <typename T>
+T *AllocAsn() {
+	return static_cast<T *>(calloc(1, sizeof(T)));
+}
+
+// Allocates a zeroed ASN.1 scalar.
+template <typename T>
+T *AllocAsn(T value) {
+	auto *p = AllocAsn<T>();
+	*p = value;
+	return p;
+}
+
+// Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
+inline uint8_t *AllocAsnBuffer(size_t size) {
+	return static_cast<uint8_t *>(calloc(size, 1));
+}
+
 
 template <typename ToTraitsType, typename FromTraitsType>
 static typename ToTraitsType::message_type *_j2735_cast(const typename FromTraitsType::message_type *in)
@@ -160,4 +189,3 @@ static T *j2735_cast(const U *in)
 
 
 
-#endif /* TMX_MESSAGES_SAEJ2735TRAITS_HPP_ */

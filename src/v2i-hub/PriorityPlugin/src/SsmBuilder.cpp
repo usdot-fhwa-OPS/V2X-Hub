@@ -25,40 +25,14 @@
 #include <PluginLog.h>
 
 using namespace tmx::messages;
+using namespace tmx::messages::j2735;
 using namespace tmx::utils;
 
 namespace PriorityPlugin {
 
     namespace {
-        // Note for allocation helpers below: 
-        // ASN.1 allocations must come from the malloc family.
-        // j2735_destroy releases the SSM tree with ASN_STRUCT_FREE, which calls free() on every node.
-        // calloc's zeroing also marks all optional fields absent.
-
-        // Allocates a zeroed ASN.1 struct.
-        template <typename T>
-        T *AllocAsn() {
-            return static_cast<T *>(calloc(1, sizeof(T)));
-        }
-
-        // Allocates a zeroed ASN.1 scalar.
-        template <typename T>
-        T *AllocAsn(T value) {
-            auto *p = AllocAsn<T>();
-            *p = value;
-            return p;
-        }
-
-        // Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
-        uint8_t *AllocAsnBuffer(size_t size) {
-            return static_cast<uint8_t *>(calloc(size, 1));
-        }
-
-        // Allocates a SignalStatusMessage_t, owned by a shared_ptr.
-        std::shared_ptr<SignalStatusMessage_t> MakeOwnedSsm() {
-            return {AllocAsn<SignalStatusMessage_t>(),
-                    [](SignalStatusMessage_t *p) { j2735::j2735_destroy<SsmTraits>(p); }};
-        }
+       
+       
 
         // Populates the SSM header timeStamp and second fields from UTC time.
         void SetSsmTimestamp(SignalStatusMessage_t *ssm, const struct tm &utc, uint32_t subsecMs) {
@@ -158,7 +132,7 @@ namespace PriorityPlugin {
 
         if (byIntersection.empty()) return nullptr;
 
-        auto ssmPtr = MakeOwnedSsm();
+        auto ssmPtr = j2735_create<SsmTraits>();
 
         struct tm utcNow;
         gmtime_r(&nowEpoch, &utcNow);
@@ -234,7 +208,7 @@ namespace PriorityPlugin {
             return nullptr;
         }
 
-        auto ssmPtr = MakeOwnedSsm();
+        auto ssmPtr = j2735_create<SsmTraits>();
 
         auto nowEpoch = static_cast<time_t>(nowMs / 1000);
         auto subsecMs = static_cast<uint32_t>(nowMs % 1000);

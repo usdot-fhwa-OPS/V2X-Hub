@@ -20,24 +20,9 @@ using namespace std;
 using namespace battelle::attributes;
 using namespace tmx;
 using namespace tmx::messages;
+using namespace tmx::messages::j2735;
 
 namespace unit_test {
-
-	namespace {
-	// Note for allocation helpers below: 
-        // ASN.1 allocations must come from the malloc family.
-        // j2735_destroy releases the SSM tree with ASN_STRUCT_FREE, which calls free() on every node.
-        // calloc's zeroing also marks all optional fields absent.
-
-        // Allocates a zeroed ASN.1 struct.
-        template <typename T>
-        T *AllocAsn() {
-            return static_cast<T *>(calloc(1, sizeof(T)));
-        }
-
-
-       
-	}
 
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
