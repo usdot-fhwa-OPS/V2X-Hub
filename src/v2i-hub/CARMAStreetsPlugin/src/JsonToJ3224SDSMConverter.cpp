@@ -188,8 +188,7 @@ namespace CARMAStreetsPlugin
 
     void JsonToJ3224SDSMConverter::encodeSDSM(const std::shared_ptr<SensorDataSharingMessage_t> &sdsmPtr, tmx::messages::SdsmEncodedMessage &encodedSDSM) const
     {
-        tmx::messages::SdsmMessage _sdsmMessage (sdsmPtr);
-        tmx::messages::MessageFrameMessage frame(_sdsmMessage.get_j2735_data());
+        tmx::messages::MessageFrameMessage frame(sdsmPtr);
         encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
     }
 
