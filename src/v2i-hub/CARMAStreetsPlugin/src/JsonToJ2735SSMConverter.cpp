@@ -146,9 +146,6 @@ namespace CARMAStreetsPlugin
     }
     void JsonToJ2735SSMConverter::encodeSSM(const std::shared_ptr<SignalStatusMessage> &ssmPtr, tmx::messages::SsmEncodedMessage &encodedSSM) const
     {
-        //  tmx::messages::SsmMessage _ssmPtr (ssmPtr);
-        // tmx::messages::MessageFrameMessage frame(_sdsmMessage.get_j2735_data());
-        // encodedSDSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SensorDataSharingMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
         tmx::messages::MessageFrameMessage frame(ssmPtr);
         encodedSSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
     }
