@@ -153,7 +153,13 @@ T *AllocAsn() {
 	return static_cast<T *>(calloc(1, sizeof(T)));
 }
 
-// Allocates a zeroed ASN.1 scalar.
+/**
+ * A helper function to allocate a zeroed ASN.1 struct and initialize it with a value.
+ * @tparam T The ASN.1 struct type to allocate
+ * @param value The value to initialize the allocated struct with
+ * @return A pointer to the allocated ASN.1 struct
+ * @note The allocated struct should not be directly freed, rather the large ASN.1 C struct created by j2735_create() will recursively free all of its members, including this struct
+ */
 template <typename T>
 T *AllocAsn(T value) {
 	auto *p = AllocAsn<T>();
@@ -161,7 +167,12 @@ T *AllocAsn(T value) {
 	return p;
 }
 
-// Allocates a zeroed byte buffer for an ASN.1 OCTET STRING.
+/**
+ * A helper function to allocate a zeroed ASN.1 buffer.
+ * @param size The size of the buffer to allocate
+ * @return A pointer to the allocated buffer
+ * @note The allocated buffer should not be directly freed, rather the large ASN.1 C struct created by j2735_create() will recursively free all of its members, including this struct
+ */
 inline uint8_t *AllocAsnBuffer(size_t size) {
 	return static_cast<uint8_t *>(calloc(size, 1));
 }
