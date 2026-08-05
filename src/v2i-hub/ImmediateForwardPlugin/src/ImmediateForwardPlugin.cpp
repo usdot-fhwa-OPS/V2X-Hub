@@ -181,7 +181,7 @@ namespace ImmediateForward
 		
 		// close pipe first before throwing any exception
 		if(pclose(pipe)==-1){
-			throw tmx::TmxException("pclose() failed!")
+			throw tmx::TmxException("pclose() failed!");
 		};
 		
 		// catch stream error
