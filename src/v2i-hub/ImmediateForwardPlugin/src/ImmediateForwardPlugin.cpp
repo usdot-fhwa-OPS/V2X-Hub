@@ -15,7 +15,7 @@
  */
 
 #include "ImmediateForwardPlugin.h"
-
+#include <tmx/TmxException.hpp>
 
 using namespace std;
 using namespace tmx::utils;
@@ -141,7 +141,7 @@ namespace ImmediateForward
 
 	}
 
-	inline bool ImmediateForwardPlugin::SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte)
+	inline void ImmediateForwardPlugin::SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte)
 	{
 		std::string mType = messageConfig.sendType;
 
@@ -163,20 +163,32 @@ namespace ImmediateForward
 		std::string result="";
 		FILE* pipe= popen(cmd,"r");
 
-		if (pipe == NULL )
-			throw std::runtime_error("popen() failed!");
-		try{
-			while (fgets(buffer, sizeof(buffer),pipe) != NULL)
-			{
-				result+=buffer;
-			}
-		} catch (std::exception const & ex) {
-
-			pclose(pipe);
-			SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
-			PLOG(logERROR) << "Error parsing Messages: " << ex.what();
-			return false;
+		if (pipe == NULL ){
+			throw tmx::TmxException("popen() failed!");
 		}
+
+		while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+		{
+			result+=buffer;
+		}
+
+		bool hasFerror = false;
+		if (ferror(pipe)) {
+			hasFerror = true;
+		} else if (feof(pipe)) {
+			PLOG(logDEBUG1) << "Successfully read all command output.";
+		}
+		
+		// close pipe first before throwing any exception
+		if(pclose(pipe)==-1){
+			throw tmx::TmxException("pclose() failed!")
+		};
+		
+		// catch stream error
+		if(hasFerror){
+			throw tmx::TmxException("A stream error occurred while reading from the pipe.");
+		}
+
 		PLOG(logDEBUG1) << "SCMS Contain response = " << result << std::endl;
 		cJSON *root   = cJSON_Parse(result.c_str());
 		// Check if status is 200 (successful)
@@ -186,15 +198,11 @@ namespace ImmediateForward
 			// Set status will increment the count of message skipped due to signature error responses by one each
 			// time this occurs. This count will be visible under the "State" tab of this plugin.
 			cJSON *message = cJSON_GetObjectItem(root, "message");
-			SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
-			PLOG(logERROR) << "Error response from SCMS container HTTP code " << status->valueint << "!\n" << message->valuestring << std::endl;
-			return false;
+			throw tmx::TmxException("Error response from SCMS container HTTP code " + std::to_string(status->valueint) + "!\n" + message->valuestring + "\n");
 		}
 		cJSON *sd = cJSON_GetObjectItem(root, "signedMessage");
 		string signedMsg = sd->valuestring;
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
-
-		return true;
 	}
 
 	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte){
@@ -265,8 +273,16 @@ namespace ImmediateForward
 				/// if signing is Enabled, request signing with HSM
 				if (imfConfig.enableHsm == 1)
 				{
-					bool success = SignWithHsm(imfConfig, messageConfig, msg, payloadbyte);
-					if(!success){return;}
+					try {
+						SignWithHsm(imfConfig, messageConfig, msg, payloadbyte);
+					}
+					catch (const tmx::TmxException &ex) {
+						SetStatus<uint>(Key_SkippedSignError, ++_skippedSignErrorResponse);
+						PLOG(logERROR) << "Signing with HSM failed: " << ex.what();
+
+						// if signing failed, return immediately
+						return;
+					}
 				}
 				else
 				{
