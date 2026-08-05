@@ -52,6 +52,8 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		void OnMessageReceived(IvpMessage *msg);
 		void OnStateChange(IvpPluginState state);
 
+		inline bool SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte);
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
