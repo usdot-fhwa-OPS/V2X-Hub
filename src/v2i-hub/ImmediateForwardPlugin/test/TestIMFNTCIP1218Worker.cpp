@@ -12,6 +12,18 @@ using testing::Return;
 using testing::SetArgReferee;
 using testing::Throw;
 
+TEST(TestIMFNTCIP1218Worker, testStripPsidPrefix) {
+    // NTCIP wants bare hex digits, while configuration and SPDU PSIDs are written "0x<HEX>"
+    EXPECT_EQ(stripPsidPrefix("0x8002"), "8002");
+    EXPECT_EQ(stripPsidPrefix("0x20"), "20");
+    EXPECT_EQ(stripPsidPrefix("0xBFEE"), "BFEE");
+    // Leading zeros are meaningful to the RSU and are preserved
+    EXPECT_EQ(stripPsidPrefix("0x0027"), "0027");
+    // A PSID that already has no prefix passes through untouched
+    EXPECT_EQ(stripPsidPrefix("8002"), "8002");
+    EXPECT_EQ(stripPsidPrefix(""), "");
+}
+
 TEST(TestIMFNTCIP1218Worker, testClearImmediateForwardTable) {
     // Test the clearImmediateForwardTable function
     // Create a mock SNMP client

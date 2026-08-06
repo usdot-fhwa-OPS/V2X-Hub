@@ -4,15 +4,9 @@ using namespace tmx::utils;
 
 namespace ImmediateForward {
 
-    namespace {
-        /**
-         * NTCIP writes PSIDs as bare hex digits, while both the plugin configuration and the PSIDs
-         * read out of forwarded SPDUs are written "0x<HEX>". Strip the prefix if one is present.
-         */
-        std::string stripPsidPrefix(const std::string &psid) {
-            size_t pos = psid.find("x");
-            return pos == std::string::npos ? psid : psid.substr(pos + 1);
-        }
+    std::string stripPsidPrefix(const std::string &psid) {
+        size_t pos = psid.find("x");
+        return pos == std::string::npos ? psid : psid.substr(pos + 1);
     }
 
     void clearImmediateForwardTable( tmx::utils::snmp_client* const client) {

@@ -24,7 +24,18 @@
 #include "ImmediateForwardConfiguration.h"
 
 namespace ImmediateForward {
-    
+
+    /**
+     * @brief Strip the "0x" prefix from a PSID.
+     *
+     * NTCIP writes PSIDs as bare hex digits, while both the plugin configuration and the PSIDs read
+     * out of forwarded SPDUs are written "0x<HEX>".
+     *
+     * @param psid The PSID, with or without a "0x" prefix.
+     * @return The hex digits alone. A PSID with no prefix is returned unchanged.
+     */
+    std::string stripPsidPrefix(const std::string &psid);
+
     /**
      * @brief Clear the immediate forward table on the RSU
      * @param client The SNMP client to use for the operation
