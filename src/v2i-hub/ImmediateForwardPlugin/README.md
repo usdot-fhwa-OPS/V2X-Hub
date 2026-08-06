@@ -116,5 +116,32 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 All V2X Messages
 
+## Raw SPDU Forwarding
+
+In addition to J2735 messages, this plugin forwards `RawSpdu` messages, which carry an IEEE 1609.2
+SPDU exactly as it was received. This is used to re-broadcast an already secured message without V2X
+Hub decoding, re-encoding or re-signing it. `RawSpdu` messages are produced by the
+[Message Receiver Plugin](../MessageReceiverPlugin/README.md) when its **FullSPDUMode** is enabled.
+
+No new configuration keys are needed. The existing `messages` entries are reused, with the following
+differences from the J2735 path:
+
+- **tmxType** is matched against the J2735 type of the message *inside* the SPDU, which uses the same
+  labels as the J2735 path (`BSM`, `SPAT-P`, `MAP-P`, `PSM-P`, ...). An SPDU whose payload cannot be
+  identified is skipped and counted under `Messages Skipped (Invalid SPDU)`.
+- **psid** is *not* what gets broadcast. The PSID carried by the SPDU is sent instead, so that what
+  goes out over the air matches the message that was received. Both values are logged at `DEBUG3`.
+- **signMessages** must be `true`. The payload is already signed, so RSU4.1 connections send
+  `Signature=True` and NTCIP 1218 rows are initialized with `rsuIFMOptions` `0x80`. SPDUs sent to a
+  connection with `signMessages` set to `false` are skipped and logged as an error.
+- **enableHsm** is ignored for SPDUs. The plugin never asks the HSM to sign an already secured
+  message.
+- **channel** is taken from the message configuration when set, otherwise from the DSRC metadata on
+  the message, which the Message Receiver Plugin defaults to 183.
+
+> [!IMPORTANT]
+> Set **RouteJ2735** to `false` on the Message Receiver Plugin. Otherwise each received message
+> arrives here twice, once unsecured and once as the SPDU, and is broadcast twice.
+
 ## Functionality Testing
 
