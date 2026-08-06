@@ -142,23 +142,26 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid, bool signedPayload){
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid, bool signMessage){
 
         // A row is shared by every message of one send type, and a forwarded raw SPDU broadcasts
-        // under the PSID it arrived with rather than the configured one, and is always signed.
-        // Writing both on every send keeps the row from carrying over what the previous message left
-        // behind. All requests go out in a single SET PDU, so this costs no additional round trip.
+        // under the PSID it arrived with rather than the configured one, and must not be signed
+        // again. Writing both on every send keeps the row from carrying over what the previous
+        // message left behind. All requests go out in a single SET PDU, so this costs no additional
+        // round trip.
         snmp_request psidRequest{
             rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
             'x',
             stripPsidPrefix(psid)
         };
-        // Yunex value for signed messages
-        // binary 10000000 to hexidecimal 80 ( see rsuIFMOptionsOid for bit values )
+        // 80 HEX is binary 10000000, which sets Bit 0 = Process1609.2, asking the RSU to build and
+        // sign the 1609.2 layer. 00 HEX leaves Bit 0 = Bypass1609.2, so an already secured payload
+        // is transmitted untouched. Note Bit 0 is the most significant bit here: this is the value
+        // a Yunex RSU expects, see rsuIFMOptionsOid for the bit definitions.
         snmp_request options{
             rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index),
             'x',
-            signedPayload ? "80" : "00"
+            signMessage ? "80" : "00"
         };
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),

@@ -24,7 +24,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "address": "127.0.0.1", /** Address of RSU **/
                 "port": 1516, /** Default port for Immediate Forward protocol on RSU4.1 **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
-                "signMessages": false, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "signMessages": false, /** Flag to indicate whether the RSU should sign the message before broadcasting it**/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
                 [ 
                     { 
@@ -50,7 +50,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "address": "127.0.0.1", /** Address of RSU **/
                 "port": 1516, /** Default port for Immediate Forward protocol on RSU4.1 **/
                 "txMode": "CONT", /** Transmission Mode (CONT or ALT) **/
-                "signMessages": true, /** Flag to indicate whether message being forwarded to RSU is already signed**/
+                "signMessages": true, /** Flag to indicate whether the RSU should sign the message before broadcasting it**/
                 "enableHsm": true, /** (Optional : default false) Flag to indicate whether V2X Hub should attempt to sign and verify message signatures via HSM **/ 
                 "hsmUrl": "http://<softhsm raspberrypi IP>:3000/v1/scms/", /** (Optional : only read when enableHsm true) URL of HSM API to provide signatures and verify signatures. **/
                 "messages": /** A list of V2X messages to be forwarded to this RSU. Any message types not listed here will not be forwarded to this RSU **/
@@ -132,11 +132,13 @@ differences from the J2735 path:
 - The **PSID** carried by the SPDU is sent instead. For NTCIP 1218, the PSID is written to the immediate forward table row on every send rather than
   only at startup, so a row shared by configured and SPDU traffic always broadcasts under the PSID
   belonging to the message currently in it.
-- **signMessages** is ignored for SPDUs and treated as `true`, whatever the connection is configured
-  with. The payload is already signed, so RSU4.1 connections always send `Signature=True` and NTCIP
-  1218 sends always set `rsuIFMOptions` to `0x80`. Like the PSID, the options bit is written on every
-  NTCIP 1218 send rather than only at startup, so a row shared by configured and SPDU traffic is
-  always marked correctly for the message currently in it.
+- **signMessages** is ignored for SPDUs and treated as `false`, whatever the connection is configured
+  with. `signMessages` asks the *RSU* to sign the payload before broadcast, and an SPDU is already a
+  complete signed 1609.2 message that must go out untouched. RSU4.1 connections therefore always send
+  `Signature=False`, and NTCIP 1218 sends always set `rsuIFMOptions` to `0x00`, leaving
+  `Bit 0 = Bypass1609.2`. Like the PSID, the options bit is written on every NTCIP 1218 send rather
+  than only at startup, so a row shared by configured and SPDU traffic is always marked correctly for
+  the message currently in it.
 - **enableHsm** is ignored for SPDUs. The plugin never asks the HSM to sign an already secured
   message.
 - **channel** is taken from the message configuration when set, otherwise from the DSRC metadata on

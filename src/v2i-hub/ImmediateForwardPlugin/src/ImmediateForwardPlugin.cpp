@@ -212,7 +212,7 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signature){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signMessage){
 		stringstream os;
 		os << "Version=0.7" << "\n"
 		   << "Type=" << messageConfig.sendType << "\n"
@@ -230,7 +230,7 @@ namespace ImmediateForward
 		os << "TxInterval=0" << "\n" 
 		   << "DeliveryStart=\n" 
 		   << "DeliveryStop=\n"
-		   << "Signature=" << (signature ? "True" : "False") << "\n"
+		   << "Signature=" << (signMessage ? "True" : "False") << "\n"
 		   << "Encryption=False\n"
 		   << "Payload=" << payloadbyte << "\n";
 
@@ -302,17 +302,17 @@ namespace ImmediateForward
 				// A forwarded SPDU broadcasts under the PSID it arrived with, so that what goes out
 				// over the air matches the message that came in.
 				string psid = messageConfig.psid;
-				bool signature = imfConfig.signMessage;
+				bool signMessage = imfConfig.signMessage;
 
 				// Format the message using the protocol defined in the
 				// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
 
 				if (isSpdu)
 				{
-					// A raw SPDU always carries its own 1609.2 signature, whatever the connection was
-					// configured with, so the signed flag is forced rather than read from the config.
-					// Telling the RSU otherwise would make it sign an already signed payload.
-					signature = true;
+					// A raw SPDU is already a complete, signed 1609.2 message, so the RSU must transmit
+					// it as-is rather than signing it again. signMessages asks the RSU to sign, so it
+					// is forced off here whatever the connection was configured with.
+					signMessage = false;
 					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
 					psid = toPsidHex(rawSpdu.get_psid());
@@ -340,7 +340,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid, signature);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid, signMessage);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
@@ -355,7 +355,7 @@ namespace ImmediateForward
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid, signature);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid, signMessage);
 
 					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType

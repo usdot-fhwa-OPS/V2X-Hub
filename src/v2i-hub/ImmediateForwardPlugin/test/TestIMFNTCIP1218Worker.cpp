@@ -281,9 +281,9 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
     EXPECT_EQ(requests_1[3].value, "1");
 }
 
-TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSpduPsidAndSignedOptions) {
-    // A forwarded raw SPDU broadcasts under the PSID it arrived with, not the configured one, and is
-    // always marked signed regardless of what the row was initialized with
+TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSignMessage) {
+    // Asking the RSU to sign sets Bit 0 = Process1609.2, which a Yunex RSU reads as the most
+    // significant bit ( see rsuIFMOptionsOid for the bit definitions )
     std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
     std::string message = "0381004003800100";
     unsigned int index = 3;
@@ -296,10 +296,30 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSpduPsidAndSignedOptions
     EXPECT_EQ(requests_1.size(), 4);
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[0].value, "20");
-    // binary 10000000, the signed bit ( see rsuIFMOptionsOid for bit values )
     EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[1].value, "80");
     EXPECT_EQ(requests_1[2].value, message);
+}
+
+TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageAlreadySignedSpdu) {
+    // A forwarded raw SPDU is already a complete signed 1609.2 message, so the RSU must leave
+    // Bit 0 = Bypass1609.2 and transmit the payload untouched rather than signing it again
+    std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
+    std::string spdu = "0381004003800100";
+    unsigned int index = 3;
+
+    std::vector<snmp_request> requests_1;
+    EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
+
+    sendNTCIP1218ImfMessage(mockClient.get(), spdu, index, "0x20", false);
+
+    EXPECT_EQ(requests_1.size(), 4);
+    // The SPDU broadcasts under the PSID it arrived with, not the one the row was initialized with
+    EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[0].value, "20");
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[1].value, "00");
+    EXPECT_EQ(requests_1[2].value, spdu);
 }
 
 TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageAcceptsUnprefixedPsid) {

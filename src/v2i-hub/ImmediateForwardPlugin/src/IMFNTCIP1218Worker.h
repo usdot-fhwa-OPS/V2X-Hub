@@ -71,10 +71,10 @@ namespace ImmediateForward {
      * @param psid PSID to set on the table row, formatted "0x<HEX>" or "<HEX>". Always written,
      * because a single row carries a mix of configured PSIDs and PSIDs taken from forwarded raw
      * SPDUs; leaving the row on whatever the previous send set would broadcast under the wrong PSID.
-     * @param signedPayload Whether the payload already carries its own 1609.2 signature, written to
-     * rsuIFMOptions. Written on every send for the same reason as the PSID: a raw SPDU is always
-     * signed, whatever the connection was configured with.
+     * @param signMessage Whether the RSU should process and sign the 1609.2 layer itself, written to
+     * rsuIFMOptions. Written on every send for the same reason as the PSID: a forwarded raw SPDU is
+     * already signed and must be transmitted as-is, whatever the connection was configured with.
      */
-    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index, const std::string &psid, bool signedPayload);
+    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index, const std::string &psid, bool signMessage);
 
 }
