@@ -17,7 +17,6 @@
 #include <SNMPClient.h>
 #include <vector>
 #include <unordered_map>
-#include <optional>
 #include <string>
 #include <rsu/NTCIP_1218_MIB.h>
 #include <rsu/RSU_MIB_4_1.h>
@@ -58,11 +57,10 @@ namespace ImmediateForward {
      * @param client The SNMP client to use for the operation
      * @param message The IMF message to send
      * @param index The index of the message in the table
-     * @param psidOverride Optional PSID, formatted "0x<HEX>" or "<HEX>", to set on the table row
-     * before transmitting. Used when forwarding a raw SPDU, whose PSID comes from the message itself
-     * rather than from the configuration the row was initialized with. When unset the row keeps the
-     * PSID it was initialized with.
+     * @param psid PSID to set on the table row, formatted "0x<HEX>" or "<HEX>". Always written,
+     * because a single row carries a mix of configured PSIDs and PSIDs taken from forwarded raw
+     * SPDUs; leaving the row on whatever the previous send set would broadcast under the wrong PSID.
      */
-    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index, const std::optional<std::string> &psidOverride = std::nullopt);
+    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index, const std::string &psid);
 
 }

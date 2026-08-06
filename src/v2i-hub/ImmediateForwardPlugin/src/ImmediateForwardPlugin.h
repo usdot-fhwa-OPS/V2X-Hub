@@ -71,11 +71,11 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 * @param messageConfig Message configuration providing the send type, PSID and optional channel.
 		 * @param msg TMX message supplying the DSRC channel when messageConfig has none.
 		 * @param payloadbyte Hex encoded payload to forward.
-		 * @param psidOverride Optional PSID to broadcast instead of the configured one. Used when
-		 * forwarding a raw SPDU, which carries its own PSID.
+		 * @param psid PSID to broadcast under. Taken from the configuration for J2735 messages, and
+		 * from the SPDU itself when forwarding a raw SPDU.
 		 * @return string The formatted message, ready to send to the RSU over UDP.
 		 */
-		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const std::optional<std::string>& psidOverride = std::nullopt);
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)

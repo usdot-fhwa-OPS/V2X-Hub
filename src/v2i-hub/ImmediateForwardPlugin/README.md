@@ -131,6 +131,9 @@ differences from the J2735 path:
   identified is skipped and counted under `Messages Skipped (Invalid SPDU)`.
 - **psid** is *not* what gets broadcast. The PSID carried by the SPDU is sent instead, so that what
   goes out over the air matches the message that was received. Both values are logged at `DEBUG3`.
+  For NTCIP 1218, the PSID is written to the immediate forward table row on every send rather than
+  only at startup, so a row shared by configured and SPDU traffic always broadcasts under the PSID
+  belonging to the message currently in it.
 - **signMessages** must be `true`. The payload is already signed, so RSU4.1 connections send
   `Signature=True` and NTCIP 1218 rows are initialized with `rsuIFMOptions` `0x80`. SPDUs sent to a
   connection with `signMessages` set to `false` are skipped and logged as an error.

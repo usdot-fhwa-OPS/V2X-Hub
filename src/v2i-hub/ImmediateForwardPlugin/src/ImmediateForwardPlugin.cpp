@@ -212,11 +212,11 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const std::optional<std::string>& psidOverride){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid){
 		stringstream os;
 		os << "Version=0.7" << "\n"
 		   << "Type=" << messageConfig.sendType << "\n"
-		   << "PSID=" << psidOverride.value_or(messageConfig.psid) << "\n";
+		   << "PSID=" << psid << "\n";
 		if (!messageConfig.channel.has_value()) {
 			os << "Priority=7" << "\n" 
 			   << "TxMode=" << txModeToString(imfConfig.mode) << "\n"
@@ -299,7 +299,9 @@ namespace ImmediateForward
 
 				foundMessageType = true;
 				string payloadbyte="";
-				std::optional<std::string> psidOverride;
+				// A forwarded SPDU broadcasts under the PSID it arrived with, so that what goes out
+				// over the air matches the message that came in.
+				string psid = messageConfig.psid;
 
 				// Format the message using the protocol defined in the
 				// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
@@ -317,11 +319,10 @@ namespace ImmediateForward
 									   << ": set signMessages to true to forward already signed messages.";
 						continue;
 					}
-					// The SPDU is forwarded byte for byte, with the PSID it was received with, so
-					// that what is broadcast matches the message that came in.
+					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
-					psidOverride = toPsidHex(rawSpdu.get_psid());
-					PLOG(logDEBUG3) << "Forwarding SPDU with PSID " << psidOverride.value()
+					psid = toPsidHex(rawSpdu.get_psid());
+					PLOG(logDEBUG3) << "Forwarding SPDU with PSID " << psid
 									<< " (configured PSID for " << messageConfig.tmxType << " is "
 									<< messageConfig.psid << ")";
 				}
@@ -345,7 +346,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psidOverride);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
@@ -353,18 +354,18 @@ namespace ImmediateForward
 					PLOG(logDEBUG1) << _logPrefix
 									<< "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << psidOverride.value_or(messageConfig.psid)
+									<< ", PSID: " << psid
 									<< ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->GetAddress();
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psidOverride);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid);
 
 					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << psidOverride.value_or(messageConfig.psid)
+									<< ", PSID: " << psid
 									<< ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->get_port();

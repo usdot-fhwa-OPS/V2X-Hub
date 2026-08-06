@@ -3,6 +3,18 @@
 using namespace tmx::utils;
 
 namespace ImmediateForward {
+
+    namespace {
+        /**
+         * NTCIP writes PSIDs as bare hex digits, while both the plugin configuration and the PSIDs
+         * read out of forwarded SPDUs are written "0x<HEX>". Strip the prefix if one is present.
+         */
+        std::string stripPsidPrefix(const std::string &psid) {
+            size_t pos = psid.find("x");
+            return pos == std::string::npos ? psid : psid.substr(pos + 1);
+        }
+    }
+
     void clearImmediateForwardTable( tmx::utils::snmp_client* const client) {
 
         FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
@@ -68,11 +80,10 @@ namespace ImmediateForward {
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
             std::vector<snmp_request> requests;
            
-            size_t pos = message.psid.find("x");
-            if (pos == std::string::npos) {
+            if (message.psid.find("x") == std::string::npos) {
                 throw tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>");
             }
-            std::string messagePsidwithoutPrefix = message.psid.substr(pos+1);
+            std::string messagePsidwithoutPrefix = stripPsidPrefix(message.psid);
             snmp_request psid{
                 rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(curIndex),
                 'x',
@@ -137,8 +148,17 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::optional<std::string> &psidOverride){
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid){
 
+        // A row is shared by every message of one send type, and a forwarded raw SPDU broadcasts
+        // under the PSID it arrived with rather than the configured one. Writing the PSID on every
+        // send keeps the row from carrying over the PSID the previous message left behind. All
+        // requests go out in a single SET PDU, so this costs no additional round trip.
+        snmp_request psidRequest{
+            rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
+            'x',
+            stripPsidPrefix(psid)
+        };
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
             'x',
@@ -150,19 +170,7 @@ namespace ImmediateForward {
                 'i',
                 "1"
         };
-        std::vector reqs {payload, enable};
-        if (psidOverride.has_value()) {
-            // All requests go out in a single SET PDU, so updating the row PSID here costs no
-            // additional round trip.
-            size_t pos = psidOverride.value().find("x");
-            std::string psidWithoutPrefix = pos == std::string::npos ? psidOverride.value() : psidOverride.value().substr(pos+1);
-            snmp_request psid{
-                rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
-                'x',
-                psidWithoutPrefix
-            };
-            reqs.push_back(psid);
-        }
+        std::vector reqs {psidRequest, payload, enable};
         client->process_snmp_set_requests(reqs);
     }
 
