@@ -33,6 +33,7 @@
 
 #include "ImmediateForwardConfiguration.h"
 #include "IMFNTCIP1218Worker.h"
+#include "SpduForwarder.h"
 
 namespace ImmediateForward
 {
@@ -70,9 +71,11 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 * @param messageConfig Message configuration providing the send type, PSID and optional channel.
 		 * @param msg TMX message supplying the DSRC channel when messageConfig has none.
 		 * @param payloadbyte Hex encoded payload to forward.
+		 * @param psidOverride Optional PSID to broadcast instead of the configured one. Used when
+		 * forwarding a raw SPDU, which carries its own PSID.
 		 * @return string The formatted message, ready to send to the RSU over UDP.
 		 */
-		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte);
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const std::optional<std::string>& psidOverride = std::nullopt);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
@@ -91,6 +94,7 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		uint _skippedNoMessageRoute;
 		uint _skippedInvalidUdpClient;
 		uint _skippedSignErrorResponse;
+		uint _skippedInvalidSpdu;
 
 	};
 

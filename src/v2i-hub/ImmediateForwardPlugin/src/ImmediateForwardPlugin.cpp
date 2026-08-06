@@ -27,15 +27,20 @@ namespace ImmediateForward
 	const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
 	const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
 	const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
+	const char* Key_SkippedInvalidSpdu = "Messages Skipped (Invalid SPDU)";
 
 	ImmediateForwardPlugin::ImmediateForwardPlugin(const std::string &name) : PluginClient(name),
 		_configRead(false),
 		_skippedNoDsrcMetadata(0),
 		_skippedNoMessageRoute(0),
-		_skippedInvalidUdpClient(0)
+		_skippedInvalidUdpClient(0),
+		_skippedInvalidSpdu(0)
 	{
 		AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
 		AddMessageFilter("Battelle-DSRC", "*", IvpMsgFlags_RouteDSRC);
+		// Raw 1609.2 SPDUs, published by MessageReceiverPlugin in FullSPDUMode, are forwarded to the
+		// radio exactly as received rather than being re-encoded or re-signed.
+		AddMessageFilter(tmx::messages::RawSpdu::MessageType, "*", IvpMsgFlags_RouteDSRC);
 		SubscribeToMessages();
 
 	}
@@ -89,10 +94,12 @@ namespace ImmediateForward
 		_skippedNoMessageRoute = 0;
 		_skippedInvalidUdpClient = 0;
 		_skippedSignErrorResponse = 0;
+		_skippedInvalidSpdu = 0;
 		SetStatus<uint>(Key_SkippedNoDsrcMetadata, _skippedNoDsrcMetadata);
 		SetStatus<uint>(Key_SkippedNoMessageRoute, _skippedNoMessageRoute);
 		SetStatus<uint>(Key_SkippedInvalidUdpClient, _skippedInvalidUdpClient);
 		SetStatus<uint>(Key_SkippedSignError, _skippedSignErrorResponse);
+		SetStatus<uint>(Key_SkippedInvalidSpdu, _skippedInvalidSpdu);
 		std::string immediateForwardConfigurationsJson;
 		GetConfigValue<string>("ImmediateForwardConfigurations", immediateForwardConfigurationsJson);
 		_imfConfigs.clear();
@@ -205,11 +212,11 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const std::optional<std::string>& psidOverride){
 		stringstream os;
 		os << "Version=0.7" << "\n"
-		   << "Type=" << messageConfig.sendType << "\n" 
-		   << "PSID=" << messageConfig.psid << "\n";
+		   << "Type=" << messageConfig.sendType << "\n"
+		   << "PSID=" << psidOverride.value_or(messageConfig.psid) << "\n";
 		if (!messageConfig.channel.has_value()) {
 			os << "Priority=7" << "\n" 
 			   << "TxMode=" << txModeToString(imfConfig.mode) << "\n"
@@ -235,9 +242,40 @@ namespace ImmediateForward
 		bool foundMessageType = false;
 		static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
 
+		// A raw SPDU carries its payload as a JSON object rather than a hex string, and routes on the
+		// J2735 type of the message inside the SPDU rather than on the TMX subtype, which is always
+		// "Basic" for a RawSpdu.
+		const bool isSpdu = (strcmp(msg->type, tmx::messages::RawSpdu::MessageType) == 0);
+		tmx::messages::RawSpdu rawSpdu;
+		string tmxType;
+		string spduPayload;
+
+		if (isSpdu)
+		{
+			try {
+				rawSpdu = getRawSpdu(msg);
+			}
+			catch (const std::exception &ex) {
+				SetStatus<uint>(Key_SkippedInvalidSpdu, ++_skippedInvalidSpdu);
+				PLOG(logWARNING) << "Could not forward SPDU. Message Ignored: " << ex.what();
+				return;
+			}
+			tmxType = rawSpdu.get_messageType();
+			spduPayload = toUpperHex(rawSpdu.get_fullByteData());
+		}
+		else
+		{
+			tmxType = msg->subtype;
+
+			// Convert the payload to upper case.
+			for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++){
+				msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
+			}
+		}
+
 		int msgCount = 0;
 
-		std::map<std::string, int>::iterator itMsgCount = _messageCountMap.find(msg->subtype);
+		std::map<std::string, int>::iterator itMsgCount = _messageCountMap.find(tmxType);
 
 		if(itMsgCount != _messageCountMap.end())
 		{
@@ -245,16 +283,11 @@ namespace ImmediateForward
 			msgCount ++;
 		}
 
-		_messageCountMap[msg->subtype] = msgCount;
+		_messageCountMap[tmxType] = msgCount;
 
 
-		if (_statusThrottle.Monitor(msg->subtype)) {
-			SetStatus<int>(msg->subtype, msgCount);
-		}
-
-		// Convert the payload to upper case.
-		for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++){
-			msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
+		if (_statusThrottle.Monitor(tmxType)) {
+			SetStatus<int>(tmxType.c_str(), msgCount);
 		}
 
 		//loop through all MessageConfig and send to each with the proper TmxType
@@ -262,16 +295,38 @@ namespace ImmediateForward
 		{
 			for ( const auto &messageConfig: imfConfig.messageConfigs )
 			{
-				if (messageConfig.tmxType != msg->subtype){continue;}
-				
+				if (messageConfig.tmxType != tmxType){continue;}
+
 				foundMessageType = true;
 				string payloadbyte="";
+				std::optional<std::string> psidOverride;
 
 				// Format the message using the protocol defined in the
 				// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
 
+				if (isSpdu)
+				{
+					// NTCIP 1218 rows are initialized once with rsuIFMOptions 0x80 when signMessages
+					// is set, which is what tells the RSU the payload already carries its own
+					// signature. RSU4.1 likewise sends Signature=True from this flag. Forwarding an
+					// already signed SPDU without it would broadcast incorrectly.
+					if (!imfConfig.signMessage)
+					{
+						SetStatus<uint>(Key_SkippedInvalidSpdu, ++_skippedInvalidSpdu);
+						PLOG(logERROR) << "Cannot forward SPDU to " << imfConfig.name
+									   << ": set signMessages to true to forward already signed messages.";
+						continue;
+					}
+					// The SPDU is forwarded byte for byte, with the PSID it was received with, so
+					// that what is broadcast matches the message that came in.
+					payloadbyte = spduPayload;
+					psidOverride = toPsidHex(rawSpdu.get_psid());
+					PLOG(logDEBUG3) << "Forwarding SPDU with PSID " << psidOverride.value()
+									<< " (configured PSID for " << messageConfig.tmxType << " is "
+									<< messageConfig.psid << ")";
+				}
 				/// if signing is Enabled, request signing with HSM
-				if (imfConfig.enableHsm == 1)
+				else if (imfConfig.enableHsm == 1)
 				{
 					try {
 						SignWithHsm(imfConfig, messageConfig, msg, payloadbyte);
@@ -290,26 +345,26 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psidOverride);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
 
-					PLOG(logDEBUG1) << _logPrefix 
-									<< "Sending - TmxType: " << messageConfig.tmxType 
+					PLOG(logDEBUG1) << _logPrefix
+									<< "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << messageConfig.psid 
+									<< ", PSID: " << psidOverride.value_or(messageConfig.psid)
 									<< ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->GetAddress();
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psidOverride);
 
-					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType 
+					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << messageConfig.psid 
+									<< ", PSID: " << psidOverride.value_or(messageConfig.psid)
 									<< ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->get_port();
@@ -321,7 +376,7 @@ namespace ImmediateForward
 		{
 			SetStatus<uint>(Key_SkippedNoMessageRoute, ++_skippedNoMessageRoute);
 			PLOG(logWARNING)<<" WARNING TMX Subtype not found in configuration. Message Ignored: " <<
-					"Type: " << msg->type << ", Subtype: " << msg->subtype;
+					"Type: " << msg->type << ", Subtype: " << tmxType;
 			return;
 		}
 
