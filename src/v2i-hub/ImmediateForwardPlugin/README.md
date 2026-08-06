@@ -132,12 +132,11 @@ differences from the J2735 path:
 - The **PSID** carried by the SPDU is sent instead. For NTCIP 1218, the PSID is written to the immediate forward table row on every send rather than
   only at startup, so a row shared by configured and SPDU traffic always broadcasts under the PSID
   belonging to the message currently in it.
-- **signMessages** is ignored for SPDUs and treated as `true`. The payload is already signed, so
-  RSU4.1 connections always send `Signature=True` and NTCIP 1218 sends always set `rsuIFMOptions` to
-  `0x80`. If the connection is configured with `signMessages` set to `false`, the SPDU is still
-  forwarded as signed and a warning is logged, at most once every 30 seconds per connection. Like the
-  PSID, the options bit is written on every NTCIP 1218 send rather than only at startup, so a row
-  shared by configured and SPDU traffic is always marked correctly for the message currently in it.
+- **signMessages** is ignored for SPDUs and treated as `true`, whatever the connection is configured
+  with. The payload is already signed, so RSU4.1 connections always send `Signature=True` and NTCIP
+  1218 sends always set `rsuIFMOptions` to `0x80`. Like the PSID, the options bit is written on every
+  NTCIP 1218 send rather than only at startup, so a row shared by configured and SPDU traffic is
+  always marked correctly for the message currently in it.
 - **enableHsm** is ignored for SPDUs. The plugin never asks the HSM to sign an already secured
   message.
 - **channel** is taken from the message configuration when set, otherwise from the DSRC metadata on

@@ -241,9 +241,6 @@ namespace ImmediateForward
 	{
 		bool foundMessageType = false;
 		static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
-		// Misconfigured signMessages is a persistent condition, so warn about it sparingly rather
-		// than once per forwarded message.
-		static FrequencyThrottle<std::string> _signMessageThrottle(chrono::milliseconds(30000));
 
 		// A raw SPDU carries its payload as a JSON object rather than a hex string, and routes on the
 		// J2735 type of the message inside the SPDU rather than on the TMX subtype, which is always
@@ -315,11 +312,6 @@ namespace ImmediateForward
 					// A raw SPDU always carries its own 1609.2 signature, whatever the connection was
 					// configured with, so the signed flag is forced rather than read from the config.
 					// Telling the RSU otherwise would make it sign an already signed payload.
-					if (!imfConfig.signMessage && _signMessageThrottle.Monitor(imfConfig.name))
-					{
-						PLOG(logWARNING) << "signMessages is false for " << imfConfig.name
-										 << ", but raw SPDUs are already signed. Forwarding as signed.";
-					}
 					signature = true;
 					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
