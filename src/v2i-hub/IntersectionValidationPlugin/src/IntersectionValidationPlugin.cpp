@@ -175,9 +175,16 @@ namespace IntersectionValidation
         removeEmptyStrings(doc, doc.GetAllocator());
         convertNumericStrings(doc, doc.GetAllocator(), schemaDoc);
 
-        // Run both validations on the same preprocessed document
-        validateMessageFields(doc, schemaDoc, fieldEventType, messageType, intersectionId, handlerBeginMs);
-        return validateRevisionCounters(doc, revisionEventType, messageType, intersectionId);
+        // First run revision validation so that MinimumData event can also be throttled
+        RevisionCounterResult revResult =
+            validateRevisionCounters(doc, revisionEventType, messageType, intersectionId);
+
+        // planForwarding() is true when message content changed (or first seen)
+        const bool contentChanged = planForwarding(revResult);
+        validateMessageFields(doc, schemaDoc, fieldEventType, messageType,
+                              intersectionId, handlerBeginMs, contentChanged);
+
+        return revResult;
     }
 
     void IntersectionValidationPlugin::validateMessageFields(const rapidjson::Document &doc,
@@ -185,7 +192,8 @@ namespace IntersectionValidation
                                                              const std::string &eventType,
                                                              const std::string &messageType,
                                                              int intersectionId,
-                                                             uint64_t handlerBeginMs)
+                                                             uint64_t handlerBeginMs,
+                                                             bool contentChanged)
     {
         uint32_t &passed = (messageType == "SPaT") ? spatValidationPassed : mapValidationPassed;
         uint32_t &failed = (messageType == "SPaT") ? spatFieldValidationErrors : mapFieldValidationErrors;
@@ -205,46 +213,58 @@ namespace IntersectionValidation
 
         if (!doc.Accept(validator))
         {
-            // Enumerate every missing required element then
-            // wrap the JSON-path strings into MissingDataElement for the event.
-            std::vector<MissingDataElement> elements;
-            for (const auto &field : IntersectionValidation::collectMissingRequiredFields(schemaDoc, doc))
-            {
-                elements.emplace_back(field);
-            }
-
-            if (elements.empty())
-            {
-                // Validation failed for a reason other than a missing required property
-                rapidjson::StringBuffer docSb;
-                rapidjson::StringBuffer schemaSb;
-                const char *keyword = validator.GetInvalidSchemaKeyword();
-                validator.GetInvalidDocumentPointer().StringifyUriFragment(docSb);
-                validator.GetInvalidSchemaPointer().StringifyUriFragment(schemaSb);
-                elements.emplace_back(std::string(docSb.GetString()) + " failed " +
-                                      (keyword ? keyword : "validation") + " (" +
-                                      schemaSb.GetString() + ")");
-            }
-
-            for (const auto &element : elements)
-            {
-                PLOG(logWARNING) << messageType << " field validation failure: " << element.value;
-            }
-
-            uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-
-            CTI4501ValidationMessage eventMsg;
-            eventMsg.set_eventGeneratedAt(handlerEndMs);
-            eventMsg.set_eventType(eventType);
-            eventMsg.set_intersectionID(intersectionId);
-            eventMsg.set_roadRegulatorID(-1);
-            eventMsg.set_source(rsuSource);
-            eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
-            eventMsg.set_missingDataElements(elements);
-
-            PluginClient::BroadcastMessage(eventMsg);
-
+            // The validation failure is real regardless of throttling, so count it.
             failed++;
+
+            if (!contentChanged)
+            {
+                // Identical to previous message for this intersection
+                // MinimumDataEvent already fired for this message
+                PLOG(logDEBUG) << messageType
+                               << " minimum-data unchanged from previous message; "
+                                  "throttling duplicate event";
+            }
+            else
+            {
+                // One entry per missing element, formatted to match conflictmonitor's own
+                // minimum-data strings.
+                std::vector<MissingDataElement> elements;
+                for (const auto &field : IntersectionValidation::collectMissingRequiredFields(schemaDoc, doc))
+                {
+                    elements.emplace_back(field);
+                }
+
+                if (elements.empty())
+                {
+                    // Validation failed for a reason other than a missing required property
+                    rapidjson::StringBuffer docSb;
+                    rapidjson::StringBuffer schemaSb;
+                    const char *keyword = validator.GetInvalidSchemaKeyword();
+                    validator.GetInvalidDocumentPointer().StringifyUriFragment(docSb);
+                    validator.GetInvalidSchemaPointer().StringifyUriFragment(schemaSb);
+                    elements.emplace_back(std::string(docSb.GetString()) + " failed " +
+                                          (keyword ? keyword : "validation") + " (" +
+                                          schemaSb.GetString() + ")");
+                }
+
+                for (const auto &element : elements)
+                {
+                    PLOG(logWARNING) << messageType << " field validation failure: " << element.value;
+                }
+
+                uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
+
+                CTI4501ValidationMessage eventMsg;
+                eventMsg.set_eventGeneratedAt(handlerEndMs);
+                eventMsg.set_eventType(eventType);
+                eventMsg.set_intersectionID(intersectionId);
+                eventMsg.set_roadRegulatorID(-1);
+                eventMsg.set_source(rsuSource);
+                eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
+                eventMsg.set_missingDataElements(elements);
+
+                PluginClient::BroadcastMessage(eventMsg);
+            }
         }
         else
         {

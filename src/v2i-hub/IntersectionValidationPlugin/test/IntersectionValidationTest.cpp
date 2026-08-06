@@ -5659,292 +5659,391 @@ namespace
  
     EXPECT_NE(resolved, nullptr);
     EXPECT_EQ(resolved, &node); // same node returned, not a copy
-}
- 
-TEST(ResolveRefTest, ResolvesLocalPointerAgainstRoot)
-{
-    rapidjson::Document root = parse(R"({
-        "definitions": { "Foo": { "type": "integer" } }
-    })");
-    rapidjson::Document node = parse(R"({"$ref": "#/definitions/Foo"})");
- 
-    const rapidjson::Value *resolved = resolveRef(node, root);
- 
-    EXPECT_NE(resolved, nullptr);
-    EXPECT_TRUE(resolved->IsObject());
-    EXPECT_TRUE(resolved->HasMember("type"));
-    EXPECT_STREQ((*resolved)["type"].GetString(), "integer");
-}
- 
-TEST(ResolveRefTest, RootPointerReturnsRoot)
-{
+  }
+  
+  TEST(ResolveRefTest, ResolvesLocalPointerAgainstRoot)
+  {
+      rapidjson::Document root = parse(R"({
+          "definitions": { "Foo": { "type": "integer" } }
+      })");
+      rapidjson::Document node = parse(R"({"$ref": "#/definitions/Foo"})");
+  
+      const rapidjson::Value *resolved = resolveRef(node, root);
+  
+      EXPECT_NE(resolved, nullptr);
+      EXPECT_TRUE(resolved->IsObject());
+      EXPECT_TRUE(resolved->HasMember("type"));
+      EXPECT_STREQ((*resolved)["type"].GetString(), "integer");
+  }
+  
+  TEST(ResolveRefTest, RootPointerReturnsRoot)
+  {
+      rapidjson::Document root = parse(R"({"type": "object"})");
+      rapidjson::Document node = parse(R"({"$ref": "#"})");
+  
+      const rapidjson::Value *resolved = resolveRef(node, root);
+  
+      EXPECT_EQ(resolved, &root);
+  }
+  
+  TEST(ResolveRefTest, ExternalRefReturnsNull)
+  {
     rapidjson::Document root = parse(R"({"type": "object"})");
-    rapidjson::Document node = parse(R"({"$ref": "#"})");
- 
-    const rapidjson::Value *resolved = resolveRef(node, root);
- 
-    EXPECT_EQ(resolved, &root);
-}
- 
-TEST(ResolveRefTest, ExternalRefReturnsNull)
-{
-  rapidjson::Document root = parse(R"({"type": "object"})");
-  rapidjson::Document node = parse(R"({"$ref": "other.json#/Foo"})");
- 
-  EXPECT_EQ(resolveRef(node, root), nullptr);
-}
- 
-TEST(ResolveRefTest, UnresolvableLocalPointerReturnsNull)
-{
-  rapidjson::Document root = parse(R"({"definitions": {}})");
-  rapidjson::Document node = parse(R"({"$ref": "#/definitions/DoesNotExist"})");
- 
-  EXPECT_EQ(resolveRef(node, root), nullptr);
-}
- 
-TEST(ResolveRefTest, NonStringRefIsTreatedAsNoRef)
-{
-  rapidjson::Document root = parse(R"({"type": "object"})");
-  rapidjson::Document node = parse(R"({"$ref": 42})");
- 
-  // A non-string $ref is ignored; the node itself is returned.
-  EXPECT_EQ(resolveRef(node, root), &node);
-}
- 
-TEST(RefOrTest, ReturnsRefStringWhenPresent)
-{
-    rapidjson::Document node = parse(R"({"$ref": "#/$defs/J2735TimeMark"})");
-    EXPECT_EQ(refOr(node, "fallback"), "#/$defs/J2735TimeMark");
-}
- 
-TEST(RefOrTest, ReturnsFallbackWhenNoRef)
-{
-  rapidjson::Document node = parse(R"({"type": "integer"})");
-  EXPECT_EQ(refOr(node, "fallback/path"), "fallback/path");
-}
+    rapidjson::Document node = parse(R"({"$ref": "other.json#/Foo"})");
+  
+    EXPECT_EQ(resolveRef(node, root), nullptr);
+  }
+  
+  TEST(ResolveRefTest, UnresolvableLocalPointerReturnsNull)
+  {
+    rapidjson::Document root = parse(R"({"definitions": {}})");
+    rapidjson::Document node = parse(R"({"$ref": "#/definitions/DoesNotExist"})");
+  
+    EXPECT_EQ(resolveRef(node, root), nullptr);
+  }
+  
+  TEST(ResolveRefTest, NonStringRefIsTreatedAsNoRef)
+  {
+    rapidjson::Document root = parse(R"({"type": "object"})");
+    rapidjson::Document node = parse(R"({"$ref": 42})");
+  
+    // A non-string $ref is ignored; the node itself is returned.
+    EXPECT_EQ(resolveRef(node, root), &node);
+  }
+  
+  TEST(RefOrTest, ReturnsRefStringWhenPresent)
+  {
+      rapidjson::Document node = parse(R"({"$ref": "#/$defs/J2735TimeMark"})");
+      EXPECT_EQ(refOr(node, "fallback"), "#/$defs/J2735TimeMark");
+  }
+  
+  TEST(RefOrTest, ReturnsFallbackWhenNoRef)
+  {
+    rapidjson::Document node = parse(R"({"type": "integer"})");
+    EXPECT_EQ(refOr(node, "fallback/path"), "fallback/path");
+  }
 
-TEST(RefOrTest, ReturnsFallbackWhenNotObject)
-{
-  rapidjson::Document node = parse(R"("just a string")");
-  EXPECT_EQ(refOr(node, "fallback"), "fallback");
-}
- 
-TEST(PropertySchemaRefTest, ReturnsPropertyRefWhenDeclared)
-{
-  rapidjson::Document schema = parse(R"({
-    "properties": { "startTime": { "$ref": "#/$defs/TimeMark" } }
-  })");
-  EXPECT_EQ(propertySchemaRef(schema, "startTime", "fallback"),
-    "#/$defs/TimeMark");
-}
- 
-TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyHasNoRef)
-{
-  rapidjson::Document schema = parse(R"({
-  "properties": { "startTime": { "type": "integer" } }
-    })");
-  EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
-    "inline/path");
-}
- 
-TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyMissing)
-{
-  rapidjson::Document schema = parse(R"({
-        "properties": { "other": { "type": "integer" } }
-  })");
-  EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
-        "inline/path");
-}
- 
-TEST(CollectMissingRequiredFieldsTest, EmptyWhenAllRequiredPresent)
-{
+  TEST(RefOrTest, ReturnsFallbackWhenNotObject)
+  {
+    rapidjson::Document node = parse(R"("just a string")");
+    EXPECT_EQ(refOr(node, "fallback"), "fallback");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsPropertyRefWhenDeclared)
+  {
     rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
-        "required": ["a", "b"]
+      "properties": { "startTime": { "$ref": "#/$defs/TimeMark" } }
     })");
-    rapidjson::Document doc = parse(R"({"a": 1, "b": 2})");
-
-    EXPECT_TRUE(collectMissingRequiredFields(schema, doc).empty());
-}
-
-TEST(CollectMissingRequiredFieldsTest, ReportsSingleMissingTopLevel)
-{
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "fallback"),
+      "#/$defs/TimeMark");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyHasNoRef)
+  {
     rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
-        "required": ["a", "b"]
-    })");
-    rapidjson::Document doc = parse(R"({"a": 1})");
-
-    auto missing = collectMissingRequiredFields(schema, doc);
-
-    ASSERT_EQ(missing.size(), 1u);
-    EXPECT_TRUE(contains(missing, "$.b is missing"));
-}
-
-TEST(CollectMissingRequiredFieldsTest, ReportsAllMissingNotJustFirst)
-{
+    "properties": { "startTime": { "type": "integer" } }
+      })");
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
+      "inline/path");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyMissing)
+  {
     rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": { "a": {}, "b": {}, "c": {} },
-        "required": ["a", "b", "c"]
+          "properties": { "other": { "type": "integer" } }
     })");
-    rapidjson::Document doc = parse(R"({"b": 2})");
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
+          "inline/path");
+  }
+  
+  TEST(CollectMissingRequiredFieldsTest, EmptyWhenAllRequiredPresent)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
+          "required": ["a", "b"]
+      })");
+      rapidjson::Document doc = parse(R"({"a": 1, "b": 2})");
 
-    auto missing = collectMissingRequiredFields(schema, doc);
+      EXPECT_TRUE(collectMissingRequiredFields(schema, doc).empty());
+  }
 
-    EXPECT_EQ(missing.size(), 2u);
-    EXPECT_TRUE(contains(missing, "$.a is missing"));
-    EXPECT_TRUE(contains(missing, "$.c is missing"));
-}
+  TEST(CollectMissingRequiredFieldsTest, ReportsSingleMissingTopLevel)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
+          "required": ["a", "b"]
+      })");
+      rapidjson::Document doc = parse(R"({"a": 1})");
 
-TEST(CollectMissingRequiredFieldsTest, DescendsIntoNestedObjects)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": {
-            "id": {
-                "type": "object",
-                "properties": { "region": {}, "id": {} },
-                "required": ["id"]
-            }
-        },
-        "required": ["id"]
-    })");
-    rapidjson::Document doc = parse(R"({"id": {"region": 1}})");
+      auto missing = collectMissingRequiredFields(schema, doc);
 
-    auto missing = collectMissingRequiredFields(schema, doc);
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.b is missing"));
+  }
 
-    ASSERT_EQ(missing.size(), 1u);
-    EXPECT_TRUE(contains(missing, "$.id.id is missing"));
-}
+  TEST(CollectMissingRequiredFieldsTest, ReportsAllMissingNotJustFirst)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": {}, "b": {}, "c": {} },
+          "required": ["a", "b", "c"]
+      })");
+      rapidjson::Document doc = parse(R"({"b": 2})");
 
-TEST(CollectMissingRequiredFieldsTest, DescendsIntoArrayItemsWithIndex)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": {
-            "states": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": { "eventState": {}, "timing": {} },
-                    "required": ["eventState", "timing"]
-                }
-            }
-        },
-        "required": ["states"]
-    })");
+      auto missing = collectMissingRequiredFields(schema, doc);
 
-    rapidjson::Document doc = parse(R"({
-        "states": [
-            {"eventState": "stop", "timing": {}},
-            {"eventState": "go"}
-        ]
-    })");
+      EXPECT_EQ(missing.size(), 2u);
+      EXPECT_TRUE(contains(missing, "$.a is missing"));
+      EXPECT_TRUE(contains(missing, "$.c is missing"));
+  }
 
-    auto missing = collectMissingRequiredFields(schema, doc);
+  TEST(CollectMissingRequiredFieldsTest, DescendsIntoNestedObjects)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "id": {
+                  "type": "object",
+                  "properties": { "region": {}, "id": {} },
+                  "required": ["id"]
+              }
+          },
+          "required": ["id"]
+      })");
+      rapidjson::Document doc = parse(R"({"id": {"region": 1}})");
 
-    ASSERT_EQ(missing.size(), 1u);
-    EXPECT_TRUE(contains(missing, "$.states[1].timing is missing"));
-}
+      auto missing = collectMissingRequiredFields(schema, doc);
 
-TEST(CollectMissingRequiredFieldsTest, ProducesConflictMonitorStyleString)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": {
-            "value": {
-                "type": "object",
-                "properties": {
-                    "SPAT": {
-                        "type": "object",
-                        "properties": { "timeStamp": {}, "intersections": {} },
-                        "required": ["timeStamp", "intersections"]
-                    }
-                },
-                "required": ["SPAT"]
-            }
-        },
-        "required": ["value"]
-    })");
-    rapidjson::Document doc = parse(R"({"value": {"SPAT": {"timeStamp": 1}}})");
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.id.id is missing"));
+  }
 
-    auto missing = collectMissingRequiredFields(schema, doc);
+  TEST(CollectMissingRequiredFieldsTest, DescendsIntoArrayItemsWithIndex)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "states": {
+                  "type": "array",
+                  "items": {
+                      "type": "object",
+                      "properties": { "eventState": {}, "timing": {} },
+                      "required": ["eventState", "timing"]
+                  }
+              }
+          },
+          "required": ["states"]
+      })");
 
-    ASSERT_EQ(missing.size(), 1u);
-    // Full expected string, path + schema-pointer citation.
-    EXPECT_EQ(missing.front(),
-              "$.value.SPAT.intersections is missing "
-              "(#/properties/value/properties/SPAT/properties/intersections)");
-}
+      rapidjson::Document doc = parse(R"({
+          "states": [
+              {"eventState": "stop", "timing": {}},
+              {"eventState": "go"}
+          ]
+      })");
 
-TEST(HandleObjectTest, NoOpForNonObjectInstance)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object", "properties": { "a": {} }, "required": ["a"]
-    })");
-    rapidjson::Document instance = parse(R"([1, 2, 3])"); // array, not object
+      auto missing = collectMissingRequiredFields(schema, doc);
 
-    std::vector<std::string> out;
-    handleObject(schema, instance, schema, "$", "#", out, 0);
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.states[1].timing is missing"));
+  }
 
-    EXPECT_TRUE(out.empty());
-}
+  TEST(CollectMissingRequiredFieldsTest, ProducesConflictMonitorStyleString)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "value": {
+                  "type": "object",
+                  "properties": {
+                      "SPAT": {
+                          "type": "object",
+                          "properties": { "timeStamp": {}, "intersections": {} },
+                          "required": ["timeStamp", "intersections"]
+                      }
+                  },
+                  "required": ["SPAT"]
+              }
+          },
+          "required": ["value"]
+      })");
+      rapidjson::Document doc = parse(R"({"value": {"SPAT": {"timeStamp": 1}}})");
 
-TEST(HandleObjectTest, CollectsMissingAndRecursesPresent)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object",
-        "properties": {
-            "a": {},
-            "nested": {
-                "type": "object",
-                "properties": { "x": {} },
-                "required": ["x"]
-            }
-        },
-        "required": ["a", "nested"]
-    })");
-    // "a" missing; "nested" present but missing its required "x".
-    rapidjson::Document instance = parse(R"({"nested": {}})");
+      auto missing = collectMissingRequiredFields(schema, doc);
 
-    std::vector<std::string> out;
-    handleObject(schema, instance, schema, "$", "#", out, 0);
+      ASSERT_EQ(missing.size(), 1u);
+      // Full expected string, path + schema-pointer citation.
+      EXPECT_EQ(missing.front(),
+                "$.value.SPAT.intersections is missing "
+                "(#/properties/value/properties/SPAT/properties/intersections)");
+  }
 
-    EXPECT_EQ(out.size(), 2u);
-    EXPECT_TRUE(contains(out, "$.a is missing"));
-    EXPECT_TRUE(contains(out, "$.nested.x is missing"));
-}
+  TEST(HandleObjectTest, NoOpForNonObjectInstance)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document instance = parse(R"([1, 2, 3])"); // array, not object
 
-TEST(CollectMissingRequiredTest, DepthGuardStopsRecursion)
-{
-    // Passing a depth over the cap short-circuits before any collection.
-    rapidjson::Document schema = parse(R"({
-        "type": "object", "properties": { "a": {} }, "required": ["a"]
-    })");
-    rapidjson::Document doc = parse(R"({})");
+      std::vector<std::string> out;
+      handleObject(schema, instance, schema, "$", "#", out, 0);
 
-    std::vector<std::string> out;
-    collectMissingRequired(schema, doc, schema, "$", "#", out, /*depth=*/1000);
+      EXPECT_TRUE(out.empty());
+  }
 
-    EXPECT_TRUE(out.empty());
-}
- 
-TEST(CollectMissingRequiredTest, DefaultDepthCollectsNormally)
-{
-    rapidjson::Document schema = parse(R"({
-        "type": "object", "properties": { "a": {} }, "required": ["a"]
-    })");
-    rapidjson::Document doc = parse(R"({})");
+  TEST(HandleObjectTest, CollectsMissingAndRecursesPresent)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "a": {},
+              "nested": {
+                  "type": "object",
+                  "properties": { "x": {} },
+                  "required": ["x"]
+              }
+          },
+          "required": ["a", "nested"]
+      })");
+      // "a" missing; "nested" present but missing its required "x".
+      rapidjson::Document instance = parse(R"({"nested": {}})");
 
-    std::vector<std::string> out;
-    collectMissingRequired(schema, doc, schema, "$", "#", out); // default depth 0
+      std::vector<std::string> out;
+      handleObject(schema, instance, schema, "$", "#", out, 0);
 
-    ASSERT_EQ(out.size(), 1u);
-    EXPECT_TRUE(contains(out, "$.a is missing"));
-}
+      EXPECT_EQ(out.size(), 2u);
+      EXPECT_TRUE(contains(out, "$.a is missing"));
+      EXPECT_TRUE(contains(out, "$.nested.x is missing"));
+  }
+
+  TEST(CollectMissingRequiredTest, DepthGuardStopsRecursion)
+  {
+      // Passing a depth over the cap short-circuits before any collection.
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document doc = parse(R"({})");
+
+      std::vector<std::string> out;
+      collectMissingRequired(schema, doc, schema, "$", "#", out, /*depth=*/1000);
+
+      EXPECT_TRUE(out.empty());
+  }
+  
+  TEST(CollectMissingRequiredTest, DefaultDepthCollectsNormally)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document doc = parse(R"({})");
+
+      std::vector<std::string> out;
+      collectMissingRequired(schema, doc, schema, "$", "#", out); // default depth 0
+
+      ASSERT_EQ(out.size(), 1u);
+      EXPECT_TRUE(contains(out, "$.a is missing"));
+  }
+
+  // MinimumDataEvent throttling
+  bool spatWouldEmit(RevisionCounterValidator &validator, const char *json)
+  {
+      rapidjson::Document doc = parse(json);
+      return planForwarding(validator.validateSpatRevision(doc));
+  }
+
+  bool mapWouldEmit(RevisionCounterValidator &validator, const char *json)
+  {
+      rapidjson::Document doc = parse(json);
+      return planForwarding(validator.validateMapRevision(doc));
+  }
+
+  constexpr const char *SPAT_A = R"json({
+      "value": { "SPAT": { "intersections": [
+          {
+              "id": { "id": 105 },
+              "revision": 0,
+              "states": [
+                  { "signalGroup": 1, "state-time-speed": [
+                      { "eventState": "stop-And-Remain", "timing": { "minEndTime": 100 } }
+                  ] }
+              ]
+          }
+      ] } }
+  })json";
+
+  // eventState changed
+  constexpr const char *SPAT_B = R"json({
+      "value": { "SPAT": { "intersections": [
+          {
+              "id": { "id": 105 },
+              "revision": 0,
+              "states": [
+                  { "signalGroup": 1, "state-time-speed": [
+                      { "eventState": "protected-Movement-Allowed", "timing": { "minEndTime": 100 } }
+                  ] }
+              ]
+          }
+      ] } }
+  })json";
+
+  constexpr const char *MAP_A = R"json({
+      "value": { "MapData": {
+          "msgIssueRevision": 0,
+          "intersections": [
+              { "id": { "id": 105 }, "revision": 0, "laneSet": [ { "laneID": 1 } ] }
+          ]
+      } }
+  })json";
+
+  // laneID changed
+  constexpr const char *MAP_B = R"json({
+      "value": { "MapData": {
+          "msgIssueRevision": 0,
+          "intersections": [
+              { "id": { "id": 105 }, "revision": 0, "laneSet": [ { "laneID": 2 } ] }
+          ]
+      } }
+  })json";
+
+  TEST(MinimumDataThrottleTest, FirstFailingSpatEmits)
+  {
+      RevisionCounterValidator validator;
+
+      // First time this intersection is seen
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));
+  }
+
+  TEST(MinimumDataThrottleTest, IdenticalSpatRepeatIsThrottled)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));   // first — emits, records state
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // identical — throttled
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // still identical — still throttled
+  }
+
+  TEST(MinimumDataThrottleTest, ChangedSpatContentReEmits)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));   // first — emits
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // identical — throttled
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_B));   // content changed — emits again
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_B));  // new content now identical — throttled
+  }
+
+  TEST(MinimumDataThrottleTest, MapFollowsSameThrottleRule)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(mapWouldEmit(validator, MAP_A));    // first — emits
+      EXPECT_FALSE(mapWouldEmit(validator, MAP_A));   // identical — throttled
+      EXPECT_TRUE(mapWouldEmit(validator, MAP_B));    // content changed — emits again
+  }
+
+
 
 
 } // namespace
