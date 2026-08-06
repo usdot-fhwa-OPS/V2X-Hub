@@ -298,7 +298,6 @@ int CswPlugin::Main() {
 
 				pthread_mutex_lock(&_timMutex);
 				_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-				//TestFindRegion();
 				pthread_mutex_unlock(&_timMutex);
 			}
 			// Get system time in milliseconds.
