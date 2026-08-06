@@ -129,14 +129,15 @@ differences from the J2735 path:
 - **tmxType** is matched against the J2735 type of the message *inside* the SPDU, which uses the same
   labels as the J2735 path (`BSM`, `SPAT-P`, `MAP-P`, `PSM-P`, ...). An SPDU whose payload cannot be
   identified is skipped and counted under `Messages Skipped (Invalid SPDU)`.
-- **psid** is *not* what gets broadcast. The PSID carried by the SPDU is sent instead, so that what
-  goes out over the air matches the message that was received. Both values are logged at `DEBUG3`.
-  For NTCIP 1218, the PSID is written to the immediate forward table row on every send rather than
+- The **PSID** carried by the SPDU is sent instead. For NTCIP 1218, the PSID is written to the immediate forward table row on every send rather than
   only at startup, so a row shared by configured and SPDU traffic always broadcasts under the PSID
   belonging to the message currently in it.
-- **signMessages** must be `true`. The payload is already signed, so RSU4.1 connections send
-  `Signature=True` and NTCIP 1218 rows are initialized with `rsuIFMOptions` `0x80`. SPDUs sent to a
-  connection with `signMessages` set to `false` are skipped and logged as an error.
+- **signMessages** is ignored for SPDUs and treated as `true`. The payload is already signed, so
+  RSU4.1 connections always send `Signature=True` and NTCIP 1218 sends always set `rsuIFMOptions` to
+  `0x80`. If the connection is configured with `signMessages` set to `false`, the SPDU is still
+  forwarded as signed and a warning is logged, at most once every 30 seconds per connection. Like the
+  PSID, the options bit is written on every NTCIP 1218 send rather than only at startup, so a row
+  shared by configured and SPDU traffic is always marked correctly for the message currently in it.
 - **enableHsm** is ignored for SPDUs. The plugin never asks the HSM to sign an already secured
   message.
 - **channel** is taken from the message configuration when set, otherwise from the DSRC metadata on

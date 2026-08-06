@@ -73,9 +73,12 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 * @param payloadbyte Hex encoded payload to forward.
 		 * @param psid PSID to broadcast under. Taken from the configuration for J2735 messages, and
 		 * from the SPDU itself when forwarding a raw SPDU.
+		 * @param signature Value of the Signature field, indicating the payload already carries its
+		 * own signature. Taken from imfConfig.signMessage for J2735 messages, and always true when
+		 * forwarding a raw SPDU.
 		 * @return string The formatted message, ready to send to the RSU over UDP.
 		 */
-		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid);
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signature);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)

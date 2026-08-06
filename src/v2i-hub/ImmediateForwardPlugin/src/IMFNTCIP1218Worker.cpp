@@ -142,16 +142,23 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid){
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid, bool signedPayload){
 
         // A row is shared by every message of one send type, and a forwarded raw SPDU broadcasts
-        // under the PSID it arrived with rather than the configured one. Writing the PSID on every
-        // send keeps the row from carrying over the PSID the previous message left behind. All
-        // requests go out in a single SET PDU, so this costs no additional round trip.
+        // under the PSID it arrived with rather than the configured one, and is always signed.
+        // Writing both on every send keeps the row from carrying over what the previous message left
+        // behind. All requests go out in a single SET PDU, so this costs no additional round trip.
         snmp_request psidRequest{
             rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
             'x',
             stripPsidPrefix(psid)
+        };
+        // Yunex value for signed messages
+        // binary 10000000 to hexidecimal 80 ( see rsuIFMOptionsOid for bit values )
+        snmp_request options{
+            rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index),
+            'x',
+            signedPayload ? "80" : "00"
         };
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
@@ -164,7 +171,7 @@ namespace ImmediateForward {
                 'i',
                 "1"
         };
-        std::vector reqs {psidRequest, payload, enable};
+        std::vector reqs {psidRequest, options, payload, enable};
         client->process_snmp_set_requests(reqs);
     }
 

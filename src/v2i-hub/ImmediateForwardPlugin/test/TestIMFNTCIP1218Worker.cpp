@@ -257,29 +257,33 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
     std::vector<snmp_request> requests_1;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
     
-    sendNTCIP1218ImfMessage(mockClient.get(), message, index, "0x8002");
+    sendNTCIP1218ImfMessage(mockClient.get(), message, index, "0x8002", false);
     // Happening inside the sendNTCIP1218ImfMessage function
     // snmp_request payload {
     //     rsu::mib::ntcip1218::rsuIFMPayloadOid +  "." + std::to_string(index),
     //     'x',
     //     message
     // }
-    EXPECT_EQ(requests_1.size(), 3);
-    // The PSID is written on every send so a row never carries over the PSID of the previous
-    // message. The "0x" prefix is stripped, matching how initializeImmediateForwardTable writes it.
+    EXPECT_EQ(requests_1.size(), 4);
+    // The PSID and options are written on every send so a row never carries over what the previous
+    // message left behind. The "0x" prefix is stripped, matching initializeImmediateForwardTable.
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[0].type, 'x');
     EXPECT_EQ(requests_1[0].value, "8002");
-    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[1].type, 'x');
-    EXPECT_EQ(requests_1[1].value, message);
-    EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index));
-    EXPECT_EQ(requests_1[2].type, 'i');
-    EXPECT_EQ(requests_1[2].value, "1");
+    EXPECT_EQ(requests_1[1].value, "00");
+    EXPECT_EQ(requests_1[2].oid, rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[2].type, 'x');
+    EXPECT_EQ(requests_1[2].value, message);
+    EXPECT_EQ(requests_1[3].oid, rsu::mib::ntcip1218::rsuIFMEnableOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[3].type, 'i');
+    EXPECT_EQ(requests_1[3].value, "1");
 }
 
-TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSpduPsid) {
-    // A forwarded raw SPDU broadcasts under the PSID it arrived with, not the configured one
+TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSpduPsidAndSignedOptions) {
+    // A forwarded raw SPDU broadcasts under the PSID it arrived with, not the configured one, and is
+    // always marked signed regardless of what the row was initialized with
     std::unique_ptr mockClient = std::make_unique<mock_snmp_client>("", 0, "", "", "", "");
     std::string message = "0381004003800100";
     unsigned int index = 3;
@@ -287,12 +291,15 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageSpduPsid) {
     std::vector<snmp_request> requests_1;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
 
-    sendNTCIP1218ImfMessage(mockClient.get(), message, index, "0x20");
+    sendNTCIP1218ImfMessage(mockClient.get(), message, index, "0x20", true);
 
-    EXPECT_EQ(requests_1.size(), 3);
+    EXPECT_EQ(requests_1.size(), 4);
     EXPECT_EQ(requests_1[0].oid, rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index));
     EXPECT_EQ(requests_1[0].value, "20");
-    EXPECT_EQ(requests_1[1].value, message);
+    // binary 10000000, the signed bit ( see rsuIFMOptionsOid for bit values )
+    EXPECT_EQ(requests_1[1].oid, rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index));
+    EXPECT_EQ(requests_1[1].value, "80");
+    EXPECT_EQ(requests_1[2].value, message);
 }
 
 TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageAcceptsUnprefixedPsid) {
@@ -302,7 +309,7 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessageAcceptsUnprefixedPsid) {
     std::vector<snmp_request> requests_1;
     EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
 
-    sendNTCIP1218ImfMessage(mockClient.get(), "00", index, "8002");
+    sendNTCIP1218ImfMessage(mockClient.get(), "00", index, "8002", false);
 
     EXPECT_EQ(requests_1[0].value, "8002");
 }

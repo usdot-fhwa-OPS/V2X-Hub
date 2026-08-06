@@ -212,7 +212,7 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signature){
 		stringstream os;
 		os << "Version=0.7" << "\n"
 		   << "Type=" << messageConfig.sendType << "\n"
@@ -230,7 +230,7 @@ namespace ImmediateForward
 		os << "TxInterval=0" << "\n" 
 		   << "DeliveryStart=\n" 
 		   << "DeliveryStop=\n"
-		   << "Signature=" << (imfConfig.signMessage ? "True" : "False") << "\n" 
+		   << "Signature=" << (signature ? "True" : "False") << "\n"
 		   << "Encryption=False\n"
 		   << "Payload=" << payloadbyte << "\n";
 
@@ -241,6 +241,9 @@ namespace ImmediateForward
 	{
 		bool foundMessageType = false;
 		static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
+		// Misconfigured signMessages is a persistent condition, so warn about it sparingly rather
+		// than once per forwarded message.
+		static FrequencyThrottle<std::string> _signMessageThrottle(chrono::milliseconds(30000));
 
 		// A raw SPDU carries its payload as a JSON object rather than a hex string, and routes on the
 		// J2735 type of the message inside the SPDU rather than on the TMX subtype, which is always
@@ -302,23 +305,22 @@ namespace ImmediateForward
 				// A forwarded SPDU broadcasts under the PSID it arrived with, so that what goes out
 				// over the air matches the message that came in.
 				string psid = messageConfig.psid;
+				bool signature = imfConfig.signMessage;
 
 				// Format the message using the protocol defined in the
 				// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
 
 				if (isSpdu)
 				{
-					// NTCIP 1218 rows are initialized once with rsuIFMOptions 0x80 when signMessages
-					// is set, which is what tells the RSU the payload already carries its own
-					// signature. RSU4.1 likewise sends Signature=True from this flag. Forwarding an
-					// already signed SPDU without it would broadcast incorrectly.
-					if (!imfConfig.signMessage)
+					// A raw SPDU always carries its own 1609.2 signature, whatever the connection was
+					// configured with, so the signed flag is forced rather than read from the config.
+					// Telling the RSU otherwise would make it sign an already signed payload.
+					if (!imfConfig.signMessage && _signMessageThrottle.Monitor(imfConfig.name))
 					{
-						SetStatus<uint>(Key_SkippedInvalidSpdu, ++_skippedInvalidSpdu);
-						PLOG(logERROR) << "Cannot forward SPDU to " << imfConfig.name
-									   << ": set signMessages to true to forward already signed messages.";
-						continue;
+						PLOG(logWARNING) << "signMessages is false for " << imfConfig.name
+										 << ", but raw SPDUs are already signed. Forwarding as signed.";
 					}
+					signature = true;
 					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
 					psid = toPsidHex(rawSpdu.get_psid());
@@ -346,7 +348,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid, signature);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
@@ -361,7 +363,7 @@ namespace ImmediateForward
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid, signature);
 
 					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
