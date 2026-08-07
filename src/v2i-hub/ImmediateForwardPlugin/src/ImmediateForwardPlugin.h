@@ -80,6 +80,13 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 */
 		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signMessage);
 
+		/**
+		 * @brief Check whether the incoming message is a SPDU regardless
+		 * of subtype.
+		 * @param ivp 
+		 * @return true (the type is SPDU, regardless of subtype)
+		 * @return false 
+		 */
 		inline bool IsSPDU(const IvpMessage* ivp);
 
 		// Mutex along with the data it protects.
