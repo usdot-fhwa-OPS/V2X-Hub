@@ -123,8 +123,7 @@ SPDU exactly as it was received. This is used to re-broadcast an already secured
 Hub decoding, re-encoding or re-signing it. `RawSpdu` messages are produced by the
 [Message Receiver Plugin](../MessageReceiverPlugin/README.md) when its **FullSPDUMode** is enabled.
 
-No new configuration keys are needed. The existing `messages` entries are reused, with the following
-differences from the J2735 path:
+Differences from the current J2735 path:
 
 - **tmxType** is matched against the J2735 type of the message *inside* the SPDU, which uses the same
   labels as the J2735 path (`BSM`, `SPAT-P`, `MAP-P`, `PSM-P`, ...). An SPDU whose payload cannot be
@@ -146,9 +145,6 @@ differences from the J2735 path:
 - **channel** is taken from the message configuration when set, otherwise from the DSRC metadata on
   the message, which the Message Receiver Plugin defaults to 183.
 
-> [!IMPORTANT]
-> Set **RouteJ2735** to `false` on the Message Receiver Plugin. Otherwise each received message
-> arrives here twice, once unsecured and once as the SPDU, and is broadcast twice.
 
 ## Functionality Testing
 
