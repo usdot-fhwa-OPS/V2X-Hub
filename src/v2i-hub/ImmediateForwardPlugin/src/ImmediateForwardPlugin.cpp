@@ -148,6 +148,14 @@ namespace ImmediateForward
 
 	}
 
+	inline bool ImmediateForwardPlugin::IsSPDU(const IvpMessage *msg)
+	{
+		using tmx::messages::RawSpdu;
+		return msg &&
+			msg->type && strcmp(msg->type, RawSpdu::MessageType) == 0 &&
+			msg->subtype && strcmp(msg->subtype, RawSpdu::MessageSubType) == 0;
+	}
+
 	inline void ImmediateForwardPlugin::SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte)
 	{
 		std::string mType = messageConfig.sendType;

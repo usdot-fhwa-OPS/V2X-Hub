@@ -80,6 +80,8 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 */
 		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signMessage);
 
+		inline bool IsSPDU(const IvpMessage* ivp);
+
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
 		std::unordered_map<std::string, std::unique_ptr<tmx::utils::UdpClient>> _udpClientMap;
