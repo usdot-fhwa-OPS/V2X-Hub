@@ -316,9 +316,6 @@ namespace ImmediateForward
 					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
 					psid = toPsidHex(rawSpdu.get_psid());
-					PLOG(logDEBUG3) << "Forwarding SPDU with PSID " << psid
-									<< " (configured PSID for " << messageConfig.tmxType << " is "
-									<< messageConfig.psid << ")";
 				}
 				/// if signing is Enabled, request signing with HSM
 				else if (imfConfig.enableHsm == 1)

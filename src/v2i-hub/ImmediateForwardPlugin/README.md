@@ -136,7 +136,9 @@ differences from the J2735 path:
   with. `signMessages` asks the *RSU* to sign the payload before broadcast, and an SPDU is already a
   complete signed 1609.2 message that must go out untouched. RSU4.1 connections therefore always send
   `Signature=False`, and NTCIP 1218 sends always set `rsuIFMOptions` to `0x00`, leaving
-  `Bit 0 = Bypass1609.2`. Like the PSID, the options bit is written on every NTCIP 1218 send rather
+  `Bit 0 = Bypass1609.2` — per NTCIP 1218 5.5.2.7 this "allows the RSU to send the message that has
+  been signed and/or encrypted by the TMC", wrapping it in a WSMP header and nothing more. Like the
+  PSID, the options bit is written on every NTCIP 1218 send rather
   than only at startup, so a row shared by configured and SPDU traffic is always marked correctly for
   the message currently in it.
 - **enableHsm** is ignored for SPDUs. The plugin never asks the HSM to sign an already secured

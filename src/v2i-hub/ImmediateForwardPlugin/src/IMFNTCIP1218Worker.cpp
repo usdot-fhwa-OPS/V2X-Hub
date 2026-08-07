@@ -154,10 +154,12 @@ namespace ImmediateForward {
             'x',
             stripPsidPrefix(psid)
         };
-        // 80 HEX is binary 10000000, which sets Bit 0 = Process1609.2, asking the RSU to build and
-        // sign the 1609.2 layer. 00 HEX leaves Bit 0 = Bypass1609.2, so an already secured payload
-        // is transmitted untouched. Note Bit 0 is the most significant bit here: this is the value
-        // a Yunex RSU expects, see rsuIFMOptionsOid for the bit definitions.
+        // 80 HEX is binary 10000000, setting Bit 0 = Process1609.2, which asks the RSU to secure the
+        // message itself. 00 HEX leaves Bit 0 = Bypass1609.2, which per NTCIP 1218 5.5.2.7 "allows
+        // the RSU to send the message that has been signed and/or encrypted by the TMC", wrapping it
+        // in a WSMP header and nothing more. That is what a forwarded raw SPDU needs. Bit 1
+        // (Secure/Unsecure) is ignored when Bit 0 = 0.
+        // Note Bit 0 is the most significant bit, which is what a Yunex RSU expects.
         snmp_request options{
             rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index),
             'x',
