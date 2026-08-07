@@ -38,8 +38,6 @@ namespace ImmediateForward
 	{
 		AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
 		AddMessageFilter("Battelle-DSRC", "*", IvpMsgFlags_RouteDSRC);
-		// Raw 1609.2 SPDUs, published by MessageReceiverPlugin in FullSPDUMode, are forwarded to the
-		// radio exactly as received rather than being re-encoded or re-signed.
 		AddMessageFilter(tmx::messages::RawSpdu::MessageType, "*", IvpMsgFlags_RouteDSRC);
 		SubscribeToMessages();
 
@@ -250,10 +248,7 @@ namespace ImmediateForward
 		bool foundMessageType = false;
 		static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
 
-		// A raw SPDU carries its payload as a JSON object rather than a hex string, and routes on the
-		// J2735 type of the message inside the SPDU rather than on the TMX subtype, which is always
-		// "Basic" for a RawSpdu.
-		const bool isSpdu = (strcmp(msg->type, tmx::messages::RawSpdu::MessageType) == 0);
+		const bool isSpdu = IsSPDU(msg);
 		tmx::messages::RawSpdu rawSpdu;
 		string tmxType;
 		string spduPayload;
@@ -263,7 +258,7 @@ namespace ImmediateForward
 			try {
 				rawSpdu = getRawSpdu(msg);
 			}
-			catch (const std::exception &ex) {
+			catch (const tmx::TmxException &ex) {
 				SetStatus<uint>(Key_SkippedInvalidSpdu, ++_skippedInvalidSpdu);
 				PLOG(logWARNING) << "Could not forward SPDU. Message Ignored: " << ex.what();
 				return;
@@ -307,8 +302,6 @@ namespace ImmediateForward
 
 				foundMessageType = true;
 				string payloadbyte="";
-				// A forwarded SPDU broadcasts under the PSID it arrived with, so that what goes out
-				// over the air matches the message that came in.
 				string psid = messageConfig.psid;
 				bool signMessage = imfConfig.signMessage;
 
@@ -317,13 +310,10 @@ namespace ImmediateForward
 
 				if (isSpdu)
 				{
-					// A raw SPDU is already a complete, signed 1609.2 message, so the RSU must transmit
-					// it as-is rather than signing it again. signMessages asks the RSU to sign, so it
-					// is forced off here whatever the connection was configured with.
+					// A raw SPDU is already signed so the RSU must not sign again. signMessages is thus set to false.
 					signMessage = false;
-					// The SPDU is forwarded byte for byte, under its own PSID.
 					payloadbyte = spduPayload;
-					psid = toPsidHex(rawSpdu.get_psid());
+					psid = toPsidHex(rawSpdu.get_psid());  // The SPDU is forwarded under its own PSID.
 				}
 				/// if signing is Enabled, request signing with HSM
 				else if (imfConfig.enableHsm == 1)
@@ -356,18 +346,20 @@ namespace ImmediateForward
 									<< ", PSID: " << psid
 									<< ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
-									<< ", Port: " << client->GetAddress();
+									<< ", Port: " << client->GetAddress()
+									<< ", SignMessage: " << signMessage;
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
 					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid, signMessage);
 
-					PLOG(logDEBUG2) << "Sending - TmxType: " << messageConfig.tmxType
+					PLOG(logDEBUG1) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
 									<< ", PSID: " << psid
 									<< ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
-									<< ", Port: " << client->get_port();
+									<< ", Port: " << client->get_port()
+									<< ", SignMessage: " << signMessage;
 				}
 		
 			}

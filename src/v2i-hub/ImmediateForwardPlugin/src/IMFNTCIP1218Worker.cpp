@@ -143,12 +143,11 @@ namespace ImmediateForward {
     }
 
     void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid, bool signMessage){
-
-        // A row is shared by every message of one send type, and a forwarded raw SPDU broadcasts
-        // under the PSID it arrived with rather than the configured one, and must not be signed
-        // again. Writing both on every send keeps the row from carrying over what the previous
-        // message left behind. All requests go out in a single SET PDU, so this costs no additional
-        // round trip.
+        // A row is shared by every message of one send type. The psid and signMessage are
+        // now set for each outbound message since the SPDU should not be signed again and 
+        // its psid might not match the static configuration, but needs to be preserved. 
+        // Writing both on every send keeps the row from carrying over what the previous
+        // message left behind.
         snmp_request psidRequest{
             rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
             'x',
