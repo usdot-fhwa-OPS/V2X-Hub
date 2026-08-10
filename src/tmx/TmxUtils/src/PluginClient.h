@@ -413,8 +413,13 @@ private:
 				if constexpr (tmx::messages::j2735::is_instance_of_v<MsgType, tmx::messages::TmxJ2735Message>) {
 					tmx::messages::J2735MessageFactory factory;
 					tmx::byte_stream bytes = routeableMsg.get_payload_bytes();
+					auto encodedMsg = factory.NewMessage(bytes);
+					if (!encodedMsg) {
+						auto event = factory.get_event();
+						throw PluginException(event);
+					}
 					std::shared_ptr<tmx::messages::TmxJ2735EncodedMessage<MsgType>> encodeMsg(
-						static_cast< tmx::messages::TmxJ2735EncodedMessage<MsgType> * > (factory.NewMessage(bytes))
+						static_cast< tmx::messages::TmxJ2735EncodedMessage<MsgType> * > (encodedMsg)
 					);
 					MsgType msg = encodeMsg->decode_j2735_message();
 					if (fn)
@@ -427,8 +432,7 @@ private:
 				}
 			}
 			else {	
-				MsgType msg = routeableMsg.template get_payload<MsgType>();
-				FILE_LOG(logERROR) << "routeableMsg : " << routeableMsg.to_string() << " msg : " << msg.to_string(); 
+				MsgType  msg = routeableMsg.template get_payload<MsgType>();
 				if (fn)
 					(instance->*fn)(msg, routeableMsg);
 				else
