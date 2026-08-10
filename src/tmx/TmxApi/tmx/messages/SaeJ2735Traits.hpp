@@ -113,7 +113,7 @@ get_messageTag()
 
 
 template <typename TraitsType>
-static void j2735_destroy(typename TraitsType::message_type *ptr,
+static void j2735_destroy(typename TraitsType::message_type * &ptr,
 						  const typename TraitsType::asn_type *descr = get_descriptor<TraitsType>())
 {
 	if (!ptr)
@@ -123,11 +123,9 @@ static void j2735_destroy(typename TraitsType::message_type *ptr,
 	{
 		typename TraitsType::asn_type *asnType = (typename TraitsType::asn_type *)descr;
 		ASN_STRUCT_FREE((*asnType), ptr);
-		ptr = nullptr;
 	}
 	else {
 		free(ptr);
-		ptr = nullptr;
 	}
 }
 /**
