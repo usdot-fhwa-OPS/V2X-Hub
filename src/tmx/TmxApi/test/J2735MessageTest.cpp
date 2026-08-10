@@ -316,7 +316,7 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 {	
-// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
 	auto message = j2735::j2735_create<BsmTraits>();	
 	/**
 	 * Populate BSMcoreData 
@@ -356,7 +356,7 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
 	// Allocate memory for wheelBrakes BIT_STRING. Otherwise Asan gives error :
 	// ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed
-	uint8_t  *my_bytes_brakes = static_cast<uint8_t *>(calloc(1, sizeof(uint8_t)));
+	uint8_t  *my_bytes_brakes = AllocAsnBuffer(1);
 	*my_bytes_brakes = 8;
 	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
 	message->coreData.brakes.wheelBrakes.size =1; // allow 0,1,2,3,4	

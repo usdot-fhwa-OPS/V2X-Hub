@@ -147,7 +147,6 @@ public:
 	{
 		
 	}
-
 	/**
 	 * Destructor
 	 */
@@ -161,7 +160,6 @@ public:
 	{
 		if (this != &msg)
 		{
-			_j2735_data.reset();
 			_j2735_data = msg._j2735_data;
 			tmx::tmx_message<Format>::operator=(msg);
 		}
