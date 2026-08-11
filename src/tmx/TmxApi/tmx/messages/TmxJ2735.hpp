@@ -132,7 +132,6 @@ public:
 				// The original owner of the pointer is still responsible for destroying it. Instead
 				// we will just free the casted pointer which will in most cased be MessageFrameMessage wrapper
 				free(p);
-				p = nullptr;
 			}
 			// If a MessageFrame message is being down cast as a J2735 type, there is no additional memory allocation
 			// so the original pointer will be responsible for completely cleaning up the memory.

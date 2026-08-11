@@ -23,7 +23,6 @@ if [ "$1" = "coverage" ]; then
     COVERAGE_BUILD=1
 fi
 top_dir="$PWD"
-
 COMPONENT_DIRS="tmx v2i-hub"
 for component_dir in ${COMPONENT_DIRS}; do
 for d in ${component_dir}/* ; do
