@@ -17,6 +17,7 @@ namespace tmx
 namespace utils
 {
 
+
 class SignalException: public tmx::TmxException
 {
 public:

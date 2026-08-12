@@ -29,8 +29,9 @@
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
 #include <environment/EnvUtils.h>
+#include <SNMPClient.h>
+
 #include "ERVCloudForwardingWorker.h"
-#include "SNMPClient.h"
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>

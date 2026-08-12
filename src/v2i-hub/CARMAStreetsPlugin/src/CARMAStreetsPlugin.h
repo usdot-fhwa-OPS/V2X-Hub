@@ -10,6 +10,7 @@
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/J2735MessageFactory.hpp>
+#include <tmx/messages/SaeJ2735Traits.hpp>
 #include "jsoncpp/json/json.h"
 #include <pthread.h>
 #include <boost/thread.hpp>

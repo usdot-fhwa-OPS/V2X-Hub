@@ -3,61 +3,53 @@
 #include <J3224ToSDSMJsonConverter.h>
 #include <cassert>
 
-class test_J3224ToSDSMJsonConverter : public ::testing::Test
-{
-    public:
-        test_J3224ToSDSMJsonConverter() = default;
-        ~test_J3224ToSDSMJsonConverter() = default;
-};
 
 namespace unit_test
 {
 
-    TEST_F(test_J3224ToSDSMJsonConverter, convertJ3224ToSDSMJSON)
+    TEST(test_J3224ToSDSMJsonConverter, convertJ3224ToSDSMJSON)
     {
-        std::vector<std::shared_ptr<void>> shared_ptrs;
         CARMAStreetsPlugin::J3224ToSDSMJsonConverter sdsmConverter;
 
-        SensorDataSharingMessage *message = (SensorDataSharingMessage_t *)calloc(1, sizeof(SensorDataSharingMessage_t));
+        std::shared_ptr<SensorDataSharingMessage> message = tmx::messages::j2735::j2735_create<tmx::messages::SdsmTraits>();
         
         message->msgCnt = 15;
 
-        uint8_t source_id_bytes[4] = {(uint8_t)1, (uint8_t)2, (uint8_t)3, (uint8_t)4};
-        TemporaryID_t source_id;
-        source_id.buf = source_id_bytes;
-        source_id.size = sizeof(source_id_bytes);
-        message->sourceID = source_id;
+        char source_id_bytes[4] = {(char)1, (char)2, (char)3, (char)4};
+        bool failed = OCTET_STRING_fromBuf(&message->sourceID, source_id_bytes, sizeof(source_id_bytes));
+        // If operation fails, unit test is no longer valid
+        ASSERT_EQ(failed, 0);
 
         message->equipmentType = EquipmentType_rsu;
 
-        auto year_ptr = CARMAStreetsPlugin::create_store_shared<DYear_t>(shared_ptrs);
+        auto year_ptr = tmx::messages::j2735::AllocAsn<DYear_t>();
         *year_ptr = 2000;
         message->sDSMTimeStamp.year = year_ptr;
-        auto month_ptr = CARMAStreetsPlugin::create_store_shared<DMonth_t>(shared_ptrs);
+        auto month_ptr = tmx::messages::j2735::AllocAsn<DMonth_t>();
         *month_ptr = 7;
         message->sDSMTimeStamp.month = month_ptr;
-        auto day_ptr = CARMAStreetsPlugin::create_store_shared<DDay_t>(shared_ptrs);
+        auto day_ptr = tmx::messages::j2735::AllocAsn<DDay_t>();
         *day_ptr = 4;
         message->sDSMTimeStamp.day = day_ptr;
-        auto hour_ptr = CARMAStreetsPlugin::create_store_shared<DHour_t>(shared_ptrs);
+        auto hour_ptr = tmx::messages::j2735::AllocAsn<DHour_t>();
         *hour_ptr = 21;
         message->sDSMTimeStamp.hour = hour_ptr;
-        auto minute_ptr = CARMAStreetsPlugin::create_store_shared<DMinute_t>(shared_ptrs);
+        auto minute_ptr = tmx::messages::j2735::AllocAsn<DMinute_t>();
         *minute_ptr = 15;
         message->sDSMTimeStamp.minute = minute_ptr;
-        auto second_ptr = CARMAStreetsPlugin::create_store_shared<DSecond_t>(shared_ptrs);
+        auto second_ptr = tmx::messages::j2735::AllocAsn<DSecond_t>();
         *second_ptr = 10000;
         message->sDSMTimeStamp.second = second_ptr;
-        auto offset_ptr = CARMAStreetsPlugin::create_store_shared<DOffset_t>(shared_ptrs);
+        auto offset_ptr = tmx::messages::j2735::AllocAsn<DOffset_t>();
         *offset_ptr = 2000;
         message->sDSMTimeStamp.offset = offset_ptr;
 
         message->refPos.lat = 400000000;
         message->refPos.Long = 800000000;
         #if SAEJ2735_SPEC < 2020
-        auto pos_elevation_ptr = CARMAStreetsPlugin::create_store_shared<DSRC_Elevation_t>(shared_ptrs);
+        auto pos_elevation_ptr = tmx::messages::j2735::AllocAsn<DSRC_Elevation_t>();
         #else
-        auto pos_elevation_ptr = CARMAStreetsPlugin::create_store_shared<Common_Elevation_t>(shared_ptrs);
+        auto pos_elevation_ptr = tmx::messages::j2735::AllocAsn<Common_Elevation_t>();
         #endif
         *pos_elevation_ptr = 30;
         message->refPos.elevation = pos_elevation_ptr;
@@ -66,300 +58,306 @@ namespace unit_test
         message->refPosXYConf.semiMinor = 200;
         message->refPosXYConf.orientation = 20000;
 
-        auto elevation_conf_ptr = CARMAStreetsPlugin::create_store_shared<ElevationConfidence_t>(shared_ptrs);
+        auto elevation_conf_ptr = tmx::messages::j2735::AllocAsn<ElevationConfidence_t>();
         *elevation_conf_ptr = ElevationConfidence_elev_000_05;
         message->refPosElConf = elevation_conf_ptr;
 
-        DetectedObjectList_t detected_obj_list;
+        // DetectedObjectList_t detected_obj_list;
 
 
         // Generate an object to test common data and detected vehicle data
-        DetectedObjectData_t test_obj1;
+        DetectedObjectData_t *test_obj1 = tmx::messages::j2735::AllocAsn<DetectedObjectData_t>();
 
-        test_obj1.detObjCommon.objType = ObjectType_vehicle;
-        test_obj1.detObjCommon.objTypeCfd = 65;
-        test_obj1.detObjCommon.objectID = 1200;
-        test_obj1.detObjCommon.measurementTime = 500;
-        test_obj1.detObjCommon.timeConfidence = TimeConfidence_time_000_200;
+        test_obj1->detObjCommon.objType = ObjectType_vehicle;
+        test_obj1->detObjCommon.objTypeCfd = 65;
+        test_obj1->detObjCommon.objectID = 1200;
+        test_obj1->detObjCommon.measurementTime = 500;
+        test_obj1->detObjCommon.timeConfidence = TimeConfidence_time_000_200;
 
-        test_obj1.detObjCommon.pos.offsetX = 1000;
-        test_obj1.detObjCommon.pos.offsetY = 750;
+        test_obj1->detObjCommon.pos.offsetX = 1000;
+        test_obj1->detObjCommon.pos.offsetY = 750;
         //SensorDataSharingMessage_ObjectDistance_t
         #if SAEJ2735_SPEC < 2024
-        auto offsetZ_ptr = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr = tmx::messages::j2735::AllocAsn<ObjectDistance_t>();
         #else
-        auto offsetZ_ptr = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr = tmx::messages::j2735::AllocAsn<SensorDataSharingMessage_ObjectDistance_t>();
         #endif
         *offsetZ_ptr = 50;
-        test_obj1.detObjCommon.pos.offsetZ = offsetZ_ptr;
+        test_obj1->detObjCommon.pos.offsetZ = offsetZ_ptr;
 
-        test_obj1.detObjCommon.posConfidence.pos = PositionConfidence_a200m;
-        test_obj1.detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
+        test_obj1->detObjCommon.posConfidence.pos = PositionConfidence_a200m;
+        test_obj1->detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
 
-        test_obj1.detObjCommon.speed = 2100;
-        test_obj1.detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
+        test_obj1->detObjCommon.speed = 2100;
+        test_obj1->detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
 
-        auto speedZ_ptr = CARMAStreetsPlugin::create_store_shared<Speed_t>(shared_ptrs);
+        auto speedZ_ptr = tmx::messages::j2735::AllocAsn<Speed_t>();
         *speedZ_ptr = 1200;
-        test_obj1.detObjCommon.speedZ = speedZ_ptr;
-        auto speedZ_conf_ptr = CARMAStreetsPlugin::create_store_shared<SpeedConfidence_t>(shared_ptrs);
+        test_obj1->detObjCommon.speedZ = speedZ_ptr;
+        auto speedZ_conf_ptr = tmx::messages::j2735::AllocAsn<SpeedConfidence_t>();
         *speedZ_conf_ptr = SpeedConfidence_prec0_1ms;
-        test_obj1.detObjCommon.speedConfidenceZ = speedZ_conf_ptr;
+        test_obj1->detObjCommon.speedConfidenceZ = speedZ_conf_ptr;
 
-        test_obj1.detObjCommon.heading = 15000;
-        test_obj1.detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
+        test_obj1->detObjCommon.heading = 15000;
+        test_obj1->detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
 
-        auto accel_4_way_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationSet4Way_t>(shared_ptrs);
+        auto accel_4_way_ptr = tmx::messages::j2735::AllocAsn<AccelerationSet4Way_t>();
         accel_4_way_ptr->Long = 200;
         accel_4_way_ptr->lat = -500;
         accel_4_way_ptr->vert = 1;
         accel_4_way_ptr->yaw = 400;
-        test_obj1.detObjCommon.accel4way = accel_4_way_ptr;
+        test_obj1->detObjCommon.accel4way = accel_4_way_ptr;
 
-        auto acc_cfd_x_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        auto acc_cfd_x_ptr = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_x_ptr = AccelerationConfidence_accl_100_00;
-        test_obj1.detObjCommon.accCfdX = acc_cfd_x_ptr;
-        auto acc_cfd_y_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj1->detObjCommon.accCfdX = acc_cfd_x_ptr;
+        auto acc_cfd_y_ptr = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_y_ptr = AccelerationConfidence_accl_010_00;
-        test_obj1.detObjCommon.accCfdY = acc_cfd_y_ptr;
-        auto acc_cfd_z_ptr = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj1->detObjCommon.accCfdY = acc_cfd_y_ptr;
+        auto acc_cfd_z_ptr = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_z_ptr = AccelerationConfidence_accl_005_00;
-        test_obj1.detObjCommon.accCfdZ = acc_cfd_z_ptr;
+        test_obj1->detObjCommon.accCfdZ = acc_cfd_z_ptr;
 
-        auto acc_cfd_yaw_ptr = CARMAStreetsPlugin::create_store_shared<YawRateConfidence_t>(shared_ptrs);
+        auto acc_cfd_yaw_ptr = tmx::messages::j2735::AllocAsn<YawRateConfidence_t>();
         *acc_cfd_yaw_ptr = YawRateConfidence_degSec_001_00;
-        test_obj1.detObjCommon.accCfdYaw = acc_cfd_yaw_ptr;
+        test_obj1->detObjCommon.accCfdYaw = acc_cfd_yaw_ptr;
 
 
-        auto det_obj_opt_ptr = CARMAStreetsPlugin::create_store_shared<DetectedObjectOptionalData_t>(shared_ptrs);
+        auto det_obj_opt_ptr = tmx::messages::j2735::AllocAsn<DetectedObjectOptionalData_t>();
         
         det_obj_opt_ptr->present = DetectedObjectOptionalData_PR_detVeh;
 
-        auto lights_ptr = CARMAStreetsPlugin::create_store_shared<ExteriorLights_t>(shared_ptrs);
-        // TODO: Make sure lights are being set and converted properly
-        uint8_t lights_bytes[9] = {(uint8_t)8};
+        auto lights_ptr = tmx::messages::j2735::AllocAsn<ExteriorLights_t>();
+
+       
+        det_obj_opt_ptr->choice.detVeh.lights = lights_ptr;
+        // Allocate memory for wheelBrakes BIT_STRING. Otherwise Asan gives error :
+	    // ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed
+        uint8_t *lights_bytes =  tmx::messages::j2735::AllocAsnBuffer(2);
+        lights_bytes[0] = ExteriorLights_highBeamHeadlightsOn | ExteriorLights_lowBeamHeadlightsOn | ExteriorLights_leftTurnSignalOn;
+        lights_bytes[1] = 0;
         lights_ptr->buf = lights_bytes;
-        lights_ptr->size = sizeof(lights_bytes);
+        lights_ptr->size = 2;
+        lights_ptr->bits_unused = 7;
         det_obj_opt_ptr->choice.detVeh.lights = lights_ptr;
 
-        auto veh_attitude_ptr = CARMAStreetsPlugin::create_store_shared<Attitude_t>(shared_ptrs);
+        auto veh_attitude_ptr = tmx::messages::j2735::AllocAsn<Attitude_t>();
         veh_attitude_ptr->pitch = 2400;
         veh_attitude_ptr->roll = -12000;
         veh_attitude_ptr->yaw = 600;
         det_obj_opt_ptr->choice.detVeh.vehAttitude = veh_attitude_ptr;
 
-        auto veh_attitude_conf_ptr = CARMAStreetsPlugin::create_store_shared<AttitudeConfidence_t>(shared_ptrs);
+        auto veh_attitude_conf_ptr = tmx::messages::j2735::AllocAsn<AttitudeConfidence_t>();
         veh_attitude_conf_ptr->pitchConfidence = HeadingConfidence_prec0_05deg;
         veh_attitude_conf_ptr->rollConfidence = HeadingConfidence_prec0_01deg;
         veh_attitude_conf_ptr->yawConfidence = HeadingConfidence_prec0_0125deg;
         det_obj_opt_ptr->choice.detVeh.vehAttitudeConfidence = veh_attitude_conf_ptr;
 
-        auto veh_ang_vel_ptr = CARMAStreetsPlugin::create_store_shared<AngularVelocity_t>(shared_ptrs);
+        auto veh_ang_vel_ptr = tmx::messages::j2735::AllocAsn<AngularVelocity_t>();
         veh_ang_vel_ptr->pitchRate = 800;
         veh_ang_vel_ptr->rollRate = -600;
         det_obj_opt_ptr->choice.detVeh.vehAngVel = veh_ang_vel_ptr;
 
-        auto veh_ang_vel_conf_ptr = CARMAStreetsPlugin::create_store_shared<AngularVelocityConfidence_t>(shared_ptrs);
-        auto pitch_rate_conf_ptr = CARMAStreetsPlugin::create_store_shared<PitchRateConfidence_t>(shared_ptrs);
+        auto veh_ang_vel_conf_ptr = tmx::messages::j2735::AllocAsn<AngularVelocityConfidence_t>();
+        auto pitch_rate_conf_ptr = tmx::messages::j2735::AllocAsn<PitchRateConfidence_t>();
         *pitch_rate_conf_ptr = PitchRateConfidence_degSec_001_00;
         veh_ang_vel_conf_ptr->pitchRateConfidence = pitch_rate_conf_ptr;
-        auto roll_rate_conf_ptr = CARMAStreetsPlugin::create_store_shared<RollRateConfidence_t>(shared_ptrs);
+        auto roll_rate_conf_ptr = tmx::messages::j2735::AllocAsn<RollRateConfidence_t>();
         *roll_rate_conf_ptr = RollRateConfidence_degSec_000_10;
         veh_ang_vel_conf_ptr->rollRateConfidence = roll_rate_conf_ptr;
         det_obj_opt_ptr->choice.detVeh.vehAngVelConfidence = veh_ang_vel_conf_ptr;
 
-        auto veh_size_ptr = CARMAStreetsPlugin::create_store_shared<VehicleSize_t>(shared_ptrs);
+        auto veh_size_ptr = tmx::messages::j2735::AllocAsn<VehicleSize_t>();
         veh_size_ptr->width = 300;
         veh_size_ptr->length = 700;
         det_obj_opt_ptr->choice.detVeh.size = veh_size_ptr;
 
-        auto veh_height_ptr = CARMAStreetsPlugin::create_store_shared<VehicleHeight_t>(shared_ptrs);
+        auto veh_height_ptr = tmx::messages::j2735::AllocAsn<VehicleHeight_t>();
         *veh_height_ptr = 70;
         det_obj_opt_ptr->choice.detVeh.height= veh_height_ptr;
 
-        auto veh_size_conf_ptr = CARMAStreetsPlugin::create_store_shared<VehicleSizeConfidence_t>(shared_ptrs);
+        auto veh_size_conf_ptr = tmx::messages::j2735::AllocAsn<VehicleSizeConfidence_t>();
         veh_size_conf_ptr->vehicleWidthConfidence = SizeValueConfidence_size_000_10;
         veh_size_conf_ptr->vehicleLengthConfidence = SizeValueConfidence_size_000_05;
-        auto veh_height_conf_ptr = CARMAStreetsPlugin::create_store_shared<SizeValueConfidence_t>(shared_ptrs);
+        auto veh_height_conf_ptr = tmx::messages::j2735::AllocAsn<SizeValueConfidence_t>();
         *veh_height_conf_ptr = SizeValueConfidence_size_000_02;
         veh_size_conf_ptr->vehicleHeightConfidence = veh_height_conf_ptr;
         det_obj_opt_ptr->choice.detVeh.vehicleSizeConfidence = veh_size_conf_ptr;
 
-        auto veh_class_ptr = CARMAStreetsPlugin::create_store_shared<BasicVehicleClass_t>(shared_ptrs);
+        auto veh_class_ptr = tmx::messages::j2735::AllocAsn<BasicVehicleClass_t>();
         *veh_class_ptr = 45;
         det_obj_opt_ptr->choice.detVeh.vehicleClass = veh_class_ptr;
 
-        auto veh_class_conf_ptr = CARMAStreetsPlugin::create_store_shared<ClassificationConfidence_t>(shared_ptrs);
+        auto veh_class_conf_ptr = tmx::messages::j2735::AllocAsn<ClassificationConfidence_t>();
         *veh_class_conf_ptr = 85;
         det_obj_opt_ptr->choice.detVeh.classConf = veh_class_conf_ptr;
 
-        test_obj1.detObjOptData = det_obj_opt_ptr;
+        test_obj1->detObjOptData = det_obj_opt_ptr;
 
-        asn_sequence_add(&message->objects.list, &test_obj1);
+        asn_sequence_add(&message->objects.list, test_obj1);
 
 
         // Generate a second object to test detected VRU data
-        DetectedObjectData_t test_obj2;
+        DetectedObjectData_t *test_obj2 = tmx::messages::j2735::AllocAsn<DetectedObjectData_t>();
 
-        test_obj2.detObjCommon.objType = ObjectType_vehicle;
-        test_obj2.detObjCommon.objTypeCfd = 65;
-        test_obj2.detObjCommon.objectID = 110;
-        test_obj2.detObjCommon.measurementTime = 500;
-        test_obj2.detObjCommon.timeConfidence = TimeConfidence_time_000_200;
+        test_obj2->detObjCommon.objType = ObjectType_vehicle;
+        test_obj2->detObjCommon.objTypeCfd = 65;
+        test_obj2->detObjCommon.objectID = 110;
+        test_obj2->detObjCommon.measurementTime = 500;
+        test_obj2->detObjCommon.timeConfidence = TimeConfidence_time_000_200;
 
-        test_obj2.detObjCommon.pos.offsetX = 1000;
-        test_obj2.detObjCommon.pos.offsetY = 750;
+        test_obj2->detObjCommon.pos.offsetX = 1000;
+        test_obj2->detObjCommon.pos.offsetY = 750;
         #if SAEJ2735_SPEC < 2024
-        auto offsetZ_ptr2 = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr2 = tmx::messages::j2735::AllocAsn<ObjectDistance_t>();
         #else
-        auto offsetZ_ptr2 = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr2 = tmx::messages::j2735::AllocAsn<SensorDataSharingMessage_ObjectDistance_t>();
         #endif
         *offsetZ_ptr2 = 50;
-        test_obj2.detObjCommon.pos.offsetZ = offsetZ_ptr2;
+        test_obj2->detObjCommon.pos.offsetZ = offsetZ_ptr2;
 
-        test_obj2.detObjCommon.posConfidence.pos = PositionConfidence_a200m;
-        test_obj2.detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
+        test_obj2->detObjCommon.posConfidence.pos = PositionConfidence_a200m;
+        test_obj2->detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
 
-        test_obj2.detObjCommon.speed = 2100;
-        test_obj2.detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
+        test_obj2->detObjCommon.speed = 2100;
+        test_obj2->detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
 
-        auto speedZ_ptr2 = CARMAStreetsPlugin::create_store_shared<Speed_t>(shared_ptrs);
+        auto speedZ_ptr2 = tmx::messages::j2735::AllocAsn<Speed_t>();
         *speedZ_ptr2 = 1200;
-        test_obj2.detObjCommon.speedZ = speedZ_ptr2;
-        auto speedZ_conf_ptr2 = CARMAStreetsPlugin::create_store_shared<SpeedConfidence_t>(shared_ptrs);
+        test_obj2->detObjCommon.speedZ = speedZ_ptr2;
+        auto speedZ_conf_ptr2 = tmx::messages::j2735::AllocAsn<SpeedConfidence_t>();
         *speedZ_conf_ptr2 = SpeedConfidence_prec0_1ms;
-        test_obj2.detObjCommon.speedConfidenceZ = speedZ_conf_ptr2;
+        test_obj2->detObjCommon.speedConfidenceZ = speedZ_conf_ptr2;
 
-        test_obj2.detObjCommon.heading = 15000;
-        test_obj2.detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
+        test_obj2->detObjCommon.heading = 15000;
+        test_obj2->detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
 
-        auto accel_4_way_ptr2 = CARMAStreetsPlugin::create_store_shared<AccelerationSet4Way_t>(shared_ptrs);
+        auto accel_4_way_ptr2 = tmx::messages::j2735::AllocAsn<AccelerationSet4Way_t>();
         accel_4_way_ptr2->Long = 200;
         accel_4_way_ptr2->lat = -500;
         accel_4_way_ptr2->vert = 1;
         accel_4_way_ptr2->yaw = 400;
-        test_obj2.detObjCommon.accel4way = accel_4_way_ptr2;
+        test_obj2->detObjCommon.accel4way = accel_4_way_ptr2;
 
-        auto acc_cfd_x_ptr2 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        auto acc_cfd_x_ptr2 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_x_ptr2 = AccelerationConfidence_accl_100_00;
-        test_obj2.detObjCommon.accCfdX = acc_cfd_x_ptr2;
-        auto acc_cfd_y_ptr2 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj2->detObjCommon.accCfdX = acc_cfd_x_ptr2;
+        auto acc_cfd_y_ptr2 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_y_ptr2 = AccelerationConfidence_accl_010_00;
-        test_obj2.detObjCommon.accCfdY = acc_cfd_y_ptr2;
-        auto acc_cfd_z_ptr2 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj2->detObjCommon.accCfdY = acc_cfd_y_ptr2;
+        auto acc_cfd_z_ptr2 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_z_ptr2 = AccelerationConfidence_accl_005_00;
-        test_obj2.detObjCommon.accCfdZ = acc_cfd_z_ptr2;
+        test_obj2->detObjCommon.accCfdZ = acc_cfd_z_ptr2;
 
-        auto acc_cfd_yaw_ptr2 = CARMAStreetsPlugin::create_store_shared<YawRateConfidence_t>(shared_ptrs);
+        auto acc_cfd_yaw_ptr2 = tmx::messages::j2735::AllocAsn<YawRateConfidence_t>();
         *acc_cfd_yaw_ptr2 = YawRateConfidence_degSec_001_00;
-        test_obj2.detObjCommon.accCfdYaw = acc_cfd_yaw_ptr2;
+        test_obj2->detObjCommon.accCfdYaw = acc_cfd_yaw_ptr2;
 
-        auto det_obj_opt_ptr2 = CARMAStreetsPlugin::create_store_shared<DetectedObjectOptionalData_t>(shared_ptrs);
+        auto det_obj_opt_ptr2 = tmx::messages::j2735::AllocAsn<DetectedObjectOptionalData_t>();
         det_obj_opt_ptr2->present = DetectedObjectOptionalData_PR_detVRU;
 
-        auto basic_type = CARMAStreetsPlugin::create_store_shared<PersonalDeviceUserType_t>(shared_ptrs);
+        auto basic_type = tmx::messages::j2735::AllocAsn<PersonalDeviceUserType_t>();
         *basic_type = PersonalDeviceUserType_aPEDESTRIAN;
         det_obj_opt_ptr2->choice.detVRU.basicType = basic_type;
 
-        auto propulsion = CARMAStreetsPlugin::create_store_shared<PropelledInformation_t>(shared_ptrs);
+        auto propulsion = tmx::messages::j2735::AllocAsn<PropelledInformation_t>();
         propulsion->present = PropelledInformation_PR_human;
         propulsion->choice.human = HumanPropelledType_onFoot;
         det_obj_opt_ptr2->choice.detVRU.propulsion = propulsion;
 
-        auto attachment = CARMAStreetsPlugin::create_store_shared<Attachment_t>(shared_ptrs);
+        auto attachment = tmx::messages::j2735::AllocAsn<Attachment_t>();
         *attachment = Attachment_wheelchair;
         det_obj_opt_ptr2->choice.detVRU.attachment = attachment;
 
-        auto radius = CARMAStreetsPlugin::create_store_shared<AttachmentRadius_t>(shared_ptrs);
+        auto radius = tmx::messages::j2735::AllocAsn<AttachmentRadius_t>();
         *radius = 30;
         det_obj_opt_ptr2->choice.detVRU.radius = radius;
 
-        test_obj2.detObjOptData = det_obj_opt_ptr2;
-        asn_sequence_add(&message->objects.list, &test_obj2);
+        test_obj2->detObjOptData = det_obj_opt_ptr2;
+        asn_sequence_add(&message->objects.list, test_obj2);
 
 
 
         // Generate a third object to test detected obstacle data
-        DetectedObjectData_t test_obj3;
+        DetectedObjectData_t *test_obj3 = tmx::messages::j2735::AllocAsn<DetectedObjectData_t>();
 
-        test_obj3.detObjCommon.objType = ObjectType_vehicle;
-        test_obj3.detObjCommon.objTypeCfd = 65;
-        test_obj3.detObjCommon.objectID = 1000;
-        test_obj3.detObjCommon.measurementTime = 500;
-        test_obj3.detObjCommon.timeConfidence = TimeConfidence_time_000_200;
+        test_obj3->detObjCommon.objType = ObjectType_vehicle;
+        test_obj3->detObjCommon.objTypeCfd = 65;
+        test_obj3->detObjCommon.objectID = 1000;
+        test_obj3->detObjCommon.measurementTime = 500;
+        test_obj3->detObjCommon.timeConfidence = TimeConfidence_time_000_200;
 
-        test_obj3.detObjCommon.pos.offsetX = 1000;
-        test_obj3.detObjCommon.pos.offsetY = 750;
+        test_obj3->detObjCommon.pos.offsetX = 1000;
+        test_obj3->detObjCommon.pos.offsetY = 750;
         #if SAEJ2735_SPEC < 2024
-        auto offsetZ_ptr3 = CARMAStreetsPlugin::create_store_shared<ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr3 = tmx::messages::j2735::AllocAsn<ObjectDistance_t>();
         #else
-        auto offsetZ_ptr3 = CARMAStreetsPlugin::create_store_shared<SensorDataSharingMessage_ObjectDistance_t>(shared_ptrs);
+        auto offsetZ_ptr3 = tmx::messages::j2735::AllocAsn<SensorDataSharingMessage_ObjectDistance_t>();
         #endif
         *offsetZ_ptr3 = 50;
-        test_obj3.detObjCommon.pos.offsetZ = offsetZ_ptr3;
+        test_obj3->detObjCommon.pos.offsetZ = offsetZ_ptr3;
 
-        test_obj3.detObjCommon.posConfidence.pos = PositionConfidence_a200m;
-        test_obj3.detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
+        test_obj3->detObjCommon.posConfidence.pos = PositionConfidence_a200m;
+        test_obj3->detObjCommon.posConfidence.elevation = ElevationConfidence_elev_100_00;
 
-        test_obj3.detObjCommon.speed = 2100;
-        test_obj3.detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
+        test_obj3->detObjCommon.speed = 2100;
+        test_obj3->detObjCommon.speedConfidence = SpeedConfidence_prec5ms;
 
-        auto speedZ_ptr3 = CARMAStreetsPlugin::create_store_shared<Speed_t>(shared_ptrs);
+        auto speedZ_ptr3 = tmx::messages::j2735::AllocAsn<Speed_t>();
         *speedZ_ptr3 = 1200;
-        test_obj3.detObjCommon.speedZ = speedZ_ptr3;
-        auto speedZ_conf_ptr3 = CARMAStreetsPlugin::create_store_shared<SpeedConfidence_t>(shared_ptrs);
+        test_obj3->detObjCommon.speedZ = speedZ_ptr3;
+        auto speedZ_conf_ptr3 = tmx::messages::j2735::AllocAsn<SpeedConfidence_t>();
         *speedZ_conf_ptr3 = SpeedConfidence_prec0_1ms;
-        test_obj3.detObjCommon.speedConfidenceZ = speedZ_conf_ptr3;
+        test_obj3->detObjCommon.speedConfidenceZ = speedZ_conf_ptr3;
 
-        test_obj3.detObjCommon.heading = 15000;
-        test_obj3.detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
+        test_obj3->detObjCommon.heading = 15000;
+        test_obj3->detObjCommon.headingConf = HeadingConfidence_prec0_05deg;
 
-        auto accel_4_way_ptr3 = CARMAStreetsPlugin::create_store_shared<AccelerationSet4Way_t>(shared_ptrs);
+        auto accel_4_way_ptr3 = tmx::messages::j2735::AllocAsn<AccelerationSet4Way_t>();
         accel_4_way_ptr3->Long = 200;
         accel_4_way_ptr3->lat = -500;
         accel_4_way_ptr3->vert = 1;
         accel_4_way_ptr3->yaw = 400;
-        test_obj3.detObjCommon.accel4way = accel_4_way_ptr3;
+        test_obj3->detObjCommon.accel4way = accel_4_way_ptr3;
 
-        auto acc_cfd_x_ptr3 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        auto acc_cfd_x_ptr3 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_x_ptr3 = AccelerationConfidence_accl_100_00;
-        test_obj3.detObjCommon.accCfdX = acc_cfd_x_ptr3;
-        auto acc_cfd_y_ptr3 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj3->detObjCommon.accCfdX = acc_cfd_x_ptr3;
+        auto acc_cfd_y_ptr3 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_y_ptr3 = AccelerationConfidence_accl_010_00;
-        test_obj3.detObjCommon.accCfdY = acc_cfd_y_ptr3;
-        auto acc_cfd_z_ptr3 = CARMAStreetsPlugin::create_store_shared<AccelerationConfidence_t>(shared_ptrs);
+        test_obj3->detObjCommon.accCfdY = acc_cfd_y_ptr3;
+        auto acc_cfd_z_ptr3 = tmx::messages::j2735::AllocAsn<AccelerationConfidence_t>();
         *acc_cfd_z_ptr3 = AccelerationConfidence_accl_005_00;
-        test_obj3.detObjCommon.accCfdZ = acc_cfd_z_ptr3;
+        test_obj3->detObjCommon.accCfdZ = acc_cfd_z_ptr3;
 
-        auto acc_cfd_yaw_ptr3 = CARMAStreetsPlugin::create_store_shared<YawRateConfidence_t>(shared_ptrs);
+        auto acc_cfd_yaw_ptr3 = tmx::messages::j2735::AllocAsn<YawRateConfidence_t>();
         *acc_cfd_yaw_ptr3 = YawRateConfidence_degSec_001_00;
-        test_obj3.detObjCommon.accCfdYaw = acc_cfd_yaw_ptr3;
+        test_obj3->detObjCommon.accCfdYaw = acc_cfd_yaw_ptr3;
 
 
 
-        auto det_obj_opt_ptr3 = CARMAStreetsPlugin::create_store_shared<DetectedObjectOptionalData_t>(shared_ptrs);
+        auto det_obj_opt_ptr3 = tmx::messages::j2735::AllocAsn<DetectedObjectOptionalData_t>();
         det_obj_opt_ptr3->present = DetectedObjectOptionalData_PR_detObst;
 
         det_obj_opt_ptr3->choice.detObst.obstSize.width = 400;
         det_obj_opt_ptr3->choice.detObst.obstSize.length = 300;
-        auto obj_height = CARMAStreetsPlugin::create_store_shared<SizeValue_t>(shared_ptrs);
+        auto obj_height = tmx::messages::j2735::AllocAsn<SizeValue_t>();
         *obj_height = 100;
         det_obj_opt_ptr3->choice.detObst.obstSize.height = obj_height;
 
         det_obj_opt_ptr3->choice.detObst.obstSizeConfidence.widthConfidence = SizeValueConfidence_size_010_00;
         det_obj_opt_ptr3->choice.detObst.obstSizeConfidence.lengthConfidence = SizeValueConfidence_size_005_00;
-        auto obj_height_conf = CARMAStreetsPlugin::create_store_shared<SizeValueConfidence_t>(shared_ptrs);
+        auto obj_height_conf = tmx::messages::j2735::AllocAsn<SizeValueConfidence_t>();
         *obj_height_conf = SizeValueConfidence_size_002_00;
         det_obj_opt_ptr3->choice.detObst.obstSizeConfidence.heightConfidence = obj_height_conf;
 
-        test_obj3.detObjOptData = det_obj_opt_ptr3;
+        test_obj3->detObjOptData = det_obj_opt_ptr3;
 
-        asn_sequence_add(&message->objects.list, &test_obj3);
-
+        asn_sequence_add(&message->objects.list, test_obj3);
+        asn_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message.get());
         // Create a SensorDataSharingMessage with the test data to load into a Json (sdsmJson)
-        std::shared_ptr<SensorDataSharingMessage> sdsmMsgPtr(message);
         Json::Value sdsmJson;
-        sdsmConverter.convertJ3224ToSDSMJSON(sdsmMsgPtr, sdsmJson);
+        sdsmConverter.convertJ3224ToSDSMJSON(message, sdsmJson);
 
         // Tests
         // Testing SDSM header data

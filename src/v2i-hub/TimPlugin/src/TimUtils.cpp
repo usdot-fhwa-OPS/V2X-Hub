@@ -79,13 +79,7 @@ namespace TimPlugin {
 		std::stringstream ss(timXml);
 		tmx::message_container_type container;
 		container.load<XML>(ss);
-		// Make shared pointer with custom delete to free underlying C struct after use.
-		std::shared_ptr<TimMessage> timPtr(new TimMessage(), [](TimMessage *p)
-		{
-			if (p->get_j2735_data()) {
-				ASN_STRUCT_FREE(asn_DEF_TravelerInformation, p->get_j2735_data().get());
-			}
-		});		
+		auto timPtr = std::make_shared<TimMessage>();
 		timPtr->set_contents(container.get_storage().get_tree());
 		return timPtr;
 	}
