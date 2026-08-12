@@ -529,8 +529,6 @@ TEST (J2735MessageTest, EncodeSrm)
 	message->requestor.position->position.Long = 8012333;
 	TransmissionAndSpeed_t *speed = AllocAsn<TransmissionAndSpeed_t>();
 	speed->speed = 10;
-	TransmissionState_t *transmission_state = (TransmissionState_t *)calloc(1, sizeof(TransmissionState_t));
-	*transmission_state = 1111;
 	speed->transmisson = 7;
 	message->requestor.position->speed = speed;
 
