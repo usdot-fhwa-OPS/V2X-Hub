@@ -36,7 +36,7 @@ namespace ERVCloudForwardingPlugin
             PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV): " << msg << endl;
         }        
     }
-
+    // TODO: Replace this implementation with AddFilter for RsuStatusMessage already implemented for RSU Health Monitoring Plugin
     void ERVCloudForwardingPlugin::RegisterRSULocation()
     {
         uint32_t attempt = 0;
