@@ -124,8 +124,7 @@ namespace tmx::utils
 
     const char *kafka_consumer_worker::consume(int timeout_ms)
     {
-        const RdKafka::Message *msg = nullptr;
-        msg = _consumer->consume(timeout_ms);
+        std::shared_ptr<RdKafka::Message> msg(_consumer->consume(timeout_ms));
         const char *msg_str = msg_consume(msg);
         return msg_str;
     }
@@ -141,7 +140,7 @@ namespace tmx::utils
             << (_group_id_str.empty() ? "UNKNOWN" : _group_id_str) << std::endl;
     }
 
-    const char *kafka_consumer_worker::msg_consume(const RdKafka::Message *message)
+    const char *kafka_consumer_worker::msg_consume(const std::shared_ptr<RdKafka::Message> message)
     {
         const char *return_msg_str = "";
         switch (message->err())

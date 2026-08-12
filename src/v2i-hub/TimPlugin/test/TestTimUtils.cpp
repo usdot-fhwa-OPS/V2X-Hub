@@ -57,8 +57,7 @@ namespace TimPlugin {
                             tmUtc->tm_hour * 60 +
                             tmUtc->tm_min;
         // 3) Get current year
-        long int* year =new long int ( tmUtc->tm_year + 1900);
-        timPtr->dataFrames.list.array[0]->startYear = year;
+        *timPtr->dataFrames.list.array[0]->startYear = tmUtc->tm_year + 1900;
         timPtr->dataFrames.list.array[0]->startTime = minuteOfYear;
         EXPECT_TRUE(isTimActive(tim));
 
@@ -81,11 +80,11 @@ namespace TimPlugin {
         auto moy = 445437;
         // Corresponds to November 6 2025 7:57 AM (UTC)
 
-        time_t convertedTime = convertTimTime(2025, moy);
+        time_t convertedTime = convertTimTime(year, moy);
         // Convert to UTC tm 
         struct tm *tmConvertedTime = gmtime(&convertedTime);
 
-        EXPECT_EQ(2025-1900, tmConvertedTime->tm_year);
+        EXPECT_EQ(year-1900, tmConvertedTime->tm_year);
         EXPECT_EQ(10, tmConvertedTime->tm_mon);
         EXPECT_EQ(6, tmConvertedTime->tm_mday);
         EXPECT_EQ(7, tmConvertedTime->tm_hour);

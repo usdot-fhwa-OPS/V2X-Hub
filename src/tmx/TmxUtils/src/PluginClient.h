@@ -15,12 +15,15 @@
 #include <pthread.h>
 #include <sstream>
 #include <string>
+#include <memory>
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <tmx/apimessages/TmxEventLog.hpp>
 #include <tmx/messages/routeable_message.hpp>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/IvpPlugin.h>
+#include <tmx/messages/TmxJ2735Codec.hpp>
+#include <tmx/j2735_messages/J2735MessageFactory.hpp>
 
 #include "Clock.h"
 #include "PluginExec.h"
@@ -405,11 +408,37 @@ private:
 
 		void invokeHandler(tmx::routeable_message &routeableMsg) override
 		{
-			MsgType msg = routeableMsg.template get_payload<MsgType>();
-			if (fn)
-				(instance->*fn)(msg, routeableMsg);
-			else
-				throw PluginException("Missing handler for " + get_messageType());
+			if ( instance->IsJ2735Message(routeableMsg)) {
+				
+				if constexpr (tmx::messages::j2735::is_instance_of_v<MsgType, tmx::messages::TmxJ2735Message>) {
+					tmx::messages::J2735MessageFactory factory;
+					tmx::byte_stream bytes = routeableMsg.get_payload_bytes();
+					auto encodedMsg = factory.NewMessage(bytes);
+					if (!encodedMsg) {
+						auto event = factory.get_event();
+						throw PluginException(event);
+					}
+					std::shared_ptr<tmx::messages::TmxJ2735EncodedMessage<MsgType>> encodeMsg(
+						static_cast< tmx::messages::TmxJ2735EncodedMessage<MsgType> * > (encodedMsg)
+					);
+					MsgType msg = encodeMsg->decode_j2735_message();
+					if (fn)
+						(instance->*fn)(msg, routeableMsg);
+					else
+						throw PluginException("Missing handler for " + get_messageType());
+				}
+				else {
+					throw PluginException("Missing J2735 handler for " + get_messageType());
+				}
+			}
+			else {	
+				MsgType  msg = routeableMsg.template get_payload<MsgType>();
+				if (fn)
+					(instance->*fn)(msg, routeableMsg);
+				else
+					throw PluginException("Missing handler for " + get_messageType());
+			}
+			
 		}
 	private:
 		PluginType *instance;

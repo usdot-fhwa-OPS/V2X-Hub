@@ -292,7 +292,7 @@ void CARMAStreetsPlugin::HandleSRMMessage(SrmMessage &msg, routeable_message &ro
 		SetStatus<uint>(Key_SRMMessageSkipped, ++_srmMessageSkipped);
 		
 	}else{
-		for (auto srmJson : srmJsonV)
+		for (const auto &srmJson : srmJsonV)
         {
 			Json::StreamWriterBuilder builder;
 			const std::string srmJsonStr = Json::writeString(builder, srmJson);
@@ -577,8 +577,8 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					continue;
 				}
 				//Convert the SPAT JSON string into J2735 SPAT message and encode it.
-				auto spat_ptr = std::make_shared<SPAT>();
-				spat_convertor.convertJson2Spat(payload_root, spat_ptr.get());
+				auto spat_ptr = tmx::messages::j2735::j2735_create<SpatTraits>();
+				spat_convertor.convertJson2Spat(payload_root, spat_ptr);
 				tmx::messages::SpatEncodedMessage spatEncodedMsg;
 				try
 				{
@@ -589,13 +589,11 @@ void CARMAStreetsPlugin::SubscribeSpatKafkaTopic(){
 					// Skip messages that fail to encode.
 					PLOG(logERROR) << "Failed to encoded SPAT message : \n" << payload_str << std::endl << "Exception encountered: " 
 						<< ex.what() << std::endl;
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 					SetStatus<uint>(Key_SPATMessageSkipped, ++_spatMessageSkipped);
 
 					continue;
 				}
 				
-				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat_ptr.get());
 				PLOG(logDEBUG) << "SpatEncodedMessage: "  << spatEncodedMsg;
 
 				//Broadcast the encoded SPAT message
@@ -630,7 +628,8 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 					continue;
 				}
 				//Convert the SSM JSON string into J2735 SSM message and encode it.
-				auto ssm_ptr = std::make_shared<SignalStatusMessage>();
+
+				auto ssm_ptr = tmx::messages::j2735::j2735_create<SsmTraits>();
 				ssm_convertor.toJ2735SSM(ssmDoc, ssm_ptr);
 				tmx::messages::SsmEncodedMessage ssmEncodedMsg;
 				try
@@ -642,12 +641,10 @@ void CARMAStreetsPlugin::SubscribeSSMKafkaTopic(){
 					// Skip messages that fail to encode.
 					PLOG(logERROR) << "Failed to encoded SSM message : \n" << payload_str << std::endl << "Exception encountered: " 
 						<< ex.what() << std::endl;
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 					SetStatus<uint>(Key_SSMMessageSkipped, ++_ssmMessageSkipped);
 					continue;
 				}
 				
-				ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssm_ptr.get());
 				PLOG(logDEBUG) << "ssmEncodedMsg: "  << ssmEncodedMsg;
 
 				//Broadcast the encoded SSM message
@@ -690,7 +687,7 @@ void CARMAStreetsPlugin::SubscribeSDSMKafkaTopic(){
 				{
 					sdsm_convertor.encodeSDSM(sdsm_ptr, sdsmEncodedMsg);
 				}
-				catch( std::exception const & x )
+				catch( const std::exception &x )
 				{
 					PLOG(logERROR) << "Failed to encoded SDSM message : " << payload_str << std::endl << boost::diagnostic_information( x ) << std::endl;
 					SetStatus<uint>(Key_SDSMMessageSkipped, ++_sdsmMessageSkipped);
@@ -728,7 +725,8 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 	try
 	{			
 		std::lock_guard<std::mutex> lock(data_lock);
-		TestMessage03* mobilityOperation = (TestMessage03 *) calloc(1, sizeof(TestMessage03));
+		
+		auto mobilityOperation = tmx::messages::j2735::j2735_create<tsm3Traits>();
 		std::string sender_id 			 = _intersectionId;
 		std::string recipient_id_str 	 = payload_json != Json::nullValue && payload_json.isMember("v_id") ? payload_json["v_id"].asString(): "UNSET";
 		std::string sender_bsm_id_str 	 = "00000000";
@@ -829,11 +827,9 @@ bool CARMAStreetsPlugin::getEncodedtsm3( tsm3EncodedMessage *tsm3EncodedMsg,  Js
 		mobilityOperation->body.operationParams.buf = string_content_params;
 		mobilityOperation->body.operationParams.size = string_size;
 
-		tmx::messages::tsm3Message* _tsm3Message = new tmx::messages::tsm3Message(mobilityOperation);
-		PLOG(logDEBUG) << *_tsm3Message;
-		tsm3EncodedMsg->initialize(*_tsm3Message);
-		free(mobilityOperation);
-		delete _tsm3Message;
+		tmx::messages::tsm3Message _tsm3Message(mobilityOperation);
+		PLOG(logDEBUG) << _tsm3Message;
+		tsm3EncodedMsg->initialize(_tsm3Message);
 		return true;
 	}
 	catch(const std::runtime_error &e )

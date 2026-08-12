@@ -283,18 +283,20 @@ public:
 	 * @return The decoded J2735 message
 	 */
 	template <typename DecType>
-	static typename DecType::type *decode_j2735_message(tmx::byte_stream bytes)
+	static std::shared_ptr<typename DecType::type> decode_j2735_message(tmx::byte_stream bytes)
 	{
 		typedef typename DecType::type type;
 		typedef typename DecType::message_type msg_type;
 
 		DecType decoder;
-		msg_type *obj = 0;
+		auto *obj = static_cast<msg_type*>(calloc(1,sizeof(msg_type)));
 		asn_dec_rval_t rval = decoder.decode((void **)&obj, bytes);
 
 		if (rval.code == RC_OK)
 		{
-			return new type(obj);
+			// TmxJ2735Message will own C struct pointer and be responsible for cleanup. 
+			// See constructor TmxJ2735Message(message_type *data = 0) in Tmxj2735.hpp
+			return std::make_shared<type>(obj);
 		}
 		else
 		{
@@ -360,26 +362,26 @@ public:
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{	
-					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
-							codec::uper<MessageFrameMessage> >(theData));
+					_frame = TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+							codec::uper<MessageFrameMessage> >(theData);
 					_decoded.reset(new MsgType(_frame->get_j2735_data()));	
 				}
 				else
 				{
-					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<UperCodec>(theData));
+					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<UperCodec>(theData);
 				}
 			}
 			else if (is_der())
 			{
 				if (msgId > MessageFrameMessage::get_default_messageId())
 				{
-					_frame.reset(TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
+					_frame = (TmxJ2735EncodedMessage<MessageFrameMessage>::decode_j2735_message<
 							codec::der<MessageFrameMessage> >(theData));
 					_decoded.reset(new MsgType(_frame->get_j2735_data()));
 				}
 				else
 				{
-					_decoded.reset(TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData));
+					_decoded = TmxJ2735EncodedMessage<MsgType>::decode_j2735_message<DerCodec>(theData);
 				}
 			}
 			else
@@ -513,12 +515,12 @@ public:
 		this->encode_j2735_message(payload);
 	}
 private:
-	std::unique_ptr<MsgType> _decoded;
+	std::shared_ptr<MsgType> _decoded;
 	// Shares the same underlying pointer to J2735 struct as _decoded in a MessageFrameMessage for 
 	// decoding/encoding purposes (see decode_j2735_message() method)
 	// Deleting this pointer before _decoded will invalidate _decoded's underlying pointer
 	// Never delete this pointer directly will result in a memory leak
-	std::unique_ptr<MessageFrameMessage> _frame;
+	std::shared_ptr<MessageFrameMessage> _frame;
 	template <typename EncType>
 	bool is_encoded()
 	{

@@ -55,7 +55,7 @@ namespace tmx::utils {
             bool _run = false;
             consumer_event_cb _consumer_event_cb;
             consumer_rebalance_cb _consumer_rebalance_cb;
-            const char* msg_consume(const RdKafka::Message *message);
+            const char* msg_consume(const std::shared_ptr<RdKafka::Message> message);
 
         public:
             /**

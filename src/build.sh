@@ -105,11 +105,15 @@ elif [ "$BUILD_TYPE" = "debug" ]; then
     # -Wall : Enables all the warnings about bad C++ practices (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
     # -Wextra : Enables extra warnings flags that are not enabled by -Wall (https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html)
     # -DCMAKE_EXPORT_COMPILE_COMMANDS=ON : Generates compile_commands.json file for use with tools like sonar cloud, clang-tidy and language servers
-    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -g -Wall -Wextra"
+    # -O0 : Completely turns off optimization, instructing the compiler to prioritize compilation speed and strict adherence to your source code over execution performance, making it easy to set breakpoints and inspect values accurately in debuggers like GDB
+    # -fno-optimize-sibling-calls : Forces  compiler to use standard stack-allocated function calls instead of reusing stack frames or turning recursive calls into loops. Helps with debugging and stack traces.
+    CMAKE_CXX_FLAGS="-DBOOST_BIND_GLOBAL_PLACEHOLDERS -fsanitize=address -Og -O0 -g -Wall -Wextra -fno-optimize-sibling-calls"
+
 elif [ "$BUILD_TYPE" = "coverage" ]; then
     # Coverage flags plus flag to enable global placeholders for boost::bind and avoid 
     # deprecation warnings
-    CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
+    # -fsanitize=address : Fail on detected memory access errors
+    CMAKE_CXX_FLAGS="-g --coverage -fprofile-arcs -ftest-coverage  -fsanitize=address  -DBOOST_BIND_GLOBAL_PLACEHOLDERS"
     BUILD_TYPE="Debug"
 else 
     echo "Error: Unsupported BUILD_TYPE ${BUILD_TYPE}. Supported BUILD_TYPE : release, coverage, debug."

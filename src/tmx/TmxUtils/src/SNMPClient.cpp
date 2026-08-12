@@ -92,7 +92,7 @@ namespace tmx::utils
             // Passphrase used for authentication
             auto authPhrase_len = authPassPhrase.length();
             auto authPhrase = (u_char *)authPassPhrase.c_str();
-
+            // Note: This function allocates memory
             session.securityAuthProto = snmp_duplicate_objid(usmAuthProto, USM_AUTH_PROTO_SHA_LEN);
             session.securityAuthProtoLen = USM_AUTH_PROTO_SHA_LEN;
             session.securityAuthKeyLen = USM_AUTH_KU_LEN;
@@ -102,6 +102,8 @@ namespace tmx::utils
                                                                             session.securityAuthKey,
                                                                             &session.securityAuthKeyLen) != SNMPERR_SUCCESS)
             {
+                // Needed since snmp_duplicate_objid allocates memory
+                free(session.securityAuthProto);
                 throw snmp_client_exception("Error generating Ku from authentication pass phrase.");
             }
         }
@@ -138,12 +140,14 @@ namespace tmx::utils
                 privLen = USM_PRIV_PROTO_AES256_CISCO_LEN;
             }
             else {
+                // Needed since snmp_duplicate_objid allocates memory
+                free(session.securityAuthProto);
                 throw snmp_client_exception("Invalid privacy protocol " + privProtocol + " !");
             }
             // Passphrase used for privacy
             auto privPhrase_len = privPassPhrase.length();
             auto privPhrase = (u_char *)privPassPhrase.c_str();
-
+            // NOTE : This function allocates memory
             session.securityPrivProto = snmp_duplicate_objid(usmPrivProto, privLen);
             session.securityPrivProtoLen = privLen;
             session.securityPrivKeyLen = USM_PRIV_KU_LEN;
@@ -153,6 +157,9 @@ namespace tmx::utils
                                                                                 session.securityPrivKey,
                                                                                 &session.securityPrivKeyLen) != SNMPERR_SUCCESS)
             {
+                // Needed since snmp_duplicate_objid allocates memory
+                free(session.securityAuthProto);
+                free(session.securityPrivProto);
                 throw snmp_client_exception("Error generating Ku from privacy pass phrase.");
             }
         }
@@ -160,6 +167,10 @@ namespace tmx::utils
 
         // Opens the snmp session if it exists
         ss = snmp_open(&session);
+        // Needed since snmp_duplicate_objid allocates memory        
+        free(session.securityAuthProto);
+        free(session.securityPrivProto);
+        
 
         if (ss == nullptr)
         {
@@ -255,7 +266,7 @@ namespace tmx::utils
         }
         else
         {
-            PLOG(logERROR) << "Invalid request type, method accpets only GET and SET";
+            PLOG(logERROR) << "Invalid request type, method accepts only GET and SET";
             return false;
         }
 
@@ -266,6 +277,7 @@ namespace tmx::utils
         if (!snmp_parse_oid(input_oid.c_str(), OID, &OID_len)) {
             snmp_perror("snmp_parse_oid");
             PLOG(logERROR) << "OID could not be created from input: " << input_oid;
+            snmp_free_pdu(pdu);
             snmp_close(ss);
             return false;
         }

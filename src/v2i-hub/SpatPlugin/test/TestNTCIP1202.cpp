@@ -36,12 +36,12 @@ TEST(NTCIP1202Test, copyBytesIntoNtcip1202)
     ntcip1202_p->setSignalGroupMappingList(json);
     ntcip1202_p->copyBytesIntoNtcip1202(buf, numBytes);
 
-    SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
-    ntcip1202_p->ToJ2735SPAT(spat_ptr,tsMsec, "test intersection name", 9012);
+    // SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
+    auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
+    ntcip1202_p->ToJ2735SPAT(spat_ptr.get(),tsMsec, "test intersection name", 9012);
 
     ASSERT_EQ(3,  spat_ptr->intersections.list.array[0]->states.list.array[0]->state_time_speed.list.array[0]->eventState);
 
-    free(spat_ptr);
 }
 
 TEST(NTCIP1202Test, ToJ2735SPAT)
@@ -49,8 +49,8 @@ TEST(NTCIP1202Test, ToJ2735SPAT)
     uint64_t tsMsec = 1677775434400;
 
     auto ntcip1202_p = std::make_shared<Ntcip1202>();
-    SPAT *spat_ptr = (SPAT *)calloc(1, sizeof(SPAT));
-    ntcip1202_p->ToJ2735SPAT(spat_ptr, tsMsec, "test intersection name", 9012);
+    auto spat_ptr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
+    ntcip1202_p->ToJ2735SPAT(spat_ptr.get(), tsMsec, "test intersection name", 9012);
     auto _spatMessage = std::make_shared<tmx::messages::SpatMessage>(spat_ptr);
     auto spat = _spatMessage->get_j2735_data();
 }
