@@ -8,6 +8,12 @@ namespace ImmediateForward {
         size_t pos = psid.find("x");
         return pos == std::string::npos ? psid : psid.substr(pos + 1);
     }
+    std::string getPSIDWithoutPrefix(const std::string &psid){
+        if (psid.find("x") == std::string::npos) {
+            throw tmx::TmxException("Message PSID " + psid + " is malformed and should be formated 0x<PSID HEX>");
+        }
+        return stripPsidPrefix(psid);
+    }
 
     void clearImmediateForwardTable( tmx::utils::snmp_client* const client) {
 
@@ -74,10 +80,8 @@ namespace ImmediateForward {
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
             std::vector<snmp_request> requests;
            
-            if (message.psid.find("x") == std::string::npos) {
-                throw tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>");
-            }
-            std::string messagePsidwithoutPrefix = stripPsidPrefix(message.psid);
+            std::string messagePsidwithoutPrefix = getPSIDWithoutPrefix(message.psid);
+
             snmp_request psid{
                 rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(curIndex),
                 'x',
