@@ -237,9 +237,8 @@ namespace ImmediateForward
 		const bool isSpdu = IsSPDU(msg);
 		string tmxType;
 		string payload;
-		string psid;
 
-		if (isSpdu)  // set tmxType and payload depending on whether it is spdu or not. In case of spdu, also set the psid.
+		if (isSpdu)  // set tmxType and payload depending on whether it is spdu or not.
 		{	
 			tmx::messages::RawSpdu rawSpdu;
 			try {
@@ -252,7 +251,6 @@ namespace ImmediateForward
 			}
 			tmxType = rawSpdu.get_messageType();
 			payload = toUpperHex(rawSpdu.get_fullByteData());
-			psid = toPsidHex(rawSpdu.get_psid());
 		}
 		else
 		{
@@ -292,7 +290,6 @@ namespace ImmediateForward
 
 				foundMessageType = true;
 				string payloadbyte="";
-				if(!isSpdu){psid = messageConfig.psid;}  // if not spdu, use config psid
 				bool signMessage = imfConfig.signMessage;
 
 				// Format the message using the protocol defined in the
@@ -332,7 +329,7 @@ namespace ImmediateForward
 					PLOG(logDEBUG1) << _logPrefix
 									<< "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << psid
+									<< ", PSID: " << messageConfig.psid
 									<< ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->GetAddress()
@@ -344,7 +341,7 @@ namespace ImmediateForward
 
 					PLOG(logDEBUG1) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
-									<< ", PSID: " << psid
+									<< ", PSID: " << messageConfig.psid
 									<< ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->get_port()

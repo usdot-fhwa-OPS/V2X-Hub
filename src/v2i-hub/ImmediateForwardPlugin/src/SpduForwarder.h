@@ -41,9 +41,4 @@ namespace ImmediateForward
      * @brief Hex encode bytes in upper case, the form the immediate forward protocols expect.
      */
     std::string toUpperHex(const tmx::byte_stream &bytes);
-
-    /**
-     * @brief Format a PSID as "0x<HEX>", matching the plugin configuration convention.
-     */
-    std::string toPsidHex(int psid);
 }

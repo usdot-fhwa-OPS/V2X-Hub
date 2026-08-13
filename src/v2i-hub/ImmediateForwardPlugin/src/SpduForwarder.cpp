@@ -61,10 +61,4 @@ namespace ImmediateForward
         return hex;
     }
 
-    std::string toPsidHex(int psid)
-    {
-        std::ostringstream os;
-        os << "0x" << std::uppercase << std::hex << psid;
-        return os.str();
-    }
 }
