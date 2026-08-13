@@ -92,11 +92,11 @@ public:
 	TmxJ2735Message(message_type *data = 0):
 		tmx::tmx_message<Format>(),
 		_j2735_data(data, [](message_type *p) { 
-			// TODO : Temporarily commenting this line out due to heap-use-after-free errors
-			// that occur when using Plugin AddFilter handlers with j2735 messages.
-			// This will likely cause memory leaks, but will prevent the exceptions from occurring until a better solution can be found.
-			// j2735::j2735_destroy<traits_type>(p); 
-		} ) { }
+			// when initialized with raw pointer to C struct -> clean up C struct using ASN_STRUCT_FREE
+			// (see SaeJ2735Traits.hpp)
+			j2735::j2735_destroy<traits_type>(p); 
+		} ) { 
+		}
 
 	/**
 	 * Copy constructor
@@ -115,7 +115,7 @@ public:
 	 * Copy from existing shared pointer of same type.  Current ownership is still
 	 * maintained in the existing shared pointer, but reference count is increased.
 	 */
-	TmxJ2735Message(const std::shared_ptr<message_type> &other):
+	TmxJ2735Message(const std::shared_ptr<message_type> other):
 		tmx::tmx_message<Format>(), _j2735_data(other) { }
 
 	/**
@@ -125,8 +125,20 @@ public:
 	 */
 	template <typename OtherMsgType>
 	TmxJ2735Message(const std::shared_ptr<OtherMsgType> &other):
-		tmx::tmx_message<Format>(),
-		_j2735_data(j2735::j2735_cast<message_type>(other.get()), [](message_type *p) { }) { }
+		tmx::tmx_message<Format>()
+		,_j2735_data(j2735::j2735_cast<message_type>(other.get()), [](message_type *p) {
+			if ( get_messageType() == "MessageFrame" ) {
+				// Since we are not preforming a deep copy of the ASN.1 struct, we cannot destroy it here.
+				// The original owner of the pointer is still responsible for destroying it. Instead
+				// we will just free the casted pointer which will in most cased be MessageFrameMessage wrapper
+				free(p);
+			}
+			// If a MessageFrame message is being down cast as a J2735 type, there is no additional memory allocation
+			// so the original pointer will be responsible for completely cleaning up the memory.
+		}) 
+		{
+			
+		}
 
 	template <typename OtherFormat>
 	TmxJ2735Message(const TmxJ2735Message<OtherFormat> &other, message_converter *converter = 0):
@@ -134,7 +146,6 @@ public:
 	{
 		
 	}
-
 	/**
 	 * Destructor
 	 */
@@ -148,7 +159,6 @@ public:
 	{
 		if (this != &msg)
 		{
-			_j2735_data.reset();
 			_j2735_data = msg._j2735_data;
 			tmx::tmx_message<Format>::operator=(msg);
 		}
@@ -188,8 +198,13 @@ public:
 							"\nFailed after " << rval.consumed << " bytes.";
 					BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
 				}
-
-				_j2735_data.reset(tmp);
+				// Add custom deleter for newly allocated decoded messages
+				// Note: reset removes any custom deleter set before hand
+				_j2735_data.reset(tmp, 
+					[](message_type *p) { 
+						j2735::j2735_destroy<traits_type>(p); 
+					} 
+				);
 			}else if (tmx_message<Format>::is_format("JSON")) {
 				rval = jer_decode(NULL, get_descriptor(), (void **)&tmp, myData.c_str(), myData.size());
 				if (rval.code != RC_OK)
@@ -199,8 +214,13 @@ public:
 							"\nFailed after " << rval.consumed << " bytes.";
 					BOOST_THROW_EXCEPTION(J2735Exception(err.str()));
 				}
-
-				_j2735_data.reset(tmp);
+				// Add custom deleter for newly allocated decoded messages.
+				// Note: reset removes any custom deleter set before hand
+				_j2735_data.reset(tmp, 
+					[](message_type *p) { 
+						j2735::j2735_destroy<traits_type>(p); 
+					} 
+				);
 			} else {
 				BOOST_THROW_EXCEPTION(J2735Exception("Unsupported format for J2735 message: " + tmx::tmx_message<Format>::format()));
 			}

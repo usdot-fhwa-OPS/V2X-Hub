@@ -2,10 +2,8 @@
 
 namespace CARMAStreetsPlugin
 {
-    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value &spat_json, SPAT *spat) const
+    void JsonToJ2735SpatConverter::convertJson2Spat(const Json::Value &spat_json, std::shared_ptr<SPAT> spat) const
     {
-        ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
-
         // Parse spat name field
         if (spat_json.isMember("name") && spat_json["name"].asString().length() != 0)
         {
@@ -225,6 +223,5 @@ namespace CARMAStreetsPlugin
     {
         tmx::messages::MessageFrameMessage frame(spat_ptr);
         encodedSpat.set_data(tmx::messages::TmxJ2735EncodedMessage<SPAT>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-        free(frame.get_j2735_data().get());
     }
 }

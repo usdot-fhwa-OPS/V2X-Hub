@@ -19,237 +19,247 @@ using namespace std;
 using namespace battelle::attributes;
 using namespace tmx;
 using namespace tmx::messages;
+using namespace tmx::messages::j2735;
 
 namespace unit_test {
 
-
-
-
-	
 TEST(J2735MessageTest, EncodeMobilityOperation)
 {	
-	TestMessage03_t* message = (TestMessage03_t*) malloc( sizeof(TestMessage03_t) );
-
+	// Allocate a C-style struct using j2735::j2735_create which includes custom delete (see SaeJ2735Traits.hpp).
+	auto message = j2735::j2735_create<tsm3Traits>(); 
+	
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int failed = 1;
 	
-	char* my_str = (char *) "sender_id";
-	uint8_t * my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	std::string hostStaticId_str = "host_id";
+	failed = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	std::string targetStaticId_str = "targer_id";
+	failed = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string bsmId_str = "bsm_idXX";
+	failed = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string planId_str = "00000000-0000-0000-0000-000000000000";
+	failed = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	failed = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	
 
 	/**
 	 * Populate MobilityOperation Body 
 	 */
-	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.operationParams.buf = my_bytes;
-	message->body.operationParams.size = strlen(my_str);
+	
+	std::string operationParams_str = "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	failed = OCTET_STRING_fromString( &message->body.operationParams, operationParams_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "carma3/Geofence_Acknowledgement";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str);
+	
+	std::string strategy_str = "carma3/Geofence_Acknowledgement";
+	failed = OCTET_STRING_fromString( &message->body.strategy, strategy_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
 	tmx::messages::tsm3EncodedMessage tsm3EncodeMessage;
-	tmx::messages::tsm3Message*  _tsm3Message = new tmx::messages::tsm3Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm3Message->get_j2735_data());
+	tmx::messages::tsm3Message  _tsm3Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm3Message.get_j2735_data());
 	tsm3EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage03>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-	free(message);
-	delete my_bytes_1;
-	delete my_str_1;
-	free(frame_msg.get_j2735_data().get());	
-	ASSERT_EQ(243,  tsm3EncodeMessage.get_msgId());
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm3EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f380b32e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868dddc78796dc2cd7c7cbbf365dd8f2df838f5eedfdf665c99f2edcbbba0b3d3961cd9b4e3bf8f7eee9cb7ecbfa723a41d3961cd9b4e3bf8f7eee9cb7ecbfa722c41871ebddbfbeccb933e5db977747483a72eb95620e5970f3dfb9d20dfc3a69dfbb0ec41cb2e1e7bf720e997c74";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
 TEST(J2735MessageTest, EncodeMobilityRequest)
 {	
-	TestMessage00_t* message = (TestMessage00_t*) calloc(1, sizeof(TestMessage00_t) );
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<tsm0Traits>();
 	
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int failed = 1;
 	
-	char* my_str = (char *) "sender_id";
-	
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	std::string hostStaticId_str = "host_id";
+	failed = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	std::string targetStaticId_str = "targer_id";
+	failed = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string bsmId_str = "bsm_idXX";
+	failed = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string planId_str = "00000000-0000-0000-0000-000000000000";
+	failed = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++) 
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	failed = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
 	/**
-	 * Populate MobilityRequest Body 
+	 * Populate MobilityOperation Body 
 	 */
-	my_str = (char *) "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategyParams.buf = my_bytes;
-	message->body.strategyParams.size = strlen(my_str);
+	
+	std::string strategyParams_str = "traffic_control_id: traffic_control_id, acknowledgement: true, reason: optional reason text";
+	failed = OCTET_STRING_fromString( &message->body.strategyParams, strategyParams_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "carma3/Geofence_Acknowledgement";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->body.strategy.buf = my_bytes;
-	message->body.strategy.size = strlen(my_str); 
+	
+	std::string strategy_str = "carma3/Geofence_Acknowledgement";
+	failed = OCTET_STRING_fromString( &message->body.strategy, strategy_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
 	message->body.urgency = 1;
 	message->body.planType = 0;
 	message->body.location.ecefX = 1;
 	message->body.location.ecefY = 1;
 	message->body.location.ecefZ = 1;
-	message->body.location.timestamp.buf = my_bytes_1;
-	message->body.location.timestamp.size = strlen(my_str_1);
-	message->body.expiration = (MobilityTimestamp_t*)malloc(sizeof(MobilityTimestamp_t));
-	message->body.expiration->buf = my_bytes_1;
-	message->body.expiration->size = strlen(my_str_1);
+	failed = OCTET_STRING_fromString( &message->body.location.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	
+	std::string expiration_str = std::to_string(1784819631875000000);
+	message->body.expiration = AllocAsn<MobilityTimestamp_t>();
+	failed = OCTET_STRING_fromString( message->body.expiration, expiration_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	
 
-	MobilityECEFOffset_t* offset = (MobilityECEFOffset_t*)calloc(1, sizeof(MobilityECEFOffset_t) );
-	offset->offsetX = 1;
-	offset->offsetY = 1;
-	offset->offsetZ = 1;
-	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
-	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, offset);
+	MobilityECEFOffset_t offset ;
+	offset.offsetX = 1;
+	offset.offsetY = 1;
+	offset.offsetZ = 1;
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
+	ASN_SEQUENCE_ADD(&message->body.trajectory->list.array, &offset);
 
-	message->body.trajectoryStart = (MobilityLocation*)malloc(sizeof(MobilityLocation));
+	message->body.trajectoryStart = AllocAsn<MobilityLocation>();
 	message->body.trajectoryStart->ecefX = 1;
 	message->body.trajectoryStart->ecefY = 1;
 	message->body.trajectoryStart->ecefZ = 1;
-	message->body.trajectoryStart->timestamp.buf = my_bytes_1;
-	message->body.trajectoryStart->timestamp.size = strlen(my_str_1);
+	failed = OCTET_STRING_fromString( &message->body.trajectoryStart->timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 		
 	tmx::messages::tsm0EncodedMessage tsm0EncodeMessage;
-	tmx::messages::tsm0Message*  _tsm0Message = new tmx::messages::tsm0Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message->get_j2735_data());
+	tmx::messages::tsm0Message  _tsm0Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm0Message.get_j2735_data());
 	tsm0EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage00>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-
-	free(message);
-	delete my_bytes_1;
-	delete my_str_1;
-	free(offset);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(240,  tsm0EncodeMessage.get_msgId());
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm0EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f080ff2e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868debb8f0f2db859af8f977e6cbbb1e5bf071ebddbfbeccb933e5db9777400029832a0d5306541aa60ca83562ddc3470c5cb666c5c3760c983170d1b8b3d3961cd9b4e3bf8f7eee9cb7ecbfa723a41d3961cd9b4e3bf8f7eee9cb7ecbfa722c41871ebddbfbeccb933e5db977747483a72eb95620e5970f3dfb9d20dfc3a69dfbb0ec41cb2e1e7bf720e997c744c19506a9832a0d5306541ab16ee1a3862e5b3362e1bb064c18b868dd8b770d1c3172d99b170ddab060c1830600";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
 TEST(J2735MessageTest, EncodeMobilityResponse)
 {	
-	TestMessage01_t* message = (TestMessage01_t*) malloc( sizeof(TestMessage01_t) );
-
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<tsm1Traits>();
 	/**
 	 * Populate MobilityHeader 
 	 */
+	int failed = 1;
 	
-	char* my_str = (char *) "sender_id";
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostStaticId.buf = my_bytes;
-	message->header.hostStaticId.size = strlen(my_str);
-	message->header.targetStaticId.buf = my_bytes;
-	message->header.targetStaticId.size = strlen(my_str);
+	std::string hostStaticId_str = "host_id";
+	failed = OCTET_STRING_fromString( &(message->header.hostStaticId), hostStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+	std::string targetStaticId_str = "targer_id";
+	failed = OCTET_STRING_fromString( &message->header.targetStaticId, targetStaticId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "bsm_idXX";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.hostBSMId.buf = my_bytes;
-	message->header.hostBSMId.size = strlen(my_str);
+	std::string bsmId_str = "bsm_idXX";
+	failed = OCTET_STRING_fromString( &message->header.hostBSMId, bsmId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	my_str = (char *) "00000000-0000-0000-0000-000000000000";
-	my_bytes = reinterpret_cast<uint8_t *>(my_str);
-	message->header.planId.buf = my_bytes;
-	message->header.planId.size = strlen(my_str);
+	std::string planId_str = "00000000-0000-0000-0000-000000000000";
+	failed = OCTET_STRING_fromString( &message->header.planId, planId_str.c_str() );
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
-	unsigned long timestamp_ll = std::chrono::duration_cast<std::chrono::nanoseconds>( std::chrono::system_clock::now().time_since_epoch()).count();		
-	std::string timestamp_str = std::to_string(timestamp_ll).c_str();
-	char * my_str_1 = new char[strlen(timestamp_str.c_str())];
-	uint8_t * my_bytes_1 = new uint8_t[strlen(timestamp_str.c_str())];
-	strcpy(my_str_1, timestamp_str.c_str());
-	for(int i = 0; i< strlen(my_str_1); i++)
-	{
-		my_bytes_1[i] =  (uint8_t)my_str_1[i];
-	}
-	message->header.timestamp.buf = my_bytes_1;
-	message->header.timestamp.size = strlen(my_str_1);
+	std::string timestamp_str = std::to_string(1784819631870201847);
+	failed = OCTET_STRING_fromString( &message->header.timestamp, timestamp_str.c_str());
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
 
 	/**
 	 * Populate MobilityResponse Body 
 	 */
-	message->body.isAccepted = 1;
+	message->body.isAccepted = true;
+	// Int from 0-1000. See ASN.1 definition
 	message->body.urgency = 1;
+	//Enumeration between 0-13. See ASN.1 definition
+	message->body.planType = 3; // PlanType: joinPlatoonAtRear
+	message->body.reason = AllocAsn<MobilityReason_t>();
+	// Enumeration between 0-8. See ASN.1 definition
+	*message->body.reason = 5; // Reason: OtherwiseEngaged
+	message->body.repeat = AllocAsn<MobilityRepeat_t>();
+	// Enumeration between 0-2. See ASN.1 definition
+	*message->body.repeat = 2; // Repeat: neverRequestAgain
+
+	asn_fprint(stdout, &asn_DEF_TestMessage01, message.get());
 
 	tmx::messages::tsm1EncodedMessage tsm1EncodeMessage;
-	tmx::messages::tsm1Message*  _tsm1Message = new tmx::messages::tsm1Message(message);
-	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message->get_j2735_data());
+	tmx::messages::tsm1Message  _tsm1Message(message);
+	tmx::messages::MessageFrameMessage frame_msg(_tsm1Message.get_j2735_data());
 	tsm1EncodeMessage.set_data(TmxJ2735EncodedMessage<TestMessage01>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-	free(message);
-	delete my_bytes_1;
-	delete my_str_1;
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(241,  tsm1EncodeMessage.get_msgId());
+	// Get encode message as hex string
+	tmx::byte_stream bytes = tsm1EncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "00f14a2e8dfcfa5fd391fa61e59f2f2bfa7262e7b6fe9c962c3060c183060c182d60c18305ac183060b583060c16b060c183060c183060c18316ee1a3862e5b3362e1bb064c18b868df00632a0";
+	EXPECT_EQ(hex_str, expected_hex_str);
+
 }
 
 
 TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 {	
-	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
-
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<BsmTraits>();
 	/**
 	 * Populate BSMcoreData 
 	 */
-	
-	char* my_str = (char *) "sender_id";
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
 	message->coreData.msgCnt = 1;
-	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	message->coreData.id.buf = my_bytes_id;
-	message->coreData.id.size = sizeof(my_bytes_id);
+	// TempId is octet string and can be populated from buffer
+	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+	bool failed = OCTET_STRING_fromBuf(&message->coreData.id, my_bytes_id, sizeof(my_bytes_id));
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+
 	message->coreData.secMark = 1023;
 	message->coreData.lat = 38954961;
 	message->coreData.Long = -77149303;
@@ -276,41 +286,50 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage)
 	message->coreData.brakes.traction = 1; // allow 0,1,2,3
 	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
 	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
-	uint8_t  my_bytes_brakes[1] = {8};
+	// Allocate memory for wheelBrakes BIT_STRING. Otherwise Asan gives error :
+	// ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed
+	uint8_t  *my_bytes_brakes = static_cast<uint8_t *>(calloc(1, sizeof(uint8_t)));
+	*my_bytes_brakes = 8;
 	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
-	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
+	message->coreData.brakes.wheelBrakes.size = 1; // allow 0,1,2,3,4	
 	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
 
 	//vehicle size
 	message->coreData.size.length = 500;
 	message->coreData.size.width = 300;
 
+	asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, message.get());
+
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
-	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	tmx::messages::BsmMessage  _bsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage.get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
 		
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());
-	//Decode the encoded BSM
-	auto bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
+	
+	// Get encode message as hex string
+	tmx::byte_stream bytes = bsmEncodeMessage.get_payload_bytes();
+	std::string hex_str = tmx::byte_stream_encode(bytes);
+	// Verify UPER encoding matches expected value
+	std::string expected_hex_str = "001425004043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0";
+	EXPECT_EQ(hex_str, expected_hex_str);
 }
 
 
 
-TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
+TEST(J2735MessageTest, EncodeBasicSafetyMessagePartII)
 {	
-	BasicSafetyMessage_t* message = (BasicSafetyMessage_t*) calloc(1, sizeof(BasicSafetyMessage_t) );
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<BsmTraits>();	
 	/**
 	 * Populate BSMcoreData 
-	*/	
-	char* my_str = (char *) "sender_id";
-	uint8_t* my_bytes = reinterpret_cast<uint8_t *>(my_str);
+	 */
 	message->coreData.msgCnt = 1;
-	uint8_t  my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	message->coreData.id.buf = my_bytes_id;
-	message->coreData.id.size = sizeof(my_bytes_id);
+	// TempId is octet string and can be populated from buffer
+	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+	bool failed = OCTET_STRING_fromBuf(&message->coreData.id, my_bytes_id, sizeof(my_bytes_id));
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+
 	message->coreData.secMark = 1023;
 	message->coreData.lat = 38954961;
 	message->coreData.Long = -77149303;
@@ -337,82 +356,71 @@ TEST(J2735MessageTest, EncodeBasicSafetyMessage_PartII)
 	message->coreData.brakes.traction = 1; // allow 0,1,2,3
 	message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
 	message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
-	uint8_t  my_bytes_brakes[1] = {8};
+	// Allocate memory for wheelBrakes BIT_STRING. Otherwise Asan gives error :
+	// ERROR: AddressSanitizer: attempting free on address which was not malloc()-ed
+	uint8_t  *my_bytes_brakes = AllocAsnBuffer(1);
+	*my_bytes_brakes = 8;
 	message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
-	message->coreData.brakes.wheelBrakes.size = sizeof(my_bytes_brakes); // allow 0,1,2,3,4	
+	message->coreData.brakes.wheelBrakes.size =1; // allow 0,1,2,3,4	
 	message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
 
 	//vehicle size
 	message->coreData.size.length = 500;
 	message->coreData.size.width = 300;
 
-	//BSM BSMpartIIExtension
-	auto bsmPartII = (BasicSafetyMessage::BasicSafetyMessage__partII*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__partII));
-	auto partIICnt = (BSMpartIIExtension_t*) calloc(1, sizeof(BSMpartIIExtension_t));
+	// Allocate optional BSM partII
+	message->partII = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__partII>();
+	auto partIICnt = AllocAsn<BSMpartIIExtension_t>();
 	partIICnt->partII_Id = 1;
 	partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
 
-	auto specialVEx = (SpecialVehicleExtensions_t*) calloc(1, sizeof(SpecialVehicleExtensions_t));
-	auto emergencyDetails = (EmergencyDetails_t*) calloc(1, sizeof(EmergencyDetails_t));
-	emergencyDetails->lightsUse = LightbarInUse_inUse;
-	auto resp_type = (ResponseType_t*) calloc(1, sizeof(ResponseType_t));
-	*resp_type = ResponseType_emergency;
-	emergencyDetails->responseType = resp_type;
-	emergencyDetails->sirenUse = SirenInUse_inUse;	
-	specialVEx->vehicleAlerts = emergencyDetails;
-	partIICnt->partII_Value.choice.SpecialVehicleExtensions = *specialVEx;
-    asn_sequence_add(&bsmPartII->list.array, partIICnt);
-	message->partII = bsmPartII;
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts = AllocAsn<EmergencyDetails_t> ();
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse = LightbarInUse_inUse;
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = AllocAsn<ResponseType_t>();
+	*partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = ResponseType_emergency;
+	partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse = SirenInUse_inUse;	
+	
+    asn_sequence_add(&message->partII->list.array, partIICnt);
 	// BSM regional extension
-    auto regional = (BasicSafetyMessage::BasicSafetyMessage__regional*) calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-    auto reg_bsm = (Reg_BasicSafetyMessage_t*) calloc(1, sizeof(Reg_BasicSafetyMessage_t));
+    message->regional = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__regional>();
+    auto reg_bsm = AllocAsn<Reg_BasicSafetyMessage_t>();
     reg_bsm->regionId = 128;
     reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
 
-    auto carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
-    auto carma_bsm_destination_points = (BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints*) calloc(1, sizeof(BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints));
-    auto point = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints = AllocAsn<BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints>();
+    auto point = AllocAsn<Position3D_t>();
 	auto dummy_lat = 12;
 	auto dummy_long = 1312;
     point->lat = dummy_lat;
     point->Long = dummy_long;
-    asn_sequence_add(&carma_bsm_destination_points->list.array, point);
-    auto point2 = (Position3D_t*) calloc(1, sizeof(Position3D_t));
+    asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point);
+    auto point2 = AllocAsn<Position3D_t>();
     point2->lat = dummy_lat + 1000;
     point2->Long = dummy_long + 1000;
-    asn_sequence_add(&carma_bsm_destination_points->list.array, point2);
-    carma_bsm_data->routeDestinationPoints = carma_bsm_destination_points;
-    reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma = *carma_bsm_data;
+    asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point2);
 
-    asn_sequence_add(&regional->list.array, reg_bsm);
-    message->regional = regional;
+    asn_sequence_add(&message->regional->list.array, reg_bsm);
 
-	xer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
-	jer_fprint(stdout, &asn_DEF_BasicSafetyMessage, message);
+	asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, message.get());
 	//Encode BSM
 	tmx::messages::BsmEncodedMessage bsmEncodeMessage;
-	tmx::messages::BsmMessage*  _bsmMessage = new tmx::messages::BsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage->get_j2735_data());
+	tmx::messages::BsmMessage  _bsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_bsmMessage.get_j2735_data());
 	bsmEncodeMessage.set_data(TmxJ2735EncodedMessage<BasicSafetyMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(20,  bsmEncodeMessage.get_msgId());	
+	
 	std::string expectedBSMEncHex = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
-	ASSERT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
+	EXPECT_EQ(expectedBSMEncHex, bsmEncodeMessage.get_payload_str());
 
-	//Decode the encoded BSM
-	auto decoded_bsm_ptr = bsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(LightbarInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse);
-	ASSERT_EQ(SirenInUse_inUse,  decoded_bsm_ptr->partII->list.array[0]->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse);
-	auto decoded_regional = (BasicSafetyMessage::BasicSafetyMessage__regional *)calloc(1, sizeof(BasicSafetyMessage::BasicSafetyMessage__regional));
-	auto decoded_reg_bsm = (Reg_BasicSafetyMessage_t *)calloc(1, sizeof(Reg_BasicSafetyMessage_t));
-	auto decode_carma_bsm_data = (BasicSafetyMessage_addGrpCarma_t *)calloc(1, sizeof(BasicSafetyMessage_addGrpCarma_t));
-	decoded_regional = decoded_bsm_ptr->regional;
-	decoded_reg_bsm = decoded_regional->list.array[0];
-	ASSERT_EQ(dummy_lat,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->lat);
-	ASSERT_EQ(dummy_long,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[0]->Long);
-	ASSERT_EQ(dummy_lat + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->lat);
-	ASSERT_EQ(dummy_long + 1000,  decoded_bsm_ptr->regional->list.array[0]->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array[1]->Long);
+}
+
+TEST(J2735MessageTest, DecodeBasicSafetyMessagePartII){
+	J2735MessageFactory factory;
+	std::string hexString = "00143d604043030280ffdbfba868b3584ec40824646400320032000c888fc834e37fff0aaa960fa0040d082408801148d693a431ad275c7c6b49d9e8d693b60e";
+	tmx::byte_stream bytes = tmx::byte_stream_decode(hexString);
+	std::shared_ptr<MessageFrameEncodedMessage> msg = std::shared_ptr<MessageFrameEncodedMessage>(static_cast<MessageFrameEncodedMessage*>(factory.NewMessage(bytes)));
+	auto decoded_msg = msg->decode_j2735_message();
+	std::string expected_json_message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MessageFrame><messageId>20</messageId><value><BasicSafetyMessage><coreData><msgCnt>1</msgCnt><id>010C0C0A</id><secMark>1023</secMark><lat>38954961</lat><long>-77149303</long><elev>72</elev><accuracy><semiMajor>200</semiMajor><semiMinor>200</semiMinor><orientation>100</orientation></accuracy><transmission><neutral/></transmission><speed>100</speed><heading>12</heading><angle>10</angle><accelSet><long>300</long><lat>100</lat><vert>100</vert><yaw>0</yaw></accelSet><brakes><wheelBrakes>00001</wheelBrakes><traction><off/></traction><abs><off/></abs><scs><off/></scs><brakeBoost><off/></brakeBoost><auxBrakes><off/></auxBrakes></brakes><size><width>300</width><length>500</length></size></coreData><partII><BSMpartIIExtension><partII-Id>1</partII-Id><partII-Value><SpecialVehicleExtensions><vehicleAlerts><doNotUse>0</doNotUse><sirenUse><inUse/></sirenUse><lightsUse><inUse/></lightsUse><multi><unavailable/></multi><responseType><emergency/></responseType></vehicleAlerts></SpecialVehicleExtensions></partII-Value></BSMpartIIExtension></partII><regional><Reg-BasicSafetyMessage><regionId>128</regionId><regExtValue><BasicSafetyMessage-addGrpCarma><routeDestinationPoints><Position3D-addGrpCarma><lat>12</lat><long>1312</long></Position3D-addGrpCarma><Position3D-addGrpCarma><lat>1012</lat><long>2312</long></Position3D-addGrpCarma></routeDestinationPoints></BasicSafetyMessage-addGrpCarma></regExtValue></Reg-BasicSafetyMessage></regional></BasicSafetyMessage></value></MessageFrame>";
+	EXPECT_EQ(decoded_msg.to_string(),expected_json_message);
 }
 
 
@@ -427,8 +435,13 @@ TEST(J2735MessageTest, EncodePersonalSafetyMessage){
 	container.load<XML>(ss);
 	psmmessage.set_contents(container.get_storage().get_tree());
 	psmENC.encode_j2735_message(psmmessage);
-	std::cout << psmENC.get_payload_str()<<std::endl;
-	ASSERT_EQ(32,  psmENC.get_msgId());
+	
+	// Get UPER hex
+	tmx::byte_stream bytes = psmENC.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00202320000200da00457ab7c04cdcf6403d4dc9ffffffffff0003e8a0008000200008000000";
+	EXPECT_EQ(expectedHexString, hexString);
+
 }
 	
 TEST(J2735MessageTest, EncodeTrafficControlRequest){
@@ -441,8 +454,12 @@ TEST(J2735MessageTest, EncodeTrafficControlRequest){
 	container.load<XML>(ss);
 	tsm4msg.set_contents(container.get_storage().get_tree());
 	tsm4Enc.encode_j2735_message(tsm4msg);
-	std::cout << tsm4Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(244,  tsm4Enc.get_msgId());
+	
+	// Get UPER HEX
+	tmx::byte_stream bytes = tsm4Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f42538f93427fcd588c9c00c0000001a3842b3a82cc5f8ccce1ab02f1000102f10a5100010a500";
+	EXPECT_EQ(expectedHexString, hexString);
 }
 
 
@@ -457,115 +474,118 @@ TEST(J2735MessageTest, EncodeTrafficControlMessage){
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
-	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());	
+	tmx::byte_stream bytes = tsm5Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f580d83cc190ac4a6e610588000024002400d2e36234213ff6bc8e0de4980c5960000000000002977dfcb5fadfbb2add987765c7b37f3cb9000034b8d88d084ffdaf238379260316580d0c41461c824a2cc34e3d0c000001a3b7738bcf64e5ec1007ff1549cbc39e774cdbb86a2d78f4dc34000001a3b7733a8312768cced14e200006a352c3d80008000805fcd60b4a017f3582d2805fcd60b4a017f3582d1805fcd60b4a017f3582d2805fcd20b4a097f3582d2805fcd60b49f97f3582d1805fcd60b4a017f3582d2805fcd60b4a017f3582d2805ffce00ba000";
+	EXPECT_EQ(expectedHexString, hexString);
+			
+}
 
-	//No <refwidth> tag in TCM
-	tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+TEST(J2735MessageTest, EncodeTrafficControlMessageWithoutRefwidth) {
+	//Has <refwidth> tag in TCM
+	std::string tsm5str="<TestMessage05><body><tcmV01><reqid>D0E0C6E650394C06</reqid><reqseq>0</reqseq><msgtot>1</msgtot><msgnum>1</msgnum><id>002740591d261d2e99e477df0a82db26</id><updated>0</updated><package><label>workzone</label><tcids><Id128b>002740591d261d2e99e477df0a82db26</Id128b></tcids></package><params><vclasses><micromobile/><motorcycle/><passenger-car/><light-truck-van/><bus/><two-axle-six-tire-single-unit-truck/><three-axle-single-unit-truck/><four-or-more-axle-single-unit-truck/><four-or-fewer-axle-single-trailer-truck/><five-axle-single-trailer-truck/><six-or-more-axle-single-trailer-truck/><five-or-fewer-axle-multi-trailer-truck/><six-axle-multi-trailer-truck/><seven-or-more-axle-multi-trailer-truck/></vclasses><schedule><start>27777312</start><end>153722867280912</end><dow>1111111</dow></schedule><regulatory><true/></regulatory><detail><closed><taperleft/></closed></detail></params><geometry><proj>epsg:3785</proj><datum>WGS84</datum><reftime>27777312</reftime><reflon>-771483519</reflon><reflat>389549109</reflat><refelv>0</refelv><heading>3312</heading><nodes><PathNode><x>1</x><y>0</y><width>0</width></PathNode><PathNode><x>-1498</x><y>-26</y><width>2</width></PathNode><PathNode><x>-1497</x><y>45</y><width>7</width></PathNode><PathNode><x>-1497</x><y>91</y><width>11</width></PathNode><PathNode><x>-370</x><y>34</y><width>2</width></PathNode></nodes></geometry></tcmV01></body></TestMessage05>";
+	std::stringstream ss;
+	tsm5Message tsm5msg;
+	tsm5EncodedMessage tsm5Enc;
+	tmx::message_container_type container;
 	ss<<tsm5str;
 	container.load<XML>(ss);
 	tsm5msg.set_contents(container.get_storage().get_tree());
 	tsm5Enc.encode_j2735_message(tsm5msg);
-	std::cout << tsm5Enc.get_payload_str()<<std::endl;
-	ASSERT_EQ(245,  tsm5Enc.get_msgId());		
+	tmx::byte_stream bytes = tsm5Enc.get_payload_bytes();
+	std::string hexString =  tmx::byte_stream_encode(bytes);
+	std::string expectedHexString = "00f580923f43831b9940e530180000040004009d0164749874ba6791df7c2a0b6c980000000000023f7dfcb5fadfbb280004e80b23a4c3a5d33c8efbe1505b64c1a18828c39049459869c7a180000034fb241179ec9cbd8200ffe2a1397873cee99b770d45af1e9b8680000034fb2407a9bd5013373d4d440033c01180018000805e899ff9a097a27802d875e89e016e2d7e8e802282";
+	EXPECT_EQ(expectedHexString, hexString);
 }
 
 TEST (J2735MessageTest, EncodeSrm)
 {
-	SignalRequestMessage_t *message = (SignalRequestMessage_t *)calloc(1, sizeof(SignalRequestMessage_t));
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<SrmTraits>();
+
 	message->second = 12;
-	RequestorDescription_t *requestor = (RequestorDescription_t *)calloc(1, sizeof(RequestorDescription_t));
-	VehicleID_t *veh_id = (VehicleID_t *)calloc(1, sizeof(VehicleID_t));
-	veh_id->present = VehicleID_PR_entityID;
-	TemporaryID_t *entity_id = (TemporaryID_t *)calloc(1, sizeof(TemporaryID_t));
-	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	entity_id->buf = my_bytes_id;
-	entity_id->size = sizeof(my_bytes_id);
-	veh_id->choice.entityID = *entity_id;
-	requestor->id = *veh_id;
-	RequestorType_t *requestType = (RequestorType_t *)calloc(1, sizeof(RequestorType_t));
-	requestType->role = 0;
-	requestor->type = requestType;
-	RequestorPositionVector_t *position = (RequestorPositionVector_t *)calloc(1, sizeof(RequestorPositionVector_t));
+	message->requestor.id.present = VehicleID_PR_entityID;
+		// TempId is octet string and can be populated from buffer
+	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+	bool failed = OCTET_STRING_fromBuf(&message->requestor.id.choice.entityID, my_bytes_id, sizeof(my_bytes_id));
+	// If operation fails, unit test is no longer valid
+	ASSERT_EQ(failed, 0);
+
+	message->requestor.position = AllocAsn<RequestorPositionVector_t>();
 	#if SAEJ2735_SPEC < 2020
 	DSRC_Angle_t *heading_angle = (DSRC_Angle_t *)calloc(1, sizeof(DSRC_Angle_t));
 	#else
 	Common_Angle_t *heading_angle = (Common_Angle_t *)calloc(1, sizeof(Common_Angle_t));
 	#endif
 	*heading_angle = 123;
-	position->heading = heading_angle;
-	Position3D_t *position_point = (Position3D_t *)calloc(1, sizeof(Position3D_t));
+	message->requestor.position->heading = heading_angle;
 	#if SAEJ2735_SPEC < 2020
-	DSRC_Elevation_t *elev = (DSRC_Elevation_t *)calloc(1, sizeof(DSRC_Elevation_t));
+	message->requestor.position->position.elevation = AllocAsn<DSRC_Elevation_t>();
 	#else
-	Common_Elevation_t *elev = (Common_Elevation_t *)calloc(1, sizeof(Common_Elevation_t));
+	message->requestor.position->position.elevation = AllocAsn<Common_Elevation_t>();
 	#endif
-	*elev = 12;
-	position_point->elevation = elev;
-	position_point->lat = 3712333;
-	position_point->Long = 8012333;
-	position->position = *position_point;
-	TransmissionAndSpeed_t *speed = (TransmissionAndSpeed_t *)calloc(1, sizeof(TransmissionAndSpeed_t));
+	*message->requestor.position->position.elevation = 12;
+	message->requestor.position->position.lat = 3712333;
+	message->requestor.position->position.Long = 8012333;
+	TransmissionAndSpeed_t *speed = AllocAsn<TransmissionAndSpeed_t>();
 	speed->speed = 10;
-	TransmissionState_t *transmission_state = (TransmissionState_t *)calloc(1, sizeof(TransmissionState_t));
-	*transmission_state = 1111;
 	speed->transmisson = 7;
-	position->speed = speed;
-	requestor->position = position;
-	message->requestor = *requestor;
+	message->requestor.position->speed = speed;
 
-	SignalRequestList_t *requests = (SignalRequestList_t *)calloc(1, sizeof(SignalRequestList_t));
+	SignalRequestList_t *requests = AllocAsn<SignalRequestList_t>();
 	//First: Request Package
-	SignalRequestPackage_t *request_package = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
-	MinuteOfTheYear_t *min = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
-	*min = 123;
-	request_package->minute = min;
-	DSecond_t *duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
-	*duration = 122;
-	request_package->duration = duration;
-	DSecond_t *second = (DSecond_t *)calloc(1, sizeof(DSecond_t));
-	*second = 1212;
-	request_package->second = second;
-	SignalRequest_t *request = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
-	IntersectionReferenceID_t *refer_id = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
-	refer_id->id = 1222;
-	request->id = *refer_id;
-	request->requestID = 1;
-	request->requestType = 0;
-	IntersectionAccessPoint_t *inBoundLane = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
-	inBoundLane->present = IntersectionAccessPoint_PR_lane;
-	inBoundLane->choice.lane = 1;
-	request->inBoundLane = *inBoundLane;
-	request_package->request = *request;
+	SignalRequestPackage_t *request_package = AllocAsn<SignalRequestPackage_t>();
+	{
+		// Seperate context so that each request package has its own allocated values 
+		MinuteOfTheYear_t *min = AllocAsn<MinuteOfTheYear_t>();
+		*min = 123;
+		request_package->minute = min;
+		DSecond_t *duration = AllocAsn<DSecond_t>();
+		*duration = 122;
+		request_package->duration = duration;
+		DSecond_t *second = AllocAsn<DSecond_t>();
+		*second = 1212;
+		request_package->second = second;
+	}
+
+	request_package->request.id.id = 1222;
+	request_package->request.requestID = 1;
+	request_package->request.requestType = 0;
+	request_package->request.inBoundLane.present = IntersectionAccessPoint_PR_lane;
+	request_package->request.inBoundLane.choice.lane = 1;
+
 	asn_sequence_add(&requests->list.array, request_package);
 
 	//Second: Request Package
-	SignalRequestPackage_t *request_package_2 = (SignalRequestPackage_t *)calloc(1, sizeof(SignalRequestPackage_t));
-	request_package_2->minute = min;
-	request_package_2->duration = duration;
-	request_package_2->second = second;
-	SignalRequest_t *request_2 = (SignalRequest_t *)calloc(1, sizeof(SignalRequest_t));
-	IntersectionReferenceID_t *referId2 = (IntersectionReferenceID_t *)calloc(1, sizeof(IntersectionReferenceID_t));
-	referId2->id = 2333;
-	request_2->id = *referId2;
-	request_2->requestID = 2;
-	request_2->requestType = 1;
-	IntersectionAccessPoint_t *inBoundLane2 = (IntersectionAccessPoint_t *)calloc(1, sizeof(IntersectionAccessPoint_t));
-	inBoundLane2->present = IntersectionAccessPoint_PR_approach;
-	inBoundLane2->choice.approach = 1;
-	request_2->inBoundLane = *inBoundLane2;
-	request_package_2->request = *request_2;
+	SignalRequestPackage_t *request_package_2 = AllocAsn<SignalRequestPackage_t>();
+	{
+		MinuteOfTheYear_t *min = AllocAsn<MinuteOfTheYear_t>();
+		*min = 123;
+		request_package_2->minute = min;
+		DSecond_t *duration = AllocAsn<DSecond_t>();
+		*duration = 122;
+		request_package_2->duration = duration;
+		DSecond_t *second = AllocAsn<DSecond_t>();
+		*second = 1212;
+		request_package_2->second = second;
+	}
+	request_package_2->request.id.id = 2333;
+	request_package_2->request.requestID = 2;
+	request_package_2->request.requestType = 1;
+
+	request_package_2->request.inBoundLane.present =IntersectionAccessPoint_PR_approach;
+	request_package_2->request.inBoundLane.choice.approach = 1;
 	asn_sequence_add(&requests->list.array, request_package_2);
 	message->requests = requests;
+
+	asn_fprint(stdout, &asn_DEF_SignalRequestMessage , message.get());
 	tmx::messages::SrmEncodedMessage srmEncodeMessage;
-	auto _srmMessage = new tmx::messages::SrmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_srmMessage->get_j2735_data());
-	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(29,  srmEncodeMessage.get_msgId());	
-	std::string expectedSRMEncHex = "001d311000605c0098c020008003d825e003d380247408910007b04bc007a60004303028001a6bbb1c9ad7882858201801ef8028";
-	ASSERT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
+	tmx::messages::SrmMessage _srmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_srmMessage.get_j2735_data());
+	srmEncodeMessage.set_data(TmxJ2735EncodedMessage<SignalRequestMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));	
+
+	std::string expectedSRMEncHex = "001d301000605c0098c020008003d825e003d380247408910007b04bc007a20004303029a6bbb1c9ad7882858201801ef80280";
+	EXPECT_EQ(expectedSRMEncHex, srmEncodeMessage.get_payload_str());	
 }
 
 TEST(J2735MessageTest, EncodeTravelerInformation){
@@ -729,32 +749,24 @@ TEST(J2735MessageTest, EncodeTravelerInformation){
 	container.load<XML>(ss);
 	timMsg.set_contents(container.get_storage().get_tree());
 	timEnc.encode_j2735_message(timMsg);
-	EXPECT_EQ(31,  timEnc.get_msgId());
-	// 2024 version and up
-	#if SAEJ2735_SPEC >= 2024
-	// 2020 version
-	#elif SAEJ2735_SPEC == 2020
-	// 2016 version
-	#else
-	#endif
+	
 	EXPECT_EQ(expectedHex, timEnc.get_payload_str());			
 }
 
 TEST(J2735MessageTest, EncodeSDSM)
 {
-	auto message = (SensorDataSharingMessage_t*)calloc(1, sizeof(SensorDataSharingMessage_t));
+	// Allocate a C-style struct and manage it with shared_ptr and a custom deleter.
+	auto message = j2735::j2735_create<SdsmTraits>();
 	message->msgCnt = 10;
-	uint8_t my_bytes_id[4] = {(uint8_t)1, (uint8_t)12, (uint8_t)12, (uint8_t)10};
-	message->sourceID.buf = my_bytes_id;
-	message->sourceID.size = sizeof(my_bytes_id);
+	char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+	bool failed = OCTET_STRING_fromBuf(&message->sourceID, my_bytes_id, sizeof(my_bytes_id));
+	ASSERT_EQ(failed, 0);
 	message->equipmentType = EquipmentType_unknown;
 	
 
-	auto sDSMTimeStamp = (DDateTime_t*) calloc(1, sizeof(DDateTime_t));
-	auto year = (DYear_t*) calloc(1, sizeof(DYear_t));
+	auto year = AllocAsn<DYear_t>();
 	*year= 2023;
-	sDSMTimeStamp->year = year;
-	message->sDSMTimeStamp = *sDSMTimeStamp;
+	message->sDSMTimeStamp.year = year;
 
 	message->refPos.lat = 38121212;
 	message->refPos.Long = -77121212;
@@ -763,8 +775,7 @@ TEST(J2735MessageTest, EncodeSDSM)
 	message->refPosXYConf.semiMajor = 12;
 	message->refPosXYConf.semiMinor = 52;
 
-	auto objects = (DetectedObjectList_t*) calloc(1, sizeof(DetectedObjectList_t));
-	auto objectData = (DetectedObjectData_t*) calloc(1, sizeof(DetectedObjectData_t));
+	auto objectData = AllocAsn<DetectedObjectData_t>();
 	objectData->detObjCommon.objType = ObjectType_unknown;
 	objectData->detObjCommon.objTypeCfd = 1;
 	objectData->detObjCommon.objectID = 1;
@@ -778,23 +789,30 @@ TEST(J2735MessageTest, EncodeSDSM)
 	objectData->detObjCommon.speedConfidence = 1;
 	objectData->detObjCommon.heading = 1;
 	objectData->detObjCommon.headingConf = 1;
-	ASN_SEQUENCE_ADD(&objects->list.array, objectData);
-	message->objects = *objects;
-	xer_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message);
+	ASN_SEQUENCE_ADD(&message->objects.list.array, objectData);
+	asn_fprint(stdout, &asn_DEF_SensorDataSharingMessage, message.get());
 
 	//Encode SDSM 
 	tmx::messages::SdsmEncodedMessage SdsmEncodeMessage;
-	auto _sdsmMessage = new tmx::messages::SdsmMessage(message);
-	tmx::messages::MessageFrameMessage frame_msg(_sdsmMessage->get_j2735_data());
+	tmx::messages::SdsmMessage _sdsmMessage(message);
+	tmx::messages::MessageFrameMessage frame_msg(_sdsmMessage.get_j2735_data());
 	SdsmEncodeMessage.set_data(TmxJ2735EncodedMessage<SdsmMessage>::encode_j2735_message<codec::uper<MessageFrameMessage>>(frame_msg));
-	free(message);
-	free(frame_msg.get_j2735_data().get());
-	ASSERT_EQ(41,  SdsmEncodeMessage.get_msgId());	
-	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
-	ASSERT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
 
-	//Decode SDSM
-	auto sdsm_ptr = SdsmEncodeMessage.decode_j2735_message().get_j2735_data();
-	ASSERT_EQ(10, sdsm_ptr->msgCnt);
-}
+	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
+	EXPECT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
+
+
+
+
+	}
+
+	TEST(J2735MessageTest, DecodeSDSM) {
+		J2735MessageFactory factory;
+		std::string hexString = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
+		tmx::byte_stream bytes = tmx::byte_stream_decode(hexString);
+		std::shared_ptr<MessageFrameEncodedMessage> msg = std::shared_ptr<MessageFrameEncodedMessage>(static_cast<MessageFrameEncodedMessage*>(factory.NewMessage(bytes)));
+		auto decoded_msg = msg->decode_j2735_message();
+		std::string expected_json_message = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MessageFrame><messageId>41</messageId><value><SensorDataSharingMessage><msgCnt>10</msgCnt><sourceID>010C0C0A</sourceID><equipmentType><unknown/></equipmentType><sDSMTimeStamp><year>2023</year></sDSMTimeStamp><refPos><lat>38121212</lat><long>-77121212</long></refPos><refPosXYConf><semiMajor>12</semiMajor><semiMinor>52</semiMinor><orientation>10</orientation></refPosXYConf><objects><DetectedObjectData><detObjCommon><objType><unknown/></objType><objTypeCfd>1</objTypeCfd><objectID>1</objectID><measurementTime>1</measurementTime><timeConfidence><time-100-000/></timeConfidence><pos><offsetX>1</offsetX><offsetY>1</offsetY></pos><posConfidence><pos><a500m/></pos><elevation><elev-500-00/></elevation></posConfidence><speed>1</speed><speedConfidence><prec100ms/></speedConfidence><heading>1</heading><headingConf><prec10deg/></headingConf></detObjCommon></DetectedObjectData></objects></SensorDataSharingMessage></value></MessageFrame>";
+		EXPECT_EQ(decoded_msg.to_string(),expected_json_message);
+	}
 }

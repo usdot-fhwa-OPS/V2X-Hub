@@ -262,264 +262,96 @@ void initialize(MsgType &payload);
 
 The `payload` parameter must be of the correct J2735 message type. For example, a BsmEncodedMessage will only initialize with a BsmMessage. It is also important to note that the most common errors occur inside the encoding of a J2735 message because the `payload` parameter does not contain the correct data and therefore cannot be encoded per the ASN.1 rules. Typical issues include missing values, certain values out-of-bounds, incorrect bit mask settings and invalid array construction. Therefore, it is recommended to always separately test the encoding when generating J2735 messages.
 
-#### Sample TIM Message Creation
+#### Sample BSM Message Creation
 
-Below is code to create a TIM message with one geographic lane designated by xy offsets from a reference point for a speed restriction zone of 35 MPH. The CSW plugin from the OSADP release contains a more detailed solution for creating a TIM message that contains multiple zones for a speed restriction curve zone. The sample code below is taken from that CSW plugin.
+Below is code to create a BSM message with optional part II content.
 
 ```cpp
-//Create a TIM message for a 35 MPH speed restriction
-
-TravelerInformation _tim;
-
-TravelerInformation* tim;
-
-memset(tim, 0, sizeof(TravelerInformation));
-
-//Set Packet ID
-
-tim->packetID = (UniqueMSGID_t *)calloc(1, sizeof(UniqueMSGID_t));
-
-tim->packetID->buf = (uint8_t *)calloc(9, sizeof(uint8_t));
-
-tim->packetID->size = 9 * sizeof(uint8_t);
-
-uint64_t time = GetMsTimeSinceEpoch();
-
-time_t time_sec = time / 1000;
-
-struct tm *tm;
-
-tm = gmtime(&time_sec);
-
-uint32_t minuteOfYear = (tm->tm_yday * 24 * 60) + (tm->tm_hour * 60) + tm->tm_min;
-
-tim->packetID->buf\[0\] = 0x00;
-
-tim->packetID->buf\[1\] = (minuteOfYear & 0xFF0000) >> 16;
-
-tim->packetID->buf\[2\] = (minuteOfYear & 0x00FF00) >> 8;
-
-tim->packetID->buf\[3\] = minuteOfYear & 0x0000FF;
-
-tim->packetID->buf\[4\] = 0x00;
-
-tim->packetID->buf\[5\] = 0x00;
-
-tim->packetID->buf\[6\] = 0x00;
-
-tim->packetID->buf\[7\] = 0x00;
-
-tim->packetID->buf\[8\] = 0x00;
-
-//Set initial values to NULL
-
-tim->timeStamp=NULL;
-
-tim->packetID=NULL;
-
-tim->urlB=NULL;
-
-tim->regional = NULL;
-
-//Set start time to yesterday
-
-uint64_t time = GetMsTimeSinceEpoch();
-
-time_t time_sec = time / 1000;
-
-struct tm *tm;
-
-tm = gmtime(&time_sec);
-
-int dayOfYear = tm->tm_yday - 1;
-
-if (dayOfYear < 0)
-
-dayOfYear = 364;
-
-frame->startTime = dayOfYear * 24 * 60;
-
-// Set the duration (minutes) to its max value.
-
-frame->duratonTime = 32000;
-
-frame->startYear = NULL;
-
-frame->url = NULL;
-
-// Priority is 0-7 with 7 the highest priority.
-
-frame->priority = 5;
-
-//Set Region
-
-TiDataFrame *frame = (TiDataFrame*)calloc(1, sizeof(TiDataFrame));
-
-frame->frameType = TravelerInfoType_advisory;
-
-frame->msgId.present = TravelerDataFrame__msgId_PR_furtherInfoID;
-
-std::string tempString = "00";
-
-OCTET_STRING_fromString(&(frame->msgId.choice.furtherInfoID), tempString.c_str());
-
-//Set Geographical Path with XY Nodes
-
-GeographicalPath *geoPath = (GeographicalPath*)malloc(sizeof(GeographicalPath));
-
-geoPath->description = (GeographicalPath::GeographicalPath__description*)
-
-malloc(sizeof(GeographicalPath::GeographicalPath__description));
-
-geoPath->regional = NULL;
-
-geoPath->name = NULL;
-
-geoPath->id = NULL;
-
-geoPath->directionality = NULL;
-
-geoPath->closedPath = NULL;
-
-geoPath->direction = NULL;
-
-memset(geoPath, 0, sizeof(geoPath));
-
-geoPath->description->present = GeographicalPath__description_PR_path;
-
-geoPath->description->choice.path.scale = NULL;
-
-geoPath->description->choice.path.offset.present = OffsetSystem__offset_PR_xy;
-
-geoPath->description->choice.path.offset.choice.xy.present = NodeListXY_PR_nodes;
-
-//Add Anchor (Reference Point) at 39.12345, -83.98765
-
-Position3D *anchor = (Position3D*)malloc(sizeof(Position3D));
-
-anchor->regional = NULL;
-
-anchor->elevation = 0 * 10;
-
-anchor->lat = (long)(39.12345 * 10000000.0);
-
-anchor->Long = (long)(-83.98765 * 10000000.0);
-
-geoPath->anchor = anchor;
-
-//Set lane width = 350 cm
-
-LaneWidth_t * laneWidth = (LaneWidth_t *)malloc(sizeof(LaneWidth_t));
-
-long lWidth = 350;
-
-*laneWidth = lWidth;
-
-geoPath->laneWidth = laneWidth;
-
-//Add Direction of Use of Forward
-
-DirectionOfUse_t* directionOfUse = (DirectionOfUse_t *)malloc(sizeof(DirectionOfUse_t));
-
-*directionOfUse = DirectionOfUse_forward;
-
-geoPath->directionality = directionOfUse;
-
-//Add two nodes
-
-NodeXY * node = (NodeXY *)malloc(sizeof(NodeXY));
-
-node->attributes = NULL;
-
-node->delta.present = NodeOffsetPointXY_PR_node_XY6;
-
-int16_t xOffset = 0;
-
-int16_t yOffset = 0;
-
-int16_t eOffset = -0;
-
-bool hasElevation = false;
-
-xOffset = 450;
-
-yOffset = -256;
-
-node->delta.choice.node_XY6.x = xOffset;
-
-node->delta.choice.node_XY6.y = yOffset;
-
-ASN_SEQUENCE_ADD(&nodeSet->list, node);
-
-node->attributes = NULL;
-
-node->delta.present = NodeOffsetPointXY_PR_node_XY6;
-
-int16_t xOffset = 0;
-
-int16_t yOffset = 0;
-
-int16_t eOffset = -0;
-
-bool hasElevation = false;
-
-xOffset = 750;
-
-yOffset = 500;
-
-node->delta.choice.node_XY6.x = xOffset;
-
-node->delta.choice.node_XY6.y = yOffset;
-
-ASN_SEQUENCE_ADD(&nodeSet->list, node);
-
-//add region to frame
-
-asn_set_add(&frame->regions.list, region);
-
-//add frame to frame list
-
-asn_set_add(&tim->dataFrames.list, frame);
-
-TiDataFrame *frame = tim->dataFrames.list.array\[0\];
-
-frame->content.present = TravelerDataFrame__content_PR_advisory;
-
-//Add ITIS Code for speed restriction
-
-ITIScodesAndText__Member* speed_restriction_member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-
-speed_restriction_member->item.present = ITIScodesAndText__Memberitem_PR_itis;
-
-speed_restriction_member->item.choice.itis = 2564; //speed restriction itis code
-
-ASN_SEQUENCE_ADD(&advisory->list, member);
-
-//Add ITIS Text for 35
-
-std::string text ="35";
-
-int textLength = text.length();
-
-ITIScodesAndText__Member* speed_limit_text_member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-
-speed_limit_text_member->item.present = ITIScodesAndText__Memberitem_PR_text;
-
-speed_limit_text_member->item.choice.text.buf = NULL;
-
-OCTET_STRING_fromString(&(member->item.choice.text), text.c_str());
-
-ASN_SEQUENCE_ADD(&advisory->list, member);
-
-//Add ITIS Code for MPH
-
-ITIScodesAndText__Member* speed_limit_units_member = (ITIScodesAndText__Member*)malloc(sizeof(ITIScodesAndText__Member));
-
-speed_limit_units_member->item.present = ITIScodesAndText__Memberitem_PR_itis;
-
-speed_limit_units_member->item.choice.itis = 8720; //MPH itis code
-
-ASN_SEQUENCE_ADD(&advisory->list, member);
+// tmx provided helper function to create J2735 message C Struct shared pointers
+// with lambda function descructor to call j2735_destroy (-> ASN_STRUCT_FREE)
+auto message = j2735::j2735_create<BsmTraits>();	
+
+message->coreData.msgCnt = 1;
+// TempId is octet string and can be populated from buffer
+char  my_bytes_id[4] = {(char)1, (char)12, (char)12, (char)10};
+// ASN.1 C provided functions for allocating and populating OCTET_STRING type members
+// either from buffer or from string OCTET_STRING_fromString
+bool failed = OCTET_STRING_fromBuf(&message->coreData.id, my_bytes_id, sizeof(my_bytes_id));
+// If operation fails, unit test is no longer valid
+ASSERT_EQ(failed, 0);
+
+message->coreData.secMark = 1023;
+message->coreData.lat = 38954961;
+message->coreData.Long = -77149303;
+message->coreData.elev = 72;
+message->coreData.speed = 100;
+message->coreData.heading = 12;
+message->coreData.angle = 10;
+message->coreData.transmission = 0;  // allow 0...7
+
+//position accuracy
+message->coreData.accuracy.orientation= 100;
+message->coreData.accuracy.semiMajor = 200;
+message->coreData.accuracy.semiMinor = 200;
+
+//Acceleration set
+message->coreData.accelSet.lat = 100;
+message->coreData.accelSet.Long = 300;
+message->coreData.accelSet.vert = 100;
+message->coreData.accelSet.yaw = 0;
+
+//populate brakes
+message->coreData.brakes.abs = 1; // allow 0,1,2,3
+message->coreData.brakes.scs = 1; // allow 0,1,2,3
+message->coreData.brakes.traction = 1; // allow 0,1,2,3
+message->coreData.brakes.brakeBoost = 1; // allow 0,1,2
+message->coreData.brakes.auxBrakes = 1; // allow 0,1,2,3
+// For BIT_STRING, ASN1.C does not provided helper methods so we defined 
+// custom helper method to allocate buff
+uint8_t  *my_bytes_brakes = AllocAsnBuffer(1);
+*my_bytes_brakes = 8;
+message->coreData.brakes.wheelBrakes.buf = my_bytes_brakes; // allow 0,1,2,3,4
+message->coreData.brakes.wheelBrakes.size =1; // allow 0,1,2,3,4	
+message->coreData.brakes.wheelBrakes.bits_unused = 3; // allow 0,1,2,3,4	
+
+//vehicle size
+message->coreData.size.length = 500;
+message->coreData.size.width = 300;
+
+// Helper function to calloc ASN1C Struct Pointers
+message->partII = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__partII>();
+auto partIICnt = AllocAsn<BSMpartIIExtension_t>();
+partIICnt->partII_Id = 1;
+partIICnt->partII_Value.present = BSMpartIIExtension__partII_Value_PR_SpecialVehicleExtensions;
+
+partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts = AllocAsn<EmergencyDetails_t> ();
+partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->lightsUse = LightbarInUse_inUse;
+partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = AllocAsn<ResponseType_t>();
+*partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->responseType = ResponseType_emergency;
+partIICnt->partII_Value.choice.SpecialVehicleExtensions.vehicleAlerts->sirenUse = SirenInUse_inUse;	
+// ASN.1 C helper function to add elements to sequence
+asn_sequence_add(&message->partII->list.array, partIICnt);
+// BSM regional extension
+message->regional = AllocAsn<BasicSafetyMessage::BasicSafetyMessage__regional>();
+auto reg_bsm = AllocAsn<Reg_BasicSafetyMessage_t>();
+reg_bsm->regionId = 128;
+reg_bsm->regExtValue.present = Reg_BasicSafetyMessage__regExtValue_PR_BasicSafetyMessage_addGrpCarma;
+
+reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints = AllocAsn<BasicSafetyMessage_addGrpCarma::BasicSafetyMessage_addGrpCarma__routeDestinationPoints>();
+auto point = AllocAsn<Position3D_t>();
+auto dummy_lat = 12;
+auto dummy_long = 1312;
+point->lat = dummy_lat;
+point->Long = dummy_long;
+asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point);
+auto point2 = AllocAsn<Position3D_t>();
+point2->lat = dummy_lat + 1000;
+point2->Long = dummy_long + 1000;
+asn_sequence_add(&reg_bsm->regExtValue.choice.BasicSafetyMessage_addGrpCarma.routeDestinationPoints->list.array, point2);
+
+asn_sequence_add(&message->regional->list.array, reg_bsm);
+// Helper function to print ASN.1 C struct in ASN format.
+asn_fprint(stdout, &asn_DEF_BasicSafetyMessage, message.get());
 ```
 
 #### Broadcasting
@@ -622,35 +454,32 @@ Note that this also includes changes to the constructor to register the handler 
 1. Re-write the MyFirstPlugin::Main() function to be the main processing loop of the new Plugin.
 2. Change the main() function to call run_plugin() with MyFirstPlugin::MyFirstPlugin type in order to launch the new Plugin.
 
-### Compiling with OSADP V2X Hub
+### Build V2X Hub
 
-The V2I compilation processes uses CMake (version 3.5 or higher) to build Makefiles. The steps are hierarchical, meaning first the base V2X Hub platform must be compiled and installed on the target platform prior to the V2X Hub plugins. The V2X Hub plugins expect that the associated platform libraries are present or else CMake fails.
-```shell
-cd tmx
-cmake .
-make
-sudo make install
+
+The `build.sh` script here is used to build V2X Hub. The documentation is provided below or can be accessed using the `-h` parameter.
+
+```bash
+Usage: ./build.sh [BUILD_TYPE] [--j2735-version <version>] [--skip-plugins 'list']
+
+Required positional arguments:
+  BUILD_TYPE            The build type (e.g., debug, release, coverage)
+
+Required options:
+  --j2735-version INT   Specify the J2735 version as an integer (e.g., 2016, 2020, 2024)
+
+Optional options:
+  --skip-plugins STRING Space-separated list of plugin directory names to skip (case-sensitive, default empty = build all)
+  -h, --help            Show this help message and exit
+
+If arguments are not provided, the script will prompt interactively.
 ```
 
-The CMakeLists.txt file defines the CMake dependencies and operations for a build. In V2X Hub, this file first finds the tmx-plugin.cmake file that was built above. This CMake package file might be located in the compiled area or could be installed on the system. Then, CMake will process any Plugin sub-directories that contain their own CMakeLists.txt file. So, presuming that the MyFirstPlugin directory exists within the V2X Hub source tree, a new CMakeLists.txt can be created directly in the MyFirstPlugin folder:’
+### Testing and Coverage
 
-```cmake
-PROJECT ( MyFirstPlugin VERSION 3.0.0 LANGUAGES CXX )
+As part of our CI/CD QA we use code coverage tools to track the source code coverage of our unit test. The `install_converage_depedencies.sh` installs dependencies for this process. 
 
-SET (TMX_PLUGIN_NAME “My Plugin”)
-
-BuildTmxPlugin()
-
-TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils )
-```
-
-The first line in this file declares the project name, which also becomes the executable name, the version of the new Plugin, and that this is a C++ project. The next line sets the name of the Plugin, which will be used in the V2X Hub portal and command lines. The last two lines tell CMake to run the build macro for a V2X Hub Plugin and sets dependencies for any Plugin. Now, the Plugin can be compiled with the following commands:
-
-```shell
-cd v2i-hub
-cmake .
-make MyFirstPlugin
-```
+The `./test.sh` script will run all the unit tests and if passed the coverage parameter (e.g `./test.sh coverage`) it will evaluate source code coverage and produce relevant report. 
 
 ### Custom Messages
 
@@ -1138,6 +967,7 @@ template <typename DataType> class TmxJ2735Message: public tmx::tmx_message
 
 The class template parameter _DataType_ is expected to be the generated J2735 C-style structures, and the class extends a V2X Hub message type that is XML/JSON based. Therefore, these messages can be dumped out in XML/JSON form by serializing to an I/O stream, which simply calls to_string().
 
+
 ```cpp
 TmxJ2735Message(DataType *data = 0);
 ```
@@ -1151,9 +981,7 @@ TmxJ2735Message(const TmxJ2735Message <DataType> & msg);
 A basic copy constructor that directly uses the same underlying J2735 structure pointer, effectively increasing the reference count by one. Therefore, the pointer will only be freed when the last reference to it was destroyed. Therefore, the original object can go out of scope without destroying the underlying structure used in this copy. Because the pointers are shared, changes to data inside will affect all references.
 
 ```cpp
-TmxJ2735Message<SPAT> *original =
-
-new TmxJ2735Message<SPAT>(spat); // Structure is a pointer to _spat_
+TmxJ2735Message<SPAT> *original = new TmxJ2735Message<SPAT>(spat); // Structure is a pointer to _spat_
 
 …
 

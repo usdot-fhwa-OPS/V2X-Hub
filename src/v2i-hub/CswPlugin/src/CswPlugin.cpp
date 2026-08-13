@@ -297,11 +297,7 @@ int CswPlugin::Main() {
 				}
 
 				pthread_mutex_lock(&_timMutex);
-				if (_isTimLoaded)
-					ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_TravelerInformation, &_tim);
 				_isTimLoaded = LoadTim(&_tim, mapFileCopy.c_str());
-				//xer_fprint(stdout, &asn_DEF_TravelerInformation, &_tim);
-				//TestFindRegion();
 				pthread_mutex_unlock(&_timMutex);
 			}
 			// Get system time in milliseconds.
