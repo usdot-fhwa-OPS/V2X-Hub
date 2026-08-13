@@ -21,14 +21,7 @@ using namespace std;
 using namespace tmx::utils;
 
 namespace ImmediateForward
-{
-
-	const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
-	const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
-	const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
-	const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
-	const char* Key_SkippedInvalidSpdu = "Messages Skipped (Invalid SPDU)";
-
+{	
 	ImmediateForwardPlugin::ImmediateForwardPlugin(const std::string &name) : PluginClient(name),
 		_configRead(false),
 		_skippedNoDsrcMetadata(0),
@@ -146,12 +139,6 @@ namespace ImmediateForward
 
 	}
 
-	inline bool ImmediateForwardPlugin::IsSPDU(const IvpMessage *msg)
-	{
-		using tmx::messages::RawSpdu;
-		return msg &&
-			msg->type && strcmp(msg->type, RawSpdu::MessageType) == 0;
-	}
 
 	inline void ImmediateForwardPlugin::SignWithHsm(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, string& payloadbyte)
 	{
@@ -248,12 +235,13 @@ namespace ImmediateForward
 		static FrequencyThrottle<std::string> _statusThrottle(chrono::milliseconds(2000));
 
 		const bool isSpdu = IsSPDU(msg);
-		tmx::messages::RawSpdu rawSpdu;
 		string tmxType;
-		string spduPayload;
+		string payload;
+		string psid;
 
-		if (isSpdu)
-		{
+		if (isSpdu)  // set tmxType and payload depending on whether it is spdu or not. In case of spdu, also set the psid.
+		{	
+			tmx::messages::RawSpdu rawSpdu;
 			try {
 				rawSpdu = getRawSpdu(msg);
 			}
@@ -263,7 +251,8 @@ namespace ImmediateForward
 				return;
 			}
 			tmxType = rawSpdu.get_messageType();
-			spduPayload = toUpperHex(rawSpdu.get_fullByteData());
+			payload = toUpperHex(rawSpdu.get_fullByteData());
+			psid = toPsidHex(rawSpdu.get_psid());
 		}
 		else
 		{
@@ -273,6 +262,8 @@ namespace ImmediateForward
 			for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++){
 				msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 			}
+
+			payload = msg->payload->valuestring;
 		}
 
 		int msgCount = 0;
@@ -301,7 +292,7 @@ namespace ImmediateForward
 
 				foundMessageType = true;
 				string payloadbyte="";
-				string psid = messageConfig.psid;
+				if(!isSpdu){psid = messageConfig.psid;}  // if not spdu, use config psid
 				bool signMessage = imfConfig.signMessage;
 
 				// Format the message using the protocol defined in the
@@ -311,8 +302,7 @@ namespace ImmediateForward
 				{
 					// A raw SPDU is already signed so the RSU must not sign again. signMessages is thus set to false.
 					signMessage = false;
-					payloadbyte = spduPayload;
-					psid = toPsidHex(rawSpdu.get_psid());  // The SPDU is forwarded under its own PSID.
+					payloadbyte = payload;
 				}
 				/// if signing is Enabled, request signing with HSM
 				else if (imfConfig.enableHsm == 1)
@@ -330,7 +320,7 @@ namespace ImmediateForward
 				}
 				else
 				{
-					payloadbyte=msg->payload->valuestring;
+					payloadbyte=payload;
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {

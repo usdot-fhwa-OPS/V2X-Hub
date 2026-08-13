@@ -38,6 +38,12 @@
 namespace ImmediateForward
 {
 
+inline bool IsSPDU(const IvpMessage *msg)
+{
+	return msg &&
+		msg->type && strcmp(msg->type, tmx::messages::RawSpdu::MessageType) == 0;
+}
+
 class ImmediateForwardPlugin : public tmx::utils::PluginClient
 {
 	public:
@@ -87,7 +93,6 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 * @return true (the type is SPDU, regardless of subtype)
 		 * @return false 
 		 */
-		inline bool IsSPDU(const IvpMessage* ivp);
 
 		// Mutex along with the data it protects.
 		// A map of UDP clients for sending V2X communication to different RSUs for broadcast (RSU Spec 4.1)
@@ -107,6 +112,12 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		uint _skippedInvalidUdpClient;
 		uint _skippedSignErrorResponse;
 		uint _skippedInvalidSpdu;
+
+		static constexpr const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
+		static constexpr const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";
+		static constexpr const char* Key_SkippedSignError = "Message Skipped (Signature Error Response)";
+		static constexpr const char* Key_SkippedInvalidUdpClient = "Messages Skipped (Invalid UDP Client)";
+		static constexpr const char* Key_SkippedInvalidSpdu = "Messages Skipped (Invalid SPDU)";
 
 	};
 
