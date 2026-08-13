@@ -321,7 +321,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, psid, signMessage);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, messageConfig.psid, signMessage);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
@@ -337,7 +337,7 @@ namespace ImmediateForward
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], psid, signMessage);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], messageConfig.psid, signMessage);
 
 					PLOG(logDEBUG1) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
