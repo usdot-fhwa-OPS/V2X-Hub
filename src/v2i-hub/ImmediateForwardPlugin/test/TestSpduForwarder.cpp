@@ -8,6 +8,7 @@
 #include <SpduForwarder.h>
 #include <tmx/messages/byte_stream.hpp>
 #include <tmx/messages/routeable_message.hpp>
+#include "ImmediateForwardPlugin.h"
 
 using namespace ImmediateForward;
 
@@ -99,4 +100,12 @@ TEST(TestSpduForwarder, formatsPsidUsingConfigurationConvention) {
     EXPECT_EQ("0x8002", toPsidHex(0x8002));
     EXPECT_EQ("0x20", toPsidHex(0x20));
     EXPECT_EQ("0xBFEE", toPsidHex(0xBFEE));
+}
+
+TEST(TestSpduForwarder, testIsSPDU){
+    tmx::messages::RawSpdu rawSpdu;
+    tmx::routeable_message rMsg;
+    rMsg.initialize<tmx::messages::RawSpdu>(rawSpdu);
+    auto ivpMsg = rMsg.get_message();
+    EXPECT_TRUE(IsSPDU(ivpMsg));
 }
