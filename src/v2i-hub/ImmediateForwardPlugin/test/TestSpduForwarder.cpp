@@ -101,6 +101,6 @@ TEST(TestSpduForwarder, testIsSPDU){
     tmx::messages::RawSpdu rawSpdu;
     tmx::routeable_message rMsg;
     rMsg.initialize<tmx::messages::RawSpdu>(rawSpdu);
-    auto ivpMsg = rMsg.get_message();
+    auto ivpMsg = std::as_const(rMsg).get_message();
     EXPECT_TRUE(IsSPDU(ivpMsg));
 }
