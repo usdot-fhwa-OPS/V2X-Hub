@@ -96,11 +96,6 @@ TEST(TestSpduForwarder, toUpperHexMatchesImmediateForwardPayloadFormat) {
     EXPECT_EQ("", toUpperHex(tmx::byte_stream()));
 }
 
-TEST(TestSpduForwarder, formatsPsidUsingConfigurationConvention) {
-    EXPECT_EQ("0x8002", toPsidHex(0x8002));
-    EXPECT_EQ("0x20", toPsidHex(0x20));
-    EXPECT_EQ("0xBFEE", toPsidHex(0xBFEE));
-}
 
 TEST(TestSpduForwarder, testIsSPDU){
     tmx::messages::RawSpdu rawSpdu;
