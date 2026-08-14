@@ -103,13 +103,13 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		std::map<std::string, int> _messageCountMap;
 
 		// Thread safe bool set to true the first time the configuration has been read.
-		std::atomic<bool> _configRead;
+		std::atomic<bool> _configRead = false;
 
-		uint _skippedNoDsrcMetadata;
-		uint _skippedNoMessageRoute;
-		uint _skippedInvalidUdpClient;
-		uint _skippedSignErrorResponse;
-		uint _skippedInvalidSpdu;
+		uint _skippedNoDsrcMetadata = 0;
+		uint _skippedNoMessageRoute = 0;
+		uint _skippedInvalidUdpClient = 0;
+		uint _skippedSignErrorResponse = 0;
+		uint _skippedInvalidSpdu = 0;
 
 		static constexpr const char* Key_SkippedNoDsrcMetadata = "Messages Skipped (No DSRC metadata)";
 		static constexpr const char* Key_SkippedNoMessageRoute = "Messages Skipped (No route)";

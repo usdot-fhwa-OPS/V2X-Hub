@@ -23,12 +23,6 @@ using namespace tmx::utils;
 namespace ImmediateForward
 {	
 	ImmediateForwardPlugin::ImmediateForwardPlugin(const std::string &name) : PluginClient(name),
-		_configRead(false),
-		_skippedNoDsrcMetadata(0),
-		_skippedNoMessageRoute(0),
-		_skippedInvalidUdpClient(0),
-		_skippedSignErrorResponse(0),
-		_skippedInvalidSpdu(0)
 	{
 		AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
 		AddMessageFilter("Battelle-DSRC", "*", IvpMsgFlags_RouteDSRC);
