@@ -204,11 +204,11 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, const string& psid, bool signMessage){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, bool signMessage){
 		stringstream os;
 		os << "Version=0.7" << "\n"
 		   << "Type=" << messageConfig.sendType << "\n"
-		   << "PSID=" << psid << "\n";
+		   << "PSID=" << messageConfig.psid << "\n";
 		if (!messageConfig.channel.has_value()) {
 			os << "Priority=7" << "\n" 
 			   << "TxMode=" << txModeToString(imfConfig.mode) << "\n"
@@ -321,7 +321,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, messageConfig.psid, signMessage);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, signMessage);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
