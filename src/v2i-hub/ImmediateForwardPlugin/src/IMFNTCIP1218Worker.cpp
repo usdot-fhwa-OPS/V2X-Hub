@@ -3,6 +3,18 @@
 using namespace tmx::utils;
 
 namespace ImmediateForward {
+
+    std::string stripPsidPrefix(const std::string &psid) {
+        size_t pos = psid.find("x");
+        return pos == std::string::npos ? psid : psid.substr(pos + 1);
+    }
+    std::string getPSIDWithoutPrefix(const std::string &psid){
+        if (psid.find("x") == std::string::npos) {
+            throw tmx::TmxException("Message PSID " + psid + " is malformed and should be formated 0x<PSID HEX>");
+        }
+        return stripPsidPrefix(psid);
+    }
+
     void clearImmediateForwardTable( tmx::utils::snmp_client* const client) {
 
         FILE_LOG(logDEBUG) << "Retrieving max Imf rows ..." ;
@@ -68,11 +80,8 @@ namespace ImmediateForward {
             FILE_LOG(logDEBUG1) << "Creating IMF row " + std::to_string(curIndex) ;
             std::vector<snmp_request> requests;
            
-            size_t pos = message.psid.find("x");
-            if (pos == std::string::npos) {
-                throw tmx::TmxException("Message PSID " + message.psid + " is malformed and should be formated 0x<PSID HEX>");
-            }
-            std::string messagePsidwithoutPrefix = message.psid.substr(pos+1);
+            std::string messagePsidwithoutPrefix = getPSIDWithoutPrefix(message.psid);
+
             snmp_request psid{
                 rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(curIndex),
                 'x',
@@ -137,8 +146,28 @@ namespace ImmediateForward {
         return tmxMessageTypeToIMFTableIndex;
     }
 
-    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index){
-        
+    void sendNTCIP1218ImfMessage( snmp_client* const client, const std::string &message, unsigned int index, const std::string &psid, bool signMessage){
+        // A row is shared by every message of one send type. The psid and signMessage are
+        // now set for each outbound message since the SPDU should not be signed again and 
+        // its psid might not match the static configuration, but needs to be preserved. 
+        // Writing both on every send keeps the row from carrying over what the previous
+        // message left behind.
+        snmp_request psidRequest{
+            rsu::mib::ntcip1218::rsuIFMPsidOid + "." + std::to_string(index),
+            'x',
+            stripPsidPrefix(psid)
+        };
+        // 80 HEX is binary 10000000, setting Bit 0 = Process1609.2, which asks the RSU to secure the
+        // message itself. 00 HEX leaves Bit 0 = Bypass1609.2, which per NTCIP 1218 5.5.2.7 "allows
+        // the RSU to send the message that has been signed and/or encrypted by the TMC", wrapping it
+        // in a WSMP header and nothing more. That is what a forwarded raw SPDU needs. Bit 1
+        // (Secure/Unsecure) is ignored when Bit 0 = 0.
+        // Note Bit 0 is the most significant bit, which is what a Yunex RSU expects.
+        snmp_request options{
+            rsu::mib::ntcip1218::rsuIFMOptionsOid + "." + std::to_string(index),
+            'x',
+            signMessage ? "80" : "00"
+        };
         snmp_request payload {
             rsu::mib::ntcip1218::rsuIFMPayloadOid + "." + std::to_string(index),
             'x',
@@ -150,7 +179,7 @@ namespace ImmediateForward {
                 'i',
                 "1"
         };
-        std::vector reqs {payload, enable};
+        std::vector reqs {psidRequest, options, payload, enable};
         client->process_snmp_set_requests(reqs);
     }
 
