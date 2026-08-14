@@ -27,6 +27,7 @@ namespace ImmediateForward
 		_skippedNoDsrcMetadata(0),
 		_skippedNoMessageRoute(0),
 		_skippedInvalidUdpClient(0),
+		_skippedSignErrorResponse(0),
 		_skippedInvalidSpdu(0)
 	{
 		AddMessageFilter("J2735", "*", IvpMsgFlags_RouteDSRC);
