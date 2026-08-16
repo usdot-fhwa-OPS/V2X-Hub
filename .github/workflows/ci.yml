@@ -204,15 +204,6 @@ jobs:
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
 
-      - name: Docker Scout Policy Evaluation
-        id: docker-scout-policy
-        uses: docker/scout-action@v1.24.0
-        with:
-          command: policy
-          image: ${{ steps.meta.outputs.tags }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          organization: usdotfhwaops
-
       - name: Set Docker Scout baseline environment
         id: scout-env
         if: ${{ github.event_name == 'pull_request' }}
@@ -224,7 +215,7 @@ jobs:
       - name: Docker Scout Compare
         id: docker-scout-compare
         if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@v1.12.0
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
@@ -236,10 +227,19 @@ jobs:
       - name: Docker Scout Record
         id: docker-scout-record
         if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@v1.12.0
         with:
           command: environment
           environment: ${{ steps.meta.outputs.version }}
+          image: ${{ steps.meta.outputs.tags }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
+
+      - name: Docker Scout Policy Evaluation
+        id: docker-scout-policy
+        uses: docker/scout-action@v1.24.0
+        with:
+          command: policy
           image: ${{ steps.meta.outputs.tags }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
