@@ -203,6 +203,16 @@ jobs:
             --tag "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
+
+      - name: Docker Scout Policy Evaluation
+        id: docker-scout-policy
+        uses: docker/scout-action@v1.24.0
+        with:
+          command: policy
+          image: ${{ steps.meta.outputs.tags }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          organization: usdotfhwaops
+
       - name: Set Docker Scout baseline environment
         id: scout-env
         if: ${{ github.event_name == 'pull_request' }}
