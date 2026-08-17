@@ -222,6 +222,7 @@ jobs:
           to-env: ${{ steps.scout-env.outputs.environment }}
           ignore-unchanged: true
           only-severities: critical,high
+          exit-on: policy
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
       - name: Docker Scout Record
@@ -231,15 +232,6 @@ jobs:
         with:
           command: environment
           environment: ${{ steps.meta.outputs.version }}
-          image: ${{ steps.meta.outputs.tags }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          organization: usdotfhwaops
-
-      - name: Docker Scout Policy Evaluation
-        id: docker-scout-policy
-        uses: docker/scout-action@v1.24.0
-        with:
-          command: policy
           image: ${{ steps.meta.outputs.tags }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
