@@ -7,6 +7,11 @@
 
 #include "TmxControl.h"
 #include <database/DbConnectionConfig.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define LIST_QUERY "\
 	SELECT IVP.plugin.id, name, description, version, coalesce(enabled, -1), \
@@ -863,25 +868,139 @@ bool TmxControl::save_state(const std::string &passphrase)
 			return false;
 		}
 
+		// Validate passphrase - reject dangerous shell metacharacters
+		if (passphrase.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
+		{
+			FILE_LOG(logERROR) << "Passphrase contains invalid characters";
+			return false;
+		}
+
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
-		std::string cmd = 
-			"bash -c 'set -o pipefail && "
-			"mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
-            " --no-tablespaces "
-            "--ignore-table=" + dbname + ".eventLog "
-            "--ignore-table=" + dbname + ".messageActivity "
-            "--ignore-table=" + dbname + ".messageType "
-            "--ignore-table=" + dbname + ".pluginActivity "
-            "--ignore-table=" + dbname + ".user "
-            " | gzip "
-            " | openssl enc -aes-256-cbc -salt -pbkdf2 "
-           	" -pass pass:" + passphrase + " "
-            " -out \"" + backupFile + "\"'";
+        // Use posix_spawn for safer execution without shell interpretation
+        pid_t pid;
+        posix_spawn_file_actions_t fileActions;
+        posix_spawn_file_actions_init(&fileActions);
 
-        if (int ret = std::system(cmd.c_str()); ret != 0)
+        // Create pipes for piping mysqldump | gzip | openssl
+        int pipe1[2], pipe2[2];
+        if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
         {
-            PLOG(logERROR) << "mysqldump failed with code " << ret;
+            PLOG(logERROR) << "Failed to create pipes";
+            return false;
+        }
+
+        // First child: mysqldump
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        char *mysqldumpArgs[] = {
+            (char*)"mysqldump",
+            (char*)"-u", (char*)user.c_str(),
+            (char*)"-p" , (char*)("" + password).c_str(),
+            (char*)"-h", (char*)host.c_str(),
+            (char*)dbname.c_str(),
+            (char*)"--no-tablespaces",
+            (char*)("--ignore-table=" + dbname + ".eventLog").c_str(),
+            (char*)("--ignore-table=" + dbname + ".messageActivity").c_str(),
+            (char*)("--ignore-table=" + dbname + ".messageType").c_str(),
+            (char*)("--ignore-table=" + dbname + ".pluginActivity").c_str(),
+            (char*)("--ignore-table=" + dbname + ".user").c_str(),
+            nullptr
+        };
+
+        int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn mysqldump: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe1[0]);
+            close(pipe1[1]);
+            close(pipe2[0]);
+            close(pipe2[1]);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe1[1]);
+
+        // Second child: gzip
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[0], STDIN_FILENO);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t gzipPid;
+        char *gzipArgs[] = { (char*)"gzip", nullptr };
+        ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn gzip: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe1[0]);
+            close(pipe2[0]);
+            close(pipe2[1]);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe1[0]);
+        close(pipe2[1]);
+
+        // Third child: openssl enc
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[0], STDIN_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+
+        int outFd = open(backupFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (outFd == -1)
+        {
+            PLOG(logERROR) << "Failed to open output file: " << backupFile;
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe2[0]);
+            return false;
+        }
+        posix_spawn_file_actions_adddup2(&fileActions, outFd, STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, outFd);
+
+        pid_t opensslPid;
+        char *opensslArgs[] = {
+            (char*)"openssl",
+            (char*)"enc",
+            (char*)"-aes-256-cbc",
+            (char*)"-salt",
+            (char*)"-pbkdf2",
+            (char*)"-pass",
+            (char*)("pass:" + passphrase).c_str(),
+            nullptr
+        };
+        ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn openssl: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe2[0]);
+            close(outFd);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe2[0]);
+        close(outFd);
+
+        // Wait for all processes to complete
+        int status;
+        waitpid(pid, &status, 0);
+        waitpid(gzipPid, &status, 0);
+        waitpid(opensslPid, &status, 0);
+
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        {
+            PLOG(logERROR) << "Database backup command failed";
             return false;
         }
 
@@ -961,36 +1080,138 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
             return false;
         }
 
+		// Validate filePath - reject dangerous shell metacharacters
+		if (filePath.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
+		{
+			FILE_LOG(logERROR) << "File path contains invalid characters";
+			return false;
+		}
+
 		if (passphrase.empty())
 		{
 			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
 			return false;
 		}
 
+		// Validate passphrase - reject dangerous shell metacharacters
+		if (passphrase.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
+		{
+			FILE_LOG(logERROR) << "Passphrase contains invalid characters";
+			return false;
+		}
+
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
-		
-		std::string cmd =
-			"bash -c 'set -o pipefail && "
-			"openssl enc -d -aes-256-cbc -pbkdf2 "
-			" -in \"" + filePath + "\""
-			 " -pass pass:" + passphrase + " "
-			" | gunzip "
-			" | mysql -u " + dbConfig.getUser() +
-			" -p" + dbConfig.getPassword() +
-			" -h " + dbConfig.getHost() +
-			" " + dbConfig.getDatabase() +
-			"'";
 
-        FILE_LOG(logDEBUG) << "Executing SQL restore command:";
-        FILE_LOG(logDEBUG) << cmd;
+        // Use posix_spawn for safer execution without shell interpretation
+        pid_t pid;
+        posix_spawn_file_actions_t fileActions;
+        posix_spawn_file_actions_init(&fileActions);
 
-        int rc = system(cmd.c_str());
-
-        FILE_LOG(logDEBUG) << "MySQL return code: " << rc;
-
-        if (rc != 0)
+        // Create pipes for piping openssl | gunzip | mysql
+        int pipe1[2], pipe2[2];
+        if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
         {
-            FILE_LOG(logERROR) << "MySQL restore failed with code " << rc;
+            PLOG(logERROR) << "Failed to create pipes";
+            return false;
+        }
+
+        // First child: openssl dec
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t opensslPid;
+        char *opensslArgs[] = {
+            (char*)"openssl",
+            (char*)"enc",
+            (char*)"-d",
+            (char*)"-aes-256-cbc",
+            (char*)"-pbkdf2",
+            (char*)"-in",
+            (char*)filePath.c_str(),
+            (char*)"-pass",
+            (char*)("pass:" + passphrase).c_str(),
+            nullptr
+        };
+
+        int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn openssl: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe1[0]);
+            close(pipe1[1]);
+            close(pipe2[0]);
+            close(pipe2[1]);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe1[1]);
+
+        // Second child: gunzip
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[0], STDIN_FILENO);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t gzipPid;
+        char *gzipArgs[] = { (char*)"gunzip", nullptr };
+        ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn gunzip: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe1[0]);
+            close(pipe2[0]);
+            close(pipe2[1]);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe1[0]);
+        close(pipe2[1]);
+
+        // Third child: mysql
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[0], STDIN_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+
+        pid_t mysqlPid;
+        char *mysqlArgs[] = {
+            (char*)"mysql",
+            (char*)"-u",
+            (char*)dbConfig.getUser().c_str(),
+            (char*)("" + ("-p" + dbConfig.getPassword())).c_str(),
+            (char*)"-h",
+            (char*)dbConfig.getHost().c_str(),
+            (char*)dbConfig.getDatabase().c_str(),
+            nullptr
+        };
+        ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs, environ);
+        if (ret != 0)
+        {
+            PLOG(logERROR) << "Failed to spawn mysql: " << strerror(ret);
+            posix_spawn_file_actions_destroy(&fileActions);
+            close(pipe2[0]);
+            return false;
+        }
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        close(pipe2[0]);
+
+        // Wait for all processes to complete
+        int status;
+        waitpid(opensslPid, &status, 0);
+        waitpid(gzipPid, &status, 0);
+        waitpid(mysqlPid, &status, 0);
+
+        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+        {
+            FILE_LOG(logERROR) << "Database restore command failed";
             return false;
         }
 
