@@ -884,8 +884,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_init(&fileActions);
 
         // Create pipes for piping mysqldump | gzip | openssl
-        int pipe1[2], pipe2[2];
-        if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
+        int pipe1[2], pipe2[2], pipe3[2];
+        if (pipe(pipe1) == -1 || pipe(pipe2) == -1 || pipe(pipe3) == -1)
         {
             PLOG(logERROR) << "Failed to create pipes";
             return false;
@@ -897,9 +897,10 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
-        std::array<std::string, 12> mysqldumpArgStorage = {
+        std::array<std::string, 13> mysqldumpArgStorage = {
+			"--no-defaults",
             "-u", user,
-            "-p=" + password,
+            "--password=" + password,
             "-h", host,
             dbname,
             "--no-tablespaces",
@@ -910,11 +911,11 @@ bool TmxControl::save_state(const std::string &passphrase)
             ("--ignore-table=" + dbname + ".user")
         };
 		FILE_LOG(logERROR) << "mysqldump args: " << mysqldumpArgStorage[0] << " " << mysqldumpArgStorage[1] << " " << mysqldumpArgStorage[2] << " " << mysqldumpArgStorage[3] << " " << mysqldumpArgStorage[4] << " " << mysqldumpArgStorage[5] << " " << mysqldumpArgStorage[6] << " " << mysqldumpArgStorage[7] << " " << mysqldumpArgStorage[8] << " " << mysqldumpArgStorage[9] << " " << mysqldumpArgStorage[10] << " " << mysqldumpArgStorage[11];
-        std::array<char*, 13> mysqldumpArgs;
+        std::array<char*, 14> mysqldumpArgs;
         for (size_t i = 0; i < mysqldumpArgStorage.size(); ++i) {
             mysqldumpArgs[i] = mysqldumpArgStorage[i].data();
         }
-        mysqldumpArgs[12] = nullptr;
+        mysqldumpArgs[13] = nullptr;
 
         int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
         if (ret != 0)
@@ -927,8 +928,47 @@ bool TmxControl::save_state(const std::string &passphrase)
             close(pipe2[1]);
             return false;
         }
+		int status = 0;
+
+		if (waitpid(pid, &status, 0) == -1) {
+			
+			PLOG(logERROR) << "Failed to wait for mysqldump process: " << strerror(errno);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
+
+		// 3. Inspect the exit status of mysqldump
+		if (WIFEXITED(status)) {
+			int exit_code = WEXITSTATUS(status);
+			if (exit_code != 0) {
+				PLOG(logERROR) << "Database backup failed with exit code: " << exit_code;
+				posix_spawn_file_actions_destroy(&fileActions);
+				close(pipe1[0]);
+				close(pipe1[1]);
+				close(pipe2[0]);
+				close(pipe2[1]);
+				return false;
+			} else {
+				PLOG(logINFO) << "Database backup completed successfully.";
+			}
+		} 
+		else if (WIFSIGNALED(status)) {
+			PLOG(logERROR) << "Database backup was killed by signal: " << WTERMSIG(status);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
+
 
         posix_spawn_file_actions_destroy(&fileActions);
+		// Close the write end of the first pipe in the parent process
         close(pipe1[1]);
 
         // Second child: gzip
@@ -952,6 +992,42 @@ bool TmxControl::save_state(const std::string &passphrase)
             close(pipe2[1]);
             return false;
         }
+		// Wait for GZip Command 
+		if (waitpid(gzipPid, &status, 0) == -1) {
+			
+			PLOG(logERROR) << "Failed to wait for Gzip process: " << strerror(errno);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
+
+		// 3. Inspect the exit status of mysqldump
+		if (WIFEXITED(status)) {
+			int exit_code = WEXITSTATUS(status);
+			if (exit_code != 0) {
+				PLOG(logERROR) << "Database backup compression failed with exit code: " << exit_code;
+				posix_spawn_file_actions_destroy(&fileActions);
+				close(pipe1[0]);
+				close(pipe1[1]);
+				close(pipe2[0]);
+				close(pipe2[1]);
+				return false;
+			} else {
+				PLOG(logINFO) << "Database backup completed successfully.";
+			}
+		} 
+		else if (WIFSIGNALED(status)) {
+			PLOG(logERROR) << "Database backup compression was killed by signal: " << WTERMSIG(status);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe1[0]);
@@ -992,6 +1068,7 @@ bool TmxControl::save_state(const std::string &passphrase)
             opensslArgStorage[5].data(),
             nullptr
         };
+		FILE_LOG(logERROR) << "openssl args: " << opensslArgStorage[0] << " " << opensslArgStorage[1] << " " << opensslArgStorage[2] << " " << opensslArgStorage[3] << " " << opensslArgStorage[4] << " " << opensslArgStorage[5];
         ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         if (ret != 0)
         {
@@ -1001,22 +1078,47 @@ bool TmxControl::save_state(const std::string &passphrase)
             close(outFd);
             return false;
         }
+		// Wait for openssl Command 
+		if (waitpid(opensslPid, &status, 0) == -1) {
+			
+			PLOG(logERROR) << "Failed to wait for openssl process: " << strerror(errno);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
+
+		// 3. Inspect the exit status of mysqldump
+		if (WIFEXITED(status)) {
+			int exit_code = WEXITSTATUS(status);
+			if (exit_code != 0) {
+				PLOG(logERROR) << "Database backup encryption failed with exit code: " << exit_code;
+				posix_spawn_file_actions_destroy(&fileActions);
+				close(pipe1[0]);
+				close(pipe1[1]);
+				close(pipe2[0]);
+				close(pipe2[1]);
+				return false;
+			} else {
+				PLOG(logINFO) << "Database backup encryption completed successfully.";
+			}
+		} 
+		else if (WIFSIGNALED(status)) {
+			PLOG(logERROR) << "Database backup encryption was killed by signal: " << WTERMSIG(status);
+			posix_spawn_file_actions_destroy(&fileActions);
+			close(pipe1[0]);
+			close(pipe1[1]);
+			close(pipe2[0]);
+			close(pipe2[1]);
+			return false;
+		}
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe2[0]);
         close(outFd);
 
-        // Wait for all processes to complete
-        int status;
-        waitpid(pid, &status, 0);
-        waitpid(gzipPid, &status, 0);
-        waitpid(opensslPid, &status, 0);
-
-        if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
-        {
-            PLOG(logERROR) << "Database backup command failed";
-            return false;
-        }
 
 		_output.get_storage().get_tree().clear();
 		message payload;
