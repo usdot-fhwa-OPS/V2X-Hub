@@ -211,28 +211,27 @@ namespace ERVCloudForwardingPlugin
         if (!carma_cloud_ca_cert_path.empty()) {
             curl_easy_setopt(req, CURLOPT_CAINFO, carma_cloud_ca_cert_path.c_str());
         }
+        if (!enforceTLSVerification) {
 
         #ifdef ALLOW_INSECURE_TLS
         // By disabled in release builds. Only enabled in debug builds for testing and debugging purposes
         // Can be ignored for sonar scanning since not in released images
         // BEGIN-NOSCAN
         // ONLY included when compiled as a Debug build
-        if (!enforceTLSVerification) {
             curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
             curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
             PLOG(logWARNING) << "TLS verification disabled by setting configuration 'enforceTLSVerification' to false. "
                 << "CARMA-Cloud certificate and hostname validation are NOT being enforced. "
                 << "This option should only be disabled in non-production / development environments for temporary troubleshooting.";
-        }
+        
         // END-NOSCAN
         #else
-        if (!enforceTLSVerification) {
             PLOG(logERROR) << "TLS verification can ONLY be disabled in Debug builds.";
             curl_easy_cleanup(req);
             return 1;
-        }
+        
         #endif
-
+        }
         curl_easy_setopt(req, CURLOPT_CONNECTTIMEOUT_MS, 500L);
         curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
         curl_easy_setopt(req, CURLOPT_NOSIGNAL, 1L);
