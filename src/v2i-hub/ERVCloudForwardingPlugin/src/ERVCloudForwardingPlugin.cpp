@@ -26,7 +26,7 @@ namespace ERVCloudForwardingPlugin
             // Construct the ERV BSM and forward it to the cloud.
             auto xml_str = ERVCloudForwardingWorker::constructERVBSMRequest(msg, _webPort);
             PLOG(logINFO) << "Forward ERV BSM to cloud: " << xml_str << endl;
-            CloudSendAsync(xml_str, _CLOUDURL, _CLOUDBSMREQ, _POSTMETHOD);
+            CloudSendAsync(xml_str, carma_cloud_url, _CLOUDBSMREQ, _POSTMETHOD);
             uint64_t delayEnd = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
             PLOG(logINFO) << "Received ERV BSM and forward ERV BSM to cloud delay (ms): " << (delayEnd - delayStart) << endl;
         }
@@ -36,7 +36,7 @@ namespace ERVCloudForwardingPlugin
             PLOG(logDEBUG) << "Incoming BSM is not from Emergency Response Vehicle (ERV): " << msg << endl;
         }        
     }
-
+    // TODO: Replace this implementation with AddFilter for RsuStatusMessage already implemented for RSU Health Monitoring Plugin
     void ERVCloudForwardingPlugin::RegisterRSULocation()
     {
         uint32_t attempt = 0;
@@ -76,7 +76,7 @@ namespace ERVCloudForwardingPlugin
                 string rsu_identifier = _rsuName + "_" + boost::lexical_cast<std::string>(uuid);
                 auto xml_str = ERVCloudForwardingWorker::constructRSULocationRequest(rsu_identifier, _webPort, latitude, longitude);
                 PLOG(logINFO) << "Sending registering RSU location reqest to cloud: " << xml_str << endl;
-                auto status = CloudSend(xml_str, _CLOUDURL, _CLOUDRSUREQ, _POSTMETHOD);
+                auto status = CloudSend(xml_str, carma_cloud_url, _CLOUDRSUREQ, _POSTMETHOD);
                 if (status == 1)
                 {
                     PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to send RSU location to cloud." << endl;
@@ -116,6 +116,15 @@ namespace ERVCloudForwardingPlugin
         GetConfigValue<string>("AuthPassPhrase", _authPassPhrase);
         GetConfigValue<string>("GPSOID", _GPSOID);
         GetConfigValue<string>("RSUName", _rsuName);
+        GetConfigValue<string>("CARMACloudBaseUrl",carma_cloud_url);
+        GetConfigValue<bool>("enforceTLSVerification",enforceTLSVerification);
+        GetConfigValue<string>("carma_cloud_ca_cert_path",carma_cloud_ca_cert_path);
+
+        PLOG(logDEBUG) << "Setting CARMA Cloud Base URL to " << carma_cloud_url << std::endl;
+        PLOG(logDEBUG) << "Setting CARMA Cloud 'Enforce TLS Verification' mode to " << enforceTLSVerification << std::endl;
+        PLOG(logDEBUG) << "Setting CARMA Cloud CA cert path to "
+                    << (carma_cloud_ca_cert_path.empty() ? "<system default>" : carma_cloud_ca_cert_path)
+                    << std::endl;
     }
 
     void ERVCloudForwardingPlugin::BroadcastBSM(const string &bsmHex)
@@ -189,30 +198,65 @@ namespace ERVCloudForwardingPlugin
 
     int ERVCloudForwardingPlugin::CloudSend(const string &local_msg, const string &local_url, const string &local_base, const string &local_method)
     {
-        CURL *req;
-        CURLcode res;
-        string urlfull = local_url + local_base;
-        req = curl_easy_init();
-        if (req)
-        {
-            curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
-            if (strcmp(local_method.c_str(), "POST") == 0)
-            {
-                curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
-                curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 5000L); //Http request timeout in 5 seconds
-                curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-                PLOG(logDEBUG) << "Forwarding message to cloud via curl: " << local_msg << endl;
-                res = curl_easy_perform(req);
-                if (res != CURLE_OK)
-                {
-                    fprintf(stderr, "curl send failed: %s\n", curl_easy_strerror(res));
-                    return EXIT_FAILURE;
-                }else{
-                    PLOG(logDEBUG) << "Successfully forwarded message to cloud via curl: " << local_msg << endl;
-                }
-            }
-            curl_easy_cleanup(req);
+        CURL* req = curl_easy_init();
+        if (!req) return 1;
+
+        const std::string urlfull = local_url + local_base;
+
+        curl_easy_setopt(req, CURLOPT_URL, urlfull.c_str());
+        curl_easy_setopt(req, CURLOPT_PROTOCOLS, CURLPROTO_HTTPS);
+        curl_easy_setopt(req, CURLOPT_REDIR_PROTOCOLS, CURLPROTO_HTTPS);
+
+        // Enforce modern TLS
+        curl_easy_setopt(req, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
+        // Enforce certificate validation
+        curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 2L);
+        // Use configured CA bundle for TLS certificate validation when connecting
+        // to services secured with a private/internal Certificate Authority (CA).
+        if (!carma_cloud_ca_cert_path.empty()) {
+            curl_easy_setopt(req, CURLOPT_CAINFO, carma_cloud_ca_cert_path.c_str());
         }
+        if (!enforceTLSVerification) {
+
+        #ifdef ALLOW_INSECURE_TLS
+        // By disabled in release builds. Only enabled in debug builds for testing and debugging purposes
+        // Can be ignored for sonar scanning since not in released images
+        // BEGIN-NOSCAN
+        // ONLY included when compiled as a Debug build
+            curl_easy_setopt(req, CURLOPT_SSL_VERIFYPEER, 0L);
+            curl_easy_setopt(req, CURLOPT_SSL_VERIFYHOST, 0L);
+            PLOG(logWARNING) << "TLS verification disabled by setting configuration 'enforceTLSVerification' to false. "
+                << "CARMA-Cloud certificate and hostname validation are NOT being enforced. "
+                << "This option should only be disabled in non-production / development environments for temporary troubleshooting.";
+        
+        // END-NOSCAN
+        #else
+            PLOG(logERROR) << "TLS verification can ONLY be disabled in Debug builds.";
+            curl_easy_cleanup(req);
+            return 1;
+        
+        #endif
+        }
+        curl_easy_setopt(req, CURLOPT_CONNECTTIMEOUT_MS, 500L);
+        curl_easy_setopt(req, CURLOPT_TIMEOUT_MS, 1000L);
+        curl_easy_setopt(req, CURLOPT_NOSIGNAL, 1L);
+        curl_easy_setopt(req, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+        if (local_method == "POST") {
+            curl_easy_setopt(req, CURLOPT_POSTFIELDS, local_msg.c_str());
+            curl_easy_setopt(req, CURLOPT_POSTFIELDSIZE, static_cast<long>(local_msg.size()));
+        }
+
+        CURLcode res = curl_easy_perform(req);
+        curl_easy_cleanup(req);
+
+        if (res != CURLE_OK) {
+            PLOG(logERROR) << "curl send failed: " << curl_easy_strerror(res);
+            return 1;
+        }
+
         return 0;
     }
 
