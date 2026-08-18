@@ -129,7 +129,7 @@ jobs:
           platforms: linux/amd64
           push: true
           sbom: true
-          provenance: true
+          provenance: mode=max
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -168,7 +168,7 @@ jobs:
           platforms: linux/arm64
           push: true
           sbom: true
-          provenance: true
+          provenance: mode=max
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-arm64
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
