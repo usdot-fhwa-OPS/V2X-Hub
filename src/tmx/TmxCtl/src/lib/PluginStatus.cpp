@@ -6,6 +6,7 @@
  */
 
 #include "TmxControl.h"
+#include <array>
 #include <database/DbConnectionConfig.h>
 #include <spawn.h>
 #include <sys/wait.h>
@@ -896,22 +897,26 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
-        char *mysqldumpArgs[] = {
-            (char*)"mysqldump",
-            (char*)"-u", (char*)user.c_str(),
-            (char*)"-p" , (char*)("" + password).c_str(),
-            (char*)"-h", (char*)host.c_str(),
-            (char*)dbname.c_str(),
-            (char*)"--no-tablespaces",
-            (char*)("--ignore-table=" + dbname + ".eventLog").c_str(),
-            (char*)("--ignore-table=" + dbname + ".messageActivity").c_str(),
-            (char*)("--ignore-table=" + dbname + ".messageType").c_str(),
-            (char*)("--ignore-table=" + dbname + ".pluginActivity").c_str(),
-            (char*)("--ignore-table=" + dbname + ".user").c_str(),
-            nullptr
+        std::array<std::string, 12> mysqldumpArgStorage = {
+            "-u", user,
+            "-p=" + password,
+            "-h", host,
+            dbname,
+            "--no-tablespaces",
+            ("--ignore-table=" + dbname + ".eventLog"),
+            ("--ignore-table=" + dbname + ".messageActivity"),
+            ("--ignore-table=" + dbname + ".messageType"),
+            ("--ignore-table=" + dbname + ".pluginActivity"),
+            ("--ignore-table=" + dbname + ".user")
         };
+		FILE_LOG(logERROR) << "mysqldump args: " << mysqldumpArgStorage[0] << " " << mysqldumpArgStorage[1] << " " << mysqldumpArgStorage[2] << " " << mysqldumpArgStorage[3] << " " << mysqldumpArgStorage[4] << " " << mysqldumpArgStorage[5] << " " << mysqldumpArgStorage[6] << " " << mysqldumpArgStorage[7] << " " << mysqldumpArgStorage[8] << " " << mysqldumpArgStorage[9] << " " << mysqldumpArgStorage[10] << " " << mysqldumpArgStorage[11];
+        std::array<char*, 13> mysqldumpArgs;
+        for (size_t i = 0; i < mysqldumpArgStorage.size(); ++i) {
+            mysqldumpArgs[i] = mysqldumpArgStorage[i].data();
+        }
+        mysqldumpArgs[12] = nullptr;
 
-        int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs, environ);
+        int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn mysqldump: " << strerror(ret);
@@ -935,8 +940,9 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         pid_t gzipPid;
-        char *gzipArgs[] = { (char*)"gzip", nullptr };
-        ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs, environ);
+        std::array<std::string, 1> gzipArgStorage = { "gzip" };
+        std::array<char*, 2> gzipArgs = { gzipArgStorage[0].data(), nullptr };
+        ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn gzip: " << strerror(ret);
@@ -968,17 +974,25 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, outFd);
 
         pid_t opensslPid;
-        char *opensslArgs[] = {
-            (char*)"openssl",
-            (char*)"enc",
-            (char*)"-aes-256-cbc",
-            (char*)"-salt",
-            (char*)"-pbkdf2",
-            (char*)"-pass",
-            (char*)("pass:" + passphrase).c_str(),
+        std::string passArg = "pass:" + passphrase;
+        std::array<std::string, 6> opensslArgStorage = {
+            "enc",
+            "-aes-256-cbc",
+            "-salt",
+            "-pbkdf2",
+            "-pass",
+            passArg
+        };
+        std::array<char*, 7> opensslArgs = {
+            opensslArgStorage[0].data(),
+            opensslArgStorage[1].data(),
+            opensslArgStorage[2].data(),
+            opensslArgStorage[3].data(),
+            opensslArgStorage[4].data(),
+            opensslArgStorage[5].data(),
             nullptr
         };
-        ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs, environ);
+        ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn openssl: " << strerror(ret);
@@ -1122,20 +1136,28 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         pid_t opensslPid;
-        char *opensslArgs[] = {
-            (char*)"openssl",
-            (char*)"enc",
-            (char*)"-d",
-            (char*)"-aes-256-cbc",
-            (char*)"-pbkdf2",
-            (char*)"-in",
-            (char*)filePath.c_str(),
-            (char*)"-pass",
-            (char*)("pass:" + passphrase).c_str(),
+		std::array<std::string, 8> opensslArgsStorage = {
+            "enc",
+            "-d",
+            "-aes-256-cbc",
+            "-pbkdf2",
+            "-in",
+            filePath,
+            "-pass",
+            ("pass:" + passphrase),
+        };
+		 std::array<char*, 9> opensslArgs = {
+            opensslArgsStorage[0].data(),
+            opensslArgsStorage[1].data(),
+            opensslArgsStorage[2].data(),
+            opensslArgsStorage[3].data(),
+            opensslArgsStorage[4].data(),
+            opensslArgsStorage[5].data(),
+            opensslArgsStorage[6].data(),
             nullptr
         };
 
-        int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs, environ);
+		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn openssl: " << strerror(ret);
@@ -1159,8 +1181,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         pid_t gzipPid;
-        char *gzipArgs[] = { (char*)"gunzip", nullptr };
-        ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs, environ);
+        ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, nullptr, environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn gunzip: " << strerror(ret);
@@ -1181,17 +1202,24 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
 
         pid_t mysqlPid;
-        char *mysqlArgs[] = {
-            (char*)"mysql",
-            (char*)"-u",
-            (char*)dbConfig.getUser().c_str(),
-            (char*)("" + ("-p" + dbConfig.getPassword())).c_str(),
-            (char*)"-h",
-            (char*)dbConfig.getHost().c_str(),
-            (char*)dbConfig.getDatabase().c_str(),
-            nullptr
+		std::array<std::string, 6> mysqlArgsStorage = {
+        	"-u",
+            dbConfig.getUser(),
+            ("-p=" + dbConfig.getPassword()),
+            "-h",
+            dbConfig.getHost(),
+           	dbConfig.getDatabase()
         };
-        ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs, environ);
+		std::array<char*, 7> mysqlArgs = {
+			mysqlArgsStorage[0].data(),
+			mysqlArgsStorage[1].data(),
+			mysqlArgsStorage[2].data(),
+			mysqlArgsStorage[3].data(),
+			mysqlArgsStorage[4].data(),
+			mysqlArgsStorage[5].data(),
+			nullptr
+		};
+		ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
         if (ret != 0)
         {
             PLOG(logERROR) << "Failed to spawn mysql: " << strerror(ret);
