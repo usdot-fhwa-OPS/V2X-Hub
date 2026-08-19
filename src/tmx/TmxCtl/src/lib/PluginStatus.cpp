@@ -838,7 +838,7 @@ bool TmxControl::user_delete()
 
 	return false;
 }
-bool TmxControl::validate_passphrase(const std::string &passphrase ) {
+bool validate_passphrase(const std::string &passphrase ) {
 	if (passphrase.empty())
 	{
 		throw TmxException("Passphrase is empty!");
@@ -850,6 +850,28 @@ bool TmxControl::validate_passphrase(const std::string &passphrase ) {
 		throw TmxException(R"(Passphrase includes illegal characters ;|&<>`$()*?")");
 	}
 	return true;
+}
+
+bool validate_filepath(const std::string &filepath) {
+	 std::ifstream test(filepath);
+	if (!test.good())
+	{
+		throw TmxException("File does not exist: " + filepath);
+	}
+	test.close();
+
+	// Reject unencrypted files — must end with .sql.gz.enc
+	if (filepath.size() < 11 ||
+		filepath.substr(filepath.size() - 11) != ".sql.gz.enc")
+	{
+		throw TmxException("File does not have appropriate file extension *.sql.gz.enc");
+	}
+
+	// Validate filePath - reject dangerous shell metacharacters
+	if (filepath.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
+	{
+		throw TmxException(R"(File has illegal characters ;|&<>`$()*?")");
+	}
 }
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
@@ -1157,7 +1179,7 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 	}
 
 	std::string filePath = (*_opts)["upload-state"].as<std::string>();
-        if (!_opts->count("passphrase"))
+    if (!_opts->count("passphrase"))
     {
         FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
         return false;
@@ -1165,11 +1187,6 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 
     std::string passphrase = (*_opts)["passphrase"].as<std::string>();
 
-    if (passphrase.empty())
-    {
-        FILE_LOG(logERROR) << "Empty passphrase not allowed";
-        return false;
-    }
 
     return upload_state(filePath, passphrase);
 }
@@ -1181,43 +1198,9 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 
     try
     {
-        FILE_LOG(logDEBUG) << "upload_state() called with filePath: [" << filePath << "]";
 
-        std::ifstream test(filePath);
-        if (!test.good())
-        {
-            FILE_LOG(logERROR) << "File does not exist: " << filePath;
-            return false;
-        }
-		test.close();
-
-		// Reject unencrypted files — must end with .sql.gz.enc
-        if (filePath.size() < 11 ||
-            filePath.substr(filePath.size() - 11) != ".sql.gz.enc")
-        {
-            FILE_LOG(logERROR) << "Rejected non-encrypted state file: " << filePath;
-            return false;
-        }
-
-		// Validate filePath - reject dangerous shell metacharacters
-		if (filePath.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
-		{
-			FILE_LOG(logERROR) << "File path contains invalid characters";
-			return false;
-		}
-
-		if (passphrase.empty())
-		{
-			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
-			return false;
-		}
-
-		// Validate passphrase - reject dangerous shell metacharacters
-		if (passphrase.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
-		{
-			FILE_LOG(logERROR) << "Passphrase contains invalid characters";
-			return false;
-		}
+		validate_passphrase(passphrase);
+		validate_filepath(filePath);
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
@@ -1461,6 +1444,10 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 	catch (const std::bad_alloc &e)
 	{
 		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		return false;
+	}
+	catch (const TmxException &ex) {
+		PLOG(logERROR) << "Input validation failed : " << ex.what();
 		return false;
 	}
 }

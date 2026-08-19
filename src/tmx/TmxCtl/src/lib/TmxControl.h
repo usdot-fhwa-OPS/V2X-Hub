@@ -32,6 +32,10 @@ enum TmxControlOutputFormat
 	TmxControlOutputFormat_JSON,
 	TmxControlOutputFormat_XML
 };
+	
+bool validate_passphrase(const std::string &passphrase);
+bool validate_filepath(const std::string &filepath);
+
 
 class TmxControl: public tmx::utils::Runnable {
 public:
@@ -82,7 +86,6 @@ public:
 	bool plugin_install(pluginlist &, ...);
 	bool plugin_remove();
 	bool plugin_remove(pluginlist &, ...);
-	bool validate_passphrase(const std::string &passphrase);
 	bool save_state(const std::string &passphrase);
 	bool save_state(pluginlist &, ...);
 	bool upload_state(pluginlist &, ...);
