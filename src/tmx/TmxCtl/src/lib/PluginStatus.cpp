@@ -915,12 +915,11 @@ bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 
     return save_state(passphrase);
 }
-
-// bool spawn_posix_process(const std::string &process, posix_spawn_file_actions_t &fileActions, const std::vector<std::string> &processArgs) {
-// 	processArgs.size();
-// 	std::array<std::string, processArgs.size()> arr;
-
-// }
+void clean_up_file_descriptor(int &fd) {
+	if (fd != -1) {
+		close(fd);
+	}
+}
 
 bool TmxControl::save_state(const std::string &passphrase)
 {
@@ -980,8 +979,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 
         posix_spawn_file_actions_destroy(&fileActions);
 		// Close the write end of the first pipe in the parent process
-        close(pipe1[1]);
-		pipe1[1] = -1;
+       	clean_up_file_descriptor(pipe1[1]);
 
         // Second child: gzip
         posix_spawn_file_actions_init(&fileActions);
@@ -998,10 +996,8 @@ bool TmxControl::save_state(const std::string &passphrase)
 		check_posix_process_status("gzip", ret , gzipPid );
 
         posix_spawn_file_actions_destroy(&fileActions);
-        close(pipe1[0]);
-		pipe1[0] = -1;
-        close(pipe2[1]);
-		pipe2[1] =-1;
+        clean_up_file_descriptor(pipe1[0]);
+        clean_up_file_descriptor(pipe2[1]);
 
         // Third child: openssl enc
         posix_spawn_file_actions_init(&fileActions);
@@ -1053,80 +1049,46 @@ bool TmxControl::save_state(const std::string &passphrase)
 
 		PLOG(logERROR) << "Encrypted database backup written to " << backupFile;
 		posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[1]);
-		pipe1[1] = -1;
-		close(pipe2[0]);
-		pipe2[0]=-1;
-		close(outFd);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(outFd);
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
 		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
 	catch (const std::system_error &ex) {
 		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
     catch (const std::bad_alloc &ex)
     {
         PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
         posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
     }
 	catch (const TmxException &ex) {
 		PLOG(logERROR) << "Input validation failed : " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
 
@@ -1214,8 +1176,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         check_posix_process_status("openssl", ret, opensslPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
-        close(pipe1[1]);
-		pipe1[1] =-1;
+        clean_up_file_descriptor(pipe1[1]);
 
         // Second child: gunzip
         posix_spawn_file_actions_init(&fileActions);
@@ -1233,10 +1194,8 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		check_posix_process_status("gzip", ret, gzipPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
-        close(pipe1[0]);
-		pipe1[0] = -1;
-        close(pipe2[1]);
-		pipe2[1] = -1;
+        clean_up_file_descriptor(pipe1[0]);
+        clean_up_file_descriptor(pipe2[1]);
 
         // Third child: mysql
         posix_spawn_file_actions_init(&fileActions);
@@ -1267,8 +1226,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         check_posix_process_status("mysql", ret, mysqlPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
-        close(pipe2[0]);
-		pipe2[0]=-1;
+        clean_up_file_descriptor(pipe2[0]);
 
         FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
         return true;
@@ -1277,53 +1235,29 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 	{
 		FILE_LOG(logERROR) << "File I/O error: " << e.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
 	catch (const std::bad_alloc &e)
 	{
 		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
 	catch (const TmxException &ex) {
 		PLOG(logERROR) << "Input validation failed : " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		for (int &fd : pipe1){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
-		for (int &fd : pipe2){
-			if (fd != -1) {
-				close(fd);
-				fd = -1;
-			}
-		}
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe1[1]);
 		return false;
 	}
 }
