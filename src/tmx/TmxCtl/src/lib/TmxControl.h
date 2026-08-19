@@ -82,6 +82,7 @@ public:
 	bool plugin_install(pluginlist &, ...);
 	bool plugin_remove();
 	bool plugin_remove(pluginlist &, ...);
+	bool validate_passphrase(const std::string &passphrase);
 	bool save_state(const std::string &passphrase);
 	bool save_state(pluginlist &, ...);
 	bool upload_state(pluginlist &, ...);

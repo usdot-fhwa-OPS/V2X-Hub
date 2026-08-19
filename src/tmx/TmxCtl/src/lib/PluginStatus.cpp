@@ -838,6 +838,19 @@ bool TmxControl::user_delete()
 
 	return false;
 }
+bool TmxControl::validate_passphrase(const std::string &passphrase ) {
+	if (passphrase.empty())
+	{
+		throw TmxException("Passphrase is empty!");
+	}
+
+	// Validate passphrase - reject dangerous shell metacharacters
+	if (passphrase.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
+	{
+		throw TmxException(R"(Passphrase includes illegal characters ;|&<>`$()*?")");
+	}
+	return true;
+}
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 {
@@ -862,20 +875,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::string password = dbConfig.getPassword(); 
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
-
-		if (passphrase.empty())
-		{
-			FILE_LOG(logERROR) << "Passphrase not provided for saving state";
-			return false;
-		}
-
-		// Validate passphrase - reject dangerous shell metacharacters
-		if (passphrase.find_first_of(";|&<>`$()\\*?'\"") != std::string::npos)
-		{
-			FILE_LOG(logERROR) << "Passphrase contains invalid characters";
-			return false;
-		}
-
+		// Validate Input (throws exception on validation failure)
+		validate_passphrase(passphrase);
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
         // Use posix_spawn for safer execution without shell interpretation
@@ -910,7 +911,6 @@ bool TmxControl::save_state(const std::string &passphrase)
             ("--ignore-table=" + dbname + ".pluginActivity"),
             ("--ignore-table=" + dbname + ".user")
         };
-		FILE_LOG(logERROR) << "mysqldump args: " << mysqldumpArgStorage[0] << " " << mysqldumpArgStorage[1] << " " << mysqldumpArgStorage[2] << " " << mysqldumpArgStorage[3] << " " << mysqldumpArgStorage[4] << " " << mysqldumpArgStorage[5] << " " << mysqldumpArgStorage[6] << " " << mysqldumpArgStorage[7] << " " << mysqldumpArgStorage[8] << " " << mysqldumpArgStorage[9] << " " << mysqldumpArgStorage[10] << " " << mysqldumpArgStorage[11];
         std::array<char*, 14> mysqldumpArgs;
         for (size_t i = 0; i < mysqldumpArgStorage.size(); ++i) {
             mysqldumpArgs[i] = mysqldumpArgStorage[i].data();
@@ -1068,7 +1068,6 @@ bool TmxControl::save_state(const std::string &passphrase)
             opensslArgStorage[5].data(),
             nullptr
         };
-		FILE_LOG(logERROR) << "openssl args: " << opensslArgStorage[0] << " " << opensslArgStorage[1] << " " << opensslArgStorage[2] << " " << opensslArgStorage[3] << " " << opensslArgStorage[4] << " " << opensslArgStorage[5];
         ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         if (ret != 0)
         {
@@ -1143,6 +1142,10 @@ bool TmxControl::save_state(const std::string &passphrase)
         PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
         return false;
     }
+	catch (const TmxException &ex) {
+		PLOG(logERROR) << "Input validation failed : " << ex.what();
+		return false;
+	}
 }
 
 bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
@@ -1260,7 +1263,6 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         };
 		int status = 0;
 
-		FILE_LOG(logERROR) << "Open SSL args " << opensslArgsStorage[0] << " " << opensslArgsStorage[1] << " " << opensslArgsStorage[2] << " " << opensslArgsStorage[3] << " " << opensslArgsStorage[4] << " " << opensslArgsStorage[5] << " " << opensslArgsStorage[6]; 
 		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         if (ret != 0)
         {
@@ -1400,8 +1402,6 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			mysqlArgsStorage[6].data(),
 			nullptr
 		};
-		FILE_LOG(logERROR) << "Open mysql args " << mysqlArgsStorage[0] << " " << mysqlArgsStorage[1] << " " << mysqlArgsStorage[2] << " " << mysqlArgsStorage[3] << " " << mysqlArgsStorage[4] << " " << mysqlArgsStorage[5] << " " << mysqlArgsStorage[6] ; 
-
 		ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
         if (ret != 0)
         {
