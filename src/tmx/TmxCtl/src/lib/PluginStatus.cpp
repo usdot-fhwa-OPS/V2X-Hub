@@ -981,6 +981,7 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_destroy(&fileActions);
 		// Close the write end of the first pipe in the parent process
         close(pipe1[1]);
+		pipe1[1] = -1;
 
         // Second child: gzip
         posix_spawn_file_actions_init(&fileActions);
@@ -998,7 +999,9 @@ bool TmxControl::save_state(const std::string &passphrase)
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe1[0]);
+		pipe1[0] = -1;
         close(pipe2[1]);
+		pipe2[1] =-1;
 
         // Third child: openssl enc
         posix_spawn_file_actions_init(&fileActions);
@@ -1010,11 +1013,10 @@ bool TmxControl::save_state(const std::string &passphrase)
         {
             PLOG(logERROR) << "Failed to open output file: " << backupFile;
             posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
 			close(pipe1[1]);
+			pipe1[1] = -1;
 			close(pipe2[0]);
-			close(pipe2[1]);
-			close(outFd);
+			pipe2[0]=-1;
             return false;
         }
         posix_spawn_file_actions_adddup2(&fileActions, outFd, STDOUT_FILENO);
@@ -1051,48 +1053,80 @@ bool TmxControl::save_state(const std::string &passphrase)
 
 		PLOG(logERROR) << "Encrypted database backup written to " << backupFile;
 		posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[0]);
 		close(pipe1[1]);
+		pipe1[1] = -1;
 		close(pipe2[0]);
-		close(pipe2[1]);
+		pipe2[0]=-1;
 		close(outFd);
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
 		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[0]);
-		close(pipe1[1]);
-		close(pipe2[0]);
-		close(pipe2[1]);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
 	catch (const std::system_error &ex) {
 		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[0]);
-		close(pipe1[1]);
-		close(pipe2[0]);
-		close(pipe2[1]);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
     catch (const std::bad_alloc &ex)
     {
         PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
         posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[0]);
-		close(pipe1[1]);
-		close(pipe2[0]);
-		close(pipe2[1]);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
     }
 	catch (const TmxException &ex) {
 		PLOG(logERROR) << "Input validation failed : " << ex.what();
 		posix_spawn_file_actions_destroy(&fileActions);
-		close(pipe1[0]);
-		close(pipe1[1]);
-		close(pipe2[0]);
-		close(pipe2[1]);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
 
@@ -1121,8 +1155,19 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 
 bool TmxControl::upload_state(const std::string &filePath, const std::string &passphrase)
 {
-    if (!checkPerm())
+    if (!checkPerm()) {
         return false;
+	}
+	// Create pipes for piping openssl | gunzip | mysql
+	int pipe1[2], pipe2[2];
+	if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
+	{
+		PLOG(logERROR) << "Failed to create pipes";
+		return false;
+	}
+	// Use posix_spawn for safer execution without shell interpretation
+	posix_spawn_file_actions_t fileActions;
+	posix_spawn_file_actions_init(&fileActions);
 
     try
     {
@@ -1134,17 +1179,9 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
-        // Use posix_spawn for safer execution without shell interpretation
-        posix_spawn_file_actions_t fileActions;
-        posix_spawn_file_actions_init(&fileActions);
+      
 
-        // Create pipes for piping openssl | gunzip | mysql
-        int pipe1[2], pipe2[2];
-        if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
-        {
-            PLOG(logERROR) << "Failed to create pipes";
-            return false;
-        }
+        
 
         // First child: openssl dec
         posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
@@ -1177,55 +1214,11 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		int status = 0;
 
 		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
-        if (ret != 0)
-        {
-            PLOG(logERROR) << "Failed to spawn openssl: " << strerror(ret);
-            posix_spawn_file_actions_destroy(&fileActions);
-            close(pipe1[0]);
-            close(pipe1[1]);
-            close(pipe2[0]);
-            close(pipe2[1]);
-            return false;
-        }
-		// Wait for openssl Command 
-		if (waitpid(opensslPid, &status, 0) == -1) {
-			
-			PLOG(logERROR) << "Failed to wait for openssl process: " << strerror(errno);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
-
-		// 3. Inspect the exit status of openssl
-		if (WIFEXITED(status)) {
-			int exit_code = WEXITSTATUS(status);
-			if (exit_code != 0) {
-				PLOG(logERROR) << "Database backup decryption failed with exit code: " << exit_code;
-				posix_spawn_file_actions_destroy(&fileActions);
-				close(pipe1[0]);
-				close(pipe1[1]);
-				close(pipe2[0]);
-				close(pipe2[1]);
-				return false;
-			} else {
-				PLOG(logINFO) << "Database backup decryption completed successfully.";
-			}
-		} 
-		else if (WIFSIGNALED(status)) {
-			PLOG(logERROR) << "Database backup decryption was killed by signal: " << WTERMSIG(status);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
+        check_posix_process_status("openssl", ret, opensslPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe1[1]);
+		pipe1[1] =-1;
 
         // Second child: gunzip
         posix_spawn_file_actions_init(&fileActions);
@@ -1240,55 +1233,13 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			nullptr
 		};
         ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs.data(), environ);
-        if (ret != 0)
-        {
-            PLOG(logERROR) << "Failed to spawn gunzip: " << strerror(ret);
-            posix_spawn_file_actions_destroy(&fileActions);
-            close(pipe1[0]);
-            close(pipe2[0]);
-            close(pipe2[1]);
-            return false;
-        }
-		// Wait for gzipPid Command 
-		if (waitpid(gzipPid, &status, 0) == -1) {
-			
-			PLOG(logERROR) << "Failed to wait for gzip process: " << strerror(errno);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
-
-		// 3. Inspect the exit status of gzip
-		if (WIFEXITED(status)) {
-			int exit_code = WEXITSTATUS(status);
-			if (exit_code != 0) {
-				PLOG(logERROR) << "Database backup decompression failed with exit code: " << exit_code;
-				posix_spawn_file_actions_destroy(&fileActions);
-				close(pipe1[0]);
-				close(pipe1[1]);
-				close(pipe2[0]);
-				close(pipe2[1]);
-				return false;
-			} else {
-				PLOG(logINFO) << "Database backup decompression completed successfully.";
-			}
-		} 
-		else if (WIFSIGNALED(status)) {
-			PLOG(logERROR) << "Database backup decompression was killed by signal: " << WTERMSIG(status);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
+		check_posix_process_status("gzip", ret, gzipPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe1[0]);
+		pipe1[0] = -1;
         close(pipe2[1]);
+		pipe2[1] = -1;
 
         // Third child: mysql
         posix_spawn_file_actions_init(&fileActions);
@@ -1316,52 +1267,11 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			nullptr
 		};
 		ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
-        if (ret != 0)
-        {
-            PLOG(logERROR) << "Failed to spawn mysql: " << strerror(ret);
-            posix_spawn_file_actions_destroy(&fileActions);
-            close(pipe2[0]);
-            return false;
-        }
-		// Wait for mysql Command 
-		if (waitpid(mysqlPid, &status, 0) == -1) {
-			
-			PLOG(logERROR) << "Failed to wait for mysql process: " << strerror(errno);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
-
-		// 3. Inspect the exit status of mysql
-		if (WIFEXITED(status)) {
-			int exit_code = WEXITSTATUS(status);
-			if (exit_code != 0) {
-				PLOG(logERROR) << "Database backup upload failed with exit code: " << exit_code;
-				posix_spawn_file_actions_destroy(&fileActions);
-				close(pipe1[0]);
-				close(pipe1[1]);
-				close(pipe2[0]);
-				close(pipe2[1]);
-				return false;
-			} else {
-				PLOG(logINFO) << "Database backup upload completed successfully.";
-			}
-		} 
-		else if (WIFSIGNALED(status)) {
-			PLOG(logERROR) << "Database backup upload was killed by signal: " << WTERMSIG(status);
-			posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[0]);
-			close(pipe1[1]);
-			close(pipe2[0]);
-			close(pipe2[1]);
-			return false;
-		}
+        check_posix_process_status("mysql", ret, mysqlPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         close(pipe2[0]);
+		pipe2[0]=-1;
 
         FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
         return true;
@@ -1369,15 +1279,54 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
     catch (const std::ios_base::failure &e)
 	{
 		FILE_LOG(logERROR) << "File I/O error: " << e.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
 	catch (const std::bad_alloc &e)
 	{
 		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
 	catch (const TmxException &ex) {
 		PLOG(logERROR) << "Input validation failed : " << ex.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		for (int &fd : pipe1){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
+		for (int &fd : pipe2){
+			if (fd != -1) {
+				close(fd);
+				fd = -1;
+			}
+		}
 		return false;
 	}
 }
