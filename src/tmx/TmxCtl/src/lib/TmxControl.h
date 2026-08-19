@@ -35,6 +35,7 @@ enum TmxControlOutputFormat
 	
 bool validate_passphrase(const std::string &passphrase);
 bool validate_filepath(const std::string &filepath);
+bool check_posix_process_status(const std::string &process_name, int posix_spawnp_ret, const pid_t &pid);
 // bool spawn_posix_process(const std::string &process, posix_spawn_file_actions_t &fileActions, const std::vector<std::string> &processArgs);
 
 
