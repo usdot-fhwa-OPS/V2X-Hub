@@ -32,12 +32,38 @@ enum TmxControlOutputFormat
 	TmxControlOutputFormat_JSON,
 	TmxControlOutputFormat_XML
 };
-	
+/**
+ * Helper function to validate that passphrase is not empty and does not contain
+ * any dangerous characters for command injection : |&<>`$()*?"
+ * @param passphrase to validate
+ * @return bool true if successful validation
+ * @throws TmxException if validation fails
+ * */	
 bool validate_passphrase(const std::string &passphrase);
+/**
+ * Helper function to validate that filepath is not empty, file exists, and does not contain
+ * any dangerous characters for command injection : |&<>`$()*?"
+ * @param filepath to validate
+ * @return bool true if successful validation
+ * @throws TmxException if validation fails
+ * */
 bool validate_filepath(const std::string &filepath);
+/**
+ * Helper function to call waitpid to get return value of posix_spawnp spawned process
+ * @param process_name a string name for the process for logging failure purposes only
+ * @param posix_spawnp_ret the int return value from posix_spawnp
+ * @param pid_t the pid of the process launched with posix_spawnp
+ * @return bool true if process has a return value of 0
+ * @throw TmxException if process has a return value != 0  
+ */
 bool check_posix_process_status(const std::string &process_name, int posix_spawnp_ret, const pid_t &pid);
-void clean_up_file_descriptor(int &fd);
-// bool spawn_posix_process(const std::string &process, posix_spawn_file_actions_t &fileActions, const std::vector<std::string> &processArgs);
+/**
+ * Helper function to clean up file descriptor. First checks if file descriptor has already been closed, if 
+ * not it closes file descriptor and sets value to -1 to indicate it has been closed and avoid undefined 
+ * behaviour with multple calls to close 
+ * @param const &fd file descriptor to close and set to -1
+ */
+void clean_up_file_descriptor(const int &fd);
 
 
 class TmxControl: public tmx::utils::Runnable {

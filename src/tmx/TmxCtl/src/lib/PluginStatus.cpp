@@ -878,7 +878,7 @@ bool validate_filepath(const std::string &filepath) {
 }
 
 bool check_posix_process_status(const std::string &process_name, int posix_spawnp_ret, const pid_t &pid) {
-	FILE_LOG(logERROR) << "Wait for process " << process_name << " with pid " << pid ;
+	FILE_LOG(logDEBUG1) << "Wait for process " << process_name << " with pid " << pid ;
 	if (posix_spawnp_ret != 0)
 	{
 		throw TmxException("Failed to spawn " + process_name + strerror(posix_spawnp_ret));
@@ -915,7 +915,7 @@ bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 
     return save_state(passphrase);
 }
-void clean_up_file_descriptor(int &fd) {
+void clean_up_file_descriptor(const int &fd) {
 	if (fd != -1) {
 		close(fd);
 	}
@@ -975,7 +975,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         mysqldumpArgs[13] = nullptr;
 		
         int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
-		check_posix_process_status("mysqldump", ret , pid );
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database save", ret , pid );
 
         posix_spawn_file_actions_destroy(&fileActions);
 		// Close the write end of the first pipe in the parent process
@@ -993,7 +994,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::array<std::string, 1> gzipArgStorage = { "gzip" };
         std::array<char*, 2> gzipArgs = { gzipArgStorage[0].data(), nullptr };
         ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
-		check_posix_process_status("gzip", ret , gzipPid );
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database compress", ret , gzipPid );
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[0]);
@@ -1038,7 +1040,8 @@ bool TmxControl::save_state(const std::string &passphrase)
             nullptr
         };
         ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
-		check_posix_process_status("openssl", ret , opensslPid );
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database encrypt", ret , opensslPid );
 
 		_output.get_storage().get_tree().clear();
 		message payload;
@@ -1047,7 +1050,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		payload.set_contents(tree);
 		_output = payload.get_container();
 
-		PLOG(logERROR) << "Encrypted database backup written to " << backupFile;
+		PLOG(logINFO) << "Encrypted database backup written to " << backupFile;
 		posix_spawn_file_actions_destroy(&fileActions);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
@@ -1173,7 +1176,8 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
         };
 
 		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
-        check_posix_process_status("openssl", ret, opensslPid);
+		// Using generic process name for error logging purposes
+        check_posix_process_status("database decrypt", ret, opensslPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[1]);
@@ -1191,7 +1195,8 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			nullptr
 		};
         ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs.data(), environ);
-		check_posix_process_status("gzip", ret, gzipPid);
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database decompress", ret, gzipPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[0]);
@@ -1223,7 +1228,8 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			nullptr
 		};
 		ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
-        check_posix_process_status("mysql", ret, mysqlPid);
+		// Using generic process name for error logging purposes
+        check_posix_process_status("database upload", ret, mysqlPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe2[0]);
