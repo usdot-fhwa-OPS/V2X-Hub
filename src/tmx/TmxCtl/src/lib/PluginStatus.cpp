@@ -955,8 +955,9 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
-        std::array<std::string, 13> mysqldumpArgStorage = {
+        std::array<std::string, 14> mysqldumpArgStorage = {
 			"--no-defaults",
+			"--single-transaction"
             "-u", user,
             "--password=" + password,
             "-h", host,
@@ -968,11 +969,11 @@ bool TmxControl::save_state(const std::string &passphrase)
             ("--ignore-table=" + dbname + ".pluginActivity"),
             ("--ignore-table=" + dbname + ".user")
         };
-        std::array<char*, 14> mysqldumpArgs;
+        std::array<char*, 15> mysqldumpArgs;
         for (size_t i = 0; i < mysqldumpArgStorage.size(); ++i) {
             mysqldumpArgs[i] = mysqldumpArgStorage[i].data();
         }
-        mysqldumpArgs[13] = nullptr;
+        mysqldumpArgs[14] = nullptr;
 		
         int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
 		// Using generic process name for error logging purposes
