@@ -1179,9 +1179,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
-      
-
-        
+    
 
         // First child: openssl dec
         posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
@@ -1211,7 +1209,6 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
             opensslArgsStorage[7].data(),
             nullptr
         };
-		int status = 0;
 
 		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
         check_posix_process_status("openssl", ret, opensslPid);
