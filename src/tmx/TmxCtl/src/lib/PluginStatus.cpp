@@ -7,6 +7,8 @@
 
 #include "TmxControl.h"
 #include <array>
+#include <algorithm> // For std::move
+
 #include <database/DbConnectionConfig.h>
 #include <spawn.h>
 #include <sys/wait.h>
@@ -872,6 +874,7 @@ bool validate_filepath(const std::string &filepath) {
 	{
 		throw TmxException(R"(File has illegal characters ;|&<>`$()*?")");
 	}
+	return true;
 }
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
@@ -887,6 +890,12 @@ bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
     return save_state(passphrase);
 }
 
+// bool spawn_posix_process(const std::string &process, posix_spawn_file_actions_t &fileActions, const std::vector<std::string> &processArgs) {
+// 	processArgs.size();
+// 	std::array<std::string, processArgs.size()> arr;
+
+// }
+
 bool TmxControl::save_state(const std::string &passphrase)
 {
     try
@@ -897,7 +906,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::string password = dbConfig.getPassword(); 
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
-		// Validate Input (throws exception on validation failure)
+		// Input validation included protection against command injection
+		// Throws TmxExeption on passphrase validation failure		
 		validate_passphrase(passphrase);
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
@@ -907,8 +917,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_init(&fileActions);
 
         // Create pipes for piping mysqldump | gzip | openssl
-        int pipe1[2], pipe2[2], pipe3[2];
-        if (pipe(pipe1) == -1 || pipe(pipe2) == -1 || pipe(pipe3) == -1)
+        int pipe1[2], pipe2[2];
+        if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
         {
             PLOG(logERROR) << "Failed to create pipes";
             return false;
@@ -1198,8 +1208,10 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 
     try
     {
-
+		// Input validation included protection against command injection
+		// Throws TmxExeption on passphrase validation failure
 		validate_passphrase(passphrase);
+		// Throws TmxException on filepath validation failure 
 		validate_filepath(filePath);
 
         const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();

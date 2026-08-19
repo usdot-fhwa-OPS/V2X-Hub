@@ -35,6 +35,7 @@ enum TmxControlOutputFormat
 	
 bool validate_passphrase(const std::string &passphrase);
 bool validate_filepath(const std::string &filepath);
+// bool spawn_posix_process(const std::string &process, posix_spawn_file_actions_t &fileActions, const std::vector<std::string> &processArgs);
 
 
 class TmxControl: public tmx::utils::Runnable {
