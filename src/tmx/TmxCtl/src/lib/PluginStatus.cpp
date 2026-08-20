@@ -919,6 +919,7 @@ void clean_up_file_descriptor(const int &fd) {
 	if (fd != -1) {
 		close(fd);
 	}
+	fd = -1;
 }
 
 bool TmxControl::save_state(const std::string &passphrase)
@@ -1053,7 +1054,6 @@ bool TmxControl::save_state(const std::string &passphrase)
 
 		PLOG(logINFO) << "Encrypted database backup written to " << backupFile;
 		posix_spawn_file_actions_destroy(&fileActions);
-		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
 		clean_up_file_descriptor(outFd);
 		return true;
@@ -1064,7 +1064,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 	catch (const std::system_error &ex) {
@@ -1073,7 +1073,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
     catch (const std::bad_alloc &ex)
@@ -1083,7 +1083,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
     }
 	catch (const TmxException &ex) {
@@ -1092,7 +1092,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 
@@ -1245,7 +1245,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 	catch (const std::bad_alloc &e)
@@ -1255,7 +1255,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 	catch (const TmxException &ex) {
@@ -1264,7 +1264,7 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		clean_up_file_descriptor(pipe1[0]);
 		clean_up_file_descriptor(pipe1[1]);
 		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 }
