@@ -956,8 +956,8 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         std::array<std::string, 14> mysqldumpArgStorage = {
-			"--no-defaults",
-			"--single-transaction"
+			"--no-defaults", //prevent mysqldump from reading/using config file to default values to overwrite passed parameters
+			"--single-transaction", // Used to prevent mysqldump command to hang on acquiring table locks. Will not capture currently in progress changes
             "-u", user,
             "--password=" + password,
             "-h", host,
