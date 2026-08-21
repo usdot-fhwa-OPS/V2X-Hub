@@ -129,7 +129,7 @@ jobs:
           platforms: linux/amd64
           push: true
           sbom: true
-          provenance: true
+          provenance: mode=max
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-amd64
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -168,7 +168,7 @@ jobs:
           platforms: linux/arm64
           push: true
           sbom: true
-          provenance: true
+          provenance: mode=max
           tags: ${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${{ steps.meta.outputs.version }}-arm64
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
@@ -203,22 +203,32 @@ jobs:
             --tag "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-amd64" \
             "${{ env.DOCKERHUB_NAMESPACE }}/v2xhub:${FINAL_TAG}-arm64"
+
+      - name: Set Docker Scout baseline environment
+        id: scout-env
+        if: ${{ github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          SCOUT_ENV="${GITHUB_BASE_REF//\//-}"
+          echo "environment=${SCOUT_ENV}" >> "$GITHUB_OUTPUT"
+          echo "Using Docker Scout environment: ${SCOUT_ENV}"
       - name: Docker Scout Compare
         id: docker-scout-compare
         if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@v1.24.0
         with:
           command: compare
           image: ${{ steps.meta.outputs.tags }}
-          to-env: ${{ github.event.pull_request.base.ref }}
+          to-env: ${{ steps.scout-env.outputs.environment }}
           ignore-unchanged: true
           only-severities: critical,high
+          exit-on: policy
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
       - name: Docker Scout Record
         id: docker-scout-record
         if: ${{ github.event_name != 'pull_request' }}
-        uses: docker/scout-action@v1
+        uses: docker/scout-action@v1.24.0
         with:
           command: environment
           environment: ${{ steps.meta.outputs.version }}
@@ -319,10 +329,17 @@ jobs:
     timeout-minutes: 35
     steps:
       - name: Checkout v2xhub-integration-tests
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: usdot-fhwa-OPS/v2xhub-integration-tests
-          ref: develop
+          ref: >-
+            ${{
+              github.base_ref ||
+              (github.ref_type == 'tag' && 'master') ||
+              (github.ref_name == 'master' && 'master') ||
+              (startsWith(github.ref_name, 'release/') && github.ref_name) ||
+              'develop'
+            }}
           token: ${{ secrets.V2XHUB_INTEGRATION_TESTS_REPO_TOKEN }}
           path: v2xhub-integration-tests
       - name: Extract metadata (tag) for integration tests
