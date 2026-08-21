@@ -77,12 +77,9 @@ class ImmediateForwardPlugin : public tmx::utils::PluginClient
 		 * @param messageConfig Message configuration providing the send type, PSID and optional channel.
 		 * @param msg TMX message supplying the DSRC channel when messageConfig has none.
 		 * @param payloadbyte Hex encoded payload to forward.
-		 * @param signMessage Value of the Signature field, asking the RSU to sign the payload before
-		 * broadcast. Taken from imfConfig.signMessage for J2735 messages, and always false when
-		 * forwarding a raw SPDU, which already carries its own signature.
 		 * @return string The formatted message, ready to send to the RSU over UDP.
 		 */
-		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, bool signMessage);
+		inline string ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte);
 
 		/**
 		 * @brief Check whether the incoming message is a SPDU regardless

@@ -68,13 +68,11 @@ namespace ImmediateForward {
      * @param client The SNMP client to use for the operation
      * @param message The IMF message to send
      * @param index The index of the message in the table
-     * @param psid PSID to set on the table row, formatted "0x<HEX>" or "<HEX>". Always written,
-     * because a single row carries a mix of configured PSIDs and PSIDs taken from forwarded raw
-     * SPDUs; leaving the row on whatever the previous send set would broadcast under the wrong PSID.
-     * @param signMessage Whether the RSU should process and sign the 1609.2 layer itself, written to
-     * rsuIFMOptions. Written on every send for the same reason as the PSID: a forwarded raw SPDU is
-     * already signed and must be transmitted as-is, whatever the connection was configured with.
+     *
+     * The PSID and the rsuIFMOptions of the row are written once by
+     * initializeImmediateForwardTable from the plugin configuration, so a send only updates the
+     * payload and enables transmission.
      */
-    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index, const std::string &psid, bool signMessage);
+    void sendNTCIP1218ImfMessage( tmx::utils::snmp_client*  const client, const std::string &message, unsigned int index);
 
 }

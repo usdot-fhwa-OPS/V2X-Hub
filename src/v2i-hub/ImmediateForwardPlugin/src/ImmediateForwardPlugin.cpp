@@ -199,7 +199,7 @@ namespace ImmediateForward
 		base642hex(signedMsg, payloadbyte); // this allows sending hex of the signed message rather than base64
 	}
 
-	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte, bool signMessage){
+	inline string ImmediateForwardPlugin::ConstructMessageRSU_4_1(const ImfConfiguration& imfConfig, const MessageConfig& messageConfig, IvpMessage* msg, const string& payloadbyte){
 		stringstream os;
 		os << "Version=0.7" << "\n"
 		   << "Type=" << messageConfig.sendType << "\n"
@@ -217,7 +217,7 @@ namespace ImmediateForward
 		os << "TxInterval=0" << "\n" 
 		   << "DeliveryStart=\n" 
 		   << "DeliveryStop=\n"
-		   << "Signature=" << (signMessage ? "True" : "False") << "\n"
+		   << "Signature=" << (imfConfig.signMessage ? "True" : "False") << "\n"
 		   << "Encryption=False\n"
 		   << "Payload=" << payloadbyte << "\n";
 
@@ -285,15 +285,15 @@ namespace ImmediateForward
 
 				foundMessageType = true;
 				string payloadbyte="";
-				bool signMessage = imfConfig.signMessage;
 
 				// Format the message using the protocol defined in the
 				// USDOT ROadside Unit Specifications Document v 4.0 Appendix C.
 
 				if (isSpdu)
 				{
-					// A raw SPDU is already signed so the RSU must not sign again. signMessages is thus set to false.
-					signMessage = false;
+					// A raw SPDU is already signed and is forwarded byte for byte. The connection it
+					// goes out on must be configured "signMessages": false, otherwise the RSU signs
+					// it a second time and receivers cannot verify the result.
 					payloadbyte = payload;
 				}
 				/// if signing is Enabled, request signing with HSM
@@ -316,7 +316,7 @@ namespace ImmediateForward
 				}
 
 				if (imfConfig.spec == tmx::utils::rsu::RSU_SPEC::RSU_4_1) {
-					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte, signMessage);
+					string message = ConstructMessageRSU_4_1(imfConfig, messageConfig, msg, payloadbyte);
 
 					auto &client = _udpClientMap.at(imfConfig.name);
 					client->Send(message);
@@ -328,11 +328,11 @@ namespace ImmediateForward
 									<< ", Client: " << client->GetAddress()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->GetAddress()
-									<< ", SignMessage: " << signMessage;
+									<< ", SignMessage: " << imfConfig.signMessage;
 				}
 				else {
 					const auto &client = _snmpClientMap.at(imfConfig.name);
-					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType], messageConfig.psid, signMessage);
+					sendNTCIP1218ImfMessage(client.get(), payloadbyte, _imfNtcipMessageTypeIndex[imfConfig.name][messageConfig.sendType]);
 
 					PLOG(logDEBUG1) << "Sending - TmxType: " << messageConfig.tmxType
 									<< ", SendType: " << messageConfig.sendType
@@ -340,7 +340,7 @@ namespace ImmediateForward
 									<< ", Client: " << client->get_port()
 									<< ", Channel: " << (messageConfig.channel.has_value() ? ::to_string( msg->dsrcMetadata->channel) : ::to_string(messageConfig.channel.value()))
 									<< ", Port: " << client->get_port()
-									<< ", SignMessage: " << signMessage;
+									<< ", SignMessage: " << imfConfig.signMessage;
 				}
 		
 			}
