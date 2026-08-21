@@ -13,7 +13,8 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/stat.h>
-#include "database/DbConnectionConfig.h"
+#include <database/DbConnectionConfig.h>
+#include <database/DbConnectionException.h>
 
 using namespace tmx::utils;
 
@@ -205,8 +206,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileNotSet) {
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
     
-    // Should return empty string when password file is not configured
-    EXPECT_EQ("", config.getPassword());
+    // Should throw exception
+    EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 
 /**
@@ -219,8 +220,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileDoesNotExist) {
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
     
-    // Should return empty string when file doesn't exist
-    EXPECT_EQ("", config.getPassword());
+    // Should throw exception
+    EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 
 /**
@@ -234,8 +235,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileEmpty) {
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
     
-    // Should return empty string for empty file
-    EXPECT_EQ("", config.getPassword());
+    // Should throw exception
+    EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 
 /**
