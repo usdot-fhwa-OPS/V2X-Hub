@@ -840,16 +840,16 @@ bool TmxControl::user_delete()
 
 	return false;
 }
-bool validate_passphrase(const std::string &passphrase ) {
-	if (passphrase.empty())
+bool validate_input_string(const std::string &input_string) {
+	if (input_string.empty())
 	{
-		throw TmxException("Passphrase is empty!");
+		throw TmxException("Input string is empty!");
 	}
 
-	// Validate passphrase - reject dangerous shell metacharacters
-	if (passphrase.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
+	// Validate input_string - reject dangerous shell metacharacters
+	if (input_string.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
 	{
-		throw TmxException(R"(Passphrase includes illegal characters ;|&<>`$()*?")");
+		throw TmxException(R"(Input string includes illegal characters ;|&<>`$()*?")");
 	}
 	return true;
 }
@@ -944,7 +944,11 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::string dbname = dbConfig.getDatabase();
 		// Input validation included protection against command injection
 		// Throws TmxExeption on passphrase validation failure		
-		validate_passphrase(passphrase);
+		validate_input_string(passphrase);
+		validate_input_string(user);
+		validate_input_string(password);
+		validate_input_string (host);
+		validate_input_string(dbname);
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
         // Use posix_spawn for safer execution without shell interpretation
@@ -1144,13 +1148,22 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 
     try
     {
+		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+
+        std::string user = dbConfig.getUser();
+        std::string password = dbConfig.getPassword(); 
+        std::string host = dbConfig.getHost();
+        std::string dbname = dbConfig.getDatabase();
 		// Input validation included protection against command injection
 		// Throws TmxExeption on passphrase validation failure
-		validate_passphrase(passphrase);
+		validate_input_string(passphrase);
 		// Throws TmxException on filepath validation failure 
 		validate_filepath(filePath);
+		validate_input_string(user);
+		validate_input_string(password);
+		validate_input_string (host);
+		validate_input_string(dbname);
 
-        const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
     
 
@@ -1218,11 +1231,11 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		std::array<std::string, 7> mysqlArgsStorage = {
         	"--no-defaults",
 			"-u",
-            dbConfig.getUser(),
-            ("--password=" + dbConfig.getPassword()),
+           	user,
+            ("--password=" + password),
             "-h",
-            dbConfig.getHost(),
-           	dbConfig.getDatabase()
+            host,
+           	dbname
         };
 		std::array<char*, 8> mysqlArgs = {
 			mysqlArgsStorage[0].data(),

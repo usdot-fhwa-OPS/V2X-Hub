@@ -33,13 +33,13 @@ enum TmxControlOutputFormat
 	TmxControlOutputFormat_XML
 };
 /**
- * Helper function to validate that passphrase is not empty and does not contain
+ * Helper function to validate that input string is not empty and does not contain
  * any dangerous characters for command injection : |&<>`$()*?"
- * @param passphrase to validate
+ * @param input_string to validate
  * @return bool true if successful validation
  * @throws TmxException if validation fails
  * */	
-bool validate_passphrase(const std::string &passphrase);
+bool validate_input_string(const std::string &input_string);
 /**
  * Helper function to validate that filepath is not empty, file exists, and does not contain
  * any dangerous characters for command injection : |&<>`$()*?"
