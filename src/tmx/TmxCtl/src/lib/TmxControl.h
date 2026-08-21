@@ -63,7 +63,7 @@ bool check_posix_process_status(const std::string &process_name, int posix_spawn
  * behaviour with multple calls to close 
  * @param const &fd file descriptor to close and set to -1
  */
-void clean_up_file_descriptor(const int &fd);
+void clean_up_file_descriptor(int &fd);
 
 
 class TmxControl: public tmx::utils::Runnable {

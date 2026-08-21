@@ -915,7 +915,7 @@ bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 
     return save_state(passphrase);
 }
-void clean_up_file_descriptor(const int &fd) {
+void clean_up_file_descriptor(int &fd) {
 	if (fd != -1) {
 		close(fd);
 	}
@@ -952,9 +952,10 @@ bool TmxControl::save_state(const std::string &passphrase)
         
         // First child: mysqldump
         posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
-        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
-        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
-        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         std::array<std::string, 14> mysqldumpArgStorage = {
 			"--no-defaults", //prevent mysqldump from reading/using config file to default values to overwrite passed parameters
@@ -976,9 +977,9 @@ bool TmxControl::save_state(const std::string &passphrase)
         }
         mysqldumpArgs[14] = nullptr;
 		
-        int ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
+        int mysql_ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
 		// Using generic process name for error logging purposes
-		check_posix_process_status("database save", ret , pid );
+		check_posix_process_status("database save", mysql_ret , pid );
 
         posix_spawn_file_actions_destroy(&fileActions);
 		// Close the write end of the first pipe in the parent process
@@ -989,15 +990,16 @@ bool TmxControl::save_state(const std::string &passphrase)
         posix_spawn_file_actions_adddup2(&fileActions, pipe1[0], STDIN_FILENO);
         posix_spawn_file_actions_adddup2(&fileActions, pipe2[1], STDOUT_FILENO);
         posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
-        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
-        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
         pid_t gzipPid;
         std::array<std::string, 1> gzipArgStorage = { "gzip" };
         std::array<char*, 2> gzipArgs = { gzipArgStorage[0].data(), nullptr };
-        ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
+        int gzip_ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
 		// Using generic process name for error logging purposes
-		check_posix_process_status("database compress", ret , gzipPid );
+		check_posix_process_status("database compress", gzip_ret , gzipPid );
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[0]);
@@ -1006,17 +1008,19 @@ bool TmxControl::save_state(const std::string &passphrase)
         // Third child: openssl enc
         posix_spawn_file_actions_init(&fileActions);
         posix_spawn_file_actions_adddup2(&fileActions, pipe2[0], STDIN_FILENO);
-        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
-
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
         int outFd = open(backupFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
         if (outFd == -1)
         {
             PLOG(logERROR) << "Failed to open output file: " << backupFile;
             posix_spawn_file_actions_destroy(&fileActions);
-			close(pipe1[1]);
-			pipe1[1] = -1;
-			close(pipe2[0]);
-			pipe2[0]=-1;
+			clean_up_file_descriptor(pipe1[0]);
+			clean_up_file_descriptor(pipe1[1]);
+			clean_up_file_descriptor(pipe2[0]);
+			clean_up_file_descriptor(pipe2[1]);
             return false;
         }
         posix_spawn_file_actions_adddup2(&fileActions, outFd, STDOUT_FILENO);
@@ -1041,9 +1045,9 @@ bool TmxControl::save_state(const std::string &passphrase)
             opensslArgStorage[5].data(),
             nullptr
         };
-        ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
+        int openssl_rtn = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
 		// Using generic process name for error logging purposes
-		check_posix_process_status("database encrypt", ret , opensslPid );
+		check_posix_process_status("database encrypt", openssl_rtn , opensslPid );
 
 		_output.get_storage().get_tree().clear();
 		message payload;
