@@ -6,7 +6,15 @@
  */
 
 #include "TmxControl.h"
+#include <array>
+#include <algorithm> // For std::move
+
 #include <database/DbConnectionConfig.h>
+#include <spawn.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define LIST_QUERY "\
 	SELECT IVP.plugin.id, name, description, version, coalesce(enabled, -1), \
@@ -832,6 +840,68 @@ bool TmxControl::user_delete()
 
 	return false;
 }
+bool validate_input_string(const std::string &input_string) {
+	if (input_string.empty())
+	{
+		throw TmxException("Input string is empty!");
+	}
+
+	// Validate input_string - reject dangerous shell metacharacters
+	if (input_string.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
+	{
+		throw TmxException(R"(Input string includes illegal characters ;|&<>`$()*?")");
+	}
+	return true;
+}
+
+bool validate_filepath(const std::string &filepath) {
+	 std::ifstream test(filepath);
+	if (!test.good())
+	{
+		throw TmxException("File does not exist: " + filepath);
+	}
+	test.close();
+
+	// Reject unencrypted files — must end with .sql.gz.enc
+	if (filepath.size() < 11 ||
+		filepath.substr(filepath.size() - 11) != ".sql.gz.enc")
+	{
+		throw TmxException("File does not have appropriate file extension *.sql.gz.enc");
+	}
+
+	// Validate filePath - reject dangerous shell metacharacters
+	if (filepath.find_first_of(R"(;|&<>`$()*?")") != std::string::npos)
+	{
+		throw TmxException(R"(File has illegal characters ;|&<>`$()*?")");
+	}
+	return true;
+}
+
+bool check_posix_process_status(const std::string &process_name, int posix_spawnp_ret, const pid_t &pid) {
+	FILE_LOG(logDEBUG1) << "Wait for process " << process_name << " with pid " << pid ;
+	if (posix_spawnp_ret != 0)
+	{
+		throw TmxException("Failed to spawn " + process_name + strerror(posix_spawnp_ret));
+		
+	}
+	int status = 0;
+
+	if (waitpid(pid, &status, 0) == -1) {
+		
+		throw TmxException("Failed to wait for " + process_name + " : " + strerror(errno));
+	}
+	if (WIFEXITED(status)) {
+		int exit_code = WEXITSTATUS(status);
+		if (exit_code != 0) {
+			throw TmxException("Process " + process_name + " failed with exit code " + std::to_string(exit_code));
+		} 
+	} 
+	else if (WIFSIGNALED(status)) {
+		throw TmxException("Process " + process_name + " was killed by signal " + std::to_string(WTERMSIG(status)));
+
+	}
+	return true;
+}
 
 bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 {
@@ -845,9 +915,25 @@ bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
 
     return save_state(passphrase);
 }
+void clean_up_file_descriptor(int &fd) {
+	if (fd != -1) {
+		close(fd);
+	}
+	fd = -1;
+}
 
 bool TmxControl::save_state(const std::string &passphrase)
 {
+	posix_spawn_file_actions_t fileActions;
+	posix_spawn_file_actions_init(&fileActions);
+
+	// Create pipes for piping mysqldump | gzip | openssl
+	int pipe1[2], pipe2[2];
+	if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
+	{
+		PLOG(logERROR) << "Failed to create pipes";
+		return false;
+	}
     try
     {
 		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
@@ -856,34 +942,121 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::string password = dbConfig.getPassword(); 
         std::string host = dbConfig.getHost();
         std::string dbname = dbConfig.getDatabase();
-
-		if (passphrase.empty())
-		{
-			FILE_LOG(logERROR) << "Passphrase not provided for saving state";
-			return false;
-		}
-
+		// Input validation included protection against command injection
+		// Throws TmxExeption on passphrase validation failure		
+		validate_input_string(passphrase);
+		validate_input_string(user);
+		validate_input_string(password);
+		validate_input_string (host);
+		validate_input_string(dbname);
         std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
 
-		std::string cmd = 
-			"bash -c 'set -o pipefail && "
-			"mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
-            " --no-tablespaces "
-            "--ignore-table=" + dbname + ".eventLog "
-            "--ignore-table=" + dbname + ".messageActivity "
-            "--ignore-table=" + dbname + ".messageType "
-            "--ignore-table=" + dbname + ".pluginActivity "
-            "--ignore-table=" + dbname + ".user "
-            " | gzip "
-            " | openssl enc -aes-256-cbc -salt -pbkdf2 "
-           	" -pass pass:" + passphrase + " "
-            " -out \"" + backupFile + "\"'";
+        // Use posix_spawn for safer execution without shell interpretation
+        pid_t pid;
+        
+        // First child: mysqldump
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
 
-        if (int ret = std::system(cmd.c_str()); ret != 0)
+        std::array<std::string, 14> mysqldumpArgStorage = {
+			"--no-defaults", //prevent mysqldump from reading/using config file to default values to overwrite passed parameters
+			"--single-transaction", // Used to prevent mysqldump command to hang on acquiring table locks. Will not capture currently in progress changes
+            "-u", user,
+            "--password=" + password,
+            "-h", host,
+            dbname,
+            "--no-tablespaces",
+            ("--ignore-table=" + dbname + ".eventLog"),
+            ("--ignore-table=" + dbname + ".messageActivity"),
+            ("--ignore-table=" + dbname + ".messageType"),
+            ("--ignore-table=" + dbname + ".pluginActivity"),
+            ("--ignore-table=" + dbname + ".user")
+        };
+        std::array<char*, 15> mysqldumpArgs;
+        for (size_t i = 0; i < mysqldumpArgStorage.size(); ++i) {
+            mysqldumpArgs[i] = mysqldumpArgStorage[i].data();
+        }
+        mysqldumpArgs[14] = nullptr;
+		
+        int mysql_ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
+		// Close the write end of the first pipe in the parent process
+       	clean_up_file_descriptor(pipe1[1]);
+		// Using generic process name for error logging purposes
+
+        posix_spawn_file_actions_destroy(&fileActions);
+		
+
+        // Second child: gzip
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[0], STDIN_FILENO);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t gzipPid;
+        std::array<std::string, 1> gzipArgStorage = { "gzip" };
+        std::array<char*, 2> gzipArgs = { gzipArgStorage[0].data(), nullptr };
+        int gzip_ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
+		posix_spawn_file_actions_destroy(&fileActions);
+        clean_up_file_descriptor(pipe1[0]);
+        clean_up_file_descriptor(pipe2[1]);
+		// Using generic process name for error logging purposes
+
+        
+
+        // Third child: openssl enc
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[0], STDIN_FILENO);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe1[1]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+		posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+        int outFd = open(backupFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (outFd == -1)
         {
-            PLOG(logERROR) << "mysqldump failed with code " << ret;
+            PLOG(logERROR) << "Failed to open output file: " << backupFile;
+            posix_spawn_file_actions_destroy(&fileActions);
+			clean_up_file_descriptor(pipe1[0]);
+			clean_up_file_descriptor(pipe1[1]);
+			clean_up_file_descriptor(pipe2[0]);
+			clean_up_file_descriptor(pipe2[1]);
             return false;
         }
+        posix_spawn_file_actions_adddup2(&fileActions, outFd, STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, outFd);
+
+        pid_t opensslPid;
+        std::string passArg = "pass:" + passphrase;
+        std::array<std::string, 6> opensslArgStorage = {
+            "enc",
+            "-aes-256-cbc",
+            "-salt",
+            "-pbkdf2",
+            "-pass",
+            passArg
+        };
+        std::array<char*, 7> opensslArgs = {
+            opensslArgStorage[0].data(),
+            opensslArgStorage[1].data(),
+            opensslArgStorage[2].data(),
+            opensslArgStorage[3].data(),
+            opensslArgStorage[4].data(),
+            opensslArgStorage[5].data(),
+            nullptr
+        };
+        int openssl_rtn = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(outFd);
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database save", mysql_ret , pid );
+		check_posix_process_status("database compress", gzip_ret , gzipPid );
+		check_posix_process_status("database encrypt", openssl_rtn , opensslPid );
 
 		_output.get_storage().get_tree().clear();
 		message payload;
@@ -892,22 +1065,48 @@ bool TmxControl::save_state(const std::string &passphrase)
 		payload.set_contents(tree);
 		_output = payload.get_container();
 
-		PLOG(logDEBUG) << "Encrypted database backup written to " << backupFile;
+		PLOG(logINFO) << "Encrypted database backup written to " << backupFile;
+		
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
 		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 	catch (const std::system_error &ex) {
 		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
     catch (const std::bad_alloc &ex)
     {
         PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
-        return false;
+        posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
+		return false;
     }
+	catch (const TmxException &ex) {
+		PLOG(logERROR) << "Input validation failed : " << ex.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
+		return false;
+	}
+
 }
 
 bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
@@ -919,7 +1118,7 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 	}
 
 	std::string filePath = (*_opts)["upload-state"].as<std::string>();
-        if (!_opts->count("passphrase"))
+    if (!_opts->count("passphrase"))
     {
         FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
         return false;
@@ -927,72 +1126,135 @@ bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
 
     std::string passphrase = (*_opts)["passphrase"].as<std::string>();
 
-    if (passphrase.empty())
-    {
-        FILE_LOG(logERROR) << "Empty passphrase not allowed";
-        return false;
-    }
 
     return upload_state(filePath, passphrase);
 }
 
 bool TmxControl::upload_state(const std::string &filePath, const std::string &passphrase)
 {
-    if (!checkPerm())
+    if (!checkPerm()) {
         return false;
+	}
+	// Create pipes for piping openssl | gunzip | mysql
+	int pipe1[2], pipe2[2];
+	if (pipe(pipe1) == -1 || pipe(pipe2) == -1)
+	{
+		PLOG(logERROR) << "Failed to create pipes";
+		return false;
+	}
+	// Use posix_spawn for safer execution without shell interpretation
+	posix_spawn_file_actions_t fileActions;
+	posix_spawn_file_actions_init(&fileActions);
 
     try
     {
-        FILE_LOG(logDEBUG) << "upload_state() called with filePath: [" << filePath << "]";
+		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
 
-        std::ifstream test(filePath);
-        if (!test.good())
-        {
-            FILE_LOG(logERROR) << "File does not exist: " << filePath;
-            return false;
-        }
-		test.close();
+        std::string user = dbConfig.getUser();
+        std::string password = dbConfig.getPassword(); 
+        std::string host = dbConfig.getHost();
+        std::string dbname = dbConfig.getDatabase();
+		// Input validation included protection against command injection
+		// Throws TmxExeption on passphrase validation failure
+		validate_input_string(passphrase);
+		// Throws TmxException on filepath validation failure 
+		validate_filepath(filePath);
+		validate_input_string(user);
+		validate_input_string(password);
+		validate_input_string (host);
+		validate_input_string(dbname);
 
-		// Reject unencrypted files — must end with .sql.gz.enc
-        if (filePath.size() < 11 ||
-            filePath.substr(filePath.size() - 11) != ".sql.gz.enc")
-        {
-            FILE_LOG(logERROR) << "Rejected non-encrypted state file: " << filePath;
-            return false;
-        }
 
-		if (passphrase.empty())
-		{
-			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
-			return false;
-		}
+    
 
-        const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+        // First child: openssl dec
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t opensslPid;
+		std::array<std::string, 8> opensslArgsStorage = {
+            "enc",
+            "-d",
+            "-aes-256-cbc",
+            "-pbkdf2",
+            "-in",
+            filePath,
+            "-pass",
+            "pass:" + passphrase,
+        };
+		 std::array<char*, 9> opensslArgs = {
+            opensslArgsStorage[0].data(),
+            opensslArgsStorage[1].data(),
+            opensslArgsStorage[2].data(),
+            opensslArgsStorage[3].data(),
+            opensslArgsStorage[4].data(),
+            opensslArgsStorage[5].data(),
+            opensslArgsStorage[6].data(),
+            opensslArgsStorage[7].data(),
+            nullptr
+        };
+
+		int openssl_ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
+		// Using generic process name for error logging purposes
+
+        posix_spawn_file_actions_destroy(&fileActions);
+        clean_up_file_descriptor(pipe1[1]);
+
+        // Second child: gunzip
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe1[0], STDIN_FILENO);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[1], STDOUT_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe1[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[1]);
+
+        pid_t gzipPid;
+		std::array<char*, 1> gzipArgs = {
+			nullptr
+		};
+        int gzip_ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs.data(), environ);
+		// Using generic process name for error logging purposes
 		
-		std::string cmd =
-			"bash -c 'set -o pipefail && "
-			"openssl enc -d -aes-256-cbc -pbkdf2 "
-			" -in \"" + filePath + "\""
-			 " -pass pass:" + passphrase + " "
-			" | gunzip "
-			" | mysql -u " + dbConfig.getUser() +
-			" -p" + dbConfig.getPassword() +
-			" -h " + dbConfig.getHost() +
-			" " + dbConfig.getDatabase() +
-			"'";
 
-        FILE_LOG(logDEBUG) << "Executing SQL restore command:";
-        FILE_LOG(logDEBUG) << cmd;
+        posix_spawn_file_actions_destroy(&fileActions);
+        clean_up_file_descriptor(pipe1[0]);
+        clean_up_file_descriptor(pipe2[1]);
 
-        int rc = system(cmd.c_str());
+        // Third child: mysql
+        posix_spawn_file_actions_init(&fileActions);
+        posix_spawn_file_actions_adddup2(&fileActions, pipe2[0], STDIN_FILENO);
+        posix_spawn_file_actions_addclose(&fileActions, pipe2[0]);
 
-        FILE_LOG(logDEBUG) << "MySQL return code: " << rc;
+        pid_t mysqlPid;
+		std::array<std::string, 7> mysqlArgsStorage = {
+        	"--no-defaults",
+			"-u",
+           	user,
+            ("--password=" + password),
+            "-h",
+            host,
+           	dbname
+        };
+		std::array<char*, 8> mysqlArgs = {
+			mysqlArgsStorage[0].data(),
+			mysqlArgsStorage[1].data(),
+			mysqlArgsStorage[2].data(),
+			mysqlArgsStorage[3].data(),
+			mysqlArgsStorage[4].data(),
+			mysqlArgsStorage[5].data(),
+			mysqlArgsStorage[6].data(),
+			nullptr
+		};
+		int mysql_ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
+		// Using generic process name for error logging purposes
+		check_posix_process_status("database decrypt", openssl_ret, opensslPid);
+		check_posix_process_status("database decompress", gzip_ret, gzipPid);
+        check_posix_process_status("database upload", mysql_ret, mysqlPid);
 
-        if (rc != 0)
-        {
-            FILE_LOG(logERROR) << "MySQL restore failed with code " << rc;
-            return false;
-        }
+        posix_spawn_file_actions_destroy(&fileActions);
+        clean_up_file_descriptor(pipe2[0]);
 
         FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
         return true;
@@ -1000,11 +1262,30 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
     catch (const std::ios_base::failure &e)
 	{
 		FILE_LOG(logERROR) << "File I/O error: " << e.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 	catch (const std::bad_alloc &e)
 	{
 		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
+		return false;
+	}
+	catch (const TmxException &ex) {
+		PLOG(logERROR) << "Input validation failed : " << ex.what();
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe1[0]);
+		clean_up_file_descriptor(pipe1[1]);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(pipe2[1]);
 		return false;
 	}
 }
