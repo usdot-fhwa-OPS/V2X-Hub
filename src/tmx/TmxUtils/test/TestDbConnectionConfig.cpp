@@ -604,8 +604,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileInNonExistentDirectory) {
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
 
-    // Should return empty string when directory doesn't exist
-    EXPECT_EQ("", config.getPassword());
+    // Should throw exception
+    EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 
 /**
