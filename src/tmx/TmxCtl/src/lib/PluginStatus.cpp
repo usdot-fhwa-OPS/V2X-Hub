@@ -978,12 +978,12 @@ bool TmxControl::save_state(const std::string &passphrase)
         mysqldumpArgs[14] = nullptr;
 		
         int mysql_ret = posix_spawnp(&pid, "mysqldump", &fileActions, nullptr, mysqldumpArgs.data(), environ);
-		// Using generic process name for error logging purposes
-		check_posix_process_status("database save", mysql_ret , pid );
-
-        posix_spawn_file_actions_destroy(&fileActions);
 		// Close the write end of the first pipe in the parent process
        	clean_up_file_descriptor(pipe1[1]);
+		// Using generic process name for error logging purposes
+
+        posix_spawn_file_actions_destroy(&fileActions);
+		
 
         // Second child: gzip
         posix_spawn_file_actions_init(&fileActions);
@@ -998,12 +998,12 @@ bool TmxControl::save_state(const std::string &passphrase)
         std::array<std::string, 1> gzipArgStorage = { "gzip" };
         std::array<char*, 2> gzipArgs = { gzipArgStorage[0].data(), nullptr };
         int gzip_ret = posix_spawnp(&gzipPid, "gzip", &fileActions, nullptr, gzipArgs.data(), environ);
-		// Using generic process name for error logging purposes
-		check_posix_process_status("database compress", gzip_ret , gzipPid );
-
-        posix_spawn_file_actions_destroy(&fileActions);
+		posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[0]);
         clean_up_file_descriptor(pipe2[1]);
+		// Using generic process name for error logging purposes
+
+        
 
         // Third child: openssl enc
         posix_spawn_file_actions_init(&fileActions);
@@ -1046,7 +1046,12 @@ bool TmxControl::save_state(const std::string &passphrase)
             nullptr
         };
         int openssl_rtn = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
+		posix_spawn_file_actions_destroy(&fileActions);
+		clean_up_file_descriptor(pipe2[0]);
+		clean_up_file_descriptor(outFd);
 		// Using generic process name for error logging purposes
+		check_posix_process_status("database save", mysql_ret , pid );
+		check_posix_process_status("database compress", gzip_ret , gzipPid );
 		check_posix_process_status("database encrypt", openssl_rtn , opensslPid );
 
 		_output.get_storage().get_tree().clear();
@@ -1057,9 +1062,7 @@ bool TmxControl::save_state(const std::string &passphrase)
 		_output = payload.get_container();
 
 		PLOG(logINFO) << "Encrypted database backup written to " << backupFile;
-		posix_spawn_file_actions_destroy(&fileActions);
-		clean_up_file_descriptor(pipe2[0]);
-		clean_up_file_descriptor(outFd);
+		
 		return true;
     }
 	catch (const boost::property_tree::ptree_error &ex) {
@@ -1180,9 +1183,8 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
             nullptr
         };
 
-		int ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
+		int openssl_ret = posix_spawnp(&opensslPid, "openssl", &fileActions, nullptr, opensslArgs.data(), environ);
 		// Using generic process name for error logging purposes
-        check_posix_process_status("database decrypt", ret, opensslPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[1]);
@@ -1199,9 +1201,9 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 		std::array<char*, 1> gzipArgs = {
 			nullptr
 		};
-        ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs.data(), environ);
+        int gzip_ret = posix_spawnp(&gzipPid, "gunzip", &fileActions, nullptr, gzipArgs.data(), environ);
 		// Using generic process name for error logging purposes
-		check_posix_process_status("database decompress", ret, gzipPid);
+		
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe1[0]);
@@ -1232,9 +1234,11 @@ bool TmxControl::upload_state(const std::string &filePath, const std::string &pa
 			mysqlArgsStorage[6].data(),
 			nullptr
 		};
-		ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
+		int mysql_ret = posix_spawnp(&mysqlPid, "mysql", &fileActions, nullptr, mysqlArgs.data(), environ);
 		// Using generic process name for error logging purposes
-        check_posix_process_status("database upload", ret, mysqlPid);
+		check_posix_process_status("database decrypt", openssl_ret, opensslPid);
+		check_posix_process_status("database decompress", gzip_ret, gzipPid);
+        check_posix_process_status("database upload", mysql_ret, mysqlPid);
 
         posix_spawn_file_actions_destroy(&fileActions);
         clean_up_file_descriptor(pipe2[0]);
