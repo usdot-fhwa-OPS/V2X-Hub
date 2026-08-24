@@ -1,3 +1,5 @@
+
+#include "XmlCurveParser.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -13,7 +15,6 @@
 #include <OffsetSystem.h>
 #include <NodeListXY.h>
 
-#include "XmlCurveParser.h"
 
 #include <OCTET_STRING.h>
 
@@ -38,17 +39,12 @@ XmlCurveParser::XmlCurveParser() :
 		// throw exception here to return ERROR_XERCES_INIT
 	}
 
-	_parser = new XercesDOMParser;
+	_parser = std::make_unique<xercesc::XercesDOMParser>();
 }
 
 XmlCurveParser::~XmlCurveParser()
 {
-	// Free memory
-
-	delete _parser;
-
 	// Terminate Xerces framework.
-
 	try
 	{
 		XMLPlatformUtils::Terminate();
