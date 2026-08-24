@@ -179,7 +179,6 @@ namespace CDASimAdapter{
         else {
             throw UdpServerRuntimeError("Listen timed out after 5 ms!");
         }
-        return "";
     }
 
 
@@ -191,7 +190,6 @@ namespace CDASimAdapter{
         else {
             throw UdpServerRuntimeError("CARMA Simulation UDP Server is not initialized!");
         }
-        return "";
 
     }
 
@@ -203,7 +201,6 @@ namespace CDASimAdapter{
         else {
             throw UdpServerRuntimeError("Immediate Forward UDP Server is not initialized!");
         }
-        return "";
 
     }
 

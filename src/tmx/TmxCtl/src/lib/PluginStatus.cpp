@@ -298,13 +298,11 @@ bool TmxControl::args(pluginlist &plugins, ...)
 		}
 		return stmt->execute();
 	}
-	catch (exception &ex)
+	catch (const exception &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
-
-	return true;
 }
 
 bool TmxControl::messages(pluginlist &plugins, ...)
@@ -498,10 +496,8 @@ bool TmxControl::clear_event_log(pluginlist &, ...)
 		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->executeUpdate();
-		//unique_ptr<Statement> stmt(conn.Get()->createStatement());
-		//unique_ptr<ResultSet> rs(stmt->executeQuery(query));
 	}
-	catch (exception &ex)
+	catch (const exception &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;

@@ -265,7 +265,6 @@ bool TmxControl::load_manifest(pluginlist &, ...)
 		return false;
 	}
 
-	return true;
 }
 
 bool TmxControl::set(pluginlist &plugins, ...)
@@ -382,9 +381,6 @@ bool TmxControl::set_system(pluginlist &plugins, ...)
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
-
-
-	return true;
 }
 
 bool TmxControl::reset(pluginlist &plugins, ...)
@@ -426,9 +422,6 @@ bool TmxControl::reset(pluginlist &plugins, ...)
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
-
-
-	return true;
 }
 
 bool TmxControl::config(pluginlist &plugins, ...)
