@@ -67,6 +67,9 @@ namespace tmx::utils
         // a pointer returned by the library
         struct snmp_session session;
         struct snmp_session *ss = nullptr;
+        /* Opaque single session handle for ss, obtained with snmp_sess_pointer. Used by the asynchronous
+        request pump so that servicing this session does not touch every other session open in the process. */
+        void *sessp_ = nullptr;
 
 
         /*OID is going to hold the location of the information which we want to receive. It will need a size as well*/
@@ -103,6 +106,36 @@ namespace tmx::utils
          * @param input_oid OID
          */
         void process_snmp_set_response( const snmp_response_obj &val,  const std::string &input_oid) const;
+
+        /**
+         * @brief Helper method for building a single SET PDU holding every request.
+         * @param requests The SET requests to encode.
+         * @param request_log Human readable description of the PDU contents, filled in for logging.
+         * @throws snmp_client_exception if any OID or value could not be added to the PDU.
+         * @return A PDU owned by the caller. Ownership passes to net-snmp once the PDU is sent.
+         */
+        snmp_pdu *create_set_pdu(const std::vector<snmp_request> &requests, std::string &request_log) const;
+
+        /**
+         * @brief Helper method for handing a PDU to net-snmp without waiting for the device to answer.
+         *        The outcome is reported later through async_response_callback.
+         * @param pdu The PDU to send. Freed here if the send fails, owned by net-snmp otherwise.
+         * @return True if the PDU was handed off, false if the send failed immediately.
+         */
+        bool send_pdu_async(snmp_pdu *pdu);
+
+        /**
+         * @brief Non blocking drain of this session. Dispatches callbacks for responses that have already
+         *        arrived and expires requests whose timeout has elapsed, which is what frees the PDUs
+         *        handed off by send_pdu_async. Never blocks.
+         */
+        void pump_async_responses() const;
+
+        /**
+         * @brief net-snmp callback for asynchronous requests. Logs the outcome and discards the response.
+         *        Must not free the pdu, net-snmp frees it once this returns.
+         */
+        static int async_response_callback(int operation, snmp_session *sp, int reqid, snmp_pdu *pdu, void *magic);
 
     public:
         /** @brief Overloaded constructor for Traffic Signal Controller Service client.
@@ -158,6 +191,16 @@ namespace tmx::utils
          *  @return void
          */
         virtual bool process_snmp_set_requests(const std::vector<snmp_request> &requests);
+
+        /** @brief Fire and forget version of process_snmp_set_requests. Sends the requests as a single PDU
+         *  and returns as soon as it is written to the socket, so a slow or unresponsive device cannot stall
+         *  the caller. The response, a timeout, or any other error is logged from async_response_callback
+         *  during a later call into this client.
+         *  @param requests A vector of snmp_request objects
+         *  @return True if the PDU was handed off to net-snmp. This says nothing about whether the device
+         *  received or accepted the SET.
+         */
+        virtual bool process_snmp_set_requests_async(const std::vector<snmp_request> &requests);
         /**
          * @brief Returns the current port
          */

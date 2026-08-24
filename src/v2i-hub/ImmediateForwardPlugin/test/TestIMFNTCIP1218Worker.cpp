@@ -255,7 +255,7 @@ TEST(TestIMFNTCIP1218Worker, testSendNTCIP1218ImfMessage) {
     unsigned int index = 1;
 
     std::vector<snmp_request> requests_1;
-    EXPECT_CALL( *mockClient, process_snmp_set_requests(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
+    EXPECT_CALL( *mockClient, process_snmp_set_requests_async(_) ).Times(1).WillRepeatedly(testing::DoAll(::testing::SaveArg<0>(&requests_1), Return(true)));
     
     sendNTCIP1218ImfMessage(mockClient.get(), message, index);
     // Happening inside the sendNTCIP1218ImfMessage function

@@ -160,7 +160,9 @@ namespace ImmediateForward {
                 "1"
         };
         std::vector reqs {payload, enable};
-        client->process_snmp_set_requests(reqs);
+        // Fire and forget. Nothing here consumes the response, and waiting on an unresponsive RSU would
+        // stall message forwarding. Failures are logged asynchronously by the client.
+        client->process_snmp_set_requests_async(reqs);
     }
 
 

@@ -16,5 +16,6 @@ namespace unit_test
         ~mock_snmp_client() = default;
         MOCK_METHOD(bool, process_snmp_request, (const std::string &input_oid, const request_type &request_type, snmp_response_obj &val), (override));
         MOCK_METHOD(bool, process_snmp_set_requests,(const std::vector<snmp_request> &requests), (override));
+        MOCK_METHOD(bool, process_snmp_set_requests_async,(const std::vector<snmp_request> &requests), (override));
     };
 }

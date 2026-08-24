@@ -1,6 +1,8 @@
 
 #include <MockSNMPClient.h>
 #include <gtest/gtest.h>
+#include <chrono>
+#include <thread>
 #include <rsu/RSU_MIB_4_1.h>
 #include <rsu/NTCIP_1218_MIB.h>
 
@@ -58,6 +60,65 @@ namespace unit_test
         vector<snmp_request> requests = {request};
         EXPECT_FALSE(client->process_snmp_set_requests(requests));
 
+    }
+
+    TEST_F(test_SNMPClient, process_snmp_set_requests_async)
+    {
+        // SNMPv2c on purpose. SNMPv3 cannot build a message until USM has discovered the agent engine ID,
+        // so with no agent listening the send would be rejected before a packet is ever written and the
+        // success path would never be reached. v2c has no discovery step, so the send is a plain sendto.
+        auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "", "SHA", "test1234", "AES", "test1234", SNMP_VERSION_2c, 1000);
+        snmp_request request {
+            RSU_ID_OID,
+            's',
+            "RSU4.1"
+        };
+        vector<snmp_request> requests = {request};
+        // Nothing is listening, so no response will ever come back. The send must still succeed and return
+        // without waiting for one.
+        EXPECT_TRUE(client->process_snmp_set_requests_async(requests));
+
+        // The timeout callback logs at logWARNING, which the default ERROR reporting level suppresses.
+        // Raise it so a request being expired is actually visible in the test output.
+        auto previous_level = tmx::utils::FILELog::ReportingLevel();
+        tmx::utils::FILELog::ReportingLevel() = tmx::utils::logWARNING;
+
+        // Each further send pumps the session before adding its own request. The client is built with a
+        // 1000 microsecond timeout and net-snmp retries 5 times, so roughly 6ms of real time has to pass
+        // before a request can expire. Sleeping between sends lets that happen, which drives the pending
+        // requests through their retries and into the timeout callback. That callback is the only thing
+        // that frees the PDUs handed off to net-snmp, so this is the path worth exercising.
+        for (int i = 0; i < 10; i++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            EXPECT_NO_THROW(client->process_snmp_set_requests_async(requests));
+        }
+        tmx::utils::FILELog::ReportingLevel() = previous_level;
+    }
+
+    TEST_F(test_SNMPClient, process_snmp_set_requests_async_send_failure)
+    {
+        // SNMPv3 against an address with no agent. Engine ID discovery cannot complete, so net-snmp
+        // rejects the send and process_snmp_set_requests_async reports the failure rather than throwing.
+        auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000);
+        snmp_request request {
+            RSU_ID_OID,
+            's',
+            "RSU4.1"
+        };
+        vector<snmp_request> requests = {request};
+        EXPECT_FALSE(client->process_snmp_set_requests_async(requests));
+    }
+
+    TEST_F(test_SNMPClient, process_snmp_set_requests_async_invalid_oid)
+    {
+        auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "authPriv", "SHA-512", "test1234", "AES-256", "test1234", SNMP_VERSION_3, 1000);
+        snmp_request request {
+            "INVALID OID",
+            's',
+            "RSU4.1"
+        };
+        vector<snmp_request> requests = {request};
+        EXPECT_THROW(client->process_snmp_set_requests_async(requests), snmp_client_exception);
     }
 
     TEST_F(test_SNMPClient, log_error)

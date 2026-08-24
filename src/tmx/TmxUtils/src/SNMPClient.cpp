@@ -180,6 +180,9 @@ namespace tmx::utils
         }
         else
         {
+            // Opaque handle for this session only. The traditional snmp_read/snmp_timeout calls service
+            // every session open in the process, the snmp_sess_* equivalents service just this one.
+            sessp_ = snmp_sess_pointer(ss);
             PLOG(logINFO) << "Established session with device at " << ip_;
         }
     }
@@ -189,35 +192,132 @@ namespace tmx::utils
         PLOG(logINFO) << "Closing SNMP session";
         if (ss)
         {
+            // Frees any asynchronous request still pending on this session. The callbacks are not invoked,
+            // but they carry no state of ours so nothing is leaked by that.
             snmp_close(ss);
+            ss = nullptr;
+            sessp_ = nullptr;
         }
     }
-    bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
+
+    snmp_pdu *snmp_client::create_set_pdu(const std::vector<snmp_request> &requests, std::string &request_log) const {
         int failures = 0;
         /*Structure to hold all of the information that we're going to send to the remote host*/
-        struct snmp_pdu *pdu;
-        /*Structure to hold response from the remote host*/
-        struct snmp_pdu *response;
-        pdu = snmp_pdu_create(SNMP_MSG_SET);
-        FILE_LOG(logDEBUG3) << "Sending SNMP Requests length " << requests.size();
-        std::string request_log = "Outgoing Request :";
+        struct snmp_pdu *pdu = snmp_pdu_create(SNMP_MSG_SET);
+        request_log = "Outgoing Request :";
         for (const auto &request : requests) {
             request_log.append("\n" + request.to_string());
-            if (snmp_parse_oid(request.oid.c_str(), OID, &OID_len) == nullptr) {
+            // Local OID buffer per request, since snmp_parse_oid uses the length both as the capacity of the
+            // buffer going in and as the length of the parsed OID coming out.
+            oid request_oid[MAX_OID_LEN];
+            size_t request_oid_len = MAX_OID_LEN;
+            if (snmp_parse_oid(request.oid.c_str(), request_oid, &request_oid_len) == nullptr) {
                 snmp_perror("snmp_parse_oid");
                 PLOG(logERROR) << "OID could not be created from input: " << request.oid;
                 failures++;
+                continue;
             }
-            if (snmp_add_var(pdu, OID, OID_len, request.type, request.value.c_str())) {
+            if (snmp_add_var(pdu, request_oid, request_oid_len, request.type, request.value.c_str())) {
                 snmp_perror("snmp_add_var");
                 PLOG(logERROR) << "PDU could not be created from input: " << request.oid;
                 failures++;
-            }  
+            }
         }
         if (failures > 0) {
-            snmp_close(ss);
+            snmp_free_pdu(pdu);
             throw snmp_client_exception("Encountered " + std::to_string(failures) + " failures while creating PDU");
         }
+        return pdu;
+    }
+
+    int snmp_client::async_response_callback(int operation, snmp_session *sp, int reqid, snmp_pdu *pdu, void *magic) {
+        // NOTE: net-snmp owns the pdu here and frees it once this returns. Do not free it.
+        if (operation == NETSNMP_CALLBACK_OP_RECEIVED_MESSAGE) {
+            if (pdu && pdu->errstat == SNMP_ERR_NOERROR) {
+                PLOG(logDEBUG3) << "Asynchronous SNMP request " << reqid << " acknowledged by device";
+            }
+            else {
+                PLOG(logWARNING) << "Asynchronous SNMP request " << reqid << " rejected by device: "
+                                 << (pdu ? snmp_errstring(pdu->errstat) : "no response pdu");
+            }
+        }
+        else if (operation == NETSNMP_CALLBACK_OP_RESEND) {
+            // Routine retransmission after a missed response, not a failure. net-snmp reports one of these
+            // per retry before it gives up and reports the timeout below.
+            PLOG(logDEBUG3) << "Asynchronous SNMP request " << reqid << " not answered in time, retransmitting";
+        }
+        else if (operation == NETSNMP_CALLBACK_OP_TIMED_OUT) {
+            PLOG(logWARNING) << "Asynchronous SNMP request " << reqid << " timed out, dropping it.";
+        }
+        else if (operation == NETSNMP_CALLBACK_OP_SEND_FAILED) {
+            PLOG(logWARNING) << "Asynchronous SNMP request " << reqid << " could not be sent, dropping it.";
+        }
+        else if (operation == NETSNMP_CALLBACK_OP_SEC_ERROR) {
+            PLOG(logWARNING) << "Asynchronous SNMP request " << reqid << " failed security processing, dropping it.";
+        }
+        else {
+            PLOG(logWARNING) << "Asynchronous SNMP request " << reqid << " ended with callback operation " << operation;
+        }
+        return 1;
+    }
+
+    void snmp_client::pump_async_responses() const {
+        if (!sessp_) {
+            return;
+        }
+        int numfds = 0;
+        fd_set fdset;
+        FD_ZERO(&fdset);
+        int block = 0;
+        // Zeroed out with block false, so net-snmp cannot ask us to wait on its behalf
+        struct timeval timeout = {0, 0};
+        snmp_sess_select_info(sessp_, &numfds, &fdset, &timeout, &block);
+        if (numfds > 0) {
+            struct timeval no_wait = {0, 0};
+            if (select(numfds, &fdset, nullptr, nullptr, &no_wait) > 0) {
+                // Dispatches async_response_callback for every response already waiting on the socket
+                snmp_sess_read(sessp_, &fdset);
+            }
+        }
+        // Expires requests whose timeout has elapsed, which is what frees the PDUs we handed off
+        snmp_sess_timeout(sessp_);
+    }
+
+    bool snmp_client::send_pdu_async(snmp_pdu *pdu) {
+        if (!ss) {
+            PLOG(logERROR) << "Cannot send asynchronous SNMP request, no open session";
+            snmp_free_pdu(pdu);
+            return false;
+        }
+        // Drain first, so responses and timeouts from earlier sends are reaped before another is added
+        pump_async_responses();
+
+        int reqid = snmp_async_send(ss, pdu, snmp_client::async_response_callback, nullptr);
+        if (reqid == 0) {
+            // net-snmp only takes ownership of the PDU when the send succeeds
+            snmp_sess_perror("snmp_async_send", ss);
+            PLOG(logERROR) << "Failed to send asynchronous SNMP request to " << ip_;
+            snmp_free_pdu(pdu);
+            return false;
+        }
+        PLOG(logDEBUG3) << "Sent asynchronous SNMP request " << reqid << " to " << ip_ << ", not waiting for a response";
+        return true;
+    }
+
+    bool snmp_client::process_snmp_set_requests_async(const std::vector<snmp_request> &requests) {
+        FILE_LOG(logDEBUG3) << "Sending SNMP Requests length " << requests.size() << " asynchronously";
+        std::string request_log;
+        struct snmp_pdu *pdu = create_set_pdu(requests, request_log);
+        PLOG(logDEBUG3) << request_log;
+        return send_pdu_async(pdu);
+    }
+
+    bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
+        /*Structure to hold response from the remote host*/
+        struct snmp_pdu *response;
+        FILE_LOG(logDEBUG3) << "Sending SNMP Requests length " << requests.size();
+        std::string request_log;
+        struct snmp_pdu *pdu = create_set_pdu(requests, request_log);
         int status = snmp_synch_response(ss, pdu, &response);
         PLOG(logDEBUG3) << request_log; 
         PLOG(logDEBUG3) << "Response request status: " << status << " (=" << (status == STAT_SUCCESS ? "SUCCESS" : "FAILED") << ")";
