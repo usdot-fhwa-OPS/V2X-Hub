@@ -497,7 +497,7 @@ bool TmxControl::clear_event_log(pluginlist &, ...)
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->executeUpdate();
 	}
-	catch (const exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
