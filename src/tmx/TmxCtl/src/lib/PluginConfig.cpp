@@ -258,8 +258,9 @@ bool TmxControl::load_manifest(pluginlist &, ...)
 			stmt->setString(self.size() + 5, cfgKey);
 			stmt->executeUpdate();
 		}
+		return true;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
