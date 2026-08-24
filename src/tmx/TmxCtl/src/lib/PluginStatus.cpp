@@ -298,7 +298,7 @@ bool TmxControl::args(pluginlist &plugins, ...)
 		}
 		return stmt->execute();
 	}
-	catch (const exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
