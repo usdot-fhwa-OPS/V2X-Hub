@@ -28,8 +28,6 @@ DEPENDENCIES="build-essential \
     libboost-filesystem-dev \
     libboost-program-options-dev \
     libcurl4-openssl-dev \
-    libev-dev \
-    libgps-dev \
     libgtest-dev \
     libjsoncpp-dev \
     libmysqlclient-dev \

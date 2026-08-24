@@ -21,11 +21,9 @@ DEPENDENCIES="ca-certificates \
     libboost-regex-dev \
     libboost-filesystem-dev \
     libboost-program-options-dev \
-    libgps-dev \
     libjsoncpp-dev \
     libmysqlclient-dev \
     libmysqlcppconn-dev \
-    libperl-dev \
     librdkafka-dev \
     libssl-dev \
     libwebsockets-dev \
@@ -49,4 +47,4 @@ LIBRARY_DEPENDENCIES=" \
 
 # install all things needed for deployment, always done
 # TODO: --install-no-recommends
-apt-get install -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+apt-get install -y --no-install-recommends $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
