@@ -262,6 +262,7 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(firstMessage.psid, "0x8002");
     EXPECT_EQ(firstMessage.channel, 183);
     EXPECT_FALSE(firstImfConfig.snmpAuth->snmpTimeout.has_value());
+    EXPECT_FALSE(firstImfConfig.snmpAuth->snmpRetries.has_value());
     EXPECT_FALSE(firstImfConfig.payloadPlaceholder.has_value());
 }
 
@@ -328,7 +329,81 @@ TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1
     EXPECT_EQ(firstMessage.psid, "0x8002");
     EXPECT_EQ(firstMessage.channel, 183);
     EXPECT_TRUE(firstImfConfig.snmpAuth->snmpTimeout.has_value());
-    EXPECT_EQ(firstImfConfig.snmpAuth->snmpTimeout.value(), 2000000); 
+    EXPECT_EQ(firstImfConfig.snmpAuth->snmpTimeout.value(), 2000000);
+    // snmpRetries is independent of snmpTimeout and is absent from this configuration
+    EXPECT_FALSE(firstImfConfig.snmpAuth->snmpRetries.has_value());
     EXPECT_TRUE(firstImfConfig.payloadPlaceholder.has_value());
     EXPECT_EQ(firstImfConfig.payloadPlaceholder.value(), "FFFF");
+}
+
+TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1218withRetries ) {
+
+    std::string jsonConfiguration = R"(
+        [
+            {
+                "name": "East Intersection Cohda",
+                "rsuSpec": "NTCIP1218",
+                "snmpAuth": {
+                    "user": "authOnlyUser",
+                    "securityLevel": "authPriv",
+                    "snmpTimeout": 2000000,
+                    "snmpRetries": 3,
+                    "community": "public",
+                    "authProtocol": "SHA-512",
+                    "authPassPhrase": "dummy123",
+                    "privacyProtocol": "AES-256",
+                    "privacyPassPhrase": "dummy123"
+                },
+                "address": "127.0.0.1",
+                "port": 3745,
+                "txMode": "CONT",
+                "signMessages": false,
+                "messages": [
+                    { "tmxType": "SPAT-P", "sendType": "SPAT", "psid": "0x8002", "channel": 183 },
+                    { "tmxType": "MAP-P", "sendType": "MAP", "psid": "0x8002", "channel": 183 }
+                ]
+            }
+        ]
+    )";
+    auto imfConfigs = parseImmediateForwardConfiguration(jsonConfiguration);
+    ASSERT_EQ(imfConfigs.size(), 1);
+    auto firstImfConfig = imfConfigs[0];
+    ASSERT_TRUE(firstImfConfig.snmpAuth.has_value());
+    EXPECT_TRUE(firstImfConfig.snmpAuth->snmpRetries.has_value());
+    EXPECT_EQ(firstImfConfig.snmpAuth->snmpRetries.value(), 3);
+}
+
+TEST(TestImmediateForwardConfiguration, parseImmediateForwardConfigurationNTCIP1218withZeroRetries ) {
+    // 0 is a meaningful value, not an absent one. It is also the default applied at the call site, so
+    // configuring it explicitly must still parse rather than being mistaken for an unset field.
+    std::string jsonConfiguration = R"(
+        [
+            {
+                "name": "East Intersection Cohda",
+                "rsuSpec": "NTCIP1218",
+                "snmpAuth": {
+                    "user": "authOnlyUser",
+                    "securityLevel": "authPriv",
+                    "snmpRetries": 0,
+                    "community": "public",
+                    "authProtocol": "SHA-512",
+                    "authPassPhrase": "dummy123",
+                    "privacyProtocol": "AES-256",
+                    "privacyPassPhrase": "dummy123"
+                },
+                "address": "127.0.0.1",
+                "port": 3745,
+                "txMode": "CONT",
+                "signMessages": false,
+                "messages": [
+                    { "tmxType": "SPAT-P", "sendType": "SPAT", "psid": "0x8002", "channel": 183 }
+                ]
+            }
+        ]
+    )";
+    auto imfConfigs = parseImmediateForwardConfiguration(jsonConfiguration);
+    ASSERT_EQ(imfConfigs.size(), 1);
+    ASSERT_TRUE(imfConfigs[0].snmpAuth.has_value());
+    EXPECT_TRUE(imfConfigs[0].snmpAuth->snmpRetries.has_value());
+    EXPECT_EQ(imfConfigs[0].snmpAuth->snmpRetries.value(), 0);
 }

@@ -125,6 +125,8 @@ namespace ImmediateForward
 					imfConfig.payloadPlaceholder.value_or("FFFF") );
 				// Set to operational mode
 				setRSUMode(_snmpClientMap[imfConfig.name].get(), 3);
+				_snmpClientMap[imfConfig.name]->set_retries(
+					static_cast<int>(imfConfig.snmpAuth.value().snmpRetries.value_or(0)));
 
 			}
 		}

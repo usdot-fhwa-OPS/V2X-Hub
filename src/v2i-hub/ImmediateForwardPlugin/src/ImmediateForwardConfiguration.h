@@ -49,6 +49,7 @@ namespace ImmediateForward
     static constexpr const char *SecurityLevelKey = "securityLevel";
     static constexpr const char *CommunityKey = "community";
     static constexpr const char *SnmpTimeoutKey = "snmpTimeout";
+    static constexpr const char *SnmpRetriesKey = "snmpRetries";
     static constexpr const char *PayloadPlaceholderKey = "payloadPlaceholder";
 
 
@@ -80,6 +81,7 @@ namespace ImmediateForward
         SecurityLevel securityLevel;
         std::string community;
         std::optional<unsigned int> snmpTimeout; // Optional SNMP timeout
+        std::optional<unsigned int> snmpRetries; // Optional transmit retries, default to 
         // Optional depending on security level
         std::optional<std::string> authProtocol;
         std::optional<std::string> privProtocol;

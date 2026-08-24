@@ -82,6 +82,7 @@ This plugin has several configuration parameters. Below these are listed out as 
                 "securityLevel": "authPriv",
                 "community": "public",
                 "snmpTimeout": 2000000, /* snmp timeout in microseconds */
+                "snmpRetries": 0, /* (optional) retransmissions for an unanswered SNMP request once the RSU is operational. Defaults to 0, meaning each forwarded message is sent exactly once. Startup always uses the net-snmp default of 5. */
                 "authProtocol": "SHA-512",
                 "authPassPhrase": "Password",
                 "privacyProtocol": "AES-256",

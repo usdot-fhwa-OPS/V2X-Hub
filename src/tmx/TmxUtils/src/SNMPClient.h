@@ -201,6 +201,12 @@ namespace tmx::utils
          *  received or accepted the SET.
          */
         virtual bool process_snmp_set_requests_async(const std::vector<snmp_request> &requests);
+
+        /** @brief Sets how many times net-snmp retransmits a request that goes unanswered.
+         *  0 means send once and never retransmit. A change applies to requests already in flight as well as future ones.
+         *  @param retries Retransmission count, or SNMP_DEFAULT_RETRIES for the net-snmp default of 5.
+         */
+        void set_retries(int retries);
         /**
          * @brief Returns the current port
          */

@@ -45,6 +45,9 @@ namespace ImmediateForward{
         if (snmpAuth[SnmpTimeoutKey].isUInt()) {
             snmpAuthObj.snmpTimeout = snmpAuth[SnmpTimeoutKey].asUInt();
         }
+        if (snmpAuth[SnmpRetriesKey].isUInt()) {
+            snmpAuthObj.snmpRetries = snmpAuth[SnmpRetriesKey].asUInt();
+        }
         if (snmpAuthObj.securityLevel != SecurityLevel::NO_AUTH_NO_PRIV) {
             snmpAuthObj.authProtocol = snmpAuth[AuthProtocolKey].asString();
             snmpAuthObj.authPassPhrase = snmpAuth[AuthPassPhraseKey].asString();

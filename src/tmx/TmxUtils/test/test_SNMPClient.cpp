@@ -95,6 +95,40 @@ namespace unit_test
         tmx::utils::FILELog::ReportingLevel() = previous_level;
     }
 
+    TEST_F(test_SNMPClient, set_retries)
+    {
+        auto client = std::make_unique<snmp_client>("127.0.0.1", 161, "public", "test", "", "SHA", "test1234", "AES", "test1234", SNMP_VERSION_2c, 1000);
+        snmp_request request {
+            RSU_ID_OID,
+            's',
+            "RSU4.1"
+        };
+        vector<snmp_request> requests = {request};
+
+        // With the net-snmp default of 5 retries an unanswered request is retransmitted five times before
+        // it is dropped. At 0 it must be dropped on the first expiry instead.
+        client->set_retries(0);
+
+        auto previous_level = tmx::utils::FILELog::ReportingLevel();
+        tmx::utils::FILELog::ReportingLevel() = tmx::utils::logDEBUG3;
+
+        EXPECT_TRUE(client->process_snmp_set_requests_async(requests));
+        for (int i = 0; i < 3; i++) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+            EXPECT_NO_THROW(client->process_snmp_set_requests_async(requests));
+        }
+        tmx::utils::FILELog::ReportingLevel() = previous_level;
+        // Observational rather than asserted: the output must show "timed out, dropping it" with no
+        // preceding "retransmitting" lines for the same request id.
+    }
+
+    TEST_F(test_SNMPClient, set_retries_without_session)
+    {
+        // The mock client uses the protected default constructor and never opens a session. Setting
+        // retries on it must be a logged no-op rather than a null dereference.
+        EXPECT_NO_THROW(scPtr->set_retries(0));
+    }
+
     TEST_F(test_SNMPClient, process_snmp_set_requests_async_send_failure)
     {
         // SNMPv3 against an address with no agent. Engine ID discovery cannot complete, so net-snmp

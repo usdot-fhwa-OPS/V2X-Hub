@@ -440,6 +440,15 @@ namespace tmx::utils
         return true;
     }
 
+    void snmp_client::set_retries(int retries) {
+        if (!ss) {
+            PLOG(logERROR) << "Cannot set SNMP retries, no open session";
+            return;
+        }
+        ss->retries = retries;
+        PLOG(logINFO) << "SNMP retries for " << ip_ << " set to " << retries;
+    }
+
     int snmp_client::get_port() const
     {
         return port_;
