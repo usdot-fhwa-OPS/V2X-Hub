@@ -248,7 +248,7 @@ namespace ImmediateForward
 			payload = toUpperHex(rawSpdu.get_fullByteData());
 
 			PLOG(logDEBUG) << "Forwarding SPDU message with uuid: " << tmx::byte_stream_encode(rawSpdu.get_uuid())
-						   << " and timestamp: " << msg->get_timestamp();
+						   << " and timestamp: " << msg->timestamp;
 		}
 		else
 		{
