@@ -1,4 +1,4 @@
-PROJECT (TelematicBridgePlugin VERSION 7.11.1 LANGUAGES CXX)
+PROJECT (TelematicBridgePlugin VERSION 8.0.0 LANGUAGES CXX)
 
 set (TMX_PLUGIN_NAME "Telematic Bridge")
 

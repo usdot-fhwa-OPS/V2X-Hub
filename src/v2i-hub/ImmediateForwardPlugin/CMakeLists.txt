@@ -1,4 +1,4 @@
-project( ImmediateForwardPlugin VERSION 7.11.1 LANGUAGES CXX )
+project( ImmediateForwardPlugin VERSION 8.0.0 LANGUAGES CXX )
 set(CMAKE_CXX_STANDARD 17)
 
 set(TMX_PLUGIN_NAME "Immediate Forward")
