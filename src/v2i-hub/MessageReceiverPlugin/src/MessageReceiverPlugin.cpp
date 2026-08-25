@@ -217,7 +217,10 @@ int MessageReceiverPlugin::Main()
 						SetStatus<uint>(Key_ProcessedSPDU, _processedSPDU);
 						tmx::routeable_message rMsg;
 						rMsg.initialize<tmx::messages::RawSpdu>(spduMsg);
-						this->OutgoingMessage(rMsg);
+						rMsg.refresh_timestamp();
+						PLOG(logDEBUG) << "Putting RawSpdu message on TMX Core with uuid: " << tmx::byte_stream_encode(spduMsg.get_uuid())
+									   << " and timestamp: " << rMsg.get_timestamp();
+  						this->OutgoingMessage(rMsg);
 					}
 				}
 			}
