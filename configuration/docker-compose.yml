@@ -34,8 +34,10 @@ services:
     networks:
       - v2xhub_web_external
     ports:
-      - "${PHP_HTTP_EXTERNAL_PORT:-80}:80"
-      - "${PHP_HTTPS_EXTERNAL_PORT:-443}:443"
+      - target: 80
+        published: ${PHP_HTTP_EXTERNAL_PORT:-80}
+      - target: 443
+        published: ${PHP_HTTPS_EXTERNAL_PORT:-443}
     restart: always
     depends_on:
       - db
@@ -59,29 +61,38 @@ services:
       - v2xhub_data_internal
       - v2xhub_app_external
     ports:
-      # Command Plugin
-      - "${COMMAND_PLUGIN_EXTERNAL_PORT:-19760}:19760"        # Command WebSocket
-
+      # Command Plugin Websocket
+      - target: 19760
+        publish: ${COMMAND_PLUGIN_EXTERNAL_PORT:-19760}
       # Message Receiver Plugin
-      - "${MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT:-26789}:26789/udp" # MessageReceiver 26789
-
-      # SPaT Plugin
-      - "${SPAT_PLUGIN_EXTERNAL_PORT:-6053}:6053/udp"      # TSC sends UDP
-
+      - target: 26789
+        publish: ${MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT:-26789}
+        protocol: udp
+      # SPaT Plugin 
+      - target: 6053
+        publish: ${SPAT_PLUGIN_EXTERNAL_PORT:-6053}
+        protocol: udp
       # TIM Plugin
-      - "${TIM_PLUGIN_EXTERNAL_PORT:-10000}:10000/tcp"    # TIM WebServicePort
-
+      - target: 10000
+        publish: ${TIM_PLUGIN_EXTERNAL_PORT:-10000}
       # CARMA Cloud Plugin
-      - "${CARMA_CLOUD_EXTERNAL_PORT:-22222}:22222/tcp"
+      - target: 22222
+        publish: ${CARMA_CLOUD_EXTERNAL_PORT:-22222}
 
       # CDASim Adapter Plugin (simulation mode)
-      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-6767}:6767/udp"   # CDASim registration
-      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-7575}:7575/udp"   # CDASim Time Sync
-      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5757}:5757/udp"   # CDASim Simulated V2X Messages
-
+      - target: 6767
+        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-6767} # CDASim registration
+        protocol: udp
+      - target: 7575
+        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-7575} # CDASim Time Sync
+        protocol: udp
+      - target: 5757
+        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5757} # CDASim Simulated V2X Messages
+        protocol: udp
       # MUST Sensor Driver Plugin
-      - "${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}:4545/udp"   # CDASim Simulated V2X Messages
-
+      - target: 4545
+        publish: ${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}
+        protocol: udp
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: always
@@ -137,7 +148,8 @@ services:
     networks:
       - v2xhub_web_external
     ports:
-      - "${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}:8090"              # Port Drayage web UI
+      - target: 8090
+        publish: ${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}  # Port Drayage web UI
     profiles: ["port_drayage"]
     deploy:
       resources:
