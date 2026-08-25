@@ -1,7 +1,6 @@
 services:
   db:
     image: mysql:8.0.40
-    container_name: mysql
     environment:
       - TZ=${TZ:-America/New_York}
       - MYSQL_DATABASE=IVP
@@ -32,12 +31,11 @@ services:
       - mysql-datavolume:/var/lib/mysql
   php:
     image: usdotfhwaops/php:${V2XHUB_VERSION:-develop}
-    container_name: php
     networks:
       - v2xhub_web_external
     ports:
-      - "80:80"
-      - "443:443"
+      - "${PHP_HTTP_EXTERNAL_PORT:-80}:80"
+      - "${PHP_HTTPS_EXTERNAL_PORT:-443}:443"
     restart: always
     depends_on:
       - db
@@ -57,34 +55,32 @@ services:
 
   v2xhub:
     image: usdotfhwaops/v2xhub:${V2XHUB_VERSION:-develop}
-    container_name: v2xhub
     networks:
       - v2xhub_data_internal
       - v2xhub_app_external
     ports:
       # Command Plugin
-      - "19760:19760"        # Command WebSocket
+      - "${COMMAND_PLUGIN_EXTERNAL_PORT:-19760}:19760"        # Command WebSocket
 
       # Message Receiver Plugin
-      - "26780-26800:26780-26800/udp" # MessageReceiver (Range 26789 ±10)
+      - "${MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT:-26789}:26789/udp" # MessageReceiver 26789
 
       # SPaT Plugin
-      - "6053:6053/udp"      # TSC sends UDP
-      - "5050:5050/udp"      # SNMP polling
+      - "${SPAT_PLUGIN_EXTERNAL_PORT:-6053}:6053/udp"      # TSC sends UDP
 
       # TIM Plugin
-      - "10000:10000/tcp"    # TIM WebServicePort
+      - "${TIM_PLUGIN_EXTERNAL_PORT:-10000}:10000/tcp"    # TIM WebServicePort
 
       # CARMA Cloud Plugin
-      - "22222:22222/tcp"
+      - "${CARMA_CLOUD_EXTERNAL_PORT:-22222}:22222/tcp"
 
       # CDASim Adapter Plugin (simulation mode)
-      - "6767:6767/udp"   # CDASim registration
-      - "7575:7575/udp"   # time sync
-      - "5757:5757/udp"   # SIM_V2X (simulated V2X out)
+      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-6767}:6767/udp"   # CDASim registration
+      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-7575}:7575/udp"   # CDASim Time Sync
+      - "${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5757}:5757/udp"   # CDASim Simulated V2X Messages
 
       # MUST Sensor Driver Plugin
-      - "4545:4545/udp"      # MUST detection receiver port
+      - "${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}:4545/udp"   # CDASim Simulated V2X Messages
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -138,11 +134,10 @@ services:
 
   port_drayage_webservice:
     image: usdotfhwaops/port-drayage-webservice:${V2XHUB_VERSION:-develop}
-    container_name: port_drayage_webservice
     networks:
       - v2xhub_web_external
     ports:
-      - "8090:8090"              # Port Drayage web UI
+      - "${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}:8090"              # Port Drayage web UI
     profiles: ["port_drayage"]
     deploy:
       resources:
