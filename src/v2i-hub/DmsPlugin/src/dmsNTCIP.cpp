@@ -272,6 +272,7 @@ int  SignalControllerNTCIP::getOctetString(const char* getOID,  const char *comm
 	            printf("value #%d is NOT a string! Ack!\n", *returnInt++);
 	        }
 	    }
+		snmp_free_pdu(response);
 	    return *returnInt;
     }
     else
@@ -279,12 +280,6 @@ int  SignalControllerNTCIP::getOctetString(const char* getOID,  const char *comm
     	// No response
         return -1;
     }
-
-    if (response)
-    {
-    	snmp_free_pdu(response);
-    }
-    return *returnInt;
 }
 
 
