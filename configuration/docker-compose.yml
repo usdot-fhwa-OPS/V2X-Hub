@@ -63,35 +63,35 @@ services:
     ports:
       # Command Plugin Websocket
       - target: 19760
-        publish: ${COMMAND_PLUGIN_EXTERNAL_PORT:-19760}
+        published: ${COMMAND_PLUGIN_EXTERNAL_PORT:-19760}
       # Message Receiver Plugin
       - target: 26789
-        publish: ${MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT:-26789}
+        published: ${MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT:-26789}
         protocol: udp
       # SPaT Plugin 
       - target: 6053
-        publish: ${SPAT_PLUGIN_EXTERNAL_PORT:-6053}
+        published: ${SPAT_PLUGIN_EXTERNAL_PORT:-6053}
         protocol: udp
       # TIM Plugin
       - target: 10000
-        publish: ${TIM_PLUGIN_EXTERNAL_PORT:-10000}
+        published: ${TIM_PLUGIN_EXTERNAL_PORT:-10000}
       # CARMA Cloud Plugin
       - target: 22222
-        publish: ${CARMA_CLOUD_EXTERNAL_PORT:-22222}
+        published: ${CARMA_CLOUD_EXTERNAL_PORT:-22222}
 
       # CDASim Adapter Plugin (simulation mode)
       - target: 6767
-        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-6767} # CDASim registration
+        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-6767} # CDASim registration
         protocol: udp
       - target: 7575
-        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-7575} # CDASim Time Sync
+        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-7575} # CDASim Time Sync
         protocol: udp
       - target: 5757
-        publish: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5757} # CDASim Simulated V2X Messages
+        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5757} # CDASim Simulated V2X Messages
         protocol: udp
       # MUST Sensor Driver Plugin
       - target: 4545
-        publish: ${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}
+        published: ${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}
         protocol: udp
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -149,7 +149,7 @@ services:
       - v2xhub_web_external
     ports:
       - target: 8090
-        publish: ${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}  # Port Drayage web UI
+        published: ${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}  # Port Drayage web UI
     profiles: ["port_drayage"]
     deploy:
       resources:
