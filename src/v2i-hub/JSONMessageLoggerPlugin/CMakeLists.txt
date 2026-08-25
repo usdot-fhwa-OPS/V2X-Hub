@@ -1,4 +1,4 @@
-project( JSONMessageLoggerPlugin VERSION 7.11.1 LANGUAGES CXX )
+project( JSONMessageLoggerPlugin VERSION 8.0.0 LANGUAGES CXX )
 set(CMAKE_CXX_STANDARD 17)
 
 set (TMX_PLUGIN_NAME "JSON Message Logger")
