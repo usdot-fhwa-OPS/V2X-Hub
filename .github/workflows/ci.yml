@@ -182,12 +182,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Verify Docker Scout policy config
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          echo "Workspace: ${{ github.workspace }}"
-          ls -la "${{ github.workspace }}/.github"
-          cat "${{ github.workspace }}/.github/docker-scout-policy.json"
       - name: Log in to Docker Hub
         uses: docker/login-action@v4
         with:
@@ -230,7 +224,7 @@ jobs:
           to-env: ${{ steps.scout-env.outputs.environment }}
           ignore-unchanged: true
           only-severities: critical,high
-          policy-config: ${{ github.workspace }}/.github/docker-scout-policy.json
+          policy-config: ${{ github.workspace }}/.github/workflows/docker-scout-policy.json
           exit-on: policy
           github-token: ${{ secrets.GITHUB_TOKEN }}
           organization: usdotfhwaops
