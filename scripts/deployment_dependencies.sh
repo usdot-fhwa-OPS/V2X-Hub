@@ -8,8 +8,8 @@ set -ex
 
 # add the STOL APT repository
 echo "deb [trusted=yes] http://s3.amazonaws.com/stol-apt-repository develop ${DISTRIB_CODENAME}" > /etc/apt/sources.list.d/stol-apt-repository.list
-apt-get clean
-apt-get update --fix-missing
+apt clean
+apt update --fix-missing
 
 # NOTE: libwebsockets-dev from Ubuntu 20 on is sufficient
 DEPENDENCIES="ca-certificates \
@@ -50,4 +50,4 @@ LIBRARY_DEPENDENCIES=" \
 
 # install all things needed for deployment, always done
 # TODO: --install-no-recommends
-apt-get install -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
+apt install --no-install-recommends -y  $DEPENDENCIES ${LIBRARY_DEPENDENCIES}
