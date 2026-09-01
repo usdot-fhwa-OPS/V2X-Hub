@@ -27,7 +27,6 @@ using namespace sql;
 using namespace tmx;
 using namespace tmx::utils;
 
-extern char **environ;
 namespace tmxctl {
 
 bool TmxControl::plugin_install(pluginlist &plugins, ...) {
