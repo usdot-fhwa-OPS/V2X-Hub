@@ -11,6 +11,8 @@
 #include <libgen.h>
 #include <System.h>
 #include <sys/stat.h>
+#include <spawn.h>
+#include <array>
 
 #ifndef PLUGINDIRECTORY_ENV
 #define PLUGINDIRECTORY_ENV "TMX_PLUGIN_DIRECTORY"
@@ -262,13 +264,23 @@ bool TmxControl::plugin_remove() {
 			// First get the component name from the output
 			size_t idx = dpkgResult.find_first_of(':');
 			if (idx != string::npos) {
-				cmd = "sudo dpkg --remove ";
-				cmd += dpkgResult.substr(0, idx);
+				string component = dpkgResult.substr(0, idx);
+				try {
+					validate_input_string(component);
 
-				PLOG(logDEBUG1) << "Removing Debian package with " << cmd;
+					PLOG(logDEBUG1) << "Removing Debian package " << component;
 
-				int exitVal = system(cmd.c_str());
-				return exitVal == 0;
+					std::array<std::string, 4> a = { "sudo", "dpkg", "--remove", component };
+					std::array<char *, 5> argv = { a[0].data(), a[1].data(), a[2].data(),
+					                               a[3].data(), nullptr };
+					pid_t pid;
+					int ret = posix_spawnp(&pid, "sudo", nullptr, nullptr, argv.data(), environ);
+					return check_posix_process_status("dpkg --remove", ret, pid);
+				}
+				catch (const TmxException &ex) {
+					PLOG(logERROR) << ex;
+					return false;
+				}
 			}
 		}
 #endif
