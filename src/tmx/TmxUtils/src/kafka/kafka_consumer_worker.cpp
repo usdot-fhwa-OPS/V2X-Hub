@@ -122,11 +122,10 @@ namespace tmx::utils
         }
     }
 
-    const char *kafka_consumer_worker::consume(int timeout_ms)
+    std::string kafka_consumer_worker::consume(int timeout_ms)
     {
         std::shared_ptr<RdKafka::Message> msg(_consumer->consume(timeout_ms));
-        const char *msg_str = msg_consume(msg);
-        return msg_str;
+        return msg_consume(msg);
     }
 
     bool kafka_consumer_worker::is_running() const
@@ -140,9 +139,9 @@ namespace tmx::utils
             << (_group_id_str.empty() ? "UNKNOWN" : _group_id_str) << std::endl;
     }
 
-    const char *kafka_consumer_worker::msg_consume(const std::shared_ptr<RdKafka::Message> message)
+    std::string kafka_consumer_worker::msg_consume(const std::shared_ptr<RdKafka::Message> message)
     {
-        const char *return_msg_str = "";
+        std::string return_msg_str;
         switch (message->err())
         {
         case RdKafka::ERR__TIMED_OUT:
@@ -150,9 +149,11 @@ namespace tmx::utils
             break;
         case RdKafka::ERR_NO_ERROR:
             FILE_LOG(logDEBUG1) << _consumer->name() << " read message at offset " <<  message->offset() << std::endl;
-            FILE_LOG(logDEBUG1) << _consumer->name() << " message Consumed: " << static_cast<int>(message->len())  << " bytes : " << static_cast<const char *>(message->payload()) << std::endl;
+            // The librdkafka payload is not null terminated and is owned by the message, so it
+            // has to be sized with message->len() and copied out before the message is released.
+            return_msg_str.assign(static_cast<const char *>(message->payload()), message->len());
+            FILE_LOG(logDEBUG1) << _consumer->name() << " message Consumed: " << static_cast<int>(message->len())  << " bytes : " << return_msg_str << std::endl;
             _cur_offset = message->offset();
-            return_msg_str = static_cast<const char *>(message->payload());
             break;
         case RdKafka::ERR__PARTITION_EOF:
             FILE_LOG(logWARNING) << _consumer->name() << " reached the end of the queue, offset : " <<  _cur_offset << std::endl;
