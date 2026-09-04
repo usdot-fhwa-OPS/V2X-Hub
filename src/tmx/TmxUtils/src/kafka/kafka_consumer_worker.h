@@ -2,6 +2,7 @@
 #define KAFKA_CONSUMER_WORKER_H
 
 #include <iostream>
+#include <memory>
 #include <string>
 #include <cstdlib>
 #include <cstdio>
@@ -55,7 +56,7 @@ namespace tmx::utils {
             bool _run = false;
             consumer_event_cb _consumer_event_cb;
             consumer_rebalance_cb _consumer_rebalance_cb;
-            const char* msg_consume(const std::shared_ptr<RdKafka::Message> message);
+            std::string msg_consume(const std::shared_ptr<RdKafka::Message> message);
 
         public:
             /**
@@ -92,9 +93,9 @@ namespace tmx::utils {
              * @brief Consume from topic.
              * 
              * @param timeout_ms timeout in milliseconds to wait before failing.;
-             * @return const char* of payload consumed.
+             * @return std::string payload consumed. Empty if nothing was consumed.
              */
-            virtual const char* consume(int timeout_ms);
+            virtual std::string consume(int timeout_ms);
             /**
              * @brief Subscribe consumer to topic
              */
