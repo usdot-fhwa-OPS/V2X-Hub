@@ -10,6 +10,17 @@ namespace tmx::utils
     }
     kafka_consumer_worker::~kafka_consumer_worker() {
         stop();
+        // The rebalance and event callbacks registered with the consumer are members of
+        // this object, so the librdkafka handles have to be destroyed here. Closing alone
+        // leaves them running and they call back into members that no longer exist.
+        if (_topic) {
+            delete _topic;
+            _topic = nullptr;
+        }
+        if (_consumer) {
+            delete _consumer;
+            _consumer = nullptr;
+        }
         FILE_LOG(logWARNING) << "Kafka consumer destroyed!" << std::endl;
     }
 
