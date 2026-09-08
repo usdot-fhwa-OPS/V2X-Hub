@@ -11,16 +11,12 @@ namespace tmx::utils
     kafka_consumer_worker::~kafka_consumer_worker() {
         stop();
         // The rebalance and event callbacks registered with the consumer are members of
-        // this object, so the librdkafka handles have to be destroyed here. Closing alone
-        // leaves them running and they call back into members that no longer exist.
-        if (_topic) {
-            delete _topic;
-            _topic = nullptr;
-        }
-        if (_consumer) {
-            delete _consumer;
-            _consumer = nullptr;
-        }
+        // this object, so the librdkafka handles have to be released before those members
+        // are destroyed. Closing alone leaves the handle and its threads running, and they
+        // call back into members that no longer exist. _topic and _consumer are unique_ptr
+        // members declared after the callbacks, so they are released here in order.
+        _topic.reset();
+        _consumer.reset();
         FILE_LOG(logWARNING) << "Kafka consumer destroyed!" << std::endl;
     }
 
@@ -76,7 +72,7 @@ namespace tmx::utils
         }
 
         // create consumer
-        _consumer = RdKafka::KafkaConsumer::create(conf, errstr);
+        _consumer.reset(RdKafka::KafkaConsumer::create(conf, errstr));
         if (!_consumer)
         {
             FILE_LOG(logWARNING) << "Failed to create consumer: " << errstr.c_str() << std::endl;
@@ -94,7 +90,7 @@ namespace tmx::utils
             return false;
         }
 
-        _topic = RdKafka::Topic::create(_consumer, _topics_str, tconf, errstr);
+        _topic.reset(RdKafka::Topic::create(_consumer.get(), _topics_str, tconf, errstr));
         if (!_topic)
         {
             FILE_LOG(logWARNING) << "RDKafka create topic failed: " <<  errstr.c_str() << std::endl;
@@ -111,7 +107,9 @@ namespace tmx::utils
         FILE_LOG(logWARNING) << "Stopping Kafka Consumer!" << std::endl;
         _run = false;
         //Close and shutdown the consumer.
-        _consumer->close();
+        if (_consumer) {
+            _consumer->close();
+        }
         FILE_LOG(logWARNING) << "Kafka Consumer Stopped!" << std::endl;
 
     }

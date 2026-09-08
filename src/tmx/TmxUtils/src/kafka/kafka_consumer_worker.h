@@ -49,8 +49,8 @@ namespace tmx::utils {
             std::string _topics_str = "";
             std::string _broker_str = "";
             std::string _group_id_str = "";
-            RdKafka::KafkaConsumer *_consumer = nullptr;
-            RdKafka::Topic *_topic = nullptr;
+            std::unique_ptr<RdKafka::KafkaConsumer> _consumer;
+            std::unique_ptr<RdKafka::Topic> _topic;
             int64_t _cur_offset =  RdKafka::Topic::OFFSET_BEGINNING;
             int32_t _partition = 0;
             bool _run = false;
