@@ -389,7 +389,7 @@ namespace tmx::utils
     void snmp_client::log_error(const int &status, const request_type &request_type, const snmp_pdu *response) const
     {
 
-        if (status == STAT_SUCCESS)
+        if (status == STAT_SUCCESS && response)
         {
             PLOG(logERROR) << "Variable type: " << response->variables->type << ". Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
         }
