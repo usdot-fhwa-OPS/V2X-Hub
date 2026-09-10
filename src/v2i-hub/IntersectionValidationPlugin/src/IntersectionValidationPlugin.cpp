@@ -129,6 +129,14 @@ namespace IntersectionValidation
 
             // Soft violation: interval exceeded the CTI 4501 required threshold.
             emitBroadcastRate();
+
+            // EventLog Message
+            tmx::messages::TmxEventLogMessage eventLogMsg;
+            eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+            eventLogMsg.set_description(messageType + EVENT_REQUIRED_THRESHOLD +
+                                        std::to_string(requiredThresholdMs) + " ms: interval " +
+                                        std::to_string(intervalMs) + " ms");
+            BroadcastMessage(eventLogMsg);
         }
 
         if (messageType == "SPaT")
@@ -247,9 +255,11 @@ namespace IntersectionValidation
                                           schemaSb.GetString() + ")");
                 }
 
+                std::string failures;
                 for (const auto &element : elements)
                 {
                     PLOG(logWARNING) << messageType << " field validation failure: " << element.value;
+                    failures += (failures.empty() ? "" : "; ") + element.value;
                 }
 
                 uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
@@ -264,6 +274,12 @@ namespace IntersectionValidation
                 eventMsg.set_missingDataElements(elements);
 
                 PluginClient::BroadcastMessage(eventMsg);
+
+                // EventLog Message
+                tmx::messages::TmxEventLogMessage eventLogMsg;
+                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+                eventLogMsg.set_description(messageType + EVENT_FIELD_VALIDATION_FAILED + failures);
+                BroadcastMessage(eventLogMsg);
             }
         }
         else
@@ -313,6 +329,15 @@ namespace IntersectionValidation
             eventMsg.set_timestampA(change.timestampA);
             eventMsg.set_timestampB(change.timestampB);
             PluginClient::BroadcastMessage(eventMsg);
+
+            // EventLog Message
+            tmx::messages::TmxEventLogMessage eventLogMsg;
+            eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+            eventLogMsg.set_description(messageType + " intersection " + std::to_string(change.id) +
+                                        " message count did not progress per CTI 4501 (countA=" +
+                                        std::to_string(change.progressionCountA) + ", countB=" +
+                                        std::to_string(change.progressionCountB) + ")");
+            BroadcastMessage(eventLogMsg);
         }
 
         // CTI 4501 revision validity bookkeeping (no event emitted here).

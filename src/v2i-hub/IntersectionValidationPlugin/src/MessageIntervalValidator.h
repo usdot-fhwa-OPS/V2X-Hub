@@ -23,7 +23,7 @@ namespace IntersectionValidation
 
     static constexpr uint64_t SPAT_INTERVAL_MAX_THRESHOLD_MS = 300;
     static constexpr uint64_t MAP_INTERVAL_MAX_THRESHOLD_MS = 100;
-    static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
+    static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 100;
     static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1000;
 
     /**
