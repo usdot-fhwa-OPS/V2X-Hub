@@ -11,7 +11,7 @@ namespace tmx::utils
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << std::to_string(port) << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << std::to_string(snmp_version) << " " << std::to_string(timeout);
 
         // Validate IP address format
         struct in_addr addr4;
