@@ -55,8 +55,8 @@ namespace IntersectionValidation
 
     private:
         // Interval tracking, one aggregation window per message type
-        MessageIntervalValidator _spatIntervalValidator{SPAT_INTERVAL_REQUIRED_MS};
-        MessageIntervalValidator _mapIntervalValidator{MAP_INTERVAL_REQUIRED_MS};
+        MessageIntervalValidator _spatIntervalValidator{SPAT_INTERVAL_MAX_MS};
+        MessageIntervalValidator _mapIntervalValidator{MAP_INTERVAL_MAX_MS};
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
@@ -65,6 +65,7 @@ namespace IntersectionValidation
         uint mapFieldValidationErrors = 0;
         uint mapValidationPassed = 0;
         std::string rsuSource; // TODO: Instead of setting the rsu IP here, have the message receiver grab the IP and attach it to the message
+        uint64_t BroadcastRateTimeWindow;
 
         uint spatRevisionPassed = 0;
         uint mapRevisionPassed = 0;
@@ -149,6 +150,6 @@ namespace IntersectionValidation
         // compares against current to detect CTI 4501 revision violations
         RevisionCounterValidator _revisionValidator;
 
-        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " Message failed CTI 4501 field validation: ";
+        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " encountered CTI 4501 MinimumDataEvent: ";
     };
 }

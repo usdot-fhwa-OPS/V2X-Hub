@@ -17,15 +17,13 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <tmx/TmxException.hpp>
 
 namespace IntersectionValidation
 {
 
-    static constexpr uint64_t SPAT_INTERVAL_REQUIRED_MS = 125;
-    static constexpr uint64_t MAP_INTERVAL_REQUIRED_MS = 1025;
-
-    // Duration of the aggregation window opened by the first interval violation
-    static constexpr uint64_t BROADCAST_RATE_WINDOW_MS = 5000;
+    static constexpr uint64_t SPAT_INTERVAL_MAX_MS = 125;
+    static constexpr uint64_t MAP_INTERVAL_MAX_MS = 1025;
 
     /**
      * @brief Outcome of comparing two message timestamps against the required interval
@@ -34,7 +32,6 @@ namespace IntersectionValidation
     {
         uint64_t intervalMs = 0;
         bool violation = false;
-        bool timeWentBackwards = false;
     };
 
     /**
@@ -43,9 +40,10 @@ namespace IntersectionValidation
      * @param currentTimestampMs ms of current message
      * @param thresholdMs maximum allowable interval in ms per CTI 4501
      * @return interval and whether it violated the threshold
+     * @throws tmx::TmxException if currentTimestampMs is earlier than lastTimestampMs
      */
     IntervalCheck evaluateMessageInterval(uint64_t lastTimestampMs, uint64_t currentTimestampMs,
-                                          uint64_t thresholdMs) noexcept;
+                                          uint64_t thresholdMs);
 
     /**
      * @brief Counts from a closed aggregation window, one BroadcastRate event's worth
@@ -69,29 +67,30 @@ namespace IntersectionValidation
     class MessageIntervalValidator
     {
     public:
-        explicit MessageIntervalValidator(uint64_t requiredThresholdMs,
-                                          uint64_t windowDurationMs = BROADCAST_RATE_WINDOW_MS);
+        explicit MessageIntervalValidator(uint64_t requiredThresholdMs);
 
         /**
          * @brief Record the arrival of a message of this type
          * @param currentTimestampMs ms the message was observed
+         * @param windowDurationMs length of the aggregation window in ms, from the
+         *        BroadcastRateTimeWindow configuration value
          * @param intersectionId intersection the message belongs to
          * @return the counts of a window that this message closed, if any
          */
         std::optional<IntervalWindowResult> recordMessage(uint64_t currentTimestampMs,
+                                                          uint64_t windowDurationMs,
                                                           int intersectionId = -1);
 
         uint64_t lastIntervalMs() const;
         uint32_t totalViolations() const;
-        uint32_t totalEventsEmitted() const;
-        uint32_t totalTimeRegressions() const;
         bool windowOpen() const;
 
     private:
-        IntervalWindowResult createWindow();
+        // Snapshots the open window's accumulated counts into an IntervalWindowResult object and 
+        // resets the counters
+        IntervalWindowResult closeWindow();
 
         const uint64_t _thresholdMs;
-        const uint64_t _windowMs;
 
         uint64_t _lastTimestampMs = 0;
         uint64_t _lastIntervalMs = 0;
@@ -105,8 +104,6 @@ namespace IntersectionValidation
         bool _windowIntersectionIdMismatch = false;
 
         uint32_t _totalViolations = 0;
-        uint32_t _totalEvents = 0;
-        uint32_t _totalRegressions = 0;
     };
 
     /**

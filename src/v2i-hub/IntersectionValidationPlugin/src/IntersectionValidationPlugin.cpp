@@ -40,6 +40,9 @@ namespace IntersectionValidation
     {
         // RSU identifier
         GetConfigValue<std::string>("rsuSource", rsuSource);
+
+        // BroadcastRate Time Window
+        GetConfigValue<uint64_t>("BroadcastRateTimeWindow", BroadcastRateTimeWindow);
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
@@ -62,18 +65,22 @@ namespace IntersectionValidation
                                                               const std::string &messageType, int intersectionId)
     {
         const uint64_t currentTimeMs = PluginClientClockAware::getClock()->nowInMilliseconds();
-        const uint32_t violationsBefore = validator.totalViolations();
 
-        const auto closedWindow = validator.recordMessage(currentTimeMs, intersectionId);
-
-        if (validator.totalViolations() > violationsBefore)
+        std::optional<IntervalWindowResult> closedWindow;
+        try
         {
-            PLOG(tmx::utils::logWARNING) << messageType << " interval violation: interval "
-                                         << validator.lastIntervalMs() << " ms";
+            closedWindow = validator.recordMessage(currentTimeMs, BroadcastRateTimeWindow, intersectionId);
+        }
+        catch (const tmx::TmxException &e)
+        {
+            PLOG(tmx::utils::logWARNING) << messageType << " interval check failed: " << e.what();
+            return;
         }
 
         PluginClient::SetStatus((messageType + " Message Interval (ms)").c_str(), validator.lastIntervalMs());
 
+        // Since closedWindow is std::optional, this checks to see if closedWindow has a value.
+        // Without this check, the dereferencing will be undefined behavior
         if (closedWindow)
         {
             publishBroadcastRateEvent(*closedWindow, messageType);
@@ -215,12 +222,6 @@ namespace IntersectionValidation
                                           schemaSb.GetString() + ")");
                 }
 
-                std::string failures;
-                for (const auto &element : elements)
-                {
-                    PLOG(logWARNING) << messageType << " field validation failure: " << element.value;
-                    failures += (failures.empty() ? "" : "; ") + element.value;
-                }
 
                 uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 
@@ -233,12 +234,15 @@ namespace IntersectionValidation
                 eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
                 eventMsg.set_missingDataElements(elements);
 
+                PLOG(logWARNING) << messageType << " encountered CTI 4501 MinimumDataEvent: " << eventMsg.to_string();
+
+
                 PluginClient::BroadcastMessage(eventMsg);
 
                 // EventLog Message
                 tmx::messages::TmxEventLogMessage eventLogMsg;
                 eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
-                eventLogMsg.set_description(messageType + EVENT_FIELD_VALIDATION_FAILED + failures);
+                eventLogMsg.set_description(messageType + EVENT_FIELD_VALIDATION_FAILED + eventMsg.to_string());
                 BroadcastMessage(eventLogMsg);
             }
         }

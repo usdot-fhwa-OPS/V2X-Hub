@@ -25,7 +25,7 @@ namespace IntersectionValidation
 {
 
     IntervalCheck evaluateMessageInterval(uint64_t lastTimestampMs, uint64_t currentTimestampMs,
-                                          uint64_t thresholdMs) noexcept
+                                          uint64_t thresholdMs)
     {
         IntervalCheck check;
 
@@ -36,8 +36,9 @@ namespace IntersectionValidation
 
         if (currentTimestampMs < lastTimestampMs)
         {
-            check.timeWentBackwards = true;
-            return check;
+            throw tmx::TmxException("Message timestamp " + std::to_string(currentTimestampMs) +
+                                    " ms is earlier than the last received message timestamp " +
+                                    std::to_string(lastTimestampMs) + " ms");
         }
 
         check.intervalMs = currentTimestampMs - lastTimestampMs;
@@ -46,12 +47,12 @@ namespace IntersectionValidation
         return check;
     }
 
-    MessageIntervalValidator::MessageIntervalValidator(uint64_t requiredThresholdMs, uint64_t windowDurationMs)
-        : _thresholdMs(requiredThresholdMs), _windowMs(windowDurationMs)
+    MessageIntervalValidator::MessageIntervalValidator(uint64_t requiredThresholdMs)
+        : _thresholdMs(requiredThresholdMs)
     {
     }
 
-    IntervalWindowResult MessageIntervalValidator::createWindow()
+    IntervalWindowResult MessageIntervalValidator::closeWindow()
     {
         IntervalWindowResult result;
         result.windowStartMs = _windowStartMs;
@@ -68,27 +69,35 @@ namespace IntersectionValidation
         _windowMessages = 0;
         _windowIntersectionId = -1;
         _windowIntersectionIdMismatch = false;
-        ++_totalEvents;
 
         return result;
     }
 
     std::optional<IntervalWindowResult> MessageIntervalValidator::recordMessage(uint64_t currentTimestampMs,
+                                                                               uint64_t windowDurationMs,
                                                                                int intersectionId)
     {
-        const IntervalCheck check = evaluateMessageInterval(_lastTimestampMs, currentTimestampMs, _thresholdMs);
-        _lastIntervalMs = check.intervalMs;
-
-        if (check.timeWentBackwards)
+        IntervalCheck check;
+        try
         {
-            ++_totalRegressions;
+            check = evaluateMessageInterval(_lastTimestampMs, currentTimestampMs, _thresholdMs);
         }
+        catch (const tmx::TmxException &)
+        {
+            // Accept the new time base so a single clock step-back does not throw on every
+            // message that follows it
+            _lastTimestampMs = currentTimestampMs;
+            _lastIntervalMs = 0;
+            throw;
+        }
+
+        _lastIntervalMs = check.intervalMs;
 
         // Close an expired window
         std::optional<IntervalWindowResult> closed;
         if (_windowOpen && currentTimestampMs >= _windowEndMs)
         {
-            closed = createWindow();
+            closed = closeWindow();
         }
 
         _lastTimestampMs = currentTimestampMs;
@@ -110,7 +119,7 @@ namespace IntersectionValidation
             {
                 _windowOpen = true;
                 _windowStartMs = currentTimestampMs;
-                _windowEndMs = currentTimestampMs + _windowMs;
+                _windowEndMs = currentTimestampMs + windowDurationMs;
                 _windowViolations = 1;
                 _windowMessages = 1;
                 _windowIntersectionId = intersectionId;
@@ -133,16 +142,6 @@ namespace IntersectionValidation
     uint32_t MessageIntervalValidator::totalViolations() const
     {
         return _totalViolations;
-    }
-
-    uint32_t MessageIntervalValidator::totalEventsEmitted() const
-    {
-        return _totalEvents;
-    }
-
-    uint32_t MessageIntervalValidator::totalTimeRegressions() const
-    {
-        return _totalRegressions;
     }
 
     bool MessageIntervalValidator::windowOpen() const
