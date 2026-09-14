@@ -62,11 +62,11 @@ namespace unit_test
 
     TEST_F(test_SNMPClient, log_error)
     {
-        snmp_pdu response;
-        ASSERT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::GET, &response));
-        ASSERT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::SET, &response));
-        ASSERT_NO_THROW(scPtr->log_error(STAT_SUCCESS, request_type::OTHER, &response));
-        ASSERT_NO_THROW(scPtr->log_error(STAT_TIMEOUT, request_type::OTHER, &response));
+        //snmp_pdu response will be nullptr on error from snmp_synch_response
+        EXPECT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::GET, nullptr));
+        EXPECT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::SET, nullptr));
+        EXPECT_NO_THROW(scPtr->log_error(STAT_SUCCESS, request_type::OTHER, nullptr));
+        EXPECT_NO_THROW(scPtr->log_error(STAT_TIMEOUT, request_type::OTHER, nullptr));
     }
 
     TEST_F(test_SNMPClient, process_snmp_request)

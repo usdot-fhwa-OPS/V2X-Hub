@@ -5,13 +5,13 @@
 namespace tmx::utils
 {
     // Client defaults to SNMPv3
-    snmp_client::snmp_client(const std::string &ip, const int &port, const std::string &community,
+    snmp_client::snmp_client(const std::string &ip, const int port, const std::string &community,
                              const std::string &snmp_user, const std::string &securityLevel, const std::string &authProtocol, const std::string &authPassPhrase, const std::string &privProtocol, const std::string &privPassPhrase, int snmp_version, int timeout)
 
         : ip_(ip), port_(port), community_(community), snmp_version_(snmp_version), timeout_(timeout)
     {
 
-        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
+        PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << std::to_string(port) << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << std::to_string(snmp_version) << " " << std::to_string(timeout);
 
         // Validate IP address format
         struct in_addr addr4;
@@ -389,7 +389,7 @@ namespace tmx::utils
     void snmp_client::log_error(const int &status, const request_type &request_type, const snmp_pdu *response) const
     {
 
-        if (status == STAT_SUCCESS)
+        if (status == STAT_SUCCESS && response)
         {
             PLOG(logERROR) << "Variable type: " << response->variables->type << ". Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
         }
