@@ -54,9 +54,9 @@ namespace IntersectionValidation
         void OnStateChange(IvpPluginState state) override;
 
     private:
-        // Interval tracking
-        uint64_t _lastMapTimeMs = 0;
-        uint64_t _lastSpatTimeMs = 0;
+        // Interval tracking, one aggregation window per message type
+        MessageIntervalValidator _spatIntervalValidator{SPAT_INTERVAL_REQUIRED_MS};
+        MessageIntervalValidator _mapIntervalValidator{MAP_INTERVAL_REQUIRED_MS};
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
@@ -76,14 +76,21 @@ namespace IntersectionValidation
         std::string mapInputTopic = "topic.ProcessedMap";
 
         /**
-         * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
-         * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
-         * @param requiredThresholdMs required threshold in ms.
-         * @param maxThresholdMs maximum threshold in ms.
-         * @param messageType label for logging (e.g. "SPaT", "MAP").
+         * @brief Record a message arrival against its interval validator
+         * @param validator interval validator for this message type
+         * @param messageType SPat or MAP 
+         * @param intersectionId intersection the message belongs to
          */
-        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs,
-                                    const std::string &messageType, int intersectionId);
+        void measureMessageInterval(MessageIntervalValidator &validator, const std::string &messageType,
+                                    int intersectionId);
+
+        /**
+         * @brief Broadcast the CTI4501ValidationMessage and TmxEventLogMessage for a closed
+         *        aggregation window
+         * @param result counts from the window
+         * @param messageType SPat or MAP
+         */
+        void publishBroadcastRateEvent(const IntervalWindowResult &result, const std::string &messageType);
 
         /**
          * @brief Parse JSON, preprocess, run both field validation and
@@ -141,9 +148,6 @@ namespace IntersectionValidation
         // Revision counter validator — stores previous message state and
         // compares against current to detect CTI 4501 revision violations
         RevisionCounterValidator _revisionValidator;
-
-        static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
-        static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
 
         static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " Message failed CTI 4501 field validation: ";
     };
