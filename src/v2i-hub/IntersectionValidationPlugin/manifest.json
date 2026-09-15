@@ -32,6 +32,11 @@
       "key": "rsuSource",
       "default": "-",
       "description": "IP Address of the RSU that sends the SPAT/MAP messages that are validated by this plugin. The IP is added to the 'source' field of all CTI 4501 Validation events so that consumers can attribute the event to the reporting RSU."
+    },
+    {
+      "key": "BroadcastRateTimeWindow",
+      "default": "5000",
+      "description": "This is the time window (in ms) over which the Intersection Validation Plugin will catch BroadcastRateEvents. At the end of the time window (default set to 5 seconds), an aggregate CTI 4501 Validation event will be created containing all failures during the time window."
     }
   ]
 }

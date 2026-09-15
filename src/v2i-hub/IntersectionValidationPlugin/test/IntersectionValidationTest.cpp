@@ -31,6 +31,10 @@ using namespace IntersectionValidation;
 namespace
 {
 
+  // Aggregation window the interval tests drive with, standing in for the plugin's
+  // BroadcastRateTimeWindow configuration value
+  constexpr uint64_t TEST_WINDOW_MS = 5000;
+
   const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
   const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
 
@@ -39,48 +43,363 @@ namespace
   // When lastTimestampMs is 0, we should treat it as the first message and return an interval of 0
   TEST(FrequencyValidationTest, InitialMessageIntervalIsZero)
   {
-    auto result = calculateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(0u, result);
+    auto result = evaluateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(0u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, SpatIntervalWithinThreshold)
   {
-    auto result = calculateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(100u, result);
+    auto result = evaluateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(100u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    auto result = evaluateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(301u, result.intervalMs);
+    EXPECT_TRUE(result.violation);
   }
 
+  // The required interval is a maximum, so landing exactly on it is compliant
+  TEST(FrequencyValidationTest, SpatIntervalExactlyAtThreshold)
+  {
+    EXPECT_FALSE(evaluateMessageInterval(1000, 1125, SPAT_INTERVAL_MAX_MS).violation);
+    EXPECT_TRUE(evaluateMessageInterval(1000, 1126, SPAT_INTERVAL_MAX_MS).violation);
+  }
+
+  // A timestamp earlier than the last one makes the interval comparison meaningless, so it
+  // is reported as an error rather than being folded into the result
   TEST(FrequencyValidationTest, SpatIntervalCurrentTimestampEarlierThanLastTimestamp)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    EXPECT_THROW(evaluateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_MS), tmx::TmxException);
   }
 
   TEST(FrequencyValidationTest, MapIntervalWithinThreshold)
   {
-    auto result = calculateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(50u, result);
+    auto result = evaluateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_MS);
+    EXPECT_EQ(50u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, MapIntervalExceedsThreshold)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1000, 1101, MAP_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    auto result = evaluateMessageInterval(1000, 2100, MAP_INTERVAL_MAX_MS);
+    EXPECT_EQ(1100u, result.intervalMs);
+    EXPECT_TRUE(result.violation);
+  }
+
+  TEST(FrequencyValidationTest, MapIntervalExactlyAtThreshold)
+  {
+    EXPECT_FALSE(evaluateMessageInterval(1000, 2025, MAP_INTERVAL_MAX_MS).violation);
+    EXPECT_TRUE(evaluateMessageInterval(1000, 2026, MAP_INTERVAL_MAX_MS).violation);
   }
 
   TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestamp)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    EXPECT_THROW(evaluateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_MS), tmx::TmxException);
+  }
+
+  // Broadcast Rate Aggregation Window Tests
+  //
+  // A violation opens a 5 s window; every violation and message seen until the window
+  // ends is counted into it. The first message at or after the window end closes it and
+  // yields one event's worth of counts. All timestamps are explicit so no test has to sleep.
+
+  TEST(BroadcastRateWindowTest, HealthyStreamNeverOpensWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    EXPECT_FALSE(validator.recordMessage(1000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(1100, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(1200, TEST_WINDOW_MS).has_value());
+
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+  }
+
+  TEST(BroadcastRateWindowTest, FirstMessageDoesNotOpenWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    EXPECT_FALSE(validator.recordMessage(1000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.lastIntervalMs());
+  }
+
+  TEST(BroadcastRateWindowTest, ViolationOpensWindowAndCountsMessages)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // 1000 ms gap, opens window 2000..7000
+    EXPECT_TRUE(validator.windowOpen());
+    EXPECT_EQ(1000u, validator.lastIntervalMs());
+
+    validator.recordMessage(2100, TEST_WINDOW_MS);
+    validator.recordMessage(2200, TEST_WINDOW_MS);
+    validator.recordMessage(2300, TEST_WINDOW_MS);
+
+    // The message at the window end closes it, and is not itself counted into it
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(4u, result->messageCount); // the violating message plus the three that followed
+  }
+
+  TEST(BroadcastRateWindowTest, MessageBeforeWindowEndDoesNotCloseIt)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+
+    EXPECT_FALSE(validator.recordMessage(6999, TEST_WINDOW_MS).has_value());
+    EXPECT_TRUE(validator.windowOpen());
+  }
+
+  TEST(BroadcastRateWindowTest, MultipleViolationsAggregateToOneEvent)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    // None of the messages inside the window report anything of their own
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    EXPECT_FALSE(validator.recordMessage(2000, TEST_WINDOW_MS).has_value()); // violation, opens window 2000..7000
+    EXPECT_FALSE(validator.recordMessage(2100, TEST_WINDOW_MS).has_value()); // healthy
+    EXPECT_FALSE(validator.recordMessage(3000, TEST_WINDOW_MS).has_value()); // violation
+    EXPECT_FALSE(validator.recordMessage(3100, TEST_WINDOW_MS).has_value()); // healthy
+    EXPECT_FALSE(validator.recordMessage(4000, TEST_WINDOW_MS).has_value()); // violation
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(3u, result->violationCount);
+    EXPECT_EQ(5u, result->messageCount); // everything from 2000 on; the message at 1000 predates the window
+    EXPECT_EQ(4u, validator.totalViolations()); // the closing message is a violation too
+  }
+
+  // A gap in the stream delays the report but does not distort it: the window is reported
+  // with its original bounds and counts whenever the stream delivers again.
+  TEST(BroadcastRateWindowTest, GapInStreamDelaysReportWithoutDistortingIt)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+
+    // Nothing arrives for another 30 s, so the window is still open and unreported
+    EXPECT_TRUE(validator.windowOpen());
+
+    auto result = validator.recordMessage(32000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs); // still the nominal 5 s bounds, not the gap
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(1u, result->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, WindowsAreTumbling)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    // Closes the first window and, being a violation itself, opens 8000..13000
+    ASSERT_TRUE(validator.recordMessage(8000, TEST_WINDOW_MS).has_value());
+    EXPECT_TRUE(validator.windowOpen());
+
+    auto result = validator.recordMessage(13000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(8000u, result->windowStartMs);
+    EXPECT_EQ(13000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(1u, result->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, MessageAfterWindowEndClosesAndReopens)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+    validator.recordMessage(2100, TEST_WINDOW_MS);
+
+    // Arrives past the window end, so it closes that window without being counted into it
+    auto result = validator.recordMessage(7500, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(2u, result->messageCount);
+
+    // It is itself a violation, so it opens the next window
+    EXPECT_TRUE(validator.windowOpen());
+    auto next = validator.recordMessage(12500, TEST_WINDOW_MS);
+    ASSERT_TRUE(next.has_value());
+    EXPECT_EQ(7500u, next->windowStartMs);
+    EXPECT_EQ(1u, next->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, ExactlyAtThresholdDoesNotOpenWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(1125, TEST_WINDOW_MS); // exactly 125 ms, compliant
+
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+  }
+
+  // The window length comes from the BroadcastRateTimeWindow configuration value, which an
+  // operator can change while the plugin is running
+  // The window length comes from the BroadcastRateTimeWindow configuration value, passed
+  // in on every message, so a configured value other than the default is honoured
+  TEST(BroadcastRateWindowTest, ConfiguredWindowDurationSetsWindowBounds)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, 2000);
+    validator.recordMessage(2000, 2000); // violation, opens a 2 s window 2000..4000
+
+    EXPECT_FALSE(validator.recordMessage(3999, 2000).has_value());
+
+    auto result = validator.recordMessage(4000, 2000);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(4000u, result->windowEndMs);
+  }
+
+  // An operator changing the configuration mid-window leaves the open window on the bounds
+  // it was opened with; the new duration takes effect on the next window
+  TEST(BroadcastRateWindowTest, WindowDurationChangeAppliesToNextWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, 5000);
+    validator.recordMessage(2000, 5000); // violation, opens window 2000..7000
+
+    // Configuration changes to 1 s while that window is still open
+    auto first = validator.recordMessage(7000, 1000);
+    ASSERT_TRUE(first.has_value());
+    EXPECT_EQ(7000u, first->windowEndMs); // still the 5 s window it was opened with
+
+    // That closing message was itself a violation, so it opened a window on the new duration
+    auto second = validator.recordMessage(8000, 1000);
+    ASSERT_TRUE(second.has_value());
+    EXPECT_EQ(7000u, second->windowStartMs);
+    EXPECT_EQ(8000u, second->windowEndMs);
+  }
+
+  TEST(BroadcastRateWindowTest, SpatAndMapValidatorsAreIndependent)
+  {
+    MessageIntervalValidator spat(SPAT_INTERVAL_MAX_MS);
+    MessageIntervalValidator map(MAP_INTERVAL_MAX_MS);
+
+    spat.recordMessage(1000, TEST_WINDOW_MS);
+    map.recordMessage(1000, TEST_WINDOW_MS);
+
+    // 500 ms violates the SPaT interval but not the MAP interval
+    spat.recordMessage(1500, TEST_WINDOW_MS);
+    map.recordMessage(1500, TEST_WINDOW_MS);
+
+    EXPECT_TRUE(spat.windowOpen());
+    EXPECT_FALSE(map.windowOpen());
+    EXPECT_EQ(1u, spat.totalViolations());
+    EXPECT_EQ(0u, map.totalViolations());
+  }
+
+  TEST(BroadcastRateWindowTest, TimeWentBackwardsThrowsAndResyncs)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+    EXPECT_THROW(validator.recordMessage(1500, TEST_WINDOW_MS), tmx::TmxException);
+
+    // The regression is an error, not a violation, so it leaves the window state alone
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+
+    // The backwards timestamp was still accepted as the new time base, so this 100 ms
+    // interval is measured against 1500 rather than against the stale 2000, and the
+    // step-back throws once rather than on every message that follows it
+    EXPECT_NO_THROW(validator.recordMessage(1600, TEST_WINDOW_MS));
+    EXPECT_EQ(100u, validator.lastIntervalMs());
+    EXPECT_FALSE(validator.windowOpen());
+  }
+
+  TEST(BroadcastRateWindowTest, ClosedWindowIsNotReportedTwice)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    ASSERT_TRUE(validator.recordMessage(7000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(7100, TEST_WINDOW_MS).has_value());
+  }
+
+  TEST(BroadcastRateWindowTest, IntersectionIdComesFromFirstViolation)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(2000, TEST_WINDOW_MS, 105); // violation, opens the window
+    validator.recordMessage(3000, TEST_WINDOW_MS, 200); // violation carrying a different intersection
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS, 105);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(105, result->intersectionId);
+    EXPECT_TRUE(result->intersectionIdMismatch);
+  }
+
+  TEST(BroadcastRateWindowTest, ConsistentIntersectionIdReportsNoMismatch)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(2000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(3000, TEST_WINDOW_MS, 105);
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS, 105);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(105, result->intersectionId);
+    EXPECT_FALSE(result->intersectionIdMismatch);
+  }
+
+  TEST(BroadcastRateWindowTest, UnknownIntersectionIdIsReportedAsNegativeOne)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(-1, result->intersectionId);
+  }
+
+  // Event Formatting Tests
+
+  TEST(Iso8601Test, FormatsEpochMs)
+  {
+    EXPECT_EQ("1970-01-01T00:00:00.000Z", formatIso8601Utc(0));
+    EXPECT_EQ("1970-01-01T00:00:01.234Z", formatIso8601Utc(1234));
+    EXPECT_EQ("1970-01-01T00:00:01.020Z", formatIso8601Utc(1020));
+  }
+
+  TEST(BroadcastRateDescriptionTest, ExactWording)
+  {
+    EXPECT_EQ("There has been 3 BroadcastRateEvents for SPaT messages between "
+              "1970-01-01T00:00:00.000Z and 1970-01-01T00:00:05.000Z",
+              formatBroadcastRateDescription("SPaT", 3, 0, 5000));
+
+    EXPECT_EQ("There has been 1 BroadcastRateEvents for MAP messages between "
+              "1970-01-01T00:00:00.000Z and 1970-01-01T00:00:05.000Z",
+              formatBroadcastRateDescription("MAP", 1, 0, 5000));
   }
 
   // SPaT Field Validation Tests
