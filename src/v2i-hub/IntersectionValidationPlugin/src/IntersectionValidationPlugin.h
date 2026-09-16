@@ -28,6 +28,7 @@
 #include <CTI4501ValidationMessage.h>
 #include "RevisionCounterValidator.h"
 #include "MessageIntervalValidator.h"
+#include "IntersectionValidationUtils.h"
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -66,6 +67,7 @@ namespace IntersectionValidation
         uint mapValidationPassed = 0;
         std::string rsuSource; // TODO: Instead of setting the rsu IP here, have the message receiver grab the IP and attach it to the message
         uint64_t BroadcastRateTimeWindow;
+        uint64_t ContentValidationTimeWindow;
 
         uint spatRevisionPassed = 0;
         uint mapRevisionPassed = 0;
@@ -75,6 +77,11 @@ namespace IntersectionValidation
         // Identifier of the measured input stream, reported as topicName on a BroadcastRate event
         std::string spatInputTopic = "topic.ProcessedSpat";
         std::string mapInputTopic = "topic.ProcessedMap";
+
+        std::map<std::string, tmx::messages::CTI4501ValidationMessage> _lastContentValidationMessage;
+        std::map<std::string, tmx::messages::CTI4501ValidationMessage> _lastRevisionValidationMessage;
+
+
 
         /**
          * @brief Record a message arrival against its interval validator
@@ -152,4 +159,20 @@ namespace IntersectionValidation
 
         static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " encountered CTI 4501 MinimumDataEvent: ";
     };
+    /** @brief Compare two vectors of missing data elements for equality.
+     *  @param a First vector of missing data elements.
+     *  @param b Second vector of missing data elements.
+     *  @return True if the vectors are equal, false otherwise.
+     */
+    bool compareMissingDataElements(const std::vector<tmx::messages::MissingDataElement> &a,
+                            const std::vector<tmx::messages::MissingDataElement> &b);
+    /** @brief Compare two CTI 4501 revision count validation messages for and only returns true if they are equal
+     * and revision count is 0 accross the board.
+     *  @param a First CTI 4501 validation message.
+     *  @param b Second CTI 4501 validation message.
+     *  @return True if the messages are equal and revision count is 0, false otherwise.
+     *  @note This is used to throttle duplicate CTI 4501 revision count validation events when revision count is never incremented.
+     */
+    bool compareRevisionValidationMessages(tmx::messages::CTI4501ValidationMessage &a,
+                            tmx::messages::CTI4501ValidationMessage &b);
 }

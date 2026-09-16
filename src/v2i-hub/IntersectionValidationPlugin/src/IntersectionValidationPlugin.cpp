@@ -43,6 +43,9 @@ namespace IntersectionValidation
 
         // BroadcastRate Time Window
         GetConfigValue<uint64_t>("BroadcastRateTimeWindow", BroadcastRateTimeWindow);
+
+        // ContentValidation Time Window
+        GetConfigValue<uint64_t>("ContentValidationTimeWindow", ContentValidationTimeWindow);
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
@@ -223,27 +226,43 @@ namespace IntersectionValidation
                 }
 
 
+
                 uint64_t handlerEndMs = PluginClientClockAware::getClock()->nowInMilliseconds();
 
-                CTI4501ValidationMessage eventMsg;
-                eventMsg.set_eventGeneratedAt(handlerEndMs);
-                eventMsg.set_eventType(eventType);
-                eventMsg.set_intersectionID(intersectionId);
-                eventMsg.set_roadRegulatorID(-1);
-                eventMsg.set_source(rsuSource);
-                eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
-                eventMsg.set_missingDataElements(elements);
+                // Check if last validation errors are equal to current validation errors 
 
-                PLOG(logWARNING) << messageType << " encountered CTI 4501 MinimumDataEvent: " << eventMsg.to_string();
+                if (!compareMissingDataElements(elements, _lastContentValidationMessage[messageType].get_missingDataElements()) || 
+                    _lastContentValidationMessage.find(messageType) == _lastContentValidationMessage.end() ||
+                    (handlerEndMs - _lastContentValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow)
+                {
+
+                    CTI4501ValidationMessage eventMsg;
+                    eventMsg.set_eventGeneratedAt(handlerEndMs);
+                    eventMsg.set_eventType(eventType);
+                    eventMsg.set_intersectionID(intersectionId);
+                    eventMsg.set_roadRegulatorID(-1);
+                    eventMsg.set_source(rsuSource);
+                    eventMsg.set_timePeriod(ProcessingTimePeriod(handlerBeginMs, handlerEndMs));
+                    eventMsg.set_missingDataElements(elements);
+
+                    PLOG(logWARNING) << messageType << " encountered CTI 4501 MinimumDataEvent: " << eventMsg.to_string();
 
 
-                PluginClient::BroadcastMessage(eventMsg);
+                    PluginClient::BroadcastMessage(eventMsg);
 
-                // EventLog Message
-                tmx::messages::TmxEventLogMessage eventLogMsg;
-                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
-                eventLogMsg.set_description(messageType + EVENT_FIELD_VALIDATION_FAILED + eventMsg.to_string());
-                BroadcastMessage(eventLogMsg);
+                    // EventLog Message
+                    tmx::messages::TmxEventLogMessage eventLogMsg;
+                    eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+                    eventLogMsg.set_description(messageType + EVENT_FIELD_VALIDATION_FAILED + eventMsg.to_string());
+                    BroadcastMessage(eventLogMsg);
+                    // Store last validation errors for each unique message type
+                    _lastContentValidationMessage[messageType] = eventMsg;
+                }
+                else
+                {
+                    PLOG(logDEBUG) << messageType << " minimum-data unchanged from previous message; "
+                                   << "throttling duplicate event";
+                }
             }
         }
         else
@@ -280,7 +299,8 @@ namespace IntersectionValidation
             {
                 continue;
             }
-
+            // Check if last revision validation error had 0 message count and current validation error has 0 count.
+            // If both are 
             CTI4501ValidationMessage eventMsg;
             eventMsg.set_eventGeneratedAt(handlerEndMs);
             eventMsg.set_eventType(eventType); // Spat/MapMessageCountProgression
@@ -292,16 +312,31 @@ namespace IntersectionValidation
             eventMsg.set_messageCountB(change.progressionCountB);
             eventMsg.set_timestampA(change.timestampA);
             eventMsg.set_timestampB(change.timestampB);
-            PluginClient::BroadcastMessage(eventMsg);
 
-            // EventLog Message
-            tmx::messages::TmxEventLogMessage eventLogMsg;
-            eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
-            eventLogMsg.set_description(messageType + " intersection " + std::to_string(change.id) +
-                                        " message count did not progress per CTI 4501 (countA=" +
-                                        std::to_string(change.progressionCountA) + ", countB=" +
-                                        std::to_string(change.progressionCountB) + ")");
-            BroadcastMessage(eventLogMsg);
+            if ( !compareRevisionValidationMessages(eventMsg, _lastRevisionValidationMessage[messageType]) || 
+                _lastRevisionValidationMessage.find(messageType) == _lastRevisionValidationMessage.end() ||
+                (handlerEndMs - _lastRevisionValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow)
+            {
+                PLOG(logWARNING) << messageType << " encountered CTI 4501 MessageCountProgressionEvent: " << eventMsg.to_string();
+                PluginClient::BroadcastMessage(eventMsg);
+                // EventLog Message
+                tmx::messages::TmxEventLogMessage eventLogMsg;
+                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_error);
+                eventLogMsg.set_description(messageType + " intersection " + std::to_string(change.id) +
+                                            " message count did not progress per CTI 4501 (countA=" +
+                                            std::to_string(change.progressionCountA) + ", countB=" +
+                                            std::to_string(change.progressionCountB) + ")");
+                BroadcastMessage(eventLogMsg);
+
+                _lastRevisionValidationMessage[messageType] = eventMsg;
+            }
+            else
+            {
+                PLOG(logDEBUG) << messageType << " message count progression unchanged from previous message; "
+                               << "throttling duplicate event";
+                continue;
+            }
+                       
         }
 
         // CTI 4501 revision validity bookkeeping (no event emitted here).
@@ -435,6 +470,8 @@ namespace IntersectionValidation
             PLOG(logERROR) << "Error during MAP validation: " << e.what();
         }
     }
+
+   
 }
 int main(int argc, char *argv[])
 {
