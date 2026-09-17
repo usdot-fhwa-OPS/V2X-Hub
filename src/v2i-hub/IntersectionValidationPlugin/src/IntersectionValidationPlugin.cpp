@@ -222,9 +222,9 @@ namespace IntersectionValidation
 
                 // Check if last validation errors are equal to current validation errors 
 
-                if (!compareMissingDataElements(elements, _lastContentValidationMessage[messageType].get_missingDataElements()) || 
-                    _lastContentValidationMessage.find(messageType) == _lastContentValidationMessage.end() ||
-                    (handlerEndMs - _lastContentValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow)
+                if (_lastContentValidationMessage.find(messageType) == _lastContentValidationMessage.end() ||  // No previous validation errors for this message type
+                    !compareMissingDataElements(elements, _lastContentValidationMessage[messageType].get_missingDataElements()) ||  // Current validation errors different from previous
+                    (handlerEndMs - _lastContentValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow) // Current validation errors the same as previous but outside of the throttling time window
                 {
                     // TODO: This currently only supports 1 to 1 intersection to v2xhub mapping
                     // Update to support multiple intersections per v2xhub in the future
@@ -307,9 +307,10 @@ namespace IntersectionValidation
             eventMsg.set_timestampA(change.timestampA);
             eventMsg.set_timestampB(change.timestampB);
 
-            if ( !compareRevisionValidationMessages(eventMsg, _lastRevisionValidationMessage[messageType]) || 
-                _lastRevisionValidationMessage.find(messageType) == _lastRevisionValidationMessage.end() ||
-                (handlerEndMs - _lastRevisionValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow)
+            if (_lastRevisionValidationMessage.find(messageType) == _lastRevisionValidationMessage.end() ||  // No previous validation errors for this message type
+                !compareRevisionValidationMessages(eventMsg, _lastRevisionValidationMessage[messageType]) || // Current validation errors different from previous or none zero counts
+                (handlerEndMs - _lastRevisionValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow) // Current validation errors the same and zero counts but outside of the throttling time window
+                {
             {
                 PLOG(logWARNING) << messageType << " encountered CTI 4501 MessageCountProgressionEvent: " << eventMsg.to_string();
                 PluginClient::BroadcastMessage(eventMsg);
