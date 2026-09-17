@@ -180,15 +180,6 @@ namespace IntersectionValidation
         rapidjson::SchemaDocument schema(schemaDoc);
         rapidjson::SchemaValidator validator(schema);
 
-        if (messageType == "SPaT")
-        {
-            PluginClient::SetStatus("SPaT Schema Path configured", "Yes");
-        }
-        else if (messageType == "MAP")
-        {
-            PluginClient::SetStatus("MAP Schema Path configured", "Yes");
-        }
-
         if (!doc.Accept(validator))
         {
             // The validation failure is real regardless of throttling, so count it.
@@ -235,7 +226,8 @@ namespace IntersectionValidation
                     _lastContentValidationMessage.find(messageType) == _lastContentValidationMessage.end() ||
                     (handlerEndMs - _lastContentValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow)
                 {
-
+                    // TODO: This currently only supports 1 to 1 intersection to v2xhub mapping
+                    // Update to support multiple intersections per v2xhub in the future
                     CTI4501ValidationMessage eventMsg;
                     eventMsg.set_eventGeneratedAt(handlerEndMs);
                     eventMsg.set_eventType(eventType);
@@ -272,6 +264,7 @@ namespace IntersectionValidation
 
         if (messageType == "SPaT")
         {
+            PluginClient::SetStatus("SPaT Schema Path configured", "Yes");
             PluginClient::SetStatus("SPaT Field Validation Passed", static_cast<int>(passed));
             PluginClient::SetStatus("SPaT Field Validation Failed", static_cast<int>(failed));
         }
@@ -279,6 +272,7 @@ namespace IntersectionValidation
         {
             PluginClient::SetStatus("MAP Field Validation Passed", static_cast<int>(passed));
             PluginClient::SetStatus("MAP Field Validation Failed", static_cast<int>(failed));
+            PluginClient::SetStatus("MAP Schema Path configured", "Yes");
         }
     }
 
