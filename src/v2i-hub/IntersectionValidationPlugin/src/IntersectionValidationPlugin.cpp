@@ -310,7 +310,6 @@ namespace IntersectionValidation
             if (_lastRevisionValidationMessage.find(messageType) == _lastRevisionValidationMessage.end() ||  // No previous validation errors for this message type
                 !compareRevisionValidationMessages(eventMsg, _lastRevisionValidationMessage[messageType]) || // Current validation errors different from previous or none zero counts
                 (handlerEndMs - _lastRevisionValidationMessage[messageType].get_eventGeneratedAt()) > ContentValidationTimeWindow) // Current validation errors the same and zero counts but outside of the throttling time window
-                {
             {
                 PLOG(logWARNING) << messageType << " encountered CTI 4501 MessageCountProgressionEvent: " << eventMsg.to_string();
                 PluginClient::BroadcastMessage(eventMsg);
