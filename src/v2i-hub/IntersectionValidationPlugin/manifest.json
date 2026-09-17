@@ -37,6 +37,11 @@
       "key": "BroadcastRateTimeWindow",
       "default": "5000",
       "description": "This is the time window (in ms) over which the Intersection Validation Plugin will catch BroadcastRateEvents. At the end of the time window (default set to 5 seconds), an aggregate CTI 4501 Validation event will be created containing all failures during the time window."
+    },
+     {
+      "key": "ContentValidationTimeWindow",
+      "default": "5000",
+      "description": "This is the time window (in ms) over which the Intersection Validation Plugin will only send a single CTI 4501 Validation event for each unique failure in the time window. This is used to reduce duplicate CTI 4501 Validation events."
     }
   ]
 }

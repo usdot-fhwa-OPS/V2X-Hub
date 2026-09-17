@@ -19,7 +19,7 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
-#include <IntersectionValidationPlugin.h>
+#include <IntersectionValidationUtils.h>
 #include <MessageIntervalValidator.h>
 #include <FieldValidation.h>
 #include <RevisionCounterValidator.h>
@@ -6360,6 +6360,51 @@ namespace
       EXPECT_TRUE(mapWouldEmit(validator, MAP_A));    // first — emits
       EXPECT_FALSE(mapWouldEmit(validator, MAP_A));   // identical — throttled
       EXPECT_TRUE(mapWouldEmit(validator, MAP_B));    // content changed — emits again
+  }
+
+  TEST(CompareCTI4501ValidationMessage, compareMissingDataElements) {
+    // Test to evaluate compareMissingDataElements function when given two std::vector<MissingDataElement>
+    MissingDataElement a (R"($.value.SPAT.intersections[0].roadAuthorityID is missing (#\/properties\/value\/properties\/SPAT\/properties\/intersections\/items\/properties\/roadAuthorityID))");
+    MissingDataElement b (R"($.value.SPAT.intersections[0].states[0].state-time-speed[0].timing.startTime is missing (#\/properties\/value\/properties\/SPAT\/properties\/intersections\/items\/properties\/states\/items\/properties\/state-time-speed\/items\/properties\/timing\/properties\/startTime))");
+    std::vector<MissingDataElement> first = {
+        a,
+        b
+    };
+    std::vector<MissingDataElement> second = {
+        a,
+        b
+    };
+
+    std::vector<MissingDataElement> third = {
+        b,
+        b
+    };
+    EXPECT_TRUE(compareMissingDataElements(first, second));
+    EXPECT_FALSE(compareMissingDataElements(first, third));
+  
+  }
+
+  TEST(CompareRevisionValidationMessages, compareRevisionValidationMessages) {
+    CTI4501ValidationMessage a;
+    a.set_messageCountA(1);
+    a.set_messageCountB(2);
+
+    CTI4501ValidationMessage b;
+    b.set_messageCountA(1);
+    b.set_messageCountB(2);
+
+    EXPECT_FALSE(compareRevisionValidationMessages(a, b));
+
+    CTI4501ValidationMessage c;
+    c.set_messageCountA(0);
+    c.set_messageCountB(0);
+
+    CTI4501ValidationMessage d;
+    d.set_messageCountA(0);
+    d.set_messageCountB(0);
+    EXPECT_TRUE(compareRevisionValidationMessages(c, d));
+    EXPECT_FALSE(compareRevisionValidationMessages(a, c));
+    EXPECT_FALSE(compareRevisionValidationMessages(c, a));
   }
 
 
