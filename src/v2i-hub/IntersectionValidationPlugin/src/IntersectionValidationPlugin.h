@@ -68,6 +68,9 @@ namespace IntersectionValidation
         std::string rsuSource; // TODO: Instead of setting the rsu IP here, have the message receiver grab the IP and attach it to the message
         uint64_t BroadcastRateTimeWindow;
         uint64_t ContentValidationTimeWindow;
+        uint64_t ContentUnchangedTimeWindow;
+
+        std::map<std::string, uint64_t> lastBroadcastMessageTime; // Map of message type to last broadcast time for that message type
 
         uint spatRevisionPassed = 0;
         uint mapRevisionPassed = 0;

@@ -46,6 +46,9 @@ namespace IntersectionValidation
 
         // ContentValidation Time Window
         GetConfigValue<uint64_t>("ContentValidationTimeWindow", ContentValidationTimeWindow);
+
+         // ContentUnchangedTimeWindow Time Window
+        GetConfigValue<uint64_t>("ContentUnchangedTimeWindow", ContentUnchangedTimeWindow);
     }
 
 	void IntersectionValidationPlugin::OnConfigChanged(const char *key, const char *value)
@@ -408,9 +411,12 @@ namespace IntersectionValidation
             // Parse, preprocess, validate
             RevisionCounterResult revResult = validateMessage(spatJsonStr, spatSchemaPath, "SpatMinimumData",
                                                               "SpatMessageCountProgression", "SPaT", intersectionId, handlerBeginMs);
-
-            if (planForwarding(revResult))
+            if (planForwarding(revResult)
+                || handlerBeginMs - lastBroadcastMessageTime["SPaT"] > ContentUnchangedTimeWindow) {
+                // Forward if content changed or if time since last broadcast exceeds the configured window
                 broadcastValidated(routeableMsg);
+                lastBroadcastMessageTime["SPaT"] = handlerBeginMs;
+            }
         }
         catch (const std::exception &e)
         {
@@ -456,8 +462,14 @@ namespace IntersectionValidation
             RevisionCounterResult revResult = validateMessage(mapJsonStr, mapSchemaPath, "MapMinimumData",
                                                               "MapMessageCountProgression", "MAP", intersectionId, handlerBeginMs);
 
-            if (planForwarding(revResult))
+            if (planForwarding(revResult) 
+                || handlerBeginMs - lastBroadcastMessageTime["MAP"] > ContentUnchangedTimeWindow) 
+            {
+                // Forward if content changed or if time since last broadcast exceeds the configured window
                 broadcastValidated(routeableMsg);
+                lastBroadcastMessageTime["MAP"] = handlerBeginMs;
+
+            }
         }
         catch (const std::exception &e)
         {

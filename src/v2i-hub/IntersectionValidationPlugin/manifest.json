@@ -42,6 +42,11 @@
       "key": "ContentValidationTimeWindow",
       "default": "60000",
       "description": "This is the time window (in ms) over which the Intersection Validation Plugin will only send a single CTI 4501 Validation event for each unique failure in the time window. This is used to reduce duplicate CTI 4501 Validation events."
+    },
+    {
+      "key": "ContentUnchangedTimeWindow",
+      "default": "60000",
+      "description": "This is a time window (in ms) over which the Intersection Validation Plugin will only forward unique J2735 messages. This allows the user to controll how frequently duplicate V2X Data is broadcast to CV Manager."
     }
   ]
 }
