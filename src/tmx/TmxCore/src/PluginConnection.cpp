@@ -116,6 +116,24 @@ void PluginConnection::receiverThread()
 			mEventContinueSlowProcessor.Set();
 			mFastProcessorThread.join();
 			mSlowProcessorThread.join();
+			mMutexFastMessageQueue.lock();
+			cout << "Fast message queue size: " << mFastMessageQueue.size() << endl;
+			while (!mFastMessageQueue.empty())
+			{
+				IvpMessage *msg = mFastMessageQueue.front();
+				mFastMessageQueue.pop();
+				ivpMsg_destroy(msg);
+			}
+			mMutexFastMessageQueue.unlock();
+			mMutexSlowMessageQueue.lock();
+			cout << "Slow message queue size: " << mSlowMessageQueue.size() << endl;
+			while (!mSlowMessageQueue.empty())
+			{
+				IvpMessage *msg = mSlowMessageQueue.front();
+				mSlowMessageQueue.pop();
+				ivpMsg_destroy(msg);
+			}
+			mMutexSlowMessageQueue.unlock();
 
 			delete this;
 			return;
@@ -123,15 +141,15 @@ void PluginConnection::receiverThread()
 
 		msgFramer_incrementBufPos(&framer, recvcount);
 
-		char *rawMessage = NULL;
+		char *rawMessage = nullptr;
 
-		while ((rawMessage = msgFramer_getNextMsg(&framer)) != NULL)
+		while ((rawMessage = msgFramer_getNextMsg(&framer)) != nullptr)
 		{
 			// Create an IvpMessage from the raw message.
 			IvpMessage *msg = ivpMsg_parse(rawMessage);
 
 			// If the message could not be parsed, send an error message back to the plugin.
-			if (msg == NULL)
+			if (msg == nullptr)
 			{
 				IvpMessage *errMsg = ivpError_createMsg(ivpError_createError(IvpLogLevel_warn, IvpError_messageParse, 0));
 				if (errMsg)
@@ -163,6 +181,8 @@ void PluginConnection::receiverThread()
 				mMutexFastMessageQueue.unlock();
 				mEventContinueFastProcessor.Set();
 			}
+			
+
 		}
 	}
 }
@@ -259,7 +279,7 @@ void PluginConnection::slowProcessorThread()
 #endif
 
 	bool messageWaiting = false;
-	IvpMessage *msg = NULL;
+	IvpMessage *msg = nullptr;
 
 	// Disable interruption of this thread (as long as the variable below is in scope).
 	// This allows the thread to exit gracefully by checking interruption_requested().
@@ -283,12 +303,12 @@ void PluginConnection::slowProcessorThread()
 		}
 		else
 		{
-			msg = NULL;
+			msg = nullptr;
 		}
 
 		mMutexSlowMessageQueue.unlock();
 
-		if (msg == NULL) continue;
+		if (msg == nullptr) continue;
 
 		if (ivpPluginStatus_isStatusMsg(msg))
 		{
@@ -298,9 +318,10 @@ void PluginConnection::slowProcessorThread()
 		{
 			processEventLogMessage(msg);
 		}
-
+		LOG_FATAL("Current slow message queue size: " << mSlowMessageQueue.size() << " for plugin " << this->mInfo.pluginInfo.name);
 		ivpMsg_destroy(msg);
 	}
+	LOG_FATAL("Slow processor thread exiting");
 }
 
 void PluginConnection::processRegistrationMessage(IvpMessage *msg)
@@ -512,14 +533,14 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 void PluginConnection::processEventLogMessage(IvpMessage *msg)
 {
 	IvpEventLogEntry *eventLogEntry = ivpEventLog_getEventLogEntry(msg);
-	assert(eventLogEntry != NULL);
+	assert(eventLogEntry != nullptr);
 
 	if (eventLogEntry)
 	{
 		assert(eventLogEntry->description != NULL);
 		assert(eventLogEntry->description[0] != '\0');
 
-		if (eventLogEntry != NULL && eventLogEntry->description[0] != '\0')
+		if (eventLogEntry != nullptr && eventLogEntry->description[0] != '\0')
 		{
 			this->addEventLogEntry((LogLevel)eventLogEntry->level, string(eventLogEntry->description));
 		}
