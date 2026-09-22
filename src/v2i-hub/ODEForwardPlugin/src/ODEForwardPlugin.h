@@ -17,7 +17,7 @@
 #ifndef TMX_PLUGINS_ODEForwardPlugin_H_
 #define TMX_PLUGINS_ODEForwardPlugin_H_
 
-#include <PluginClientClockAware.h>
+#include <PluginClient.h>
 #include <iostream>
 #include <cstring>
 #include <string>
@@ -58,7 +58,7 @@ namespace ODEForwardPlugin
 	/**
 	 * This plugin logs the BSM messages received in the following CSV format.
 	 */
-	class ODEForwardPlugin: public tmx::utils::PluginClientClockAware
+	class ODEForwardPlugin: public tmx::utils::PluginClient
 	{
 		public:
 			explicit ODEForwardPlugin(const std::string &name);
