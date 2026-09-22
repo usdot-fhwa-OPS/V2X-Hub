@@ -50,6 +50,7 @@ void PluginConnection::onConfigChanged(string key, string value)
 		this->onMessageReceived(msg);
 		ivpMsg_destroy(msg);
 	}
+	ivpConfig_destroyCollection(collection);
 }
 
 // This onMessageReceived override is called to send messages to plugins that are using the ivpapi
@@ -120,20 +121,16 @@ void PluginConnection::receiverThread()
 			mSlowProcessorThread.join();
 			// Clear queues and free messages
 			mMutexFastMessageQueue.lock();
-			while (!mFastMessageQueue.empty())
-			{
-				IvpMessage *msg = mFastMessageQueue.front();
-				mFastMessageQueue.pop_front();
+			for (const auto msg : mFastMessageQueue) {
 				ivpMsg_destroy(msg);
 			}
+			mFastMessageQueue.clear();
 			mMutexFastMessageQueue.unlock();
 			mMutexSlowMessageQueue.lock();
-			while (!mSlowMessageQueue.empty())
-			{
-				IvpMessage *msg = mSlowMessageQueue.front();
-				mSlowMessageQueue.pop_front();
+			for (const auto msg : mSlowMessageQueue) {
 				ivpMsg_destroy(msg);
 			}
+			mSlowMessageQueue.clear();
 			mMutexSlowMessageQueue.unlock();
 
 			delete this;
@@ -173,6 +170,8 @@ void PluginConnection::receiverThread()
 				mMutexSlowMessageQueue.lock();
 				if (mSlowMessageQueue.full()) {
 					LOG_WARN("Event/Status message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+					// Must free memory before push_back deletes pointer
+					ivpMsg_destroy(mSlowMessageQueue.front());
 				}
 				mSlowMessageQueue.push_back(msg);
 				mMutexSlowMessageQueue.unlock();
@@ -183,6 +182,8 @@ void PluginConnection::receiverThread()
 				mMutexFastMessageQueue.lock();
 				if (mFastMessageQueue.full()) {
 					LOG_WARN("Configuration/Registration/Subscribe message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+					// Must free memory before push_back deletes pointer
+					ivpMsg_destroy(mFastMessageQueue.front());
 				}
 				mFastMessageQueue.push_back(msg);
 				mMutexFastMessageQueue.unlock();
@@ -326,6 +327,7 @@ void PluginConnection::slowProcessorThread()
 			processEventLogMessage(msg);
 		}
 		ivpMsg_destroy(msg);
+		LOG_DEBUG("Slow Queue size " << mSlowMessageQueue.size() << " for Plugin " << mInfo.pluginInfo.name );
 	}
 	LOG_FATAL("Slow processor thread exiting");
 }

@@ -113,6 +113,7 @@ void Plugin::registerPlugin(RegistrationInformation info)
 	IvpMessage *msg = ivpMsg_create(NULL, NULL, NULL, IvpMsgFlags_None, NULL);
 	if (msg != NULL)
 		this->sendMessageToRouter(msg);
+	//Clean up registration message
 	ivpMsg_destroy(msg);
 }
 

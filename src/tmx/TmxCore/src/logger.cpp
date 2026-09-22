@@ -53,10 +53,9 @@ Logger* Logger::getInstance(std::string logFile)
 		);
 
     	logging::add_console_log(std::cout, boost::log::keywords::format = "%TimeStamp%\t%Message%");
-
 		logging::core::get()->set_filter
 		(
-			logging::trivial::severity >= logging::trivial::trace
+			logging::trivial::severity >= logging::trivial::info
 		);
 
         logging::add_common_attributes();
