@@ -21,7 +21,9 @@ using namespace std;
 // The receiver thread then listens for messages over the socket.
 // When a message is received it is placed on a queue for processing by the processor threads.
 
-PluginConnection::PluginConnection(MessageRouter *router, int socket) : Plugin(router)
+PluginConnection::PluginConnection(MessageRouter *router, int socket) : Plugin(router),
+	mFastMessageQueue(50),
+	mSlowMessageQueue(50)
 {
 	assert(socket != (int) NULL);
 
@@ -116,21 +118,20 @@ void PluginConnection::receiverThread()
 			mEventContinueSlowProcessor.Set();
 			mFastProcessorThread.join();
 			mSlowProcessorThread.join();
+			// Clear queues and free messages
 			mMutexFastMessageQueue.lock();
-			cout << "Fast message queue size: " << mFastMessageQueue.size() << endl;
 			while (!mFastMessageQueue.empty())
 			{
 				IvpMessage *msg = mFastMessageQueue.front();
-				mFastMessageQueue.pop();
+				mFastMessageQueue.pop_front();
 				ivpMsg_destroy(msg);
 			}
 			mMutexFastMessageQueue.unlock();
 			mMutexSlowMessageQueue.lock();
-			cout << "Slow message queue size: " << mSlowMessageQueue.size() << endl;
 			while (!mSlowMessageQueue.empty())
 			{
 				IvpMessage *msg = mSlowMessageQueue.front();
-				mSlowMessageQueue.pop();
+				mSlowMessageQueue.pop_front();
 				ivpMsg_destroy(msg);
 			}
 			mMutexSlowMessageQueue.unlock();
@@ -170,14 +171,20 @@ void PluginConnection::receiverThread()
 			if (ivpPluginStatus_isStatusMsg(msg) ||	ivpEventLog_isEventLogMsg(msg))
 			{
 				mMutexSlowMessageQueue.lock();
-				mSlowMessageQueue.push(msg);
+				if (mSlowMessageQueue.full()) {
+					LOG_WARN("Event/Status message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+				}
+				mSlowMessageQueue.push_back(msg);
 				mMutexSlowMessageQueue.unlock();
 				mEventContinueSlowProcessor.Set();
 			}
 			else
 			{
 				mMutexFastMessageQueue.lock();
-				mFastMessageQueue.push(msg);
+				if (mFastMessageQueue.full()) {
+					LOG_WARN("Configuration/Registration/Subscribe message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+				}
+				mFastMessageQueue.push_back(msg);
 				mMutexFastMessageQueue.unlock();
 				mEventContinueFastProcessor.Set();
 			}
@@ -215,7 +222,7 @@ void PluginConnection::fastProcessorThread()
 		if (!mFastMessageQueue.empty())
 		{
 			msg = mFastMessageQueue.front();
-			mFastMessageQueue.pop();
+			mFastMessageQueue.pop_front();
 			messageWaiting = !mFastMessageQueue.empty();
 		}
 		else
@@ -298,7 +305,7 @@ void PluginConnection::slowProcessorThread()
 		if (!mSlowMessageQueue.empty())
 		{
 			msg = mSlowMessageQueue.front();
-			mSlowMessageQueue.pop();
+			mSlowMessageQueue.pop_front();
 			messageWaiting = !mSlowMessageQueue.empty();
 		}
 		else
@@ -318,7 +325,6 @@ void PluginConnection::slowProcessorThread()
 		{
 			processEventLogMessage(msg);
 		}
-		LOG_FATAL("Current slow message queue size: " << mSlowMessageQueue.size() << " for plugin " << this->mInfo.pluginInfo.name);
 		ivpMsg_destroy(msg);
 	}
 	LOG_FATAL("Slow processor thread exiting");

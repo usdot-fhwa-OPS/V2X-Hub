@@ -16,7 +16,6 @@ namespace tmx::utils {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
             PLOG(logDEBUG2) << "Added Time Sync Message Filter";
         }
-        _pluginStatusThrottle.set_Frequency(boost::chrono::milliseconds(2000));
         
 
     }

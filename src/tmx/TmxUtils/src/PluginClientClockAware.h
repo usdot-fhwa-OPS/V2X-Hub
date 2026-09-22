@@ -43,13 +43,7 @@ protected:
     void OnStateChange(IvpPluginState state) override; 
     
     bool isSimulationMode() const;
-    template<typename T>
-    inline bool SetStatusThrottled(const char *key, T value, bool prependTime = false, std::streamsize precision = 2) {
-        if (_pluginStatusThrottle.Monitor(key)) {
-            return PluginClient::SetStatus<T>(key, value, prependTime, precision);
-        }
-        return false;
-    };
+    
 
 
 
@@ -70,7 +64,7 @@ private:
 
     bool _simulation_mode;
 
-    tmx::utils::FrequencyThrottle<std::string> _pluginStatusThrottle;
+   
     
 };
 

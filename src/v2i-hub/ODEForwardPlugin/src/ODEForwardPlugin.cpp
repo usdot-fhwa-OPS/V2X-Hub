@@ -163,11 +163,11 @@ namespace ODEForwardPlugin
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::BSM);
 			++_bsmStats.forwarded;
-			PluginClientClockAware::SetStatusThrottled<uint>("BSM Forwarded", _bsmStats.forwarded);
+			PluginClient::SetStatusThrottled<uint>("BSM Forwarded", _bsmStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward BSM message: " << e.what();
 			++_bsmStats.skipped;
-			PluginClientClockAware::SetStatusThrottled<uint>("BSM Skipped", _bsmStats.skipped);
+			PluginClient::SetStatusThrottled<uint>("BSM Skipped", _bsmStats.skipped);
 		}
 
 	}
@@ -181,11 +181,11 @@ namespace ODEForwardPlugin
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::SPAT);
 			++_spatStats.forwarded;
-			PluginClientClockAware::SetStatusThrottled<uint>("SPAT Forwarded", _spatStats.forwarded);
+			PluginClient::SetStatusThrottled<uint>("SPAT Forwarded", _spatStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward SPAT message: " << e.what();
 			++_spatStats.skipped;
-			PluginClientClockAware::SetStatusThrottled<uint>("SPAT Skipped", _spatStats.skipped);
+			PluginClient::SetStatusThrottled<uint>("SPAT Skipped", _spatStats.skipped);
 		}
 	}
 
@@ -193,7 +193,7 @@ namespace ODEForwardPlugin
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::TIM);
 			++_timStats.forwarded;
-			PluginClientClockAware::SetStatusThrottled<uint>("TIM Forwarded", _timStats.forwarded);
+			PluginClient::SetStatusThrottled<uint>("TIM Forwarded", _timStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward TIM message: " << e.what();
 			++_timStats.skipped;
@@ -211,11 +211,11 @@ namespace ODEForwardPlugin
 		try {
 			sendUDPMessage(routeableMsg, UDPMessageType::MAP);
 			++_mapStats.forwarded;
-			PluginClientClockAware::SetStatusThrottled<uint>("MAP Forwarded", _mapStats.forwarded);
+			PluginClient::SetStatusThrottled<uint>("MAP Forwarded", _mapStats.forwarded);
 		} catch (const tmx::TmxException &e) {
 			PLOG(logERROR) << "Failed to forward MAP message: " << e.what();
 			++_mapStats.skipped;
-			PluginClientClockAware::SetStatusThrottled<uint>("MAP Skipped", _mapStats.skipped);
+			PluginClient::SetStatusThrottled<uint>("MAP Skipped", _mapStats.skipped);
 		}
 	}
 
@@ -252,12 +252,12 @@ namespace ODEForwardPlugin
 			PLOG(logDEBUG) << "Forwarded validation event '" << eventType
 			               << "' to Kafka topic '" << it->second << "'.";
 			++_validationStats.forwarded;
-			PluginClientClockAware::SetStatusThrottled<uint>("Validation Events Forwarded", _validationStats.forwarded);
+			PluginClient::SetStatusThrottled<uint>("Validation Events Forwarded", _validationStats.forwarded);
 		} catch (const std::exception &e) {
 			PLOG(logERROR) << "Failed to forward validation event '" << eventType
 			               << "': " << e.what();
 			++_validationStats.skipped;
-			PluginClientClockAware::SetStatusThrottled<uint>("Validation Events Skipped", _validationStats.skipped);
+			PluginClient::SetStatusThrottled<uint>("Validation Events Skipped", _validationStats.skipped);
 		}
 	}
 
