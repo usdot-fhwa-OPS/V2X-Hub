@@ -3,7 +3,6 @@
 #include <carma-clock/carma_clock.h>
 #include <environment/EnvUtils.h>
 #include <TimeSyncMessage.h>
-#include <FrequencyThrottle.h>
 #include "PluginClient.h"
 #include "Clock.h"
 
@@ -43,9 +42,6 @@ protected:
     void OnStateChange(IvpPluginState state) override; 
     
     bool isSimulationMode() const;
-    
-
-
 
     
 private:
@@ -63,8 +59,6 @@ private:
 	const char* Key_Simulation_Mode = "Simulation Mode ";
 
     bool _simulation_mode;
-
-   
     
 };
 

@@ -16,7 +16,6 @@ namespace tmx::utils {
             AddMessageFilter<tmx::messages::TimeSyncMessage>(this, &PluginClientClockAware::HandleTimeSyncMessage);
             PLOG(logDEBUG2) << "Added Time Sync Message Filter";
         }
-        
 
     }
 
@@ -44,7 +43,5 @@ namespace tmx::utils {
         clock->wait_for_initialization(); // Blocks until first call to update when in sim mode.
         return clock;
     }
-
-
 
 }
