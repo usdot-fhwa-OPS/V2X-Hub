@@ -389,6 +389,9 @@ void PluginConnection::processRegistrationMessage(IvpMessage *msg)
 					this->onMessageReceived(msg);
 					ivpMsg_destroy(msg);
 				}
+				if (collection) {
+					ivpConfig_destroyCollection(collection);
+				}
 			}
 			catch (PluginException &e)
 			{
@@ -523,6 +526,9 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 				key = string(item->key);
 			updateItems[key] = string(item->value);
 		}
+		// Cleanup IvpStatusItem
+		ivpPluginStatus_destroyItem(item);
+
 	}
 
 	try
@@ -534,6 +540,7 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 	{
 		LOG_WARN(e.what());
 	}
+
 }
 
 void PluginConnection::processEventLogMessage(IvpMessage *msg)
