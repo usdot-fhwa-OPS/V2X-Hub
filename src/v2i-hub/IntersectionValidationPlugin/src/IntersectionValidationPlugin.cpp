@@ -83,7 +83,7 @@ namespace IntersectionValidation
             return;
         }
 
-        PluginClient::SetStatus((messageType + " Message Interval (ms)").c_str(), validator.lastIntervalMs());
+        PluginClient::SetStatusThrottled((messageType + " Message Interval (ms)").c_str(), validator.lastIntervalMs());
 
         // Since closedWindow is std::optional, this checks to see if closedWindow has a value.
         // Without this check, the dereferencing will be undefined behavior
@@ -267,15 +267,15 @@ namespace IntersectionValidation
 
         if (messageType == "SPaT")
         {
-            PluginClient::SetStatus("SPaT Schema Path configured", "Yes");
-            PluginClient::SetStatus("SPaT Field Validation Passed", static_cast<int>(passed));
-            PluginClient::SetStatus("SPaT Field Validation Failed", static_cast<int>(failed));
+            PluginClient::SetStatusThrottled("SPaT Schema Path configured", "Yes");
+            PluginClient::SetStatusThrottled("SPaT Field Validation Passed", static_cast<int>(passed));
+            PluginClient::SetStatusThrottled("SPaT Field Validation Failed", static_cast<int>(failed));
         }
         else if (messageType == "MAP")
         {
-            PluginClient::SetStatus("MAP Field Validation Passed", static_cast<int>(passed));
-            PluginClient::SetStatus("MAP Field Validation Failed", static_cast<int>(failed));
-            PluginClient::SetStatus("MAP Schema Path configured", "Yes");
+            PluginClient::SetStatusThrottled("MAP Field Validation Passed", static_cast<int>(passed));
+            PluginClient::SetStatusThrottled("MAP Field Validation Failed", static_cast<int>(failed));
+            PluginClient::SetStatusThrottled("MAP Schema Path configured", "Yes");
         }
     }
 
@@ -355,13 +355,13 @@ namespace IntersectionValidation
 
         if (messageType == "SPaT")
         {
-            PluginClient::SetStatus("SPaT Revision Validation Passed", static_cast<int>(passed));
-            PluginClient::SetStatus("SPaT Revision Validation Failed", static_cast<int>(failed));
+            PluginClient::SetStatusThrottled("SPaT Revision Validation Passed", static_cast<int>(passed));
+            PluginClient::SetStatusThrottled("SPaT Revision Validation Failed", static_cast<int>(failed));
         }
         else if (messageType == "MAP")
         {
-            PluginClient::SetStatus("MAP Revision Validation Passed", static_cast<int>(passed));
-            PluginClient::SetStatus("MAP Revision Validation Failed", static_cast<int>(failed));
+            PluginClient::SetStatusThrottled("MAP Revision Validation Passed", static_cast<int>(passed));
+            PluginClient::SetStatusThrottled("MAP Revision Validation Failed", static_cast<int>(failed));
         }
 
         return result;
@@ -385,7 +385,7 @@ namespace IntersectionValidation
         if (spatSchemaPath.empty())
         {
             PLOG(logWARNING) << "SpatSchemaPath not configured, skipping validation";
-            PluginClient::SetStatus("SPaT Schema Path configured", "No");
+            PluginClient::SetStatusThrottled("SPaT Schema Path configured", "No");
             return;
         }
  
@@ -435,7 +435,7 @@ namespace IntersectionValidation
         if (mapSchemaPath.empty())
         {
             PLOG(logWARNING) << "MapSchemaPath not configured, skipping validation";
-            PluginClient::SetStatus("MAP Schema Path configured", "No");
+            PluginClient::SetStatusThrottled("MAP Schema Path configured", "No");
             return;
         }
  

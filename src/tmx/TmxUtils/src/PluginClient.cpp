@@ -102,6 +102,10 @@ PluginClient::PluginClient(const std::string &name) :
 
 	_keepAlive = std::make_unique<PluginKeepAlive>(this);
 	_startTime = std::chrono::system_clock::now();
+	std::string intervalString = tmx::utils::environment::get_environment_variable("PLUGIN_STATUS_INTERVAL", false);
+	unsigned long  interval =  intervalString.empty() ? DEFAULT_PLUGIN_STATUS_UPDATE_INTERVAL_MS : stoul(intervalString);
+	_pluginStatusThrottle.set_Frequency(std::chrono::milliseconds(interval));
+
 }
 
 PluginClient::~PluginClient()

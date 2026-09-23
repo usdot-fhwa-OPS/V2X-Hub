@@ -21,7 +21,9 @@ using namespace std;
 // The receiver thread then listens for messages over the socket.
 // When a message is received it is placed on a queue for processing by the processor threads.
 
-PluginConnection::PluginConnection(MessageRouter *router, int socket) : Plugin(router)
+PluginConnection::PluginConnection(MessageRouter *router, int socket) : Plugin(router),
+	mFastMessageQueue(50),
+	mSlowMessageQueue(50)
 {
 	assert(socket != (int) NULL);
 
@@ -48,6 +50,7 @@ void PluginConnection::onConfigChanged(string key, string value)
 		this->onMessageReceived(msg);
 		ivpMsg_destroy(msg);
 	}
+	ivpConfig_destroyCollection(collection);
 }
 
 // This onMessageReceived override is called to send messages to plugins that are using the ivpapi
@@ -116,6 +119,19 @@ void PluginConnection::receiverThread()
 			mEventContinueSlowProcessor.Set();
 			mFastProcessorThread.join();
 			mSlowProcessorThread.join();
+			// Clear queues and free messages
+			mMutexFastMessageQueue.lock();
+			for (const auto msg : mFastMessageQueue) {
+				ivpMsg_destroy(msg);
+			}
+			mFastMessageQueue.clear();
+			mMutexFastMessageQueue.unlock();
+			mMutexSlowMessageQueue.lock();
+			for (const auto msg : mSlowMessageQueue) {
+				ivpMsg_destroy(msg);
+			}
+			mSlowMessageQueue.clear();
+			mMutexSlowMessageQueue.unlock();
 
 			delete this;
 			return;
@@ -123,15 +139,15 @@ void PluginConnection::receiverThread()
 
 		msgFramer_incrementBufPos(&framer, recvcount);
 
-		char *rawMessage = NULL;
+		char *rawMessage = nullptr;
 
-		while ((rawMessage = msgFramer_getNextMsg(&framer)) != NULL)
+		while ((rawMessage = msgFramer_getNextMsg(&framer)) != nullptr)
 		{
 			// Create an IvpMessage from the raw message.
 			IvpMessage *msg = ivpMsg_parse(rawMessage);
 
 			// If the message could not be parsed, send an error message back to the plugin.
-			if (msg == NULL)
+			if (msg == nullptr)
 			{
 				IvpMessage *errMsg = ivpError_createMsg(ivpError_createError(IvpLogLevel_warn, IvpError_messageParse, 0));
 				if (errMsg)
@@ -152,17 +168,29 @@ void PluginConnection::receiverThread()
 			if (ivpPluginStatus_isStatusMsg(msg) ||	ivpEventLog_isEventLogMsg(msg))
 			{
 				mMutexSlowMessageQueue.lock();
-				mSlowMessageQueue.push(msg);
+				if (mSlowMessageQueue.full()) {
+					LOG_WARN("Event/Status message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+					// Must free memory before push_back deletes pointer
+					ivpMsg_destroy(mSlowMessageQueue.front());
+				}
+				mSlowMessageQueue.push_back(msg);
 				mMutexSlowMessageQueue.unlock();
 				mEventContinueSlowProcessor.Set();
 			}
 			else
 			{
 				mMutexFastMessageQueue.lock();
-				mFastMessageQueue.push(msg);
+				if (mFastMessageQueue.full()) {
+					LOG_WARN("Configuration/Registration/Subscribe message queue is full. Dropping oldest message for plugin " << this->mInfo.pluginInfo.name);
+					// Must free memory before push_back deletes pointer
+					ivpMsg_destroy(mFastMessageQueue.front());
+				}
+				mFastMessageQueue.push_back(msg);
 				mMutexFastMessageQueue.unlock();
 				mEventContinueFastProcessor.Set();
 			}
+			
+
 		}
 	}
 }
@@ -195,7 +223,7 @@ void PluginConnection::fastProcessorThread()
 		if (!mFastMessageQueue.empty())
 		{
 			msg = mFastMessageQueue.front();
-			mFastMessageQueue.pop();
+			mFastMessageQueue.pop_front();
 			messageWaiting = !mFastMessageQueue.empty();
 		}
 		else
@@ -259,7 +287,7 @@ void PluginConnection::slowProcessorThread()
 #endif
 
 	bool messageWaiting = false;
-	IvpMessage *msg = NULL;
+	IvpMessage *msg = nullptr;
 
 	// Disable interruption of this thread (as long as the variable below is in scope).
 	// This allows the thread to exit gracefully by checking interruption_requested().
@@ -278,17 +306,17 @@ void PluginConnection::slowProcessorThread()
 		if (!mSlowMessageQueue.empty())
 		{
 			msg = mSlowMessageQueue.front();
-			mSlowMessageQueue.pop();
+			mSlowMessageQueue.pop_front();
 			messageWaiting = !mSlowMessageQueue.empty();
 		}
 		else
 		{
-			msg = NULL;
+			msg = nullptr;
 		}
 
 		mMutexSlowMessageQueue.unlock();
 
-		if (msg == NULL) continue;
+		if (msg == nullptr) continue;
 
 		if (ivpPluginStatus_isStatusMsg(msg))
 		{
@@ -298,9 +326,10 @@ void PluginConnection::slowProcessorThread()
 		{
 			processEventLogMessage(msg);
 		}
-
 		ivpMsg_destroy(msg);
+		LOG_DEBUG("Slow Queue size " << mSlowMessageQueue.size() << " for Plugin " << mInfo.pluginInfo.name );
 	}
+	LOG_FATAL("Slow processor thread exiting");
 }
 
 void PluginConnection::processRegistrationMessage(IvpMessage *msg)
@@ -361,6 +390,9 @@ void PluginConnection::processRegistrationMessage(IvpMessage *msg)
 				{
 					this->onMessageReceived(msg);
 					ivpMsg_destroy(msg);
+				}
+				if (collection) {
+					ivpConfig_destroyCollection(collection);
 				}
 			}
 			catch (PluginException &e)
@@ -496,6 +528,9 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 				key = string(item->key);
 			updateItems[key] = string(item->value);
 		}
+		// Cleanup IvpStatusItem
+		ivpPluginStatus_destroyItem(item);
+
 	}
 
 	try
@@ -507,19 +542,20 @@ void PluginConnection::processStatusMessage(IvpMessage *msg)
 	{
 		LOG_WARN(e.what());
 	}
+
 }
 
 void PluginConnection::processEventLogMessage(IvpMessage *msg)
 {
 	IvpEventLogEntry *eventLogEntry = ivpEventLog_getEventLogEntry(msg);
-	assert(eventLogEntry != NULL);
+	assert(eventLogEntry != nullptr);
 
 	if (eventLogEntry)
 	{
 		assert(eventLogEntry->description != NULL);
 		assert(eventLogEntry->description[0] != '\0');
 
-		if (eventLogEntry != NULL && eventLogEntry->description[0] != '\0')
+		if (eventLogEntry != nullptr && eventLogEntry->description[0] != '\0')
 		{
 			this->addEventLogEntry((LogLevel)eventLogEntry->level, string(eventLogEntry->description));
 		}
