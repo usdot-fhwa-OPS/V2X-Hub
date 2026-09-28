@@ -14,7 +14,6 @@
 #include <chrono>
 #include <sstream>
 #include <cassert>
-#include <stol-j2735-201603-carma/jer_encoder.h>
 
 using namespace std;
 using namespace battelle::attributes;
