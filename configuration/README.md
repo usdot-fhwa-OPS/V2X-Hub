@@ -98,7 +98,11 @@ OR
 <SERVICE_NAME>_EXTERNAL_<PORT_NAME>_PORT
 ```
 > [!NOTE]  
-> When incoming connections are from docker containers running on an accessible container, host port mapping is unnecessary. Setting these external ports to 0 will allow docker to find an open port on the host machine and just use that. This avoids port conflicts, which is especially useful when running multiple instances of V2X Hub (scaling)
+> When incoming connections are from docker containers running on an accessible container, host port mapping is unnecessary. This is the case for CDASim incoming communication
+
+
+> [!NOTE] 
+> Setting these external ports to 0 will allow docker to find an open port on the host machine and just use that. This avoids port conflicts, which is especially useful when running multiple instances of V2X Hub (scaling)
 
 Below is a list of currently available external port configurations: 
 **PHP_EXTERNAL_HTTP_PORT** : HTTP access to beb UI 
@@ -108,9 +112,6 @@ Below is a list of currently available external port configurations:
 **SPAT_PLUGIN_EXTERNAL_PORT** : Incoming SPAT data from Traffic Signal Controller (TSCBM or UPER SPAT)
 **TIM_PLUGIN_EXTERNAL_PORT** : TIM Plugin REST API for receving XER encoded TIM messages to broadcast
 **CARMA_CLOUD_EXTERNAL_PORT** : CARMA Cloud Plugin REST API for receiving communication from CARMA Cloud
-**CDASIM_ADAPTER_PLUGIN_EXTERNAL_SIM_INTERACTION_PORT** : CDA Sim Adapter Plugin port for receiving simulated interactions like sensor detections
-**CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT** : CDA Sim Adapter Plugin port for receiving time sync messages
-**CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT** : CDA Sim Adapter Plugin port for receiving V2X messages
 **MUST_SENSOR_PLUGIN_EXTERNAL_PORT** : Must Sensor Plugin Port for receiving detections from MUST sensor.
 **PORT_DRAYAGE_SERVICE_EXTERNAL_HTTP_PORT** : HTTP access to Port Drayage Web UI 
 

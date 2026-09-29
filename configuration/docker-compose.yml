@@ -77,16 +77,6 @@ services:
       # CARMA Cloud Plugin
       - target: 22222
         published: ${CARMA_CLOUD_EXTERNAL_PORT:-22222}
-      # CDASim Adapter Plugin (simulation mode)
-      - target: ${TIME_SYNC_PORT:-5010}
-        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-5010} # CDASim Time Sync
-        protocol: udp
-      - target: ${V2X_PORT:-5020}
-        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT:-5020} # CDASim Simulated V2X Messages
-        protocol: udp
-      - target: ${SIM_INTERACTION_PORT:-5030}
-        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_SIM_INTERACTION_PORT:-5030} # CDASim Simulated V2X Messages
-        protocol: udp
       # MUST Sensor Driver Plugin
       - target: 4545
         published: ${MUST_SENSOR_PLUGIN_EXTERNAL_PORT:-4545}
