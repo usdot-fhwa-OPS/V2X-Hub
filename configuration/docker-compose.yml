@@ -34,9 +34,9 @@ services:
       - v2xhub_web_external
     ports:
       - target: 80
-        published: ${PHP_HTTP_EXTERNAL_PORT:-80}
+        published: ${PHP_EXTERNAL_HTTP_PORT:-80}
       - target: 443
-        published: ${PHP_HTTPS_EXTERNAL_PORT:-443}
+        published: ${PHP_EXTERNAL_HTTPS_PORT:-443}
     restart: always
     depends_on:
       - db
@@ -78,9 +78,6 @@ services:
       - target: 22222
         published: ${CARMA_CLOUD_EXTERNAL_PORT:-22222}
       # CDASim Adapter Plugin (simulation mode)
-      - target: ${SIMULATION_REGISTRATION_PORT:-5000}
-        published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT:-5000} # CDASim registration
-        protocol: udp
       - target: ${TIME_SYNC_PORT:-5010}
         published: ${CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT:-5010} # CDASim Time Sync
         protocol: udp
@@ -150,7 +147,7 @@ services:
       - v2xhub_web_external
     ports:
       - target: 8090
-        published: ${PORT_DRAYAGE_SERVICE_EXTERNAL_PORT:-8090}  # Port Drayage web UI
+        published: ${PORT_DRAYAGE_SERVICE_EXTERNAL_HTTP_PORT:-8090}  # Port Drayage web UI
     profiles: ["port_drayage"]
     deploy:
       resources:
