@@ -5,7 +5,6 @@ namespace ERVCloudForwardingPlugin
     ERVCloudForwardingPlugin::ERVCloudForwardingPlugin(const string &name) : PluginClient(name)
     {
         UpdateConfigSettings();
-        std::lock_guard<mutex> lock(_cfgLock);
         AddMessageFilter<BsmMessage>(this, &ERVCloudForwardingPlugin::handleBSM);
         // Subscribe to all messages specified by the filters above.
         SubscribeToMessages();
@@ -50,8 +49,15 @@ namespace ERVCloudForwardingPlugin
             try
             {
                 PLOG(logINFO) << "Create SNMP Client to connect to RSU. RSU IP:" << _rsuIp << ",\tRSU Port:" << _snmpPort << ",\tSecurity Name:" << _securityUser << ",\tAuthentication Passphrase: " << _authPassPhrase << endl;
-                auto snmpClient = std::make_shared<SNMPClient>(_rsuIp, _snmpPort, _securityUser, _authPassPhrase);
-                auto gps_sentence = snmpClient->SNMPGet(_GPSOID);
+                auto snmpClient = tmx::utils::snmp_client(_rsuIp, _snmpPort, "", _securityUser, "authPriv", _authPassPhrase, 3);
+                snmp_response_obj response;
+                bool success = snmpClient.process_snmp_request(_GPSOID, tmx::utils::request_type::GET, response);
+                if ( !success ) {
+                    PLOG(logERROR) << "Cannot register RSU location. Reason: Failed to get GPS location from RSU." << endl;
+                    continue;
+                }
+                auto gps_data = response.val_string;
+                auto gps_sentence = std::string(gps_data.begin(), gps_data.end());
                 auto gps_map = ERVCloudForwardingWorker::ParseGPS(gps_sentence);
                 long latitude = 0;
                 long longitude = 0;
@@ -78,7 +84,7 @@ namespace ERVCloudForwardingPlugin
                 }
                 isRegistered = true;
             }
-            catch (SNMPClientException &ex)
+            catch (const tmx::utils::snmp_client_exception &ex)
             {
                 PLOG(logERROR) << "Cannot register RSU location. Reason: " << ex.what() << endl;
             }
@@ -102,8 +108,7 @@ namespace ERVCloudForwardingPlugin
 
     void ERVCloudForwardingPlugin::UpdateConfigSettings()
     {
-        std::lock_guard<mutex> lock(_cfgLock);
-        GetConfigValue<string>("WebServiceIP", _webIp);
+	    _webIp = tmx::utils::environment::get_local_ip();
         GetConfigValue<uint16_t>("WebServicePort", _webPort);
         GetConfigValue<string>("RSUIp", _rsuIp);
         GetConfigValue<uint16_t>("SNMPPort", _snmpPort);

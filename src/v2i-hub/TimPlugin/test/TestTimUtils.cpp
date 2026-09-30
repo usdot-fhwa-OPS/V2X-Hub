@@ -7,9 +7,9 @@ namespace TimPlugin {
     TEST(TestTimUtils, isTimActiveFalse ) {
         // Test expired TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
 
         EXPECT_FALSE(isTimActive(tim));
@@ -21,13 +21,17 @@ namespace TimPlugin {
       TEST(TestTimUtils, isTimActivePersistTrue ) {
         // Test Persist TIM 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         // Setting duration time to max value 32000 should indicate indefinite broadcast of TIM
+#if SAEJ2735_SPEC >= 2024
         timPtr->dataFrames.list.array[0]->durationTime = 32000;
+#else
+        timPtr->dataFrames.list.array[0]->duratonTime = 32000;
+#endif
         EXPECT_TRUE(isTimActive(tim));
         // Start time 2025 May 14 5:36 PM (UTC)
         // Duration is 32000 miutes -> indefinite
@@ -37,9 +41,9 @@ namespace TimPlugin {
     TEST(TestTimUtils, isTimActiveEdgeCases) {
         // Test TIM when start time == current time 
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         // Set start time to current time 
@@ -53,8 +57,7 @@ namespace TimPlugin {
                             tmUtc->tm_hour * 60 +
                             tmUtc->tm_min;
         // 3) Get current year
-        long int* year =new long int ( tmUtc->tm_year + 1900);
-        timPtr->dataFrames.list.array[0]->startYear = year;
+        *timPtr->dataFrames.list.array[0]->startYear = tmUtc->tm_year + 1900;
         timPtr->dataFrames.list.array[0]->startTime = minuteOfYear;
         EXPECT_TRUE(isTimActive(tim));
 
@@ -77,11 +80,11 @@ namespace TimPlugin {
         auto moy = 445437;
         // Corresponds to November 6 2025 7:57 AM (UTC)
 
-        time_t convertedTime = convertTimTime(2025, moy);
+        time_t convertedTime = convertTimTime(year, moy);
         // Convert to UTC tm 
         struct tm *tmConvertedTime = gmtime(&convertedTime);
 
-        EXPECT_EQ(2025-1900, tmConvertedTime->tm_year);
+        EXPECT_EQ(year-1900, tmConvertedTime->tm_year);
         EXPECT_EQ(10, tmConvertedTime->tm_mon);
         EXPECT_EQ(6, tmConvertedTime->tm_mday);
         EXPECT_EQ(7, tmConvertedTime->tm_hour);
@@ -256,7 +259,7 @@ namespace TimPlugin {
                         </roadSignID>
                     </msgId>
                     <startYear>2025</startYear>
-                    <startTime>5760</startTime>
+                    <startTime>181181</startTime>
                     <duratonTime>5760</duratonTime>
                     <priority>5</priority>
                     <sspLocationRights>0</sspLocationRights>
@@ -371,13 +374,17 @@ namespace TimPlugin {
                     </TravelerDataFrame>
                 </dataFrames>
             </TravelerInformation>
-        )"
+        )";
 #endif
         auto tim = readTimXml(timXml);
         auto timPtr = tim->get_j2735_data();
         EXPECT_EQ(2025, *(timPtr->dataFrames.list.array[0]->startYear));
         EXPECT_EQ(181181, timPtr->dataFrames.list.array[0]->startTime);
+#if SAEJ2735_SPEC >= 2024
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
+#else
+        EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->duratonTime);
+#endif
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
 
 
@@ -385,23 +392,27 @@ namespace TimPlugin {
 
     TEST(TestTimUtils, readTimFile) {
 #if SAEJ2735_SPEC >= 2024
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2024.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.xml");
 #else
-        auto tim = readTimFile("../../TimPlugin/test/test_files/tim_2016.xml");
+        auto tim = readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.xml");
 #endif
         auto timPtr = tim->get_j2735_data();
         EXPECT_EQ(2025, *(timPtr->dataFrames.list.array[0]->startYear));
         EXPECT_EQ(181181, timPtr->dataFrames.list.array[0]->startTime);
+#if SAEJ2735_SPEC >= 2024
         EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->durationTime);
+#else
+        EXPECT_EQ(5760, timPtr->dataFrames.list.array[0]->duratonTime);
+#endif
         EXPECT_EQ(5, timPtr->dataFrames.list.array[0]->priority);
         // Attempt to read from file that does not exist
-        EXPECT_THROW(readTimFile("../../TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
+        EXPECT_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/non-existant-file.xml"), tmx::TmxException);
 
         // Attempt to read from file that has the incorrect file extension
 #if SAEJ2735_SPEC >= 2024
-        EXPECT_NO_THROW(readTimFile("../../TimPlugin/test/test_files/tim_2024.bad_ext"));
+        EXPECT_NO_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2024.bad_ext"));
 #else
-        EXPECT_NO_THROW(readTimFile("../../TimPlugin/test/test_files/tim_2016.bad_ext"));
+        EXPECT_NO_THROW(readTimFile("../../../v2i-hub/TimPlugin/test/test_files/tim_2016.bad_ext"));
 #endif
     }
 }

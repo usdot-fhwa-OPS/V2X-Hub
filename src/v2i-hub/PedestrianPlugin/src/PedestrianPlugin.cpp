@@ -258,14 +258,14 @@ void PedestrianPlugin::UpdateConfigSettings()
 	// Configuration settings are retrieved from the API using the GetConfigValue template class.
 	// This method does NOT execute in the main thread, so variables must be protected
 	// (e.g. using std::atomic, std::mutex, etc.).
-
-	GetConfigValue<std::string>("WebServiceIP", webip, &_cfgLock);
-	GetConfigValue<uint16_t>("WebServicePort", webport, &_cfgLock);
-	GetConfigValue<std::string>("DataProvider", dataprovider, &_cfgLock);
-	GetConfigValue<std::string>("FLIROutput", flirOutput, &_cfgLock);
+	webip = tmx::utils::environment::get_local_ip();
+	GetConfigValue<std::string>("WebServiceIP", webip);
+	GetConfigValue<uint16_t>("WebServicePort", webport);
+	GetConfigValue<std::string>("DataProvider", dataprovider);
+	GetConfigValue<std::string>("FLIROutput", flirOutput);
 
 	std::string flirConfigsStr;
-	GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr, &_cfgLock);
+	GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
 	flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);
 
 	PLOG(logDEBUG) << "Pedestrian data provider: " << dataprovider;
@@ -273,9 +273,9 @@ void PedestrianPlugin::UpdateConfigSettings()
 	if (dataprovider.compare("FLIR") == 0)
     {
 		//Read static TIM message from configuration parameter only when provider set to FLIR as the TIM message size is large.
-		GetConfigValue<std::string> ("StaticTim", staticTimXML, &_cfgLock);
+		GetConfigValue<std::string> ("StaticTim", staticTimXML);
 		staticTimXML = TIMHelper::jsonToXml(staticTimXML);
-		GetConfigValue<int>("StaticTimFrequency", staticTimFrequency, &_cfgLock);
+		GetConfigValue<int>("StaticTimFrequency", staticTimFrequency);
 		getMessageToWrite();
         StopWebService();
         if (!runningWebSocket)

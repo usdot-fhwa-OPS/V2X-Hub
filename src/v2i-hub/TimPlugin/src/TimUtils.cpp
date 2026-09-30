@@ -55,15 +55,17 @@ namespace TimPlugin {
 
 	time_t convertTimTime(long year, long minuteOfYear ) {
 		// Create tm for start of year
-		struct tm tm_utc = {0};
-		tm_utc.tm_year = static_cast<int>(year) - 1900; // Years since 1900
-		tm_utc.tm_yday = 0;
-		tm_utc.tm_mon = 0;          
-		tm_utc.tm_mday = 1;
-		tm_utc.tm_hour = 0;
-		tm_utc.tm_min = 0;
-		tm_utc.tm_sec = 0;
-		tm_utc.tm_isdst = 0; 
+		struct tm tm_utc = {
+			0, // tm_sec
+			0, // tm_min
+			0, // tm_hour
+			1, // tm_mday
+			0, // tm_mon
+			static_cast<int>(year) - 1900, // tm_year
+			0, // tm_wday
+			0, // tm_yday
+			0  // tm_isdst
+		};
 		// Convert to time T assuming tm is UTC time
 		time_t utc_time = timegm(&tm_utc);
 		// Add minuteOfYear to utc_time
@@ -77,13 +79,7 @@ namespace TimPlugin {
 		std::stringstream ss(timXml);
 		tmx::message_container_type container;
 		container.load<XML>(ss);
-		// Make shared pointer with custom delete to free underlying C struct after use.
-		std::shared_ptr<TimMessage> timPtr(new TimMessage(), [](TimMessage *p)
-		{
-			if (p->get_j2735_data()) {
-				ASN_STRUCT_FREE(asn_DEF_TravelerInformation, p->get_j2735_data().get());
-			}
-		});		
+		auto timPtr = std::make_shared<TimMessage>();
 		timPtr->set_contents(container.get_storage().get_tree());
 		return timPtr;
 	}

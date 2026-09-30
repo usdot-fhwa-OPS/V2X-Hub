@@ -1,4 +1,4 @@
-PROJECT ( CARMACloudPlugin VERSION 7.11.0 LANGUAGES CXX )
+PROJECT ( CARMACloudPlugin VERSION 7.11.1 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "CARMACloud")
 add_compile_options(-fPIC)
@@ -34,3 +34,7 @@ TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} PUBLIC tmxutils ${XercesC_LIBRARY} ${NET
 
 
 link_directories(${CMAKE_PREFIX_PATH}/lib)
+
+target_compile_definitions(CARMACloudPlugin PRIVATE
+    $<$<CONFIG:Debug>:ALLOW_INSECURE_TLS=1>
+)

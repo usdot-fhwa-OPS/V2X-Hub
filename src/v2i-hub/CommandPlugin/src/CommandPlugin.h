@@ -158,8 +158,6 @@ private:
 
 	boost::lockfree::spsc_queue<EventLogMessage, boost::lockfree::capacity<1024> > _eventLogMessageQueue;
 
-	static string _databaseAddress;
-	static string _databasePort;
 	static uint64_t _updateIntervalMS;
 	static uint64_t _heartbeatIntervalMS;
 	static uint64_t _lastPluginsUpdateTimeMS;

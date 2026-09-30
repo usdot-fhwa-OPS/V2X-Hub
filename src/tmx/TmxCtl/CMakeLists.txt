@@ -1,5 +1,8 @@
 PROJECT ( tmxctl CXX )
 
+# Find required packages for testing
+find_package(Boost REQUIRED COMPONENTS program_options regex system)
+
 SET (LIBRARY_NAME ${PROJECT_NAME}Static)
 
 FILE (GLOB_RECURSE LIB_SOURCES "src/lib/*.c*")
@@ -29,3 +32,32 @@ INSTALL (TARGETS ${LIBRARY_NAME} EXPORT ${TMX_APPNAME}
 INSTALL (FILES ${HEADERS} 
          DESTINATION include COMPONENT ${PROJECT_NAME})
 
+################################
+#GTest
+###############################
+enable_testing()
+
+#############
+## Testing ##
+#############
+if(BUILD_TESTING)
+    set(BINARY ${PROJECT_NAME}_test)
+
+    file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false test/*.h test/*.cpp)
+
+    add_executable(${BINARY} ${TEST_SOURCES})
+
+    add_test(NAME ${BINARY} COMMAND ${BINARY})
+
+    target_link_libraries(${BINARY} PUBLIC
+        ${LIBRARY_NAME}
+        ${TMXUTILS_LIBRARIES}
+        ${Boost_LIBRARIES}
+        ${TMXAPI_LIBRARIES}
+        ${ASN_J2735_LIBRARIES}
+        gtest
+        gtest_main
+        gmock
+        pthread
+    )
+endif()

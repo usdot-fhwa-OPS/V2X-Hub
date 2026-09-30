@@ -6,6 +6,7 @@
  */
 
 #include "TmxControl.h"
+#include <database/DbConnectionConfig.h>
 
 #include <grp.h>
 #include <functional>
@@ -64,7 +65,7 @@ void registerFunction(string name, const char *aliases, const char *descr,
 TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NULL)
 {
 	// Register the available functions as options
-#define REG_FN(X, Y, Z) registerFunction(#X, Y, Z, &TmxControl::X);
+#define REG_FN(X, Y, Z) registerFunction(#X, Y, Z, &TmxControl::X)
 #define REG_FN_ARG(X, Y, Z, T) registerFunction(#X, Y, Z, &TmxControl::X, \
 		boost::program_options::value<T>())
 
@@ -90,6 +91,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN(user_add, NULL, "Add a TMX user. Must set --username, --password, and --access-level.");
 	REG_FN(user_update, NULL, "Update a TMX users info. Must set --username, --password, and --access-level.");
 	REG_FN(user_delete, NULL, "Delete a TMX user.");
+	REG_FN(save_state, nullptr, "Save the current state of the system.");
 
 	// These have arguments
 	REG_FN_ARG(max_message_interval, "M", "Set the max message interval for the plugin", std::string);
@@ -99,6 +101,7 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 	REG_FN_ARG(load_manifest, "m", "(Re-)load the plugin manifest to the database", std::string);
 	REG_FN_ARG(plugin_install, NULL, "Decompress and install the specified plugin install file on this system.", std::string);
 	REG_FN_ARG(plugin_remove, NULL, "Delete the specified plugin on this system.  No wildcards accepted.", std::string);
+	REG_FN_ARG(upload_state, nullptr, "Upload state from SQL file", std::string);
 
 #undef REG_FN_ARG
 #undef REG_FN
@@ -143,7 +146,10 @@ TmxControl::TmxControl(): Runnable("plugin", "The plugin to control"), _opts(NUL
 				"A TMX system users access level. 1 = ReadOnly, 2 = ApplicationAdministrator, 3 = SystemAdministrator")
 			("rowLimit",
 				boost::program_options::value<string>(),
-				"Max number of rows to return");
+				"Max number of rows to return")
+			("passphrase",
+				boost::program_options::value<string>(),
+				"Passphrase used to encrypt/decrypt state files");
 }
 
 TmxControl::~TmxControl() {}
@@ -211,10 +217,21 @@ int TmxControl::Main()
 	for (size_t p = 0; p < plugins.size(); p++)
 		std::transform(plugins[p].begin(), plugins[p].end(), plugins[p].begin(), convert);
 
-	string url = "tcp://";
-	url += (*_opts)["host"].as<string>();
-	url += ':';
-	url += (*_opts)["port"].as<string>();
+	// Use configuration helper for database connection, but allow command line override
+	auto& config = DbConnectionConfig::getInstance();
+	string url;
+
+	// Check if host/port were provided via command line, otherwise use environment config
+	if (_opts->count("host") && (*_opts)["host"].as<string>() != config.getHost()) {
+		// Command line override
+		url = "tcp://";
+		url += (*_opts)["host"].as<string>();
+		url += ':';
+		url += (*_opts)["port"].as<string>();
+	} else {
+		// Use environment configuration
+		url = config.getConnectionUrl();
+	}
 
 	_pool.SetConnectionUrl(url);
 
@@ -373,5 +390,3 @@ tmx::message_container_type* TmxControl::GetOutput()
 
 
 } /* namespace tmxctl */
-
-

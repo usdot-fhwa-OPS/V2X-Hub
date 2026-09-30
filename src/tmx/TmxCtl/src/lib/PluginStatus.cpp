@@ -6,6 +6,7 @@
  */
 
 #include "TmxControl.h"
+#include <database/DbConnectionConfig.h>
 
 #define LIST_QUERY "\
 	SELECT IVP.plugin.id, name, description, version, coalesce(enabled, -1), \
@@ -81,6 +82,13 @@ using namespace tmx::utils;
 
 namespace tmxctl {
 
+// Helper function to get database connection using configuration
+static DbConnection getConfiguredConnection(DbConnectionPool& pool) {
+	auto& config = DbConnectionConfig::getInstance();
+	std::string pwd = pool.GetPwd();
+	return pool.Connection(config.getConnectionUrl(), config.getUser(), pwd, config.getDatabase());
+}
+
 bool TmxControl::list(pluginlist &plugins, ...)
 {
 	string query = add_constraint(LIST_QUERY, plugins, "IVP.plugin.id");
@@ -91,8 +99,7 @@ bool TmxControl::list(pluginlist &plugins, ...)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
@@ -178,8 +185,7 @@ bool TmxControl::state(pluginlist &plugins, ...)
 		PLOG(logDEBUG) << "Executing query " << query;
 
 		_output.get_storage().get_tree().clear();
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
 		{
@@ -221,8 +227,7 @@ bool TmxControl::max_message_interval(pluginlist &plugins, ...)
 
 		PLOG(logDEBUG1) << "Executing query (?1 = " << val << ")" << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setString(1, val);
 		for (size_t i = 0; i < plugins.size(); i++)
@@ -276,8 +281,7 @@ bool TmxControl::args(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query (?1 = " << val << ")" << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setString(1, val);
 		for (size_t i = 0; i < plugins.size(); i++)
@@ -306,9 +310,7 @@ bool TmxControl::messages(pluginlist &plugins, ...)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
-
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
 		{
@@ -389,8 +391,7 @@ bool TmxControl::events(pluginlist &, ...)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 
@@ -444,8 +445,7 @@ bool TmxControl::system_config(pluginlist &, ...)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<Statement> stmt(conn.Get()->createStatement());
 		unique_ptr<ResultSet> rs(stmt->executeQuery(query));
 
@@ -487,8 +487,7 @@ bool TmxControl::clear_event_log(pluginlist &, ...)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->executeUpdate();
 		//unique_ptr<Statement> stmt(conn.Get()->createStatement());
@@ -523,8 +522,7 @@ bool TmxControl::user_info(bool showPassword)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setString(1, (*_opts)["username"].as<string>());
 		unique_ptr<ResultSet> rs(stmt->executeQuery());
@@ -582,8 +580,7 @@ bool TmxControl::hashed_info()
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setString(1, (*_opts)["password"].as<string>());
 		unique_ptr<ResultSet> rs(stmt->executeQuery());
@@ -631,8 +628,7 @@ bool TmxControl::all_users_info(bool showPassword)
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<Statement> stmt(conn.Get()->createStatement());
 		unique_ptr<ResultSet> rs(stmt->executeQuery(query));
 
@@ -697,8 +693,7 @@ bool TmxControl::user_add()
 		PLOG(logDEBUG1) << "Executing query (?1 = " << username << ", ?2 = " << password <<
 				", ?3 = " << access_level << ", ?4 = " << username << "): " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt.reset(conn.Get()->prepareStatement(query));
 		stmt->setString(1, username);
@@ -766,8 +761,7 @@ bool TmxControl::user_update()
 		query += " WHERE username = ?";
 		PLOG(logDEBUG1) << "Executing query : " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		if (havePassword)
 		{
@@ -822,8 +816,7 @@ bool TmxControl::user_delete()
 
 		_output.get_storage().get_tree().clear();
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setString(1, (*_opts)["username"].as<string>());
 		int deleted = stmt->executeUpdate();
@@ -840,5 +833,179 @@ bool TmxControl::user_delete()
 	return false;
 }
 
-} /* namespace tmxctl */
+bool TmxControl::save_state([[maybe_unused]] pluginlist &plugins, ...)
+{
+	if (!_opts || !_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
 
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    return save_state(passphrase);
+}
+
+bool TmxControl::save_state(const std::string &passphrase)
+{
+    try
+    {
+		const tmx::utils::DbConnectionConfig& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+
+        std::string user = dbConfig.getUser();
+        std::string password = dbConfig.getPassword(); 
+        std::string host = dbConfig.getHost();
+        std::string dbname = dbConfig.getDatabase();
+
+		if (passphrase.empty())
+		{
+			FILE_LOG(logERROR) << "Passphrase not provided for saving state";
+			return false;
+		}
+
+        std::string backupFile = "/var/www/download/v2x_hub_state_" + std::to_string(std::time(nullptr)) + ".sql.gz.enc";
+
+		std::string cmd = 
+			"bash -c 'set -o pipefail && "
+			"mysqldump -u " + user + " -p" + password + " -h " + host + " " + dbname +
+            " --no-tablespaces "
+            "--ignore-table=" + dbname + ".eventLog "
+            "--ignore-table=" + dbname + ".messageActivity "
+            "--ignore-table=" + dbname + ".messageType "
+            "--ignore-table=" + dbname + ".pluginActivity "
+            "--ignore-table=" + dbname + ".user "
+            " | gzip "
+            " | openssl enc -aes-256-cbc -salt -pbkdf2 "
+           	" -pass pass:" + passphrase + " "
+            " -out \"" + backupFile + "\"'";
+
+        if (int ret = std::system(cmd.c_str()); ret != 0)
+        {
+            PLOG(logERROR) << "mysqldump failed with code " << ret;
+            return false;
+        }
+
+		_output.get_storage().get_tree().clear();
+		message payload;
+		message_tree_type tree;
+		tree.put("file", backupFile);	
+		payload.set_contents(tree);
+		_output = payload.get_container();
+
+		PLOG(logDEBUG) << "Encrypted database backup written to " << backupFile;
+		return true;
+    }
+	catch (const boost::property_tree::ptree_error &ex) {
+		PLOG(logERROR) << "Configuration/Tree error: " << ex.what();
+		return false;
+	}
+	catch (const std::system_error &ex) {
+		PLOG(logERROR) << "System/OS error during backup: " << ex.what();
+		return false;
+	}
+    catch (const std::bad_alloc &ex)
+    {
+        PLOG(logERROR) << "Memory allocation failed during backup: " << ex.what();
+        return false;
+    }
+}
+
+bool TmxControl::upload_state([[maybe_unused]] pluginlist &plugins, ...)
+{
+    if (!_opts || !_opts->count("upload-state"))
+	{
+		FILE_LOG(logERROR) << "Missing required argument: --upload-state <filePath>";
+		return false;
+	}
+
+	std::string filePath = (*_opts)["upload-state"].as<std::string>();
+        if (!_opts->count("passphrase"))
+    {
+        FILE_LOG(logERROR) << "Missing required argument: --passphrase <value>";
+        return false;
+    }
+
+    std::string passphrase = (*_opts)["passphrase"].as<std::string>();
+
+    if (passphrase.empty())
+    {
+        FILE_LOG(logERROR) << "Empty passphrase not allowed";
+        return false;
+    }
+
+    return upload_state(filePath, passphrase);
+}
+
+bool TmxControl::upload_state(const std::string &filePath, const std::string &passphrase)
+{
+    if (!checkPerm())
+        return false;
+
+    try
+    {
+        FILE_LOG(logDEBUG) << "upload_state() called with filePath: [" << filePath << "]";
+
+        std::ifstream test(filePath);
+        if (!test.good())
+        {
+            FILE_LOG(logERROR) << "File does not exist: " << filePath;
+            return false;
+        }
+		test.close();
+
+		// Reject unencrypted files — must end with .sql.gz.enc
+        if (filePath.size() < 11 ||
+            filePath.substr(filePath.size() - 11) != ".sql.gz.enc")
+        {
+            FILE_LOG(logERROR) << "Rejected non-encrypted state file: " << filePath;
+            return false;
+        }
+
+		if (passphrase.empty())
+		{
+			FILE_LOG(logERROR) << "Passphrase not provided for state upload";
+			return false;
+		}
+
+        const auto &dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+		
+		std::string cmd =
+			"bash -c 'set -o pipefail && "
+			"openssl enc -d -aes-256-cbc -pbkdf2 "
+			" -in \"" + filePath + "\""
+			 " -pass pass:" + passphrase + " "
+			" | gunzip "
+			" | mysql -u " + dbConfig.getUser() +
+			" -p" + dbConfig.getPassword() +
+			" -h " + dbConfig.getHost() +
+			" " + dbConfig.getDatabase() +
+			"'";
+
+        FILE_LOG(logDEBUG) << "Executing SQL restore command:";
+        FILE_LOG(logDEBUG) << cmd;
+
+        int rc = system(cmd.c_str());
+
+        FILE_LOG(logDEBUG) << "MySQL return code: " << rc;
+
+        if (rc != 0)
+        {
+            FILE_LOG(logERROR) << "MySQL restore failed with code " << rc;
+            return false;
+        }
+
+        FILE_LOG(logDEBUG) << "Database restore successful from file: " << filePath;
+        return true;
+    }
+    catch (const std::ios_base::failure &e)
+	{
+		FILE_LOG(logERROR) << "File I/O error: " << e.what();
+		return false;
+	}
+	catch (const std::bad_alloc &e)
+	{
+		FILE_LOG(logERROR) << "Memory allocation failed: " << e.what();
+		return false;
+	}
+}
+} /* namespace tmxctl */

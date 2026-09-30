@@ -9,6 +9,7 @@
 #include <cstdarg>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <database/DbConnectionConfig.h>
 
 constexpr const char * ENABLE_STMT = "UPDATE IVP.installedPlugin SET enabled = ?";
 
@@ -25,6 +26,13 @@ using namespace tmx::utils;
 
 namespace tmxctl {
 
+// Helper function to get database connection using configuration
+static DbConnection getConfiguredConnection(DbConnectionPool& pool) {
+	auto& config = DbConnectionConfig::getInstance();
+	std::string pwd = pool.GetPwd();
+	return pool.Connection(config.getConnectionUrl(), config.getUser(), pwd, config.getDatabase());
+}
+
 bool TmxControl::enable(pluginlist &plugins, ...)
 {
 	if (!checkPerm())
@@ -36,8 +44,7 @@ bool TmxControl::enable(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query (?1 = 1): " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setUInt(1, 1);
 		for (size_t i = 0; i < plugins.size(); i++)
@@ -66,8 +73,7 @@ bool TmxControl::disable(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query (?1 = 0): " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		stmt->setUInt(1, 0);
 		for (size_t i = 0; i < plugins.size(); i++)
@@ -96,8 +102,7 @@ bool TmxControl::start(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
 		{
@@ -170,8 +175,7 @@ bool TmxControl::stop(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query " << query;
 
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
 		{
@@ -226,8 +230,7 @@ bool TmxControl::status(pluginlist &plugins, ...)
 	{
 		PLOG(logDEBUG1) << "Executing query " << query;
 		_output.get_storage().get_tree().clear();
-		std::string pwd = _pool.GetPwd();
-		DbConnection conn = _pool.Connection("tcp://127.0.0.1:3306","IVP", pwd, "IVP");
+		DbConnection conn = getConfiguredConnection(_pool);
 		unique_ptr<PreparedStatement> stmt(conn.Get()->prepareStatement(query));
 		for (size_t i = 0; i < plugins.size(); i++)
 		{

@@ -216,7 +216,6 @@ private:
 	double _holding_lon;
 
 };
-std::mutex _cfgLock;
 
 }
 #endif

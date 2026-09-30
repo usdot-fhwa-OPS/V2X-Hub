@@ -309,7 +309,7 @@ namespace MapPlugin {
 							std::istringstream streamableContent(payload);
 							streamableContent >> bytes;
 							PLOG(logINFO) << "MAP encoded bytes are " << bytes;
-							tmx::messages::MapDataMessage *mapMsg = tmx::messages::MapDataEncodedMessage::decode_j2735_message<tmx::messages::codec::uper<tmx::messages::MapDataMessage>>(bytes);
+							auto mapMsg = tmx::messages::MapDataEncodedMessage::decode_j2735_message<tmx::messages::codec::uper<tmx::messages::MapDataMessage>>(bytes);
 
 							if (mapMsg)
 							{

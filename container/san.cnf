@@ -17,4 +17,4 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = localhost
 IP.1 = 127.0.0.1
-IP.2 = ${ENV::LOCAL_IP}
+IP.2 = ${ENV::V2XHUB_IP}

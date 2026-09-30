@@ -32,7 +32,6 @@ PortDrayagePlugin::~PortDrayagePlugin() {
 
 void PortDrayagePlugin::UpdateConfigSettings() {
 
-	lock_guard<mutex> lock(_cfgLock);
 
 	std::string _database_username;
 	std::string _database_password;

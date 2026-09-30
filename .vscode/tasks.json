@@ -17,8 +17,8 @@
         {
             "label": "clean",
             "type": "shell",
-            "command": "cd src/tmx && rm -rf build && cd ../v2i-hub && rm -rf build",
-            "detail": "Task deletes any build folders in src/tmx and src/v2ihub",
+            "command": "cd src/ && rm -rf build",
+            "detail": "Task deletes build folder under src/",
             "group": {
                 "kind": "build"
             }

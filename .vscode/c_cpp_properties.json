@@ -4,7 +4,11 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/carma/include"
+                "/opt/carma/include",
+                "/opt/carma/include/stol-j2735-2024-carma",
+                "/usr/include/x86_64-linux-gnu/qt5/QtCore",
+                "/usr/include/x86_64-linux-gnu/qt5",
+                "/usr/include/x86_64-linux-gnu/qt5/QtNetwork"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",

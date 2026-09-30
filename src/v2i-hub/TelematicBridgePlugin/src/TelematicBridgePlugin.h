@@ -6,7 +6,7 @@
 
 #include "TelematicBridgeMsgWorker.h"
 #include "TelematicUnit.h"
-#include <simulation/SimulationEnvUtils.h>
+#include <environment/EnvUtils.h>
 
 
 namespace TelematicBridge
@@ -23,7 +23,6 @@ namespace TelematicBridge
         std::string _unitName;
         std::string _natsURL;
         std::string _excludedMessages;
-        std::mutex _configMutex;
 
     public:
         explicit TelematicBridgePlugin(const std::string &name);

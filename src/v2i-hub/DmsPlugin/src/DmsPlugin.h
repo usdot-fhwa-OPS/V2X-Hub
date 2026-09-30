@@ -56,7 +56,6 @@ protected:
 	void OnMessageReceived(IvpMessage *msg);
 	void OnStateChange(IvpPluginState state);
 private:
-	std::mutex _cfgLock;
 	std::mutex _mutexSetRequested;
 
 	SignalControllerNTCIP _dmsController;

@@ -21,7 +21,6 @@ namespace CARMAStreetsPlugin
     {
         try 
         {        
-            ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SignalStatusMessage, ssmPtr.get());
             if (!ssmDoc.isMember("SignalStatus"))
             {
                 PLOG(logERROR) << "No SignalStatus present in JSON."  << std::endl;
@@ -37,13 +36,12 @@ namespace CARMAStreetsPlugin
             // populate SignalStatusMessage::timstamp
             if (ssmDoc["SignalStatus"].isMember("minuteOfYear") && ssmDoc["SignalStatus"]["minuteOfYear"].isNumeric())
             {
-                MinuteOfTheYear_t *timeStamp = (MinuteOfTheYear_t *)calloc(1, sizeof(MinuteOfTheYear_t));
+                MinuteOfTheYear_t *timeStamp = tmx::messages::j2735::AllocAsn<MinuteOfTheYear_t>();
                 *timeStamp = ssmDoc["SignalStatus"]["minuteOfYear"].asInt64();
                 ssmPtr->timeStamp = timeStamp;
             }
 
-            SignalStatusList_t *statusPtr = (SignalStatusList_t *)calloc(1, sizeof(SignalStatusList_t));
-            SignalStatus *signalStatus = (SignalStatus *)calloc(1, sizeof(SignalStatus));
+            SignalStatus *signalStatus = tmx::messages::j2735::AllocAsn<SignalStatus>();
 
             // populate SignalStatusMessage::status::id
             if (ssmDoc["SignalStatus"].isMember("intersectionID") && ssmDoc["SignalStatus"]["intersectionID"].isNumeric())
@@ -63,16 +61,15 @@ namespace CARMAStreetsPlugin
                 Json::Value requesterJsonArr = ssmDoc["SignalStatus"]["requestorInfo"];
                 for (auto itr = requesterJsonArr.begin(); itr != requesterJsonArr.end(); itr++)
                 {
-                    SignalStatusPackage *signalStatusPackage = (SignalStatusPackage *)calloc(1, sizeof(SignalStatusPackage));
+                    SignalStatusPackage *signalStatusPackage = tmx::messages::j2735::AllocAsn<SignalStatusPackage>();
                     populateSigStatusPackage(signalStatusPackage, itr);
                     asn_sequence_add(&signalStatus->sigStatus.list.array, signalStatusPackage);
                 } // Populate signal status package
             }
 
-            asn_sequence_add(&statusPtr->list.array, signalStatus);
-            ssmPtr->status = *statusPtr;
+            asn_sequence_add(&ssmPtr->status.list.array, signalStatus);
         }
-        catch(exception &ex)
+        catch(const exception &ex)
         {
             PLOG(logERROR) << "Cannot read JSON file."  << std::endl;
         }
@@ -80,7 +77,7 @@ namespace CARMAStreetsPlugin
  
     void JsonToJ2735SSMConverter::populateSigStatusPackage(SignalStatusPackage *signalStatusPackage, Json::Value::iterator itr) const
     {
-        signalStatusPackage->requester  = (SignalRequesterInfo *)calloc(1, sizeof(SignalRequesterInfo));
+        signalStatusPackage->requester  = tmx::messages::j2735::AllocAsn<SignalRequesterInfo>();
 
         // populate SignalStatusMessage::status::sigStatus::requester::request
         if (itr->isMember("requestID") && (*itr)["requestID"].isNumeric())
@@ -104,7 +101,7 @@ namespace CARMAStreetsPlugin
         // populate SignalStatusMessage::status::sigStatus::requester::role
         if (itr->isMember("basicVehicleRole") && (*itr)["basicVehicleRole"].isNumeric())
         {
-            signalStatusPackage->requester->role = (BasicVehicleRole_t *)calloc(1, sizeof(BasicVehicleRole_t));
+            signalStatusPackage->requester->role = tmx::messages::j2735::AllocAsn<BasicVehicleRole_t>();
             *signalStatusPackage->requester->role  = (*itr)["basicVehicleRole"].asInt64();
         }
 
@@ -129,28 +126,27 @@ namespace CARMAStreetsPlugin
         // populate SignalStatusMessage::status::sigStatus::duration
         if (itr->isMember("ETA_Duration") && (*itr)["ETA_Duration"].isNumeric())
         {
-            signalStatusPackage->duration = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+            signalStatusPackage->duration = tmx::messages::j2735::AllocAsn<DSecond_t>();
             *signalStatusPackage->duration = (*itr)["ETA_Duration"].asInt64();
         }
 
         // populate SignalStatusMessage::status::sigStatus::minute
         if (itr->isMember("ETA_Minute") && (*itr)["ETA_Minute"].isNumeric())
         {
-            signalStatusPackage->minute = (DSecond_t *)calloc(1, sizeof(DSecond_t));
+            signalStatusPackage->minute = tmx::messages::j2735::AllocAsn<DSecond_t>();
             *signalStatusPackage->minute = (*itr)["ETA_Minute"].asInt64();
         }
 
         // populate SignalStatusMessage::status::sigStatus::second
         if (itr->isMember("ETA_Second") && (*itr)["ETA_Second"].isNumeric())
         {
-            signalStatusPackage->minute = (DSecond_t *)calloc(1, sizeof(DSecond_t));
-            *signalStatusPackage->minute = (*itr)["ETA_Second"].asInt64();
+            signalStatusPackage->second = tmx::messages::j2735::AllocAsn<DSecond_t>();
+            *signalStatusPackage->second = (*itr)["ETA_Second"].asInt64();
         }
     }
     void JsonToJ2735SSMConverter::encodeSSM(const std::shared_ptr<SignalStatusMessage> &ssmPtr, tmx::messages::SsmEncodedMessage &encodedSSM) const
     {
         tmx::messages::MessageFrameMessage frame(ssmPtr);
         encodedSSM.set_data(tmx::messages::TmxJ2735EncodedMessage<SignalStatusMessage>::encode_j2735_message<tmx::messages::codec::uper<tmx::messages::MessageFrameMessage>>(frame));
-        free(frame.get_j2735_data().get());
     }
 }

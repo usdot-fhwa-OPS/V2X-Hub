@@ -55,7 +55,6 @@ namespace RSUHealthMonitor
 
         PLOG(logINFO) << "Updating configuration settings.";
 
-        lock_guard<mutex> lock(_configMutex);
         GetConfigValue<uint16_t>("Interval", _interval);
         GetConfigValue<string>("RSUConfigurationList", _rsuConfigListStr);
         

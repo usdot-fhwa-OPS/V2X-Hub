@@ -45,17 +45,17 @@ namespace SpatPlugin {
 			std::string signal_controller_snmp_community;
 			std::string intersection_name;
 			unsigned int intersection_id;
-			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json, &data_lock);
-			GetConfigValue<std::string>("Local_IP", ip_address, &data_lock);
-			GetConfigValue<unsigned int>("Local_UDP_Port", port, &data_lock);
-			GetConfigValue<std::string>("TSC_IP", signal_controller_ip, &data_lock);
-			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port,&data_lock);
-			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community,&data_lock);
+			GetConfigValue<std::string>("SignalGroupMapping", signal_group_mapping_json);
+			ip_address = tmx::utils::environment::get_local_ip();
+			GetConfigValue<unsigned int>("Local_UDP_Port", port);
+			GetConfigValue<std::string>("TSC_IP", signal_controller_ip);
+			GetConfigValue<unsigned int>("TSC_SNMP_Port", signal_controller_snmp_port);
+			GetConfigValue<std::string>("TSC_SNMP_Community", signal_controller_snmp_community);
 
-			GetConfigValue<std::string>("Intersection_Name", intersection_name,&data_lock);
-			GetConfigValue<unsigned int>("Intersection_Id", intersection_id, &data_lock);
+			GetConfigValue<std::string>("Intersection_Name", intersection_name);
+			GetConfigValue<unsigned int>("Intersection_Id", intersection_id);
 			std::string spat_string;
-			GetConfigValue<std::string>("SPAT_Mode", spat_string, &data_lock);
+			GetConfigValue<std::string>("SPAT_Mode", spat_string);
 			spatMode = spat_mode_from_string(spat_string);
 			if (spatMode == SPAT_MODE::UNKNOWN) {
 				tmx::messages::TmxEventLogMessage eventLogMsg;
@@ -163,9 +163,9 @@ namespace SpatPlugin {
 
 	void SpatPlugin::processTSCBM() {
 		PLOG(logDEBUG) << "Attempting to process package as TSCBM...";
-		auto spatPtr = (SPAT*)calloc(1, sizeof(SPAT));
+		auto spatPtr = tmx::messages::j2735::j2735_create<tmx::messages::SpatTraits>();
 		// Includes call to UDP socket which will block on incoming packet
-		scConnection->receiveBinarySPAT(spatPtr, PluginClientClockAware::getClock());
+		scConnection->receiveBinarySPAT(spatPtr.get(), PluginClientClockAware::getClock());
 		// Initialize message after receiving data to ensure timestamp is accurate to when packet is received and not when we
 		// started waiting for incoming packet
 		tmx::messages::SpatEncodedMessage spatEncoded;
@@ -177,14 +177,6 @@ namespace SpatPlugin {
 		spatEncoded.set_flags(IvpMsgFlags_RouteDSRC);
 		auto rMsg = dynamic_cast<routeable_message*>(&spatEncoded);
 		BroadcastMessage(*rMsg);
-		// TODO Fix j2735::j2735_cast used in TmxJ2735Message(const std::shared_ptr<OtherMsgType> &other)
-		// constructor which allocates memory for wrapping Message Frame (see J2735MessageTemplate.hpp)
-		// without a mechanism to  free it later causing memory leak here if we attempt to initialize a 
-		// EncodeSPatMessage here with the SpatMesssage directly. Adding a deleter to _j2735_data
-		// shared_ptr seems to solve the issue here but causes issues for other unit tests and potentially 
-		// else where. Due to this known issue we need to create MessageFrameMessage manualy and ensure pointer 
-		// to underlying MessageFrame is freed explicitly to avoid memory leak.
-		free(frame.get_j2735_data().get());
 	}
 	
 

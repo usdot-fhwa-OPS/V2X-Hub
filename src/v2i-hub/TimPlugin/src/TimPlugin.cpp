@@ -100,7 +100,6 @@ int TimPlugin::StartWebService()
 
 void TimPlugin::UpdateConfigSettings() {
 
-	std::scoped_lock lock{_cfgLock};
 	
 	GetConfigValue<uint64_t>("Interval", _interval);
 	
@@ -114,8 +113,7 @@ void TimPlugin::UpdateConfigSettings() {
 		}
 
 	}
-	
-	GetConfigValue<string>("WebServiceIP", webip);
+	webip = tmx::utils::environment::get_local_ip();
 	GetConfigValue<uint16_t>("WebServicePort", webport);
 
 }

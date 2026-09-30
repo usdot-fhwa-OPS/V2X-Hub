@@ -6,6 +6,7 @@ var clearUploadProgressTimer = null;
 var uploadFileType = null;
 var uploadFile = null;
 var defaultFileDestPath = "/var/www/download/";
+var uploadStatePassphrase = "";
 
 /**
 *   Print text to console with a timestamp.
@@ -64,6 +65,15 @@ function setFileTypesForAndOpenFileUploadForm(type, accessLevel, fileTypeStringL
     $("#fileButtonOptions > button[data-type=\"" + type + "\"]").addClass("activeFileOption");
     $("#fileButtonOptions > button:not([data-type=\"" + type + "\"])").removeClass("activeFileOption");
     $("#uploadFiles").attr("data-acceptedFileTypes", fileTypeStringList);
+
+    if (type === "state") {
+        $("#statePasswordSection").show();
+    } else {
+        $("#statePasswordSection").hide();
+        $("#uploadStatePassword").val("");
+        $("#uploadStatePasswordError").html("");
+    }
+
     if (type == "other") {
         $("#fileDestPathLabel").css("display", "");
         $("#fileDestPathInput").css("display", "");
@@ -83,15 +93,17 @@ function createFileUploadDialog(accessLevel) {
         if (accessLevel == "2") {
             dialog.innerHTML =  "<div id=\"fileButtonOptions\"><button data-type=\"plugin\" >Upload Plugin</button><button data-type=\"map\">Upload Map</button></div>" + dialog.innerHTML;
         } else if (accessLevel == "3") {
-            dialog.innerHTML = "<div id=\"fileButtonOptions\"><button data-type=\"plugin\">Upload Plugin</button><button data-type=\"map\">Upload Map</button><button data-type=\"other\">Upload Other</button></div>" + dialog.innerHTML;
+            dialog.innerHTML = "<div id=\"fileButtonOptions\"><button data-type=\"plugin\">Upload Plugin</button><button data-type=\"map\">Upload Map</button><button data-type=\"state\">Upload State</button><button data-type=\"other\">Upload Other</button></div>" + dialog.innerHTML;
         }
 
         if (accessLevel == "2") {
             $("#fileButtonOptions > button[data-type=\"plugin\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("plugin", accessLevel, ".deb,.zip,.tar.gz,.tgz") });
             $("#fileButtonOptions > button[data-type=\"map\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("map", accessLevel, ".xml,.json,.txt") });
+            $("#fileButtonOptions > button[data-type=\"state\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("state", accessLevel, ".sql.gz.enc") });
         } else if (accessLevel == "3") {
             $("#fileButtonOptions > button[data-type=\"plugin\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("plugin", accessLevel, ".deb,.zip,.tar.gz,.tgz") });
             $("#fileButtonOptions > button[data-type=\"map\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("map", accessLevel, ".xml,.json,.txt") });
+            $("#fileButtonOptions > button[data-type=\"state\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("state", accessLevel, ".sql.gz.enc") });
             $("#fileButtonOptions > button[data-type=\"other\"]").on("mousedown", function () { setFileTypesForAndOpenFileUploadForm("other", accessLevel, null) });
         }
     }
@@ -159,6 +171,18 @@ function createFileUploadDialog(accessLevel) {
 
 }
 
+function checkIfUpdateState() {
+    if (uploadFileType == "state") {
+        sendUpdateStateCommand(uploadFile.name)
+        return true;
+    }
+    return false;
+}
+
+function sendUpdateStateCommand(filename) {
+    generateAndSendCommandMessage("uploadstate", [{ name: "statefile", value: filename}, { name: "passphrase", value: uploadStatePassphrase}]);
+}
+
 function checkIfPluginUploadAndInstall() {
     if (uploadFileType == "plugin") {
         sendInstallCommand(uploadFile.name);
@@ -214,9 +238,27 @@ $(document).ready(function () {
                 uploadFile = uploadFiles.files[0];
                 var destPath = "";
                 var type = $(".activeFileOption").attr("data-type");
+
+                $("#fileUploadErrorFeedback").html("");
+                $("#uploadStatePasswordError").html("");
+
+                 if (type === "state") {
+
+                    var password = $("#uploadStatePassword").val();
+
+                    if (!password || password.trim() === "") {
+                        $("#uploadStatePasswordError").html("Passphrase is required.");
+                        return;
+                    }
+
+                    uploadStatePassphrase = password.trim();
+                }
+
                 uploadFileType = type;
                 if (type == "map") {
                     destPath = defaultFileDestPath + "MAP/";
+                } else if (type == "state") {
+                    destPath = defaultFileDestPath + "STATE/";
                 } else if (type == "other") {
                     var usrPath = $("#fileDestPathInput").val();
                     if (usrPath.length > 0) {
@@ -242,6 +284,11 @@ $(document).ready(function () {
         $(this).attr("disabled", "true");
         $("#fileDestPathInput").val(defaultFileDestPath);
         populateFileUploadDialogBasedOnAccessLevel();
+
+         $("#uploadStatePassword").val("");
+        $("#uploadStatePasswordError").html("");
+        uploadStatePassphrase = "";
+        
         $("#fileUploadDialog").dialog("open");
         resizeDialogWindow($(".ui-dialog[aria-describedby=\"fileUploadDialog\"]"));
         $(".ui-dialog-buttonset > .ui-button:contains(\"Submit\")").button("disable");

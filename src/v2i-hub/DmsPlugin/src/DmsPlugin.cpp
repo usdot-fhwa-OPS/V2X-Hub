@@ -39,7 +39,6 @@ void DmsPlugin::UpdateConfig()
 	GetConfigValue("Enable Sign Simulator", _enableSignSimulator);
 	GetConfigValue("Enable DMS", _enableDms);
 
-	lock_guard<mutex> lock(_cfgLock);
 
 	string ipAddress = _dmsIpAddress;
 	uint32_t port = _dmsPort;
@@ -429,7 +428,6 @@ bool DmsPlugin::InitializeSignMessages()
 
 	// Initialize the sign with each message if the init has not been performed yet for that message.
 
-	lock_guard<mutex> lock(_cfgLock);
 
 	bool success = true;
 	std::map<int, SignMessage>::iterator it;
@@ -458,7 +456,6 @@ bool DmsPlugin::InitializeSignMessages()
 
 void DmsPlugin::UninitializeSignMessages()
 {
-	lock_guard<mutex> lock(_cfgLock);
 
 	std::map<int, SignMessage>::iterator it;
 

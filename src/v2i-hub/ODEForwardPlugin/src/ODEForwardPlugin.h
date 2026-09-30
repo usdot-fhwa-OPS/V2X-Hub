@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2019 LEIDOS.
  *
@@ -15,98 +14,113 @@
  * the License.
  */
 
- #ifndef TMX_PLUGINS_ODEForwardPlugin_H_
- #define TMX_PLUGINS_ODEForwardPlugin_H_
+#ifndef TMX_PLUGINS_ODEForwardPlugin_H_
+#define TMX_PLUGINS_ODEForwardPlugin_H_
 
- #include "PluginClient.h"
- #include "PluginDataMonitor.h"
- #include <iostream>
- #include <cstring>
- #include <string>
- #include <fstream>
- #include <stdio.h>
- #include <stdlib.h>
- #include <chrono>
- #include <atomic>
- #include <thread>
- #include <boost/algorithm/string.hpp>
- #include <tmx/messages/IvpJ2735.h>
- #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
- #include <tmx/j2735_messages/SpatMessage.hpp>
- #include <tmx/j2735_messages/TravelerInformationMessage.hpp>
- #include <tmx/j2735_messages/MapDataMessage.hpp>
- #include <BasicSafetyMessage.h>
- #include <tmx/messages/auto_message.hpp>
- #include <librdkafka/rdkafkacpp.h>
- #include <tmx/json/cJSON.h>
- #include "/usr/local/include/date/date.h"
- #include "UDPMessageForwarder.h"
- #include "CommunicationModeHelper.h"
+#include <PluginClient.h>
+#include <iostream>
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <chrono>
+#include <atomic>
+#include <thread>
+#include <map>
+#include <mutex>
+#include <memory>
+#include <boost/algorithm/string.hpp>
+#include <tmx/messages/IvpJ2735.h>
+#include <tmx/j2735_messages/BasicSafetyMessage.hpp>
+#include <tmx/j2735_messages/SpatMessage.hpp>
+#include <tmx/j2735_messages/TravelerInformationMessage.hpp>
+#include <tmx/j2735_messages/MapDataMessage.hpp>
+#include <BasicSafetyMessage.h>
+#include <tmx/messages/auto_message.hpp>
+#include <tmx/json/cJSON.h>
+#include <environment/EnvUtils.h>
+#include <kafka/kafka_client.h>
+#include "UDPMessageForwarder.h"
+#include "CTI4501ValidationMessage.h"
 
  
- using namespace std;
- using namespace tmx;
- using namespace tmx::utils;
- using namespace tmx::messages;
- using namespace date;
-
- namespace ODEForwardPlugin
- {
 
 
- #define BYTESTOMB 1048576
+namespace ODEForwardPlugin
+{
 
- /**
-  * This plugin logs the BSM messages received in the following CSV format.
-  */
- class ODEForwardPlugin: public PluginClient
- {
- public:
- 	ODEForwardPlugin(std::string);
- 	virtual ~ODEForwardPlugin();
- protected:
- 	void UpdateConfigSettings();
+	/**
+	 * This plugin logs the BSM messages received in the following CSV format.
+	 */
+	class ODEForwardPlugin: public tmx::utils::PluginClient
+	{
+		public:
+			explicit ODEForwardPlugin(const std::string &name);
+			~ODEForwardPlugin() override = default;
+		protected:
+			void UpdateConfigSettings();
 
- 	// Virtual method overrides.
- 	void OnConfigChanged(const char *key, const char *value);
- 	void OnStateChange(IvpPluginState state);
+			// Create the Kafka producer once at registration (called from OnStateChange),
+			// after UpdateConfigSettings has populated _kafkaBrokers.
+			void InitKafkaProducer();
 
- 	void HandleRealTimePublish(BsmMessage &msg, routeable_message &routeableMsg);
- 	void HandleSPaTPublish(SpatMessage &msg, routeable_message &routeableMsg);
- 	void HandleTimPublish(TimMessage &msg, routeable_message &routeableMsg);
- 	void HandleMapPublish(MapDataMessage &msg, routeable_message &routeableMsg);
+			// Virtual method overrides.
+			void OnConfigChanged(const char *key, const char *value) override;
+			void OnStateChange(IvpPluginState state) override;
 
- private:
- 	std::atomic<uint64_t> _frequency{0};
- 	DATA_MONITOR(_frequency);   // Declares the
+			void HandleRealTimePublish(tmx::messages::BsmMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleSPaTPublish(tmx::messages::SpatMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleTimPublish(tmx::messages::TimMessage &msg, tmx::routeable_message &routeableMsg);
+			void HandleMapPublish(tmx::messages::MapDataMessage &msg, tmx::routeable_message &routeableMsg);
 
- 	void QueueKafkaMessage(RdKafka::Producer *producer, std::string topic, std::string message);
-	void sendSpatKafkaMessage(SpatMessage &msg, routeable_message &routeableMsg);
-	void sendBsmKafkaMessage(BsmMessage &msg, routeable_message &routeableMsg);
-	void sendUDPMessage(routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
+			/**
+			 * Handle a CTI 4501 validation event emitted by the IntersectionValidationPlugin
+			 * and forward its JSON payload to the matching jpo-conflictmonitor Kafka topic.
+			 */
+			void HandleValidationEvent(tmx::messages::CTI4501ValidationMessage &msg, tmx::routeable_message &routeableMsg);
 
- 	uint16_t _scheduleFrequency;
-	uint16_t _freqCounter;
- 	uint16_t _forwardMSG;
- 	std::string _BSMkafkaTopic;
- 	std::string _SPaTkafkaTopic;
- 	std::string _kafkaBrokerIp;
- 	std::string _kafkaBrokerPort;
- 	std::string kafkaConnectString;
- 	RdKafka::Conf *kafka_conf;
- 	RdKafka::Producer *kafka_producer;
-	int _MAPUDPPort;
-	int _TIMUDPPort;
-	int _BSMUDPPort;
-	int _SPATUDPPort;
-	std::string _communicationMode;
-	std::string _udpServerIpAddress;
-	std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
-	std::shared_ptr<CommunicationModeHelper> _communicationModeHelper;
- };
- std::mutex _cfgLock;
+		private:
+
+			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
+
+			uint16_t _scheduleFrequency;
+			uint16_t _forwardMSG;
+			int _MAPUDPPort;
+			int _TIMUDPPort;
+			int _BSMUDPPort;
+			int _SPATUDPPort;
+
+			// Forwarded/skipped counters for one message stream
+			struct ForwardStats
+			{
+				uint forwarded = 0;
+				uint skipped = 0;
+			};
+			ForwardStats _bsmStats;
+			ForwardStats _spatStats;
+			ForwardStats _timStats;
+			ForwardStats _mapStats;
+			ForwardStats _validationStats;
+
+			std::string _udpServerIpAddress;
+			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
+
+			// Kafka validation-event forwarding
+
+			/// Kafka broker connection string (e.g. "localhost:9092"). Empty disables forwarding.
+			std::string _kafkaBrokers;
+			/// Shared producer; fans out to per-event-type topics via send(payload, topic).
+			std::shared_ptr<tmx::utils::kafka_producer_worker> _kafkaProducer;
+			/// Maps the validation eventType string to its destination Kafka topic.
+			std::map<std::string, std::string, std::less<>> _validationTopics;
+			/// Serializes producer (re)creation and send(); send() recreates the topic
+			/// handle on a topic-name change, which is not concurrency-safe on its own.
+			std::mutex _kafkaLock;
+
+	};
 
 
- } /* namespace ODEForwardPlugin */
+} /* namespace ODEForwardPlugin */
 
- #endif /* ODEForwardPlugin.h */
+#endif /* ODEForwardPlugin.h */

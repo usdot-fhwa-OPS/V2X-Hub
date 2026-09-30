@@ -36,52 +36,50 @@
 #include <tmx/messages/J2735Exception.hpp>
 #include <tmx/messages/SaeJ2735Traits.hpp>
 #include <tmx/messages/routeable_message.hpp>
+#include <RawSpdu.h>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <environment/EnvUtils.h>
 
 
-#define UDP "UDP"
 
-//using namespace Botan; 
 namespace MessageReceiver {
 
 class MessageReceiverPlugin: public tmx::utils::TmxMessageManager {
 public:
-	MessageReceiverPlugin(std::string);
-	virtual ~MessageReceiverPlugin();
-	int Main();
-	void OnMessageReceived(tmx::routeable_message &msg);
+	explicit MessageReceiverPlugin(const std::string &name);
+	~MessageReceiverPlugin() override = default;
+	int Main() override;
+	using tmx::utils::TmxMessageManager::OnMessageReceived;
+	void OnMessageReceived(tmx::routeable_message &msg) override;
 	void getmessageid();
 protected:
 	void UpdateConfigSettings();
 
 	// Virtual method overrides.
-	void OnConfigChanged(const char *key, const char *value);
-	void OnStateChange(IvpPluginState state);
+	void OnConfigChanged(const char *key, const char *value) override;
+	void OnStateChange(IvpPluginState state) override;
 private:
-	tmx::messages::BsmMessage* DecodeBsm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-			   uint32_t longitude, uint32_t elevation, tmx::messages::DecodedBsmMessage &decodedBsm);
-	tmx::messages::SrmMessage* DecodeSrm(uint32_t vehicleId, uint32_t heading, uint32_t speed, uint32_t latitude,
-		uint32_t longitude, uint32_t role);
 	std::atomic<bool> cfgChanged { false };
 	std::string ip;
 	unsigned short port = 0;
-
 	std::atomic<bool> routeDsrc { false };
-	std::atomic<bool> simBSM { true };
-	std::atomic<bool> simSRM { true };
-	std::atomic<bool> simLoc { true };
 	unsigned int verState;
-	std::string url; 
+	std::string url;
 	std::string baseurl;
 	std::vector<string> messageid;
-	std::string messageidstr; 
+	std::string messageidstr;
+	bool fullSPDUMode = false;
+	boost::uuids::random_generator _uuidGen;
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
-	uint _skippedSignVerifyErrorResponse;
-	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
+	uint _processedSPDU = 0;
+	uint _failedSPDU = 0;
+	const char* Key_FailedSPDU = "Message Failed (SPDU)";
+	const char* Key_ProcessedSPDU = "Message Processed (SPDU)";
 
 
-	
 
 };
 

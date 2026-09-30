@@ -1,7 +1,7 @@
 #pragma once
 
 #include <carma-clock/carma_clock.h>
-#include <simulation/SimulationEnvUtils.h>
+#include <environment/EnvUtils.h>
 #include <TimeSyncMessage.h>
 #include "PluginClient.h"
 #include "Clock.h"

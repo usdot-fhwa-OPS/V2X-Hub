@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <cstdlib>
+#include "database/DbConnectionConfig.h"
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof(x[0]))
@@ -29,8 +31,6 @@ const char * CommandPlugin::_httpParamNames[4] = {
 std::atomic<uint64_t> CommandPlugin::_eventRowLimit{500};
 string CommandPlugin::_downloadPath = "/var/www/download";
 mutex CommandPlugin::_configLock;
-string CommandPlugin::_databaseAddress = "127.0.0.1";
-string CommandPlugin::_databasePort = "3306";
 uint64_t CommandPlugin::_updateIntervalMS = 1000;
 uint64_t CommandPlugin::_heartbeatIntervalMS = 30000;
 uint64_t CommandPlugin::_lastPluginsUpdateTimeMS = 0;
@@ -85,8 +85,9 @@ std::map<string, CommandPlugin::UploadData> CommandPlugin::_uploadRequests;
  */
 CommandPlugin::CommandPlugin(string name) : PluginClient(name)
 {
-	//set tmxcontrol connection url
-	_tmxControl.SetConnectionUrl(string("tcp://" + _databaseAddress + ":" + _databasePort));
+	//set tmxcontrol connection url using DnConnectionconfig
+	auto& dbConfig = tmx::utils::DbConnectionConfig::getInstance();
+	_tmxControl.SetConnectionUrl(dbConfig.getConnectionUrl());
 	_tmxControl.DisablePermissionCheck();
 
 	// Add a message filter and handler for each message this plugin wants to receive.
@@ -1077,6 +1078,121 @@ int CommandPlugin::WSCallbackBASE64(
 												}
 											}
 										}
+										else if (command == "savestate" && psdata->authorizationLevel >= AuthorizationLevels::SystemAdministrator)
+										{
+											std::map<string, string> data;
+											std::map<string, string> arrayData;
+											FILE_LOG(logDEBUG) << "WSCallbackBASE64: Received command 'savestate'";
+
+											std::string passphrase = "";
+
+											if (argsList.find("passphrase") != argsList.end())
+											{
+												passphrase = argsList["passphrase"];
+											}
+
+											if (passphrase.empty())
+											{
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing passphrase", data, arrayData);
+												return 0;
+											}
+
+
+											_tmxControl.ClearOptions();
+											bool rc = _tmxControl.save_state(passphrase);
+											if (rc)
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 savestate success";
+												tmx::message_container_type *output = _tmxControl.GetOutput();
+												std::string filePath = output->get_storage().get_tree().get<string>("file");
+												FILE_LOG(logDEBUG) << "Backup file created at: " << filePath;
+												// Open file and read content
+												std::ifstream file(filePath, std::ios::binary);
+												if (file)
+												{
+													std::ostringstream oss;
+													oss << file.rdbuf();
+													std::string fileContent = oss.str();
+													std::string encodedContent = tmx::utils::Base64::Encode(
+														reinterpret_cast<const unsigned char*>(fileContent.c_str()),
+														static_cast<unsigned int>(fileContent.size())
+													);
+													data["fileBuffer"] = encodedContent;
+													BuildCommandResponse(psdata->outputbuffer, id, command, "success", "Backup completed", data, arrayData);
+													FILE_LOG(logDEBUG) << "Backup file content sent over WebSocket";
+												}
+												else
+												{
+													FILE_LOG(logDEBUG) << "Failed to open backup file for sending";
+													BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Backup file could not be read", data, arrayData);
+												}
+											}
+											else
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 savestate failed";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Backup failed", data, arrayData);
+											}
+										}
+										else if (command == "uploadstate" && psdata->authorizationLevel >= AuthorizationLevels::SystemAdministrator)
+										{
+											FILE_LOG(logDEBUG) << "WSCallbackBASE64: Received command 'uploadstate'";
+
+											std::map<string, string> data;
+											std::map<string, string> arrayData;
+
+											if (argsList.find("statefile") == argsList.end())
+											{
+												FILE_LOG(logERROR) << "statefile not found in argsList";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing statefile", data, arrayData);
+												return 0;
+											}
+
+											std::string fileName = argsList["statefile"];
+
+											if (fileName.empty())
+											{
+												FILE_LOG(logERROR) << "statefile is empty";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Empty statefile", data, arrayData);
+												return 0;
+											}
+
+											std::string passphrase = "";
+
+											if (argsList.find("passphrase") != argsList.end())
+											{
+												passphrase = argsList["passphrase"];
+											}
+
+											if (passphrase.empty())
+											{
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "Missing passphrase", data, arrayData);
+												return 0;
+											}
+
+											std::string filePath;
+											{
+											std::scoped_lock lock(_configLock);
+											filePath = _downloadPath;
+											}
+
+											filePath.append("/STATE/");
+											filePath.append(fileName);
+
+											FILE_LOG(logDEBUG) << "Restoring state from file: " << filePath;
+
+											bool rc = _tmxControl.upload_state(filePath, passphrase);
+
+											if (rc)
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate success";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "success", "State restore completed", data, arrayData);
+											}
+											else
+											{
+												FILE_LOG(logDEBUG) << "WSCallbackBASE64 uploadstate failed";
+												BuildCommandResponse(psdata->outputbuffer, id, command, "failed", "State restore failed", data, arrayData);
+											}
+										}
 									}
 									else
 									{
@@ -1285,7 +1401,19 @@ int CommandPlugin::Main()
 	lws_context_creation_info info;
 	memset(&info, 0, sizeof(info));
 
-	info.port = 19760;
+	// Get WebSocket port from environment variable, default to 19760
+	const char* wsPortEnv = std::getenv("COMMAND_WS_PORT");
+	int wsPort = 19760; // Default port
+	if (wsPortEnv != nullptr) {
+		try {
+			wsPort = std::stoi(wsPortEnv);
+			PLOG(logINFO) << "Using WebSocket port from environment: " << wsPort;
+		} catch (const std::exception& e) {
+			PLOG(logWARNING) << "Invalid COMMAND_WS_PORT value, using default: 19760";
+		}
+	}
+
+	info.port = wsPort;
 	info.protocols = protocols;
 	info.gid = -1;
 	info.uid = -1;

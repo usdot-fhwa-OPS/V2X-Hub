@@ -223,7 +223,6 @@ void Ntcip1202::ToJ2735SPAT(SPAT* spat, unsigned long msEpoch , const std::strin
 	auto epochMs = msEpoch;
 	long msOfMin = 1000 * (epochSec % 60) + (epochMs % 1000);
 
-	ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_SPAT, spat);
 
 	IntersectionState *intersection = (IntersectionState *)calloc(1, sizeof(IntersectionState));
 

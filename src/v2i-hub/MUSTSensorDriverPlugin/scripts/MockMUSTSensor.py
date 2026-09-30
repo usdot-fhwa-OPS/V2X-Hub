@@ -66,7 +66,7 @@ detections.append(MUSTDetection(DetectionClassification.SEDAN, 0, 0, 330, 1, Det
 def main():
     parser = argparse.ArgumentParser(description='Script to mock detection data coming from MUST Sensor')
     parser.add_argument('--ip', help='IP address to send detection data to.', type=str, default="127.0.0.1") 
-    parser.add_argument('--port', help='Port to send detection data to.', type=str, default=4545)  
+    parser.add_argument('--port', help='Port to send detection data to.', type=int, default=4545)
     args = parser.parse_args()
     sock = create_socket()
     host = (args.ip, args.port)

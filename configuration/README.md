@@ -1,14 +1,30 @@
 ## Introduction
-This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures.
+This directory contains deployment and configuration instructions for deploying V2X-Hub on both ARM64(arm64) and x86(amd64) architectures with enhanced network security.
 
 > [!NOTE]
 > Separate deployment files/configurations are no longer necessary for arm64 and x86 deployments.
+
+> [!IMPORTANT]
+> **Network Security Enhancement**: V2X-Hub now uses isolated Docker networks for improved security. The database is completely isolated from external access, and only necessary ports are exposed. See [NETWORK_SECURITY.md](NETWORK_SECURITY.md) for detailed information.
+
+## Database Configuration
+
+V2X-Hub uses a secure network architecture with the following database configuration:
+
+- **Database Host**: `db` (Docker service name for internal communication)
+- **Database Port**: `3306` (accessible only within internal network)
+- **Database Name**: `IVP`
+- **Database User**: `IVP`
+- **Password Management**: Secured via Docker secrets
+
+The database is completely isolated on the `v2xhub_data_internal` network and cannot be accessed directly from external networks, providing enhanced security.
 
 ### Deployment Instructions
 Once downloaded, navigate to the configuration directory:
 ```
 cd ~/V2X-Hub/configuration/
 ```
+
 Run the initialization script:
 ```
 ./initialization.sh
@@ -36,7 +52,7 @@ Installation complete!
 
 To support execution in a simulated environment, V2X-Hub is in the process of integrating with CDASim, a Co-Simulation tool built as an extension of Eclipse Mosiac. This extension will incorporate integration with several other platforms including CARMA-Platform and CARLA. The setup for this simply requires setting environment variables for the V2X-Hub docker compose deployment. These can be set via the `initialization.sh` script and can be manually edited after.
 
-### Docker Environment Vaeriables
+### Docker Environment Variables
 
 * **V2XHUB_VERSION** – Version of V2X-Hub to deloy ( Docker Tag/ GitHub Tag )
 * **SIMULATION_MODE** – Environment variable for enabling simulation components for V2X-Hub. If set to "true" or "TRUE" simulation components will be enable. Otherwise, simulation components will not be enabled.
@@ -47,11 +63,19 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
 * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
 * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
-* **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub.
+* **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub. Defaults to 0.0.0.0
+> [!NOTE]
+> For docker compose deployments please use default value to accomodate docker bridge network security setup. For non-containerized or custom deployments set this value to the IP address of the hosting machine.
 * **INFRASTRUCTURE_ID** – Environment variable for storing infrastructure id of V2X Hub.
 * **V2XHUB_USER** – V2X Hub Administrator Username to create on startup
 * **V2XHUB_PASSWORD** – V2X Hub Administrator Password to create on startup
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
+* **MYSQL_HOST** – Database hostname (e.g. Docker service name, db or IP Address for database)
+* **MYSQL_PORT** – Database port (internal only)
+* **MYSQL_DATABASE** – Database Name
+* **MYSQL_USER** – Database username
+* **MYSQL_PASSWORD** – Managed via Docker secrets
+* **V2XHUB_VOLUME_PATH** – Path to which local volume or shared memory between the container and host machine will be setup. See the docker-compose.yml for more information on the specific volumes V2X Hub deployets.
 
 ### Access V2X-Hub 
 To access V2X-Hub UI, either chromium or google-chrome browser can be used by running the following commands:
@@ -65,10 +89,8 @@ google-chrome  <v2xhub_ip>
  ```
 
 > [!NOTE]  
-> V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `.ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
+> V2X-Hub initialization script uses [mkcert](https://github.com/FiloSottile/mkcert), a simple tool for making locally-trusted development certificates for HTTPS communication and placing them in the `${V2XHUB_VOLUME_PATH}/ssl/` directory. For deployment, it is recommended that you generate your own trusted certificates from a real certificate authorities (CAs). MKCert can also be used to setup a local CA but that is up to deployers.
 
 > [!NOTE]  
 > If no certificates are present at start-up time, the V2X Hub container will create self signed certificates using `openssl` (see `container/generate_certificates.sh`). These certificates need to be explicitly trusted by the browser. To do this simply navigate to `https://<v2xhub-ip>` and accept the warning. After this you should be redirected to the login page.
 
-> [!WARNING]  
-> To use generated trusted certificates the `docker-compose.yml` file needs to be modified to map the local ssl directory to the ssl docker compose volume. See the comment in the `ssl` docker compose defined volume for instructions for modifications

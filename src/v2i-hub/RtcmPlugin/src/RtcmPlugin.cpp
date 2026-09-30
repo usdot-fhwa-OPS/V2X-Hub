@@ -33,7 +33,6 @@ RtcmPlugin::RtcmPlugin(string name): PluginClient(name) {
 
 RtcmPlugin::~RtcmPlugin() { }
 
-std::mutex _cfgLock;
 
 void RtcmPlugin::UpdateConfigSettings() {
 	GetConfigValue("Route RTCM", _routeRTCM);
@@ -42,7 +41,6 @@ void RtcmPlugin::UpdateConfigSettings() {
 	int port;
 
 	// Critical section
-	std::lock_guard<mutex> lock(_cfgLock);
 	GetConfigValue("Endpoint IP", ipaddress);
 	GetConfigValue("Endpoint Port", port);
 	GetConfigValue("Username", _username);
@@ -92,7 +90,6 @@ void RtcmPlugin::OnStateChange(IvpPluginState state) {
 void RtcmPlugin::OnMessageReceived(IvpMessage *ivpMsg) {
 	// Intercept the NMEA messages
 	if (ivpMsg && ::strcmp(IVPMSG_TYPE_NMEA, ivpMsg->type) == 0) {
-		lock_guard<mutex> lock(_cfgLock);
 		if (ivpMsg->payload)
 			this->_nmea = ivpMsg->payload->valuestring;
 
@@ -147,7 +144,6 @@ int RtcmPlugin::Main() {
 
 		// Critical section
 		{
-			std::lock_guard<mutex> lock(_cfgLock);
 			user = _username;
 			pass = _password;
 			mount = _mount;

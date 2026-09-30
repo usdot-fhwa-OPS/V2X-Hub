@@ -30,6 +30,10 @@ sql::Statement *DbContext::getStatement()
 	return mCon->createStatement();
 }
 
+std::unique_ptr<sql::PreparedStatement> DbContext::getPreparedStatement(const std::string& sql)
+{
+    return std::unique_ptr<sql::PreparedStatement>(mCon->prepareStatement(sql));
+}
 
 std::string DbContext::formatStringValue(std::string str)
 {
