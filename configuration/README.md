@@ -60,7 +60,7 @@ This section covers environment variables used to configure V2X Hub deployment
 
 This category of environment variables configures the general V2X Hub system.
 
-* **V2XHUB_VERSION** – Version of V2X-Hub to deloy ( Docker Tag/ GitHub Tag )im
+* **V2XHUB_VERSION** – Version of V2X-Hub to deploy ( Docker Tag/ GitHub Tag )
 * **V2XHUB_IP** – Environment variable for storing IP address of V2X Hub. Defaults to 0.0.0.0
 > [!NOTE]
 > For docker compose deployments please use default value to accomodate docker bridge network security setup. For non-containerized or custom deployments set this value to the IP address of the hosting machine.
@@ -81,7 +81,7 @@ This category of environment variables configures V2X Hub for simulation and is 
 * **TIME_SYNC_TOPIC** – Environment variable for storing Kafka time sync topic.
 * **SIMULATION_IP** – Environment variable for storing IP address of CDASim application.
 * **SIMULATION_REGISTRATION_PORT** – Environment variable for storing port on CDASim that handles registration attempts.
-* **TIME_SYNC_PORT** – Environment varaible for storing port for receiving time sync messages from CDASim.
+* **TIME_SYNC_PORT** – Environment variable for storing port for receiving time sync messages from CDASim.
 * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
 * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
@@ -105,7 +105,7 @@ OR
 > Setting these external ports to 0 will allow docker to find an open port on the host machine and just use that. This avoids port conflicts, which is especially useful when running multiple instances of V2X Hub (scaling)
 
 Below is a list of currently available external port configurations: 
-**PHP_EXTERNAL_HTTP_PORT** : HTTP access to beb UI 
+**PHP_EXTERNAL_HTTP_PORT** : HTTP access to web UI 
 **PHP_EXTERNAL_HTTPS_PORT** : HTTPS access to web UI
 **COMMAND_PLUGIN_EXTERNAL_PORT** : Connection between browser and V2X Hub server
 **MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT** : Incoming UPER encoded V2X messages for V2X Hub to process (e.g from RSU)
