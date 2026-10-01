@@ -11,11 +11,7 @@ namespace tmx::utils::environment{
          * will not be enabled.
          */
         constexpr inline static const char *SIMULATION_MODE = "SIMULATION_MODE";
-        /**
-         * @brief Name of environment variable for storing Kafka broker connection string (including port). Only necessary
-         * in SIMULATION MODE for transmitting and consuming time synchronization messages.
-         */
-        constexpr inline static const char *KAFKA_BROKER_ADDRESS = "KAFKA_BROKER_ADDRESS";
+       
         /**
          * @brief Name of environment variable for storing Kafka time sync topic. Only necessary
          * in SIMULATION MODE for transmitting and consuming time synchronization messages.
