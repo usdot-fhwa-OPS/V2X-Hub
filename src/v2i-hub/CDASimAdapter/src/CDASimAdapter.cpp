@@ -130,7 +130,7 @@ namespace CDASimAdapter{
                 ". Check environment variables are set to the correct type!";
             return false;
         }
-        catch (const std::out_of_range e&) {
+        catch (const std::out_of_range &e) {
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() <<
                 ". Check environment variables are set to the correct type!";
             return false;        
