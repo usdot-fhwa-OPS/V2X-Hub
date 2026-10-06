@@ -12,6 +12,15 @@ show_help() {
   echo ""
   echo "If arguments are not provided, the script will prompt interactively."
 }
+# Function returns 0 if value is double 
+is_double() {
+    # Regex matches optional sign, digits, and optional decimal points
+    if [[ "$1" =~ ^[+-]?[0-9]+([.][0-9]+)?$ ]]; then
+        return 0 # True
+    else
+        return 1 # False
+    fi
+}
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -110,6 +119,29 @@ if [[ "$interactive" == true ]]; then
         # Simulation IP
         read -r -p "Enter Simulation IP (loop back addresses will not work and redirect traffic to containers virtual network ip): " SIMULATION_IP
         SIMULATION_IP=${SIMULATION_IP}
+        # V2X Hub Location
+        read -r -p "Enter Simulated Coordinates X (Simulated X coorinate in m on .osm map): " SIM_LOCATION_X
+        SIM_LOCATION_X=${SIM_LOCATION_X}
+        read -r -p "Enter Simulated Coordinates Y (Simulated Y coorinate in m on .osm map): " SIM_LOCATION_X
+        SIM_LOCATION_X=${SIM_LOCATION_Y}
+        read -r -p "Enter Simulated Coordinates Z (Simulated Z coorinate in m on .osm map): " SIM_LOCATION_X
+        SIM_LOCATION_X=${SIM_LOCATION_Z}
+        if ! is_double "$SIM_LOCATION_X"; then
+            echo "Error: X coordinate ('$SIM_LOCATION_X') is not a valid double." >&2
+            exit 1
+        fi
+
+        # Validate Y
+        if ! is_double "$SIM_LOCATION_Y"; then
+            echo "Error: Y coordinate ('$SIM_LOCATION_Y') is not a valid double." >&2
+            exit 1
+        fi
+
+        # Validate Z
+        if ! is_double "$SIM_LOCATION_Z"; then
+            echo "Error: Z coordinate ('$SIM_LOCATION_Z') is not a valid double." >&2
+            exit 1
+fi
 
         # Sensor Configuration File Path
         read -r -p "Enter Sensor Configuration File Path (or press Enter to use default as $SENSOR_JSON_FILE_PATH_DEFAULT): " SENSOR_JSON_FILE_PATH

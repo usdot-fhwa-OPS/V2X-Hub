@@ -15,11 +15,6 @@ namespace CDASimAdapter{
     void CDASimAdapter::UpdateConfigSettings() {
         std::scoped_lock<std::mutex> lock(_lock);
         bool success = false;
-        success = GetConfigValue<double>("X", location.X);
-        success = success && GetConfigValue<double>("Y", location.Y);
-        success = success && GetConfigValue<double>("Z", location.Z);
-        PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", "
-            << location.Y << ", " << location.Z << "}." << std::endl;
         success = success && GetConfigValue<int>("MaxConnectionAttempts", max_connection_attempts);
         success = success && GetConfigValue<uint>("ConnectionSleepTime", connection_sleep_time);
         if (connection_sleep_time < 1 ) {
@@ -94,6 +89,11 @@ namespace CDASimAdapter{
 
     bool CDASimAdapter::connect() {
         try {
+            location.X = std::stod(environment::get_environment_variable(environment::SIM_LOCATION_X));
+            location.Y = std::stod(environment::get_environment_variable(environment::SIM_LOCATION_Y));
+            location.Z = std::stod(environment::get_environment_variable(environment::SIM_LOCATION_Z));
+            PLOG(logINFO) << "Location of Simulated V2X-Hub updated to : {" << location.X << ", "
+                << location.Y << ", " << location.Z << "}." << std::endl;
             std::string simulation_ip = environment::get_environment_variable(environment::SIMULATION_IP);
             std::string local_ip =  environment::get_environment_variable(environment::V2XHUB_IP);
             PLOG(logINFO) << "Simulation and local IP successfully initialized!"<< std::endl;
@@ -125,10 +125,15 @@ namespace CDASimAdapter{
             return false;
         }
         catch (const std::invalid_argument &e ) {
-            // std::stoul throws invalid arguement exception when provided with a string that contains characters that are not numbers.
+            // std::stoul and stod throws invalid arguement exception when provided with a string that contains characters that are not numbers.
             PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() <<
                 ". Check environment variables are set to the correct type!";
             return false;
+        }
+        catch (const std::out_of_range e&) {
+            PLOG(logERROR) << "Exception occured attempting to initialize CDASim Connection : " << e.what() <<
+                ". Check environment variables are set to the correct type!";
+            return false;        
         }
         return connection->connect();
     }
