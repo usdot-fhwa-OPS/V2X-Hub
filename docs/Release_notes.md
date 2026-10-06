@@ -1,6 +1,87 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 7.12.0, released Sep 30th, 2026
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 7.12.0 improves deployment, container configuration, security, reliability, and message processing, including streamlined setup, improved MySQL database security, memory-management fixes, and support for ARM-based systems and multiple V2X Hub instances. Additional updates strengthen automated testing, continuous integration, and documentation. Additionally, as part of this release, V2X Hub has been verified to support SCMS-enabled V2X communications with appropriately configured RSUs.
+
+**Enhancements**
+
+- Improve V2X-Hub deployment and container configuration to simplify setup, improve container networking and security, support ARM-based systems and multiple V2X-Hub instances, and reduce production image dependencies.
+  * Pull Requests: [V2X-Hub PR #833](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/833), [V2X-Hub PR #842](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/842), [V2X-Hub PR #844](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/844), [V2X-Hub PR #859](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/859), [V2X-Hub PR #862](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/862), [V2X-Hub PR #863](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/863), [V2X-Hub PR #865](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/865), [V2X-Hub PR #867](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/867), [V2X-Hub PR #919](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/919), [V2X-Hub PR #920](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/920), [V2X-Hub PR #947](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/947)
+
+**Fixes**
+
+- [V2X-Hub PR #841](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/841): Refactor the database connection to use environment variables.
+
+- [V2X-Hub PR #868](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/868): Fix SQL injection issue.
+
+- [V2X-Hub PR #869](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/869): Update addEventLogEntry to use prepared statements.
+
+- [V2X-Hub PR #871](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/871): Update removePluginStatusItems to use prepared statements.
+
+- [V2X-Hub PR #874](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/874): Use prepared statements and modernized SQL syntax.
+
+- [V2X-Hub PR #875](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/875): Use prepared statements and modernized SQL syntax for additional database operations.
+
+- [V2X-Hub PR #908](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/908): Fix a conditional mutex locking issue that could result in unintended deadlock.
+
+- [V2X-Hub PR #873](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/873): Correct SNMP client behavior for SNMP v1 and v2, including timeout, security model, and logging behavior.
+
+- [V2X-Hub PR #886](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/886): Fix PSS memory usage reporting to use MB instead of KB.
+
+- [V2X-Hub PR #882](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/882): Fix TIM Plugin test compatibility with SAE J2735 2016 and 2020.
+
+- [V2X-Hub PR #927](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/927): Fix memory-management issues in the SAE J2735 message wrapper classes.
+
+- [V2X-Hub PR #952](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/952): Fix a use-after-free issue when consuming SDSM Kafka payloads from sensor_data_sharing_service.
+
+**Other Updates**
+
+- [V2X-Hub PR #845](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/845): Update CI workflows for Node.js 24-compatible GitHub Actions.
+
+- [V2X-Hub PR #847](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/847): Add health checks for automated V2X-Hub integration tests.
+
+- [V2X-Hub PR #853](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/853): Add GitHub Actions CI for V2X-Hub integration tests.
+
+- [V2X-Hub PR #854](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/854): Fix Sonar code smells in the Dockerfile and update Docker labels to OCI labels.
+
+- [V2X-Hub PR #858](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/858): Fix consolidated CI workflow dependencies.
+
+- [V2X-Hub PR #861](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/861): Add the SonarCloud dependency to the integration-tests job.
+
+- [V2X-Hub PR #870](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/870): Add Docker Scout to pull request CI.
+
+- [V2X-Hub PR #892](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/892): Exclude TmxApi unit tests from line coverage analysis.
+
+- [V2X-Hub PR #909](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/909): Update third-party GitHub Actions versions for Node.js 24 compatibility.
+
+- [V2X-Hub PR #942](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/942): Add Docker Scout policy evaluation to CI.
+
+- [V2X-Hub PR #948](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/948): Exclude the copyleft license policy from Docker Scout evaluation.
+
+- [V2X-Hub PR #851](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/851): Add error handling and mean-latency reporting to the messaging performance script.
+
+- [V2X-Hub PR #857](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/857): Update the V2X-Hub messaging performance analyzer.
+
+- [V2X-Hub PR #913](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/913): Add command-line arguments and an average-latency result summary to the messaging performance analyzer.
+
+- [V2X-Hub PR #872](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/872): Fix GitHub badges.
+
+- [V2X-Hub PR #877](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/877): Correct Programming Guide documentation.
+
+- [V2X-Hub PR #878](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/878): Add the V2X-Hub factsheet.
+
+- [V2X-Hub PR #879](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/879): Update badges to include Docker pulls and license information.
+
+- [V2X-Hub PR #843](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/843): Rename the Dev Container image to avoid deployment.
+
+- [V2X-Hub PR #897](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/897): Remove unused Message Receiver functionality.
+
+- [V2X-Hub PR #899](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/899): Remove the standalone Message Validation Tool from V2X-Hub.
+
 Version 7.11.1, released Jan 30th, 2026
 --------------------------------------------------------
 
