@@ -52,7 +52,7 @@ PluginClient::PluginClient(const std::string &name) :
 	_msgFilter(nullptr),
 	_sysConfig(nullptr)
 {
-	PLOG(logDEBUG2) << "Constructing the plugin";
+	PLOG(logERROR) << "Constructing the plugin";
 
 	// Populate the info for the plugin by specifying the callback functions.
 	// Since info.manifestLocation is not specified below, the default value of
