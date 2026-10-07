@@ -84,6 +84,11 @@ This category of environment variables configures V2X Hub for simulation and is 
 * **TIME_SYNC_PORT** – Environment variable for storing port for receiving time sync messages from CDASim.
 * **V2X_PORT** – Environment variable for storing port for receiving v2x messages from CDASim
 * **SIM_V2X_PORT** – Environment variable for storing port for sending v2x messages to CDASim
+* **SIM_LOCATION_X** – Environment variable for storing X Coordinate in OSM file for V2X Hub location (m)
+* **SIM_LOCATION_Y** – Environment variable for storing Y Coordinate in OSM file for V2X Hub location (m)
+* **SIM_LOCATION_Z** – Environment variable for storing Z Coordinate in OSM file for V2X Hub location (m)
+
+
 * **SENSOR_JSON_FILE_PATH** – Environment variable for storing path to sensor configuration file. This is an optional simulation environment variable that allows for setting up simulated sensor for a V2X-Hub instance. Example file can be found in the **CDASimAdapterPlugin** tests [here](../src/v2i-hub/CDASimAdapter/test/sensors.json).
 
 #### Host Port Mapping Docker Environment Variables
