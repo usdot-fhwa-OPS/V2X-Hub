@@ -4,6 +4,8 @@ set -e
 mkdir -p /var/www/plugins/ssl 
 # Strip trailing carriage returns (\r) and whitespaces
 V2XHUB_IP=$(echo "$V2XHUB_IP" | tr -d '\r' | xargs)
+# Validate if the provided V2XHUB_IP is a valid IPv4 address or DNS name
+
 if [[ "$V2XHUB_IP" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     export V2XHUB_IP_ENTRY="$V2XHUB_IP"
     export V2XHUB_DNS_ENTRY="localhost"  # Safe fallback for the DNS slot
