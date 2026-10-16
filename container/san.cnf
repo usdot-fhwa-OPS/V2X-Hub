@@ -15,6 +15,7 @@ extendedKeyUsage = serverAuth
 subjectAltName = @alt_names
 
 [alt_names]
-DNS.1 = localhost
-IP.1 = 127.0.0.1
-IP.2 = ${ENV::V2XHUB_IP}
+DNS.1 =  ${ENV::V2XHUB_DNS_ENTRY}
+IP.1 = ${ENV::V2XHUB_IP_ENTRY}
+
+
