@@ -16,7 +16,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Set up some required platform dependencies, including MySQL
 #
 FIND_PACKAGE ( TmxMySQL )
-
+SET(TMX_HEADERS_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include/tmx)
 #
 # Include the API libraries and interfaces that contain the build properties
 #
