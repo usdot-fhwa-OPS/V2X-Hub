@@ -18,6 +18,7 @@
 #include <TmxMessageManager.h>
 #include <tmx/messages/TmxJ2735.hpp>
 #include <tmx/messages/TmxJ2735Codec.hpp>
+#include <environment/EnvUtils.h>
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
