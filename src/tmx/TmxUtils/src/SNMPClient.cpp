@@ -1,6 +1,5 @@
 #include "SNMPClient.h"
-#include <tmx/messages/byte_stream.hpp>
-#include <arpa/inet.h>
+
 
 namespace tmx::utils
 {
@@ -13,12 +12,17 @@ namespace tmx::utils
 
         PLOG(logDEBUG3) << "String snmp_client configs : " << ip << " " << port << " " << community << " " << snmp_user << " " << securityLevel << " " << authProtocol << " " << authPassPhrase << " " << privProtocol << " " << privPassPhrase << " " << snmp_version << " " << timeout;
 
-        // Validate IP address format
-        struct in_addr addr4;
-        struct in6_addr addr6;
-        if (inet_pton(AF_INET, ip.c_str(), &addr4) != 1 && inet_pton(AF_INET6, ip.c_str(), &addr6) != 1)
-        {
-            throw snmp_client_exception("Invalid IP address: " + ip);
+       
+        // Check if IP V4 or IV6
+      
+        // Check if DNS name resolution
+        if ( !validate_address(ip)){
+            throw snmp_client_exception("Invalid IP address " + ip);
+        }
+
+        
+        else{
+            PLOG(logINFO) << "IP " << ip << " resolved succesfully";
         }
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
@@ -192,6 +196,43 @@ namespace tmx::utils
             snmp_close(ss);
         }
     }
+
+    bool validate_address(const std::string& hostname) {
+            
+        struct addrinfo hints;
+        struct addrinfo* res = nullptr;
+
+        // Configure criteria for the lookup
+        std::memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;     // Allow both IPv4 (AF_INET) and IPv6 (AF_INET6)
+        hints.ai_socktype = SOCK_STREAM; // Look up stream socket addresses (TCP)
+        // Regex to check if the input starts like an IP address (IPv4 digit or IPv6 hex/colon)
+        // Matches if it starts with 1 or more digits, or standard IPv6 structural characters
+        std::regex ip_start_pattern("^([0-9]+|::|[0-9a-fA-F]+:)");
+        // If matches IPV4 or IPV6 format
+        if (std::regex_search(hostname, ip_start_pattern)) {
+            // Force strict numeric parsing. If it's malformed (like 127.0.XX.XX), 
+            // getaddrinfo will fail immediately instead of trying to resolve it as a hostname.
+            hints.ai_flags = AI_NUMERICHOST;
+        } else {
+            // Treat as a standard domain name / hostname
+            hints.ai_flags = 0; 
+        }
+        // Perform the DNS resolution lookup
+        int status = getaddrinfo(hostname.c_str(), nullptr, &hints, &res);
+        
+        if (status != 0) {
+            PLOG(logERROR) << "DNS Lookup failed for " << hostname 
+                    << ": " << gai_strerror(status) << std::endl;
+            return false;
+        }
+
+        // Memory cleanup allocated by getaddrinfo
+        freeaddrinfo(res);
+        return true;
+    }
+
+
     bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
         /*Structure to hold all of the information that we're going to send to the remote host*/
