@@ -42,6 +42,7 @@ COPY --from=dependencies --chown=plugin:adm --chmod=544 /usr/local/plugins/ /usr
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxapi.* /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxctlStatic.a /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libtmxutils.a /usr/local/lib/
+COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/share/tmx/*.cmake /usr/local/share/tmx/
 # Built libraries in ext/ (e.g. libsnmp, libqhttpengine, etc)
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libv2xhubWebAPI.a /usr/local/lib/
 COPY --from=dependencies  --chown=plugin:adm --chmod=544 /usr/local/lib/libqhttpengine.* /usr/local/lib/

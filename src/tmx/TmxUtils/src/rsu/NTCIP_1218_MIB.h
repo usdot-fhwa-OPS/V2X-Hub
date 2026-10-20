@@ -62,12 +62,25 @@ namespace tmx::utils::rsu::mib::ntcip1218
     // Forward Message Priority. Priority assigned to the Immediate Forward message. Priority values defined by IEEE 1609.3-2016 for DSRC radios.
     static const std::string rsuIFMPriorityOid = "1.3.6.1.4.1.1206.4.2.18.4.2.1.6";
 
-    /* Forward Message Options. 
+    /* Forward Message Options.
     A bit-mapped value as defined below for configuring the message.
         Bit 0 0=Bypass1609.2, 1=Process1609.2
         Bit 1 0=Secure, 1=Unsecure
         Bit 2 0=ContXmit, 1=NoXmitShortTermXceeded
         Bit 3 0=ContXmit, 1=NoXmitLongTermXceeded
+
+    From NTCIP 1218 5.5.2.7, on the two bits this codebase sets:
+        Bit 0 - Indicates if the RSU is to bypass 1609.2 processing of the message to the V2X
+                interface. This allows the RSU to send the message that has been signed and/or
+                encrypted by the TMC. Note the RSU would still wrap the message payload in a WSMP
+                header.
+        Bit 1 - Indicates if the message should be secured (signed or encrypted) prior to
+                transmission to the V2X Interface. How the message is to be secured is determined by
+                its security profile. This bit is ignored if Bit 0=0 (bypass).
+
+    So 00 HEX has the RSU transmit an already secured payload untouched, and 80 HEX has the RSU
+    secure the message itself. Bit 0 is the most significant bit, so Process1609.2 is 80 HEX rather
+    than 01 HEX; this is the numbering a Yunex RSU expects.
     */
     static const std::string rsuIFMOptionsOid = "1.3.6.1.4.1.1206.4.2.18.4.2.1.7";
 

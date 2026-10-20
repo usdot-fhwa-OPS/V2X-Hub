@@ -54,6 +54,7 @@ static CONSTEXPR const char *MSGTYPE_VEHICLE_STRING = "Vehicle";
 static CONSTEXPR const char *MSGTYPE_PEDESTRIAN_STRING = "Pedestrian";
 static CONSTEXPR const char *MSGTYPE_PMM_STRING = "Pmm";
 static CONSTEXPR const char *MSGTYPE_RADIO_STRING = "Radio";
+static CONSTEXPR const char *MSGTYPE_SPDU_STRING = "SPDU";
 			
 enum MsgSubType 
 {

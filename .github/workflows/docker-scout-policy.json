@@ -1,0 +1,8 @@
+{
+  "policies": [
+    {
+      "name": "copyleft-license",
+      "enabled": false
+    }
+  ]
+}

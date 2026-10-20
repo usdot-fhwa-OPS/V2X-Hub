@@ -1,0 +1,62 @@
+{
+	"name":"PriorityPlugin",
+	"description":"Plugin to handle Signal Request Messages and place priority requests.",
+	"version":"@PROJECT_VERSION@",
+	"exeLocation":"/bin/PriorityPlugin",
+	"coreIpAddr":"127.0.0.1",
+	"corePort":24601,
+	"messageTypes":[
+	],
+	"configuration":[
+		{
+            "key":"LogLevel",
+            "default":"INFO",
+            "description":"The log level for this plugin."
+        },
+		{
+			"key":"TSC_Configuration_List",
+			"default":"[{\"IntersectionID\": 9709, \"IP\": \"192.168.55.92\", \"Port\": 161}]",
+			"description":"A JSON array of Traffic Signal Controller (TSC) entries. Each entry must contain: IntersectionID (integer matching the J2735 Intersection ID), IP (IPv4 address of the TSC), and Port (SNMP port on the TSC). Example: [{\"IntersectionID\": 9709, \"IP\": \"192.168.55.91\", \"Port\": 161}, {\"IntersectionID\": 9945, \"IP\": \"192.168.55.92\", \"Port\": 161}]"
+		},
+		{
+			"key":"PluginRole",
+			"default":"PRS",
+			"description":"Role the plugin will assume. Acceptable values are PRS (Priority Request Server) and PRG (Priority Request Generator). If PRS is selected, the plugin will manage and prioritize one or more priority requests (SRMs) and generate one or more service requests. If PRG is selected, the plugin will pass along the priority requests to a presumed PRS running on the controller."
+		},
+		{
+			"key":"LaneStrategyMapping",
+			"default":"[{\"IntersectionID\": 9709, \"Lane\": 2, \"Strategy\": 1}]",
+			"description":"A JSON array mapping (IntersectionID, Lane) pairs to a service strategy number. The SRM inBoundLane is compared to this mapping. If no match is found, the request is rejected with a closedStrategyError (PRS mode) or a rejected SSM status (PRG mode). Example: [{\"IntersectionID\": 101, \"Lane\": 3, \"Strategy\": 1}, {\"IntersectionID\": 102, \"Lane\": 5, \"Strategy\": 2}]"
+		},
+		{
+			"key":"EstimatedTimeofArrival",
+			"default":"5",
+			"description":"Fallback in case the estimated time of arrival is not provided in SRM. The estimated time (1..65535) in seconds for the vehicle to arrive at the intersection, after making the request."
+		},
+		{
+			"key":"EstimatedDepartureTime",
+			"default":"3",
+			"description":"Fallback in case the estimated time of departure is not provided in SRM. The estimated time (1..65535) in seconds for the vehicle to clear the intersection, after arrival."
+		},
+		{
+			"key":"PollIntervalMs",
+			"default":"1000",
+			"description":"PRS mode only. The interval in milliseconds at which the PRS polls the CO (Coordinator) for service request status exchanges. Per NTCIP 1211 3.5.4.1, valid range is 100-1000ms."
+		},
+		{
+			"key":"TimeToLiveSec",
+			"default":"30",
+			"description":"PRS mode: The maximum time in seconds that the PRS considers a priority request after receiving it. Requests exceeding this time are automatically cleared. PRG mode: Used to evict stale requests."
+		},
+		{
+			"key":"ReserviceClassTimes",
+			"default":"0,0,0,0,0,0,0,0,0,0",
+			"description":"PRS mode only. Comma-separated list of 10 reservice periods in seconds (limit not defined), one per vehicle class type (1..10). Defines the minimum time that must pass after servicing one priority request before another request of the same class is serviced. Per NTCIP 1211 3.5.1.1."
+		},
+		{
+			"key":"MaxBroadcastsPerStatus",
+			"default":"2",
+			"description":"Maximum number of SSM broadcasts per priority request per status state (1..255; values below 1 are clamped to 1). In PRS mode, the counter resets when the request transitions to a new status. In PRG mode, this is the number of SSM broadcasts per received SRM."
+		}
+    ]
+}

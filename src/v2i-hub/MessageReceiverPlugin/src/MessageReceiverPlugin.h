@@ -36,6 +36,9 @@
 #include <tmx/messages/J2735Exception.hpp>
 #include <tmx/messages/SaeJ2735Traits.hpp>
 #include <tmx/messages/routeable_message.hpp>
+#include <RawSpdu.h>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <environment/EnvUtils.h>
 
 
@@ -62,18 +65,21 @@ private:
 	unsigned short port = 0;
 	std::atomic<bool> routeDsrc { false };
 	unsigned int verState;
-	std::string url; 
+	std::string url;
 	std::string baseurl;
 	std::vector<string> messageid;
-	std::string messageidstr; 
+	std::string messageidstr;
+	bool fullSPDUMode = false;
+	boost::uuids::random_generator _uuidGen;
 	std::mutex syncLock;
 	tmx::utils::FrequencyThrottle<int> errThrottle;
 	tmx::utils::FrequencyThrottle<int> statThrottle;
-	uint _skippedSignVerifyErrorResponse;
-	const char* Key_SkippedSignVerifyError = "Message Skipped (Signature Verification Error Response)";
+	uint _processedSPDU = 0;
+	uint _failedSPDU = 0;
+	const char* Key_FailedSPDU = "Message Failed (SPDU)";
+	const char* Key_ProcessedSPDU = "Message Processed (SPDU)";
 
 
-	
 
 };
 

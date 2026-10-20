@@ -120,8 +120,8 @@ This document summarizes the network security enhancements implemented for V2X-H
 | Plugin | Port(s) | Protocol | Exposure | Purpose |
 |--------|---------|----------|----------|---------|
 | CommandPlugin | 19760 | TCP | External | Command WebSocket |
-| MessageReceiverPlugin | 26780-26800 | UDP | External | External Message Reception |
-| SPaTPlugin | 6053 5050 | UDP | External | TSC sends and SNMP polling |
+| MessageReceiverPlugin | 26789 | UDP | External | External Message Reception |
+| SPaTPlugin | 6053 | UDP | External | TSC sends and SNMP polling |
 | TIMPlugin | 10000 | TCP | External | TIM WebServicePort |
 | CARMACloudPlugin | 22222 | TCP | External | CARMA Cloud Integration |
 | CDASimAdapter | 6767 7575 5757 | UDP | External | CDASim registration, Time sync, Simulated V2X out |
