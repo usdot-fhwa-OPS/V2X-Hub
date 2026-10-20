@@ -36,11 +36,12 @@ namespace JSONMessageLoggerPlugin {
             << maxFileSize << " MB, MaxFiles: " << maxFiles << ", LogDir: " << logDir;
          // Common attributes (timestamp, etc.)
         boost::log::add_common_attributes();
+        std::string infrastructure_id = tmx::utils::environment::get_environment_variable(tmx::utils::environment::INFRASTRUCTURE_ID);
 
         // RX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir+"j2735Rx_%Y-%m-%d_%H-%M-%S.%N.log",
+            (boost::log::keywords::file_name = logDir+infrastructure_id+ "_j2735Rx_%Y-%m-%d_%H-%M-%S.%N.log"),
             boost::log::keywords::target = logDir,
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
@@ -53,7 +54,7 @@ namespace JSONMessageLoggerPlugin {
         // TX Logger
         boost::log::add_file_log
         (
-            boost::log::keywords::file_name = logDir+"j2735Tx_%Y-%m-%d_%H-%M-%S.%N.log",
+            (boost::log::keywords::file_name = logDir+infrastructure_id+ "_j2735Tx_%Y-%m-%d_%H-%M-%S.%N.log"),
             boost::log::keywords::target = logDir,
             boost::log::keywords::rotation_size = maxFileSize * 1024 * 1024,
             boost::log::keywords::time_based_rotation = boost::log::sinks::file::rotation_at_time_point(0, 0, 0),
