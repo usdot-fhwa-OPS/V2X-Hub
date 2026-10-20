@@ -84,7 +84,6 @@ public:
 		if (!tmxMsg)
 		{
 			BOOST_THROW_EXCEPTION(factory.get_event());
-			exit(-1);
 		}
 
 		// Get a copy of the property tree to use and manipulate

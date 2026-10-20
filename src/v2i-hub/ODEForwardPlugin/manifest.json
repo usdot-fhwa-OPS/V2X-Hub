@@ -20,37 +20,7 @@
 			"description": "Name of the log file for this plugin. If a relative path is provided, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
 		},
 		{
-			"key":"instance",
-			"default":"1",
-			"description":"Instance of the application"
-		},
-		{
-			"key":"schedule_frequency",
-			"default":"1",
-			"description":"Sample of incoming messages to forward (1 = forward every message)"
-		},
-		{
-			"key":"ForwardMSG",
-			"default":"1",
-			"description":"Enable forwarding of messages"
-		},
-		{
-			"key": "CommunicationMode",
-			"default": "UDP",
-			"description":"Communication mode to be used for UDP socket connection. Modes: Kafka or UDP"
-		},
-		{
-			"key":"BSMKafkaTopic",
-			"default":"topic.OdeRawEncodedBSMJson",
-			"description":"(Cond: ForwardMSG == True) Topic to use for forwarding BSM"
-		},
-		{
-			"key":"SPaTKafkaTopic",
-			"default":"topic.OdeRawEncodedSPATJson",
-			"description":"(Cond: ForwardMSG == True) Topic to use for forwarding SPaT"
-		},
-		{
-			"key":"KafkaBrokerIp",
+			"key":"OdeIp",
 			"default":"172.31.55.238",
 			"description":"IP address to be used for KAFKA broker"
 		},

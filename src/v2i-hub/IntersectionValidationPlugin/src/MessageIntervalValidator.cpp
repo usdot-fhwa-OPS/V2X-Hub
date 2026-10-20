@@ -16,30 +16,160 @@
 
 #include "MessageIntervalValidator.h"
 
+#include <array>
+#include <ctime>
+#include <iomanip>
+#include <sstream>
+
 namespace IntersectionValidation
 {
 
-    uint64_t calculateMessageInterval(uint64_t lastTimestampMs, uint64_t currentTimestampMs, uint64_t thresholdMs)
+    IntervalCheck evaluateMessageInterval(uint64_t lastTimestampMs, uint64_t currentTimestampMs,
+                                          uint64_t thresholdMs)
     {
+        IntervalCheck check;
+
         if (lastTimestampMs == 0)
         {
-            return 0;
+            return check;
         }
 
         if (currentTimestampMs < lastTimestampMs)
         {
-            throw tmx::TmxException("Current timestamp is earlier than last timestamp");
+            throw tmx::TmxException("Message timestamp " + std::to_string(currentTimestampMs) +
+                                    " ms is earlier than the last received message timestamp " +
+                                    std::to_string(lastTimestampMs) + " ms");
         }
 
-        uint64_t intervalMs = currentTimestampMs - lastTimestampMs;
+        check.intervalMs = currentTimestampMs - lastTimestampMs;
+        check.violation = check.intervalMs > thresholdMs;
 
-        if (intervalMs > thresholdMs)
+        return check;
+    }
+
+    MessageIntervalValidator::MessageIntervalValidator(uint64_t requiredThresholdMs)
+        : _thresholdMs(requiredThresholdMs)
+    {
+    }
+
+    IntervalWindowResult MessageIntervalValidator::closeWindow()
+    {
+        IntervalWindowResult result;
+        result.windowStartMs = _windowStartMs;
+        result.windowEndMs = _windowEndMs;
+        result.violationCount = _windowViolations;
+        result.messageCount = _windowMessages;
+        result.intersectionId = _windowIntersectionId;
+        result.intersectionIdMismatch = _windowIntersectionIdMismatch;
+
+        _windowOpen = false;
+        _windowStartMs = 0;
+        _windowEndMs = 0;
+        _windowViolations = 0;
+        _windowMessages = 0;
+        _windowIntersectionId = -1;
+        _windowIntersectionIdMismatch = false;
+
+        return result;
+    }
+
+    std::optional<IntervalWindowResult> MessageIntervalValidator::recordMessage(uint64_t currentTimestampMs,
+                                                                               uint64_t windowDurationMs,
+                                                                               int intersectionId)
+    {
+        IntervalCheck check;
+        try
         {
-            throw tmx::TmxException("Message interval " + std::to_string(intervalMs) +
-                                    " ms exceeded CTI 4501 maximum threshold of " + std::to_string(thresholdMs) + " ms");
+            check = evaluateMessageInterval(_lastTimestampMs, currentTimestampMs, _thresholdMs);
+        }
+        catch (const tmx::TmxException &)
+        {
+            // Accept the new time base so a single clock step-back does not throw on every
+            // message that follows it
+            _lastTimestampMs = currentTimestampMs;
+            _lastIntervalMs = 0;
+            throw;
         }
 
-        return intervalMs;
+        _lastIntervalMs = check.intervalMs;
+
+        // Close an expired window
+        std::optional<IntervalWindowResult> closed;
+        if (_windowOpen && currentTimestampMs >= _windowEndMs)
+        {
+            closed = closeWindow();
+        }
+
+        _lastTimestampMs = currentTimestampMs;
+
+        if (check.violation)
+        {
+            ++_totalViolations;
+
+            if (_windowOpen)
+            {
+                ++_windowViolations;
+                ++_windowMessages;
+                if (intersectionId != _windowIntersectionId)
+                {
+                    _windowIntersectionIdMismatch = true;
+                }
+            }
+            else
+            {
+                _windowOpen = true;
+                _windowStartMs = currentTimestampMs;
+                _windowEndMs = currentTimestampMs + windowDurationMs;
+                _windowViolations = 1;
+                _windowMessages = 1;
+                _windowIntersectionId = intersectionId;
+                _windowIntersectionIdMismatch = false;
+            }
+        }
+        else if (_windowOpen)
+        {
+            ++_windowMessages;
+        }
+
+        return closed;
+    }
+
+    uint64_t MessageIntervalValidator::lastIntervalMs() const
+    {
+        return _lastIntervalMs;
+    }
+
+    uint32_t MessageIntervalValidator::totalViolations() const
+    {
+        return _totalViolations;
+    }
+
+    bool MessageIntervalValidator::windowOpen() const
+    {
+        return _windowOpen;
+    }
+
+    std::string formatIso8601Utc(uint64_t epochMs)
+    {
+        const auto secs = static_cast<std::time_t>(epochMs / 1000);
+        const auto millis = static_cast<int>(epochMs % 1000);
+        std::tm tmUtc{};
+        gmtime_r(&secs, &tmUtc);
+
+        std::array<char, 32> buf{};
+        std::strftime(buf.data(), buf.size(), "%Y-%m-%dT%H:%M:%S", &tmUtc);
+
+        std::ostringstream out;
+        out << buf.data() << '.' << std::setfill('0') << std::setw(3) << millis << 'Z';
+        return out.str();
+    }
+
+    std::string formatBroadcastRateDescription(const std::string &messageType, uint32_t violationCount,
+                                               uint64_t windowStartMs, uint64_t windowEndMs)
+    {
+        return "There has been " + std::to_string(violationCount) + " BroadcastRateEvents for " +
+               messageType + " messages between " + formatIso8601Utc(windowStartMs) + " and " +
+               formatIso8601Utc(windowEndMs);
     }
 
 }

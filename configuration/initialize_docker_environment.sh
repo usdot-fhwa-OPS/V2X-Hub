@@ -115,9 +115,17 @@ if [[ "$interactive" == true ]]; then
         read -r -p "Enter Sensor Configuration File Path (or press Enter to use default as $SENSOR_JSON_FILE_PATH_DEFAULT): " SENSOR_JSON_FILE_PATH
         SENSOR_JSON_FILE_PATH=${SENSOR_JSON_FILE_PATH:-$SENSOR_JSON_FILE_PATH_DEFAULT}
     fi
-    # MySQL (IVP) User Password
-    read -r -s -p "MYSQL PASSWORD (password for configuration database): " MYSQL_PASSWORD
+    # MySQL (IVP) User Password 
+    # Using single quotes to prevent expressions from expanding or needing to escape special characters
+    read -r -s -p 'MYSQL PASSWORD (password for configuration database, avoid illegal characters ;|&<>`$()*? ): ' MYSQL_PASSWORD
     echo
+    # Check for illegal characters
+    # Check if the variable contains any illegal characters
+    if [[ "$MYSQL_PASSWORD" =~ [\;\|\&\<\>\`\$\(\)\*\?] ]]; then
+        # Using single quotes to prevent expressions from expanding or needing to escape special characters
+        echo 'INVALID MYSQL PASSWORD. Found illegal characters ;|&<>`$()*? '
+        exit 1
+    fi
     # V2X Hub Username
     read -r -p "V2X Hub Admin Username (or press Enter to use default as v2xadmin): " V2XHUB_USERNAME
     V2XHUB_USERNAME=${V2XHUB_USERNAME:-v2xadmin}

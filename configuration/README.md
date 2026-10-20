@@ -74,7 +74,7 @@ To support execution in a simulated environment, V2X-Hub is in the process of in
 * **MYSQL_PORT** – Database port (internal only)
 * **MYSQL_DATABASE** – Database Name
 * **MYSQL_USER** – Database username
-* **MYSQL_PASSWORD** – Managed via Docker secrets
+* **MYSQL_PASSWORD** – Managed via Docker secrets. Avoid illegal characters ;|&<>`$()*? 
 * **V2XHUB_VOLUME_PATH** – Path to which local volume or shared memory between the container and host machine will be setup. See the docker-compose.yml for more information on the specific volumes V2X Hub deployets.
 
 ### Access V2X-Hub 

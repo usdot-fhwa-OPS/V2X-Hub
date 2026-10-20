@@ -1,4 +1,4 @@
-PROJECT ( IntersectionValidationPlugin VERSION 7.12.0 LANGUAGES CXX )
+PROJECT ( IntersectionValidationPlugin VERSION 8.0.0 LANGUAGES CXX )
 
 SET (TMX_PLUGIN_NAME "Intersection Validation")
 
@@ -8,7 +8,7 @@ BuildTmxPlugin ()
 
 TARGET_LINK_LIBRARIES ( ${PROJECT_NAME} tmxutils ::carma-clock )
 
-add_library(${PROJECT_NAME}_lib src/MessageIntervalValidator.cpp src/FieldValidation.cpp src/RevisionCounterValidator.cpp src/ODEForwarding.cpp)
+add_library(${PROJECT_NAME}_lib src/MessageIntervalValidator.cpp src/FieldValidation.cpp src/RevisionCounterValidator.cpp src/ODEForwarding.cpp src/IntersectionValidationUtils.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils)
 target_include_directories(${PROJECT_NAME}_lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
 

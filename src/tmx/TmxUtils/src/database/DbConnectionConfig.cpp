@@ -8,8 +8,7 @@
 #include "DbConnectionConfig.h"
 
 
-namespace tmx {
-namespace utils {
+namespace tmx::utils{
 
 // Default values for backward compatibility
 const std::string DbConnectionConfig::DEFAULT_HOST = "127.0.0.1";
@@ -27,12 +26,13 @@ DbConnectionConfig& DbConnectionConfig::getInstance() {
 }
 
 void DbConnectionConfig::loadFromEnvironment() {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     
     host = getEnvVar("MYSQL_HOST", DEFAULT_HOST);
     port = getEnvVar("MYSQL_PORT", DEFAULT_PORT);
     database = getEnvVar("MYSQL_DATABASE", DEFAULT_DATABASE);
     user = getEnvVar("MYSQL_USER", DEFAULT_USER);
+
     
     // Get password file path from environment
     const char* pwdFileEnv = std::getenv("MYSQL_PASSWORD");
@@ -59,54 +59,58 @@ std::string DbConnectionConfig::getEnvVar(const char* envVar, const std::string&
 }
 
 std::string DbConnectionConfig::getConnectionUrl() const {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     std::ostringstream url;
     url << "tcp://" << host << ":" << port;
     return url.str();
 }
 
 std::string DbConnectionConfig::getHost() const {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     return host;
 }
 
 std::string DbConnectionConfig::getPort() const {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     return port;
 }
 
 std::string DbConnectionConfig::getDatabase() const {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     return database;
 }
 
 std::string DbConnectionConfig::getUser() const {
-    std::lock_guard<std::mutex> lock(configMutex);
+    std::scoped_lock lock(configMutex);
     return user;
 }
 
 std::string DbConnectionConfig::getPassword() const {
-    std::lock_guard<std::mutex> lock(configMutex);
-    
-    if (passwordFile.empty()) {
-        FILE_LOG(logERROR) << "MYSQL_PASSWORD environment variable not set" << std::endl;
-        return "";
-    }
-    
-    std::ifstream file(passwordFile);
-    if (!file.is_open()) {
-        FILE_LOG(logERROR) << "Unable to read password file: " << passwordFile << std::endl;
-        return "";
-    }
-    
+    std::scoped_lock lock(configMutex);
     std::string password;
-    std::getline(file, password);
+
+    if (passwordFile.empty()) {
+        throw DbConnectionException( "MYSQL_PASSWORD environment variable not set"); 
+    }
+    try {
+        const std::filesystem::path filepath = std::filesystem::canonical(passwordFile);
+
+    
+        std::ifstream file(passwordFile);
+        if (!file.is_open()) {
+            FILE_LOG(logERROR) << "Unable to read password file: " << passwordFile << std::endl;
+            return "";
+        }
+    
+        std::getline(file, password);
+    }
+    catch (const std::filesystem::filesystem_error &e) {
+        throw DbConnectionException(e);
+    }
     
     if (password.empty()) {
-        FILE_LOG(logERROR) << "Empty password file: " << passwordFile << std::endl;
-        return "";
+        throw DbConnectionException("Empty MYSQL_PASSWORD secret!");
     }
-    
     return password;
 }
 
@@ -115,5 +119,4 @@ void DbConnectionConfig::reloadConfiguration() {
     loadFromEnvironment();
 }
 
-} /* namespace utils */
-} /* namespace tmx */
+}

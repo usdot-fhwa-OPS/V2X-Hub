@@ -1,6 +1,46 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 8.0.0, released Oct 20th, 2026
+--------------------------------------------------------
+
+**Summary:**
+V2X Hub release 8.0.0 improves CTI 4501 edge validation, V2X message processing, and system reliability, including enhanced event reporting, configurable message validation intervals, and improved message throttling and broadcasting. The release also includes configuration state save and restore functionality, improves plugin status handling to address excessive memory usage, adds secure communication support for ERV message forwarding to CARMA Cloud, and improves ODE connectivity configuration. Additional updates address security vulnerabilities, memory-management issues, and code reliability.
+
+**Enhancements**
+
+- Intersection Validation Plugin: The Intersection Validation Plugin validates MAP and SPaT messages received from roadside units against CTI 4501 requirements, including required fields, message revision counts, and broadcast intervals. Updates improve validation event reporting and logging, aggregate broadcast-rate events over a configurable time window, reduce duplicate validation events, and allow unchanged messages to be rebroadcast after a configured interval.
+  * Pull Requests: [V2X-Hub PR #932](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/932), [V2X-Hub PR #956](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/956), [V2X-Hub PR #936](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/936), [V2X-Hub PR #959](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/959), [V2X-Hub PR #960](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/960), [V2X-Hub PR #961](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/961)
+
+- Configuration Save/Load: Support saving and restoring V2X Hub configuration state through the V2X-Hub web UI, allowing administrators to download encrypted, passphrase-protected database backups and upload saved state files to restore the configuration.
+  * Pull Requests: [V2X-Hub PR #856](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/856), [V2X-Hub PR #881](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/881), [V2X-Hub PR #902](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/902)
+
+- Secure CARMA Cloud Communication: Added TLS support for ERV message forwarding from V2X Hub to CARMA Cloud to secure communication between the two systems.
+  * Pull Request: [V2X-Hub PR #891](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/891)
+
+- ODE Plugin Configuration: Added a configurable destination IP address for ODE Plugin UDP and Kafka traffic, allowing connections to use the configured ODE endpoint.
+  * Pull Request: [V2X-Hub PR #925](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/925)
+
+**Fixes**
+
+- [V2X-Hub PR #934](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/934): Correct CTI 4501 event field types and missing-data formatting so CV Manager can ingest and display the events.
+
+- [V2X-Hub PR #941](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/941): Address command injection vulnerabilities by replacing std::system calls with posix_spawnp and adding input validation.
+
+- [V2X-Hub PR #943](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/943): Fix a path injection vulnerability in database connection configuration and improve error handling for invalid configurations.
+
+- [V2X-Hub PR #944](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/944): Remove unreachable code identified by SonarCloud to improve code reliability.
+
+- [V2X-Hub PR #945](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/945): Fix a potential double-free memory issue by improving pointer ownership.
+
+- [V2X-Hub PR #949](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/949): Address a security issue in plugin installation by replacing std::system calls with posix_spawnp.
+
+- [V2X-Hub PR #962](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/962): Reduce memory growth from frequent plugin status updates by throttling status updates and using bounded queues for status and event log messages.
+
+**Other Updates**
+
+- [V2X-Hub PR #946](https://github.com/usdot-fhwa-OPS/V2X-Hub/pull/946): Update V2X Hub version number to 8.0.0.
+
 Version 7.12.0, released Sep 30th, 2026
 --------------------------------------------------------
 
