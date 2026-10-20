@@ -66,7 +66,10 @@ namespace SpatPlugin {
 			}
 			try{
 				if (scConnection) {
-					scConnection.reset();
+					// Spot UDP Socket and thread
+					if (spatReceiverThread && spatReceiverThread->IsRunning()) {
+						spatReceiverThread->Stop();
+					}
 					scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
 				}
 				else {

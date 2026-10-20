@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <tmx/messages/byte_stream.hpp>
+#include <regex>
 #include "PluginLog.h"
 
 #include "SNMPClientException.h"
@@ -56,11 +57,11 @@ namespace tmx::utils
         }
     };
     /**
-     * Check if DNS name resolves
-     * @param string dnsname
-     * @return true if resolves successfully
+     * Check if hostname is valid IPV4 or IVP6 or DNS name 
+     * @param string hostname
+     * @return true if is valid
      */
-    bool  TEST_F(test_SNMPClient, process_snmp_request)(const std::string& hostname);
+    bool validate_address(const std::string& hostname);
 
     class snmp_client
     {
