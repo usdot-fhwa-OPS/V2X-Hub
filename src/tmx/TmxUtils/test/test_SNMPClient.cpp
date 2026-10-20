@@ -109,4 +109,10 @@ namespace unit_test
         scClient.process_snmp_request(RSU_MODE, request_type::OTHER, reqponseMode);
     }
 
+    TEST_F(test_SNMPClient, check_dns_resolution) {
+        EXPECT_TRUE(check_dns_resolution("localhost"));
+        EXPECT_FALSE(check_dns_resolution("invalid-ip"));
+
+    }
+
 }

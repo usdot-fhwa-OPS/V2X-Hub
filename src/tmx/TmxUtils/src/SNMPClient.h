@@ -3,6 +3,11 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <vector>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <tmx/messages/byte_stream.hpp>
 #include "PluginLog.h"
 
 #include "SNMPClientException.h"
@@ -50,8 +55,13 @@ namespace tmx::utils
             return val_int == obj2.val_int && val_string == obj2.val_string && type == obj2.type;
         }
     };
+    /**
+     * Check if DNS name resolves
+     * @param string dnsname
+     * @return true if resolves successfully
+     */
+    bool  TEST_F(test_SNMPClient, process_snmp_request)(const std::string& hostname);
 
-  
     class snmp_client
     {
     protected:

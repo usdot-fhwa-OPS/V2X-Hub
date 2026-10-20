@@ -1,6 +1,5 @@
 #include "SNMPClient.h"
-#include <tmx/messages/byte_stream.hpp>
-#include <arpa/inet.h>
+
 
 namespace tmx::utils
 {
@@ -16,9 +15,11 @@ namespace tmx::utils
         // Validate IP address format
         struct in_addr addr4;
         struct in6_addr addr6;
-        if (inet_pton(AF_INET, ip.c_str(), &addr4) != 1 && inet_pton(AF_INET6, ip.c_str(), &addr6) != 1)
-        {
+        if ( !check_dns_resolution(ip) && inet_pton(AF_INET, ip.c_str(), &addr4) != 1 && inet_pton(AF_INET6, ip.c_str(), &addr6) != 1){
             throw snmp_client_exception("Invalid IP address: " + ip);
+        }
+        else{
+            PLOG(logINFO) << "IP " << ip << " resolved succesfully";
         }
 
         // Bring the IP address and port of the target SNMP device in the required form, which is "IPADDRESS:PORT":
@@ -192,6 +193,31 @@ namespace tmx::utils
             snmp_close(ss);
         }
     }
+
+    bool check_dns_resolution(const std::string& hostname) {
+        struct addrinfo hints;
+        struct addrinfo* res = nullptr;
+
+        // Configure criteria for the lookup
+        std::memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;     // Allow both IPv4 (AF_INET) and IPv6 (AF_INET6)
+        hints.ai_socktype = SOCK_STREAM; // Look up stream socket addresses (TCP)
+
+        // Perform the DNS resolution lookup
+        int status = getaddrinfo(hostname.c_str(), nullptr, &hints, &res);
+        
+        if (status != 0) {
+            std::cerr << "DNS Lookup failed for " << hostname 
+                    << ": " << gai_strerror(status) << std::endl;
+            return false;
+        }
+
+        // Memory cleanup allocated by getaddrinfo
+        freeaddrinfo(res);
+        return true;
+    }
+
+
     bool snmp_client::process_snmp_set_requests(const std::vector<snmp_request> &requests) {
         int failures = 0;
         /*Structure to hold all of the information that we're going to send to the remote host*/
