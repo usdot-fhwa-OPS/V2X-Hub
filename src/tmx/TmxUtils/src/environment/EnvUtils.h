@@ -11,11 +11,7 @@ namespace tmx::utils::environment{
          * will not be enabled.
          */
         constexpr inline static const char *SIMULATION_MODE = "SIMULATION_MODE";
-        /**
-         * @brief Name of environment variable for storing Kafka broker connection string (including port). Only necessary
-         * in SIMULATION MODE for transmitting and consuming time synchronization messages.
-         */
-        constexpr inline static const char *KAFKA_BROKER_ADDRESS = "KAFKA_BROKER_ADDRESS";
+       
         /**
          * @brief Name of environment variable for storing Kafka time sync topic. Only necessary
          * in SIMULATION MODE for transmitting and consuming time synchronization messages.
@@ -51,6 +47,21 @@ namespace tmx::utils::environment{
          * necessary in SIMULATION MODE for CDASim message forwarding.
          */
         constexpr inline static const char *SIM_INTERACTION_PORT= "SIM_INTERACTION_PORT";
+         /**
+         * @brief Name of environment variable for storing V2X Hub cartesian X coordinate (in meters). Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        constexpr inline static const char *SIM_LOCATION_X= "SIM_LOCATION_X";
+        /**
+         * @brief Name of environment variable for storing V2X Hub cartesian Y coordinate (in meters). Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        constexpr inline static const char *SIM_LOCATION_Y= "SIM_LOCATION_Y";
+        /**
+         * @brief Name of environment variable for storing V2X Hub cartesian Z coordinate (in meters). Only
+         * necessary in SIMULATION MODE for CDASim message forwarding.
+         */
+        constexpr inline static const char *SIM_LOCATION_Z= "SIM_LOCATION_Z";
         /**
          * @brief Name of environment variable for storing port for receiving v2x messages from CDASim. Only
          * necessary in SIMULATION MODE for CDASim message forwarding.
