@@ -22,9 +22,10 @@
 #include <poll.h>
 #include <string.h>
 #include <iostream>
-#include <queue>
 
 #include <boost/thread.hpp>
+#include <boost/circular_buffer.hpp>
+
 #include "utils/AutoResetEvent.h"
 
 #include "Plugin.h"
@@ -58,10 +59,10 @@ private:
 
 	AutoResetEvent mEventContinueFastProcessor;
 	boost::mutex mMutexFastMessageQueue;
-	std::queue<IvpMessage*> mFastMessageQueue;
+	boost::circular_buffer<IvpMessage*> mFastMessageQueue;
 
 	boost::mutex mMutexSlowMessageQueue;
-	std::queue<IvpMessage*> mSlowMessageQueue;
+	boost::circular_buffer<IvpMessage*> mSlowMessageQueue;
 
 	AutoResetEvent mEventContinueSlowProcessor;
 };

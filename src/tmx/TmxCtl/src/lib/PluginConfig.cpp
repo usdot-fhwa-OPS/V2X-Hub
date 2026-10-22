@@ -258,14 +258,14 @@ bool TmxControl::load_manifest(pluginlist &, ...)
 			stmt->setString(self.size() + 5, cfgKey);
 			stmt->executeUpdate();
 		}
+		return true;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
 
-	return true;
 }
 
 bool TmxControl::set(pluginlist &plugins, ...)
@@ -324,7 +324,7 @@ bool TmxControl::set(pluginlist &plugins, ...)
 
 		return true;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
@@ -377,14 +377,11 @@ bool TmxControl::set_system(pluginlist &plugins, ...)
 
 		return true;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
-
-
-	return true;
 }
 
 bool TmxControl::reset(pluginlist &plugins, ...)
@@ -421,14 +418,11 @@ bool TmxControl::reset(pluginlist &plugins, ...)
 		PLOG(logDEBUG1) << "Updated " << rows << " rows.";
 		return rows > 0;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
 	}
-
-
-	return true;
 }
 
 bool TmxControl::config(pluginlist &plugins, ...)
@@ -474,7 +468,7 @@ bool TmxControl::config(pluginlist &plugins, ...)
 			_output.store(path, dsc);
 		}
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;
@@ -519,7 +513,7 @@ bool TmxControl::remove(pluginlist &plugins, ...)
 
 		return true;
 	}
-	catch (exception &ex)
+	catch (const sql::SQLException &ex)
 	{
 		PLOG(logERROR) << TmxException(ex);
 		return false;

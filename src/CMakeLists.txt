@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10.2)
-project(V2X-Hub VERSION 7.11.1 LANGUAGES C CXX)
+project(V2X-Hub VERSION 8.0.0 LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 # Set CMake module path to find stol-apt packages 
 list(APPEND CMAKE_PREFIX_PATH "/opt/carma/lib")

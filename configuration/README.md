@@ -71,7 +71,7 @@ This category of environment variables configures the general V2X Hub system.
 * **MYSQL_PORT** – Database port (internal only)
 * **MYSQL_DATABASE** – Database Name
 * **MYSQL_USER** – Database username
-* **MYSQL_PASSWORD** – Managed via Docker secrets
+* **MYSQL_PASSWORD** – Managed via Docker secrets. Avoid illegal characters ;|&<>`$()*? 
 * **V2XHUB_VOLUME_PATH** – Path to which local volume or shared memory between the container and host machine will be setup. See the docker-compose.yml for more information on the specific volumes V2X Hub deployets.
 * **SAVE_STATE_FILE_PATH** – Absolute file path to .sql.gz.enc V2X Hub configuration save state to load on startup.
 * **SAVE_STATE_PASS_PHRASE** – Passphrase used for encryption of save state. 

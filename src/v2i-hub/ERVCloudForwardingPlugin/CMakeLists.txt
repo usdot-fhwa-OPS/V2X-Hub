@@ -1,4 +1,4 @@
-PROJECT(ERVCloudForwardingPlugin VERSION 7.12.0 LANGUAGES CXX)
+PROJECT(ERVCloudForwardingPlugin VERSION 8.0.0 LANGUAGES CXX)
 
 SET(TMX_PLUGIN_NAME "ERVCloudForwarding")
 add_compile_options(-fPIC)
@@ -21,6 +21,9 @@ TARGET_INCLUDE_DIRECTORIES(${PROJECT_NAME} PUBLIC  ${Qt5Core_INCLUDE_DIRS} ${Qt5
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} PUBLIC tmxutils 
    ${QHttpEngine_LIBRARY} ${Boost_SYSTEM_LIBRARY} NemaTode curl Qt5Core Qt5Network qhttpengine v2xhubWebAPI)
 link_directories(${CMAKE_PREFIX_PATH}/lib)
+target_compile_definitions(${PROJECT_NAME} PRIVATE 
+    $<$<CONFIG:Debug>:ALLOW_INSECURE_TLS=1>
+)
 
 # ############
 # # Testing ##

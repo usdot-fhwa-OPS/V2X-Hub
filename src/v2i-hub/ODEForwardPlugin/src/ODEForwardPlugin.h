@@ -30,6 +30,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <vector>
 #include <boost/algorithm/string.hpp>
 #include <tmx/messages/IvpJ2735.h>
 #include <tmx/j2735_messages/BasicSafetyMessage.hpp>
@@ -41,8 +42,12 @@
 #include <tmx/json/cJSON.h>
 #include <environment/EnvUtils.h>
 #include <kafka/kafka_client.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include "UDPMessageForwarder.h"
 #include "CTI4501ValidationMessage.h"
+#include "ODEForwardConversion.h"
 
  
 
@@ -84,12 +89,6 @@ namespace ODEForwardPlugin
 
 			void sendUDPMessage(tmx::routeable_message &routeableMsg, UDPMessageType udpMessageType) const;
 
-			uint16_t _scheduleFrequency;
-			uint16_t _forwardMSG;
-			int _MAPUDPPort;
-			int _TIMUDPPort;
-			int _BSMUDPPort;
-			int _SPATUDPPort;
 
 			// Forwarded/skipped counters for one message stream
 			struct ForwardStats
@@ -103,7 +102,6 @@ namespace ODEForwardPlugin
 			ForwardStats _mapStats;
 			ForwardStats _validationStats;
 
-			std::string _udpServerIpAddress;
 			std::shared_ptr<UDPMessageForwarder> _udpMessageForwarder;
 
 			// Kafka validation-event forwarding

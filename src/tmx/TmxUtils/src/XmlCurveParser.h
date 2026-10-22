@@ -16,6 +16,7 @@
 
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 #include "DsrcBuilder.h"
 
@@ -47,7 +48,7 @@ private:
 	void ReadNodes(xercesc::DOMElement* nodesElement, NodeSetXY *nodeSet);
 	void ReadNode(xercesc::DOMElement* nodeElement, NodeSetXY *nodeSet);
 
-	xercesc::XercesDOMParser *_parser;
+	std::unique_ptr<xercesc::XercesDOMParser> _parser;
 };
 
 #endif

@@ -32,12 +32,14 @@
 #include "PluginKeepAlive.h"
 #include "database/DbConnectionPool.h"
 #include "database/SystemContext.h"
+#include "environment/EnvUtils.h"
 
 
 #define PLOG(level) PLUGIN_LOG(level, _name)
 
 namespace tmx::utils {
 
+const unsigned long DEFAULT_PLUGIN_STATUS_UPDATE_INTERVAL_MS = 2000;
 
 // C++ wrapper for an ivpapi plugin.
 // If the ivpapi is rewritten in C++, this class will be moved to the API, and it will
@@ -54,6 +56,8 @@ public:
 	/// Static map used to track which PluginClient instance goes with which IvpPlugin* created.
 	/// This allows the static callback functions below to call the instance virtual callback functions.
 	static std::map<IvpPlugin*, PluginClient*> _instanceMap;
+	tmx::utils::FrequencyThrottle<std::string> _pluginStatusThrottle;
+	
 
 	static void StaticOnConfigChanged(IvpPlugin *plugin, const char *key, const char *value);
 	static void StaticOnError(IvpPlugin *plugin, IvpError err);
@@ -323,6 +327,14 @@ public:
 
 		return isNewValue;
 	}
+
+	template<typename T>
+    inline bool SetStatusThrottled(const char *key, T value, bool prependTime = false, std::streamsize precision = 2) {
+        if (_pluginStatusThrottle.Monitor(key)) {
+            return SetStatus<T>(key, value, prependTime, precision);
+        }
+        return false;
+    };
 
 	void RemoveStatus(const char *key);
 

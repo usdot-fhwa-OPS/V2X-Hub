@@ -28,6 +28,7 @@
 #include <CTI4501ValidationMessage.h>
 #include "RevisionCounterValidator.h"
 #include "MessageIntervalValidator.h"
+#include "IntersectionValidationUtils.h"
 
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 #include <tmx/j2735_messages/SpatMessage.hpp>
@@ -54,9 +55,9 @@ namespace IntersectionValidation
         void OnStateChange(IvpPluginState state) override;
 
     private:
-        // Interval tracking
-        uint64_t _lastMapTimeMs = 0;
-        uint64_t _lastSpatTimeMs = 0;
+        // Interval tracking, one aggregation window per message type
+        MessageIntervalValidator _spatIntervalValidator{SPAT_INTERVAL_MAX_MS};
+        MessageIntervalValidator _mapIntervalValidator{MAP_INTERVAL_MAX_MS};
 
         std::string spatSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/spat.schema.json";
         std::string mapSchemaPath = "/var/www/plugins/IntersectionValidationPlugin/resources/map.schema.json";
@@ -64,7 +65,12 @@ namespace IntersectionValidation
         uint spatValidationPassed = 0;
         uint mapFieldValidationErrors = 0;
         uint mapValidationPassed = 0;
-        std::string rsuSource;
+        std::string rsuSource; // TODO: Instead of setting the rsu IP here, have the message receiver grab the IP and attach it to the message
+        uint64_t BroadcastRateTimeWindow;
+        uint64_t ContentValidationTimeWindow;
+        uint64_t ContentUnchangedTimeWindow;
+
+        std::map<std::string, uint64_t> lastBroadcastMessageTime; // Map of message type to last broadcast time for that message type
 
         uint spatRevisionPassed = 0;
         uint mapRevisionPassed = 0;
@@ -72,18 +78,30 @@ namespace IntersectionValidation
         uint mapRevisionFailed = 0;
 
         // Identifier of the measured input stream, reported as topicName on a BroadcastRate event
-        std::string spatInputTopic;
-        std::string mapInputTopic;
+        std::string spatInputTopic = "topic.ProcessedSpat";
+        std::string mapInputTopic = "topic.ProcessedMap";
+
+        std::map<std::string, tmx::messages::CTI4501ValidationMessage> _lastContentValidationMessage;
+        std::map<std::string, tmx::messages::CTI4501ValidationMessage> _lastRevisionValidationMessage;
+
+
 
         /**
-         * @brief Measure message interval and broadcast TmxEventLogMessage if threshold exceeded.
-         * @param lastTimestampMs reference to stored timestamp for this message type (updated in place).
-         * @param requiredThresholdMs required threshold in ms.
-         * @param maxThresholdMs maximum threshold in ms.
-         * @param messageType label for logging (e.g. "SPaT", "MAP").
+         * @brief Record a message arrival against its interval validator
+         * @param validator interval validator for this message type
+         * @param messageType SPat or MAP 
+         * @param intersectionId intersection the message belongs to
          */
-        void measureMessageInterval(uint64_t &lastTimestampMs, uint64_t requiredThresholdMs, uint64_t maxThresholdMs,
-                                    const std::string &messageType, int intersectionId);
+        void measureMessageInterval(MessageIntervalValidator &validator, const std::string &messageType,
+                                    int intersectionId);
+
+        /**
+         * @brief Broadcast the CTI4501ValidationMessage and TmxEventLogMessage for a closed
+         *        aggregation window
+         * @param result counts from the window
+         * @param messageType SPat or MAP
+         */
+        void publishBroadcastRateEvent(const IntervalWindowResult &result, const std::string &messageType);
 
         /**
          * @brief Parse JSON, preprocess, run both field validation and
@@ -111,10 +129,12 @@ namespace IntersectionValidation
          * @param messageType The message type label for logging and status updates (e.g. "SPaT", "MAP").
          * @param intersectionId The intersection ID to include in the CTI4501ValidationMessage if validation fails.
          * @param handlerBeginMs Timestamp in milliseconds when message handling began
+         * @param contentChanged Boolean value indicating if the content of the message 
+         has changed
          */
         void validateMessageFields(const rapidjson::Document &doc, const rapidjson::Document &schemaDoc,
                                     const std::string &eventType, const std::string &messageType,
-                                    int intersectionId, uint64_t handlerBeginMs);
+                                    int intersectionId, uint64_t handlerBeginMs, bool contentChanged);
 
 
         /**
@@ -140,9 +160,22 @@ namespace IntersectionValidation
         // compares against current to detect CTI 4501 revision violations
         RevisionCounterValidator _revisionValidator;
 
-        static inline const std::string EVENT_MAX_THRESHOLD = " Message interval exceeded CTI 4501 maximum threshold of ";
-        static inline const std::string EVENT_REQUIRED_THRESHOLD = " Message interval exceeded CTI 4501 required threshold of ";
-
-        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " Message failed CTI 4501 field validation: ";
+        static inline const std::string EVENT_FIELD_VALIDATION_FAILED = " encountered CTI 4501 MinimumDataEvent: ";
     };
+    /** @brief Compare two vectors of missing data elements for equality.
+     *  @param a First vector of missing data elements.
+     *  @param b Second vector of missing data elements.
+     *  @return True if the vectors are equal, false otherwise.
+     */
+    bool compareMissingDataElements(const std::vector<tmx::messages::MissingDataElement> &a,
+                            const std::vector<tmx::messages::MissingDataElement> &b);
+    /** @brief Compare two CTI 4501 revision count validation messages for and only returns true if they are equal
+     * and revision count is 0 accross the board.
+     *  @param a First CTI 4501 validation message.
+     *  @param b Second CTI 4501 validation message.
+     *  @return True if the messages are equal and revision count is 0, false otherwise.
+     *  @note This is used to throttle duplicate CTI 4501 revision count validation events when revision count is never incremented.
+     */
+    bool compareRevisionValidationMessages(tmx::messages::CTI4501ValidationMessage &a,
+                            tmx::messages::CTI4501ValidationMessage &b);
 }

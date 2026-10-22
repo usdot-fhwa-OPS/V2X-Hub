@@ -5,10 +5,10 @@
  *      @author: Daniel I. Kelley (Leidos)
  */
 
-#ifndef SRC_DATABASE_DBCONNECTIONCONFIG_H_
-#define SRC_DATABASE_DBCONNECTIONCONFIG_H_
+#pragma once
 
 #include "../PluginLog.h"
+#include "DbConnectionException.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -16,9 +16,10 @@
 #include <iostream>
 #include <string>
 #include <mutex>
+#include <filesystem>
 
-namespace tmx {
-namespace utils {
+
+namespace tmx::utils{
 
 /**
  * A singleton class to manage database connection configuration through environment variables.
@@ -114,6 +115,4 @@ private:
 };
 
 } /* namespace utils */
-} /* namespace tmx */
 
-#endif /* SRC_DATABASE_DBCONNECTIONCONFIG_H_ */

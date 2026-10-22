@@ -19,7 +19,7 @@
 #include <tmx/j2735_messages/SpatMessage.hpp>
 #include <tmx/j2735_messages/MapDataMessage.hpp>
 
-#include <IntersectionValidationPlugin.h>
+#include <IntersectionValidationUtils.h>
 #include <MessageIntervalValidator.h>
 #include <FieldValidation.h>
 #include <RevisionCounterValidator.h>
@@ -31,6 +31,10 @@ using namespace IntersectionValidation;
 namespace
 {
 
+  // Aggregation window the interval tests drive with, standing in for the plugin's
+  // BroadcastRateTimeWindow configuration value
+  constexpr uint64_t TEST_WINDOW_MS = 5000;
+
   const std::string SPAT_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/spat.schema.json";
   const std::string MAP_SCHEMA_PATH = "../../../v2i-hub/IntersectionValidationPlugin/resources/map.schema.json";
 
@@ -39,48 +43,363 @@ namespace
   // When lastTimestampMs is 0, we should treat it as the first message and return an interval of 0
   TEST(FrequencyValidationTest, InitialMessageIntervalIsZero)
   {
-    auto result = calculateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(0u, result);
+    auto result = evaluateMessageInterval(0, 1000, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(0u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, SpatIntervalWithinThreshold)
   {
-    auto result = calculateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(100u, result);
+    auto result = evaluateMessageInterval(1000, 1100, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(100u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, SpatIntervalExceedsThreshold)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    auto result = evaluateMessageInterval(1000, 1301, SPAT_INTERVAL_MAX_MS);
+    EXPECT_EQ(301u, result.intervalMs);
+    EXPECT_TRUE(result.violation);
   }
 
+  // The required interval is a maximum, so landing exactly on it is compliant
+  TEST(FrequencyValidationTest, SpatIntervalExactlyAtThreshold)
+  {
+    EXPECT_FALSE(evaluateMessageInterval(1000, 1125, SPAT_INTERVAL_MAX_MS).violation);
+    EXPECT_TRUE(evaluateMessageInterval(1000, 1126, SPAT_INTERVAL_MAX_MS).violation);
+  }
+
+  // A timestamp earlier than the last one makes the interval comparison meaningless, so it
+  // is reported as an error rather than being folded into the result
   TEST(FrequencyValidationTest, SpatIntervalCurrentTimestampEarlierThanLastTimestamp)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    EXPECT_THROW(evaluateMessageInterval(1001, 1000, SPAT_INTERVAL_MAX_MS), tmx::TmxException);
   }
 
   TEST(FrequencyValidationTest, MapIntervalWithinThreshold)
   {
-    auto result = calculateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_THRESHOLD_MS);
-    EXPECT_EQ(50u, result);
+    auto result = evaluateMessageInterval(1000, 1050, MAP_INTERVAL_MAX_MS);
+    EXPECT_EQ(50u, result.intervalMs);
+    EXPECT_FALSE(result.violation);
   }
 
   TEST(FrequencyValidationTest, MapIntervalExceedsThreshold)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1000, 1101, MAP_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    auto result = evaluateMessageInterval(1000, 2100, MAP_INTERVAL_MAX_MS);
+    EXPECT_EQ(1100u, result.intervalMs);
+    EXPECT_TRUE(result.violation);
+  }
+
+  TEST(FrequencyValidationTest, MapIntervalExactlyAtThreshold)
+  {
+    EXPECT_FALSE(evaluateMessageInterval(1000, 2025, MAP_INTERVAL_MAX_MS).violation);
+    EXPECT_TRUE(evaluateMessageInterval(1000, 2026, MAP_INTERVAL_MAX_MS).violation);
   }
 
   TEST(FrequencyValidationTest, MapIntervalCurrentTimestampEarlierThanLastTimestamp)
   {
-    EXPECT_THROW(
-        calculateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_THRESHOLD_MS),
-        tmx::TmxException);
+    EXPECT_THROW(evaluateMessageInterval(1001, 1000, MAP_INTERVAL_MAX_MS), tmx::TmxException);
+  }
+
+  // Broadcast Rate Aggregation Window Tests
+  //
+  // A violation opens a 5 s window; every violation and message seen until the window
+  // ends is counted into it. The first message at or after the window end closes it and
+  // yields one event's worth of counts. All timestamps are explicit so no test has to sleep.
+
+  TEST(BroadcastRateWindowTest, HealthyStreamNeverOpensWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    EXPECT_FALSE(validator.recordMessage(1000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(1100, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(1200, TEST_WINDOW_MS).has_value());
+
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+  }
+
+  TEST(BroadcastRateWindowTest, FirstMessageDoesNotOpenWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    EXPECT_FALSE(validator.recordMessage(1000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.lastIntervalMs());
+  }
+
+  TEST(BroadcastRateWindowTest, ViolationOpensWindowAndCountsMessages)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // 1000 ms gap, opens window 2000..7000
+    EXPECT_TRUE(validator.windowOpen());
+    EXPECT_EQ(1000u, validator.lastIntervalMs());
+
+    validator.recordMessage(2100, TEST_WINDOW_MS);
+    validator.recordMessage(2200, TEST_WINDOW_MS);
+    validator.recordMessage(2300, TEST_WINDOW_MS);
+
+    // The message at the window end closes it, and is not itself counted into it
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(4u, result->messageCount); // the violating message plus the three that followed
+  }
+
+  TEST(BroadcastRateWindowTest, MessageBeforeWindowEndDoesNotCloseIt)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+
+    EXPECT_FALSE(validator.recordMessage(6999, TEST_WINDOW_MS).has_value());
+    EXPECT_TRUE(validator.windowOpen());
+  }
+
+  TEST(BroadcastRateWindowTest, MultipleViolationsAggregateToOneEvent)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    // None of the messages inside the window report anything of their own
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    EXPECT_FALSE(validator.recordMessage(2000, TEST_WINDOW_MS).has_value()); // violation, opens window 2000..7000
+    EXPECT_FALSE(validator.recordMessage(2100, TEST_WINDOW_MS).has_value()); // healthy
+    EXPECT_FALSE(validator.recordMessage(3000, TEST_WINDOW_MS).has_value()); // violation
+    EXPECT_FALSE(validator.recordMessage(3100, TEST_WINDOW_MS).has_value()); // healthy
+    EXPECT_FALSE(validator.recordMessage(4000, TEST_WINDOW_MS).has_value()); // violation
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(3u, result->violationCount);
+    EXPECT_EQ(5u, result->messageCount); // everything from 2000 on; the message at 1000 predates the window
+    EXPECT_EQ(4u, validator.totalViolations()); // the closing message is a violation too
+  }
+
+  // A gap in the stream delays the report but does not distort it: the window is reported
+  // with its original bounds and counts whenever the stream delivers again.
+  TEST(BroadcastRateWindowTest, GapInStreamDelaysReportWithoutDistortingIt)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+
+    // Nothing arrives for another 30 s, so the window is still open and unreported
+    EXPECT_TRUE(validator.windowOpen());
+
+    auto result = validator.recordMessage(32000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs); // still the nominal 5 s bounds, not the gap
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(1u, result->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, WindowsAreTumbling)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    // Closes the first window and, being a violation itself, opens 8000..13000
+    ASSERT_TRUE(validator.recordMessage(8000, TEST_WINDOW_MS).has_value());
+    EXPECT_TRUE(validator.windowOpen());
+
+    auto result = validator.recordMessage(13000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(8000u, result->windowStartMs);
+    EXPECT_EQ(13000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(1u, result->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, MessageAfterWindowEndClosesAndReopens)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS); // violation, opens window 2000..7000
+    validator.recordMessage(2100, TEST_WINDOW_MS);
+
+    // Arrives past the window end, so it closes that window without being counted into it
+    auto result = validator.recordMessage(7500, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(7000u, result->windowEndMs);
+    EXPECT_EQ(1u, result->violationCount);
+    EXPECT_EQ(2u, result->messageCount);
+
+    // It is itself a violation, so it opens the next window
+    EXPECT_TRUE(validator.windowOpen());
+    auto next = validator.recordMessage(12500, TEST_WINDOW_MS);
+    ASSERT_TRUE(next.has_value());
+    EXPECT_EQ(7500u, next->windowStartMs);
+    EXPECT_EQ(1u, next->messageCount);
+  }
+
+  TEST(BroadcastRateWindowTest, ExactlyAtThresholdDoesNotOpenWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(1125, TEST_WINDOW_MS); // exactly 125 ms, compliant
+
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+  }
+
+  // The window length comes from the BroadcastRateTimeWindow configuration value, which an
+  // operator can change while the plugin is running
+  // The window length comes from the BroadcastRateTimeWindow configuration value, passed
+  // in on every message, so a configured value other than the default is honoured
+  TEST(BroadcastRateWindowTest, ConfiguredWindowDurationSetsWindowBounds)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, 2000);
+    validator.recordMessage(2000, 2000); // violation, opens a 2 s window 2000..4000
+
+    EXPECT_FALSE(validator.recordMessage(3999, 2000).has_value());
+
+    auto result = validator.recordMessage(4000, 2000);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(2000u, result->windowStartMs);
+    EXPECT_EQ(4000u, result->windowEndMs);
+  }
+
+  // An operator changing the configuration mid-window leaves the open window on the bounds
+  // it was opened with; the new duration takes effect on the next window
+  TEST(BroadcastRateWindowTest, WindowDurationChangeAppliesToNextWindow)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, 5000);
+    validator.recordMessage(2000, 5000); // violation, opens window 2000..7000
+
+    // Configuration changes to 1 s while that window is still open
+    auto first = validator.recordMessage(7000, 1000);
+    ASSERT_TRUE(first.has_value());
+    EXPECT_EQ(7000u, first->windowEndMs); // still the 5 s window it was opened with
+
+    // That closing message was itself a violation, so it opened a window on the new duration
+    auto second = validator.recordMessage(8000, 1000);
+    ASSERT_TRUE(second.has_value());
+    EXPECT_EQ(7000u, second->windowStartMs);
+    EXPECT_EQ(8000u, second->windowEndMs);
+  }
+
+  TEST(BroadcastRateWindowTest, SpatAndMapValidatorsAreIndependent)
+  {
+    MessageIntervalValidator spat(SPAT_INTERVAL_MAX_MS);
+    MessageIntervalValidator map(MAP_INTERVAL_MAX_MS);
+
+    spat.recordMessage(1000, TEST_WINDOW_MS);
+    map.recordMessage(1000, TEST_WINDOW_MS);
+
+    // 500 ms violates the SPaT interval but not the MAP interval
+    spat.recordMessage(1500, TEST_WINDOW_MS);
+    map.recordMessage(1500, TEST_WINDOW_MS);
+
+    EXPECT_TRUE(spat.windowOpen());
+    EXPECT_FALSE(map.windowOpen());
+    EXPECT_EQ(1u, spat.totalViolations());
+    EXPECT_EQ(0u, map.totalViolations());
+  }
+
+  TEST(BroadcastRateWindowTest, TimeWentBackwardsThrowsAndResyncs)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+    EXPECT_THROW(validator.recordMessage(1500, TEST_WINDOW_MS), tmx::TmxException);
+
+    // The regression is an error, not a violation, so it leaves the window state alone
+    EXPECT_FALSE(validator.windowOpen());
+    EXPECT_EQ(0u, validator.totalViolations());
+
+    // The backwards timestamp was still accepted as the new time base, so this 100 ms
+    // interval is measured against 1500 rather than against the stale 2000, and the
+    // step-back throws once rather than on every message that follows it
+    EXPECT_NO_THROW(validator.recordMessage(1600, TEST_WINDOW_MS));
+    EXPECT_EQ(100u, validator.lastIntervalMs());
+    EXPECT_FALSE(validator.windowOpen());
+  }
+
+  TEST(BroadcastRateWindowTest, ClosedWindowIsNotReportedTwice)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    ASSERT_TRUE(validator.recordMessage(7000, TEST_WINDOW_MS).has_value());
+    EXPECT_FALSE(validator.recordMessage(7100, TEST_WINDOW_MS).has_value());
+  }
+
+  TEST(BroadcastRateWindowTest, IntersectionIdComesFromFirstViolation)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(2000, TEST_WINDOW_MS, 105); // violation, opens the window
+    validator.recordMessage(3000, TEST_WINDOW_MS, 200); // violation carrying a different intersection
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS, 105);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(105, result->intersectionId);
+    EXPECT_TRUE(result->intersectionIdMismatch);
+  }
+
+  TEST(BroadcastRateWindowTest, ConsistentIntersectionIdReportsNoMismatch)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(2000, TEST_WINDOW_MS, 105);
+    validator.recordMessage(3000, TEST_WINDOW_MS, 105);
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS, 105);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(105, result->intersectionId);
+    EXPECT_FALSE(result->intersectionIdMismatch);
+  }
+
+  TEST(BroadcastRateWindowTest, UnknownIntersectionIdIsReportedAsNegativeOne)
+  {
+    MessageIntervalValidator validator(SPAT_INTERVAL_MAX_MS);
+
+    validator.recordMessage(1000, TEST_WINDOW_MS);
+    validator.recordMessage(2000, TEST_WINDOW_MS);
+
+    auto result = validator.recordMessage(7000, TEST_WINDOW_MS);
+    ASSERT_TRUE(result.has_value());
+    EXPECT_EQ(-1, result->intersectionId);
+  }
+
+  // Event Formatting Tests
+
+  TEST(Iso8601Test, FormatsEpochMs)
+  {
+    EXPECT_EQ("1970-01-01T00:00:00.000Z", formatIso8601Utc(0));
+    EXPECT_EQ("1970-01-01T00:00:01.234Z", formatIso8601Utc(1234));
+    EXPECT_EQ("1970-01-01T00:00:01.020Z", formatIso8601Utc(1020));
+  }
+
+  TEST(BroadcastRateDescriptionTest, ExactWording)
+  {
+    EXPECT_EQ("There has been 3 BroadcastRateEvents for SPaT messages between "
+              "1970-01-01T00:00:00.000Z and 1970-01-01T00:00:05.000Z",
+              formatBroadcastRateDescription("SPaT", 3, 0, 5000));
+
+    EXPECT_EQ("There has been 1 BroadcastRateEvents for MAP messages between "
+              "1970-01-01T00:00:00.000Z and 1970-01-01T00:00:05.000Z",
+              formatBroadcastRateDescription("MAP", 1, 0, 5000));
   }
 
   // SPaT Field Validation Tests
@@ -5633,5 +5952,462 @@ namespace
 
     EXPECT_FALSE(change.progressionViolation);
   }
+
+  rapidjson::Document parse(const char *json)
+  {
+    rapidjson::Document doc;
+    doc.Parse(json);
+    EXPECT_FALSE(doc.HasParseError()) << "test fixture JSON failed to parse: " << json;
+    return doc;
+  }
+ 
+  // True if any collected element string contains the given substring.
+  bool contains(const std::vector<std::string> &elements, const std::string &needle)
+  {
+    return std::any_of(elements.begin(), elements.end(),
+                      [&](const std::string &e) { return e.find(needle) != std::string::npos; });
+  }
+
+  // Tests for helper functions for populating MinimumDataEvent 
+  TEST(ResolveRefTest, ReturnsNodeItselfWhenNoRef)
+  {
+    rapidjson::Document root = parse(R"({"type": "object"})");
+    rapidjson::Document node = parse(R"({"type": "string"})");
+ 
+    const rapidjson::Value *resolved = resolveRef(node, root);
+ 
+    EXPECT_NE(resolved, nullptr);
+    EXPECT_EQ(resolved, &node); // same node returned, not a copy
+  }
+  
+  TEST(ResolveRefTest, ResolvesLocalPointerAgainstRoot)
+  {
+      rapidjson::Document root = parse(R"({
+          "definitions": { "Foo": { "type": "integer" } }
+      })");
+      rapidjson::Document node = parse(R"({"$ref": "#/definitions/Foo"})");
+  
+      const rapidjson::Value *resolved = resolveRef(node, root);
+  
+      EXPECT_NE(resolved, nullptr);
+      EXPECT_TRUE(resolved->IsObject());
+      EXPECT_TRUE(resolved->HasMember("type"));
+      EXPECT_STREQ((*resolved)["type"].GetString(), "integer");
+  }
+  
+  TEST(ResolveRefTest, RootPointerReturnsRoot)
+  {
+      rapidjson::Document root = parse(R"({"type": "object"})");
+      rapidjson::Document node = parse(R"({"$ref": "#"})");
+  
+      const rapidjson::Value *resolved = resolveRef(node, root);
+  
+      EXPECT_EQ(resolved, &root);
+  }
+  
+  TEST(ResolveRefTest, ExternalRefReturnsNull)
+  {
+    rapidjson::Document root = parse(R"({"type": "object"})");
+    rapidjson::Document node = parse(R"({"$ref": "other.json#/Foo"})");
+  
+    EXPECT_EQ(resolveRef(node, root), nullptr);
+  }
+  
+  TEST(ResolveRefTest, UnresolvableLocalPointerReturnsNull)
+  {
+    rapidjson::Document root = parse(R"({"definitions": {}})");
+    rapidjson::Document node = parse(R"({"$ref": "#/definitions/DoesNotExist"})");
+  
+    EXPECT_EQ(resolveRef(node, root), nullptr);
+  }
+  
+  TEST(ResolveRefTest, NonStringRefIsTreatedAsNoRef)
+  {
+    rapidjson::Document root = parse(R"({"type": "object"})");
+    rapidjson::Document node = parse(R"({"$ref": 42})");
+  
+    // A non-string $ref is ignored; the node itself is returned.
+    EXPECT_EQ(resolveRef(node, root), &node);
+  }
+  
+  TEST(RefOrTest, ReturnsRefStringWhenPresent)
+  {
+      rapidjson::Document node = parse(R"({"$ref": "#/$defs/J2735TimeMark"})");
+      EXPECT_EQ(refOr(node, "fallback"), "#/$defs/J2735TimeMark");
+  }
+  
+  TEST(RefOrTest, ReturnsFallbackWhenNoRef)
+  {
+    rapidjson::Document node = parse(R"({"type": "integer"})");
+    EXPECT_EQ(refOr(node, "fallback/path"), "fallback/path");
+  }
+
+  TEST(RefOrTest, ReturnsFallbackWhenNotObject)
+  {
+    rapidjson::Document node = parse(R"("just a string")");
+    EXPECT_EQ(refOr(node, "fallback"), "fallback");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsPropertyRefWhenDeclared)
+  {
+    rapidjson::Document schema = parse(R"({
+      "properties": { "startTime": { "$ref": "#/$defs/TimeMark" } }
+    })");
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "fallback"),
+      "#/$defs/TimeMark");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyHasNoRef)
+  {
+    rapidjson::Document schema = parse(R"({
+    "properties": { "startTime": { "type": "integer" } }
+      })");
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
+      "inline/path");
+  }
+  
+  TEST(PropertySchemaRefTest, ReturnsFallbackWhenPropertyMissing)
+  {
+    rapidjson::Document schema = parse(R"({
+          "properties": { "other": { "type": "integer" } }
+    })");
+    EXPECT_EQ(propertySchemaRef(schema, "startTime", "inline/path"),
+          "inline/path");
+  }
+  
+  TEST(CollectMissingRequiredFieldsTest, EmptyWhenAllRequiredPresent)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
+          "required": ["a", "b"]
+      })");
+      rapidjson::Document doc = parse(R"({"a": 1, "b": 2})");
+
+      EXPECT_TRUE(collectMissingRequiredFields(schema, doc).empty());
+  }
+
+  TEST(CollectMissingRequiredFieldsTest, ReportsSingleMissingTopLevel)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": { "type": "integer" }, "b": { "type": "integer" } },
+          "required": ["a", "b"]
+      })");
+      rapidjson::Document doc = parse(R"({"a": 1})");
+
+      auto missing = collectMissingRequiredFields(schema, doc);
+
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.b is missing"));
+  }
+
+  TEST(CollectMissingRequiredFieldsTest, ReportsAllMissingNotJustFirst)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": { "a": {}, "b": {}, "c": {} },
+          "required": ["a", "b", "c"]
+      })");
+      rapidjson::Document doc = parse(R"({"b": 2})");
+
+      auto missing = collectMissingRequiredFields(schema, doc);
+
+      EXPECT_EQ(missing.size(), 2u);
+      EXPECT_TRUE(contains(missing, "$.a is missing"));
+      EXPECT_TRUE(contains(missing, "$.c is missing"));
+  }
+
+  TEST(CollectMissingRequiredFieldsTest, DescendsIntoNestedObjects)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "id": {
+                  "type": "object",
+                  "properties": { "region": {}, "id": {} },
+                  "required": ["id"]
+              }
+          },
+          "required": ["id"]
+      })");
+      rapidjson::Document doc = parse(R"({"id": {"region": 1}})");
+
+      auto missing = collectMissingRequiredFields(schema, doc);
+
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.id.id is missing"));
+  }
+
+  TEST(CollectMissingRequiredFieldsTest, DescendsIntoArrayItemsWithIndex)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "states": {
+                  "type": "array",
+                  "items": {
+                      "type": "object",
+                      "properties": { "eventState": {}, "timing": {} },
+                      "required": ["eventState", "timing"]
+                  }
+              }
+          },
+          "required": ["states"]
+      })");
+
+      rapidjson::Document doc = parse(R"({
+          "states": [
+              {"eventState": "stop", "timing": {}},
+              {"eventState": "go"}
+          ]
+      })");
+
+      auto missing = collectMissingRequiredFields(schema, doc);
+
+      ASSERT_EQ(missing.size(), 1u);
+      EXPECT_TRUE(contains(missing, "$.states[1].timing is missing"));
+  }
+
+  TEST(CollectMissingRequiredFieldsTest, ProducesConflictMonitorStyleString)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "value": {
+                  "type": "object",
+                  "properties": {
+                      "SPAT": {
+                          "type": "object",
+                          "properties": { "timeStamp": {}, "intersections": {} },
+                          "required": ["timeStamp", "intersections"]
+                      }
+                  },
+                  "required": ["SPAT"]
+              }
+          },
+          "required": ["value"]
+      })");
+      rapidjson::Document doc = parse(R"({"value": {"SPAT": {"timeStamp": 1}}})");
+
+      auto missing = collectMissingRequiredFields(schema, doc);
+
+      ASSERT_EQ(missing.size(), 1u);
+      // Full expected string, path + schema-pointer citation.
+      EXPECT_EQ(missing.front(),
+                "$.value.SPAT.intersections is missing "
+                "(#/properties/value/properties/SPAT/properties/intersections)");
+  }
+
+  TEST(HandleObjectTest, NoOpForNonObjectInstance)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document instance = parse(R"([1, 2, 3])"); // array, not object
+
+      std::vector<std::string> out;
+      handleObject(schema, instance, schema, "$", "#", out, 0);
+
+      EXPECT_TRUE(out.empty());
+  }
+
+  TEST(HandleObjectTest, CollectsMissingAndRecursesPresent)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object",
+          "properties": {
+              "a": {},
+              "nested": {
+                  "type": "object",
+                  "properties": { "x": {} },
+                  "required": ["x"]
+              }
+          },
+          "required": ["a", "nested"]
+      })");
+      // "a" missing; "nested" present but missing its required "x".
+      rapidjson::Document instance = parse(R"({"nested": {}})");
+
+      std::vector<std::string> out;
+      handleObject(schema, instance, schema, "$", "#", out, 0);
+
+      EXPECT_EQ(out.size(), 2u);
+      EXPECT_TRUE(contains(out, "$.a is missing"));
+      EXPECT_TRUE(contains(out, "$.nested.x is missing"));
+  }
+
+  TEST(CollectMissingRequiredTest, DepthGuardStopsRecursion)
+  {
+      // Passing a depth over the cap short-circuits before any collection.
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document doc = parse(R"({})");
+
+      std::vector<std::string> out;
+      collectMissingRequired(schema, doc, schema, "$", "#", out, /*depth=*/1000);
+
+      EXPECT_TRUE(out.empty());
+  }
+  
+  TEST(CollectMissingRequiredTest, DefaultDepthCollectsNormally)
+  {
+      rapidjson::Document schema = parse(R"({
+          "type": "object", "properties": { "a": {} }, "required": ["a"]
+      })");
+      rapidjson::Document doc = parse(R"({})");
+
+      std::vector<std::string> out;
+      collectMissingRequired(schema, doc, schema, "$", "#", out); // default depth 0
+
+      ASSERT_EQ(out.size(), 1u);
+      EXPECT_TRUE(contains(out, "$.a is missing"));
+  }
+
+  // MinimumDataEvent throttling
+  bool spatWouldEmit(RevisionCounterValidator &validator, const char *json)
+  {
+      rapidjson::Document doc = parse(json);
+      return planForwarding(validator.validateSpatRevision(doc));
+  }
+
+  bool mapWouldEmit(RevisionCounterValidator &validator, const char *json)
+  {
+      rapidjson::Document doc = parse(json);
+      return planForwarding(validator.validateMapRevision(doc));
+  }
+
+  constexpr const char *SPAT_A = R"json({
+      "value": { "SPAT": { "intersections": [
+          {
+              "id": { "id": 105 },
+              "revision": 0,
+              "states": [
+                  { "signalGroup": 1, "state-time-speed": [
+                      { "eventState": "stop-And-Remain", "timing": { "minEndTime": 100 } }
+                  ] }
+              ]
+          }
+      ] } }
+  })json";
+
+  // eventState changed
+  constexpr const char *SPAT_B = R"json({
+      "value": { "SPAT": { "intersections": [
+          {
+              "id": { "id": 105 },
+              "revision": 0,
+              "states": [
+                  { "signalGroup": 1, "state-time-speed": [
+                      { "eventState": "protected-Movement-Allowed", "timing": { "minEndTime": 100 } }
+                  ] }
+              ]
+          }
+      ] } }
+  })json";
+
+  constexpr const char *MAP_A = R"json({
+      "value": { "MapData": {
+          "msgIssueRevision": 0,
+          "intersections": [
+              { "id": { "id": 105 }, "revision": 0, "laneSet": [ { "laneID": 1 } ] }
+          ]
+      } }
+  })json";
+
+  // laneID changed
+  constexpr const char *MAP_B = R"json({
+      "value": { "MapData": {
+          "msgIssueRevision": 0,
+          "intersections": [
+              { "id": { "id": 105 }, "revision": 0, "laneSet": [ { "laneID": 2 } ] }
+          ]
+      } }
+  })json";
+
+  TEST(MinimumDataThrottleTest, FirstFailingSpatEmits)
+  {
+      RevisionCounterValidator validator;
+
+      // First time this intersection is seen
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));
+  }
+
+  TEST(MinimumDataThrottleTest, IdenticalSpatRepeatIsThrottled)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));   // first — emits, records state
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // identical — throttled
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // still identical — still throttled
+  }
+
+  TEST(MinimumDataThrottleTest, ChangedSpatContentReEmits)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_A));   // first — emits
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_A));  // identical — throttled
+      EXPECT_TRUE(spatWouldEmit(validator, SPAT_B));   // content changed — emits again
+      EXPECT_FALSE(spatWouldEmit(validator, SPAT_B));  // new content now identical — throttled
+  }
+
+  TEST(MinimumDataThrottleTest, MapFollowsSameThrottleRule)
+  {
+      RevisionCounterValidator validator;
+
+      EXPECT_TRUE(mapWouldEmit(validator, MAP_A));    // first — emits
+      EXPECT_FALSE(mapWouldEmit(validator, MAP_A));   // identical — throttled
+      EXPECT_TRUE(mapWouldEmit(validator, MAP_B));    // content changed — emits again
+  }
+
+  TEST(CompareCTI4501ValidationMessage, compareMissingDataElements) {
+    // Test to evaluate compareMissingDataElements function when given two std::vector<MissingDataElement>
+    MissingDataElement a (R"($.value.SPAT.intersections[0].roadAuthorityID is missing (#\/properties\/value\/properties\/SPAT\/properties\/intersections\/items\/properties\/roadAuthorityID))");
+    MissingDataElement b (R"($.value.SPAT.intersections[0].states[0].state-time-speed[0].timing.startTime is missing (#\/properties\/value\/properties\/SPAT\/properties\/intersections\/items\/properties\/states\/items\/properties\/state-time-speed\/items\/properties\/timing\/properties\/startTime))");
+    std::vector<MissingDataElement> first = {
+        a,
+        b
+    };
+    std::vector<MissingDataElement> second = {
+        a,
+        b
+    };
+
+    std::vector<MissingDataElement> third = {
+        b,
+        b
+    };
+    EXPECT_TRUE(compareMissingDataElements(first, second));
+    EXPECT_FALSE(compareMissingDataElements(first, third));
+  
+  }
+
+  TEST(CompareRevisionValidationMessages, compareRevisionValidationMessages) {
+    CTI4501ValidationMessage a;
+    a.set_messageCountA(1);
+    a.set_messageCountB(2);
+
+    CTI4501ValidationMessage b;
+    b.set_messageCountA(1);
+    b.set_messageCountB(2);
+
+    EXPECT_FALSE(compareRevisionValidationMessages(a, b));
+
+    CTI4501ValidationMessage c;
+    c.set_messageCountA(0);
+    c.set_messageCountB(0);
+
+    CTI4501ValidationMessage d;
+    d.set_messageCountA(0);
+    d.set_messageCountB(0);
+    EXPECT_TRUE(compareRevisionValidationMessages(c, d));
+    EXPECT_FALSE(compareRevisionValidationMessages(a, c));
+    EXPECT_FALSE(compareRevisionValidationMessages(c, a));
+  }
+
+
+
 
 } // namespace
