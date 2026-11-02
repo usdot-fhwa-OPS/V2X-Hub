@@ -391,7 +391,14 @@ namespace tmx::utils
 
         if (status == STAT_SUCCESS)
         {
-            PLOG(logERROR) << "Variable type: " << response->variables->type << ". Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
+            if (response && response->variables)
+            {
+                PLOG(logERROR) << "Variable type: " << response->variables->type << ". Error in packet " << static_cast<std::string>(snmp_errstring(static_cast<int>(response->errstat)));
+            }
+            else
+            {
+                PLOG(logERROR) << "Error in packet with no variables in response";
+            }
         }
         else if (status == STAT_TIMEOUT)
         {
