@@ -126,6 +126,7 @@ private:
 	std::string _transmitSRMTopic;
 	std::string _transmitSimSensorDetectedObjTopic;
 	std::string _transmitSDSMTopic;
+	std::string _transmitTimeSyncTopic;
 	std::string _kafkaBrokerIp;
 	std::string _kafkaBrokerPort;
 	std::shared_ptr<kafka_producer_worker> _kafka_producer_ptr;

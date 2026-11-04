@@ -50,6 +50,9 @@ void CARMAStreetsPlugin::UpdateConfigSettings() {
 	GetConfigValue<string>("SimSensorDetectedObjTopic", _transmitSimSensorDetectedObjTopic); 
 	GetConfigValue<string>("SdsmSubscribeTopic", _subscribeToSdsmTopic);
 	GetConfigValue<string>("SdsmTransmitTopic", _transmitSDSMTopic);
+	if ( isSimulationMode()) {
+		_transmitTimeSyncTopic = tmx::utils::environment::get_environment_variable(tmx::utils::environment::TIME_SYNC_TOPIC);
+	}
 	 // Populate strategies config
 	string config;
 	GetConfigValue<string>("MobilityOperationStrategies", config);
@@ -124,7 +127,7 @@ void CARMAStreetsPlugin::HandleTimeSyncMessage(tmx::messages::TimeSyncMessage &m
 		std::string rv = boost::regex_replace(msg.to_string(), exp, "$1");
 		PLOG(logINFO) << "Sending Time Sync Message " << rv << std::endl;
 
-		produce_kafka_msg(rv, "time_sync");
+		produce_kafka_msg(rv, _transmitTimeSyncTopic);
 	}
 }
 void CARMAStreetsPlugin::HandleMobilityOperationMessage(tsm3Message &msg, routeable_message &routeableMsg ) {

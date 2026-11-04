@@ -22,5 +22,14 @@ if [ -n "$V2XHUB_USERNAME" ] && [ -n "$V2XHUB_PASSWORD" ]; then
     # Add V2XHub admin user (Will not add if user already exists)
     tmxctl --user-add --username "$V2XHUB_USERNAME" --password "$V2XHUB_PASSWORD" --access-level 3
 fi
+
+# If V2X HUB Save State file exists at SAVE_STATE_FILE_PATH then load it to restore the state of the system
+# and SAVE_STATE_PASS_PHRASE is set, then attempt to load it
+if [ -f "$SAVE_STATE_FILE_PATH" ] && [ -n "$SAVE_STATE_PASS_PHRASE" ]; then
+    echo "Loading V2X Hub Save State from $SAVE_STATE_FILE_PATH"
+    tmxctl --upload-state "$SAVE_STATE_FILE_PATH" --passphrase "$SAVE_STATE_PASS_PHRASE"
+    echo "V2X Hub Save State loaded successfully!"
+fi
+
 # Start Tmx Core
 tmxcore

@@ -19,21 +19,6 @@
 			"description": "Name of the log file for this plugin. If a relative path is provided, this file will create a directory under /var/log/<PluginName> and add the file here. Not including this parameter or setting to (-) will direct log output to stdout which is the default behavior. NOTE: File logging for plugins should only be used for temporary data collection. Current file logging does not have mechanisms to purge data after a certain time or size."
 		},
 		{
-			"key":"X",
-			"default":"0.0",
-			"description":"Cartesian X coordinate in simulated map (in meters)."
-		},
-		{
-			"key":"Y",
-			"default":"0.0",
-			"description":"Cartesian Y coordinate in simulated map (in meters)."
-		},
-		{
-			"key":"Z",
-			"default":"0.0",
-			"description":"Cartesian Z coordinate in simulated map (in meters)."
-		},
-		{
 			"key":"MaxConnectionAttempts",
 			"default":"10",
 			"description":"Number of connection attempts CDASimAdapter plugin will execute before failing. Valid values are any integers greater than or equal to 1. Any value less than 1 will result in unlimited connection attemtps."

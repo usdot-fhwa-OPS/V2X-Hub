@@ -277,7 +277,7 @@ jobs:
           V2XHUB_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           echo "Publishing with TAG_NAME=${TAG_NAME} V2XHUB_VERSION=${V2XHUB_VERSION}"
-          docker compose publish --with-env --yes ${{ steps.meta.outputs.tags }}
+          docker compose publish --yes ${{ steps.meta.outputs.tags }}
 
   sonarcloud:
     runs-on: ubuntu-24.04

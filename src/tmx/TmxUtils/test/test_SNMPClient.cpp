@@ -109,4 +109,11 @@ namespace unit_test
         scClient.process_snmp_request(RSU_MODE, request_type::OTHER, reqponseMode);
     }
 
+    TEST_F(test_SNMPClient, validate_address) {
+        EXPECT_TRUE(validate_address("localhost"));
+        EXPECT_FALSE(validate_address("invalid-ip"));
+        EXPECT_FALSE(validate_address("127.0.XX.XX"));
+
+    }
+
 }
