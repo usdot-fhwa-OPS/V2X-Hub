@@ -233,9 +233,11 @@ namespace CDASimAdapter{
     }
 
     Json::Value CDASimConnection::read_json_file(const std::string& file_path) const{
-        //Read file from disk
+        // Confirm file exists
+        const std::filesystem::path json_file_path = std::filesystem::canonical(file_path); // throws std::filesystem::filesystem_error if file does not exist
+        // Read file from disk
         std::ifstream in_strm;
-        in_strm.open(file_path, std::ifstream::binary);
+        in_strm.open(json_file_path, std::ifstream::binary);
         if(!in_strm.is_open())
         {
             throw std::invalid_argument("File cannot be opened. File path: " + file_path);

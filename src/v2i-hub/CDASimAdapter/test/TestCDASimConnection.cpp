@@ -101,7 +101,7 @@ namespace CDASimAdapter {
 
     TEST_F(TestCDASimConnection, read_json_file)
     {        
-        EXPECT_THROW(connection->read_json_file("Invalid_file_path" ), std::invalid_argument);
+        EXPECT_THROW(connection->read_json_file("Invalid_file_path" ), std::filesystem::filesystem_error);
         std::ifstream in_strm;
         in_strm.open(sensors_file_path, std::ifstream::binary);
         if(in_strm.is_open())
