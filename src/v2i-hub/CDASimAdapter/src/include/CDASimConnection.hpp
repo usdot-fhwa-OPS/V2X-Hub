@@ -9,6 +9,7 @@
 #include <PluginLog.h>
 #include <gtest/gtest.h>
 #include <fstream>
+#include <filesystem>
 
 
 namespace CDASimAdapter {
