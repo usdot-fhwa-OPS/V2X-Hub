@@ -64,11 +64,26 @@ namespace SpatPlugin {
 				eventLogMsg.set_description(description);
 				BroadcastMessage(eventLogMsg);
 			}
-			if (scConnection) {
-				scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
+			try{
+				if (scConnection) {
+					// Spot UDP Socket and thread
+					if (spatReceiverThread && spatReceiverThread->IsRunning()) {
+						spatReceiverThread->Stop();
+					}
+					scConnection.reset(new SignalControllerConnection(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port, signal_controller_snmp_community ,intersection_name, intersection_id));
+				}
+				else {
+					scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
+				}
 			}
-			else {
-				scConnection = std::make_unique<SignalControllerConnection>(ip_address, port, signal_group_mapping_json, signal_controller_ip, signal_controller_snmp_port,signal_controller_snmp_community, intersection_name, intersection_id);
+			// If SignalControllerConnection fails to initialize, terminate plugin 
+			catch( tmx::utils::snmp_client_exception &e) {
+				// Handle exception casts exception to string so it can't be const
+				HandleException( e, true);
+			}
+			catch( tmx::utils::UdpServerRuntimeError &e) {
+				// Handle exception casts exception to string so it can't be const
+				HandleException( e, true);
 			}
 			// TODO: SNMP OID set call is now only required for old physical controllers and varies by controller. Implement more permanent fix that allows user
 			// to define an OID and value to set or none at all

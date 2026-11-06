@@ -1,6 +1,32 @@
 V2X-Hub Release Notes
 ---------------------------------
 
+Version 8.1.0, released Nov 4th, 2026
+--------------------------------------------------------
+**Summary:**
+
+V2X Hub release 8.1.0 improves support for multi-instance CDASim simulation deployments, including saved configuration state initialization, configurable simulation settings, and Docker DNS hostname support for signal-controller connections. Additional updates improve infrastructure-specific logging, certificate generation, and SPaT Plugin error handling.
+
+**Enhancements**
+
+- Load a saved configuration state at startup using the SAVE_STATE_FILE_PATH and SAVE_STATE_PASS_PHRASE environment variables.
+  * Pull Requests: [V2X-Hub PR #977](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/977)
+
+- Make the CDASim registration port configurable and allow the infrastructure spawn location to be set through environment variables.
+  * Pull Requests: [V2X-Hub PR #969](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/969), [V2X-Hub PR #973](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/973)
+
+- Add DNS hostname resolution to the SNMP client for signal-controller connections.
+  * Pull Requests: [V2X-Hub PR #982](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/982)
+
+- Include the infrastructure ID in JSONMessageLogger filenames so logs from different V2X-Hub instances can be identified separately.
+  * Pull Requests: [V2X-Hub PR #981](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/981)
+
+**Fixes**
+
+- [V2X-Hub PR #978](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/978): Fix certificate generation to support either DNS hostnames or IP addresses specified through V2XHUB_IP..
+
+- [V2X-Hub PR #982](https://github.com/usdot-fhwa-stol/V2X-Hub/pull/9820): Update SPaT Plugin error handling to terminate the plugin when the signal-controller connection fails.
+
 Version 8.0.0, released Oct 20th, 2026
 --------------------------------------------------------
 
