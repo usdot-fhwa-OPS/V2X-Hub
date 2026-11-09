@@ -255,3 +255,53 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     EXPECT_EQ( obj.get_projString(), proj_string);
 }
 
+TEST(FLIRWebsockAsyncClnSessionTest, checkStreamTimingDetectsStall)
+{
+    auto makeFrame = [](const std::string &dataNumber, const std::string &time) {
+        std::stringstream ss("{\"dataNumber\": \"" + dataNumber + "\", \"messageType\": \"Data\", \"time\": \"" + time +
+            "\", \"track\": [], \"type\": \"PedestrianPresenceTracking\"}");
+        boost::property_tree::ptree pr;
+        boost::property_tree::read_json(ss, pr);
+        return pr;
+    };
+    net::io_context ioc;
+    auto flirSession = std::make_shared<FLIRWebsockAsyncClnSession>(
+        ioc,
+        "127.0.0.1",
+        "8084",
+        90.0,
+        "North",
+        "api/subscription",
+        tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0)
+    );
+
+    // Frames received around a real stall (2026-09-15 17:47:10 UTC): nothing arrived for 3.58 s
+    // although the camera produced dataNumber 50652 only 100 ms after 50650.
+    flirSession->checkStreamTiming(makeFrame("50645", "2026-09-15T13:47:09.529-04:00"), 1789494429532ULL);
+    flirSession->checkStreamTiming(makeFrame("50646", "2026-09-15T13:47:09.629-04:00"), 1789494429634ULL);
+    flirSession->checkStreamTiming(makeFrame("50647", "2026-09-15T13:47:09.730-04:00"), 1789494429733ULL);
+    flirSession->checkStreamTiming(makeFrame("50648", "2026-09-15T13:47:09.831-04:00"), 1789494429837ULL);
+    flirSession->checkStreamTiming(makeFrame("50649", "2026-09-15T13:47:09.932-04:00"), 1789494429936ULL);
+    flirSession->checkStreamTiming(makeFrame("50650", "2026-09-15T13:47:10.032-04:00"), 1789494430036ULL);
+    flirSession->checkStreamTiming(makeFrame("50652", "2026-09-15T13:47:10.132-04:00"), 1789494433619ULL);
+
+    auto stats = flirSession->getStreamStats();
+    EXPECT_EQ(stats.frames, 7u);
+    EXPECT_EQ(stats.stalls, 1u);
+    EXPECT_EQ(stats.maxStallMs, 3483);
+    EXPECT_EQ(stats.missingFrames, 1u);
+    EXPECT_EQ(stats.lateFrames, 1u);
+    EXPECT_EQ(stats.lastStallStartMs, 1789494430036ULL);
+    EXPECT_EQ(stats.lastStallEndMs, 1789494433619ULL);
+
+    // A frame with an unreadable timestamp is skipped without throwing
+    EXPECT_NO_THROW(flirSession->checkStreamTiming(makeFrame("50653", "not a time"), 1789494433620ULL));
+    EXPECT_EQ(flirSession->getStreamStats().frames, 7u);
+
+    // The threshold can be changed at runtime
+    auto config = flirSession->getStreamMonitorConfig();
+    config.stallThresholdMs = 1000;
+    flirSession->setStreamMonitorConfig(config);
+    EXPECT_EQ(flirSession->getStreamMonitorConfig().stallThresholdMs, 1000);
+}
+

@@ -34,10 +34,12 @@
 #include <algorithm>
 #include <queue>
 #include <atomic>
+#include <optional>
 
 #include <SensorDetectedObject.h>
 
 #include "FLIRPedestrianPresenceTrackingProcessor.hpp"
+#include "FLIRStreamMonitor.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -90,8 +92,19 @@ namespace FLIRCameraDriverPlugin
             std::atomic<unsigned int> droppedPedCount_{0};
             // Reference location for the sensor. All detection positions are expressed in cartesian coordinates relative to this point.
             tmx::utils::WGS84Point sensorRefPoint;
+            // Compares frame arrival times with camera timestamps to detect stalls on the camera link
+            FLIRStreamMonitor streamMonitor_;
+
+            /**
+             * @brief Logs a summary of a run of frames that arrived late (the backlog delivered after a stall).
+             */
+            void logLateBurst(const LateBurstSummary &burst) const;
 
         public:
+            /**
+             * @brief Current host wall-clock time in milliseconds since epoch.
+             */
+            static uint64_t wallClockMs();
 
             // Resolver and socket require an io_context
             explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
@@ -176,6 +189,35 @@ namespace FLIRCameraDriverPlugin
              * @param pr Property tree containing the parsed JSON message
              */
             void handleDataMessage(const pt::ptree& pr);
+
+            /**
+             * @brief Compares when a "Data" frame arrived with its camera timestamp and logs link stalls,
+             * minor holds, missing frames and late-frame bursts. Never throws.
+             * @param pr Property tree containing the parsed JSON message
+             * @param recvMs Time the frame was received, in ms since epoch (host wall clock)
+             */
+            void checkStreamTiming(const pt::ptree& pr, uint64_t recvMs);
+
+            /**
+             * @brief Reports a late-frame burst that ended together with a track, once no frame has arrived for
+             * a while. Call periodically.
+             */
+            void checkStreamIdle();
+
+            /**
+             * @brief Get camera link statistics since the session was created.
+             */
+            StreamMonitorStats getStreamStats() const;
+
+            /**
+             * @brief Get the thresholds used for camera link monitoring.
+             */
+            StreamMonitorConfig getStreamMonitorConfig() const;
+
+            /**
+             * @brief Set the thresholds used for camera link monitoring.
+             */
+            void setStreamMonitorConfig(const StreamMonitorConfig &config);
 
             /**
              * @brief Processes an array of pedestrian presence tracking objects from the FLIR camera.

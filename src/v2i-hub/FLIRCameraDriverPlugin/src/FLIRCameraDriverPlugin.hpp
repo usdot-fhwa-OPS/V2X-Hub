@@ -88,6 +88,15 @@ namespace FLIRCameraDriverPlugin
 			// Live number of currently detected pedestrians
 			const char* Key_LivePedestrianCount = "Live number of currently detected pedestrians";
 
+			// Camera link monitoring status keys (totals since the camera connections started)
+			const char* Key_LinkStallCount = "Camera Link Stalls";
+			const char* Key_LinkMaxStall = "Camera Link Longest Stall (ms)";
+			const char* Key_LinkLastStall = "Camera Link Last Stall (UTC)";
+			const char* Key_LinkLateFrames = "Camera Link Late Frames";
+			const char* Key_LinkMinorHolds = "Camera Link Minor Holds";
+			const char* Key_CameraMissingFrames = "Camera Missing Frames";
+			// Extra transit time (ms) at which a camera frame counts as a link stall. Set by LinkStallThresholdMs.
+			std::atomic<int64_t> linkStallThresholdMs{500};
 
 
 	};

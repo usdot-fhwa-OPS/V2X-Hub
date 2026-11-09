@@ -19,6 +19,11 @@
 			"description": "A list of dictionaries containing the configuration for each FLIR camera. Each dictionary should contain the following keys: WebSocketHost, WebSocketPort, Endpoint, CameraRotation, and SensorId."
 		},
 		{
+			"key": "LinkStallThresholdMs",
+			"default": "500",
+			"description": "Camera link monitoring: a camera frame held this many milliseconds longer in transit than the frame before it, while the camera kept producing frames, is logged as a link stall, and frames this much later than normal are counted as late. Minimum 200."
+		},
+		{
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"
