@@ -112,6 +112,33 @@ For each stall it prints whether the camera stayed reachable and how the backlog
 
 If the plugin logs a stall at a time when the probe did not see one, the frames were held on the V2X Hub host. Running the probe on a laptop on the same switch separates the camera's link from the V2X Hub host's link.
 
+#### Running the probe in the background
+
+Stalls can be hours apart, so the probe is usually left running unattended. Start it detached from the terminal so it keeps running after you log out or your SSH session ends, with unbuffered output (`-u`) so `console.log` fills as it runs:
+
+```shell
+OUT=scripts/flir_probe_$(date +%Y%m%d_%H%M%S); mkdir -p "$OUT"
+setsid nohup python3 -u scripts/flir_stream_probe.py live --host <camera-ip> \
+    --control <gateway-ip>:<open-port> --control <other-host-on-same-switch>:<open-port> \
+    --control <this-host-ip>:<open-port> --out "$OUT" > "$OUT/console.log" 2>&1 < /dev/null &
+```
+
+Check on it later, e.g. after logging back in:
+
+```shell
+pgrep -af flir_stream_probe                                     # PID and command line; no output if it stopped
+ps -o pid,etime,cmd -p "$(pgrep -f flir_stream_probe)"          # how long it has been running
+ls -l --time-style=+%T <run-dir>/probes.csv; date +%T           # updated every 0.5 s while it runs
+grep -E 'SILENCE details|STALL details|LATE BURST' <run-dir>/console.log   # outages found so far
+tail -f <run-dir>/console.log                                   # live output (Ctrl-C stops tail, not the probe)
+```
+
+Stop it with SIGINT, the same as Ctrl-C, so it writes its summary to `events.jsonl` and `console.log` before exiting. Then rerun the start commands above, which write to a new run directory:
+
+```shell
+pkill -INT -f flir_stream_probe
+```
+
 **analyze** finds stalls in existing logs and cross-checks them:
 
 ```shell
