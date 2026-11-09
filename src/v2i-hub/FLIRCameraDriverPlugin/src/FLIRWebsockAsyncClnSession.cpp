@@ -326,15 +326,28 @@ namespace FLIRCameraDriverPlugin
                 logLateBurst(*report.completedBurst);
             }
 
+            if (report.baselineShift)
+            {
+                PLOG(logINFO) << "FLIR baseline latency on " << sensorId << " moved to " << report.latencyMs
+                    << " ms at " << FLIRStreamMonitor::formatUtcMs(report.recvMs) << ": frames stayed at that latency for "
+                    << streamMonitor_.getConfig().baselineWindowMs << " ms, so the camera/host clock offset changed. "
+                    << "Frames counted as late since the change were not a backlog and are no longer counted.";
+            }
+
             if (report.hold == FrameHoldType::Stall)
             {
+                // Keep the first sentence in this format: scripts/flir_stream_probe.py analyze parses it
                 PLOG(logWARNING) << "FLIR link stall on " << sensorId << ": no data for " << report.arrivalGapMs
                     << " ms while the camera kept producing frames " << report.cameraGapMs
                     << " ms apart, so frames were held " << report.holdMs << " ms in transit. Stall from "
                     << FLIRStreamMonitor::formatUtcMs(report.prevRecvMs) << " to " << FLIRStreamMonitor::formatUtcMs(report.recvMs)
                     << ", dataNumber " << toString(report.prevDataNumber) << " -> " << toString(report.dataNumber)
                     << " (" << report.missingFrames << " missing), latency of the first frame after the stall "
-                    << report.latencyMs << " ms.";
+                    << report.latencyMs << " ms."
+                    << (report.cameraGapMs > streamMonitor_.getConfig().trackGapMs
+                        ? " The camera was idle (nothing tracked) before this frame, so the link was already down "
+                          "when tracking resumed."
+                        : "");
             }
             else if (report.hold == FrameHoldType::Minor)
             {

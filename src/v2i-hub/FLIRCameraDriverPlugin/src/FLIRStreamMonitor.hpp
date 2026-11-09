@@ -29,10 +29,10 @@ namespace FLIRCameraDriverPlugin
     struct StreamMonitorConfig
     {
         /**
-         * A frame that spent at least this long longer in transit than the frame before it, while the camera
-         * was still producing frames continuously, is reported as a link stall. Frames whose latency is at
-         * least this much above the recent baseline are counted as late. 500 ms matches the freshness limit
-         * the CARMA Streets sensor data sharing service applies before discarding detections.
+         * A frame that spent at least this long longer in transit than the frame before it is reported as a
+         * link stall. Frames whose latency is at least this much above the recent baseline are counted as late.
+         * 500 ms matches the freshness limit the CARMA Streets sensor data sharing service applies before
+         * discarding detections.
          */
         int64_t stallThresholdMs = 500;
         /**
@@ -43,12 +43,17 @@ namespace FLIRCameraDriverPlugin
         int64_t minorHoldThresholdMs = 150;
         /**
          * Camera timestamps further apart than this mean the camera stopped sending because nothing was
-         * being tracked. Gaps like that are idle periods, not stalls.
+         * being tracked. Missing dataNumbers are only counted across shorter gaps. Holds are still measured
+         * across idle periods (the camera gap is subtracted), so an outage that begins while nothing is tracked
+         * is caught by the first frame the camera produces during it. A pause in arrivals longer than this
+         * also ends a late burst.
          */
         int64_t trackGapMs = 1000;
         /**
          * Time window used to estimate the normal camera-to-plugin latency, which includes any clock offset
-         * between the camera and this host.
+         * between the camera and this host. Late frames are kept out of the estimate, so the backlog after a
+         * stall does not become the new normal. A latency that stays late at a steady level for this long is
+         * adopted as the new baseline, since that is a clock offset change rather than held frames.
          */
         int64_t baselineWindowMs = 10000;
     };
@@ -113,6 +118,9 @@ namespace FLIRCameraDriverPlugin
         uint64_t missingFrames = 0;
         // excessLatencyMs >= stallThresholdMs
         bool late = false;
+        // The latency had stayed late at a steady level for baselineWindowMs, so it was adopted as the new
+        // baseline (camera/host clock offset changed). The late burst counted until now was discarded.
+        bool baselineShift = false;
         // Late burst that ended just before this frame, if any
         std::optional<LateBurstSummary> completedBurst;
     };
@@ -127,6 +135,8 @@ namespace FLIRCameraDriverPlugin
         uint64_t minorHolds = 0;
         uint64_t lateFrames = 0;
         uint64_t missingFrames = 0;
+        // Times a steady late latency was adopted as the new baseline (camera/host clock offset changed)
+        uint64_t baselineShifts = 0;
         int64_t maxStallMs = 0;
         // Receive times bounding the most recent stall (ms since epoch, host clock). 0 if no stall yet.
         uint64_t lastStallStartMs = 0;
@@ -140,7 +150,9 @@ namespace FLIRCameraDriverPlugin
      * A link stall shows up as a long gap between arrivals while the camera timestamps of the same frames
      * stay close together: the camera kept producing frames but they were held in transit and then delivered
      * as a burst. This check uses differences of camera timestamps and of receive timestamps separately, so it
-     * does not depend on the camera and host clocks being synchronized.
+     * does not depend on the camera and host clocks being synchronized. It also works across idle periods: if
+     * the link goes down while nothing is tracked, the first frame produced during the outage arrives with a
+     * hold as long as the time it waited.
      *
      * Thread safe: frames may be reported from the I/O thread while statistics are read from another thread.
      */
@@ -182,7 +194,16 @@ namespace FLIRCameraDriverPlugin
             static std::string formatUtcMs(uint64_t epochMs);
 
         private:
-            int64_t updateBaseline(uint64_t recvMs, int64_t latencyMs);
+            /**
+             * @brief Baseline latency to compare a frame with: the lowest latency of recent on-time frames.
+             */
+            int64_t currentBaseline(uint64_t recvMs, int64_t latencyMs);
+            /**
+             * @brief Feed the baseline estimate. On-time frames go into the window; late frames are tracked
+             * separately and only adopted if they stay at a steady level for baselineWindowMs.
+             * @return True if a steady late level was adopted as the new baseline.
+             */
+            bool trackBaseline(uint64_t recvMs, int64_t latencyMs, bool late);
             std::optional<LateBurstSummary> closeBurst();
 
             mutable std::mutex mutex_;
@@ -194,9 +215,13 @@ namespace FLIRCameraDriverPlugin
             uint64_t prevCameraMs_ = 0;
             std::optional<uint64_t> prevDataNumber_;
 
-            // (receive time, latency) of recent frames, used for the baseline latency
+            // (receive time, latency) of recent on-time frames, used for the baseline latency
             std::deque<std::pair<uint64_t, int64_t>> latencyWindow_;
             std::optional<int64_t> lastBaselineMs_;
+            // (receive time, latency) of the last baselineWindowMs of the current run of consecutive late frames
+            std::deque<std::pair<uint64_t, int64_t>> lateRun_;
+            // Receive time of the first frame of the current late run
+            std::optional<uint64_t> lateSinceMs_;
 
             std::optional<LateBurstSummary> openBurst_;
     };

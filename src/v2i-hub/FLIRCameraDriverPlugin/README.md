@@ -41,7 +41,7 @@ This plugin has several configuration parameters. Below these are listed out as 
 ]
 ```
 
-**LinkStallThresholdMs** (default 500, minimum 200): camera link monitoring threshold. A camera frame that spent this many milliseconds longer in transit than the frame before it, while the camera kept producing frames, is logged as a link stall. Frames this much later than normal are counted as late. 500 ms matches the freshness limit the CARMA Streets Sensor Data Sharing Service applies before discarding detections.
+**LinkStallThresholdMs** (default 500, minimum 200): camera link monitoring threshold. A camera frame that spent this many milliseconds longer in transit than the frame before it is logged as a link stall, including when the camera had been idle (nothing tracked) before it. Frames this much later than normal are counted as late. 500 ms matches the freshness limit the CARMA Streets Sensor Data Sharing Service applies before discarding detections.
 
 ## Status Information
 
@@ -57,10 +57,10 @@ This plugin includes some custom status information to allow for real-time monit
 
 The following camera link statuses are totals since the camera connections started (see [Camera Link Monitoring](#camera-link-monitoring)):
 
-**Camera Link Stalls**: Number of times the camera kept producing frames but none arrived for at least `LinkStallThresholdMs`, after which the backlog arrived together.
+**Camera Link Stalls**: Number of times camera frames were held in transit for at least `LinkStallThresholdMs`, after which the backlog arrived together. This includes outages that began while the camera was idle: the first frame it produced during the outage arrives as late as the time it waited.
 **Camera Link Longest Stall (ms)**: Longest time frames were held in transit.
 **Camera Link Last Stall (UTC)**: Start and end of the most recent stall, for matching against packet captures and network logs.
-**Camera Link Late Frames**: Frames that arrived at least `LinkStallThresholdMs` later than normal. Detections in these frames are likely discarded downstream as stale.
+**Camera Link Late Frames**: Frames that arrived at least `LinkStallThresholdMs` later than normal, i.e. every frame of each backlog. Detections in these frames are likely discarded downstream as stale.
 **Camera Link Minor Holds**: Frames held 150 ms to `LinkStallThresholdMs` in transit. About 200 ms is the signature of a single TCP retransmission, so a rising count is an early sign of packet loss on the camera link.
 **Camera Missing Frames**: Gaps in the camera's `dataNumber` sequence while it was tracking continuously.
 
@@ -82,12 +82,13 @@ Above is a diagram illustrates how the FLIR Camera Driver Plugin is used to crea
 
 The camera streams tracking data over a WebSocket (TCP). If packets are lost on the camera link, TCP holds back everything after the lost packet until a retransmission gets through, so detections stop for a few seconds and then arrive all at once. Downstream services discard detections that late, which shows up as a gap followed by a burst on the detection topic.
 
-The plugin compares when each frame arrives with the camera's own `time` field. It compares differences between consecutive frames rather than absolute times, so it does not depend on the camera and V2X Hub clocks being synchronized. It logs:
+The plugin compares when each frame arrives with the camera's own `time` field. It compares differences between consecutive frames rather than absolute times, so it does not depend on the camera and V2X Hub clocks being synchronized. Late frames are measured against the normal latency of recent on-time frames; if the latency stays higher at a steady level for 10 s, the clock offset changed and the new level becomes the normal. It logs:
 
-* `WARNING ... FLIR link stall on <sensor>: no data for 3583 ms while the camera kept producing frames 100 ms apart, so frames were held 3483 ms in transit. Stall from <start> to <end> ...`: the camera kept producing frames but none arrived. Start and end are UTC; use them to look up the same moment in a packet capture, ping log or switch log.
+* `WARNING ... FLIR link stall on <sensor>: no data for 3583 ms while the camera kept producing frames 100 ms apart, so frames were held 3483 ms in transit. Stall from <start> to <end> ...`: the camera kept producing frames but none arrived. Start and end are UTC; use them to look up the same moment in a packet capture, ping log or switch log. If the camera was idle before the stall, the warning ends with `The camera was idle (nothing tracked) before this frame ...`; the camera gap is then the idle time, and the link went down at some point during it.
 * `WARNING ... FLIR late burst on <sensor>: 26 frame(s) arrived at least 500 ms later than normal ...`: the backlog delivered after a stall.
 * `INFO ... FLIR link minor hold on <sensor>: frame held 200 ms in transit ...`: usually one TCP retransmission.
 * `DEBUG ... FLIR camera frames missing on <sensor>: dataNumber ...`: gaps in the camera's frame sequence.
+* `INFO ... FLIR baseline latency on <sensor> moved to ...`: the camera/host clock offset changed; frames counted as late since the change are no longer counted.
 
 ### Pinpointing where frames are held
 
@@ -96,13 +97,17 @@ The plugin compares when each frame arrives with the camera's own `time` field. 
 **live** subscribes to the camera as a second, independent client and at the same time keeps opening TCP connections to the camera and to optional control hosts. Run it on the V2X Hub host while testing:
 
 ```shell
-python3 scripts/flir_stream_probe.py live --host <camera-ip> --control <other-host-on-same-switch>:<open-port>
+python3 scripts/flir_stream_probe.py live --host <camera-ip> --control <gateway-ip>:<open-port> \
+    --control <other-host-on-same-switch>:<open-port> --control <this-host-ip>:<open-port>
 ```
 
-For each stall it prints whether the camera stayed reachable and how the backlog arrived at the TCP level, and writes `events.jsonl`, `frames.csv` and `chunks.csv`:
+A `--control` that is one of this host's own addresses is probed as a *self* check, which shows whether this host lost its own network address (link down, Wi-Fi disconnected, or a user-private NetworkManager connection taken down when the user logs out). Use other machines, such as the gateway, as controls.
 
+For each stall it prints whether the camera stayed reachable and how the backlog arrived at the TCP level, and writes `events.jsonl`, `frames.csv`, `chunks.csv` and `probes.csv` (every connect probe with its error, e.g. `ENETUNREACH`). It also reports any period with no data at all, not even the camera's 60 s keepalive ping (`--silence-ms`, default 90000), so outages are caught even while nothing is tracked:
+
+* Self check failed too: this host lost its network address or interface; the camera and the network were not the cause.
 * Camera unreachable while the control host answered: packets were lost between the switch and the camera (camera network interface, its cable, PoE/BPL link or switch port).
-* Camera and control host both unreachable: the problem is on the V2X Hub host or in shared network equipment.
+* Camera and control hosts all unreachable while this host kept its address: the problem is between this host and the rest of the network (its link to the switch or Wi-Fi access point, or that equipment itself).
 * Camera reachable throughout: the network path was up; frames were held by the camera's sender or by TCP retransmission backoff.
 
 If the plugin logs a stall at a time when the probe did not see one, the frames were held on the V2X Hub host. Running the probe on a laptop on the same switch separates the camera's link from the V2X Hub host's link.

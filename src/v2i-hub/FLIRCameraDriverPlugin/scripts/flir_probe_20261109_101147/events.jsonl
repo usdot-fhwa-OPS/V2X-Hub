@@ -1,0 +1,8 @@
+{"type": "start", "time": "2026-11-09T15:11:47.192Z", "host": "192.168.55.83", "port": 80, "path": "/api/subscriptions", "stall_ms": 500, "probes": ["camera 192.168.55.83:80", "control 192.168.55.134:22"]}
+{"type": "connected", "time": "2026-11-09T15:11:47.215Z"}
+{"type": "missing_frames", "time": "2026-11-09T15:16:30.165Z", "recv_utc": "2026-11-09T15:16:30.165Z", "missing": 1, "prev_data_number": 118, "data_number": 120}
+{"type": "missing_frames", "time": "2026-11-09T15:16:40.172Z", "recv_utc": "2026-11-09T15:16:40.171Z", "missing": 1, "prev_data_number": 219, "data_number": 221}
+{"type": "missing_frames", "time": "2026-11-09T15:18:50.199Z", "recv_utc": "2026-11-09T15:18:50.199Z", "missing": 1, "prev_data_number": 308, "data_number": 310}
+{"type": "missing_frames", "time": "2026-11-09T15:19:00.111Z", "recv_utc": "2026-11-09T15:19:00.111Z", "missing": 1, "prev_data_number": 408, "data_number": 410}
+{"type": "missing_frames", "time": "2026-11-09T15:19:10.122Z", "recv_utc": "2026-11-09T15:19:10.122Z", "missing": 1, "prev_data_number": 481, "data_number": 483}
+{"type": "summary", "time": "2026-11-09T15:20:08.725Z", "frames": 452, "stalls": 0, "minor_holds": 0, "late_frames": 0, "missing_frames": 5, "max_stall_ms": 0}

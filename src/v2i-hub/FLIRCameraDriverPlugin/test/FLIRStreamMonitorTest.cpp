@@ -71,6 +71,34 @@ namespace
         {1789494433666ULL, 1789494432632ULL, 50677},
     };
 
+    // Frames received around a real outage that began while the camera was idle (2026-11-09, V2X Hub host lost
+    // its network for ~12 minutes). The last frame before it arrived at 15:54:04; the camera then tracked
+    // nothing until 15:59:41, so its frames from then on were held and the whole backlog arrived at 16:09:46,
+    // up to 604 s late. The backlog itself contains a 354 s idle gap (dataNumber 3170 -> 3206). The next track
+    // (dataNumber 3337) arrived on time. A subset of the backlog is used.
+    const std::vector<Frame> recordedIdleStartStall = {
+        {1794239643637ULL, 1794239643661ULL, 2935},
+        {1794239643739ULL, 1794239643762ULL, 2936},
+        {1794239643839ULL, 1794239643862ULL, 2937},
+        {1794239643939ULL, 1794239643962ULL, 2938},
+        {1794239644039ULL, 1794239644062ULL, 2939},
+        {1794239644139ULL, 1794239644163ULL, 2940},
+        {1794240586460ULL, 1794239981774ULL, 2975},
+        {1794240586460ULL, 1794239981876ULL, 2976},
+        {1794240586460ULL, 1794239981977ULL, 2977},
+        {1794240586460ULL, 1794239982076ULL, 2978},
+        {1794240586460ULL, 1794239982177ULL, 2979},
+        {1794240586460ULL, 1794239982277ULL, 2980},
+        {1794240586464ULL, 1794239982675ULL, 2984},
+        {1794240586489ULL, 1794240000994ULL, 3169},
+        {1794240586489ULL, 1794240001094ULL, 3170},
+        {1794240586489ULL, 1794240355856ULL, 3206},
+        {1794240586489ULL, 1794240355955ULL, 3207},
+        {1794240586500ULL, 1794240365864ULL, 3307},
+        {1794240655522ULL, 1794240655460ULL, 3337},
+        {1794240655564ULL, 1794240655560ULL, 3338},
+    };
+
     const uint64_t t0 = 1789494400000ULL;
 }
 
@@ -263,6 +291,121 @@ TEST(FLIRStreamMonitorTest, configurableThreshold)
     monitor.setConfig(config);
     report = monitor.onFrame(t0 + 1100 + 404 + 400, t0 + 1100, 11);
     EXPECT_EQ(report.hold, FrameHoldType::Minor);
+}
+
+TEST(FLIRStreamMonitorTest, detectsStallThatBeganWhileIdle)
+{
+    FLIRStreamMonitor monitor;
+    std::vector<FrameReport> reports;
+    for (const auto &frame : recordedIdleStartStall)
+    {
+        reports.push_back(monitor.onFrame(frame.recvMs, frame.cameraMs, frame.dataNumber));
+    }
+
+    // The first backlog frame is a stall even though the camera had been idle (camera gap 337 s) before it
+    const auto &stall = reports[6];
+    EXPECT_EQ(stall.hold, FrameHoldType::Stall);
+    EXPECT_EQ(stall.arrivalGapMs, 942321);
+    EXPECT_EQ(stall.cameraGapMs, 337611);
+    EXPECT_EQ(stall.holdMs, 604710);
+    // dataNumber advances while the camera is idle, so the jump 2940 -> 2975 is not counted as missing
+    EXPECT_EQ(stall.missingFrames, 0u);
+    EXPECT_TRUE(stall.late);
+
+    // Every backlog frame is late, including those after the window of on-time frames emptied and those after
+    // the idle gap inside the backlog
+    for (size_t i = 6; i <= 17; i++)
+    {
+        EXPECT_TRUE(reports[i].late) << "frame index " << i;
+        EXPECT_FALSE(reports[i].completedBurst.has_value()) << "frame index " << i;
+    }
+
+    // The next track arrives on time and closes the burst, which covers the whole backlog
+    EXPECT_FALSE(reports[18].late);
+    EXPECT_EQ(reports[18].hold, FrameHoldType::None);
+    ASSERT_TRUE(reports[18].completedBurst.has_value());
+    const auto &burst = *reports[18].completedBurst;
+    EXPECT_EQ(burst.frames, 12u);
+    EXPECT_EQ(burst.firstDataNumber, 2975u);
+    EXPECT_EQ(burst.lastDataNumber, 3307u);
+    EXPECT_EQ(burst.firstRecvMs, 1794240586460ULL);
+    EXPECT_EQ(burst.lastRecvMs, 1794240586500ULL);
+    // Baseline latency -24 ms (camera clock slightly ahead), first backlog frame 604686 ms
+    EXPECT_EQ(burst.maxExcessLatencyMs, 604710);
+    EXPECT_FALSE(reports[19].late);
+
+    auto stats = monitor.getStats();
+    EXPECT_EQ(stats.stalls, 1u);
+    EXPECT_EQ(stats.lateFrames, 12u);
+    EXPECT_EQ(stats.maxStallMs, 604710);
+    EXPECT_EQ(stats.lastStallStartMs, 1794239644139ULL);
+    EXPECT_EQ(stats.lastStallEndMs, 1794240586460ULL);
+    EXPECT_EQ(stats.baselineShifts, 0u);
+}
+
+TEST(FLIRStreamMonitorTest, clockStepBecomesNewBaseline)
+{
+    FLIRStreamMonitor monitor;
+    for (uint64_t i = 0; i < 100; i++)
+    {
+        monitor.onFrame(t0 + i * 100 + 5, t0 + i * 100, i);
+    }
+    // The camera clock steps 2 s back and stays there. At the step this looks like a 2 s hold.
+    auto report = monitor.onFrame(t0 + 100 * 100 + 2005, t0 + 100 * 100, 100);
+    EXPECT_EQ(report.hold, FrameHoldType::Stall);
+    EXPECT_TRUE(report.late);
+    for (uint64_t i = 101; i < 200; i++)
+    {
+        report = monitor.onFrame(t0 + i * 100 + 2005, t0 + i * 100, i);
+        EXPECT_TRUE(report.late) << "frame " << i;
+        EXPECT_FALSE(report.baselineShift) << "frame " << i;
+    }
+    EXPECT_EQ(monitor.getStats().lateFrames, 100u);
+
+    // After a whole baseline window at the same latency, it becomes the new baseline
+    report = monitor.onFrame(t0 + 200 * 100 + 2005, t0 + 200 * 100, 200);
+    EXPECT_TRUE(report.baselineShift);
+    EXPECT_FALSE(report.late);
+    EXPECT_EQ(report.excessLatencyMs, 0);
+    EXPECT_EQ(report.hold, FrameHoldType::None);
+    EXPECT_FALSE(report.completedBurst.has_value());
+    for (uint64_t i = 201; i < 300; i++)
+    {
+        report = monitor.onFrame(t0 + i * 100 + 2005, t0 + i * 100, i);
+        EXPECT_FALSE(report.late) << "frame " << i;
+        EXPECT_FALSE(report.baselineShift) << "frame " << i;
+    }
+
+    auto stats = monitor.getStats();
+    EXPECT_EQ(stats.baselineShifts, 1u);
+    // The frames counted late before the shift were not a backlog
+    EXPECT_EQ(stats.lateFrames, 0u);
+    EXPECT_FALSE(monitor.flush().has_value());
+}
+
+TEST(FLIRStreamMonitorTest, slowlyDrainingBacklogIsNotABaselineShift)
+{
+    FLIRStreamMonitor monitor;
+    for (uint64_t i = 0; i < 100; i++)
+    {
+        monitor.onFrame(t0 + i * 100 + 5, t0 + i * 100, 1000 + i);
+    }
+    // 30 s outage, then the backlog drains over 15 s: frames produced 100 ms apart arrive 50 ms apart, so the
+    // latency keeps falling and never settles at a steady level
+    std::optional<FrameReport> last;
+    for (uint64_t k = 0; k < 300; k++)
+    {
+        last = monitor.onFrame(t0 + 40000 + k * 50, t0 + 10000 + k * 100, 1100 + k);
+        EXPECT_TRUE(last->late) << "backlog frame " << k;
+        EXPECT_FALSE(last->baselineShift) << "backlog frame " << k;
+    }
+    auto stats = monitor.getStats();
+    EXPECT_EQ(stats.stalls, 1u);
+    EXPECT_EQ(stats.lateFrames, 300u);
+    EXPECT_EQ(stats.baselineShifts, 0u);
+    auto burst = monitor.flush();
+    ASSERT_TRUE(burst.has_value());
+    EXPECT_EQ(burst->frames, 300u);
 }
 
 TEST(FLIRStreamMonitorTest, formatUtcMs)

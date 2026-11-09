@@ -33,12 +33,23 @@ namespace FLIRCameraDriverPlugin
         report.cameraMs = cameraMs;
         report.dataNumber = dataNumber;
         report.latencyMs = static_cast<int64_t>(recvMs) - static_cast<int64_t>(cameraMs);
-        report.excessLatencyMs = report.latencyMs - updateBaseline(recvMs, report.latencyMs);
+        report.excessLatencyMs = report.latencyMs - currentBaseline(recvMs, report.latencyMs);
+        bool late = report.excessLatencyMs >= config_.stallThresholdMs;
+        if (trackBaseline(recvMs, report.latencyMs, late))
+        {
+            // The frames counted as late were a clock offset change, not a backlog: stop counting them.
+            report.baselineShift = true;
+            stats_.baselineShifts++;
+            if (openBurst_)
+            {
+                stats_.lateFrames -= std::min<uint64_t>(stats_.lateFrames, openBurst_->frames);
+                openBurst_.reset();
+            }
+            report.excessLatencyMs = report.latencyMs - *lastBaselineMs_;
+            late = false;
+        }
         stats_.frames++;
 
-        // True when this frame and the previous one belong to the same continuous stream of camera frames,
-        // as opposed to a new track starting after the camera went quiet.
-        bool continuous = false;
         if (hasPrevious_)
         {
             report.hasPrevious = true;
@@ -48,9 +59,14 @@ namespace FLIRCameraDriverPlugin
             report.arrivalGapMs = static_cast<int64_t>(recvMs) - static_cast<int64_t>(prevRecvMs_);
             report.cameraGapMs = static_cast<int64_t>(cameraMs) - static_cast<int64_t>(prevCameraMs_);
             report.holdMs = report.arrivalGapMs - report.cameraGapMs;
-            continuous = report.cameraGapMs >= 0 && report.cameraGapMs <= config_.trackGapMs;
+            // True when this frame and the previous one belong to the same continuous stream of camera frames,
+            // as opposed to a new track starting after the camera went quiet.
+            const bool continuous = report.cameraGapMs >= 0 && report.cameraGapMs <= config_.trackGapMs;
 
-            if (continuous)
+            // The hold subtracts the camera gap, so it is meaningful across idle periods too: an outage that
+            // begins while nothing is tracked is caught by the first frame the camera produces during it. Only
+            // a camera clock going backwards makes it meaningless.
+            if (report.cameraGapMs >= 0 && !report.baselineShift)
             {
                 if (report.holdMs >= config_.stallThresholdMs)
                 {
@@ -65,22 +81,24 @@ namespace FLIRCameraDriverPlugin
                     report.hold = FrameHoldType::Minor;
                     stats_.minorHolds++;
                 }
+            }
 
-                if (dataNumber && prevDataNumber_ && *dataNumber > *prevDataNumber_ + 1)
-                {
-                    report.missingFrames = *dataNumber - *prevDataNumber_ - 1;
-                    stats_.missingFrames += report.missingFrames;
-                }
+            // Sequence numbers keep advancing while the camera is idle, so only count gaps within a track
+            if (continuous && dataNumber && prevDataNumber_ && *dataNumber > *prevDataNumber_ + 1)
+            {
+                report.missingFrames = *dataNumber - *prevDataNumber_ - 1;
+                stats_.missingFrames += report.missingFrames;
             }
         }
 
-        // A track starting after an idle period ends any burst left open from the previous track.
-        if (!continuous && openBurst_)
+        // A burst is the backlog delivered after one stall. Gaps in the camera timestamps inside the backlog
+        // (the camera briefly tracked nothing) do not end it; a new stall or a pause in arrivals does.
+        if (openBurst_ && (report.hold == FrameHoldType::Stall || report.arrivalGapMs > config_.trackGapMs))
         {
             report.completedBurst = closeBurst();
         }
 
-        report.late = report.excessLatencyMs >= config_.stallThresholdMs;
+        report.late = late;
         if (report.late)
         {
             stats_.lateFrames++;
@@ -144,7 +162,7 @@ namespace FLIRCameraDriverPlugin
         return config_;
     }
 
-    int64_t FLIRStreamMonitor::updateBaseline(uint64_t recvMs, int64_t latencyMs)
+    int64_t FLIRStreamMonitor::currentBaseline(uint64_t recvMs, int64_t latencyMs)
     {
         // The baseline is the lowest latency seen recently: frames that crossed the link without delay.
         // It absorbs any constant clock offset between camera and host.
@@ -153,20 +171,58 @@ namespace FLIRCameraDriverPlugin
         {
             latencyWindow_.pop_front();
         }
-        int64_t baseline = latencyMs;
         if (!latencyWindow_.empty())
         {
-            baseline = std::min_element(latencyWindow_.begin(), latencyWindow_.end(),
+            lastBaselineMs_ = std::min_element(latencyWindow_.begin(), latencyWindow_.end(),
                 [](const auto &a, const auto &b) { return a.second < b.second; })->second;
         }
-        else if (lastBaselineMs_)
+        else if (!lastBaselineMs_)
         {
-            // Nothing recent to compare against (e.g. a long stall): keep the previous baseline.
-            baseline = *lastBaselineMs_;
+            lastBaselineMs_ = latencyMs;
         }
-        lastBaselineMs_ = baseline;
-        latencyWindow_.emplace_back(recvMs, latencyMs);
-        return baseline;
+        // Otherwise nothing recent to compare against (e.g. a long stall): keep the previous baseline.
+        return *lastBaselineMs_;
+    }
+
+    bool FLIRStreamMonitor::trackBaseline(uint64_t recvMs, int64_t latencyMs, bool late)
+    {
+        if (!late)
+        {
+            lateRun_.clear();
+            lateSinceMs_.reset();
+            latencyWindow_.emplace_back(recvMs, latencyMs);
+            return false;
+        }
+
+        // Late frames stay out of the window: otherwise, after a stall long enough to empty the window, the
+        // first backlog frame would become the baseline and the rest of the backlog would look on time.
+        if (!lateSinceMs_)
+        {
+            lateSinceMs_ = recvMs;
+        }
+        lateRun_.emplace_back(recvMs, latencyMs);
+        while (static_cast<int64_t>(recvMs) - static_cast<int64_t>(lateRun_.front().first) > config_.baselineWindowMs)
+        {
+            lateRun_.pop_front();
+        }
+        if (static_cast<int64_t>(recvMs) - static_cast<int64_t>(*lateSinceMs_) < config_.baselineWindowMs)
+        {
+            return false;
+        }
+        const auto [lowest, highest] = std::minmax_element(lateRun_.begin(), lateRun_.end(),
+            [](const auto &a, const auto &b) { return a.second < b.second; });
+        if (highest->second - lowest->second >= config_.stallThresholdMs)
+        {
+            // Still changing, e.g. a backlog draining: not a new steady level
+            return false;
+        }
+
+        // Late at a steady level for a whole window: the clock offset changed. Adopt the new level.
+        lastBaselineMs_ = lowest->second;
+        latencyWindow_.assign(lateRun_.begin(), lateRun_.end());
+        lateRun_.clear();
+        lateSinceMs_.reset();
+        return true;
     }
 
     std::optional<LateBurstSummary> FLIRStreamMonitor::closeBurst()

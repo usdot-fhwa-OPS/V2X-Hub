@@ -11,9 +11,12 @@ live
     Subscribes to the camera as an independent WebSocket client (it can run next to the V2X Hub plugin) and,
     at the same time, repeatedly opens TCP connections to the camera and to optional control hosts. When a
     stall happens it reports whether the camera stayed reachable, which separates a link outage from a
-    sender-side hold, and records how the backlog arrived at the TCP level.
+    sender-side hold, and records how the backlog arrived at the TCP level. Every connect probe result is
+    kept in probes.csv. Control hosts should be other machines (e.g. the gateway); a --control that is this
+    host's own address is probed as a "self" check, which detects this host losing its address (Wi-Fi drop).
 
-        python3 flir_stream_probe.py live --host 192.168.55.83 --control 192.168.55.114:22
+        python3 flir_stream_probe.py live --host 192.168.55.83 --control 192.168.55.1:80 \\
+            --control 192.168.55.114:22 --control 192.168.55.134:22
 
 analyze
     Finds stalls in existing logs: V2X Hub plugin logs (the plugin's "FLIR link stall" warnings, or the DEBUG
@@ -30,6 +33,7 @@ import base64
 import bisect
 import calendar
 import csv
+import errno
 import hashlib
 import json
 import os
@@ -127,17 +131,24 @@ class Report:
     hold: str = "none"  # none | minor | stall
     missing: int = 0
     late: bool = False
+    baseline_shift: bool = False
     completed_burst: Optional[Burst] = None
 
 
 class StreamMonitor:
     """Compares frame arrival times with camera timestamps.
 
-    stall_ms:    a frame held at least this much longer in transit than the previous frame, while the camera kept
-                 producing frames, is a stall; frames at least this much above baseline latency are late.
+    stall_ms:    a frame held at least this much longer in transit than the previous frame is a stall; frames at
+                 least this much above baseline latency are late.
     minor_ms:    holds from this value up to stall_ms are minor holds (~200 ms = one TCP retransmission).
-    track_gap_ms: camera timestamps further apart than this mean the camera went quiet (nothing tracked).
-    baseline_window_ms: window for the normal latency estimate, which absorbs camera/host clock offset.
+    track_gap_ms: camera timestamps further apart than this mean the camera went quiet (nothing tracked). Missing
+                 dataNumbers are only counted, and a late burst only continues, across shorter gaps. Holds are
+                 measured across longer gaps too: the camera gap is subtracted, so an outage that begins while
+                 nothing is tracked is still caught by the first frame the camera produces during it.
+    baseline_window_ms: window for the normal latency estimate, which absorbs camera/host clock offset. Late frames
+                 are kept out of it (otherwise the backlog after a stall becomes the new normal and only its first
+                 frame counts as late). A latency that stays late at a steady level for this long is adopted as the
+                 new baseline, since that is a clock offset change rather than held frames.
     """
 
     def __init__(self, stall_ms: int = 500, minor_ms: int = 150, track_gap_ms: int = 1000,
@@ -148,23 +159,43 @@ class StreamMonitor:
         self.baseline_window_ms = baseline_window_ms
         self._window: Deque[Tuple[int, int]] = deque()
         self._last_baseline: Optional[int] = None
+        self._late_run: Deque[Tuple[int, int]] = deque()  # recent (recv_ms, latency_ms) of consecutive late frames
+        self._late_since: Optional[int] = None  # receive time of the first frame of the current late run
         self._prev: Optional[Tuple[int, int, Optional[int]]] = None
         self._burst: Optional[Burst] = None
         self.stats = {"frames": 0, "stalls": 0, "minor_holds": 0, "late_frames": 0, "missing_frames": 0,
-                      "max_stall_ms": 0}
+                      "max_stall_ms": 0, "baseline_shifts": 0}
 
     def _baseline(self, recv_ms: int, latency_ms: int) -> int:
         while self._window and recv_ms - self._window[0][0] > self.baseline_window_ms:
             self._window.popleft()
         if self._window:
-            baseline = min(latency for _, latency in self._window)
-        elif self._last_baseline is not None:
-            baseline = self._last_baseline
-        else:
-            baseline = latency_ms
-        self._last_baseline = baseline
-        self._window.append((recv_ms, latency_ms))
-        return baseline
+            self._last_baseline = min(latency for _, latency in self._window)
+        elif self._last_baseline is None:
+            self._last_baseline = latency_ms
+        # Otherwise nothing recent to compare against (e.g. a long stall): keep the previous baseline.
+        return self._last_baseline
+
+    def _track_baseline(self, recv_ms: int, latency_ms: int, late: bool) -> bool:
+        """Feed the baseline window with on-time frames. Returns True if a steady late level became the baseline."""
+        if not late:
+            self._late_run.clear()
+            self._late_since = None
+            self._window.append((recv_ms, latency_ms))
+            return False
+        if self._late_since is None:
+            self._late_since = recv_ms
+        self._late_run.append((recv_ms, latency_ms))
+        while recv_ms - self._late_run[0][0] > self.baseline_window_ms:
+            self._late_run.popleft()
+        latencies = [latency for _, latency in self._late_run]
+        if recv_ms - self._late_since < self.baseline_window_ms or max(latencies) - min(latencies) >= self.stall_ms:
+            return False
+        self._window = deque(self._late_run)
+        self._last_baseline = min(latencies)
+        self._late_run.clear()
+        self._late_since = None
+        return True
 
     def _close(self) -> Optional[Burst]:
         burst, self._burst = self._burst, None
@@ -172,7 +203,18 @@ class StreamMonitor:
 
     def on_frame(self, recv_ms: int, camera_ms: int, data_number: Optional[int]) -> Report:
         latency = recv_ms - camera_ms
-        report = Report(recv_ms, camera_ms, data_number, latency, latency - self._baseline(recv_ms, latency))
+        excess = latency - self._baseline(recv_ms, latency)
+        late = excess >= self.stall_ms
+        report = Report(recv_ms, camera_ms, data_number, latency, excess)
+        if self._track_baseline(recv_ms, latency, late):
+            # The frames counted late were a clock offset change, not a backlog: stop counting them.
+            report.baseline_shift = True
+            self.stats["baseline_shifts"] += 1
+            if self._burst is not None:
+                self.stats["late_frames"] -= self._burst.frames
+                self._burst = None
+            report.excess_ms = latency - (self._last_baseline if self._last_baseline is not None else latency)
+            late = False
         self.stats["frames"] += 1
         continuous = False
         if self._prev is not None:
@@ -182,7 +224,8 @@ class StreamMonitor:
             report.camera_gap_ms = camera_ms - prev_camera
             report.hold_ms = report.arrival_gap_ms - report.camera_gap_ms
             continuous = 0 <= report.camera_gap_ms <= self.track_gap_ms
-            if continuous:
+            # A camera clock going backwards makes the hold meaningless; otherwise it holds across idle gaps too.
+            if report.camera_gap_ms >= 0 and not report.baseline_shift:
                 if report.hold_ms >= self.stall_ms:
                     report.hold = "stall"
                     self.stats["stalls"] += 1
@@ -190,12 +233,14 @@ class StreamMonitor:
                 elif report.hold_ms >= self.minor_ms:
                     report.hold = "minor"
                     self.stats["minor_holds"] += 1
-                if data_number is not None and prev_dn is not None and data_number > prev_dn + 1:
-                    report.missing = data_number - prev_dn - 1
-                    self.stats["missing_frames"] += report.missing
-        if not continuous and self._burst is not None:
+            if continuous and data_number is not None and prev_dn is not None and data_number > prev_dn + 1:
+                report.missing = data_number - prev_dn - 1
+                self.stats["missing_frames"] += report.missing
+        # A burst is the backlog delivered after one stall. Gaps in the camera timestamps inside the backlog (the
+        # camera briefly tracked nothing) do not end it; a new stall or a pause in arrivals does.
+        if self._burst is not None and (report.hold == "stall" or report.arrival_gap_ms > self.track_gap_ms):
             report.completed_burst = self._close()
-        report.late = report.excess_ms >= self.stall_ms
+        report.late = late
         if report.late:
             self.stats["late_frames"] += 1
             if self._burst is None:
@@ -326,17 +371,54 @@ class WebSocketClient:
                 self.sock = None
 
 
+def is_local_address(host: str) -> bool:
+    """True if host resolves to an address assigned to this machine (binding to it only works then)."""
+    try:
+        address = socket.gethostbyname(host)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.bind((address, 0))
+        return True
+    except OSError:
+        return False
+
+
+class ProbeLog:
+    """Every connect probe result, so reachability can be checked afterwards for any period, flagged or not."""
+
+    def __init__(self, path: str):
+        self._file = open(path, "w", newline="", buffering=1)
+        self._csv = csv.writer(self._file)
+        self._csv.writerow(["start_utc", "start_ms", "role", "target", "duration_ms", "ok", "error"])
+        self._lock = threading.Lock()
+        self._closed = False
+
+    def write(self, start_ms: int, role: str, target: str, duration_ms: int, ok: bool, error: str) -> None:
+        with self._lock:
+            if not self._closed:
+                self._csv.writerow([utc(start_ms), start_ms, role, target, duration_ms, int(ok), error])
+
+    def close(self) -> None:
+        with self._lock:
+            self._closed = True
+            self._file.close()
+
+
 class ConnectProbe(threading.Thread):
     """Repeatedly opens (and immediately closes) a TCP connection to host:port and records how long it took.
 
     During a link outage the connection request is lost and the connect takes about 1 s longer (SYN
-    retransmission) or times out, independently of the detection stream.
+    retransmission) or times out, independently of the detection stream. If this host loses its own address the
+    connect fails at once with an error such as ENETUNREACH.
+
+    role is "camera", "control" (another host) or "self" (one of this host's own addresses).
     """
 
-    def __init__(self, label: str, host: str, port: int, interval_s: float, timeout_s: float):
+    def __init__(self, role: str, host: str, port: int, interval_s: float, timeout_s: float,
+                 log: Optional[ProbeLog] = None):
         super().__init__(daemon=True)
-        self.label, self.host, self.port = label, host, port
-        self.interval_s, self.timeout_s = interval_s, timeout_s
+        self.role, self.host, self.port = role, host, port
+        self.label = f"{role} {host}:{port}"
+        self.interval_s, self.timeout_s, self.log = interval_s, timeout_s, log
         self._results: Deque[Tuple[int, int, bool, str]] = deque(maxlen=20000)  # start_ms, duration_ms, ok, error
         self._lock = threading.Lock()
         self._stop = threading.Event()
@@ -350,10 +432,13 @@ class ConnectProbe(threading.Thread):
                 with socket.create_connection((self.host, self.port), timeout=self.timeout_s):
                     pass
             except OSError as e:
-                ok, error = False, type(e).__name__
+                ok = False
+                error = (errno.errorcode.get(e.errno) if e.errno else None) or type(e).__name__
             duration = int((time.monotonic() - began) * 1000)
             with self._lock:
                 self._results.append((start, duration, ok, error))
+            if self.log is not None:
+                self.log.write(start, self.role, f"{self.host}:{self.port}", duration, ok, error)
             self._stop.wait(max(0.0, self.interval_s - (time.monotonic() - began)))
 
     def stop(self) -> None:
@@ -363,34 +448,47 @@ class ConnectProbe(threading.Thread):
         with self._lock:
             results = [r for r in self._results if start_ms <= r[0] <= end_ms]
         bad = [r for r in results if not r[2] or r[1] >= slow_ms]
+        errors: Dict[str, int] = {}
+        for r in bad:
+            key = r[3] or "slow"
+            errors[key] = errors.get(key, 0) + 1
         return {
             "target": self.label,
+            "role": self.role,
             "sent": len(results),
             "failed_or_slow": len(bad),
+            "errors": errors,
             "worst_ms": max((r[1] for r in results), default=None),
             "first_bad": utc(bad[0][0]) if bad else None,
             "last_bad": utc(bad[-1][0]) if bad else None,
         }
 
 
-def probe_verdict(camera: Optional[Dict], controls: List[Dict]) -> str:
+def probe_verdict(camera: Optional[Dict], controls: List[Dict], selfs: Optional[List[Dict]] = None) -> str:
     if camera is None:
         return "No reachability probes were running (--no-probe)."
     if camera["sent"] == 0:
         return "No camera probe fell inside the stall window; use a shorter --probe-interval."
+    if any(s["sent"] > 0 and s["failed_or_slow"] > 0 for s in selfs or []):
+        return ("Connections to this host's own address failed too, so this host lost its network address or "
+                "interface during the stall (link down, Wi-Fi disconnected, DHCP/NetworkManager reset). The camera "
+                "and the rest of the network were not the cause.")
     camera_bad = camera["failed_or_slow"] > 0
     controls_probed = [c for c in controls if c["sent"] > 0]
     controls_bad = any(c["failed_or_slow"] > 0 for c in controls_probed)
     controls_ok = bool(controls_probed) and not controls_bad
     if camera_bad and controls_bad:
-        return ("The camera and the control targets were all unreachable: the problem is on this host's side or in "
-                "shared equipment (this host's network interface or VM networking, the switch).")
+        self_note = (" while this host kept its own address" if any(s["sent"] > 0 for s in selfs or []) else "")
+        return (f"The camera and the other hosts were all unreachable{self_note}: the problem is between this host "
+                "and the rest of the network (this host's link to the switch or Wi-Fi access point, or that "
+                "switch/access point itself).")
     if camera_bad and controls_ok:
         return ("Only the camera was unreachable while the control targets answered: packets were lost between the "
                 "shared network and the camera (camera network interface, its cable, PoE/BPL link or switch port).")
     if camera_bad:
         return ("The camera stopped answering new TCP connections during the stall, so the network path to it was "
-                "down. Add --control HOST:PORT to tell this host's network apart from the camera's link.")
+                "down. Add --control HOST:PORT (another machine, e.g. the gateway) to tell this host's network apart "
+                "from the camera's link.")
     return ("The camera kept answering new TCP connections throughout the stall, so the network path was up. The "
             "frames were held by the camera's sender, or by this connection's TCP retransmission backoff after a "
             "loss too short for the probes to catch.")
@@ -422,16 +520,27 @@ def run_live(args: argparse.Namespace) -> int:
 
     probes: List[ConnectProbe] = []
     camera_probe: Optional[ConnectProbe] = None
+    probe_log: Optional[ProbeLog] = None
     if not args.no_probe:
-        camera_probe = ConnectProbe(f"camera {args.host}:{args.port}", args.host, args.port,
-                                    args.probe_interval, args.probe_timeout)
-        probes.append(camera_probe)
+        targets = []
         for target in args.control:
             host, _, port = target.rpartition(":")
             if not host or not port.isdigit():
                 print(f"--control expects HOST:PORT, got {target}", file=sys.stderr)
                 return 2
-            probes.append(ConnectProbe(f"control {target}", host, int(port), args.probe_interval, args.probe_timeout))
+            targets.append((host, int(port)))
+        probe_log = ProbeLog(os.path.join(out_dir, "probes.csv"))
+        camera_probe = ConnectProbe("camera", args.host, args.port, args.probe_interval, args.probe_timeout, probe_log)
+        probes.append(camera_probe)
+        for host, port in targets:
+            role = "self" if is_local_address(host) else "control"
+            if role == "self":
+                print(f"--control {host}:{port} is this host's own address: probing it as a self check (detects this "
+                      f"host losing its address), not as a control.")
+            probes.append(ConnectProbe(role, host, port, args.probe_interval, args.probe_timeout, probe_log))
+        if not any(p.role == "control" for p in probes):
+            print("No --control on another machine: a stall verdict cannot separate this host's network from the "
+                  "camera's link. Add e.g. --control <gateway>:80.")
         for probe in probes:
             probe.start()
 
@@ -440,7 +549,7 @@ def run_live(args: argparse.Namespace) -> int:
     pending_stalls: List[Dict] = []
     probe_settle_ms = int(args.probe_timeout * 1000) + 500
 
-    print(f"Writing results to {out_dir}/ (events.jsonl, frames.csv, chunks.csv). Ctrl-C to stop.")
+    print(f"Writing results to {out_dir}/ (events.jsonl, frames.csv, chunks.csv, probes.csv). Ctrl-C to stop.")
     events.write("start", host=args.host, port=args.port, path=args.path, stall_ms=args.stall_ms,
                  probes=[p.label for p in probes])
 
@@ -459,19 +568,26 @@ def run_live(args: argparse.Namespace) -> int:
             if not force and now < stall["end_ms"] + probe_settle_ms:
                 continue
             pending_stalls.remove(stall)
+            kind = stall.pop("kind", "stall")
             chunks = [(t - stall["end_ms"], n) for t, n in recent_chunks if stall["end_ms"] - 5 <= t <= stall["end_ms"] + 500]
             stall["chunks_after_stall"] = [{"offset_ms": o, "bytes": n} for o, n in chunks[:8]]
             camera = camera_probe.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) if camera_probe else None
-            controls = [p.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) for p in probes if p is not camera_probe]
-            stall["camera_probe"], stall["control_probes"] = camera, controls
-            stall["verdict"] = probe_verdict(camera, controls)
-            events.write("stall", **stall)
+            controls = [p.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) for p in probes if p.role == "control"]
+            selfs = [p.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) for p in probes if p.role == "self"]
+            stall["camera_probe"], stall["control_probes"], stall["self_probes"] = camera, controls, selfs
+            stall["verdict"] = probe_verdict(camera, controls, selfs)
+            events.write(kind, **stall)
             shape = ", ".join(f"+{c['offset_ms']}ms/{c['bytes']}B" for c in stall["chunks_after_stall"])
-            print(f"{stall['start_utc']}  STALL details ({stall['hold_ms']} ms, ended {stall['end_utc']}):")
-            print(f"    TCP data after the stall (offset/bytes): {shape or '-'}")
-            for summary in ([camera] if camera else []) + controls:
-                print(f"    probe {summary['target']}: {summary['sent']} sent, {summary['failed_or_slow']} failed/slow, "
-                      f"worst {summary['worst_ms']} ms")
+            if kind == "silence":
+                print(f"{stall['start_utc']}  SILENCE details (no data at all for {stall['no_data_ms']} ms, "
+                      f"ended {stall['end_utc']}):")
+            else:
+                print(f"{stall['start_utc']}  STALL details ({stall['hold_ms']} ms, ended {stall['end_utc']}):")
+            print(f"    TCP data after it (offset/bytes): {shape or '-'}")
+            for summary in ([camera] if camera else []) + controls + selfs:
+                errors = ", ".join(f"{k} x{v}" for k, v in summary["errors"].items())
+                print(f"    probe {summary['target']}: {summary['sent']} sent, {summary['failed_or_slow']} failed/slow"
+                      f"{' (' + errors + ')' if errors else ''}, worst {summary['worst_ms']} ms")
             print(f"    -> {stall['verdict']}")
 
     deadline = time.monotonic() + args.duration if args.duration > 0 else None
@@ -493,6 +609,9 @@ def run_live(args: argparse.Namespace) -> int:
             reconnect_delay = 1.0
             events.write("connected")
             print(f"{utc(now_ms())}  subscribed to {args.host}:{args.port}{args.path}")
+            # The camera sends a WebSocket ping every 60 s even when it tracks nothing, so a much longer silence
+            # means the connection is held, whether or not anything was being tracked.
+            last_rx_ms, silence_open = now_ms(), False
             # Frames that arrived together with the handshake response
             pending = [(now_ms(), opcode, payload) for opcode, payload in client.feed(b"")]
             try:
@@ -505,9 +624,20 @@ def run_live(args: argparse.Namespace) -> int:
                         recv = now_ms()
                         if not data:
                             raise ConnectionError("camera closed the connection")
+                        if recv - last_rx_ms >= args.silence_ms:
+                            pending_stalls.append({
+                                "kind": "silence", "start_ms": last_rx_ms, "end_ms": recv, "start_utc": utc(last_rx_ms),
+                                "end_utc": utc(recv), "no_data_ms": recv - last_rx_ms})
+                            print(f"{utc(recv)}  data resumed after {(recv - last_rx_ms) / 1000:.1f} s with no data "
+                                  f"at all. Probe results in {probe_settle_ms / 1000:.1f} s.")
+                        last_rx_ms, silence_open = recv, False
                         recent_chunks.append((recv, len(data)))
                         chunks_csv.writerow([utc(recv), recv, len(data)])
                         messages += [(recv, opcode, payload) for opcode, payload in client.feed(data)]
+                    elif not silence_open and now_ms() - last_rx_ms >= args.silence_ms:
+                        silence_open = True
+                        events.write("silence_start", last_data_utc=utc(last_rx_ms))
+                        print(f"{utc(now_ms())}  no data at all (not even keepalive pings) since {utc(last_rx_ms)}")
                     for recv, opcode, payload in messages:
                         if opcode == 0x9:
                             client.send(0xA, payload)
@@ -541,6 +671,10 @@ def run_live(args: argparse.Namespace) -> int:
                                              report.hold_ms, report.hold, report.missing, int(report.late)])
                         if report.completed_burst:
                             report_burst(report.completed_burst)
+                        if report.baseline_shift:
+                            events.write("baseline_shift", recv_utc=utc(recv), latency_ms=report.latency_ms)
+                            print(f"{utc(recv)}  baseline latency moved to {report.latency_ms} ms (steady for "
+                                  f"{monitor.baseline_window_ms / 1000:.0f} s): camera/host clock offset changed")
                         if report.hold == "stall":
                             pending_stalls.append({
                                 "start_ms": report.prev_recv_ms, "end_ms": recv,
@@ -580,6 +714,10 @@ def run_live(args: argparse.Namespace) -> int:
         settle_stalls(force=True)
         for probe in probes:
             probe.stop()
+        for probe in probes:
+            probe.join(timeout=args.probe_timeout + 1)
+        if probe_log is not None:
+            probe_log.close()
         events.write("summary", **monitor.stats)
         print(f"Summary: {json.dumps(monitor.stats)}")
         events.close()
@@ -797,8 +935,12 @@ def main() -> int:
     live.add_argument("--port", type=int, default=80, help="Camera WebSocket port (default 80).")
     live.add_argument("--path", default="/api/subscriptions", help="Camera WebSocket endpoint.")
     live.add_argument("--control", action="append", default=[], metavar="HOST:PORT",
-                      help="Another host on the same network to probe for comparison, e.g. pc1 or the switch "
-                           "(repeatable). Must have an open TCP port.")
+                      help="Another host on the same network to probe for comparison, e.g. the gateway or pc1 "
+                           "(repeatable). Must have an open TCP port. One of this host's own addresses is probed as "
+                           "a self check instead (detects this host losing its address).")
+    live.add_argument("--silence-ms", type=int, default=90000,
+                      help="Report a period with no data at all (not even the camera's 60 s keepalive ping) longer "
+                           "than this, even if nothing was tracked (default 90000).")
     live.add_argument("--probe-interval", type=float, default=0.5, help="Seconds between TCP connect probes (default 0.5).")
     live.add_argument("--probe-timeout", type=float, default=3.0, help="TCP connect probe timeout in seconds (default 3).")
     live.add_argument("--slow-ms", type=int, default=500,
