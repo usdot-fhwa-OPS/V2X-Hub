@@ -16,6 +16,9 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "FLIRWebsockAsyncClnSession.hpp" 
+#include <ctime>
+#include <functional>
+#include <thread>
 
 using namespace FLIRCameraDriverPlugin;
 
@@ -305,6 +308,156 @@ TEST(FLIRWebsockAsyncClnSessionTest, checkStreamTimingDetectsStall)
     EXPECT_EQ(flirSession->getStreamMonitorConfig().stallThresholdMs, 1000);
 }
 
+namespace
+{
+    /**
+     * @brief Minimal FLIR camera for link tests: accepts WebSocket connections, answers the subscription and then
+     * runs the behavior given for that connection, each connection on its own thread.
+     */
+    class TestCamera
+    {
+        public:
+            using Connection = websocket::stream<tcp::socket>;
+            using Behavior = std::function<void(Connection &ws, unsigned int connectionIndex)>;
+
+            explicit TestCamera(Behavior behavior, unsigned short port = 0)
+                : acceptor_(ioc_, tcp::endpoint(net::ip::make_address("127.0.0.1"), port)), behavior_(std::move(behavior))
+            {
+                thread_ = std::thread([this] { serve(); });
+            }
+
+            ~TestCamera()
+            {
+                stopping_ = true;
+                // Closing the acceptor does not wake a blocked accept(): connect once to wake it
+                beast::error_code ec;
+                tcp::socket wake(ioc_);
+                wake.connect(acceptor_.local_endpoint(), ec);
+                thread_.join();
+                acceptor_.close(ec);
+                for (auto &connectionThread : connectionThreads_)
+                {
+                    connectionThread.join();
+                }
+            }
+
+            std::string port() const { return std::to_string(acceptor_.local_endpoint().port()); }
+            unsigned int connections() const { return connections_.load(); }
+
+            static std::string dataFrame(unsigned int dataNumber)
+            {
+                const auto nowMs = FLIRWebsockAsyncClnSession::wallClockMs();
+                const auto seconds = static_cast<std::time_t>(nowMs / 1000);
+                std::tm utc{};
+                gmtime_r(&seconds, &utc);
+                char time[64];
+                std::snprintf(time, sizeof(time), "%04d-%02d-%02dT%02d:%02d:%02d.%03d+00:00", utc.tm_year + 1900,
+                    utc.tm_mon + 1, utc.tm_mday, utc.tm_hour, utc.tm_min, utc.tm_sec, static_cast<int>(nowMs % 1000));
+                return "{\"dataNumber\": \"" + std::to_string(dataNumber) + "\", \"messageType\": \"Data\", \"time\": \"" +
+                    time + "\", \"track\": [{\"angle\": \"255.0\", \"class\": \"Pedestrian\", \"iD\": \"1234\", "
+                    "\"latitude\": \"38.95504354\", \"longitude\": \"-77.14934177\", \"speed\": \"1.1\", \"x\": \"-2.6\", "
+                    "\"y\": \"19.9\"}], \"type\": \"PedestrianPresenceTracking\"}";
+            }
+
+            static void sendFrames(Connection &ws, unsigned int count)
+            {
+                for (unsigned int i = 1; i <= count; i++)
+                {
+                    ws.write(net::buffer(dataFrame(i)));
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+            }
+
+        private:
+            void serve()
+            {
+                while (!stopping_)
+                {
+                    beast::error_code ec;
+                    tcp::socket socket(ioc_);
+                    acceptor_.accept(socket, ec);
+                    if (ec || stopping_)
+                    {
+                        return;
+                    }
+                    connectionThreads_.emplace_back([this, socket = std::move(socket)]() mutable
+                    {
+                        try
+                        {
+                            Connection ws(std::move(socket));
+                            ws.accept();
+                            beast::flat_buffer request;
+                            ws.read(request);
+                            ws.write(net::buffer(std::string(
+                                R"({"messageType": "Subscription", "subscription": {"returnValue": "OK", "type": "Data"}})")));
+                            behavior_(ws, connections_++);
+                        }
+                        catch (const std::exception &)
+                        {
+                            // Client went away
+                        }
+                    });
+                }
+            }
+
+            net::io_context ioc_;
+            tcp::acceptor acceptor_;
+            Behavior behavior_;
+            std::atomic<unsigned int> connections_{0};
+            std::atomic<bool> stopping_{false};
+            std::thread thread_;
+            std::vector<std::thread> connectionThreads_;
+    };
+
+    /**
+     * @brief Runs a session against a local camera on its own I/O thread.
+     */
+    struct RunningSession
+    {
+        net::io_context ioc;
+        std::shared_ptr<FLIRWebsockAsyncClnSession> session;
+        std::thread io;
+
+        RunningSession(const std::string &port, int64_t linkTimeoutMs)
+        {
+            session = std::make_shared<FLIRWebsockAsyncClnSession>(ioc, "127.0.0.1", port, 90.0, "Test",
+                "/api/subscriptions", tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
+            session->setLinkTimeoutMs(linkTimeoutMs);
+            session->run();
+            io = std::thread([this] { ioc.run(); });
+        }
+
+        ~RunningSession()
+        {
+            stop();
+        }
+
+        void stop()
+        {
+            session->stop();
+            if (io.joinable())
+            {
+                io.join();
+            }
+        }
+
+        template <typename Condition>
+        bool waitFor(Condition condition, std::chrono::milliseconds limit = std::chrono::milliseconds(5000))
+        {
+            const auto deadline = std::chrono::steady_clock::now() + limit;
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                if (condition())
+                {
+                    return true;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+            return condition();
+        }
+    };
+}
+
 TEST(FLIRWebsockAsyncClnSessionTest, linkTimeoutSetting)
 {
     net::io_context ioc;
@@ -315,4 +468,48 @@ TEST(FLIRWebsockAsyncClnSessionTest, linkTimeoutSetting)
     EXPECT_EQ(flirSession->getLinkTimeoutMs(), 200);
     EXPECT_EQ(flirSession->getReconnectCount(), 0u);
     EXPECT_FALSE(flirSession->isHealthy());
+}
+
+TEST(FLIRWebsockAsyncClnSessionTest, reconnectsWhenCameraClosesConnection)
+{
+    // First connection: a few frames, then the camera closes it. Later connections stream normally.
+    TestCamera camera([](TestCamera::Connection &ws, unsigned int connection)
+    {
+        if (connection == 0)
+        {
+            TestCamera::sendFrames(ws, 3);
+            ws.close(websocket::close_code::going_away);
+            return;
+        }
+        TestCamera::sendFrames(ws, 1000);
+    });
+    RunningSession running(camera.port(), 500);
+
+    ASSERT_TRUE(running.waitFor([&] { return running.session->getReconnectCount() == 1; }));
+    EXPECT_EQ(camera.connections(), 2u);
+    const auto framesAfterReconnect = running.session->getStreamStats().frames;
+    EXPECT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= framesAfterReconnect + 3; }));
+    EXPECT_TRUE(running.session->isHealthy());
+}
+
+TEST(FLIRWebsockAsyncClnSessionTest, connectsWhenCameraComesUpLater)
+{
+    // Find a free port, then leave it closed so the first connection attempts are refused
+    unsigned short port;
+    {
+        net::io_context ioc;
+        tcp::acceptor probe(ioc, tcp::endpoint(net::ip::make_address("127.0.0.1"), 0));
+        port = probe.local_endpoint().port();
+    }
+    RunningSession running(std::to_string(port), 500);
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    EXPECT_FALSE(running.session->isHealthy());
+
+    TestCamera camera([](TestCamera::Connection &ws, unsigned int) { TestCamera::sendFrames(ws, 1000); }, port);
+    EXPECT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= 3; }));
+    EXPECT_TRUE(running.session->isHealthy());
+    // Not a reconnect: the link had never delivered data
+    EXPECT_EQ(running.session->getReconnectCount(), 0u);
+    // Disconnect before the camera goes away
+    running.stop();
 }

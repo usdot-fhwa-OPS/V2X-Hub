@@ -105,6 +105,8 @@ namespace FLIRCameraDriverPlugin
 			const char* Key_LinkLateFrames = "Camera Link Late Frames";
 			const char* Key_LinkMinorHolds = "Camera Link Minor Holds";
 			const char* Key_CameraMissingFrames = "Camera Missing Frames";
+			const char* Key_LinkReconnects = "Camera Link Reconnects";
+			const char* Key_LinksConnected = "Camera Links Connected";
 			// Extra transit time (ms) at which a camera frame counts as a link stall. Set by LinkStallThresholdMs.
 			std::atomic<int64_t> linkStallThresholdMs{500};
 			// Link watchdog timeout (ms), 0 disables it. Set by LinkTimeoutMs.

@@ -58,7 +58,8 @@ namespace FLIRCameraDriverPlugin
 		PLOG(logDEBUG) << "Successfully running the I/O service.";	
 		runningWebSocket = true;
 
-		// Run the I/O service. The call will return when the socket is closed.
+		// Run the I/O service. The session reconnects by itself when the connection is lost, so this only
+		// returns once the session is stopped.
 		ioc.run();
 		PLOG(logDEBUG) << "Successfully terminating the I/O service.";	
 
@@ -85,9 +86,8 @@ namespace FLIRCameraDriverPlugin
 		if (!sessions.empty() && runningWebSocket)
 		{
 			PLOG(logDEBUG) << "Stopping WebSocket session";
-			beast::error_code ec;
 			for(const auto &flirSession: sessions){
-				flirSession->on_close(ec);
+				flirSession->stop();
 			}
 			runningWebSocket = false;
 		}
@@ -115,10 +115,17 @@ namespace FLIRCameraDriverPlugin
 				auto livePedCount = 0;
 				// Camera link statistics summed over all FLIR sessions
 				StreamMonitorStats linkTotals;
+				uint64_t linkReconnects = 0;
+				unsigned int linksConnected = 0;
 
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
 				for(const auto &flirSession: sessions)
 				{
+					linkReconnects += flirSession->getReconnectCount();
+					if (flirSession->isHealthy())
+					{
+						linksConnected++;
+					}
 					// Report a late burst that ended together with a track
 					flirSession->checkStreamIdle();
 					const auto linkStats = flirSession->getStreamStats();
@@ -194,6 +201,8 @@ namespace FLIRCameraDriverPlugin
 				SetStatus<uint64_t>(Key_LinkLateFrames, linkTotals.lateFrames);
 				SetStatus<uint64_t>(Key_LinkMinorHolds, linkTotals.minorHolds);
 				SetStatus<uint64_t>(Key_CameraMissingFrames, linkTotals.missingFrames);
+				SetStatus<uint64_t>(Key_LinkReconnects, linkReconnects);
+				SetStatus<std::string>(Key_LinksConnected, std::to_string(linksConnected) + " of " + std::to_string(sessions.size()));
 			}
 			// Update the live pedestrian count status
 			// Sleep for 10 milliseconds

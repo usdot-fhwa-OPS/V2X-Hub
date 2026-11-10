@@ -29,43 +29,106 @@ namespace FLIRCameraDriverPlugin
         {
             return value ? std::to_string(*value) : std::string("?");
         }
+
+        bool isPowerOfTen(unsigned int value)
+        {
+            while (value >= 10 && value % 10 == 0)
+            {
+                value /= 10;
+            }
+            return value == 1;
+        }
     }
 
     void FLIRWebsockAsyncClnSession::fail(beast::error_code ec, const std::string& what)
     {
         isHealthy_.store(false);
-        PLOG(logERROR) << what << ": " << ec.message();
         // Report any backlog that was still arriving when the connection failed
         if (auto burst = streamMonitor_.flush())
         {
             logLateBurst(*burst);
         }
-        // TODO(reconnect): unless stopping_, log the lost link and scheduleReconnect().
+        if (stopping_.load())
+        {
+            PLOG(logDEBUG) << "FLIR session " << sensorId << " stopped (" << what << ": " << ec.message() << ")";
+            return;
+        }
+
+        const uint64_t nowMs = wallClockMs();
+        if (receivedOnConnection_)
+        {
+            // A connection that was delivering data was lost
+            receivedOnConnection_ = false;
+            failedAttempts_ = 0;
+            linkLostMs_ = lastMessageMs_;
+            PLOG(logWARNING) << "FLIR link to " << sensorId << " lost at " << FLIRStreamMonitor::formatUtcMs(nowMs) << " ("
+                << what << ": " << ec.message() << "), " << (nowMs - lastMessageMs_) << " ms after the last message. Reconnecting.";
+        }
+        else
+        {
+            failedAttempts_++;
+            // Log the 1st, 10th, 100th, ... failed attempt so a long outage does not flood the log
+            if (isPowerOfTen(failedAttempts_))
+            {
+                PLOG(logWARNING) << "Unable to connect to FLIR camera " << sensorId << " at " << host_ << ":" << port_
+                    << " (" << what << ": " << ec.message() << "), " << failedAttempts_ << " failed attempt(s). Retrying.";
+            }
+            else
+            {
+                PLOG(logDEBUG) << "Unable to connect to FLIR camera " << sensorId << " (" << what << ": " << ec.message()
+                    << "), attempt " << failedAttempts_ << ".";
+            }
+        }
+        // The first attempt after losing a working connection starts at once; after a failed attempt, wait a little
+        scheduleReconnect(failedAttempts_ == 0 ? std::chrono::milliseconds(0) : reconnectDelay);
     }
 
     void FLIRWebsockAsyncClnSession::scheduleReconnect(std::chrono::milliseconds delay)
     {
-        // TODO(reconnect): after delay, replace the WebSocket stream with a fresh one and run() again.
-        boost::ignore_unused(delay);
+        reconnectTimer_.expires_after(delay);
+        reconnectTimer_.async_wait([self = shared_from_this()](beast::error_code ec)
+        {
+            if (ec || self->stopping_.load())
+            {
+                return;
+            }
+            // A websocket stream cannot be reused after a failure: close the old one and start over with a new one
+            beast::get_lowest_layer(*self->ws_).close();
+            self->ws_.emplace(self->strand_);
+            self->buffer_.clear();
+            self->run();
+        });
     }
 
     websocket::stream_base::timeout FLIRWebsockAsyncClnSession::linkTimeouts() const
     {
-        // TODO(reconnect): limit the handshake to the link timeout.
-        // TODO(link watchdog): once the camera has answered a ping, use the link timeout as the idle timeout, with
-        // keep-alive pings.
-        return websocket::stream_base::timeout::suggested(beast::role_type::client);
+        auto timeouts = websocket::stream_base::timeout::suggested(beast::role_type::client);
+        const auto linkTimeout = std::chrono::milliseconds(linkTimeoutMs_.load());
+        if (linkTimeout.count() > 0)
+        {
+            timeouts.handshake_timeout = linkTimeout;
+            // TODO(link watchdog): once the camera has answered a ping, also use linkTimeout as the idle timeout,
+            // with keep-alive pings, so a stalled link is detected.
+        }
+        return timeouts;
     }
 
     std::chrono::milliseconds FLIRWebsockAsyncClnSession::connectTimeout() const
     {
-        // TODO(reconnect): 10x the last successful connect time, at least 250 ms and at most the link timeout.
-        return std::chrono::milliseconds(30000);
+        const auto linkTimeout = std::chrono::milliseconds(linkTimeoutMs_.load());
+        if (linkTimeout.count() <= 0)
+        {
+            return std::chrono::milliseconds(30000);
+        }
+        if (lastConnectDuration_.count() < 0)
+        {
+            return linkTimeout;
+        }
+        return std::min(std::max(lastConnectDuration_ * 10, std::chrono::milliseconds(250)), linkTimeout);
     }
 
     void FLIRWebsockAsyncClnSession::run()
     {
-	    // Save these for later
         PLOG(logDEBUG) << "Starting FLIRWebsockAsyncClnSession at " << host_ << ":" << port_;
         // Look up the domain name
         resolver_.async_resolve(
@@ -80,12 +143,12 @@ namespace FLIRCameraDriverPlugin
     {
         if(ec)
             return fail(ec, "resolve");
-        isHealthy_.store(true);
         // Limit the TCP connect, see connectTimeout()
-        beast::get_lowest_layer(ws_).expires_after(connectTimeout());
+        connectStart_ = std::chrono::steady_clock::now();
+        beast::get_lowest_layer(*ws_).expires_after(connectTimeout());
 
         // Make the connection on the IP address we get from a lookup
-        beast::get_lowest_layer(ws_).async_connect(
+        beast::get_lowest_layer(*ws_).async_connect(
             results,
             beast::bind_front_handler(
                 &FLIRWebsockAsyncClnSession::on_connect,
@@ -97,15 +160,16 @@ namespace FLIRCameraDriverPlugin
     {
         if(ec)
             return fail(ec, "connect");
-        isHealthy_.store(true);
+        lastConnectDuration_ = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now() - connectStart_);
         // Turn off the timeout on the tcp_stream, because
         // the websocket stream has its own timeout system.
-        beast::get_lowest_layer(ws_).expires_never();      
+        beast::get_lowest_layer(*ws_).expires_never();
 
-        ws_.set_option(linkTimeouts());
+        ws_->set_option(linkTimeouts());
 
         // Set a decorator to change the User-Agent of the handshake
-        ws_.set_option(websocket::stream_base::decorator(
+        ws_->set_option(websocket::stream_base::decorator(
             [](websocket::request_type& req)
             {
                 req.set(http::field::user_agent,
@@ -120,7 +184,7 @@ namespace FLIRCameraDriverPlugin
         PLOG(logDEBUG) << "host_: " << host_ << "hostString_: " << endpoint_;
 
         // Perform the websocket handshake
-        ws_.async_handshake(host_, endpoint_,
+        ws_->async_handshake(host_, endpoint_,
             beast::bind_front_handler(
                 &FLIRWebsockAsyncClnSession::on_handshake,
                 shared_from_this()));
@@ -130,9 +194,8 @@ namespace FLIRCameraDriverPlugin
     {
         if(ec)
             return fail(ec, "handshake");
-        isHealthy_.store(true);
         // Send the message
-        ws_.async_write(
+        ws_->async_write(
             net::buffer(pedPresenceTrackingReq),
             beast::bind_front_handler(
                 &FLIRWebsockAsyncClnSession::on_write,
@@ -145,10 +208,9 @@ namespace FLIRCameraDriverPlugin
 
         if(ec)
             return fail(ec, "write");
-        isHealthy_.store(true);
         // Read a message into our buffer,
         // this should be the response to the subscribe message
-        ws_.async_read(
+        ws_->async_read(
             buffer_,
             beast::bind_front_handler(
                 &FLIRWebsockAsyncClnSession::on_read,
@@ -164,41 +226,60 @@ namespace FLIRCameraDriverPlugin
         // Arrival time of this frame, taken before any processing
         const uint64_t recvMs = wallClockMs();
         isHealthy_.store(true);
-        // parse the buffer
-        std::stringstream ss;
-	    ptree pr;
-	    std::string text(beast::buffers_to_string(buffer_.data()));
-        ss<<text;
+        lastMessageMs_ = recvMs;
+        if (!receivedOnConnection_)
+        {
+            receivedOnConnection_ = true;
+            if (linkLostMs_ != 0)
+            {
+                reconnects_++;
+                PLOG(logWARNING) << "FLIR link to " << sensorId << " restored at " << FLIRStreamMonitor::formatUtcMs(recvMs)
+                    << ": no messages for " << (recvMs - linkLostMs_) << " ms, " << failedAttempts_
+                    << " failed reconnect attempt(s).";
+                linkLostMs_ = 0;
+            }
+            else
+            {
+                PLOG(logINFO) << "FLIR link to " << sensorId << " connected"
+                    << (failedAttempts_ > 0 ? " after " + std::to_string(failedAttempts_) + " failed attempt(s)." : ".");
+            }
+            failedAttempts_ = 0;
+        }
 
+        std::string text(beast::buffers_to_string(buffer_.data()));
         PLOG(logDEBUG) << "Received: " << text;
-
-        try {
-	        pt::read_json(ss, pr);
-        } catch(const ptree_error &e) {
-            PLOG(logERROR) << "Error converting json to p tree: " << e.what();
-        }
-
-        std::string messageType = pr.get_child("messageType").get_value<string>();
-
-        if (messageType.compare("Subscription") == 0)
+        // A malformed message must not end the read loop (an exception here would escape the I/O thread)
+        try
         {
-            handleSubscriptionMessage(pr);
+            std::stringstream ss(text);
+            ptree pr;
+            pt::read_json(ss, pr);
+            const auto messageType = pr.get<std::string>("messageType");
+
+            if (messageType == "Subscription")
+            {
+                handleSubscriptionMessage(pr);
+            }
+            else if (messageType == "Data")
+            {
+                checkStreamTiming(pr, recvMs);
+                handleDataMessage(pr);
+            }
+            else
+            {
+                PLOG(logDEBUG) << "Received unknown message: " << text;
+            }
         }
-        else if (messageType.compare("Data") == 0)
+        catch (const std::exception &e)
         {
-            checkStreamTiming(pr, recvMs);
-            handleDataMessage(pr);
-        }
-        else
-        {
-            PLOG(logDEBUG) << "Received unknown message: " << text.c_str();
+            PLOG(logERROR) << "Unable to process message from FLIR camera " << sensorId << ": " << e.what();
         }
 
         // need to clear the buffer after reading the message
-        buffer_.consume(buffer_.size());  
+        buffer_.consume(buffer_.size());
 
         // this will read data subscribed to
-        ws_.async_read(
+        ws_->async_read(
         buffer_,
         beast::bind_front_handler(
             &FLIRWebsockAsyncClnSession::on_read,
@@ -440,6 +521,13 @@ namespace FLIRCameraDriverPlugin
     void FLIRWebsockAsyncClnSession::stop()
     {
         stopping_.store(true);
-        // TODO(reconnect): cancel a pending reconnect and close the connection on the session's strand.
+        net::post(strand_, [self = shared_from_this()]
+        {
+            self->reconnectTimer_.cancel();
+            if (self->ws_)
+            {
+                beast::get_lowest_layer(*self->ws_).close();
+            }
+        });
     }
 }

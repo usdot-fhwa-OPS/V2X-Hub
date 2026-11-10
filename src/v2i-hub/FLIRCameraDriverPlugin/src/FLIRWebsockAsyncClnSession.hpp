@@ -17,6 +17,8 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/bind.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -56,8 +58,13 @@ namespace FLIRCameraDriverPlugin
     class FLIRWebsockAsyncClnSession : public std::enable_shared_from_this<FLIRWebsockAsyncClnSession>
     {   
         private:
+            // All handlers run on this strand
+            net::strand<net::io_context::executor_type> strand_;
             tcp::resolver resolver_;
-            websocket::stream<beast::tcp_stream> ws_;
+            // Replaced with a fresh stream for every connection attempt (a websocket stream cannot be reused)
+            std::optional<websocket::stream<beast::tcp_stream>> ws_;
+            // Delays the next connection attempt after a failure
+            net::steady_timer reconnectTimer_;
             beast::flat_buffer buffer_;
             std::string host_;
             std::string port_;
@@ -101,6 +108,13 @@ namespace FLIRCameraDriverPlugin
             std::atomic<bool> stopping_{false};
             // Successful reconnects after a connection that had been delivering data was lost
             std::atomic<uint64_t> reconnects_{0};
+            // Connection state, only used on the strand
+            bool receivedOnConnection_ = false;   // a message arrived on the current connection
+            uint64_t lastMessageMs_ = 0;          // receive time of the last message (host clock)
+            uint64_t linkLostMs_ = 0;             // last message before the current outage, 0 if none
+            unsigned int failedAttempts_ = 0;     // connection attempts that failed since the last message
+            std::chrono::steady_clock::time_point connectStart_;
+            std::chrono::milliseconds lastConnectDuration_{-1};  // TCP connect time of the last connection, -1 if none
 
             /**
              * @brief Logs a summary of a run of frames that arrived late (the backlog delivered after a stall).
@@ -141,7 +155,7 @@ namespace FLIRCameraDriverPlugin
 
             // Resolver and socket require an io_context
             explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
-                : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
+                : strand_(net::make_strand(ioc)), resolver_(strand_), ws_(std::in_place, strand_), reconnectTimer_(strand_), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
                     isHealthy_.store(false);
                 };
 
@@ -167,11 +181,11 @@ namespace FLIRCameraDriverPlugin
             void stop();
 
             /**
-             * @brief Reports a failure with any of the websocket functions below
-             * @param ec the error code for the specific function 
-             * @param what description of the error 
+             * @brief Reports a failure with any of the websocket functions below and schedules a reconnect
+             * @param ec the error code for the specific function
+             * @param what description of the error
              */
-            void fail(beast::error_code ec, const std::string& what);       
+            void fail(beast::error_code ec, const std::string& what);
 
             /**
              * @brief Start the asynchronous web socket connection to the camera. Each function will call the
