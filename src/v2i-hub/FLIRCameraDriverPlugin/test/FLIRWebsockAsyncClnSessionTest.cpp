@@ -15,6 +15,7 @@
  */
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <thread>
 #include "FLIRWebsockAsyncClnSession.hpp" 
 
 using namespace FLIRCameraDriverPlugin;
@@ -291,4 +292,41 @@ TEST(FLIRWebsockAsyncClnSessionTest, checkStreamTimingQueuesStalls)
     lenientSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.032-04:00"), 1789494430036ULL);
     lenientSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.132-04:00"), 1789494433619ULL);
     EXPECT_TRUE(lenientSession->takeStalls().empty());
+}
+
+TEST(FLIRWebsockAsyncClnSessionTest, lastReceiveCountsPings)
+{
+    net::io_context ioc;
+    tcp::acceptor acceptor(ioc, tcp::endpoint(net::ip::make_address("127.0.0.1"), 0));
+    // A camera that accepts the subscription, then sends nothing but a WebSocket ping, like an idle FLIR camera
+    std::thread camera([&acceptor] {
+        websocket::stream<tcp::socket> ws(acceptor.accept());
+        ws.accept();
+        beast::flat_buffer request;
+        ws.read(request);
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+        ws.ping({});
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        beast::error_code ec;
+        ws.close(websocket::close_code::normal, ec);
+    });
+
+    auto flirSession = std::make_shared<FLIRWebsockAsyncClnSession>(ioc, "127.0.0.1",
+        std::to_string(acceptor.local_endpoint().port()), 90.0, "North", "/api/subscriptions",
+        tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
+    EXPECT_EQ(flirSession->getLastReceiveMs(), 0u);
+    flirSession->run();
+    std::thread io([&ioc] { ioc.run(); });
+
+    // Set when the connection is established
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    const auto connectedMs = flirSession->getLastReceiveMs();
+    EXPECT_NE(connectedMs, 0u);
+    // Updated by the ping alone
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+    EXPECT_GE(flirSession->getLastReceiveMs(), connectedMs + 250);
+
+    camera.join();
+    ioc.stop();
+    io.join();
 }
