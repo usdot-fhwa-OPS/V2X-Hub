@@ -107,8 +107,15 @@ namespace FLIRCameraDriverPlugin
         if (linkTimeout.count() > 0)
         {
             timeouts.handshake_timeout = linkTimeout;
-            // TODO(link watchdog): once the camera has answered a ping, also use linkTimeout as the idle timeout,
-            // with keep-alive pings, so a stalled link is detected.
+            if (cameraAnswersPings_)
+            {
+                // Link watchdog. When nothing has arrived for linkTimeout / 2, Beast pings the camera; if nothing at
+                // all, not even the reply, arrives within linkTimeout, the read fails with a timeout. An idle camera
+                // (nothing tracked) answers the ping, so it is not mistaken for a stall. During a link outage or a TCP
+                // retransmission stall the reply cannot arrive, because it is queued behind the frames being held.
+                timeouts.idle_timeout = linkTimeout;
+                timeouts.keep_alive_pings = true;
+            }
         }
         return timeouts;
     }
@@ -166,7 +173,17 @@ namespace FLIRCameraDriverPlugin
         // the websocket stream has its own timeout system.
         beast::get_lowest_layer(*ws_).expires_never();
 
+        connectedAt_ = std::chrono::steady_clock::now();
         ws_->set_option(linkTimeouts());
+        ws_->control_callback([this](websocket::frame_type kind, beast::string_view)
+        {
+            if (kind == websocket::frame_type::pong && !cameraAnswersPings_)
+            {
+                cameraAnswersPings_ = true;
+                ws_->set_option(linkTimeouts());
+                PLOG(logINFO) << "FLIR camera " << sensorId << " answers WebSocket pings, link watchdog active.";
+            }
+        });
 
         // Set a decorator to change the User-Agent of the handshake
         ws_->set_option(websocket::stream_base::decorator(
@@ -194,6 +211,12 @@ namespace FLIRCameraDriverPlugin
     {
         if(ec)
             return fail(ec, "handshake");
+        if (linkTimeoutMs_.load() > 0 && !cameraAnswersPings_)
+        {
+            // Find out whether the camera answers pings, which the watchdog relies on. Sent before the subscription,
+            // so the reply normally arrives before the subscription response and the watchdog is armed from then on.
+            ws_->async_ping({}, [self = shared_from_this()](beast::error_code) {});
+        }
         // Send the message
         ws_->async_write(
             net::buffer(pedPresenceTrackingReq),
@@ -244,6 +267,14 @@ namespace FLIRCameraDriverPlugin
                     << (failedAttempts_ > 0 ? " after " + std::to_string(failedAttempts_) + " failed attempt(s)." : ".");
             }
             failedAttempts_ = 0;
+        }
+        if (linkTimeoutMs_.load() > 0 && !cameraAnswersPings_ && !noPingReplyLogged_ &&
+            std::chrono::steady_clock::now() - connectedAt_ > std::chrono::milliseconds(linkTimeoutMs_.load()))
+        {
+            noPingReplyLogged_ = true;
+            PLOG(logWARNING) << "FLIR camera " << sensorId << " has not answered a WebSocket ping within LinkTimeoutMs, "
+                << "so a stalled link cannot be told apart from an idle camera: the link watchdog is off for this camera "
+                << "until it answers one.";
         }
 
         std::string text(beast::buffers_to_string(buffer_.data()));

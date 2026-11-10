@@ -110,6 +110,11 @@ namespace FLIRCameraDriverPlugin
             std::atomic<uint64_t> reconnects_{0};
             // Connection state, only used on the strand
             bool receivedOnConnection_ = false;   // a message arrived on the current connection
+            // The camera has answered a WebSocket ping. Until it has, silence cannot be told apart from an idle
+            // camera, so the watchdog is not enforced.
+            bool cameraAnswersPings_ = false;
+            bool noPingReplyLogged_ = false;
+            std::chrono::steady_clock::time_point connectedAt_;
             uint64_t lastMessageMs_ = 0;          // receive time of the last message (host clock)
             uint64_t linkLostMs_ = 0;             // last message before the current outage, 0 if none
             unsigned int failedAttempts_ = 0;     // connection attempts that failed since the last message

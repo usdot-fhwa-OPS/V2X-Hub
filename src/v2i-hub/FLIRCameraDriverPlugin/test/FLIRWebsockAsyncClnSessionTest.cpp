@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "FLIRWebsockAsyncClnSession.hpp" 
+#include <array>
 #include <ctime>
 #include <functional>
 #include <thread>
@@ -320,8 +321,13 @@ namespace
             using Connection = websocket::stream<tcp::socket>;
             using Behavior = std::function<void(Connection &ws, unsigned int connectionIndex)>;
 
-            explicit TestCamera(Behavior behavior, unsigned short port = 0)
-                : acceptor_(ioc_, tcp::endpoint(net::ip::make_address("127.0.0.1"), port)), behavior_(std::move(behavior))
+            /**
+             * @param answerPings False for a camera without ping support: the subscription is read as raw bytes,
+             * so the ping sent with it is never answered.
+             */
+            explicit TestCamera(Behavior behavior, unsigned short port = 0, bool answerPings = true)
+                : acceptor_(ioc_, tcp::endpoint(net::ip::make_address("127.0.0.1"), port)), behavior_(std::move(behavior)),
+                  answerPings_(answerPings)
             {
                 thread_ = std::thread([this] { serve(); });
             }
@@ -386,8 +392,16 @@ namespace
                         {
                             Connection ws(std::move(socket));
                             ws.accept();
-                            beast::flat_buffer request;
-                            ws.read(request);
+                            if (answerPings_)
+                            {
+                                beast::flat_buffer request;
+                                ws.read(request);
+                            }
+                            else
+                            {
+                                std::array<char, 1024> raw;
+                                ws.next_layer().read_some(net::buffer(raw));
+                            }
                             ws.write(net::buffer(std::string(
                                 R"({"messageType": "Subscription", "subscription": {"returnValue": "OK", "type": "Data"}})")));
                             behavior_(ws, connections_++);
@@ -403,6 +417,7 @@ namespace
             net::io_context ioc_;
             tcp::acceptor acceptor_;
             Behavior behavior_;
+            bool answerPings_;
             std::atomic<unsigned int> connections_{0};
             std::atomic<bool> stopping_{false};
             std::thread thread_;
@@ -492,6 +507,57 @@ TEST(FLIRWebsockAsyncClnSessionTest, reconnectsWhenCameraClosesConnection)
     EXPECT_TRUE(running.session->isHealthy());
 }
 
+TEST(FLIRWebsockAsyncClnSessionTest, reconnectsWhenLinkStalls)
+{
+    // First connection: a few frames, then the camera goes silent without closing the connection and does not
+    // answer pings, as during a link outage. Later connections stream normally.
+    TestCamera camera([](TestCamera::Connection &ws, unsigned int connection)
+    {
+        if (connection == 0)
+        {
+            TestCamera::sendFrames(ws, 3);
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            return;
+        }
+        TestCamera::sendFrames(ws, 1000);
+    });
+    RunningSession running(camera.port(), 500);
+
+    ASSERT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= 3; }));
+    const auto stallStart = std::chrono::steady_clock::now();
+    ASSERT_TRUE(running.waitFor([&] { return running.session->getReconnectCount() == 1; }));
+    // Detected about LinkTimeoutMs after the last frame, not after the 2 s the silent connection stays open
+    EXPECT_LT(std::chrono::steady_clock::now() - stallStart, std::chrono::milliseconds(1500));
+    EXPECT_EQ(camera.connections(), 2u);
+    // Frames flow again on the new connection
+    const auto framesAfterReconnect = running.session->getStreamStats().frames;
+    EXPECT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= framesAfterReconnect + 3; }));
+    EXPECT_TRUE(running.session->isHealthy());
+}
+
+TEST(FLIRWebsockAsyncClnSessionTest, idleCameraIsNotAStall)
+{
+    // The camera sends a few frames and then nothing (nothing tracked) but keeps reading, so it answers pings
+    TestCamera camera([](TestCamera::Connection &ws, unsigned int)
+    {
+        TestCamera::sendFrames(ws, 3);
+        beast::flat_buffer buffer;
+        for (;;)
+        {
+            ws.read(buffer);
+            buffer.consume(buffer.size());
+        }
+    });
+    RunningSession running(camera.port(), 500);
+
+    ASSERT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= 3; }));
+    // Idle for six link timeouts: pings are answered, so the connection is kept
+    std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    EXPECT_EQ(running.session->getReconnectCount(), 0u);
+    EXPECT_EQ(camera.connections(), 1u);
+    EXPECT_TRUE(running.session->isHealthy());
+}
+
 TEST(FLIRWebsockAsyncClnSessionTest, connectsWhenCameraComesUpLater)
 {
     // Find a free port, then leave it closed so the first connection attempts are refused
@@ -511,5 +577,23 @@ TEST(FLIRWebsockAsyncClnSessionTest, connectsWhenCameraComesUpLater)
     // Not a reconnect: the link had never delivered data
     EXPECT_EQ(running.session->getReconnectCount(), 0u);
     // Disconnect before the camera goes away
+    running.stop();
+}
+
+TEST(FLIRWebsockAsyncClnSessionTest, watchdogOffWhenCameraDoesNotAnswerPings)
+{
+    // A camera that never answers pings: a few frames and then idle. Silence cannot be told apart from a stall,
+    // so the connection must be kept rather than dropped every time the camera goes idle.
+    TestCamera camera([](TestCamera::Connection &ws, unsigned int)
+    {
+        TestCamera::sendFrames(ws, 3);
+        std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    }, 0, false);
+    RunningSession running(camera.port(), 500);
+
+    ASSERT_TRUE(running.waitFor([&] { return running.session->getStreamStats().frames >= 3; }));
+    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    EXPECT_EQ(running.session->getReconnectCount(), 0u);
+    EXPECT_EQ(camera.connections(), 1u);
     running.stop();
 }
