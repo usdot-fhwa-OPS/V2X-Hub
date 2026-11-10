@@ -305,3 +305,14 @@ TEST(FLIRWebsockAsyncClnSessionTest, checkStreamTimingDetectsStall)
     EXPECT_EQ(flirSession->getStreamMonitorConfig().stallThresholdMs, 1000);
 }
 
+TEST(FLIRWebsockAsyncClnSessionTest, linkTimeoutSetting)
+{
+    net::io_context ioc;
+    auto flirSession = std::make_shared<FLIRWebsockAsyncClnSession>(ioc, "127.0.0.1", "8084", 90.0, "North",
+        "api/subscription", tmx::utils::WGS84Point(38.95499217, -77.14920953, 0.0));
+    EXPECT_EQ(flirSession->getLinkTimeoutMs(), 500);
+    flirSession->setLinkTimeoutMs(200);
+    EXPECT_EQ(flirSession->getLinkTimeoutMs(), 200);
+    EXPECT_EQ(flirSession->getReconnectCount(), 0u);
+    EXPECT_FALSE(flirSession->isHealthy());
+}

@@ -24,6 +24,11 @@
 			"description": "Camera link monitoring: a camera frame held this many milliseconds longer in transit than the frame before it, while the camera kept producing frames, is logged as a link stall, and frames this much later than normal are counted as late. Minimum 200."
 		},
 		{
+			"key": "LinkTimeoutMs",
+			"default": "500",
+			"description": "Camera link watchdog: when nothing has arrived from a camera for half this time the plugin pings it, and when nothing at all (no data and no reply to the ping) arrives within this time the connection is dropped and re-established. Also limits each connection attempt. Minimum 200; 0 disables the watchdog."
+		},
+		{
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"

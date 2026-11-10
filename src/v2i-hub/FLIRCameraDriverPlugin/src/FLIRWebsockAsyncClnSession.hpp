@@ -95,12 +95,45 @@ namespace FLIRCameraDriverPlugin
             // Compares frame arrival times with camera timestamps to detect stalls on the camera link
             FLIRStreamMonitor streamMonitor_;
 
+            // Link watchdog timeout (ms), see setLinkTimeoutMs. 0 disables the watchdog.
+            std::atomic<int64_t> linkTimeoutMs_{500};
+            // Set by stop(): no further reconnects
+            std::atomic<bool> stopping_{false};
+            // Successful reconnects after a connection that had been delivering data was lost
+            std::atomic<uint64_t> reconnects_{0};
+
             /**
              * @brief Logs a summary of a run of frames that arrived late (the backlog delivered after a stall).
              */
             void logLateBurst(const LateBurstSummary &burst) const;
 
+            /**
+             * @brief Starts the next connection attempt after the given delay.
+             */
+            void scheduleReconnect(std::chrono::milliseconds delay);
+
+            /**
+             * @brief WebSocket timeouts for the current settings: the link timeout limits the handshake, and once the
+             * camera has answered a ping it is also the idle timeout of the watchdog.
+             */
+            websocket::stream_base::timeout linkTimeouts() const;
+
+            /**
+             * @brief Time limit for a TCP connect. While the network is down, the SYN of an attempt is lost and the
+             * kernel would only resend it after 1 s, 2 s, 4 s, ...; abandoning the attempt and starting a new one
+             * sends a new SYN sooner, so the connection is made soon after the network comes back. The limit is 10x
+             * the last successful connect time (a LAN connect takes about 1 ms), at least 250 ms and at most the link
+             * timeout; until a connect has succeeded, the link timeout.
+             */
+            std::chrono::milliseconds connectTimeout() const;
+
         public:
+            /**
+             * @brief Pause between a failed connection attempt and the next attempt. Short, so a
+             * new connection is made soon after the network comes back; failed attempts are cheap.
+             */
+            static constexpr std::chrono::milliseconds reconnectDelay{100};
+
             /**
              * @brief Current host wall-clock time in milliseconds since epoch.
              */
@@ -111,6 +144,27 @@ namespace FLIRCameraDriverPlugin
                 : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
                     isHealthy_.store(false);
                 };
+
+            /**
+             * @brief Set the link watchdog timeout. Once the camera has answered a ping, the connection is dropped and
+             * re-established when nothing (no data and no reply to a ping) has arrived from the camera for this long.
+             * It also limits the WebSocket handshake and the TCP connect (see connectTimeout()). 0 disables the
+             * watchdog (silence is waited out indefinitely, connection attempts limited to 30 s). Applies from the
+             * next connection.
+             */
+            void setLinkTimeoutMs(int64_t timeoutMs);
+            int64_t getLinkTimeoutMs() const;
+
+            /**
+             * @brief Number of times the connection was re-established after a connection that had been delivering
+             * data was lost.
+             */
+            uint64_t getReconnectCount() const;
+
+            /**
+             * @brief Close the connection and stop reconnecting. Thread safe.
+             */
+            void stop();
 
             /**
              * @brief Reports a failure with any of the websocket functions below

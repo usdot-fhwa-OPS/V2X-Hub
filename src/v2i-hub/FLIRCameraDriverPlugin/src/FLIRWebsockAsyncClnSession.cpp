@@ -40,6 +40,27 @@ namespace FLIRCameraDriverPlugin
         {
             logLateBurst(*burst);
         }
+        // TODO(reconnect): unless stopping_, log the lost link and scheduleReconnect().
+    }
+
+    void FLIRWebsockAsyncClnSession::scheduleReconnect(std::chrono::milliseconds delay)
+    {
+        // TODO(reconnect): after delay, replace the WebSocket stream with a fresh one and run() again.
+        boost::ignore_unused(delay);
+    }
+
+    websocket::stream_base::timeout FLIRWebsockAsyncClnSession::linkTimeouts() const
+    {
+        // TODO(reconnect): limit the handshake to the link timeout.
+        // TODO(link watchdog): once the camera has answered a ping, use the link timeout as the idle timeout, with
+        // keep-alive pings.
+        return websocket::stream_base::timeout::suggested(beast::role_type::client);
+    }
+
+    std::chrono::milliseconds FLIRWebsockAsyncClnSession::connectTimeout() const
+    {
+        // TODO(reconnect): 10x the last successful connect time, at least 250 ms and at most the link timeout.
+        return std::chrono::milliseconds(30000);
     }
 
     void FLIRWebsockAsyncClnSession::run()
@@ -60,8 +81,8 @@ namespace FLIRCameraDriverPlugin
         if(ec)
             return fail(ec, "resolve");
         isHealthy_.store(true);
-        // Set the timeout for the operation
-        beast::get_lowest_layer(ws_).expires_after(std::chrono::seconds(30));
+        // Limit the TCP connect, see connectTimeout()
+        beast::get_lowest_layer(ws_).expires_after(connectTimeout());
 
         // Make the connection on the IP address we get from a lookup
         beast::get_lowest_layer(ws_).async_connect(
@@ -81,10 +102,7 @@ namespace FLIRCameraDriverPlugin
         // the websocket stream has its own timeout system.
         beast::get_lowest_layer(ws_).expires_never();      
 
-        // Set suggested timeout settings for the websocket
-        ws_.set_option(
-            websocket::stream_base::timeout::suggested(
-                beast::role_type::client));
+        ws_.set_option(linkTimeouts());
 
         // Set a decorator to change the User-Agent of the handshake
         ws_.set_option(websocket::stream_base::decorator(
@@ -402,5 +420,26 @@ namespace FLIRCameraDriverPlugin
     void FLIRWebsockAsyncClnSession::setStreamMonitorConfig(const StreamMonitorConfig &config)
     {
         streamMonitor_.setConfig(config);
+    }
+
+    void FLIRWebsockAsyncClnSession::setLinkTimeoutMs(int64_t timeoutMs)
+    {
+        linkTimeoutMs_.store(timeoutMs);
+    }
+
+    int64_t FLIRWebsockAsyncClnSession::getLinkTimeoutMs() const
+    {
+        return linkTimeoutMs_.load();
+    }
+
+    uint64_t FLIRWebsockAsyncClnSession::getReconnectCount() const
+    {
+        return reconnects_.load();
+    }
+
+    void FLIRWebsockAsyncClnSession::stop()
+    {
+        stopping_.store(true);
+        // TODO(reconnect): cancel a pending reconnect and close the connection on the session's strand.
     }
 }

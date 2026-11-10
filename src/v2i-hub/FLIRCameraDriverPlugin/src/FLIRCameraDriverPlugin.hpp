@@ -63,11 +63,21 @@ namespace FLIRCameraDriverPlugin
 			 * @brief Loops over Websocket FLIR connections, checks for messages in the queue and sends them on the TMX message bus.
 			 */
 			__attribute__((noreturn)) void sendDetections();
+			/**
+			 * @brief Applies the link monitoring and link timeout settings to a session.
+			 */
+			void applyLinkSettings(FLIRWebsockAsyncClnSession &flirSession) const;
+			/**
+			 * @brief Copy of the session list, safe to iterate while WebSocket threads add sessions.
+			 */
+			std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> getSessions();
 			
 		private:
 			
 			
 			std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> flirSessions;
+			// Guards flirSessions, which the WebSocket threads add to while other threads read it
+			std::mutex flirSessionsMutex;
 			std::shared_ptr<FLIRConfigurations> flirConfigsPtr;
 			bool runningWebSocket = false;
 			// Status data and keys
@@ -97,6 +107,8 @@ namespace FLIRCameraDriverPlugin
 			const char* Key_CameraMissingFrames = "Camera Missing Frames";
 			// Extra transit time (ms) at which a camera frame counts as a link stall. Set by LinkStallThresholdMs.
 			std::atomic<int64_t> linkStallThresholdMs{500};
+			// Link watchdog timeout (ms), 0 disables it. Set by LinkTimeoutMs.
+			std::atomic<int64_t> linkTimeoutMs{500};
 
 
 	};

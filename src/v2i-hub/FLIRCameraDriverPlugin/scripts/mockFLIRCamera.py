@@ -164,8 +164,11 @@ async def sendMessage(websocket):
                 print(f"Sending: {len(tracks.track)}")
             await asyncio.sleep(0.1)  # interval to send the message
 
-async def handleClient(websocket, path):
+async def handleClient(websocket, path=None):
     """Handle a new client connection."""
+    # websockets 13 and later pass only the connection; the path is on its request
+    if path is None:
+        path = websocket.request.path
     if path == "/api/subscriptions":
         print(f"Client connected to path: {path}")
         try:

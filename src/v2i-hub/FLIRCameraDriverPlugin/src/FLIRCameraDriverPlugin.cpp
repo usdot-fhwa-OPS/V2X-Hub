@@ -48,12 +48,13 @@ namespace FLIRCameraDriverPlugin
 			config.sensorId, 
 			config.apiSubscription,
 			config.cameraRefPoint);
-		StreamMonitorConfig monitorConfig = flirSession->getStreamMonitorConfig();
-		monitorConfig.stallThresholdMs = linkStallThresholdMs.load();
-		flirSession->setStreamMonitorConfig(monitorConfig);
+		applyLinkSettings(*flirSession);
 		// Launch the asynchronous operation
 		flirSession->run();	
-		flirSessions.push_back(flirSession);
+		{
+			std::scoped_lock lock{flirSessionsMutex};
+			flirSessions.push_back(flirSession);
+		}
 		PLOG(logDEBUG) << "Successfully running the I/O service.";	
 		runningWebSocket = true;
 
@@ -64,15 +65,30 @@ namespace FLIRCameraDriverPlugin
 		return EXIT_SUCCESS;
 	}
 
+	void FLIRCameraDriverPlugin::applyLinkSettings(FLIRWebsockAsyncClnSession &flirSession) const
+	{
+		auto monitorConfig = flirSession.getStreamMonitorConfig();
+		monitorConfig.stallThresholdMs = linkStallThresholdMs.load();
+		flirSession.setStreamMonitorConfig(monitorConfig);
+		flirSession.setLinkTimeoutMs(linkTimeoutMs.load());
+	}
+
+	std::vector<std::shared_ptr<FLIRWebsockAsyncClnSession>> FLIRCameraDriverPlugin::getSessions()
+	{
+		std::scoped_lock lock{flirSessionsMutex};
+		return flirSessions;
+	}
+
 	void FLIRCameraDriverPlugin::StopWebSocket()
 	{
-		if (!flirSessions.empty() && runningWebSocket)
+		const auto sessions = getSessions();
+		if (!sessions.empty() && runningWebSocket)
 		{
 			PLOG(logDEBUG) << "Stopping WebSocket session";
 			beast::error_code ec;
-			for(const auto &flirSession: flirSessions){
+			for(const auto &flirSession: sessions){
 				flirSession->on_close(ec);
-			}        
+			}
 			runningWebSocket = false;
 		}
 		else
@@ -85,7 +101,9 @@ namespace FLIRCameraDriverPlugin
 	{
 		while (true)
 		{
-			if (flirSessions.empty())
+			// Sessions are added by the WebSocket threads: work on a copy of the list
+			const auto sessions = getSessions();
+			if (sessions.empty())
 			{
 				PLOG(logDEBUG) << "FLIR session not yet initialized: ";
 				SetStatus<uint>(Key_LivePedestrianCount, 0);
@@ -99,15 +117,8 @@ namespace FLIRCameraDriverPlugin
 				StreamMonitorStats linkTotals;
 
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
-				for(const auto &flirSession: flirSessions)
+				for(const auto &flirSession: sessions)
 				{
-					// Keep the stall threshold in sync with the plugin configuration
-					auto monitorConfig = flirSession->getStreamMonitorConfig();
-					if (monitorConfig.stallThresholdMs != linkStallThresholdMs.load())
-					{
-						monitorConfig.stallThresholdMs = linkStallThresholdMs.load();
-						flirSession->setStreamMonitorConfig(monitorConfig);
-					}
 					// Report a late burst that ended together with a track
 					flirSession->checkStreamIdle();
 					const auto linkStats = flirSession->getStreamStats();
@@ -215,6 +226,21 @@ namespace FLIRCameraDriverPlugin
 			stallThresholdMs = 200;
 		}
 		linkStallThresholdMs.store(static_cast<int64_t>(stallThresholdMs));
+
+		uint64_t timeoutMs = 500;
+		GetConfigValue<uint64_t>("LinkTimeoutMs", timeoutMs);
+		if (timeoutMs != 0 && timeoutMs < 200)
+		{
+			PLOG(logWARNING) << "LinkTimeoutMs " << timeoutMs << " is too close to the 100 ms camera frame interval. Using 200 ms.";
+			timeoutMs = 200;
+		}
+		linkTimeoutMs.store(static_cast<int64_t>(timeoutMs));
+
+		// Sessions already running pick up the new values (the link timeout from their next connection)
+		for (const auto &flirSession : getSessions())
+		{
+			applyLinkSettings(*flirSession);
+		}
 
 		if (!runningWebSocket)
 		{

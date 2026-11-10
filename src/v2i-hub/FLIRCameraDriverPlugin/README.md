@@ -43,6 +43,8 @@ This plugin has several configuration parameters. Below these are listed out as 
 
 **LinkStallThresholdMs** (default 500, minimum 200): camera link monitoring threshold. A camera frame that spent this many milliseconds longer in transit than the frame before it is logged as a link stall, including when the camera had been idle (nothing tracked) before it. Frames this much later than normal are counted as late. 500 ms matches the freshness limit the CARMA Streets Sensor Data Sharing Service applies before discarding detections.
 
+**LinkTimeoutMs** (default 500, minimum 200, 0 disables): camera link watchdog. When nothing has arrived from a camera for half this time, the plugin pings it; when nothing at all, neither data nor the reply to the ping, arrives within this time, it drops the connection and connects again. See [Link Watchdog and Reconnect](#link-watchdog-and-reconnect).
+
 ## Status Information
 
 This plugin includes some custom status information to allow for real-time monitoring of FLIR Camera detection data. Included are:
@@ -63,6 +65,8 @@ The following camera link statuses are totals since the camera connections start
 **Camera Link Late Frames**: Frames that arrived at least `LinkStallThresholdMs` later than normal, i.e. every frame of each backlog. Detections in these frames are likely discarded downstream as stale.
 **Camera Link Minor Holds**: Frames held 150 ms to `LinkStallThresholdMs` in transit. About 200 ms is the signature of a single TCP retransmission, so a rising count is an early sign of packet loss on the camera link.
 **Camera Missing Frames**: Gaps in the camera's `dataNumber` sequence while it was tracking continuously.
+**Camera Link Reconnects**: Number of times a camera connection that had been delivering data was lost and re-established.
+**Camera Links Connected**: Cameras currently connected and delivering data, e.g. `2 of 2`.
 
 ![alt text](docs/FLIRCameraDriverStatus.png)
 
@@ -89,6 +93,46 @@ The plugin compares when each frame arrives with the camera's own `time` field. 
 * `INFO ... FLIR link minor hold on <sensor>: frame held 200 ms in transit ...`: usually one TCP retransmission.
 * `DEBUG ... FLIR camera frames missing on <sensor>: dataNumber ...`: gaps in the camera's frame sequence.
 * `INFO ... FLIR baseline latency on <sensor> moved to ...`: the camera/host clock offset changed; frames counted as late since the change are no longer counted.
+
+### Link Watchdog and Reconnect
+
+Each camera connection recovers by itself:
+
+* **Stalled link.** When nothing has arrived for half of `LinkTimeoutMs`, the plugin sends the camera a WebSocket ping. An idle camera (nothing tracked) answers right away. On a stalled link the reply cannot arrive, because TCP delivers it only after the frames being held, so after `LinkTimeoutMs` with nothing received the plugin drops the connection. The held frames are discarded with it; they would be stale anyway.
+* **Reconnect.** A new attempt starts 100 ms after each failure. Each TCP connect is abandoned after 10 times the previous connect time (at least 250 ms, at most `LinkTimeoutMs`), so while the network is down a new connection request goes out every ~350 ms instead of waiting for the kernel's own retries after 1 s, 2 s, 4 s, .... The same applies when the camera closes or refuses the connection, or is not up when the plugin starts; before, a failed connection stayed down until the plugin was restarted.
+* **Ping support.** Right after connecting, the plugin pings the camera once, and the watchdog only drops connections once the camera has answered a ping (`INFO ... answers WebSocket pings, link watchdog active.`). A camera that never answers logs `WARNING ... has not answered a WebSocket ping ...` and keeps its connection through silences, as before.
+
+What this changes: a stall is the time the network was down plus a wait for TCP. While the link is down, TCP resends the oldest frame after about 0.2 s, 0.6 s, 1.4 s, 3.0 s, 6.2 s, ...; when the link comes back, the old connection waits for the next of these resends. That is why stalls cluster at about 1.8 s, 3.3 s and 6.6 s: any outage of about 1.5 s to 3 s ends as a stall of about 3.3 s (3.5 s with the RTT of a real network). The reconnect removes the wait, not the outage. Measured with all packets between plugin and camera dropped for the given time, camera sending every 100 ms (`LinkTimeoutMs` 1000; while the whole path is down the timeout makes no difference):
+
+| Network down | No frames, without watchdog | No frames, with watchdog |
+|---|---|---|
+| 0.5 s | 0.7 s | 0.7 s (TCP recovers before the watchdog fires) |
+| 1.0 s | 1.6 s | 1.2 s |
+| 1.5 s | 3.2 s | 1.8 s |
+| 2.0 s | 3.2 s | 2.2 s |
+| 2.5 s | 3.2 s | 2.9 s |
+| 3.0 s | 3.2 s | 3.2 s |
+| 5.0 s | 6.5 s | 5.3 s |
+| 20 s | 26.7 s | 20.4 s |
+
+With the watchdog, frames resumed 0.05 s to 0.3 s after the network came back, against up to 1.6 s (6.6 s after the 20 s outage) without it. So a ~3.5 s stall becomes about as long as the network was really down (1.5 s to 3 s) plus up to ~0.3 s: shorter on average, but not gone, and close to unchanged when the outage itself was ~3 s. Shortening the outage itself needs the network fixed: see [Pinpointing where frames are held](#pinpointing-where-frames-are-held).
+
+The table above is for the whole path being down. Whether a reconnect helps depends on where the frames are held, because the new connection takes the same path. With 3 s disturbances:
+
+| Where frames are held | No frames, without watchdog | `LinkTimeoutMs` 1000 | 500 | 200 |
+|---|---|---|---|---|
+| Whole path (link, switch, host network): new connections cannot get through either | 3.2 s | 3.1 s | 3.3 s | 3.2 s |
+| Only the existing connection: a new connection gets through | 3.2 s | 1.0 s | 0.5 s | 0.2 s |
+
+The `restored` log tells the two apart: after a stall of only the existing connection the link is restored with `0 failed reconnect attempt(s)` right after it was lost; when the whole path was down, the attempts fail until the path is back. A lower `LinkTimeoutMs` only helps in the first case. In both cases it also drops connections that a single TCP retransmission (0.2 s to 0.4 s) would have recovered, which costs about as long as waiting.
+
+It logs:
+
+* `WARNING ... FLIR link to <sensor> lost at <time> (read: The socket was closed due to a timeout), 1001 ms after the last message. Reconnecting.`
+* `WARNING ... Unable to connect to FLIR camera <sensor> at <host>:<port> (connect: ...), 10 failed attempt(s). Retrying.`: logged at the 1st, 10th, 100th, ... failed attempt.
+* `WARNING ... FLIR link to <sensor> restored at <time>: no messages for 2203 ms, ...`: how long the camera was cut off, as seen by the plugin.
+
+An outage that ends with a reconnect is not counted under **Camera Link Stalls**: the new connection delivers current frames, not a backlog. It is counted under **Camera Link Reconnects** and logged as above. Stalls shorter than `LinkTimeoutMs` are reported as before.
 
 ### Pinpointing where frames are held
 
@@ -171,5 +215,15 @@ In the `./scripts/` directory in this plugin we have created a simply python scr
 2) Run `python3 -m pip install -r scripts/requirements.txt` to install depedencies.
 3) Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`
 4) Configure FLIR Camera Driver Plugin for connection to the websocket and in the **Messages** tab of the plugin you should see Sensor Detected Objects publishing.
+
+To test the link watchdog, drop the traffic between the plugin and the mock for a few seconds, e.g. with nftables on the V2X Hub host (port 9000 is the mock's default). The plugin should log `FLIR link to <sensor> lost`, connection attempts while the port is blocked, and `restored` about 0.1 s to 0.4 s after the rule is removed:
+
+```shell
+sudo nft add table inet flirtest
+sudo nft add chain inet flirtest c '{ type filter hook input priority 0 ; }'
+sudo nft add rule inet flirtest c tcp sport 9000 drop
+sudo nft add rule inet flirtest c tcp dport 9000 drop
+sleep 3; sudo nft delete table inet flirtest
+```
 
 To test camera link monitoring, add `--stall-every <seconds> --stall-ms <milliseconds>` to the mock. It then periodically holds the messages it produces for the given time and sends them all at once. The plugin should log a `FLIR link stall` and a `FLIR late burst` for each one, and the **Camera Link** statuses should count them. 
