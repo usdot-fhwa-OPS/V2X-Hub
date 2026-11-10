@@ -59,7 +59,7 @@ The plugin reports the following status for real-time monitoring of FLIR camera 
 * **Total Pedestrian Detections**: All pedestrian detections, including dropped and modified ones.
 * **Live number of currently detected pedestrians**: Unique pedestrians currently detected.
 * **Camera Link Stalls**: Number of [link stalls](#camera-link-monitoring) on all camera connections.
-* **Camera Link Last Stall**: The latest stall's sensor, hold, and start and end times (UTC).
+* **Camera Link Last Stall**: The latest stall's sensor, hold, start and end times (UTC), and once known, its verdict.
 * **Camera Link Failed Checks**: Link checks to cameras that were not answered or were refused.
 * **Control Host Failed Checks**: Link checks to control hosts that were not answered.
 
@@ -99,7 +99,22 @@ WARNING FLIR link check: camera FLIR_North (192.168.55.83:80) stopped answering 
 WARNING FLIR link check: camera FLIR_North (192.168.55.83:80) answering again at 2026-11-10T14:24:11.400Z, after 1846 failed checks over 369200 ms.
 ```
 
-When a camera and a control host stop answering at the same time, the problem is on V2X Hub's side of the network. When only the camera stops answering, it is on the camera's link: its network port, its cable or PoE, or its switch port.
+**Verdict.** For each stall, and for each run of failed camera checks when it ends, the plugin logs where the frames were held, judged from the link checks that ran at the time:
+
+```
+WARNING FLIR link stall on FLIR_North from 2026-09-15T17:47:10.136Z to 2026-09-15T17:47:13.619Z: camera link. The camera stopped answering while the control hosts answered, so packets were lost between the network and the camera: its network port, its cable or PoE, or its switch port. Link checks during this time: camera answered 11 of 17, control hosts 17 of 17.
+```
+
+| Verdict | Link checks during the stall | Where to look |
+|---|---|---|
+| network path up | The camera answered every check. | Software: the camera's sender, or this host. |
+| camera service down | The camera refused connections. | The camera's web service. |
+| camera link | The camera stopped answering, the control hosts answered. | The camera's network port, its cable or PoE, its switch port. |
+| host network | The camera and the control hosts stopped answering. | This host's network port, cable or switch, or equipment shared with the camera. |
+| camera unreachable | The camera stopped answering; no control hosts are configured. | Set `LinkCheckControlHosts` to narrow it down. |
+| not checked | No checks ran, e.g. `LinkCheckIntervalMs` is 0. | |
+
+Longer stalls overlap more checks, so their verdicts are more certain. Packet loss that affects only large frames, such as an MTU mismatch, does not show up in the checks.
 
 ## Functionality Testing
 
