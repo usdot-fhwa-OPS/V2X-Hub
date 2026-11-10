@@ -14,6 +14,7 @@
  * the License.
  */
 #include "FLIRCameraDriverPlugin.hpp"
+#include "FLIRLinkTime.hpp"
 
 using namespace tmx;
 using namespace tmx::messages;
@@ -47,7 +48,8 @@ namespace FLIRCameraDriverPlugin
 			config.cameraRotation, 
 			config.sensorId, 
 			config.apiSubscription,
-			config.cameraRefPoint);
+			config.cameraRefPoint,
+			linkStallThresholdMs);
 		// Launch the asynchronous operation
 		flirSession->run();	
 		flirSessions.push_back(flirSession);
@@ -171,9 +173,19 @@ namespace FLIRCameraDriverPlugin
 		SetStatus<uint>(Key_ModifiedPedestrianCount, modifiedPedCount);
 		SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
 		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
+		SetStatus<uint64_t>(Key_LinkStalls, linkStallCount);
+		SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
+
+		GetConfigValue<int64_t>("LinkStallThresholdMs", linkStallThresholdMs);
+		if (linkStallThresholdMs < 200)
+		{
+			PLOG(logWARNING) << "LinkStallThresholdMs " << linkStallThresholdMs << " is below the minimum of 200 ms, "
+				<< "where normal network jitter would count as stalls. Using 200 ms.";
+			linkStallThresholdMs = 200;
+		}
 
 		if (!runningWebSocket)
 		{
@@ -208,13 +220,32 @@ namespace FLIRCameraDriverPlugin
 
 	void FLIRCameraDriverPlugin::reportLinkHealth()
 	{
-		// TODO(PR 2, stall detection): log each session's takeStalls() and update the Camera Link Stalls and
-		// Camera Link Last Stall status.
+		bool statusChanged = false;
+		for (const auto &flirSession : flirSessions)
+		{
+			const auto sensorId = flirSession->getSensorId();
+			for (const auto &stall : flirSession->takeStalls())
+			{
+				PLOG(logWARNING) << "FLIR link stall on " << sensorId << ": frames held " << stall.holdMs()
+					<< " ms in transit, from " << formatUtcMs(stall.startMs) << " to " << formatUtcMs(stall.endMs)
+					<< " (the camera produced the held frame " << stall.cameraGapMs << " ms after the previous one).";
+				linkStallCount++;
+				lastLinkStall = sensorId + ": " + std::to_string(stall.holdMs()) + " ms, " + formatUtcMs(stall.startMs)
+					+ " to " + formatUtcMs(stall.endMs);
+				statusChanged = true;
+			}
+		}
 		// TODO(PR 3, link checks): log linkChecker->takeEvents() and update the failed check status.
 		// TODO(PR 4, verdict): once the checks covering a stall have finished, log its verdict, and log one for
 		// each run of failed camera checks that ended.
 		// TODO(PR 5, silence watchdog): warn when a session's getLastReceiveMs() is 90 s old, and log when it
 		// resumes. Update the Silent Cameras status.
+
+		if (statusChanged)
+		{
+			SetStatus<uint64_t>(Key_LinkStalls, linkStallCount);
+			SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
+		}
 	}
 
 	void FLIRCameraDriverPlugin::OnStateChange(IvpPluginState state)

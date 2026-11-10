@@ -21,11 +21,23 @@ namespace FLIRCameraDriverPlugin
     {
     }
 
-    std::optional<LinkStall> FLIRStreamMonitor::onFrame(uint64_t /*recvMs*/, uint64_t /*cameraMs*/)
+    std::optional<LinkStall> FLIRStreamMonitor::onFrame(uint64_t recvMs, uint64_t cameraMs)
     {
-        // TODO(PR 2, stall detection): hold = (recvMs - prevRecvMs) - (cameraMs - prevCameraMs). Return a stall
-        // from recvMs - hold to recvMs when hold >= stallThresholdMs_, skip frames whose camera time went
-        // backwards, then remember this frame as the previous one.
-        return std::nullopt;
+        std::optional<LinkStall> stall;
+        if (prevRecvMs_)
+        {
+            const auto arrivalGapMs = static_cast<int64_t>(recvMs) - static_cast<int64_t>(*prevRecvMs_);
+            const auto cameraGapMs = static_cast<int64_t>(cameraMs) - static_cast<int64_t>(prevCameraMs_);
+            // A camera clock that went backwards makes the comparison meaningless. Otherwise the hold is
+            // meaningful across idle gaps too: a frame held by an outage that began while the camera was idle
+            // still arrives that much late.
+            if (cameraGapMs >= 0 && arrivalGapMs - cameraGapMs >= stallThresholdMs_)
+            {
+                stall = LinkStall{*prevRecvMs_ + static_cast<uint64_t>(cameraGapMs), recvMs, cameraGapMs};
+            }
+        }
+        prevRecvMs_ = recvMs;
+        prevCameraMs_ = cameraMs;
+        return stall;
     }
 }

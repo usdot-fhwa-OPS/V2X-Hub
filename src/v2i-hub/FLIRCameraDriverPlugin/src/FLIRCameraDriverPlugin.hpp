@@ -100,6 +100,14 @@ namespace FLIRCameraDriverPlugin
 
 			// Camera link monitoring, see docs/CameraLinkMonitoring.md
 			std::unique_ptr<FLIRLinkChecker> linkChecker;
+			// Hold, in ms, from which a camera frame counts as a link stall. Set by LinkStallThresholdMs.
+			int64_t linkStallThresholdMs = 500;
+			const char* Key_LinkStalls = "Camera Link Stalls";
+			// Number of link stalls on all camera connections
+			uint64_t linkStallCount = 0;
+			const char* Key_LinkLastStall = "Camera Link Last Stall";
+			// Sensor, hold, start and end of the latest stall
+			std::string lastLinkStall = "None";
 
 
 

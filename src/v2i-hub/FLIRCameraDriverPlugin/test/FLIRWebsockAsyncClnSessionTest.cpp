@@ -255,3 +255,40 @@ TEST(FLIRPedestrianPresenceTrackingProcessorTest, processPedestrianPresenceTrack
     EXPECT_EQ( obj.get_projString(), proj_string);
 }
 
+
+TEST(FLIRWebsockAsyncClnSessionTest, checkStreamTimingQueuesStalls)
+{
+    auto makeFrame = [](const std::string &time) {
+        std::stringstream ss("{\"dataNumber\": \"1\", \"messageType\": \"Data\", \"time\": \"" + time +
+            "\", \"track\": [], \"type\": \"PedestrianPresenceTracking\"}");
+        boost::property_tree::ptree pr;
+        boost::property_tree::read_json(ss, pr);
+        return pr;
+    };
+    net::io_context ioc;
+    const tmx::utils::WGS84Point refPoint(38.95499217, -77.14920953, 0.0);
+    auto flirSession = std::make_shared<FLIRWebsockAsyncClnSession>(ioc, "127.0.0.1", "8084", 90.0, "North",
+        "api/subscription", refPoint);
+
+    // The last on-time frame before a stall recorded in the field and the first held frame. The camera's time
+    // field is local time (UTC-4); the receive times are UTC.
+    flirSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.032-04:00"), 1789494430036ULL);
+    flirSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.132-04:00"), 1789494433619ULL);
+    // A frame whose time cannot be parsed is skipped without throwing
+    EXPECT_NO_THROW(flirSession->checkStreamTiming(makeFrame("not a time"), 1789494433620ULL));
+
+    const auto stalls = flirSession->takeStalls();
+    ASSERT_EQ(stalls.size(), 1u);
+    EXPECT_EQ(stalls[0].startMs, 1789494430136ULL);
+    EXPECT_EQ(stalls[0].endMs, 1789494433619ULL);
+    EXPECT_EQ(stalls[0].holdMs(), 3483);
+    // Taking the stalls clears them
+    EXPECT_TRUE(flirSession->takeStalls().empty());
+
+    // With a 5 s threshold the same frames are not a stall
+    auto lenientSession = std::make_shared<FLIRWebsockAsyncClnSession>(ioc, "127.0.0.1", "8084", 90.0, "North",
+        "api/subscription", refPoint, 5000);
+    lenientSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.032-04:00"), 1789494430036ULL);
+    lenientSession->checkStreamTiming(makeFrame("2026-09-15T13:47:10.132-04:00"), 1789494433619ULL);
+    EXPECT_TRUE(lenientSession->takeStalls().empty());
+}
