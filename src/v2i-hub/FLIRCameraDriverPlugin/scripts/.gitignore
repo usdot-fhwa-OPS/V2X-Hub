@@ -1,0 +1,3 @@
+# flir_stream_probe.py output and Python bytecode
+flir_probe_*/
+__pycache__/

@@ -1,3 +1,0 @@
-{"type": "start", "time": "2026-11-09T15:45:21.863Z", "host": "192.168.55.83", "port": 80, "path": "/api/subscriptions", "stall_ms": 500, "probes": ["camera 192.168.55.83:80", "control 192.168.55.134:23"]}
-{"type": "connected", "time": "2026-11-09T15:45:21.911Z"}
-{"type": "summary", "time": "2026-11-09T15:45:26.937Z", "frames": 0, "stalls": 0, "minor_holds": 0, "late_frames": 0, "missing_frames": 0, "max_stall_ms": 0}
