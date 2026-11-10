@@ -152,7 +152,8 @@ namespace FLIRCameraDriverPlugin
             FLIRLinkChecker &operator=(const FLIRLinkChecker &) = delete;
 
             /**
-             * @brief Resolves the targets and starts checking them on a new thread.
+             * @brief Resolves the targets and starts checking them on a new thread. A target that cannot be
+             * resolved is logged and not checked. Call once.
              */
             void start();
             /**
@@ -182,10 +183,17 @@ namespace FLIRCameraDriverPlugin
             std::vector<LinkCheckEvent> takeEvents();
 
             /**
-             * @brief Parses a comma-separated "host[:port]" list of control hosts. The port defaults to 80.
+             * @brief Parses a comma-separated "host[:port]" list of control hosts (IPv4 addresses or host names).
+             * The port defaults to 80.
              * @throws std::invalid_argument if an entry is malformed.
              */
             static std::vector<LinkCheckTarget> parseControlHosts(const std::string &list);
+
+            /**
+             * @brief Parses a TCP port number.
+             * @throws std::invalid_argument if the text is not a number from 1 to 65535.
+             */
+            static uint16_t parsePort(const std::string &text);
 
         private:
             struct TargetState;

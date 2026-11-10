@@ -108,6 +108,12 @@ namespace FLIRCameraDriverPlugin
 			const char* Key_LinkLastStall = "Camera Link Last Stall";
 			// Sensor, hold, start and end of the latest stall
 			std::string lastLinkStall = "None";
+			const char* Key_CameraFailedChecks = "Camera Link Failed Checks";
+			// Link checks to cameras that were not answered or were refused
+			uint64_t cameraFailedChecks = 0;
+			const char* Key_ControlFailedChecks = "Control Host Failed Checks";
+			// Link checks to control hosts that were not answered
+			uint64_t controlFailedChecks = 0;
 
 
 

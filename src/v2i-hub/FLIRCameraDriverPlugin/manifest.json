@@ -24,6 +24,16 @@
 			"description": "Camera link monitoring: a camera frame held this many milliseconds longer in transit than the frame before it is logged as a link stall. Minimum 200. Read when the plugin starts."
 		},
 		{
+			"key": "LinkCheckIntervalMs",
+			"default": "200",
+			"description": "Camera link monitoring: milliseconds between TCP connection checks of each camera and control host, and the time each check may take. 0 disables link checks. Minimum 50. Read when the plugin starts."
+		},
+		{
+			"key": "LinkCheckControlHosts",
+			"default": "",
+			"description": "Camera link monitoring: comma-separated host[:port] list (default port 80) of other devices on the network, such as the gateway, checked like the cameras. A camera that stops answering while a control host answers points to the camera's link. Read when the plugin starts."
+		},
+		{
             "key":"LogLevel",
             "default":"INFO",
             "description":"The log level for this plugin"

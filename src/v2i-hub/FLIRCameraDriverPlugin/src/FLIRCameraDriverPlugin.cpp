@@ -175,6 +175,8 @@ namespace FLIRCameraDriverPlugin
 		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 		SetStatus<uint64_t>(Key_LinkStalls, linkStallCount);
 		SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
+		SetStatus<uint64_t>(Key_CameraFailedChecks, cameraFailedChecks);
+		SetStatus<uint64_t>(Key_ControlFailedChecks, controlFailedChecks);
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
@@ -214,8 +216,52 @@ namespace FLIRCameraDriverPlugin
 
 	void FLIRCameraDriverPlugin::startLinkChecks()
 	{
-		// TODO(PR 3, link checks): read LinkCheckIntervalMs (0 disables) and LinkCheckControlHosts, then start
-		// linkChecker with a target per camera, on its WebSocket port, and one per control host.
+		int64_t intervalMs = 200;
+		GetConfigValue<int64_t>("LinkCheckIntervalMs", intervalMs);
+		if (intervalMs <= 0)
+		{
+			PLOG(logINFO) << "FLIR link checks are disabled (LinkCheckIntervalMs is " << intervalMs << ").";
+			return;
+		}
+		if (intervalMs < 50)
+		{
+			PLOG(logWARNING) << "LinkCheckIntervalMs " << intervalMs << " is below the minimum of 50 ms. Using 50 ms.";
+			intervalMs = 50;
+		}
+
+		std::vector<LinkCheckTarget> targets;
+		for (const auto &config : flirConfigsPtr->getConfigs())
+		{
+			try
+			{
+				targets.push_back({config.sensorId, config.socketIp, FLIRLinkChecker::parsePort(config.socketPort)});
+			}
+			catch (const std::invalid_argument &e)
+			{
+				PLOG(logERROR) << "FLIR link check: camera " << config.sensorId << " will not be checked: " << e.what();
+			}
+		}
+		std::string controlHosts;
+		GetConfigValue<std::string>("LinkCheckControlHosts", controlHosts);
+		try
+		{
+			const auto controls = FLIRLinkChecker::parseControlHosts(controlHosts);
+			if (controls.empty())
+			{
+				PLOG(logINFO) << "No LinkCheckControlHosts configured: link checks cannot tell a fault on a camera's "
+					<< "link from one on this host's side of the network.";
+			}
+			targets.insert(targets.end(), controls.begin(), controls.end());
+		}
+		catch (const std::invalid_argument &e)
+		{
+			PLOG(logERROR) << "LinkCheckControlHosts \"" << controlHosts << "\" is invalid, so no control hosts will "
+				<< "be checked: " << e.what();
+		}
+
+		linkChecker = std::make_unique<FLIRLinkChecker>(targets, std::chrono::milliseconds(intervalMs));
+		linkChecker->start();
+		PLOG(logINFO) << "FLIR link checks started: " << targets.size() << " target(s) every " << intervalMs << " ms.";
 	}
 
 	void FLIRCameraDriverPlugin::reportLinkHealth()
@@ -235,7 +281,32 @@ namespace FLIRCameraDriverPlugin
 				statusChanged = true;
 			}
 		}
-		// TODO(PR 3, link checks): log linkChecker->takeEvents() and update the failed check status.
+		if (linkChecker)
+		{
+			const auto &targets = linkChecker->getTargets();
+			for (const auto &event : linkChecker->takeEvents())
+			{
+				const auto &target = targets[event.target];
+				if (!event.answeredAgain)
+				{
+					PLOG(logWARNING) << "FLIR link check: " << target.describe() << " stopped answering at "
+						<< formatUtcMs(event.failedSinceMs) << ": " << event.error << ".";
+					continue;
+				}
+				PLOG(logWARNING) << "FLIR link check: " << target.describe() << " answering again at "
+					<< formatUtcMs(event.answeredAtMs) << ", after " << event.failedChecks << " failed checks over "
+					<< (event.answeredAtMs - event.failedSinceMs) << " ms.";
+			}
+
+			const auto cameraFailures = linkChecker->getFailedChecks(true);
+			const auto controlFailures = linkChecker->getFailedChecks(false);
+			if (cameraFailures != cameraFailedChecks || controlFailures != controlFailedChecks)
+			{
+				cameraFailedChecks = cameraFailures;
+				controlFailedChecks = controlFailures;
+				statusChanged = true;
+			}
+		}
 		// TODO(PR 4, verdict): once the checks covering a stall have finished, log its verdict, and log one for
 		// each run of failed camera checks that ended.
 		// TODO(PR 5, silence watchdog): warn when a session's getLastReceiveMs() is 90 s old, and log when it
@@ -245,6 +316,8 @@ namespace FLIRCameraDriverPlugin
 		{
 			SetStatus<uint64_t>(Key_LinkStalls, linkStallCount);
 			SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
+			SetStatus<uint64_t>(Key_CameraFailedChecks, cameraFailedChecks);
+			SetStatus<uint64_t>(Key_ControlFailedChecks, controlFailedChecks);
 		}
 	}
 

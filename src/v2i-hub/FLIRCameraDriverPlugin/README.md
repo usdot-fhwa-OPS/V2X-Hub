@@ -45,6 +45,10 @@ The following parameters configure [camera link monitoring](#camera-link-monitor
 
 **LinkStallThresholdMs** (default `500`, minimum `200`): A camera frame held this many milliseconds longer in transit than the frame before it is logged as a link stall. 500 ms matches the freshness limit of the Sensor Data Sharing Service, which discards older detections.
 
+**LinkCheckIntervalMs** (default `200`, minimum `50`): Milliseconds between link checks, TCP connections opened and closed again, of each camera and control host. It is also the time each check may take. `0` disables link checks. Raise it if round trips to the cameras are longer than about 50 ms, e.g. over a cellular or radio backhaul.
+
+**LinkCheckControlHosts** (default empty): Comma-separated `host[:port]` list (port 80 by default) of other devices on the network, checked like the cameras, e.g. `192.168.55.1:80` for the gateway. Any port works: a host that refuses the connection still proves the network path to it is up. Choose devices whose path from V2X Hub is the same as the cameras' as far as possible, such as the gateway or another device on the cameras' switch.
+
 ## Status Information
 
 The plugin reports the following status for real-time monitoring of FLIR camera detection data, as totals over all FLIR camera connections:
@@ -56,6 +60,8 @@ The plugin reports the following status for real-time monitoring of FLIR camera 
 * **Live number of currently detected pedestrians**: Unique pedestrians currently detected.
 * **Camera Link Stalls**: Number of [link stalls](#camera-link-monitoring) on all camera connections.
 * **Camera Link Last Stall**: The latest stall's sensor, hold, and start and end times (UTC).
+* **Camera Link Failed Checks**: Link checks to cameras that were not answered or were refused.
+* **Control Host Failed Checks**: Link checks to control hosts that were not answered.
 
 > [!NOTE]
 > Only detections with incomplete or invalid heading and speed are modified. In testing, when a detected object stops, the FLIR camera occasionally keeps broadcasting detections that **do not** include an angle but **do** include a speed. This appears to be an intermittent bug for stationary objects. To handle it, the plugin assumes a speed of 0 when no angle is provided. For traceability, the Modified Pedestrian Detections status counts these detections, and each Sensor Detected Object message has a flag that indicates whether its data was modified.
@@ -85,6 +91,15 @@ WARNING FLIR link stall on FLIR_North: frames held 3483 ms in transit, from 2026
 ```
 
 The times are UTC: use them to look up the same moment in a packet capture or switch log. If the camera produced the held frame much more than 100 ms after the previous one, the camera was idle before it, and the outage began at some point during that time.
+
+**Link checks.** Independently of the stream, the plugin opens a TCP connection to each camera, on its WebSocket port, and to each control host every `LinkCheckIntervalMs`, and closes it again. A check that is not answered within the interval, or fails with an error such as "No route to host", has failed. A camera that refuses the connection is up on the network, but its web service is not. A run of failed checks is logged when it starts and when it ends, so outages are recorded even while the camera is idle:
+
+```
+WARNING FLIR link check: camera FLIR_North (192.168.55.83:80) stopped answering at 2026-11-10T14:18:02.200Z: no answer within 200 ms.
+WARNING FLIR link check: camera FLIR_North (192.168.55.83:80) answering again at 2026-11-10T14:24:11.400Z, after 1846 failed checks over 369200 ms.
+```
+
+When a camera and a control host stop answering at the same time, the problem is on V2X Hub's side of the network. When only the camera stops answering, it is on the camera's link: its network port, its cable or PoE, or its switch port.
 
 ## Functionality Testing
 
