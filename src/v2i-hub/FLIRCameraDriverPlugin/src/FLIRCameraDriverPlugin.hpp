@@ -28,6 +28,7 @@
 #include <queue>
 #include "FLIRWebsockAsyncClnSession.hpp"
 #include "FLIRConfigurations.hpp"
+#include "FLIRLinkChecker.hpp"
 
 
 namespace FLIRCameraDriverPlugin
@@ -63,7 +64,16 @@ namespace FLIRCameraDriverPlugin
 			 * @brief Loops over Websocket FLIR connections, checks for messages in the queue and sends them on the TMX message bus.
 			 */
 			__attribute__((noreturn)) void sendDetections();
-			
+			/**
+			 * @brief Starts the link checker for the configured cameras and control hosts. See docs/CameraLinkMonitoring.md.
+			 */
+			void startLinkChecks();
+			/**
+			 * @brief Logs camera link stalls, link check events, verdicts and silent cameras, and updates the camera link
+			 * status. Called on each pass of the detection loop.
+			 */
+			void reportLinkHealth();
+
 		private:
 			
 			
@@ -87,6 +97,9 @@ namespace FLIRCameraDriverPlugin
 			unsigned int totalPedCount = 0;
 			// Live number of currently detected pedestrians
 			const char* Key_LivePedestrianCount = "Live number of currently detected pedestrians";
+
+			// Camera link monitoring, see docs/CameraLinkMonitoring.md
+			std::unique_ptr<FLIRLinkChecker> linkChecker;
 
 
 

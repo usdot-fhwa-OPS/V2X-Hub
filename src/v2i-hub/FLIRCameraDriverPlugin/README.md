@@ -1,77 +1,82 @@
 # FLIR Camera Driver Plugin Documentation
 
 ## Introduction
-The FLIR Camera Driver Plugin is the hardware interface for the FLIR Sensor. It contains logic to translate FLIR Sensor Pedestrian Presence Tracking information into V2X Hub Sensor Detections. These detections can be consumed by downstream plugins or services for J2735 Message Generation. Currently this is support by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service) which will generate SDSMs
+
+The FLIR Camera Driver Plugin is the hardware interface for the FLIR sensor. It translates FLIR pedestrian presence tracking data into V2X Hub Sensor Detected Object messages. Downstream plugins or services can consume these detections for J2735 message generation. Currently this is supported by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service), which generates SDSMs.
 
 ## Related Plugins
 
-A list of plugins related to the FLIR Camera Driver Plugin.
-
 ### Immediate Forward Plugin
 
-For RSU Immediate Message Forwarding (IMF) functionality forward any generated J2735 message to RSU (e.g. SDSM)
+Forwards any generated J2735 message, e.g. SDSM, to the RSU for RSU Immediate Message Forwarding (IMF).
 
 ### CARMA Streets Plugin
 
-The CARMA Streets plugin is required for SDSM generation since this is handled by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service). For this functionality the FLIR Camera Driver Plugin generates Sensor Detected Object messages, which are forwarded to the Sensor Data Sharing service via the CARMA Streets plugin. The Sensor Data Sharing Service then generates SDSMs which are sent back to V2X Hub via the CARMA Streets Plugin  and broadcast to the RSU via the Immediate Forward Plugin.
-
+Required for SDSM generation, which is handled by the [CARMA Streets](https://github.com/usdot-fhwa-stol/carma-streets) [Sensor Data Sharing Service](https://github.com/usdot-fhwa-stol/carma-streets/tree/develop/sensor_data_sharing_service). The CARMA Streets plugin forwards the Sensor Detected Object messages from this plugin to the Sensor Data Sharing Service. The service generates SDSMs and sends them back to V2X Hub through the CARMA Streets plugin, and the Immediate Forward Plugin broadcasts them through the RSU.
 
 ## Configuration/Deployment
 
-This plugin has several configuration parameters. Below these are listed out as together with descriptions on how to set them.
-
-**FLIRConfigurations**: JSON string configuration parameters which contains on or more FLIR Camera(s) to connect to.
+**FLIRConfigurations**: JSON list of one or more FLIR cameras to connect to.
 
 ```json
 [
   {
-    "WebSocketHost": "127.0.0.1", // IP Address of FLIR Camera
-    "WebSocketPort": "8081", // Websocket port
-    "Endpoint": "/api/subscriptions", // Websocket endpoint
-    "CameraRotation": 16.13, // Camera heading measure in degrees clockwise from North
-    "SensorId": "FLIR_Turner_Parking_Lot" // Sensor Id 
+    "WebSocketHost": "127.0.0.1", // IP address of the FLIR camera
+    "WebSocketPort": "8081", // WebSocket port
+    "Endpoint": "/api/subscriptions", // WebSocket endpoint
+    "CameraRotation": 16.13, // Camera heading in degrees clockwise from North
+    "SensorId": "FLIR_Turner_Parking_Lot", // Sensor ID
+    "CameraLatitude": 38.95499217, // Camera reference point: detection positions are relative to it
+    "CameraLongitude": -77.14920953
   },
   {
     "WebSocketHost": "127.0.0.1",
     "WebSocketPort": "8082",
     "Endpoint": "/api/subscriptions",
     "CameraRotation": 11.13,
-    "SensorId": "FLIR_Crosswalk"
+    "SensorId": "FLIR_Crosswalk",
+    "CameraLatitude": 38.95499217,
+    "CameraLongitude": -77.14920953
   }
 ]
 ```
 
 ## Status Information
 
-This plugin includes some custom status information to allow for real-time monitoring of FLIR Camera detection data. Included are:
+The plugin reports the following status for real-time monitoring of FLIR camera detection data, as totals over all FLIR camera connections:
 
-**Dropped Pedestrian Detections** : A complete count of all pedestrian detections from all FLIR Camera connections that were dropped due to inability to process the information
-**Modified Pedestrian Detections (Bad Data: Assumed Stationary)**: A complete count of all pedestrian detections from all FLIR Camera connections that were modified due to bad incoming data.
-> [!NOTE]  
-> We only modify incoming detections that have incomplete/invalid heading/speed information. After testing we have found that occassionally, when a detected object stops, the FLIR Camera will continue to broadcast detections that **do not** include angle or heading but **do** include speed. This seems to be a bug that only occurs for stationary objects intermittently. To address this, when no angle is provided, we assume speed is 0. For tracebility we have added this status as well as a flag in each SensorDetectedObjectMessage which indicates whether we have modified the detection data from the source sensor at all.
-**Unique Pedestrian Detections**: A complete count of all pedestrian detections from all FLIR Camera connections that are unique. We evaluate this by comparing the incoming detection ids to the previously received ids. This is meant to be a rough estimate of all pedestrians detected by the FLIR Cameras connected.
-**Total Pedestrian Detections**: A complete count of all pedestrian detections from all FLIR Camera connections. This includes any detections that where dropped or modified.
-**Live number of currently detected pedestrians**: A current/live count of unique pedestrian detections from all FLIR Camera connections.
+* **Dropped Pedestrian Detections**: Detections dropped because they could not be processed.
+* **Modified Pedestrian Detections (Bad Data: Assumed Stationary)**: Detections modified because of bad incoming data (see the note below).
+* **Unique Pedestrian Detections**: Detections of new pedestrians, found by comparing incoming detection IDs with the previously received IDs. This is a rough estimate of the number of pedestrians detected.
+* **Total Pedestrian Detections**: All pedestrian detections, including dropped and modified ones.
+* **Live number of currently detected pedestrians**: Unique pedestrians currently detected.
 
-![alt text](docs/FLIRCameraDriverStatus.png)
+> [!NOTE]
+> Only detections with incomplete or invalid heading and speed are modified. In testing, when a detected object stops, the FLIR camera occasionally keeps broadcasting detections that **do not** include an angle but **do** include a speed. This appears to be an intermittent bug for stationary objects. To handle it, the plugin assumes a speed of 0 when no angle is provided. For traceability, the Modified Pedestrian Detections status counts these detections, and each Sensor Detected Object message has a flag that indicates whether its data was modified.
 
+![FLIR Camera Driver Plugin status](docs/FLIRCameraDriverStatus.png)
 
 ## Design
-![Alt text](docs/FLIRCameraDriverArchitecture.drawio.png)
 
-Above is a diagram illustrates how the FLIR Camera Driver Plugin is used to create Sensor Data Sharing Messages (SDSM) for Cooperative Perception.
+![FLIR Camera Driver Plugin architecture](docs/FLIRCameraDriverArchitecture.drawio.png)
+
+The diagram above shows how the FLIR Camera Driver Plugin is used to create Sensor Data Sharing Messages (SDSM) for cooperative perception.
 
 ### Messages
 
-**SensorDetectedObject**: V2X Hub message that contains detection data. Can be used to generate other messages like SDSM.
+**SensorDetectedObject**: V2X Hub message that contains detection data. It can be used to generate other messages, such as SDSM.
 
-**SensorDataSharingMessage**: V2X Cooperative Perception message defined in the J3224 standard.
+**SensorDataSharingMessage**: V2X cooperative perception message defined in the J3224 standard.
 
+### Camera Link Monitoring
+
+Work in progress: the plugin is being extended to detect stalls on the camera connection and to tell where the frames were held. See the [design](docs/CameraLinkMonitoring.md). Its configuration and status are added to this README as each part is merged.
 
 ## Functionality Testing
-In the `./scripts/` directory in this plugin we have created a simply python script that mocks the websocket hosted by the FLIR Camera for pedestrian presence tracking. To confirm plugin functionality this script can be used to mock the output of the FLIR Camera
 
-1) Install Python3 and Pip.
-2) Run `python3 -m pip install -r scripts/requirements.txt` to install depedencies.
-3) Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`
-4) Configure FLIR Camera Driver Plugin for connection to the websocket and in the **Messages** tab of the plugin you should see Sensor Detected Objects publishing. 
+`scripts/mockFLIRCamera.py` mocks the WebSocket that the FLIR camera hosts for pedestrian presence tracking. Use it to check the plugin without a camera:
+
+1. Install Python 3 and pip.
+2. Run `python3 -m pip install -r scripts/requirements.txt` to install the dependencies.
+3. Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`.
+4. Configure the FLIR Camera Driver Plugin to connect to the mock. Sensor Detected Objects should appear in the plugin's **Messages** tab.

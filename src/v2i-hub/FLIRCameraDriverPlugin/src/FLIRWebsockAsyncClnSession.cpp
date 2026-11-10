@@ -14,6 +14,7 @@
  * the License.
  */
 #include "FLIRWebsockAsyncClnSession.hpp"
+#include "FLIRLinkTime.hpp"
 
 using namespace tmx::utils;
 using namespace std;
@@ -99,6 +100,8 @@ namespace FLIRCameraDriverPlugin
         if(ec)
             return fail(ec, "handshake");
         isHealthy_.store(true);
+        // TODO(PR 5, silence watchdog): set lastReceiveMs_ now, and on every WebSocket control frame (ping) through
+        // ws_.control_callback(), before the first read.
         // Send the message
         ws_.async_write(
             net::buffer(pedPresenceTrackingReq),
@@ -129,6 +132,9 @@ namespace FLIRCameraDriverPlugin
 
         if(ec)
             return fail(ec, "read");
+        // Arrival time, taken before any processing
+        const uint64_t recvMs = wallClockMs();
+        // TODO(PR 5, silence watchdog): lastReceiveMs_.store(recvMs);
         isHealthy_.store(true);
         // parse the buffer
         std::stringstream ss;
@@ -152,6 +158,7 @@ namespace FLIRCameraDriverPlugin
         }
         else if (messageType.compare("Data") == 0)
         {
+            checkStreamTiming(pr, recvMs);
             handleDataMessage(pr);
         }
         else
@@ -275,5 +282,22 @@ namespace FLIRCameraDriverPlugin
 
     unsigned int FLIRWebsockAsyncClnSession::getNumLastDetections() const {
         return numLastDetections_.load();
+    }
+
+    void FLIRWebsockAsyncClnSession::checkStreamTiming(const pt::ptree& /*pr*/, uint64_t /*recvMs*/)
+    {
+        // TODO(PR 2, stall detection): pass recvMs and the parsed "time" field to streamMonitor_ and append any
+        // stall to stalls_ under stallLock_. Log and skip a frame whose time cannot be parsed.
+    }
+
+    std::vector<LinkStall> FLIRWebsockAsyncClnSession::takeStalls()
+    {
+        std::scoped_lock lock{stallLock_};
+        return std::exchange(stalls_, {});
+    }
+
+    uint64_t FLIRWebsockAsyncClnSession::getLastReceiveMs() const
+    {
+        return lastReceiveMs_.load();
     }
 }
