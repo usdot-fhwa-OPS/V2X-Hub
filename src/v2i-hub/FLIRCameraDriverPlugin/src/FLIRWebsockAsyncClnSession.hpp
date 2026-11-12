@@ -34,10 +34,12 @@
 #include <algorithm>
 #include <queue>
 #include <atomic>
+#include <mutex>
 
 #include <SensorDetectedObject.h>
 
 #include "FLIRPedestrianPresenceTrackingProcessor.hpp"
+#include "FLIRStreamMonitor.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -91,11 +93,20 @@ namespace FLIRCameraDriverPlugin
             // Reference location for the sensor. All detection positions are expressed in cartesian coordinates relative to this point.
             tmx::utils::WGS84Point sensorRefPoint;
 
+            // Camera link monitoring, see docs/CameraLinkMonitoring.md
+            FLIRStreamMonitor streamMonitor_;
+            // Stalls detected since the last takeStalls() call
+            std::vector<LinkStall> stalls_;
+            std::mutex stallLock_;
+            // When anything, data or a WebSocket ping, was last received from the camera (ms since epoch). 0 until
+            // the connection is established.
+            std::atomic<uint64_t> lastReceiveMs_{0};
+
         public:
 
             // Resolver and socket require an io_context
-            explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point)
-                : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point){
+            explicit FLIRWebsockAsyncClnSession(net::io_context& ioc, const std::string &host, const std::string &port, double cameraRotation,const std::string &sensorId, const std::string& endpoint, const tmx::utils::WGS84Point& point, int64_t stallThresholdMs = 500)
+                : resolver_(net::make_strand(ioc)), ws_(net::make_strand(ioc)), host_(host), port_(port), cameraRotation_(cameraRotation), sensorId(sensorId), endpoint_(endpoint), sensorRefPoint(point), streamMonitor_(stallThresholdMs){
                     isHealthy_.store(false);
                 };
 
@@ -176,6 +187,24 @@ namespace FLIRCameraDriverPlugin
              * @param pr Property tree containing the parsed JSON message
              */
             void handleDataMessage(const pt::ptree& pr);
+
+            /**
+             * @brief Checks the timing of a "Data" message for a link stall and queues any stall found. Never throws.
+             * @param pr Property tree containing the parsed JSON message
+             * @param recvMs When the message was received (ms since epoch, host wall clock)
+             */
+            void checkStreamTiming(const pt::ptree& pr, uint64_t recvMs);
+
+            /**
+             * @brief Returns the link stalls detected since the last call and clears them.
+             */
+            std::vector<LinkStall> takeStalls();
+
+            /**
+             * @brief When anything, data or a WebSocket ping, was last received from the camera.
+             * @return Milliseconds since epoch, or 0 if the connection has not been established.
+             */
+            uint64_t getLastReceiveMs() const;
 
             /**
              * @brief Processes an array of pedestrian presence tracking objects from the FLIR camera.

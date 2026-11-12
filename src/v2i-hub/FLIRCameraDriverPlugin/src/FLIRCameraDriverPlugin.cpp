@@ -151,6 +151,7 @@ namespace FLIRCameraDriverPlugin
 				SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 				SetStatus<uint>(Key_LivePedestrianCount, livePedCount);
 			}
+			reportLinkHealth();
 			// Update the live pedestrian count status
 			// Sleep for 10 milliseconds
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -176,6 +177,7 @@ namespace FLIRCameraDriverPlugin
 
 		if (!runningWebSocket)
 		{
+			startLinkChecks();
 			std::vector<std::thread> socketThreads;
 			for(const auto & config: flirConfigsPtr->getConfigs()){
 				socketThreads.emplace_back(&FLIRCameraDriverPlugin::StartWebSocket, this, config);
@@ -196,6 +198,23 @@ namespace FLIRCameraDriverPlugin
 		}
 	
 
+	}
+
+	void FLIRCameraDriverPlugin::startLinkChecks()
+	{
+		// TODO(PR 3, link checks): read LinkCheckIntervalMs (0 disables) and LinkCheckControlHosts, then start
+		// linkChecker with a target per camera, on its WebSocket port, and one per control host.
+	}
+
+	void FLIRCameraDriverPlugin::reportLinkHealth()
+	{
+		// TODO(PR 2, stall detection): log each session's takeStalls() and update the Camera Link Stalls and
+		// Camera Link Last Stall status.
+		// TODO(PR 3, link checks): log linkChecker->takeEvents() and update the failed check status.
+		// TODO(PR 4, verdict): once the checks covering a stall have finished, log its verdict, and log one for
+		// each run of failed camera checks that ended.
+		// TODO(PR 5, silence watchdog): warn when a session's getLastReceiveMs() is 90 s old, and log when it
+		// resumes. Update the Silent Cameras status.
 	}
 
 	void FLIRCameraDriverPlugin::OnStateChange(IvpPluginState state)
