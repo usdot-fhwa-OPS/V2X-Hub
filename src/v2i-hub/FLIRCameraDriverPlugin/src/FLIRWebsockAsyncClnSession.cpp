@@ -284,10 +284,20 @@ namespace FLIRCameraDriverPlugin
         return numLastDetections_.load();
     }
 
-    void FLIRWebsockAsyncClnSession::checkStreamTiming(const pt::ptree& /*pr*/, uint64_t /*recvMs*/)
+    void FLIRWebsockAsyncClnSession::checkStreamTiming(const pt::ptree& pr, uint64_t recvMs)
     {
-        // TODO(PR 2, stall detection): pass recvMs and the parsed "time" field to streamMonitor_ and append any
-        // stall to stalls_ under stallLock_. Log and skip a frame whose time cannot be parsed.
+        try
+        {
+            if (auto stall = streamMonitor_.onFrame(recvMs, timeStringParser(pr.get<std::string>("time"))))
+            {
+                std::scoped_lock lock{stallLock_};
+                stalls_.push_back(*stall);
+            }
+        }
+        catch (const std::exception &e)
+        {
+            PLOG(logDEBUG) << "Unable to check the timing of a frame from " << sensorId << ": " << e.what();
+        }
     }
 
     std::vector<LinkStall> FLIRWebsockAsyncClnSession::takeStalls()
