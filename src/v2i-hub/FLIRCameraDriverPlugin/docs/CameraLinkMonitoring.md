@@ -179,7 +179,7 @@ Read when the plugin starts, like `FLIRConfigurations`.
 | Key | Default | Added in | Description |
 |---|---|---|---|
 | `LinkStallThresholdMs` | `500` | PR 2 | Hold, in ms, from which a frame counts as a stall. Minimum 200. |
-| `LinkCheckIntervalMs` | `200` | PR 3 | Time between link checks of each target, and the time each check may take. `0` disables link checks and verdicts. |
+| `LinkCheckIntervalMs` | `200` | PR 3 | Time between link checks of each target, and the time each check may take. Minimum 50; `0` disables link checks and verdicts. |
 | `LinkCheckControlHosts` | empty | PR 3 | Comma-separated `host[:port]` list of control hosts (default port 80), e.g. `192.168.55.1:80`. |
 
 ## Status
