@@ -15,6 +15,7 @@
  */
 #include "FLIRCameraDriverPlugin.hpp"
 #include "FLIRLinkTime.hpp"
+#include "FLIRLinkVerdict.hpp"
 
 using namespace tmx;
 using namespace tmx::messages;
@@ -278,7 +279,14 @@ namespace FLIRCameraDriverPlugin
 				linkStallCount++;
 				lastLinkStall = sensorId + ": " + std::to_string(stall.holdMs()) + " ms, " + formatUtcMs(stall.startMs)
 					+ " to " + formatUtcMs(stall.endMs);
+				lastLinkStallSensor = sensorId;
+				lastLinkStallEndMs = stall.endMs;
 				statusChanged = true;
+				if (linkChecker)
+				{
+					pendingVerdicts.push_back({sensorId, stall.startMs, stall.endMs, "FLIR link stall on " + sensorId
+						+ " from " + formatUtcMs(stall.startMs) + " to " + formatUtcMs(stall.endMs), true});
+				}
 			}
 		}
 		if (linkChecker)
@@ -296,6 +304,35 @@ namespace FLIRCameraDriverPlugin
 				PLOG(logWARNING) << "FLIR link check: " << target.describe() << " answering again at "
 					<< formatUtcMs(event.answeredAtMs) << ", after " << event.failedChecks << " failed checks over "
 					<< (event.answeredAtMs - event.failedSinceMs) << " ms.";
+				if (target.isCamera())
+				{
+					pendingVerdicts.push_back({target.sensorId, event.failedSinceMs, event.answeredAtMs, "FLIR link check: "
+						+ target.describe() + " failed checks from " + formatUtcMs(event.failedSinceMs) + " to "
+						+ formatUtcMs(event.answeredAtMs), false});
+				}
+			}
+
+			// Classify each stall and run of failed camera checks once the checks covering it have finished
+			const uint64_t nowMs = wallClockMs();
+			const auto settleMs = 2 * static_cast<uint64_t>(linkChecker->getInterval().count());
+			for (auto pending = pendingVerdicts.begin(); pending != pendingVerdicts.end();)
+			{
+				if (pending->toMs + settleMs > nowMs)
+				{
+					++pending;
+					continue;
+				}
+				const auto camera = linkChecker->summarizeCamera(pending->sensorId, pending->fromMs, pending->toMs)
+					.value_or(LinkCheckSummary{});
+				const auto controls = linkChecker->summarizeControls(pending->fromMs, pending->toMs);
+				const auto verdict = classifyLink(camera, controls);
+				PLOG(logWARNING) << pending->description << ": " << describeVerdict(verdict, camera, controls);
+				if (pending->isStall && pending->sensorId == lastLinkStallSensor && pending->toMs == lastLinkStallEndMs)
+				{
+					lastLinkStall += " (" + verdictName(verdict) + ")";
+					statusChanged = true;
+				}
+				pending = pendingVerdicts.erase(pending);
 			}
 
 			const auto cameraFailures = linkChecker->getFailedChecks(true);
@@ -307,8 +344,6 @@ namespace FLIRCameraDriverPlugin
 				statusChanged = true;
 			}
 		}
-		// TODO(PR 4, verdict): once the checks covering a stall have finished, log its verdict, and log one for
-		// each run of failed camera checks that ended.
 		// TODO(PR 5, silence watchdog): warn when a session's getLastReceiveMs() is 90 s old, and log when it
 		// resumes. Update the Silent Cameras status.
 

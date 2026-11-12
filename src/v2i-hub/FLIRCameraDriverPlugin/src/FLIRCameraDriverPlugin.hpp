@@ -106,8 +106,22 @@ namespace FLIRCameraDriverPlugin
 			// Number of link stalls on all camera connections
 			uint64_t linkStallCount = 0;
 			const char* Key_LinkLastStall = "Camera Link Last Stall";
-			// Sensor, hold, start and end of the latest stall
+			// Sensor, hold, start and end of the latest stall, and its verdict
 			std::string lastLinkStall = "None";
+			// Sensor and end of the latest stall, to add its verdict to lastLinkStall
+			std::string lastLinkStallSensor;
+			uint64_t lastLinkStallEndMs = 0;
+			// A stall or a run of failed camera checks, waiting for the link checks that cover it to finish
+			struct PendingVerdict
+			{
+				std::string sensorId;
+				uint64_t fromMs = 0;
+				uint64_t toMs = 0;
+				// Beginning of the log line, e.g. "FLIR link stall on FLIR_North from <start> to <end>"
+				std::string description;
+				bool isStall = false;
+			};
+			std::vector<PendingVerdict> pendingVerdicts;
 			const char* Key_CameraFailedChecks = "Camera Link Failed Checks";
 			// Link checks to cameras that were not answered or were refused
 			uint64_t cameraFailedChecks = 0;

@@ -17,22 +17,102 @@
 
 namespace FLIRCameraDriverPlugin
 {
-    LinkVerdict classifyLink(const LinkCheckSummary & /*camera*/, const std::vector<LinkCheckSummary> & /*controls*/)
+    LinkVerdict classifyLink(const LinkCheckSummary &camera, const std::vector<LinkCheckSummary> &controls)
     {
-        // TODO(PR 4, verdict): follow the decision chart in docs/CameraLinkMonitoring.md.
-        return LinkVerdict::NotChecked;
+        if (camera.checks == 0)
+        {
+            return LinkVerdict::NotChecked;
+        }
+        if (camera.noAnswer == 0)
+        {
+            return camera.refused > 0 ? LinkVerdict::CameraService : LinkVerdict::PathUp;
+        }
+        bool controlChecked = false;
+        bool controlFailed = false;
+        for (const auto &control : controls)
+        {
+            if (control.checks > 0)
+            {
+                controlChecked = true;
+                controlFailed = controlFailed || control.noAnswer > 0;
+            }
+        }
+        if (!controlChecked)
+        {
+            return LinkVerdict::CameraUnreachable;
+        }
+        return controlFailed ? LinkVerdict::HostNetwork : LinkVerdict::CameraLink;
     }
 
-    std::string verdictName(LinkVerdict /*verdict*/)
+    std::string verdictName(LinkVerdict verdict)
     {
-        // TODO(PR 4, verdict): short name of each verdict.
-        return "not checked";
+        switch (verdict)
+        {
+            case LinkVerdict::NotChecked:
+                return "not checked";
+            case LinkVerdict::PathUp:
+                return "network path up";
+            case LinkVerdict::CameraService:
+                return "camera service down";
+            case LinkVerdict::CameraLink:
+                return "camera link";
+            case LinkVerdict::CameraUnreachable:
+                return "camera unreachable";
+            case LinkVerdict::HostNetwork:
+                return "host network";
+        }
+        return "unknown";
     }
 
-    std::string describeVerdict(LinkVerdict verdict, const LinkCheckSummary & /*camera*/,
-        const std::vector<LinkCheckSummary> & /*controls*/)
+    std::string describeVerdict(LinkVerdict verdict, const LinkCheckSummary &camera,
+        const std::vector<LinkCheckSummary> &controls)
     {
-        // TODO(PR 4, verdict): name, explanation and "camera answered X of Y, control hosts X of Y".
-        return verdictName(verdict) + ".";
+        std::string explanation;
+        switch (verdict)
+        {
+            case LinkVerdict::NotChecked:
+                explanation = "No link checks of the camera ran during this time.";
+                break;
+            case LinkVerdict::PathUp:
+                explanation = "The camera answered every link check, so the network path was up and the frames were "
+                    "held by the camera's software or on this host.";
+                break;
+            case LinkVerdict::CameraService:
+                explanation = "The camera's network answered, but the camera refused connections, so its web service "
+                    "was down.";
+                break;
+            case LinkVerdict::CameraLink:
+                explanation = "The camera stopped answering while the control hosts answered, so packets were lost "
+                    "between the network and the camera: its network port, its cable or PoE, or its switch port.";
+                break;
+            case LinkVerdict::CameraUnreachable:
+                explanation = "The camera stopped answering. Set LinkCheckControlHosts to tell a fault on the camera's "
+                    "link from one on this host's side of the network.";
+                break;
+            case LinkVerdict::HostNetwork:
+                explanation = "The camera and the control hosts stopped answering together, so the fault is on this "
+                    "host's side: its network port, cable or switch, or equipment it shares with the camera.";
+                break;
+        }
+
+        std::string text = verdictName(verdict) + ". " + explanation;
+        if (camera.checks > 0)
+        {
+            text += " Link checks during this time: camera answered " + std::to_string(camera.answered()) + " of " +
+                std::to_string(camera.checks);
+            unsigned controlChecks = 0;
+            unsigned controlAnswered = 0;
+            for (const auto &control : controls)
+            {
+                controlChecks += control.checks;
+                controlAnswered += control.answered();
+            }
+            if (controlChecks > 0)
+            {
+                text += ", control hosts " + std::to_string(controlAnswered) + " of " + std::to_string(controlChecks);
+            }
+            text += ".";
+        }
+        return text;
     }
 }
