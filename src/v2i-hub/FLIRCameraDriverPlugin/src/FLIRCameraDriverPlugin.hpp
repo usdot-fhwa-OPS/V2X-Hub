@@ -26,6 +26,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <queue>
+#include <map>
 #include "FLIRWebsockAsyncClnSession.hpp"
 #include "FLIRConfigurations.hpp"
 #include "FLIRLinkChecker.hpp"
@@ -122,6 +123,12 @@ namespace FLIRCameraDriverPlugin
 				bool isStall = false;
 			};
 			std::vector<PendingVerdict> pendingVerdicts;
+			// A camera connection that carried nothing for this long is silent. The camera sends a WebSocket ping
+			// every 60 s even while it tracks nothing.
+			static constexpr uint64_t linkSilenceMs = 90000;
+			const char* Key_SilentCameras = "Silent Cameras";
+			// Silent cameras: sensor id and when it last received anything (ms since epoch)
+			std::map<std::string, uint64_t> silentCameras;
 			const char* Key_CameraFailedChecks = "Camera Link Failed Checks";
 			// Link checks to cameras that were not answered or were refused
 			uint64_t cameraFailedChecks = 0;

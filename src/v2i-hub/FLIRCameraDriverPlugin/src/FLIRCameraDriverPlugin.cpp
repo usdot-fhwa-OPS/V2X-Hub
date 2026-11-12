@@ -178,6 +178,7 @@ namespace FLIRCameraDriverPlugin
 		SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
 		SetStatus<uint64_t>(Key_CameraFailedChecks, cameraFailedChecks);
 		SetStatus<uint64_t>(Key_ControlFailedChecks, controlFailedChecks);
+		SetStatus<std::string>(Key_SilentCameras, "None");
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
 		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
@@ -267,6 +268,7 @@ namespace FLIRCameraDriverPlugin
 
 	void FLIRCameraDriverPlugin::reportLinkHealth()
 	{
+		const uint64_t nowMs = wallClockMs();
 		bool statusChanged = false;
 		for (const auto &flirSession : flirSessions)
 		{
@@ -313,7 +315,6 @@ namespace FLIRCameraDriverPlugin
 			}
 
 			// Classify each stall and run of failed camera checks once the checks covering it have finished
-			const uint64_t nowMs = wallClockMs();
 			const auto settleMs = 2 * static_cast<uint64_t>(linkChecker->getInterval().count());
 			for (auto pending = pendingVerdicts.begin(); pending != pendingVerdicts.end();)
 			{
@@ -344,8 +345,37 @@ namespace FLIRCameraDriverPlugin
 				statusChanged = true;
 			}
 		}
-		// TODO(PR 5, silence watchdog): warn when a session's getLastReceiveMs() is 90 s old, and log when it
-		// resumes. Update the Silent Cameras status.
+		// Silence watchdog. Without it a dead connection goes unnoticed: the WebSocket client has no idle timeout,
+		// and the plugin never writes to the connection after subscribing.
+		for (const auto &flirSession : flirSessions)
+		{
+			const auto sensorId = flirSession->getSensorId();
+			const auto lastReceiveMs = flirSession->getLastReceiveMs();
+			const auto silent = silentCameras.find(sensorId);
+			if (silent == silentCameras.end() && lastReceiveMs != 0 && nowMs >= lastReceiveMs + linkSilenceMs)
+			{
+				std::string verdict;
+				if (linkChecker)
+				{
+					const auto camera = linkChecker->summarizeCamera(sensorId, lastReceiveMs, nowMs)
+						.value_or(LinkCheckSummary{});
+					const auto controls = linkChecker->summarizeControls(lastReceiveMs, nowMs);
+					verdict = " Link verdict: " + describeVerdict(classifyLink(camera, controls), camera, controls);
+				}
+				PLOG(logWARNING) << "FLIR camera " << sensorId << " has sent nothing, not even keepalive pings, since "
+					<< formatUtcMs(lastReceiveMs) << " (" << (nowMs - lastReceiveMs) / 1000 << " s)." << verdict
+					<< " The plugin does not reconnect on its own: restart it if this lasts.";
+				silentCameras[sensorId] = lastReceiveMs;
+				statusChanged = true;
+			}
+			else if (silent != silentCameras.end() && lastReceiveMs > silent->second)
+			{
+				PLOG(logWARNING) << "FLIR camera " << sensorId << " is sending again after "
+					<< (lastReceiveMs - silent->second) / 1000 << " s of silence.";
+				silentCameras.erase(silent);
+				statusChanged = true;
+			}
+		}
 
 		if (statusChanged)
 		{
@@ -353,6 +383,12 @@ namespace FLIRCameraDriverPlugin
 			SetStatus<std::string>(Key_LinkLastStall, lastLinkStall);
 			SetStatus<uint64_t>(Key_CameraFailedChecks, cameraFailedChecks);
 			SetStatus<uint64_t>(Key_ControlFailedChecks, controlFailedChecks);
+			std::string silentList;
+			for (const auto &silentCamera : silentCameras)
+			{
+				silentList += (silentList.empty() ? "" : ", ") + silentCamera.first;
+			}
+			SetStatus<std::string>(Key_SilentCameras, silentList.empty() ? "None" : silentList);
 		}
 	}
 

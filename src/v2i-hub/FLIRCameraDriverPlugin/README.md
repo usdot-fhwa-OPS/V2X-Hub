@@ -62,6 +62,7 @@ The plugin reports the following status for real-time monitoring of FLIR camera 
 * **Camera Link Last Stall**: The latest stall's sensor, hold, start and end times (UTC), and once known, its verdict.
 * **Camera Link Failed Checks**: Link checks to cameras that were not answered or were refused.
 * **Control Host Failed Checks**: Link checks to control hosts that were not answered.
+* **Silent Cameras**: Cameras whose connection has carried nothing for 90 s, or `None`.
 
 > [!NOTE]
 > Only detections with incomplete or invalid heading and speed are modified. In testing, when a detected object stops, the FLIR camera occasionally keeps broadcasting detections that **do not** include an angle but **do** include a speed. This appears to be an intermittent bug for stationary objects. To handle it, the plugin assumes a speed of 0 when no angle is provided. For traceability, the Modified Pedestrian Detections status counts these detections, and each Sensor Detected Object message has a flag that indicates whether its data was modified.
@@ -116,6 +117,12 @@ WARNING FLIR link stall on FLIR_North from 2026-09-15T17:47:10.136Z to 2026-09-1
 
 Longer stalls overlap more checks, so their verdicts are more certain. Packet loss that affects only large frames, such as an MTU mismatch, does not show up in the checks.
 
+**Silence watchdog.** While nothing is tracked, the camera sends no data but sends a WebSocket ping every 60 s. If a camera connection carries nothing at all for 90 s, the plugin logs a warning with the verdict for the silent period, and logs again when data resumes. The plugin does not reconnect on its own, so a connection that stays silent, e.g. after the camera restarted, needs a plugin restart.
+
+```
+WARNING FLIR camera FLIR_North has sent nothing, not even keepalive pings, since 2026-11-10T14:18:01.950Z (90 s). Link verdict: camera link. ...
+```
+
 ## Functionality Testing
 
 `scripts/mockFLIRCamera.py` mocks the WebSocket that the FLIR camera hosts for pedestrian presence tracking. Use it to check the plugin without a camera:
@@ -125,4 +132,4 @@ Longer stalls overlap more checks, so their verdicts are more certain. Packet lo
 3. Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`.
 4. Configure the FLIR Camera Driver Plugin to connect to the mock. Sensor Detected Objects should appear in the plugin's **Messages** tab.
 
-To test camera link monitoring, add `--stall-every <seconds> --stall-ms <milliseconds>` to the mock. It then periodically holds the frames it produces for the given time and sends them all at once. The plugin should log a `FLIR link stall` for each, and the **Camera Link Stalls** status should count them.
+To test camera link monitoring, add `--stall-every <seconds> --stall-ms <milliseconds>` to the mock. It then periodically holds the frames it produces for the given time and sends them all at once. The plugin should log a `FLIR link stall` for each, and the **Camera Link Stalls** status should count them. Since the mock holds the frames in software, each stall's verdict should be `network path up`. To test the silence watchdog, suspend the mock with `kill -STOP <pid>` for more than 90 s, then resume it with `kill -CONT <pid>`.

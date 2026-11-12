@@ -100,8 +100,12 @@ namespace FLIRCameraDriverPlugin
         if(ec)
             return fail(ec, "handshake");
         isHealthy_.store(true);
-        // TODO(PR 5, silence watchdog): set lastReceiveMs_ now, and on every WebSocket control frame (ping) through
-        // ws_.control_callback(), before the first read.
+        // Anything received counts as a sign of life, including the WebSocket pings the camera sends every 60 s
+        // while it tracks nothing. Set before the first read.
+        lastReceiveMs_.store(wallClockMs());
+        ws_.control_callback([this](websocket::frame_type, beast::string_view) {
+            lastReceiveMs_.store(wallClockMs());
+        });
         // Send the message
         ws_.async_write(
             net::buffer(pedPresenceTrackingReq),
@@ -134,7 +138,7 @@ namespace FLIRCameraDriverPlugin
             return fail(ec, "read");
         // Arrival time, taken before any processing
         const uint64_t recvMs = wallClockMs();
-        // TODO(PR 5, silence watchdog): lastReceiveMs_.store(recvMs);
+        lastReceiveMs_.store(recvMs);
         isHealthy_.store(true);
         // parse the buffer
         std::stringstream ss;
