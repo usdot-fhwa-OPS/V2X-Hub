@@ -7,8 +7,7 @@ BuildTmxPlugin()
 target_link_libraries(${PROJECT_NAME} tmxutils ::carma-clock)
 add_library(${PROJECT_NAME}_lib src/FLIRConfigurations.cpp
                                 src/FLIRWebsockAsyncClnSession.cpp
-                                src/FLIRPedestrianPresenceTrackingProcessor.cpp
-                                src/FLIRStreamMonitor.cpp)
+                                src/FLIRPedestrianPresenceTrackingProcessor.cpp)
 target_link_libraries(${PROJECT_NAME}_lib PUBLIC tmxutils ::carma-clock )
 #############
 ## Testing ##

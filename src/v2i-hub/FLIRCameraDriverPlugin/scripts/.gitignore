@@ -1,3 +1,4 @@
-# flir_stream_probe.py output and Python bytecode
+# Output of flir_stream_probe.py, flir_capture.sh, and Python bytecode
 flir_probe_*/
+flir_capture_runs/
 __pycache__/

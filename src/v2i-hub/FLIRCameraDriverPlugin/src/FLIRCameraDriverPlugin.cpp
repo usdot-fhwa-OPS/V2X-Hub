@@ -48,9 +48,6 @@ namespace FLIRCameraDriverPlugin
 			config.sensorId, 
 			config.apiSubscription,
 			config.cameraRefPoint);
-		StreamMonitorConfig monitorConfig = flirSession->getStreamMonitorConfig();
-		monitorConfig.stallThresholdMs = linkStallThresholdMs.load();
-		flirSession->setStreamMonitorConfig(monitorConfig);
 		// Launch the asynchronous operation
 		flirSession->run();	
 		flirSessions.push_back(flirSession);
@@ -95,33 +92,10 @@ namespace FLIRCameraDriverPlugin
 			{	
 
 				auto livePedCount = 0;
-				// Camera link statistics summed over all FLIR sessions
-				StreamMonitorStats linkTotals;
 
 				//Loop through all FLIR sessions to check each session for any messages in the queue and broadcast them.
 				for(const auto &flirSession: flirSessions)
 				{
-					// Keep the stall threshold in sync with the plugin configuration
-					auto monitorConfig = flirSession->getStreamMonitorConfig();
-					if (monitorConfig.stallThresholdMs != linkStallThresholdMs.load())
-					{
-						monitorConfig.stallThresholdMs = linkStallThresholdMs.load();
-						flirSession->setStreamMonitorConfig(monitorConfig);
-					}
-					// Report a late burst that ended together with a track
-					flirSession->checkStreamIdle();
-					const auto linkStats = flirSession->getStreamStats();
-					linkTotals.stalls += linkStats.stalls;
-					linkTotals.lateFrames += linkStats.lateFrames;
-					linkTotals.minorHolds += linkStats.minorHolds;
-					linkTotals.missingFrames += linkStats.missingFrames;
-					linkTotals.maxStallMs = std::max(linkTotals.maxStallMs, linkStats.maxStallMs);
-					if (linkStats.lastStallEndMs > linkTotals.lastStallEndMs)
-					{
-						linkTotals.lastStallStartMs = linkStats.lastStallStartMs;
-						linkTotals.lastStallEndMs = linkStats.lastStallEndMs;
-					}
-
 					// Check for dropped pedestrians and add it to status count
 					if ( flirSession->getDroppedPedCount()> 0) {
 						droppedPedCount += flirSession->getDroppedPedCount();
@@ -176,13 +150,6 @@ namespace FLIRCameraDriverPlugin
 				SetStatus<uint>(Key_UniquePedestrianCount, uniquePedCount);
 				SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 				SetStatus<uint>(Key_LivePedestrianCount, livePedCount);
-				SetStatus<uint64_t>(Key_LinkStallCount, linkTotals.stalls);
-				SetStatus<int64_t>(Key_LinkMaxStall, linkTotals.maxStallMs);
-				SetStatus<std::string>(Key_LinkLastStall, linkTotals.lastStallEndMs == 0 ? std::string("None") :
-					FLIRStreamMonitor::formatUtcMs(linkTotals.lastStallStartMs) + " to " + FLIRStreamMonitor::formatUtcMs(linkTotals.lastStallEndMs));
-				SetStatus<uint64_t>(Key_LinkLateFrames, linkTotals.lateFrames);
-				SetStatus<uint64_t>(Key_LinkMinorHolds, linkTotals.minorHolds);
-				SetStatus<uint64_t>(Key_CameraMissingFrames, linkTotals.missingFrames);
 			}
 			// Update the live pedestrian count status
 			// Sleep for 10 milliseconds
@@ -205,16 +172,7 @@ namespace FLIRCameraDriverPlugin
 		SetStatus<uint>(Key_TotalPedestrianCount, totalPedCount);
 		std::string flirConfigsStr;
 		GetConfigValue<std::string>("FLIRConfigurations", flirConfigsStr);
-		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);
-
-		uint64_t stallThresholdMs = 500;
-		GetConfigValue<uint64_t>("LinkStallThresholdMs", stallThresholdMs);
-		if (stallThresholdMs < 200)
-		{
-			PLOG(logWARNING) << "LinkStallThresholdMs " << stallThresholdMs << " is too low to tell stalls from normal jitter. Using 200 ms.";
-			stallThresholdMs = 200;
-		}
-		linkStallThresholdMs.store(static_cast<int64_t>(stallThresholdMs));
+		flirConfigsPtr->parseFLIRConfigs(flirConfigsStr);		
 
 		if (!runningWebSocket)
 		{

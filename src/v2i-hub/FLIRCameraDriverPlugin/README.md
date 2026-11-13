@@ -41,8 +41,6 @@ This plugin has several configuration parameters. Below these are listed out as 
 ]
 ```
 
-**LinkStallThresholdMs** (default 500, minimum 200): camera link monitoring threshold. A camera frame that spent this many milliseconds longer in transit than the frame before it is logged as a link stall, including when the camera had been idle (nothing tracked) before it. Frames this much later than normal are counted as late. 500 ms matches the freshness limit the CARMA Streets Sensor Data Sharing Service applies before discarding detections.
-
 ## Status Information
 
 This plugin includes some custom status information to allow for real-time monitoring of FLIR Camera detection data. Included are:
@@ -54,15 +52,6 @@ This plugin includes some custom status information to allow for real-time monit
 **Unique Pedestrian Detections**: A complete count of all pedestrian detections from all FLIR Camera connections that are unique. We evaluate this by comparing the incoming detection ids to the previously received ids. This is meant to be a rough estimate of all pedestrians detected by the FLIR Cameras connected.
 **Total Pedestrian Detections**: A complete count of all pedestrian detections from all FLIR Camera connections. This includes any detections that where dropped or modified.
 **Live number of currently detected pedestrians**: A current/live count of unique pedestrian detections from all FLIR Camera connections.
-
-The following camera link statuses are totals since the camera connections started (see [Camera Link Monitoring](#camera-link-monitoring)):
-
-**Camera Link Stalls**: Number of times camera frames were held in transit for at least `LinkStallThresholdMs`, after which the backlog arrived together. This includes outages that began while the camera was idle: the first frame it produced during the outage arrives as late as the time it waited.
-**Camera Link Longest Stall (ms)**: Longest time frames were held in transit.
-**Camera Link Last Stall (UTC)**: Start and end of the most recent stall, for matching against packet captures and network logs.
-**Camera Link Late Frames**: Frames that arrived at least `LinkStallThresholdMs` later than normal, i.e. every frame of each backlog. Detections in these frames are likely discarded downstream as stale.
-**Camera Link Minor Holds**: Frames held 150 ms to `LinkStallThresholdMs` in transit. About 200 ms is the signature of a single TCP retransmission, so a rising count is an early sign of packet loss on the camera link.
-**Camera Missing Frames**: Gaps in the camera's `dataNumber` sequence while it was tracking continuously.
 
 ![alt text](docs/FLIRCameraDriverStatus.png)
 
@@ -78,91 +67,6 @@ Above is a diagram illustrates how the FLIR Camera Driver Plugin is used to crea
 
 **SensorDataSharingMessage**: V2X Cooperative Perception message defined in the J3224 standard.
 
-## Camera Link Monitoring
-
-The camera streams tracking data over a WebSocket (TCP). If packets are lost on the camera link, TCP holds back everything after the lost packet until a retransmission gets through, so detections stop for a few seconds and then arrive all at once. Downstream services discard detections that late, which shows up as a gap followed by a burst on the detection topic.
-
-The plugin compares when each frame arrives with the camera's own `time` field. It compares differences between consecutive frames rather than absolute times, so it does not depend on the camera and V2X Hub clocks being synchronized. Late frames are measured against the normal latency of recent on-time frames; if the latency stays higher at a steady level for 10 s, the clock offset changed and the new level becomes the normal. It logs:
-
-* `WARNING ... FLIR link stall on <sensor>: no data for 3583 ms while the camera kept producing frames 100 ms apart, so frames were held 3483 ms in transit. Stall from <start> to <end> ...`: the camera kept producing frames but none arrived. Start and end are UTC; use them to look up the same moment in a packet capture, ping log or switch log. If the camera was idle before the stall, the warning ends with `The camera was idle (nothing tracked) before this frame ...`; the camera gap is then the idle time, and the link went down at some point during it.
-* `WARNING ... FLIR late burst on <sensor>: 26 frame(s) arrived at least 500 ms later than normal ...`: the backlog delivered after a stall.
-* `INFO ... FLIR link minor hold on <sensor>: frame held 200 ms in transit ...`: usually one TCP retransmission.
-* `DEBUG ... FLIR camera frames missing on <sensor>: dataNumber ...`: gaps in the camera's frame sequence.
-* `INFO ... FLIR baseline latency on <sensor> moved to ...`: the camera/host clock offset changed; frames counted as late since the change are no longer counted.
-
-### Pinpointing where frames are held
-
-`scripts/flir_stream_probe.py` uses only the Python standard library.
-
-**live** subscribes to the camera as a second, independent client and at the same time keeps opening TCP connections to the camera and to optional control hosts. Run it on the V2X Hub host while testing:
-
-```shell
-python3 scripts/flir_stream_probe.py live --host 192.168.55.183 \
-    --control 192.168.55.1:80 --control 192.168.55.125:22
-```
-
-The examples in this section use these addresses; replace them with yours:
-
-* `192.168.55.183`: the FLIR camera (WebSocket on port 80).
-* `192.168.55.1:80`: the gateway, a control host. Any other machine on the network with an open TCP port works; add more with extra `--control HOST:PORT` options, e.g. another host on the camera's switch.
-* `192.168.55.125:22`: this PC, the host running the probe, as a self check (needs an open port, e.g. SSH).
-
-A `--control` that is one of this host's own addresses (`192.168.55.125` above) is probed as a *self* check, which shows whether this host lost its own network address (link down, Wi-Fi disconnected, or a user-private NetworkManager connection taken down when the user logs out). Use other machines, such as the gateway, as controls.
-
-For each stall it prints whether the camera stayed reachable and how the backlog arrived at the TCP level, and writes `events.jsonl`, `frames.csv`, `chunks.csv` and `probes.csv` (every connect probe with its error, e.g. `ENETUNREACH`). It also reports any period with no data at all, not even the camera's 60 s keepalive ping (`--silence-ms`, default 90000), so outages are caught even while nothing is tracked:
-
-* Self check failed too: this host lost its network address or interface; the camera and the network were not the cause.
-* Camera unreachable while the control host answered: packets were lost between the switch and the camera (camera network interface, its cable, PoE/BPL link or switch port).
-* Camera and control hosts all unreachable while this host kept its address: the problem is between this host and the rest of the network (its link to the switch or Wi-Fi access point, or that equipment itself).
-* Camera reachable throughout: the network path was up; frames were held by the camera's sender or by TCP retransmission backoff.
-
-If the plugin logs a stall at a time when the probe did not see one, the frames were held on the V2X Hub host. Running the probe on a laptop on the same switch separates the camera's link from the V2X Hub host's link.
-
-#### Running the probe in the background
-
-Stalls can be hours apart, so the probe is usually left running unattended. All commands below are run from the plugin directory, `src/v2i-hub/FLIRCameraDriverPlugin` in the V2X Hub repository; change the `cd` path to where you cloned it. Each run writes to its own `scripts/flir_probe_<date>_<time>/` directory.
-
-Start it detached from the terminal so it keeps running after you log out or your SSH session ends, with unbuffered output (`-u`) so `console.log` fills as it runs:
-
-```shell
-cd ~/v2x-hub/src/v2i-hub/FLIRCameraDriverPlugin
-OUT=scripts/flir_probe_$(date +%Y%m%d_%H%M%S); mkdir -p "$OUT"
-setsid nohup python3 -u scripts/flir_stream_probe.py live --host 192.168.55.183 \
-    --control 192.168.55.1:80 --control 192.168.55.125:22 \
-    --out "$OUT" > "$OUT/console.log" 2>&1 < /dev/null &
-echo "Run directory: $OUT"
-```
-
-Check on it later, e.g. after logging back in. `$OUT` from the start commands is gone in a new shell, so look up the newest run directory first:
-
-```shell
-cd ~/v2x-hub/src/v2i-hub/FLIRCameraDriverPlugin
-RUN=$(ls -td scripts/flir_probe_* | head -1); echo "$RUN"        # newest run directory
-pgrep -af '[p]ython3 .*flir_stream_probe'                         # PID and command line; no output if it stopped
-ps -o pid,etime,cmd -p "$(pgrep -d, -f '[p]ython3 .*flir_stream_probe')"   # how long it has been running
-date +%T; ls -l --time-style=+%T "$RUN/probes.csv"              # updated every 0.5 s while it runs
-grep -E 'SILENCE details|STALL details|LATE BURST' "$RUN/console.log"   # outages found so far
-tail -f "$RUN/console.log"                                      # live output (Ctrl-C stops tail, not the probe)
-```
-
-Runs started without the command above (e.g. in a terminal or with plain `nohup`) have no `console.log` in their directory; their output went to the terminal or to `nohup.out`.
-
-Stop it with SIGINT, the same as Ctrl-C, so it writes its summary to `events.jsonl` and `console.log` before exiting. Check that it has exited, then run the start commands above again, which create a new run directory:
-
-```shell
-pkill -INT -f '[p]ython3 .*flir_stream_probe'
-sleep 5; pgrep -af '[p]ython3 .*flir_stream_probe' || echo "stopped"
-```
-
-**analyze** finds stalls in existing logs and cross-checks them:
-
-```shell
-python3 scripts/flir_stream_probe.py analyze --v2xhub <v2xhub log> --sdss <sensor data sharing service log> \
-    --other-traffic <kafka export of another topic, e.g. v2xhub_bsm_in.log> --probe-events <live run>/events.jsonl
-```
-
-It reads the plugin's stall warnings, or the DEBUG `Received:` lines of older builds (plugin `LogLevel` DEBUG, single camera). Per stall it reports how many detections the Sensor Data Sharing Service discarded as stale, whether other traffic kept arriving (which rules out the V2X Hub host stalling as a whole), and whether the probe saw the same stall.
-
 
 ## Functionality Testing
 In the `./scripts/` directory in this plugin we have created a simply python script that mocks the websocket hosted by the FLIR Camera for pedestrian presence tracking. To confirm plugin functionality this script can be used to mock the output of the FLIR Camera
@@ -170,6 +74,4 @@ In the `./scripts/` directory in this plugin we have created a simply python scr
 1) Install Python3 and Pip.
 2) Run `python3 -m pip install -r scripts/requirements.txt` to install depedencies.
 3) Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`
-4) Configure FLIR Camera Driver Plugin for connection to the websocket and in the **Messages** tab of the plugin you should see Sensor Detected Objects publishing.
-
-To test camera link monitoring, add `--stall-every <seconds> --stall-ms <milliseconds>` to the mock. It then periodically holds the messages it produces for the given time and sends them all at once. The plugin should log a `FLIR link stall` and a `FLIR late burst` for each one, and the **Camera Link** statuses should count them. 
+4) Configure FLIR Camera Driver Plugin for connection to the websocket and in the **Messages** tab of the plugin you should see Sensor Detected Objects publishing. 
