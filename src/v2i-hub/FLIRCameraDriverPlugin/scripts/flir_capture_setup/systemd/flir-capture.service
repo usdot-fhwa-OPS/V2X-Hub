@@ -1,0 +1,26 @@
+[Unit]
+Description=FLIR camera link stall evidence collection (V2X-Hub PR 991)
+Wants=network-online.target
+After=network-online.target NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=vug
+Group=vug
+SupplementaryGroups=wireshark
+WorkingDirectory=/home/vug/workspace/V2X-Hub/src/v2i-hub/FLIRCameraDriverPlugin/scripts
+# Ensure the switch-subnet address exists (also saved in NetworkManager connection share-eth)
+ExecCondition=/usr/local/bin/flir-capture-in-hours
+ExecStartPre=+/bin/sh -c 'ip addr show dev enp60s0 | grep -q "192.168.0.52/" || ip addr add 192.168.0.52/24 dev enp60s0'
+# Wait up to 3 min for the camera to answer before starting
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 90); do ping -c1 -W1 192.168.55.111 >/dev/null 2>&1 && exit 0; sleep 1; done; exit 0'
+ExecStart=/home/vug/workspace/V2X-Hub/src/v2i-hub/FLIRCameraDriverPlugin/scripts/flir_capture.sh start --camera 192.168.55.111 --switch 192.168.0.239 --switch-port 80 --control 192.168.55.20:80 --control 192.168.55.1:80 --control 192.168.55.52:22 --iface enp60s0 --ring-mb 100 --ring-files 200 --note "camera 192.168.55.111 time-synced to RSU 192.168.55.20; switch 192.168.0.239 via secondary IP 192.168.0.52 on enp60s0; started by flir-capture.service"
+ExecStop=/home/vug/workspace/V2X-Hub/src/v2i-hub/FLIRCameraDriverPlugin/scripts/flir_capture.sh stop
+TimeoutStartSec=300
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

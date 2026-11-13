@@ -90,3 +90,7 @@ When testing changes to the network path (another switch, port or cable), start 
 ## Running on a virtual machine
 
 If the probe and capture run in a virtual machine with a NAT network adapter, the hypervisor relays TCP connections and the capture does not show the camera's real retransmissions. Use a bridged adapter or a physical machine.
+
+## Running as a service
+
+`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. The camera, switch and control addresses, the interface and the user are set in `flir_capture_setup/systemd/flir-capture.service`; edit them for your site, then run `flir_capture_setup/install.sh`. See `flir_capture_setup/README.md`.
