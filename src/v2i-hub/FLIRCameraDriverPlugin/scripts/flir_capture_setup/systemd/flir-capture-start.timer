@@ -1,0 +1,9 @@
+[Unit]
+Description=Start FLIR capture on weekdays at 07:00
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 07:00:00
+Unit=flir-capture.service
+
+[Install]
+WantedBy=timers.target

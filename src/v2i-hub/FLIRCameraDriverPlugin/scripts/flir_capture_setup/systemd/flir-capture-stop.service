@@ -1,0 +1,6 @@
+[Unit]
+Description=Stop FLIR capture
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl stop flir-capture.service

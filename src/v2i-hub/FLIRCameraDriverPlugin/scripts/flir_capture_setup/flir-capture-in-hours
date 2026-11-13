@@ -1,0 +1,4 @@
+#!/bin/sh
+# Exit 0 when inside the FLIR capture window (Mon-Fri 07:00-18:00 local time), 1 otherwise.
+d=$(date +%u); h=$(date +%H)
+[ "$d" -le 5 ] && [ "$h" -ge 7 ] && [ "$h" -lt 18 ]
