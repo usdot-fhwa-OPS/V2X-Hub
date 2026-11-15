@@ -62,7 +62,7 @@ namespace unit_test
 
     TEST_F(test_SNMPClient, log_error)
     {
-        snmp_pdu response;
+        snmp_pdu response{};
         ASSERT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::GET, &response));
         ASSERT_NO_THROW(scPtr->log_error(STAT_ERROR, request_type::SET, &response));
         ASSERT_NO_THROW(scPtr->log_error(STAT_SUCCESS, request_type::OTHER, &response));
