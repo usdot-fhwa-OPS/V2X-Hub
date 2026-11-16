@@ -18,7 +18,15 @@ Files (the installed copies are the live ones; reinstall after editing here):
 - `flir-capture-in-hours` -> /usr/local/bin/ : weekday-hours check used by the service
 - NetworkManager connection `share-eth`: extra address 192.168.0.52/24
 
+The addresses above, the user `vug`, the interface `enp60s0` and the path
+`/home/vug/workspace/V2X-Hub` are hardcoded in `systemd/flir-capture.service` and `install.sh`.
+Edit both for another site.
+
 Reinstall: `./install.sh`
+
+Disk: every weekday start creates a new run directory of up to 20 GB, and old runs are not
+deleted. `start` refuses to begin with less than 24 GB free (the service retries every 30 s),
+so delete old runs under `../flir_capture_runs/` regularly.
 
 Check: `systemctl status flir-capture`, `systemctl list-timers 'flir-capture-*'`,
 `../flir_capture.sh status`.

@@ -49,7 +49,10 @@ python3 flir_stream_probe.py analyze --v2xhub <v2xhub log> --sdss <sensor data s
     --other-traffic <kafka export of another topic, e.g. v2xhub_bsm_in.log> --probe-events <live run>/events.jsonl
 ```
 
-It reads the plugin's DEBUG `Received:` lines (plugin `LogLevel` DEBUG, single camera). Per stall it reports how many detections the Sensor Data Sharing Service discarded as stale, whether other traffic kept arriving (which rules out the V2X Hub host stalling as a whole), and whether the probe saw the same stall.
+It reads the plugin's DEBUG `Received:` lines (plugin `LogLevel` DEBUG, single camera). Per stall it reports how many detections the Sensor Data Sharing Service discarded as stale, whether other traffic kept arriving (which rules out the V2X Hub host stalling as a whole), and whether the probe saw the same stall. Only `--v2xhub` is required; the other inputs add their columns when given.
+
+* `--log-utc-offset H`: UTC offset in hours of the V2X Hub log timestamps (default 0, logs in UTC).
+* `--csv FILE`: also write one row per stall to a CSV file.
 
 ## flir_capture.sh
 
@@ -70,7 +73,9 @@ It needs `tshark` (`sudo apt install tshark`), and the user running it must be a
 ./flir_capture.sh stop
 ```
 
-`./flir_capture.sh help` lists all options (camera address, extra control and ping hosts, RTSP port, capture interface, ring buffer size). The capture keeps the newest 100 files of 100 MB by default, so copy out what you need soon after an event.
+`--switch` is required: the PoE switch's address, or another device plugged into the same switch, which is pinged next to the camera. Use `--switch none` to skip it. If the switch has an open TCP port (e.g. its web page), add `--switch-port 80` so the probe also uses it as a control host.
+
+`./flir_capture.sh help` lists all options (camera address, extra control and ping hosts, RTSP port, capture interface, ring buffer size). The camera's WebSocket is expected on port 80. The capture keeps the newest 100 files of 100 MB by default, so copy out what you need soon after an event.
 
 After a stall, cut out the evidence for it:
 
@@ -93,4 +98,11 @@ If the probe and capture run in a virtual machine with a NAT network adapter, th
 
 ## Running as a service
 
-`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. The camera, switch and control addresses, the interface and the user are set in `flir_capture_setup/systemd/flir-capture.service`; edit them for your site, then run `flir_capture_setup/install.sh`. See `flir_capture_setup/README.md`.
+`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. It is set up for one site; before installing elsewhere, edit for your site:
+
+* `flir_capture_setup/systemd/flir-capture.service`: the user and group, the repository path (`WorkingDirectory`, `ExecStart`, `ExecStop`), the interface, the camera, switch and control addresses, and the extra switch-subnet address added in `ExecStartPre`;
+* `flir_capture_setup/install.sh`: the user added to the `wireshark` group and the NetworkManager connection and address for the switch subnet.
+
+Then run `flir_capture_setup/install.sh`. See `flir_capture_setup/README.md`.
+
+Each weekday start creates a new run directory, and old runs are not deleted. With the 20 GB ring, each run can reach 20 GB, and `start` refuses to begin when less than 24 GB is free (the service then retries every 30 s). Copy out the bundles you need and delete old run directories under `flir_capture_runs/` regularly.

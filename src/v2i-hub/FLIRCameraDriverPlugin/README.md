@@ -75,3 +75,6 @@ In the `./scripts/` directory in this plugin we have created a simply python scr
 2) Run `python3 -m pip install -r scripts/requirements.txt` to install depedencies.
 3) Run `python3 scripts/mockFLIRCamera.py --ip <ip> --port <port>`
 4) Configure FLIR Camera Driver Plugin for connection to the websocket and in the **Messages** tab of the plugin you should see Sensor Detected Objects publishing. 
+
+## Diagnosing Camera Link Stalls
+If FLIR detections stop for a few seconds and then arrive all at once (and are discarded downstream as stale), `scripts/flir_stream_probe.py` and `scripts/flir_capture.sh` detect these stalls from outside the plugin, show whether the camera, the network or the V2X Hub host held the frames, and bundle the evidence for each stall. See [scripts/README.md](scripts/README.md).
