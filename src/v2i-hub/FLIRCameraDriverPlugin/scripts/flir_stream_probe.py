@@ -19,9 +19,9 @@ live
             --control 192.168.55.114:22 --control 192.168.55.134:22
 
 analyze
-    Finds stalls in existing logs: V2X Hub plugin logs (the plugin's "FLIR link stall" warnings, or the DEBUG
-    "Received:" lines from older builds), and optionally correlates them with sensor data sharing service
-    discards, other Kafka traffic and the events recorded by "live".
+    Finds stalls in existing logs: the FLIR plugin's DEBUG "Received:" lines in V2X Hub logs, and optionally
+    correlates them with sensor data sharing service discards, other Kafka traffic and the events recorded by
+    "live".
 
         python3 flir_stream_probe.py analyze --v2xhub v2xhub_pc2.log --sdss sdss.log \\
             --other-traffic kafka_topics/v2xhub_bsm_in.log --probe-events flir_probe_*/events.jsonl
@@ -77,10 +77,7 @@ _CAMERA_TIME_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.
 
 
 def parse_camera_time(text: str) -> int:
-    """Parse a camera timestamp such as 2026-09-15T13:47:10.032-04:00 into ms since epoch.
-
-    Mirrors the plugin's timeStringParser so both report the same values.
-    """
+    """Parse a camera timestamp such as 2026-09-15T13:47:10.032-04:00 into ms since epoch."""
     m = _CAMERA_TIME_RE.match(text.strip())
     if not m:
         dt = datetime.fromisoformat(text.strip().replace("Z", "+00:00"))
@@ -94,12 +91,8 @@ def parse_camera_time(text: str) -> int:
     return seconds * 1000 + millis
 
 
-def parse_iso_utc(text: str) -> int:
-    return round(datetime.fromisoformat(text.replace("Z", "+00:00")).timestamp() * 1000)
-
-
 # --------------------------------------------------------------------------------------------------------------
-# Stall detection (same rules as FLIRStreamMonitor in the plugin)
+# Stall detection
 # --------------------------------------------------------------------------------------------------------------
 
 @dataclass
@@ -733,15 +726,6 @@ def run_live(args: argparse.Namespace) -> int:
 _LOG_TIME_RE = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d\.\d{3})\]")
 _RECEIVED_RE = re.compile(r"WebsockAsyncClnSession\.cpp \(\d+\)\s*-\s*\w+\s*:\s*Received:\s*(\{.*)$")
 _FIELD_RE = {name: re.compile(r'"%s":\s*"?([^",}]+)"?' % name) for name in ("dataNumber", "messageType", "time")}
-_STALL_RE = re.compile(
-    r"FLIR link stall on (?P<sensor>.+?): no data for (?P<gap>-?\d+) ms while the camera kept producing frames "
-    r"(?P<cgap>-?\d+) ms apart, so frames were held (?P<hold>-?\d+) ms in transit\. Stall from (?P<start>\S+) to "
-    r"(?P<end>\S+), dataNumber (?P<dn0>\S+) -> (?P<dn1>\S+) \((?P<missing>\d+) missing\)")
-_BURST_RE = re.compile(
-    r"FLIR late burst on (?P<sensor>.+?): (?P<frames>\d+) frame\(s\) arrived at least (?P<thr>\d+) ms later than "
-    r"normal \(worst (?P<worst>-?\d+) ms\)\. Received from (?P<r0>\S+) to (?P<r1>\S+) \((?P<spread>-?\d+) ms\), "
-    r"produced by the camera from (?P<c0>\S+) to (?P<c1>\S+), dataNumber (?P<dn0>\S+) -> (?P<dn1>\S+)\.")
-_MINOR_RE = re.compile(r"FLIR link minor hold on (?P<sensor>.+?): frame held (?P<hold>-?\d+) ms in transit")
 _SDSS_SKIP_RE = re.compile(r"Skipping incoming detection at (\d+)ms is not current or has invalid timestamp of (\d+)ms")
 _KAFKA_CREATE_RE = re.compile(rb"^CreateTime:(\d+)\|")
 
@@ -756,31 +740,9 @@ def _int_or_none(text: Optional[str]) -> Optional[int]:
 def analyze_logs(args: argparse.Namespace) -> int:
     offset_ms = int(args.log_utc_offset * 3600 * 1000)
     received: Dict[Tuple[int, Optional[int], int], None] = {}
-    warn_stalls: List[Dict] = []
-    warn_bursts: List[Burst] = []
-    warn_minor = 0
     for path in args.v2xhub:
         with open(path, errors="replace") as f:
             for line in f:
-                if "FLIR link stall on" in line:
-                    m = _STALL_RE.search(line)
-                    if m:
-                        warn_stalls.append({
-                            "sensor": m["sensor"], "start_ms": parse_iso_utc(m["start"]), "end_ms": parse_iso_utc(m["end"]),
-                            "hold_ms": int(m["hold"]), "arrival_gap_ms": int(m["gap"]), "camera_gap_ms": int(m["cgap"]),
-                            "prev_data_number": _int_or_none(m["dn0"]), "data_number": _int_or_none(m["dn1"]),
-                            "missing": int(m["missing"])})
-                    continue
-                if "FLIR late burst on" in line:
-                    m = _BURST_RE.search(line)
-                    if m:
-                        warn_bursts.append(Burst(parse_iso_utc(m["r0"]), parse_iso_utc(m["r1"]), parse_iso_utc(m["c0"]),
-                                                 parse_iso_utc(m["c1"]), int(m["frames"]), int(m["worst"]),
-                                                 _int_or_none(m["dn0"]), _int_or_none(m["dn1"])))
-                    continue
-                if "FLIR link minor hold on" in line and _MINOR_RE.search(line):
-                    warn_minor += 1
-                    continue
                 if "Received:" not in line or "WebsockAsyncClnSession" not in line:
                     continue
                 t = _LOG_TIME_RE.match(line)
@@ -799,37 +761,31 @@ def analyze_logs(args: argparse.Namespace) -> int:
                     + int(t.group(1)[-3:]) - offset_ms
                 received[(recv_ms, _int_or_none(fields["dataNumber"]), camera_ms)] = None
 
+    if not received:
+        print("No camera frames found. The plugin LogLevel must be DEBUG so 'Received:' lines are logged.",
+              file=sys.stderr)
+        return 1
+
     stalls: List[Dict] = []
     bursts: List[Burst] = []
-    stats: Dict = {}
-    if received:
-        source = f"{len(received)} DEBUG 'Received:' frames (assumes a single camera)"
-        monitor = StreamMonitor(stall_ms=args.stall_ms)
-        for recv_ms, data_number, camera_ms in sorted(received, key=lambda k: (k[0], k[1] or 0)):
-            burst = monitor.close_if_idle(recv_ms)
-            if burst:
-                bursts.append(burst)
-            report = monitor.on_frame(recv_ms, camera_ms, data_number)
-            if report.completed_burst:
-                bursts.append(report.completed_burst)
-            if report.hold == "stall":
-                stalls.append({"sensor": "-", "start_ms": report.prev_recv_ms, "end_ms": recv_ms,
-                               "hold_ms": report.hold_ms, "arrival_gap_ms": report.arrival_gap_ms,
-                               "camera_gap_ms": report.camera_gap_ms, "prev_data_number": report.prev_data_number,
-                               "data_number": data_number, "missing": report.missing})
-        burst = monitor.flush()
+    source = f"{len(received)} DEBUG 'Received:' frames (assumes a single camera)"
+    monitor = StreamMonitor(stall_ms=args.stall_ms)
+    for recv_ms, data_number, camera_ms in sorted(received, key=lambda k: (k[0], k[1] or 0)):
+        burst = monitor.close_if_idle(recv_ms)
         if burst:
             bursts.append(burst)
-        stats = monitor.stats
-    elif warn_stalls or warn_bursts:
-        source = "plugin 'FLIR link stall' / 'FLIR late burst' warnings"
-        stalls, bursts = warn_stalls, warn_bursts
-        stats = {"stalls": len(stalls), "minor_holds": warn_minor, "late_frames": sum(b.frames for b in bursts),
-                 "max_stall_ms": max((s["hold_ms"] for s in stalls), default=0)}
-    else:
-        print("No camera frames or FLIR link warnings found. For older plugin builds the plugin LogLevel must be "
-              "DEBUG so 'Received:' lines are logged.", file=sys.stderr)
-        return 1
+        report = monitor.on_frame(recv_ms, camera_ms, data_number)
+        if report.completed_burst:
+            bursts.append(report.completed_burst)
+        if report.hold == "stall":
+            stalls.append({"start_ms": report.prev_recv_ms, "end_ms": recv_ms,
+                           "hold_ms": report.hold_ms, "arrival_gap_ms": report.arrival_gap_ms,
+                           "camera_gap_ms": report.camera_gap_ms, "prev_data_number": report.prev_data_number,
+                           "data_number": data_number, "missing": report.missing})
+    burst = monitor.flush()
+    if burst:
+        bursts.append(burst)
+    stats = monitor.stats
 
     sdss_skips: List[int] = []
     for path in args.sdss or []:
@@ -868,7 +824,7 @@ def analyze_logs(args: argparse.Namespace) -> int:
     for stall in stalls:
         burst = next((b for b in bursts if abs(b.first_recv_ms - stall["end_ms"]) <= 1), None)
         row = {
-            "start_utc": utc(stall["start_ms"]), "end_utc": utc(stall["end_ms"]), "sensor": stall["sensor"],
+            "start_utc": utc(stall["start_ms"]), "end_utc": utc(stall["end_ms"]),
             "hold_ms": stall["hold_ms"], "no_data_ms": stall["arrival_gap_ms"], "camera_gap_ms": stall["camera_gap_ms"],
             "data_number": f"{stall['prev_data_number']}->{stall['data_number']}", "missing": stall["missing"],
             "late_frames": burst.frames if burst else "",
@@ -926,8 +882,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     common = argparse.ArgumentParser(add_help=False)
     common.add_argument("--stall-ms", type=int, default=500,
-                        help="Extra transit time that counts as a stall, and lateness that counts as late (default 500, "
-                             "the plugin's LinkStallThresholdMs default).")
+                        help="Extra transit time that counts as a stall, and lateness that counts as late (default 500).")
     sub = parser.add_subparsers(dest="command", required=True)
 
     live = sub.add_parser("live", parents=[common], help="Subscribe to the camera independently and probe the network.")
