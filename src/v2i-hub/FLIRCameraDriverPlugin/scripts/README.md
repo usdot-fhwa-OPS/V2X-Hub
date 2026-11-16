@@ -10,6 +10,59 @@
 
 The camera streams tracking data over a WebSocket (TCP). If packets are lost on the camera link, TCP holds back everything after the lost packet until a retransmission gets through, so detections stop for a few seconds and then arrive all at once. Downstream services discard detections that late, which shows up as a gap followed by a burst on the detection topic.
 
+## Setup overview
+
+The network. The camera streams detections to the FLIR plugin on the V2X Hub host; the plugin forwards them to the Sensor Data Sharing Service, which discards detections that arrive late.
+
+```mermaid
+flowchart LR
+    host["V2X Hub host<br/>FLIR plugin, flir_capture.sh"] === switch["PoE switch<br/>--switch"]
+    switch === camera["FLIR camera<br/>--camera"]
+    host === net["Rest of the network<br/>control hosts: gateway, RSU<br/>--control HOST:PORT"]
+    host -- "detections" --> sdss["Sensor Data Sharing Service"]
+```
+
+What `flir_capture.sh` runs on the V2X Hub host, and what each part connects to, pings or captures. Solid arrows are WebSocket subscriptions, dotted arrows are checks. Comparing which checks failed during a stall shows where the frames were held. Not shown: `ip monitor`, which logs this host's own link and address changes.
+
+```mermaid
+flowchart LR
+    subgraph host["V2X Hub host"]
+        direction TB
+        probe["flir_stream_probe.py live"]
+        plugin["FLIR Camera Driver Plugin"]
+        rtsp["RTSP check, every 0.5 s"]
+        ping["ping, every 0.2 s"]
+        cap["dumpcap packet capture"]
+    end
+    self["This host's own address<br/>self check"]
+    control["Control hosts"]
+    camera["FLIR camera"]
+    switch["PoE switch"]
+
+    probe -. "TCP connect, every 0.5 s" .-> self
+    probe -. "TCP connect, every 0.5 s" .-> control
+    probe -- "WebSocket :80, stall detection" --> camera
+    probe -. "TCP connect :80, every 0.5 s" .-> camera
+    probe -. "TCP connect, if --switch-port" .-> switch
+    plugin -- "WebSocket :80" --> camera
+    rtsp -. "TCP connect :554" .-> camera
+    ping -. "ICMP" .-> camera
+    ping -. "ICMP" .-> switch
+    cap -. "all traffic" .-> camera
+    cap -. "all traffic" .-> switch
+```
+
+| Check | Run by | Shows |
+|---|---|---|
+| WebSocket subscription | `flir_stream_probe.py live` | stalls and late bursts, seen independently of the plugin |
+| TCP connects to the camera's WebSocket port | `flir_stream_probe.py live` | whether the camera accepted new connections during the stall |
+| TCP connects to control hosts | `flir_stream_probe.py live` | whether the rest of the network was reachable at the same time |
+| TCP connects to this host's own address | `flir_stream_probe.py live` | whether this host lost its own address or link |
+| ICMP ping to the camera and the switch | `flir_capture.sh` | whether only the camera stopped answering while the switch still did |
+| TCP connects to the camera's RTSP port | `flir_capture.sh` | whether the camera's other services stopped too |
+| Packet capture | `flir_capture.sh` (`dumpcap`) | whether packets stopped, were retransmitted, or were delayed |
+| Link and address log | `flir_capture.sh` (`ip monitor`) | whether this host's interface went down or changed address |
+
 ## flir_stream_probe.py
 
 Uses only the Python standard library (3.8+).
@@ -37,6 +90,18 @@ For each stall it prints whether the camera stayed reachable and how the backlog
 * Camera unreachable while the control host answered: packets were lost between the switch and the camera (camera network interface, its cable, PoE link or switch port).
 * Camera and control hosts all unreachable while this host kept its address: the problem is between this host and the rest of the network (its link to the switch or Wi-Fi access point, or that equipment itself).
 * Camera reachable throughout: the network path was up; frames were held by the camera's sender or by TCP retransmission backoff.
+
+```mermaid
+flowchart TD
+    stall["Stall: frames held at least 500 ms<br/>while the camera timestamps kept going"] --> selfq{"Self check failed?"}
+    selfq -- yes --> hostlost["This host lost its address or link.<br/>Not the camera or the network."]
+    selfq -- no --> camq{"Camera TCP connects<br/>failed or slow?"}
+    camq -- no --> sender["Network path was up.<br/>Held by the camera's sender<br/>or TCP retransmission backoff."]
+    camq -- yes --> ctlq{"Control hosts answered?"}
+    ctlq -- yes --> camlink["Camera link: camera network interface,<br/>cable, PoE or switch port"]
+    ctlq -- no --> hostlink["Between this host and the network:<br/>its link, switch or access point"]
+    ctlq -- "no control hosts given" --> unknown["Path to the camera was down.<br/>Add --control to narrow it down."]
+```
 
 If V2X Hub sees a stall at a time when the probe did not, the frames were held on the V2X Hub host. Running the probe on a laptop on the same switch separates the camera's link from the V2X Hub host's link.
 
@@ -98,11 +163,6 @@ If the probe and capture run in a virtual machine with a NAT network adapter, th
 
 ## Running as a service
 
-`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. It is set up for one site; before installing elsewhere, edit for your site:
-
-* `flir_capture_setup/systemd/flir-capture.service`: the user and group, the repository path (`WorkingDirectory`, `ExecStart`, `ExecStop`), the interface, the camera, switch and control addresses, and the extra switch-subnet address added in `ExecStartPre`;
-* `flir_capture_setup/install.sh`: the user added to the `wireshark` group and the NetworkManager connection and address for the switch subnet.
-
-Then run `flir_capture_setup/install.sh`. See `flir_capture_setup/README.md`.
+`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. Run `flir_capture_setup/install.sh`: it asks for the camera, switch and control addresses, checks that they answer, shows the resulting command and installs after confirmation. See `flir_capture_setup/README.md`.
 
 Each weekday start creates a new run directory, and old runs are not deleted. With the 20 GB ring, each run can reach 20 GB, and `start` refuses to begin when less than 24 GB is free (the service then retries every 30 s). Copy out the bundles you need and delete old run directories under `flir_capture_runs/` regularly.

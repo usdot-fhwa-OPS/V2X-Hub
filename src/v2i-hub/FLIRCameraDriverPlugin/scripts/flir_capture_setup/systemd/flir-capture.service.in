@@ -1,0 +1,28 @@
+# Template: install.sh fills in the @...@ values from its questions and installs the result
+# as /etc/systemd/system/flir-capture.service. Rerun install.sh to change them.
+[Unit]
+Description=FLIR camera link stall evidence collection
+Wants=network-online.target
+After=network-online.target NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=@USER@
+Group=@GROUP@
+SupplementaryGroups=wireshark
+WorkingDirectory=@SCRIPTS_DIR@
+# Only run Mon-Fri 07:00-18:00 local time
+ExecCondition=/usr/local/bin/flir-capture-in-hours
+@EXTRA_ADDRESS@
+# Wait up to 3 min for the camera to answer before starting
+ExecStartPre=/bin/sh -c 'for i in $(seq 1 90); do ping -c1 -W1 @CAMERA@ >/dev/null 2>&1 && exit 0; sleep 1; done; exit 0'
+ExecStart=@SCRIPTS_DIR@/flir_capture.sh start @START_ARGS@
+ExecStop=@SCRIPTS_DIR@/flir_capture.sh stop
+TimeoutStartSec=300
+TimeoutStopSec=30
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
