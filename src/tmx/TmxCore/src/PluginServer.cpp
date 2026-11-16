@@ -5,34 +5,24 @@
  *      Author: ivp
  */
 
-#ifndef __CYGWIN__
-#include <sys/prctl.h>
-#endif
 #include "PluginServer.h"
-#include <tmx/tmx.h>
-#include <stdlib.h>
-#include <assert.h>
+
 using namespace std;
 
 PluginServer::PluginServer(MessageRouter *router)
 {
-	assert(router != NULL);
+	assert(router != nullptr);
 
 	this->server_sockfd = 0;
 	this->mRouter = router;
 	boost::thread connectionThread(&PluginServer::startServer, this);
 }
 
-PluginServer::~PluginServer()
-{
 
-}
 
 void PluginServer::startServer()
 {
-#ifndef __CYGWIN__
 	prctl(PR_SET_NAME, "PluginServer", 0, 0, 0);
-#endif
 	int temp_fd;
 	int server_len;
 	int client_len;
@@ -41,17 +31,23 @@ void PluginServer::startServer()
 	int flags;
 	int on = 1;
 	
-	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,NULL);
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,NULL);
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE,nullptr);
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED,nullptr);
 
 	//Create unnamed socket
 	server_sockfd = socket(AF_INET, SOCK_STREAM,0);
+	if ( server_sockfd == -1 ) {
+		perror("SOCKET");
+		exit(1);
+	}
 	//Allows the socket to reuse the binding address so that on quick restarts we do not get an error
-	//TODO check this return value
-	/*retvalue = */setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on));
-
+ 	if (setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&on,sizeof(on)) == -1) {
+        perror("SETSOCKOPT:");
+        close(server_sockfd);
+        exit(1);
+    }
 	server_address.sin_family = AF_INET;
-	server_address.sin_addr.s_addr = htonl(INADDR_ANY);		//inet_addr("131.167.81.36"); // Use for static IP
+	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
 	// TODO make port configurable
 	server_address.sin_port = htons(IVP_DEFAULT_PORT);
 	server_len = sizeof(server_address);
@@ -65,10 +61,17 @@ void PluginServer::startServer()
 
 	//Set socket as non blocking
 	flags = fcntl(server_sockfd,F_GETFL,0);
-	//TODO check this return value
-	/*retvalue = */fcntl(server_sockfd,F_SETFL,O_NONBLOCK|flags);
+	if (flags == -1) {
+		perror("fcntl F_GETFL");
+		exit(1);
+	}
 
-	while(1)
+	if ( fcntl(server_sockfd,F_SETFL,O_NONBLOCK|flags) == -1 ) {
+		perror("fcntl F_SETFL");
+		exit(1);
+	}
+
+	while(true)
 	{
 
 		temp_fd = accept(server_sockfd,(struct sockaddr *)&client_address, (socklen_t *) &client_len);
@@ -76,7 +79,7 @@ void PluginServer::startServer()
 
 		if(temp_fd >= 0)
 		{
-			new PluginConnection(mRouter, temp_fd);
+			pluginConnections.push_back(std::make_unique<PluginConnection>(mRouter,temp_fd));
 		}
 
 		sleep(1);
