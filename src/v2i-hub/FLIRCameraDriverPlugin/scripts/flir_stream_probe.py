@@ -11,12 +11,12 @@ live
     Subscribes to the camera as an independent WebSocket client (it can run next to the V2X Hub plugin) and,
     at the same time, repeatedly opens TCP connections to the camera and to optional control hosts. When a
     stall happens it reports whether the camera stayed reachable, which separates a link outage from a
-    sender-side hold, and records how the backlog arrived at the TCP level. Every connect probe result is
-    kept in probes.csv. Control hosts should be other machines (e.g. the gateway); a --control that is this
-    host's own address is probed as a "self" check, which detects this host losing its address (Wi-Fi drop).
+    sender-side hold, and records how the backlog arrived at the TCP level. It also checks that this host still
+    has the address it uses to reach the camera (the "self" check), which detects this host losing its address
+    (link down, Wi-Fi drop). Every probe result is kept in probes.csv. Control hosts should be other machines
+    (e.g. the gateway) with an open TCP port.
 
-        python3 flir_stream_probe.py live --host 192.168.55.83 --control 192.168.55.1:80 \\
-            --control 192.168.55.114:22 --control 192.168.55.134:22
+        python3 flir_stream_probe.py live --host 192.168.55.83 --control 192.168.55.1:80
 
 analyze
     Finds stalls in existing logs: the FLIR plugin's DEBUG "Received:" lines in V2X Hub logs, and optionally
@@ -364,6 +364,16 @@ class WebSocketClient:
                 self.sock = None
 
 
+def source_address(host: str, port: int) -> Optional[str]:
+    """The address this host uses to reach host:port, or None if there is no route."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect((host, port))
+            return s.getsockname()[0]
+    except OSError:
+        return None
+
+
 def is_local_address(host: str) -> bool:
     """True if host resolves to an address assigned to this machine (binding to it only works then)."""
     try:
@@ -403,14 +413,15 @@ class ConnectProbe(threading.Thread):
     retransmission) or times out, independently of the detection stream. If this host loses its own address the
     connect fails at once with an error such as ENETUNREACH.
 
-    role is "camera", "control" (another host) or "self" (one of this host's own addresses).
+    role is "camera" or "control" (another host).
     """
 
     def __init__(self, role: str, host: str, port: int, interval_s: float, timeout_s: float,
                  log: Optional[ProbeLog] = None):
         super().__init__(daemon=True)
         self.role, self.host, self.port = role, host, port
-        self.label = f"{role} {host}:{port}"
+        self.target = f"{host}:{port}"
+        self.label = f"{role} {self.target}"
         self.interval_s, self.timeout_s, self.log = interval_s, timeout_s, log
         self._results: Deque[Tuple[int, int, bool, str]] = deque(maxlen=20000)  # start_ms, duration_ms, ok, error
         self._lock = threading.Lock()
@@ -422,8 +433,7 @@ class ConnectProbe(threading.Thread):
             began = time.monotonic()
             ok, error = True, ""
             try:
-                with socket.create_connection((self.host, self.port), timeout=self.timeout_s):
-                    pass
+                self.attempt()
             except OSError as e:
                 ok = False
                 error = (errno.errorcode.get(e.errno) if e.errno else None) or type(e).__name__
@@ -431,8 +441,12 @@ class ConnectProbe(threading.Thread):
             with self._lock:
                 self._results.append((start, duration, ok, error))
             if self.log is not None:
-                self.log.write(start, self.role, f"{self.host}:{self.port}", duration, ok, error)
+                self.log.write(start, self.role, self.target, duration, ok, error)
             self._stop.wait(max(0.0, self.interval_s - (time.monotonic() - began)))
+
+    def attempt(self) -> None:
+        with socket.create_connection((self.host, self.port), timeout=self.timeout_s):
+            pass
 
     def stop(self) -> None:
         self._stop.set()
@@ -457,14 +471,30 @@ class ConnectProbe(threading.Thread):
         }
 
 
+class SelfCheck(ConnectProbe):
+    """Checks that this host still has the address it uses to reach the camera.
+
+    Binding to an address this host no longer has fails at once with EADDRNOTAVAIL, e.g. when the link goes
+    down, Wi-Fi disconnects or NetworkManager takes the connection down. Needs no open port.
+    """
+
+    def __init__(self, address: str, interval_s: float, log: Optional[ProbeLog] = None):
+        super().__init__("self", address, 0, interval_s, 0.0, log)
+        self.target = address
+        self.label = f"self {address}"
+
+    def attempt(self) -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind((self.host, 0))
+
+
 def probe_verdict(camera: Optional[Dict], controls: List[Dict], selfs: Optional[List[Dict]] = None) -> str:
     if camera is None:
         return "No reachability probes were running (--no-probe)."
     if camera["sent"] == 0:
         return "No camera probe fell inside the stall window; use a shorter --probe-interval."
     if any(s["sent"] > 0 and s["failed_or_slow"] > 0 for s in selfs or []):
-        return ("Connections to this host's own address failed too, so this host lost its network address or "
-                "interface during the stall (link down, Wi-Fi disconnected, DHCP/NetworkManager reset). The camera "
+        return ("This host lost the address it uses to reach the camera during the stall (link down, Wi-Fi disconnected, DHCP/NetworkManager reset). The camera "
                 "and the rest of the network were not the cause.")
     camera_bad = camera["failed_or_slow"] > 0
     controls_probed = [c for c in controls if c["sent"] > 0]
@@ -525,12 +555,16 @@ def run_live(args: argparse.Namespace) -> int:
         probe_log = ProbeLog(os.path.join(out_dir, "probes.csv"))
         camera_probe = ConnectProbe("camera", args.host, args.port, args.probe_interval, args.probe_timeout, probe_log)
         probes.append(camera_probe)
+        own = source_address(args.host, args.port)
+        if own is None:
+            print(f"No route to {args.host} right now: running without the self check.")
+        else:
+            probes.append(SelfCheck(own, args.probe_interval, probe_log))
         for host, port in targets:
-            role = "self" if is_local_address(host) else "control"
-            if role == "self":
-                print(f"--control {host}:{port} is this host's own address: probing it as a self check (detects this "
-                      f"host losing its address), not as a control.")
-            probes.append(ConnectProbe(role, host, port, args.probe_interval, args.probe_timeout, probe_log))
+            if is_local_address(host):
+                print(f"--control {host}:{port} is this host's own address, which is already checked: skipped.")
+                continue
+            probes.append(ConnectProbe("control", host, port, args.probe_interval, args.probe_timeout, probe_log))
         if not any(p.role == "control" for p in probes):
             print("No --control on another machine: a stall verdict cannot separate this host's network from the "
                   "camera's link. Add e.g. --control <gateway>:80.")
@@ -890,13 +924,12 @@ def main() -> int:
     live.add_argument("--port", type=int, default=80, help="Camera WebSocket port (default 80).")
     live.add_argument("--path", default="/api/subscriptions", help="Camera WebSocket endpoint.")
     live.add_argument("--control", action="append", default=[], metavar="HOST:PORT",
-                      help="Another host on the same network to probe for comparison, e.g. the gateway or pc1 "
-                           "(repeatable). Must have an open TCP port. One of this host's own addresses is probed as "
-                           "a self check instead (detects this host losing its address).")
+                      help="Another host on the same network to probe for comparison, e.g. the gateway "
+                           "(repeatable). Must have an open TCP port. This host's own address is checked automatically.")
     live.add_argument("--silence-ms", type=int, default=90000,
                       help="Report a period with no data at all (not even the camera's 60 s keepalive ping) longer "
                            "than this, even if nothing was tracked (default 90000).")
-    live.add_argument("--probe-interval", type=float, default=0.5, help="Seconds between TCP connect probes (default 0.5).")
+    live.add_argument("--probe-interval", type=float, default=0.5, help="Seconds between probes (default 0.5).")
     live.add_argument("--probe-timeout", type=float, default=3.0, help="TCP connect probe timeout in seconds (default 3).")
     live.add_argument("--slow-ms", type=int, default=500,
                       help="A connect probe slower than this counts as failed (default 500; a lost SYN adds ~1000 ms).")

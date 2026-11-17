@@ -4,12 +4,11 @@
 # Runs, unattended and all into one run directory:
 #   - flir_stream_probe.py live: second WebSocket client on the camera, stall detection, TCP connect checks
 #   - ICMP ping (timestamped) to the camera and the PoE switch
-#   - TCP connect checks to the camera's RTSP port
 #   - a rotating packet capture (dumpcap) of all traffic to/from the camera and the switch
 #   - a log of this host's own link/address changes
 # and cuts out a small, self-contained bundle per stall to send to the camera vendor.
 #
-#   ./flir_capture.sh start --switch 192.168.55.2 --firmware V2.05 --note "switch A, port 3, cable 1"
+#   ./flir_capture.sh start --switch 192.168.55.2 --note "firmware V2.05, switch A, port 3, cable 1"
 #   ./flir_capture.sh status
 #   ./flir_capture.sh list                         # stalls found so far, with UTC times
 #   ./flir_capture.sh extract 2026-11-13T15:15:02.120Z
@@ -37,17 +36,13 @@ start options
   --camera IP          Camera address (default 192.168.55.183).
   --switch IP          PoE switch address, pinged next to the camera. If the switch has no IP address,
                        use another device plugged into the same switch. "none" to skip.
-  --switch-port PORT   An open TCP port on the switch (e.g. 80 for its web page), also checked with TCP
-                       connects by the probe. Leave out if the switch has no open TCP port.
   --control HOST:PORT  Extra host for the probe's TCP comparison checks, e.g. the gateway (repeatable).
                        Must be another machine with an open TCP port.
   --ping HOST          Extra host to ping and capture (repeatable).
-  --rtsp-port PORT     Camera RTSP port to check with TCP connects (default 554, 0 to skip).
   --iface IF           Capture interface (default: the one routing to the camera).
   --ring-mb N          Size of each capture file in MB (default 100).
   --ring-files N       Number of capture files kept; the oldest is overwritten (default 100).
-  --firmware TEXT      Camera firmware version, recorded in notes.txt.
-  --note TEXT          Free text recorded in notes.txt: switch, port, cable, what changed (repeatable).
+  --note TEXT          Free text recorded in notes.txt: firmware, switch, port, cable, what changed (repeatable).
   --no-capture         Do not run the packet capture (only if capturing is not possible).
 
 extract <UTC time> [options]
@@ -85,41 +80,18 @@ launch() {  # launch <name> <logfile> <command...>
     echo "$name $!" >> "$RUN/pids"
 }
 
-# TCP connect checks of one HOST:PORT every 0.5 s. CSV: epoch_s,utc,target,duration_ms,ok,error
-TCPCHECK='
-import socket, sys, time, errno, datetime
-host, port, out = sys.argv[1], int(sys.argv[2]), sys.argv[3]
-with open(out, "a", buffering=1) as f:
-    if f.tell() == 0:
-        f.write("epoch_s,utc,target,duration_ms,ok,error\n")
-    while True:
-        t = time.time(); m = time.monotonic(); ok, err = 1, ""
-        try:
-            socket.create_connection((host, port), timeout=3).close()
-        except OSError as e:
-            ok, err = 0, (errno.errorcode.get(e.errno) if e.errno else None) or type(e).__name__
-        d = int((time.monotonic() - m) * 1000)
-        u = datetime.datetime.fromtimestamp(t, datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        f.write(f"{t:.3f},{u},{host}:{port},{d},{ok},{err}\n")
-        time.sleep(max(0.0, 0.5 - (time.monotonic() - m)))
-'
-
 cmd_start() {
-    local camera=192.168.55.183 switch="" switch_port="" rtsp_port=554 iface="" ring_mb=100 ring_files=100
-    local firmware="" capture=1
+    local camera=192.168.55.183 switch="" iface="" ring_mb=100 ring_files=100 capture=1
     local -a controls=() pings=() notes=()
     while [ $# -gt 0 ]; do
         case $1 in
             --camera) camera=$2; shift 2 ;;
             --switch) switch=$2; shift 2 ;;
-            --switch-port) switch_port=$2; shift 2 ;;
             --control) controls+=("$2"); shift 2 ;;
             --ping) pings+=("$2"); shift 2 ;;
-            --rtsp-port) rtsp_port=$2; shift 2 ;;
             --iface) iface=$2; shift 2 ;;
             --ring-mb) ring_mb=$2; shift 2 ;;
             --ring-files) ring_files=$2; shift 2 ;;
-            --firmware) firmware=$2; shift 2 ;;
             --note) notes+=("$2"); shift 2 ;;
             --no-capture) capture=0; shift ;;
             *) die "unknown option for start: $1 (see: $0 help)" ;;
@@ -127,7 +99,6 @@ cmd_start() {
     done
     [ -n "$switch" ] || die "--switch is required: the PoE switch's IP, or another device on the same switch. Use --switch none to skip."
     [ "$switch" = none ] && switch=""
-    [ -z "$switch_port" ] || [ -n "$switch" ] || die "--switch-port needs --switch"
 
     need python3 "Install Python 3."
     need ping "Install iputils-ping."
@@ -182,9 +153,9 @@ If dumpcap still cannot capture: sudo dpkg-reconfigure wireshark-common (answer 
         echo "started_utc: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
         echo "started_epoch: $(date +%s)"
         echo "host: $(hostname)  iface: $iface  virt: $(systemd-detect-virt 2>/dev/null || echo unknown)"
-        echo "camera: $camera  firmware: ${firmware:-not recorded}"
-        echo "switch: ${switch:-none}${switch_port:+  tcp port $switch_port}"
-        echo "extra ping: ${pings[*]:-none}  extra controls: ${controls[*]:-none}  rtsp port: $rtsp_port"
+        echo "camera: $camera"
+        echo "switch: ${switch:-none}"
+        echo "extra ping: ${pings[*]:-none}  controls: ${controls[*]:-none}"
         echo "capture: $([ "$capture" = 1 ] && echo "$iface, filter '$filter', ${ring_files} x ${ring_mb} MB ring" || echo off)"
         echo "ntp synchronized: $(timedatectl show -p NTPSynchronized --value 2>/dev/null || echo unknown)"
         for h in "${notes[@]}"; do echo "note: $h"; done
@@ -194,16 +165,12 @@ If dumpcap still cannot capture: sudo dpkg-reconfigure wireshark-common (answer 
     } > "$RUN/notes.txt"
 
     local -a probe_args=(live --host "$camera" --out "$RUN")
-    [ -n "$switch_port" ] && probe_args+=(--control "$switch:$switch_port")
     for h in "${controls[@]}"; do probe_args+=(--control "$h"); done
     launch probe "$RUN/console.log" python3 -u "$PROBE" "${probe_args[@]}"
 
     launch ping_camera "$RUN/ping_camera.log" ping -D -O -i 0.2 "$camera"
     [ -n "$switch" ] && launch ping_switch "$RUN/ping_switch.log" ping -D -O -i 0.2 "$switch"
     for h in "${pings[@]}"; do launch "ping_$h" "$RUN/ping_$h.log" ping -D -O -i 0.2 "$h"; done
-
-    [ "$rtsp_port" != 0 ] && launch rtsp_check "$RUN/rtsp_check.log" \
-        python3 -I -c "$TCPCHECK" "$camera" "$rtsp_port" "$RUN/rtsp_check.csv"
 
     launch ip_monitor "$RUN/ip_monitor.log" ip -ts monitor link address
 
@@ -256,9 +223,6 @@ cmd_status() {
         [ -f "$f" ] || continue
         echo "$(basename "$f" .log): $(grep -c 'bytes from' "$f" || true) replies, $(grep -c 'no answer yet' "$f" || true) unanswered"
     done
-    if [ -f "$run/rtsp_check.csv" ]; then
-        echo "rtsp_check: $(awk -F, 'NR>1 && $5==1' "$run/rtsp_check.csv" | wc -l) ok, $(awk -F, 'NR>1 && $5==0' "$run/rtsp_check.csv" | wc -l) failed"
-    fi
     echo "ip_monitor: $(cat "$run/ip_monitor.log" 2>/dev/null | grep -c . || true) link/address change(s) on this host"
     echo
     echo "Found by the probe: $(grep -c 'STALL details' "$run/console.log" 2>/dev/null || true) stall(s)," \
@@ -330,7 +294,7 @@ cmd_extract() {
     {
         echo "Event: $when (UTC), window $(date -u -d "@${lo%.*}" +%H:%M:%S) to $(date -u -d "@${hi%.*}" +%H:%M:%S) UTC"
         echo "Camera: $camera"
-        sed -n '1,9p' "$run/notes.txt"
+        sed '/^$/,$d' "$run/notes.txt"
         echo
     } > "$summary"
 
@@ -379,11 +343,6 @@ cmd_extract() {
         echo "$(basename "$f" .log): $(grep -c 'bytes from' "$out/$(basename "$f")" || true) replies," \
              "$(grep -c 'no answer yet' "$out/$(basename "$f")" || true) unanswered in the window" >> "$summary"
     done
-    if [ -f "$run/rtsp_check.csv" ]; then
-        awk -F, -v lo="$lo" -v hi="$hi" 'NR == 1 || ($1 >= lo && $1 <= hi)' "$run/rtsp_check.csv" > "$out/rtsp_check.csv"
-        echo "rtsp_check: $(awk -F, 'NR>1 && $5==1' "$out/rtsp_check.csv" | wc -l) ok," \
-             "$(awk -F, 'NR>1 && $5==0' "$out/rtsp_check.csv" | wc -l) failed in the window" >> "$summary"
-    fi
     for f in frames.csv chunks.csv probes.csv; do
         [ -f "$run/$f" ] && awk -F, -v lo="$lo" -v hi="$hi" 'NR == 1 || ($2 >= lo * 1000 && $2 <= hi * 1000)' \
             "$run/$f" > "$out/$f"
