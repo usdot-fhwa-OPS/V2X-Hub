@@ -163,6 +163,6 @@ If the probe and capture run in a virtual machine with a NAT network adapter, th
 
 ## Running as a service
 
-`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring. Run `flir_capture_setup/install.sh`: it asks for the camera, switch and control addresses, checks that they answer, shows the resulting command and installs after confirmation. See `flir_capture_setup/README.md`.
+`flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring by default. Run `flir_capture_setup/install.sh`: it asks for the camera, switch and control addresses, ports and capture size, showing a default for each, checks that they answer, shows the resulting command and installs after confirmation. See `flir_capture_setup/README.md`.
 
-Each weekday start creates a new run directory, and old runs are not deleted. With the 20 GB ring, each run can reach 20 GB, and `start` refuses to begin when less than 24 GB is free (the service then retries every 30 s). Copy out the bundles you need and delete old run directories under `flir_capture_runs/` regularly.
+Each weekday start creates a new run directory, and old runs are not deleted. With the default 20 GB ring, each run can reach 20 GB, and `start` refuses to begin when less than 24 GB is free (the service then retries every 30 s). Copy out the bundles you need and delete old run directories under `flir_capture_runs/` regularly.

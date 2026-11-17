@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install ../flir_capture.sh as a systemd service on this machine (weekdays 07:00-18:00, 20 GB capture ring).
+# Install ../flir_capture.sh as a systemd service on this machine (weekdays 07:00-18:00, 20 GB capture ring by default).
 #
 # Asks for the camera, switch and control addresses, checks that they answer, shows the resulting command,
 # and installs after confirmation. The answers are saved to /etc/flir-capture/site.conf and offered as the
@@ -27,7 +27,8 @@ die() { echo "error: $*" >&2; exit 1; }
 [ -t 0 ] || [ "$YES" = 1 ] || die "run this in a terminal (it asks for the site's addresses), or use --yes to reuse the saved answers."
 
 # Saved answers from the last install, if any
-RUN_USER="" CAMERA="" IFACE="" SWITCH="" SWITCH_PORT="" CONTROLS="" SELF_CHECK="" EXTRA_ADDR="" NM_CON="" FIRMWARE="" NOTE=""
+RUN_USER="" CAMERA="" IFACE="" SWITCH="" SWITCH_PORT="" CONTROLS="" SELF_CHECK="" EXTRA_ADDR="" NM_CON=""
+RTSP_PORT="" CAPTURE_GB="" FIRMWARE="" NOTE=""
 SAVED=0
 if [ -r "$CONF" ]; then
     # shellcheck disable=SC1090
@@ -38,8 +39,8 @@ elif [ "$YES" = 1 ]; then
     die "--yes needs saved answers in $CONF; run without --yes first."
 fi
 
-# ---- validators (set ERR and return 1 when the value is not valid) -------------------------------------
-ERR=""
+# ---- validators (set ERR and return 1 when the value is not valid; may set VAL to a completed value) -------
+ERR="" VAL=""
 is_ipv4() {
     [[ $1 =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
     local i; for i in 1 2 3 4; do [ "${BASH_REMATCH[$i]}" -le 255 ] || return 1; done
@@ -50,11 +51,21 @@ v_user() { id -u "$1" >/dev/null 2>&1 || { ERR="no such user"; return 1; }; }
 v_ip() { is_ipv4 "$1" || { ERR="enter an IPv4 address such as 192.168.55.183"; return 1; }; }
 v_switch() { [ "$1" = none ] || is_ipv4 "$1" || { ERR="enter an IPv4 address, or none"; return 1; }; }
 v_port_opt() { [ -z "$1" ] || is_port "$1" || { ERR="enter a port number 1-65535, or - for none"; return 1; }; }
+v_port0() { [ "$1" = 0 ] || is_port "$1" || { ERR="enter a port number 1-65535, or 0 to skip"; return 1; }; }
+v_gb() { [[ $1 =~ ^[0-9]{1,4}$ ]] && [ "$1" -ge 1 ] || { ERR="enter a whole number of GB, such as 20"; return 1; }; }
 v_iface() { [ -n "$1" ] && ip link show dev "$1" >/dev/null 2>&1 || { ERR="no such interface (see: ip -br link)"; return 1; }; }
-v_hostport_opt() { [ -z "$1" ] || is_hostport "$1" || { ERR="enter HOST:PORT, or - to skip"; return 1; }; }
-v_hostports() {
-    local h; for h in $1; do is_hostport "$h" || { ERR="'$h' is not HOST:PORT; separate several with spaces"; return 1; }; done
+# HOST or HOST:PORT, space-separated; a HOST without a port gets the default port $1.
+hostports() {
+    local h hp out=""
+    for h in $2; do
+        hp=$h; [[ $h == *:* ]] || hp="$h:$1"
+        is_hostport "$hp" || { ERR="'$h' is not HOST or HOST:PORT; separate several with spaces"; return 1; }
+        out+="${out:+ }$hp"
+    done
+    VAL=$out
 }
+v_controls() { hostports 80 "$1"; }
+v_self() { [[ $1 != *" "* ]] || { ERR="enter one address"; return 1; }; hostports 22 "$1"; }
 v_cidr_opt() {
     [ -z "$1" ] && return 0
     local addr="${1%/*}" prefix="${1##*/}"
@@ -71,22 +82,25 @@ v_any() { :; }
 saved_or() { if [ "$SAVED" = 1 ]; then printf '%s' "$1"; else printf '%s' "$2"; fi; }
 
 # ask VAR VALIDATOR "question" DEFAULT [optional]
-# Enter keeps the default; "-" clears an optional value.
+# Shows the default in [brackets] ([none] for an empty optional value); Enter keeps it, "-" or "none" clears
+# an optional value.
 ask() {
-    local var=$1 check=$2 question=$3 def=$4 optional=${5:-} ans
+    local var=$1 check=$2 question=$3 def=$4 optional=${5:-} ans shown
+    shown=$def; [ -z "$shown" ] && [ -n "$optional" ] && shown=none
     while true; do
         if [ "$YES" = 1 ]; then
             ans=$def
         else
-            read -r -p "$question${def:+ [$def]}: " ans || die "no answer"
+            read -r -p "$question${shown:+ [$shown]}: " ans || die "no answer"
             ans=${ans:-$def}
-            [ "$ans" = - ] && [ -n "$optional" ] && ans=""
+            [ -n "$optional" ] && { [ "$ans" = - ] || [ "$ans" = none ]; } && ans=""
         fi
         if [ -z "$ans" ] && [ -z "$optional" ]; then
             [ "$YES" = 1 ] && die "no saved value for: $question"
             echo "  a value is needed"; continue
         fi
-        if "$check" "$ans"; then printf -v "$var" '%s' "$ans"; return 0; fi
+        VAL=$ans
+        if "$check" "$ans"; then printf -v "$var" '%s' "$VAL"; return 0; fi
         [ "$YES" = 1 ] && die "saved value '$ans' is not valid for: $question ($ERR)"
         echo "  $ERR"
     done
@@ -95,31 +109,35 @@ ask() {
 # ---- questions ------------------------------------------------------------------------------------------
 if [ "$YES" = 0 ]; then
     cat <<'EOF'
-FLIR capture service setup. Press Enter to keep the value in [brackets]; type - to leave an optional value empty.
+FLIR capture service setup. Press Enter to keep the default in [brackets]; type - or none to leave an
+optional value empty.
 See README.md next to this script for a diagram of what is checked.
 
 EOF
 fi
 
 ask RUN_USER v_user "User the service runs as (needs to read $SCRIPTS_DIR)" "${RUN_USER:-${SUDO_USER:-$USER}}"
-ask CAMERA v_ip "FLIR camera IP address" "$CAMERA"
+ask CAMERA v_ip "FLIR camera IP address (WebSocket on port 80)" "${CAMERA:-192.168.55.183}"
 
 route_dev() { ip route get "$1" 2>/dev/null | grep -oP ' dev \K\S+' | head -1; }
 route_src() { ip route get "$1" 2>/dev/null | grep -oP ' src \K\S+' | head -1; }
 ask IFACE v_iface "Network interface that reaches the camera (captured on)" "${IFACE:-$(route_dev "$CAMERA" || true)}"
 
+tcp_open() { timeout 2 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; }
+
 ask SWITCH v_switch "PoE switch IP, pinged next to the camera (or another device on the same switch; none to skip)" "${SWITCH:-}"
 if [ "$SWITCH" = none ]; then
     SWITCH_PORT="" EXTRA_ADDR="" NM_CON=""
 else
-    ask SWITCH_PORT v_port_opt "Open TCP port on the switch, e.g. 80 for its web page (- for none)" "$SWITCH_PORT" optional
+    sw_port=""; [ "$SAVED" = 1 ] || ! tcp_open "$SWITCH" 80 || sw_port=80
+    ask SWITCH_PORT v_port_opt "Open TCP port on the switch, e.g. 80 for its web page" "$(saved_or "$SWITCH_PORT" "$sw_port")" optional
     if [ -z "$EXTRA_ADDR" ] && ip route get "$SWITCH" 2>/dev/null | grep -q ' via '; then
         echo "  $SWITCH is not on a subnet $IFACE is attached to. If the switch only has its factory address,"
         echo "  give this host an extra address on the switch's subnet, e.g. 192.168.0.52/24 for a switch at 192.168.0.239."
     fi
-    ask EXTRA_ADDR v_cidr_opt "Extra address to add to $IFACE to reach the switch (- for none)" "$EXTRA_ADDR" optional
+    ask EXTRA_ADDR v_cidr_opt "Extra address to add to $IFACE to reach the switch, ADDRESS/PREFIX" "$EXTRA_ADDR" optional
     if [ -n "$EXTRA_ADDR" ] && command -v nmcli >/dev/null 2>&1; then
-        ask NM_CON v_nmcon_opt "NetworkManager connection to save that address in (- to not save it; the service adds it at each start anyway)" \
+        ask NM_CON v_nmcon_opt "NetworkManager connection to save that address in (none: the service still adds it at each start)" \
             "$(saved_or "$NM_CON" "$(nmcli -g GENERAL.CONNECTION device show "$IFACE" 2>/dev/null || true)")" optional
     else
         NM_CON=""
@@ -127,23 +145,24 @@ else
 fi
 
 default_gw=$(ip route show default dev "$IFACE" 2>/dev/null | awk '{print $3; exit}' || true)
-ask CONTROLS v_hostports "Control hosts, HOST:PORT with an open TCP port, e.g. the gateway or RSU (space-separated, - for none)" \
+ask CONTROLS v_controls "Control hosts with an open TCP port, e.g. the gateway or RSU: HOST[:PORT], port 80 if left out, space-separated" \
     "$(saved_or "$CONTROLS" "${default_gw:+$default_gw:80}")" optional
 src=$(route_src "$CAMERA" || true)
-ask SELF_CHECK v_hostport_opt "This host's own address for the self check, HOST:PORT with an open port such as SSH (- to skip)" \
+ask SELF_CHECK v_self "This host's own address for the self check, needs an open port: HOST[:PORT], port 22 (SSH) if left out" \
     "$(saved_or "$SELF_CHECK" "${src:+$src:22}")" optional
-ask FIRMWARE v_any "Camera firmware version, recorded with each run (- for none)" "$FIRMWARE" optional
-ask NOTE v_any "Note recorded with each run: switch, port, cable, time source (- for none)" "$NOTE" optional
+ask RTSP_PORT v_port0 "Camera RTSP port, checked with TCP connects (0 to skip)" "${RTSP_PORT:-554}"
+ask CAPTURE_GB v_gb "Packet capture kept per run, in GB (the oldest 100 MB file is overwritten)" "${CAPTURE_GB:-20}"
+ask FIRMWARE v_any "Camera firmware version, recorded with each run" "$FIRMWARE" optional
+ask NOTE v_any "Note recorded with each run: switch, port, cable, time source" "$NOTE" optional
 
 # ---- reachability (warnings only) -----------------------------------------------------------------------
 echo
 echo "Checking the addresses from this host:"
 check_ping() { if ping -c 1 -W 1 "$1" >/dev/null 2>&1; then echo "  ok         ping $1 ($2)"; else echo "  NO ANSWER  ping $1 ($2)"; fi; }
-check_tcp() {
-    if timeout 2 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; then echo "  ok         tcp  $1:$2 ($3)"; else echo "  NO ANSWER  tcp  $1:$2 ($3)"; fi
-}
+check_tcp() { if tcp_open "$1" "$2"; then echo "  ok         tcp  $1:$2 ($3)"; else echo "  NO ANSWER  tcp  $1:$2 ($3)"; fi; }
 check_ping "$CAMERA" camera
 check_tcp "$CAMERA" 80 "camera WebSocket"
+[ "$RTSP_PORT" = 0 ] || check_tcp "$CAMERA" "$RTSP_PORT" "camera RTSP"
 if [ "$SWITCH" != none ]; then
     if [ -n "$EXTRA_ADDR" ] && ! ip -4 addr show dev "$IFACE" | grep -qF "inet ${EXTRA_ADDR%/*}/"; then
         echo "  (skipped)  ping $SWITCH (switch): $IFACE does not have ${EXTRA_ADDR} yet; the service adds it"
@@ -154,6 +173,10 @@ if [ "$SWITCH" != none ]; then
 fi
 for h in $CONTROLS; do check_tcp "${h%:*}" "${h##*:}" control; done
 [ -z "$SELF_CHECK" ] || check_tcp "${SELF_CHECK%:*}" "${SELF_CHECK##*:}" "self check"
+free_gb=$(df -Pk "$SCRIPTS_DIR" | awk 'NR==2 {print int($4 / 1048576)}')
+need_gb=$((CAPTURE_GB + CAPTURE_GB / 5))
+if [ "$free_gb" -gt "$need_gb" ]; then echo "  ok         disk ${free_gb} GB free, a run needs about ${need_gb} GB"
+else echo "  TOO LITTLE disk ${free_gb} GB free, a run needs about ${need_gb} GB: start will refuse to run"; fi
 
 # ---- build the service file -----------------------------------------------------------------------------
 # Free text goes inside "..." in the unit file: drop quotes and backslashes, escape systemd's % and $.
@@ -162,7 +185,8 @@ unit_text() { local s=${1//[\"\\]/}; s=${s//%/%%}; s=${s//\$/\$\$}; printf '"%s"
 args="--camera $CAMERA --switch $SWITCH"
 [ -z "$SWITCH_PORT" ] || args+=" --switch-port $SWITCH_PORT"
 for h in $CONTROLS $SELF_CHECK; do args+=" --control $h"; done
-args+=" --iface $IFACE --ring-mb 100 --ring-files 200"
+[ "$RTSP_PORT" = 554 ] || args+=" --rtsp-port $RTSP_PORT"
+args+=" --iface $IFACE --ring-mb 100 --ring-files $((CAPTURE_GB * 10))"
 [ -z "$FIRMWARE" ] || args+=" --firmware $(unit_text "$FIRMWARE")"
 note="${NOTE:+$NOTE; }started by flir-capture.service"
 args+=" --note $(unit_text "$note")"
@@ -202,7 +226,7 @@ fi
 sudo mkdir -p "$(dirname "$CONF")"
 {
     echo "# Answers from flir_capture_setup/install.sh, offered as defaults when it is run again."
-    for v in RUN_USER CAMERA IFACE SWITCH SWITCH_PORT CONTROLS SELF_CHECK EXTRA_ADDR NM_CON FIRMWARE NOTE; do
+    for v in RUN_USER CAMERA IFACE SWITCH SWITCH_PORT CONTROLS SELF_CHECK EXTRA_ADDR NM_CON RTSP_PORT CAPTURE_GB FIRMWARE NOTE; do
         printf '%s=%q\n' "$v" "${!v}"
     done
 } | sudo tee "$CONF" >/dev/null
