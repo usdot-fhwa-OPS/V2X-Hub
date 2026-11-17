@@ -2,7 +2,8 @@
 # Collect evidence for FLIR camera link stalls (detections stop for ~3.5 s, then arrive in a burst).
 #
 # Runs, unattended and all into one run directory:
-#   - flir_stream_probe.py live: second WebSocket client on the camera, stall detection, TCP connect checks
+#   - flir_stream_probe.py live: second WebSocket client on the camera, stall detection, TCP connect checks,
+#     and requests to the camera's web interface and RTSP server
 #   - ICMP ping (timestamped) to the camera and the PoE switch
 #   - a rotating packet capture (dumpcap) of all traffic to/from the camera and the switch
 #   - a log of this host's own link/address changes
@@ -39,6 +40,8 @@ start options
   --control HOST:PORT  Extra host for the probe's TCP comparison checks, e.g. the gateway (repeatable).
                        Must be another machine with an open TCP port.
   --ping HOST          Extra host to ping and capture (repeatable).
+  --web-port PORT      Camera web interface port, checked with HTTP requests (default 80, 0 to skip).
+  --rtsp-port PORT     Camera RTSP port, checked with RTSP OPTIONS requests (default 554, 0 to skip).
   --iface IF           Capture interface (default: the one routing to the camera).
   --ring-mb N          Size of each capture file in MB (default 100).
   --ring-files N       Number of capture files kept; the oldest is overwritten (default 100).
@@ -80,8 +83,64 @@ launch() {  # launch <name> <logfile> <command...>
     echo "$name $!" >> "$RUN/pids"
 }
 
+# Prints what each check saw during the probe's stall (or silence) nearest to an event time:
+#   python3 -c "$EVENT_TABLE" <run dir> <epoch seconds>
+EVENT_TABLE='
+import datetime, glob, json, os, re, sys
+run, t = sys.argv[1], float(sys.argv[2]) * 1000
+events = []
+try:
+    with open(os.path.join(run, "events.jsonl")) as f:
+        events = [e for e in map(json.loads, f) if e.get("type") in ("stall", "silence")]
+except OSError:
+    pass
+near = [e for e in events if abs(e["start_ms"] - t) <= 2000]
+if not near:
+    print("=== No stall recorded by the probe at this time, so no per-check table.")
+    sys.exit(0)
+e = min(near, key=lambda e: abs(e["start_ms"] - t))
+lo, hi = e["start_ms"] / 1000, e["end_ms"] / 1000
+hms = lambda s: datetime.datetime.fromtimestamp(s, datetime.timezone.utc).strftime("%H:%M:%S.%f")[:-3]
+held = e.get("hold_ms", e.get("no_data_ms"))
+kind = e["type"]
+print(f"=== Camera during the {kind}, {hms(lo)} to {hms(hi)} UTC")
+row = lambda name, text: print(f"  {name:<42} {text}")
+row("WebSocket stream (probe)", f"held {held} ms")
+for path in sorted(glob.glob(os.path.join(run, "ping_*.log"))):
+    ok = lost = 0
+    with open(path) as f:
+        for line in f:
+            m = re.match(r"\[([0-9.]+)\]", line)
+            if m and lo <= float(m.group(1)) <= hi:
+                ok += "bytes from" in line
+                lost += "no answer yet" in line
+    row(os.path.basename(path)[:-4].replace("_", " "), f"{ok} answered, {lost} unanswered")
+names = {"camera": "TCP connect", "web": "web interface", "rtsp": "RTSP", "control": "control", "self": "this host address"}
+for c in ([e["camera_probe"]] if e.get("camera_probe") else []) + e.get("service_probes", []) + \
+        e.get("control_probes", []) + e.get("self_probes", []):
+    errors = ", ".join(f"{k} x{v}" for k, v in c["errors"].items())
+    name = names.get(c["role"], c["role"]) + " " + c["target"].split(" ")[-1]
+    bad = c["failed_or_slow"]
+    ok = c["sent"] - bad
+    text = f"{ok} answered, {bad} failed/slow"
+    row(name, text + (" (" + errors + ")" if errors else ""))
+changes = 0
+try:
+    with open(os.path.join(run, "ip_monitor.log")) as f:
+        for line in f:
+            m = re.match(r"\[(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d+)\]", line)
+            if m and lo <= datetime.datetime.strptime(m.group(1), "%Y-%m-%dT%H:%M:%S.%f").timestamp() <= hi:
+                changes += 1
+except OSError:
+    pass
+row("this host link/address changes", str(changes) if changes else "none")
+for key in ("verdict", "services_verdict"):
+    if e.get(key):
+        print(f"  -> {e[key]}")
+'
+
 cmd_start() {
-    local camera=192.168.55.183 switch="" iface="" ring_mb=100 ring_files=100 capture=1
+    local camera=192.168.55.183 switch="" iface="" ring_mb=100 ring_files=100 capture=1 web_port=80 rtsp_port=554
     local -a controls=() pings=() notes=()
     while [ $# -gt 0 ]; do
         case $1 in
@@ -89,6 +148,8 @@ cmd_start() {
             --switch) switch=$2; shift 2 ;;
             --control) controls+=("$2"); shift 2 ;;
             --ping) pings+=("$2"); shift 2 ;;
+            --web-port) web_port=$2; shift 2 ;;
+            --rtsp-port) rtsp_port=$2; shift 2 ;;
             --iface) iface=$2; shift 2 ;;
             --ring-mb) ring_mb=$2; shift 2 ;;
             --ring-files) ring_files=$2; shift 2 ;;
@@ -155,7 +216,7 @@ If dumpcap still cannot capture: sudo dpkg-reconfigure wireshark-common (answer 
         echo "host: $(hostname)  iface: $iface  virt: $(systemd-detect-virt 2>/dev/null || echo unknown)"
         echo "camera: $camera"
         echo "switch: ${switch:-none}"
-        echo "extra ping: ${pings[*]:-none}  controls: ${controls[*]:-none}"
+        echo "extra ping: ${pings[*]:-none}  controls: ${controls[*]:-none}  web port: $web_port  rtsp port: $rtsp_port"
         echo "capture: $([ "$capture" = 1 ] && echo "$iface, filter '$filter', ${ring_files} x ${ring_mb} MB ring" || echo off)"
         echo "ntp synchronized: $(timedatectl show -p NTPSynchronized --value 2>/dev/null || echo unknown)"
         for h in "${notes[@]}"; do echo "note: $h"; done
@@ -164,7 +225,7 @@ If dumpcap still cannot capture: sudo dpkg-reconfigure wireshark-common (answer 
         echo "--- route to camera"; ip route get "$camera" 2>&1 || true
     } > "$RUN/notes.txt"
 
-    local -a probe_args=(live --host "$camera" --out "$RUN")
+    local -a probe_args=(live --host "$camera" --out "$RUN" --web-port "$web_port" --rtsp-port "$rtsp_port")
     for h in "${controls[@]}"; do probe_args+=(--control "$h"); done
     launch probe "$RUN/console.log" python3 -u "$PROBE" "${probe_args[@]}"
 
@@ -297,6 +358,9 @@ cmd_extract() {
         sed '/^$/,$d' "$run/notes.txt"
         echo
     } > "$summary"
+
+    python3 -I -c "$EVENT_TABLE" "$run" "$t" >> "$summary"
+    echo >> "$summary"
 
     if [ ${#sel[@]} -gt 0 ]; then
         local tmp

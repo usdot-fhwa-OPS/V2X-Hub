@@ -14,7 +14,8 @@ Runs `../flir_capture.sh` as a systemd service: it starts on boot and on weekday
 
 ```text
 User the service runs as (needs to read .../scripts) [vug]:
-FLIR camera IP address (WebSocket on port 80) [192.168.55.183]: 192.168.55.111
+FLIR camera IP address (WebSocket and web interface on port 80) [192.168.55.183]: 192.168.55.111
+Camera RTSP port, asked for a reply during each stall (0 to skip) [554]:
 Network interface that reaches the camera (captured on) [enp60s0]:
 PoE switch IP, pinged next to the camera (or another device on the same switch; none to skip): 192.168.0.239
   192.168.0.239 is not on a subnet enp60s0 is attached to. If the switch only has its factory address,
@@ -27,7 +28,8 @@ Note recorded with each run: firmware, switch, port, cable, time source [none]: 
 | Question | Used for | Default the first time |
 |---|---|---|
 | User the service runs as | runs the capture; added to the `wireshark` group | you |
-| FLIR camera IP address | `--camera`: WebSocket (port 80), connect checks, ping, capture | 192.168.55.183 (`flir_capture.sh`'s default) |
+| FLIR camera IP address | `--camera`: WebSocket and web interface (port 80), connect checks, ping, capture | 192.168.55.183 (`flir_capture.sh`'s default) |
+| Camera RTSP port | `--rtsp-port`: RTSP requests during each stall, 0 to skip | 554 |
 | Network interface | `--iface`: the interface captured on | the one routing to the camera |
 | PoE switch IP, or `none` | `--switch`: pinged and captured next to the camera | none, an answer is required |
 | Extra address to reach the switch | only asked when the switch is on another subnet (e.g. still on its factory address); added to the interface at each start and saved in its NetworkManager connection | none |
@@ -36,7 +38,7 @@ Note recorded with each run: firmware, switch, port, cable, time source [none]: 
 
 This host's own address is checked by the probe automatically, so it is not asked.
 
-Before asking for confirmation it pings the camera and switch, tries a TCP connect to the camera's WebSocket port and each control host, and checks the free disk space, and warns about any problem. It then:
+Before asking for confirmation it pings the camera and switch, tries a TCP connect to the camera's port 80 and RTSP port and to each control host, and checks the free disk space, and warns about any problem. It then:
 
 - installs `tshark` and allows members of the `wireshark` group to capture, and adds the user to that group;
 - saves the extra address in the interface's NetworkManager connection, if one is given;

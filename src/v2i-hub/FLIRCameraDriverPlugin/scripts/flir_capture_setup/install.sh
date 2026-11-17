@@ -28,7 +28,7 @@ die() { echo "error: $*" >&2; exit 1; }
 [ -t 0 ] || [ "$YES" = 1 ] || die "run this in a terminal (it asks for the site's addresses), or use --yes to reuse the saved answers."
 
 # Saved answers from the last install, if any
-RUN_USER="" CAMERA="" IFACE="" SWITCH="" EXTRA_ADDR="" CONTROLS="" NOTE=""
+RUN_USER="" CAMERA="" IFACE="" SWITCH="" EXTRA_ADDR="" CONTROLS="" RTSP_PORT="" NOTE=""
 SAVED=0
 if [ -r "$CONF" ]; then
     # shellcheck disable=SC1090
@@ -48,6 +48,7 @@ is_ipv4() {
 is_port() { [[ $1 =~ ^[0-9]{1,5}$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]; }
 v_user() { id -u "$1" >/dev/null 2>&1 || { ERR="no such user"; return 1; }; }
 v_ip() { is_ipv4 "$1" || { ERR="enter an IPv4 address such as 192.168.55.183"; return 1; }; }
+v_port0() { [ "$1" = 0 ] || is_port "$1" || { ERR="enter a port number 1-65535, or 0 to skip"; return 1; }; }
 v_switch() { [ "$1" = none ] || is_ipv4 "$1" || { ERR="enter an IPv4 address, or none"; return 1; }; }
 v_iface() { [ -n "$1" ] && ip link show dev "$1" >/dev/null 2>&1 || { ERR="no such interface (see: ip -br link)"; return 1; }; }
 v_cidr_opt() {
@@ -108,7 +109,8 @@ EOF
 fi
 
 ask RUN_USER v_user "User the service runs as (needs to read $SCRIPTS_DIR)" "${RUN_USER:-${SUDO_USER:-$USER}}"
-ask CAMERA v_ip "FLIR camera IP address (WebSocket on port 80)" "${CAMERA:-192.168.55.183}"
+ask CAMERA v_ip "FLIR camera IP address (WebSocket and web interface on port 80)" "${CAMERA:-192.168.55.183}"
+ask RTSP_PORT v_port0 "Camera RTSP port, asked for a reply during each stall (0 to skip)" "${RTSP_PORT:-554}"
 
 route_dev() { ip route get "$1" 2>/dev/null | grep -oP ' dev \K\S+' | head -1; }
 ask IFACE v_iface "Network interface that reaches the camera (captured on)" "${IFACE:-$(route_dev "$CAMERA" || true)}"
@@ -144,7 +146,8 @@ check_tcp() {
     if timeout 2 bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; then echo "  ok         tcp  $1:$2 ($3)"; else echo "  NO ANSWER  tcp  $1:$2 ($3)"; fi
 }
 check_ping "$CAMERA" camera
-check_tcp "$CAMERA" 80 "camera WebSocket"
+check_tcp "$CAMERA" 80 "camera WebSocket and web interface"
+[ "$RTSP_PORT" = 0 ] || check_tcp "$CAMERA" "$RTSP_PORT" "camera RTSP"
 if [ "$SWITCH" != none ]; then
     if [ -n "$EXTRA_ADDR" ] && ! ip -4 addr show dev "$IFACE" | grep -qF "inet ${EXTRA_ADDR%/*}/"; then
         echo "  (skipped)  ping $SWITCH (switch): $IFACE does not have ${EXTRA_ADDR} yet; the service adds it"
@@ -164,6 +167,7 @@ unit_text() { local s=${1//[\"\\]/}; s=${s//%/%%}; s=${s//\$/\$\$}; printf '"%s"
 
 args="--camera $CAMERA --switch $SWITCH"
 for h in $CONTROLS; do args+=" --control $h"; done
+[ "$RTSP_PORT" = 554 ] || args+=" --rtsp-port $RTSP_PORT"
 args+=" --iface $IFACE --ring-mb 100 --ring-files $RING_FILES"
 note="${NOTE:+$NOTE; }started by flir-capture.service"
 args+=" --note $(unit_text "$note")"
@@ -203,7 +207,7 @@ fi
 sudo mkdir -p "$(dirname "$CONF")"
 {
     echo "# Answers from flir_capture_setup/install.sh, offered as defaults when it is run again."
-    for v in RUN_USER CAMERA IFACE SWITCH EXTRA_ADDR CONTROLS NOTE; do
+    for v in RUN_USER CAMERA IFACE SWITCH EXTRA_ADDR CONTROLS RTSP_PORT NOTE; do
         printf '%s=%q\n' "$v" "${!v}"
     done
 } | sudo tee "$CONF" >/dev/null

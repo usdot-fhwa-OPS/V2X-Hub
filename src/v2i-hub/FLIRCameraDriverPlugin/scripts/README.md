@@ -42,6 +42,8 @@ flowchart LR
     probe -. "TCP connect, every 0.5 s" .-> control
     probe -- "WebSocket :80, stall detection" --> camera
     probe -. "TCP connect :80, every 0.5 s" .-> camera
+    probe -. "HTTP GET :80, every 1 s" .-> camera
+    probe -. "RTSP OPTIONS :554, every 1 s" .-> camera
     plugin -- "WebSocket :80" --> camera
     ping -. "ICMP" .-> camera
     ping -. "ICMP" .-> switch
@@ -52,7 +54,9 @@ flowchart LR
 | Check | Run by | Shows |
 |---|---|---|
 | WebSocket subscription | `flir_stream_probe.py live` | stalls and late bursts, seen independently of the plugin |
-| TCP connects to the camera's WebSocket port | `flir_stream_probe.py live` | whether the camera accepted new connections during the stall |
+| TCP connects to the camera's port 80 | `flir_stream_probe.py live` | whether the camera's network stack answered during the stall (its operating system answers these, even if its applications are stuck) |
+| HTTP request to the camera's web interface | `flir_stream_probe.py live` | whether the web interface application answered during the stall |
+| RTSP `OPTIONS` request to the camera | `flir_stream_probe.py live` | whether the RTSP (video) application answered during the stall |
 | TCP connects to control hosts | `flir_stream_probe.py live` | whether the rest of the network was reachable at the same time |
 | Self check: this host still has its address | `flir_stream_probe.py live` | whether this host lost its own address |
 | ICMP ping to the camera and the switch | `flir_capture.sh` | whether only the camera stopped answering while the switch still did |
@@ -65,7 +69,7 @@ Uses only the Python standard library (3.8+).
 
 ### live
 
-Subscribes to the camera as a second, independent client (it can run next to V2X Hub) and at the same time, every 0.5 s (`--probe-interval`), opens TCP connections to the camera and to optional control hosts:
+Subscribes to the camera as a second, independent client (it can run next to V2X Hub) and at the same time, every 0.5 s (`--probe-interval`), opens TCP connections to the camera and to optional control hosts. Every second (`--service-interval`) it also asks the camera's web interface (HTTP `GET`, `--web-port`, default 80) and RTSP server (`OPTIONS`, `--rtsp-port`, default 554) for a reply; `0` skips either:
 
 ```shell
 python3 flir_stream_probe.py live --host 192.168.55.183 --control 192.168.55.1:80
@@ -73,12 +77,12 @@ python3 flir_stream_probe.py live --host 192.168.55.183 --control 192.168.55.1:8
 
 The examples in this document use these addresses; replace them with yours:
 
-* `192.168.55.183`: the FLIR camera (WebSocket on port 80).
+* `192.168.55.183`: the FLIR camera (WebSocket and web interface on port 80, RTSP on 554).
 * `192.168.55.1:80`: the gateway, a control host. Any other machine on the network with an open TCP port works; add more with extra `--control HOST:PORT` options, e.g. the RSU.
 
 It also checks, at the same interval, that this host still has the address it uses to reach the camera (the *self* check; no option or open port needed). That shows whether this host lost its own address: link down, Wi-Fi disconnected, or a user-private NetworkManager connection taken down when the user logs out.
 
-For each stall it prints whether the camera stayed reachable and how the backlog arrived at the TCP level, and writes `events.jsonl`, `frames.csv`, `chunks.csv` and `probes.csv` (every connect probe with its error, e.g. `ENETUNREACH`) to a `flir_probe_<date>_<time>/` directory. It also reports any period with no data at all, not even the camera's 60 s keepalive ping (`--silence-ms`, default 90000), so outages are caught even while nothing is tracked:
+For each stall it prints whether the camera stayed reachable and how the backlog arrived at the TCP level, and writes `events.jsonl`, `frames.csv`, `chunks.csv` and `probes.csv` (every probe with its error, e.g. `ENETUNREACH` or `TimeoutError`) to a `flir_probe_<date>_<time>/` directory. It also reports any period with no data at all, not even the camera's 60 s keepalive ping (`--silence-ms`, default 90000), so outages are caught even while nothing is tracked:
 
 * Self check failed too: this host lost its network address or interface; the camera and the network were not the cause.
 * Camera unreachable while the control host answered: packets were lost between the switch and the camera (camera network interface, its cable, PoE link or switch port).
@@ -96,6 +100,28 @@ flowchart TD
     ctlq -- no --> hostlink["Between this host and the network:<br/>its link, switch or access point"]
     ctlq -- "no control hosts given" --> unknown["Path to the camera was down.<br/>Add --control to narrow it down."]
 ```
+
+#### Camera services during a stall
+
+A TCP connect is answered by the camera's operating system, so it only shows that the camera's network side is up. The web interface and RTSP requests are answered by the applications themselves. Together with ping, they show whether only the WebSocket stream stopped or everything on the camera stopped at once. For each stall the probe prints a second line with this, for example:
+
+```text
+    probe camera 192.168.55.183:80: 7 sent, 0 failed/slow, worst 2 ms
+    probe web http://192.168.55.183:80/: 4 sent, 0 failed/slow, worst 41 ms
+    probe rtsp rtsp://192.168.55.183:554/: 4 sent, 0 failed/slow, worst 12 ms
+    -> Camera services: TCP connect, web interface, RTSP answered, while the WebSocket stream was held. Only the stream stopped: ...
+```
+
+| Ping to camera | TCP connect | Web interface | RTSP | Ping to switch | Points to |
+|---|---|---|---|---|---|
+| answers | answers | answers | answers | answers | the WebSocket application, or TCP retransmission on that one connection |
+| answers | answers | fails | fails | answers | the camera's software: its network side was up but its applications stopped |
+| fails | fails | fails | fails | answers | the camera's network interface side: interface, cable, PoE or switch port, not the WebSocket application alone |
+| fails | fails | fails | fails | fails | this host's side or the switch (see the control hosts and the self check) |
+
+A failed check means no reply, or one slower than 500 ms for TCP connects and 1500 ms for web and RTSP (`--slow-ms`, `--service-slow-ms`). Ping is run by `flir_capture.sh`; its `extract` summary puts all of these in one table for the stall. Whether the camera's Ethernet link itself stayed up cannot be seen from this host: check the switch's port status or log, or the camera's own log, for the same time.
+
+#### Comparing with V2X Hub
 
 If V2X Hub sees a stall at a time when the probe did not, the frames were held on the V2X Hub host. Running the probe on a laptop on the same switch separates the camera's link from the V2X Hub host's link.
 
@@ -117,7 +143,7 @@ It reads the plugin's DEBUG `Received:` lines (plugin `LogLevel` DEBUG, single c
 
 Stalls can be hours apart, so evidence is usually collected unattended. `flir_capture.sh` starts, in one run directory under `flir_capture_runs/`, and keeps running after logout:
 
-* `flir_stream_probe.py live` against the camera (and the switch, if it has an open TCP port);
+* `flir_stream_probe.py live` against the camera, including its web interface and RTSP checks;
 * timestamped ICMP ping to the camera and to the PoE switch (or another device on the same switch), to show whether only the camera stops answering;
 * a rotating packet capture (`dumpcap`) of all traffic to and from the camera and the switch, to show whether packets stop completely, are retransmitted, or are delayed;
 * a log of this host's own link and address changes.
@@ -133,7 +159,7 @@ It needs `tshark` (`sudo apt install tshark`), and the user running it must be a
 
 `--switch` is required: the PoE switch's address, or another device plugged into the same switch, which is pinged next to the camera. Use `--switch none` to skip it. `--control HOST:PORT` is passed on to the probe.
 
-`./flir_capture.sh help` lists all options (camera address, extra ping hosts, capture interface, ring buffer size). The camera's WebSocket is expected on port 80. The capture keeps the newest 100 files of 100 MB by default, so copy out what you need soon after an event.
+`./flir_capture.sh help` lists all options (camera address, extra ping hosts, web and RTSP ports, capture interface, ring buffer size). The camera's WebSocket is expected on port 80. The capture keeps the newest 100 files of 100 MB by default, so copy out what you need soon after an event.
 
 After a stall, cut out the evidence for it:
 
@@ -142,6 +168,23 @@ After a stall, cut out the evidence for it:
 ```
 
 This writes `flir_capture_runs/<run>/events/<time>/` and a `.tar.gz` of it, with the packet capture of the minute around the event, the ping and probe records for the same window, the run's notes, and a `summary.txt`:
+
+* a table of every check during the stall itself, with the probe's conclusions:
+
+  ```text
+  === Camera during the stall, 15:15:02.120 to 15:15:05.580 UTC
+    WebSocket stream (probe)                   held 3460 ms
+    ping camera                                17 answered, 0 unanswered
+    ping switch                                17 answered, 0 unanswered
+    TCP connect 192.168.55.183:80              7 answered, 0 failed/slow
+    web interface http://192.168.55.183:80/    4 answered, 0 failed/slow
+    RTSP rtsp://192.168.55.183:554/            4 answered, 0 failed/slow
+    control 192.168.55.1:80                    7 answered, 0 failed/slow
+    this host address 192.168.55.52            7 answered, 0 failed/slow
+    this host link/address changes             none
+    -> The camera kept answering new TCP connections throughout the stall, ...
+    -> Camera services: TCP connect, web interface, RTSP answered, while the WebSocket stream was held. ...
+  ```
 
 * the longest gaps in packets from the camera;
 * TCP retransmissions, duplicate ACKs, zero windows and resets;

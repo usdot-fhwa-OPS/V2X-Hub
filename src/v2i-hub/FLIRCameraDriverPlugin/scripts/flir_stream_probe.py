@@ -13,8 +13,10 @@ live
     stall happens it reports whether the camera stayed reachable, which separates a link outage from a
     sender-side hold, and records how the backlog arrived at the TCP level. It also checks that this host still
     has the address it uses to reach the camera (the "self" check), which detects this host losing its address
-    (link down, Wi-Fi drop). Every probe result is kept in probes.csv. Control hosts should be other machines
-    (e.g. the gateway) with an open TCP port.
+    (link down, Wi-Fi drop). Every second it also asks the camera's web interface (HTTP GET) and RTSP server
+    (OPTIONS) for a reply, which shows whether the camera's other applications stopped during the same stall.
+    Every probe result is kept in probes.csv. Control hosts should be other machines (e.g. the gateway) with an
+    open TCP port.
 
         python3 flir_stream_probe.py live --host 192.168.55.83 --control 192.168.55.1:80
 
@@ -488,6 +490,77 @@ class SelfCheck(ConnectProbe):
             s.bind((self.host, 0))
 
 
+class ServiceCheck(ConnectProbe):
+    """Sends one request to an application on the camera and waits for the start of its reply.
+
+    A TCP connect alone is answered by the camera's operating system even when the application behind the
+    port is stuck; a reply to a request shows that the application itself is working. Any reply status counts
+    (e.g. 401 or a redirect), only a missing or garbled reply fails.
+    """
+
+    def __init__(self, role: str, url: str, host: str, port: int, request: bytes, expect: bytes,
+                 interval_s: float, timeout_s: float, log: Optional[ProbeLog] = None):
+        super().__init__(role, host, port, interval_s, timeout_s, log)
+        self.request, self.expect = request, expect
+        self.target = url
+        self.label = f"{role} {url}"
+
+    def attempt(self) -> None:
+        with socket.create_connection((self.host, self.port), timeout=self.timeout_s) as s:
+            s.sendall(self.request)
+            reply = s.recv(64)
+        if not reply:
+            raise NoReply()
+        if not reply.startswith(self.expect):
+            raise BadReply()
+
+
+class NoReply(OSError):
+    """The application closed the connection without replying."""
+
+
+class BadReply(OSError):
+    """The reply did not look like the expected protocol."""
+
+
+def web_check(host: str, port: int, interval_s: float, timeout_s: float, log: Optional[ProbeLog]) -> ServiceCheck:
+    request = f"GET / HTTP/1.0\r\nHost: {host}\r\nUser-Agent: flir_stream_probe\r\n\r\n".encode()
+    return ServiceCheck("web", f"http://{host}:{port}/", host, port, request, b"HTTP/", interval_s, timeout_s, log)
+
+
+def rtsp_check(host: str, port: int, interval_s: float, timeout_s: float, log: Optional[ProbeLog]) -> ServiceCheck:
+    url = f"rtsp://{host}:{port}/"
+    request = f"OPTIONS {url} RTSP/1.0\r\nCSeq: 1\r\nUser-Agent: flir_stream_probe\r\n\r\n".encode()
+    return ServiceCheck("rtsp", url, host, port, request, b"RTSP/", interval_s, timeout_s, log)
+
+
+def services_verdict(camera: Optional[Dict], services: List[Dict], controls: List[Dict]) -> Optional[str]:
+    """Which of the camera's services kept answering while the WebSocket stream was held."""
+    names = {"camera": "TCP connect", "web": "web interface", "rtsp": "RTSP"}
+    checked = [c for c in ([camera] if camera else []) + services if c["sent"] > 0]
+    if not services or not checked:
+        return None
+    up = [names[c["role"]] for c in checked if c["failed_or_slow"] == 0]
+    down = [names[c["role"]] for c in checked if c["failed_or_slow"] > 0]
+    state = (f"{', '.join(up)} answered" if up else "") + ("; " if up and down else "") + \
+            (f"{', '.join(down)} failed or slow" if down else "")
+    controls_probed = [c for c in controls if c["sent"] > 0]
+    network_ok = bool(controls_probed) and all(c["failed_or_slow"] == 0 for c in controls_probed)
+    if not down:
+        return (f"Camera services: {state}, while the WebSocket stream was held. Only the stream stopped: points to "
+                "the WebSocket application, or to TCP retransmission on this one connection, not the camera's "
+                "network interface.")
+    if not up:
+        where = " while the rest of the network answered" if network_ok else ""
+        return (f"Camera services: {state}{where}. Everything on the camera stopped together: points to the "
+                "camera's network interface side (interface, cable, PoE, switch port), not the WebSocket "
+                "application alone. Compare with ping to the camera and the switch for the same window.")
+    if "TCP connect" in up:
+        return (f"Camera services: {state}. The camera's network stack answered but some of its applications did "
+                "not: points to the camera's software rather than the network.")
+    return f"Camera services: {state}. Mixed result; compare with the packet capture."
+
+
 def probe_verdict(camera: Optional[Dict], controls: List[Dict], selfs: Optional[List[Dict]] = None) -> str:
     if camera is None:
         return "No reachability probes were running (--no-probe)."
@@ -565,6 +638,10 @@ def run_live(args: argparse.Namespace) -> int:
                 print(f"--control {host}:{port} is this host's own address, which is already checked: skipped.")
                 continue
             probes.append(ConnectProbe("control", host, port, args.probe_interval, args.probe_timeout, probe_log))
+        if args.web_port:
+            probes.append(web_check(args.host, args.web_port, args.service_interval, args.probe_timeout, probe_log))
+        if args.rtsp_port:
+            probes.append(rtsp_check(args.host, args.rtsp_port, args.service_interval, args.probe_timeout, probe_log))
         if not any(p.role == "control" for p in probes):
             print("No --control on another machine: a stall verdict cannot separate this host's network from the "
                   "camera's link. Add e.g. --control <gateway>:80.")
@@ -601,8 +678,12 @@ def run_live(args: argparse.Namespace) -> int:
             camera = camera_probe.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) if camera_probe else None
             controls = [p.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) for p in probes if p.role == "control"]
             selfs = [p.summarize(stall["start_ms"], stall["end_ms"], args.slow_ms) for p in probes if p.role == "self"]
+            services = [p.summarize(stall["start_ms"], stall["end_ms"], args.service_slow_ms)
+                        for p in probes if p.role in ("web", "rtsp")]
             stall["camera_probe"], stall["control_probes"], stall["self_probes"] = camera, controls, selfs
+            stall["service_probes"] = services
             stall["verdict"] = probe_verdict(camera, controls, selfs)
+            stall["services_verdict"] = services_verdict(camera, services, controls)
             events.write(kind, **stall)
             shape = ", ".join(f"+{c['offset_ms']}ms/{c['bytes']}B" for c in stall["chunks_after_stall"])
             if kind == "silence":
@@ -611,11 +692,13 @@ def run_live(args: argparse.Namespace) -> int:
             else:
                 print(f"{stall['start_utc']}  STALL details ({stall['hold_ms']} ms, ended {stall['end_utc']}):")
             print(f"    TCP data after it (offset/bytes): {shape or '-'}")
-            for summary in ([camera] if camera else []) + controls + selfs:
+            for summary in ([camera] if camera else []) + services + controls + selfs:
                 errors = ", ".join(f"{k} x{v}" for k, v in summary["errors"].items())
                 print(f"    probe {summary['target']}: {summary['sent']} sent, {summary['failed_or_slow']} failed/slow"
                       f"{' (' + errors + ')' if errors else ''}, worst {summary['worst_ms']} ms")
             print(f"    -> {stall['verdict']}")
+            if stall["services_verdict"]:
+                print(f"    -> {stall['services_verdict']}")
 
     deadline = time.monotonic() + args.duration if args.duration > 0 else None
     reconnect_delay = 1.0
@@ -926,6 +1009,14 @@ def main() -> int:
     live.add_argument("--control", action="append", default=[], metavar="HOST:PORT",
                       help="Another host on the same network to probe for comparison, e.g. the gateway "
                            "(repeatable). Must have an open TCP port. This host's own address is checked automatically.")
+    live.add_argument("--web-port", type=int, default=80,
+                      help="Camera web interface port, asked for a reply (HTTP GET) every --service-interval (default 80, 0 to skip).")
+    live.add_argument("--rtsp-port", type=int, default=554,
+                      help="Camera RTSP port, asked for a reply (RTSP OPTIONS) every --service-interval (default 554, 0 to skip).")
+    live.add_argument("--service-interval", type=float, default=1.0,
+                      help="Seconds between web interface and RTSP requests (default 1).")
+    live.add_argument("--service-slow-ms", type=int, default=1500,
+                      help="A web interface or RTSP reply slower than this counts as failed (default 1500).")
     live.add_argument("--silence-ms", type=int, default=90000,
                       help="Report a period with no data at all (not even the camera's 60 s keepalive ping) longer "
                            "than this, even if nothing was tracked (default 90000).")
