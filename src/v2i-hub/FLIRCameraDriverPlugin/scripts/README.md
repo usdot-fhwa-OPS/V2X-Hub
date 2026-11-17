@@ -157,10 +157,6 @@ This writes `flir_capture_runs/<run>/events/<time>/` and a `.tar.gz` of it, with
 
 When testing changes to the network path (another switch, port or cable), start a new run for each setup and record it with `--note`, so the runs can be compared.
 
-## Running on a virtual machine
-
-If the probe and capture run in a virtual machine with a NAT network adapter, the hypervisor relays TCP connections and the capture does not show the camera's real retransmissions. Use a bridged adapter or a physical machine.
-
 ## Running as a service
 
 `flir_capture_setup/` installs `flir_capture.sh` as a systemd service that starts on boot and runs on weekdays 07:00 to 18:00 local time, with a 20 GB capture ring by default. Run `flir_capture_setup/install.sh`: it asks for the camera, switch and control addresses, ports and capture size, showing a default for each, checks that they answer, shows the resulting command and installs after confirmation. See `flir_capture_setup/README.md`.
