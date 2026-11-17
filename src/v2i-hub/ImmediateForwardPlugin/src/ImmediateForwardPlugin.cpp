@@ -254,7 +254,7 @@ namespace ImmediateForward
 			tmxType = msg->subtype;
 
 			// Convert the payload to upper case.
-			for (int i = 0; i < (int)(strlen(msg->payload->valuestring)); i++){
+			for (int i = 0; i < (int)(strnlen(msg->payload->valuestring, sizeof msg->payload->valuestring)); i++){
 				msg->payload->valuestring[i] = toupper(msg->payload->valuestring[i]);
 			}
 
