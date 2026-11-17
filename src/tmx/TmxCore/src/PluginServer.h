@@ -22,16 +22,16 @@
 #include <poll.h>
 #include <string.h>
 #include <iostream>
-
+#include <tmx/tmx.h>
+#include <assert.h>
 #include <boost/thread.hpp>
-
+#include <sys/prctl.h>
+#include <memory>
+#include <vector>
 #include "MessageRouter.h"
 #include "PluginConnection.h"
 
-#define NET_DELIM ";"
-#define MAX_CONNECTIONS	5
-#define DISCONNECTED	0
-#define CONNECTED		1
+inline constexpr int MAX_CONNECTIONS = 5;
 
 /**
  * PluginServer
@@ -40,14 +40,14 @@
 class PluginServer
 {
 public:
-	PluginServer(MessageRouter *router);
-	~PluginServer();
+	explicit PluginServer(MessageRouter *router);
+	~PluginServer() = default;
 
 
 private:
 	MessageRouter *mRouter;
 	int server_sockfd;
-//	boost::thread routerThread;
+    std::vector<std::unique_ptr<PluginConnection>> pluginConnections;
 
 	void startServer(void);
 };
