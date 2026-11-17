@@ -36,8 +36,9 @@ void PluginServer::startServer()
 
 	//Create unnamed socket
 	server_sockfd = socket(AF_INET, SOCK_STREAM,0);
-	if ( server_sockfd == -1 ) {
+	if (server_sockfd == -1) {
 		perror("SOCKET");
+		close(server_sockfd);
 		exit(1);
 	}
 	//Allows the socket to reuse the binding address so that on quick restarts we do not get an error
@@ -51,11 +52,17 @@ void PluginServer::startServer()
 	// TODO make port configurable
 	server_address.sin_port = htons(IVP_DEFAULT_PORT);
 	server_len = sizeof(server_address);
-	if(bind(server_sockfd, (struct sockaddr *)&server_address, server_len))
+	if(bind(server_sockfd, (struct sockaddr *)&server_address, server_len)) {
 		perror("BIND:");
+		close(server_sockfd);
+		exit(1);
+	}
 
-	if(listen(server_sockfd, MAX_CONNECTIONS))
+	if(listen(server_sockfd, MAX_CONNECTIONS)) {
 		perror("LISTEN:");
+		close(server_sockfd);
+		exit(1);
+	}
 	client_len = sizeof(client_address);
 
 
@@ -63,11 +70,13 @@ void PluginServer::startServer()
 	flags = fcntl(server_sockfd,F_GETFL,0);
 	if (flags == -1) {
 		perror("fcntl F_GETFL");
+		close(server_sockfd);
 		exit(1);
 	}
 
-	if ( fcntl(server_sockfd,F_SETFL,O_NONBLOCK|flags) == -1 ) {
+	if (fcntl(server_sockfd,F_SETFL,O_NONBLOCK|flags) == -1) {
 		perror("fcntl F_SETFL");
+		close(server_sockfd);
 		exit(1);
 	}
 
