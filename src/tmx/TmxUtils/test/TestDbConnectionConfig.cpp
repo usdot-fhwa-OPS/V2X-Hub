@@ -63,8 +63,8 @@ private:
 class TempFileGuard {
 public:
     TempFileGuard(const std::string& content = "") {
-        // Create unique temporary file name
-        char tempTemplate[] = "/tmp/dbconfig_test_XXXXXX";
+        // Create unique file in docker secrets allowed location
+        char tempTemplate[] = "/run/secrets/dbconfig_test_XXXXXX";
         int fd = mkstemp(tempTemplate);
         if (fd == -1) {
             throw std::runtime_error("Failed to create temporary file");
