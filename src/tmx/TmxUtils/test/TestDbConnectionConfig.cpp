@@ -271,13 +271,11 @@ TEST_F(DbConnectionConfigTest, PasswordFileValidPathEscape) {
     std::string expectedPassword = "test_password_123";
     TempFileGuard tempFile(expectedPassword);
     passwordGuard_->set(tempFile.getPath());
-    secretsGuard_->set("/tmp/secrets/");
-
-    
+    // Not tmp path but other path that exists
+    secretsGuard_->set("/usr/");
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
-    
-    // Should throw exception
+    // Should throw exception due to path escape
     EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 

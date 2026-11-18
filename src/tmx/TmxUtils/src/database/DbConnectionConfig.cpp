@@ -98,7 +98,7 @@ std::string DbConnectionConfig::getPassword() const {
         // Confirm filepath is in allowed docker secrets base dir
         const auto relative = filepath.lexically_relative(basedir);
         if (relative.empty() || relative.string().find("..") != std::string::npos) {
-            throw DbConnectionException("Security violation: path escape attempted! MYSQL_PASSWORD is restricted to /run/secrets/ directory!");
+            throw DbConnectionException("Security violation: path escape attempted! MYSQL_PASSWORD is restricted to " + basedir.string() + "directory!");
         }
 
     
