@@ -212,9 +212,6 @@ int RtcmPlugin::Main() {
 					istringstream inStream(string((const char *)inBytes.data(), recv));
 					string line;
 					while (getline(inStream, line)) {
-						if (line[line.length()-1] == '\r') line.erase(line.length()-1);
-						PLOG(logDEBUG1) << line;
-						PLOG(logDEBUG1) << System::ExecCommand("echo '" + line + "' | gpsdecode");
 						response.push_back(line);
 					}
 
