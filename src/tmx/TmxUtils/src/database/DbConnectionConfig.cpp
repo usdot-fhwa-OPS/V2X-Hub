@@ -88,14 +88,13 @@ std::string DbConnectionConfig::getUser() const {
 std::string DbConnectionConfig::getPassword() const {
     std::scoped_lock lock(configMutex);
     std::string password;
-
     if (passwordFile.empty()) {
         throw DbConnectionException( "MYSQL_PASSWORD environment variable not set"); 
     }
     try {
         const std::filesystem::path filepath = std::filesystem::canonical(passwordFile);
         // Docker Secrets directory
-        const std::filesystem::path basedir = std::filesystem::canonical("/run/secrets/");
+        const std::filesystem::path basedir = std::filesystem::canonical(getEnvVar("SECRETS_DIR", "/run/secrets/" ));
         // Confirm filepath is in allowed docker secrets base dir
         const auto relative = filepath.lexically_relative(basedir);
         if (relative.empty() || relative.string().find("..") != std::string::npos) {
