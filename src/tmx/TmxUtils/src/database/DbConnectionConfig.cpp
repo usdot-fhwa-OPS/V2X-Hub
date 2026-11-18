@@ -94,12 +94,18 @@ std::string DbConnectionConfig::getPassword() const {
     }
     try {
         const std::filesystem::path filepath = std::filesystem::canonical(passwordFile);
+        // Docker Secrets directory
+        const std::filesystem::path basedir = std::filesystem::canonical("/run/secrets/");
+        // Confirm filepath is in allowed docker secrets base dir
+        const auto relative = filepath.lexically_relative(basedir);
+        if (relative.empty() || relative.string().find("..") != std::string::npos) {
+            throw DbConnectionException("Security violation: path escape attempted! MYSQL_PASSWORD is restricted to /run/secrets/ directory!");
+        }
 
     
         std::ifstream file(passwordFile);
         if (!file.is_open()) {
-            FILE_LOG(logERROR) << "Unable to read password file: " << passwordFile << std::endl;
-            return "";
+            throw DbConnectionException("Unable to read password file: " + passwordFile );
         }
     
         std::getline(file, password);
