@@ -53,8 +53,9 @@ pushd /tmp
 if [ -d "NemaTode" ]; then
     rm -r NemaTode
 fi
-git clone https://github.com/ckgt/NemaTode.git
+git clone https://github.com/ckgt/NemaTode.git --branch master
 cd NemaTode
+git checkout d061b62bacd201a89494a16702d53014c5b4f6e1
 cmake .
 make -j${numCPU}
 make install
