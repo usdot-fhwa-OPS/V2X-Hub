@@ -62,7 +62,7 @@ private:
  */
 class TempFileGuard {
 public:
-    TempFileGuard(const std::string& content = "") {
+    explicit TempFileGuard(const std::string& content = "") {
         // Create unique file in docker secrets allowed location
         char tempTemplate[] = "/run/secrets/dbconfig_test_XXXXXX";
         int fd = mkstemp(tempTemplate);
