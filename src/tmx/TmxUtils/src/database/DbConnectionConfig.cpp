@@ -102,9 +102,9 @@ std::string DbConnectionConfig::getPassword() const {
         }
 
     
-        std::ifstream file(passwordFile);
+        std::ifstream file(filepath);
         if (!file.is_open()) {
-            throw DbConnectionException("Unable to read password file: " + passwordFile );
+            throw DbConnectionException("Unable to read password file: " + filepath.string() );
         }
     
         std::getline(file, password);
