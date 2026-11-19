@@ -112,13 +112,14 @@ protected:
         databaseGuard_ = std::make_unique<EnvironmentVariableGuard>("MYSQL_DATABASE");
         userGuard_ = std::make_unique<EnvironmentVariableGuard>("MYSQL_USER");
         passwordGuard_ = std::make_unique<EnvironmentVariableGuard>("MYSQL_PASSWORD");
-        
+        secretsGuard_ = std::make_unique<EnvironmentVariableGuard>("SECRETS_DIR");
         // Clear all environment variables for clean test state
         hostGuard_->unset();
         portGuard_->unset();
         databaseGuard_->unset();
         userGuard_->unset();
         passwordGuard_->unset();
+        secretsGuard_->unset();
     }
     
     void TearDown() override {
@@ -131,6 +132,8 @@ protected:
     std::unique_ptr<EnvironmentVariableGuard> databaseGuard_;
     std::unique_ptr<EnvironmentVariableGuard> userGuard_;
     std::unique_ptr<EnvironmentVariableGuard> passwordGuard_;
+    std::unique_ptr<EnvironmentVariableGuard> secretsGuard_;
+
 };
 
 /**
@@ -202,6 +205,7 @@ TEST_F(DbConnectionConfigTest, ConnectionUrlFormat) {
 TEST_F(DbConnectionConfigTest, PasswordFileNotSet) {
     // Ensure MYSQL_PASSWORD is not set
     passwordGuard_->unset();
+    secretsGuard_->set("/tmp/");
     
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -216,6 +220,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileNotSet) {
 TEST_F(DbConnectionConfigTest, PasswordFileDoesNotExist) {
     // Set MYSQL_PASSWORD to a non-existent file
     passwordGuard_->set("/tmp/non_existent_password_file_12345");
+    secretsGuard_->set("/tmp/");
+
     
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -231,7 +237,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileEmpty) {
     // Create empty temporary file
     TempFileGuard tempFile("");
     passwordGuard_->set(tempFile.getPath());
-    
+    secretsGuard_->set("/tmp/");
+
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
     
@@ -247,11 +254,29 @@ TEST_F(DbConnectionConfigTest, PasswordFileValid) {
     std::string expectedPassword = "test_password_123";
     TempFileGuard tempFile(expectedPassword);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
+
     
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
     
     EXPECT_EQ(expectedPassword, config.getPassword());
+}
+
+/**
+ * Test successful password file reading
+ */
+TEST_F(DbConnectionConfigTest, PasswordFileValidPathEscape) {
+    // Create temporary file with password
+    std::string expectedPassword = "test_password_123";
+    TempFileGuard tempFile(expectedPassword);
+    passwordGuard_->set(tempFile.getPath());
+    // Not tmp path but other path that exists
+    secretsGuard_->set("/usr/");
+    DbConnectionConfig::getInstance().reloadConfiguration();
+    DbConnectionConfig& config = DbConnectionConfig::getInstance();
+    // Should throw exception due to path escape
+    EXPECT_THROW(config.getPassword(), DbConnectionException);
 }
 
 /**
@@ -262,6 +287,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileMultipleLines) {
     std::string fileContent = "first_line_password\nsecond_line\nthird_line";
     TempFileGuard tempFile(fileContent);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
+
     
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -526,6 +553,7 @@ TEST_F(DbConnectionConfigTest, PasswordFileWithWhitespace) {
     std::string passwordWithSpaces = "  password_with_spaces  ";
     TempFileGuard tempFile(passwordWithSpaces);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -541,6 +569,7 @@ TEST_F(DbConnectionConfigTest, PasswordFileOnlyWhitespace) {
     // Test file containing only whitespace
     TempFileGuard tempFile("   \t\n   ");
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -557,6 +586,7 @@ TEST_F(DbConnectionConfigTest, PasswordFileSpecialCharacters) {
     std::string specialPassword = "p@ssw0rd!#$%^&*()_+-={}[]|\\:;\"'<>?,./~`";
     TempFileGuard tempFile(specialPassword);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -572,6 +602,7 @@ TEST_F(DbConnectionConfigTest, PasswordFileUnicodeCharacters) {
     std::string unicodePassword = "密码123пароль";
     TempFileGuard tempFile(unicodePassword);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -587,6 +618,7 @@ TEST_F(DbConnectionConfigTest, VeryLongPassword) {
     std::string longPassword(10000, 'x');
     TempFileGuard tempFile(longPassword);
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -600,6 +632,7 @@ TEST_F(DbConnectionConfigTest, VeryLongPassword) {
 TEST_F(DbConnectionConfigTest, PasswordFileInNonExistentDirectory) {
     // Set MYSQL_PASSWORD to a file in a non-existent directory
     passwordGuard_->set("/tmp/non_existent_dir_12345/password_file");
+    secretsGuard_->set("/tmp/");
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
@@ -615,6 +648,8 @@ TEST_F(DbConnectionConfigTest, ConcurrentPasswordFileReading) {
     // Create password file
     TempFileGuard tempFile("concurrent_password");
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
+
 
     DbConnectionConfig::getInstance().reloadConfiguration();
 
@@ -657,6 +692,8 @@ TEST_F(DbConnectionConfigTest, PasswordFileModificationDuringReading) {
     // Create initial password file
     TempFileGuard tempFile("initial_password");
     passwordGuard_->set(tempFile.getPath());
+    secretsGuard_->set("/tmp/");
+
 
     DbConnectionConfig::getInstance().reloadConfiguration();
     DbConnectionConfig& config = DbConnectionConfig::getInstance();
