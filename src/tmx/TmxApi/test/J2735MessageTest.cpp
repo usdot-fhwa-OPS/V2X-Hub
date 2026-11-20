@@ -795,10 +795,6 @@ TEST(J2735MessageTest, EncodeSDSM)
 
 	std::string expectedSDSMEncHex = "0029250a010c0c0a101f9c37ea97fc66b10b430c34000a00000020002bba0a000200004400240009";
 	EXPECT_EQ(expectedSDSMEncHex, SdsmEncodeMessage.get_payload_str());	
-
-
-
-
 	}
 
 	TEST(J2735MessageTest, DecodeSDSM) {

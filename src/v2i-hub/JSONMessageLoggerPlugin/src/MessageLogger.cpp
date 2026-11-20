@@ -28,4 +28,9 @@ namespace JSONMessageLoggerPlugin{
             throw tmx::TmxException("Conversion of msg " + msg.to_string() + " to JSON resulted in empty string failed!");
         }
     }
+
+    std::string invalidMessageWarning(tmx::routeable_message& msg, const std::string& reason) {
+        return "Invalid " + msg.get_subtype() + " message (ASN.1 UPER decoding failed: " + reason + "). Payload: "
+            + msg.get_payload_str();
+    }
 }

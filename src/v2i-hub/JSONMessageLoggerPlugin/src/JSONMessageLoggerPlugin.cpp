@@ -99,6 +99,22 @@ namespace JSONMessageLoggerPlugin {
                     logRouteableMessage(msg, rxLogger);
                 }
             }
+            catch (const tmx::J2735Exception &e) {
+                // Any J2735 message that isn't valid ASN.1: one WARN, one event log entry, counted per message type.
+                std::string warning = invalidMessageWarning(msg, e.what());
+                FILE_LOG(tmx::utils::logWARNING) << warning;
+                tmx::messages::TmxEventLogMessage eventLogMsg;
+                eventLogMsg.set_level(IvpLogLevel::IvpLogLevel_warn);
+                eventLogMsg.set_description(warning);
+                BroadcastMessage(eventLogMsg, JSONMessageLoggerPlugin::GetName());
+                std::string key = "Invalid " + msg.get_subtype() + " Messages";
+                unsigned long count;
+                {
+                    std::scoped_lock lock(_invalidMessagesLock);
+                    count = ++_invalidMessages[msg.get_subtype()];
+                }
+                SetStatus<unsigned long>(key.c_str(), count);
+            }
             catch (const boost::exception &e) {
                 std::string errorMessage = "Boost exception while logging message: " + boost::diagnostic_information(e);
                 FILE_LOG(tmx::utils::logERROR) << errorMessage;

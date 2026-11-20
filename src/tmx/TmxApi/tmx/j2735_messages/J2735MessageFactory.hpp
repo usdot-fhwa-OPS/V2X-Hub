@@ -41,6 +41,9 @@
 #include <tmx/j2735_messages/SensorDataSharingMessage.hpp>
 #if SAEJ2735_SPEC >= 2024
 #include <tmx/j2735_messages/RoadSafetyMessage.hpp>
+#include <tmx/j2735_messages/TollAdvertisementMessage.hpp>
+#include <tmx/j2735_messages/TollUsageMessage.hpp>
+#include <tmx/j2735_messages/TollUsageAckMessage.hpp>
 #endif
 
 namespace tmx {
@@ -60,6 +63,9 @@ using message_types = message_type_list<
 		PdmMessage,
 #if SAEJ2735_SPEC >= 2024
 		RsmMessage,
+		TamMessage,
+		TumMessage,
+		TumAckMessage,
 #endif
 		PsmMessage,
 		PvdMessage,
@@ -182,6 +188,9 @@ public:
 			add_allocator_to_maps<PdmMessage>();
 #if SAEJ2735_SPEC >= 2024
 			add_allocator_to_maps<RsmMessage>();
+			add_allocator_to_maps<TamMessage>();
+			add_allocator_to_maps<TumMessage>();
+			add_allocator_to_maps<TumAckMessage>();
 #endif
 			add_allocator_to_maps<PvdMessage>();
 			add_allocator_to_maps<PsmMessage>();
